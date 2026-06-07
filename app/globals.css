@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/*
+ * NextGenAchievers corporate design tokens
+ * Primary Base: #031F82 | Panel: #BDE9FB | Secondary: #0CC1E0
+ * CTA Accent: #FFA503 | Design Accent: #DCB766
+ */
+@theme {
+  /* Official corporate palette */
+  --color-nga-primary: #031f82;
+  --color-nga-primary-hover: #021554;
+  --color-nga-panel: #bde9fb;
+  --color-nga-secondary: #0cc1e0;
+  --color-nga-cta: #ffa503;
+  --color-nga-cta-hover: #e89400;
+  --color-nga-cta-shadow: #c88202;
+  --color-nga-secondary-shadow: #099fb8;
+  --color-nga-accent: #dcb766;
+
+  /* Supporting neutrals */
+  --color-nga-ink: #031f82;
+  --color-nga-slate: #1e3a5f;
+  --color-nga-surface: #ffffff;
+  --color-nga-mist: #e8f6fc;
+
+  /* Tier accents (Explorers vs Titans) */
+  --color-nga-explorer: #8b5cf6;
+  --color-nga-titan: #0cc1e0;
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  /* Radii & elevation */
+  --radius-nga-sm: 0.5rem;
+  --radius-nga-md: 0.75rem;
+  --radius-nga-lg: 1rem;
+  --radius-nga-xl: 1.25rem;
+  --shadow-nga-card: 0 4px 24px -4px rgb(3 31 130 / 0.14);
+  --shadow-nga-pop: 0 8px 32px -8px rgb(3 31 130 / 0.28);
+
+  /* Spacing scale for touch-friendly targets */
+  --spacing-touch: 2.75rem;
+}
+
+@layer base {
+  html {
+    @apply antialiased scroll-smooth;
+  }
+
+  body {
+    @apply bg-nga-panel text-nga-ink font-sans min-h-dvh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-nga-secondary;
+  }
+}

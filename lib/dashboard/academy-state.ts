@@ -16,6 +16,84 @@ export const PHASE_1_LEVEL_COUNT = 6;
 
 export const PHASE_1_MILESTONE_COUNT = 54;
 
+/** Distinct phase colors for each Academy level block (Duolingo-style map). */
+export const ACADEMY_LEVEL_PHASE_THEME: Record<
+  AcademyLevelId,
+  { fill: string; shadow: string; ring: string }
+> = {
+  1: { fill: "#0CC1E0", shadow: "#099FB8", ring: "rgba(12, 193, 224, 0.4)" },
+  2: { fill: "#22C55E", shadow: "#15803D", ring: "rgba(34, 197, 94, 0.4)" },
+  3: { fill: "#FFA503", shadow: "#C88202", ring: "rgba(255, 165, 3, 0.4)" },
+  4: { fill: "#6366F1", shadow: "#4338CA", ring: "rgba(99, 102, 241, 0.4)" },
+  5: { fill: "#8B5CF6", shadow: "#6D28D9", ring: "rgba(139, 92, 246, 0.4)" },
+  6: { fill: "#DCB766", shadow: "#B8943F", ring: "rgba(220, 183, 102, 0.4)" },
+};
+
+export type AcademyLessonIconKind =
+  | "target"
+  | "lightbulb"
+  | "sparkles"
+  | "zap"
+  | "trending-up"
+  | "trophy";
+
+const REGULAR_LESSON_ICON_SEQUENCE: readonly AcademyLessonIconKind[] = [
+  "target",
+  "lightbulb",
+  "sparkles",
+  "zap",
+  "trending-up",
+];
+
+/** True on the 9th node of each phase in a 0-based loop (ids 9, 18, 27, 36, 45, 54). */
+export function isPhaseCloserByIndex(index: number): boolean {
+  return (index + 1) % LESSONS_PER_LEVEL === 0;
+}
+
+const DEFAULT_PHASE_THEME = ACADEMY_LEVEL_PHASE_THEME[1];
+
+/** Safe phase theme lookup — never returns undefined. */
+export function getAcademyPhaseTheme(levelGroup: AcademyLevelId) {
+  return ACADEMY_LEVEL_PHASE_THEME[levelGroup] ?? DEFAULT_PHASE_THEME;
+}
+
+/** Runtime guard for map rendering — rejects nullish or malformed nodes. */
+export function isRenderableAcademyMilestone(
+  milestone: AcademyLessonMilestoneNode | null | undefined,
+): milestone is AcademyLessonMilestoneNode {
+  if (!milestone) return false;
+  return (
+    Number.isFinite(milestone.id) &&
+    milestone.id > 0 &&
+    milestone.id <= PHASE_1_MILESTONE_COUNT &&
+    (milestone.status === "active" ||
+      milestone.status === "completed" ||
+      milestone.status === "locked") &&
+    milestone.levelGroup >= 1 &&
+    milestone.levelGroup <= PHASE_1_LEVEL_COUNT
+  );
+}
+
+/** Phase closer by milestone id — last node in each 9-lesson block. */
+export function isPhaseCloserMilestone(
+  milestone: AcademyLessonMilestoneNode | null | undefined,
+): boolean {
+  if (!isRenderableAcademyMilestone(milestone)) return false;
+  return isBossMilestoneId(milestone.id);
+}
+
+/** Maps a regular lesson to a high-agency icon. Trophies are UI-only via isPhaseCloserMilestone. */
+export function lessonIconKindForMilestone(
+  milestone: AcademyLessonMilestoneNode | null | undefined,
+): AcademyLessonIconKind {
+  if (!isRenderableAcademyMilestone(milestone)) return "target";
+  const lessonIndex = (milestone.id - 1) % LESSONS_PER_LEVEL;
+  const sequenceIndex =
+    (lessonIndex + (milestone.levelGroup - 1)) %
+    REGULAR_LESSON_ICON_SEQUENCE.length;
+  return REGULAR_LESSON_ICON_SEQUENCE[sequenceIndex] ?? "target";
+}
+
 /**
  * One lesson milestone on the continuous Phase 1 path (1–54).
  * Nodes 1–9 = Level 1, 10–18 = Level 2, … 46–54 = Level 6.
@@ -71,10 +149,10 @@ export function levelGroupForMilestoneId(milestoneId: number): AcademyLevelId {
   return Math.ceil(clamped / LESSONS_PER_LEVEL) as AcademyLevelId;
 }
 
-/** Boss nodes are the last lesson in each level (9, 18, 27, 36, 45, 54). */
+/** Phase closers are the 9th node in each block (ids 9, 18, 27, 36, 45, 54). */
 export function isBossMilestoneId(milestoneId: number): boolean {
   return (
-    milestoneId >= 1 &&
+    milestoneId > 0 &&
     milestoneId <= PHASE_1_MILESTONE_COUNT &&
     milestoneId % LESSONS_PER_LEVEL === 0
   );
@@ -97,13 +175,20 @@ export function createMilestoneNode(
 export function createPhase1MilestoneScaffold(
   activeMilestoneId: number = 1,
 ): AcademyLessonMilestoneNode[] {
+  const clampedActive = Number.isFinite(activeMilestoneId)
+    ? Math.min(
+        PHASE_1_MILESTONE_COUNT,
+        Math.max(1, Math.floor(activeMilestoneId)),
+      )
+    : 1;
+
   return Array.from({ length: PHASE_1_MILESTONE_COUNT }, (_, index) => {
     const id = index + 1;
     let status: AcademyNodeStatus = "locked";
 
-    if (id < activeMilestoneId) {
+    if (id < clampedActive) {
       status = "completed";
-    } else if (id === activeMilestoneId) {
+    } else if (id === clampedActive) {
       status = "active";
     }
 
@@ -112,14 +197,11 @@ export function createPhase1MilestoneScaffold(
 }
 
 /**
- * Demo scaffold: Node 1 is active, Nodes 2–54 are locked.
- * No completed nodes yet — fresh start on the path.
+ * Demo scaffold: Node 12 active for scroll-focus testing.
+ * Nodes 1–11 completed, Nodes 13–54 locked.
  */
 export function createDemoPhase1Milestones(): AcademyLessonMilestoneNode[] {
-  return Array.from({ length: PHASE_1_MILESTONE_COUNT }, (_, index) => {
-    const id = index + 1;
-    return createMilestoneNode(id, id === 1 ? "active" : "locked");
-  });
+  return createPhase1MilestoneScaffold(12);
 }
 
 /** Count completed milestones inside one level group. */

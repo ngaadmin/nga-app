@@ -5,7 +5,7 @@ import type { JourneyStaggerSide } from "@/lib/dashboard/journey-stagger";
 
 const BRIDGE_VIEW_HEIGHT = 100;
 
-function staggerAnchorPercent(stagger: JourneyStaggerSide): number {
+export function staggerAnchorPercent(stagger: JourneyStaggerSide): number {
   switch (stagger) {
     case "left":
       return 22;
@@ -13,6 +13,18 @@ function staggerAnchorPercent(stagger: JourneyStaggerSide): number {
       return 78;
     case "center":
       return 50;
+  }
+}
+
+/** Positions a node center on the same anchor as the path bridge endpoints. */
+export function staggerAnchorPositionClass(stagger: JourneyStaggerSide): string {
+  switch (stagger) {
+    case "left":
+      return "left-[22%] -translate-x-1/2";
+    case "right":
+      return "left-[78%] -translate-x-1/2";
+    case "center":
+      return "left-1/2 -translate-x-1/2";
   }
 }
 
@@ -39,6 +51,10 @@ export type JourneyPathBridgeProps = {
   toStagger: JourneyStaggerSide;
   segmentIndex: number;
   activeStepIndex: number;
+  /** Tighter bridge height for dense maps (e.g. Academy 54-node track). */
+  compact?: boolean;
+  /** Ultra-tight bridge for icon-only Academy snake tracks. */
+  dense?: boolean;
 };
 
 export function JourneyPathBridge({
@@ -46,6 +62,8 @@ export function JourneyPathBridge({
   toStagger,
   segmentIndex,
   activeStepIndex,
+  compact = false,
+  dense = false,
 }: JourneyPathBridgeProps) {
   const walked = isWalkedSegment(segmentIndex, activeStepIndex);
 
@@ -56,7 +74,13 @@ export function JourneyPathBridge({
 
   return (
     <div
-      className="relative z-0 h-12 w-full shrink-0 sm:h-14"
+      className={
+        dense
+          ? "relative z-0 h-5 w-full shrink-0"
+          : compact
+            ? "relative z-0 h-7 w-full shrink-0 sm:h-8"
+            : "relative z-0 h-12 w-full shrink-0 sm:h-14"
+      }
       aria-hidden
     >
       <svg

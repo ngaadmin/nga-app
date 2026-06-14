@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getEligibleBirthYears, isEligibleBirthYear } from "@/lib/onboarding/birth-years";
 import {
   createGhostAccessSession,
+  DASHBOARD_ACADEMY_PATH,
   saveGhostAccessSession,
 } from "@/lib/onboarding/ghost-session";
 import { cn } from "@/lib/utils/cn";
@@ -58,7 +59,7 @@ export function PersonalizationGateForm() {
       birthYear: Number(birthYear),
     });
     saveGhostAccessSession(session);
-    router.push("/dashboard/home");
+    router.push(DASHBOARD_ACADEMY_PATH);
   }
 
   return (

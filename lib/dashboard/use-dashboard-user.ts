@@ -5,6 +5,7 @@ import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
 
 export type DashboardUserState = {
   username: string;
+  joinDate: string | null;
   isGhostMode: boolean;
   isLoading: boolean;
 };
@@ -14,6 +15,7 @@ const GUEST_USERNAME = "Guest";
 export function useDashboardUser(): DashboardUserState {
   const [state, setState] = useState<DashboardUserState>({
     username: GUEST_USERNAME,
+    joinDate: null,
     isGhostMode: false,
     isLoading: true,
   });
@@ -23,6 +25,7 @@ export function useDashboardUser(): DashboardUserState {
     if (session) {
       setState({
         username: session.username,
+        joinDate: session.createdAt,
         isGhostMode: session.accessMode === "ghost",
         isLoading: false,
       });
@@ -30,6 +33,7 @@ export function useDashboardUser(): DashboardUserState {
     }
     setState({
       username: GUEST_USERNAME,
+      joinDate: null,
       isGhostMode: false,
       isLoading: false,
     });

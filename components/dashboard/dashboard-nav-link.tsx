@@ -32,7 +32,9 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
       >
         <Icon className="size-6 shrink-0" />
         <span className="font-heading text-[10px] font-bold leading-tight">
-          {item.label.replace("The ", "")}
+          {item.label.startsWith("The ")
+            ? item.label.replace("The ", "")
+            : item.label}
         </span>
       </Link>
     );

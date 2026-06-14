@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PersonalizationGateForm } from "@/components/onboarding/personalization-gate-form";
+import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-session-redirect";
 
 export const metadata: Metadata = {
   title: "Create Your Profile",
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function OnboardingStartPage() {
-  return <PersonalizationGateForm />;
+  return (
+    <>
+      <OnboardingSessionRedirect />
+      <PersonalizationGateForm />
+    </>
+  );
 }

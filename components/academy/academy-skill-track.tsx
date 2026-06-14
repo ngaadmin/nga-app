@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils/cn";
 type AcademySkillTrackProps = {
   milestones?: readonly AcademyLessonMilestoneNode[];
   scrollContainerRef?: RefObject<HTMLDivElement | null>;
+  hudBannerRef?: RefObject<HTMLDivElement | null>;
 };
 
 /** Sine wave layout — centered, gentle swing, never hugs screen edges. */
@@ -190,15 +191,20 @@ function AcademyNode({ milestone }: AcademyNodeProps) {
 function focusActiveNodeInScrollContainer(
   scrollContainer: HTMLElement,
   activeNode: HTMLElement,
+  hudBannerHeight: number,
 ): void {
+  const mapViewportCenter =
+    hudBannerHeight + (scrollContainer.clientHeight - hudBannerHeight) / 2;
+
   const containerRect = scrollContainer.getBoundingClientRect();
   const activeRect = activeNode.getBoundingClientRect();
+  const activeCenterFromContainerTop =
+    activeRect.top - containerRect.top + activeRect.height / 2;
+
   const scrollOffset =
-    activeRect.top -
-    containerRect.top +
-    scrollContainer.scrollTop -
-    scrollContainer.clientHeight / 2 +
-    activeRect.height / 2;
+    scrollContainer.scrollTop +
+    activeCenterFromContainerTop -
+    mapViewportCenter;
 
   scrollContainer.scrollTo({
     top: Math.max(0, scrollOffset),
@@ -209,6 +215,7 @@ function focusActiveNodeInScrollContainer(
 export function AcademySkillTrack({
   milestones = [],
   scrollContainerRef,
+  hudBannerRef,
 }: AcademySkillTrackProps) {
   const copy = copyMatrix.dashboard.academy.journey;
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
@@ -243,15 +250,15 @@ export function AcademySkillTrack({
 
     const activeEl = activeNodeRef.current;
     const scrollContainer = scrollContainerRef?.current;
-    if (!activeEl) return;
+    if (!activeEl || !scrollContainer) return;
 
     const runFocus = () => {
-      if (scrollContainer) {
-        focusActiveNodeInScrollContainer(scrollContainer, activeEl);
-        return;
-      }
-
-      activeEl.scrollIntoView({ block: "center", behavior: "auto" });
+      const bannerHeight = hudBannerRef?.current?.offsetHeight ?? 0;
+      focusActiveNodeInScrollContainer(
+        scrollContainer,
+        activeEl,
+        bannerHeight,
+      );
     };
 
     runFocus();
@@ -261,18 +268,18 @@ export function AcademySkillTrack({
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [activeStepIndex, scrollContainerRef]);
+  }, [activeStepIndex, scrollContainerRef, hudBannerRef]);
 
   return (
     <section
       aria-labelledby="academy-journey-heading"
-      className="w-full max-w-full overflow-x-hidden bg-white pb-4"
+      className="relative z-0 w-full max-w-full bg-white pb-4"
     >
-      <DashboardSectionHeading id="academy-journey-heading" className="mb-3">
+      <DashboardSectionHeading id="academy-journey-heading" className="mb-3 px-1">
         {copy.heading}
       </DashboardSectionHeading>
 
-      <div className="relative mx-auto w-full max-w-full overflow-x-hidden pt-12">
+      <div className="relative mx-auto w-full max-w-full px-1 pt-4">
         <div
           className="relative w-full"
           style={{ height: trackHeightPx }}
@@ -291,7 +298,7 @@ export function AcademySkillTrack({
                     style={{ height: slotHeight }}
                   >
                     <div
-                      className="absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+                      className="absolute top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
                       style={{ left: `${anchorX}%` }}
                     >
                       <AcademyNode milestone={milestone} />

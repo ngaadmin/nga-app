@@ -1,12 +1,6 @@
-import type { Metadata } from "next";
-import { HomeDashboard } from "@/components/dashboard/home-dashboard";
-import { copyMatrix } from "@/constants/copyMatrix";
+import { redirect } from "next/navigation";
+import { DASHBOARD_SETTINGS_HREF } from "@/lib/dashboard/navigation";
 
-export const metadata: Metadata = {
-  title: copyMatrix.dashboard.home.title,
-  description: copyMatrix.dashboard.home.description,
-};
-
-export default function HomePage() {
-  return <HomeDashboard />;
+export default function LegacyHomeRedirectPage() {
+  redirect(DASHBOARD_SETTINGS_HREF);
 }

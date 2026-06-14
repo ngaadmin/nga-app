@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import {
+  ONBOARDING_START_PATH,
+  readGhostAccessSession,
+} from "@/lib/onboarding/ghost-session";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -17,7 +20,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   useEffect(() => {
     const session = readGhostAccessSession();
     if (!session) {
-      router.replace("/onboarding/start");
+      router.replace(ONBOARDING_START_PATH);
     }
   }, [router]);
 

@@ -4,18 +4,54 @@ export const copyMatrix = {
   dashboard: {
     greeting: "Hey, [Username]! Let's build wealth.",
     subheading: "Pick your path",
-    home: {
-      title: "Home",
+    settings: {
+      title: "Settings",
       description:
         "Your account cockpit — manage settings, parent tools, and point conversion.",
       account: {
         passwordReset: "Password Reset",
+        changeParentPin: "Change Parent PIN",
         subscriptionStatus: "Account & Subscription Status",
         logOut: "Log Out",
       },
+      profile: {
+        joinDateLabel: "Joined",
+      },
       parentMode: {
-        label: "Switch to Parent Mode",
+        label: "Parent Mode",
+        shortLabel: "Parent",
         enabledHint: "Parent mode is on — conversion settings are unlocked.",
+        pinTitle: "Parent PIN Required",
+        pinBody:
+          "Enter the parent PIN to unlock conversion controls. Kids can't flip this on their own.",
+        setupTitle: "Set Parent PIN",
+        setupBody:
+          "No parent PIN yet. Choose a 4-digit code to secure conversion controls.",
+        setupNewLabel: "New PIN",
+        pinPlaceholder: "4-digit PIN",
+        setupConfirmLabel: "Confirm new PIN",
+        pinError: "Wrong PIN — nice try.",
+        setupMismatch: "PINs don't match — try again.",
+        pinConfirm: "Unlock Parent Mode",
+        setupSave: "Save & Unlock Parent Mode",
+        pinCancel: "Cancel",
+      },
+      changePin: {
+        title: "Change Parent PIN",
+        body: "Verify your current PIN, then set a new 4-digit parent code.",
+        currentLabel: "Current PIN",
+        newLabel: "New PIN",
+        confirmLabel: "Confirm new PIN",
+        currentError: "Current PIN doesn't match.",
+        newInvalid: "New PIN must be exactly 4 digits.",
+        mismatch: "New PINs don't match — try again.",
+        sameAsOld: "Pick a different PIN than your current one.",
+        forgotPin: "Forgot PIN?",
+        forgotPinSending: "Sending recovery code…",
+        forgotPinSuccess:
+          "Recovery code {code} sent to {email}. Use it as your current PIN, then set a new one.",
+        save: "Save New PIN",
+        cancel: "Cancel",
       },
       conversion: {
         heading: "Parent Points Conversion Rate",
@@ -104,6 +140,11 @@ export const copyMatrix = {
       description:
         "Your wealth cockpit. Track your assets, revenue, and watch your net worth climb.",
     },
+    achievements: {
+      title: "Achievements",
+      description:
+        "Your badge cabinet — track Bronze, Silver, and Gold breakthroughs across Academy and Engine.",
+    },
   },
   home: {
     streak: {
@@ -151,5 +192,5 @@ export const copyMatrix = {
 
 export type DashboardCopyPillar = keyof Pick<
   typeof copyMatrix.dashboard,
-  "home" | "academy" | "engine" | "vault"
+  "settings" | "academy" | "engine" | "vault" | "achievements"
 >;

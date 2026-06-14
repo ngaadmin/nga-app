@@ -1,3 +1,5 @@
+import { copyMatrix } from "@/constants/copyMatrix";
+
 export type AcademyNodeStatus = "active" | "locked" | "completed";
 
 /** One high-level map node — kept for the existing 6-node journey UI. */
@@ -15,6 +17,168 @@ export const LESSONS_PER_LEVEL = 9;
 export const PHASE_1_LEVEL_COUNT = 6;
 
 export const PHASE_1_MILESTONE_COUNT = 54;
+
+/** Module titles aligned with copyMatrix journey nodes (Modules 1–6). */
+export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
+  1: copyMatrix.dashboard.academy.journey.nodes[0]?.subtitle ?? "The Cash Stash",
+  2:
+    copyMatrix.dashboard.academy.journey.nodes[1]?.subtitle ??
+    "Leveling Up Your Loot",
+  3:
+    copyMatrix.dashboard.academy.journey.nodes[2]?.subtitle ??
+    "The Interest Multiplier",
+  4:
+    copyMatrix.dashboard.academy.journey.nodes[3]?.subtitle ??
+    "Goal Crusher: Console Quest",
+  5:
+    copyMatrix.dashboard.academy.journey.nodes[4]?.subtitle ??
+    "Scammer Defense Shield",
+  6:
+    copyMatrix.dashboard.academy.journey.nodes[5]?.subtitle ??
+    "Savings Streak Builder",
+};
+
+/**
+ * Fallback lesson topic strings per module (Lessons 1–9).
+ * Lesson 9 is the phase-closer checkpoint for each module.
+ */
+export const ACADEMY_LESSON_TOPICS_BY_MODULE: Record<
+  AcademyLevelId,
+  readonly [string, string, string, string, string, string, string, string, string]
+> = {
+  1: [
+    "Money In, Money Out",
+    "Needs vs Wants Sort",
+    "The 50/30/20 Split",
+    "Pocket Money Map",
+    "Track Every Coin",
+    "Save-First Power",
+    "Spending Triggers",
+    "Stash Audit",
+    "Cash Stash Checkpoint",
+  ],
+  2: [
+    "Income Sources 101",
+    "Side Hustle Spark",
+    "Value Your Time",
+    "Pricing Your Skills",
+    "Negotiation Basics",
+    "Raise Your Rates",
+    "Passive Income Intro",
+    "Loot Leverage Review",
+    "Loot Level Checkpoint",
+  ],
+  3: [
+    "Interest Explained",
+    "Compound Growth",
+    "APR vs APY",
+    "Savings Account Power",
+    "Rule of 72",
+    "Inflation Reality Check",
+    "Time Value of Money",
+    "Multiplier Math Lab",
+    "Interest Checkpoint",
+  ],
+  4: [
+    "Set a Real Goal",
+    "Break Goals Into Steps",
+    "Console Quest Budget",
+    "Trade-Off Decisions",
+    "Delay Gratification",
+    "Goal Timeline Map",
+    "Progress Check Ritual",
+    "Crush the Milestone",
+    "Goal Crusher Checkpoint",
+  ],
+  5: [
+    "Spot the Red Flags",
+    "Phishing & Fake Links",
+    "Too-Good-To-Be-True Offers",
+    "Password & Privacy Basics",
+    "Social Media Scams",
+    "In-App Purchase Traps",
+    "Report & Block Playbook",
+    "Defense Drill",
+    "Scam Shield Checkpoint",
+  ],
+  6: [
+    "Build the Streak Habit",
+    "Weekly Save Challenge",
+    "Automate Your Stash",
+    "Celebrate Small Wins",
+    "Streak Recovery Plan",
+    "Long-Term Consistency",
+    "Streak + Goal Combo",
+    "Final Push Review",
+    "Savings Streak Checkpoint",
+  ],
+};
+
+export type AcademyContextBannerState = {
+  moduleNumber: AcademyLevelId;
+  lessonNumber: number;
+  topic: string;
+  label: string;
+};
+
+/** Lesson index 1–9 inside a module from a global milestone id. */
+export function lessonNumberForMilestoneId(milestoneId: number): number {
+  const clamped = Math.min(
+    PHASE_1_MILESTONE_COUNT,
+    Math.max(1, Math.floor(milestoneId)),
+  );
+  return ((clamped - 1) % LESSONS_PER_LEVEL) + 1;
+}
+
+/** Resolve the lesson topic fallback for a milestone position. */
+export function academyLessonTopicForMilestone(
+  milestone: AcademyLessonMilestoneNode | null | undefined,
+): string {
+  if (!isRenderableAcademyMilestone(milestone)) {
+    return ACADEMY_LESSON_TOPICS_BY_MODULE[1][0];
+  }
+
+  const lessonNumber = lessonNumberForMilestoneId(milestone.id);
+  const topics = ACADEMY_LESSON_TOPICS_BY_MODULE[milestone.levelGroup];
+  return topics[lessonNumber - 1] ?? ACADEMY_MODULE_TITLES[milestone.levelGroup];
+}
+
+/** Pick the user's current structural position from the milestone scaffold. */
+export function resolveActiveAcademyMilestone(
+  milestones: readonly AcademyLessonMilestoneNode[],
+): AcademyLessonMilestoneNode | null {
+  const safe = milestones.filter(isRenderableAcademyMilestone);
+  if (safe.length === 0) return null;
+
+  const active = safe.find((node) => node.status === "active");
+  if (active) return active;
+
+  const lastCompleted = [...safe]
+    .reverse()
+    .find((node) => node.status === "completed");
+  if (lastCompleted) return lastCompleted;
+
+  return safe[0] ?? null;
+}
+
+/** Build the banner copy: "Module X, Lesson Y: Z". */
+export function resolveAcademyContextBanner(
+  milestones: readonly AcademyLessonMilestoneNode[],
+): AcademyContextBannerState {
+  const milestone = resolveActiveAcademyMilestone(milestones);
+  const moduleNumber = milestone?.levelGroup ?? 1;
+  const lessonNumber = milestone
+    ? lessonNumberForMilestoneId(milestone.id)
+    : 1;
+  const topic = academyLessonTopicForMilestone(milestone);
+
+  return {
+    moduleNumber,
+    lessonNumber,
+    topic,
+    label: `Module ${moduleNumber}, Lesson ${lessonNumber}: ${topic}`,
+  };
+}
 
 /** Distinct phase colors for each Academy level block (Duolingo-style map). */
 export const ACADEMY_LEVEL_PHASE_THEME: Record<

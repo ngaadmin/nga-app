@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-session-redirect";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -8,7 +9,9 @@ export const metadata: Metadata = {
 
 export default function OnboardingSignInPage() {
   return (
-    <section className="flex flex-1 flex-col justify-center py-12">
+    <>
+      <OnboardingSessionRedirect />
+      <section className="flex flex-1 flex-col justify-center py-12">
       <h1 className="font-heading text-2xl font-bold text-nga-primary">
         Welcome back.
       </h1>
@@ -22,5 +25,6 @@ export default function OnboardingSignInPage() {
         ← Back to entry
       </Link>
     </section>
+    </>
   );
 }

@@ -5,7 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
+  type ComponentType,
 } from "react";
 import {
   getComplianceTier,
@@ -13,13 +13,15 @@ import {
   type ComplianceTier,
 } from "@/lib/onboarding/ghost-session";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
-import { JourneyPathBridge } from "@/components/dashboard/journey-path-bridge";
-import { resolveActiveStepIndex } from "@/lib/dashboard/resolve-active-step-index";
 import {
-  cycleStagger,
-  type JourneyStaggerSide,
-} from "@/lib/dashboard/journey-stagger";
-import { LockIcon } from "@/lib/dashboard/icons";
+  LightbulbIcon,
+  LockIcon,
+  SparklesIcon,
+  TargetIcon,
+  TrendingUpIcon,
+  TrophyIcon,
+  ZapIcon,
+} from "@/lib/dashboard/icons";
 import {
   buildCloseBusinessWarningLead,
   resolveFinnAddressName,
@@ -206,14 +208,76 @@ const VENTURE_JOURNEY_STEPS: Record<
   ],
 };
 
-const JOURNEY_STAGGER: readonly JourneyStaggerSide[] = [
-  "left",
-  "right",
-  "left",
-  "right",
+const floatingTileClass = "rounded-2xl border-0 bg-white shadow-md";
+
+/** Sine wave layout — matches Academy floating snake path. */
+const SINE_CENTER_X = 50;
+const SINE_AMPLITUDE = 16;
+const SINE_FREQUENCY = 0.72;
+const REGULAR_NODE_SIZE_PX = 48;
+const MILESTONE_NODE_SIZE_PX = 61;
+const NODE_GAP_PX = 32;
+
+const VENTURE_PATH_THEME = {
+  fill: "#FFA503",
+  shadow: "#C88202",
+  ring: "rgba(255, 165, 3, 0.4)",
+};
+
+type VentureLessonIconKind =
+  | "target"
+  | "lightbulb"
+  | "sparkles"
+  | "zap"
+  | "trending-up"
+  | "trophy";
+
+const VENTURE_LESSON_ICON_SEQUENCE: readonly VentureLessonIconKind[] = [
+  "target",
+  "lightbulb",
+  "sparkles",
+  "zap",
+  "trending-up",
 ];
 
-const floatingTileClass = "rounded-2xl border-0 bg-white shadow-md";
+const VENTURE_LESSON_ICON_MAP: Record<
+  VentureLessonIconKind,
+  ComponentType<{ className?: string }>
+> = {
+  target: TargetIcon,
+  lightbulb: LightbulbIcon,
+  sparkles: SparklesIcon,
+  zap: ZapIcon,
+  "trending-up": TrendingUpIcon,
+  trophy: TrophyIcon,
+};
+
+function ventureSnakeAnchorX(index: number): number {
+  if (!Number.isFinite(index) || index < 0) return SINE_CENTER_X;
+  const raw = SINE_CENTER_X + SINE_AMPLITUDE * Math.sin(index * SINE_FREQUENCY);
+  return Math.min(72, Math.max(28, raw));
+}
+
+function isVentureBossMilestone(index: number, total: number): boolean {
+  return index === total - 1;
+}
+
+function ventureLessonIconKind(
+  index: number,
+  total: number,
+): VentureLessonIconKind {
+  if (isVentureBossMilestone(index, total)) return "trophy";
+  return (
+    VENTURE_LESSON_ICON_SEQUENCE[index % VENTURE_LESSON_ICON_SEQUENCE.length] ??
+    "target"
+  );
+}
+
+function ventureNodeSlotHeightPx(index: number, total: number): number {
+  return isVentureBossMilestone(index, total)
+    ? MILESTONE_NODE_SIZE_PX
+    : REGULAR_NODE_SIZE_PX;
+}
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
@@ -449,11 +513,99 @@ function BusinessIdeasCarousel({
   );
 }
 
-function CheckmarkBadge() {
+function VentureMilestoneIcon({
+  kind,
+  className,
+}: {
+  kind: VentureLessonIconKind;
+  className?: string;
+}) {
+  const Icon = VENTURE_LESSON_ICON_MAP[kind] ?? TargetIcon;
+  return <Icon className={className} />;
+}
+
+type VentureJourneyNodeProps = {
+  milestone: JourneyMilestone;
+  index: number;
+  total: number;
+  onLaunch?: () => void;
+};
+
+function VentureJourneyNode({
+  milestone,
+  index,
+  total,
+  onLaunch,
+}: VentureJourneyNodeProps) {
+  const isBoss = isVentureBossMilestone(index, total);
+  const iconKind = ventureLessonIconKind(index, total);
+  const isActive = milestone.status === "active";
+  const isCompleted = milestone.status === "completed";
+  const isLocked = milestone.status === "locked";
+  const showVentureColor = isCompleted || isActive;
+
+  const circleStyle = showVentureColor
+    ? {
+        backgroundColor: VENTURE_PATH_THEME.fill,
+        borderBottomColor: VENTURE_PATH_THEME.shadow,
+        boxShadow: isActive
+          ? `0 4px 0 ${VENTURE_PATH_THEME.shadow}, 0 0 0 4px ${VENTURE_PATH_THEME.ring}`
+          : `0 3px 0 ${VENTURE_PATH_THEME.shadow}`,
+      }
+    : undefined;
+
+  const circle = (
+    <div
+      className={cn(
+        "relative flex items-center justify-center rounded-full transition-all duration-75",
+        isBoss ? "h-[3.8125rem] w-[3.8125rem]" : "h-12 w-12",
+        isLocked
+          ? "border-0 bg-gray-100 text-gray-400 shadow-sm"
+          : "border-0 border-b-[4px] text-white",
+        isActive && "group-active:translate-y-[2px] group-active:border-b-[2px]",
+      )}
+      style={circleStyle}
+    >
+      <VentureMilestoneIcon
+        kind={iconKind}
+        className={isBoss ? "size-6" : "size-5"}
+      />
+      {isLocked ? (
+        <span
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-white text-gray-400 shadow-sm",
+            isBoss ? "size-5" : "size-4",
+          )}
+        >
+          <LockIcon className={isBoss ? "size-3" : "size-2.5"} />
+        </span>
+      ) : null}
+    </div>
+  );
+
+  if (isActive && onLaunch) {
+    return (
+      <button
+        type="button"
+        onClick={onLaunch}
+        aria-label={`${milestone.title} — launch now`}
+        className="group rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0CC1E0]"
+      >
+        {circle}
+      </button>
+    );
+  }
+
   return (
-    <span className="flex size-5 items-center justify-center rounded-full bg-[#86EFAC] font-heading text-xs font-bold text-[#031F82]">
-      ✓
-    </span>
+    <div
+      className={cn(isLocked && "opacity-55")}
+      aria-label={
+        isLocked ? `${milestone.title} — locked` : milestone.title
+      }
+      role="img"
+    >
+      {circle}
+    </div>
   );
 }
 
@@ -468,10 +620,19 @@ function VentureJourneyMap({
   milestones,
   onLaunchStep,
 }: VentureJourneyMapProps) {
-  const activeStepIndex = useMemo(
-    () => resolveActiveStepIndex(milestones),
+  const anchorXs = useMemo(
+    () => milestones.map((_, index) => ventureSnakeAnchorX(index)),
     [milestones],
   );
+
+  const trackHeightPx = useMemo(() => {
+    if (milestones.length === 0) return 0;
+    const slotHeights = milestones.reduce(
+      (sum, _, index) => sum + ventureNodeSlotHeightPx(index, milestones.length),
+      0,
+    );
+    return slotHeights + (milestones.length - 1) * NODE_GAP_PX;
+  }, [milestones]);
 
   return (
     <section
@@ -487,101 +648,52 @@ function VentureJourneyMap({
         </h2>
       </div>
 
-      <div className="relative mt-3 min-h-0 flex-1 overflow-y-auto bg-white py-1">
-        <div className="relative z-10 flex flex-col">
-          {milestones.map((milestone, index) => {
-            const stagger = cycleStagger(JOURNEY_STAGGER, index);
-            const nextStagger =
-              index < milestones.length - 1
-                ? cycleStagger(JOURNEY_STAGGER, index + 1)
-                : null;
-            const alignment =
-              stagger === "left"
-                ? "self-start"
-                : stagger === "right"
-                  ? "self-end"
-                  : "self-center";
+      <div className="relative mt-3 min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-white py-1">
+        <div className="relative mx-auto w-full max-w-full overflow-x-hidden pt-4">
+          <div className="relative w-full" style={{ height: trackHeightPx }}>
+            <div className="relative flex w-full flex-col">
+              {milestones.map((milestone, index) => {
+                const anchorX = anchorXs[index] ?? SINE_CENTER_X;
+                const slotHeight = ventureNodeSlotHeightPx(
+                  index,
+                  milestones.length,
+                );
 
-            let nodeElement: ReactNode;
-
-            if (milestone.status === "completed") {
-              nodeElement = (
-                <div
-                  className={cn(
-                    "relative z-10 flex w-[min(100%,9rem)] flex-col items-center gap-1",
-                    alignment,
-                  )}
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-[#86EFAC]/40 shadow-sm">
-                    <CheckmarkBadge />
-                  </div>
-                  <span className="text-center font-heading text-[10px] font-bold text-[#031F82]">
-                    {milestone.title}
-                  </span>
-                  <span className="font-heading text-[8px] font-bold uppercase tracking-wide text-[#22C55E]">
-                    Done
-                  </span>
-                </div>
-              );
-            } else if (milestone.status === "active") {
-              nodeElement = (
-                <button
-                  type="button"
-                  onClick={() => onLaunchStep(venture.id, milestone.title)}
-                  className={cn(
-                    "group relative z-10 flex w-[min(100%,9rem)] flex-col items-center gap-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0CC1E0]",
-                    alignment,
-                  )}
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-b-[3px] border-b-[#C88202] bg-[#FFA503] font-heading text-lg font-extrabold text-white shadow-lg shadow-[#FFA503]/35 ring-4 ring-[#FFA503]/25 transition-all duration-75 group-active:translate-y-[2px] group-active:border-b-0">
-                    {index + 1}
-                  </div>
-                  <span className="text-center font-heading text-[10px] font-bold text-[#031F82]">
-                    {milestone.title}
-                  </span>
-                  <span className="font-heading text-[8px] font-bold uppercase tracking-wide text-[#FFA503]">
-                    Launch Now
-                  </span>
-                </button>
-              );
-            } else {
-              nodeElement = (
-                <div
-                  className={cn(
-                    "relative z-10 flex w-[min(100%,9rem)] flex-col items-center gap-1 opacity-60",
-                    alignment,
-                  )}
-                  aria-label={`${milestone.title} — locked`}
-                >
-                  <div className="relative flex h-11 w-11 items-center justify-center rounded-full border-0 bg-gray-50 text-gray-400 shadow-sm">
-                    <span className="font-heading text-sm font-bold text-gray-400">
-                      {index + 1}
-                    </span>
-                    <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-white shadow-sm">
-                      <LockIcon className="size-2" />
-                    </span>
-                  </div>
-                  <span className="text-center font-heading text-[10px] font-bold text-gray-400">
-                    {milestone.title}
-                  </span>
-                </div>
-              );
-            }
-
-            return (
-              <Fragment key={milestone.id}>
-                {nodeElement}
-                {nextStagger ? (
-                  <JourneyPathBridge
-                    fromStagger={stagger}
-                    toStagger={nextStagger}
-                    segmentIndex={index}
-                    activeStepIndex={activeStepIndex}
-                  />
-                ) : null}
-              </Fragment>
-            );
-          })}
+                return (
+                  <Fragment key={milestone.id}>
+                    <div
+                      className="relative w-full shrink-0"
+                      style={{ height: slotHeight }}
+                    >
+                      <div
+                        className="absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+                        style={{ left: `${anchorX}%` }}
+                      >
+                        <VentureJourneyNode
+                          milestone={milestone}
+                          index={index}
+                          total={milestones.length}
+                          onLaunch={
+                            milestone.status === "active"
+                              ? () =>
+                                  onLaunchStep(venture.id, milestone.title)
+                              : undefined
+                          }
+                        />
+                      </div>
+                    </div>
+                    {index < milestones.length - 1 ? (
+                      <div
+                        className="shrink-0"
+                        style={{ height: NODE_GAP_PX }}
+                        aria-hidden
+                      />
+                    ) : null}
+                  </Fragment>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -44,7 +44,10 @@ export function DashboardStatusHeader() {
   const streakCopy = copyMatrix.home.streak;
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 px-4 py-2 backdrop-blur-sm sm:px-6">
+    <header
+      data-dashboard-status-header
+      className="sticky top-0 z-30 bg-white/95 px-4 py-2 backdrop-blur-sm sm:px-6"
+    >
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
           <StatusPill

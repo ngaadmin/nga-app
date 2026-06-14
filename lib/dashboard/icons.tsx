@@ -52,7 +52,7 @@ export function AcademyIcon({ className }: IconProps) {
   );
 }
 
-/** Factory / wrench placeholder for The Engine. */
+/** Checkered flag icon for The Engine navigation. */
 export function EngineIcon({ className }: IconProps) {
   return (
     <svg
@@ -65,23 +65,28 @@ export function EngineIcon({ className }: IconProps) {
       aria-hidden
     >
       <path
-        d="M14.7 6.3a1 1 0 0 0 0-1.4l-1.4-1.4a1 1 0 0 0-1.4 0l-1.1 1.1-5.1 5.1a3 3 0 1 0 4.2 4.2l5.1-5.1 1.1-1.1Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M18 10l2 2m-1 5a4 4 0 1 1-2-2"
+        d="M5 3v18"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
       />
-      <circle cx="8" cy="16" r="2" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M5 4h12l-1.5 2L17 8l-1.5 2L17 12l-1.5 2L17 16l-1.5 2L17 20H5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <rect x="7" y="6" width="3" height="3" fill="currentColor" />
+      <rect x="13" y="6" width="3" height="3" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="7" y="12" width="3" height="3" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="13" y="12" width="3" height="3" fill="currentColor" />
+      <rect x="7" y="18" width="3" height="3" fill="currentColor" />
+      <rect x="13" y="18" width="3" height="3" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }
 
-/** Safe / bank placeholder for The Vault. */
+/** Banking vault / safe icon for The Vault navigation. */
 export function VaultIcon({ className }: IconProps) {
   return (
     <svg
@@ -95,25 +100,161 @@ export function VaultIcon({ className }: IconProps) {
     >
       <rect
         x="3"
-        y="5"
+        y="4"
         width="18"
-        height="14"
+        height="16"
         rx="2"
         stroke="currentColor"
         strokeWidth="2"
       />
-      <circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="2" />
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
       <path
-        d="M7 9h.01M17 9h.01"
+        d="M12 8v1M12 15v1M8.5 12h1M14.5 12h1"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 4V3M16 4V3"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+/** Trophy icon for Achievements navigation. */
+export function AchievementsIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
       <path
-        d="M12 5V3"
+        d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 4H5a1 1 0 0 0-1 1v1a3 3 0 0 0 3 3M17 4h2a1 1 0 0 1 1 1v1a3 3 0 0 1-3 3"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Cog wheel icon for Settings navigation. */
+export function SettingsIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.09V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87-.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.09-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0 .34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 .4 1.09 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.09.4H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.09.4 1.7 1.7 0 0 0-.6 1Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Key icon for password / security settings. */
+export function KeyIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="m11 12 9-9M16 4h4v4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Card icon for subscription / billing settings. */
+export function BillingCardIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <rect
+        x="3"
+        y="6"
+        width="18"
+        height="12"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M7 15h4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** Log out icon for account exit. */
+export function LogOutIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M10 17 15 12 10 7M15 12H4M15 4h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

@@ -1,12 +1,18 @@
 import type { ComponentType } from "react";
 import {
   AcademyIcon,
+  AchievementsIcon,
   EngineIcon,
-  HomeIcon,
+  SettingsIcon,
   VaultIcon,
 } from "@/lib/dashboard/icons";
 
-export type DashboardPillar = "home" | "academy" | "engine" | "vault";
+export type DashboardPillar =
+  | "academy"
+  | "engine"
+  | "vault"
+  | "achievements"
+  | "settings";
 
 export type DashboardNavItem = {
   id: DashboardPillar;
@@ -16,12 +22,6 @@ export type DashboardNavItem = {
 };
 
 export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
-  {
-    id: "home",
-    label: "Home",
-    href: "/dashboard/home",
-    Icon: HomeIcon,
-  },
   {
     id: "academy",
     label: "The Academy",
@@ -40,20 +40,26 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
     href: "/dashboard/vault",
     Icon: VaultIcon,
   },
+  {
+    id: "achievements",
+    label: "Achievements",
+    href: "/dashboard/achievements",
+    Icon: AchievementsIcon,
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    href: "/dashboard/settings",
+    Icon: SettingsIcon,
+  },
 ] as const;
 
-export const DASHBOARD_HOME_HREF = "/dashboard/home" as const;
+export const DASHBOARD_SETTINGS_HREF = "/dashboard/settings" as const;
+export const DASHBOARD_DEFAULT_HREF = "/dashboard/academy" as const;
 
 export function isNavItemActive(
   pathname: string,
   href: DashboardNavItem["href"],
 ): boolean {
-  if (
-    href === DASHBOARD_HOME_HREF &&
-    (pathname === "/dashboard" || pathname === DASHBOARD_HOME_HREF)
-  ) {
-    return true;
-  }
-
   return pathname === href || pathname.startsWith(`${href}/`);
 }

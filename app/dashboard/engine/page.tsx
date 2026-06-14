@@ -129,13 +129,13 @@ const BUSINESS_IDEAS: readonly BusinessIdea[] = [
 
 const BUSINESS_IDEA_BRIEFS: Record<VentureBlueprintId, string> = {
   "dog-walking":
-    "Finn's take: leashes up, neighborhood mapped, tails wagging — you're about to turn daily walks into steady cash. Low startup, high smiles.",
+    "Finn's take: leashes up, neighborhood mapped, tails wagging - you're about to turn daily walks into steady cash. Low startup, high smiles.",
   "lawn-mowing":
     "Finn's take: grab the mower, quote your first yard, and watch grass clippings turn into green in your pocket. Summer hustle, unlocked.",
   "lemonade-stand":
-    "Finn's take: ice cold, price bold, corner claimed — this classic play teaches pricing, pitch, and profit in one sunny afternoon.",
+    "Finn's take: ice cold, price bold, corner claimed - this classic play teaches pricing, pitch, and profit in one sunny afternoon.",
   "car-wash":
-    "Finn's take: buckets, suds, shine — neighbors love a clean ride and you'll love repeat bookings. Premium hustle for founders ready to level up.",
+    "Finn's take: buckets, suds, shine - neighbors love a clean ride and you'll love repeat bookings. Premium hustle for founders ready to level up.",
   "pet-sitting":
     "Finn's take: trusted sitter energy wins every time. Build a care checklist, earn trust, and stack bookings while pet parents travel stress-free.",
   "handmade-crafts":
@@ -143,9 +143,9 @@ const BUSINESS_IDEA_BRIEFS: Record<VentureBlueprintId, string> = {
   "furniture-flipping":
     "Finn's take: find the rough gem, restore the glow, flip for profit. Eye for value plus elbow grease equals founder flex.",
   "digital-art-shop":
-    "Finn's take: brand your style, upload your art, open shop online — your designs deserve a storefront and your first sale is waiting.",
+    "Finn's take: brand your style, upload your art, open shop online - your designs deserve a storefront and your first sale is waiting.",
   "tech-support-tutoring":
-    "Finn's take: you already speak tech fluently. Package that skill, help one person, then another — digital helper status incoming.",
+    "Finn's take: you already speak tech fluently. Package that skill, help one person, then another - digital helper status incoming.",
 };
 
 const VENTURE_JOURNEY_STEPS: Record<
@@ -210,7 +210,7 @@ const VENTURE_JOURNEY_STEPS: Record<
 
 const floatingTileClass = "rounded-2xl border-0 bg-white shadow-md";
 
-/** Sine wave layout — matches Academy floating snake path. */
+/** Sine wave layout - matches Academy floating snake path. */
 const SINE_CENTER_X = 50;
 const SINE_AMPLITUDE = 16;
 const SINE_FREQUENCY = 0.72;
@@ -369,7 +369,7 @@ function InProgressCarousel({
       </DashboardSectionHeading>
       {ventures.length === 0 ? (
         <p className="py-3 font-sans text-xs text-[#1E3A5F]/70">
-          No active ventures yet — pick a business idea below to launch.
+          No active ventures yet - pick a business idea below to launch.
         </p>
       ) : (
         <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -588,7 +588,7 @@ function VentureJourneyNode({
       <button
         type="button"
         onClick={onLaunch}
-        aria-label={`${milestone.title} — launch now`}
+        aria-label={`${milestone.title} - launch now`}
         className="group rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0CC1E0]"
       >
         {circle}
@@ -600,7 +600,7 @@ function VentureJourneyNode({
     <div
       className={cn(isLocked && "opacity-55")}
       aria-label={
-        isLocked ? `${milestone.title} — locked` : milestone.title
+        isLocked ? `${milestone.title} - locked` : milestone.title
       }
       role="img"
     >
@@ -907,7 +907,7 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
           onClick={onClose}
           className="mt-3 w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/60"
         >
-          Not yet — keep exploring
+          Not yet - keep exploring
         </button>
       </div>
     </div>
@@ -1008,7 +1008,7 @@ export default function EnginePage() {
   }
 
   function handleLaunchStep(ventureId: VentureBlueprintId, stepTitle: string) {
-    console.log(`Engine step launch: ${ventureId} — ${stepTitle}`);
+    console.log(`Engine step launch: ${ventureId} - ${stepTitle}`);
   }
 
   return (

@@ -8,17 +8,27 @@ import {
   type ComponentType,
   type RefObject,
 } from "react";
+import {
+  AcademyModuleSignpost,
+  ACADEMY_MODULE_SIGNPOST_GAP_PX,
+  ACADEMY_MODULE_SIGNPOST_HEIGHT_PX,
+} from "@/components/academy/academy-module-signpost";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { resolveActiveStepIndex } from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
   getAcademyPhaseTheme,
+  isFirstMilestoneInModule,
   isPhaseCloserMilestone,
   isRenderableAcademyMilestone,
   lessonIconKindForMilestone,
   type AcademyLessonIconKind,
   type AcademyLessonMilestoneNode,
 } from "@/lib/dashboard/academy-state";
+import {
+  getMasteryCohortFromBirthYear,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import {
   LightbulbIcon,
   LockIcon,
@@ -28,6 +38,7 @@ import {
   TrophyIcon,
   ZapIcon,
 } from "@/lib/dashboard/icons";
+import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
 import { cn } from "@/lib/utils/cn";
 
 type AcademySkillTrackProps = {
@@ -36,7 +47,7 @@ type AcademySkillTrackProps = {
   hudBannerRef?: RefObject<HTMLDivElement | null>;
 };
 
-/** Sine wave layout — centered, gentle swing, never hugs screen edges. */
+/** Sine wave layout - centered, gentle swing, never hugs screen edges. */
 const SINE_CENTER_X = 50;
 const SINE_AMPLITUDE = 16;
 const SINE_FREQUENCY = 0.72;
@@ -71,6 +82,14 @@ function nodeSlotHeightPx(milestone: AcademyLessonMilestoneNode): number {
     : REGULAR_NODE_SIZE_PX;
 }
 
+function resolveMasteryCohort(): MasteryCohort {
+  const session = readGhostAccessSession();
+  if (session?.birthYear) {
+    return getMasteryCohortFromBirthYear(session.birthYear);
+  }
+  return "younger";
+}
+
 function resolveMilestoneIconKind(
   milestone: AcademyLessonMilestoneNode,
 ): AcademyLessonIconKind {
@@ -97,9 +116,9 @@ function milestoneAriaLabel(milestone: AcademyLessonMilestoneNode): string {
 
   if (milestone.status === "locked") {
     if (isPhaseCloser) {
-      return `Level ${milestone.levelGroup} milestone — ${copy.lockedLabel}`;
+      return `Level ${milestone.levelGroup} milestone - ${copy.lockedLabel}`;
     }
-    return `Academy step ${milestone.id} — ${copy.lockedLabel}`;
+    return `Academy step ${milestone.id} - ${copy.lockedLabel}`;
   }
 
   if (isPhaseCloser) {
@@ -220,6 +239,7 @@ export function AcademySkillTrack({
   const copy = copyMatrix.dashboard.academy.journey;
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
+  const masteryCohort = useMemo(() => resolveMasteryCohort(), []);
 
   const safeMilestones = useMemo(
     () => milestones.filter(isRenderableAcademyMilestone),
@@ -236,14 +256,28 @@ export function AcademySkillTrack({
     [safeMilestones],
   );
 
+  const moduleSignpostCount = useMemo(
+    () =>
+      safeMilestones.filter((milestone) =>
+        isFirstMilestoneInModule(milestone.id),
+      ).length,
+    [safeMilestones],
+  );
+
   const trackHeightPx = useMemo(() => {
     if (safeMilestones.length === 0) return 0;
+
     const slotHeights = safeMilestones.reduce(
       (sum, milestone) => sum + nodeSlotHeightPx(milestone),
       0,
     );
-    return slotHeights + (safeMilestones.length - 1) * NODE_GAP_PX;
-  }, [safeMilestones]);
+    const nodeGaps = (safeMilestones.length - 1) * NODE_GAP_PX;
+    const signpostBlocks =
+      moduleSignpostCount *
+      (ACADEMY_MODULE_SIGNPOST_HEIGHT_PX + ACADEMY_MODULE_SIGNPOST_GAP_PX);
+
+    return slotHeights + nodeGaps + signpostBlocks;
+  }, [safeMilestones, moduleSignpostCount]);
 
   useEffect(() => {
     if (lastFocusedStepRef.current === activeStepIndex) return;
@@ -289,9 +323,24 @@ export function AcademySkillTrack({
               const anchorX = anchorXs[index] ?? SINE_CENTER_X;
               const isActiveNode = milestone.status === "active";
               const slotHeight = nodeSlotHeightPx(milestone);
+              const showModuleSignpost = isFirstMilestoneInModule(milestone.id);
 
               return (
                 <Fragment key={milestone.id}>
+                  {showModuleSignpost ? (
+                    <>
+                      <AcademyModuleSignpost
+                        moduleNumber={milestone.levelGroup}
+                        milestones={safeMilestones}
+                        masteryCohort={masteryCohort}
+                      />
+                      <div
+                        className="shrink-0"
+                        style={{ height: ACADEMY_MODULE_SIGNPOST_GAP_PX }}
+                        aria-hidden
+                      />
+                    </>
+                  ) : null}
                   <div
                     ref={isActiveNode ? activeNodeRef : undefined}
                     className="relative w-full shrink-0"

@@ -11,7 +11,7 @@ function requireEnv(name: string): string {
   return value;
 }
 
-/** Call only when the integration is wired — avoids failing the Milestone 1 scaffold. */
+/** Call only when the integration is wired - avoids failing the Milestone 1 scaffold. */
 export function getOptionalEnv(name: string): string | undefined {
   return process.env[name];
 }

@@ -26,7 +26,7 @@ export function GhostModeSaveModal({ isOpen, onClose }: GhostModeSaveModalProps)
         onClick={(event) => event.stopPropagation()}
       >
         <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-          Free account — not premium
+          Free account - not premium
         </p>
         <h2
           id="ghost-save-title"
@@ -36,7 +36,7 @@ export function GhostModeSaveModal({ isOpen, onClose }: GhostModeSaveModalProps)
         </h2>
         <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
           Finn says your wins are riding on a ghost session right now. Create a
-          free account to keep your streak, jars, and venture roadmap safe —
+          free account to keep your streak, jars, and venture roadmap safe -
           no paid upgrade required.
         </p>
 

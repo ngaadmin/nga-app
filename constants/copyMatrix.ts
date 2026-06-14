@@ -7,7 +7,7 @@ export const copyMatrix = {
     settings: {
       title: "Settings",
       description:
-        "Your account cockpit — manage settings, parent tools, and point conversion.",
+        "Your account cockpit - manage settings, parent tools, and point conversion.",
       account: {
         passwordReset: "Password Reset",
         changeParentPin: "Change Parent PIN",
@@ -20,7 +20,7 @@ export const copyMatrix = {
       parentMode: {
         label: "Parent Mode",
         shortLabel: "Parent",
-        enabledHint: "Parent mode is on — conversion settings are unlocked.",
+        enabledHint: "Parent mode is on - conversion settings are unlocked.",
         pinTitle: "Parent PIN Required",
         pinBody:
           "Enter the parent PIN to unlock conversion controls. Kids can't flip this on their own.",
@@ -30,8 +30,8 @@ export const copyMatrix = {
         setupNewLabel: "New PIN",
         pinPlaceholder: "4-digit PIN",
         setupConfirmLabel: "Confirm new PIN",
-        pinError: "Wrong PIN — nice try.",
-        setupMismatch: "PINs don't match — try again.",
+        pinError: "Wrong PIN - nice try.",
+        setupMismatch: "PINs don't match - try again.",
         pinConfirm: "Unlock Parent Mode",
         setupSave: "Save & Unlock Parent Mode",
         pinCancel: "Cancel",
@@ -44,7 +44,7 @@ export const copyMatrix = {
         confirmLabel: "Confirm new PIN",
         currentError: "Current PIN doesn't match.",
         newInvalid: "New PIN must be exactly 4 digits.",
-        mismatch: "New PINs don't match — try again.",
+        mismatch: "New PINs don't match - try again.",
         sameAsOld: "Pick a different PIN than your current one.",
         forgotPin: "Forgot PIN?",
         forgotPinSending: "Sending recovery code…",
@@ -73,7 +73,7 @@ export const copyMatrix = {
         confirmAcknowledge: "Got it",
         cashInHeading: "Cash In Your Points",
         cashInRateHint:
-          "Your parent set the conversion rate — cash out when you are ready!",
+          "Your parent set the conversion rate - cash out when you are ready!",
         childPayoutReadoutTemplate: "You will receive {amount} straight into your Save Jar",
         claimCashReward: "Claim Cash Reward",
         successTitle: "Points Converted!",
@@ -143,7 +143,7 @@ export const copyMatrix = {
     achievements: {
       title: "Achievements",
       description:
-        "Your badge cabinet — track Bronze, Silver, and Gold breakthroughs across Academy and Engine.",
+        "Your badge cabinet - track Bronze, Silver, and Gold breakthroughs across Academy and Engine.",
     },
   },
   home: {

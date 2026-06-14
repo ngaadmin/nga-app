@@ -1,8 +1,9 @@
 import { copyMatrix } from "@/constants/copyMatrix";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 export type AcademyNodeStatus = "active" | "locked" | "completed";
 
-/** One high-level map node — kept for the existing 6-node journey UI. */
+/** One high-level map node - kept for the existing 6-node journey UI. */
 export type AcademyNodeState = {
   id: string;
   status: AcademyNodeStatus;
@@ -193,6 +194,59 @@ export const ACADEMY_LEVEL_PHASE_THEME: Record<
   6: { fill: "#DCB766", shadow: "#B8943F", ring: "rgba(220, 183, 102, 0.4)" },
 };
 
+/** Modules 5–6 unlock for Advanced mastery cohort (age 15+) only. */
+export const ACADEMY_AGE_GATED_MODULE_IDS: readonly AcademyLevelId[] = [5, 6];
+
+/** True on the first lesson node of each module (ids 1, 10, 19, 28, 37, 46). */
+export function isFirstMilestoneInModule(milestoneId: number): boolean {
+  return (
+    milestoneId > 0 &&
+    milestoneId <= PHASE_1_MILESTONE_COUNT &&
+    (milestoneId - 1) % LESSONS_PER_LEVEL === 0
+  );
+}
+
+export function milestonesForModule(
+  milestones: readonly AcademyLessonMilestoneNode[],
+  levelGroup: AcademyLevelId,
+): AcademyLessonMilestoneNode[] {
+  return milestones.filter(
+    (node) =>
+      isRenderableAcademyMilestone(node) && node.levelGroup === levelGroup,
+  );
+}
+
+/** Module not yet reached — every lesson node is still locked. */
+export function isModuleProgressionLocked(
+  levelGroup: AcademyLevelId,
+  milestones: readonly AcademyLessonMilestoneNode[],
+): boolean {
+  const moduleMilestones = milestonesForModule(milestones, levelGroup);
+  if (moduleMilestones.length === 0) return true;
+  return moduleMilestones.every((node) => node.status === "locked");
+}
+
+export function isModuleAgeGatedForCohort(
+  levelGroup: AcademyLevelId,
+  masteryCohort: MasteryCohort,
+): boolean {
+  return (
+    masteryCohort === "younger" &&
+    (ACADEMY_AGE_GATED_MODULE_IDS as readonly number[]).includes(levelGroup)
+  );
+}
+
+export function isModuleSignpostLocked(
+  levelGroup: AcademyLevelId,
+  milestones: readonly AcademyLessonMilestoneNode[],
+  masteryCohort: MasteryCohort,
+): boolean {
+  return (
+    isModuleProgressionLocked(levelGroup, milestones) ||
+    isModuleAgeGatedForCohort(levelGroup, masteryCohort)
+  );
+}
+
 export type AcademyLessonIconKind =
   | "target"
   | "lightbulb"
@@ -216,12 +270,12 @@ export function isPhaseCloserByIndex(index: number): boolean {
 
 const DEFAULT_PHASE_THEME = ACADEMY_LEVEL_PHASE_THEME[1];
 
-/** Safe phase theme lookup — never returns undefined. */
+/** Safe phase theme lookup - never returns undefined. */
 export function getAcademyPhaseTheme(levelGroup: AcademyLevelId) {
   return ACADEMY_LEVEL_PHASE_THEME[levelGroup] ?? DEFAULT_PHASE_THEME;
 }
 
-/** Runtime guard for map rendering — rejects nullish or malformed nodes. */
+/** Runtime guard for map rendering - rejects nullish or malformed nodes. */
 export function isRenderableAcademyMilestone(
   milestone: AcademyLessonMilestoneNode | null | undefined,
 ): milestone is AcademyLessonMilestoneNode {
@@ -238,7 +292,7 @@ export function isRenderableAcademyMilestone(
   );
 }
 
-/** Phase closer by milestone id — last node in each 9-lesson block. */
+/** Phase closer by milestone id - last node in each 9-lesson block. */
 export function isPhaseCloserMilestone(
   milestone: AcademyLessonMilestoneNode | null | undefined,
 ): boolean {
@@ -465,7 +519,7 @@ export function mapLevelsToNodes(
   });
 }
 
-/** Master 54-node Phase 1 path — primary source of truth for journey progress. */
+/** Master 54-node Phase 1 path - primary source of truth for journey progress. */
 export const ACADEMY_PHASE_1_MILESTONES: readonly AcademyLessonMilestoneNode[] =
   createDemoPhase1Milestones();
 
@@ -473,7 +527,7 @@ export const ACADEMY_PHASE_1_MILESTONES: readonly AcademyLessonMilestoneNode[] =
 export const ACADEMY_PHASE_1_LEVELS: readonly AcademyLevelState[] =
   deriveLevelsFromMilestones(ACADEMY_PHASE_1_MILESTONES);
 
-/** Placeholder Academy journey metrics — wire to centralized state engines later. */
+/** Placeholder Academy journey metrics - wire to centralized state engines later. */
 export const ACADEMY_JOURNEY_PLACEHOLDER_STATE = {
   dayStreak: 0,
   xp: 0,

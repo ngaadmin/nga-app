@@ -46,7 +46,7 @@ function SkillNode({ node, stagger }: SkillNodeProps) {
       <button
         type="button"
         onClick={() => {
-          console.log(`Skill node clicked: ${node.id} — ${title}`);
+          console.log(`Skill node clicked: ${node.id} - ${title}`);
         }}
         className={cn(
           "group flex w-[min(100%,14rem)] flex-col items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary",
@@ -74,7 +74,7 @@ function SkillNode({ node, stagger }: SkillNodeProps) {
   return (
     <div
       className={cn("flex w-[min(100%,14rem)] flex-col items-center gap-2", alignment)}
-      aria-label={`${title} — ${copy.lockedLabel}`}
+      aria-label={`${title} - ${copy.lockedLabel}`}
     >
       <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-gray-200 bg-gray-100 text-gray-400">
         {isLocked ? <LockIcon className="size-5" /> : null}

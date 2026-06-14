@@ -5,7 +5,7 @@ import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-se
 export const metadata: Metadata = {
   title: "Create Your Profile",
   description:
-    "Pick a nickname and birth year — your 5-second personalization gate.",
+    "Pick a nickname and birth year - your 5-second personalization gate.",
 };
 
 export default function OnboardingStartPage() {

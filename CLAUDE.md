@@ -14,9 +14,9 @@
 * **OpenAI Absolute Exclusion:** Under no circumstances are OpenAI, ChatGPT, or associated SDKs, libraries, or dependencies to be imported or referenced.
 
 ## 3. Brand Voice & UI Style Safeguards
-* **The Sjon Persona:** The AI must generate user-facing copy matching the "Cool, Savvy Mentor" identity—Bold, Fun, Direct, and Witty. Never lecture or talk down to the user.
+* **The Sjon Persona:** The AI must generate user-facing copy matching the "Cool, Savvy Mentor" identity-Bold, Fun, Direct, and Witty. Never lecture or talk down to the user.
 * **Tone Adaptability:** UI copy must align with the target user profiles: Short sentences and high-energy metaphors for Explorers (10-13); peer-to-peer respect focusing on leverage and independence for Titans (14-17+).
-* **Aesthetic Standard:** "Duolingo for Finance"—highly visual, low-text, interactive, gamified interface layouts.
+* **Aesthetic Standard:** "Duolingo for Finance"-highly visual, low-text, interactive, gamified interface layouts.
 
 ## 4. Ethical & Compliance Guardrails
 * **Financial Advice Ban:** The application code and underlying prompt configurations must never deliver specific financial advice or asset recommendations.

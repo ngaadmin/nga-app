@@ -8,7 +8,6 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { SkillTrophyShelf } from "@/components/dashboard/skill-trophy-shelf";
 import {
   DashboardSectionHeading,
   dashboardSectionHeadingClass,
@@ -699,7 +698,7 @@ export default function VaultPage() {
     {
       id: "ledger-welcome",
       message:
-        "Vault online, legend. Deposit income, funnel it into jars, and stack wins like a pro CFO — Finn's watching your moves.",
+        "Vault online, legend. Deposit income, funnel it into jars, and stack wins like a pro CFO - Finn's watching your moves.",
     },
   ]);
   const [coinFlights, setCoinFlights] = useState<CoinFlight[]>([]);
@@ -786,7 +785,7 @@ export default function VaultPage() {
     setMoneyToAllocate((current) => current + amount);
     setIncomeInput("");
     appendLedger(
-      `Income drop! ${formatCurrency(amount)} landed in Money to Allocate — Finn says funnel it where it counts.`,
+      `Income drop! ${formatCurrency(amount)} landed in Money to Allocate - Finn says funnel it where it counts.`,
     );
   }
 
@@ -822,7 +821,7 @@ export default function VaultPage() {
       );
       triggerCoinBurst("to-jar", jarIndex);
       appendLedger(
-        `Boom! ${formatCurrency(amount)} just flew into your ${jar.name} — Future-you is cheering!`,
+        `Boom! ${formatCurrency(amount)} just flew into your ${jar.name} - Future-you is cheering!`,
       );
     } else {
       if (amount > jar.balance) return;
@@ -837,7 +836,7 @@ export default function VaultPage() {
       setMoneyToAllocate((current) => current + amount);
       triggerCoinBurst("to-holding", jarIndex);
       appendLedger(
-        `Smart recall — ${formatCurrency(amount)} boomeranged from ${jar.name} back to Money to Allocate. Redeploy when ready.`,
+        `Smart recall - ${formatCurrency(amount)} boomeranged from ${jar.name} back to Money to Allocate. Redeploy when ready.`,
       );
     }
 
@@ -851,13 +850,6 @@ export default function VaultPage() {
         isOpen={premiumJarModalOpen}
         onClose={() => setPremiumJarModalOpen(false)}
       />
-
-      <section aria-labelledby="skill-medals-heading" className="w-full shrink-0">
-        <DashboardSectionHeading id="skill-medals-heading">
-          Your Skill Medals
-        </DashboardSectionHeading>
-        <SkillTrophyShelf />
-      </section>
 
       <section
         aria-labelledby="savings-stats-heading"

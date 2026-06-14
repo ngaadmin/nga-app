@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | NextGenAchievers",
   },
   description:
-    "Your AI-powered financial cockpit — learn, build, and level up your money game.",
+    "Your AI-powered financial cockpit - learn, build, and level up your money game.",
   applicationName: "NextGenAchievers",
 };
 

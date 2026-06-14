@@ -9,8 +9,12 @@ export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_test_seed_1500
 /** TEMP: Seed XP balance for child conversion / Vault routing QA. Remove before production. */
 export const TEMP_TEST_SEED_XP_BALANCE = 1500;
 
+/** Lifetime XP earned - never reduced when points are cashed into the Vault. */
+export const TEMP_TEST_SEED_LIFETIME_XP = 2800;
+
 export type PersistedDashboardWallet = {
   totalPoints: number;
+  lifetimePointsEarned: number;
   audSliderIndex: number;
   moneyToAllocate: number;
   jarBalances: JarBalanceMap;
@@ -19,6 +23,7 @@ export type PersistedDashboardWallet = {
 export function defaultDashboardWalletState(): PersistedDashboardWallet {
   return {
     totalPoints: TEMP_TEST_SEED_XP_BALANCE,
+    lifetimePointsEarned: TEMP_TEST_SEED_LIFETIME_XP,
     audSliderIndex: DEFAULT_AUD_SLIDER_INDEX,
     moneyToAllocate: 0,
     jarBalances: defaultJarBalances(),
@@ -66,8 +71,16 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
         }
       : defaultJarBalances();
 
+    const totalPoints = Math.max(0, Math.floor(parsed.totalPoints));
+    const lifetimePointsEarned =
+      typeof parsed.lifetimePointsEarned === "number" &&
+      Number.isFinite(parsed.lifetimePointsEarned)
+        ? Math.max(0, Math.floor(parsed.lifetimePointsEarned))
+        : Math.max(totalPoints, TEMP_TEST_SEED_LIFETIME_XP);
+
     return {
-      totalPoints: Math.max(0, Math.floor(parsed.totalPoints)),
+      totalPoints,
+      lifetimePointsEarned,
       audSliderIndex: parsed.audSliderIndex,
       moneyToAllocate: Math.max(0, parsed.moneyToAllocate),
       jarBalances,

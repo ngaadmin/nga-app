@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Corporate HEX palette — mirrored in `app/globals.css` (@theme) for Tailwind v4.
+ * Corporate HEX palette - mirrored in `app/globals.css` (@theme) for Tailwind v4.
  * Primary Base: #031F82 | Panel: #BDE9FB | Secondary: #0CC1E0
  * CTA Accent: #FFA503 | Design Accent: #DCB766
  */

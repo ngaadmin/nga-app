@@ -57,7 +57,7 @@ export default function DesignSystemPage() {
             NextGenAchievers Design System
           </h1>
           <p className="mt-4 max-w-2xl font-sans text-base leading-relaxed text-nga-slate">
-            Milestone 1 brand assets — corporate HEX palette, Poppins headings,
+            Milestone 1 brand assets - corporate HEX palette, Poppins headings,
             Inter body copy, and interactive button states. Confirm everything
             looks sharp before we ship onboarding.
           </p>
@@ -107,7 +107,7 @@ export default function DesignSystemPage() {
         <section className="rounded-nga-xl bg-nga-surface p-8 shadow-nga-card">
           <SectionHeading
             title="Typography"
-            subtitle="Poppins — bold interactive headings & buttons · Inter — body text"
+            subtitle="Poppins - bold interactive headings & buttons · Inter - body text"
           />
           <div className="mt-8 grid gap-10 lg:grid-cols-2">
             <div className="space-y-6">
@@ -115,13 +115,13 @@ export default function DesignSystemPage() {
                 Poppins (Headings)
               </p>
               <p className="font-heading text-4xl font-extrabold text-nga-primary">
-                ExtraBold 800 — Level up your money game
+                ExtraBold 800 - Level up your money game
               </p>
               <p className="font-heading text-2xl font-bold text-nga-primary">
-                Bold 700 — Your financial cockpit awaits
+                Bold 700 - Your financial cockpit awaits
               </p>
               <p className="font-heading text-xl font-semibold text-nga-slate">
-                SemiBold 600 — Short. Punchy. No lectures.
+                SemiBold 600 - Short. Punchy. No lectures.
               </p>
             </div>
             <div className="space-y-6">
@@ -129,15 +129,15 @@ export default function DesignSystemPage() {
                 Inter (Body)
               </p>
               <p className="font-sans text-lg font-semibold text-nga-ink">
-                SemiBold 600 — Track progress across all three front doors.
+                SemiBold 600 - Track progress across all three front doors.
               </p>
               <p className="font-sans text-base font-medium text-nga-slate">
-                Medium 500 — Explorers get high-energy metaphors; Titans get
+                Medium 500 - Explorers get high-energy metaphors; Titans get
                 peer-level respect and leverage-focused copy.
               </p>
               <p className="font-sans text-base font-normal leading-relaxed text-nga-slate">
-                Regular 400 — Data minimization by default. No fluff, no
-                financial advice, no get-rich-quick noise — just tools you
+                Regular 400 - Data minimization by default. No fluff, no
+                financial advice, no get-rich-quick noise - just tools you
                 control.
               </p>
             </div>
@@ -148,7 +148,7 @@ export default function DesignSystemPage() {
         <section className="rounded-nga-xl bg-nga-surface p-8 shadow-nga-card">
           <SectionHeading
             title="Interactive Buttons"
-            subtitle="Primary, CTA, secondary, outline, ghost — default, hover, and disabled"
+            subtitle="Primary, CTA, secondary, outline, ghost - default, hover, and disabled"
           />
           <div className="mt-8 space-y-10">
             <ButtonRow label="Default states">
@@ -190,7 +190,7 @@ export default function DesignSystemPage() {
                 dashboards.
               </p>
               <Button variant="cta" className="mt-4">
-                Go Pro — #FFA503
+                Go Pro - #FFA503
               </Button>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function DesignSystemPage() {
               Composite card sample
             </h2>
             <p className="mt-1 font-sans text-sm text-nga-panel/90">
-              Primary base header on panel body — typical app shell pattern
+              Primary base header on panel body - typical app shell pattern
             </p>
           </div>
           <div className="space-y-4 bg-nga-panel px-8 py-6">

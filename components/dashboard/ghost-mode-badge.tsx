@@ -17,7 +17,7 @@ export function GhostModeBadge({ className, size = "md" }: GhostModeBadgeProps) 
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        aria-label="Ghost Mode — tap to save your progress with a free account"
+        aria-label="Ghost Mode - tap to save your progress with a free account"
         className={cn(
           "inline-flex items-center gap-2 rounded-full bg-[#BDE9FB]/40 font-heading font-bold text-[#031F82] transition-all hover:bg-[#BDE9FB]/60 active:scale-[0.98]",
           size === "sm" ? "px-2.5 py-1 text-[10px] sm:text-xs" : "px-3 py-1.5 text-xs sm:text-sm",

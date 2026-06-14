@@ -2,72 +2,15 @@
 
 import { useMemo } from "react";
 import { LockIcon } from "@/lib/dashboard/icons";
+import {
+  sortTrophiesByTier,
+  VAULT_SKILL_TROPHIES,
+  type SkillTrophyTier,
+  type VaultSkillTrophy,
+} from "@/lib/dashboard/skill-trophies";
 import { cn } from "@/lib/utils/cn";
 
-export type SkillTrophyTier = "gold" | "silver" | "bronze" | "locked";
-
-export type VaultSkillTrophy = {
-  id: string;
-  label: string;
-  tier: SkillTrophyTier;
-  medalEmoji: string;
-  ageGated?: boolean;
-};
-
-const TIER_RANK: Record<SkillTrophyTier, number> = {
-  gold: 0,
-  silver: 1,
-  bronze: 2,
-  locked: 3,
-};
-
-const VAULT_SKILL_TROPHIES_SOURCE: readonly VaultSkillTrophy[] = [
-  {
-    id: "vault-setup",
-    label: "The Vault Setup",
-    tier: "gold",
-    medalEmoji: "🏦",
-  },
-  {
-    id: "budgeting-basics",
-    label: "Budgeting Basics",
-    tier: "silver",
-    medalEmoji: "📊",
-  },
-  {
-    id: "smart-saving",
-    label: "Smart Saving",
-    tier: "silver",
-    medalEmoji: "💰",
-  },
-  {
-    id: "giving-mindset",
-    label: "The Giving Mindset",
-    tier: "bronze",
-    medalEmoji: "🎁",
-  },
-  {
-    id: "side-hustle-launchpad",
-    label: "Side-Hustle Launchpad",
-    tier: "locked",
-    medalEmoji: "🚀",
-  },
-  {
-    id: "angel-investing-101",
-    label: "Angel Investing 101",
-    tier: "locked",
-    medalEmoji: "📈",
-    ageGated: true,
-  },
-];
-
-function sortTrophiesByTier(
-  trophies: readonly VaultSkillTrophy[],
-): VaultSkillTrophy[] {
-  return [...trophies].sort(
-    (a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier],
-  );
-}
+export type { SkillTrophyTier, VaultSkillTrophy };
 
 function medalCoinStyles(tier: SkillTrophyTier): string {
   switch (tier) {
@@ -156,9 +99,9 @@ function SkillTrophyMedal({ trophy }: SkillTrophyMedalProps) {
       >
         {tierDisplayLabel(trophy.tier)}
       </p>
-      {trophy.ageGated ? (
+      {trophy.advancedOnly ? (
         <p className="mt-1 font-heading text-[7px] font-bold uppercase tracking-wide text-[#031F82]/40">
-          Older cohorts
+          15+ cohort
         </p>
       ) : null}
     </article>
@@ -167,7 +110,7 @@ function SkillTrophyMedal({ trophy }: SkillTrophyMedalProps) {
 
 export function SkillTrophyShelf() {
   const orderedTrophies = useMemo(
-    () => sortTrophiesByTier(VAULT_SKILL_TROPHIES_SOURCE),
+    () => sortTrophiesByTier(VAULT_SKILL_TROPHIES),
     [],
   );
 
@@ -176,9 +119,9 @@ export function SkillTrophyShelf() {
       aria-label="Financial skill medals"
       className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
-        {orderedTrophies.map((trophy) => (
-          <SkillTrophyMedal key={trophy.id} trophy={trophy} />
-        ))}
+      {orderedTrophies.map((trophy) => (
+        <SkillTrophyMedal key={trophy.id} trophy={trophy} />
+      ))}
     </div>
   );
 }

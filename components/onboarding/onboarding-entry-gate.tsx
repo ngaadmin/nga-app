@@ -13,7 +13,7 @@ export function OnboardingEntryGate() {
               Your guide
             </p>
             <p className="mt-2 max-w-xs font-sans text-sm text-nga-slate">
-              Vector character / avatar illustration ships here — your savvy
+              Vector character / avatar illustration ships here - your savvy
               mentor on the money journey.
             </p>
           </div>
@@ -25,7 +25,7 @@ export function OnboardingEntryGate() {
             skills!
           </h1>
           <p className="mt-4 max-w-md font-sans text-base text-nga-slate">
-            Jump in fast. No password lecture — just play, learn, and level up
+            Jump in fast. No password lecture - just play, learn, and level up
             your financial cockpit.
           </p>
           <div className="mt-8 flex w-full max-w-sm flex-col gap-4">

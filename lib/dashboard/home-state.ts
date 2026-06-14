@@ -6,7 +6,7 @@ export type SkillNodeState = {
   progressPercent?: number;
 };
 
-/** Placeholder dashboard home metrics — wire to centralized state engines later. */
+/** Placeholder dashboard home metrics - wire to centralized state engines later. */
 export const DASHBOARD_HOME_PLACEHOLDER_STATE = {
   totalPoints: 1500,
   dayStreak: 0,

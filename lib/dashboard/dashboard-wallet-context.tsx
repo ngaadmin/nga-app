@@ -32,6 +32,8 @@ type ClaimPointsResult =
 
 type DashboardWalletContextValue = {
   totalPoints: number;
+  /** Cumulative XP earned - separate from spendable balance after cash-outs. */
+  lifetimePointsEarned: number;
   audSliderIndex: number;
   audPer100Xp: number;
   moneyToAllocate: number;
@@ -54,6 +56,9 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const defaults = defaultDashboardWalletState();
 
   const [totalPoints, setTotalPoints] = useState<number>(() => defaults.totalPoints);
+  const [lifetimePointsEarned, setLifetimePointsEarned] = useState<number>(
+    () => defaults.lifetimePointsEarned,
+  );
   const [audSliderIndex, setAudSliderIndex] = useState(() => defaults.audSliderIndex);
   const [moneyToAllocate, setMoneyToAllocateState] = useState(
     () => defaults.moneyToAllocate,
@@ -67,6 +72,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     const persisted = readDashboardWalletState();
     if (persisted) {
       setTotalPoints(persisted.totalPoints);
+      setLifetimePointsEarned(persisted.lifetimePointsEarned);
       setAudSliderIndex(persisted.audSliderIndex);
       setMoneyToAllocateState(persisted.moneyToAllocate);
       setJarsState(jarsFromBalanceMap(persisted.jarBalances));
@@ -79,11 +85,19 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
 
     saveDashboardWalletState({
       totalPoints,
+      lifetimePointsEarned,
       audSliderIndex,
       moneyToAllocate,
       jarBalances: balanceMapFromJars(jars),
     });
-  }, [audSliderIndex, jars, moneyToAllocate, totalPoints, walletHydrated]);
+  }, [
+    audSliderIndex,
+    jars,
+    lifetimePointsEarned,
+    moneyToAllocate,
+    totalPoints,
+    walletHydrated,
+  ]);
 
   const audPer100Xp = useMemo(
     () => audPerXpBlockFromSliderIndex(audSliderIndex),
@@ -143,6 +157,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const value = useMemo(
     () => ({
       totalPoints,
+      lifetimePointsEarned,
       audSliderIndex,
       audPer100Xp,
       moneyToAllocate,
@@ -160,6 +175,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       moneyToAllocate,
       setJars,
       setMoneyToAllocate,
+      lifetimePointsEarned,
       totalPoints,
     ],
   );

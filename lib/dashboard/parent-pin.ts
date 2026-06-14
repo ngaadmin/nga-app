@@ -1,6 +1,6 @@
 export const PARENT_PIN_STORAGE_KEY = "nga_parent_pin";
 
-/** Master recovery token — only applied after explicit Forgot PIN recovery. */
+/** Master recovery token - only applied after explicit Forgot PIN recovery. */
 export const RECOVERY_PARENT_PIN = "2580";
 
 const PIN_PATTERN = /^\d{4}$/;

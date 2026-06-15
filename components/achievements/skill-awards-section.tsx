@@ -12,9 +12,9 @@ import {
 import {
   countEarnedMedals,
   countNotYetStartedSkills,
+  resolveVaultSkillTrophies,
   skillTrophiesForMasteryCohort,
   sortTrophiesByTier,
-  VAULT_SKILL_TROPHIES,
   type SkillTrophyTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
@@ -172,7 +172,7 @@ export function SkillAwardsSection() {
   const masteryCohort = useMemo(() => resolveMasteryCohort(), []);
 
   const cohortSkills = useMemo(
-    () => skillTrophiesForMasteryCohort(VAULT_SKILL_TROPHIES, masteryCohort),
+    () => skillTrophiesForMasteryCohort(resolveVaultSkillTrophies(), masteryCohort),
     [masteryCohort],
   );
 
@@ -186,7 +186,7 @@ export function SkillAwardsSection() {
   const silverCount = countEarnedMedals(cohortSkills, "silver");
   const bronzeCount = countEarnedMedals(cohortSkills, "bronze");
   const notStartedCount = countNotYetStartedSkills(
-    VAULT_SKILL_TROPHIES,
+    resolveVaultSkillTrophies(),
     masteryCohort,
   );
 

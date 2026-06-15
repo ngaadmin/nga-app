@@ -1,5 +1,6 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { totalSkillsToMasterForMasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { readVaultSkillTierOverrides } from "@/lib/dashboard/vault-skill-progress-storage";
 
 export type SkillTrophyTier = "gold" | "silver" | "bronze" | "locked";
 
@@ -136,6 +137,15 @@ export const VAULT_SKILL_TROPHIES: readonly VaultSkillTrophy[] = [
     advancedOnly: true,
   },
 ];
+
+/** Merge persisted Vault skill progress over the static scaffold. */
+export function resolveVaultSkillTrophies(): VaultSkillTrophy[] {
+  const overrides = readVaultSkillTierOverrides();
+  return VAULT_SKILL_TROPHIES.map((trophy) => ({
+    ...trophy,
+    tier: overrides[trophy.id] ?? trophy.tier,
+  }));
+}
 
 export function sortTrophiesByTier(
   trophies: readonly VaultSkillTrophy[],

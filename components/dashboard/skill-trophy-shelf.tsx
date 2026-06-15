@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { LockIcon } from "@/lib/dashboard/icons";
 import {
   sortTrophiesByTier,
-  VAULT_SKILL_TROPHIES,
+  resolveVaultSkillTrophies,
   type SkillTrophyTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
@@ -110,7 +110,7 @@ function SkillTrophyMedal({ trophy }: SkillTrophyMedalProps) {
 
 export function SkillTrophyShelf() {
   const orderedTrophies = useMemo(
-    () => sortTrophiesByTier(VAULT_SKILL_TROPHIES),
+    () => sortTrophiesByTier(resolveVaultSkillTrophies()),
     [],
   );
 

@@ -8,6 +8,7 @@ import {
   type ComponentType,
   type RefObject,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   AcademyModuleSignpost,
   ACADEMY_MODULE_SIGNPOST_GAP_PX,
@@ -39,6 +40,7 @@ import {
   ZapIcon,
 } from "@/lib/dashboard/icons";
 import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { canLaunchAcademyLesson } from "@/lib/academy/lessons/registry";
 import { cn } from "@/lib/utils/cn";
 
 type AcademySkillTrackProps = {
@@ -130,9 +132,10 @@ function milestoneAriaLabel(milestone: AcademyLessonMilestoneNode): string {
 
 type AcademyNodeProps = {
   milestone: AcademyLessonMilestoneNode;
+  onLaunch?: (milestoneId: number) => void;
 };
 
-function AcademyNode({ milestone }: AcademyNodeProps) {
+function AcademyNode({ milestone, onLaunch }: AcademyNodeProps) {
   if (!isRenderableAcademyMilestone(milestone)) {
     return null;
   }
@@ -188,7 +191,21 @@ function AcademyNode({ milestone }: AcademyNodeProps) {
     return (
       <button
         type="button"
+        onClick={() => onLaunch?.(milestone.id)}
         aria-label={milestoneAriaLabel(milestone)}
+        className="group rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary"
+      >
+        {circle}
+      </button>
+    );
+  }
+
+  if (canLaunchAcademyLesson(milestone.id, milestone.status)) {
+    return (
+      <button
+        type="button"
+        onClick={() => onLaunch?.(milestone.id)}
+        aria-label={`Replay ${milestoneAriaLabel(milestone)}`}
         className="group rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary"
       >
         {circle}
@@ -236,6 +253,7 @@ export function AcademySkillTrack({
   scrollContainerRef,
   hudBannerRef,
 }: AcademySkillTrackProps) {
+  const router = useRouter();
   const copy = copyMatrix.dashboard.academy.journey;
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
@@ -304,6 +322,16 @@ export function AcademySkillTrack({
     return () => cancelAnimationFrame(frame);
   }, [activeStepIndex, scrollContainerRef, hudBannerRef]);
 
+  const handleLaunchLesson = (milestoneId: number) => {
+    const milestone = safeMilestones.find((node) => node.id === milestoneId);
+    if (
+      milestone &&
+      canLaunchAcademyLesson(milestoneId, milestone.status)
+    ) {
+      router.push(`/dashboard/academy/lesson/${milestoneId}`);
+    }
+  };
+
   return (
     <section
       aria-labelledby="academy-journey-heading"
@@ -350,7 +378,10 @@ export function AcademySkillTrack({
                       className="absolute top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
                       style={{ left: `${anchorX}%` }}
                     >
-                      <AcademyNode milestone={milestone} />
+                      <AcademyNode
+                        milestone={milestone}
+                        onLaunch={handleLaunchLesson}
+                      />
                     </div>
                   </div>
                   {index < safeMilestones.length - 1 ? (

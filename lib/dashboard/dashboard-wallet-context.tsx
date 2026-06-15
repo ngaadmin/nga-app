@@ -42,6 +42,7 @@ type DashboardWalletContextValue = {
   setMoneyToAllocate: (updater: number | ((current: number) => number)) => void;
   setJars: (updater: DestinationJar[] | ((current: DestinationJar[]) => DestinationJar[])) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
+  awardLessonXp: (points: number) => void;
 };
 
 const DashboardWalletContext = createContext<DashboardWalletContextValue | null>(
@@ -154,6 +155,14 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     [audPer100Xp, totalPoints],
   );
 
+  const awardLessonXp = useCallback((points: number) => {
+    const safePoints = Math.floor(points);
+    if (!Number.isFinite(safePoints) || safePoints <= 0) return;
+
+    setTotalPoints((current) => current + safePoints);
+    setLifetimePointsEarned((current) => current + safePoints);
+  }, []);
+
   const value = useMemo(
     () => ({
       totalPoints,
@@ -166,10 +175,12 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       setMoneyToAllocate,
       setJars,
       claimPointsForVault,
+      awardLessonXp,
     }),
     [
       audPer100Xp,
       audSliderIndex,
+      awardLessonXp,
       claimPointsForVault,
       jars,
       moneyToAllocate,

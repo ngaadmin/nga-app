@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ACADEMY_MODULE_FOCUS_AREAS,
   ACADEMY_MODULE_TITLES,
   getAcademyPhaseTheme,
   isModuleSignpostLocked,
@@ -28,6 +29,7 @@ export function AcademyModuleSignpost({
 }: AcademyModuleSignpostProps) {
   const phase = getAcademyPhaseTheme(moduleNumber);
   const title = ACADEMY_MODULE_TITLES[moduleNumber];
+  const focusAreas = ACADEMY_MODULE_FOCUS_AREAS[moduleNumber];
   const isLocked = isModuleSignpostLocked(
     moduleNumber,
     milestones,
@@ -69,7 +71,7 @@ export function AcademyModuleSignpost({
           className="mt-1 text-center font-heading text-[9px] font-bold uppercase tracking-wide sm:text-[10px]"
           style={{ color: phase.shadow }}
         >
-          {LESSONS_PER_LEVEL} Lessons
+          Focus: {focusAreas} · {LESSONS_PER_LEVEL} Lessons
         </p>
       </div>
     </div>

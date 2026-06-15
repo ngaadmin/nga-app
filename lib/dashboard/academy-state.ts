@@ -21,22 +21,38 @@ export const PHASE_1_MILESTONE_COUNT = 54;
 
 /** Module titles aligned with copyMatrix journey nodes (Modules 1–6). */
 export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
-  1: copyMatrix.dashboard.academy.journey.nodes[0]?.subtitle ?? "The Cash Stash",
-  2:
-    copyMatrix.dashboard.academy.journey.nodes[1]?.subtitle ??
-    "Leveling Up Your Loot",
-  3:
-    copyMatrix.dashboard.academy.journey.nodes[2]?.subtitle ??
-    "The Interest Multiplier",
+  1: copyMatrix.dashboard.academy.journey.nodes[0]?.subtitle ?? "Money Game Rules",
+  2: copyMatrix.dashboard.academy.journey.nodes[1]?.subtitle ?? "Plugging Leaks",
+  3: copyMatrix.dashboard.academy.journey.nodes[2]?.subtitle ?? "Taking Control",
   4:
     copyMatrix.dashboard.academy.journey.nodes[3]?.subtitle ??
-    "Goal Crusher: Console Quest",
-  5:
-    copyMatrix.dashboard.academy.journey.nodes[4]?.subtitle ??
-    "Scammer Defense Shield",
+    "Making Your Own Cash",
+  5: copyMatrix.dashboard.academy.journey.nodes[4]?.subtitle ?? "Growing Assets",
   6:
     copyMatrix.dashboard.academy.journey.nodes[5]?.subtitle ??
-    "Savings Streak Builder",
+    "Mastering the System",
+};
+
+/** Focus scope labels for each Academy module signpost. */
+export const ACADEMY_MODULE_FOCUS_AREAS: Record<AcademyLevelId, string> = {
+  1:
+    copyMatrix.dashboard.academy.journey.nodes[0]?.focusAreas ??
+    "Mindset, Time, Inflation",
+  2:
+    copyMatrix.dashboard.academy.journey.nodes[1]?.focusAreas ??
+    "Subscriptions, Debt, Cyber Security",
+  3:
+    copyMatrix.dashboard.academy.journey.nodes[2]?.focusAreas ??
+    "Dashboards, Savings, Vaults",
+  4:
+    copyMatrix.dashboard.academy.journey.nodes[3]?.focusAreas ??
+    "Value, Offers, Trust",
+  5:
+    copyMatrix.dashboard.academy.journey.nodes[4]?.focusAreas ??
+    "Equities, Property, Leverage",
+  6:
+    copyMatrix.dashboard.academy.journey.nodes[5]?.focusAreas ??
+    "Tax, Structures, Legacy",
 };
 
 /**

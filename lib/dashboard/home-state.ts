@@ -11,13 +11,14 @@ export const DASHBOARD_HOME_PLACEHOLDER_STATE = {
   totalPoints: 1500,
   dayStreak: 0,
   streakFreezes: 2,
-  skillNodes: [
-    { id: "cash-stash", status: "active", progressPercent: 35 },
-    { id: "leveling-up-loot", status: "locked" },
-    { id: "interest-multiplier", status: "locked" },
-    { id: "goal-crusher", status: "locked" },
-    { id: "scammer-defense", status: "locked" },
-  ],
+    skillNodes: [
+      { id: "level-1", status: "active", progressPercent: 35 },
+      { id: "level-2", status: "locked" },
+      { id: "level-3", status: "locked" },
+      { id: "level-4", status: "locked" },
+      { id: "level-5", status: "locked" },
+      { id: "level-6", status: "locked" },
+    ],
 } as const satisfies {
   totalPoints: number;
   dayStreak: number;

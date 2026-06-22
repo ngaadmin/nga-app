@@ -89,7 +89,7 @@ function resolveMasteryCohort(): MasteryCohort {
   if (session?.birthYear) {
     return getMasteryCohortFromBirthYear(session.birthYear);
   }
-  return "younger";
+  return "explorer";
 }
 
 function resolveMilestoneIconKind(

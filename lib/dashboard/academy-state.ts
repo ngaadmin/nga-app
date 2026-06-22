@@ -1,5 +1,8 @@
 import { copyMatrix } from "@/constants/copyMatrix";
-import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import {
+  canAccessAdvancedSkills,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 
 export type AcademyNodeStatus = "active" | "locked" | "completed";
 
@@ -210,7 +213,7 @@ export const ACADEMY_LEVEL_PHASE_THEME: Record<
   6: { fill: "#DCB766", shadow: "#B8943F", ring: "rgba(220, 183, 102, 0.4)" },
 };
 
-/** Modules 5–6 unlock for Advanced mastery cohort (age 15+) only. */
+/** Levels 5–6 unlock for Mavericks (ages 16–18) only — maps to skills 13–18. */
 export const ACADEMY_AGE_GATED_MODULE_IDS: readonly AcademyLevelId[] = [5, 6];
 
 /** True on the first lesson node of each module (ids 1, 10, 19, 28, 37, 46). */
@@ -247,7 +250,7 @@ export function isModuleAgeGatedForCohort(
   masteryCohort: MasteryCohort,
 ): boolean {
   return (
-    masteryCohort === "younger" &&
+    !canAccessAdvancedSkills(masteryCohort) &&
     (ACADEMY_AGE_GATED_MODULE_IDS as readonly number[]).includes(levelGroup)
   );
 }

@@ -168,32 +168,32 @@ export const copyMatrix = {
     },
     skillNodes: [
       {
-        id: "cash-stash",
+        id: "level-1",
         title: "1. Money Game Rules",
         subtext: "Focus: Mindset, Time, Inflation",
       },
       {
-        id: "leveling-up-loot",
+        id: "level-2",
         title: "2. Plugging Leaks",
         subtext: "Focus: Subscriptions, Debt, Cyber Security",
       },
       {
-        id: "interest-multiplier",
+        id: "level-3",
         title: "3. Taking Control",
         subtext: "Focus: Dashboards, Savings, Vaults",
       },
       {
-        id: "goal-crusher",
+        id: "level-4",
         title: "4. Making Your Own Cash",
         subtext: "Focus: Value, Offers, Trust",
       },
       {
-        id: "scammer-defense",
+        id: "level-5",
         title: "5. Growing Assets",
         subtext: "Focus: Equities, Property, Leverage",
       },
       {
-        id: "savings-streak",
+        id: "level-6",
         title: "6. Mastering the System",
         subtext: "Focus: Tax, Structures, Legacy",
       },

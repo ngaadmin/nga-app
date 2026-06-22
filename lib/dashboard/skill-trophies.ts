@@ -1,5 +1,12 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { totalSkillsToMasterForMasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import {
+  getSkillRegistryRecord,
+  resolveCanonicalSkillSlug,
+  SKILLS_REGISTRY,
+  type SkillRegistryRecord,
+} from "@/lib/skills/skills-registry";
+import { skillsRegistryForMasteryCohort } from "@/lib/skills/skills-registry-query";
 import { readVaultSkillTierOverrides } from "@/lib/dashboard/vault-skill-progress-storage";
 
 export type SkillTrophyTier = "gold" | "silver" | "bronze" | "locked";
@@ -7,9 +14,12 @@ export type SkillTrophyTier = "gold" | "silver" | "bronze" | "locked";
 export type VaultSkillTrophy = {
   id: string;
   label: string;
+  description: string;
+  skillNumber: number;
+  levelId: number;
   tier: SkillTrophyTier;
   medalEmoji: string;
-  /** Hidden from Younger cohort (<15); Advanced cohort (15+) can earn this skill. */
+  /** Skills 13–18 — hidden from Explorers and Pathfinders; Mavericks only. */
   advancedOnly?: boolean;
 };
 
@@ -20,131 +30,81 @@ const TIER_RANK: Record<SkillTrophyTier, number> = {
   locked: 3,
 };
 
-/** Full skills inventory - 12 base skills + 6 Advanced-only skills (18 total). */
-export const VAULT_SKILL_TROPHIES: readonly VaultSkillTrophy[] = [
-  {
-    id: "vault-setup",
-    label: "The Vault Setup",
-    tier: "gold",
-    medalEmoji: "🏦",
-  },
-  {
-    id: "budgeting-basics",
-    label: "Budgeting Basics",
-    tier: "silver",
-    medalEmoji: "📊",
-  },
-  {
-    id: "smart-saving",
-    label: "Smart Saving",
-    tier: "silver",
-    medalEmoji: "💰",
-  },
-  {
-    id: "giving-mindset",
-    label: "The Giving Mindset",
-    tier: "bronze",
-    medalEmoji: "🎁",
-  },
-  {
-    id: "cash-stash-basics",
-    label: "Cash Stash Basics",
-    tier: "locked",
-    medalEmoji: "🪙",
-  },
-  {
-    id: "needs-vs-wants",
-    label: "Needs vs Wants",
-    tier: "locked",
-    medalEmoji: "⚖️",
-  },
-  {
-    id: "side-hustle-launchpad",
-    label: "Side-Hustle Launchpad",
-    tier: "locked",
-    medalEmoji: "🚀",
-  },
-  {
-    id: "goal-setting-101",
-    label: "Goal Setting 101",
-    tier: "locked",
-    medalEmoji: "🎯",
-  },
-  {
-    id: "interest-growth",
-    label: "Interest & Growth",
-    tier: "locked",
-    medalEmoji: "📈",
-  },
-  {
-    id: "scam-defense",
-    label: "Scam Defense",
-    tier: "locked",
-    medalEmoji: "🛡️",
-  },
-  {
-    id: "savings-streak",
-    label: "Savings Streak Builder",
-    tier: "locked",
-    medalEmoji: "🔥",
-  },
-  {
-    id: "money-mindset",
-    label: "Money Mindset",
-    tier: "locked",
-    medalEmoji: "🧠",
-  },
-  {
-    id: "angel-investing-101",
-    label: "Angel Investing 101",
-    tier: "locked",
-    medalEmoji: "💎",
-    advancedOnly: true,
-  },
-  {
-    id: "tax-basics",
-    label: "Tax Basics",
-    tier: "locked",
-    medalEmoji: "🧾",
-    advancedOnly: true,
-  },
-  {
-    id: "credit-debt",
-    label: "Credit & Debt",
-    tier: "locked",
-    medalEmoji: "💳",
-    advancedOnly: true,
-  },
-  {
-    id: "business-pricing",
-    label: "Business Pricing",
-    tier: "locked",
-    medalEmoji: "🏷️",
-    advancedOnly: true,
-  },
-  {
-    id: "investment-portfolio",
-    label: "Investment Portfolio",
-    tier: "locked",
-    medalEmoji: "📊",
-    advancedOnly: true,
-  },
-  {
-    id: "wealth-planning",
-    label: "Wealth Planning",
-    tier: "locked",
-    medalEmoji: "🗺️",
-    advancedOnly: true,
-  },
-];
+function mapRegistryToTrophies(
+  registry: readonly SkillRegistryRecord[],
+): VaultSkillTrophy[] {
+  return registry.map((skill) => ({
+    id: skill.skillSlug,
+    label: skill.skillName,
+    description: skill.description,
+    skillNumber: skill.skillNumber,
+    levelId: skill.levelId,
+    tier: "locked" as const,
+    medalEmoji: skill.medalEmoji,
+    advancedOnly: skill.isAdvancedCohortOnly,
+  }));
+}
 
-/** Merge persisted Vault skill progress over the static scaffold. */
-export function resolveVaultSkillTrophies(): VaultSkillTrophy[] {
-  const overrides = readVaultSkillTierOverrides();
-  return VAULT_SKILL_TROPHIES.map((trophy) => ({
+/** UI scaffold built from the universal 18-skill registry. */
+export const VAULT_SKILL_TROPHIES: readonly VaultSkillTrophy[] =
+  mapRegistryToTrophies(SKILLS_REGISTRY);
+
+function normalizedTierOverrides(
+  overrides: Partial<Record<string, SkillTrophyTier>>,
+): Partial<Record<string, SkillTrophyTier>> {
+  const normalized: Partial<Record<string, SkillTrophyTier>> = {};
+
+  for (const [key, tier] of Object.entries(overrides)) {
+    if (!tier) continue;
+    normalized[resolveCanonicalSkillSlug(key)] = tier;
+  }
+
+  return normalized;
+}
+
+function applyTierOverrides(
+  trophies: readonly VaultSkillTrophy[],
+  overrides: Partial<Record<string, SkillTrophyTier>>,
+): VaultSkillTrophy[] {
+  return trophies.map((trophy) => ({
     ...trophy,
     tier: overrides[trophy.id] ?? trophy.tier,
   }));
+}
+
+/** Merge persisted Vault skill progress over the static scaffold (all 18 skills). */
+export function resolveVaultSkillTrophies(): VaultSkillTrophy[] {
+  const overrides = normalizedTierOverrides(readVaultSkillTierOverrides());
+  return applyTierOverrides(VAULT_SKILL_TROPHIES, overrides);
+}
+
+/** Cohort-scoped trophies — skips skills 13–18 for Explorers and Pathfinders. */
+export function resolveVaultSkillTrophiesForCohort(
+  masteryCohort: MasteryCohort,
+): VaultSkillTrophy[] {
+  const overrides = normalizedTierOverrides(readVaultSkillTierOverrides());
+  const registry = skillsRegistryForMasteryCohort(masteryCohort);
+  return applyTierOverrides(mapRegistryToTrophies(registry), overrides);
+}
+
+/** Lookup a skill trophy from the global achievements inventory. */
+export function getVaultSkillTrophyById(
+  skillId: string,
+): VaultSkillTrophy | undefined {
+  const canonicalId = resolveCanonicalSkillSlug(skillId);
+  return resolveVaultSkillTrophies().find((trophy) => trophy.id === canonicalId);
+}
+
+/** Format the bronze unlock line shown on lesson completion screens. */
+export function formatLessonBronzeSkillLine(skillId: string): string {
+  const registrySkill = getSkillRegistryRecord(skillId);
+  if (registrySkill) {
+    return `Skill Unlocked: Bronze Medal - ${registrySkill.skillName}`;
+  }
+
+  const trophy = getVaultSkillTrophyById(skillId);
+  if (!trophy) return "Skill Unlocked: Bronze Medal";
+  return `Skill Unlocked: Bronze Medal - ${trophy.label}`;
 }
 
 export function sortTrophiesByTier(
@@ -152,16 +112,6 @@ export function sortTrophiesByTier(
 ): VaultSkillTrophy[] {
   return [...trophies].sort(
     (a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier],
-  );
-}
-
-/** Skills visible for the user's mastery cohort. */
-export function skillTrophiesForMasteryCohort(
-  trophies: readonly VaultSkillTrophy[],
-  masteryCohort: MasteryCohort,
-): VaultSkillTrophy[] {
-  return trophies.filter(
-    (trophy) => !trophy.advancedOnly || masteryCohort === "advanced",
   );
 }
 
@@ -173,11 +123,10 @@ export function countEarnedMedals(
 }
 
 export function countNotYetStartedSkills(
-  trophies: readonly VaultSkillTrophy[],
+  cohortSkills: readonly VaultSkillTrophy[],
   masteryCohort: MasteryCohort,
 ): number {
   const total = totalSkillsToMasterForMasteryCohort(masteryCohort);
-  const cohortSkills = skillTrophiesForMasteryCohort(trophies, masteryCohort);
   const gold = countEarnedMedals(cohortSkills, "gold");
   const silver = countEarnedMedals(cohortSkills, "silver");
   const bronze = countEarnedMedals(cohortSkills, "bronze");

@@ -15,13 +15,20 @@ import {
 } from "@/lib/dashboard/academy-progress-storage";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
+  M1_L1_ACHIEVEMENT_SKILL_ID,
+  M1_L1_PERFECT_STREAK_BONUS,
   M1_L1_SKILL_ID,
   M1_L1_XP_REWARD,
 } from "@/lib/academy/lessons/registry";
 import { setVaultSkillTierOverride } from "@/lib/dashboard/vault-skill-progress-storage";
+import { LessonCompletionPane } from "@/components/academy/lesson/lesson-completion-pane";
+import {
+  LESSON_CASH_IN_LABEL,
+  lessonGoldClaimClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 
-const TOTAL_SCREENS = 7;
+const TOTAL_SCREENS = 8;
 const FREEZE_HOLD_MS = 2000;
 
 const SORT_ITEMS = [
@@ -41,8 +48,7 @@ const SORT_ITEMS = [
   },
 ];
 
-const goldClaimClass =
-  "h-touch w-full max-w-md rounded-nga-lg border-b-4 border-[#9A5F00] bg-gradient-to-br from-[#FFE082] via-[#FFA503] to-[#C88202] px-6 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-[0_6px_16px_rgba(255,165,3,0.45)] transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2";
+const goldClaimClass = lessonGoldClaimClass;
 
 function playSuccessPing(): void {
   if (typeof window === "undefined") return;
@@ -76,13 +82,14 @@ type M1L1LessonProps = {
 
 export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
   const router = useRouter();
-  const { awardLessonXp, totalPoints } = useDashboardWallet();
+  const { awardLessonXp } = useDashboardWallet();
 
   const [screenIndex, setScreenIndex] = useState(0);
   const [screenReady, setScreenReady] = useState<boolean[]>(
     () => Array.from({ length: TOTAL_SCREENS }, () => false),
   );
   const [screenFlash, setScreenFlash] = useState<ScreenFlash>("none");
+  const [screenMistakes, setScreenMistakes] = useState(0);
 
   // Screen 1
   const [wordDropChoice, setWordDropChoice] = useState<string | null>(null);
@@ -118,8 +125,7 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
   const holdFrameRef = useRef<number | null>(null);
 
   // Screen 7
-  const [claimed, setClaimed] = useState(false);
-  const [showParticles, setShowParticles] = useState(false);
+  const [lessonComplete, setLessonComplete] = useState(false);
 
   const markScreenReady = useCallback((index: number) => {
     setScreenReady((current) => {
@@ -128,6 +134,10 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
       next[index] = true;
       return next;
     });
+  }, []);
+
+  const incrementMistake = useCallback(() => {
+    setScreenMistakes((count) => count + 1);
   }, []);
 
   const flashScreen = useCallback((kind: ScreenFlash) => {
@@ -145,6 +155,7 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
     setWordDropError(
       "Not quite! Look how fast Lars is running - what is his brain telling him to do?",
     );
+    incrementMistake();
   };
 
   const handleSentenceChoice = (choice: "a" | "b") => {
@@ -157,6 +168,7 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
     setSentenceError(
       "If only! In the real world, once you trade your cash, it's gone. Try again.",
     );
+    incrementMistake();
     flashScreen("error");
   };
 
@@ -177,6 +189,7 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
 
     if (item.bucket !== bucket) {
       setSortError(true);
+      incrementMistake();
       triggerErrorVibration();
       flashScreen("error");
       window.setTimeout(() => setSortError(false), 500);
@@ -206,6 +219,7 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
     setTrapError(
       "Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it.",
     );
+    incrementMistake();
   };
 
   const startFreezeHold = () => {
@@ -255,8 +269,8 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
   };
 
   useEffect(() => {
-    if (screenIndex === TOTAL_SCREENS - 1) {
-      markScreenReady(TOTAL_SCREENS - 1);
+    if (screenIndex === 6) {
+      markScreenReady(6);
     }
   }, [screenIndex, markScreenReady]);
 
@@ -268,11 +282,15 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
     };
   }, []);
 
-  const handleClaimReward = () => {
-    if (claimed) return;
-    setClaimed(true);
-    setShowParticles(true);
+  const perfectStreak = screenMistakes === 0;
+
+  const handleCashInPoints = () => {
+    if (lessonComplete) return;
+    setLessonComplete(true);
     awardLessonXp(M1_L1_XP_REWARD);
+    if (perfectStreak) {
+      awardLessonXp(M1_L1_PERFECT_STREAK_BONUS);
+    }
 
     const milestones = readAcademyMilestones();
     const alreadyCompleted = milestones.some(
@@ -286,9 +304,7 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
       saveAcademyMilestones(updated);
     }
 
-    window.setTimeout(() => {
-      router.push("/dashboard/academy");
-    }, 900);
+    router.push("/dashboard/academy");
   };
 
   const handleNext = () => {
@@ -321,11 +337,11 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
           screenIndex === TOTAL_SCREENS - 1 ? (
             <button
               type="button"
-              onClick={handleClaimReward}
-              disabled={!screenReady[screenIndex] || claimed}
+              onClick={handleCashInPoints}
+              disabled={lessonComplete}
               className={goldClaimClass}
             >
-              {claimed ? "Claimed!" : "Claim 150 XP"}
+              {lessonComplete ? "Cashing in..." : LESSON_CASH_IN_LABEL}
             </button>
           ) : undefined
         }
@@ -608,48 +624,24 @@ export function M1L1Lesson({ milestoneId = 1 }: M1L1LessonProps) {
           </div>
         </LessonScreenPane>
 
-        {/* Screen 7: Reward Wrap */}
+        {/* Screen 7: Narrative Resolution */}
         <LessonScreenPane>
-          <div className="relative">
-            {showParticles ? (
-              <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-                {Array.from({ length: 12 }, (_, index) => (
-                  <span
-                    key={index}
-                    className="absolute text-lg animate-ping"
-                    style={{
-                      left: `${10 + index * 7}%`,
-                      top: `${(index % 4) * 20}%`,
-                      animationDelay: `${index * 80}ms`,
-                    }}
-                  >
-                    ✨
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
-              The freeze worked! The next morning, Lars realized he didn&apos;t
-              even want that skin anymore. He kept his money safe to save for a
-              new gaming headset. Congratulations for helping him avoid wasting
-              his money.
-            </p>
-          </div>
-          <div className={cn(lessonCardClass, "mt-6 text-center")}>
-            <p className="font-heading text-4xl" aria-hidden>
-              🏆
-            </p>
-            <p className="mt-2 font-heading text-sm font-extrabold text-[#FFA503]">
-              {claimed
-                ? `+${M1_L1_XP_REWARD} XP Claimed!`
-                : `+${M1_L1_XP_REWARD} XP Ready`}
-            </p>
-            <p className="mt-1 font-sans text-xs text-[#1E3A5F]/80">
-              {claimed
-                ? `Your balance is now ${totalPoints.toLocaleString()} XP`
-                : "Skill 1 unlocked at Bronze in your Vault"}
-            </p>
-          </div>
+          <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+            The freeze worked! The next morning, Lars realized he didn&apos;t
+            even want that skin anymore. He kept his money safe to save for a
+            new gaming headset. Congratulations for helping him avoid wasting
+            his money.
+          </p>
+        </LessonScreenPane>
+
+        {/* Screen 8: Milestone Splash */}
+        <LessonScreenPane>
+          <LessonCompletionPane
+            xpReward={M1_L1_XP_REWARD}
+            perfectStreakBonus={M1_L1_PERFECT_STREAK_BONUS}
+            perfectStreak={perfectStreak}
+            achievementSkillId={M1_L1_ACHIEVEMENT_SKILL_ID}
+          />
         </LessonScreenPane>
       </AcademyLessonShell>
     </div>

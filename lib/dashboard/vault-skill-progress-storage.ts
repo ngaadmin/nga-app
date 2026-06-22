@@ -1,4 +1,5 @@
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
+import { resolveCanonicalSkillSlug } from "@/lib/skills/skills-registry";
 
 export const VAULT_SKILL_PROGRESS_STORAGE_KEY = "nga_vault_skill_progress_v1";
 
@@ -26,8 +27,9 @@ export function setVaultSkillTierOverride(
 ): void {
   if (typeof window === "undefined") return;
 
+  const canonicalId = resolveCanonicalSkillSlug(skillId);
   const current = readVaultSkillTierOverrides();
-  saveVaultSkillTierOverrides({ ...current, [skillId]: tier });
+  saveVaultSkillTierOverrides({ ...current, [canonicalId]: tier });
 }
 
 export function saveVaultSkillTierOverrides(

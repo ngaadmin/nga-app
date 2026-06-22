@@ -12,8 +12,7 @@ import {
 import {
   countEarnedMedals,
   countNotYetStartedSkills,
-  resolveVaultSkillTrophies,
-  skillTrophiesForMasteryCohort,
+  resolveVaultSkillTrophiesForCohort,
   sortTrophiesByTier,
   type SkillTrophyTier,
   type VaultSkillTrophy,
@@ -153,7 +152,7 @@ function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
       </p>
       {skill.advancedOnly ? (
         <p className="mt-1 font-heading text-[7px] font-bold uppercase tracking-wide text-[#031F82]/40">
-          15+ cohort
+          Mavericks
         </p>
       ) : null}
     </article>
@@ -165,14 +164,14 @@ function resolveMasteryCohort(): MasteryCohort {
   if (session?.birthYear) {
     return getMasteryCohortFromBirthYear(session.birthYear);
   }
-  return "younger";
+  return "explorer";
 }
 
 export function SkillAwardsSection() {
   const masteryCohort = useMemo(() => resolveMasteryCohort(), []);
 
   const cohortSkills = useMemo(
-    () => skillTrophiesForMasteryCohort(resolveVaultSkillTrophies(), masteryCohort),
+    () => resolveVaultSkillTrophiesForCohort(masteryCohort),
     [masteryCohort],
   );
 
@@ -185,10 +184,7 @@ export function SkillAwardsSection() {
   const goldCount = countEarnedMedals(cohortSkills, "gold");
   const silverCount = countEarnedMedals(cohortSkills, "silver");
   const bronzeCount = countEarnedMedals(cohortSkills, "bronze");
-  const notStartedCount = countNotYetStartedSkills(
-    resolveVaultSkillTrophies(),
-    masteryCohort,
-  );
+  const notStartedCount = countNotYetStartedSkills(cohortSkills, masteryCohort);
 
   return (
     <section aria-labelledby="skill-awards-heading" className="w-full shrink-0">
@@ -232,7 +228,7 @@ export function SkillAwardsSection() {
         className={cn(ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS, "mt-3 gap-5")}
       >
         {orderedSkills.map((skill) => (
-          <SkillCarouselCard key={skill.id} skill={skill} />
+          <SkillCarouselCard key={`skill-${skill.skillNumber}`} skill={skill} />
         ))}
       </div>
     </section>

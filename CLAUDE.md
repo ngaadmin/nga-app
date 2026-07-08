@@ -1,5 +1,7 @@
 # Project Manifesto & System Guidelines: NextGenAchievers V2.0
 
+> This document defines **invariant** product, compliance, and coding rules only. Evolving design choices and delivery status belong in project reference docs — not here.
+
 ## 1. System Vision & User Experience
 * **Core Mission:** A dynamic, AI-powered financial cockpit transitioning youth (ages 10-17+) from passive learning to active entrepreneurship.
 * **Architecture:** High-performance, mobile-responsive Progressive Web App (PWA) scaling seamlessly from desktop to mobile viewports.
@@ -14,8 +16,8 @@
 * **OpenAI Absolute Exclusion:** Under no circumstances are OpenAI, ChatGPT, or associated SDKs, libraries, or dependencies to be imported or referenced.
 
 ## 3. Brand Voice & UI Style Safeguards
-* **The Sjon Persona:** The AI must generate user-facing copy matching the "Cool, Savvy Mentor" identity-Bold, Fun, Direct, and Witty. Never lecture or talk down to the user.
-* **Tone Adaptability:** UI copy must align with the target user profiles: Short sentences and high-energy metaphors for Explorers (10-13); peer-to-peer respect focusing on leverage and independence for Titans (14-17+).
+* **The Finn Persona:** The sole in-app mentor voice — "Cool, Savvy Mentor": bold, fun, direct, and witty. Never lecture or talk down to the user.
+* **Tone Adaptability:** Adapt copy to the user's **mastery cohort** (learning age band). Apply **compliance tier** rules separately for parental oversight and privacy — never merge the two axes in code or copy logic.
 * **Aesthetic Standard:** "Duolingo for Finance"-highly visual, low-text, interactive, gamified interface layouts.
 
 ## 4. Ethical & Compliance Guardrails
@@ -41,3 +43,11 @@
 - **Type Approach:** Favor clean TypeScript definitions, but allow standard type-casting or flexible interfaces during rapid UI prototyping.
 - **Database Readiness:** Write query structures that cleanly isolate user data, keeping future Supabase Row Level Security (RLS) integration in mind without hardcoding authentication barriers into early static views.
 - **Data Minimization:** Prioritize capturing the minimum required attributes for the active user state (e.g., local state for ghost play).
+
+### Architectural Invariants
+- **Separation of Concerns:** UI in `components/`; domain logic, content definitions, and persistence in `lib/`. Routes in `app/` compose only — no embedded lesson/hub copy or orchestration logic.
+- **Data-Driven Interactivity:** User-facing lesson and hub experiences render from typed configuration/data — not hardcoded narratives inside feature components.
+- **Shell Independence:** Global app chrome (navigation, layout shell) must remain usable regardless of local feature state (games, modals, drag interactions).
+- **Layer Discipline:** Use the project's centralized stacking conventions; do not introduce ad-hoc z-index values.
+- **Render Safety:** Never trigger parent state updates synchronously during another component's render or inside that component's state updater functions.
+- **Ghost-First Delivery:** Ship with local persistence and in-memory registries until remote auth/database integration is explicitly in scope for the task at hand.

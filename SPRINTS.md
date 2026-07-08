@@ -6,6 +6,8 @@
 
 > **App avatar guide:** All in-app mentor voice, activity logs, and youth-facing copy reference **Finn** as the sole guide persona across Academy, Engine, and Vault hubs.
 
+> **Decision log:** Finalized architecture choices live in `DECISIONS_LOG.md`. Invariant agent rules live in `CLAUDE.md`.
+
 
 
 ---
@@ -31,6 +33,8 @@
 - [x] Task 2.1: Build the 5-Second Personalization Gate - collect Birth Year and Username only (`/onboarding/start`).
 
 - [x] Task 2.2: Instant Ghost Routing - route users straight into the app dashboard with temporary Ghost Access (no password or parental stage-gate upfront). Ghost sessions persist in `sessionStorage`; onboarding routes to `/dashboard/academy`.
+
+- [x] Task 2.3: Ghost Session QA Reset - visit `/onboarding/start?reset=1` to wipe ghost session data and re-enter the birth-year personalization gate as a new user (`clear-app-session-state.ts`, `OnboardingFreshStartReset`). **(COMPLETE — dev/QA helper only.)**
 
 
 
@@ -58,7 +62,11 @@
 
 - **Settings** (`/dashboard/settings`) hosts Account & Settings links, Shared Device Parent Mode toggle (4-digit PIN gate via `parent-pin.ts`), and the point-conversion workspace. In Parent Mode, parents set the AUD-per-100-XP conversion rate slider with no child payout triggers. Global XP in the status header reads from the same wallet context.
 
-- **The Academy** (`/dashboard/academy`) ships a high-engagement, scrollable, Duolingo-inspired vertical lesson roadmap - sticky context banner (`AcademyContextBanner`), 54 Phase 1 milestone nodes (6 Levels × 9 Lessons) with level signposts, dotted path progression, Maverick age-gating on Levels 5–6, and cohort-aware state from `academy-state.ts` + `academy-progress-storage.ts`. **Two interactive lessons are shipped:** M1-L1 (Stop & Think) and M1-L2 (Put Needs First) - each an 8-screen horizontal slide flow with shared completion pane, XP awards, bronze skill unlocks, and replay support via `components/academy/lesson/`.
+- **The Academy** (`/dashboard/academy`) ships a high-engagement, scrollable, Duolingo-inspired vertical lesson roadmap - sticky context banner (`AcademyContextBanner`), 54 Phase 1 milestone nodes (6 Levels × 9 Lessons) with level signposts, dotted path progression, Maverick age-gating on Levels 5–6, and cohort-aware state from `academy-state.ts` + `academy-progress-storage.ts`. **Three interactive lessons are shipped:** M1-L1 (Stop & Think), M1-L2 (Put Needs First), and M1-L3 (Spare Cash) — each an 8-screen flow via the **registry-driven generic player** (`AcademyLessonPlayer`, `LessonScreenRenderer`, `useLessonFlow`). Content lives in `lib/academy/lessons/content/` with cohort overrides; spreadsheet import tooling lives in `templates/lesson-authoring/` + `tools/import-lesson-from-sheet.mjs`.
+
+- **Academy lesson pipeline (complete — foundation):** Monolithic per-lesson TSX removed; declarative `ScreenConfig` union, cohort override merge, shared completion helpers, and new interaction archetypes (`link-match`, `bucket-sort` with `spent-total` layout) ship in the generic renderer. Only the active lesson screen mounts live interactive content.
+
+- **Semantic UI layering (complete):** Centralized `@theme` z-index tokens, portal roots (`#overlay-root`, `#modal-root`, `#toast-root`), shared `ModalShell` / `OverlayPortal`, and ESLint guard against ad-hoc z-index values. Dashboard nav restored during lesson interactions (explicit routing, pointer-capture cleanup, scoped touch handling).
 
 - **The Engine** (`/dashboard/engine`) ships a premium, mobile-first operating layout: dual horizontal carousels (In Progress ventures + All Business Ideas deck), discovery-brief launch drawers, safe close-shop confirmation flows, and a dynamic bottom canvas consuming 50% viewport height with a 4-node zigzag venture journey map (dotted path connectors + Step 3 demo state) synced to the selected active venture. Finn voice copy drives all mentor prompts.
 
@@ -68,7 +76,7 @@
 
 - **18-Skill Level Registry (complete — schema + app layer):** Universal progression is built **Levels-up** (6 Levels × 3 Skills = 18 achievements). TypeScript source of truth lives in `lib/skills/skills-registry.ts` (`SKILLS_LEVELS`, `SKILLS_REGISTRY`). Supabase migrations ship `skills_registry` with `level_id`, `skill_number`, `is_advanced_cohort_only`, cohort boundary CHECK constraint, and indexed cohort filters. Cohort-aware fetch helpers live in `lib/skills/skills-registry-query.ts`; trophy UI scaffolds in `lib/dashboard/skill-trophies.ts`. Skills 1–12 are universal; Skills 13–18 are Maverick-only (ages 16–18). **Supabase client runtime queries are not yet wired** - all reads use the in-memory registry mirror.
 
-- **Active technical backlog (remaining within Milestone 3):** Task 3.4 (gamified adaptive placement quiz) and Task 3.7 (Parent Incentive Engine interface). Downstream Milestone 4, Milestone 5, Sprint 4, and Sprint 5 items are catalogued below.
+- **Active technical backlog (remaining within Milestone 3):** Task 3.4 (gamified adaptive placement quiz), Task 3.7 (Parent Incentive Engine interface), and Task 3.18 (Level 1 lesson content fill via spreadsheet pipeline). Downstream Milestone 4, Milestone 5, Sprint 4, Sprint 5, and Sprint 6 items are catalogued below.
 
 
 
@@ -98,11 +106,17 @@
 
 - [x] Task 3.13: Academy Phase 1 Milestone Scaffold - build the 54-node lesson journey (6 Levels × 9 Lessons) with level signposts, boss-node checkpoints, context banner, sessionStorage progress persistence, and cohort-gated advanced levels (`academy-state.ts`, `academy-progress-storage.ts`, `academy-skill-track.tsx`).
 
-- [x] Task 3.14: Interactive Academy Lessons (Slice One) - ship M1-L1 (*Money In, Money Out* → Skill: Stop & Think) and M1-L2 (*Needs vs Wants Sort* → Skill: Put Needs First) as full 8-screen interactive lesson flows with horizontal slide shell, mistake tracking, XP awards, bronze skill unlock on completion, and replay-safe routing (`components/academy/lesson/`, `lib/academy/lessons/registry.ts`).
+- [x] Task 3.14: Interactive Academy Lessons (Slice One) - ship M1-L1 (*Money In, Money Out* → Skill: Stop & Think), M1-L2 (*Needs vs Wants Sort* → Skill: Put Needs First), and M1-L3 (*Spare Cash* → Skill 3) as full 8-screen interactive lesson flows via the registry-driven generic player, with mistake tracking, XP awards, bronze skill unlock on completion, and replay-safe routing (`lib/academy/lessons/registry.ts`, `lib/academy/lessons/content/`). *(Expanded from original 2-lesson slice; monolithic `m1-l1-lesson.tsx` / `m1-l2-lesson.tsx` removed.)*
 
 - [x] Task 3.15: Achievements Hub - build `/dashboard/achievements` with tiered skill medal carousel (Bronze / Silver / Gold / Locked scaffolds), learning streak milestones, money milestones, monthly challenges, and social friends leaderboard sections (`components/achievements/`, `lib/dashboard/achievements-state.ts`, `lib/dashboard/skill-trophies.ts`).
 
 - [x] Task 3.16: Parent PIN Gate (Local) - implement 4-digit PIN setup, verification, and recovery flow securing the Parent Mode toggle in Settings (`lib/dashboard/parent-pin.ts`, `home-dashboard.tsx`). *(SessionStorage-only; no Supabase auth binding yet.)*
+
+- [x] Task 3.17: Semantic UI Layering System - centralize stacking contexts with `@theme` z-index tokens, portal roots in root layout, shared modal/overlay portal components, migration of hub modals and lesson overlays, `layer-island` isolation on lesson/journey containers, and ESLint rule banning raw numeric z-index. **(COMPLETE)**
+
+- [ ] Task 3.18: Academy Lesson Authoring Pipeline (Scale) - non-developer spreadsheet workflow (`templates/lesson-authoring/`), import scripts, cohort override pattern, and Level 1 lesson fill (L4–L9). **(IN PROGRESS — L1–L3 shipped; L4 import fixtures exist; author self-service docs in `INSTRUCTIONS.md`.)**
+
+- [x] Task 3.19: Lesson Runtime Stability - fix React cross-component update errors in bucket-sort flow via deferred action queues; mount only the active lesson screen; restore dashboard nav during lesson interactions (explicit `router.push`, pointer-capture cleanup, scoped touch handling). **(COMPLETE)**
 
 
 
@@ -130,7 +144,7 @@
 
 - [ ] Task 5.1: Paywall Layer - lock premium dashboards behind high-energy CTA orange (#FFA503) prompts. *(Design-system preview label only; Vault custom-jar premium modal is a local placeholder.)*
 
-- [ ] Task 5.2: Slice One Content - ship the horizontal slice (1 active foundational learning mission, 1 operational entry-level Venture Pack template, 1 basic Vault tool layout). *(Partial: 2 Academy lessons + full Vault allocator ship; Engine venture template remains demo/scaffold state.)*
+- [ ] Task 5.2: Slice One Content - ship the horizontal slice (1 active foundational learning mission, 1 operational entry-level Venture Pack template, 1 basic Vault tool layout). *(Partial: 3 Academy lessons + declarative lesson pipeline + full Vault allocator ship; Engine venture template remains demo/scaffold state.)*
 
 
 
@@ -140,7 +154,7 @@
 
 ### 🎮 Sprint 4: Gamification, Profile & Security *(Local State & UI)*
 
-- [ ] **Gamified Utility Points Allocation:** Map static lesson activity parameters (10 XP standard milestones, 20 XP hard action items, Double XP finishes) into our local state configuration. *(Partial: M1-L1/M1-L2 ship fixed XP + perfect-streak bonus via `awardLessonXp()`; global XP constants not yet standardised across all lesson types.)*
+- [ ] **Gamified Utility Points Allocation:** Map static lesson activity parameters (10 XP standard milestones, 20 XP hard action items, Double XP finishes) into our local state configuration. *(Partial: M1-L1/M1-L2/M1-L3 ship fixed XP + perfect-streak bonus via `awardLessonXp()`; global XP constants not yet standardised across all lesson types.)*
 
 - [ ] **Parent Rewards Marketplace (Vault Section):** Create a visual card component layout at the base of the Vault for exchanging point balances for custom parent-fulfilled rewards (screen time, movie nights, etc.).
 
@@ -167,3 +181,35 @@
 
 
 ---
+
+
+
+### 📚 Sprint 6: Academy Content & Authoring *(Spreadsheet → Registry → Ship)*
+
+**Goal:** Enable non-developer lesson authoring and fill Level 1 (L4–L9) without new monolithic lesson components.
+
+- [x] **Declarative lesson architecture** - registry-driven generic player, `ScreenConfig` union, `useLessonFlow`, cohort override merge, shared completion helpers. **(COMPLETE)**
+
+- [x] **Spreadsheet authoring templates** - `templates/lesson-authoring/` (`Lesson-Details.csv`, `Screens.csv`, lookup sheets, `INSTRUCTIONS.md`, example M1-L1 folder). **(COMPLETE)**
+
+- [x] **Import tooling** - `npm run lesson:import` and `npm run lesson:import:explorer` via `tools/import-lesson-from-sheet.mjs` and `tools/import-explorer-workbook.mjs`. **(COMPLETE)**
+
+- [ ] **Level 1 lessons L4–L9** - author via spreadsheet pipeline, import, register in `LESSON_REGISTRY`, browser QA per cohort. *(L4 fixtures exist under `content/data/explorer/`; not yet shipped.)*
+
+- [ ] **M1-L3 cohort overrides** - Explorer and Maverick narrative variants via `screenOverrides` once copy is ready.
+
+- [ ] **M1-L2 Pathfinder variant** - teen copy overrides when Pathfinder content is finalized. *(Lower priority.)*
+
+- [ ] **Game-Types catalog sync** - document `link-match` and `spent-total` bucket-sort layout in `Game-Types.csv` for content authors.
+
+- [ ] **Import fixture cleanup** - resolve TypeScript errors in `content/data/explorer/` generated files (staging output only; runtime content in `content/mX-lY.ts`).
+
+- [ ] **Lesson side-effect lint guard** - optional ESLint rule banning parent callbacks inside `setState` updaters in `components/academy/lesson/`.
+
+- [ ] **Generic DataDrivenLesson component** - deferred until 4–6 lessons are stable in the current pipeline. *(See `DECISIONS_LOG.md`.)*
+
+
+
+---
+
+*Last updated: 2026-07-08*

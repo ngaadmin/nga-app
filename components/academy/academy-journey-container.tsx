@@ -1,9 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AcademyJourney } from "@/components/academy/academy-journey";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import type { AcademyLessonMilestoneNode } from "@/lib/dashboard/academy-state";
+import {
+  focusAcademyMilestone,
+  parseAcademyFocusParam,
+  SHIPPED_DEV_LESSON_JUMP_IDS,
+} from "@/lib/dev/academy-dev-tools";
+import { isDevClient } from "@/lib/dev/client-persist";
+
+function DevLessonJumpBar({
+  onFocus,
+}: {
+  onFocus: (milestoneId: number) => void;
+}) {
+  const router = useRouter();
+
+  if (!isDevClient()) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-950">
+      <span className="font-heading font-bold uppercase tracking-wide">Dev</span>
+      {SHIPPED_DEV_LESSON_JUMP_IDS.map((id) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onFocus(id)}
+          className="rounded-md border border-amber-300 bg-white px-2 py-1 font-medium hover:bg-amber-100"
+        >
+          Focus L{id}
+        </button>
+      ))}
+      {SHIPPED_DEV_LESSON_JUMP_IDS.map((id) => (
+        <button
+          key={`open-${id}`}
+          type="button"
+          onClick={() => router.push(`/dashboard/academy/lesson/${id}`)}
+          className="rounded-md border border-amber-300 bg-white px-2 py-1 font-medium hover:bg-amber-100"
+        >
+          Open L{id}
+        </button>
+      ))}
+      <span className="text-amber-800/80">· persists in localStorage</span>
+    </div>
+  );
+}
 
 export function AcademyJourneyContainer() {
   const [milestones, setMilestones] = useState<
@@ -11,8 +55,18 @@ export function AcademyJourneyContainer() {
   >([]);
   const [hydrated, setHydrated] = useState(false);
 
+  const applyFocus = useCallback((milestoneId: number) => {
+    const next = focusAcademyMilestone(milestoneId);
+    setMilestones(next);
+  }, []);
+
   useEffect(() => {
-    setMilestones(readAcademyMilestones());
+    const focusId = parseAcademyFocusParam(window.location.search);
+    if (focusId !== null) {
+      setMilestones(focusAcademyMilestone(focusId));
+    } else {
+      setMilestones(readAcademyMilestones());
+    }
     setHydrated(true);
   }, []);
 
@@ -22,5 +76,10 @@ export function AcademyJourneyContainer() {
     );
   }
 
-  return <AcademyJourney milestones={milestones} />;
+  return (
+    <>
+      <DevLessonJumpBar onFocus={applyFocus} />
+      <AcademyJourney milestones={milestones} />
+    </>
+  );
 }

@@ -1,0 +1,14 @@
+Field,Value,Notes
+Module Number,1,
+Lesson Number,1,EXAMPLE ONLY — preview import only; do not use --install
+Lesson Title,Money In Money Out,
+Level,1,
+Pathfinder Character,Holly,
+Explorer Character,Lars,
+Maverick Character,Dash,
+Support Character,Senna,Optional — appears when you write {support} in text
+Skill Name,Stop & Think,
+Skill ID,stop-and-think,
+Explorer XP,150,
+Teen XP,50,
+Explorer Perfect Bonus,50,

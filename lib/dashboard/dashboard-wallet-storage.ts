@@ -3,6 +3,11 @@ import {
   type JarBalanceMap,
 } from "@/lib/dashboard/destination-jars";
 import { DEFAULT_AUD_SLIDER_INDEX } from "@/lib/dashboard/point-conversion";
+import {
+  readPersisted,
+  removePersisted,
+  writePersisted,
+} from "@/lib/dev/client-persist";
 
 export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_test_seed_1500";
 
@@ -47,7 +52,7 @@ function isJarBalanceMap(value: unknown): value is JarBalanceMap {
 export function readDashboardWalletState(): PersistedDashboardWallet | null {
   if (typeof window === "undefined") return null;
 
-  const raw = window.sessionStorage.getItem(DASHBOARD_WALLET_STORAGE_KEY);
+  const raw = readPersisted(DASHBOARD_WALLET_STORAGE_KEY);
   if (!raw) return null;
 
   try {
@@ -93,7 +98,7 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
 export function saveDashboardWalletState(state: PersistedDashboardWallet): void {
   if (typeof window === "undefined") return;
 
-  window.sessionStorage.setItem(
+  writePersisted(
     DASHBOARD_WALLET_STORAGE_KEY,
     JSON.stringify(state),
   );
@@ -101,5 +106,5 @@ export function saveDashboardWalletState(state: PersistedDashboardWallet): void 
 
 export function clearDashboardWalletState(): void {
   if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(DASHBOARD_WALLET_STORAGE_KEY);
+  removePersisted(DASHBOARD_WALLET_STORAGE_KEY);
 }

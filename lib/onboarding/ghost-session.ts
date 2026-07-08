@@ -1,4 +1,9 @@
 import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
+import {
+  readPersisted,
+  removePersisted,
+  writePersisted,
+} from "@/lib/dev/client-persist";
 
 export const GHOST_SESSION_STORAGE_KEY = "nga_ghost_session";
 
@@ -55,16 +60,13 @@ export function createGhostAccessSession(
 
 export function saveGhostAccessSession(session: GhostAccessSession): void {
   if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(
-    GHOST_SESSION_STORAGE_KEY,
-    JSON.stringify(session),
-  );
+  writePersisted(GHOST_SESSION_STORAGE_KEY, JSON.stringify(session));
 }
 
 export function readGhostAccessSession(): GhostAccessSession | null {
   if (typeof window === "undefined") return null;
 
-  const raw = window.sessionStorage.getItem(GHOST_SESSION_STORAGE_KEY);
+  const raw = readPersisted(GHOST_SESSION_STORAGE_KEY);
   if (!raw) return null;
 
   try {
@@ -84,5 +86,5 @@ export function readGhostAccessSession(): GhostAccessSession | null {
 
 export function clearGhostAccessSession(): void {
   if (typeof window === "undefined") return;
-  window.sessionStorage.removeItem(GHOST_SESSION_STORAGE_KEY);
+  removePersisted(GHOST_SESSION_STORAGE_KEY);
 }

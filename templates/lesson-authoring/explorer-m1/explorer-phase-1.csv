@@ -1,0 +1,71 @@
+lessonId,screenNumber,objective,gameArchetype,simpleScreenText,theAction,contentForGame,errorMessage
+L1-M1-T1,1,Activate Prior Knowledge (Relatability),The Fill-the-Blank Drop,"Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be [ ______ ] right away!",Drag the correct word into the blank.,"Pool: Spent, Saved, Hidden
+Correct: Spent","Not quite! Look how fast Lars is running - what is his brain telling him to do?"
+L1-M1-T1,2,Introduce Short vs Long Fun,The Sentence Finisher,"Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy, but ten minutes later...",Tap the sentence ending that matches real life.,"🟢 [...the candy is gone and the toy feels boring.]
+🔴 [...his $20 cash magically reappears.]","If only! In the real world, once you trade your cash, it's gone. Try again."
+L1-M1-T1,3,Explore Short vs Long Fun,The Flash Tap,Lars's money is gone and he only had 10 minutes of fun. Tap these items to see the difference!,Tap each item chip to reveal its bucket.,"🍬 Sour Worms──> Flashes red to Short Fun.
+🍿 Cinema Popcorn──> Flashes red to Short Fun.
+🎧 Wireless Headphones──> Flashes green to More Fun for Longer.
+🛹 Skateboard──> Flashes green to More Fun for Longer.",
+L1-M1-T1,4,Practice Sorting,The Sorting Game,Your turn! Sort these items into the correct bucket.,Drag each card into Short Fun or More Fun for Longer.,"Short Fun:
+🍕 Pizza slice
+🥤 Bubble tea with all the toppings
+More Fun for Longer:
+🎮 Gaming controller
+💃 Dance Emote",
+L1-M1-T1,5,Apply — Urgency Trap,The Quick Choice,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",Tap the best answer.,"🟢 To trick his brain into buying fast.
+🔴 Because the game creators love him.","Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it."
+L1-M1-T1,6,Apply — Impulse Pause,The 24-Hour Freeze,Don't tap buy! Stop the rush with a 24-Hour Buy Freeze. Give your brain time to cool down.,Hold the freeze button until the bar fills.,"Button: [ ❄️ HOLD TO FREEZE ❄️ ]
+Visual: 24-hour countdown bar","Release too soon! Hold the button to start the 24-hour freeze."
+L1-M1-T1,7,Reward — Resolution,The Celebration,"The freeze worked! The next morning, Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",Tap Next when ready.,,
+L1-M1-T1,8,Close — Milestone Splash,Milestone Splash Page,,Standard completion pane with XP and bronze skill unlock.,,
+L2-M1-T1,1,Hook — Empty Jar,The Fact Finder,"Tomorrow is Senna's birthday. Lars opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Lars can still buy the present.",Tap True or False.,"🟢 FALSE is correct","Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!"
+L2-M1-T1,2,Core — Needs vs Wants,The Stacked Sorting Triage,"Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'",Drag each card to the correct bucket.,"1. 📱 Phone Case Birthday Present (Needs)
+2. 🔌 Broken Phone Cable (Needs)
+3. 🍫 Beast Munch (Wants)
+4. 💃 New skin for his favourite game (Wants)","Persistent Error:
+• Card 1: Hold up! You promised this to your brother for his birthday. Promises are Total Must-Haves!
+• Card 2: Wait! If your phone cable is broken, your phone dies. That's a Need!
+• Card 3: Beast Munch tastes great, but you won't get stuck without it. That's a Want!
+• Card 4: A new skin brings short-term fun, but it isn't an essential lifeline. That goes into Things Lars wants!"
+L2-M1-T1,3,Core — Spotlight Needs,The Pick One / Spotlight (3-round challenge),Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?,Pick the need in each round.,"Round 1:
+❌ [Icon] A new phone case, even though his old one is still fine
+✅ [Icon] A new phone case he promised to buy his brother for his birthday
+Round 2:
+❌ [Icon] A new gaming mouse with lights (his old one still works)
+✅ [Icon] A light for his bike to be seen in the dark
+Round 3:
+❌ [Icon] Buy lunch for all his friends on Monday and have nothing left over
+✅ [Icon] Buy lunch for himself with his weekly tuckshop money","• Round 1: Whoops! If your current case is still fine, replacing it is just a want. The one you promised your brother is the true Must-Have!
+• Round 2: If the old one's still working, replacing it becomes a 'want' not a 'need'.
+• Round 3: Buying lunch for everyone is a nice thing to do, but it is a want, not something he 'needs' to do to look after himself!"
+L2-M1-T1,4,Apply — Budget Balance,The Budget Balance,You have $30 left. Check the boxes to buy what you actually need.,Select needs that fit the wallet.,"Wallet: $30
+☐ 🚍 Bus Pass ($15)
+☐ ⚡ Energy Drink ($10)
+☐ 🔌 Phone Cable ($15)
+Correct: Bus Pass + Phone Cable","Uncheck the item you don't really 'need'."
+L2-M1-T1,5,Apply — Reserve Slider,The Allocation Slider,Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.,Slide until at least $20 is in the reserve.,"Total: $25
+Reserve target: $20
+Spend zone: Energy Drink ($10)","Not quite! If you leave less than $20 in the reserve, you won't have enough to buy your brother's gift next week. Slide the line to protect the full $20!"
+L2-M1-T1,6,Apply — Rank Stack,The Sequence Stack,"Drag the choices in the correct order, starting with what would be best for Lars to do.",Drag cards into best-to-avoid order.,"1. Don't buy anything - keep the $5.
+2. Choose something cheaper for $5 to enjoy now.
+3. Borrow $5 from dad to buy the $10 bottle.
+Correct order: keep → cheaper → borrow","Not quite! Borrowing money creates debt — put this option at the bottom."
+L2-M1-T1,7,Reward — Gift Reveal,The Reveal Tap,Fast forward to next week! Tap the gift box to help Lars deliver his promise to Senna.,Tap the gift to reveal the outcome.,Gift box between Lars and Senna,
+L2-M1-T1,8,Close — Milestone Splash,Milestone Splash Page,,Standard completion pane with XP and bronze skill unlock.,,
+L3-M1-T1,1,Hook — TBD,301,[Draft L3 Screen 1] Reserve concept hook — content TBD,,(Tap to continue),
+L3-M1-T1,2,Core — TBD,302,[Draft L3 Screen 2] — content TBD,,(Tap to continue),
+L3-M1-T1,3,Core — TBD,303,[Draft L3 Screen 3] — content TBD,,(Tap to continue),
+L3-M1-T1,4,Core — TBD,304,[Draft L3 Screen 4] — content TBD,,(Tap to continue),
+L3-M1-T1,5,Apply — TBD,305,[Draft L3 Screen 5] — content TBD,,(Tap to continue),
+L3-M1-T1,6,Apply — TBD,306,[Draft L3 Screen 6] — content TBD,,(Tap to continue),
+L3-M1-T1,7,Reward — TBD,307,[Draft L3 Screen 7] — content TBD,,(Tap to continue),
+L3-M1-T1,8,Close — TBD,308,[Draft L3 Screen 8] — content TBD,,(Tap to continue),
+L4-M1-T1,1,Hook — TBD,401,[Draft L4 Screen 1] Social pressure hook — content TBD,,(Tap to continue),
+L4-M1-T1,2,Core — TBD,402,[Draft L4 Screen 2] — content TBD,,(Tap to continue),
+L4-M1-T1,3,Core — TBD,403,[Draft L4 Screen 3] — content TBD,,(Tap to continue),
+L4-M1-T1,4,Core — TBD,404,[Draft L4 Screen 4] — content TBD,,(Tap to continue),
+L4-M1-T1,5,Apply — TBD,405,[Draft L4 Screen 5] — content TBD,,(Tap to continue),
+L4-M1-T1,6,Apply — TBD,406,[Draft L4 Screen 6] — content TBD,,(Tap to continue),
+L4-M1-T1,7,Reward — TBD,407,[Draft L4 Screen 7] — content TBD,,(Tap to continue),
+L4-M1-T1,8,Close — TBD,408,[Draft L4 Screen 8] — content TBD,,(Tap to continue),

@@ -2,6 +2,10 @@ import {
   createPhase1MilestoneScaffold,
   type AcademyLessonMilestoneNode,
 } from "@/lib/dashboard/academy-state";
+import {
+  readPersisted,
+  writePersisted,
+} from "@/lib/dev/client-persist";
 
 export const ACADEMY_PROGRESS_STORAGE_KEY = "nga_academy_progress_v1";
 
@@ -14,7 +18,7 @@ export function readAcademyMilestones(): AcademyLessonMilestoneNode[] {
     return defaultAcademyMilestones();
   }
 
-  const raw = window.sessionStorage.getItem(ACADEMY_PROGRESS_STORAGE_KEY);
+  const raw = readPersisted(ACADEMY_PROGRESS_STORAGE_KEY);
   if (!raw) return defaultAcademyMilestones();
 
   try {
@@ -32,7 +36,7 @@ export function saveAcademyMilestones(
   milestones: readonly AcademyLessonMilestoneNode[],
 ): void {
   if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(
+  writePersisted(
     ACADEMY_PROGRESS_STORAGE_KEY,
     JSON.stringify(milestones),
   );

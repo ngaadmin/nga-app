@@ -55,10 +55,7 @@ export function AcademyLessonShell({
         </div>
       </header>
 
-      <div
-        className="relative min-h-0 flex-1 overflow-hidden"
-        style={{ touchAction: "none" }}
-      >
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <div
           className="flex h-full w-full transition-transform duration-300 ease-out"
           style={{
@@ -85,9 +82,19 @@ export function AcademyLessonShell({
   );
 }
 
-export function LessonScreenPane({ children }: { children: ReactNode }) {
+export function LessonScreenPane({
+  children,
+  isActive = true,
+}: {
+  children: ReactNode;
+  isActive?: boolean;
+}) {
   return (
-    <div className="flex h-full w-full shrink-0 flex-col overflow-y-auto px-4 py-5">
+    <div
+      className="flex h-full w-full shrink-0 flex-col overflow-y-auto px-4 py-5"
+      aria-hidden={!isActive}
+      inert={isActive ? undefined : true}
+    >
       {children}
     </div>
   );
@@ -96,5 +103,4 @@ export function LessonScreenPane({ children }: { children: ReactNode }) {
 export const lessonCardClass =
   "rounded-2xl border-0 bg-white p-4 shadow-md";
 
-export const lessonChoiceClass =
-  "w-full rounded-2xl border-2 border-[#BDE9FB]/60 bg-white px-4 py-4 text-left font-heading text-sm font-bold text-[#031F82] shadow-sm transition-all hover:bg-[#BDE9FB]/20 active:scale-[0.99]";
+export { lessonChoiceBaseClass as lessonChoiceClass } from "@/components/academy/lesson/lesson-shared-styles";

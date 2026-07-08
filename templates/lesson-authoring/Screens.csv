@@ -1,0 +1,23 @@
+Screen,Game Type,Pathfinder Text,Explorer Text,Maverick Text,Extra Text,Game Settings,Explorer Settings,Maverick Settings,Error Pathfinder,Error Explorer,Error Maverick,Notes
+1,Word Drop,,,,right away!,"OPTIONS: Spent | Saved | Hidden
+CORRECT: Spent",,,Not quite! Try again.,,,Screen 1 = story hook. Extra Text = words after the blank.
+2,Two Choices,,,,,"CHOICE A: 
+CHOICE B: 
+CORRECT: A",,,,,,Screen 2 = core lesson idea.
+3,Tap to Reveal,,,,,"ITEMS:
+SHORT: 
+LONG:
+TAP: emoji-only",,,,,,Pick any game type from Game-Types.csv — not locked to Tap to Reveal.
+4,Drag Sort,Your turn! Sort these into the correct bucket.,,,,"ITEMS:
+SHORT:
+LONG:",,,,,,
+5,Speed Choice,,,,,"CHOICE A:
+CHOICE B:
+CORRECT: A
+STYLE: banner",,,,,,
+6,Hold Button,,,,,"HOLD:
+FROZEN:
+SUCCESS:
+CLEAR: yes",,,,,,
+7,Celebration,,,,,"BONUS: 0",,,,,,Use Explorer Settings for BONUS: 0 on Explorer if teens get 50 XP.
+8,Lesson Complete,,,,,,,,,,,Always last row. Leave text + settings blank.

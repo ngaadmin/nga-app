@@ -29,7 +29,7 @@ export const AcademyContextBanner = forwardRef<
   return (
     <div
       ref={ref}
-      className="pointer-events-none fixed inset-x-0 z-20 md:left-64"
+      className="pointer-events-none fixed inset-x-0 z-sticky md:left-64"
       style={{ top: topOffset }}
     >
       <div className="pointer-events-auto mx-auto w-full max-w-md bg-white px-5 pb-2 pt-1 sm:px-6">

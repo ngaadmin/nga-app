@@ -1,5 +1,9 @@
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import { resolveCanonicalSkillSlug } from "@/lib/skills/skills-registry";
+import {
+  readPersisted,
+  writePersisted,
+} from "@/lib/dev/client-persist";
 
 export const VAULT_SKILL_PROGRESS_STORAGE_KEY = "nga_vault_skill_progress_v1";
 
@@ -10,7 +14,7 @@ export type VaultSkillTierOverrides = Partial<
 export function readVaultSkillTierOverrides(): VaultSkillTierOverrides {
   if (typeof window === "undefined") return {};
 
-  const raw = window.sessionStorage.getItem(VAULT_SKILL_PROGRESS_STORAGE_KEY);
+  const raw = readPersisted(VAULT_SKILL_PROGRESS_STORAGE_KEY);
   if (!raw) return {};
 
   try {
@@ -36,7 +40,7 @@ export function saveVaultSkillTierOverrides(
   overrides: VaultSkillTierOverrides,
 ): void {
   if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(
+  writePersisted(
     VAULT_SKILL_PROGRESS_STORAGE_KEY,
     JSON.stringify(overrides),
   );

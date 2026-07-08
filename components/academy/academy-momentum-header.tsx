@@ -20,7 +20,7 @@ export function AcademyMomentumHeader({
   const journeyCopy = copyMatrix.dashboard.academy.journey;
 
   return (
-    <div className="sticky top-0 z-20 shrink-0 bg-white px-1 py-2">
+    <div className="sticky top-0 z-sticky shrink-0 bg-white px-1 py-2">
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl border-0 bg-white p-3 shadow-md">
           <div className="flex items-center gap-1.5">

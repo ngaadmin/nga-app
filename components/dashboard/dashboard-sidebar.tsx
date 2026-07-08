@@ -8,7 +8,7 @@ import {
 
 export function DashboardSidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-nga-mist bg-white md:flex">
+    <aside className="fixed inset-y-0 left-0 z-chrome hidden w-64 flex-col border-r border-nga-mist bg-white md:flex">
       <div className="flex flex-col items-center border-b border-nga-mist px-4 py-6">
         <Link
           href={DASHBOARD_DEFAULT_HREF}

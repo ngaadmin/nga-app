@@ -324,10 +324,8 @@ export function AcademySkillTrack({
 
   const handleLaunchLesson = (milestoneId: number) => {
     const milestone = safeMilestones.find((node) => node.id === milestoneId);
-    if (
-      milestone &&
-      canLaunchAcademyLesson(milestoneId, milestone.status)
-    ) {
+    if (!milestone) return;
+    if (canLaunchAcademyLesson(milestoneId, milestone.status)) {
       router.push(`/dashboard/academy/lesson/${milestoneId}`);
     }
   };
@@ -335,7 +333,7 @@ export function AcademySkillTrack({
   return (
     <section
       aria-labelledby="academy-journey-heading"
-      className="relative z-0 w-full max-w-full bg-white pb-4"
+      className="relative z-base w-full max-w-full bg-white pb-4"
     >
       <DashboardSectionHeading id="academy-journey-heading" className="mb-3 px-1">
         {copy.heading}
@@ -375,7 +373,7 @@ export function AcademySkillTrack({
                     style={{ height: slotHeight }}
                   >
                     <div
-                      className="absolute top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
+                      className="absolute top-1/2 z-base -translate-x-1/2 -translate-y-1/2"
                       style={{ left: `${anchorX}%` }}
                     >
                       <AcademyNode

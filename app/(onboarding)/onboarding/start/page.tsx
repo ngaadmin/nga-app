@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PersonalizationGateForm } from "@/components/onboarding/personalization-gate-form";
+import { OnboardingFreshStartReset } from "@/components/onboarding/onboarding-fresh-start-reset";
 import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-session-redirect";
 
 export const metadata: Metadata = {
@@ -11,7 +13,10 @@ export const metadata: Metadata = {
 export default function OnboardingStartPage() {
   return (
     <>
-      <OnboardingSessionRedirect />
+      <Suspense fallback={null}>
+        <OnboardingFreshStartReset />
+        <OnboardingSessionRedirect />
+      </Suspense>
       <PersonalizationGateForm />
     </>
   );

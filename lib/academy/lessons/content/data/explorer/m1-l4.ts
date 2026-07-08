@@ -1,0 +1,399 @@
+/* AUTO-GENERATED from Explorer workbook — npm run lesson:import:explorer */
+
+import type { CohortLessonDefinition } from "@/lib/academy/lessons/types";
+
+export const M1_L4_EXPLORER_DEFINITION: CohortLessonDefinition = {
+  "meta": {
+    "milestoneId": 4,
+    "levelId": 1,
+    "lessonNumber": 4,
+    "moduleTitle": "Module 1",
+    "lessonTitle": "Pause Under Pressure",
+    "shellLabel": "Module 1 · Lesson 4 · Pause Under Pressure",
+    "totalScreens": 8,
+    "lessonKey": "L4-M1-T1",
+    "skillName": "Recognise and Pause Impulsive Spending",
+    "skillHubId": "SKILL-01",
+    "learningOutcome": "I can use recognise spending triggers in more realistic situations",
+    "conceptTruth": "Wanting something strongly in the moment does not mean it is a good decision - pausing helps improve the decision",
+    "behaviourShift": "From waiting but still making the same decision without thinking it through\n → To using the pause to actively think before deciding",
+    "ruleEnforcement": "When I pause before buying something I want, I ask:\n Do I still want this after thinking about it?\n Can this wait, or do I need it now?\n Is there a better way to buy this (e.g. cheaper or later)?",
+    "learningArc": "Deepening",
+    "focus": "Apply Recognise Spending Triggers under pressure",
+    "characters": {
+      "lead": "Senna",
+      "support": "Senna",
+      "explorer": "Senna",
+      "pathfinder": "Holly",
+      "maverick": "Dash"
+    }
+  },
+  "rewards": {
+    "skillSlug": "stop-and-think",
+    "achievementSkillSlug": "stop-and-think",
+    "xpReward": 150,
+    "perfectStreakBonus": 50
+  },
+  "custom": {
+    "sequence": {
+      "intro": "Put Senna's pause steps in the right order.",
+      "dragHint": "Drag each step into the order Senna should follow.",
+      "axisLabel": "First → Last",
+      "submitLabel": "Submit Answer",
+      "successMessage": "Perfect! He didn't rush in, he checked the price, and he stayed in control of his own cash.",
+      "items": [
+        {
+          "id": "see-offer",
+          "label": "Senna sees the Limited Time offer."
+        },
+        {
+          "id": "remember",
+          "label": "He stops and remembers the price might drop later."
+        },
+        {
+          "id": "wait",
+          "label": "He waits two days to check the price again."
+        },
+        {
+          "id": "buy-if-cheaper",
+          "label": "Senna only buys it if the price is cheaper and he still wants it."
+        }
+      ],
+      "correctOrder": [
+        "see-offer",
+        "remember",
+        "wait",
+        "buy-if-cheaper"
+      ],
+      "errors": {
+        "buy-if-cheaper": "Not quite! Senna checks the price before buying — that step comes later.",
+        "wait": "Not quite! Remembering to pause comes before waiting."
+      }
+    },
+    "rank": {
+      "intro": "Put Senna's pause steps in the right order.",
+      "dragHint": "Drag each step into the order Senna should follow.",
+      "axisLabel": "First → Last",
+      "submitLabel": "Submit Answer",
+      "successMessage": "Perfect! He didn't rush in, he checked the price, and he stayed in control of his own cash.",
+      "items": [
+        {
+          "id": "see-offer",
+          "label": "Senna sees the Limited Time offer."
+        },
+        {
+          "id": "remember",
+          "label": "He stops and remembers the price might drop later."
+        },
+        {
+          "id": "wait",
+          "label": "He waits two days to check the price again."
+        },
+        {
+          "id": "buy-if-cheaper",
+          "label": "Senna only buys it if the price is cheaper and he still wants it."
+        }
+      ],
+      "correctOrder": [
+        "see-offer",
+        "remember",
+        "wait",
+        "buy-if-cheaper"
+      ],
+      "errors": {
+        "buy-if-cheaper": "Not quite! Senna checks the price before buying — that step comes later.",
+        "wait": "Not quite! Remembering to pause comes before waiting."
+      }
+    }
+  },
+  "baseScreens": [
+    {
+      "type": "binary-choice",
+      "id": "skill-spotlight",
+      "prompt": "What skill is Senna practicing?",
+      "optionA": {
+        "label": "Senna stops to think.",
+        "isCorrect": true
+      },
+      "optionB": {
+        "label": "Senna has run out of money.",
+        "isCorrect": false
+      },
+      "wrongError": "Nah, running out of cash isn't a skill! We're looking for what Senna is choosing to do.",
+      "errorStyle": "inline-red",
+      "authoring": {
+        "objective": "Activate Prior Knowledge (Relatability)",
+        "gameArchetype": "123",
+        "simpleScreenText": "",
+        "theAction": "Choose the correct answer.",
+        "contentForGame": "What skill is Senna practicing?\nOption A: \"Senna stops to think.\" (Correct)\nOption B: \"Senna has run out of money.\" (Wrong)\nOption C: \"Senna is just slow at clicking.\" (Wrong)",
+        "errorMessage": "A - That's right! Senna is hitting the brakes before his brain makes a quick mistake.\nB - Nah, running out of cash isn't a skill! We're looking for what Senna is choosing to do.\nC - Not quite! Senna is actually being smart by not rushing into a trap.",
+        "pedagogicalStage": "hook",
+        "screenNumber": 1,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "custom",
+      "id": "pause-sequence",
+      "renderer": "m1-l2-rank-stack",
+      "configRef": "rank",
+      "authoring": {
+        "objective": "Concept Introduction (Mechanism)",
+        "gameArchetype": "127",
+        "simpleScreenText": "",
+        "theAction": "Mechanism (Game Type): Step-by-Step Sequencer (Snap-in interaction: Each step locks into place only when placed in the correct chronological order).",
+        "contentForGame": "1. Senna sees the \"Limited Time\" offer.\n2. He stops and remembers the price might drop later.\n3. He waits two days to check the price again.\n4. Senna only buys it if the price is cheaper and he still wants it.",
+        "errorMessage": "Success: Perfect! He didn't rush in, he checked the price, and he stayed in control of his own cash.",
+        "pedagogicalStage": "core",
+        "screenNumber": 2,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "validate-on-next",
+        "rules": [
+          {
+            "kind": "rank-order",
+            "correctOrder": [
+              "see-offer",
+              "remember",
+              "wait",
+              "buy-if-cheaper"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "bucket-sort",
+      "id": "rush-vs-think-sort",
+      "intro": "Sort each thought — is Senna rushing or thinking?",
+      "buckets": [
+        {
+          "id": "rush",
+          "label": "I'm Rushing"
+        },
+        {
+          "id": "think",
+          "label": "I'm Thinking"
+        }
+      ],
+      "items": [
+        {
+          "id": "it-looks-cool-i-need-it-",
+          "label": "It looks cool, I need it right now!",
+          "bucket": "rush"
+        },
+        {
+          "id": "i-ll-ask-around-if-it-s-",
+          "label": "I’ll ask around if it’s actually any good.",
+          "bucket": "think"
+        },
+        {
+          "id": "everyone-has-it-i-don-t-",
+          "label": "Everyone has it, I don't want to be left out.",
+          "bucket": "rush"
+        },
+        {
+          "id": "i-can-wait-and-get-it-ch",
+          "label": "I can wait and get it cheaper later.",
+          "bucket": "think"
+        },
+        {
+          "id": "it-s-a-limited-time-offe",
+          "label": "It’s a 'limited time' offer—I have to buy it!",
+          "bucket": "rush"
+        },
+        {
+          "id": "i-ll-sleep-on-it-and-dec",
+          "label": "I’ll sleep on it and decide tomorrow.",
+          "bucket": "think"
+        }
+      ],
+      "authoring": {
+        "objective": "Contrast & Categorization (Discrimination)",
+        "gameArchetype": "131",
+        "simpleScreenText": "",
+        "theAction": "The Interaction: The user drags a thought bubble from the list to a bucket.\n\nThe \"Success\" State (Drop into correct bucket): - When the user releases the bubble over the correct bucket, it \"snaps\" cleanly into place, perhaps with a small click sound or a subtle highlight on the bucket. The item stays in that bucket.\n\nThe \"Error\" State (Drop into incorrect bucket): - If the user drops it into the wrong bucket, it returns to the pool of items to be sorted. The user is visually told \"that's not right\" without the game explicitly telling them \"You are wrong.\"",
+        "contentForGame": "Option 1: Action-Oriented (Most Direct)\nBucket A: \"I'm Rushing\"\nBucket B: \"I'm Thinking\"\n\n\"It looks cool, I need it right now!\" (Bucket A)\n\"I’ll ask around if it’s actually any good.\" (Bucket B)\n\"Everyone has it, I don't want to be left out.\" (Bucket A)\n\"I can wait and get it cheaper later.\" (Bucket B)\n\"It’s a 'limited time' offer—I have to buy it!\" (Bucket A)\n\"I’ll sleep on it and decide tomorrow.\" (Bucket B)",
+        "errorMessage": "\"Perfect! You’ve sorted the 'rush' from the 'think.' Lars and Mia are in control now!\"",
+        "pedagogicalStage": "core",
+        "screenNumber": 3,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "all-items-sorted"
+      }
+    },
+    {
+      "type": "tap-reveal",
+      "id": "pressure-sign-tap",
+      "intro": "Tap the parts of the sign that are making Lars rush.",
+      "tapDisplay": "label",
+      "revealDisplay": "label",
+      "buckets": [
+        {
+          "id": "pressure",
+          "label": "Pressure tricks",
+          "tone": "short"
+        },
+        {
+          "id": "neutral",
+          "label": "Just info",
+          "tone": "long"
+        }
+      ],
+      "items": [
+        {
+          "id": "tap-on-the-parts-of-the-",
+          "label": "Tap on the parts of the sign that are making Lars rush.",
+          "bucket": "neutral"
+        },
+        {
+          "id": "don-t-miss-out",
+          "label": "DON'T MISS OUT!",
+          "bucket": "pressure"
+        },
+        {
+          "id": "only-2-left",
+          "label": "ONLY 2 LEFT!",
+          "bucket": "pressure"
+        },
+        {
+          "id": "ends-tomorrow",
+          "label": "ENDS TOMORROW!",
+          "bucket": "pressure"
+        }
+      ],
+      "authoring": {
+        "objective": "Active Processing (Triage/Application)",
+        "gameArchetype": "135",
+        "simpleScreenText": "",
+        "theAction": "The Interaction:\n\nUser taps each of the three lines.\n\nAs each line is tapped, it fades away.",
+        "contentForGame": "\"Tap on the parts of the sign that are making Lars rush.\"\n\nThe Sign:\n\n\"DON'T MISS OUT!\"\n\"ONLY 2 LEFT!\"\n\"ENDS TOMORROW!\"",
+        "errorMessage": "Good work. With the pressure removed, Lars has time to think and decides he doesn't need it.",
+        "pedagogicalStage": "core",
+        "screenNumber": 4,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "all-taps-revealed"
+      }
+    },
+    {
+      "type": "binary-choice",
+      "id": "check-not-rush",
+      "prompt": "Which question helps Senna pause before buying?",
+      "optionA": {
+        "label": "Do I have enough money left for my other goals?",
+        "isCorrect": true
+      },
+      "optionB": {
+        "label": "CLICK HERE TO BUY NOW!",
+        "isCorrect": false
+      },
+      "wrongError": "Caught you! That button is trying to do the thinking for you.",
+      "errorStyle": "inline-red",
+      "authoring": {
+        "objective": "Cognitive Conflict (Deconstruction)",
+        "gameArchetype": "139",
+        "simpleScreenText": "",
+        "theAction": "Mechanism\nA list of four clickable buttons. Tapping a \"Correct\" button highlights it green and locks it in. Tapping the \"Dud\" button triggers a gentle shake animation to indicate it is not the right tool for this decision.",
+        "contentForGame": "[Check] Do I really need this instead of using the money for something else?\n[Check] \"Do I really want this now, or is the timer making me rush to buy it?\"\n[Check] \"Do I have enough money left for my other goals?\"\n[Dud] \"CLICK HERE TO BUY NOW!\"",
+        "errorMessage": "Caught you! That button is trying to do the thinking for you. Don't let it!",
+        "pedagogicalStage": "apply",
+        "screenNumber": 5,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "narrative-bonus",
+      "id": "coins-to-piggy",
+      "narrative": "Drag your coins into the piggy bank — saving beats rushing every time.",
+      "bonusXp": 0,
+      "bonusTapLabel": "",
+      "autoReadyWhenNoBonus": true,
+      "authoring": {
+        "objective": "Situational Resolution (Procedural Memory)",
+        "gameArchetype": "143",
+        "simpleScreenText": "",
+        "theAction": "Swipe and move object",
+        "contentForGame": "Stack of gold coins that can be moved around the screen by the user. The coins are dropped into a piggy bank when the user hovers the money over the piggy bank.",
+        "errorMessage": "",
+        "pedagogicalStage": "apply",
+        "screenNumber": 6,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "auto-ready"
+      }
+    },
+    {
+      "type": "narrative-bonus",
+      "id": "workshop-goal",
+      "narrative": "Senna saved up for the Wheelie Workshop! \"Snacks at school $5, \" $5",
+      "bonusXp": 50,
+      "bonusTapLabel": "[ COLLECT 50 XP BONUS ]",
+      "autoReadyWhenNoBonus": false,
+      "authoring": {
+        "objective": "Timeline Progression",
+        "gameArchetype": "146",
+        "simpleScreenText": "",
+        "theAction": "The Meter: A progress bar at the top labeled \"Savings for Workshop: $0 / $20.\"\n\nThe Action: As the user drags each item into the \"Saved\" box, the item vanishes, the \"Saved\" box glows, and the meter ticks up: $5... $15... $20!\n\nThe Finale: Once the meter hits $20, the \"Wheelie Workshop\" sign transforms from \"Locked\" to \"Sign Up Now!\" with a \"Goal Achieved!\" animation.",
+        "contentForGame": "\"Snacks at school $5\n\"Extra Lives Bundle\" $5 \nFlashlight $10",
+        "errorMessage": "Once the meter hits $20, the \"Wheelie Workshop\" sign transforms from \"Locked\" to \"Sign Up Now!\" with a \"Goal Achieved!\" animation.",
+        "pedagogicalStage": "reward",
+        "screenNumber": 7,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "completion",
+      "id": "milestone-splash",
+      "useStandardPane": true,
+      "authoring": {
+        "objective": "Neurological Closure (Variable Reward System)",
+        "gameArchetype": "150",
+        "simpleScreenText": "",
+        "theAction": "151",
+        "contentForGame": "",
+        "errorMessage": "",
+        "pedagogicalStage": "close",
+        "screenNumber": 8,
+        "lessonKey": "L4-M1-T1"
+      },
+      "advance": {
+        "mode": "manual-next"
+      }
+    }
+  ],
+  "byCohort": {
+    "explorer": {
+      "characterName": "Senna"
+    },
+    "pathfinder": {
+      "characterName": "Holly",
+      "rewards": {
+        "xpReward": 50,
+        "perfectStreakBonus": 0
+      }
+    },
+    "maverick": {
+      "characterName": "Dash",
+      "rewards": {
+        "xpReward": 50,
+        "perfectStreakBonus": 0
+      }
+    }
+  },
+  "_draft": false
+} as const;

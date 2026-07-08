@@ -12,6 +12,8 @@ import {
   DashboardSectionHeading,
   dashboardSectionHeadingClass,
 } from "@/components/dashboard/dashboard-section-heading";
+import { ModalShell } from "@/components/ui/modal-shell";
+import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
@@ -191,10 +193,7 @@ function CoinFlightOverlay({ flights }: CoinFlightOverlayProps) {
         }
       `}</style>
 
-      <div
-        className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
-        aria-hidden
-      >
+      <OverlayPortal className="overflow-hidden">
         {flights.map((flight) => (
           <span
             key={flight.id}
@@ -211,7 +210,7 @@ function CoinFlightOverlay({ flights }: CoinFlightOverlayProps) {
             🪙
           </span>
         ))}
-      </div>
+      </OverlayPortal>
     </>
   );
 }
@@ -543,20 +542,14 @@ type PremiumCustomJarModalProps = {
 };
 
 function PremiumCustomJarModal({ isOpen, onClose }: PremiumCustomJarModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#031F82]/45 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="premium-jar-title"
-      onClick={onClose}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      labelledBy="premium-jar-title"
+      backdropClassName="bg-[#031F82]/45"
+      panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
     >
-      <div
-        className="w-full max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
-        onClick={(event) => event.stopPropagation()}
-      >
         <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#DCB766]">
           Premium unlock
         </p>
@@ -585,8 +578,7 @@ function PremiumCustomJarModal({ isOpen, onClose }: PremiumCustomJarModalProps) 
         >
           Maybe later
         </button>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 

@@ -41,6 +41,46 @@
 
   /* Spacing scale for touch-friendly targets */
   --spacing-touch: 2.75rem;
+
+  /*
+   * Stacking layers — use z-base, z-raised, z-sticky, z-chrome,
+   * z-overlay, z-modal, z-toast, z-dev. Avoid raw z-[N] values.
+   */
+  --z-index-base: 0;
+  --z-index-raised: 10;
+  --z-index-sticky: 20;
+  --z-index-chrome: 40;
+  --z-index-overlay: 50;
+  --z-index-modal: 60;
+  --z-index-toast: 70;
+  --z-index-dev: 80;
+}
+
+@layer components {
+  #overlay-root,
+  #modal-root,
+  #toast-root {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    isolation: isolate;
+  }
+
+  #overlay-root {
+    z-index: var(--z-index-overlay);
+  }
+
+  #modal-root {
+    z-index: var(--z-index-modal);
+  }
+
+  #toast-root {
+    z-index: var(--z-index-toast);
+  }
+
+  .layer-island {
+    isolation: isolate;
+  }
 }
 
 @layer base {

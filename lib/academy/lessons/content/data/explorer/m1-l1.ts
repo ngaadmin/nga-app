@@ -1,0 +1,324 @@
+/* AUTO-GENERATED from Explorer workbook — npm run lesson:import:explorer */
+
+import type { CohortLessonDefinition } from "@/lib/academy/lessons/types";
+
+export const M1_L1_EXPLORER_DEFINITION: CohortLessonDefinition = {
+  "meta": {
+    "milestoneId": 1,
+    "levelId": 1,
+    "lessonNumber": 1,
+    "moduleTitle": "Module 1",
+    "lessonTitle": "Money In, Money Out",
+    "shellLabel": "Module 1 · Lesson 1 · Money In, Money Out",
+    "totalScreens": 8,
+    "lessonKey": "L1-M1-T1",
+    "skillName": "Recognise and Pause Impulsive Spending",
+    "skillHubId": "SKILL-01",
+    "learningOutcome": "I understand the basics of recognising spending triggers",
+    "conceptTruth": "Impulsive spending happens quickly, but can be stopped by pausing before acting",
+    "behaviourShift": "From spending immediately when something feels exciting\n → To pausing before spending to decide if it is worth it",
+    "ruleEnforcement": "I always pause before buying something I want",
+    "learningArc": "Awareness",
+    "focus": "Introduce Recognise Spending Triggers",
+    "characters": {
+      "lead": "Lars",
+      "support": "Senna",
+      "explorer": "Lars",
+      "pathfinder": "Holly",
+      "maverick": "Dash"
+    }
+  },
+  "rewards": {
+    "skillSlug": "stop-and-think",
+    "achievementSkillSlug": "stop-and-think",
+    "xpReward": 150,
+    "perfectStreakBonus": 50
+  },
+  "baseScreens": [
+    {
+      "type": "word-drop",
+      "id": "hook-word-drop",
+      "narrativeBefore": "Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be",
+      "narrativeAfter": "right away!",
+      "options": [
+        "Spent",
+        "Saved",
+        "Hidden"
+      ],
+      "correctOption": "Spent",
+      "wrongError": "Not quite! Look how fast Lars is running - what is his brain telling him to do?",
+      "authoring": {
+        "objective": "Activate Prior Knowledge (Relatability)",
+        "gameArchetype": "The Fill-the-Blank Drop",
+        "simpleScreenText": "Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be [ ______ ] right away!",
+        "theAction": "Drag-and-Drop: User drags the correct capsule into the blank space to start the story.",
+        "contentForGame": "Correct: [Spent]\n\n\nPool: [Spent], [Saved], [Hidden]",
+        "errorMessage": "Not quite! Look how fast Lars is running - what is his brain telling him to do?",
+        "pedagogicalStage": "hook",
+        "screenNumber": 1,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "binary-choice",
+      "id": "short-fun-reality",
+      "prompt": "Lars buys a giant bag of sour worms and a plastic fidget spinner. He’s super happy, but ten minutes later...",
+      "optionA": {
+        "label": "...the candy is gone and the toy feels boring.",
+        "isCorrect": true
+      },
+      "optionB": {
+        "label": "...his $20 cash magically reappears.",
+        "isCorrect": false
+      },
+      "wrongError": "If only! In the real world, once you trade your cash, it's gone. Try again!",
+      "errorStyle": "inline-red",
+      "authoring": {
+        "objective": "Concept Introduction (Mechanism)",
+        "gameArchetype": "The Sentence Finisher",
+        "simpleScreenText": "Lars buys a giant bag of sour worms and a plastic fidget spinner. He’s super happy, but ten minutes later...",
+        "theAction": "Simple Tap: User taps the true ending block to finish the thought.",
+        "contentForGame": "🟢 [...the candy is gone and the toy feels boring.]\n\n\n🔴 [...his $20 cash magically reappears.]",
+        "errorMessage": "If only! In the real world, once you trade your cash, it's gone. Try again!",
+        "pedagogicalStage": "core",
+        "screenNumber": 2,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "tap-reveal",
+      "id": "tap-short-vs-long",
+      "intro": "Lars’s money is gone and he only had 10 minutes of fun. Tap these items to see the difference!",
+      "tapDisplay": "emoji-label",
+      "revealDisplay": "emoji-label",
+      "buckets": [
+        {
+          "id": "short",
+          "label": "Short Fun",
+          "tone": "short"
+        },
+        {
+          "id": "long",
+          "label": "More Fun for Longer",
+          "tone": "long"
+        }
+      ],
+      "items": [
+        {
+          "id": "sour-worms",
+          "emoji": "🍬",
+          "label": "Sour Worms",
+          "bucket": "short"
+        },
+        {
+          "id": "cinema-popcorn",
+          "emoji": "🍿",
+          "label": "Cinema Popcorn",
+          "bucket": "short"
+        },
+        {
+          "id": "wireless-headphones",
+          "emoji": "🎧",
+          "label": "Wireless Headphones",
+          "bucket": "long"
+        },
+        {
+          "id": "skateboard",
+          "emoji": "🛹",
+          "label": "Skateboard",
+          "bucket": "long"
+        }
+      ],
+      "authoring": {
+        "objective": "Contrast & Categorization (Discrimination)",
+        "gameArchetype": "The Flash Tap",
+        "simpleScreenText": "Lars’s money is gone and he only had 10 minutes of fun. Tap these items to see the difference!",
+        "theAction": "Tap-to-Reveal: User taps items to watch them flash and sort into distinct piles.",
+        "contentForGame": "🍬 Sour Worms ──> Flashes red to Short Fun.\n\n🍿 Cinema Popcorn ──> Flashes red to Short Fun.\n\n🎧 Wireless Headphones ──> Flashes green to More Fun for Longer.\n\n🛹 Skateboard ──> Flashes green to More Fun for Longer.",
+        "errorMessage": "(Exploratory mode — no error message needed)",
+        "pedagogicalStage": "core",
+        "screenNumber": 3,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "all-taps-revealed"
+      }
+    },
+    {
+      "type": "bucket-sort",
+      "id": "sort-short-vs-long",
+      "intro": "Your turn! Sort these items into the correct bucket.",
+      "buckets": [
+        {
+          "id": "short",
+          "label": "Short Fun"
+        },
+        {
+          "id": "long",
+          "label": "More Fun for Longer"
+        }
+      ],
+      "items": [
+        {
+          "id": "slice-of-pizza",
+          "emoji": "🍕",
+          "label": "Slice of pizza",
+          "bucket": "short"
+        },
+        {
+          "id": "tea-with-all-the-topping",
+          "emoji": "🥤Bubble",
+          "label": "tea with all the toppings",
+          "bucket": "short"
+        },
+        {
+          "id": "gaming-controller",
+          "emoji": "🎮",
+          "label": "Gaming controller",
+          "bucket": "long"
+        },
+        {
+          "id": "dance-emote",
+          "emoji": "📚",
+          "label": "Dance Emote",
+          "bucket": "long"
+        }
+      ],
+      "authoring": {
+        "objective": "Active Processing (Triage/Application)",
+        "gameArchetype": "The Sorting Game",
+        "simpleScreenText": "Your turn! Sort these items into the correct bucket.",
+        "theAction": "Left/Right Tap: User taps left/right buttons. Static items load one by one. Screen borders flash green/red on input.",
+        "contentForGame": "Short Fun (Left):\n\n🍕 Slice of pizza\n🥤Bubble tea with all the toppings\n\n\nMore Fun for Longer (Right):\n\n🎮 Gaming controller\n📚 Dance Emote",
+        "errorMessage": "Wrong input: Screen vibrates and shows a thick red border around the glass.",
+        "pedagogicalStage": "core",
+        "screenNumber": 4,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "all-items-sorted"
+      }
+    },
+    {
+      "type": "binary-choice",
+      "id": "countdown-trap",
+      "prompt": "Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
+      "optionA": {
+        "label": "...To trick his brain into buying fast.",
+        "isCorrect": true
+      },
+      "optionB": {
+        "label": "...Because the game creators love him.",
+        "isCorrect": false
+      },
+      "wrongError": "Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it.",
+      "errorStyle": "banner",
+      "authoring": {
+        "objective": "Cognitive Conflict (Deconstruction)",
+        "gameArchetype": "The Quick Choice",
+        "simpleScreenText": "Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
+        "theAction": "Simple Tap: User taps the true hidden reason behind the flash countdown.",
+        "contentForGame": "🟢 [To trick his brain into buying fast.]\n\n\n🔴 [Because the game creators love him.]",
+        "errorMessage": "Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it.",
+        "pedagogicalStage": "apply",
+        "screenNumber": 5,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "hold-to-fill",
+      "id": "impulse-pause",
+      "narrative": "Don't tap buy! Stop the rush with a 24-Hour Buy Freeze. Give your brain time to cool down.",
+      "holdLabel": "❄️ HOLD TO FREEZE ❄️",
+      "frozenLabel": "❄️ FROZEN ❄️",
+      "successMessage": "Success! Lars has to wait 24 hours.",
+      "clearOnSuccess": false,
+      "holdDurationMs": 2000,
+      "releaseHint": "(Must hold down fully for 2 seconds to activate)",
+      "authoring": {
+        "objective": "Situational Resolution (Procedural Memory)",
+        "gameArchetype": "The 24-Hour Freeze",
+        "simpleScreenText": "Don't tap buy! Stop the rush with a 24-Hour Buy Freeze. Give your brain time to cool down.",
+        "theAction": "Hold-to-Activate: Child presses and holds a big blue button for 2 seconds to freeze the offer.",
+        "contentForGame": "Button: [❄️ HOLD TO FREEZE ❄️]\n\n\nVisual: Frost animation cracks over the layout; timer sits at 24:00:00 Safe.",
+        "errorMessage": "(Must hold down fully for 2 seconds to activate)",
+        "pedagogicalStage": "apply",
+        "screenNumber": 6,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "narrative-bonus",
+      "id": "resolution",
+      "narrative": "The freeze worked! The next morning, Lars realized he didn't even want that skin.",
+      "bonusXp": 50,
+      "bonusTapLabel": "[ COLLECT 50 XP BONUS ]",
+      "autoReadyWhenNoBonus": false,
+      "authoring": {
+        "objective": "Timeline Progression",
+        "gameArchetype": "The Celebration",
+        "simpleScreenText": "The freeze worked! The next morning, Lars realized he didn't even want that skin.\n\nTap to collect bonus 50xp for successfully staying in control of spending.",
+        "theAction": "User taps gold button with  BONUS - 50XP  on it. When user taps, bonus points are instantly added to user's points count",
+        "contentForGame": "Giant glowing button: [Claim 50 XP BONUS]",
+        "errorMessage": "(No errors)",
+        "pedagogicalStage": "reward",
+        "screenNumber": 7,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "completion",
+      "id": "milestone-splash",
+      "useStandardPane": true,
+      "authoring": {
+        "objective": "Neurological Closure (Variable Reward System)",
+        "gameArchetype": "52",
+        "simpleScreenText": "",
+        "theAction": "Pressing the button triggers the screen to close and game to go back to learning journey, with next lesson button now unlocked and clickable.",
+        "contentForGame": "Vault: Skill 1 initializes at Bronze.",
+        "errorMessage": "55",
+        "pedagogicalStage": "close",
+        "screenNumber": 8,
+        "lessonKey": "L1-M1-T1"
+      },
+      "advance": {
+        "mode": "manual-next"
+      }
+    }
+  ],
+  "byCohort": {
+    "explorer": {
+      "characterName": "Lars"
+    },
+    "pathfinder": {
+      "characterName": "Holly",
+      "rewards": {
+        "xpReward": 50,
+        "perfectStreakBonus": 0
+      }
+    },
+    "maverick": {
+      "characterName": "Dash",
+      "rewards": {
+        "xpReward": 50,
+        "perfectStreakBonus": 0
+      }
+    }
+  },
+  "_draft": false
+} as const;

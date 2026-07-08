@@ -13,6 +13,7 @@ import {
   type ComplianceTier,
 } from "@/lib/onboarding/ghost-session";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
+import { ModalShell } from "@/components/ui/modal-shell";
 import {
   LightbulbIcon,
   LockIcon,
@@ -393,7 +394,7 @@ function InProgressCarousel({
                     onCloseRequest(venture.id);
                   }}
                   aria-label={`Close ${idea.title}`}
-                  className="absolute -right-1 -top-1 z-10 flex size-5 items-center justify-center rounded-full bg-white text-[#031F82]/70 shadow-sm transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
+                  className="absolute -right-1 -top-1 z-raised flex size-5 items-center justify-center rounded-full bg-white text-[#031F82]/70 shadow-sm transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
                 >
                   <CloseIcon className="size-2.5" />
                 </button>
@@ -666,7 +667,7 @@ function VentureJourneyMap({
                       style={{ height: slotHeight }}
                     >
                       <div
-                        className="absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
+                        className="absolute top-1/2 z-raised -translate-x-1/2 -translate-y-1/2"
                         style={{ left: `${anchorX}%` }}
                       >
                         <VentureJourneyNode
@@ -735,17 +736,13 @@ function DiscoveryBriefDrawer({
   onLaunch,
 }: DiscoveryBriefDrawerProps) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#031F82]/50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="discovery-brief-title"
-      onClick={onClose}
+    <ModalShell
+      isOpen
+      onClose={onClose}
+      labelledBy="discovery-brief-title"
+      align="bottom"
+      panelClassName="max-w-md rounded-t-nga-xl rounded-b-nga-lg bg-white p-5 shadow-nga-pop"
     >
-      <div
-        className="w-full max-w-md rounded-t-nga-xl rounded-b-nga-lg bg-white p-5 shadow-nga-pop"
-        onClick={(event) => event.stopPropagation()}
-      >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#BDE9FB]" />
 
         <div className="flex items-start gap-3">
@@ -800,8 +797,7 @@ function DiscoveryBriefDrawer({
             LAUNCH THIS BUSINESS
           </button>
         )}
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -819,14 +815,16 @@ function CloseBusinessConfirm({
   onCloseShop,
 }: CloseBusinessConfirmProps) {
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#031F82]/60 p-4"
+    <ModalShell
+      isOpen
+      align="center"
+      dismissOnBackdrop={false}
       role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="close-business-title"
-      aria-describedby="close-business-warning"
+      labelledBy="close-business-title"
+      describedBy="close-business-warning"
+      backdropClassName="bg-[#031F82]/60"
+      panelClassName="max-w-sm rounded-nga-xl border-2 border-[#FFA503] bg-white p-5 shadow-nga-pop"
     >
-      <div className="w-full max-w-sm rounded-nga-xl border-2 border-[#FFA503] bg-white p-5 shadow-nga-pop">
         <div className="flex flex-col items-center text-center">
           <span className="text-4xl" aria-hidden>
             ⚠️
@@ -859,8 +857,7 @@ function CloseBusinessConfirm({
         >
           Close Shop
         </button>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -871,17 +868,12 @@ type PaywallModalProps = {
 
 function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#031F82]/50 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="engine-paywall-title"
-      onClick={onClose}
+    <ModalShell
+      isOpen
+      onClose={onClose}
+      labelledBy="engine-paywall-title"
+      panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
     >
-      <div
-        className="w-full max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
-        onClick={(event) => event.stopPropagation()}
-      >
         <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#DCB766]">
           Premium unlock
         </p>
@@ -909,8 +901,7 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
         >
           Not yet - keep exploring
         </button>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 

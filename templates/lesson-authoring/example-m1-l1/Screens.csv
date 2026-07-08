@@ -1,0 +1,59 @@
+Screen,Game Type,Pathfinder Text,Explorer Text,Maverick Text,Extra Text,Game Settings,Explorer Settings,Maverick Settings,Error Pathfinder,Error Explorer,Error Maverick
+1,Word Drop,"Holly made $25 from her weekend chores. At the mall, her friends are all showing off their new eyelash extensions and she feels the sudden urge to get hers done too. Her brain tricks her into thinking the cash must be","Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be","Dash just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be",right away!,"OPTIONS: Spent | Saved | Hidden
+CORRECT: Spent",,,"Not quite! Holly's friends are showing off — what's her brain pushing her to do with that $25?","Not quite! Look how fast Lars is running - what is his brain telling him to do?","Not quite! Dash spotted those earbuds — what's his brain pushing him to do with that $40?"
+2,Two Choices,Holly gets her eyelashes done right away with the $25 but ten minutes later...,Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy but ten minutes later...,Dash buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first but a few hours later...,,"CHOICE A: ...the initial excitement fades and her $25 is gone.
+CHOICE B: ...her $25 magically reappears in her wallet.
+CORRECT: A","CHOICE A: ...the candy is gone and the toy feels boring.
+CHOICE B: ...his $20 cash magically reappears.
+CORRECT: A","CHOICE A: ...the thrill starts to wear off and his $40 is spent.
+CHOICE B: ...the seller gives him his money back because he bought them so quickly.
+CORRECT: A","If only! In the real world, once you trade your cash, it's gone. Try again!","If only! In the real world, once you trade your cash, it's gone. Try again.","If only! On the marketplace, once you pay and take the item, the money is gone. No instant refunds just for buying fast. Try again!"
+3,Tap to Reveal,"Holly's $25 is gone and she only had a few minutes of excitement. Tap these items to see the difference between short fun and longer fun!",Lars's money is gone and he only had 10 minutes of fun. Tap these items to see the difference!,Dash's $40 is gone after buying the earbuds and he only had a short burst of satisfaction. Tap these items to see the difference between things that give short fun and things that give more fun for longer!,,"ITEMS:
+SHORT: 🧪 Glow-in-the-dark slime kit
+SHORT: 🍬 Candy salad
+LONG: 🧥 Viral hoodie
+LONG: 🥤 Water bottle
+TAP: emoji-only","ITEMS:
+SHORT: 🍬 Sour Worms
+SHORT: 🍿 Cinema Popcorn
+LONG: 🎧 Wireless Headphones
+LONG: 🛹 Skateboard","ITEMS:
+SHORT: ⚡ Energy drink + snack
+SHORT: 🎫 Scratch-it lottery ticket
+LONG: 🔊 Wireless speaker
+LONG: 🔧 Multi-tool / pocket knife",,,
+4,Drag Sort,Your turn! Sort these items into the correct bucket.,Your turn! Sort these items into the correct bucket.,Your turn!,,,"ITEMS:
+SHORT: 🧋 Giant bubble tea
+SHORT: 🪄 Cheap glow sticks / LED toys
+LONG: 🔊 Wireless speaker for hangouts
+LONG: 📓 Journal + good pen set","ITEMS:
+SHORT: 🍕 Pizza slice
+SHORT: 🥤 Bubble tea with all the toppings
+LONG: 🎮 Gaming controller
+LONG: 💃 Dance Emote","ITEMS:
+SHORT: 🍔 Food delivery with priority fee
+SHORT: 👕 Disposable concert merch
+LONG: 🎸 Second-hand quality guitar
+LONG: 🧥 High-quality piece of clothing",,,
+5,Speed Choice,"Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Later that day Dash receives a text message: ""Flash sale on premium bike lights – huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",,"CHOICE A: To stop her from pausing to decide if she really needs it.
+CHOICE B: Because they want to make sure she gets a good deal.
+CORRECT: A
+STYLE: banner","CHOICE A: To trick his brain into buying fast.
+CHOICE B: Because the game creators love him.
+CORRECT: A","CHOICE A: To trick his brain into buying fast without thinking.
+CHOICE B: Because the company genuinely cares about Dash's safety.
+CORRECT: A","Don't fall for the countdown! They're rushing Holly so she won't stop to think if she really wants to spend her money on it. Try again!","Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it.","Don't fall for the countdown! They're rushing Dash so he won't stop to think if he really wants to spend his money on it. Try again!"
+6,Hold Button,"Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, but silencing the chat alerts.","Don't tap buy! Stop the rush with a 24-Hour Buy Freeze. Give your brain time to cool down.","If dash had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Dash can decide if he really needs the item right now.",,"HOLD: 🔕 HOLD TO SILENCE 🔕
+FROZEN: 🔕 SILENCED 🔕
+SUCCESS: Thank you! Holly's had time to think.
+CLEAR: yes","HOLD: ❄️ HOLD TO FREEZE ❄️
+FROZEN: ❄️ FROZEN ❄️
+SUCCESS: Success! Lars has to wait 24 hours.
+CLEAR: no","HOLD: ⏸️ HOLD TO PAUSE ⏸️
+FROZEN: ⏸️ PAUSED ⏸️
+SUCCESS: Dash pauses and realizes: 'It's just a flash sale. I don't really need this right now and there will always be another deal.'
+CLEAR: yes",,,
+7,Celebration,Holly chooses to keep her money instead of giving in to the rush. Tap to collect bonus 50 XP for successfully staying in control of spending.,The freeze worked! The next morning Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset.,Dash walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.,,"BONUS: 50
+LABEL: [ COLLECT 50 XP BONUS ]","BONUS: 0","BONUS: 50
+LABEL: [ COLLECT 50 XP BONUS ]",,,
+8,Lesson Complete,,,,,,,,,,

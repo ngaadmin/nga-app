@@ -1,0 +1,14 @@
+Field,Value,Notes
+Module Number,1,Which module (usually matches Level)
+Lesson Number,,e.g. 3 for Lesson 3
+Lesson Title,,Shown in the app header
+Level,1,Academy level 1–6
+Pathfinder Character,,Main teen story voice — Holly Senna or Lucas (see Characters.csv)
+Explorer Character,Lars,Younger story — Lars or Mia
+Maverick Character,Dash,Older teen story — Dash Saskia or Immi
+Support Character,,Optional — Eva Tom or a peer. Use {support} in text.
+Skill Name,,Bronze skill on Screen 8 e.g. Stop & Think
+Skill ID,,kebab-case — ask dev once if new e.g. stop-and-think
+Explorer XP,150,Ages 10–12 (Explorer tier)
+Teen XP,50,Ages 13–18 (Pathfinder + Maverick)
+Explorer Perfect Bonus,50,Zero-mistake bonus — Explorer only

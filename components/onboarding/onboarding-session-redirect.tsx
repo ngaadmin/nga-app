@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   DASHBOARD_ACADEMY_PATH,
   readGhostAccessSession,
@@ -10,12 +10,15 @@ import {
 /** Sends completed ghost sessions straight to the Academy map. */
 export function OnboardingSessionRedirect() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (searchParams.get("reset") === "1") return;
+
     if (readGhostAccessSession()) {
       router.replace(DASHBOARD_ACADEMY_PATH);
     }
-  }, [router]);
+  }, [router, searchParams]);
 
   return null;
 }

@@ -76,10 +76,10 @@ export function JourneyPathBridge({
     <div
       className={
         dense
-          ? "relative z-0 h-5 w-full shrink-0"
+          ? "relative z-base h-5 w-full shrink-0"
           : compact
-            ? "relative z-0 h-7 w-full shrink-0 sm:h-8"
-            : "relative z-0 h-12 w-full shrink-0 sm:h-14"
+            ? "relative z-base h-7 w-full shrink-0 sm:h-8"
+            : "relative z-base h-12 w-full shrink-0 sm:h-14"
       }
       aria-hidden
     >

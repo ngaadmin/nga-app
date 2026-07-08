@@ -2,10 +2,10 @@
 
 import { useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
+import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import { clearGhostAccessSession } from "@/lib/onboarding/ghost-session";
-import { clearDashboardWalletState } from "@/lib/dashboard/dashboard-wallet-storage";
+import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
 import {
   BillingCardIcon,
   KeyIcon,
@@ -200,17 +200,14 @@ function ParentPinGate({
       : isValidPinFormat(pinValue);
 
   return (
-    <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#031F82]/55 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="parent-pin-title"
-      onClick={onCancel}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      layer="toast"
+      labelledBy="parent-pin-title"
+      backdropClassName="bg-[#031F82]/55"
+      panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
     >
-      <div
-        className="w-full max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
-        onClick={(event) => event.stopPropagation()}
-      >
         <h2
           id="parent-pin-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
@@ -273,8 +270,7 @@ function ParentPinGate({
         >
           {cancelLabel}
         </button>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -396,17 +392,14 @@ function ChangeParentPinModal({
     isValidPinFormat(confirmPin);
 
   return (
-    <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#031F82]/55 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="change-parent-pin-title"
-      onClick={handleClose}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={handleClose}
+      layer="toast"
+      labelledBy="change-parent-pin-title"
+      backdropClassName="bg-[#031F82]/55"
+      panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
     >
-      <div
-        className="w-full max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
-        onClick={(event) => event.stopPropagation()}
-      >
         <h2
           id="change-parent-pin-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
@@ -483,8 +476,7 @@ function ChangeParentPinModal({
         >
           {copy.cancel}
         </button>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -506,17 +498,14 @@ function PointsConvertedSuccessModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-[#031F82]/50 p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="points-converted-title"
-      onClick={onClose}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      layer="toast"
+      labelledBy="points-converted-title"
+      backdropClassName="bg-[#031F82]/50"
+      panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md sm:p-6"
     >
-      <div
-        className="w-full max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md sm:p-6"
-        onClick={(event) => event.stopPropagation()}
-      >
         <h2
           id="points-converted-title"
           className="font-heading text-xl font-extrabold leading-tight text-[#031F82] sm:text-2xl"
@@ -533,8 +522,7 @@ function PointsConvertedSuccessModal({
         >
           {acknowledgeLabel}
         </button>
-      </div>
-    </div>
+    </ModalShell>
   );
 }
 
@@ -757,8 +745,7 @@ export function HomeDashboard() {
   );
 
   function handleLogOut() {
-    clearGhostAccessSession();
-    clearDashboardWalletState();
+    clearAllAppSessionState();
     router.push("/onboarding/start");
   }
 

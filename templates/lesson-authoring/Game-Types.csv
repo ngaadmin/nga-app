@@ -1,0 +1,91 @@
+Game Type,Also Called,What It Does,Copy Into Game Settings,Built In App
+Word Drop,Word Bank Rule,Fill the blank with a word chip,"OPTIONS: Spent | Saved | Hidden
+CORRECT: Spent",Yes
+Two Choices,Standard Quiz,Pick A or B to finish a sentence,"CHOICE A: First ending here
+CHOICE B: Second ending here
+CORRECT: A",Yes
+True False,,True or false statement,"CORRECT: false
+LABEL: Fact Finder",Yes
+Tap to Reveal,,Tap items to reveal short vs long fun (or hidden facts),"ITEMS:
+SHORT: 🧪 Slime kit
+SHORT: 🍬 Candy
+LONG: 🧥 Hoodie
+LONG: 🥤 Water bottle
+TAP: emoji-only",Yes
+Drag Sort,Triage Sorter,Drag items into two buckets,"ITEMS:
+WANT: 🎮 Game skin
+WANT: 🍕 Pizza
+NEED: 🚌 Bus pass
+NEED: 📱 Phone cable",Yes
+Speed Choice,Quick Trap,Countdown / pressure choice — use STYLE banner,"CHOICE A: Correct answer here
+CHOICE B: Wrong answer here
+CORRECT: A
+STYLE: banner",Yes
+Scenario Fork,Narrative Branch,Real-world fork in the road,"CHOICE A: Smart path
+CHOICE B: Risky path
+CORRECT: A
+STYLE: banner",Yes
+Pick One Rounds,,Three rounds — pick the best option each time,"ROUNDS:
+Round 1 | Option A | Option B | CORRECT: A | ERROR: Try again!
+Round 2 | Option A | Option B | CORRECT: B | ERROR: Nope!",Yes
+Hold Button,,Hold to pause / freeze / silence alerts,"HOLD: 🔕 HOLD TO SILENCE 🔕
+FROZEN: 🔕 SILENCED 🔕
+SUCCESS: Thank you! Time to think.
+CLEAR: yes",Yes
+Celebration,,Story beat + optional bonus XP tap,"BONUS: 50
+LABEL: [ COLLECT 50 XP BONUS ]",Yes
+Tap Pairs,Pair Matcher,Match left/right concept pairs,"PAIRS:
+Instant fun = Short-lived thrill
+Delayed reward = Lasting value
+Impulse buy = Money gone fast",Coming soon
+Pipeline Leak Monitor,,Tap leaking pipes before cash drains,"LEAKS: Subscription drip
+LEAKS: Card interest
+LEAKS: Free trial
+POOL: 100",Coming soon
+Error Eliminator,,Tap grid cells to knock out phishing flags,"FLAGS: Click here to verify
+FLAGS: You won a prize
+FLAGS: Urgent payment due",Coming soon
+Budget Checkboxes,,Pick needs within a wallet total,"RENDERER: budget-wallet
+TOTAL: 30
+ITEMS: 🚍 Bus Pass | 15
+ITEMS: ⚡ Energy Drink | 10
+ITEMS: 🔌 Phone Cable | 15
+CORRECT: bus,cable",Yes (M1-L2)
+Budget Slider,,Slide money into a reserve,"RENDERER: budget-slider
+TOTAL: 25
+TARGET: 20",Yes (M1-L2)
+Rank Choices,Priority Ranker,Drag choices best → worst,"RENDERER: rank-stack
+ITEMS: Keep the money safe
+ITEMS: Buy something cheaper
+ITEMS: Borrow to afford it
+ORDER: keep,cheaper,borrow",Yes (M1-L2)
+Gift Reveal,,Tap gift for story ending,"RENDERER: gift-reveal
+MESSAGE: Recap what the character learned",Yes (M1-L2)
+Cash Allocation Splitter,,Split paycheck into spending vs vault,"RENDERER: cash-allocation
+TOTAL: 100
+VAULT: 20
+SPEND: 80",Planned
+Market Clock,,Cash vs assets over accelerated time,"RENDERER: market-clock
+START: 100
+YEARS: 10",Planned
+Volatility Clock,,Hold through a market dip without panic selling,"RENDERER: volatility-clock
+DURATION: 30",Planned
+Balance Scale,,Balance two sliders to equilibrium,"RENDERER: balance-scale
+LEFT: Growth
+RIGHT: Safety
+TARGET: 50",Planned
+Tax Routing Pipeline,Flowchart Builder,Route profits into tax-efficient buckets,"RENDERER: tax-routing-pipeline
+BUCKETS: Personal | Trust | Super",Planned
+Scalable Curve Engine,,Compare hourly wage vs scalable offer,"RENDERER: scalable-curve
+HOURLY: 15
+OFFER: 500",Planned
+Hotspot Hunter,,Tap red flags on a bill or message,"RENDERER: hotspot-hunter
+FLAGS: Too-good-to-be-true prize
+FLAGS: Misspelled bank name
+FLAGS: Urgent wire transfer",Planned
+Value Accumulator,,Tap to stack coins toward a goal,"RENDERER: value-accumulator
+TARGET: 50
+TAP: 5",Planned
+Map Explorer,,Tap nodes on a learning map,"RENDERER: map-explorer
+NODES: Save | Spend | Invest",Planned
+Lesson Complete,,Screen 8 — skill unlock + XP,(leave Game Settings blank),Yes

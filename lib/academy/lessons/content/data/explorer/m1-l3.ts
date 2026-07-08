@@ -1,0 +1,354 @@
+/* AUTO-GENERATED from Explorer workbook — npm run lesson:import:explorer */
+
+import type { CohortLessonDefinition } from "@/lib/academy/lessons/types";
+
+export const M1_L3_EXPLORER_DEFINITION: CohortLessonDefinition = {
+  "meta": {
+    "milestoneId": 3,
+    "levelId": 1,
+    "lessonNumber": 3,
+    "moduleTitle": "Module 1",
+    "lessonTitle": "Keep Some Money Aside",
+    "shellLabel": "Module 1 · Lesson 3 · Keep Some Money Aside",
+    "totalScreens": 8,
+    "lessonKey": "L3-M1-T1",
+    "skillName": "Choose to Keep Some Money Instead of Spending It All",
+    "skillHubId": "SKILL-03",
+    "learningOutcome": "I understand the basics of money changes over time",
+    "conceptTruth": "Money doesn’t have to be spent - it can be kept and used in more beneficial ways",
+    "behaviourShift": "From spending all remaining money on wants once needs are covered\n → To choosing to keep some money because it can be used in better ways than immediate spending",
+    "ruleEnforcement": "I don’t spend everything - I always keep some aside",
+    "learningArc": "Awareness",
+    "focus": "Introduce Money Changes Over Time",
+    "characters": {
+      "lead": "Mia",
+      "support": "Sister",
+      "explorer": "Mia",
+      "pathfinder": "Holly",
+      "maverick": "Dash"
+    }
+  },
+  "rewards": {
+    "skillSlug": "keep-some-aside",
+    "achievementSkillSlug": "keep-some-aside",
+    "xpReward": 150,
+    "perfectStreakBonus": 50
+  },
+  "custom": {
+    "rank": {
+      "intro": "Drag the choices in the correct order — Spare Cash first, then fun!",
+      "dragHint": "Spare Cash first, then fun. What would Mia do best?",
+      "axisLabel": "Best → Avoid",
+      "submitLabel": "Submit Answer",
+      "successMessage": "Perfect! Spare Cash first, then fun. You're ready for anything!",
+      "items": [
+        {
+          "id": "spare",
+          "label": "Set aside Spare Cash for the headphones first"
+        },
+        {
+          "id": "fun",
+          "label": "Spend what's left on small treats"
+        },
+        {
+          "id": "all",
+          "label": "Spend everything on fun stuff right away"
+        }
+      ],
+      "correctOrder": [
+        "spare",
+        "fun",
+        "all"
+      ],
+      "errors": {
+        "all": "Not quite! Spending everything first leaves no Spare Cash — put that at the bottom.",
+        "fun": "Not quite! Setting aside Spare Cash comes first."
+      }
+    }
+  },
+  "baseScreens": [
+    {
+      "type": "binary-choice",
+      "id": "hook-finish-sentence",
+      "prompt": "Mia borrowed her sister's headphones and broke them. What happened next?",
+      "optionA": {
+        "label": "Mia has no money to buy a new pair",
+        "isCorrect": true
+      },
+      "optionB": {
+        "label": "Mia tries to fix them with sticky tape and now they're even worse",
+        "isCorrect": false
+      },
+      "wrongError": "Haha, maybe. But let's try again",
+      "errorStyle": "inline-red",
+      "authoring": {
+        "objective": "Activate Prior Knowledge (Relatability)",
+        "gameArchetype": "97",
+        "simpleScreenText": "",
+        "theAction": "Finish the sentence",
+        "contentForGame": "- Mia has no money to buy a new pair\n- Mia tries to fix them with sticky tape and now they're even worse\n- the dog runs off with one of the pieces",
+        "errorMessage": "Option 1 = correct.\nMessage if submitted correct: \"Exactly! No money left = big sister drama.\"\nIf submitted incorrect answer: \"Haha, maybe. But let's try again\"",
+        "pedagogicalStage": "hook",
+        "screenNumber": 1,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "bucket-sort",
+      "id": "spent-triage",
+      "intro": "Mia had $40. Drag each purchase into Spent to see what's left for her sister's headphones.",
+      "buckets": [
+        {
+          "id": "spent",
+          "label": "Spent"
+        }
+      ],
+      "items": [
+        {
+          "id": "squishy",
+          "emoji": "🧸",
+          "label": "Squishy toy ($25)",
+          "price": 25,
+          "bucket": "spent"
+        },
+        {
+          "id": "slime",
+          "emoji": "🫧",
+          "label": "Slime tub ($8)",
+          "price": 8,
+          "bucket": "spent"
+        },
+        {
+          "id": "snacks",
+          "emoji": "🍫",
+          "label": "Snacks ($7)",
+          "price": 7,
+          "bucket": "spent"
+        }
+      ],
+      "successMessage": "Mia has no money left to pay for new headphones",
+      "authoring": {
+        "objective": "Concept Introduction (Mechanism)",
+        "gameArchetype": "101",
+        "simpleScreenText": "",
+        "theAction": "Triage Sorter (Standardized Engine Pattern)",
+        "contentForGame": "Screen Layout:\n\nLeft Side (Inventory): Three distinct icons representing Mia's recent purchases:\n\nA Squishy toy (+ icon) $25\nA Slime (+ tub icon). $8\nSnacks (chocolate bar/wrapper icon). $7\n\nRight Side (The bucket/bin): A target area labeled [Spent].\nDynamic Counter (Bottom): A digital display: Total Spent: $0 / $40\n\nScreen starts with '$40 available' and each time an item is dragged to 'spent' the 'amount available' drops by the value of that item.",
+        "errorMessage": "When all items are dragged and the 'amount available' hits $0 a pop up shows the message: \"Mia has no money left to pay for new headphones\"",
+        "pedagogicalStage": "core",
+        "screenNumber": 2,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "all-items-sorted"
+      }
+    },
+    {
+      "type": "tap-reveal",
+      "id": "spare-vs-spend-tap",
+      "intro": "Mia spent everything on fun stuff. Tap each idea — Spare Cash thinking or Spend-Everything thinking?",
+      "tapDisplay": "emoji-label",
+      "revealDisplay": "emoji-label",
+      "buckets": [
+        {
+          "id": "spare",
+          "label": "Spare Cash",
+          "tone": "long"
+        },
+        {
+          "id": "spend",
+          "label": "Spend Everything",
+          "tone": "short"
+        }
+      ],
+      "items": [
+        {
+          "id": "aside",
+          "emoji": "🎧",
+          "label": "Set $20 aside for headphones",
+          "bucket": "spare"
+        },
+        {
+          "id": "squishy",
+          "emoji": "🧸",
+          "label": "Buy another squishy toy",
+          "bucket": "spend"
+        },
+        {
+          "id": "save-first",
+          "emoji": "💡",
+          "label": "Save before spending on fun",
+          "bucket": "spare"
+        },
+        {
+          "id": "snacks",
+          "emoji": "🍫",
+          "label": "Spend every last dollar on snacks",
+          "bucket": "spend"
+        }
+      ],
+      "authoring": {
+        "objective": "Contrast & Categorization (Discrimination)",
+        "gameArchetype": "105",
+        "simpleScreenText": "",
+        "theAction": "106",
+        "contentForGame": "",
+        "errorMessage": "Match successful!",
+        "pedagogicalStage": "core",
+        "screenNumber": 3,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "all-taps-revealed"
+      }
+    },
+    {
+      "type": "custom",
+      "id": "spare-cash-first-rank",
+      "renderer": "m1-l2-rank-stack",
+      "configRef": "rank",
+      "authoring": {
+        "objective": "Active Processing (Triage/Application)",
+        "gameArchetype": "108",
+        "simpleScreenText": "",
+        "theAction": "109",
+        "contentForGame": "",
+        "errorMessage": "Perfect! Spare Cash first, then fun. You’re ready for anything!",
+        "pedagogicalStage": "core",
+        "screenNumber": 4,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "validate-on-next",
+        "rules": [
+          {
+            "kind": "rank-order",
+            "correctOrder": [
+              "spare",
+              "fun",
+              "all"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "binary-choice",
+      "id": "mia-priority-choice",
+      "prompt": "What should Mia do?",
+      "optionA": {
+        "label": "Buy the headphones to fix what she broke.",
+        "isCorrect": true
+      },
+      "optionB": {
+        "label": "Buy the toy and save $10 more next week.",
+        "isCorrect": false
+      },
+      "wrongError": "That's a trap! Stick to the plan to avoid stress later'\nIf #2: ",
+      "errorStyle": "inline-red",
+      "authoring": {
+        "objective": "Cognitive Conflict (Deconstruction)",
+        "gameArchetype": "111",
+        "simpleScreenText": "",
+        "theAction": "Multiple choice",
+        "contentForGame": "What should Mia do?\n\n[Buy the toy and save $10 more next week.] (The Trap)\n[Buy the headphones to fix what she broke.] (The Concept Truth)\n[Buy the toy and hope the headphones don't cost $40.] (The Trap)",
+        "errorMessage": "If #1 or #3: \"That's a trap! Stick to the plan to avoid stress later'\nIf #2: \"Smart move. Replacing the broken headphones should come first.\"",
+        "pedagogicalStage": "apply",
+        "screenNumber": 5,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "word-drop",
+      "id": "reflection-word-drop",
+      "narrativeBefore": "Because I didn't",
+      "narrativeAfter": "everything, I had Spare Cash to replace the headphones immediately.",
+      "options": [
+        "spend",
+        "save"
+      ],
+      "correctOption": "spend",
+      "wrongError": "Think about what Mia did — she didn't use all her money.",
+      "authoring": {
+        "objective": "Situational Resolution (Procedural Memory)",
+        "gameArchetype": "115",
+        "simpleScreenText": "",
+        "theAction": "Fill-in-the-Blanks (Drag & Drop)",
+        "contentForGame": "\"Because I didn't ['spend' = correct answer / save = wrong answer] everything, I had ['Spare Cash' = correct/ 'Borrowed money' = incorrect] to ['replace' = good / 'throw away' = bad] the headphones immediately.\"",
+        "errorMessage": "96",
+        "pedagogicalStage": "apply",
+        "screenNumber": 6,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "narrative-bonus",
+      "id": "resolution-bonus",
+      "narrative": "Exactly! Keeping some money means you’re in charge, you don't have to beg for cash, and you can get the stuff that actually matters.",
+      "bonusXp": 50,
+      "bonusTapLabel": "[ COLLECT 50 XP BONUS ]",
+      "autoReadyWhenNoBonus": false,
+      "authoring": {
+        "objective": "Timeline Progression",
+        "gameArchetype": "118",
+        "simpleScreenText": "",
+        "theAction": "119",
+        "contentForGame": "",
+        "errorMessage": "Exactly! Keeping some money means you’re in charge, you don't have to beg for cash, and you can get the stuff that actually matters.",
+        "pedagogicalStage": "reward",
+        "screenNumber": 7,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "on-complete"
+      }
+    },
+    {
+      "type": "completion",
+      "id": "milestone-splash",
+      "useStandardPane": true,
+      "authoring": {
+        "objective": "Neurological Closure (Variable Reward System)",
+        "gameArchetype": "121",
+        "simpleScreenText": "",
+        "theAction": "122",
+        "contentForGame": "",
+        "errorMessage": "",
+        "pedagogicalStage": "close",
+        "screenNumber": 8,
+        "lessonKey": "L3-M1-T1"
+      },
+      "advance": {
+        "mode": "manual-next"
+      }
+    }
+  ],
+  "byCohort": {
+    "explorer": {
+      "characterName": "Mia"
+    },
+    "pathfinder": {
+      "characterName": "Holly",
+      "rewards": {
+        "xpReward": 50,
+        "perfectStreakBonus": 0
+      }
+    },
+    "maverick": {
+      "characterName": "Dash",
+      "rewards": {
+        "xpReward": 50,
+        "perfectStreakBonus": 0
+      }
+    }
+  },
+  "_draft": false
+} as const;

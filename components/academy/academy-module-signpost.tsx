@@ -38,7 +38,7 @@ export function AcademyModuleSignpost({
 
   return (
     <div
-      className="relative z-10 flex w-full shrink-0 justify-center px-2"
+      className="relative z-raised flex w-full shrink-0 justify-center px-2"
       style={{ height: ACADEMY_MODULE_SIGNPOST_HEIGHT_PX }}
       role="region"
       aria-label={`Module ${moduleNumber}: ${title}`}

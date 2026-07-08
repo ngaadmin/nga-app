@@ -96,7 +96,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     skillName: "Smart Saving",
     description: "Choose to Keep Some Money Instead of Spending It All",
     isAdvancedCohortOnly: false,
-    legacySlugs: ["savings-streak"],
+    legacySlugs: ["savings-streak", "keep-some-aside"],
     medalEmoji: "💰",
   },
   {

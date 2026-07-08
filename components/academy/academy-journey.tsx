@@ -47,7 +47,7 @@ export function AcademyJourney({ milestones = [] }: AcademyJourneyProps) {
 
       <div
         ref={scrollContainerRef}
-        className="relative z-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+        className="layer-island relative z-base min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
       >
         <AcademySkillTrack
           milestones={milestones}

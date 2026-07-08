@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lesson:import": "node tools/import-lesson-from-sheet.mjs",
+    "lesson:import:explorer": "node tools/import-explorer-workbook.mjs"
   },
   "dependencies": {
     "next": "^15.3.3",

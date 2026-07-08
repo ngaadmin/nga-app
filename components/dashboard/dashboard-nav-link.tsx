@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { DashboardNavItem } from "@/lib/dashboard/navigation";
 import { isNavItemActive } from "@/lib/dashboard/navigation";
 import { TACTILE_PRESS } from "@/lib/dashboard/styles";
@@ -14,13 +14,32 @@ type DashboardNavLinkProps = {
 
 export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isActive = isNavItemActive(pathname, item.href);
   const { Icon } = item;
+
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    if (!isActive) {
+      router.push(item.href);
+    }
+  };
 
   if (variant === "bottom") {
     return (
       <Link
         href={item.href}
+        onClick={handleClick}
         aria-current={isActive ? "page" : undefined}
         className={cn(
           "flex flex-1 flex-col items-center justify-center gap-1 border-t-2 border-transparent px-2 py-2",
@@ -43,6 +62,7 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
   return (
     <Link
       href={item.href}
+      onClick={handleClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
         "flex items-center gap-3 rounded-nga-lg border-2 border-b-4 px-4 py-3 font-heading text-sm font-bold",

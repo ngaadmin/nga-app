@@ -41,6 +41,9 @@ export default function RootLayout({
         className={`${poppins.variable} ${inter.variable} font-sans antialiased`}
       >
         {children}
+        <div id="overlay-root" aria-hidden="true" />
+        <div id="modal-root" aria-hidden="true" />
+        <div id="toast-root" aria-hidden="true" />
       </body>
     </html>
   );

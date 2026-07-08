@@ -36,6 +36,16 @@ const config: Config = {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
         heading: ["var(--font-poppins)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
+      zIndex: {
+        base: "var(--z-index-base)",
+        raised: "var(--z-index-raised)",
+        sticky: "var(--z-index-sticky)",
+        chrome: "var(--z-index-chrome)",
+        overlay: "var(--z-index-overlay)",
+        modal: "var(--z-index-modal)",
+        toast: "var(--z-index-toast)",
+        dev: "var(--z-index-dev)",
+      },
     },
   },
 };

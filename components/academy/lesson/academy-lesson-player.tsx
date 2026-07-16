@@ -1,17 +1,39 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-definition";
 import { useM1L2LessonExtensions } from "@/lib/academy/lessons/hooks/use-m1-l2-lesson-extensions";
+import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
+import { isLessonShippedForCohort } from "@/lib/academy/lessons/registry";
+import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/ghost-session";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;
 };
 
 export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
+  const cohort = useLessonMasteryCohort();
+  const router = useRouter();
+  const isAvailable = isLessonShippedForCohort(milestoneId, cohort);
+
+  useEffect(() => {
+    if (!isAvailable) {
+      router.replace(DASHBOARD_ACADEMY_PATH);
+    }
+  }, [isAvailable, router]);
+
+  if (!isAvailable) {
+    return null;
+  }
+
+  return <AcademyLessonPlayerInner milestoneId={milestoneId} />;
+}
+
+function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
   const content = useLessonDefinition(milestoneId);
   const { awardLessonXp } = useDashboardWallet();
 

@@ -6,6 +6,7 @@ import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   cnLessonChoice,
   lessonSortChipClass,
+  lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   playLessonSuccessPing,
@@ -14,8 +15,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { useState } from "react";
 
-const submitAnswerClass =
-  "h-touch w-full max-w-xs rounded-nga-lg border-b-4 border-[#4338CA] bg-[#6366F1] px-6 font-heading text-sm font-bold uppercase tracking-wide text-white shadow-md transition-all hover:brightness-[1.05] active:translate-y-[2px] active:border-b-2";
+const submitAnswerClass = lessonSubmitAnswerClass;
 
 type RankItemId = (typeof M1_L2_CUSTOM.rank.items)[number]["id"];
 

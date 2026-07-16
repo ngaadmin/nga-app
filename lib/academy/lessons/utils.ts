@@ -16,6 +16,16 @@ export function playLessonSuccessPing(): void {
   }
 }
 
+export type LessonFlashTone = "success" | "error";
+
+/** Shared sound + screen flash when a learner answers correctly. */
+export function celebrateLessonCorrectAnswer(
+  flashScreen?: (tone: LessonFlashTone) => void,
+): void {
+  playLessonSuccessPing();
+  flashScreen?.("success");
+}
+
 export function triggerLessonErrorVibration(): void {
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     navigator.vibrate(120);

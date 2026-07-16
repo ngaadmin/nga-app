@@ -9,6 +9,7 @@ const M1_L2_META = {
   lessonTitle: "Needs vs Wants Sort",
   shellLabel: "Module 1 · Lesson 2 · Needs vs Wants Sort",
   totalScreens: 8,
+  shippedCohorts: ["explorer", "pathfinder", "maverick"],
 } as const;
 
 const M1_L2_REWARDS = {

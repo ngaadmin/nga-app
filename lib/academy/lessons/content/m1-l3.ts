@@ -8,6 +8,7 @@ const M1_L3_META = {
   lessonTitle: "Keep Some Money Aside",
   shellLabel: "Module 1 · Lesson 3 · Keep Some Money Aside",
   totalScreens: 8,
+  shippedCohorts: ["explorer"],
   characters: {
     lead: "Mia",
     support: "Senna",
@@ -61,28 +62,27 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     type: "link-match",
     id: "spare-vs-spend-match",
     intro:
-      "Senna explains that keeping Spare Cash gives you options. Match the event to the benefit.",
-    eventColumnLabel: "The Event",
-    benefitColumnLabel: "The Win",
+      "Senna explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:",
+    eventColumnLabel: "Events",
+    benefitColumnLabel: "Possibilities",
     pairs: [
       {
         id: "headphones",
-        event: "Headphones break",
-        benefit: "Fix them fast",
+        event: "I broke my friend's headphones",
+        benefit: "Fix or replace them",
       },
       {
         id: "birthday",
-        event: "Friend's birthday",
-        benefit: "Buy a gift",
+        event: "It's my friend's birthday",
+        benefit: "I can buy a gift",
       },
       {
         id: "sale",
-        event: "A cool sale",
-        benefit: "Grab the deal",
+        event: "There's a sale at the toy store",
+        benefit: "I can buy my favourite toy for less",
       },
     ],
     successMessage: "Match successful!",
-    wrongError: "Not quite — try linking a different win.",
     advance: { mode: "on-complete" },
   },
   {
@@ -90,6 +90,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     id: "spare-cash-steps",
     intro:
       "Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.",
+    layout: "steps-row",
     buckets: [
       { id: "step1", label: "Step 1" },
       { id: "step2", label: "Step 2" },
@@ -120,16 +121,19 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     type: "binary-choice",
     id: "mia-priority-choice",
     prompt:
-      "Mia has the $40 Spare Cash. She sees a $10 toy and thinks she'll spend it now.",
+      "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
     optionA: {
-      label: "Buy the toy and save more next week",
+      label: "Buy the toy and save $10 more next week.",
       isCorrect: false,
     },
     optionB: {
-      label: "Buy the headphones to fix what she broke",
+      label: "Buy the headphones to fix what she broke first.",
       isCorrect: true,
     },
-    optionC: { label: "Buy the toy and hope", isCorrect: false },
+    optionC: {
+      label: "Buy the toy and hope the headphones don't cost $40.",
+      isCorrect: false,
+    },
     successMessage:
       "Smart move. Replacing the broken headphones should come first.",
     wrongError: "That's a trap! Stick to the plan to avoid stress later.",
@@ -142,7 +146,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     prompt:
       "Because I didn't [blank] everything, I had [blank] to [blank] the headphones immediately.",
     blanks: [
-      { options: ["save", "spend"], correctOption: "save" },
+      { options: ["save", "spend"], correctOption: "spend" },
       { options: ["Spare Cash", "Borrowed money"], correctOption: "Spare Cash" },
       { options: ["replace", "throw away"], correctOption: "replace" },
     ],
@@ -150,20 +154,38 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     narrativeAfter: "",
     options: [],
     correctOption: "",
-    wrongError: "Try again!",
+    wrongError: "Not quite. Let's try again.",
+    successMessage: "Exactly! Spare cash gave Mia options when she needed them.",
     advance: { mode: "on-complete" },
   },
   {
-    type: "narrative-bonus",
-    id: "resolution-bonus",
-    narrative:
-      "Mia could fix the problem because she had spare cash. What are the other benefits of not spending all of your money?",
+    type: "binary-choice",
+    id: "resolution-benefits-choice",
+    prompt:
+      "Mia could fix the problem because she had spare cash. What are the other benefits of not spending all of your money? Select the best answer:",
+    optionA: {
+      label: "If I lose something, I can replace it myself.",
+      isCorrect: false,
+    },
+    optionB: {
+      label: "I won't have to ask my parents for money if I need something.",
+      isCorrect: false,
+    },
+    optionC: {
+      label:
+        "I can save up for a big goal instead of wasting it on small stuff that doesn't last.",
+      isCorrect: false,
+    },
+    optionD: {
+      label: "I worry less if I can afford things that I want or have to buy.",
+      isCorrect: false,
+    },
+    optionE: { label: "All of the above.", isCorrect: true },
     successMessage:
-      "Exactly! Keeping some money means you're in charge...",
-    bonusXp: 0,
-    bonusTapLabel: "",
-    autoReadyWhenNoBonus: true,
-    advance: { mode: "auto-ready" },
+      "Exactly! Keeping some money means you're in charge, you don't have to beg for cash, and you can get the stuff that actually matters.",
+    wrongError: "Yes, but take a look at the other options and see if there's a better answer.",
+    errorStyle: "inline-red",
+    advance: { mode: "on-complete" },
   },
   {
     type: "completion",

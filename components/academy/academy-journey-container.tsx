@@ -8,8 +8,9 @@ import type { AcademyLessonMilestoneNode } from "@/lib/dashboard/academy-state";
 import {
   focusAcademyMilestone,
   parseAcademyFocusParam,
-  SHIPPED_DEV_LESSON_JUMP_IDS,
 } from "@/lib/dev/academy-dev-tools";
+import { getShippedLessonIdsForCohort } from "@/lib/academy/lessons/registry";
+import { getLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { isDevClient } from "@/lib/dev/client-persist";
 
 function DevLessonJumpBar({
@@ -18,13 +19,18 @@ function DevLessonJumpBar({
   onFocus: (milestoneId: number) => void;
 }) {
   const router = useRouter();
+  const cohort = getLessonMasteryCohort();
+  const shippedIds = getShippedLessonIdsForCohort(cohort);
 
   if (!isDevClient()) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-950">
       <span className="font-heading font-bold uppercase tracking-wide">Dev</span>
-      {SHIPPED_DEV_LESSON_JUMP_IDS.map((id) => (
+      <span className="rounded-md bg-white px-2 py-1 font-medium capitalize text-amber-900">
+        {cohort}
+      </span>
+      {shippedIds.map((id) => (
         <button
           key={id}
           type="button"
@@ -34,7 +40,7 @@ function DevLessonJumpBar({
           Focus L{id}
         </button>
       ))}
-      {SHIPPED_DEV_LESSON_JUMP_IDS.map((id) => (
+      {shippedIds.map((id) => (
         <button
           key={`open-${id}`}
           type="button"

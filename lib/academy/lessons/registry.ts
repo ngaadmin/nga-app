@@ -20,6 +20,38 @@ export const SHIPPED_ACADEMY_LESSON_IDS = new Set<number>(
   Object.keys(LESSON_DEFINITIONS).map((key) => Number.parseInt(key, 10)),
 );
 
+const DEFAULT_SHIPPED_COHORTS: readonly MasteryCohort[] = [
+  "explorer",
+  "pathfinder",
+  "maverick",
+];
+
+export function getShippedCohortsForLesson(
+  milestoneId: number,
+): readonly MasteryCohort[] {
+  const definition = getLessonDefinition(milestoneId);
+  if (!definition) return [];
+  return definition.meta.shippedCohorts ?? DEFAULT_SHIPPED_COHORTS;
+}
+
+export function isLessonShippedForCohort(
+  milestoneId: number,
+  cohort: MasteryCohort,
+): boolean {
+  if (!SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId)) {
+    return false;
+  }
+  return getShippedCohortsForLesson(milestoneId).includes(cohort);
+}
+
+export function getShippedLessonIdsForCohort(
+  cohort: MasteryCohort,
+): number[] {
+  return [...SHIPPED_ACADEMY_LESSON_IDS]
+    .filter((id) => isLessonShippedForCohort(id, cohort))
+    .sort((a, b) => a - b);
+}
+
 export function getLessonDefinition(
   milestoneId: number,
 ): CohortLessonDefinition | null {
@@ -68,8 +100,9 @@ export function hasShippedLesson(milestoneId: number): boolean {
 export function canLaunchAcademyLesson(
   milestoneId: number,
   status: "active" | "completed" | "locked",
+  cohort: MasteryCohort,
 ): boolean {
-  if (!hasShippedLesson(milestoneId)) {
+  if (!isLessonShippedForCohort(milestoneId, cohort)) {
     return false;
   }
 

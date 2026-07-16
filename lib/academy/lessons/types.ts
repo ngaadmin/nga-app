@@ -97,6 +97,8 @@ export type LessonMeta = {
   lessonKey?: string;
   /** Default character tokens for `{character}` / `{support}` substitution */
   characters?: CharacterTokenMap;
+  /** Mastery cohorts that can see and launch this lesson on the Academy map. */
+  shippedCohorts?: readonly MasteryCohort[];
 };
 
 /** Pedagogical stage from Lesson Scaffold Screens sheet. */
@@ -248,6 +250,7 @@ export type WordDropScreenConfig = WithDeclarative<{
     options: readonly string[];
     correctOption: string;
   }[];
+  successMessage?: string;
 }>;
 
 export type BinaryChoiceScreenConfig = WithDeclarative<{
@@ -258,6 +261,8 @@ export type BinaryChoiceScreenConfig = WithDeclarative<{
   optionA: { label: string; isCorrect: boolean };
   optionB: { label: string; isCorrect: boolean };
   optionC?: { label: string; isCorrect: boolean };
+  optionD?: { label: string; isCorrect: boolean };
+  optionE?: { label: string; isCorrect: boolean };
   wrongError: string;
   successMessage?: string;
   /** inline-red = sentence screen; banner = trap-style toast */
@@ -280,10 +285,10 @@ export type TapRevealScreenConfig<TBucket extends string = string> = WithDeclara
   items: readonly TapRevealItem<TBucket>[];
   buckets: readonly TapRevealBucket<TBucket>[];
   successMessage?: string;
-  /** Tap chips: emoji-only (teen) vs emoji + label (Explorer). Default emoji-label. */
-  tapDisplay?: "emoji-only" | "emoji-label";
-  /** Sorted bucket lists: emoji-only vs emoji + label. Default emoji-label. */
-  revealDisplay?: "emoji-only" | "emoji-label";
+  /** Tap chips: emoji-only, label-only, or emoji + label (Explorer). Default emoji-label. */
+  tapDisplay?: "emoji-only" | "emoji-label" | "label";
+  /** Sorted bucket lists: emoji-only, label-only, or emoji + label. Default emoji-label. */
+  revealDisplay?: "emoji-only" | "emoji-label" | "label";
 }>;
 
 export type LinkMatchPair = {
@@ -299,8 +304,9 @@ export type LinkMatchScreenConfig = WithDeclarative<{
   pairs: readonly LinkMatchPair[];
   eventColumnLabel?: string;
   benefitColumnLabel?: string;
-  successMessage?: string;
   wrongError?: string;
+  submitLabel?: string;
+  successMessage?: string;
 }>;
 
 export type BucketSortScreenConfig<TBucket extends string = string> = WithDeclarative<{
@@ -311,7 +317,7 @@ export type BucketSortScreenConfig<TBucket extends string = string> = WithDeclar
   items: readonly SortItem<TBucket>[];
   successMessage?: string;
   /** Two-column layout with running spent total (L3 Screen 2). */
-  layout?: "default" | "spent-total";
+  layout?: "default" | "spent-total" | "steps-row";
   /** Expected total when all items are sorted (shown in spent-total header). */
   targetTotal?: number;
 }>;

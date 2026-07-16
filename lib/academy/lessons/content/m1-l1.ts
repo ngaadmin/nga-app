@@ -16,6 +16,7 @@ const M1_L1_META = {
   lessonTitle: "Money In, Money Out",
   shellLabel: "Module 1 · Lesson 1 · Money In, Money Out",
   totalScreens: 8,
+  shippedCohorts: ["explorer", "pathfinder", "maverick"],
 } as const;
 
 const M1_L1_REWARDS = {

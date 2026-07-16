@@ -27,7 +27,6 @@ import {
   type AcademyLessonMilestoneNode,
 } from "@/lib/dashboard/academy-state";
 import {
-  getMasteryCohortFromBirthYear,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -39,8 +38,8 @@ import {
   TrophyIcon,
   ZapIcon,
 } from "@/lib/dashboard/icons";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
 import { canLaunchAcademyLesson } from "@/lib/academy/lessons/registry";
+import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { cn } from "@/lib/utils/cn";
 
 type AcademySkillTrackProps = {
@@ -84,14 +83,6 @@ function nodeSlotHeightPx(milestone: AcademyLessonMilestoneNode): number {
     : REGULAR_NODE_SIZE_PX;
 }
 
-function resolveMasteryCohort(): MasteryCohort {
-  const session = readGhostAccessSession();
-  if (session?.birthYear) {
-    return getMasteryCohortFromBirthYear(session.birthYear);
-  }
-  return "explorer";
-}
-
 function resolveMilestoneIconKind(
   milestone: AcademyLessonMilestoneNode,
 ): AcademyLessonIconKind {
@@ -132,10 +123,11 @@ function milestoneAriaLabel(milestone: AcademyLessonMilestoneNode): string {
 
 type AcademyNodeProps = {
   milestone: AcademyLessonMilestoneNode;
+  masteryCohort: MasteryCohort;
   onLaunch?: (milestoneId: number) => void;
 };
 
-function AcademyNode({ milestone, onLaunch }: AcademyNodeProps) {
+function AcademyNode({ milestone, masteryCohort, onLaunch }: AcademyNodeProps) {
   if (!isRenderableAcademyMilestone(milestone)) {
     return null;
   }
@@ -200,7 +192,7 @@ function AcademyNode({ milestone, onLaunch }: AcademyNodeProps) {
     );
   }
 
-  if (canLaunchAcademyLesson(milestone.id, milestone.status)) {
+  if (canLaunchAcademyLesson(milestone.id, milestone.status, masteryCohort)) {
     return (
       <button
         type="button"
@@ -257,7 +249,7 @@ export function AcademySkillTrack({
   const copy = copyMatrix.dashboard.academy.journey;
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
-  const masteryCohort = useMemo(() => resolveMasteryCohort(), []);
+  const masteryCohort = useLessonMasteryCohort();
 
   const safeMilestones = useMemo(
     () => milestones.filter(isRenderableAcademyMilestone),
@@ -325,7 +317,7 @@ export function AcademySkillTrack({
   const handleLaunchLesson = (milestoneId: number) => {
     const milestone = safeMilestones.find((node) => node.id === milestoneId);
     if (!milestone) return;
-    if (canLaunchAcademyLesson(milestoneId, milestone.status)) {
+    if (canLaunchAcademyLesson(milestoneId, milestone.status, masteryCohort)) {
       router.push(`/dashboard/academy/lesson/${milestoneId}`);
     }
   };
@@ -378,6 +370,7 @@ export function AcademySkillTrack({
                     >
                       <AcademyNode
                         milestone={milestone}
+                        masteryCohort={masteryCohort}
                         onLaunch={handleLaunchLesson}
                       />
                     </div>

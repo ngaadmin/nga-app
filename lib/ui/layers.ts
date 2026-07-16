@@ -16,6 +16,23 @@ export const Z = {
 
 export type LayerToken = keyof typeof Z;
 
+/** Tailwind utility class names aligned with {@link Z} — single source for className usage. */
+export const LAYER_CLASS = {
+  base: "z-base",
+  raised: "z-raised",
+  sticky: "z-sticky",
+  chrome: "z-chrome",
+  overlay: "z-overlay",
+  modal: "z-modal",
+  toast: "z-toast",
+  dev: "z-dev",
+} as const satisfies Record<LayerToken, string>;
+
+/** Inline style helper — use when z-index must match exactly between SSR and hydration. */
+export function zLayerStyle(token: LayerToken): { zIndex: number } {
+  return { zIndex: Z[token] };
+}
+
 export const LAYER_ROOT_IDS = {
   overlay: "overlay-root",
   modal: "modal-root",

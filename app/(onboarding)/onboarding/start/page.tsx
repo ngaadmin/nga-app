@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { PersonalizationGateForm } from "@/components/onboarding/personalization-gate-form";
 import { OnboardingFreshStartReset } from "@/components/onboarding/onboarding-fresh-start-reset";
 import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-session-redirect";
+import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
   title: "Create Your Profile",
@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 export default function OnboardingStartPage() {
   return (
     <>
-      <Suspense fallback={null}>
+      <SearchParamsBoundary>
         <OnboardingFreshStartReset />
         <OnboardingSessionRedirect />
-      </Suspense>
+      </SearchParamsBoundary>
       <PersonalizationGateForm />
     </>
   );

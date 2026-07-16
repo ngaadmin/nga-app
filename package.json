@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "node tools/clean-next.mjs && next dev",
+    "prebuild": "node tools/check-dev-not-running.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run typecheck",
     "lesson:import": "node tools/import-lesson-from-sheet.mjs",
     "lesson:import:explorer": "node tools/import-explorer-workbook.mjs"
   },

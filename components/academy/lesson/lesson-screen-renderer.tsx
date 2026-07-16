@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
 import { LessonLinkMatchGame } from "@/components/academy/lesson/lesson-link-match-game";
+import { LessonWordDropGame } from "@/components/academy/lesson/lesson-word-drop-game";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { LessonCompletionPane } from "@/components/academy/lesson/lesson-completion-pane";
 import {
   lessonGoldClaimClass,
   LESSON_CASH_IN_LABEL,
+  lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import type {
@@ -25,105 +27,38 @@ import type {
   TrueFalseScreenConfig,
   WordDropScreenConfig,
 } from "@/lib/academy/lessons/types";
-import { playLessonSuccessPing } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  playLessonSuccessPing,
+} from "@/lib/academy/lessons/utils";
 import { formatLessonBronzeSkillLine } from "@/lib/dashboard/skill-trophies";
 import { cn } from "@/lib/utils/cn";
 
 const DEFAULT_HOLD_MS = 2000;
 
-type StandardScreenProps<T extends ScreenConfig> = {
+type CoreScreenProps<T extends ScreenConfig> = {
   screen: T;
   screenIndex: number;
   flow: LessonFlow;
+};
+
+type StandardScreenProps<T extends ScreenConfig> = CoreScreenProps<T> & {
   rewards: LessonRewards;
 };
 
-function WordDropScreen({
+function SingleBlankWordDropScreen({
   screen,
   screenIndex,
   flow,
-}: StandardScreenProps<WordDropScreenConfig>) {
-  const [choices, setChoices] = useState<string[]>(() =>
-    screen.blanks ? Array.from({ length: screen.blanks.length }, () => "") : [],
-  );
+}: CoreScreenProps<WordDropScreenConfig>) {
   const [choice, setChoice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  if (screen.prompt && screen.blanks?.length) {
-    const parts = screen.prompt.split("[blank]");
-    const allFilled = choices.every(Boolean);
-    const allCorrect =
-      allFilled &&
-      screen.blanks.every((blank, index) => choices[index] === blank.correctOption);
-
-    const handleMultiChoice = (blankIndex: number, option: string) => {
-      const next = [...choices];
-      next[blankIndex] = option;
-      setChoices(next);
-      setError(null);
-      const filled = next.every(Boolean);
-      const correct =
-        filled &&
-        screen.blanks!.every((blank, index) => next[index] === blank.correctOption);
-      if (correct) {
-        flow.markScreenReady(screenIndex);
-        return;
-      }
-      if (filled) {
-        setError(screen.wrongError);
-        flow.incrementMistake();
-      }
-    };
-
-    const activeBlankIndex = choices.findIndex((value) => !value);
-
-    return (
-      <>
-        <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
-          {parts.map((part, index) => (
-            <span key={`${part}-${index}`}>
-              {part}
-              {index < screen.blanks!.length ? (
-                <span className="inline-block min-w-[4rem] border-b-2 border-dashed border-[#0CC1E0] px-2 font-heading font-extrabold text-[#031F82]">
-                  {choices[index] || "______"}
-                </span>
-              ) : null}
-            </span>
-          ))}
-        </p>
-        {activeBlankIndex >= 0 ? (
-          <div className={cn(lessonCardClass, "mt-5 space-y-2")}>
-            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-              {screen.promptLabel ?? "Word Drop"}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {screen.blanks[activeBlankIndex]!.options.map((option) => (
-                <LessonChoiceButton
-                  key={option}
-                  onClick={() => handleMultiChoice(activeBlankIndex, option)}
-                  selected={choices[activeBlankIndex] === option}
-                  variant="neutral"
-                  className="w-auto px-5 py-2 text-xs"
-                >
-                  {option}
-                </LessonChoiceButton>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {error ? (
-          <p className="mt-4 rounded-xl bg-[#FFF7ED] px-3 py-2 font-sans text-xs text-[#031F82]">
-            {error}
-          </p>
-        ) : null}
-      </>
-    );
-  }
 
   const handleChoice = (option: string) => {
     setChoice(option);
     if (option === screen.correctOption) {
       setError(null);
+      celebrateLessonCorrectAnswer(flow.flashScreen);
       flow.markScreenReady(screenIndex);
       return;
     }
@@ -173,26 +108,74 @@ function WordDropScreen({
   );
 }
 
+function WordDropScreen({
+  screen,
+  screenIndex,
+  flow,
+}: CoreScreenProps<WordDropScreenConfig>) {
+  const flowRef = useRef(flow);
+  flowRef.current = flow;
+
+  const handleComplete = useCallback(() => {
+    flowRef.current.markScreenReady(screenIndex);
+  }, [screenIndex]);
+
+  const handleSuccess = useCallback(() => {
+    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+  }, []);
+
+  const handleMistake = useCallback(() => {
+    flowRef.current.incrementMistake();
+  }, []);
+
+  if (screen.prompt && screen.blanks?.length) {
+    return (
+      <LessonWordDropGame
+        prompt={screen.prompt}
+        blanks={screen.blanks}
+        wrongError={screen.wrongError}
+        successMessage={screen.successMessage}
+        promptLabel={screen.promptLabel}
+        onComplete={handleComplete}
+        onMistake={handleMistake}
+        onSuccess={handleSuccess}
+      />
+    );
+  }
+
+  return (
+    <SingleBlankWordDropScreen
+      screen={screen}
+      screenIndex={screenIndex}
+      flow={flow}
+    />
+  );
+}
+
 function BinaryChoiceScreen({
   screen,
   screenIndex,
   flow,
 }: StandardScreenProps<BinaryChoiceScreenConfig>) {
-  const [choice, setChoice] = useState<"a" | "b" | "c" | null>(null);
+  type ChoiceKey = "a" | "b" | "c" | "d" | "e";
+  const choiceOptions: { key: ChoiceKey; label: string; isCorrect: boolean }[] = [
+    { key: "a", ...screen.optionA },
+    { key: "b", ...screen.optionB },
+    ...(screen.optionC ? [{ key: "c" as const, ...screen.optionC }] : []),
+    ...(screen.optionD ? [{ key: "d" as const, ...screen.optionD }] : []),
+    ...(screen.optionE ? [{ key: "e" as const, ...screen.optionE }] : []),
+  ];
+  const [choice, setChoice] = useState<ChoiceKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const pick = (which: "a" | "b" | "c") => {
+  const pick = (which: ChoiceKey) => {
     setChoice(which);
-    const isCorrect =
-      which === "a"
-        ? screen.optionA.isCorrect
-        : which === "b"
-          ? screen.optionB.isCorrect
-          : screen.optionC?.isCorrect ?? false;
-    if (isCorrect) {
+    const selected = choiceOptions.find((option) => option.key === which);
+    if (selected?.isCorrect) {
       setError(null);
       setSuccess(screen.successMessage ?? null);
+      celebrateLessonCorrectAnswer(flow.flashScreen);
       flow.markScreenReady(screenIndex);
       return;
     }
@@ -208,52 +191,25 @@ function BinaryChoiceScreen({
     <>
       <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.prompt}</p>
       <div className="mt-5 space-y-3">
-        <LessonChoiceButton
-          onClick={() => pick("a")}
-          selected={choice === "a"}
-          variant={
-            choice === "a"
-              ? screen.optionA.isCorrect
-                ? "correct"
-                : "wrong"
-              : "neutral"
-          }
-        >
-          {screen.optionA.label}
-        </LessonChoiceButton>
-        <LessonChoiceButton
-          onClick={() => pick("b")}
-          selected={choice === "b"}
-          variant={
-            choice === "b"
-              ? screen.optionB.isCorrect
-                ? "correct"
-                : "wrong"
-              : "neutral"
-          }
-        >
-          {screen.optionB.label}
-        </LessonChoiceButton>
-        {screen.optionC ? (
+        {choiceOptions.map((option) => (
           <LessonChoiceButton
-            onClick={() => pick("c")}
-            selected={choice === "c"}
+            key={option.key}
+            onClick={() => pick(option.key)}
+            selected={choice === option.key}
             variant={
-              choice === "c"
-                ? screen.optionC.isCorrect
+              choice === option.key
+                ? option.isCorrect
                   ? "correct"
                   : "wrong"
                 : "neutral"
             }
           >
-            {screen.optionC.label}
+            {option.label}
           </LessonChoiceButton>
-        ) : null}
+        ))}
       </div>
       {success ? (
-        <p className="mt-4 rounded-xl bg-[#DCFCE7] px-3 py-2 font-sans text-xs text-[#031F82]">
-          {success}
-        </p>
+        <p className={lessonSuccessMessageClass}>{success}</p>
       ) : null}
       {error ? (
         <p
@@ -334,8 +290,12 @@ function TapRevealScreen({
   useEffect(() => {
     if (screen.items.length === 0 && screen.advance?.mode === "auto-ready") {
       flow.markScreenReady(screenIndex);
+      return;
     }
-  }, [flow, screen.advance?.mode, screen.items.length, screenIndex]);
+    if (screen.items.length > 0 && tapped.size === screen.items.length) {
+      flow.markScreenReady(screenIndex);
+    }
+  }, [flow, screen.advance?.mode, screen.items.length, screenIndex, tapped.size]);
 
   if (screen.items.length === 0) {
     return (
@@ -358,13 +318,10 @@ function TapRevealScreen({
     });
   };
 
-  useEffect(() => {
-    if (screen.items.length > 0 && tapped.size === screen.items.length) {
-      flow.markScreenReady(screenIndex);
-    }
-  }, [flow, screen.items.length, screenIndex, tapped.size]);
-
   const renderTapChip = (item: TapRevealScreenConfig["items"][number]) => {
+    if (tapDisplay === "label") {
+      return item.label;
+    }
     if (tapDisplay === "emoji-only" && item.emoji) {
       return (
         <span className="text-2xl leading-none" aria-hidden>
@@ -386,6 +343,9 @@ function TapRevealScreen({
   };
 
   const renderRevealEntry = (item: TapRevealScreenConfig["items"][number]) => {
+    if (revealDisplay === "label") {
+      return item.label;
+    }
     if (revealDisplay === "emoji-only" && item.emoji) {
       return (
         <span className="text-xl leading-none" aria-hidden>
@@ -475,13 +435,8 @@ function LinkMatchScreen({
     flowRef.current.markScreenReady(screenIndex);
   }, [screen.successMessage, screenIndex]);
 
-  const handleMistake = useCallback(() => {
-    flowRef.current.incrementMistake();
-  }, []);
-
   const handleSuccess = useCallback(() => {
-    playLessonSuccessPing();
-    flowRef.current.flashScreen("success");
+    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
   }, []);
 
   return (
@@ -492,13 +447,10 @@ function LinkMatchScreen({
         eventColumnLabel={screen.eventColumnLabel}
         benefitColumnLabel={screen.benefitColumnLabel}
         onComplete={handleComplete}
-        onMistake={handleMistake}
         onSuccess={handleSuccess}
       />
       {completeMessage ? (
-        <p className="mt-4 rounded-xl bg-[#DCFCE7] px-3 py-2 font-sans text-xs text-[#031F82]">
-          {completeMessage}
-        </p>
+        <p className={lessonSuccessMessageClass}>{completeMessage}</p>
       ) : null}
     </>
   );
@@ -531,8 +483,7 @@ function BucketSortScreen({
   }, []);
 
   const handleSuccess = useCallback(() => {
-    playLessonSuccessPing();
-    flowRef.current.flashScreen("success");
+    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
   }, []);
 
   const handleWrongDrop = useCallback(
@@ -559,9 +510,7 @@ function BucketSortScreen({
         onWrongDrop={handleWrongDrop}
       />
       {completeMessage ? (
-        <p className="mt-4 rounded-xl bg-[#DCFCE7] px-3 py-2 font-sans text-xs text-[#031F82]">
-          {completeMessage}
-        </p>
+        <p className={lessonSuccessMessageClass}>{completeMessage}</p>
       ) : null}
     </>
   );
@@ -899,7 +848,6 @@ export function LessonScreenRenderer({
           screen={screen}
           screenIndex={screenIndex}
           flow={flow}
-          rewards={rewards}
         />
       );
     case "binary-choice":

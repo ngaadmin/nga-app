@@ -1,9 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { LAYER_CLASS } from "@/lib/ui/layers";
+import { cn } from "@/lib/utils/cn";
 
 export function OnboardingHeader() {
   return (
-    <header className="sticky top-0 z-10 border-b border-nga-mist bg-white px-6 py-4">
+    <header
+      className={cn(
+        "sticky top-0 border-b border-nga-mist bg-white px-6 py-4",
+        LAYER_CLASS.raised,
+      )}
+    >
       <div className="flex w-full items-center justify-center">
         <Link
           href="/onboarding"

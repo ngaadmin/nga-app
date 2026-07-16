@@ -11,6 +11,7 @@ import {
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
+import { zLayerStyle } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
 const statusPillClass =
@@ -46,7 +47,8 @@ export function DashboardStatusHeader() {
   return (
     <header
       data-dashboard-status-header
-      className="sticky top-0 z-30 bg-white/95 px-4 py-2 backdrop-blur-sm sm:px-6"
+      style={zLayerStyle("sticky")}
+      className="sticky top-0 bg-white/95 px-4 py-2 backdrop-blur-sm sm:px-6"
     >
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-2">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">

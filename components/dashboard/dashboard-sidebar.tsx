@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { DashboardNavLink } from "@/components/dashboard/dashboard-nav-link";
@@ -5,10 +7,14 @@ import {
   DASHBOARD_DEFAULT_HREF,
   DASHBOARD_NAV_ITEMS,
 } from "@/lib/dashboard/navigation";
+import { zLayerStyle } from "@/lib/ui/layers";
 
 export function DashboardSidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-chrome hidden w-64 flex-col border-r border-nga-mist bg-white md:flex">
+    <aside
+      style={zLayerStyle("chrome")}
+      className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-nga-mist bg-white md:flex"
+    >
       <div className="flex flex-col items-center border-b border-nga-mist px-4 py-6">
         <Link
           href={DASHBOARD_DEFAULT_HREF}

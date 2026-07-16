@@ -36,7 +36,10 @@ export type { ScreenOverrideMap, ScreenOverridePatch } from "@/lib/academy/lesso
 export {
   canLaunchAcademyLesson,
   getLessonDefinition,
+  getShippedCohortsForLesson,
+  getShippedLessonIdsForCohort,
   hasShippedLesson,
+  isLessonShippedForCohort,
   LESSON_DEFINITIONS,
   resolveLessonForMilestone,
   M1_L1_ACHIEVEMENT_SKILL_ID,

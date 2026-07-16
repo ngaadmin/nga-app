@@ -39,7 +39,7 @@ type LessonBucketSortGameProps<TBucket extends string> = {
   onSuccess?: () => void;
   /** Optional hook for cohort-specific wrong-bucket feedback copy. */
   onWrongDrop?: (itemId: string, bucketId: TBucket) => void;
-  layout?: "default" | "spent-total";
+  layout?: "default" | "spent-total" | "steps-row";
   targetTotal?: number;
 };
 
@@ -56,24 +56,6 @@ type DragState = {
 type PendingSideEffect<TBucket extends string> =
   | { kind: "wrong"; itemId: string; bucketId: TBucket }
   | { kind: "correct"; willComplete: boolean };
-
-function playSuccessPing(): void {
-  if (typeof window === "undefined") return;
-  try {
-    const ctx = new window.AudioContext();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.frequency.value = 880;
-    gain.gain.setValueAtTime(0.12, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.18);
-  } catch {
-    /* Audio optional */
-  }
-}
 
 function triggerErrorVibration(): void {
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -96,6 +78,7 @@ export function LessonBucketSortGame<TBucket extends string>({
   targetTotal,
 }: LessonBucketSortGameProps<TBucket>) {
   const isSpentTotalLayout = layout === "spent-total";
+  const isStepsRowLayout = layout === "steps-row";
 
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -167,7 +150,6 @@ export function LessonBucketSortGame<TBucket extends string>({
         continue;
       }
 
-      playSuccessPing();
       onSuccessRef.current?.();
       if (effect.willComplete) {
         onCompleteRef.current();
@@ -261,7 +243,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     });
   };
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     if (!dragState) return;
     setDragState((current) =>
       current
@@ -275,7 +257,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     setActiveBucketId(resolveBucketAtPoint(event.clientX, event.clientY));
   };
 
-  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (!dragState) {
       endDrag();
       return;
@@ -355,7 +337,10 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <div
         key={itemId}
-        className="rounded-xl border border-[#BDE9FB]/80 bg-white px-2 py-2 font-heading text-[10px] font-bold text-[#031F82] shadow-sm"
+        className={cn(
+          "rounded-xl border border-[#BDE9FB]/80 bg-white px-2 py-2 font-heading font-bold text-[#031F82] shadow-sm",
+          isStepsRowLayout ? "text-[9px] leading-snug sm:text-[10px]" : "text-[10px]",
+        )}
       >
         <span className="flex items-center justify-between gap-2">
           <span className="flex items-center gap-1.5">
@@ -383,6 +368,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         className={cn(
           lessonSortBucketClass,
           isSpentTotalLayout && "min-h-[10rem] flex-1",
+          isStepsRowLayout && "min-h-[8.5rem] min-w-0",
           activeBucketId === bucket.id && lessonSortBucketActiveClass,
           errorBucketId === bucket.id && lessonSortBucketErrorClass,
         )}
@@ -493,7 +479,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className={cn(isStepsRowLayout ? "grid grid-cols-3 gap-2" : "grid grid-cols-2 gap-3")}>
         {buckets.map((bucket) => renderBucket(bucket))}
       </div>
 

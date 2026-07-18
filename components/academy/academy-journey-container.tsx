@@ -70,6 +70,12 @@ export function AcademyJourneyContainer() {
     const focusId = parseAcademyFocusParam(window.location.search);
     if (focusId !== null) {
       setMilestones(focusAcademyMilestone(focusId));
+      // Dev-only ?focus=N must not stick in the URL (avoids confusing reloads/bookmarks).
+      const url = new URL(window.location.href);
+      url.searchParams.delete("focus");
+      const cleaned =
+        url.pathname + (url.search ? url.search : "") + url.hash;
+      window.history.replaceState(null, "", cleaned);
     } else {
       setMilestones(readAcademyMilestones());
     }

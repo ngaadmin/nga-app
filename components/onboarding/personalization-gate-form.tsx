@@ -69,7 +69,7 @@ export function PersonalizationGateForm() {
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            Create your profile!
+            Start Playing the Money Game
           </h1>
         </div>
 

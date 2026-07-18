@@ -448,7 +448,7 @@ export function LessonBucketSortGame<TBucket extends string>({
       >
         {isStepsRowLayout && stepIndex !== undefined ? (
           <span
-            className="absolute left-1 top-1 z-[1] flex h-4 w-4 items-center justify-center rounded-full bg-[#031F82] font-heading text-[9px] font-bold leading-none text-white"
+            className="absolute left-1 top-1 z-raised flex h-4 w-4 items-center justify-center rounded-full bg-[#031F82] font-heading text-[9px] font-bold leading-none text-white"
             aria-label={bucket.label}
           >
             {stepIndex + 1}

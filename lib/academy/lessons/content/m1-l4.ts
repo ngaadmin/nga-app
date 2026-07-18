@@ -243,5 +243,8 @@ export const M1_L4_LESSON_DEFINITION: CohortLessonDefinition = {
     explorer: {
       characterName: "Senna",
     },
+    pathfinder: {
+      characterName: "Holly",
+    },
   },
 };

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
+import { ONBOARDING_ENTRY_PATH } from "@/lib/onboarding/ghost-session";
 
-/** App entry opens the Academy dashboard map; onboarding stays at /onboarding. */
+/** App entry sends new users into onboarding; dashboard stays at /dashboard. */
 export default function HomePage() {
-  redirect(DASHBOARD_DEFAULT_HREF);
+  redirect(ONBOARDING_ENTRY_PATH);
 }

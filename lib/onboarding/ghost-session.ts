@@ -7,6 +7,7 @@ import {
 
 export const GHOST_SESSION_STORAGE_KEY = "nga_ghost_session";
 
+export const ONBOARDING_ENTRY_PATH = "/onboarding" as const;
 export const ONBOARDING_START_PATH = "/onboarding/start" as const;
 export const DASHBOARD_ACADEMY_PATH = "/dashboard/academy" as const;
 

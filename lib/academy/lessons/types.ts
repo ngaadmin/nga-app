@@ -253,20 +253,42 @@ export type WordDropScreenConfig = WithDeclarative<{
   successMessage?: string;
 }>;
 
+export type BinaryChoiceOption = {
+  label: string;
+  isCorrect: boolean;
+  /** Option-specific success or error copy; falls back to screen-level messages. */
+  feedback?: string;
+};
+
 export type BinaryChoiceScreenConfig = WithDeclarative<{
   type: "binary-choice";
   id: string;
   /** Main narrative / question copy */
   prompt: string;
-  optionA: { label: string; isCorrect: boolean };
-  optionB: { label: string; isCorrect: boolean };
-  optionC?: { label: string; isCorrect: boolean };
-  optionD?: { label: string; isCorrect: boolean };
-  optionE?: { label: string; isCorrect: boolean };
+  optionA: BinaryChoiceOption;
+  optionB: BinaryChoiceOption;
+  optionC?: BinaryChoiceOption;
+  optionD?: BinaryChoiceOption;
+  optionE?: BinaryChoiceOption;
   wrongError: string;
   successMessage?: string;
   /** inline-red = sentence screen; banner = trap-style toast */
   errorStyle?: "inline-red" | "banner";
+  /** Lock each correct option until all are selected (L4 pressure-sign style). */
+  selectionMode?: "single" | "multi-correct";
+  /** Scene copy shown above the question (sign / illustration screens). */
+  scenePrompt?: string;
+  /** Placeholder block for a future scene illustration. */
+  imagePlaceholder?: {
+    label: string;
+    alt?: string;
+  };
+  /** buttons = default tiles; radio-list = spaced list with large radio indicators. */
+  optionLayout?: "buttons" | "radio-list";
+  /** When true, correct selections cannot be toggled off (L4 check-questions style). */
+  lockCorrectSelections?: boolean;
+  /** persist = keep wrong selected (radio-list); shake = transient dud feedback (button list). */
+  wrongInteraction?: "persist" | "shake";
 }>;
 
 export type TrueFalseScreenConfig = WithDeclarative<{
@@ -335,6 +357,47 @@ export type HoldToFillScreenConfig = WithDeclarative<{
   releaseHint?: string;
 }>;
 
+/** Drag a draggable item from a source zone into a target drop zone (e.g. coins → piggy bank). */
+export type DragToTargetScreenConfig = WithDeclarative<{
+  type: "drag-to-target";
+  id: string;
+  intro: string;
+  sourceLabel: string;
+  targetLabel: string;
+  itemEmoji?: string;
+  /** Visual stack depth for coin-style drags. Default 5. */
+  coinCount?: number;
+  successMessage: string;
+}>;
+
+export type SavingsGoalItem = {
+  id: string;
+  label: string;
+  price: number;
+  emoji?: string;
+};
+
+/** Drag skipped purchases into a savings bucket; meter fills toward a workshop goal. */
+export type SavingsGoalScreenConfig = WithDeclarative<{
+  type: "savings-goal";
+  id: string;
+  intro: string;
+  meterLabel: string;
+  targetAmount: number;
+  poolColumnLabel: string;
+  dropZoneLabel: string;
+  items: readonly SavingsGoalItem[];
+  workshopSignTitle: string;
+  lockedLabel: string;
+  unlockedLabel: string;
+  goalAchievedLabel: string;
+  successMessage?: string;
+  imagePlaceholder?: {
+    label: string;
+    alt?: string;
+  };
+}>;
+
 export type NarrativeBonusScreenConfig = WithDeclarative<{
   type: "narrative-bonus";
   id: string;
@@ -391,6 +454,8 @@ export type ScreenConfig =
   | LinkMatchScreenConfig
   | BucketSortScreenConfig
   | HoldToFillScreenConfig
+  | DragToTargetScreenConfig
+  | SavingsGoalScreenConfig
   | NarrativeBonusScreenConfig
   | SpotlightRoundsScreenConfig
   | CompletionScreenConfig

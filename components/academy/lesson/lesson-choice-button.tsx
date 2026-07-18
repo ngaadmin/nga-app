@@ -2,7 +2,10 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import {
-  cnLessonChoice,
+  lessonChoiceBaseClass,
+  lessonChoiceLayoutClass,
+  lessonChoiceLockedCorrectClass,
+  lessonChoiceStateClass,
   type LessonChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
@@ -10,6 +13,8 @@ import { cn } from "@/lib/utils/cn";
 type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   selected?: boolean;
   variant?: LessonChoiceVariant;
+  /** Persistent locked-in correct state (multi-select check screens). */
+  locked?: boolean;
   children: ReactNode;
 };
 
@@ -17,15 +22,24 @@ type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 export function LessonChoiceButton({
   selected = false,
   variant = "neutral",
+  locked = false,
   className,
   children,
   type = "button",
   ...props
 }: LessonChoiceButtonProps) {
+  const isPressed = selected || locked;
+
   return (
     <button
       type={type}
-      className={cn(cnLessonChoice(selected, variant), className)}
+      aria-pressed={isPressed}
+      className={cn(
+        locked
+          ? cn(lessonChoiceLayoutClass, lessonChoiceLockedCorrectClass)
+          : cn(lessonChoiceBaseClass, lessonChoiceStateClass(isPressed, variant)),
+        className,
+      )}
       {...props}
     >
       {children}

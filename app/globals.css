@@ -54,6 +54,8 @@
   --z-index-modal: 60;
   --z-index-toast: 70;
   --z-index-dev: 80;
+
+  --animate-lesson-shake: lesson-choice-shake 0.45s ease-in-out;
 }
 
 @layer components {
@@ -84,6 +86,25 @@
 }
 
 @layer base {
+  @keyframes lesson-choice-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-5px);
+    }
+    40% {
+      transform: translateX(5px);
+    }
+    60% {
+      transform: translateX(-3px);
+    }
+    80% {
+      transform: translateX(3px);
+    }
+  }
+
   html {
     @apply antialiased scroll-smooth;
   }

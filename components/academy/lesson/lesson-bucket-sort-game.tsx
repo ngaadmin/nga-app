@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -67,6 +68,26 @@ function formatDollars(amount: number): string {
   return `$${amount}`;
 }
 
+function shuffleIds(ids: readonly string[]): string[] {
+  const next = [...ids];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j]!, next[i]!];
+  }
+  return next;
+}
+
+/** Steps-row — content-height boxes; no inherited min-heights from sort defaults. */
+const stepsRowRowClass = "h-full w-full min-w-0";
+const stepsRowTextClass = "text-[11px] leading-tight sm:text-xs sm:leading-snug";
+const stepsRowChipBaseClass =
+  "cursor-grab touch-none select-none rounded-lg border-2 border-b-2 border-[#BDE9FB] bg-white font-heading font-bold text-[#031F82] transition-shadow active:cursor-grabbing active:translate-y-px";
+const stepsRowChipClass = "px-3.5 py-2 shadow-none";
+const stepsRowBucketBaseClass =
+  "rounded-lg border-2 border-dashed border-[#BDE9FB]/80 bg-[#F7FBFF]/80 transition-colors";
+const stepsRowBucketClass =
+  "relative flex h-full w-full min-h-0 flex-col p-2.5";
+
 export function LessonBucketSortGame<TBucket extends string>({
   items,
   buckets,
@@ -85,16 +106,26 @@ export function LessonBucketSortGame<TBucket extends string>({
     [items],
   );
 
-  const [poolIds, setPoolIds] = useState<string[]>(() => items.map((item) => item.id));
+  const [poolIds, setPoolIds] = useState<string[]>(() => {
+    const ids = items.map((item) => item.id);
+    return isSpentTotalLayout ? ids : shuffleIds(ids);
+  });
   const [bucketItems, setBucketItems] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(buckets.map((bucket) => [bucket.id, []])),
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [activeBucketId, setActiveBucketId] = useState<TBucket | null>(null);
   const [errorBucketId, setErrorBucketId] = useState<TBucket | null>(null);
+  const [lockedBucketIds, setLockedBucketIds] = useState<ReadonlySet<TBucket>>(
+    () => new Set(),
+  );
 
   const poolIdsRef = useRef(poolIds);
   poolIdsRef.current = poolIds;
+  const bucketItemsRef = useRef(bucketItems);
+  bucketItemsRef.current = bucketItems;
+  const lockedBucketIdsRef = useRef(lockedBucketIds);
+  lockedBucketIdsRef.current = lockedBucketIds;
 
   const onCompleteRef = useRef(onComplete);
   const onMistakeRef = useRef(onMistake);
@@ -191,8 +222,21 @@ export function LessonBucketSortGame<TBucket extends string>({
       const item = itemById.get(itemId);
       if (!item) return;
 
+      if (isStepsRowLayout && lockedBucketIdsRef.current.has(bucketId)) {
+        return;
+      }
+
       const currentPool = poolIdsRef.current;
       if (!currentPool.includes(itemId)) return;
+
+      const occupiedStep = bucketItemsRef.current[bucketId] ?? [];
+      if (isStepsRowLayout && occupiedStep.length > 0) {
+        setErrorBucketId(bucketId);
+        window.setTimeout(() => setErrorBucketId(null), 500);
+        triggerErrorVibration();
+        queueSideEffect({ kind: "wrong", itemId, bucketId });
+        return;
+      }
 
       if (item.bucket !== bucketId) {
         setErrorBucketId(bucketId);
@@ -215,9 +259,13 @@ export function LessonBucketSortGame<TBucket extends string>({
         };
       });
 
+      if (isStepsRowLayout) {
+        setLockedBucketIds((current) => new Set(current).add(bucketId));
+      }
+
       queueSideEffect({ kind: "correct", willComplete: nextPool.length === 0 });
     },
-    [itemById, queueSideEffect],
+    [isStepsRowLayout, itemById, queueSideEffect],
   );
 
   const handleChipPointerDown = (
@@ -294,8 +342,15 @@ export function LessonBucketSortGame<TBucket extends string>({
         onPointerCancel={handlePointerCancel}
         onLostPointerCapture={handlePointerCancel}
         className={cn(
-          lessonSortChipClass,
           stacked ? "w-full text-left" : "min-w-[7rem] max-w-full flex-1",
+          isStepsRowLayout && stacked
+            ? cn(
+                stepsRowChipBaseClass,
+                stepsRowTextClass,
+                stepsRowChipClass,
+                "flex h-full w-full items-center text-left",
+              )
+            : lessonSortChipClass,
           isDragging && "opacity-30",
         )}
         style={{ touchAction: "none" }}
@@ -312,7 +367,11 @@ export function LessonBucketSortGame<TBucket extends string>({
                 {item.emoji}
               </span>
             ) : null}
-            <span className={cn("leading-snug", stacked && "text-sm")}>
+            <span
+              className={cn(
+                stacked && !isStepsRowLayout && "text-sm leading-snug",
+              )}
+            >
               {item.label}
             </span>
           </span>
@@ -338,8 +397,13 @@ export function LessonBucketSortGame<TBucket extends string>({
       <div
         key={itemId}
         className={cn(
-          "rounded-xl border border-[#BDE9FB]/80 bg-white px-2 py-2 font-heading font-bold text-[#031F82] shadow-sm",
-          isStepsRowLayout ? "text-[9px] leading-snug sm:text-[10px]" : "text-[10px]",
+          isStepsRowLayout
+            ? cn(
+                stepsRowTextClass,
+                stepsRowChipClass,
+                "flex h-full w-full items-center rounded-lg border border-[#BDE9FB]/80 bg-white font-heading font-bold text-[#031F82]",
+              )
+            : "rounded-xl border border-[#BDE9FB]/80 bg-white px-2 py-2 font-heading font-bold text-[#031F82] shadow-sm text-[10px]",
         )}
       >
         <span className="flex items-center justify-between gap-2">
@@ -357,8 +421,12 @@ export function LessonBucketSortGame<TBucket extends string>({
     );
   };
 
-  const renderBucket = (bucket: LessonSortBucket<TBucket>) => {
+  const renderBucket = (
+    bucket: LessonSortBucket<TBucket>,
+    stepIndex?: number,
+  ) => {
     const placedIds = bucketItems[bucket.id] ?? [];
+    const isLocked = isStepsRowLayout && lockedBucketIds.has(bucket.id);
     return (
       <div
         key={bucket.id}
@@ -366,21 +434,46 @@ export function LessonBucketSortGame<TBucket extends string>({
           bucketRefs.current[bucket.id] = node;
         }}
         className={cn(
-          lessonSortBucketClass,
+          !isStepsRowLayout && lessonSortBucketClass,
           isSpentTotalLayout && "min-h-[10rem] flex-1",
-          isStepsRowLayout && "min-h-[8.5rem] min-w-0",
+          isStepsRowLayout &&
+            cn(
+              stepsRowBucketBaseClass,
+              stepsRowBucketClass,
+            ),
           activeBucketId === bucket.id && lessonSortBucketActiveClass,
           errorBucketId === bucket.id && lessonSortBucketErrorClass,
+          isLocked && "border-[#16A34A] bg-[#DCFCE7]/35",
         )}
       >
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-          {bucket.label}
-        </p>
-        <div className="mt-2 space-y-2">
+        {isStepsRowLayout && stepIndex !== undefined ? (
+          <span
+            className="absolute left-1 top-1 z-[1] flex h-4 w-4 items-center justify-center rounded-full bg-[#031F82] font-heading text-[9px] font-bold leading-none text-white"
+            aria-label={bucket.label}
+          >
+            {stepIndex + 1}
+          </span>
+        ) : (
+          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+            {bucket.label}
+          </p>
+        )}
+        <div
+          className={cn(
+            isStepsRowLayout ? "flex flex-col justify-center" : "mt-2 space-y-2",
+          )}
+        >
           {placedIds.map((itemId) => renderPlacedItem(itemId))}
           {placedIds.length === 0 ? (
-            <p className="py-6 text-center font-sans text-[11px] text-[#1E3A5F]/50">
-              Drop items here
+            <p
+              className={cn(
+                "text-center font-sans text-[#1E3A5F]/50",
+                isStepsRowLayout
+                  ? "text-[10px] leading-tight"
+                  : "py-3 text-[11px]",
+              )}
+            >
+              {isStepsRowLayout ? "Drop here" : "Drop items here"}
             </p>
           ) : null}
         </div>
@@ -457,6 +550,79 @@ export function LessonBucketSortGame<TBucket extends string>({
     );
   }
 
+  if (isStepsRowLayout) {
+    const rowCount = buckets.length;
+
+    return (
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+      >
+        <div className={cn(lessonCardClass, "flex min-h-0 flex-1 flex-col p-4")}>
+          <div
+            className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-x-3 gap-y-2"
+            style={{
+              gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
+            }}
+          >
+            {poolIds.length === 0 ? (
+              <div
+                className="col-start-1 row-start-1 flex items-center justify-center rounded-xl border border-dashed border-[#BDE9FB]/60 bg-[#F7FBFF]/50"
+                style={{ gridRow: `1 / span ${rowCount}` }}
+              >
+                <p className="text-center font-heading text-xs font-bold text-[#22C55E]">
+                  All sorted!
+                </p>
+              </div>
+            ) : null}
+
+            {buckets.map((bucket, rowIndex) => (
+              <Fragment key={bucket.id}>
+                {poolIds.length > 0 ? (
+                  <div className={stepsRowRowClass}>
+                    {poolIds[rowIndex] ? (
+                      renderPoolChip(poolIds[rowIndex]!, true)
+                    ) : (
+                      <div className="h-full w-full min-w-0" aria-hidden />
+                    )}
+                  </div>
+                ) : null}
+                <div className={stepsRowRowClass}>{renderBucket(bucket, rowIndex)}</div>
+              </Fragment>
+            ))}
+          </div>
+        </div>
+
+        {draggedItem && dragState ? (
+          <OverlayPortal className="overflow-visible">
+            <div
+              className={cn(
+                lessonSortChipClass,
+                stepsRowTextClass,
+                stepsRowChipClass,
+                "pointer-events-none fixed w-[10rem] shadow-lg",
+              )}
+              style={{
+                left: dragState.x,
+                top: dragState.y,
+                width: dragState.width,
+              }}
+            >
+              {draggedItem.emoji ? (
+                <span className="block text-xl" aria-hidden>
+                  {draggedItem.emoji}
+                </span>
+              ) : null}
+              <span className="block leading-snug">{draggedItem.label}</span>
+            </div>
+          </OverlayPortal>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div
       className="mt-5 space-y-4"
@@ -479,7 +645,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         )}
       </div>
 
-      <div className={cn(isStepsRowLayout ? "grid grid-cols-3 gap-2" : "grid grid-cols-2 gap-3")}>
+      <div className="grid grid-cols-2 gap-3">
         {buckets.map((bucket) => renderBucket(bucket))}
       </div>
 

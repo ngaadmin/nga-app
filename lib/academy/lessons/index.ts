@@ -1,6 +1,7 @@
 export { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
 export { M1_L2_LESSON_DEFINITION, M1_L2_CUSTOM } from "@/lib/academy/lessons/content/m1-l2";
 export { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
+export { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
 export {
   M1_L1_EXPLORER_DEFINITION,
   M1_L2_EXPLORER_DEFINITION,
@@ -54,6 +55,10 @@ export {
   M1_L3_PERFECT_STREAK_BONUS,
   M1_L3_SKILL_ID,
   M1_L3_XP_REWARD,
+  M1_L4_ACHIEVEMENT_SKILL_ID,
+  M1_L4_PERFECT_STREAK_BONUS,
+  M1_L4_SKILL_ID,
+  M1_L4_XP_REWARD,
   SHIPPED_ACADEMY_LESSON_IDS,
 } from "@/lib/academy/lessons/registry";
 export type {
@@ -64,6 +69,7 @@ export type {
   CohortLessonDefinition,
   CompletionScreenConfig,
   CustomScreenConfig,
+  DragToTargetScreenConfig,
   HoldToFillScreenConfig,
   LinkMatchScreenConfig,
   LinkMatchPair,
@@ -72,6 +78,8 @@ export type {
   LessonRewards,
   NarrativeBonusScreenConfig,
   ResolvedLessonContent,
+  SavingsGoalItem,
+  SavingsGoalScreenConfig,
   ScreenConfig,
   SortBucket,
   SortItem,

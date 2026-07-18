@@ -1,8 +1,12 @@
 import { cn } from "@/lib/utils/cn";
 
+/** Layout shared by default and locked lesson choice tiles. */
+export const lessonChoiceLayoutClass =
+  "w-full rounded-2xl px-4 py-4 text-left font-heading text-sm font-bold text-[#031F82] shadow-sm transition-colors";
+
 /** Base tile for lesson multiple-choice and sort chips. */
 export const lessonChoiceBaseClass =
-  "w-full rounded-2xl border-2 border-b-4 border-[#BDE9FB] bg-white px-4 py-4 text-left font-heading text-sm font-bold text-[#031F82] shadow-sm transition-all hover:bg-[#BDE9FB]/20 active:translate-y-[2px] active:border-b-2";
+  `${lessonChoiceLayoutClass} border-2 border-b-4 border-[#BDE9FB] bg-white hover:bg-[#BDE9FB]/20 active:translate-y-[2px] active:border-b-2`;
 
 /** @deprecated Use lessonChoiceBaseClass + lessonChoiceSelectedClass helpers. */
 export const lessonChoiceClass = lessonChoiceBaseClass;
@@ -17,6 +21,10 @@ const lessonChoiceSelectedVariantClass: Record<LessonChoiceVariant, string> = {
   wrong:
     "translate-y-[3px] border-b-0 border-[#E11D48] bg-[#FDA4AF]/70 shadow-[inset_0_4px_8px_rgba(190,18,60,0.24)]",
 };
+
+/** Locked-in correct (multi-select): hover blue fill + navy border — standalone, no base class. */
+export const lessonChoiceLockedCorrectClass =
+  "pointer-events-none cursor-default border-2 border-[#031F82] bg-[#BDE9FB]/20 hover:bg-[#BDE9FB]/20 translate-y-[1px] shadow-[inset_0_2px_4px_rgba(3,31,130,0.1)]";
 
 export function lessonChoiceStateClass(
   isSelected: boolean,

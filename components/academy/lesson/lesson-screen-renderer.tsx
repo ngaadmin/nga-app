@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
+import { LessonDragToTargetGame } from "@/components/academy/lesson/lesson-drag-to-target-game";
+import { LessonSavingsGoalGame } from "@/components/academy/lesson/lesson-savings-goal-game";
 import { LessonLinkMatchGame } from "@/components/academy/lesson/lesson-link-match-game";
 import { LessonWordDropGame } from "@/components/academy/lesson/lesson-word-drop-game";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
@@ -17,11 +19,13 @@ import type {
   BinaryChoiceScreenConfig,
   BucketSortScreenConfig,
   CompletionScreenConfig,
+  DragToTargetScreenConfig,
   HoldToFillScreenConfig,
   LessonRewards,
   LinkMatchScreenConfig,
   NarrativeBonusScreenConfig,
   ScreenConfig,
+  SavingsGoalScreenConfig,
   SpotlightRoundsScreenConfig,
   TapRevealScreenConfig,
   TrueFalseScreenConfig,
@@ -158,56 +162,331 @@ function BinaryChoiceScreen({
   flow,
 }: StandardScreenProps<BinaryChoiceScreenConfig>) {
   type ChoiceKey = "a" | "b" | "c" | "d" | "e";
-  const choiceOptions: { key: ChoiceKey; label: string; isCorrect: boolean }[] = [
+  type ChoiceOption = {
+    key: ChoiceKey;
+    label: string;
+    isCorrect: boolean;
+    feedback?: string;
+  };
+
+  const choiceOptions: ChoiceOption[] = [
     { key: "a", ...screen.optionA },
     { key: "b", ...screen.optionB },
     ...(screen.optionC ? [{ key: "c" as const, ...screen.optionC }] : []),
     ...(screen.optionD ? [{ key: "d" as const, ...screen.optionD }] : []),
     ...(screen.optionE ? [{ key: "e" as const, ...screen.optionE }] : []),
   ];
+
+  const isMultiCorrect = screen.selectionMode === "multi-correct";
+  const lockCorrectSelections = screen.lockCorrectSelections ?? false;
+  const isRadioList = screen.optionLayout === "radio-list";
+  const wrongIsShake =
+    screen.wrongInteraction === "shake" ||
+    (screen.wrongInteraction !== "persist" &&
+      lockCorrectSelections &&
+      isMultiCorrect &&
+      !isRadioList);
+  const correctKeys = choiceOptions.filter((option) => option.isCorrect).map((o) => o.key);
+
+  const [optionOrder] = useState<ChoiceKey[]>(() => {
+    const keys = choiceOptions.map((option) => option.key);
+    if (!isMultiCorrect) return keys;
+    const shuffled = [...keys];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+    }
+    return shuffled;
+  });
+
   const [choice, setChoice] = useState<ChoiceKey | null>(null);
+  const [lockedCorrect, setLockedCorrect] = useState<ReadonlySet<ChoiceKey>>(
+    () => new Set(),
+  );
+  const [wrongPicked, setWrongPicked] = useState<ReadonlySet<ChoiceKey>>(
+    () => new Set(),
+  );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [shakingKey, setShakingKey] = useState<ChoiceKey | null>(null);
+  const shakeTimeoutRef = useRef<number | null>(null);
+  const errorDismissTimeoutRef = useRef<number | null>(null);
 
-  const pick = (which: ChoiceKey) => {
+  const clearScheduledDudReset = useCallback(() => {
+    if (shakeTimeoutRef.current !== null) {
+      window.clearTimeout(shakeTimeoutRef.current);
+      shakeTimeoutRef.current = null;
+    }
+    if (errorDismissTimeoutRef.current !== null) {
+      window.clearTimeout(errorDismissTimeoutRef.current);
+      errorDismissTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleDudFeedbackReset = useCallback((which: ChoiceKey) => {
+    if (shakeTimeoutRef.current !== null) {
+      window.clearTimeout(shakeTimeoutRef.current);
+    }
+    if (errorDismissTimeoutRef.current !== null) {
+      window.clearTimeout(errorDismissTimeoutRef.current);
+    }
+
+    setShakingKey(which);
+    shakeTimeoutRef.current = window.setTimeout(() => {
+      setShakingKey(null);
+      shakeTimeoutRef.current = null;
+    }, 450);
+
+    errorDismissTimeoutRef.current = window.setTimeout(() => {
+      setError(null);
+      errorDismissTimeoutRef.current = null;
+    }, 3200);
+  }, []);
+
+  useEffect(
+    () => () => {
+      clearScheduledDudReset();
+    },
+    [clearScheduledDudReset],
+  );
+
+  const optionByKey = new Map(choiceOptions.map((option) => [option.key, option]));
+
+  const pickSingle = (which: ChoiceKey) => {
     setChoice(which);
-    const selected = choiceOptions.find((option) => option.key === which);
+    const selected = optionByKey.get(which);
     if (selected?.isCorrect) {
       setError(null);
-      setSuccess(screen.successMessage ?? null);
+      setSuccess(selected.feedback ?? screen.successMessage ?? null);
       celebrateLessonCorrectAnswer(flow.flashScreen);
       flow.markScreenReady(screenIndex);
       return;
     }
     setSuccess(null);
-    setError(screen.wrongError);
+    setError(selected?.feedback ?? screen.wrongError);
     flow.incrementMistake();
     if (screen.errorStyle !== "banner") {
       flow.flashScreen("error");
     }
   };
 
+  const pickMulti = (which: ChoiceKey) => {
+    const selected = optionByKey.get(which);
+    if (!selected) return;
+
+    if (lockedCorrect.has(which)) {
+      if (lockCorrectSelections) return;
+      const nextLocked = new Set(lockedCorrect);
+      nextLocked.delete(which);
+      setLockedCorrect(nextLocked);
+      setSuccess(null);
+      flow.clearScreenReady(screenIndex);
+      return;
+    }
+
+    if (wrongPicked.has(which)) {
+      const nextWrong = new Set(wrongPicked);
+      nextWrong.delete(which);
+      setWrongPicked(nextWrong);
+      if (nextWrong.size === 0) {
+        setError(null);
+      }
+      return;
+    }
+
+    if (selected.isCorrect) {
+      clearScheduledDudReset();
+      const nextLocked = new Set(lockedCorrect).add(which);
+      setLockedCorrect(nextLocked);
+      setError(null);
+      celebrateLessonCorrectAnswer(flow.flashScreen);
+
+      if (correctKeys.every((key) => nextLocked.has(key))) {
+        setSuccess(screen.successMessage ?? null);
+        flow.markScreenReady(screenIndex);
+      } else {
+        flow.clearScreenReady(screenIndex);
+      }
+      return;
+    }
+
+    if (wrongIsShake) {
+      setWrongPicked((current) => {
+        if (!current.has(which)) return current;
+        const next = new Set(current);
+        next.delete(which);
+        return next;
+      });
+      setSuccess(null);
+      flow.clearScreenReady(screenIndex);
+      setError(
+        selected.feedback ??
+          screen.wrongError ??
+          "Not quite! That button is trying to do the thinking for you. Don't let it!",
+      );
+      flow.incrementMistake();
+      if (screen.errorStyle !== "banner") {
+        flow.flashScreen("error");
+      }
+      scheduleDudFeedbackReset(which);
+      return;
+    }
+
+    setWrongPicked((current) => new Set(current).add(which));
+    setSuccess(null);
+    flow.clearScreenReady(screenIndex);
+    setError(selected.feedback ?? screen.wrongError);
+    flow.incrementMistake();
+    if (screen.errorStyle !== "banner") {
+      flow.flashScreen("error");
+    }
+  };
+
+  const pick = isMultiCorrect ? pickMulti : pickSingle;
+
+  const getVariant = (key: ChoiceKey): "neutral" | "correct" | "wrong" => {
+    if (isMultiCorrect) {
+      if (shakingKey === key) return "neutral";
+      if (lockedCorrect.has(key)) {
+        return lockCorrectSelections ? "neutral" : "correct";
+      }
+      if (wrongPicked.has(key)) return "wrong";
+      return "neutral";
+    }
+    if (choice !== key) return "neutral";
+    return optionByKey.get(key)?.isCorrect ? "correct" : "wrong";
+  };
+
+  const isSelected = (key: ChoiceKey): boolean => {
+    if (isMultiCorrect) {
+      if (shakingKey === key) return false;
+      return lockedCorrect.has(key) || wrongPicked.has(key);
+    }
+    return choice === key;
+  };
+
+  const isRadioListLayout = isRadioList;
+
+  const renderRadioIndicator = (variant: "neutral" | "correct" | "wrong") => (
+    <span
+      className={cn(
+        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+        variant === "correct" && "border-[#16A34A] bg-[#86EFAC]",
+        variant === "wrong" && "border-[#E11D48] bg-[#FDA4AF]",
+        variant === "neutral" && "border-[#BDE9FB] bg-white",
+      )}
+      aria-hidden
+    >
+      {variant === "correct" ? (
+        <span className="h-2.5 w-2.5 rounded-full bg-[#16A34A]" />
+      ) : null}
+      {variant === "wrong" ? (
+        <span className="h-2.5 w-2.5 rounded-full bg-[#E11D48]" />
+      ) : null}
+    </span>
+  );
+
+  const renderOptionList = () =>
+    optionOrder.map((key) => {
+      const option = optionByKey.get(key);
+      if (!option) return null;
+      const variant = getVariant(key);
+      const selected = isSelected(key);
+
+      if (isRadioListLayout) {
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              pick(key);
+            }}
+            className="flex w-full items-center gap-3 py-2.5 text-left"
+          >
+            {renderRadioIndicator(variant)}
+            <span className="font-heading text-sm font-bold leading-snug text-[#031F82]">
+              {option.label}
+            </span>
+          </button>
+        );
+      }
+
+      const isLockedCorrect = lockCorrectSelections && lockedCorrect.has(key);
+
+      return (
+        <LessonChoiceButton
+          key={key}
+          onClick={(event) => {
+            event.stopPropagation();
+            pick(key);
+            if (isMultiCorrect && wrongIsShake && !option.isCorrect) {
+              event.currentTarget.blur();
+            }
+          }}
+          selected={selected}
+          variant={variant}
+          locked={isLockedCorrect}
+          className={shakingKey === key ? "animate-lesson-shake" : undefined}
+        >
+          {option.label}
+        </LessonChoiceButton>
+      );
+    });
+
+  if (isRadioListLayout) {
+    return (
+      <>
+        {screen.imagePlaceholder ? (
+          <div
+            className="flex aspect-[5/3] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-4 text-center"
+            role="img"
+            aria-label={screen.imagePlaceholder.alt ?? screen.imagePlaceholder.label}
+          >
+            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+              Image placeholder
+            </p>
+            <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">
+              {screen.imagePlaceholder.label}
+            </p>
+          </div>
+        ) : null}
+
+        {screen.scenePrompt ? (
+          <p className="mt-4 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+            {screen.scenePrompt}
+          </p>
+        ) : null}
+
+        <p className="mt-4 font-sans text-sm font-bold leading-relaxed text-[#031F82]">
+          {screen.prompt}
+        </p>
+
+        <div className="mt-3 space-y-1">{renderOptionList()}</div>
+
+        {success ? (
+          <p className={lessonSuccessMessageClass}>{success}</p>
+        ) : null}
+        {error ? (
+          <p
+            className={cn(
+              "mt-4 font-sans text-xs",
+              screen.errorStyle === "banner"
+                ? "rounded-xl bg-[#FFF7ED] px-3 py-2 text-[#031F82]"
+                : "text-[#E11D48]",
+            )}
+          >
+            {error}
+          </p>
+        ) : null}
+      </>
+    );
+  }
+
   return (
     <>
       <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.prompt}</p>
-      <div className="mt-5 space-y-3">
-        {choiceOptions.map((option) => (
-          <LessonChoiceButton
-            key={option.key}
-            onClick={() => pick(option.key)}
-            selected={choice === option.key}
-            variant={
-              choice === option.key
-                ? option.isCorrect
-                  ? "correct"
-                  : "wrong"
-                : "neutral"
-            }
-          >
-            {option.label}
-          </LessonChoiceButton>
-        ))}
-      </div>
+      <div className="mt-5 space-y-3">{renderOptionList()}</div>
       {success ? (
         <p className={lessonSuccessMessageClass}>{success}</p>
       ) : null}
@@ -496,6 +775,31 @@ function BucketSortScreen({
     [onPersistentError, screen.items],
   );
 
+  const isStepsRow = screen.layout === "steps-row";
+
+  if (isStepsRow) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
+        <div className="mt-3 flex min-h-0 flex-1 flex-col">
+          <LessonBucketSortGame
+            items={screen.items}
+            buckets={screen.buckets}
+            layout={screen.layout}
+            targetTotal={screen.targetTotal}
+            onComplete={handleComplete}
+            onMistake={handleMistake}
+            onSuccess={handleSuccess}
+            onWrongDrop={handleWrongDrop}
+          />
+        </div>
+        {completeMessage ? (
+          <p className={lessonSuccessMessageClass}>{completeMessage}</p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
@@ -513,6 +817,105 @@ function BucketSortScreen({
         <p className={lessonSuccessMessageClass}>{completeMessage}</p>
       ) : null}
     </>
+  );
+}
+
+function DragToTargetScreen({
+  screen,
+  screenIndex,
+  flow,
+}: StandardScreenProps<DragToTargetScreenConfig>) {
+  const [completeMessage, setCompleteMessage] = useState<string | null>(null);
+  const flowRef = useRef(flow);
+  flowRef.current = flow;
+
+  const handleComplete = useCallback(() => {
+    if (screen.successMessage) {
+      setCompleteMessage(screen.successMessage);
+    }
+    flowRef.current.markScreenReady(screenIndex);
+  }, [screen.successMessage, screenIndex]);
+
+  const handleSuccess = useCallback(() => {
+    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+  }, []);
+
+  return (
+    <>
+      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
+      <LessonDragToTargetGame
+        sourceLabel={screen.sourceLabel}
+        targetLabel={screen.targetLabel}
+        itemEmoji={screen.itemEmoji}
+        coinCount={screen.coinCount}
+        onComplete={handleComplete}
+        onSuccess={handleSuccess}
+      />
+      {completeMessage ? (
+        <p className={lessonSuccessMessageClass}>{completeMessage}</p>
+      ) : null}
+    </>
+  );
+}
+
+function SavingsGoalScreen({
+  screen,
+  screenIndex,
+  flow,
+}: StandardScreenProps<SavingsGoalScreenConfig>) {
+  const flowRef = useRef(flow);
+  flowRef.current = flow;
+
+  const handleGoalReady = useCallback(() => {
+    flowRef.current.markScreenReady(screenIndex);
+  }, [screenIndex]);
+
+  const handleAdvance = useCallback(() => {
+    flowRef.current.handleNext();
+  }, []);
+
+  const handleItemSaved = useCallback(() => {
+    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+  }, []);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <p className="shrink-0 font-sans text-xs leading-snug text-[#1E3A5F]">
+        {screen.intro}
+      </p>
+
+      {screen.imagePlaceholder ? (
+        <div
+          className="mt-2 flex h-20 w-full shrink-0 flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-3 text-center"
+          role="img"
+          aria-label={screen.imagePlaceholder.alt ?? screen.imagePlaceholder.label}
+        >
+          <p className="font-heading text-[9px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+            Image placeholder
+          </p>
+          <p className="mt-0.5 font-heading text-[11px] font-bold leading-tight text-[#031F82]">
+            {screen.imagePlaceholder.label}
+          </p>
+        </div>
+      ) : null}
+
+      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+        <LessonSavingsGoalGame
+          meterLabel={screen.meterLabel}
+          targetAmount={screen.targetAmount}
+          poolColumnLabel={screen.poolColumnLabel}
+          dropZoneLabel={screen.dropZoneLabel}
+          items={screen.items}
+          workshopSignTitle={screen.workshopSignTitle}
+          lockedLabel={screen.lockedLabel}
+          unlockedLabel={screen.unlockedLabel}
+          goalAchievedLabel={screen.goalAchievedLabel}
+          onGoalReady={handleGoalReady}
+          onAdvance={handleAdvance}
+          onItemSaved={handleItemSaved}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -896,6 +1299,24 @@ export function LessonScreenRenderer({
           rewards={rewards}
           onPersistentError={onPersistentError}
           onDismissPersistentError={onDismissPersistentError}
+        />
+      );
+    case "drag-to-target":
+      return (
+        <DragToTargetScreen
+          screen={screen}
+          screenIndex={screenIndex}
+          flow={flow}
+          rewards={rewards}
+        />
+      );
+    case "savings-goal":
+      return (
+        <SavingsGoalScreen
+          screen={screen}
+          screenIndex={screenIndex}
+          flow={flow}
+          rewards={rewards}
         />
       );
     case "hold-to-fill":

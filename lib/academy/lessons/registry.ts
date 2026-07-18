@@ -2,6 +2,7 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
 import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
+import { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
 import {
   resolveLessonDefinition,
   type CohortLessonDefinition,
@@ -14,6 +15,7 @@ export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {
   1: M1_L1_LESSON_DEFINITION,
   2: M1_L2_LESSON_DEFINITION,
   3: M1_L3_LESSON_DEFINITION,
+  4: M1_L4_LESSON_DEFINITION,
 };
 
 export const SHIPPED_ACADEMY_LESSON_IDS = new Set<number>(
@@ -91,6 +93,13 @@ export const M1_L3_ACHIEVEMENT_SKILL_ID =
 export const M1_L3_XP_REWARD = LESSON_DEFINITIONS[3]!.rewards.xpReward;
 export const M1_L3_PERFECT_STREAK_BONUS =
   LESSON_DEFINITIONS[3]!.rewards.perfectStreakBonus;
+
+export const M1_L4_SKILL_ID = LESSON_DEFINITIONS[4]!.rewards.skillSlug;
+export const M1_L4_ACHIEVEMENT_SKILL_ID =
+  LESSON_DEFINITIONS[4]!.rewards.achievementSkillSlug;
+export const M1_L4_XP_REWARD = LESSON_DEFINITIONS[4]!.rewards.xpReward;
+export const M1_L4_PERFECT_STREAK_BONUS =
+  LESSON_DEFINITIONS[4]!.rewards.perfectStreakBonus;
 
 export function hasShippedLesson(milestoneId: number): boolean {
   return SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId);

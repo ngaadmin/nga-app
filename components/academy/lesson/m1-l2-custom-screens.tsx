@@ -17,8 +17,6 @@ import { useState } from "react";
 
 const submitAnswerClass = lessonSubmitAnswerClass;
 
-type RankItemId = (typeof M1_L2_CUSTOM.rank.items)[number]["id"];
-
 type BudgetState = {
   busChecked: boolean;
   drinkChecked: boolean;

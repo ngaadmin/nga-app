@@ -35,13 +35,14 @@ export function LessonRunner({
   canAdvance,
   onNext,
 }: LessonRunnerProps) {
+  const { screenIndex, markScreenReady } = flow;
   const footerLabel = getCompletionFooterLabel(
     content.screens,
     flow.lessonComplete,
   );
 
   useEffect(() => {
-    const screen = content.screens[flow.screenIndex];
+    const screen = content.screens[screenIndex];
     if (!screen) return;
 
     const autoReady =
@@ -51,9 +52,9 @@ export function LessonRunner({
         screen.autoReadyWhenNoBonus !== false);
 
     if (autoReady) {
-      flow.markScreenReady(flow.screenIndex);
+      markScreenReady(screenIndex);
     }
-  }, [content.screens, flow.screenIndex, flow.markScreenReady]);
+  }, [content.screens, screenIndex, markScreenReady]);
 
   return (
     <div

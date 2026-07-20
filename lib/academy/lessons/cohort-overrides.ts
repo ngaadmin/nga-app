@@ -50,7 +50,8 @@ export function mergeScreenConfig<T extends ScreenConfig>(
   override: ScreenOverridePatch,
 ): T {
   if (override._replace) {
-    const { _replace: _ignored, ...replacement } = override;
+    const replacement = { ...override };
+    delete (replacement as ScreenOverridePatch)._replace;
     return replacement as T;
   }
 

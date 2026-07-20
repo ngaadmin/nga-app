@@ -234,9 +234,10 @@ export function LessonLinkMatchGame({
   }, [evaluateMatches, releasePointerCapture]);
 
   useEffect(() => {
+    const pulseTimeouts = pulseTimeoutsRef.current;
     return () => {
       releasePointerCapture();
-      for (const timeoutId of Object.values(pulseTimeoutsRef.current)) {
+      for (const timeoutId of Object.values(pulseTimeouts)) {
         if (timeoutId !== undefined) window.clearTimeout(timeoutId);
       }
     };

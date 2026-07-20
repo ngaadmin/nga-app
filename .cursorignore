@@ -1,0 +1,22 @@
+﻿# Dependencies & build artifacts
+node_modules/
+.next/
+out/
+tsconfig.tsbuildinfo
+package-lock.json
+
+# Import pipeline scratch & outputs
+.tmp-*
+**/.tmp-*/
+lib/academy/lessons/content/data/
+templates/lesson-authoring/
+tools/output/
+tools/import-*.mjs
+
+# Large dashboard pages (split later; exclude from agent context)
+app/dashboard/engine/page.tsx
+app/dashboard/vault/page.tsx
+
+# Long documentation
+DECISIONS_LOG.md
+SPRINTS.md

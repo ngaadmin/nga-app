@@ -25,10 +25,13 @@ export function SignUpPendingPanel() {
 
         <div className="space-y-3 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            Ask Your Parent to Check Their Email
+            Ask your parent/guardian to check their email
           </h1>
-          <p className="font-sans text-sm leading-relaxed text-nga-slate">
-            Finn sent a safety check to{" "}
+        </div>
+
+        <div className="space-y-4 rounded-nga-lg border-2 border-[#BDE9FB] bg-[#BDE9FB]/15 px-4 py-4 font-sans text-sm leading-relaxed text-nga-ink">
+          <p>
+            We sent an email to{" "}
             {parentEmail ? (
               <span className="font-semibold text-nga-primary">
                 {maskEmail(parentEmail)}
@@ -36,17 +39,14 @@ export function SignUpPendingPanel() {
             ) : (
               "your parent or guardian"
             )}
-            . Once they tap approve, your progress jumps into your new profile.
+            . Once they tap approve, your profile will be saved, including the
+            learning progress you&apos;ve made in this session. So jump right
+            in!
           </p>
-        </div>
-
-        <div className="space-y-4 rounded-nga-lg border-2 border-[#BDE9FB] bg-[#BDE9FB]/15 px-4 py-4 font-sans text-sm leading-relaxed text-nga-ink">
           <p className="font-heading text-sm font-bold text-nga-primary">
-            Good news: ghost mode still works
-          </p>
-          <p>
-            Keep playing while you wait. Your points, skills, and lesson wins
-            stay in ghost mode until your parent approves — nothing gets wiped.
+            Good news: Start playing while you wait for the approval. Your
+            points, skills and lesson wins will stay saved as long as the app
+            stays open.
           </p>
           {approvalPath ? (
             <p className="text-xs text-nga-slate">
@@ -62,7 +62,7 @@ export function SignUpPendingPanel() {
         </div>
 
         <ButtonLink href={DASHBOARD_ACADEMY_PATH} variant="cta" fullWidth>
-          Keep Playing in Ghost Mode
+          Start Playing Now!
         </ButtonLink>
       </div>
     </section>

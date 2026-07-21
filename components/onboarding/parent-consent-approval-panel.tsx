@@ -12,6 +12,9 @@ import {
 } from "@/lib/onboarding/parent-consent-pending";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/ghost-session";
 
+const EMAIL_HELPER_TEXT =
+  "Your email stays private and is never used for marketing unless you give us permission.";
+
 type ApprovalState = "loading" | "ready" | "approved" | "invalid";
 
 export function ParentConsentApprovalPanel() {
@@ -78,23 +81,30 @@ export function ParentConsentApprovalPanel() {
             <span className="font-semibold text-nga-primary">
               {pending.childUsername}
             </span>
-            . You&apos;ll own the master account; their ghost progress transfers
-            when you approve.
+            . You&apos;ll own the master account; their progress is saved once
+            you approve.
           </p>
         </div>
-
-        <LockedBirthYearSummary birthYear={pending.birthYear} ageTier="explorer" />
 
         <div className="rounded-nga-lg border-2 border-nga-panel bg-nga-mist/30 px-4 py-3 font-sans text-sm text-nga-ink">
           <p>
-            Master account email:{" "}
+            Master Account Email Address:{" "}
             <span className="font-semibold">{pending.parentEmail}</span>
           </p>
           <p className="mt-2 text-nga-slate">
-            No paid upgrade required. You can review their activity through the
-            parent dashboard in a later release.
+            You can review their activity through the parent dashboard in a
+            later release.
           </p>
         </div>
+
+        <LockedBirthYearSummary
+          birthYear={pending.birthYear}
+          parentConsent
+        />
+
+        <p className="font-sans text-sm italic leading-relaxed text-nga-slate text-center">
+          {EMAIL_HELPER_TEXT}
+        </p>
 
         <Button type="button" variant="cta" fullWidth onClick={handleApprove}>
           Approve &amp; Create Profile

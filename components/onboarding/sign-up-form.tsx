@@ -18,7 +18,6 @@ import {
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
-  masteryCohortLabel,
   requiresParentConsent,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -29,6 +28,9 @@ import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const EMAIL_HELPER_TEXT =
+  "Your email stays private and is never used for marketing unless you give us permission.";
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
@@ -49,13 +51,7 @@ export function SignUpForm() {
   const ageTier = birthYear ? getMasteryCohortFromBirthYear(birthYear) : null;
   const needsParentConsent = ageTier ? requiresParentConsent(ageTier) : false;
 
-  const [username, setUsername] = useState(() => {
-    return (
-      searchParams.get("username") ??
-      existingSession?.username ??
-      ""
-    );
-  });
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{
     username?: string;
@@ -132,7 +128,6 @@ export function SignUpForm() {
   }
 
   const isGhostConversion = existingSession?.accessMode === "ghost";
-  const tierLabel = masteryCohortLabel(ageTier);
 
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
@@ -147,7 +142,7 @@ export function SignUpForm() {
           </h1>
           <p className="font-sans text-sm leading-relaxed text-nga-slate">
             {needsParentConsent
-              ? "Finn needs a parent or guardian to give the green light before we save your profile. Your ghost progress stays safe while you wait."
+              ? "Financial Explorers under 14 need a parent or guardian to give the approval before we can save your profile."
               : isGhostConversion
                 ? "Your points, skills, and lesson progress carry over automatically."
                 : "Save your streak, points, and skills across every visit."}
@@ -155,34 +150,25 @@ export function SignUpForm() {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          <LockedBirthYearSummary birthYear={birthYear} ageTier={ageTier} />
-
-          {needsParentConsent ? (
-            <div className="rounded-nga-lg border-2 border-[#BDE9FB] bg-[#BDE9FB]/20 px-4 py-3 font-sans text-sm leading-relaxed text-nga-ink">
-              <p className="font-heading text-sm font-bold text-nga-primary">
-                Why a parent email?
-              </p>
-              <p className="mt-1">
-                Explorers under 14 need a parent to own the master account and
-                approve signup. We&apos;ll email them a secure link — no paid
-                upgrade, just safety first.
-              </p>
-            </div>
-          ) : null}
+          <LockedBirthYearSummary
+            birthYear={birthYear}
+            ageTier={ageTier}
+            signup
+          />
 
           <div className="space-y-2">
             <label
               htmlFor="signup-username"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Nickname / Username
+              Username
             </label>
             <input
               id="signup-username"
               name="username"
               type="text"
               autoComplete="username"
-              placeholder="Pick the name you want to keep"
+              placeholder="Pick a username"
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
@@ -214,7 +200,7 @@ export function SignUpForm() {
               id="signup-email"
               name="email"
               type="email"
-              autoComplete={needsParentConsent ? "email" : "email"}
+              autoComplete="email"
               placeholder={
                 needsParentConsent ? "parent@example.com" : "you@example.com"
               }
@@ -226,6 +212,9 @@ export function SignUpForm() {
                 }
               }}
               aria-invalid={Boolean(errors.email)}
+              aria-describedby={
+                errors.email ? undefined : "signup-email-hint"
+              }
               className={cn(
                 fieldBase,
                 errors.email && "border-red-400 focus:border-red-500",
@@ -236,10 +225,11 @@ export function SignUpForm() {
                 {errors.email}
               </p>
             ) : (
-              <p className="font-sans text-sm italic text-nga-slate">
-                {needsParentConsent
-                  ? "We never ask Explorers for their own email — just a trusted adult."
-                  : `${tierLabel} signup — your email stays private and is never used for marketing.`}
+              <p
+                id="signup-email-hint"
+                className="font-sans text-sm italic text-nga-slate"
+              >
+                {EMAIL_HELPER_TEXT}
               </p>
             )}
           </div>
@@ -252,7 +242,7 @@ export function SignUpForm() {
 
           <Button type="submit" variant="cta" fullWidth>
             {needsParentConsent
-              ? "Send Consent Email to Parent"
+              ? "Send Consent Email to Parent / Guardian"
               : "Create My Free Account"}
           </Button>
         </form>

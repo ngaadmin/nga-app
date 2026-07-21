@@ -67,3 +67,8 @@ export function totalSkillsToMasterForMasteryCohort(
 export function masteryCohortLabel(cohort: MasteryCohort): string {
   return MASTERY_COHORT[cohort].label;
 }
+
+export function masteryCohortAgeRangeLabel(cohort: MasteryCohort): string {
+  const { minAge, maxAge } = MASTERY_COHORT[cohort];
+  return `${minAge}–${maxAge}`;
+}

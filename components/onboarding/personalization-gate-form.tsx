@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   getBirthYearRangeLabel,
   getEligibleBirthYears,
@@ -68,10 +68,7 @@ export function PersonalizationGateForm() {
     return Object.keys(next).length === 0;
   }
 
-  function handleContinueWithoutProfile(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!validate()) return;
-
+  function persistGhostSession(): boolean {
     let reservedId = genericProfileId;
     if (!reservedId) {
       try {
@@ -81,7 +78,7 @@ export function PersonalizationGateForm() {
           ...prev,
           username: "Could not reserve a profile ID. Try again in a moment.",
         }));
-        return;
+        return false;
       }
     }
 
@@ -91,29 +88,28 @@ export function PersonalizationGateForm() {
       genericProfileId: reservedId,
     });
     saveGhostAccessSession(session);
+    return true;
+  }
+
+  function handleContinueWithoutProfile(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!validate()) return;
+    if (!persistGhostSession()) return;
     router.push(DASHBOARD_ACADEMY_PATH);
   }
 
-  function buildSignUpHref(): string {
-    const params = new URLSearchParams();
-    const trimmed = username.trim();
-    if (trimmed) params.set("username", trimmed);
-    if (birthYear) params.set("birthYear", birthYear);
-    const query = params.toString();
-    return query ? `${ONBOARDING_SIGN_UP_PATH}?${query}` : ONBOARDING_SIGN_UP_PATH;
-  }
-
-  function handleCreateProfileClick(
-    event: React.MouseEvent<HTMLAnchorElement>,
-  ) {
+  function handleCreateProfile() {
     const year = birthYear ? Number(birthYear) : NaN;
     if (!birthYear || !isEligibleBirthYear(year)) {
-      event.preventDefault();
       setErrors((prev) => ({
         ...prev,
         birthYear: "Select your birth year before creating a profile.",
       }));
+      return;
     }
+    if (!validate()) return;
+    if (!persistGhostSession()) return;
+    router.push(ONBOARDING_SIGN_UP_PATH);
   }
 
   return (
@@ -248,17 +244,17 @@ export function PersonalizationGateForm() {
           </div>
 
           <div className="space-y-3">
-            <Button type="submit" variant="cta" fullWidth>
-              Continue without a profile
-            </Button>
-            <ButtonLink
-              href={buildSignUpHref()}
-              variant="secondary-outline"
+            <Button
+              type="button"
+              variant="cta"
               fullWidth
-              onClick={handleCreateProfileClick}
+              onClick={handleCreateProfile}
             >
               Create Profile
-            </ButtonLink>
+            </Button>
+            <Button type="submit" variant="secondary-outline" fullWidth>
+              Continue without a profile
+            </Button>
           </div>
         </form>
       </div>

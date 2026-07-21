@@ -32,6 +32,8 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_HELPER_TEXT =
   "Your email stays private and is never used for marketing unless you give us permission.";
 
+const EXPLORER_ACCENT_CLASS = "text-nga-explorer";
+
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
 
@@ -140,9 +142,16 @@ export function SignUpForm() {
               ? "Almost There, Explorer!"
               : "Create Your Free Profile"}
           </h1>
-          <p className="font-sans text-sm leading-relaxed text-nga-slate">
+          <p
+            className={cn(
+              "font-sans text-sm leading-relaxed",
+              needsParentConsent
+                ? cn(EXPLORER_ACCENT_CLASS, "font-semibold")
+                : "text-nga-slate",
+            )}
+          >
             {needsParentConsent
-              ? "Financial Explorers under 14 need a parent or guardian to give the approval before we can save your profile."
+              ? "Explorers under 14 need a parent or guardian to give the approval before we can save your profile."
               : isGhostConversion
                 ? "Your points, skills, and lesson progress carry over automatically."
                 : "Save your streak, points, and skills across every visit."}
@@ -192,7 +201,12 @@ export function SignUpForm() {
           <div className="space-y-2">
             <label
               htmlFor="signup-email"
-              className="block font-heading text-sm font-bold text-nga-primary"
+              className={cn(
+                "block font-heading text-sm font-bold",
+                needsParentConsent
+                  ? EXPLORER_ACCENT_CLASS
+                  : "text-nga-primary",
+              )}
             >
               {needsParentConsent ? "Parent or guardian email" : "Your email"}
             </label>

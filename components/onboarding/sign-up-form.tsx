@@ -1,65 +1,77 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   getBirthYearRangeLabel,
   getEligibleBirthYears,
   isEligibleBirthYear,
 } from "@/lib/onboarding/birth-years";
-import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
-  createGhostAccessSession,
+  convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
-  ONBOARDING_SIGN_UP_PATH,
-  saveGhostAccessSession,
+  readUserSession,
+  saveUserSession,
 } from "@/lib/onboarding/ghost-session";
 import { cn } from "@/lib/utils/cn";
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_#-]{2,20}$/;
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
 
-export function PersonalizationGateForm() {
+export function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const birthYears = useMemo(() => getEligibleBirthYears(), []);
 
-  const [username, setUsername] = useState("");
-  const [birthYear, setBirthYear] = useState("");
-  const [genericProfileId, setGenericProfileId] = useState<string | null>(null);
+  const existingSession = useMemo(() => readUserSession(), []);
+
+  const [username, setUsername] = useState(() => {
+    return (
+      searchParams.get("username") ??
+      (existingSession?.accessMode === "ghost" ? existingSession.username : "") ??
+      ""
+    );
+  });
+  const [email, setEmail] = useState("");
+  const [birthYear, setBirthYear] = useState(() => {
+    const fromQuery = searchParams.get("birthYear");
+    if (fromQuery) return fromQuery;
+    if (existingSession?.birthYear) return String(existingSession.birthYear);
+    return "";
+  });
   const [errors, setErrors] = useState<{
     username?: string;
+    email?: string;
     birthYear?: string;
+    form?: string;
   }>({});
-
-  useEffect(() => {
-    try {
-      const generated = reserveGenericProfileId();
-      setUsername(generated.username);
-      setGenericProfileId(generated.id);
-    } catch {
-      setUsername("");
-      setGenericProfileId(null);
-    }
-  }, []);
 
   function validate(): boolean {
     const next: typeof errors = {};
     const trimmed = username.trim();
+    const trimmedEmail = email.trim();
 
     if (!trimmed) {
-      next.username = "Pick a nickname to continue.";
+      next.username = "Pick a nickname for your saved profile.";
     } else if (!USERNAME_PATTERN.test(trimmed)) {
       next.username =
-        "Use 2–20 letters, numbers, underscores, hyphens, or # only.";
+        "Use 2–20 letters, numbers, underscores, or hyphens only.";
+    }
+
+    if (!trimmedEmail) {
+      next.email = "Enter an email so we can save your account.";
+    } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
+      next.email = "Enter a valid email address.";
     }
 
     const year = birthYear ? Number(birthYear) : NaN;
     if (!birthYear) {
-      next.birthYear = "Select your birth year so we can match your challenges.";
+      next.birthYear = "Select your birth year.";
     } else if (!isEligibleBirthYear(year)) {
       next.birthYear = `Please choose a birth year between ${getBirthYearRangeLabel()}.`;
     }
@@ -68,83 +80,58 @@ export function PersonalizationGateForm() {
     return Object.keys(next).length === 0;
   }
 
-  function handleContinueWithoutProfile(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validate()) return;
 
-    let reservedId = genericProfileId;
-    if (!reservedId) {
-      try {
-        reservedId = reserveGenericProfileId().id;
-      } catch {
-        setErrors((prev) => ({
-          ...prev,
-          username: "Could not reserve a profile ID. Try again in a moment.",
-        }));
-        return;
-      }
-    }
-
-    const session = createGhostAccessSession({
-      username: username.trim(),
-      birthYear: Number(birthYear),
-      genericProfileId: reservedId,
-    });
-    saveGhostAccessSession(session);
-    router.push(DASHBOARD_ACADEMY_PATH);
-  }
-
-  function buildSignUpHref(): string {
-    const params = new URLSearchParams();
-    const trimmed = username.trim();
-    if (trimmed) params.set("username", trimmed);
-    if (birthYear) params.set("birthYear", birthYear);
-    const query = params.toString();
-    return query ? `${ONBOARDING_SIGN_UP_PATH}?${query}` : ONBOARDING_SIGN_UP_PATH;
-  }
-
-  function handleCreateProfileClick(
-    event: React.MouseEvent<HTMLAnchorElement>,
-  ) {
-    const year = birthYear ? Number(birthYear) : NaN;
-    if (!birthYear || !isEligibleBirthYear(year)) {
-      event.preventDefault();
+    try {
+      const session = convertToRegisteredProfile({
+        username: username.trim(),
+        email: email.trim(),
+        birthYear: Number(birthYear),
+      });
+      saveUserSession(session);
+      router.push(DASHBOARD_ACADEMY_PATH);
+    } catch {
       setErrors((prev) => ({
         ...prev,
-        birthYear: "Select your birth year before creating a profile.",
+        form: "We could not create your profile. Check your details and try again.",
       }));
     }
   }
 
+  const isGhostConversion = existingSession?.accessMode === "ghost";
+
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
-        <OnboardingProgress value={25} />
+        <OnboardingProgress value={50} />
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            Start Playing the Money Game
+            Create Your Free Profile
           </h1>
+          <p className="font-sans text-sm leading-relaxed text-nga-slate">
+            {isGhostConversion
+              ? "Your points, skills, and lesson progress carry over automatically."
+              : "Save your streak, points, and skills across every visit."}
+          </p>
         </div>
 
-        <form
-          className="space-y-6"
-          onSubmit={handleContinueWithoutProfile}
-          noValidate
-        >
+        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
           <div className="space-y-2">
             <label
-              htmlFor="username"
+              htmlFor="signup-username"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Nickname
+              Nickname / Username
             </label>
             <input
-              id="username"
+              id="signup-username"
               name="username"
               type="text"
               autoComplete="username"
-              placeholder="Pick a cool nickname..."
+              placeholder="Pick the name you want to keep"
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
@@ -153,18 +140,13 @@ export function PersonalizationGateForm() {
                 }
               }}
               aria-invalid={Boolean(errors.username)}
-              aria-describedby={errors.username ? "username-error" : undefined}
               className={cn(
                 fieldBase,
                 errors.username && "border-red-400 focus:border-red-500",
               )}
             />
             {errors.username ? (
-              <p
-                id="username-error"
-                className="font-sans text-sm font-medium text-red-600"
-                role="alert"
-              >
+              <p className="font-sans text-sm font-medium text-red-600" role="alert">
                 {errors.username}
               </p>
             ) : null}
@@ -172,14 +154,47 @@ export function PersonalizationGateForm() {
 
           <div className="space-y-2">
             <label
-              htmlFor="birth-year"
+              htmlFor="signup-email"
+              className="block font-heading text-sm font-bold text-nga-primary"
+            >
+              Email
+            </label>
+            <input
+              id="signup-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) {
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }
+              }}
+              aria-invalid={Boolean(errors.email)}
+              className={cn(
+                fieldBase,
+                errors.email && "border-red-400 focus:border-red-500",
+              )}
+            />
+            {errors.email ? (
+              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                {errors.email}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-birth-year"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
               Birth year
             </label>
             <div className="relative">
               <select
-                id="birth-year"
+                id="signup-birth-year"
                 name="birthYear"
                 value={birthYear}
                 onChange={(e) => {
@@ -190,7 +205,7 @@ export function PersonalizationGateForm() {
                 }}
                 aria-invalid={Boolean(errors.birthYear)}
                 aria-describedby={
-                  errors.birthYear ? "birth-year-error" : "birth-year-hint"
+                  errors.birthYear ? "signup-birth-year-error" : "signup-birth-year-hint"
                 }
                 className={cn(
                   fieldBase,
@@ -230,15 +245,16 @@ export function PersonalizationGateForm() {
               </span>
             </div>
             <p
-              id="birth-year-hint"
+              id="signup-birth-year-hint"
               className="font-sans text-sm italic leading-relaxed text-nga-slate"
             >
-              (We use this to make sure your challenges are a perfect match for
-              your age!)
+              We ask for birth year to match lesson difficulty to your age band
+              and apply the right privacy rules for younger players. We never
+              use it for marketing.
             </p>
             {errors.birthYear ? (
               <p
-                id="birth-year-error"
+                id="signup-birth-year-error"
                 className="font-sans text-sm font-medium text-red-600"
                 role="alert"
               >
@@ -247,19 +263,15 @@ export function PersonalizationGateForm() {
             ) : null}
           </div>
 
-          <div className="space-y-3">
-            <Button type="submit" variant="cta" fullWidth>
-              Continue without a profile
-            </Button>
-            <ButtonLink
-              href={buildSignUpHref()}
-              variant="secondary-outline"
-              fullWidth
-              onClick={handleCreateProfileClick}
-            >
-              Create Profile
-            </ButtonLink>
-          </div>
+          {errors.form ? (
+            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              {errors.form}
+            </p>
+          ) : null}
+
+          <Button type="submit" variant="cta" fullWidth>
+            Create My Free Account
+          </Button>
         </form>
       </div>
     </section>

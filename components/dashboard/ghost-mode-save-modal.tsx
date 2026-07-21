@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { ONBOARDING_SIGN_UP_PATH } from "@/lib/onboarding/ghost-session";
 import { cn } from "@/lib/utils/cn";
 
 type GhostModeSaveModalProps = {
@@ -9,7 +11,7 @@ type GhostModeSaveModalProps = {
 };
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
+  "inline-flex h-touch min-h-touch w-full items-center justify-center rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-6 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
 
 export function GhostModeSaveModal({ isOpen, onClose }: GhostModeSaveModalProps) {
   return (
@@ -28,20 +30,20 @@ export function GhostModeSaveModal({ isOpen, onClose }: GhostModeSaveModalProps)
         id="ghost-save-title"
         className="mt-2 font-heading text-xl font-extrabold leading-tight text-[#031F82] sm:text-2xl"
       >
-        Sign Up to Save Your Progress &amp; Lock in Your Streak!
+        Sign up to save your progress &amp; lock in your streak!
       </h2>
       <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Finn says your wins are riding on a ghost session right now. Create a
-        free account to keep your streak, jars, and venture roadmap safe -
-        no paid upgrade required.
+        Create a free account to keep your streak, points and skills earned safe
+        - no paid upgrade required.
       </p>
 
-      <button
-        type="button"
-        className={cn("mt-5 h-touch w-full px-6 shadow-md", orangeCtaClass)}
+      <Link
+        href={ONBOARDING_SIGN_UP_PATH}
+        onClick={onClose}
+        className={cn("mt-5", orangeCtaClass)}
       >
         Create My Free Account
-      </button>
+      </Link>
       <button
         type="button"
         onClick={onClose}

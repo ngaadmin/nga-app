@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { readUserSession, isGhostSession } from "@/lib/onboarding/ghost-session";
 
 export type DashboardUserState = {
   username: string;
@@ -21,12 +21,12 @@ export function useDashboardUser(): DashboardUserState {
   });
 
   useEffect(() => {
-    const session = readGhostAccessSession();
+    const session = readUserSession();
     if (session) {
       setState({
         username: session.username,
         joinDate: session.createdAt,
-        isGhostMode: session.accessMode === "ghost",
+        isGhostMode: isGhostSession(session),
         isLoading: false,
       });
       return;

@@ -25,7 +25,7 @@ export function OnboardingEntryGate() {
             skills!
           </h1>
           <div className="mt-8 flex w-full max-w-sm flex-col gap-4">
-            <ButtonLink href="/onboarding/start" variant="cta" fullWidth>
+            <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
               Get started
             </ButtonLink>
             <ButtonLink

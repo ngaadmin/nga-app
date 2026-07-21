@@ -8,6 +8,7 @@ import {
   type CohortLessonDefinition,
   type ResolvedLessonContent,
 } from "@/lib/academy/lessons/types";
+import { isDevTestingUnlockedLesson } from "@/lib/dev/academy-dev-tools";
 import { isDevClient } from "@/lib/dev/client-persist";
 
 /** Shipped lesson definitions keyed by academy milestone id. */
@@ -115,7 +116,11 @@ export function canLaunchAcademyLesson(
     return false;
   }
 
-  if (isDevClient()) {
+  if (
+    isDevClient() &&
+    isDevTestingUnlockedLesson(milestoneId) &&
+    isLessonShippedForCohort(milestoneId, cohort)
+  ) {
     return true;
   }
 

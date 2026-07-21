@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PersonalizationGateForm } from "@/components/onboarding/personalization-gate-form";
 import { OnboardingFreshStartReset } from "@/components/onboarding/onboarding-fresh-start-reset";
-import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-session-redirect";
+import { OnboardingPersonalizationFresh } from "@/components/onboarding/onboarding-personalization-fresh";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function OnboardingStartPage() {
     <>
       <SearchParamsBoundary>
         <OnboardingFreshStartReset />
-        <OnboardingSessionRedirect />
+        <OnboardingPersonalizationFresh />
       </SearchParamsBoundary>
       <PersonalizationGateForm />
     </>

@@ -7,7 +7,8 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import {
   ONBOARDING_START_PATH,
-  readGhostAccessSession,
+  readUserSession,
+  hasCompletedPersonalizationGate,
 } from "@/lib/onboarding/ghost-session";
 
 type DashboardShellProps = {
@@ -18,8 +19,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
 
   useEffect(() => {
-    const session = readGhostAccessSession();
-    if (!session) {
+    const session = readUserSession();
+    if (!hasCompletedPersonalizationGate(session)) {
       router.replace(ONBOARDING_START_PATH);
     }
   }, [router]);

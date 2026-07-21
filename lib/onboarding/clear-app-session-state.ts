@@ -3,12 +3,14 @@ import { DASHBOARD_WALLET_STORAGE_KEY } from "@/lib/dashboard/dashboard-wallet-s
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
 import { GHOST_SESSION_STORAGE_KEY } from "@/lib/onboarding/ghost-session";
+import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
 
 import { clearAllPersistedNgaKeys } from "@/lib/dev/client-persist";
 
 /** All sessionStorage keys written by the ghost-phase app shell. */
 export const APP_SESSION_STORAGE_KEYS = [
   GHOST_SESSION_STORAGE_KEY,
+  GENERIC_PROFILE_POOL_STORAGE_KEY,
   DASHBOARD_WALLET_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,
   VAULT_SKILL_PROGRESS_STORAGE_KEY,

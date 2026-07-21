@@ -1,19 +1,30 @@
-/** Inclusive birth-year window for tweens and teens (Ghost Access onboarding). */
-export const BIRTH_YEAR_MIN = 2005;
-export const BIRTH_YEAR_MAX = 2020;
+/** Inclusive birth-year window for onboarding (adults may sign up on behalf of youth). */
+export const BIRTH_YEAR_MIN = 1950;
 
-export function getEligibleBirthYears(): number[] {
+export function getBirthYearMax(referenceDate = new Date()): number {
+  return referenceDate.getFullYear();
+}
+
+export function getEligibleBirthYears(referenceDate = new Date()): number[] {
+  const max = getBirthYearMax(referenceDate);
   const years: number[] = [];
-  for (let year = BIRTH_YEAR_MAX; year >= BIRTH_YEAR_MIN; year--) {
+  for (let year = max; year >= BIRTH_YEAR_MIN; year--) {
     years.push(year);
   }
   return years;
 }
 
-export function isEligibleBirthYear(year: number): boolean {
+export function isEligibleBirthYear(
+  year: number,
+  referenceDate = new Date(),
+): boolean {
   return (
     Number.isInteger(year) &&
     year >= BIRTH_YEAR_MIN &&
-    year <= BIRTH_YEAR_MAX
+    year <= getBirthYearMax(referenceDate)
   );
+}
+
+export function getBirthYearRangeLabel(referenceDate = new Date()): string {
+  return `${BIRTH_YEAR_MIN} and ${getBirthYearMax(referenceDate)}`;
 }

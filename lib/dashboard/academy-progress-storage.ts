@@ -2,6 +2,7 @@ import {
   createPhase1MilestoneScaffold,
   type AcademyLessonMilestoneNode,
 } from "@/lib/dashboard/academy-state";
+import { applyDevShippedLessonUnlocks } from "@/lib/dev/academy-dev-tools";
 import {
   readPersisted,
   writePersisted,
@@ -19,16 +20,16 @@ export function readAcademyMilestones(): AcademyLessonMilestoneNode[] {
   }
 
   const raw = readPersisted(ACADEMY_PROGRESS_STORAGE_KEY);
-  if (!raw) return defaultAcademyMilestones();
+  if (!raw) return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
 
   try {
     const parsed = JSON.parse(raw) as AcademyLessonMilestoneNode[];
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return defaultAcademyMilestones();
+      return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
     }
-    return parsed;
+    return applyDevShippedLessonUnlocks(parsed);
   } catch {
-    return defaultAcademyMilestones();
+    return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
   }
 }
 

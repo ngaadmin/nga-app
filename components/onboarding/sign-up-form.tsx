@@ -1,20 +1,30 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button } from "@/components/ui/button";
 import {
-  getBirthYearRangeLabel,
-  getEligibleBirthYears,
-  isEligibleBirthYear,
-} from "@/lib/onboarding/birth-years";
+  captureGhostProgressSnapshot,
+} from "@/lib/onboarding/ghost-progress-snapshot";
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
+  ONBOARDING_SIGN_UP_PENDING_PATH,
+  ONBOARDING_START_PATH,
   readUserSession,
-  saveUserSession,
 } from "@/lib/onboarding/ghost-session";
+import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
+import {
+  getMasteryCohortFromBirthYear,
+  masteryCohortLabel,
+  requiresParentConsent,
+} from "@/lib/dashboard/mastery-cohort";
+import {
+  buildParentConsentApprovalPath,
+  createPendingParentConsent,
+} from "@/lib/onboarding/parent-consent-pending";
 import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
@@ -26,30 +36,38 @@ const fieldBase =
 export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const birthYears = useMemo(() => getEligibleBirthYears(), []);
-
   const existingSession = useMemo(() => readUserSession(), []);
+
+  const birthYear = useMemo(() => {
+    const fromQuery = searchParams.get("birthYear");
+    if (fromQuery && Number.isInteger(Number(fromQuery))) {
+      return Number(fromQuery);
+    }
+    return existingSession?.birthYear ?? null;
+  }, [existingSession?.birthYear, searchParams]);
+
+  const ageTier = birthYear ? getMasteryCohortFromBirthYear(birthYear) : null;
+  const needsParentConsent = ageTier ? requiresParentConsent(ageTier) : false;
 
   const [username, setUsername] = useState(() => {
     return (
       searchParams.get("username") ??
-      (existingSession?.accessMode === "ghost" ? existingSession.username : "") ??
+      existingSession?.username ??
       ""
     );
   });
   const [email, setEmail] = useState("");
-  const [birthYear, setBirthYear] = useState(() => {
-    const fromQuery = searchParams.get("birthYear");
-    if (fromQuery) return fromQuery;
-    if (existingSession?.birthYear) return String(existingSession.birthYear);
-    return "";
-  });
   const [errors, setErrors] = useState<{
     username?: string;
     email?: string;
-    birthYear?: string;
     form?: string;
   }>({});
+
+  useEffect(() => {
+    if (!birthYear || !existingSession?.birthYearLocked) {
+      router.replace(ONBOARDING_START_PATH);
+    }
+  }, [birthYear, existingSession?.birthYearLocked, router]);
 
   function validate(): boolean {
     const next: typeof errors = {};
@@ -64,16 +82,11 @@ export function SignUpForm() {
     }
 
     if (!trimmedEmail) {
-      next.email = "Enter an email so we can save your account.";
+      next.email = needsParentConsent
+        ? "Enter a parent or guardian email so they can approve your account."
+        : "Enter your email so we can save your account.";
     } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
       next.email = "Enter a valid email address.";
-    }
-
-    const year = birthYear ? Number(birthYear) : NaN;
-    if (!birthYear) {
-      next.birthYear = "Select your birth year.";
-    } else if (!isEligibleBirthYear(year)) {
-      next.birthYear = `Please choose a birth year between ${getBirthYearRangeLabel()}.`;
     }
 
     setErrors(next);
@@ -82,15 +95,29 @@ export function SignUpForm() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!validate()) return;
+    if (!birthYear || !validate()) return;
 
     try {
+      if (needsParentConsent) {
+        const pending = createPendingParentConsent({
+          parentEmail: email.trim(),
+          childUsername: username.trim(),
+          birthYear,
+        });
+        router.push(
+          `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
+        );
+        return;
+      }
+
+      captureGhostProgressSnapshot();
       const session = convertToRegisteredProfile({
         username: username.trim(),
         email: email.trim(),
-        birthYear: Number(birthYear),
+        birthYear,
+        accountRole: "child",
       });
-      saveUserSession(session);
+      finalizeRegisteredSignup(session);
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch {
       setErrors((prev) => ({
@@ -100,7 +127,12 @@ export function SignUpForm() {
     }
   }
 
+  if (!birthYear || !ageTier) {
+    return null;
+  }
+
   const isGhostConversion = existingSession?.accessMode === "ghost";
+  const tierLabel = masteryCohortLabel(ageTier);
 
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
@@ -109,16 +141,35 @@ export function SignUpForm() {
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            Create Your Free Profile
+            {needsParentConsent
+              ? "Almost There, Explorer!"
+              : "Create Your Free Profile"}
           </h1>
           <p className="font-sans text-sm leading-relaxed text-nga-slate">
-            {isGhostConversion
-              ? "Your points, skills, and lesson progress carry over automatically."
-              : "Save your streak, points, and skills across every visit."}
+            {needsParentConsent
+              ? "Finn needs a parent or guardian to give the green light before we save your profile. Your ghost progress stays safe while you wait."
+              : isGhostConversion
+                ? "Your points, skills, and lesson progress carry over automatically."
+                : "Save your streak, points, and skills across every visit."}
           </p>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+          <LockedBirthYearSummary birthYear={birthYear} ageTier={ageTier} />
+
+          {needsParentConsent ? (
+            <div className="rounded-nga-lg border-2 border-[#BDE9FB] bg-[#BDE9FB]/20 px-4 py-3 font-sans text-sm leading-relaxed text-nga-ink">
+              <p className="font-heading text-sm font-bold text-nga-primary">
+                Why a parent email?
+              </p>
+              <p className="mt-1">
+                Explorers under 14 need a parent to own the master account and
+                approve signup. We&apos;ll email them a secure link — no paid
+                upgrade, just safety first.
+              </p>
+            </div>
+          ) : null}
+
           <div className="space-y-2">
             <label
               htmlFor="signup-username"
@@ -157,14 +208,16 @@ export function SignUpForm() {
               htmlFor="signup-email"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Email
+              {needsParentConsent ? "Parent or guardian email" : "Your email"}
             </label>
             <input
               id="signup-email"
               name="email"
               type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
+              autoComplete={needsParentConsent ? "email" : "email"}
+              placeholder={
+                needsParentConsent ? "parent@example.com" : "you@example.com"
+              }
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -182,85 +235,13 @@ export function SignUpForm() {
               <p className="font-sans text-sm font-medium text-red-600" role="alert">
                 {errors.email}
               </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="signup-birth-year"
-              className="block font-heading text-sm font-bold text-nga-primary"
-            >
-              Birth year
-            </label>
-            <div className="relative">
-              <select
-                id="signup-birth-year"
-                name="birthYear"
-                value={birthYear}
-                onChange={(e) => {
-                  setBirthYear(e.target.value);
-                  if (errors.birthYear) {
-                    setErrors((prev) => ({ ...prev, birthYear: undefined }));
-                  }
-                }}
-                aria-invalid={Boolean(errors.birthYear)}
-                aria-describedby={
-                  errors.birthYear ? "signup-birth-year-error" : "signup-birth-year-hint"
-                }
-                className={cn(
-                  fieldBase,
-                  "appearance-none pr-10",
-                  !birthYear && "text-nga-slate/60",
-                  errors.birthYear && "border-red-400 focus:border-red-500",
-                )}
-              >
-                <option value="" disabled>
-                  Select your birth year
-                </option>
-                {birthYears.map((year) => (
-                  <option key={year} value={year} className="text-nga-ink">
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <span
-                className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-nga-secondary"
-                aria-hidden
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M4 6L8 10L12 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            </div>
-            <p
-              id="signup-birth-year-hint"
-              className="font-sans text-sm italic leading-relaxed text-nga-slate"
-            >
-              We ask for birth year to match lesson difficulty to your age band
-              and apply the right privacy rules for younger players. We never
-              use it for marketing.
-            </p>
-            {errors.birthYear ? (
-              <p
-                id="signup-birth-year-error"
-                className="font-sans text-sm font-medium text-red-600"
-                role="alert"
-              >
-                {errors.birthYear}
+            ) : (
+              <p className="font-sans text-sm italic text-nga-slate">
+                {needsParentConsent
+                  ? "We never ask Explorers for their own email — just a trusted adult."
+                  : `${tierLabel} signup — your email stays private and is never used for marketing.`}
               </p>
-            ) : null}
+            )}
           </div>
 
           {errors.form ? (
@@ -270,7 +251,9 @@ export function SignUpForm() {
           ) : null}
 
           <Button type="submit" variant="cta" fullWidth>
-            Create My Free Account
+            {needsParentConsent
+              ? "Send Consent Email to Parent"
+              : "Create My Free Account"}
           </Button>
         </form>
       </div>

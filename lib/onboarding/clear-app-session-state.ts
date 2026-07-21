@@ -4,6 +4,8 @@ import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
 import { GHOST_SESSION_STORAGE_KEY } from "@/lib/onboarding/ghost-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
+import { GHOST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/ghost-progress-snapshot";
+import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
 
 import { clearAllPersistedNgaKeys } from "@/lib/dev/client-persist";
 
@@ -11,6 +13,8 @@ import { clearAllPersistedNgaKeys } from "@/lib/dev/client-persist";
 export const APP_SESSION_STORAGE_KEYS = [
   GHOST_SESSION_STORAGE_KEY,
   GENERIC_PROFILE_POOL_STORAGE_KEY,
+  GHOST_PROGRESS_SNAPSHOT_KEY,
+  PENDING_PARENT_CONSENT_KEY,
   DASHBOARD_WALLET_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,
   VAULT_SKILL_PROGRESS_STORAGE_KEY,

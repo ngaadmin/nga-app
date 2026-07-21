@@ -23,9 +23,9 @@
   --color-nga-surface: #ffffff;
   --color-nga-mist: #e8f6fc;
 
-  /* Tier accents (Explorers vs Titans) */
+  /* Tier accents (Explorers · Pathfinders · Mavericks) */
   --color-nga-explorer: #8b5cf6;
-  --color-nga-titan: #0cc1e0;
+  --color-nga-pathfinder: #0cc1e0;
 
   /* Typography */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

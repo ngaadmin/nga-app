@@ -1,4 +1,8 @@
 import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
+import {
+  getMasteryCohortFromBirthYear,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import { releaseGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   readPersisted,
@@ -11,6 +15,10 @@ export const GHOST_SESSION_STORAGE_KEY = "nga_ghost_session";
 export const ONBOARDING_ENTRY_PATH = "/onboarding" as const;
 export const ONBOARDING_START_PATH = "/onboarding/start" as const;
 export const ONBOARDING_SIGN_UP_PATH = "/onboarding/sign-up" as const;
+export const ONBOARDING_SIGN_UP_PENDING_PATH =
+  "/onboarding/sign-up/pending" as const;
+export const ONBOARDING_PARENT_CONSENT_PATH =
+  "/onboarding/parent-consent" as const;
 export const DASHBOARD_ACADEMY_PATH = "/dashboard/academy" as const;
 
 export type AccessMode = "ghost" | "registered";
@@ -18,8 +26,10 @@ export type AccessMode = "ghost" | "registered";
 /** @deprecated Use AccessMode — kept for existing imports. */
 export type GhostAccessMode = "ghost";
 
-/** Explorers 10–13 · Titans 14+ (used later for retrospective gates). */
-export type ComplianceTier = "explorer" | "titan";
+/** @deprecated Use MasteryCohort from `@/lib/dashboard/mastery-cohort`. */
+export type ComplianceTier = MasteryCohort;
+
+export type AccountRole = "child" | "parent_master";
 
 export type GhostProfileInput = {
   username: string;
@@ -31,17 +41,24 @@ export type RegisteredProfileInput = {
   username: string;
   email: string;
   birthYear: number;
+  accountRole: AccountRole;
+  parentEmail?: string;
+  consentApprovedAt?: string;
 };
 
 export type UserSession = {
   accessMode: AccessMode;
   username: string;
   birthYear: number;
-  complianceTier: ComplianceTier;
+  birthYearLocked: boolean;
+  ageTier: MasteryCohort;
   createdAt: string;
   email?: string;
+  parentEmail?: string;
+  accountRole?: AccountRole;
   genericProfileId?: string;
   convertedAt?: string;
+  consentApprovedAt?: string;
 };
 
 /** @deprecated Use UserSession — kept for existing imports. */
@@ -49,18 +66,42 @@ export type GhostAccessSession = UserSession;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** @deprecated Use getMasteryCohortFromBirthYear. */
 export function getComplianceTier(
   birthYear: number,
   referenceYear = new Date().getFullYear(),
-): ComplianceTier {
-  const age = referenceYear - birthYear;
-  return age < 14 ? "explorer" : "titan";
+): MasteryCohort {
+  return getMasteryCohortFromBirthYear(birthYear, referenceYear);
+}
+
+function resolveAgeTier(
+  birthYear: number,
+  parsed?: Partial<UserSession & { complianceTier?: string }>,
+): MasteryCohort {
+  if (
+    parsed?.ageTier === "explorer" ||
+    parsed?.ageTier === "pathfinder" ||
+    parsed?.ageTier === "maverick"
+  ) {
+    return parsed.ageTier;
+  }
+
+  if (parsed?.complianceTier === "explorer") {
+    return "explorer";
+  }
+  if (parsed?.complianceTier === "titan") {
+    return getMasteryCohortFromBirthYear(birthYear);
+  }
+
+  return getMasteryCohortFromBirthYear(birthYear);
 }
 
 function normalizeStoredSession(raw: unknown): UserSession | null {
   if (!raw || typeof raw !== "object") return null;
 
-  const parsed = raw as Partial<UserSession>;
+  const parsed = raw as Partial<
+    UserSession & { complianceTier?: string }
+  >;
   if (typeof parsed.username !== "string" || !parsed.username.trim()) {
     return null;
   }
@@ -70,6 +111,8 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
 
   const accessMode: AccessMode =
     parsed.accessMode === "registered" ? "registered" : "ghost";
+  const birthYear = Number(parsed.birthYear);
+  const ageTier = resolveAgeTier(birthYear, parsed);
 
   if (accessMode === "registered") {
     const email = typeof parsed.email === "string" ? parsed.email.trim() : "";
@@ -78,13 +121,12 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
     }
   }
 
-  const birthYear = Number(parsed.birthYear);
-
   return {
     accessMode,
     username: parsed.username.trim(),
     birthYear,
-    complianceTier: getComplianceTier(birthYear),
+    birthYearLocked: parsed.birthYearLocked !== false,
+    ageTier,
     createdAt:
       typeof parsed.createdAt === "string"
         ? parsed.createdAt
@@ -93,12 +135,24 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
       accessMode === "registered" && typeof parsed.email === "string"
         ? parsed.email.trim().toLowerCase()
         : undefined,
+    parentEmail:
+      typeof parsed.parentEmail === "string"
+        ? parsed.parentEmail.trim().toLowerCase()
+        : undefined,
+    accountRole:
+      parsed.accountRole === "parent_master" || parsed.accountRole === "child"
+        ? parsed.accountRole
+        : undefined,
     genericProfileId:
       typeof parsed.genericProfileId === "string"
         ? parsed.genericProfileId
         : undefined,
     convertedAt:
       typeof parsed.convertedAt === "string" ? parsed.convertedAt : undefined,
+    consentApprovedAt:
+      typeof parsed.consentApprovedAt === "string"
+        ? parsed.consentApprovedAt
+        : undefined,
   };
 }
 
@@ -119,7 +173,8 @@ export function createGhostAccessSession(
     accessMode: "ghost",
     username,
     birthYear,
-    complianceTier: getComplianceTier(birthYear),
+    birthYearLocked: true,
+    ageTier: getMasteryCohortFromBirthYear(birthYear),
     createdAt: new Date().toISOString(),
     genericProfileId: input.genericProfileId,
   };
@@ -131,6 +186,7 @@ export function convertToRegisteredProfile(
   const username = input.username.trim();
   const email = input.email.trim().toLowerCase();
   const birthYear = input.birthYear;
+  const ageTier = getMasteryCohortFromBirthYear(birthYear);
 
   if (!username) {
     throw new Error("Username is required.");
@@ -147,14 +203,22 @@ export function convertToRegisteredProfile(
     releaseGenericProfileId(existing.genericProfileId);
   }
 
+  const parentEmail =
+    input.parentEmail?.trim().toLowerCase() ??
+    (ageTier === "explorer" ? email : undefined);
+
   return {
     accessMode: "registered",
     username,
     email,
     birthYear,
-    complianceTier: getComplianceTier(birthYear),
+    birthYearLocked: true,
+    ageTier,
+    accountRole: input.accountRole,
+    parentEmail,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     convertedAt: new Date().toISOString(),
+    consentApprovedAt: input.consentApprovedAt,
   };
 }
 
@@ -206,6 +270,7 @@ export function hasCompletedPersonalizationGate(
 ): boolean {
   return (
     session !== null &&
+    session.birthYearLocked &&
     isEligibleBirthYear(session.birthYear) &&
     session.username.trim().length > 0
   );

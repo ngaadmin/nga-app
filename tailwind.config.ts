@@ -29,7 +29,7 @@ const config: Config = {
           surface: "#FFFFFF",
           mist: "#E8F6FC",
           explorer: "#8B5CF6",
-          titan: "#0CC1E0",
+          pathfinder: "#0CC1E0",
         },
       },
       fontFamily: {

@@ -1,22 +1,19 @@
 /**
- * Compliance tiers from global minor standards (COPPA / GDPR-K).
- * Explorers require verifiable parental consent before account creation.
+ * Unified youth age bands — compliance (COPPA/GDPR-K) and mastery cohorts share these tiers.
+ * Explorers (under 14) · Pathfinders (14–15) · Mavericks (16+)
  */
-export const AGE_TIER = {
-  explorer: {
-    id: "explorer",
-    label: "Explorer",
-    minAge: 10,
-    maxAge: 13,
-  },
-  titan: {
-    id: "titan",
-    label: "Titan",
-    minAge: 14,
-    maxAge: 17,
-  },
-} as const;
+export {
+  MASTERY_COHORT as AGE_TIER,
+  type MasteryCohort as AgeTierId,
+  getMasteryCohortFromAge,
+  getMasteryCohortFromBirthYear,
+  masteryCohortLabel,
+  requiresParentConsent,
+} from "@/lib/dashboard/mastery-cohort";
 
-export type AgeTierId = keyof typeof AGE_TIER;
-
-export type AgeTier = (typeof AGE_TIER)[AgeTierId];
+export type AgeTier = {
+  id: import("@/lib/dashboard/mastery-cohort").MasteryCohort;
+  label: string;
+  minAge: number;
+  maxAge: number;
+};

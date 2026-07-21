@@ -17,6 +17,13 @@ export {
   reserveGenericProfileId,
 } from "./generic-profile-id";
 export {
+  captureGhostProgressSnapshot,
+  clearGhostProgressSnapshot,
+  GHOST_PROGRESS_SNAPSHOT_KEY,
+  mergeGhostProgressSnapshot,
+  readGhostProgressSnapshot,
+} from "./ghost-progress-snapshot";
+export {
   clearGhostAccessSession,
   clearUserSession,
   convertToRegisteredProfile,
@@ -29,8 +36,11 @@ export {
   saveGhostAccessSession,
   saveUserSession,
   GHOST_SESSION_STORAGE_KEY,
+  ONBOARDING_PARENT_CONSENT_PATH,
   ONBOARDING_SIGN_UP_PATH,
+  ONBOARDING_SIGN_UP_PENDING_PATH,
   type AccessMode,
+  type AccountRole,
   type ComplianceTier,
   type GhostAccessMode,
   type GhostAccessSession,
@@ -38,3 +48,12 @@ export {
   type RegisteredProfileInput,
   type UserSession,
 } from "./ghost-session";
+export { finalizeRegisteredSignup } from "./signup-finalize";
+export {
+  approveParentConsent,
+  buildParentConsentApprovalPath,
+  clearPendingParentConsent,
+  createPendingParentConsent,
+  PENDING_PARENT_CONSENT_KEY,
+  readPendingParentConsent,
+} from "./parent-consent-pending";

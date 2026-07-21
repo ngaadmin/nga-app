@@ -1,6 +1,6 @@
 import { SKILLS_REGISTRY } from "@/lib/skills/skills-registry";
 
-/** Age-based mastery track — separate from COPPA compliance tiers (Explorer/Titan). */
+/** Unified age band: Explorers (under 14) · Pathfinders (14–15) · Mavericks (16+). */
 export type MasteryCohort = "explorer" | "pathfinder" | "maverick";
 
 export const MASTERY_COHORT = {
@@ -8,12 +8,12 @@ export const MASTERY_COHORT = {
     id: "explorer",
     label: "Explorer",
     minAge: 10,
-    maxAge: 12,
+    maxAge: 13,
   },
   pathfinder: {
     id: "pathfinder",
     label: "Pathfinder",
-    minAge: 13,
+    minAge: 14,
     maxAge: 15,
   },
   maverick: {
@@ -32,13 +32,18 @@ export const UNIVERSAL_MASTERY_SKILLS_COUNT = SKILLS_REGISTRY.filter(
 ).length;
 export const MAVERICK_MASTERY_SKILLS_COUNT = SKILLS_REGISTRY.length;
 
+/** Explorers under 14 require verifiable parental consent before a saved account. */
+export function requiresParentConsent(cohort: MasteryCohort): boolean {
+  return cohort === "explorer";
+}
+
 /** Skills 13–18 (`is_advanced_cohort_only`) unlock for Mavericks (ages 16–18) only. */
 export function canAccessAdvancedSkills(cohort: MasteryCohort): boolean {
   return cohort === "maverick";
 }
 
 export function getMasteryCohortFromAge(age: number): MasteryCohort {
-  if (age <= 12) return "explorer";
+  if (age < 14) return "explorer";
   if (age <= 15) return "pathfinder";
   return "maverick";
 }

@@ -132,8 +132,8 @@ export default function DesignSystemPage() {
                 SemiBold 600 - Track progress across all three front doors.
               </p>
               <p className="font-sans text-base font-medium text-nga-slate">
-                Medium 500 - Explorers get high-energy metaphors; Titans get
-                peer-level respect and leverage-focused copy.
+                Medium 500 - Explorers get high-energy metaphors; Pathfinders
+                and Mavericks get peer-level respect and leverage-focused copy.
               </p>
               <p className="font-sans text-base font-normal leading-relaxed text-nga-slate">
                 Regular 400 - Data minimization by default. No fluff, no

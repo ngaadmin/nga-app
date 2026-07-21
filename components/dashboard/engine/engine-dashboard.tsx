@@ -8,10 +8,12 @@ import {
   type ComponentType,
 } from "react";
 import {
-  getComplianceTier,
   readGhostAccessSession,
-  type ComplianceTier,
 } from "@/lib/onboarding/ghost-session";
+import {
+  getMasteryCohortFromBirthYear,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
@@ -71,13 +73,13 @@ type JourneyMilestone = {
 
 type EngineProfile = {
   birthYear: number;
-  complianceTier: ComplianceTier;
+  ageTier: MasteryCohort;
   isPremium: boolean;
 };
 
 const DEFAULT_ENGINE_PROFILE: EngineProfile = {
   birthYear: 2013,
-  complianceTier: "explorer",
+  ageTier: "explorer",
   isPremium: false,
 };
 
@@ -295,7 +297,7 @@ function resolveEngineProfile(): EngineProfile {
 
   return {
     birthYear: session.birthYear,
-    complianceTier: getComplianceTier(session.birthYear, REFERENCE_YEAR),
+    ageTier: getMasteryCohortFromBirthYear(session.birthYear, REFERENCE_YEAR),
     isPremium: false,
   };
 }
@@ -305,7 +307,7 @@ function getVentureAccessState(
   profile: EngineProfile,
 ): VentureAccessState {
   if (idea.tier === "freemium") return "free_launch";
-  if (idea.row === 3 && profile.complianceTier === "explorer") {
+  if (idea.row === 3 && profile.ageTier === "explorer") {
     return "milestone_locked";
   }
   return "premium_unlock";

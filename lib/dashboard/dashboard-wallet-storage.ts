@@ -3,6 +3,7 @@ import {
   type JarBalanceMap,
 } from "@/lib/dashboard/destination-jars";
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
+import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
 import { DEFAULT_AUD_SLIDER_INDEX } from "@/lib/dashboard/point-conversion";
 import {
   readPersisted,
@@ -13,7 +14,7 @@ import {
 export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_v2";
 
 /** Bump when persisted wallet shape or defaults change. */
-export const WALLET_SCHEMA_VERSION = 2;
+export const WALLET_SCHEMA_VERSION = 3;
 
 /** TEMP: Seed XP balance for child conversion / Vault routing QA. Remove before production. */
 export const TEMP_TEST_SEED_XP_BALANCE = 1500;
@@ -29,6 +30,7 @@ export type PersistedDashboardWallet = {
   moneyToAllocate: number;
   jarBalances: JarBalanceMap;
   customBuckets?: CustomVaultBucketPersisted[];
+  savingsGoals?: SavingsGoal[];
 };
 
 export function defaultDashboardWalletState(): PersistedDashboardWallet {
@@ -40,6 +42,7 @@ export function defaultDashboardWalletState(): PersistedDashboardWallet {
     moneyToAllocate: 0,
     jarBalances: defaultJarBalances(),
     customBuckets: [],
+    savingsGoals: [],
   };
 }
 
@@ -115,6 +118,18 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
               typeof entry === "object" &&
               typeof (entry as CustomVaultBucketPersisted).id === "string" &&
               (entry as CustomVaultBucketPersisted).id.startsWith("custom-"),
+          )
+        : [],
+      savingsGoals: Array.isArray(parsed.savingsGoals)
+        ? parsed.savingsGoals.filter(
+            (entry): entry is SavingsGoal =>
+              Boolean(entry) &&
+              typeof entry === "object" &&
+              typeof (entry as SavingsGoal).id === "string" &&
+              (entry as SavingsGoal).id.startsWith("goal-") &&
+              typeof (entry as SavingsGoal).name === "string" &&
+              typeof (entry as SavingsGoal).targetAmount === "number" &&
+              typeof (entry as SavingsGoal).balance === "number",
           )
         : [],
     };

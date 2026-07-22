@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -16,6 +15,9 @@ import {
   VaultBudgetHub,
   type MoveTarget,
 } from "@/components/dashboard/vault/vault-budget-hub";
+import { VaultSavingsSection } from "@/components/dashboard/vault/vault-savings-section";
+import { VaultCollapsible } from "@/components/dashboard/vault/vault-visuals";
+import { ModalShell } from "@/components/ui/modal-shell";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -27,8 +29,8 @@ import {
 import {
   defaultCustomBucket,
   isCustomBucketId,
-  isSavingsBucket,
   sumAllocations,
+  sumBucketBalances,
   type CustomVaultBucketPersisted,
   type VaultBucket,
   type VaultBucketId,
@@ -40,6 +42,13 @@ import {
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
+import {
+  buildFreemiumDefaultGoal,
+  defaultSavingsGoal,
+  freemiumDefaultGoalTarget,
+  sumSavingsGoalBalances,
+  type SavingsGoalId,
+} from "@/lib/dashboard/savings-goals";
 import {
   getVaultCompoundingDefaults,
   resolveFutureSavingsPotential,
@@ -57,13 +66,6 @@ type LedgerEntry = {
   flow?: LedgerFlow;
 };
 
-type SavingsRegisterEntry = {
-  id: string;
-  timestamp: number;
-  amount: number;
-  direction: "added" | "removed";
-};
-
 type CoinFlight = {
   id: string;
   direction: "to-jar" | "to-holding";
@@ -75,14 +77,6 @@ const HIGH_ROI_WARNING_THRESHOLD = 12;
 
 const COIN_BURST_COUNT = 6;
 const COIN_FLIGHT_DURATION_MS = 900;
-
-const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
-
-const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 sm:text-sm";
-
-const vaultTileClass =
-  "flex flex-col items-center justify-center rounded-2xl bg-white p-4 text-center shadow-md transition-all hover:shadow-lg active:scale-[0.98]";
 
 function formatLedgerDate(timestamp: number): string {
   return new Intl.DateTimeFormat("en-AU", {
@@ -189,29 +183,6 @@ function resolveBucketName(
   return buckets.find((bucket) => bucket.id === bucketId)?.name ?? "Jar";
 }
 
-function ChevronIcon({ isOpen }: { isOpen: boolean }) {
-  return (
-    <svg
-      className={cn(
-        "size-4 shrink-0 text-[#0CC1E0] transition-transform duration-300",
-        isOpen && "rotate-180",
-      )}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M6 9l6 6 6-6"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 type CoinFlightOverlayProps = {
   flights: CoinFlight[];
 };
@@ -256,108 +227,6 @@ function CoinFlightOverlay({ flights }: CoinFlightOverlayProps) {
   );
 }
 
-type VaultStatTileProps = {
-  label: string;
-  value: string;
-  subtext?: string;
-  icon: React.ReactNode;
-  isActive?: boolean;
-  onClick: () => void;
-  ariaControls?: string;
-};
-
-function VaultStatTile({
-  label,
-  value,
-  subtext,
-  icon,
-  isActive,
-  onClick,
-  ariaControls,
-}: VaultStatTileProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-expanded={isActive}
-      aria-controls={ariaControls}
-      className={cn(
-        vaultTileClass,
-        "w-full min-h-[7.5rem]",
-        isActive && "ring-2 ring-[#0CC1E0]/35 shadow-lg",
-      )}
-    >
-      <span className="flex size-11 items-center justify-center rounded-full bg-[#BDE9FB]/25">
-        {icon}
-      </span>
-      <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-        {label}
-      </p>
-      <p className="mt-1 font-heading text-lg font-extrabold leading-none text-[#031F82] sm:text-xl">
-        {value}
-      </p>
-      {subtext ? (
-        <p className="mt-1 font-sans text-[9px] font-medium text-[#1E3A5F] sm:text-[10px]">
-          {subtext}
-        </p>
-      ) : null}
-    </button>
-  );
-}
-
-type SavingsRegisterPanelProps = {
-  entries: SavingsRegisterEntry[];
-};
-
-function SavingsRegisterPanel({ entries }: SavingsRegisterPanelProps) {
-  const { formatMoney } = useCurrency();
-
-  return (
-    <div
-      id="savings-register-panel"
-      className={cn(floatingPanelClass, "p-4")}
-      role="region"
-      aria-label="Savings register"
-    >
-      <h3 className="font-heading text-sm font-extrabold text-[#031F82]">
-        Savings Register
-      </h3>
-      <p className="mt-1 font-sans text-xs text-[#1E3A5F]">
-        Every add or remove from your Save Jar - dated and tracked.
-      </p>
-      {entries.length === 0 ? (
-        <p className="mt-4 rounded-xl bg-[#BDE9FB]/15 px-3 py-4 text-center font-sans text-xs text-[#1E3A5F]">
-          No savings movements yet. Cash in XP above or allocate cash from Budget
-          Hub into your Save Jar to start your register.
-        </p>
-      ) : (
-        <ul className="mt-3 max-h-56 space-y-2 overflow-y-auto">
-          {entries.map((entry) => (
-            <li
-              key={entry.id}
-              className="flex items-center justify-between gap-3 rounded-xl bg-[#BDE9FB]/10 px-3 py-2"
-            >
-              <span className="font-sans text-[11px] text-[#1E3A5F]">
-                {formatLedgerDate(entry.timestamp)}
-              </span>
-              <span
-                className={cn(
-                  "font-heading text-sm font-extrabold",
-                  entry.direction === "added"
-                    ? "text-[#22C55E]"
-                    : "text-[#E11D48]",
-                )}
-              >
-                {entry.direction === "added" ? "+" : "-"}
-                {formatMoney(entry.amount)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 type CompoundingCalculatorPanelProps = {
   savingsBalance: number;
@@ -394,21 +263,13 @@ function CompoundingCalculatorPanel({
   return (
     <div
       id="compounding-calculator-panel"
-      className={cn(floatingPanelClass, "space-y-3 p-4")}
+      className="space-y-3 rounded-xl bg-[#F7FBFF]/80 p-3"
       role="region"
       aria-label="Compounding calculator"
     >
-      <div>
-        <h3 className="font-heading text-sm font-extrabold text-[#031F82]">
-          Compounding Calculator
-        </h3>
-        <p className="mt-1 font-sans text-xs text-[#1E3A5F]">
-          Tune your forecast - projected total:{" "}
-          <span className="font-semibold text-[#031F82]">
-            {formatMoney(projectedTotal)}
-          </span>
-        </p>
-      </div>
+      <p className="font-sans text-xs text-[#1E3A5F]">
+        Projected: <span className="font-semibold text-[#031F82]">{formatMoney(projectedTotal)}</span>
+      </p>
 
       <label className="block">
         <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
@@ -490,143 +351,47 @@ function CompoundingCalculatorPanel({
       </label>
 
       {showHighRoiWarning ? (
-        <div
-          role="alert"
-          className={cn(floatingPanelClass, "bg-[#FFF7ED] p-3 shadow-sm")}
-        >
-          <p className="font-sans text-xs leading-relaxed text-[#031F82]">
-            <span aria-hidden className="mr-1">
-              ⚠️
-            </span>
-            {highRoiWarningCopy}
-          </p>
+        <div role="alert" className="rounded-xl bg-[#FFF7ED] p-2.5">
+          <p className="font-sans text-xs leading-relaxed text-[#031F82]">⚠️ {highRoiWarningCopy}</p>
         </div>
       ) : null}
     </div>
   );
 }
 
-type ActivityLogCardProps = {
+type ActivityLogListProps = {
   displayName: string;
-  isOpen: boolean;
   ledger: LedgerEntry[];
-  onToggle: () => void;
 };
 
-function ActivityLogCard({
-  displayName,
-  isOpen,
-  ledger,
-  onToggle,
-}: ActivityLogCardProps) {
+function ActivityLogList({ ledger }: ActivityLogListProps) {
   const { formatMoney } = useCurrency();
 
   return (
-    <section aria-labelledby="activity-log-heading" className="w-full">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        aria-controls="activity-log-panel"
-        className={cn(
-          floatingPanelClass,
-          "flex w-full items-center gap-3 p-4 text-left transition-all hover:shadow-lg active:scale-[0.99]",
-          isOpen && "ring-2 ring-[#0CC1E0]/25",
-        )}
-      >
-        <span
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#BDE9FB]/25 text-xl"
-          aria-hidden
-        >
-          📒
-        </span>
-        <div className="min-w-0 flex-1">
-          <p
-            id="activity-log-heading"
-            className="font-heading text-sm font-extrabold text-[#031F82]"
-          >
-            {displayName}&apos;s Activity Log
-          </p>
-          <p className="mt-0.5 font-sans text-xs text-[#1E3A5F]">
-            Tap to see your money in and out
-          </p>
-        </div>
-        <ChevronIcon isOpen={isOpen} />
-      </button>
-
-      <div
-        id="activity-log-panel"
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          isOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
-        )}
-        role="region"
-        aria-label={`${displayName}'s activity log`}
-        aria-hidden={!isOpen}
-      >
-        <div className="overflow-hidden">
-          <ul className="max-h-72 space-y-2 overflow-y-auto">
-            {ledger.map((entry) => (
-              <li
-                key={entry.id}
-                className={cn(
-                  "flex items-start gap-3 rounded-2xl px-3 py-2.5 shadow-sm",
-                  entry.highlight
-                    ? "bg-[#DCB766]/10"
-                    : "bg-[#BDE9FB]/15",
-                )}
-              >
-                {entry.amount !== undefined && entry.flow ? (
-                  <span
-                    className={cn(
-                      "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full font-heading text-sm font-extrabold",
-                      entry.flow === "in"
-                        ? "bg-[#22C55E]/15 text-[#15803D]"
-                        : "bg-[#FDA4AF]/30 text-[#BE123C]",
-                    )}
-                    aria-hidden
-                  >
-                    {entry.flow === "in" ? "↓" : "↑"}
-                  </span>
-                ) : (
-                  <span
-                    className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-white/80 text-sm"
-                    aria-hidden
-                  >
-                    •
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-                    <p className="font-sans text-xs leading-relaxed text-[#031F82]">
-                      {entry.message}
-                    </p>
-                    {entry.amount !== undefined ? (
-                      <span
-                        className={cn(
-                          "shrink-0 font-heading text-xs font-extrabold",
-                          entry.flow === "in"
-                            ? "text-[#22C55E]"
-                            : entry.flow === "out"
-                              ? "text-[#E11D48]"
-                              : "text-[#031F82]",
-                        )}
-                      >
-                        {entry.flow === "out" ? "-" : entry.flow === "in" ? "+" : ""}
-                        {formatMoney(entry.amount)}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-0.5 font-sans text-[10px] text-[#1E3A5F]/70">
-                    {formatLedgerDate(entry.timestamp)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </section>
+    <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+      {ledger.map((entry) => (
+        <li key={entry.id} className={cn("flex items-start gap-2 rounded-lg px-2 py-2", entry.highlight ? "bg-[#DCB766]/10" : "bg-[#BDE9FB]/10")}>
+          {entry.flow ? (
+            <span className={cn("mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold", entry.flow === "in" ? "bg-[#22C55E]/15 text-[#15803D]" : "bg-[#FDA4AF]/30 text-[#BE123C]")}>
+              {entry.flow === "in" ? "↓" : "↑"}
+            </span>
+          ) : (
+            <span className="mt-0.5 size-6 shrink-0 rounded-full bg-white/80 text-center text-[10px] leading-6">•</span>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-sans text-[11px] leading-snug text-[#031F82]">{entry.message}</p>
+              {entry.amount !== undefined ? (
+                <span className={cn("shrink-0 font-heading text-[10px] font-extrabold", entry.flow === "in" ? "text-[#22C55E]" : entry.flow === "out" ? "text-[#E11D48]" : "text-[#031F82]")}>
+                  {entry.flow === "out" ? "-" : entry.flow === "in" ? "+" : ""}{formatMoney(entry.amount)}
+                </span>
+              ) : null}
+            </div>
+            <p className="font-sans text-[9px] text-[#1E3A5F]/60">{formatLedgerDate(entry.timestamp)}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -648,6 +413,8 @@ export function VaultDashboard() {
     jars,
     setJars,
     setCustomBuckets,
+    savingsGoals,
+    setSavingsGoals,
     vaultBuckets,
   } = useDashboardWallet();
   const highRoiWarningCopy = useMemo(
@@ -655,7 +422,6 @@ export function VaultDashboard() {
     [displayName],
   );
   const ledgerCounter = useRef(0);
-  const savingsRegisterCounter = useRef(0);
 
   const [ledger, setLedger] = useState<LedgerEntry[]>([
     {
@@ -664,9 +430,6 @@ export function VaultDashboard() {
       timestamp: Date.now(),
     },
   ]);
-  const [savingsRegister, setSavingsRegister] = useState<SavingsRegisterEntry[]>(
-    [],
-  );
   const [coinFlights, setCoinFlights] = useState<CoinFlight[]>([]);
 
   const [principalOverride, setPrincipalOverride] = useState("");
@@ -683,24 +446,36 @@ export function VaultDashboard() {
     setExpectedRoi(cohortDefaults.expectedRoi);
   }, [cohortDefaults.expectedRoi, cohortDefaults.weeklyTopUp]);
 
-  const [savingsRegisterOpen, setSavingsRegisterOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
-  const [budgetHubOpen, setBudgetHubOpen] = useState(false);
   const [cashInOpen, setCashInOpen] = useState(
     () => searchParams.get("cashIn") === "1",
   );
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [isPremium] = useState(false);
-  const cashInPanelRef = useRef<HTMLDivElement | null>(null);
 
-  const savingsBalance = useMemo(
+  const totalBucketBalance = useMemo(
+    () => sumBucketBalances(vaultBuckets),
+    [vaultBuckets],
+  );
+
+  const saveJarBalance = useMemo(
     () => jars.find((jar) => jar.id === SAVINGS_JAR_ID)?.balance ?? 0,
     [jars],
   );
 
+  const goalsBalance = useMemo(
+    () => sumSavingsGoalBalances(savingsGoals),
+    [savingsGoals],
+  );
+
+  const totalSavings = useMemo(
+    () => roundAudAmount(saveJarBalance + goalsBalance),
+    [goalsBalance, saveJarBalance],
+  );
+
   const activePrincipal = useMemo(
-    () => parsePrincipalOverride(principalOverride, savingsBalance),
-    [principalOverride, savingsBalance],
+    () => parsePrincipalOverride(principalOverride, totalSavings),
+    [principalOverride, totalSavings],
   );
 
   const projectedTotal = useMemo(
@@ -715,8 +490,22 @@ export function VaultDashboard() {
   );
 
   const futureSavingsPotential = useMemo(
-    () => resolveFutureSavingsPotential(savingsBalance, projectedTotal),
-    [projectedTotal, savingsBalance],
+    () => resolveFutureSavingsPotential(totalSavings, projectedTotal),
+    [projectedTotal, totalSavings],
+  );
+
+  const futureSubtext =
+    totalSavings > 0
+      ? `${expectedRoi}% ROI · ${yearsSaved} yrs`
+      : "Start saving to unlock your forecast";
+
+  const freemiumDefaultGoal = useMemo(
+    () =>
+      buildFreemiumDefaultGoal(
+        totalSavings,
+        freemiumDefaultGoalTarget(masteryCohort),
+      ),
+    [masteryCohort, totalSavings],
   );
 
   const triggerCoinBurst = useCallback(
@@ -735,21 +524,6 @@ export function VaultDashboard() {
     [],
   );
 
-  const appendSavingsRegister = useCallback(
-    (amount: number, direction: "added" | "removed") => {
-      savingsRegisterCounter.current += 1;
-      setSavingsRegister((current) => [
-        {
-          id: `savings-${savingsRegisterCounter.current}-${Date.now()}`,
-          timestamp: Date.now(),
-          amount,
-          direction,
-        },
-        ...current,
-      ]);
-    },
-    [],
-  );
 
   const appendLedger = useCallback(
     (
@@ -780,23 +554,19 @@ export function VaultDashboard() {
     ({ audAmount, pointsClaimed }: PointsConvertedPayload) => {
       const saveJarIndex = jars.findIndex((jar) => jar.id === SAVINGS_JAR_ID);
       triggerCoinBurst("to-jar", saveJarIndex >= 0 ? saveJarIndex : 0);
-      appendSavingsRegister(audAmount, "added");
       appendLedger(
         `Cashed in ${pointsClaimed.toLocaleString()} XP to Save Jar`,
         { amount: audAmount, flow: "in", highlight: true },
       );
-      setSavingsRegisterOpen(true);
       setCalculatorOpen(false);
     },
-    [appendLedger, appendSavingsRegister, jars, triggerCoinBurst],
+    [appendLedger, jars, triggerCoinBurst],
   );
 
   useEffect(() => {
-    if (searchParams.get("cashIn") !== "1") return;
-    setCashInOpen(true);
-    window.requestAnimationFrame(() => {
-      cashInPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    if (searchParams.get("cashIn") === "1") {
+      setCashInOpen(true);
+    }
   }, [searchParams]);
 
   const handleDeposit = useCallback(
@@ -817,7 +587,6 @@ export function VaultDashboard() {
 
       setMoneyToAllocate((current) => roundAudAmount(current - total));
 
-      let saveAmount = 0;
       for (const [bucketId, amount] of Object.entries(allocations)) {
         if (amount <= 0) continue;
         adjustBucketBalance(
@@ -826,14 +595,6 @@ export function VaultDashboard() {
           setJars,
           setCustomBuckets,
         );
-        const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
-        if (bucket && isSavingsBucket(bucket)) {
-          saveAmount = roundAudAmount(saveAmount + amount);
-        }
-      }
-
-      if (saveAmount > 0) {
-        appendSavingsRegister(saveAmount, "added");
       }
 
       const saveIndex = vaultBuckets.findIndex((bucket) => bucket.id === SAVINGS_JAR_ID);
@@ -845,7 +606,6 @@ export function VaultDashboard() {
     },
     [
       appendLedger,
-      appendSavingsRegister,
       budgetCopy.lockedInTemplate,
       formatMoney,
       moneyToAllocate,
@@ -872,9 +632,6 @@ export function VaultDashboard() {
           `Moved ${formatMoney(amount)} from ${fromBucket.name} to ${budgetCopy.poolLabel}`,
           { amount, flow: "in" },
         );
-        if (isSavingsBucket(fromBucket)) {
-          appendSavingsRegister(amount, "removed");
-        }
         return;
       }
 
@@ -884,18 +641,9 @@ export function VaultDashboard() {
         `Moved ${formatMoney(amount)} from ${fromBucket.name} to ${destName}`,
         { amount },
       );
-
-      const destBucket = vaultBuckets.find((bucket) => bucket.id === destination);
-      if (isSavingsBucket(fromBucket)) {
-        appendSavingsRegister(amount, "removed");
-      }
-      if (destBucket && isSavingsBucket(destBucket)) {
-        appendSavingsRegister(amount, "added");
-      }
     },
     [
       appendLedger,
-      appendSavingsRegister,
       budgetCopy.poolLabel,
       formatMoney,
       setCustomBuckets,
@@ -952,124 +700,163 @@ export function VaultDashboard() {
     setCustomBuckets((current) => [...current, defaultCustomBucket()]);
   }, [setCustomBuckets]);
 
+  const handleAddGoal = useCallback(
+    (name: string, targetAmount: number) => {
+      setSavingsGoals((current) => [
+        ...current,
+        defaultSavingsGoal(name, targetAmount),
+      ]);
+      appendLedger(`Created savings goal: ${name.trim()}`);
+    },
+    [appendLedger, setSavingsGoals],
+  );
+
+  const handleAllocateToGoal = useCallback(
+    (goalId: SavingsGoalId, amount: number) => {
+      if (amount <= 0 || amount > saveJarBalance) return;
+
+      const goal = savingsGoals.find((entry) => entry.id === goalId);
+      if (!goal) return;
+
+      adjustBucketBalance(SAVINGS_JAR_ID, -amount, setJars, setCustomBuckets);
+      setSavingsGoals((current) =>
+        current.map((entry) =>
+          entry.id === goalId
+            ? { ...entry, balance: roundAudAmount(entry.balance + amount) }
+            : entry,
+        ),
+      );
+      appendLedger(
+        vaultCopy.savings.allocatedToGoalTemplate
+          .replace("{amount}", formatMoney(amount))
+          .replace("{goal}", goal.name),
+        { amount },
+      );
+    },
+    [
+      appendLedger,
+      formatMoney,
+      saveJarBalance,
+      savingsGoals,
+      setCustomBuckets,
+      setJars,
+      setSavingsGoals,
+      vaultCopy.savings.allocatedToGoalTemplate,
+    ],
+  );
+
+  const handleSpendFromSaveJar = useCallback(
+    (amount: number) => {
+      if (amount <= 0 || amount > saveJarBalance) return;
+
+      adjustBucketBalance(SAVINGS_JAR_ID, -amount, setJars, setCustomBuckets);
+      appendLedger(
+        vaultCopy.savings.spentFromSaveTemplate.replace("{amount}", formatMoney(amount)),
+        { amount, flow: "out", highlight: true },
+      );
+    },
+    [
+      appendLedger,
+      formatMoney,
+      saveJarBalance,
+      setCustomBuckets,
+      setJars,
+      vaultCopy.savings.spentFromSaveTemplate,
+    ],
+  );
+
+  const handleWithdrawSaveJarToPool = useCallback(
+    (amount: number) => {
+      if (amount <= 0 || amount > saveJarBalance) return;
+
+      adjustBucketBalance(SAVINGS_JAR_ID, -amount, setJars, setCustomBuckets);
+      setMoneyToAllocate((current) => roundAudAmount(current + amount));
+      appendLedger(
+        vaultCopy.savings.returnedSaveToPoolTemplate.replace("{amount}", formatMoney(amount)),
+        { amount, flow: "in" },
+      );
+    },
+    [
+      appendLedger,
+      formatMoney,
+      saveJarBalance,
+      setCustomBuckets,
+      setJars,
+      setMoneyToAllocate,
+      vaultCopy.savings.returnedSaveToPoolTemplate,
+    ],
+  );
+
+  const handleSpendFromGoal = useCallback(
+    (goalId: SavingsGoalId, amount: number) => {
+      if (amount <= 0) return;
+
+      const goal = savingsGoals.find((entry) => entry.id === goalId);
+      if (!goal || amount > goal.balance) return;
+
+      setSavingsGoals((current) =>
+        current.map((entry) =>
+          entry.id === goalId
+            ? { ...entry, balance: roundAudAmount(entry.balance - amount) }
+            : entry,
+        ),
+      );
+      appendLedger(
+        vaultCopy.savings.spentFromGoalTemplate
+          .replace("{amount}", formatMoney(amount))
+          .replace("{goal}", goal.name),
+        { amount, flow: "out", highlight: true },
+      );
+    },
+    [
+      appendLedger,
+      formatMoney,
+      savingsGoals,
+      setSavingsGoals,
+      vaultCopy.savings.spentFromGoalTemplate,
+    ],
+  );
+
+  const handleReturnGoalToSaveJar = useCallback(
+    (goalId: SavingsGoalId, amount: number) => {
+      if (amount <= 0) return;
+
+      const goal = savingsGoals.find((entry) => entry.id === goalId);
+      if (!goal || amount > goal.balance) return;
+
+      setSavingsGoals((current) =>
+        current.map((entry) =>
+          entry.id === goalId
+            ? { ...entry, balance: roundAudAmount(entry.balance - amount) }
+            : entry,
+        ),
+      );
+      adjustBucketBalance(SAVINGS_JAR_ID, amount, setJars, setCustomBuckets);
+      appendLedger(
+        vaultCopy.savings.returnedGoalToSaveTemplate
+          .replace("{amount}", formatMoney(amount))
+          .replace("{goal}", goal.name),
+        { amount },
+      );
+    },
+    [
+      appendLedger,
+      formatMoney,
+      savingsGoals,
+      setCustomBuckets,
+      setJars,
+      setSavingsGoals,
+      vaultCopy.savings.returnedGoalToSaveTemplate,
+    ],
+  );
+
   return (
-    <div className="relative mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-6 pb-10">
+    <div className="relative mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-2 overflow-x-hidden bg-white px-3 py-5 pb-10">
       <CoinFlightOverlay flights={coinFlights} />
 
-      <section aria-label="Cash in points" className="w-full shrink-0">
-        <button
-          type="button"
-          onClick={() => {
-            setCashInOpen((open) => !open);
-            setCalculatorOpen(false);
-          }}
-          aria-expanded={cashInOpen}
-          aria-controls="vault-cash-in-panel"
-          className={cn(
-            "h-touch w-full px-4 shadow-nga-pop",
-            orangeCtaClass,
-            cashInOpen && "ring-2 ring-[#FFA503]/35",
-          )}
-        >
-          {vaultCopy.cashInTileLabel}
-        </button>
-
-        <div
-          id="vault-cash-in-panel"
-          ref={cashInPanelRef}
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            cashInOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-          )}
-          aria-hidden={!cashInOpen}
-        >
-          <div className="overflow-hidden">
-            <div className={cn(floatingPanelClass, "p-4")}>
-              <CashInPointsPanel onConverted={handlePointsConverted} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section aria-label="Vault savings overview" className="w-full shrink-0">
-        <div className="grid grid-cols-2 gap-3">
-          <VaultStatTile
-            label="Total Savings"
-            value={formatMoney(savingsBalance)}
-            icon={
-              <Image
-                src="/dashboard/piggy-bank.svg"
-                alt=""
-                width={28}
-                height={28}
-                className="size-7"
-                aria-hidden
-              />
-            }
-            isActive={savingsRegisterOpen}
-            ariaControls="savings-register-panel"
-            onClick={() => {
-              setSavingsRegisterOpen((open) => !open);
-              setCalculatorOpen(false);
-            }}
-          />
-          <VaultStatTile
-            label="Future Savings Potential"
-            value={formatMoney(futureSavingsPotential)}
-            subtext={
-              savingsBalance > 0
-                ? `${expectedRoi}% ROI · ${yearsSaved} yrs`
-                : "Start saving to unlock your forecast"
-            }
-            icon={
-              <Image
-                src="/dashboard/trend-up.svg"
-                alt=""
-                width={28}
-                height={28}
-                className="size-7"
-                aria-hidden
-              />
-            }
-            isActive={calculatorOpen}
-            ariaControls="compounding-calculator-panel"
-            onClick={() => {
-              setCalculatorOpen((open) => !open);
-              setSavingsRegisterOpen(false);
-            }}
-          />
-        </div>
-
-        {savingsRegisterOpen ? (
-          <div className="mt-3">
-            <SavingsRegisterPanel entries={savingsRegister} />
-          </div>
-        ) : null}
-
-        {calculatorOpen ? (
-          <div className="mt-3">
-            <CompoundingCalculatorPanel
-              savingsBalance={savingsBalance}
-              projectedTotal={projectedTotal}
-              yearsSaved={yearsSaved}
-              weeklyTopUp={weeklyTopUp}
-              weeklyTopUpMax={cohortDefaults.weeklyTopUpMax}
-              expectedRoi={expectedRoi}
-              principalOverride={principalOverride}
-              highRoiWarningCopy={highRoiWarningCopy}
-              onPrincipalOverrideChange={setPrincipalOverride}
-              onYearsSavedChange={setYearsSaved}
-              onWeeklyTopUpChange={setWeeklyTopUp}
-              onExpectedRoiChange={setExpectedRoi}
-            />
-          </div>
-        ) : null}
-      </section>
-
       <VaultBudgetHub
-        isOpen={budgetHubOpen}
-        onToggle={() => setBudgetHubOpen((open) => !open)}
         isPremium={isPremium}
+        totalBalance={totalBucketBalance}
         moneyToAllocate={moneyToAllocate}
         buckets={vaultBuckets}
         onDeposit={handleDeposit}
@@ -1080,12 +867,74 @@ export function VaultDashboard() {
         onAddCustomBucket={handleAddCustomBucket}
       />
 
-      <ActivityLogCard
-        displayName={displayName}
-        isOpen={ledgerOpen}
-        ledger={ledger}
-        onToggle={() => setLedgerOpen((open) => !open)}
+      <VaultSavingsSection
+        isPremium={isPremium}
+        totalSavings={totalSavings}
+        saveJarBalance={saveJarBalance}
+        futureSavingsPotential={futureSavingsPotential}
+        futureSubtext={futureSubtext}
+        defaultGoal={freemiumDefaultGoal}
+        goals={savingsGoals}
+        calculatorOpen={calculatorOpen}
+        onToggleCalculator={() => setCalculatorOpen((open) => !open)}
+        calculatorPanel={
+          <CompoundingCalculatorPanel
+            savingsBalance={totalSavings}
+            projectedTotal={projectedTotal}
+            yearsSaved={yearsSaved}
+            weeklyTopUp={weeklyTopUp}
+            weeklyTopUpMax={cohortDefaults.weeklyTopUpMax}
+            expectedRoi={expectedRoi}
+            principalOverride={principalOverride}
+            highRoiWarningCopy={highRoiWarningCopy}
+            onPrincipalOverrideChange={setPrincipalOverride}
+            onYearsSavedChange={setYearsSaved}
+            onWeeklyTopUpChange={setWeeklyTopUp}
+            onExpectedRoiChange={setExpectedRoi}
+          />
+        }
+        onAddGoal={handleAddGoal}
+        onAllocateToGoal={handleAllocateToGoal}
+        onSpendFromSaveJar={handleSpendFromSaveJar}
+        onWithdrawSaveJarToPool={handleWithdrawSaveJarToPool}
+        onSpendFromGoal={handleSpendFromGoal}
+        onReturnGoalToSaveJar={handleReturnGoalToSaveJar}
+        formatMoney={formatMoney}
       />
+
+      <VaultCollapsible
+        id="vault-activity-log"
+        title={`${displayName}'s Activity Log`}
+        subtitle="Money in and out"
+        icon="📒"
+        isOpen={ledgerOpen}
+        onToggle={() => setLedgerOpen((open) => !open)}
+      >
+        <ActivityLogList displayName={displayName} ledger={ledger} />
+      </VaultCollapsible>
+
+      <ModalShell
+        isOpen={cashInOpen}
+        onClose={() => setCashInOpen(false)}
+        labelledBy="vault-cash-in-title"
+        backdropClassName="bg-[#031F82]/45"
+        panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
+      >
+        <h2
+          id="vault-cash-in-title"
+          className="font-heading text-lg font-extrabold text-[#031F82]"
+        >
+          {vaultCopy.cashInTileLabel}
+        </h2>
+        <div className="mt-4">
+          <CashInPointsPanel
+            onConverted={(payload) => {
+              handlePointsConverted(payload);
+              setCashInOpen(false);
+            }}
+          />
+        </div>
+      </ModalShell>
     </div>
   );
 }

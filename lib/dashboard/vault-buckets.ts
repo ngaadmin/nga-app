@@ -6,7 +6,23 @@ import {
   roundAudAmount,
 } from "@/lib/dashboard/destination-jars";
 
-export const MAX_CUSTOM_VAULT_BUCKETS = 20;
+export const FOUNDATION_VAULT_BUCKET_COUNT = 3;
+export const MAX_FREEMIUM_VAULT_BUCKETS = 15;
+export const MAX_PREMIUM_VAULT_BUCKETS = 20;
+
+/** @deprecated Use tier-specific limits via maxVaultBuckets(). */
+export const MAX_CUSTOM_VAULT_BUCKETS = MAX_PREMIUM_VAULT_BUCKETS - FOUNDATION_VAULT_BUCKET_COUNT;
+
+export function maxVaultBuckets(isPremium: boolean): number {
+  return isPremium ? MAX_PREMIUM_VAULT_BUCKETS : MAX_FREEMIUM_VAULT_BUCKETS;
+}
+
+export function canAddVaultBucket(
+  currentBucketCount: number,
+  isPremium: boolean,
+): boolean {
+  return currentBucketCount < maxVaultBuckets(isPremium);
+}
 
 export type CustomVaultBucketId = `custom-${string}`;
 
@@ -82,7 +98,18 @@ export function defaultCustomBucket(
 }
 
 export function canMarkBucketAsSpent(bucket: VaultBucket): boolean {
-  return bucket.foundationRole === "spend";
+  return (
+    bucket.id !== SAVINGS_JAR_ID &&
+    bucket.foundationRole !== "save"
+  );
+}
+
+export function canRenameFoundationBucket(
+  bucket: VaultBucket,
+  isPremium: boolean,
+): boolean {
+  if (!bucket.isFoundation) return true;
+  return isPremium;
 }
 
 export function isSavingsBucket(bucket: VaultBucket): boolean {
@@ -124,4 +151,8 @@ export function sumAllocations(drafts: Record<string, number>): number {
   return roundAudAmount(
     Object.values(drafts).reduce((total, value) => total + value, 0),
   );
+}
+
+export function sumBucketBalances(buckets: readonly VaultBucket[]): number {
+  return roundAudAmount(buckets.reduce((total, bucket) => total + bucket.balance, 0));
 }

@@ -23,6 +23,7 @@ import {
 } from "@/lib/dashboard/destination-jars";
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
 import { mergeVaultBuckets } from "@/lib/dashboard/vault-buckets";
+import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
 import {
   audPerXpBlockFromSliderIndex,
   convertPointsToAud,
@@ -41,6 +42,7 @@ type DashboardWalletContextValue = {
   moneyToAllocate: number;
   jars: DestinationJar[];
   customBuckets: CustomVaultBucketPersisted[];
+  savingsGoals: SavingsGoal[];
   vaultBuckets: ReturnType<typeof mergeVaultBuckets>;
   setAudSliderIndex: (index: number) => void;
   setMoneyToAllocate: (updater: number | ((current: number) => number)) => void;
@@ -49,6 +51,9 @@ type DashboardWalletContextValue = {
     updater:
       | CustomVaultBucketPersisted[]
       | ((current: CustomVaultBucketPersisted[]) => CustomVaultBucketPersisted[]),
+  ) => void;
+  setSavingsGoals: (
+    updater: SavingsGoal[] | ((current: SavingsGoal[]) => SavingsGoal[]),
   ) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
   awardLessonXp: (points: number) => void;
@@ -79,6 +84,9 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const [customBuckets, setCustomBucketsState] = useState<CustomVaultBucketPersisted[]>(
     () => defaults.customBuckets ?? [],
   );
+  const [savingsGoals, setSavingsGoalsState] = useState<SavingsGoal[]>(
+    () => defaults.savingsGoals ?? [],
+  );
   const [walletHydrated, setWalletHydrated] = useState(false);
 
   useEffect(() => {
@@ -90,6 +98,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       setMoneyToAllocateState(persisted.moneyToAllocate);
       setJarsState(jarsFromBalanceMap(persisted.jarBalances));
       setCustomBucketsState(persisted.customBuckets ?? []);
+      setSavingsGoalsState(persisted.savingsGoals ?? []);
     }
     setWalletHydrated(true);
   }, []);
@@ -104,6 +113,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       moneyToAllocate,
       jarBalances: balanceMapFromJars(jars),
       customBuckets,
+      savingsGoals,
     });
   }, [
     audSliderIndex,
@@ -111,6 +121,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     jars,
     lifetimePointsEarned,
     moneyToAllocate,
+    savingsGoals,
     totalPoints,
     walletHydrated,
   ]);
@@ -183,6 +194,15 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     [],
   );
 
+  const setSavingsGoals = useCallback(
+    (updater: SavingsGoal[] | ((current: SavingsGoal[]) => SavingsGoal[])) => {
+      setSavingsGoalsState((current) =>
+        typeof updater === "function" ? updater(current) : updater,
+      );
+    },
+    [],
+  );
+
   const vaultBuckets = useMemo(
     () => mergeVaultBuckets(jars, customBuckets),
     [customBuckets, jars],
@@ -205,11 +225,13 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       moneyToAllocate,
       jars,
       customBuckets,
+      savingsGoals,
       vaultBuckets,
       setAudSliderIndex,
       setMoneyToAllocate,
       setJars,
       setCustomBuckets,
+      setSavingsGoals,
       claimPointsForVault,
       awardLessonXp,
     }),
@@ -221,9 +243,11 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       customBuckets,
       jars,
       moneyToAllocate,
+      savingsGoals,
       setCustomBuckets,
       setJars,
       setMoneyToAllocate,
+      setSavingsGoals,
       lifetimePointsEarned,
       totalPoints,
       vaultBuckets,

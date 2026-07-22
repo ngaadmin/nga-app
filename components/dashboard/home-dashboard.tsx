@@ -3,11 +3,13 @@
 import { useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { BirthYearSettingsModal } from "@/components/dashboard/birth-year-settings-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
 import {
   BillingCardIcon,
+  CalendarIcon,
   KeyIcon,
   LockIcon,
   LogOutIcon,
@@ -682,6 +684,8 @@ function FinancialPanelContent({
   );
 }
 
+type PinIntent = "parent-mode" | "birth-year";
+
 export function HomeDashboard() {
   const router = useRouter();
   const { username, joinDate, isLoading } = useDashboardUser();
@@ -697,8 +701,10 @@ export function HomeDashboard() {
   } = useDashboardWallet();
 
   const [parentModeEnabled, setParentModeEnabled] = useState(false);
+  const [pinIntent, setPinIntent] = useState<PinIntent>("parent-mode");
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<"verify" | "setup">("verify");
+  const [birthYearModalOpen, setBirthYearModalOpen] = useState(false);
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinConfirmInput, setPinConfirmInput] = useState("");
@@ -749,16 +755,25 @@ export function HomeDashboard() {
     router.push("/onboarding/start");
   }
 
-  function handleParentModeToggle() {
-    if (parentModeEnabled) {
-      setParentModeEnabled(false);
-      return;
-    }
+  function openPinGate(intent: PinIntent) {
+    setPinIntent(intent);
     setPinError(null);
     setPinInput("");
     setPinConfirmInput("");
     setPinModalMode(isParentPinConfigured() ? "verify" : "setup");
     setPinModalOpen(true);
+  }
+
+  function handleParentModeToggle() {
+    if (parentModeEnabled) {
+      setParentModeEnabled(false);
+      return;
+    }
+    openPinGate("parent-mode");
+  }
+
+  function handleBirthYearSettingsClick() {
+    openPinGate("birth-year");
   }
 
   function handlePinConfirm() {
@@ -769,10 +784,16 @@ export function HomeDashboard() {
       }
       saveParentPin(pinInput);
       setPinError(null);
-      setParentModeEnabled(true);
       setPinModalOpen(false);
       setPinInput("");
       setPinConfirmInput("");
+
+      if (pinIntent === "birth-year") {
+        setBirthYearModalOpen(true);
+        return;
+      }
+
+      setParentModeEnabled(true);
       return;
     }
 
@@ -781,10 +802,16 @@ export function HomeDashboard() {
       return;
     }
     setPinError(null);
-    setParentModeEnabled(true);
     setPinModalOpen(false);
     setPinInput("");
     setPinConfirmInput("");
+
+    if (pinIntent === "birth-year") {
+      setBirthYearModalOpen(true);
+      return;
+    }
+
+    setParentModeEnabled(true);
   }
 
   function handlePinCancel() {
@@ -840,6 +867,11 @@ export function HomeDashboard() {
             onClick={() => setChangePinModalOpen(true)}
           />
           <SettingsRow
+            icon={CalendarIcon}
+            label={copy.account.birthYearTrack}
+            onClick={handleBirthYearSettingsClick}
+          />
+          <SettingsRow
             icon={BillingCardIcon}
             label={copy.account.subscriptionStatus}
           />
@@ -889,6 +921,11 @@ export function HomeDashboard() {
         </section>
       </div>
 
+      <BirthYearSettingsModal
+        isOpen={birthYearModalOpen}
+        onClose={() => setBirthYearModalOpen(false)}
+      />
+
       <ChangeParentPinModal
         isOpen={changePinModalOpen}
         copy={copy.changePin}
@@ -907,7 +944,9 @@ export function HomeDashboard() {
         body={
           pinModalMode === "setup"
             ? copy.parentMode.setupBody
-            : copy.parentMode.pinBody
+            : pinIntent === "birth-year"
+              ? copy.birthYear.pinBody
+              : copy.parentMode.pinBody
         }
         placeholder={copy.parentMode.pinPlaceholder}
         newPinLabel={copy.parentMode.setupNewLabel}

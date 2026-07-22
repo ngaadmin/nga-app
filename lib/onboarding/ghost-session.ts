@@ -9,6 +9,7 @@ import {
   removePersisted,
   writePersisted,
 } from "@/lib/dev/client-persist";
+import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
 
 export const GHOST_SESSION_STORAGE_KEY = "nga_ghost_session";
 
@@ -225,6 +226,22 @@ export function convertToRegisteredProfile(
 export function saveUserSession(session: UserSession): void {
   if (typeof window === "undefined") return;
   writePersisted(GHOST_SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+/** Update birth year and mastery cohort; notifies dashboard views to refresh. */
+export function updateUserBirthYear(birthYear: number): UserSession | null {
+  const session = readUserSession();
+  if (!session || !isEligibleBirthYear(birthYear)) return null;
+
+  const updated: UserSession = {
+    ...session,
+    birthYear,
+    ageTier: getMasteryCohortFromBirthYear(birthYear),
+    birthYearLocked: true,
+  };
+  saveUserSession(updated);
+  dispatchUserSessionUpdated();
+  return updated;
 }
 
 /** @deprecated Use saveUserSession — kept for existing imports. */

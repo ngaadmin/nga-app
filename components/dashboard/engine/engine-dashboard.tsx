@@ -7,9 +7,8 @@ import {
   useState,
   type ComponentType,
 } from "react";
-import {
-  readGhostAccessSession,
-} from "@/lib/onboarding/ghost-session";
+import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import {
   getMasteryCohortFromBirthYear,
   type MasteryCohort,
@@ -929,7 +928,10 @@ export function EngineDashboard() {
   const [paywallIdea, setPaywallIdea] = useState<BusinessIdea | null>(null);
 
   useEffect(() => {
-    setProfile(resolveEngineProfile());
+    const sync = () => setProfile(resolveEngineProfile());
+    sync();
+    window.addEventListener(USER_SESSION_UPDATED_EVENT, sync);
+    return () => window.removeEventListener(USER_SESSION_UPDATED_EVENT, sync);
   }, []);
 
   const inProgressIds = useMemo(

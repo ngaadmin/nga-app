@@ -5,9 +5,7 @@ import { ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS } from "@/components/achievement
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { LockIcon } from "@/lib/dashboard/icons";
 import {
-  getMasteryCohortFromBirthYear,
   totalSkillsToMasterForMasteryCohort,
-  type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
   countEarnedMedals,
@@ -17,7 +15,7 @@ import {
   type SkillTrophyTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -168,16 +166,8 @@ function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
   );
 }
 
-function resolveMasteryCohort(): MasteryCohort {
-  const session = readGhostAccessSession();
-  if (session?.birthYear) {
-    return getMasteryCohortFromBirthYear(session.birthYear);
-  }
-  return "explorer";
-}
-
 export function SkillAwardsSection() {
-  const masteryCohort = useMemo(() => resolveMasteryCohort(), []);
+  const masteryCohort = useMasteryCohort();
 
   const cohortSkills = useMemo(
     () => resolveVaultSkillTrophiesForCohort(masteryCohort),

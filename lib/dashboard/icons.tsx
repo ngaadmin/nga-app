@@ -205,6 +205,37 @@ export function KeyIcon({ className }: IconProps) {
   );
 }
 
+/** Calendar icon for birth year / age track settings. */
+export function CalendarIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="16"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8 3v4M16 3v4M4 10h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** Card icon for subscription / billing settings. */
 export function BillingCardIcon({ className }: IconProps) {
   return (

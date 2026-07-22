@@ -11,6 +11,7 @@ export const copyMatrix = {
       account: {
         passwordReset: "Password Reset",
         changeParentPin: "Change Parent PIN",
+        birthYearTrack: "Birth Year / Age Track",
         subscriptionStatus: "Account & Subscription Status",
         logOut: "Log Out",
       },
@@ -35,6 +36,24 @@ export const copyMatrix = {
         pinConfirm: "Unlock Parent Mode",
         setupSave: "Save & Unlock Parent Mode",
         pinCancel: "Cancel",
+      },
+      birthYear: {
+        pinBody:
+          "Enter the parent PIN to update birth year and learning track.",
+        modalTitle: "Update Birth Year",
+        modalBody:
+          "Pick the correct birth year. Academy modules, skills, and lessons will match the new age track.",
+        currentTrackLabel: "Current track",
+        newTrackLabel: "New track",
+        birthYearLabel: "Birth year",
+        save: "Save Birth Year",
+        cancel: "Cancel",
+        savedTitle: "Track Updated",
+        savedBodyTemplate:
+          "Birth year saved. You are now on the {track} track (ages {range}).",
+        savedAcknowledge: "Got it",
+        invalidYear: "Pick a valid birth year.",
+        unchanged: "That birth year is already saved.",
       },
       changePin: {
         title: "Change Parent PIN",

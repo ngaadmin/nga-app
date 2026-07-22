@@ -1,7 +1,7 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
 import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
-import { useMemo } from "react";
 
 export function getLessonMasteryCohort(
   referenceYear = new Date().getFullYear(),
@@ -12,5 +12,5 @@ export function getLessonMasteryCohort(
 }
 
 export function useLessonMasteryCohort(): MasteryCohort {
-  return useMemo(() => getLessonMasteryCohort(), []);
+  return useMasteryCohort();
 }

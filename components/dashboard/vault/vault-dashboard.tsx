@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useCallback,
   useId,
@@ -8,14 +9,8 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import {
-  DashboardSectionHeading,
-  dashboardSectionHeadingClass,
-} from "@/components/dashboard/dashboard-section-heading";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
-import { copyMatrix } from "@/constants/copyMatrix";
-import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
   SAVINGS_JAR_ID,
   type DestinationJar,
@@ -25,13 +20,26 @@ import {
   buildHighRoiWarningCopy,
   resolveFinnAddressName,
 } from "@/lib/dashboard/resolve-finn-address-name";
+import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { cn } from "@/lib/utils/cn";
+
+type LedgerFlow = "in" | "out";
 
 type LedgerEntry = {
   id: string;
   message: string;
   highlight?: boolean;
+  timestamp: number;
+  amount?: number;
+  flow?: LedgerFlow;
+};
+
+type SavingsRegisterEntry = {
+  id: string;
+  timestamp: number;
+  amount: number;
+  direction: "added" | "removed";
 };
 
 type CoinFlight = {
@@ -50,8 +58,7 @@ const HIGH_ROI_WARNING_THRESHOLD = 12;
 const COIN_BURST_COUNT = 6;
 const COIN_FLIGHT_DURATION_MS = 900;
 
-const floatingPanelClass =
-  "rounded-2xl border-0 bg-white shadow-md";
+const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 sm:text-sm";
@@ -67,6 +74,9 @@ const resetPoolClass =
 
 const RESET_POOL_LEDGER_MESSAGE = "Typo cleared! Let's try that deposit again.";
 
+const vaultTileClass =
+  "flex flex-col items-center justify-center rounded-2xl bg-white p-4 text-center shadow-md transition-all hover:shadow-lg active:scale-[0.98]";
+
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-AU", {
     style: "currency",
@@ -74,6 +84,15 @@ function formatCurrency(amount: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Math.max(0, amount));
+}
+
+function formatLedgerDate(timestamp: number): string {
+  return new Intl.DateTimeFormat("en-AU", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(timestamp));
 }
 
 function parsePositiveAmount(rawValue: string): number | null {
@@ -97,10 +116,6 @@ function parsePrincipalOverride(
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : savingsBalance;
 }
 
-/**
- * Standard client-side compound interest with weekly contributions:
- * each week balance compounds at (annualROI / 52) and adds weeklyTopUp.
- */
 function projectCompoundSavings(
   principal: number,
   weeklyTopUp: number,
@@ -145,26 +160,23 @@ function resolveCoinJarOffset(jarIndex: number): string {
   return "0vw";
 }
 
-function GearIcon({ className }: { className?: string }) {
+function ChevronIcon({ isOpen }: { isOpen: boolean }) {
   return (
     <svg
-      className={className}
-      width="18"
-      height="18"
+      className={cn(
+        "size-4 shrink-0 text-[#0CC1E0] transition-transform duration-300",
+        isOpen && "rotate-180",
+      )}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
       <path
-        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+        d="M6 9l6 6 6-6"
         stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M19.4 13a7.9 7.9 0 0 0 .1-2l2-1.2-2-3.5-2.3.9a8 8 0 0 0-1.7-1L15 2h-6l-.5 4.2a8 8 0 0 0-1.7 1l-2.3-.9-2 3.5L4.5 11a7.9 7.9 0 0 0 .1 2l-2 1.2 2 3.5 2.3-.9a8 8 0 0 0 1.7 1L9 22h6l.5-4.2a8 8 0 0 0 1.7-1l2.3.9 2-3.5-2-1.2Z"
-        stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="2.5"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
@@ -215,197 +227,247 @@ function CoinFlightOverlay({ flights }: CoinFlightOverlayProps) {
   );
 }
 
-type MotivationScoreboardProps = {
+type VaultStatTileProps = {
+  label: string;
+  value: string;
+  subtext?: string;
+  icon: React.ReactNode;
+  isActive?: boolean;
+  onClick: () => void;
+  ariaControls?: string;
+};
+
+function VaultStatTile({
+  label,
+  value,
+  subtext,
+  icon,
+  isActive,
+  onClick,
+  ariaControls,
+}: VaultStatTileProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={isActive}
+      aria-controls={ariaControls}
+      className={cn(
+        vaultTileClass,
+        "w-full min-h-[7.5rem]",
+        isActive && "ring-2 ring-[#0CC1E0]/35 shadow-lg",
+      )}
+    >
+      <span className="flex size-11 items-center justify-center rounded-full bg-[#BDE9FB]/25">
+        {icon}
+      </span>
+      <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+        {label}
+      </p>
+      <p className="mt-1 font-heading text-lg font-extrabold leading-none text-[#031F82] sm:text-xl">
+        {value}
+      </p>
+      {subtext ? (
+        <p className="mt-1 font-sans text-[9px] font-medium text-[#1E3A5F] sm:text-[10px]">
+          {subtext}
+        </p>
+      ) : null}
+    </button>
+  );
+}
+
+type SavingsRegisterPanelProps = {
+  entries: SavingsRegisterEntry[];
+};
+
+function SavingsRegisterPanel({ entries }: SavingsRegisterPanelProps) {
+  return (
+    <div
+      id="savings-register-panel"
+      className={cn(floatingPanelClass, "p-4")}
+      role="region"
+      aria-label="Savings register"
+    >
+      <h3 className="font-heading text-sm font-extrabold text-[#031F82]">
+        Savings Register
+      </h3>
+      <p className="mt-1 font-sans text-xs text-[#1E3A5F]">
+        Every add or remove from your Save Jar - dated and tracked.
+      </p>
+      {entries.length === 0 ? (
+        <p className="mt-4 rounded-xl bg-[#BDE9FB]/15 px-3 py-4 text-center font-sans text-xs text-[#1E3A5F]">
+          No savings movements yet. Allocate cash into your Save Jar from Budget
+          Hub to start your register.
+        </p>
+      ) : (
+        <ul className="mt-3 max-h-56 space-y-2 overflow-y-auto">
+          {entries.map((entry) => (
+            <li
+              key={entry.id}
+              className="flex items-center justify-between gap-3 rounded-xl bg-[#BDE9FB]/10 px-3 py-2"
+            >
+              <span className="font-sans text-[11px] text-[#1E3A5F]">
+                {formatLedgerDate(entry.timestamp)}
+              </span>
+              <span
+                className={cn(
+                  "font-heading text-sm font-extrabold",
+                  entry.direction === "added"
+                    ? "text-[#22C55E]"
+                    : "text-[#E11D48]",
+                )}
+              >
+                {entry.direction === "added" ? "+" : "-"}
+                {formatCurrency(entry.amount)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+type CompoundingCalculatorPanelProps = {
   savingsBalance: number;
   projectedTotal: number;
   yearsSaved: number;
   weeklyTopUp: number;
   expectedRoi: number;
-  forecastSettingsOpen: boolean;
   principalOverride: string;
   highRoiWarningCopy: string;
-  onToggleSettings: () => void;
   onPrincipalOverrideChange: (value: string) => void;
   onYearsSavedChange: (value: number) => void;
   onWeeklyTopUpChange: (value: number) => void;
   onExpectedRoiChange: (value: number) => void;
 };
 
-function MotivationScoreboard({
+function CompoundingCalculatorPanel({
   savingsBalance,
   projectedTotal,
   yearsSaved,
   weeklyTopUp,
   expectedRoi,
-  forecastSettingsOpen,
   principalOverride,
   highRoiWarningCopy,
-  onToggleSettings,
   onPrincipalOverrideChange,
   onYearsSavedChange,
   onWeeklyTopUpChange,
   onExpectedRoiChange,
-}: MotivationScoreboardProps) {
+}: CompoundingCalculatorPanelProps) {
   const showHighRoiWarning = expectedRoi >= HIGH_ROI_WARNING_THRESHOLD;
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-2 gap-4">
-        <div className={cn(floatingPanelClass, "p-3")}>
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-            Total Savings
-          </p>
-          <p className="mt-0.5 truncate font-heading text-lg font-extrabold leading-none text-[#031F82] sm:text-xl">
-            {formatCurrency(savingsBalance)}
-          </p>
-        </div>
-
-        <div className={cn(floatingPanelClass, "p-3")}>
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-            Projected Total
-          </p>
-          <p className="mt-0.5 font-heading text-lg font-extrabold leading-none text-[#031F82] sm:text-xl">
+    <div
+      id="compounding-calculator-panel"
+      className={cn(floatingPanelClass, "space-y-3 p-4")}
+      role="region"
+      aria-label="Compounding calculator"
+    >
+      <div>
+        <h3 className="font-heading text-sm font-extrabold text-[#031F82]">
+          Compounding Calculator
+        </h3>
+        <p className="mt-1 font-sans text-xs text-[#1E3A5F]">
+          Tune your forecast - projected total:{" "}
+          <span className="font-semibold text-[#031F82]">
             {formatCurrency(projectedTotal)}
-          </p>
-          <p className="mt-1 font-sans text-[9px] font-semibold text-[#1E3A5F] sm:text-[10px]">
-            Projected at {expectedRoi}% ROI
-          </p>
-          <div className="mt-1 flex items-center justify-between gap-1">
-            <p className="font-sans text-[9px] text-[#1E3A5F] sm:text-[10px]">
-              {yearsSaved} yrs @ {formatCurrency(weeklyTopUp)}/wk
-            </p>
-            <button
-              type="button"
-              onClick={onToggleSettings}
-              aria-label="Toggle forecast settings"
-              aria-expanded={forecastSettingsOpen}
-              className={cn(
-                "shrink-0 rounded-full bg-[#BDE9FB]/30 p-1 text-[#031F82] transition-all hover:bg-[#BDE9FB]/50 active:scale-95",
-                forecastSettingsOpen && "bg-[#0CC1E0]/15 ring-2 ring-[#0CC1E0]/30",
-              )}
-            >
-              <GearIcon className="size-3.5" />
-            </button>
-          </div>
-        </div>
+          </span>
+        </p>
       </div>
 
-      <div
-        className={cn(
-          "grid transition-all duration-300 ease-in-out",
-          forecastSettingsOpen
-            ? "mt-3 grid-rows-[1fr] opacity-100"
-            : "mt-0 grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className={cn(floatingPanelClass, "space-y-3 p-3")}>
-            <label className="block">
-              <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-                Principal override
-              </span>
-              <input
-                type="number"
-                min={0}
-                step={1}
-                inputMode="decimal"
-                placeholder={String(savingsBalance)}
-                value={principalOverride}
-                onChange={(event) =>
-                  onPrincipalOverrideChange(event.target.value)
-                }
-                className="mt-1 w-full rounded-xl bg-[#BDE9FB]/20 px-3 py-1.5 font-sans text-sm text-[#031F82] outline-none ring-0 focus:bg-[#BDE9FB]/35 focus:outline-none"
-              />
-            </label>
+      <label className="block">
+        <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+          Starting Amount
+        </span>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          inputMode="decimal"
+          placeholder={String(savingsBalance)}
+          value={principalOverride}
+          onChange={(event) => onPrincipalOverrideChange(event.target.value)}
+          className="mt-1 w-full rounded-xl bg-[#BDE9FB]/20 px-3 py-1.5 font-sans text-sm text-[#031F82] outline-none focus:bg-[#BDE9FB]/35"
+        />
+      </label>
 
-            <label className="block">
-              <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-                Years Saved
-                <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
-                  {yearsSaved}
-                </span>
-              </span>
-              <input
-                type="range"
-                min={1}
-                max={10}
-                step={1}
-                value={yearsSaved}
-                onChange={(event) => {
-                  const next = Number.parseInt(event.target.value, 10) as number;
-                  if (Number.isFinite(next)) onYearsSavedChange(next);
-                }}
-                className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
-              />
-            </label>
+      <label className="block">
+        <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+          Years Saved
+          <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
+            {yearsSaved}
+          </span>
+        </span>
+        <input
+          type="range"
+          min={1}
+          max={10}
+          step={1}
+          value={yearsSaved}
+          onChange={(event) => {
+            const next = Number.parseInt(event.target.value, 10) as number;
+            if (Number.isFinite(next)) onYearsSavedChange(next);
+          }}
+          className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
+        />
+      </label>
 
-            <label className="block">
-              <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-                Weekly Top-Up
-                <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
-                  {formatCurrency(weeklyTopUp)}
-                </span>
-              </span>
-              <input
-                type="range"
-                min={0}
-                max={50}
-                step={1}
-                value={weeklyTopUp}
-                onChange={(event) => {
-                  const next = Number.parseInt(event.target.value, 10) as number;
-                  if (Number.isFinite(next)) onWeeklyTopUpChange(next);
-                }}
-                className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
-              />
-            </label>
+      <label className="block">
+        <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+          Weekly Top-Up
+          <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
+            {formatCurrency(weeklyTopUp)}
+          </span>
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={50}
+          step={1}
+          value={weeklyTopUp}
+          onChange={(event) => {
+            const next = Number.parseInt(event.target.value, 10) as number;
+            if (Number.isFinite(next)) onWeeklyTopUpChange(next);
+          }}
+          className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
+        />
+      </label>
 
-            <label className="block">
-              <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-                Expected Return (ROI)
-                <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
-                  {expectedRoi}%
-                </span>
-              </span>
-              <input
-                type="range"
-                min={1}
-                max={25}
-                step={1}
-                value={expectedRoi}
-                onChange={(event) => {
-                  const next = Number.parseInt(event.target.value, 10) as number;
-                  if (Number.isFinite(next)) onExpectedRoiChange(next);
-                }}
-                className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#DCB766]"
-              />
-            </label>
+      <label className="block">
+        <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+          Expected Return (ROI)
+          <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
+            {expectedRoi}%
+          </span>
+        </span>
+        <input
+          type="range"
+          min={1}
+          max={25}
+          step={1}
+          value={expectedRoi}
+          onChange={(event) => {
+            const next = Number.parseInt(event.target.value, 10) as number;
+            if (Number.isFinite(next)) onExpectedRoiChange(next);
+          }}
+          className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#DCB766]"
+        />
+      </label>
 
-            <div
-              className={cn(
-                "grid transition-all duration-300 ease-in-out",
-                showHighRoiWarning
-                  ? "grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0",
-              )}
-            >
-              <div className="overflow-hidden">
-                <div
-                  role="alert"
-                  className={cn(floatingPanelClass, "bg-[#FFF7ED] p-3 shadow-sm")}
-                >
-                  <p className="font-sans text-xs leading-relaxed text-[#031F82]">
-                    <span aria-hidden className="mr-1">
-                      ⚠️
-                    </span>
-                    {highRoiWarningCopy}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {showHighRoiWarning ? (
+        <div
+          role="alert"
+          className={cn(floatingPanelClass, "bg-[#FFF7ED] p-3 shadow-sm")}
+        >
+          <p className="font-sans text-xs leading-relaxed text-[#031F82]">
+            <span aria-hidden className="mr-1">
+              ⚠️
+            </span>
+            {highRoiWarningCopy}
+          </p>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -446,11 +508,7 @@ function DestinationJarCard({
           <span className="text-lg leading-none" aria-hidden>
             {jar.emoji}
           </span>
-          <span className="rounded-full bg-[#DCB766]/15 px-1.5 py-0.5 font-heading text-[8px] font-bold uppercase tracking-wide text-[#031F82]">
-            Foundation
-          </span>
         </div>
-
         <h3 className="mt-1.5 line-clamp-2 font-heading text-[10px] font-bold leading-tight text-[#031F82]">
           {jar.name}
         </h3>
@@ -483,7 +541,6 @@ function DestinationJarCard({
                 className="mt-1 w-full rounded-xl bg-[#BDE9FB]/20 px-2 py-1.5 font-sans text-sm text-[#031F82] outline-none focus:bg-[#BDE9FB]/35"
               />
             </label>
-
             <div className="flex gap-1.5">
               <button
                 type="button"
@@ -550,116 +607,150 @@ function PremiumCustomJarModal({ isOpen, onClose }: PremiumCustomJarModalProps) 
       backdropClassName="bg-[#031F82]/45"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
     >
-        <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#DCB766]">
-          Premium unlock
-        </p>
-        <h2
-          id="premium-jar-title"
-          className="mt-2 font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl"
-        >
-          Build Your Custom Jar
-        </h2>
-        <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-          Adding, renaming, and modifying custom jars is an exclusive Paid Premium
-          Tier feature. Level up to design your own money buckets and run your vault
-          like a true founder.
-        </p>
-
-        <button
-          type="button"
-          className={cn("mt-5 h-touch w-full px-4 shadow-nga-pop", orangeCtaClass)}
-        >
-          Unlock Premium Tier
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-3 w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/40"
-        >
-          Maybe later
-        </button>
+      <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#DCB766]">
+        Premium unlock
+      </p>
+      <h2
+        id="premium-jar-title"
+        className="mt-2 font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl"
+      >
+        Build Your Custom Jar
+      </h2>
+      <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+        Adding, renaming, and modifying custom jars is an exclusive Paid Premium
+        Tier feature. Level up to design your own money buckets and run your vault
+        like a true founder.
+      </p>
+      <button
+        type="button"
+        className={cn("mt-5 h-touch w-full px-4 shadow-nga-pop", orangeCtaClass)}
+      >
+        Unlock Premium Tier
+      </button>
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-3 w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/40"
+      >
+        Maybe later
+      </button>
     </ModalShell>
   );
 }
 
-type FinnActivityDrawerProps = {
+type ActivityLogCardProps = {
+  displayName: string;
   isOpen: boolean;
   ledger: LedgerEntry[];
   onToggle: () => void;
 };
 
-function ChevronIcon({ isOpen }: { isOpen: boolean }) {
-  return (
-    <svg
-      className={cn(
-        "size-4 shrink-0 text-[#0CC1E0] transition-transform duration-300",
-        isOpen && "rotate-180",
-      )}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M6 9l6 6 6-6"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function FinnActivityDrawer({
+function ActivityLogCard({
+  displayName,
   isOpen,
   ledger,
   onToggle,
-}: FinnActivityDrawerProps) {
+}: ActivityLogCardProps) {
   return (
-    <section
-      aria-labelledby="finn-activity-log-heading"
-      className="w-full pt-4"
-    >
+    <section aria-labelledby="activity-log-heading" className="w-full">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        aria-controls="finn-activity-log-panel"
-        className="group flex w-full items-center justify-center gap-2 py-2 transition-opacity hover:opacity-80 active:opacity-70"
+        aria-controls="activity-log-panel"
+        className={cn(
+          floatingPanelClass,
+          "flex w-full items-center gap-3 p-4 text-left transition-all hover:shadow-lg active:scale-[0.99]",
+          isOpen && "ring-2 ring-[#0CC1E0]/25",
+        )}
       >
         <span
-          id="finn-activity-log-heading"
-          className={dashboardSectionHeadingClass}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#BDE9FB]/25 text-xl"
+          aria-hidden
         >
-          Finn&apos;s Activity Log
+          📒
         </span>
+        <div className="min-w-0 flex-1">
+          <p
+            id="activity-log-heading"
+            className="font-heading text-sm font-extrabold text-[#031F82]"
+          >
+            {displayName}&apos;s Activity Log
+          </p>
+          <p className="mt-0.5 font-sans text-xs text-[#1E3A5F]">
+            Tap to see your money in and out
+          </p>
+        </div>
         <ChevronIcon isOpen={isOpen} />
       </button>
 
       <div
-        id="finn-activity-log-panel"
+        id="activity-log-panel"
         className={cn(
           "grid transition-all duration-300 ease-in-out",
-          isOpen ? "mt-4 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+          isOpen ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
         )}
         role="region"
-        aria-label="Finn's Activity Log feed"
+        aria-label={`${displayName}'s activity log`}
         aria-hidden={!isOpen}
       >
         <div className="overflow-hidden">
-          <ul className="max-h-72 space-y-3 overflow-y-auto px-1 py-1">
+          <ul className="max-h-72 space-y-2 overflow-y-auto">
             {ledger.map((entry) => (
               <li
                 key={entry.id}
                 className={cn(
-                  "rounded-2xl px-3 py-2.5 font-sans text-xs leading-relaxed shadow-sm",
+                  "flex items-start gap-3 rounded-2xl px-3 py-2.5 shadow-sm",
                   entry.highlight
-                    ? "bg-[#DCB766]/10 font-semibold text-[#031F82]"
-                    : "bg-[#BDE9FB]/15 text-[#1E3A5F]",
+                    ? "bg-[#DCB766]/10"
+                    : "bg-[#BDE9FB]/15",
                 )}
               >
-                {entry.message}
+                {entry.amount !== undefined && entry.flow ? (
+                  <span
+                    className={cn(
+                      "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full font-heading text-sm font-extrabold",
+                      entry.flow === "in"
+                        ? "bg-[#22C55E]/15 text-[#15803D]"
+                        : "bg-[#FDA4AF]/30 text-[#BE123C]",
+                    )}
+                    aria-hidden
+                  >
+                    {entry.flow === "in" ? "↓" : "↑"}
+                  </span>
+                ) : (
+                  <span
+                    className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-white/80 text-sm"
+                    aria-hidden
+                  >
+                    •
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+                    <p className="font-sans text-xs leading-relaxed text-[#031F82]">
+                      {entry.message}
+                    </p>
+                    {entry.amount !== undefined ? (
+                      <span
+                        className={cn(
+                          "shrink-0 font-heading text-xs font-extrabold",
+                          entry.flow === "in"
+                            ? "text-[#22C55E]"
+                            : entry.flow === "out"
+                              ? "text-[#E11D48]"
+                              : "text-[#031F82]",
+                        )}
+                      >
+                        {entry.flow === "out" ? "-" : entry.flow === "in" ? "+" : ""}
+                        {formatCurrency(entry.amount)}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-0.5 font-sans text-[10px] text-[#1E3A5F]/70">
+                    {formatLedgerDate(entry.timestamp)}
+                  </p>
+                </div>
               </li>
             ))}
           </ul>
@@ -670,16 +761,16 @@ function FinnActivityDrawer({
 }
 
 export function VaultDashboard() {
-  const vaultCopy = copyMatrix.dashboard.vault;
   const { username, isLoading } = useDashboardUser();
+  const displayName = resolveFinnAddressName(username, isLoading);
   const { moneyToAllocate, setMoneyToAllocate, jars, setJars } =
     useDashboardWallet();
-  const finnAddressName = resolveFinnAddressName(username, isLoading);
   const highRoiWarningCopy = useMemo(
-    () => buildHighRoiWarningCopy(finnAddressName),
-    [finnAddressName],
+    () => buildHighRoiWarningCopy(displayName),
+    [displayName],
   );
   const ledgerCounter = useRef(0);
+  const savingsRegisterCounter = useRef(0);
 
   const [incomeInput, setIncomeInput] = useState("");
   const [expandedJarId, setExpandedJarId] = useState<DestinationJarId | null>(
@@ -689,17 +780,23 @@ export function VaultDashboard() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([
     {
       id: "ledger-welcome",
-      message:
-        "Vault online, legend. Deposit income, funnel it into jars, and stack wins like a pro CFO - Finn's watching your moves.",
+      message: "Vault online! Deposit income, funnel it into jars, and stack wins.",
+      timestamp: Date.now(),
     },
   ]);
+  const [savingsRegister, setSavingsRegister] = useState<SavingsRegisterEntry[]>(
+    [],
+  );
   const [coinFlights, setCoinFlights] = useState<CoinFlight[]>([]);
 
   const [principalOverride, setPrincipalOverride] = useState("");
   const [yearsSaved, setYearsSaved] = useState(5);
   const [weeklyTopUp, setWeeklyTopUp] = useState(10);
   const [expectedRoi, setExpectedRoi] = useState(DEFAULT_EXPECTED_ROI);
-  const [forecastSettingsOpen, setForecastSettingsOpen] = useState(false);
+
+  const [savingsRegisterOpen, setSavingsRegisterOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [budgetHubOpen, setBudgetHubOpen] = useState(false);
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [premiumJarModalOpen, setPremiumJarModalOpen] = useState(false);
 
@@ -740,17 +837,46 @@ export function VaultDashboard() {
     [],
   );
 
-  const appendLedger = useCallback((message: string, highlight = false) => {
-    ledgerCounter.current += 1;
-    setLedger((current) => [
-      {
-        id: `ledger-${ledgerCounter.current}-${createLedgerId()}`,
-        message,
-        highlight,
+  const appendSavingsRegister = useCallback(
+    (amount: number, direction: "added" | "removed") => {
+      savingsRegisterCounter.current += 1;
+      setSavingsRegister((current) => [
+        {
+          id: `savings-${savingsRegisterCounter.current}-${Date.now()}`,
+          timestamp: Date.now(),
+          amount,
+          direction,
+        },
+        ...current,
+      ]);
+    },
+    [],
+  );
+
+  const appendLedger = useCallback(
+    (
+      message: string,
+      options?: {
+        highlight?: boolean;
+        amount?: number;
+        flow?: LedgerFlow;
       },
-      ...current,
-    ]);
-  }, []);
+    ) => {
+      ledgerCounter.current += 1;
+      setLedger((current) => [
+        {
+          id: `ledger-${ledgerCounter.current}-${createLedgerId()}`,
+          message,
+          highlight: options?.highlight,
+          timestamp: Date.now(),
+          amount: options?.amount,
+          flow: options?.flow,
+        },
+        ...current,
+      ]);
+    },
+    [],
+  );
 
   function clearInteraction() {
     setExpandedJarId(null);
@@ -777,15 +903,20 @@ export function VaultDashboard() {
     setMoneyToAllocate((current) => current + amount);
     setIncomeInput("");
     appendLedger(
-      `Income drop! ${formatCurrency(amount)} landed in Money to Allocate - Finn says funnel it where it counts.`,
+      `Income deposited to Money to Allocate`,
+      { amount, flow: "in" },
     );
   }
 
   function handleResetUnallocatedPool() {
     if (moneyToAllocate <= 0) return;
 
+    const cleared = moneyToAllocate;
     setMoneyToAllocate(0);
-    appendLedger(RESET_POOL_LEDGER_MESSAGE);
+    appendLedger(RESET_POOL_LEDGER_MESSAGE, {
+      amount: cleared,
+      flow: "out",
+    });
   }
 
   function handleConfirmInteraction(
@@ -812,9 +943,10 @@ export function VaultDashboard() {
         ),
       );
       triggerCoinBurst("to-jar", jarIndex);
-      appendLedger(
-        `Boom! ${formatCurrency(amount)} just flew into your ${jar.name} - Future-you is cheering!`,
-      );
+      appendLedger(`Moved to ${jar.name}`, { amount, flow: "out" });
+      if (jarId === SAVINGS_JAR_ID) {
+        appendSavingsRegister(amount, "added");
+      }
     } else {
       if (amount > jar.balance) return;
 
@@ -827,136 +959,225 @@ export function VaultDashboard() {
       );
       setMoneyToAllocate((current) => current + amount);
       triggerCoinBurst("to-holding", jarIndex);
-      appendLedger(
-        `Smart recall - ${formatCurrency(amount)} boomeranged from ${jar.name} back to Money to Allocate. Redeploy when ready.`,
-      );
+      appendLedger(`Recalled from ${jar.name} to allocate`, {
+        amount,
+        flow: "in",
+      });
+      if (jarId === SAVINGS_JAR_ID) {
+        appendSavingsRegister(amount, "removed");
+      }
     }
 
     clearInteraction();
   }
 
   return (
-    <div className="relative mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col space-y-14 overflow-x-hidden bg-white px-2 py-6 pb-10">
+    <div className="relative mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-6 pb-10">
       <CoinFlightOverlay flights={coinFlights} />
       <PremiumCustomJarModal
         isOpen={premiumJarModalOpen}
         onClose={() => setPremiumJarModalOpen(false)}
       />
 
-      <section
-        aria-labelledby="savings-stats-heading"
-        className="w-full shrink-0"
-      >
-        <DashboardSectionHeading id="savings-stats-heading">
-          Your Savings Stats
-        </DashboardSectionHeading>
-        <div className="mt-5">
-          <MotivationScoreboard
-            savingsBalance={savingsBalance}
-            projectedTotal={projectedTotal}
-            yearsSaved={yearsSaved}
-            weeklyTopUp={weeklyTopUp}
-            expectedRoi={expectedRoi}
-            forecastSettingsOpen={forecastSettingsOpen}
-            principalOverride={principalOverride}
-            highRoiWarningCopy={highRoiWarningCopy}
-            onToggleSettings={() => setForecastSettingsOpen((open) => !open)}
-            onPrincipalOverrideChange={setPrincipalOverride}
-            onYearsSavedChange={setYearsSaved}
-            onWeeklyTopUpChange={setWeeklyTopUp}
-            onExpectedRoiChange={setExpectedRoi}
+      <section aria-label="Vault savings overview" className="w-full shrink-0">
+        <div className="grid grid-cols-2 gap-3">
+          <VaultStatTile
+            label="Total Savings"
+            value={formatCurrency(savingsBalance)}
+            icon={
+              <Image
+                src="/dashboard/piggy-bank.svg"
+                alt=""
+                width={28}
+                height={28}
+                className="size-7"
+                aria-hidden
+              />
+            }
+            isActive={savingsRegisterOpen}
+            ariaControls="savings-register-panel"
+            onClick={() => {
+              setSavingsRegisterOpen((open) => !open);
+              setCalculatorOpen(false);
+            }}
+          />
+          <VaultStatTile
+            label="Future Savings Potential"
+            value={formatCurrency(projectedTotal)}
+            subtext={`${expectedRoi}% ROI · ${yearsSaved} yrs`}
+            icon={
+              <Image
+                src="/dashboard/trend-up.svg"
+                alt=""
+                width={28}
+                height={28}
+                className="size-7"
+                aria-hidden
+              />
+            }
+            isActive={calculatorOpen}
+            ariaControls="compounding-calculator-panel"
+            onClick={() => {
+              setCalculatorOpen((open) => !open);
+              setSavingsRegisterOpen(false);
+            }}
           />
         </div>
-      </section>
 
-      <section
-        aria-labelledby="income-funnel-heading"
-        className="w-full space-y-6"
-      >
-        <div>
-          <DashboardSectionHeading id="income-funnel-heading">
-            Your Income Funnel
-          </DashboardSectionHeading>
-          <p className="mt-3 text-center font-sans text-[10px] leading-relaxed text-[#1E3A5F]">
-            {vaultCopy.description}
-          </p>
-        </div>
-
-        <form
-          onSubmit={handleDepositIncome}
-          className="flex w-full flex-col gap-4"
-        >
-          <label
-            className={cn(
-              floatingPanelClass,
-              "flex w-full items-center gap-2 px-3 py-2",
-            )}
-          >
-            <span className="font-heading text-sm font-bold text-[#031F82]">
-              $
-            </span>
-            <input
-              type="number"
-              min={0}
-              step={1}
-              inputMode="decimal"
-              value={incomeInput}
-              onChange={(event) => setIncomeInput(event.target.value)}
-              placeholder="0"
-              className="w-full min-w-0 bg-transparent font-sans text-sm text-[#031F82] outline-none"
-              aria-label="Income amount"
-            />
-          </label>
-          <button
-            type="submit"
-            className={cn("h-touch w-full px-4 shadow-nga-pop", orangeCtaClass)}
-          >
-            Deposit Income
-          </button>
-        </form>
-
-        <article
-          id={HOLDING_JAR_ID}
-          className={cn(floatingPanelClass, "p-4")}
-        >
-          <div className="flex items-center justify-center gap-3">
-            <div className="min-w-0 flex-1 text-center">
-              <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-                Money to Allocate
-              </p>
-              <p className="mt-0.5 font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
-                {formatCurrency(moneyToAllocate)}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleResetUnallocatedPool}
-              disabled={moneyToAllocate <= 0}
-              aria-label="Reset unallocated income pool"
-              className={resetPoolClass}
-            >
-              Reset
-            </button>
+        {savingsRegisterOpen ? (
+          <div className="mt-3">
+            <SavingsRegisterPanel entries={savingsRegister} />
           </div>
-        </article>
+        ) : null}
 
-        <div className="grid w-full grid-cols-2 items-start gap-4">
-          {jars.map((jar) => (
-            <DestinationJarCard
-              key={jar.id}
-              jar={jar}
-              isExpanded={expandedJarId === jar.id}
-              interactionAmount={interactionAmount}
-              onToggleExpand={handleToggleJarExpand}
-              onAmountChange={setInteractionAmount}
-              onConfirm={handleConfirmInteraction}
+        {calculatorOpen ? (
+          <div className="mt-3">
+            <CompoundingCalculatorPanel
+              savingsBalance={savingsBalance}
+              projectedTotal={projectedTotal}
+              yearsSaved={yearsSaved}
+              weeklyTopUp={weeklyTopUp}
+              expectedRoi={expectedRoi}
+              principalOverride={principalOverride}
+              highRoiWarningCopy={highRoiWarningCopy}
+              onPrincipalOverrideChange={setPrincipalOverride}
+              onYearsSavedChange={setYearsSaved}
+              onWeeklyTopUpChange={setWeeklyTopUp}
+              onExpectedRoiChange={setExpectedRoi}
             />
-          ))}
-          <CustomJarTeaserCard onClick={() => setPremiumJarModalOpen(true)} />
+          </div>
+        ) : null}
+      </section>
+
+      <section aria-label="Budget Hub" className="w-full space-y-3">
+        <button
+          type="button"
+          onClick={() => setBudgetHubOpen((open) => !open)}
+          aria-expanded={budgetHubOpen}
+          aria-controls="budget-hub-panel"
+          className={cn(
+            floatingPanelClass,
+            "flex w-full items-center gap-3 p-4 text-left transition-all hover:shadow-lg active:scale-[0.99]",
+            budgetHubOpen && "ring-2 ring-[#0CC1E0]/25",
+          )}
+        >
+          <span
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#BDE9FB]/25"
+            aria-hidden
+          >
+            <Image
+              src="/dashboard/money-bag.svg"
+              alt=""
+              width={26}
+              height={26}
+              className="size-6"
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-heading text-sm font-extrabold text-[#031F82]">
+              Budget Hub
+            </p>
+            <p className="mt-0.5 font-sans text-xs text-[#1E3A5F]">
+              {formatCurrency(moneyToAllocate)} ready to allocate
+            </p>
+          </div>
+          <ChevronIcon isOpen={budgetHubOpen} />
+        </button>
+
+        <div
+          id="budget-hub-panel"
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            budgetHubOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0",
+          )}
+          aria-hidden={!budgetHubOpen}
+        >
+          <div className="overflow-hidden">
+            <div className="space-y-4">
+              <form onSubmit={handleDepositIncome} className="space-y-3">
+                <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+                  Enter how much cash you made, then hit deposit - it lands in
+                  Money to Allocate so you can split it across your jars.
+                </p>
+                <label
+                  className={cn(
+                    floatingPanelClass,
+                    "flex w-full items-center gap-2 px-3 py-2.5",
+                  )}
+                >
+                  <span className="font-heading text-sm font-bold text-[#031F82]">
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="decimal"
+                    value={incomeInput}
+                    onChange={(event) => setIncomeInput(event.target.value)}
+                    placeholder="0.00"
+                    className="w-full min-w-0 bg-transparent font-sans text-sm text-[#031F82] outline-none"
+                    aria-label="Income amount"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className={cn("h-touch w-full px-4 shadow-nga-pop", orangeCtaClass)}
+                >
+                  Deposit Income
+                </button>
+              </form>
+
+              <article
+                id={HOLDING_JAR_ID}
+                className={cn(floatingPanelClass, "p-4")}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="min-w-0 flex-1 text-center">
+                    <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+                      Money to Allocate
+                    </p>
+                    <p className="mt-0.5 font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
+                      {formatCurrency(moneyToAllocate)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResetUnallocatedPool}
+                    disabled={moneyToAllocate <= 0}
+                    aria-label="Reset unallocated income pool"
+                    className={resetPoolClass}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </article>
+
+              <div className="grid w-full grid-cols-2 items-start gap-3">
+                {jars.map((jar) => (
+                  <DestinationJarCard
+                    key={jar.id}
+                    jar={jar}
+                    isExpanded={expandedJarId === jar.id}
+                    interactionAmount={interactionAmount}
+                    onToggleExpand={handleToggleJarExpand}
+                    onAmountChange={setInteractionAmount}
+                    onConfirm={handleConfirmInteraction}
+                  />
+                ))}
+                <CustomJarTeaserCard
+                  onClick={() => setPremiumJarModalOpen(true)}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <FinnActivityDrawer
+      <ActivityLogCard
+        displayName={displayName}
         isOpen={ledgerOpen}
         ledger={ledger}
         onToggle={() => setLedgerOpen((open) => !open)}

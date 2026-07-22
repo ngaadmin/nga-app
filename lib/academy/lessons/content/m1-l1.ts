@@ -37,7 +37,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     options: ["Spent", "Saved", "Hidden"],
     correctOption: "Spent",
     wrongError:
-      "Not quite! Holly's friends are showing off — what's her brain pushing her to do with that $25?",
+      "Not quite! Holly's friends are showing off - what's her brain pushing her to do with that $25?",
   },
   {
     type: "binary-choice",
@@ -232,7 +232,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     narrativeBefore:
       "Dash just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be",
     wrongError:
-      "Not quite! Dash spotted those earbuds — what's his brain pushing him to do with that $40?",
+      "Not quite! Dash spotted those earbuds - what's his brain pushing him to do with that $40?",
   },
   "short-fun-reality": {
     prompt:
@@ -294,7 +294,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
   "countdown-trap": {
     prompt:
-      'Later that day Dash receives a text message: "Flash sale on premium bike lights – huge discount but ONLY 10 MINUTES LEFT!" Why is the offer rushing him?',
+      'Later that day Dash receives a text message: "Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!" Why is the offer rushing him?',
     optionA: {
       label: "To trick his brain into buying fast without thinking.",
       isCorrect: true,

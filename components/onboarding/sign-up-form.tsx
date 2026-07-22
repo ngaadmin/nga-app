@@ -76,7 +76,7 @@ export function SignUpForm() {
       next.username = "Pick a nickname for your saved profile.";
     } else if (!USERNAME_PATTERN.test(trimmed)) {
       next.username =
-        "Use 2–20 letters, numbers, underscores, or hyphens only.";
+        "Use 2-20 letters, numbers, underscores, or hyphens only.";
     }
 
     if (!trimmedEmail) {

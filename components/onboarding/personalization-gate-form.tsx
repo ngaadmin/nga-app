@@ -54,7 +54,7 @@ export function PersonalizationGateForm() {
       next.username = "Pick a nickname to continue.";
     } else if (!USERNAME_PATTERN.test(trimmed)) {
       next.username =
-        "Use 2–20 letters, numbers, underscores, hyphens, or # only.";
+        "Use 2-20 letters, numbers, underscores, hyphens, or # only.";
     }
 
     const year = birthYear ? Number(birthYear) : NaN;

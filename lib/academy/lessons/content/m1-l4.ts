@@ -157,7 +157,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     optionE: { label: "Quality guaranteed", isCorrect: false },
     successMessage:
       "That's right. These are all tricks so you spend your money, without stopping to think.",
-    wrongError: "Not quite — that's just info on the sign, not a pressure trick.",
+    wrongError: "Not quite - that's just info on the sign, not a pressure trick.",
     errorStyle: "inline-red",
     advance: { mode: "on-complete" },
   },
@@ -189,7 +189,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
         "Not quite! That button is trying to do the thinking for you. Don't let it!",
     },
     successMessage:
-      "Great questions! Lars is thinking for himself—not letting the game rush him into spending.",
+      "Great questions! Lars is thinking for himself - not letting the game rush him into spending.",
     wrongError:
       "Not quite! That button is trying to do the thinking for you. Don't let it!",
     errorStyle: "inline-red",
@@ -225,7 +225,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
       { id: "lives", label: "Extra Lives Bundle", price: 5, emoji: "🎮" },
       { id: "flashlight", label: "Flashlight", price: 10, emoji: "🔦" },
     ],
-    workshopSignTitle: "Learn to Wheelie — 30 Minute Workshop: $20",
+    workshopSignTitle: "Learn to Wheelie - 30 Minute Workshop: $20",
     lockedLabel: "Locked",
     unlockedLabel: "Sign Up Now!",
     goalAchievedLabel: "Goal Achieved!",

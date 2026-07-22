@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ACADEMY_MODULE_FOCUS_AREAS,
+  ACADEMY_MODULE_DESCRIPTIONS,
   ACADEMY_MODULE_TITLES,
   getAcademyPhaseTheme,
   isModuleSignpostLocked,
@@ -13,7 +13,7 @@ import { LockIcon } from "@/lib/dashboard/icons";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
-export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 76;
+export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 92;
 export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 20;
 
 type AcademyModuleSignpostProps = {
@@ -29,7 +29,7 @@ export function AcademyModuleSignpost({
 }: AcademyModuleSignpostProps) {
   const phase = getAcademyPhaseTheme(moduleNumber);
   const title = ACADEMY_MODULE_TITLES[moduleNumber];
-  const focusAreas = ACADEMY_MODULE_FOCUS_AREAS[moduleNumber];
+  const description = ACADEMY_MODULE_DESCRIPTIONS[moduleNumber];
   const isLocked = isModuleSignpostLocked(
     moduleNumber,
     milestones,
@@ -67,11 +67,14 @@ export function AcademyModuleSignpost({
             Module {moduleNumber}: {title}
           </p>
         </div>
+        <p className="mt-1 text-center font-sans text-[10px] font-medium leading-snug text-nga-slate sm:text-[11px]">
+          {description}
+        </p>
         <p
-          className="mt-1 text-center font-heading text-[9px] font-bold uppercase tracking-wide sm:text-[10px]"
+          className="mt-0.5 text-center font-heading text-[9px] font-bold uppercase tracking-wide sm:text-[10px]"
           style={{ color: phase.shadow }}
         >
-          Focus: {focusAreas} · {LESSONS_PER_LEVEL} Lessons
+          {LESSONS_PER_LEVEL} Lessons
         </p>
       </div>
     </div>

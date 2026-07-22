@@ -4,39 +4,42 @@ type AcademyLevelId = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Module titles aligned with copyMatrix journey nodes (Modules 1–6). */
 export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
-  1: copyMatrix.dashboard.academy.journey.nodes[0]?.subtitle ?? "Money Game Rules",
-  2: copyMatrix.dashboard.academy.journey.nodes[1]?.subtitle ?? "Plugging Leaks",
-  3: copyMatrix.dashboard.academy.journey.nodes[2]?.subtitle ?? "Taking Control",
+  1: copyMatrix.dashboard.academy.journey.nodes[0]?.subtitle ?? "Understanding the Money Game",
+  2: copyMatrix.dashboard.academy.journey.nodes[1]?.subtitle ?? "Protecting Your Money",
+  3: copyMatrix.dashboard.academy.journey.nodes[2]?.subtitle ?? "Commanding Your Cash",
   4:
     copyMatrix.dashboard.academy.journey.nodes[3]?.subtitle ??
-    "Making Your Own Cash",
-  5: copyMatrix.dashboard.academy.journey.nodes[4]?.subtitle ?? "Growing Assets",
+    "Generating Your Income",
+  5: copyMatrix.dashboard.academy.journey.nodes[4]?.subtitle ?? "Multiplying Your Wealth",
   6:
     copyMatrix.dashboard.academy.journey.nodes[5]?.subtitle ??
     "Mastering the System",
 };
 
-/** Focus scope labels for each Academy module signpost. */
-export const ACADEMY_MODULE_FOCUS_AREAS: Record<AcademyLevelId, string> = {
+/** Module descriptions shown on Academy intro signposts (Modules 1–6). */
+export const ACADEMY_MODULE_DESCRIPTIONS: Record<AcademyLevelId, string> = {
   1:
     copyMatrix.dashboard.academy.journey.nodes[0]?.focusAreas ??
-    "Mindset, Time, Inflation",
+    "How your daily spending choices shape your freedom and future.",
   2:
     copyMatrix.dashboard.academy.journey.nodes[1]?.focusAreas ??
-    "Subscriptions, Debt, Cyber Security",
+    "Stop money from quietly slipping away.",
   3:
     copyMatrix.dashboard.academy.journey.nodes[2]?.focusAreas ??
-    "Dashboards, Savings, Vaults",
+    "Build a system that puts you in control.",
   4:
     copyMatrix.dashboard.academy.journey.nodes[3]?.focusAreas ??
-    "Value, Offers, Trust",
+    "Create extra money with skills you have.",
   5:
     copyMatrix.dashboard.academy.journey.nodes[4]?.focusAreas ??
-    "Equities, Property, Leverage",
+    "Make your money work for you.",
   6:
     copyMatrix.dashboard.academy.journey.nodes[5]?.focusAreas ??
-    "Tax, Structures, Legacy",
+    "Unlock how the wealthy stay ahead.",
 };
+
+/** @deprecated Use ACADEMY_MODULE_DESCRIPTIONS — retained for imports. */
+export const ACADEMY_MODULE_FOCUS_AREAS = ACADEMY_MODULE_DESCRIPTIONS;
 
 /**
  * Fallback lesson topic strings per module (Lessons 1–9).

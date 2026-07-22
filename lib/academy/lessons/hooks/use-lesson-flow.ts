@@ -8,7 +8,14 @@ import {
   saveAcademyMilestones,
 } from "@/lib/dashboard/academy-progress-storage";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import { setVaultSkillTierOverride } from "@/lib/dashboard/vault-skill-progress-storage";
+import {
+  applyLessonSkillTierProgress,
+  resolveSkillSlugForMilestone,
+  skillTierForLessonNumber,
+} from "@/lib/dashboard/skill-trophies";
+import { lessonNumberForMilestoneId } from "@/lib/dashboard/academy-state";
+import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
+import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
 
 export type ScreenFlash = "none" | "error" | "success";
 
@@ -166,7 +173,11 @@ export function useLessonFlow({
     );
 
     if (!alreadyCompleted) {
-      setVaultSkillTierOverride(skillSlug, "bronze");
+      const session = readGhostAccessSession();
+      const cohort = session?.birthYear
+        ? getMasteryCohortFromBirthYear(session.birthYear)
+        : "explorer";
+      applyLessonSkillTierProgress(milestoneId, cohort);
       const updated = completeAcademyMilestone(milestoneId, milestones);
       saveAcademyMilestones(updated);
     }
@@ -180,7 +191,6 @@ export function useLessonFlow({
     perfectStreak,
     perfectStreakBonus,
     router,
-    skillSlug,
     xpReward,
   ]);
 
@@ -194,6 +204,11 @@ export function useLessonFlow({
   const isLastScreen = screenIndex === totalScreens - 1;
   const canAdvanceDefault =
     Boolean(screenReady[screenIndex]) && !isLastScreen;
+
+  const lessonNumber = lessonNumberForMilestoneId(milestoneId);
+  const skillMedalTier = skillTierForLessonNumber(lessonNumber);
+  const progressSkillSlug =
+    resolveSkillSlugForMilestone(milestoneId) ?? skillSlug;
 
   return {
     screenIndex,
@@ -213,6 +228,9 @@ export function useLessonFlow({
     isLastScreen,
     canAdvanceDefault,
     totalScreens,
+    lessonNumber,
+    skillMedalTier,
+    progressSkillSlug,
   };
 }
 

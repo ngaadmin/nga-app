@@ -1,5 +1,5 @@
 import {
-  canAccessAdvancedSkills,
+  maxSkillNumberForMasteryCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -15,23 +15,32 @@ export const SKILLS_REGISTRY_SELECT_COLUMNS =
 
 /**
  * PostgREST filter fragment for cohort-scoped reads.
- * Explorers and Pathfinders fetch skills 1–12 only; Mavericks fetch the full registry.
+ * Explorers: skills 1–12 · Pathfinders: 1–15 · Mavericks: full registry.
  */
 export function skillsRegistryPostgrestFilter(
   masteryCohort: MasteryCohort,
 ): string {
-  if (canAccessAdvancedSkills(masteryCohort)) {
-    return "order=skill_number.asc";
-  }
-  return "is_advanced_cohort_only.eq.false&order=skill_number.asc";
+  const maxSkill = maxSkillNumberForMasteryCohort(masteryCohort);
+  return `skill_number.lte.${maxSkill}&order=skill_number.asc`;
 }
 
 /** In-memory registry slice — mirrors the Supabase cohort filter until the client is wired. */
 export function skillsRegistryForMasteryCohort(
   masteryCohort: MasteryCohort,
 ): readonly SkillRegistryRecord[] {
-  if (canAccessAdvancedSkills(masteryCohort)) {
-    return SKILLS_REGISTRY;
-  }
-  return SKILLS_REGISTRY.filter((skill) => !skill.isAdvancedCohortOnly);
+  const maxSkill = maxSkillNumberForMasteryCohort(masteryCohort);
+  return SKILLS_REGISTRY.filter((skill) => skill.skillNumber <= maxSkill);
+}
+
+export function isSkillAccessibleForMasteryCohort(
+  skillKey: string,
+  masteryCohort: MasteryCohort,
+): boolean {
+  const record = SKILLS_REGISTRY.find(
+    (skill) =>
+      skill.skillSlug === skillKey ||
+      skill.legacySlugs?.includes(skillKey) === true,
+  );
+  if (!record) return false;
+  return record.skillNumber <= maxSkillNumberForMasteryCohort(masteryCohort);
 }

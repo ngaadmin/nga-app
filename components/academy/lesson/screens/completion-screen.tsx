@@ -2,7 +2,8 @@
 
 import { LessonCompletionPane } from "@/components/academy/lesson/lesson-completion-pane";
 import type { CompletionScreenConfig } from "@/lib/academy/lessons/types";
-import { formatLessonBronzeSkillLine } from "@/lib/dashboard/skill-trophies";
+import { formatLessonSkillUnlockLine } from "@/lib/dashboard/skill-trophies";
+import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import type { StandardScreenProps } from "./types";
 
 export function CompletionScreen({
@@ -16,7 +17,8 @@ export function CompletionScreen({
         xpReward={rewards.xpReward}
         perfectStreakBonus={rewards.perfectStreakBonus}
         perfectStreak={flow.perfectStreak}
-        achievementSkillId={rewards.achievementSkillSlug}
+        achievementSkillId={flow.progressSkillSlug}
+        skillMedalTier={flow.skillMedalTier}
       />
     );
   }
@@ -46,12 +48,27 @@ export function CompletionScreen({
           {screen.bodyCopy}
         </p>
       ) : null}
-      <p className="mt-10 text-4xl" aria-hidden>
-        🥉
-      </p>
-      {!screen.skillLearnedLabel ? (
+      {flow.skillMedalTier === "bronze" ? (
+        <p className="mt-10 text-4xl" aria-hidden>
+          🥉
+        </p>
+      ) : flow.skillMedalTier === "unlocked" ? (
+        <div
+          className="mt-10 flex size-16 items-center justify-center rounded-full border-2 border-[#031F82] bg-white shadow-[0_2px_8px_rgba(3,31,130,0.12)]"
+          aria-hidden
+        >
+          <span className="text-3xl leading-none">
+            {getSkillRegistryRecord(flow.progressSkillSlug)?.medalEmoji ??
+              "🏅"}
+          </span>
+        </div>
+      ) : null}
+      {!screen.skillLearnedLabel && flow.skillMedalTier ? (
         <p className="mt-3 font-heading text-sm font-extrabold text-[#031F82]">
-          {formatLessonBronzeSkillLine(rewards.achievementSkillSlug)}
+          {formatLessonSkillUnlockLine(
+            flow.progressSkillSlug,
+            flow.skillMedalTier,
+          )}
         </p>
       ) : null}
     </div>

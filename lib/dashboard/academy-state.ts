@@ -1,5 +1,5 @@
 import {
-  canAccessAdvancedSkills,
+  maxAcademyModuleForMasteryCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -93,8 +93,13 @@ export function resolveAcademyContextBanner(
   };
 }
 
-/** Levels 5–6 unlock for Mavericks (ages 16–18) only — maps to skills 13–18. */
-export const ACADEMY_AGE_GATED_MODULE_IDS: readonly AcademyLevelId[] = [5, 6];
+/** Modules above the cohort skill cap are hidden on the Academy map. */
+export function isModuleAgeGatedForCohort(
+  levelGroup: AcademyLevelId,
+  masteryCohort: MasteryCohort,
+): boolean {
+  return levelGroup > maxAcademyModuleForMasteryCohort(masteryCohort);
+}
 
 /** True on the first lesson node of each module (ids 1, 10, 19, 28, 37, 46). */
 export function isFirstMilestoneInModule(milestoneId: number): boolean {
@@ -123,16 +128,6 @@ export function isModuleProgressionLocked(
   const moduleMilestones = milestonesForModule(milestones, levelGroup);
   if (moduleMilestones.length === 0) return true;
   return moduleMilestones.every((node) => node.status === "locked");
-}
-
-export function isModuleAgeGatedForCohort(
-  levelGroup: AcademyLevelId,
-  masteryCohort: MasteryCohort,
-): boolean {
-  return (
-    !canAccessAdvancedSkills(masteryCohort) &&
-    (ACADEMY_AGE_GATED_MODULE_IDS as readonly number[]).includes(levelGroup)
-  );
 }
 
 export function isModuleSignpostLocked(
@@ -425,6 +420,7 @@ export const ACADEMY_JOURNEY_PLACEHOLDER_STATE = {
 export {
   ACADEMY_LEVEL_PHASE_THEME,
   ACADEMY_LESSON_TOPICS_BY_MODULE,
+  ACADEMY_MODULE_DESCRIPTIONS,
   ACADEMY_MODULE_FOCUS_AREAS,
   ACADEMY_MODULE_TITLES,
   LEVEL_MAP_NODE_IDS,

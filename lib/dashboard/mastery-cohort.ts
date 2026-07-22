@@ -37,9 +37,39 @@ export function requiresParentConsent(cohort: MasteryCohort): boolean {
   return cohort === "explorer";
 }
 
-/** Skills 13–18 (`is_advanced_cohort_only`) unlock for Mavericks (ages 16–18) only. */
+export function maxSkillNumberForMasteryCohort(cohort: MasteryCohort): number {
+  switch (cohort) {
+    case "explorer":
+      return 12;
+    case "pathfinder":
+      return 15;
+    case "maverick":
+      return 18;
+  }
+}
+
+/** Highest Academy module (1–6) visible for a cohort's skill track. */
+export function maxAcademyModuleForMasteryCohort(
+  cohort: MasteryCohort,
+): 1 | 2 | 3 | 4 | 5 | 6 {
+  switch (cohort) {
+    case "explorer":
+      return 4;
+    case "pathfinder":
+      return 5;
+    case "maverick":
+      return 6;
+  }
+}
+
+/** Skills 13–18 unlock for Mavericks (ages 16–18) only. */
 export function canAccessAdvancedSkills(cohort: MasteryCohort): boolean {
   return cohort === "maverick";
+}
+
+/** Skills 13–15 unlock for Pathfinders and Mavericks. */
+export function canAccessPathfinderGrowthSkills(cohort: MasteryCohort): boolean {
+  return cohort === "pathfinder" || cohort === "maverick";
 }
 
 export function getMasteryCohortFromAge(age: number): MasteryCohort {
@@ -59,9 +89,7 @@ export function getMasteryCohortFromBirthYear(
 export function totalSkillsToMasterForMasteryCohort(
   cohort: MasteryCohort,
 ): number {
-  return canAccessAdvancedSkills(cohort)
-    ? MAVERICK_MASTERY_SKILLS_COUNT
-    : UNIVERSAL_MASTERY_SKILLS_COUNT;
+  return maxSkillNumberForMasteryCohort(cohort);
 }
 
 export function masteryCohortLabel(cohort: MasteryCohort): string {

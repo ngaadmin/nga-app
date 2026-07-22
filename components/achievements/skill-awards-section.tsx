@@ -80,6 +80,11 @@ function medalCoinStyles(tier: SkillTrophyTier): string {
         "bg-gradient-to-br from-[#E8C4A8] via-[#CD7F32] to-[#8B5A2B]",
         "border-b-4 border-b-[#6B4423] shadow-[0_3px_10px_rgba(139,90,43,0.35)]",
       );
+    case "unlocked":
+      return cn(
+        "border-2 border-[#031F82] bg-white",
+        "shadow-[0_2px_8px_rgba(3,31,130,0.12)]",
+      );
     case "locked":
       return "bg-gray-200 opacity-30 shadow-none";
   }
@@ -93,6 +98,8 @@ function tierDisplayLabel(tier: SkillTrophyTier): string {
       return "Silver";
     case "bronze":
       return "Bronze";
+    case "unlocked":
+      return "Skill Unlocked";
     case "locked":
       return "Locked";
   }
@@ -104,6 +111,7 @@ type SkillCarouselCardProps = {
 
 function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
   const isLocked = skill.tier === "locked";
+  const isUnlocked = skill.tier === "unlocked";
 
   return (
     <article className="flex w-[5.5rem] shrink-0 snap-center flex-col items-center px-1 text-center sm:w-[6rem]">
@@ -145,6 +153,7 @@ function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
           skill.tier === "gold" && "text-[#FFA503]",
           skill.tier === "silver" && "text-[#8FA3B0]",
           skill.tier === "bronze" && "text-[#CD7F32]",
+          isUnlocked && "text-[#031F82]",
           isLocked && "text-[#031F82]/40",
         )}
       >
@@ -184,7 +193,7 @@ export function SkillAwardsSection() {
   const goldCount = countEarnedMedals(cohortSkills, "gold");
   const silverCount = countEarnedMedals(cohortSkills, "silver");
   const bronzeCount = countEarnedMedals(cohortSkills, "bronze");
-  const notStartedCount = countNotYetStartedSkills(cohortSkills, masteryCohort);
+  const notStartedCount = countNotYetStartedSkills(cohortSkills);
 
   return (
     <section aria-labelledby="skill-awards-heading" className="w-full shrink-0">

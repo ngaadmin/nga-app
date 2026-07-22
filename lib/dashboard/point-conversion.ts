@@ -35,15 +35,18 @@ export function convertPointsToAud(
   );
 }
 
+import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
+import { formatMoney } from "@/lib/dashboard/currency/format-money";
+
 export function formatAud(amount: number): string {
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-  }).format(Math.max(0, amount));
+  return formatMoney(amount, "AUD");
 }
 
-export function formatConversionRateLabel(audPer100Xp: number): string {
-  return `100 XP = ${formatAud(audPer100Xp)} AUD`;
+export function formatConversionRateLabel(
+  audPer100Xp: number,
+  currencyCode: SupportedCurrencyCode = "AUD",
+): string {
+  return `100 XP = ${formatMoney(audPer100Xp, currencyCode)}`;
 }
 
 export function parsePointsInput(rawValue: string): number | null {

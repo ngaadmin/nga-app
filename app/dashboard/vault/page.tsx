@@ -1,5 +1,10 @@
-﻿import { VaultDashboard } from "@/components/dashboard/vault/vault-dashboard";
+﻿import { Suspense } from "react";
+import { VaultDashboard } from "@/components/dashboard/vault/vault-dashboard";
 
 export default function VaultPage() {
-  return <VaultDashboard />;
+  return (
+    <Suspense fallback={null}>
+      <VaultDashboard />
+    </Suspense>
+  );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { CurrencyProvider } from "@/lib/dashboard/currency-context";
 import { DashboardWalletProvider } from "@/lib/dashboard/dashboard-wallet-context";
 
 type DashboardProvidersProps = {
@@ -7,5 +8,9 @@ type DashboardProvidersProps = {
 };
 
 export function DashboardProviders({ children }: DashboardProvidersProps) {
-  return <DashboardWalletProvider>{children}</DashboardWalletProvider>;
+  return (
+    <CurrencyProvider>
+      <DashboardWalletProvider>{children}</DashboardWalletProvider>
+    </CurrencyProvider>
+  );
 }

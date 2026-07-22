@@ -2,6 +2,7 @@ import {
   defaultJarBalances,
   type JarBalanceMap,
 } from "@/lib/dashboard/destination-jars";
+import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
 import { DEFAULT_AUD_SLIDER_INDEX } from "@/lib/dashboard/point-conversion";
 import {
   readPersisted,
@@ -9,7 +10,10 @@ import {
   writePersisted,
 } from "@/lib/dev/client-persist";
 
-export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_test_seed_1500";
+export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_v2";
+
+/** Bump when persisted wallet shape or defaults change. */
+export const WALLET_SCHEMA_VERSION = 2;
 
 /** TEMP: Seed XP balance for child conversion / Vault routing QA. Remove before production. */
 export const TEMP_TEST_SEED_XP_BALANCE = 1500;
@@ -18,20 +22,24 @@ export const TEMP_TEST_SEED_XP_BALANCE = 1500;
 export const TEMP_TEST_SEED_LIFETIME_XP = 2800;
 
 export type PersistedDashboardWallet = {
+  schemaVersion?: number;
   totalPoints: number;
   lifetimePointsEarned: number;
   audSliderIndex: number;
   moneyToAllocate: number;
   jarBalances: JarBalanceMap;
+  customBuckets?: CustomVaultBucketPersisted[];
 };
 
 export function defaultDashboardWalletState(): PersistedDashboardWallet {
   return {
+    schemaVersion: WALLET_SCHEMA_VERSION,
     totalPoints: TEMP_TEST_SEED_XP_BALANCE,
     lifetimePointsEarned: TEMP_TEST_SEED_LIFETIME_XP,
     audSliderIndex: DEFAULT_AUD_SLIDER_INDEX,
     moneyToAllocate: 0,
     jarBalances: defaultJarBalances(),
+    customBuckets: [],
   };
 }
 
@@ -76,6 +84,11 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
         }
       : defaultJarBalances();
 
+    const storedSchemaVersion =
+      typeof parsed.schemaVersion === "number" && Number.isFinite(parsed.schemaVersion)
+        ? parsed.schemaVersion
+        : 1;
+
     const totalPoints = Math.max(0, Math.floor(parsed.totalPoints));
     const lifetimePointsEarned =
       typeof parsed.lifetimePointsEarned === "number" &&
@@ -83,12 +96,27 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
         ? Math.max(0, Math.floor(parsed.lifetimePointsEarned))
         : Math.max(totalPoints, TEMP_TEST_SEED_LIFETIME_XP);
 
+    const moneyToAllocate =
+      storedSchemaVersion >= WALLET_SCHEMA_VERSION
+        ? Math.max(0, parsed.moneyToAllocate)
+        : 0;
+
     return {
+      schemaVersion: WALLET_SCHEMA_VERSION,
       totalPoints,
       lifetimePointsEarned,
       audSliderIndex: parsed.audSliderIndex,
-      moneyToAllocate: Math.max(0, parsed.moneyToAllocate),
+      moneyToAllocate,
       jarBalances,
+      customBuckets: Array.isArray(parsed.customBuckets)
+        ? parsed.customBuckets.filter(
+            (entry): entry is CustomVaultBucketPersisted =>
+              Boolean(entry) &&
+              typeof entry === "object" &&
+              typeof (entry as CustomVaultBucketPersisted).id === "string" &&
+              (entry as CustomVaultBucketPersisted).id.startsWith("custom-"),
+          )
+        : [],
     };
   } catch {
     return null;
@@ -100,7 +128,7 @@ export function saveDashboardWalletState(state: PersistedDashboardWallet): void 
 
   writePersisted(
     DASHBOARD_WALLET_STORAGE_KEY,
-    JSON.stringify(state),
+    JSON.stringify({ ...state, schemaVersion: WALLET_SCHEMA_VERSION }),
   );
 }
 

@@ -55,6 +55,7 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
 ] as const;
 
 export const DASHBOARD_SETTINGS_HREF = "/dashboard/settings" as const;
+export const VAULT_CASH_IN_HREF = "/dashboard/vault?cashIn=1" as const;
 export const DASHBOARD_DEFAULT_HREF = "/dashboard/academy" as const;
 
 export function isNavItemActive(

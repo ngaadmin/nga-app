@@ -11,9 +11,9 @@ export const copyMatrix = {
       account: {
         passwordReset: "Password Reset",
         changeParentPin: "Change Parent PIN",
-        birthYearTrack: "Birth Year / Age Track",
         subscriptionStatus: "Account & Subscription Status",
         logOut: "Log Out",
+        birthYearTrack: "Birth Year / Age Track",
       },
       profile: {
         joinDateLabel: "Joined",
@@ -21,21 +21,39 @@ export const copyMatrix = {
       parentMode: {
         label: "Parent Mode",
         shortLabel: "Parent",
-        enabledHint: "Parent mode is on - conversion settings are unlocked.",
+        enabledHint: "Parent Hub is unlocked - you can adjust these settings.",
         pinTitle: "Parent PIN Required",
         pinBody:
-          "Enter the parent PIN to unlock conversion controls. Kids can't flip this on their own.",
+          "Enter the parent PIN to open Parent Hub. Kids can't change conversion rate, currency, or age track on their own.",
         setupTitle: "Set Parent PIN",
         setupBody:
-          "No parent PIN yet. Choose a 4-digit code to secure conversion controls.",
+          "No parent PIN yet. Choose a 4-digit code to secure Parent Hub.",
         setupNewLabel: "New PIN",
         pinPlaceholder: "4-digit PIN",
         setupConfirmLabel: "Confirm new PIN",
         pinError: "Wrong PIN - nice try.",
         setupMismatch: "PINs don't match - try again.",
-        pinConfirm: "Unlock Parent Mode",
-        setupSave: "Save & Unlock Parent Mode",
+        pinConfirm: "Unlock Parent Hub",
+        setupSave: "Save & Unlock Parent Hub",
         pinCancel: "Cancel",
+      },
+      parentHub: {
+        title: "Parent Hub",
+        lockedSubtext: "PIN required for parent-only controls",
+        unlockedSubtext: "Conversion rate, currency & age track",
+        lockedBadge: "Locked",
+        unlockedBadge: "Open",
+        unlockButton: "Enter Parent PIN",
+        lockHub: "Lock Parent Hub",
+        birthYearHint:
+          "Update birth year to refresh Academy modules, skills, and lesson tracks.",
+      },
+      currency: {
+        heading: "Display Currency",
+        summary:
+          "Choose the currency shown across The Vault and XP cash-in. Amounts stay the same - only the symbol and format change.",
+        lockedHint: "Unlock Parent Hub to change currency.",
+        savedNote: "Currency updated across The Vault.",
       },
       birthYear: {
         pinBody:
@@ -76,7 +94,9 @@ export const copyMatrix = {
         heading: "Parent Points Conversion Rate",
         rateTemplate: " XP = $1.00 AUD",
         summary:
-          "When points are converted by a parent, this cash amount will automatically appear as fresh income to distribute inside the child's Vault.",
+          "When your child cashes in XP from The Vault, converted cash goes straight into their Save Jar at this rate.",
+        vaultCashInHint:
+          "Open Parent Hub (PIN required) to set the conversion rate. Kids cash in XP from The Vault.",
         convertNowHeading: "Convert Now",
         convertFullBalance: "Convert Full Points Balance",
         customAmountLabel: "Custom points to convert",
@@ -92,13 +112,24 @@ export const copyMatrix = {
         confirmAcknowledge: "Got it",
         cashInHeading: "Cash In Your Points",
         cashInRateHint:
-          "Your parent set the conversion rate - cash out when you are ready!",
+          "Conversion rate has been set to {rate}. Cash out when you are ready!",
+        xpAvailableTemplate: "{points} XP available",
+        noPointsError: "No XP to cash in yet - keep learning!",
+        claimingLabel: "Claiming…",
         childPayoutReadoutTemplate: "You will receive {amount} straight into your Save Jar",
         claimCashReward: "Claim Cash Reward",
         successTitle: "Points Converted!",
         successBodyTemplate:
           "Points Converted! {amount} has been safely deposited straight into your Save Jar. Head over to the Vault to check your growth, or shift your funds to another jar if you have a different plan!",
         successAcknowledge: "Let's Go!",
+        parentEmail: {
+          draftLabel: "Parent notification",
+          title: "Email sent to guardian",
+          body: "We sent a heads-up about this XP cash-in. Draft preview below.",
+          toLabel: "To:",
+          subjectLabel: "Subject:",
+          acknowledge: "Got it",
+        },
       },
     },
     academy: {
@@ -165,6 +196,40 @@ export const copyMatrix = {
       title: "The Vault",
       description:
         "Your wealth cockpit. Track your assets, revenue, and watch your net worth climb.",
+      cashInTileLabel: "Cash In Your Points",
+      cashInTileSubtext: "{points} XP ready to convert",
+      budget: {
+        hubTitle: "Budget Hub",
+        depositHeading: "Got some money? Add it here!",
+        depositButton: "Deposit to Allocate",
+        poolLabel: "Money to Allocate",
+        poolDisclaimer:
+          "This represents real-world money you earned - not real digital payments.",
+        currencySettingsNote:
+          "Currency can be changed in Settings → Parent Hub.",
+        allocatedTemplate: "Allocated: {allocated} / {total}",
+        lockItIn: "Lock It In",
+        move: "Move",
+        markAsSpent: "Mark as Spent",
+        inJarTemplate: "{amount} in jar",
+        fromPoolLabel: "From this deposit",
+        addCustomBucket: "Add Custom Bucket",
+        renameBucket: "Rename",
+        premiumModalTitle: "Level Up Your Vault",
+        premiumModalBody:
+          "Renaming jars and adding custom buckets is a Premium perk. Freemium gets Save, Spend, and Give - locked and ready to go. Upgrade to create up to 20 custom buckets and name them your way.",
+        premiumUnlock: "Unlock Premium Tier",
+        premiumLater: "Maybe later",
+        moveTitle: "Move Money",
+        moveAmountLabel: "Amount to move",
+        moveDestinationLabel: "Move to",
+        moveConfirm: "Move It",
+        moveCancel: "Cancel",
+        movePoolOption: "Money to Allocate",
+        spentLogTemplate: "Marked {amount} as spent from {bucket}",
+        lockedInTemplate: "Locked {amount} into your jars",
+        depositLogTemplate: "Deposited {amount} to allocate",
+      },
     },
     achievements: {
       title: "Achievements",

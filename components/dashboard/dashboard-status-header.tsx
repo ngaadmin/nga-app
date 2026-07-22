@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { GhostModeBadge } from "@/components/dashboard/ghost-mode-badge";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
@@ -9,6 +10,7 @@ import {
   XpStarIcon,
 } from "@/lib/dashboard/icons";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
+import { VAULT_CASH_IN_HREF } from "@/lib/dashboard/navigation";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { zLayerStyle } from "@/lib/ui/layers";
@@ -24,16 +26,35 @@ type StatusPillProps = {
   icon: ReactNode;
   label: string;
   value: string;
+  href?: string;
 };
 
-function StatusPill({ icon, label, value }: StatusPillProps) {
-  return (
-    <div
-      className={statusPillClass}
-      aria-label={`${label}: ${value}`}
-    >
+function StatusPill({ icon, label, value, href }: StatusPillProps) {
+  const content = (
+    <>
       {icon}
       <span className={statusValueClass}>{value}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(
+          statusPillClass,
+          "transition-transform hover:scale-[1.03] active:scale-[0.98]",
+        )}
+        aria-label={`${label}: ${value}. Tap to cash in points in The Vault.`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={statusPillClass} aria-label={`${label}: ${value}`}>
+      {content}
     </div>
   );
 }
@@ -58,6 +79,7 @@ export function DashboardStatusHeader() {
             }
             label="Total points"
             value={`${totalPoints} XP`}
+            href={VAULT_CASH_IN_HREF}
           />
           <StatusPill
             icon={

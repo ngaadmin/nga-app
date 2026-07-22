@@ -4,12 +4,11 @@ import { useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { BirthYearSettingsModal } from "@/components/dashboard/birth-year-settings-modal";
+import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
 import {
   BillingCardIcon,
-  CalendarIcon,
   KeyIcon,
   LockIcon,
   LogOutIcon,
@@ -23,14 +22,6 @@ import {
   saveParentPin,
   verifyParentPin,
 } from "@/lib/dashboard/parent-pin";
-import {
-  convertPointsToAud,
-  formatAud,
-  formatConversionRateLabel,
-  MAX_AUD_SLIDER_INDEX,
-  MIN_AUD_SLIDER_INDEX,
-  parsePointsInput,
-} from "@/lib/dashboard/point-conversion";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { cn } from "@/lib/utils/cn";
 
@@ -108,52 +99,6 @@ function ProfileHeader({
         </p>
       </div>
     </header>
-  );
-}
-
-type CompactParentModeSwitchProps = {
-  enabled: boolean;
-  label: string;
-  onToggle: () => void;
-};
-
-function CompactParentModeSwitch({
-  enabled,
-  label,
-  onToggle,
-}: CompactParentModeSwitchProps) {
-  return (
-    <div className="flex flex-col items-center justify-start gap-2 self-start text-center">
-      <span className="font-heading text-[10px] font-bold uppercase leading-tight tracking-wide text-[#031F82]">
-        {label}
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={enabled}
-        aria-label={label}
-        onClick={onToggle}
-        className={cn(
-          "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full p-1 shadow-inner transition-colors duration-200",
-          enabled ? "bg-[#0CC1E0]" : "bg-[#BDE9FB]/60",
-        )}
-      >
-        <span
-          className={cn(
-            "pointer-events-none block size-6 rounded-full bg-white shadow-md transition-transform duration-200",
-            enabled ? "translate-x-[1.35rem]" : "translate-x-0",
-          )}
-        />
-      </button>
-      <span
-        className={cn(
-          "font-heading text-[9px] font-bold uppercase tracking-wide",
-          enabled ? "text-[#0CC1E0]" : "text-[#1E3A5F]/50",
-        )}
-      >
-        {enabled ? "On" : "Off"}
-      </span>
-    </div>
   );
 }
 
@@ -482,226 +427,12 @@ function ChangeParentPinModal({
   );
 }
 
-type PointsConvertedSuccessModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  body: string;
-  acknowledgeLabel: string;
-};
-
-function PointsConvertedSuccessModal({
-  isOpen,
-  onClose,
-  title,
-  body,
-  acknowledgeLabel,
-}: PointsConvertedSuccessModalProps) {
-  if (!isOpen) return null;
-
-  return (
-    <ModalShell
-      isOpen={isOpen}
-      onClose={onClose}
-      layer="toast"
-      labelledBy="points-converted-title"
-      backdropClassName="bg-[#031F82]/50"
-      panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md sm:p-6"
-    >
-        <h2
-          id="points-converted-title"
-          className="font-heading text-xl font-extrabold leading-tight text-[#031F82] sm:text-2xl"
-        >
-          {title}
-        </h2>
-        <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-          {body}
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className={cn("mt-5 h-touch w-full px-6 shadow-md", orangeCtaClass)}
-        >
-          {acknowledgeLabel}
-        </button>
-    </ModalShell>
-  );
-}
-
-type FinancialPanelContentProps = {
-  parentModeEnabled: boolean;
-  conversionCopy: (typeof copyMatrix.dashboard.settings)["conversion"];
-  parentModeHint: string;
-  conversionRateLabel: string;
-  audSliderIndex: number;
-  setAudSliderIndex: (index: number) => void;
-  totalPoints: number;
-  pointsInput: string;
-  setPointsInput: (value: string) => void;
-  setClaimError: (value: string | null) => void;
-  isFullBalanceSelected: boolean;
-  onSelectFullBalance: () => void;
-  childPayoutReadout: string;
-  claimError: string | null;
-  canClaim: boolean;
-  onClaimCashReward: () => void;
-};
-
-function FinancialPanelContent({
-  parentModeEnabled,
-  conversionCopy,
-  parentModeHint,
-  conversionRateLabel,
-  audSliderIndex,
-  setAudSliderIndex,
-  totalPoints,
-  pointsInput,
-  setPointsInput,
-  setClaimError,
-  isFullBalanceSelected,
-  onSelectFullBalance,
-  childPayoutReadout,
-  claimError,
-  canClaim,
-  onClaimCashReward,
-}: FinancialPanelContentProps) {
-  if (parentModeEnabled) {
-    return (
-      <div className="min-w-0">
-        <p className="font-heading text-sm font-extrabold text-[#031F82]">
-          {conversionCopy.heading}
-        </p>
-        <p className="mt-2 font-heading text-base font-extrabold text-[#031F82]">
-          {conversionRateLabel}
-        </p>
-        <label className="mt-4 block">
-          <span className="sr-only">{conversionCopy.heading}</span>
-          <input
-            type="range"
-            min={MIN_AUD_SLIDER_INDEX}
-            max={MAX_AUD_SLIDER_INDEX}
-            step={1}
-            value={audSliderIndex}
-            onChange={(event) => {
-              const next = Number.parseInt(event.target.value, 10);
-              if (Number.isFinite(next)) setAudSliderIndex(next);
-            }}
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
-          />
-        </label>
-        <p className="mt-3 font-sans text-[10px] leading-relaxed text-[#1E3A5F]">
-          {conversionCopy.summary}
-        </p>
-        <p className="mt-2 font-sans text-[10px] leading-relaxed text-[#0CC1E0]">
-          {parentModeHint}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-w-0">
-      <p className="font-heading text-sm font-extrabold text-[#031F82]">
-        {conversionCopy.cashInHeading}
-      </p>
-      <p className="mt-1 font-sans text-[10px] leading-relaxed text-[#1E3A5F]">
-        {conversionCopy.cashInRateHint}
-      </p>
-      <p className="mt-2 font-heading text-base font-extrabold text-[#031F82]">
-        {conversionRateLabel}
-      </p>
-
-      <div className="mt-4 flex flex-col gap-2.5">
-        <button
-          type="button"
-          onClick={onSelectFullBalance}
-          aria-pressed={isFullBalanceSelected}
-          className={cn(
-            "rounded-xl px-3 py-2.5 text-left font-heading text-xs font-bold transition-all",
-            isFullBalanceSelected
-              ? "bg-[#BDE9FB]/50 text-[#031F82] ring-2 ring-[#0CC1E0]/30"
-              : "bg-[#BDE9FB]/20 text-[#1E3A5F] hover:bg-[#BDE9FB]/35",
-          )}
-        >
-          {conversionCopy.convertFullBalance}
-          <span className="mt-0.5 block font-sans text-[10px] font-semibold opacity-80">
-            {totalPoints.toLocaleString()} XP available
-          </span>
-        </button>
-
-        <div
-          className={cn(
-            "rounded-xl p-2.5 transition-all",
-            pointsInput.trim().length > 0 && !isFullBalanceSelected
-              ? "bg-[#BDE9FB]/50 ring-2 ring-[#0CC1E0]/30"
-              : "bg-[#BDE9FB]/20",
-          )}
-        >
-          <label className="block">
-            <span className="font-heading text-xs font-bold text-[#031F82]">
-              {conversionCopy.customAmountLabel}
-            </span>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder={conversionCopy.customAmountPlaceholder}
-              value={pointsInput}
-              onChange={(event) => {
-                setClaimError(null);
-                setPointsInput(event.target.value.replace(/[^\d]/g, ""));
-              }}
-              aria-label={conversionCopy.customAmountLabel}
-              className="mt-1.5 w-full rounded-lg border-0 bg-white px-3 py-2 font-sans text-sm text-[#031F82] shadow-sm outline-none focus:ring-2 focus:ring-[#0CC1E0]/30"
-            />
-          </label>
-        </div>
-      </div>
-
-      <p className="mt-3 font-heading text-xs font-bold leading-snug text-[#031F82]">
-        {childPayoutReadout}
-      </p>
-
-      {claimError ? (
-        <p className="mt-1.5 font-sans text-xs font-semibold text-red-600" role="alert">
-          {claimError}
-        </p>
-      ) : null}
-
-      <button
-        type="button"
-        onClick={onClaimCashReward}
-        disabled={!canClaim}
-        className={cn("mt-3 h-10 w-full px-4 text-xs shadow-md", orangeCtaClass)}
-      >
-        {conversionCopy.claimCashReward}
-      </button>
-
-      <p className="mt-2 font-sans text-[9px] leading-relaxed text-[#1E3A5F]/70">
-        {conversionCopy.disclaimer}
-      </p>
-    </div>
-  );
-}
-
-type PinIntent = "parent-mode" | "birth-year";
-
 export function HomeDashboard() {
   const router = useRouter();
   const { username, joinDate, isLoading } = useDashboardUser();
   const copy = copyMatrix.dashboard.settings;
-  const conversionCopy = copy.conversion;
 
-  const {
-    totalPoints,
-    audSliderIndex,
-    audPer100Xp,
-    setAudSliderIndex,
-    claimPointsForVault,
-  } = useDashboardWallet();
-
-  const [parentModeEnabled, setParentModeEnabled] = useState(false);
-  const [pinIntent, setPinIntent] = useState<PinIntent>("parent-mode");
+  const [parentHubUnlocked, setParentHubUnlocked] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<"verify" | "setup">("verify");
   const [birthYearModalOpen, setBirthYearModalOpen] = useState(false);
@@ -709,41 +440,7 @@ export function HomeDashboard() {
   const [pinInput, setPinInput] = useState("");
   const [pinConfirmInput, setPinConfirmInput] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
-  const [pointsInput, setPointsInput] = useState("");
-  const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [successAudAmount, setSuccessAudAmount] = useState(0);
-  const [claimError, setClaimError] = useState<string | null>(null);
-
-  const selectedPoints = useMemo(
-    () => parsePointsInput(pointsInput) ?? 0,
-    [pointsInput],
-  );
-
-  const isFullBalanceSelected =
-    totalPoints > 0 && selectedPoints === totalPoints;
-
-  const audPayout = useMemo(
-    () => convertPointsToAud(selectedPoints, audPer100Xp),
-    [selectedPoints, audPer100Xp],
-  );
-
-  const conversionRateLabel = formatConversionRateLabel(audPer100Xp);
-
-  const childPayoutReadout = conversionCopy.childPayoutReadoutTemplate.replace(
-    "{amount}",
-    formatAud(audPayout),
-  );
-
-  const successBody = conversionCopy.successBodyTemplate.replace(
-    "{amount}",
-    formatAud(successAudAmount),
-  );
-
-  const canClaim =
-    selectedPoints > 0 &&
-    selectedPoints <= totalPoints &&
-    Number.isFinite(audPayout) &&
-    audPayout > 0;
+  const [openBirthYearAfterPin, setOpenBirthYearAfterPin] = useState(false);
 
   const simulatedParentEmail = useMemo(
     () => resolveSimulatedParentEmail(username),
@@ -755,25 +452,13 @@ export function HomeDashboard() {
     router.push("/onboarding/start");
   }
 
-  function openPinGate(intent: PinIntent) {
-    setPinIntent(intent);
+  function openPinGate(options?: { thenBirthYear?: boolean }) {
+    setOpenBirthYearAfterPin(Boolean(options?.thenBirthYear));
     setPinError(null);
     setPinInput("");
     setPinConfirmInput("");
     setPinModalMode(isParentPinConfigured() ? "verify" : "setup");
     setPinModalOpen(true);
-  }
-
-  function handleParentModeToggle() {
-    if (parentModeEnabled) {
-      setParentModeEnabled(false);
-      return;
-    }
-    openPinGate("parent-mode");
-  }
-
-  function handleBirthYearSettingsClick() {
-    openPinGate("birth-year");
   }
 
   function handlePinConfirm() {
@@ -787,13 +472,12 @@ export function HomeDashboard() {
       setPinModalOpen(false);
       setPinInput("");
       setPinConfirmInput("");
+      setParentHubUnlocked(true);
 
-      if (pinIntent === "birth-year") {
+      if (openBirthYearAfterPin) {
         setBirthYearModalOpen(true);
-        return;
+        setOpenBirthYearAfterPin(false);
       }
-
-      setParentModeEnabled(true);
       return;
     }
 
@@ -805,13 +489,12 @@ export function HomeDashboard() {
     setPinModalOpen(false);
     setPinInput("");
     setPinConfirmInput("");
+    setParentHubUnlocked(true);
 
-    if (pinIntent === "birth-year") {
+    if (openBirthYearAfterPin) {
       setBirthYearModalOpen(true);
-      return;
+      setOpenBirthYearAfterPin(false);
     }
-
-    setParentModeEnabled(true);
   }
 
   function handlePinCancel() {
@@ -819,28 +502,15 @@ export function HomeDashboard() {
     setPinInput("");
     setPinConfirmInput("");
     setPinError(null);
+    setOpenBirthYearAfterPin(false);
   }
 
-  function handleSelectFullBalance() {
-    setClaimError(null);
-    if (totalPoints <= 0) {
-      setPointsInput("");
+  function handleOpenBirthYearFromHub() {
+    if (parentHubUnlocked) {
+      setBirthYearModalOpen(true);
       return;
     }
-    setPointsInput(String(totalPoints));
-  }
-
-  function handleClaimCashReward() {
-    setClaimError(null);
-    const result = claimPointsForVault(selectedPoints);
-    if (!result.success) {
-      setClaimError(result.error);
-      return;
-    }
-
-    setSuccessAudAmount(result.audAmount);
-    setPointsInput("");
-    setSuccessModalOpen(true);
+    openPinGate({ thenBirthYear: true });
   }
 
   return (
@@ -867,11 +537,6 @@ export function HomeDashboard() {
             onClick={() => setChangePinModalOpen(true)}
           />
           <SettingsRow
-            icon={CalendarIcon}
-            label={copy.account.birthYearTrack}
-            onClick={handleBirthYearSettingsClick}
-          />
-          <SettingsRow
             icon={BillingCardIcon}
             label={copy.account.subscriptionStatus}
           />
@@ -882,43 +547,12 @@ export function HomeDashboard() {
           />
         </nav>
 
-        <section
-          aria-labelledby="cash-in-heading"
-          className={cn(floatingPanelClass, "p-4")}
-        >
-          <h2 id="cash-in-heading" className="sr-only">
-            {conversionCopy.cashInHeading}
-          </h2>
-
-          <div className="grid grid-cols-[minmax(0,25%)_minmax(0,75%)] items-start gap-3">
-            <div className="flex items-start border-r border-[#BDE9FB]/60 pr-2">
-              <CompactParentModeSwitch
-                enabled={parentModeEnabled}
-                label={copy.parentMode.shortLabel}
-                onToggle={handleParentModeToggle}
-              />
-            </div>
-
-            <FinancialPanelContent
-              parentModeEnabled={parentModeEnabled}
-              conversionCopy={conversionCopy}
-              parentModeHint={copy.parentMode.enabledHint}
-              conversionRateLabel={conversionRateLabel}
-              audSliderIndex={audSliderIndex}
-              setAudSliderIndex={setAudSliderIndex}
-              totalPoints={totalPoints}
-              pointsInput={pointsInput}
-              setPointsInput={setPointsInput}
-              setClaimError={setClaimError}
-              isFullBalanceSelected={isFullBalanceSelected}
-              onSelectFullBalance={handleSelectFullBalance}
-              childPayoutReadout={childPayoutReadout}
-              claimError={claimError}
-              canClaim={canClaim}
-              onClaimCashReward={handleClaimCashReward}
-            />
-          </div>
-        </section>
+        <ParentHubSection
+          isUnlocked={parentHubUnlocked}
+          onRequestUnlock={() => openPinGate()}
+          onLock={() => setParentHubUnlocked(false)}
+          onOpenBirthYear={handleOpenBirthYearFromHub}
+        />
       </div>
 
       <BirthYearSettingsModal
@@ -944,9 +578,7 @@ export function HomeDashboard() {
         body={
           pinModalMode === "setup"
             ? copy.parentMode.setupBody
-            : pinIntent === "birth-year"
-              ? copy.birthYear.pinBody
-              : copy.parentMode.pinBody
+            : copy.parentMode.pinBody
         }
         placeholder={copy.parentMode.pinPlaceholder}
         newPinLabel={copy.parentMode.setupNewLabel}
@@ -964,14 +596,6 @@ export function HomeDashboard() {
         onConfirmPinChange={setPinConfirmInput}
         onConfirm={handlePinConfirm}
         onCancel={handlePinCancel}
-      />
-
-      <PointsConvertedSuccessModal
-        isOpen={successModalOpen}
-        onClose={() => setSuccessModalOpen(false)}
-        title={conversionCopy.successTitle}
-        body={successBody}
-        acknowledgeLabel={conversionCopy.successAcknowledge}
       />
     </>
   );

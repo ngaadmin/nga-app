@@ -67,3 +67,8 @@ export function balanceMapFromJars(jars: readonly DestinationJar[]): JarBalanceM
 export function roundAudAmount(amount: number): number {
   return Math.round(Math.max(0, amount) * 100) / 100;
 }
+
+/** Snap money amounts to the nearest $0.50 step for allocation sliders. */
+export function roundToHalfStep(amount: number): number {
+  return Math.round(Math.max(0, amount) * 2) / 2;
+}

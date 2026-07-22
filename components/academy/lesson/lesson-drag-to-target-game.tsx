@@ -11,6 +11,7 @@ import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonSortBucketActiveClass,
   lessonSortBucketClass,
+  lessonSortBucketErrorClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 
@@ -30,6 +31,7 @@ type LessonDragToTargetGameProps = {
   coinCount?: number;
   onComplete: () => void;
   onSuccess?: () => void;
+  onMiss?: () => void;
 };
 
 export function LessonDragToTargetGame({
@@ -39,10 +41,12 @@ export function LessonDragToTargetGame({
   coinCount = 5,
   onComplete,
   onSuccess,
+  onMiss,
 }: LessonDragToTargetGameProps) {
   const [deposited, setDeposited] = useState(false);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [isOverTarget, setIsOverTarget] = useState(false);
+  const [missedDrop, setMissedDrop] = useState(false);
 
   const sourceRef = useRef<HTMLDivElement | null>(null);
   const targetRef = useRef<HTMLDivElement | null>(null);
@@ -52,8 +56,10 @@ export function LessonDragToTargetGame({
 
   const onCompleteRef = useRef(onComplete);
   const onSuccessRef = useRef(onSuccess);
+  const onMissRef = useRef(onMiss);
   onCompleteRef.current = onComplete;
   onSuccessRef.current = onSuccess;
+  onMissRef.current = onMiss;
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -136,6 +142,9 @@ export function LessonDragToTargetGame({
       return;
     }
 
+    onMissRef.current?.();
+    setMissedDrop(true);
+    window.setTimeout(() => setMissedDrop(false), 500);
     endDrag();
   };
 
@@ -172,7 +181,8 @@ export function LessonDragToTargetGame({
           ref={sourceRef}
           className={cn(
             lessonSortBucketClass,
-            "flex min-h-[10rem] flex-col items-center justify-center gap-3 p-4 text-center",
+            "flex min-h-[10rem] flex-col items-center justify-center gap-3 p-4 text-center transition-colors",
+            missedDrop && lessonSortBucketErrorClass,
           )}
         >
           <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">

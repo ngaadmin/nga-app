@@ -9,8 +9,7 @@ import {
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
-  playLessonSuccessPing,
-  triggerLessonErrorVibration,
+  celebrateLessonCorrectAnswer,
 } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import { useState } from "react";
@@ -316,14 +315,12 @@ function RankStackScreen({
       setRankSuccessMessage(config.successMessage);
       setRankSubmitted(true);
       flow.markScreenReady(screenIndex);
-      playLessonSuccessPing();
-      onFlashSuccess();
+      celebrateLessonCorrectAnswer(flow.flashScreen);
       return;
     }
 
     flow.incrementMistake();
     onPersistentError(getRankSubmitError(rankOrder));
-    triggerLessonErrorVibration();
   };
 
   return (
@@ -401,8 +398,7 @@ function GiftRevealScreen({
     if (revealed) return;
     setRevealed(true);
     flow.markScreenReady(screenIndex);
-    playLessonSuccessPing();
-    onFlashSuccess();
+    celebrateLessonCorrectAnswer(flow.flashScreen);
   };
 
   return (

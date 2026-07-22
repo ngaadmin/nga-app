@@ -4,6 +4,10 @@ import { useCallback, useMemo, useState } from "react";
 import { M1L2CustomScreen } from "@/components/academy/lesson/m1-l2-custom-screens";
 import { M1_L2_CUSTOM } from "@/lib/academy/lessons/content/m1-l2";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import type { ResolvedLessonContent } from "@/lib/academy/lessons/types";
 import type { ReactNode } from "react";
 
@@ -46,7 +50,7 @@ export function useM1L2LessonExtensions(
   const showPersistentError = useCallback(
     (message: string) => {
       setPersistentError(message);
-      flow.flashScreen("error");
+      signalLessonIncorrectAnswer(flow.flashScreen);
     },
     [flow],
   );
@@ -57,8 +61,7 @@ export function useM1L2LessonExtensions(
   }, [flow]);
 
   const flashSuccess = useCallback(() => {
-    flow.flashScreen("success");
-    window.setTimeout(() => flow.flashScreen("none"), 450);
+    celebrateLessonCorrectAnswer(flow.flashScreen);
   }, [flow]);
 
   const budgetSpent =

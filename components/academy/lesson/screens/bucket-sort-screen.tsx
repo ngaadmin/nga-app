@@ -4,7 +4,10 @@ import { useCallback, useRef, useState } from "react";
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
 import { lessonSuccessMessageClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { BucketSortScreenConfig } from "@/lib/academy/lessons/types";
-import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import type { StandardScreenProps } from "./types";
 
 export function BucketSortScreen({
@@ -31,6 +34,7 @@ export function BucketSortScreen({
 
   const handleMistake = useCallback(() => {
     flowRef.current.incrementMistake();
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
   }, []);
 
   const handleSuccess = useCallback(() => {

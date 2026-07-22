@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { lessonGoldClaimClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { NarrativeBonusScreenConfig } from "@/lib/academy/lessons/types";
-import { playLessonSuccessPing } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -28,7 +30,7 @@ export function NarrativeBonusScreen({
     if (claimed || !hasBonus) return;
     setClaimed(true);
     awardBonusXp?.(screen.bonusXp);
-    playLessonSuccessPing();
+    celebrateLessonCorrectAnswer(flow.flashScreen);
     flow.markScreenReady(screenIndex);
   };
 

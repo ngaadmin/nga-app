@@ -58,12 +58,6 @@ type PendingSideEffect<TBucket extends string> =
   | { kind: "wrong"; itemId: string; bucketId: TBucket }
   | { kind: "correct"; willComplete: boolean };
 
-function triggerErrorVibration(): void {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-    navigator.vibrate(120);
-  }
-}
-
 function formatDollars(amount: number): string {
   return `$${amount}`;
 }
@@ -233,7 +227,6 @@ export function LessonBucketSortGame<TBucket extends string>({
       if (isStepsRowLayout && occupiedStep.length > 0) {
         setErrorBucketId(bucketId);
         window.setTimeout(() => setErrorBucketId(null), 500);
-        triggerErrorVibration();
         queueSideEffect({ kind: "wrong", itemId, bucketId });
         return;
       }
@@ -241,7 +234,6 @@ export function LessonBucketSortGame<TBucket extends string>({
       if (item.bucket !== bucketId) {
         setErrorBucketId(bucketId);
         window.setTimeout(() => setErrorBucketId(null), 500);
-        triggerErrorVibration();
         queueSideEffect({ kind: "wrong", itemId, bucketId });
         return;
       }

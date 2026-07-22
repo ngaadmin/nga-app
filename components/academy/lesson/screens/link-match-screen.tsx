@@ -4,7 +4,10 @@ import { useCallback, useRef, useState } from "react";
 import { LessonLinkMatchGame } from "@/components/academy/lesson/lesson-link-match-game";
 import { lessonSuccessMessageClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LinkMatchScreenConfig } from "@/lib/academy/lessons/types";
-import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import type { StandardScreenProps } from "./types";
 
 export function LinkMatchScreen({
@@ -27,6 +30,10 @@ export function LinkMatchScreen({
     celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
   }, []);
 
+  const handleMismatch = useCallback(() => {
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+  }, []);
+
   return (
     <>
       <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
@@ -36,6 +43,7 @@ export function LinkMatchScreen({
         benefitColumnLabel={screen.benefitColumnLabel}
         onComplete={handleComplete}
         onSuccess={handleSuccess}
+        onMismatch={handleMismatch}
       />
       {completeMessage ? (
         <p className={lessonSuccessMessageClass}>{completeMessage}</p>

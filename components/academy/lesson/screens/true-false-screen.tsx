@@ -4,6 +4,10 @@ import { useState } from "react";
 import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import type { TrueFalseScreenConfig } from "@/lib/academy/lessons/types";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -20,11 +24,16 @@ export function TrueFalseScreen({
   const pick = (option: "true" | "false") => {
     setChoice(option);
     if (option === screen.correctAnswer) {
+      celebrateLessonCorrectAnswer(flow.flashScreen);
       flow.markScreenReady(screenIndex);
       return;
     }
     flow.incrementMistake();
-    onPersistentError?.(screen.wrongError);
+    if (onPersistentError) {
+      onPersistentError(screen.wrongError);
+    } else {
+      signalLessonIncorrectAnswer(flow.flashScreen);
+    }
   };
 
   return (

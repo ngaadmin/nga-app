@@ -31,3 +31,23 @@ export function triggerLessonErrorVibration(): void {
     navigator.vibrate(120);
   }
 }
+
+type LessonIncorrectFeedbackOptions = {
+  /** Screen-wide red flash (default true). */
+  flash?: boolean;
+  /** Haptic buzz (default true). */
+  vibrate?: boolean;
+};
+
+/** Shared vibration + screen flash when a learner picks a wrong answer. */
+export function signalLessonIncorrectAnswer(
+  flashScreen?: (tone: LessonFlashTone) => void,
+  options?: LessonIncorrectFeedbackOptions,
+): void {
+  if (options?.vibrate !== false) {
+    triggerLessonErrorVibration();
+  }
+  if (options?.flash !== false) {
+    flashScreen?.("error");
+  }
+}

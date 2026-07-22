@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -35,6 +39,7 @@ export function HoldToFillScreen({
       if (nextProgress >= 1) {
         setComplete(true);
         setIsHolding(false);
+        celebrateLessonCorrectAnswer(flow.flashScreen);
         flow.markScreenReady(screenIndex);
         holdStartRef.current = null;
         return;
@@ -56,6 +61,7 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
+      signalLessonIncorrectAnswer(flow.flashScreen);
       setHint(
         screen.releaseHint ??
           "(Must hold down fully for 2 seconds to activate)",

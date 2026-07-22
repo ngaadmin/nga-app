@@ -13,7 +13,6 @@ import {
   lessonSortChipClass,
   lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { triggerLessonErrorVibration } from "@/lib/academy/lessons/utils";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { cn } from "@/lib/utils/cn";
 
@@ -162,7 +161,6 @@ export function LessonWordDropGame({
 
       setError(wrongError);
       onMistakeRef.current();
-      triggerLessonErrorVibration();
     },
     [blanks, wrongError],
   );
@@ -314,6 +312,10 @@ export function LessonWordDropGame({
         : "border-[#0CC1E0]/70 bg-white",
       hoverBlankIndex === index &&
         "border-[#0CC1E0] bg-[#BDE9FB]/45 ring-2 ring-[#0CC1E0]/35",
+      error &&
+        choices[index] &&
+        choices[index] !== blanks[index]?.correctOption &&
+        lessonChoiceStateClass(true, "wrong"),
       isComplete &&
         choices[index] === blanks[index]?.correctOption &&
         lessonChoiceStateClass(true, "correct"),
@@ -412,7 +414,7 @@ export function LessonWordDropGame({
 
       {error ? (
         <p
-          className="rounded-xl bg-[#FFF7ED] px-3 py-2 font-sans text-xs text-[#031F82]"
+          className="rounded-xl border-2 border-[#E11D48] bg-[#FEE2E2]/50 px-3 py-2 font-sans text-xs text-[#031F82]"
           role="alert"
         >
           {error}

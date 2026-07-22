@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { lessonSuccessMessageClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { BinaryChoiceScreenConfig } from "@/lib/academy/lessons/types";
-import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -117,9 +120,9 @@ export function BinaryChoiceScreen({
     setSuccess(null);
     setError(selected?.feedback ?? screen.wrongError);
     flow.incrementMistake();
-    if (screen.errorStyle !== "banner") {
-      flow.flashScreen("error");
-    }
+    signalLessonIncorrectAnswer(flow.flashScreen, {
+      flash: screen.errorStyle !== "banner",
+    });
   };
 
   const pickMulti = (which: ChoiceKey) => {
@@ -177,9 +180,9 @@ export function BinaryChoiceScreen({
           "Not quite! That button is trying to do the thinking for you. Don't let it!",
       );
       flow.incrementMistake();
-      if (screen.errorStyle !== "banner") {
-        flow.flashScreen("error");
-      }
+      signalLessonIncorrectAnswer(flow.flashScreen, {
+        flash: screen.errorStyle !== "banner",
+      });
       scheduleDudFeedbackReset(which);
       return;
     }
@@ -189,9 +192,9 @@ export function BinaryChoiceScreen({
     flow.clearScreenReady(screenIndex);
     setError(selected.feedback ?? screen.wrongError);
     flow.incrementMistake();
-    if (screen.errorStyle !== "banner") {
-      flow.flashScreen("error");
-    }
+    signalLessonIncorrectAnswer(flow.flashScreen, {
+      flash: screen.errorStyle !== "banner",
+    });
   };
 
   const pick = isMultiCorrect ? pickMulti : pickSingle;

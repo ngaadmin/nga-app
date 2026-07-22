@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import type { TapRevealScreenConfig } from "@/lib/academy/lessons/types";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -40,11 +44,23 @@ export function TapRevealScreen({
   }
 
   const handleTap = (itemId: string) => {
+    const item = screen.items.find((entry) => entry.id === itemId);
+    if (!item || tapped.has(itemId)) return;
+
+    const bucketTone = screen.buckets.find((bucket) => bucket.id === item.bucket)?.tone;
+    const isShortTermSpend = bucketTone === "short" || bucketTone === "want";
+
     setTapped((current) => {
       const next = new Set(current);
       next.add(itemId);
       return next;
     });
+
+    if (isShortTermSpend) {
+      signalLessonIncorrectAnswer(flow.flashScreen);
+    } else {
+      celebrateLessonCorrectAnswer(flow.flashScreen);
+    }
   };
 
   const renderTapChip = (item: TapRevealScreenConfig["items"][number]) => {

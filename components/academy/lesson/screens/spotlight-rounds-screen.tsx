@@ -4,7 +4,10 @@ import { useState } from "react";
 import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
-import { playLessonSuccessPing } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -29,11 +32,14 @@ export function SpotlightRoundsScreen({
     onDismissError?.();
     if (which !== round.correct) {
       flow.incrementMistake();
-      onPersistentError?.(round.error);
+      if (onPersistentError) {
+        onPersistentError(round.error);
+      } else {
+        signalLessonIncorrectAnswer(flow.flashScreen);
+      }
       return;
     }
-    playLessonSuccessPing();
-    flow.flashScreen("success");
+    celebrateLessonCorrectAnswer(flow.flashScreen);
     if (roundIndex + 1 >= screen.rounds.length) {
       setAllDone(true);
       flow.markScreenReady(screenIndex);

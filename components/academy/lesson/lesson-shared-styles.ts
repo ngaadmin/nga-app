@@ -55,6 +55,9 @@ export const lessonSortBucketClass =
 export const lessonSortBucketActiveClass =
   "border-[#0CC1E0] bg-[#BDE9FB]/35 ring-2 ring-[#0CC1E0]/40";
 
+export const lessonSortBucketSuccessClass =
+  "border-[#16A34A] bg-[#DCFCE7]/40 ring-2 ring-[#22C55E]/35";
+
 export const lessonSortBucketErrorClass =
   "border-[#E11D48] bg-[#FEE2E2]/40 ring-2 ring-[#E11D48]/35";
 

@@ -5,7 +5,10 @@ import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shel
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { LessonWordDropGame } from "@/components/academy/lesson/lesson-word-drop-game";
 import type { WordDropScreenConfig } from "@/lib/academy/lessons/types";
-import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { CoreScreenProps } from "./types";
 
@@ -27,6 +30,7 @@ function SingleBlankWordDropScreen({
     }
     setError(screen.wrongError);
     flow.incrementMistake();
+    signalLessonIncorrectAnswer(flow.flashScreen);
   };
 
   return (
@@ -89,6 +93,7 @@ export function WordDropScreen({
 
   const handleMistake = useCallback(() => {
     flowRef.current.incrementMistake();
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
   }, []);
 
   if (screen.prompt && screen.blanks?.length) {

@@ -29,6 +29,7 @@ type LessonLinkMatchGameProps = {
   benefitColumnLabel?: string;
   onComplete: () => void;
   onSuccess?: () => void;
+  onMismatch?: () => void;
 };
 
 const MATCH_PULSE_MS = 750;
@@ -101,6 +102,7 @@ export function LessonLinkMatchGame({
   benefitColumnLabel = "The Win",
   onComplete,
   onSuccess,
+  onMismatch,
 }: LessonLinkMatchGameProps) {
   const pairIds = useMemo(() => pairs.map((pair) => pair.id), [pairs]);
   const pairById = useMemo(
@@ -138,8 +140,10 @@ export function LessonLinkMatchGame({
 
   const onCompleteRef = useRef(onComplete);
   const onSuccessRef = useRef(onSuccess);
+  const onMismatchRef = useRef(onMismatch);
   onCompleteRef.current = onComplete;
   onSuccessRef.current = onSuccess;
+  onMismatchRef.current = onMismatch;
 
   const pulseRow = useCallback((rowIndex: number) => {
     const existing = pulseTimeoutsRef.current[rowIndex];
@@ -283,7 +287,18 @@ export function LessonLinkMatchGame({
 
   const handleBoardPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
+
+    const hadDrag = dragBenefitId !== null;
+    const matchCountBefore = prevMatchedRowsRef.current.size;
     endDrag();
+
+    if (
+      hadDrag &&
+      prevMatchedRowsRef.current.size < eventOrder.length &&
+      prevMatchedRowsRef.current.size <= matchCountBefore
+    ) {
+      onMismatchRef.current?.();
+    }
   };
 
   const handleKeyboardMove = (fromIndex: number, toIndex: number) => {
@@ -296,7 +311,14 @@ export function LessonLinkMatchGame({
     }
     moveBenefit(fromIndex, toIndex);
     window.requestAnimationFrame(() => {
+      const matchCountBefore = prevMatchedRowsRef.current.size;
       evaluateMatches(benefitOrderRef.current);
+      if (
+        prevMatchedRowsRef.current.size < eventOrder.length &&
+        prevMatchedRowsRef.current.size <= matchCountBefore
+      ) {
+        onMismatchRef.current?.();
+      }
     });
   };
 

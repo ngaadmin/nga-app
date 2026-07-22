@@ -4,7 +4,10 @@ import { useCallback, useRef, useState } from "react";
 import { LessonDragToTargetGame } from "@/components/academy/lesson/lesson-drag-to-target-game";
 import { lessonSuccessMessageClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { DragToTargetScreenConfig } from "@/lib/academy/lessons/types";
-import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
+import {
+  celebrateLessonCorrectAnswer,
+  signalLessonIncorrectAnswer,
+} from "@/lib/academy/lessons/utils";
 import type { StandardScreenProps } from "./types";
 
 export function DragToTargetScreen({
@@ -27,6 +30,10 @@ export function DragToTargetScreen({
     celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
   }, []);
 
+  const handleMiss = useCallback(() => {
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+  }, []);
+
   return (
     <>
       <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
@@ -37,6 +44,7 @@ export function DragToTargetScreen({
         coinCount={screen.coinCount}
         onComplete={handleComplete}
         onSuccess={handleSuccess}
+        onMiss={handleMiss}
       />
       {completeMessage ? (
         <p className={lessonSuccessMessageClass}>{completeMessage}</p>

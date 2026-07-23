@@ -6,26 +6,34 @@ import {
   useMemo,
   useState,
   type FormEvent,
+  type ReactNode,
 } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
   JarFillVisual,
+  BucketPieChart,
+  BucketPieLegend,
   bucketTheme,
   jarFillPercent,
 } from "@/components/dashboard/vault/vault-visuals";
+import {
+  FuturePotentialCalculator,
+  FuturePotentialCompactButton,
+} from "@/components/dashboard/vault/vault-future-potential";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
+import { roundAudAmount, roundToHalfStep, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   canAddVaultBucket,
   canMarkBucketAsSpent,
   canRenameFoundationBucket,
   maxVaultBuckets,
   sumAllocations,
-  isSavingsBucket,
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
+import { SaveJarExpandedPanel } from "@/components/dashboard/vault/vault-save-jar-panel";
+import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -120,7 +128,6 @@ function BucketInlinePanel({
   const [amountInput, setAmountInput] = useState("");
   const [destination, setDestination] = useState<MoveTarget>("pool");
   const showSpent = canMarkBucketAsSpent(bucket);
-  const isSave = isSavingsBucket(bucket);
 
   const destinations = [
     { id: "pool" as const, label: copy.movePoolOption },
@@ -144,17 +151,15 @@ function BucketInlinePanel({
   }
 
   return (
-    <div className={cn("mt-2 rounded-xl border px-3 py-3", theme.track)}>
+    <div className="mt-3 rounded-xl border-2 bg-white p-4" style={{ borderColor: theme.accent }}>
       <div className="flex items-center justify-between gap-2">
-        <p className={cn("font-heading text-xs font-bold", theme.label)}>
-          {bucket.emoji} {bucket.name} · {formatMoney(bucket.balance)}
+        <p className={cn("font-heading text-base font-extrabold", theme.label)}>
+          {bucket.emoji} {bucket.name}
         </p>
-        <button type="button" onClick={onClose} className="font-heading text-[10px] font-bold text-[#1E3A5F]/60">Close</button>
+        <button type="button" onClick={onClose} className="font-heading text-sm font-bold text-[#1E3A5F]/60">Close</button>
       </div>
-      {isSave ? (
-        <p className="mt-1 font-sans text-[10px] text-[#1E3A5F]/75">Move only — assign to goals in the section below.</p>
-      ) : null}
-      <div className="mt-2 flex gap-2">
+      <p className={cn("font-heading text-2xl font-extrabold", theme.label)}>{formatMoney(bucket.balance)}</p>
+      <div className="mt-4 flex min-w-0 gap-2">
         <input
           type="number"
           min={0}
@@ -162,12 +167,12 @@ function BucketInlinePanel({
           value={amountInput}
           onChange={(e) => setAmountInput(e.target.value)}
           placeholder="Amount"
-          className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
+          className="min-w-0 flex-1 rounded-xl border border-[#BDE9FB] px-3 py-2.5 text-base outline-none focus:border-[#0CC1E0]"
         />
         <select
           value={destination}
           onChange={(e) => setDestination(e.target.value as MoveTarget)}
-          className="max-w-[45%] rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-xs outline-none"
+          className="max-w-[45%] rounded-xl border border-[#BDE9FB] bg-white px-2 py-2.5 text-sm outline-none"
         >
           {destinations.map((d) => (
             <option key={d.id} value={d.id}>{d.label}</option>
@@ -193,10 +198,24 @@ type VaultBudgetHubProps = {
   totalBalance: number;
   moneyToAllocate: number;
   buckets: VaultBucket[];
+  totalSavings: number;
+  futureSavingsPotential: number;
+  futureSubtext: string;
+  calculatorOpen: boolean;
+  onToggleCalculator: () => void;
+  calculatorPanel: ReactNode;
+  goals: SavingsGoal[];
+  onRenameGoal: (goalId: SavingsGoalId, name: string) => void;
   onDeposit: (amount: number) => void;
   onLockIn: (allocations: Record<string, number>) => void;
   onMove: (fromId: VaultBucketId, destination: MoveTarget, amount: number) => void;
   onMarkSpent: (bucketId: VaultBucketId, amount: number) => void;
+  onSpendFromSaveJar: (amount: number) => void;
+  onAddGoal: (name: string, targetAmount: number) => void;
+  onAllocateToGoal: (goalId: SavingsGoalId, amount: number) => void;
+  onAssignGoals: (allocations: Record<string, number>) => void;
+  onSpendFromGoal: (goalId: SavingsGoalId, amount: number) => void;
+  onMoveFromGoal: (goalId: SavingsGoalId, amount: number, destination: VaultBucketId) => void;
   onRenameBucket: (bucketId: VaultBucketId, name: string) => void;
   onAddCustomBucket: () => void;
 };
@@ -206,10 +225,24 @@ export function VaultBudgetHub({
   totalBalance,
   moneyToAllocate,
   buckets,
+  totalSavings,
+  futureSavingsPotential,
+  futureSubtext,
+  calculatorOpen,
+  onToggleCalculator,
+  calculatorPanel,
+  goals,
+  onRenameGoal,
   onDeposit,
   onLockIn,
   onMove,
   onMarkSpent,
+  onSpendFromSaveJar,
+  onAddGoal,
+  onAllocateToGoal,
+  onAssignGoals,
+  onSpendFromGoal,
+  onMoveFromGoal,
   onRenameBucket,
   onAddCustomBucket,
 }: VaultBudgetHubProps) {
@@ -221,7 +254,6 @@ export function VaultBudgetHub({
   const [depositInput, setDepositInput] = useState("");
   const [allocationDrafts, setAllocationDrafts] = useState<Record<string, number>>({});
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
-  const [balanceExpanded, setBalanceExpanded] = useState(false);
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [renameBucketId, setRenameBucketId] = useState<VaultBucketId | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -291,57 +323,42 @@ export function VaultBudgetHub({
 
   return (
     <>
-      <div className="w-full space-y-5">
-        <div>
-          <button
-            type="button"
-            onClick={() => setBalanceExpanded((o) => !o)}
-            aria-expanded={balanceExpanded}
-            className="flex w-full items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-[#031F82] to-[#0CC1E0]/75 px-4 py-3 text-left text-white shadow-sm"
-          >
-            <div>
-              <p className="font-heading text-[9px] font-bold uppercase tracking-wider text-white/70">
-                {copy.totalBalanceLabel}
-              </p>
-              <p className="font-heading text-2xl font-extrabold leading-tight">{formatMoney(totalBalance)}</p>
-              <p className="font-sans text-[10px] text-white/70">{copy.totalBalanceHint}</p>
+      <div className="w-full min-w-0 space-y-6 overflow-x-hidden">
+        <div className="flex min-w-0 gap-2">
+          <div className="min-w-0 flex-[2] rounded-xl bg-[#031F82] px-4 py-4 text-white shadow-sm">
+            <div className="flex items-start gap-3">
+              <BucketPieChart buckets={buckets} poolAmount={poolTotal} size={48} />
+              <div className="min-w-0 flex-1">
+                <p className="font-heading text-xs font-bold uppercase tracking-wide text-white/70">
+                  {copy.totalBalanceLabel}
+                </p>
+                <p className="font-heading text-2xl font-extrabold leading-tight">{formatMoney(totalBalance)}</p>
+                {poolTotal > 0 ? (
+                  <span className="mt-2 inline-block rounded-full bg-[#FFA503] px-2.5 py-0.5 font-heading text-xs font-bold text-[#031F82]">
+                    +{formatMoney(poolTotal)} to allocate
+                  </span>
+                ) : null}
+              </div>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              {poolTotal > 0 ? (
-                <span className="rounded-full bg-[#FFA503] px-2 py-0.5 font-heading text-[9px] font-bold text-[#031F82]">
-                  +{formatMoney(poolTotal)}
-                </span>
-              ) : null}
-              <span className="text-white/60">{balanceExpanded ? "▲" : "▼"}</span>
-            </div>
-          </button>
-          {balanceExpanded ? (
-            <ul className="mt-1 space-y-1 rounded-b-xl border border-t-0 border-[#BDE9FB]/50 bg-[#F7FBFF]/60 px-3 py-2">
-              {buckets.map((bucket) => {
-                const theme = bucketTheme(bucket);
-                return (
-                  <li key={bucket.id} className="flex items-center justify-between gap-2 text-[11px]">
-                    <span className={cn("font-heading font-bold", theme.label)}>{bucket.emoji} {bucket.name}</span>
-                    <span className="font-heading font-extrabold text-[#031F82]">{formatMoney(bucket.balance)}</span>
-                  </li>
-                );
-              })}
-              {poolTotal > 0 ? (
-                <li className="flex items-center justify-between gap-2 border-t border-[#BDE9FB]/40 pt-1 text-[11px]">
-                  <span className="font-heading font-bold text-[#FFA503]">{copy.poolLabel}</span>
-                  <span className="font-heading font-extrabold text-[#FFA503]">{formatMoney(poolTotal)}</span>
-                </li>
-              ) : null}
-            </ul>
-          ) : null}
+            <BucketPieLegend buckets={buckets} poolAmount={poolTotal} />
+          </div>
+          <FuturePotentialCompactButton
+            className="min-w-0 flex-1"
+            totalSavings={totalSavings}
+            futureSavingsPotential={futureSavingsPotential}
+            futureSubtext={futureSubtext}
+            isOpen={calculatorOpen}
+            onToggle={onToggleCalculator}
+          />
         </div>
+        <FuturePotentialCalculator isOpen={calculatorOpen} calculatorPanel={calculatorPanel} />
 
         <section aria-label="Deposit income">
           <form onSubmit={handleDepositSubmit} className="space-y-3">
-            <h2 className="font-heading text-sm font-extrabold text-[#031F82]">{copy.depositHeading}</h2>
-            <div className="flex gap-2">
-              <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#BDE9FB] bg-[#F7FBFF]/50 px-3 py-2.5">
-                <span className="font-heading text-sm font-bold text-[#031F82]">{currencySymbol}</span>
+            <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.depositHeading}</h2>
+            <div className="flex min-w-0 gap-2">
+              <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#BDE9FB] bg-white px-3 py-3">
+                <span className="font-heading text-base font-bold text-[#031F82]">{currencySymbol}</span>
                 <input
                   type="number"
                   min={0}
@@ -350,24 +367,24 @@ export function VaultBudgetHub({
                   value={depositInput}
                   onChange={(e) => setDepositInput(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-transparent font-sans text-sm text-[#031F82] outline-none"
+                  className="w-full min-w-0 bg-transparent font-sans text-base text-[#031F82] outline-none"
                 />
               </label>
-              <button type="submit" className={cn("shrink-0 px-5 py-2.5", orangeCtaClass)}>Add</button>
+              <button type="submit" className={cn("shrink-0 px-5 py-3", orangeCtaClass)}>Add</button>
             </div>
           </form>
         </section>
 
         {showAllocation ? (
-          <section aria-label={copy.sectionTitle} className="space-y-3 border-t border-[#BDE9FB]/40 pt-4">
+          <section aria-label={copy.sectionTitle} className="space-y-4 border-t border-[#BDE9FB]/40 pt-5">
             <div className="flex items-end justify-between gap-3">
-              <h2 className="font-heading text-sm font-extrabold text-[#031F82]">{copy.sectionTitle}</h2>
+              <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.sectionTitle}</h2>
               {isFullyAllocated ? (
-                <span className="rounded-full bg-[#22C55E]/15 px-2 py-0.5 font-heading text-[10px] font-bold text-[#15803D]">
+                <span className="rounded-full bg-[#22C55E]/15 px-2.5 py-0.5 font-heading text-xs font-bold text-[#15803D]">
                   {copy.fullyAllocatedLabel}
                 </span>
               ) : (
-                <p className="font-heading text-xs font-extrabold text-[#FFA503]">
+                <p className="font-heading text-sm font-extrabold text-[#FFA503]">
                   {copy.remainingLabel}: {formatMoney(remainingTotal)}
                 </p>
               )}
@@ -390,8 +407,8 @@ export function VaultBudgetHub({
         ) : null}
 
         {showBucketsOverview ? (
-          <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-4">
-            <h2 className="font-heading text-sm font-extrabold text-[#031F82]">{copy.bucketsOverviewTitle}</h2>
+          <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-5">
+            <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.bucketsOverviewTitle}</h2>
             <div className={cn("mt-3 grid gap-2", buckets.length <= 3 ? "grid-cols-3" : "grid-cols-3 sm:grid-cols-4")}>
               {buckets.map((bucket) => {
                 const theme = bucketTheme(bucket);
@@ -403,26 +420,45 @@ export function VaultBudgetHub({
                     onClick={() => toggleBucket(bucket.id)}
                     aria-expanded={isActive}
                     className={cn(
-                      "flex flex-col items-center rounded-xl px-1 py-2 transition-colors",
-                      isActive ? theme.track : "hover:bg-[#F7FBFF]",
+                      "flex flex-col items-center rounded-xl border-2 px-1 py-2 transition-colors",
+                      isActive ? "bg-transparent" : "border-transparent hover:bg-[#F7FBFF]",
                     )}
+                    style={isActive ? { borderColor: theme.accent } : undefined}
                   >
                     <JarFillVisual size="sm" emoji={bucket.emoji} theme={theme} fillPercent={jarFillPercent(bucket.balance, maxJarBalance)} />
-                    <p className={cn("mt-1 font-heading text-[9px] font-bold leading-tight", theme.label)}>{bucket.name}</p>
-                    <p className="font-heading text-[11px] font-extrabold text-[#031F82]">{formatMoney(bucket.balance)}</p>
+                    <p className={cn("mt-1 font-heading text-xs font-bold leading-tight", theme.label)}>{bucket.name}</p>
+                    <p className="font-heading text-sm font-extrabold text-[#031F82]">{formatMoney(bucket.balance)}</p>
                   </button>
                 );
               })}
             </div>
 
             {expandedBucket ? (
-              <BucketInlinePanel
-                bucket={expandedBucket}
-                buckets={buckets}
-                onMove={(amount, dest) => onMove(expandedBucket.id, dest, amount)}
-                onMarkSpent={(amount) => onMarkSpent(expandedBucket.id, amount)}
-                onClose={() => setExpandedBucketId(null)}
-              />
+              expandedBucket.id === SAVINGS_JAR_ID ? (
+                <SaveJarExpandedPanel
+                  bucket={expandedBucket}
+                  buckets={buckets}
+                  isPremium={isPremium}
+                  goals={goals}
+                  onMove={(amount, dest) => onMove(expandedBucket.id, dest, amount)}
+                  onMarkSpent={onSpendFromSaveJar}
+                  onAddGoal={onAddGoal}
+                  onRenameGoal={onRenameGoal}
+                  onAllocateToGoal={onAllocateToGoal}
+                  onAssignGoals={onAssignGoals}
+                  onSpendFromGoal={onSpendFromGoal}
+                  onMoveFromGoal={onMoveFromGoal}
+                  onClose={() => setExpandedBucketId(null)}
+                />
+              ) : (
+                <BucketInlinePanel
+                  bucket={expandedBucket}
+                  buckets={buckets}
+                  onMove={(amount, dest) => onMove(expandedBucket.id, dest, amount)}
+                  onMarkSpent={(amount) => onMarkSpent(expandedBucket.id, amount)}
+                  onClose={() => setExpandedBucketId(null)}
+                />
+              )
             ) : null}
 
             <div className="mt-2 flex flex-wrap items-center gap-3">

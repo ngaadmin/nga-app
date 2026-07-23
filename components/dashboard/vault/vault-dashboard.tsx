@@ -15,7 +15,6 @@ import {
   VaultBudgetHub,
   type MoveTarget,
 } from "@/components/dashboard/vault/vault-budget-hub";
-import { VaultSavingsSection } from "@/components/dashboard/vault/vault-savings-section";
 import { VaultCollapsible } from "@/components/dashboard/vault/vault-visuals";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
@@ -43,9 +42,9 @@ import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import {
-  buildFreemiumDefaultGoal,
   defaultSavingsGoal,
-  freemiumDefaultGoalTarget,
+  ensureFreemiumStarterGoals,
+  resolveVaultSavingsGoals,
   sumSavingsGoalBalances,
   type SavingsGoalId,
 } from "@/lib/dashboard/savings-goals";
@@ -497,16 +496,31 @@ export function VaultDashboard() {
   const futureSubtext =
     totalSavings > 0
       ? `${expectedRoi}% ROI · ${yearsSaved} yrs`
-      : "Start saving to unlock your forecast";
+      : "Save first to unlock your forecast";
 
-  const freemiumDefaultGoal = useMemo(
-    () =>
-      buildFreemiumDefaultGoal(
-        totalSavings,
-        freemiumDefaultGoalTarget(masteryCohort),
-      ),
-    [masteryCohort, totalSavings],
+  const vaultGoals = useMemo(
+    () => resolveVaultSavingsGoals(savingsGoals, masteryCohort, isPremium),
+    [isPremium, masteryCohort, savingsGoals],
   );
+
+  useEffect(() => {
+    if (isPremium) return;
+    setSavingsGoals((current) => {
+      const ensured = ensureFreemiumStarterGoals(current, masteryCohort);
+      const isSynced =
+        ensured.length === current.length &&
+        ensured.every((goal) => {
+          const match = current.find((entry) => entry.id === goal.id);
+          return (
+            match &&
+            match.balance === goal.balance &&
+            match.targetAmount === goal.targetAmount &&
+            match.name === goal.name
+          );
+        });
+      return isSynced ? current : ensured;
+    });
+  }, [isPremium, masteryCohort, setSavingsGoals]);
 
   const triggerCoinBurst = useCallback(
     (direction: CoinFlight["direction"], jarIndex: number) => {
@@ -711,6 +725,18 @@ export function VaultDashboard() {
     [appendLedger, setSavingsGoals],
   );
 
+  const handleRenameGoal = useCallback(
+    (goalId: SavingsGoalId, name: string) => {
+      setSavingsGoals((current) =>
+        current.map((goal) =>
+          goal.id === goalId ? { ...goal, name: name.trim() } : goal,
+        ),
+      );
+      appendLedger(`Renamed savings goal to ${name.trim()}`);
+    },
+    [appendLedger, setSavingsGoals],
+  );
+
   const handleAllocateToGoal = useCallback(
     (goalId: SavingsGoalId, amount: number) => {
       if (amount <= 0 || amount > saveJarBalance) return;
@@ -765,28 +791,6 @@ export function VaultDashboard() {
     ],
   );
 
-  const handleWithdrawSaveJarToPool = useCallback(
-    (amount: number) => {
-      if (amount <= 0 || amount > saveJarBalance) return;
-
-      adjustBucketBalance(SAVINGS_JAR_ID, -amount, setJars, setCustomBuckets);
-      setMoneyToAllocate((current) => roundAudAmount(current + amount));
-      appendLedger(
-        vaultCopy.savings.returnedSaveToPoolTemplate.replace("{amount}", formatMoney(amount)),
-        { amount, flow: "in" },
-      );
-    },
-    [
-      appendLedger,
-      formatMoney,
-      saveJarBalance,
-      setCustomBuckets,
-      setJars,
-      setMoneyToAllocate,
-      vaultCopy.savings.returnedSaveToPoolTemplate,
-    ],
-  );
-
   const handleSpendFromGoal = useCallback(
     (goalId: SavingsGoalId, amount: number) => {
       if (amount <= 0) return;
@@ -817,8 +821,46 @@ export function VaultDashboard() {
     ],
   );
 
-  const handleReturnGoalToSaveJar = useCallback(
-    (goalId: SavingsGoalId, amount: number) => {
+  const handleAssignGoals = useCallback(
+    (allocations: Record<string, number>) => {
+      const total = sumAllocations(allocations);
+      if (total <= 0 || total > saveJarBalance + 0.001) return;
+
+      adjustBucketBalance(SAVINGS_JAR_ID, -total, setJars, setCustomBuckets);
+      setSavingsGoals((current) =>
+        current.map((entry) => {
+          const amount = allocations[entry.id] ?? 0;
+          if (amount <= 0) return entry;
+          return { ...entry, balance: roundAudAmount(entry.balance + amount) };
+        }),
+      );
+
+      for (const [goalId, amount] of Object.entries(allocations)) {
+        if (amount <= 0) continue;
+        const goal = savingsGoals.find((entry) => entry.id === goalId);
+        if (!goal) continue;
+        appendLedger(
+          vaultCopy.savings.allocatedToGoalTemplate
+            .replace("{amount}", formatMoney(amount))
+            .replace("{goal}", goal.name),
+          { amount },
+        );
+      }
+    },
+    [
+      appendLedger,
+      formatMoney,
+      saveJarBalance,
+      savingsGoals,
+      setCustomBuckets,
+      setJars,
+      setSavingsGoals,
+      vaultCopy.savings.allocatedToGoalTemplate,
+    ],
+  );
+
+  const handleMoveFromGoal = useCallback(
+    (goalId: SavingsGoalId, amount: number, destination: VaultBucketId) => {
       if (amount <= 0) return;
 
       const goal = savingsGoals.find((entry) => entry.id === goalId);
@@ -831,13 +873,21 @@ export function VaultDashboard() {
             : entry,
         ),
       );
-      adjustBucketBalance(SAVINGS_JAR_ID, amount, setJars, setCustomBuckets);
-      appendLedger(
-        vaultCopy.savings.returnedGoalToSaveTemplate
-          .replace("{amount}", formatMoney(amount))
-          .replace("{goal}", goal.name),
-        { amount },
-      );
+
+      adjustBucketBalance(destination, amount, setJars, setCustomBuckets);
+
+      if (destination === SAVINGS_JAR_ID) {
+        appendLedger(
+          vaultCopy.savings.returnedGoalToSaveTemplate
+            .replace("{amount}", formatMoney(amount))
+            .replace("{goal}", goal.name),
+          { amount },
+        );
+        return;
+      }
+
+      const destName = vaultBuckets.find((bucket) => bucket.id === destination)?.name ?? "Jar";
+      appendLedger(`Moved ${formatMoney(amount)} from ${goal.name} to ${destName}`, { amount });
     },
     [
       appendLedger,
@@ -847,6 +897,7 @@ export function VaultDashboard() {
       setJars,
       setSavingsGoals,
       vaultCopy.savings.returnedGoalToSaveTemplate,
+      vaultBuckets,
     ],
   );
 
@@ -859,22 +910,9 @@ export function VaultDashboard() {
         totalBalance={totalBucketBalance}
         moneyToAllocate={moneyToAllocate}
         buckets={vaultBuckets}
-        onDeposit={handleDeposit}
-        onLockIn={handleLockIn}
-        onMove={handleMove}
-        onMarkSpent={handleMarkSpent}
-        onRenameBucket={handleRenameBucket}
-        onAddCustomBucket={handleAddCustomBucket}
-      />
-
-      <VaultSavingsSection
-        isPremium={isPremium}
         totalSavings={totalSavings}
-        saveJarBalance={saveJarBalance}
         futureSavingsPotential={futureSavingsPotential}
         futureSubtext={futureSubtext}
-        defaultGoal={freemiumDefaultGoal}
-        goals={savingsGoals}
         calculatorOpen={calculatorOpen}
         onToggleCalculator={() => setCalculatorOpen((open) => !open)}
         calculatorPanel={
@@ -893,13 +931,20 @@ export function VaultDashboard() {
             onExpectedRoiChange={setExpectedRoi}
           />
         }
+        goals={vaultGoals}
+        onRenameGoal={handleRenameGoal}
+        onDeposit={handleDeposit}
+        onLockIn={handleLockIn}
+        onMove={handleMove}
+        onMarkSpent={handleMarkSpent}
+        onSpendFromSaveJar={handleSpendFromSaveJar}
         onAddGoal={handleAddGoal}
         onAllocateToGoal={handleAllocateToGoal}
-        onSpendFromSaveJar={handleSpendFromSaveJar}
-        onWithdrawSaveJarToPool={handleWithdrawSaveJarToPool}
+        onAssignGoals={handleAssignGoals}
         onSpendFromGoal={handleSpendFromGoal}
-        onReturnGoalToSaveJar={handleReturnGoalToSaveJar}
-        formatMoney={formatMoney}
+        onMoveFromGoal={handleMoveFromGoal}
+        onRenameBucket={handleRenameBucket}
+        onAddCustomBucket={handleAddCustomBucket}
       />
 
       <VaultCollapsible

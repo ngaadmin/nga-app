@@ -14,13 +14,7 @@ import {
 export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_v2";
 
 /** Bump when persisted wallet shape or defaults change. */
-export const WALLET_SCHEMA_VERSION = 3;
-
-/** TEMP: Seed XP balance for child conversion / Vault routing QA. Remove before production. */
-export const TEMP_TEST_SEED_XP_BALANCE = 1500;
-
-/** Lifetime XP earned - never reduced when points are cashed into the Vault. */
-export const TEMP_TEST_SEED_LIFETIME_XP = 2800;
+export const WALLET_SCHEMA_VERSION = 4;
 
 export type PersistedDashboardWallet = {
   schemaVersion?: number;
@@ -33,17 +27,22 @@ export type PersistedDashboardWallet = {
   savingsGoals?: SavingsGoal[];
 };
 
-export function defaultDashboardWalletState(): PersistedDashboardWallet {
+/** Fresh profiles start with zero balances and zero XP until earned in-app. */
+export function freshDashboardWalletState(): PersistedDashboardWallet {
   return {
     schemaVersion: WALLET_SCHEMA_VERSION,
-    totalPoints: TEMP_TEST_SEED_XP_BALANCE,
-    lifetimePointsEarned: TEMP_TEST_SEED_LIFETIME_XP,
+    totalPoints: 0,
+    lifetimePointsEarned: 0,
     audSliderIndex: DEFAULT_AUD_SLIDER_INDEX,
     moneyToAllocate: 0,
     jarBalances: defaultJarBalances(),
     customBuckets: [],
     savingsGoals: [],
   };
+}
+
+export function defaultDashboardWalletState(): PersistedDashboardWallet {
+  return freshDashboardWalletState();
 }
 
 function isJarBalanceMap(value: unknown): value is JarBalanceMap {
@@ -97,7 +96,7 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
       typeof parsed.lifetimePointsEarned === "number" &&
       Number.isFinite(parsed.lifetimePointsEarned)
         ? Math.max(0, Math.floor(parsed.lifetimePointsEarned))
-        : Math.max(totalPoints, TEMP_TEST_SEED_LIFETIME_XP);
+        : totalPoints;
 
     const moneyToAllocate =
       storedSchemaVersion >= WALLET_SCHEMA_VERSION

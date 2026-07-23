@@ -216,6 +216,168 @@ export function jarFillPercent(balance: number, maxBalance: number): number {
   return Math.min(100, (balance / maxBalance) * 100);
 }
 
+type PieSegment = {
+  id: string;
+  value: number;
+  color: string;
+  label: string;
+};
+
+function buildPieSegments(
+  buckets: readonly VaultBucket[],
+  poolAmount: number,
+): PieSegment[] {
+  const segments: PieSegment[] = buckets
+    .filter((bucket) => bucket.balance > 0)
+    .map((bucket) => ({
+      id: bucket.id,
+      value: bucket.balance,
+      color: bucketTheme(bucket).accent,
+      label: bucket.name,
+    }));
+
+  if (poolAmount > 0) {
+    segments.push({
+      id: "pool",
+      value: poolAmount,
+      color: "#FFA503",
+      label: "To allocate",
+    });
+  }
+
+  return segments;
+}
+
+type BucketPieChartProps = {
+  buckets: readonly VaultBucket[];
+  poolAmount?: number;
+  size?: number;
+};
+
+export function BucketPieChart({
+  buckets,
+  poolAmount = 0,
+  size = 56,
+}: BucketPieChartProps) {
+  const segments = buildPieSegments(buckets, poolAmount);
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+  const radius = size / 2;
+  const strokeWidth = size * 0.18;
+  const normalizedRadius = radius - strokeWidth / 2;
+  const circumference = 2 * Math.PI * normalizedRadius;
+
+  if (total <= 0) {
+    return (
+      <div
+        className="relative shrink-0 rounded-full border-2 border-white/20 bg-white/10"
+        style={{ width: size, height: size }}
+        aria-hidden
+      />
+    );
+  }
+
+  let offset = 0;
+
+  return (
+    <svg width={size} height={size} className="shrink-0 -rotate-90" aria-hidden>
+      <circle
+        cx={radius}
+        cy={radius}
+        r={normalizedRadius}
+        fill="none"
+        stroke="rgba(255,255,255,0.15)"
+        strokeWidth={strokeWidth}
+      />
+      {segments.map((segment) => {
+        const fraction = segment.value / total;
+        const dash = fraction * circumference;
+        const circle = (
+          <circle
+            key={segment.id}
+            cx={radius}
+            cy={radius}
+            r={normalizedRadius}
+            fill="none"
+            stroke={segment.color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${dash} ${circumference - dash}`}
+            strokeDashoffset={-offset}
+            strokeLinecap="butt"
+          />
+        );
+        offset += dash;
+        return circle;
+      })}
+    </svg>
+  );
+}
+
+type BucketPieLegendProps = {
+  buckets: readonly VaultBucket[];
+  poolAmount?: number;
+  variant?: "on-dark" | "on-light";
+};
+
+export function BucketPieLegend({
+  buckets,
+  poolAmount = 0,
+  variant = "on-dark",
+}: BucketPieLegendProps) {
+  const labelClass =
+    variant === "on-dark" ? "text-white/75" : "text-[#1E3A5F]/75";
+
+  return (
+    <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+      {buckets.map((bucket) => (
+        <li key={bucket.id} className={cn("flex min-w-0 items-center gap-1.5 font-sans text-xs", labelClass)}>
+          <span
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: bucketTheme(bucket).accent }}
+            aria-hidden
+          />
+          <span className="truncate">{bucket.name}</span>
+        </li>
+      ))}
+      {poolAmount > 0 ? (
+        <li className={cn("flex items-center gap-1.5 font-sans text-xs", labelClass)}>
+          <span className="size-2 shrink-0 rounded-full bg-[#FFA503]" aria-hidden />
+          <span>To allocate</span>
+        </li>
+      ) : null}
+    </ul>
+  );
+}
+
+type GoalProgressBarProps = {
+  progress: number;
+  color?: string;
+  trackColor?: string;
+};
+
+export function GoalProgressBar({
+  progress,
+  color = "#DCB766",
+  trackColor = "#FEF3C7",
+}: GoalProgressBarProps) {
+  const clamped = Math.min(100, Math.max(0, progress));
+
+  return (
+    <div
+      className="h-1.5 w-full overflow-hidden rounded-full"
+      style={{ backgroundColor: trackColor }}
+      role="progressbar"
+      aria-valuenow={Math.round(clamped)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div
+        className="h-full rounded-full transition-all duration-500"
+        style={{ width: `${clamped}%`, backgroundColor: color }}
+      />
+    </div>
+  );
+}
+
 export function roleLabel(role: FoundationJarRole | "custom"): string {
   switch (role) {
     case "save":

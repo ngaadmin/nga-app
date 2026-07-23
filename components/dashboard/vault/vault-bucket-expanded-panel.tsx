@@ -2,7 +2,16 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { VaultTransferControls } from "@/components/dashboard/vault/vault-transfer-controls";
+import {
+  VaultTransferControls,
+  VaultTransferToggle,
+  vaultActionLinkActiveClass,
+  vaultActionLinkClass,
+  vaultActionPanelClass,
+  vaultConfirmLinkClass,
+  vaultFieldInputClass,
+  vaultGhostBtnClass,
+} from "@/components/dashboard/vault/vault-transfer-controls";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import {
@@ -26,13 +35,6 @@ import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
-const ghostBtnClass =
-  "rounded-lg px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#F0FBFF]";
-const linkBtnClass =
-  "font-heading text-xs font-bold text-[#0CC1E0] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
-const actionLinkActiveClass = "text-[#031F82] underline decoration-[#0CC1E0]";
-const spendConfirmBtnClass =
-  "font-heading text-sm font-bold text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
 
 type BucketActionMode = "spend" | "move";
 
@@ -64,6 +66,97 @@ function PremiumCategoriesModal({ isOpen, onClose }: { isOpen: boolean; onClose:
   );
 }
 
+type CategoryManagementProps = {
+  isPremium: boolean;
+  categories: SpendingCategory[];
+  manageOpen: boolean;
+  onManageClick: () => void;
+  renameDrafts: Record<string, string>;
+  onRenameDraftChange: (categoryId: SpendingCategoryId, value: string) => void;
+  onRenameBlur: (categoryId: SpendingCategoryId) => void;
+  newCategoryLabel: string;
+  onNewCategoryLabelChange: (value: string) => void;
+  onAddCategory: (event: FormEvent) => void;
+};
+
+function SpendingCategoryFields({
+  isPremium,
+  categories,
+  manageOpen,
+  onManageClick,
+  renameDrafts,
+  onRenameDraftChange,
+  onRenameBlur,
+  newCategoryLabel,
+  onNewCategoryLabelChange,
+  onAddCategory,
+  categoryId,
+  onCategoryIdChange,
+}: CategoryManagementProps & {
+  categoryId: SpendingCategoryId;
+  onCategoryIdChange: (id: SpendingCategoryId) => void;
+}) {
+  const budgetCopy = copyMatrix.dashboard.vault.budget;
+
+  return (
+    <div className="space-y-1.5">
+      <select
+        value={categoryId}
+        onChange={(e) => onCategoryIdChange(e.target.value as SpendingCategoryId)}
+        aria-label={budgetCopy.spendCategoryLabel}
+        className={cn("w-full", vaultFieldInputClass)}
+      >
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.label}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={onManageClick}
+        className="font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
+      >
+        {budgetCopy.manageSpendingCategories}
+      </button>
+      {manageOpen && isPremium ? (
+        <div className="space-y-2 pt-1">
+          <p className="font-heading text-xs font-extrabold text-[#031F82]">
+            {budgetCopy.manageCategoriesHeading}
+          </p>
+          <ul className="space-y-1.5">
+            {categories.map((category) => (
+              <li key={category.id} className="flex min-w-0 items-center gap-2">
+                <input
+                  value={renameDrafts[category.id] ?? category.label}
+                  onChange={(e) => onRenameDraftChange(category.id, e.target.value)}
+                  onBlur={() => onRenameBlur(category.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") onRenameBlur(category.id);
+                  }}
+                  aria-label={`Rename ${category.label}`}
+                  className={cn("min-w-0 flex-1", vaultFieldInputClass)}
+                />
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={onAddCategory} className="flex min-w-0 gap-1.5">
+            <input
+              value={newCategoryLabel}
+              onChange={(e) => onNewCategoryLabelChange(e.target.value)}
+              placeholder={budgetCopy.customCategoryPlaceholder}
+              className={cn("min-w-0 flex-1", vaultFieldInputClass)}
+            />
+            <button type="submit" className={cn("shrink-0 px-3 py-1.5", orangeCtaClass)}>
+              {budgetCopy.addCategory}
+            </button>
+          </form>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function BucketFundsActions({
   bucket,
   categories,
@@ -76,6 +169,8 @@ function BucketFundsActions({
   onSpend,
   onTransfer,
   onClose,
+  categoryManagement,
+  onPremiumCategoriesRequest,
 }: {
   bucket: VaultBucket;
   categories: SpendingCategory[];
@@ -92,6 +187,8 @@ function BucketFundsActions({
     amount: number,
   ) => void;
   onClose: () => void;
+  categoryManagement: CategoryManagementProps;
+  onPremiumCategoriesRequest: () => void;
 }) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
@@ -101,6 +198,9 @@ function BucketFundsActions({
   );
 
   const selectedCategory = categories.find((entry) => entry.id === categoryId) ?? categories[0];
+  const canUseFunds = bucket.balance > 0;
+  const canTransfer =
+    bucket.balance > 0 || transferLocations.some((entry) => entry.balance > 0);
 
   useEffect(() => {
     if (!spendOpen) setSpendAmount("");
@@ -119,26 +219,45 @@ function BucketFundsActions({
     onClose();
   }
 
-  const canUseFunds = bucket.balance > 0;
+  function handleManageCategoriesClick() {
+    if (!categoryManagement.isPremium) {
+      onPremiumCategoriesRequest();
+      return;
+    }
+    categoryManagement.onManageClick();
+  }
+
+  const showActionRow = showSpend || canTransfer;
 
   return (
     <div className="space-y-2 border-t border-[#BDE9FB]/40 pt-2">
-      {showSpend ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <button
-            type="button"
-            onClick={onToggleSpend}
-            disabled={!canUseFunds}
-            className={cn(linkBtnClass, spendOpen && actionLinkActiveClass)}
-          >
-            {savingsCopy.spendMoney}
-          </button>
+      {showActionRow ? (
+        <div className="flex items-center justify-between gap-x-4 gap-y-1">
+          {showSpend ? (
+            <button
+              type="button"
+              onClick={onToggleSpend}
+              disabled={!canUseFunds}
+              className={cn(vaultActionLinkClass, spendOpen && vaultActionLinkActiveClass)}
+            >
+              {savingsCopy.spendMoney}
+            </button>
+          ) : (
+            <span aria-hidden />
+          )}
+          {canTransfer ? (
+            <VaultTransferToggle
+              isOpen={moveOpen}
+              disabled={transferLocations.length === 0}
+              onToggle={onToggleMove}
+            />
+          ) : null}
         </div>
       ) : null}
 
       {showSpend && spendOpen && canUseFunds ? (
-        <div className="space-y-2 rounded-lg bg-[#FAFDFF]/80 py-2">
-          <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+        <div className={vaultActionPanelClass}>
+          <div className="flex min-w-0 gap-2">
             <input
               type="number"
               min={0}
@@ -147,26 +266,22 @@ function BucketFundsActions({
               onChange={(e) => setSpendAmount(e.target.value)}
               placeholder={budgetCopy.spendAmountLabel}
               aria-label={budgetCopy.spendAmountLabel}
-              className="w-full shrink-0 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0] sm:w-24"
+              className={cn("w-24 shrink-0", vaultFieldInputClass)}
             />
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value as SpendingCategoryId)}
-              aria-label={budgetCopy.spendCategoryLabel}
-              className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
+            <div className="min-w-0 flex-1">
+              <SpendingCategoryFields
+                {...categoryManagement}
+                categoryId={categoryId}
+                onCategoryIdChange={setCategoryId}
+                onManageClick={handleManageCategoriesClick}
+              />
+            </div>
           </div>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={confirmSpend} className={spendConfirmBtnClass}>
+            <button type="button" onClick={confirmSpend} className={vaultConfirmLinkClass}>
               {budgetCopy.spendConfirm}
             </button>
-            <button type="button" onClick={onClose} className={ghostBtnClass}>
+            <button type="button" onClick={onClose} className={vaultGhostBtnClass}>
               {savingsCopy.spendCancel}
             </button>
           </div>
@@ -182,6 +297,7 @@ function BucketFundsActions({
         onToggle={onToggleMove}
         onTransfer={onTransfer}
         onClose={onClose}
+        showToggle={false}
       />
 
       {!canUseFunds && showSpend && spendOpen ? (
@@ -247,14 +363,6 @@ export function BucketExpandedPanel({
     [bucket.id, buckets, goals, moneyToAllocate, poolLabel],
   );
 
-  function handleManageCategoriesClick() {
-    if (!isPremium) {
-      setPremiumCategoriesOpen(true);
-      return;
-    }
-    setManageCategoriesOpen((open) => !open);
-  }
-
   function handleAddCategory(event: FormEvent) {
     event.preventDefault();
     const label = newCategoryLabel.trim();
@@ -271,6 +379,11 @@ export function BucketExpandedPanel({
       onRenameCategory(categoryId, draft);
     }
   }
+
+  const hasActions =
+    showSpend ||
+    bucket.balance > 0 ||
+    transferLocations.some((entry) => entry.balance > 0);
 
   return (
     <>
@@ -292,7 +405,7 @@ export function BucketExpandedPanel({
           {formatMoney(bucket.balance)}
         </p>
 
-        {showSpend || bucket.balance > 0 || transferLocations.some((entry) => entry.balance > 0) ? (
+        {hasActions ? (
           <BucketFundsActions
             bucket={bucket}
             categories={spendingCategories}
@@ -301,10 +414,7 @@ export function BucketExpandedPanel({
             spendOpen={showSpend && activeAction === "spend"}
             moveOpen={activeAction === "move"}
             onToggleSpend={() => {
-              if (!showSpend) return;
-              setActiveAction((current) =>
-                current === "spend" ? null : "spend",
-              );
+              setActiveAction((current) => (current === "spend" ? null : "spend"));
             }}
             onToggleMove={() => {
               setActiveAction((current) => (current === "move" ? null : "move"));
@@ -312,62 +422,24 @@ export function BucketExpandedPanel({
             onSpend={onMarkSpent}
             onTransfer={onVaultTransfer}
             onClose={() => setActiveAction(null)}
+            onPremiumCategoriesRequest={() => setPremiumCategoriesOpen(true)}
+            categoryManagement={{
+              isPremium,
+              categories: spendingCategories,
+              manageOpen: manageCategoriesOpen,
+              onManageClick: () => setManageCategoriesOpen((open) => !open),
+              renameDrafts,
+              onRenameDraftChange: (categoryId, value) =>
+                setRenameDrafts((current) => ({ ...current, [categoryId]: value })),
+              onRenameBlur: handleRenameBlur,
+              newCategoryLabel,
+              onNewCategoryLabelChange: setNewCategoryLabel,
+              onAddCategory: handleAddCategory,
+            }}
           />
         ) : (
           <p className="mt-2 font-sans text-[10px] text-[#1E3A5F]/70">{copy.bucketEmptyHint}</p>
         )}
-
-        {showSpend ? (
-          <>
-            {manageCategoriesOpen && isPremium ? (
-              <div className="mt-3 space-y-2 border-t border-[#BDE9FB]/50 pt-2">
-                <p className="font-heading text-xs font-extrabold text-[#031F82]">
-                  {copy.manageCategoriesHeading}
-                </p>
-                <ul className="space-y-1.5">
-                  {spendingCategories.map((category) => (
-                    <li key={category.id} className="flex min-w-0 items-center gap-2">
-                      <input
-                        value={renameDrafts[category.id] ?? category.label}
-                        onChange={(e) =>
-                          setRenameDrafts((current) => ({
-                            ...current,
-                            [category.id]: e.target.value,
-                          }))
-                        }
-                        onBlur={() => handleRenameBlur(category.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRenameBlur(category.id);
-                        }}
-                        aria-label={`Rename ${category.label}`}
-                        className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
-                      />
-                    </li>
-                  ))}
-                </ul>
-                <form onSubmit={handleAddCategory} className="flex min-w-0 gap-1.5">
-                  <input
-                    value={newCategoryLabel}
-                    onChange={(e) => setNewCategoryLabel(e.target.value)}
-                    placeholder={copy.customCategoryPlaceholder}
-                    className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
-                  />
-                  <button type="submit" className={cn("shrink-0 px-3 py-1.5", orangeCtaClass)}>
-                    {copy.addCategory}
-                  </button>
-                </form>
-              </div>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={handleManageCategoriesClick}
-              className="mt-3 font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
-            >
-              {copy.manageSpendingCategories}
-            </button>
-          </>
-        ) : null}
       </div>
 
       <PremiumCategoriesModal

@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -15,8 +14,13 @@ import {
   VaultBudgetHub,
 } from "@/components/dashboard/vault/vault-budget-hub";
 import { VaultCollapsible } from "@/components/dashboard/vault/vault-visuals";
+import {
+  CoinRainOverlay,
+  COIN_RAIN_DURATION_MS,
+  spawnRainCoins,
+  type RainCoin,
+} from "@/components/dashboard/vault/vault-coin-rain";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import {
@@ -76,17 +80,7 @@ type LedgerEntry = {
   flow?: LedgerFlow;
 };
 
-type CoinFlight = {
-  id: string;
-  direction: "to-jar" | "to-holding";
-  jarIndex: number;
-  delayMs: number;
-};
-
 const HIGH_ROI_WARNING_THRESHOLD = 12;
-
-const COIN_BURST_COUNT = 6;
-const COIN_FLIGHT_DURATION_MS = 900;
 
 /** Premium billing is not wired yet — Vault defaults to freemium limits. */
 const VAULT_IS_PREMIUM = false;
@@ -136,27 +130,8 @@ function projectCompoundSavings(
   return Math.round(balance);
 }
 
-function spawnCoinFlights(
-  direction: CoinFlight["direction"],
-  jarIndex: number,
-): CoinFlight[] {
-  const stamp = Date.now();
-  return Array.from({ length: COIN_BURST_COUNT }, (_, index) => ({
-    id: `${direction}-${jarIndex}-${stamp}-${index}`,
-    direction,
-    jarIndex,
-    delayMs: index * 70,
-  }));
-}
-
 function createLedgerId(): string {
   return `ledger-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function resolveCoinJarOffset(jarIndex: number): string {
-  if (jarIndex === 0) return "-14vw";
-  if (jarIndex === 1) return "14vw";
-  return "0vw";
 }
 
 function adjustBucketBalance(
@@ -190,51 +165,6 @@ function adjustBucketBalance(
     ),
   );
 }
-
-type CoinFlightOverlayProps = {
-  flights: CoinFlight[];
-};
-
-function CoinFlightOverlay({ flights }: CoinFlightOverlayProps) {
-  const styleId = useId().replace(/:/g, "");
-
-  if (flights.length === 0) return null;
-
-  return (
-    <>
-      <style>{`
-        @keyframes vault-coin-to-jar-${styleId} {
-          0% { transform: translate(-50%, -120%) scale(1); opacity: 1; }
-          100% { transform: translate(calc(-50% + var(--jar-offset)), 180%) scale(0.45); opacity: 0; }
-        }
-        @keyframes vault-coin-to-holding-${styleId} {
-          0% { transform: translate(calc(-50% + var(--jar-offset)), 120%) scale(0.6); opacity: 1; }
-          100% { transform: translate(-50%, -160%) scale(1); opacity: 0; }
-        }
-      `}</style>
-
-      <OverlayPortal className="overflow-hidden">
-        {flights.map((flight) => (
-          <span
-            key={flight.id}
-            className="absolute left-1/2 top-[42%] text-xl sm:text-2xl"
-            style={{
-              ["--jar-offset" as string]: resolveCoinJarOffset(flight.jarIndex),
-              animation:
-                flight.direction === "to-jar"
-                  ? `vault-coin-to-jar-${styleId} ${COIN_FLIGHT_DURATION_MS}ms ease-in forwards`
-                  : `vault-coin-to-holding-${styleId} ${COIN_FLIGHT_DURATION_MS}ms ease-out forwards`,
-              animationDelay: `${flight.delayMs}ms`,
-            }}
-          >
-            🪙
-          </span>
-        ))}
-      </OverlayPortal>
-    </>
-  );
-}
-
 
 type CompoundingCalculatorPanelProps = {
   savingsBalance: number;
@@ -540,7 +470,7 @@ export function VaultDashboard() {
       timestamp: Date.now(),
     },
   ]);
-  const [coinFlights, setCoinFlights] = useState<CoinFlight[]>([]);
+  const [coinRain, setCoinRain] = useState<RainCoin[]>([]);
 
   const [yearsSaved, setYearsSaved] = useState(5);
   const [weeklyTopUp, setWeeklyTopUp] = useState(
@@ -636,21 +566,16 @@ export function VaultDashboard() {
     });
   }, [isPremium, masteryCohort, setSavingsGoals]);
 
-  const triggerCoinBurst = useCallback(
-    (direction: CoinFlight["direction"], jarIndex: number) => {
-      const burst = spawnCoinFlights(direction, jarIndex);
-      setCoinFlights((current) => [...current, ...burst]);
+  const triggerCoinRain = useCallback(() => {
+    const burst = spawnRainCoins();
+    setCoinRain((current) => [...current, ...burst]);
 
-      window.setTimeout(() => {
-        setCoinFlights((current) =>
-          current.filter(
-            (flight) => !burst.some((coin) => coin.id === flight.id),
-          ),
-        );
-      }, COIN_FLIGHT_DURATION_MS + (burst.at(-1)?.delayMs ?? 0) + 100);
-    },
-    [],
-  );
+    window.setTimeout(() => {
+      setCoinRain((current) =>
+        current.filter((coin) => !burst.some((entry) => entry.id === coin.id)),
+      );
+    }, COIN_RAIN_DURATION_MS + 200);
+  }, []);
 
 
   const appendLedger = useCallback(
@@ -680,15 +605,14 @@ export function VaultDashboard() {
 
   const handlePointsConverted = useCallback(
     ({ audAmount, pointsClaimed }: PointsConvertedPayload) => {
-      const saveJarIndex = jars.findIndex((jar) => jar.id === SAVINGS_JAR_ID);
-      triggerCoinBurst("to-jar", saveJarIndex >= 0 ? saveJarIndex : 0);
+      triggerCoinRain();
       appendLedger(
         `Cashed in ${pointsClaimed.toLocaleString()} XP to Save Jar`,
         { amount: audAmount, flow: "in", highlight: true },
       );
       setCalculatorOpen(false);
     },
-    [appendLedger, jars, triggerCoinBurst],
+    [appendLedger, triggerCoinRain],
   );
 
   useEffect(() => {
@@ -725,8 +649,7 @@ export function VaultDashboard() {
         );
       }
 
-      const saveIndex = vaultBuckets.findIndex((bucket) => bucket.id === SAVINGS_JAR_ID);
-      triggerCoinBurst("to-jar", saveIndex >= 0 ? saveIndex : 0);
+      triggerCoinRain();
       appendLedger(
         budgetCopy.lockedInTemplate.replace("{amount}", formatMoney(total)),
         { amount: total, flow: "out" },
@@ -740,8 +663,7 @@ export function VaultDashboard() {
       setCustomBuckets,
       setJars,
       setMoneyToAllocate,
-      triggerCoinBurst,
-      vaultBuckets,
+      triggerCoinRain,
     ],
   );
 
@@ -1045,7 +967,7 @@ export function VaultDashboard() {
 
   return (
     <div className="relative mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-2 overflow-x-hidden bg-white px-3 py-5 pb-10">
-      <CoinFlightOverlay flights={coinFlights} />
+      <CoinRainOverlay coins={coinRain} />
 
       <VaultBudgetHub
         isPremium={isPremium}

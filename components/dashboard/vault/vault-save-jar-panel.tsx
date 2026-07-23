@@ -9,7 +9,16 @@ import {
 } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { GoalProgressBar } from "@/components/dashboard/vault/vault-visuals";
-import { VaultTransferControls } from "@/components/dashboard/vault/vault-transfer-controls";
+import {
+  VaultTransferControls,
+  VaultTransferToggle,
+  vaultActionLinkActiveClass,
+  vaultActionLinkClass,
+  vaultActionPanelClass,
+  vaultConfirmLinkClass,
+  vaultFieldInputClass,
+  vaultGhostBtnClass,
+} from "@/components/dashboard/vault/vault-transfer-controls";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
@@ -36,15 +45,8 @@ const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
 const splitBtnClass =
   "shrink-0 rounded-lg border border-[#0CC1E0] bg-white px-2.5 py-2 font-heading text-[10px] font-bold leading-tight text-[#031F82] disabled:opacity-40 sm:text-xs";
-const spendConfirmBtnClass =
-  "font-heading text-sm font-bold text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
 const confirmBtnClass =
   "rounded-lg border border-[#0CC1E0] bg-white px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] disabled:opacity-40";
-const ghostBtnClass =
-  "rounded-lg px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#F0FBFF]";
-const linkBtnClass =
-  "font-heading text-xs font-bold text-[#0CC1E0] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
-const actionLinkActiveClass = "text-[#031F82] underline decoration-[#0CC1E0]";
 
 type GoalActionMode = "change-target" | "spend" | "move";
 
@@ -151,7 +153,7 @@ function ChangeGoalTargetPanel({
         <button type="button" onClick={run} className={confirmBtnClass}>
           {savingsCopy.setGoalConfirm}
         </button>
-        <button type="button" onClick={onClose} className={ghostBtnClass}>
+        <button type="button" onClick={onClose} className={vaultGhostBtnClass}>
           {savingsCopy.spendCancel}
         </button>
       </div>
@@ -204,22 +206,31 @@ function GoalFundsActions({
   }
 
   const canUseFunds = goal.balance > 0;
+  const canTransfer =
+    goal.balance > 0 || transferLocations.some((entry) => entry.balance > 0);
 
   return (
     <div className="space-y-2 border-t border-[#BDE9FB]/40 pt-2">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <div className="flex items-center justify-between gap-x-4 gap-y-1">
         <button
           type="button"
           onClick={onToggleSpend}
           disabled={!canUseFunds}
-          className={cn(linkBtnClass, spendOpen && actionLinkActiveClass)}
+          className={cn(vaultActionLinkClass, spendOpen && vaultActionLinkActiveClass)}
         >
           {savingsCopy.spendMoney}
         </button>
+        {canTransfer ? (
+          <VaultTransferToggle
+            isOpen={moveOpen}
+            disabled={transferLocations.length === 0}
+            onToggle={onToggleMove}
+          />
+        ) : null}
       </div>
 
       {spendOpen && canUseFunds ? (
-        <div className="space-y-2 rounded-lg bg-[#FAFDFF]/80 py-2">
+        <div className={vaultActionPanelClass}>
           <div className="flex min-w-0 gap-2">
             <input
               type="number"
@@ -229,7 +240,7 @@ function GoalFundsActions({
               onChange={(e) => setSpendAmount(e.target.value)}
               placeholder={savingsCopy.spendAmountLabel}
               aria-label={savingsCopy.spendAmountLabel}
-              className="w-24 shrink-0 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
+              className={cn("w-24 shrink-0", vaultFieldInputClass)}
             />
             <input
               type="text"
@@ -237,14 +248,14 @@ function GoalFundsActions({
               onChange={(e) => setSpendNote(e.target.value)}
               placeholder={savingsCopy.spendOnLabel}
               aria-label={savingsCopy.spendOnLabel}
-              className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
+              className={cn("min-w-0 flex-1", vaultFieldInputClass)}
             />
           </div>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={confirmSpend} className={spendConfirmBtnClass}>
+            <button type="button" onClick={confirmSpend} className={vaultConfirmLinkClass}>
               {savingsCopy.spendGoalConfirm}
             </button>
-            <button type="button" onClick={onClose} className={ghostBtnClass}>
+            <button type="button" onClick={onClose} className={vaultGhostBtnClass}>
               {savingsCopy.spendCancel}
             </button>
           </div>
@@ -260,6 +271,7 @@ function GoalFundsActions({
         onToggle={onToggleMove}
         onTransfer={onTransfer}
         onClose={onClose}
+        showToggle={false}
       />
 
       {!canUseFunds && spendOpen ? (
@@ -318,19 +330,6 @@ export function SaveJarExpandedPanel({
     goalId: SavingsGoalId;
     mode: GoalActionMode;
   } | null>(null);
-  const [saveJarMoveOpen, setSaveJarMoveOpen] = useState(false);
-
-  const saveJarTransferLocations = useMemo(
-    () =>
-      buildVaultTransferLocations(
-        buckets,
-        goals,
-        moneyToAllocate,
-        poolLabel,
-        bucket.id,
-      ),
-    [bucket.id, buckets, goals, moneyToAllocate, poolLabel],
-  );
 
   const allocatedTotal = sumAllocations(goalAllocationDrafts);
   const remainingTotal = roundAudAmount(Math.max(0, unassignedSavings - allocatedTotal));
@@ -436,19 +435,6 @@ export function SaveJarExpandedPanel({
           </div>
         ) : null}
 
-        <div className={cn(unassignedSavings <= 0 && "mt-2")}>
-          <VaultTransferControls
-            contextId={bucket.id}
-            contextLabel={bucket.name}
-            contextBalance={unassignedSavings}
-            locations={saveJarTransferLocations}
-            isOpen={saveJarMoveOpen}
-            onToggle={() => setSaveJarMoveOpen((open) => !open)}
-            onTransfer={onVaultTransfer}
-            onClose={() => setSaveJarMoveOpen(false)}
-          />
-        </div>
-
         {allocationOpen && canSplitGoals ? (
           <div className="mt-2 space-y-2 border-b border-[#BDE9FB]/50 pb-2">
             <div className="flex items-center justify-between gap-2">
@@ -520,7 +506,7 @@ export function SaveJarExpandedPanel({
                     <button
                       type="button"
                       onClick={() => toggleGoalAction(goal.id, "change-target")}
-                      className={cn(linkBtnClass, "shrink-0 text-right")}
+                      className={cn(vaultActionLinkClass, "shrink-0 text-right")}
                     >
                       {savingsCopy.setOrChangeSavingsTarget}
                     </button>

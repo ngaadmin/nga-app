@@ -8,13 +8,17 @@ import { parsePositiveVaultAmount, VAULT_AMOUNT_STEP } from "@/lib/dashboard/vau
 import type { VaultTransferLocation, VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
 import { cn } from "@/lib/utils/cn";
 
-const linkBtnClass =
+export const vaultActionLinkClass =
   "font-heading text-xs font-bold text-[#0CC1E0] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
-const actionLinkActiveClass = "text-[#031F82] underline decoration-[#0CC1E0]";
-const moveConfirmBtnClass =
-  "rounded-lg border border-[#0CC1E0] bg-[#F0FBFF] px-4 py-2 font-heading text-sm font-bold text-[#031F82] disabled:opacity-40";
-const ghostBtnClass =
+export const vaultActionLinkActiveClass = "text-[#031F82] underline decoration-[#0CC1E0]";
+export const vaultConfirmLinkClass =
+  "font-heading text-sm font-bold text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
+export const vaultGhostBtnClass =
   "rounded-lg px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#F0FBFF]";
+export const vaultActionPanelClass = "space-y-2 rounded-lg bg-[#FAFDFF]/80 py-2";
+export const vaultFieldInputClass =
+  "rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]";
+
 const amountChipClass =
   "rounded-full border border-[#BDE9FB] bg-white px-2.5 py-1 font-heading text-[10px] font-bold text-[#031F82] transition-colors hover:border-[#0CC1E0] hover:bg-[#F0FBFF]";
 
@@ -29,6 +33,7 @@ export type VaultTransferControlsProps = {
   onToggle: () => void;
   onTransfer: (from: VaultTransferLocationId, to: VaultTransferLocationId, amount: number) => void;
   onClose: () => void;
+  showToggle?: boolean;
 };
 
 function buildAmountPresets(balance: number): number[] {
@@ -49,6 +54,7 @@ export function VaultTransferControls({
   onToggle,
   onTransfer,
   onClose,
+  showToggle = true,
 }: VaultTransferControlsProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -96,19 +102,21 @@ export function VaultTransferControls({
   const moveInLabel = savingsCopy.moveIntoTemplate.replace("{name}", contextLabel);
 
   return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={!canTransfer || locations.length === 0}
-        className={cn(linkBtnClass, isOpen && actionLinkActiveClass)}
-      >
-        {savingsCopy.moveMoney}
-      </button>
+    <div className={showToggle ? "space-y-2" : undefined}>
+      {showToggle ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={!canTransfer || locations.length === 0}
+          className={cn(vaultActionLinkClass, isOpen && vaultActionLinkActiveClass)}
+        >
+          {savingsCopy.moveMoney}
+        </button>
+      ) : null}
 
       {isOpen ? (
-        <div className="space-y-2 rounded-lg bg-[#FAFDFF]/80 py-2">
-          <div className="flex flex-wrap gap-1.5">
+        <div className={vaultActionPanelClass}>
+          <div className="flex min-w-0 flex-wrap gap-2">
             {presets.map((preset) => (
               <button
                 key={preset}
@@ -130,7 +138,7 @@ export function VaultTransferControls({
               onChange={(e) => setAmountInput(e.target.value)}
               placeholder={budgetCopy.moveAmountLabel}
               aria-label={budgetCopy.moveAmountLabel}
-              className="w-20 rounded-full border border-[#BDE9FB] bg-white px-2.5 py-1 text-center font-heading text-[10px] font-bold outline-none focus:border-[#0CC1E0]"
+              className={cn("w-24 shrink-0", vaultFieldInputClass)}
             />
           </div>
 
@@ -167,7 +175,7 @@ export function VaultTransferControls({
             value={counterpartId}
             onChange={(e) => setCounterpartId(e.target.value)}
             aria-label={budgetCopy.moveDestinationLabel}
-            className="w-full rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
+            className={cn("w-full", vaultFieldInputClass)}
           >
             {locations.map((entry) => (
               <option key={entry.id} value={entry.id}>
@@ -181,16 +189,37 @@ export function VaultTransferControls({
               type="button"
               onClick={confirmTransfer}
               disabled={sourceBalance <= 0}
-              className={moveConfirmBtnClass}
+              className={vaultConfirmLinkClass}
             >
               {savingsCopy.moveConfirm}
             </button>
-            <button type="button" onClick={onClose} className={ghostBtnClass}>
+            <button type="button" onClick={onClose} className={vaultGhostBtnClass}>
               {savingsCopy.spendCancel}
             </button>
           </div>
         </div>
       ) : null}
     </div>
+  );
+}
+
+export type VaultTransferToggleProps = {
+  isOpen: boolean;
+  disabled?: boolean;
+  onToggle: () => void;
+};
+
+export function VaultTransferToggle({ isOpen, disabled, onToggle }: VaultTransferToggleProps) {
+  const savingsCopy = copyMatrix.dashboard.vault.savings;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={disabled}
+      className={cn(vaultActionLinkClass, isOpen && vaultActionLinkActiveClass)}
+    >
+      {savingsCopy.moveMoney}
+    </button>
   );
 }

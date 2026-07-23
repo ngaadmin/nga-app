@@ -205,17 +205,14 @@ type VaultBudgetHubProps = {
   onToggleCalculator: () => void;
   calculatorPanel: ReactNode;
   goals: SavingsGoal[];
-  onRenameGoal: (goalId: SavingsGoalId, name: string) => void;
   onDeposit: (amount: number) => void;
   onLockIn: (allocations: Record<string, number>) => void;
   onMove: (fromId: VaultBucketId, destination: MoveTarget, amount: number) => void;
   onMarkSpent: (bucketId: VaultBucketId, amount: number) => void;
-  onSpendFromSaveJar: (amount: number) => void;
   onAddGoal: (name: string, targetAmount: number) => void;
-  onAllocateToGoal: (goalId: SavingsGoalId, amount: number) => void;
+  onUpdateGoalTarget: (goalId: SavingsGoalId, targetAmount: number) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
   onSpendFromGoal: (goalId: SavingsGoalId, amount: number) => void;
-  onMoveFromGoal: (goalId: SavingsGoalId, amount: number, destination: VaultBucketId) => void;
   onRenameBucket: (bucketId: VaultBucketId, name: string) => void;
   onAddCustomBucket: () => void;
 };
@@ -232,17 +229,14 @@ export function VaultBudgetHub({
   onToggleCalculator,
   calculatorPanel,
   goals,
-  onRenameGoal,
   onDeposit,
   onLockIn,
   onMove,
   onMarkSpent,
-  onSpendFromSaveJar,
   onAddGoal,
-  onAllocateToGoal,
+  onUpdateGoalTarget,
   onAssignGoals,
   onSpendFromGoal,
-  onMoveFromGoal,
   onRenameBucket,
   onAddCustomBucket,
 }: VaultBudgetHubProps) {
@@ -333,6 +327,9 @@ export function VaultBudgetHub({
                   {copy.totalBalanceLabel}
                 </p>
                 <p className="font-heading text-2xl font-extrabold leading-tight">{formatMoney(totalBalance)}</p>
+                <p className="mt-2 font-sans text-[10px] leading-snug text-white/60">
+                  {copy.virtualMoneyDisclaimer}
+                </p>
                 {poolTotal > 0 ? (
                   <span className="mt-2 inline-block rounded-full bg-[#FFA503] px-2.5 py-0.5 font-heading text-xs font-bold text-[#031F82]">
                     +{formatMoney(poolTotal)} to allocate
@@ -436,18 +433,14 @@ export function VaultBudgetHub({
             {expandedBucket ? (
               expandedBucket.id === SAVINGS_JAR_ID ? (
                 <SaveJarExpandedPanel
+                  totalSavings={totalSavings}
                   bucket={expandedBucket}
-                  buckets={buckets}
                   isPremium={isPremium}
                   goals={goals}
-                  onMove={(amount, dest) => onMove(expandedBucket.id, dest, amount)}
-                  onMarkSpent={onSpendFromSaveJar}
                   onAddGoal={onAddGoal}
-                  onRenameGoal={onRenameGoal}
-                  onAllocateToGoal={onAllocateToGoal}
+                  onUpdateGoalTarget={onUpdateGoalTarget}
                   onAssignGoals={onAssignGoals}
                   onSpendFromGoal={onSpendFromGoal}
-                  onMoveFromGoal={onMoveFromGoal}
                   onClose={() => setExpandedBucketId(null)}
                 />
               ) : (

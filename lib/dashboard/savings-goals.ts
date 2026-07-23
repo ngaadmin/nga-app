@@ -42,6 +42,16 @@ export function savingsGoalProgress(goal: SavingsGoal): number {
   return Math.min(100, (goal.balance / goal.targetAmount) * 100);
 }
 
+/** Uncapped percent for display (e.g. 125% when balance exceeds target). */
+export function savingsGoalPercentAchieved(goal: SavingsGoal): number {
+  if (goal.targetAmount <= 0) return goal.balance > 0 ? 100 : 0;
+  return Math.round((goal.balance / goal.targetAmount) * 100);
+}
+
+export function isSavingsGoalAllocationLocked(goal: SavingsGoal): boolean {
+  return goal.targetAmount > 0 && goal.balance >= goal.targetAmount;
+}
+
 export function sumSavingsGoalBalances(goals: readonly SavingsGoal[]): number {
   return roundAudAmount(goals.reduce((total, goal) => total + goal.balance, 0));
 }

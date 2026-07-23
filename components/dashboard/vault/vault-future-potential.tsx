@@ -64,16 +64,37 @@ export function FuturePotentialCompactButton({
 export type FuturePotentialCalculatorProps = {
   isOpen: boolean;
   calculatorPanel: ReactNode;
+  onClose: () => void;
 };
 
 export function FuturePotentialCalculator({
   isOpen,
   calculatorPanel,
+  onClose,
 }: FuturePotentialCalculatorProps) {
+  const copy = copyMatrix.dashboard.vault.budget;
+
   if (!isOpen) return null;
+
   return (
-    <div className="mt-3" role="region" aria-label="Compounding calculator">
-      {calculatorPanel}
+    <div
+      className="mt-3 rounded-xl border border-[#BDE9FB] bg-white p-3"
+      role="region"
+      aria-label="Compounding calculator"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-heading text-sm font-extrabold text-[#031F82]">
+          {copy.futurePotentialLabel}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+        >
+          Close
+        </button>
+      </div>
+      <div className="mt-2">{calculatorPanel}</div>
     </div>
   );
 }

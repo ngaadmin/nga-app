@@ -109,6 +109,28 @@ type JarFillVisualProps = {
   size?: "sm" | "md";
 };
 
+/** Emoji-only bucket icon (no fill level). */
+type BucketEmojiIconProps = {
+  emoji: string;
+  theme: BucketTheme;
+  size?: "sm" | "md" | "lg";
+};
+
+export function BucketEmojiIcon({ emoji, theme, size = "md" }: BucketEmojiIconProps) {
+  const dimensions =
+    size === "lg" ? "size-16 text-4xl" : size === "md" ? "size-12 text-2xl" : "size-10 text-xl";
+
+  return (
+    <span
+      className={cn("flex shrink-0 items-center justify-center rounded-2xl leading-none", dimensions)}
+      style={{ backgroundColor: `${theme.accent}18` }}
+      aria-hidden
+    >
+      {emoji}
+    </span>
+  );
+}
+
 export function JarFillVisual({ fillPercent, theme, emoji, size = "md" }: JarFillVisualProps) {
   const clamped = Math.min(100, Math.max(0, fillPercent));
   const dims = size === "sm" ? "h-14 w-10" : "h-16 w-11";
@@ -210,11 +232,6 @@ function ChevronIcon({ isOpen }: { isOpen: boolean }) {
   );
 }
 
-export function jarFillPercent(balance: number, maxBalance: number): number {
-  if (balance <= 0 || maxBalance <= 0) return 0;
-  return Math.min(100, (balance / maxBalance) * 100);
-}
-
 type PieSegment = {
   id: string;
   value: number;
@@ -247,6 +264,37 @@ function buildPieSegments(
   return segments;
 }
 
+function polarToCartesian(cx: number, cy: number, radius: number, angleDeg: number) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return {
+    x: cx + radius * Math.cos(rad),
+    y: cy + radius * Math.sin(rad),
+  };
+}
+
+function describePieWedge(
+  cx: number,
+  cy: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+): string {
+  if (endAngle - startAngle >= 359.99) {
+    return `M ${cx - radius} ${cy} A ${radius} ${radius} 0 1 0 ${cx + radius} ${cy} A ${radius} ${radius} 0 1 0 ${cx - radius} ${cy} Z`;
+  }
+
+  const start = polarToCartesian(cx, cy, radius, startAngle);
+  const end = polarToCartesian(cx, cy, radius, endAngle);
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${cx} ${cy}`,
+    `L ${start.x} ${start.y}`,
+    `A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y}`,
+    "Z",
+  ].join(" ");
+}
+
 type BucketPieChartProps = {
   buckets: readonly VaultBucket[];
   poolAmount?: number;
@@ -261,9 +309,7 @@ export function BucketPieChart({
   const segments = buildPieSegments(buckets, poolAmount);
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
   const radius = size / 2;
-  const strokeWidth = size * 0.18;
-  const normalizedRadius = radius - strokeWidth / 2;
-  const circumference = 2 * Math.PI * normalizedRadius;
+  const pieRadius = radius - 1;
 
   if (total <= 0) {
     return (
@@ -275,37 +321,17 @@ export function BucketPieChart({
     );
   }
 
-  let offset = 0;
+  let currentAngle = -90;
 
   return (
-    <svg width={size} height={size} className="shrink-0 -rotate-90" aria-hidden>
-      <circle
-        cx={radius}
-        cy={radius}
-        r={normalizedRadius}
-        fill="none"
-        stroke="rgba(255,255,255,0.15)"
-        strokeWidth={strokeWidth}
-      />
+    <svg width={size} height={size} className="shrink-0" aria-hidden viewBox={`0 0 ${size} ${size}`}>
       {segments.map((segment) => {
-        const fraction = segment.value / total;
-        const dash = fraction * circumference;
-        const circle = (
-          <circle
-            key={segment.id}
-            cx={radius}
-            cy={radius}
-            r={normalizedRadius}
-            fill="none"
-            stroke={segment.color}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${dash} ${circumference - dash}`}
-            strokeDashoffset={-offset}
-            strokeLinecap="butt"
-          />
-        );
-        offset += dash;
-        return circle;
+        const sliceAngle = (segment.value / total) * 360;
+        const endAngle = currentAngle + sliceAngle;
+        const path = describePieWedge(radius, radius, pieRadius, currentAngle, endAngle);
+        currentAngle = endAngle;
+
+        return <path key={segment.id} d={path} fill={segment.color} />;
       })}
     </svg>
   );
@@ -315,28 +341,38 @@ type BucketPieLegendProps = {
   buckets: readonly VaultBucket[];
   poolAmount?: number;
   variant?: "on-dark" | "on-light";
+  layout?: "horizontal" | "vertical";
 };
 
 export function BucketPieLegend({
   buckets,
   poolAmount = 0,
   variant = "on-dark",
+  layout = "horizontal",
 }: BucketPieLegendProps) {
   const labelClass =
     variant === "on-dark" ? "text-white/75" : "text-[#1E3A5F]/75";
 
   return (
-    <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-      {buckets.map((bucket) => (
-        <li key={bucket.id} className={cn("flex min-w-0 items-center gap-1.5 font-sans text-xs", labelClass)}>
-          <span
-            className="size-2 shrink-0 rounded-full"
-            style={{ backgroundColor: bucketTheme(bucket).accent }}
-            aria-hidden
-          />
-          <span className="truncate">{bucket.name}</span>
-        </li>
-      ))}
+    <ul
+      className={cn(
+        layout === "vertical"
+          ? "flex min-w-0 flex-1 flex-col gap-1"
+          : "mt-2 flex flex-wrap gap-x-3 gap-y-1",
+      )}
+    >
+      {buckets
+        .filter((bucket) => bucket.balance > 0)
+        .map((bucket) => (
+          <li key={bucket.id} className={cn("flex min-w-0 items-center gap-1.5 font-sans text-xs", labelClass)}>
+            <span
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: bucketTheme(bucket).accent }}
+              aria-hidden
+            />
+            <span className="truncate">{bucket.name}</span>
+          </li>
+        ))}
       {poolAmount > 0 ? (
         <li className={cn("flex items-center gap-1.5 font-sans text-xs", labelClass)}>
           <span className="size-2 shrink-0 rounded-full bg-[#FFA503]" aria-hidden />
@@ -351,18 +387,25 @@ type GoalProgressBarProps = {
   progress: number;
   color?: string;
   trackColor?: string;
+  /** Larger bar for savings goal tiles (avoids slider-like appearance). */
+  variant?: "default" | "goal";
 };
 
 export function GoalProgressBar({
   progress,
   color = "#DCB766",
   trackColor = "#FEF3C7",
+  variant = "default",
 }: GoalProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, progress));
+  const isGoal = variant === "goal";
 
   return (
     <div
-      className="h-1.5 w-full overflow-hidden rounded-full"
+      className={cn(
+        "w-full overflow-hidden",
+        isGoal ? "h-3.5 rounded-md" : "h-1.5 rounded-full",
+      )}
       style={{ backgroundColor: trackColor }}
       role="progressbar"
       aria-valuenow={Math.round(clamped)}
@@ -370,7 +413,10 @@ export function GoalProgressBar({
       aria-valuemax={100}
     >
       <div
-        className="h-full rounded-full transition-all duration-500"
+        className={cn(
+          "h-full transition-all duration-500",
+          isGoal ? "rounded-md" : "rounded-full",
+        )}
         style={{ width: `${clamped}%`, backgroundColor: color }}
       />
     </div>

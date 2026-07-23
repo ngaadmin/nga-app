@@ -13,7 +13,6 @@ import { CashInPointsPanel } from "@/components/dashboard/points/cash-in-points-
 import type { PointsConvertedPayload } from "@/components/dashboard/points/cash-in-points-panel";
 import {
   VaultBudgetHub,
-  type MoveTarget,
 } from "@/components/dashboard/vault/vault-budget-hub";
 import { VaultCollapsible } from "@/components/dashboard/vault/vault-visuals";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -28,10 +27,10 @@ import {
 import {
   defaultCustomBucket,
   isCustomBucketId,
+  isSavingsGoalMoveTarget,
   sumAllocations,
-  sumBucketBalances,
+  sumVaultWealthBalance,
   type CustomVaultBucketPersisted,
-  type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
 import {
@@ -43,16 +42,27 @@ import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import {
   defaultSavingsGoal,
+  computeTotalSavings,
   ensureFreemiumStarterGoals,
-  isSavingsGoalAllocationLocked,
   resolveVaultSavingsGoals,
-  sumSavingsGoalBalances,
   type SavingsGoalId,
 } from "@/lib/dashboard/savings-goals";
 import {
+  DEFAULT_SPENDING_CATEGORY_IDS,
+  defaultCustomSpendingCategory,
+  resolveSpendingCategories,
+  type DefaultSpendingCategoryId,
+  type SpendingCategoryId,
+} from "@/lib/dashboard/spending-categories";
+import {
   getVaultCompoundingDefaults,
+  resolveCompoundingLimits,
   resolveFutureSavingsPotential,
 } from "@/lib/dashboard/vault-compounding-defaults";
+import {
+  resolveVaultTransferLocationLabel,
+  type VaultTransferLocationId,
+} from "@/lib/dashboard/vault-transfer";
 import { cn } from "@/lib/utils/cn";
 
 type LedgerFlow = "in" | "out";
@@ -81,6 +91,21 @@ const COIN_FLIGHT_DURATION_MS = 900;
 /** Premium billing is not wired yet — Vault defaults to freemium limits. */
 const VAULT_IS_PREMIUM = false;
 
+function defaultSpendingCategoryLabels(): Record<DefaultSpendingCategoryId, string> {
+  const labels = copyMatrix.dashboard.vault.budget.defaultCategories;
+  return {
+    "food-snacks": labels.foodSnacks,
+    "fun-entertainment": labels.funEntertainment,
+    "personal-items": labels.personalItems,
+    gifts: labels.gifts,
+    other: labels.other,
+  };
+}
+
+function isDefaultSpendingCategoryId(id: SpendingCategoryId): id is DefaultSpendingCategoryId {
+  return (DEFAULT_SPENDING_CATEGORY_IDS as readonly string[]).includes(id);
+}
+
 function formatLedgerDate(timestamp: number): string {
   return new Intl.DateTimeFormat("en-AU", {
     day: "numeric",
@@ -88,17 +113,6 @@ function formatLedgerDate(timestamp: number): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(timestamp));
-}
-
-function parsePrincipalOverride(
-  rawValue: string,
-  savingsBalance: number,
-): number {
-  const trimmed = rawValue.trim();
-  if (!trimmed) return savingsBalance;
-
-  const parsed = Number.parseFloat(trimmed) as number;
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : savingsBalance;
 }
 
 function projectCompoundSavings(
@@ -177,15 +191,6 @@ function adjustBucketBalance(
   );
 }
 
-function resolveBucketName(
-  bucketId: VaultBucketId | "pool",
-  buckets: readonly VaultBucket[],
-  poolLabel: string,
-): string {
-  if (bucketId === "pool") return poolLabel;
-  return buckets.find((bucket) => bucket.id === bucketId)?.name ?? "Jar";
-}
-
 type CoinFlightOverlayProps = {
   flights: CoinFlight[];
 };
@@ -234,36 +239,79 @@ function CoinFlightOverlay({ flights }: CoinFlightOverlayProps) {
 type CompoundingCalculatorPanelProps = {
   savingsBalance: number;
   projectedTotal: number;
+  isPremium: boolean;
   yearsSaved: number;
+  yearsSavedMax: number;
   weeklyTopUp: number;
   weeklyTopUpMax: number;
   expectedRoi: number;
-  principalOverride: string;
   highRoiWarningCopy: string;
-  onPrincipalOverrideChange: (value: string) => void;
   onYearsSavedChange: (value: number) => void;
   onWeeklyTopUpChange: (value: number) => void;
   onExpectedRoiChange: (value: number) => void;
 };
 
+function PremiumCompoundingLimitsModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const copy = copyMatrix.dashboard.vault.budget;
+  const orangeCtaClass =
+    "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82]";
+
+  return (
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      labelledBy="premium-compounding-title"
+      backdropClassName="bg-[#031F82]/45"
+      panelClassName="max-w-sm rounded-nga-xl bg-white p-5"
+    >
+      <h2
+        id="premium-compounding-title"
+        className="font-heading text-lg font-extrabold text-[#031F82]"
+      >
+        {copy.premiumCompoundingTitle}
+      </h2>
+      <p className="mt-2 text-sm text-[#1E3A5F]">{copy.premiumCompoundingBody}</p>
+      <button type="button" className={cn("mt-4 h-touch w-full px-4", orangeCtaClass)}>
+        {copy.premiumUnlock}
+      </button>
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-2 w-full py-2 text-sm font-bold text-[#0CC1E0]"
+      >
+        {copy.premiumLater}
+      </button>
+    </ModalShell>
+  );
+}
+
 function CompoundingCalculatorPanel({
   savingsBalance,
   projectedTotal,
+  isPremium,
   yearsSaved,
+  yearsSavedMax,
   weeklyTopUp,
   weeklyTopUpMax,
   expectedRoi,
-  principalOverride,
   highRoiWarningCopy,
-  onPrincipalOverrideChange,
   onYearsSavedChange,
   onWeeklyTopUpChange,
   onExpectedRoiChange,
 }: CompoundingCalculatorPanelProps) {
   const { formatMoney } = useCurrency();
+  const budgetCopy = copyMatrix.dashboard.vault.budget;
   const showHighRoiWarning = expectedRoi >= HIGH_ROI_WARNING_THRESHOLD;
+  const [premiumLimitsOpen, setPremiumLimitsOpen] = useState(false);
 
   return (
+    <>
     <div
       id="compounding-calculator-panel"
       className="space-y-3 rounded-xl bg-[#F7FBFF]/80 p-3"
@@ -274,21 +322,17 @@ function CompoundingCalculatorPanel({
         Projected: <span className="font-semibold text-[#031F82]">{formatMoney(projectedTotal)}</span>
       </p>
 
-      <label className="block">
+      <div className="block">
         <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-          Starting Amount
+          {budgetCopy.currentSavingsLabel}
         </span>
-        <input
-          type="number"
-          min={0}
-          step={1}
-          inputMode="decimal"
-          placeholder={String(savingsBalance)}
-          value={principalOverride}
-          onChange={(event) => onPrincipalOverrideChange(event.target.value)}
-          className="mt-1 w-full rounded-xl bg-[#BDE9FB]/20 px-3 py-1.5 font-sans text-sm text-[#031F82] outline-none focus:bg-[#BDE9FB]/35"
-        />
-      </label>
+        <p
+          className="mt-1 w-full rounded-xl bg-[#BDE9FB]/20 px-3 py-1.5 font-heading text-sm font-extrabold text-[#031F82]"
+          aria-live="polite"
+        >
+          {formatMoney(savingsBalance)}
+        </p>
+      </div>
 
       <label className="block">
         <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
@@ -300,15 +344,32 @@ function CompoundingCalculatorPanel({
         <input
           type="range"
           min={1}
-          max={10}
+          max={yearsSavedMax}
           step={1}
-          value={yearsSaved}
+          value={Math.min(yearsSaved, yearsSavedMax)}
           onChange={(event) => {
             const next = Number.parseInt(event.target.value, 10) as number;
             if (Number.isFinite(next)) onYearsSavedChange(next);
           }}
           className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
         />
+        {isPremium ? (
+          <input
+            type="number"
+            min={1}
+            max={yearsSavedMax}
+            step={1}
+            value={yearsSaved}
+            onChange={(event) => {
+              const next = Number.parseInt(event.target.value, 10);
+              if (Number.isFinite(next)) {
+                onYearsSavedChange(Math.min(yearsSavedMax, Math.max(1, next)));
+              }
+            }}
+            className="mt-1.5 w-full rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
+            aria-label="Custom years saved"
+          />
+        ) : null}
       </label>
 
       <label className="block">
@@ -323,14 +384,41 @@ function CompoundingCalculatorPanel({
           min={0}
           max={weeklyTopUpMax}
           step={1}
-          value={weeklyTopUp}
+          value={Math.min(weeklyTopUp, weeklyTopUpMax)}
           onChange={(event) => {
             const next = Number.parseInt(event.target.value, 10) as number;
             if (Number.isFinite(next)) onWeeklyTopUpChange(next);
           }}
           className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
         />
+        {isPremium ? (
+          <input
+            type="number"
+            min={0}
+            max={weeklyTopUpMax}
+            step={1}
+            value={weeklyTopUp}
+            onChange={(event) => {
+              const next = Number.parseInt(event.target.value, 10);
+              if (Number.isFinite(next)) {
+                onWeeklyTopUpChange(Math.min(weeklyTopUpMax, Math.max(0, next)));
+              }
+            }}
+            className="mt-1.5 w-full rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
+            aria-label="Custom weekly top-up"
+          />
+        ) : null}
       </label>
+
+      {!isPremium ? (
+        <button
+          type="button"
+          onClick={() => setPremiumLimitsOpen(true)}
+          className="font-heading text-[10px] font-bold text-[#0CC1E0] hover:underline"
+        >
+          {budgetCopy.changeLimitsLink}
+        </button>
+      ) : null}
 
       <label className="block">
         <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
@@ -359,6 +447,11 @@ function CompoundingCalculatorPanel({
         </div>
       ) : null}
     </div>
+    <PremiumCompoundingLimitsModal
+      isOpen={premiumLimitsOpen}
+      onClose={() => setPremiumLimitsOpen(false)}
+    />
+    </>
   );
 }
 
@@ -418,8 +511,22 @@ export function VaultDashboard() {
     setCustomBuckets,
     savingsGoals,
     setSavingsGoals,
+    spendingCategoryOverrides,
+    setSpendingCategoryOverrides,
+    customSpendingCategories,
+    setCustomSpendingCategories,
     vaultBuckets,
   } = useDashboardWallet();
+  const spendingCategories = useMemo(
+    () =>
+      resolveSpendingCategories(
+        defaultSpendingCategoryLabels(),
+        spendingCategoryOverrides,
+        customSpendingCategories,
+      ),
+    [customSpendingCategories, spendingCategoryOverrides],
+  );
+
   const highRoiWarningCopy = useMemo(
     () => buildHighRoiWarningCopy(displayName),
     [displayName],
@@ -435,7 +542,6 @@ export function VaultDashboard() {
   ]);
   const [coinFlights, setCoinFlights] = useState<CoinFlight[]>([]);
 
-  const [principalOverride, setPrincipalOverride] = useState("");
   const [yearsSaved, setYearsSaved] = useState(5);
   const [weeklyTopUp, setWeeklyTopUp] = useState(
     () => cohortDefaults.weeklyTopUp,
@@ -456,40 +562,35 @@ export function VaultDashboard() {
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const isPremium = VAULT_IS_PREMIUM;
 
-  const totalBucketBalance = useMemo(
-    () => sumBucketBalances(vaultBuckets),
-    [vaultBuckets],
-  );
-
   const saveJarBalance = useMemo(
     () => jars.find((jar) => jar.id === SAVINGS_JAR_ID)?.balance ?? 0,
     [jars],
   );
 
-  const goalsBalance = useMemo(
-    () => sumSavingsGoalBalances(savingsGoals),
-    [savingsGoals],
+  const vaultGoals = useMemo(
+    () => resolveVaultSavingsGoals(savingsGoals, masteryCohort, isPremium),
+    [isPremium, masteryCohort, savingsGoals],
   );
 
   const totalSavings = useMemo(
-    () => roundAudAmount(saveJarBalance + goalsBalance),
-    [goalsBalance, saveJarBalance],
+    () => computeTotalSavings(saveJarBalance, vaultGoals),
+    [saveJarBalance, vaultGoals],
   );
 
-  const activePrincipal = useMemo(
-    () => parsePrincipalOverride(principalOverride, totalSavings),
-    [principalOverride, totalSavings],
+  const totalBucketBalance = useMemo(
+    () => sumVaultWealthBalance(vaultBuckets, totalSavings),
+    [totalSavings, vaultBuckets],
   );
 
   const projectedTotal = useMemo(
     () =>
       projectCompoundSavings(
-        activePrincipal,
+        totalSavings,
         weeklyTopUp,
         yearsSaved,
         expectedRoi,
       ),
-    [activePrincipal, weeklyTopUp, yearsSaved, expectedRoi],
+    [totalSavings, weeklyTopUp, yearsSaved, expectedRoi],
   );
 
   const futureSavingsPotential = useMemo(
@@ -502,10 +603,19 @@ export function VaultDashboard() {
       ? `${expectedRoi}% ROI · ${yearsSaved} yrs`
       : "Save first to unlock your forecast";
 
-  const vaultGoals = useMemo(
-    () => resolveVaultSavingsGoals(savingsGoals, masteryCohort, isPremium),
-    [isPremium, masteryCohort, savingsGoals],
+  const compoundingLimits = useMemo(
+    () => resolveCompoundingLimits(masteryCohort, isPremium),
+    [isPremium, masteryCohort],
   );
+
+  useEffect(() => {
+    if (yearsSaved > compoundingLimits.yearsSavedMax) {
+      setYearsSaved(compoundingLimits.yearsSavedMax);
+    }
+    if (weeklyTopUp > compoundingLimits.weeklyTopUpMax) {
+      setWeeklyTopUp(compoundingLimits.weeklyTopUpMax);
+    }
+  }, [compoundingLimits.weeklyTopUpMax, compoundingLimits.yearsSavedMax, weeklyTopUp, yearsSaved]);
 
   useEffect(() => {
     if (isPremium) return;
@@ -635,28 +745,66 @@ export function VaultDashboard() {
     ],
   );
 
-  const handleMove = useCallback(
-    (fromId: VaultBucketId, destination: MoveTarget, amount: number) => {
-      if (amount <= 0) return;
+  const handleVaultTransfer = useCallback(
+    (from: VaultTransferLocationId, to: VaultTransferLocationId, amount: number) => {
+      if (amount <= 0 || from === to) return;
 
-      const fromBucket = vaultBuckets.find((bucket) => bucket.id === fromId);
-      if (!fromBucket || amount > fromBucket.balance) return;
+      const resolveBalance = (id: VaultTransferLocationId): number => {
+        if (id === "pool") return moneyToAllocate;
+        if (isSavingsGoalMoveTarget(id)) {
+          return savingsGoals.find((entry) => entry.id === id)?.balance ?? 0;
+        }
+        return vaultBuckets.find((entry) => entry.id === id)?.balance ?? 0;
+      };
 
-      adjustBucketBalance(fromId, -amount, setJars, setCustomBuckets);
+      if (amount > resolveBalance(from)) return;
 
-      if (destination === "pool") {
-        setMoneyToAllocate((current) => roundAudAmount(current + amount));
-        appendLedger(
-          `Moved ${formatMoney(amount)} from ${fromBucket.name} to ${budgetCopy.poolLabel}`,
-          { amount, flow: "in" },
-        );
-        return;
+      const fromIsGoal = isSavingsGoalMoveTarget(from);
+      const toIsGoal = isSavingsGoalMoveTarget(to);
+
+      if (from === "pool") {
+        setMoneyToAllocate((current) => roundAudAmount(current - amount));
+      } else if (!fromIsGoal) {
+        adjustBucketBalance(from, -amount, setJars, setCustomBuckets);
       }
 
-      adjustBucketBalance(destination, amount, setJars, setCustomBuckets);
-      const destName = resolveBucketName(destination, vaultBuckets, budgetCopy.poolLabel);
+      if (to === "pool") {
+        setMoneyToAllocate((current) => roundAudAmount(current + amount));
+      } else if (!toIsGoal) {
+        adjustBucketBalance(to, amount, setJars, setCustomBuckets);
+      }
+
+      if (fromIsGoal || toIsGoal) {
+        setSavingsGoals((current) =>
+          current.map((entry) => {
+            if (fromIsGoal && entry.id === from) {
+              return { ...entry, balance: roundAudAmount(entry.balance - amount) };
+            }
+            if (toIsGoal && entry.id === to) {
+              return { ...entry, balance: roundAudAmount(entry.balance + amount) };
+            }
+            return entry;
+          }),
+        );
+      }
+
+      const fromName = resolveVaultTransferLocationLabel(
+        from,
+        vaultBuckets,
+        savingsGoals,
+        budgetCopy.poolLabel,
+      );
+      const toName = resolveVaultTransferLocationLabel(
+        to,
+        vaultBuckets,
+        savingsGoals,
+        budgetCopy.poolLabel,
+      );
       appendLedger(
-        `Moved ${formatMoney(amount)} from ${fromBucket.name} to ${destName}`,
+        vaultCopy.savings.vaultTransferLogTemplate
+          .replace("{amount}", formatMoney(amount))
+          .replace("{from}", fromName)
+          .replace("{to}", toName),
         { amount },
       );
     },
@@ -664,15 +812,19 @@ export function VaultDashboard() {
       appendLedger,
       budgetCopy.poolLabel,
       formatMoney,
+      moneyToAllocate,
+      savingsGoals,
       setCustomBuckets,
       setJars,
       setMoneyToAllocate,
+      setSavingsGoals,
       vaultBuckets,
+      vaultCopy.savings.vaultTransferLogTemplate,
     ],
   );
 
   const handleMarkSpent = useCallback(
-    (bucketId: VaultBucketId, amount: number) => {
+    (bucketId: VaultBucketId, amount: number, categoryLabel: string) => {
       if (amount <= 0) return;
 
       const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
@@ -682,6 +834,7 @@ export function VaultDashboard() {
       appendLedger(
         budgetCopy.spentLogTemplate
           .replace("{amount}", formatMoney(amount))
+          .replace("{category}", categoryLabel)
           .replace("{bucket}", bucket.name),
         { amount, flow: "out", highlight: true },
       );
@@ -694,6 +847,40 @@ export function VaultDashboard() {
       setJars,
       vaultBuckets,
     ],
+  );
+
+  const handleAddCustomSpendingCategory = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      setCustomSpendingCategories((current) => [
+        ...current,
+        defaultCustomSpendingCategory(trimmed),
+      ]);
+    },
+    [setCustomSpendingCategories],
+  );
+
+  const handleRenameSpendingCategory = useCallback(
+    (categoryId: SpendingCategoryId, label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+
+      if (isDefaultSpendingCategoryId(categoryId)) {
+        setSpendingCategoryOverrides((current) => ({
+          ...current,
+          [categoryId]: trimmed,
+        }));
+        return;
+      }
+
+      setCustomSpendingCategories((current) =>
+        current.map((entry) =>
+          entry.id === categoryId ? { ...entry, label: trimmed } : entry,
+        ),
+      );
+    },
+    [setCustomSpendingCategories, setSpendingCategoryOverrides],
   );
 
   const handleRenameBucket = useCallback(
@@ -759,7 +946,7 @@ export function VaultDashboard() {
   );
 
   const handleSpendFromGoal = useCallback(
-    (goalId: SavingsGoalId, amount: number) => {
+    (goalId: SavingsGoalId, amount: number, note?: string) => {
       if (amount <= 0) return;
 
       const goal = savingsGoals.find((entry) => entry.id === goalId);
@@ -772,12 +959,18 @@ export function VaultDashboard() {
             : entry,
         ),
       );
-      appendLedger(
-        vaultCopy.savings.spentFromGoalTemplate
-          .replace("{amount}", formatMoney(amount))
-          .replace("{goal}", goal.name),
-        { amount, flow: "out", highlight: true },
-      );
+
+      const trimmedNote = note?.trim();
+      const ledgerMessage = trimmedNote
+        ? vaultCopy.savings.spentFromGoalWithNoteTemplate
+            .replace("{amount}", formatMoney(amount))
+            .replace("{goal}", goal.name)
+            .replace("{note}", trimmedNote)
+        : vaultCopy.savings.spentFromGoalTemplate
+            .replace("{amount}", formatMoney(amount))
+            .replace("{goal}", goal.name);
+
+      appendLedger(ledgerMessage, { amount, flow: "out", highlight: true });
     },
     [
       appendLedger,
@@ -785,7 +978,22 @@ export function VaultDashboard() {
       savingsGoals,
       setSavingsGoals,
       vaultCopy.savings.spentFromGoalTemplate,
+      vaultCopy.savings.spentFromGoalWithNoteTemplate,
     ],
+  );
+
+
+  const handleDeleteCustomBucket = useCallback(
+    (bucketId: VaultBucketId) => {
+      if (!isCustomBucketId(bucketId)) return;
+
+      const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
+      if (!bucket || bucket.balance > 0) return;
+
+      setCustomBuckets((current) => current.filter((entry) => entry.id !== bucketId));
+      appendLedger(`Removed bucket: ${bucket.name}`);
+    },
+    [appendLedger, setCustomBuckets, vaultBuckets],
   );
 
   const handleAssignGoals = useCallback(
@@ -793,13 +1001,11 @@ export function VaultDashboard() {
       const appliedByGoal = new Map<SavingsGoalId, number>();
       let appliedTotal = 0;
 
-      for (const goal of savingsGoals) {
-        const amount = allocations[goal.id] ?? 0;
-        if (amount <= 0 || isSavingsGoalAllocationLocked(goal)) continue;
-        const headroom = Math.max(0, goal.targetAmount - goal.balance);
-        const applied = roundAudAmount(Math.min(amount, headroom));
-        if (applied <= 0) continue;
-        appliedByGoal.set(goal.id, applied);
+      for (const [goalId, rawAmount] of Object.entries(allocations)) {
+        const amount = rawAmount ?? 0;
+        if (amount <= 0) continue;
+        const applied = roundAudAmount(amount);
+        appliedByGoal.set(goalId as SavingsGoalId, applied);
         appliedTotal = roundAudAmount(appliedTotal + applied);
       }
 
@@ -855,13 +1061,13 @@ export function VaultDashboard() {
           <CompoundingCalculatorPanel
             savingsBalance={totalSavings}
             projectedTotal={projectedTotal}
+            isPremium={isPremium}
             yearsSaved={yearsSaved}
+            yearsSavedMax={compoundingLimits.yearsSavedMax}
             weeklyTopUp={weeklyTopUp}
-            weeklyTopUpMax={cohortDefaults.weeklyTopUpMax}
+            weeklyTopUpMax={compoundingLimits.weeklyTopUpMax}
             expectedRoi={expectedRoi}
-            principalOverride={principalOverride}
             highRoiWarningCopy={highRoiWarningCopy}
-            onPrincipalOverrideChange={setPrincipalOverride}
             onYearsSavedChange={setYearsSaved}
             onWeeklyTopUpChange={setWeeklyTopUp}
             onExpectedRoiChange={setExpectedRoi}
@@ -870,14 +1076,18 @@ export function VaultDashboard() {
         goals={vaultGoals}
         onDeposit={handleDeposit}
         onLockIn={handleLockIn}
-        onMove={handleMove}
+        onVaultTransfer={handleVaultTransfer}
         onMarkSpent={handleMarkSpent}
+        spendingCategories={spendingCategories}
+        onAddCustomSpendingCategory={handleAddCustomSpendingCategory}
+        onRenameSpendingCategory={handleRenameSpendingCategory}
         onAddGoal={handleAddGoal}
         onUpdateGoalTarget={handleUpdateGoalTarget}
         onAssignGoals={handleAssignGoals}
         onSpendFromGoal={handleSpendFromGoal}
         onRenameBucket={handleRenameBucket}
         onAddCustomBucket={handleAddCustomBucket}
+        onDeleteCustomBucket={handleDeleteCustomBucket}
       />
 
       <VaultCollapsible

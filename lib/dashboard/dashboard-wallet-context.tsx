@@ -24,6 +24,10 @@ import {
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
 import { mergeVaultBuckets } from "@/lib/dashboard/vault-buckets";
 import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
+import type {
+  CustomSpendingCategory,
+  SpendingCategoryOverrides,
+} from "@/lib/dashboard/spending-categories";
 import {
   audPerXpBlockFromSliderIndex,
   convertPointsToAud,
@@ -43,6 +47,8 @@ type DashboardWalletContextValue = {
   jars: DestinationJar[];
   customBuckets: CustomVaultBucketPersisted[];
   savingsGoals: SavingsGoal[];
+  spendingCategoryOverrides: SpendingCategoryOverrides;
+  customSpendingCategories: CustomSpendingCategory[];
   vaultBuckets: ReturnType<typeof mergeVaultBuckets>;
   setAudSliderIndex: (index: number) => void;
   setMoneyToAllocate: (updater: number | ((current: number) => number)) => void;
@@ -54,6 +60,16 @@ type DashboardWalletContextValue = {
   ) => void;
   setSavingsGoals: (
     updater: SavingsGoal[] | ((current: SavingsGoal[]) => SavingsGoal[]),
+  ) => void;
+  setSpendingCategoryOverrides: (
+    updater:
+      | SpendingCategoryOverrides
+      | ((current: SpendingCategoryOverrides) => SpendingCategoryOverrides),
+  ) => void;
+  setCustomSpendingCategories: (
+    updater:
+      | CustomSpendingCategory[]
+      | ((current: CustomSpendingCategory[]) => CustomSpendingCategory[]),
   ) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
   awardLessonXp: (points: number) => void;
@@ -87,6 +103,11 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const [savingsGoals, setSavingsGoalsState] = useState<SavingsGoal[]>(
     () => defaults.savingsGoals ?? [],
   );
+  const [spendingCategoryOverrides, setSpendingCategoryOverridesState] =
+    useState<SpendingCategoryOverrides>(() => defaults.spendingCategoryOverrides ?? {});
+  const [customSpendingCategories, setCustomSpendingCategoriesState] = useState<
+    CustomSpendingCategory[]
+  >(() => defaults.customSpendingCategories ?? []);
   const [walletHydrated, setWalletHydrated] = useState(false);
 
   useEffect(() => {
@@ -99,6 +120,8 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       setJarsState(jarsFromBalanceMap(persisted.jarBalances));
       setCustomBucketsState(persisted.customBuckets ?? []);
       setSavingsGoalsState(persisted.savingsGoals ?? []);
+      setSpendingCategoryOverridesState(persisted.spendingCategoryOverrides ?? {});
+      setCustomSpendingCategoriesState(persisted.customSpendingCategories ?? []);
     }
     setWalletHydrated(true);
   }, []);
@@ -114,14 +137,18 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       jarBalances: balanceMapFromJars(jars),
       customBuckets,
       savingsGoals,
+      spendingCategoryOverrides,
+      customSpendingCategories,
     });
   }, [
     audSliderIndex,
     customBuckets,
+    customSpendingCategories,
     jars,
     lifetimePointsEarned,
     moneyToAllocate,
     savingsGoals,
+    spendingCategoryOverrides,
     totalPoints,
     walletHydrated,
   ]);
@@ -203,6 +230,32 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     [],
   );
 
+  const setSpendingCategoryOverrides = useCallback(
+    (
+      updater:
+        | SpendingCategoryOverrides
+        | ((current: SpendingCategoryOverrides) => SpendingCategoryOverrides),
+    ) => {
+      setSpendingCategoryOverridesState((current) =>
+        typeof updater === "function" ? updater(current) : updater,
+      );
+    },
+    [],
+  );
+
+  const setCustomSpendingCategories = useCallback(
+    (
+      updater:
+        | CustomSpendingCategory[]
+        | ((current: CustomSpendingCategory[]) => CustomSpendingCategory[]),
+    ) => {
+      setCustomSpendingCategoriesState((current) =>
+        typeof updater === "function" ? updater(current) : updater,
+      );
+    },
+    [],
+  );
+
   const vaultBuckets = useMemo(
     () => mergeVaultBuckets(jars, customBuckets),
     [customBuckets, jars],
@@ -226,12 +279,16 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       jars,
       customBuckets,
       savingsGoals,
+      spendingCategoryOverrides,
+      customSpendingCategories,
       vaultBuckets,
       setAudSliderIndex,
       setMoneyToAllocate,
       setJars,
       setCustomBuckets,
       setSavingsGoals,
+      setSpendingCategoryOverrides,
+      setCustomSpendingCategories,
       claimPointsForVault,
       awardLessonXp,
     }),
@@ -245,9 +302,13 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       moneyToAllocate,
       savingsGoals,
       setCustomBuckets,
+      setCustomSpendingCategories,
       setJars,
       setMoneyToAllocate,
       setSavingsGoals,
+      setSpendingCategoryOverrides,
+      spendingCategoryOverrides,
+      customSpendingCategories,
       lifetimePointsEarned,
       totalPoints,
       vaultBuckets,

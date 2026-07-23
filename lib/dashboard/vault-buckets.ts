@@ -28,6 +28,14 @@ export type CustomVaultBucketId = `custom-${string}`;
 
 export type VaultBucketId = DestinationJarId | CustomVaultBucketId;
 
+export type MoveTarget = VaultBucketId | "pool";
+
+export type GoalMoveTarget = MoveTarget | `goal-${string}`;
+
+export function isSavingsGoalMoveTarget(id: string): id is `goal-${string}` {
+  return id.startsWith("goal-");
+}
+
 export type VaultBucket = {
   id: VaultBucketId;
   name: string;
@@ -155,4 +163,34 @@ export function sumAllocations(drafts: Record<string, number>): number {
 
 export function sumBucketBalances(buckets: readonly VaultBucket[]): number {
   return roundAudAmount(buckets.reduce((total, bucket) => total + bucket.balance, 0));
+}
+
+/** Save Jar tile / pie chart balance: unassigned pool + all goal balances. */
+export function withSavingsBucketDisplayTotal(
+  buckets: readonly VaultBucket[],
+  totalSavings: number,
+): VaultBucket[] {
+  return buckets.map((bucket) =>
+    bucket.id === SAVINGS_JAR_ID
+      ? { ...bucket, balance: roundAudAmount(totalSavings) }
+      : bucket,
+  );
+}
+
+/** Wealth across every bucket, counting savings goals inside the Save Jar total. */
+export function sumVaultWealthBalance(
+  buckets: readonly VaultBucket[],
+  totalSavings: number,
+): number {
+  const nonSavingsTotal = buckets
+    .filter((bucket) => bucket.id !== SAVINGS_JAR_ID)
+    .reduce((sum, bucket) => sum + bucket.balance, 0);
+  return roundAudAmount(nonSavingsTotal + totalSavings);
+}
+
+export function savingsBucketDisplayBalance(
+  bucket: VaultBucket,
+  totalSavings: number,
+): number {
+  return bucket.id === SAVINGS_JAR_ID ? roundAudAmount(totalSavings) : bucket.balance;
 }

@@ -4,6 +4,10 @@ import {
 } from "@/lib/dashboard/destination-jars";
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
 import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
+import type {
+  CustomSpendingCategory,
+  SpendingCategoryOverrides,
+} from "@/lib/dashboard/spending-categories";
 import { DEFAULT_AUD_SLIDER_INDEX } from "@/lib/dashboard/point-conversion";
 import {
   readPersisted,
@@ -14,7 +18,7 @@ import {
 export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_v2";
 
 /** Bump when persisted wallet shape or defaults change. */
-export const WALLET_SCHEMA_VERSION = 4;
+export const WALLET_SCHEMA_VERSION = 5;
 
 export type PersistedDashboardWallet = {
   schemaVersion?: number;
@@ -25,6 +29,8 @@ export type PersistedDashboardWallet = {
   jarBalances: JarBalanceMap;
   customBuckets?: CustomVaultBucketPersisted[];
   savingsGoals?: SavingsGoal[];
+  spendingCategoryOverrides?: SpendingCategoryOverrides;
+  customSpendingCategories?: CustomSpendingCategory[];
 };
 
 /** Fresh profiles start with zero balances and zero XP until earned in-app. */
@@ -38,6 +44,8 @@ export function freshDashboardWalletState(): PersistedDashboardWallet {
     jarBalances: defaultJarBalances(),
     customBuckets: [],
     savingsGoals: [],
+    spendingCategoryOverrides: {},
+    customSpendingCategories: [],
   };
 }
 
@@ -129,6 +137,21 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
               typeof (entry as SavingsGoal).name === "string" &&
               typeof (entry as SavingsGoal).targetAmount === "number" &&
               typeof (entry as SavingsGoal).balance === "number",
+          )
+        : [],
+      spendingCategoryOverrides:
+        parsed.spendingCategoryOverrides &&
+        typeof parsed.spendingCategoryOverrides === "object"
+          ? (parsed.spendingCategoryOverrides as SpendingCategoryOverrides)
+          : {},
+      customSpendingCategories: Array.isArray(parsed.customSpendingCategories)
+        ? parsed.customSpendingCategories.filter(
+            (entry): entry is CustomSpendingCategory =>
+              Boolean(entry) &&
+              typeof entry === "object" &&
+              typeof (entry as CustomSpendingCategory).id === "string" &&
+              (entry as CustomSpendingCategory).id.startsWith("spend-cat-") &&
+              typeof (entry as CustomSpendingCategory).label === "string",
           )
         : [],
     };

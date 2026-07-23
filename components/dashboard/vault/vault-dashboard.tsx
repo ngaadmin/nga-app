@@ -76,18 +76,13 @@ import {
   resolveVaultTransferLocationLabel,
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
+import { VaultLedgerView } from "@/components/dashboard/vault/vault-ledger-view";
+import {
+  type LedgerCategory,
+  type LedgerEntry,
+  type LedgerFlow,
+} from "@/lib/dashboard/vault-ledger";
 import { cn } from "@/lib/utils/cn";
-
-type LedgerFlow = "in" | "out";
-
-type LedgerEntry = {
-  id: string;
-  message: string;
-  highlight?: boolean;
-  timestamp: number;
-  amount?: number;
-  flow?: LedgerFlow;
-};
 
 const HIGH_ROI_WARNING_THRESHOLD = 12;
 
@@ -107,15 +102,6 @@ function defaultSpendingCategoryLabels(): Record<DefaultSpendingCategoryId, stri
 
 function isDefaultSpendingCategoryId(id: SpendingCategoryId): id is DefaultSpendingCategoryId {
   return (DEFAULT_SPENDING_CATEGORY_IDS as readonly string[]).includes(id);
-}
-
-function formatLedgerDate(timestamp: number): string {
-  return new Intl.DateTimeFormat("en-AU", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(timestamp));
 }
 
 function projectCompoundSavings(
@@ -394,46 +380,11 @@ function CompoundingCalculatorPanel({
   );
 }
 
-type ActivityLogListProps = {
-  displayName: string;
-  ledger: LedgerEntry[];
-};
-
-function ActivityLogList({ ledger }: ActivityLogListProps) {
-  const { formatMoney } = useCurrency();
-
-  return (
-    <ul className="max-h-64 space-y-1.5 overflow-y-auto">
-      {ledger.map((entry) => (
-        <li key={entry.id} className={cn("flex items-start gap-2 rounded-lg px-2 py-2", entry.highlight ? "bg-[#DCB766]/10" : "bg-[#BDE9FB]/10")}>
-          {entry.flow ? (
-            <span className={cn("mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold", entry.flow === "in" ? "bg-[#22C55E]/15 text-[#15803D]" : "bg-[#FDA4AF]/30 text-[#BE123C]")}>
-              {entry.flow === "in" ? "↓" : "↑"}
-            </span>
-          ) : (
-            <span className="mt-0.5 size-6 shrink-0 rounded-full bg-white/80 text-center text-[10px] leading-6">•</span>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="font-sans text-[11px] leading-snug text-[#031F82]">{entry.message}</p>
-              {entry.amount !== undefined ? (
-                <span className={cn("shrink-0 font-heading text-[10px] font-extrabold", entry.flow === "in" ? "text-[#22C55E]" : entry.flow === "out" ? "text-[#E11D48]" : "text-[#031F82]")}>
-                  {entry.flow === "out" ? "-" : entry.flow === "in" ? "+" : ""}{formatMoney(entry.amount)}
-                </span>
-              ) : null}
-            </div>
-            <p className="font-sans text-[9px] text-[#1E3A5F]/60">{formatLedgerDate(entry.timestamp)}</p>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export function VaultDashboard() {
   const searchParams = useSearchParams();
   const vaultCopy = copyMatrix.dashboard.vault;
   const budgetCopy = vaultCopy.budget;
+  const ledgerCopy = vaultCopy.ledger;
   const { formatMoney } = useCurrency();
   const { username, isLoading } = useDashboardUser();
   const masteryCohort = useMasteryCohort();
@@ -475,7 +426,8 @@ export function VaultDashboard() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([
     {
       id: "ledger-welcome",
-      message: "Vault online! Deposit income, funnel it into jars, and stack wins.",
+      message: ledgerCopy.welcomeMessage,
+      category: "info",
       timestamp: Date.now(),
     },
   ]);
@@ -604,7 +556,8 @@ export function VaultDashboard() {
   const appendLedger = useCallback(
     (
       message: string,
-      options?: {
+      options: {
+        category: LedgerCategory;
         highlight?: boolean;
         amount?: number;
         flow?: LedgerFlow;
@@ -615,10 +568,11 @@ export function VaultDashboard() {
         {
           id: `ledger-${ledgerCounter.current}-${createLedgerId()}`,
           message,
-          highlight: options?.highlight,
+          category: options.category,
+          highlight: options.highlight,
           timestamp: Date.now(),
-          amount: options?.amount,
-          flow: options?.flow,
+          amount: options.amount,
+          flow: options.flow,
         },
         ...current,
       ]);
@@ -644,7 +598,7 @@ export function VaultDashboard() {
       for (const goal of hitGoals) {
         appendLedger(
           vaultCopy.savings.goalHitTargetLogTemplate.replace("{goal}", goal.name),
-          { highlight: true },
+          { category: "milestone", highlight: true },
         );
       }
     },
@@ -665,7 +619,7 @@ export function VaultDashboard() {
       triggerCoinRain();
       appendLedger(
         `Cashed in ${pointsClaimed.toLocaleString()} XP to Save Jar`,
-        { amount: audAmount, flow: "in", highlight: true },
+        { category: "cash_in", amount: audAmount, flow: "in", highlight: true },
       );
       setCalculatorOpen(false);
     },
@@ -683,7 +637,7 @@ export function VaultDashboard() {
       setMoneyToAllocate((current) => roundAudAmount(current + amount));
       appendLedger(
         budgetCopy.depositLogTemplate.replace("{amount}", formatMoney(amount)),
-        { amount, flow: "in" },
+        { category: "deposit", amount, flow: "in" },
       );
     },
     [appendLedger, budgetCopy.depositLogTemplate, formatMoney, setMoneyToAllocate],
@@ -709,7 +663,7 @@ export function VaultDashboard() {
       triggerCoinRain();
       appendLedger(
         budgetCopy.lockedInTemplate.replace("{amount}", formatMoney(total)),
-        { amount: total, flow: "out" },
+        { category: "allocation", amount: total },
       );
     },
     [
@@ -785,7 +739,7 @@ export function VaultDashboard() {
           .replace("{amount}", formatMoney(amount))
           .replace("{from}", fromName)
           .replace("{to}", toName),
-        { amount },
+        { category: "transfer", amount },
       );
     },
     [
@@ -817,7 +771,7 @@ export function VaultDashboard() {
           .replace("{amount}", formatMoney(amount))
           .replace("{category}", categoryLabel)
           .replace("{bucket}", bucket.name),
-        { amount, flow: "out", highlight: true },
+        { category: "spend", amount, flow: "out", highlight: true },
       );
     },
     [
@@ -892,7 +846,7 @@ export function VaultDashboard() {
         ...current,
         defaultSavingsGoal(name, targetAmount),
       ]);
-      appendLedger(`Created savings goal: ${name.trim()}`);
+      appendLedger(`Created savings goal: ${name.trim()}`, { category: "setup" });
     },
     [appendLedger, setSavingsGoals],
   );
@@ -915,6 +869,7 @@ export function VaultDashboard() {
         vaultCopy.savings.goalTargetUpdatedTemplate
           .replace("{goal}", goal.name)
           .replace("{amount}", formatMoney(targetAmount)),
+        { category: "setup" },
       );
     },
     [
@@ -951,7 +906,12 @@ export function VaultDashboard() {
             .replace("{amount}", formatMoney(amount))
             .replace("{goal}", goal.name);
 
-      appendLedger(ledgerMessage, { amount, flow: "out", highlight: true });
+      appendLedger(ledgerMessage, {
+        category: "goal_spend",
+        amount,
+        flow: "out",
+        highlight: true,
+      });
     },
     [
       appendLedger,
@@ -972,7 +932,7 @@ export function VaultDashboard() {
       if (!bucket || bucket.balance > 0) return;
 
       setCustomBuckets((current) => current.filter((entry) => entry.id !== bucketId));
-      appendLedger(`Removed bucket: ${bucket.name}`);
+      appendLedger(`Removed bucket: ${bucket.name}`, { category: "setup" });
     },
     [appendLedger, setCustomBuckets, vaultBuckets],
   );
@@ -1010,7 +970,7 @@ export function VaultDashboard() {
           vaultCopy.savings.allocatedToGoalTemplate
             .replace("{amount}", formatMoney(applied))
             .replace("{goal}", goal.name),
-          { amount: applied },
+          { category: "savings_goal", amount: applied },
         );
       }
     },
@@ -1081,14 +1041,14 @@ export function VaultDashboard() {
       />
 
       <VaultCollapsible
-        id="vault-activity-log"
-        title={`${displayName}'s Activity Log`}
-        subtitle="Money in and out"
+        id="vault-ledger"
+        title={ledgerCopy.titleTemplate.replace("{name}", displayName)}
+        subtitle={ledgerCopy.subtitle}
         icon="📒"
         isOpen={ledgerOpen}
         onToggle={() => setLedgerOpen((open) => !open)}
       >
-        <ActivityLogList displayName={displayName} ledger={ledger} />
+        <VaultLedgerView ledger={ledger} copy={ledgerCopy} />
       </VaultCollapsible>
 
       <ModalShell

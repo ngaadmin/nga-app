@@ -153,7 +153,7 @@ export function SavingsGoalAchievedCallout({
           }
         }
       `}</style>
-      <OverlayPortal className="z-10 flex min-h-[100dvh] items-center justify-center px-6">
+      <OverlayPortal className="flex min-h-[100dvh] items-center justify-center px-6">
         <div
           className="relative w-full max-w-xs text-center"
           role="status"

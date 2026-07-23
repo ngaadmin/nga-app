@@ -8,9 +8,6 @@ import {
   lessonSortChipClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  celebrateLessonCorrectAnswer,
-} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import { useState } from "react";
 
@@ -315,7 +312,7 @@ function RankStackScreen({
       setRankSuccessMessage(config.successMessage);
       setRankSubmitted(true);
       flow.markScreenReady(screenIndex);
-      celebrateLessonCorrectAnswer(flow.flashScreen);
+      onFlashSuccess();
       return;
     }
 
@@ -398,7 +395,7 @@ function GiftRevealScreen({
     if (revealed) return;
     setRevealed(true);
     flow.markScreenReady(screenIndex);
-    celebrateLessonCorrectAnswer(flow.flashScreen);
+    onFlashSuccess();
   };
 
   return (

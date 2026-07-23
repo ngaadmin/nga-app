@@ -8,7 +8,7 @@ export const FREEMIUM_BIG_SAVINGS_GOAL_ID =
 export const FREEMIUM_EMERGENCY_GOAL_ID =
   "goal-freemium-emergency" as SavingsGoalId;
 
-/** @deprecated Use freemium system goal ids. */
+/** @deprecated Use FREEMIUM_BIG_SAVINGS_GOAL_ID. */
 export const FREEMIUM_DEFAULT_GOAL_ID = FREEMIUM_BIG_SAVINGS_GOAL_ID;
 
 export type SavingsGoal = {
@@ -58,10 +58,6 @@ export function sumSavingsGoalBalances(goals: readonly SavingsGoal[]): number {
 
 export function isFreemiumSystemGoal(id: SavingsGoalId): boolean {
   return id === FREEMIUM_BIG_SAVINGS_GOAL_ID || id === FREEMIUM_EMERGENCY_GOAL_ID;
-}
-
-export function canRenameSavingsGoal(goal: SavingsGoal, isPremium: boolean): boolean {
-  return isPremium && !isFreemiumSystemGoal(goal.id);
 }
 
 /** Cohort-scaled target for the primary freemium savings goal. */

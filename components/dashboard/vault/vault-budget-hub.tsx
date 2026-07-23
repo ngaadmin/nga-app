@@ -24,6 +24,10 @@ import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount, roundToHalfStep, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
+  parsePositiveVaultAmount,
+  VAULT_AMOUNT_STEP,
+} from "@/lib/dashboard/vault-amount-input";
+import {
   canAddVaultBucket,
   canMarkBucketAsSpent,
   canRenameFoundationBucket,
@@ -44,16 +48,6 @@ const tealBtnClass =
 
 const spendBtnClass =
   "rounded-lg border border-[#FDA4AF] bg-[#FDA4AF]/25 px-3 py-1.5 font-heading text-[10px] font-bold text-[#031F82] disabled:opacity-40";
-
-const ALLOCATION_STEP = 0.5;
-
-function parsePositiveAmount(rawValue: string): number | null {
-  const trimmed = rawValue.trim();
-  if (!trimmed) return null;
-  const parsed = Number.parseFloat(trimmed);
-  if (!Number.isFinite(parsed) || parsed <= 0) return null;
-  return roundToHalfStep(parsed);
-}
 
 function PremiumRenameModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const copy = copyMatrix.dashboard.vault.budget;
@@ -96,7 +90,7 @@ function AllocationSliderRow({
             type="range"
             min={0}
             max={poolTotal}
-            step={ALLOCATION_STEP}
+            step={VAULT_AMOUNT_STEP}
             value={draft}
             onChange={(e) => onSliderChange(bucket.id, Number.parseFloat(e.target.value))}
             className={cn("mt-1.5 h-1.5 w-full cursor-pointer appearance-none rounded-full", theme.track)}
@@ -135,7 +129,7 @@ function BucketInlinePanel({
   ];
 
   function runMove() {
-    const amount = parsePositiveAmount(amountInput);
+    const amount = parsePositiveVaultAmount(amountInput);
     if (amount === null || amount > bucket.balance) return;
     onMove(amount, destination);
     setAmountInput("");
@@ -143,7 +137,7 @@ function BucketInlinePanel({
   }
 
   function runSpent() {
-    const amount = parsePositiveAmount(amountInput);
+    const amount = parsePositiveVaultAmount(amountInput);
     if (amount === null || amount > bucket.balance) return;
     onMarkSpent(amount);
     setAmountInput("");
@@ -163,7 +157,7 @@ function BucketInlinePanel({
         <input
           type="number"
           min={0}
-          step={ALLOCATION_STEP}
+          step={VAULT_AMOUNT_STEP}
           value={amountInput}
           onChange={(e) => setAmountInput(e.target.value)}
           placeholder="Amount"
@@ -286,7 +280,7 @@ export function VaultBudgetHub({
 
   function handleDepositSubmit(event: FormEvent) {
     event.preventDefault();
-    const amount = parsePositiveAmount(depositInput);
+    const amount = parsePositiveVaultAmount(depositInput);
     if (amount === null) return;
     onDeposit(amount);
     setDepositInput("");
@@ -359,7 +353,7 @@ export function VaultBudgetHub({
                 <input
                   type="number"
                   min={0}
-                  step={ALLOCATION_STEP}
+                  step={VAULT_AMOUNT_STEP}
                   inputMode="decimal"
                   value={depositInput}
                   onChange={(e) => setDepositInput(e.target.value)}

@@ -78,6 +78,9 @@ const HIGH_ROI_WARNING_THRESHOLD = 12;
 const COIN_BURST_COUNT = 6;
 const COIN_FLIGHT_DURATION_MS = 900;
 
+/** Premium billing is not wired yet — Vault defaults to freemium limits. */
+const VAULT_IS_PREMIUM = false;
+
 function formatLedgerDate(timestamp: number): string {
   return new Intl.DateTimeFormat("en-AU", {
     day: "numeric",
@@ -451,7 +454,7 @@ export function VaultDashboard() {
     () => searchParams.get("cashIn") === "1",
   );
   const [ledgerOpen, setLedgerOpen] = useState(false);
-  const [isPremium] = useState(false);
+  const isPremium = VAULT_IS_PREMIUM;
 
   const totalBucketBalance = useMemo(
     () => sumBucketBalances(vaultBuckets),
@@ -787,30 +790,38 @@ export function VaultDashboard() {
 
   const handleAssignGoals = useCallback(
     (allocations: Record<string, number>) => {
-      const total = sumAllocations(allocations);
-      if (total <= 0 || total > saveJarBalance + 0.001) return;
+      const appliedByGoal = new Map<SavingsGoalId, number>();
+      let appliedTotal = 0;
 
-      adjustBucketBalance(SAVINGS_JAR_ID, -total, setJars, setCustomBuckets);
+      for (const goal of savingsGoals) {
+        const amount = allocations[goal.id] ?? 0;
+        if (amount <= 0 || isSavingsGoalAllocationLocked(goal)) continue;
+        const headroom = Math.max(0, goal.targetAmount - goal.balance);
+        const applied = roundAudAmount(Math.min(amount, headroom));
+        if (applied <= 0) continue;
+        appliedByGoal.set(goal.id, applied);
+        appliedTotal = roundAudAmount(appliedTotal + applied);
+      }
+
+      if (appliedTotal <= 0 || appliedTotal > saveJarBalance + 0.001) return;
+
+      adjustBucketBalance(SAVINGS_JAR_ID, -appliedTotal, setJars, setCustomBuckets);
       setSavingsGoals((current) =>
         current.map((entry) => {
-          const amount = allocations[entry.id] ?? 0;
-          if (amount <= 0 || isSavingsGoalAllocationLocked(entry)) return entry;
-          const headroom = Math.max(0, entry.targetAmount - entry.balance);
-          const applied = roundAudAmount(Math.min(amount, headroom));
+          const applied = appliedByGoal.get(entry.id) ?? 0;
           if (applied <= 0) return entry;
           return { ...entry, balance: roundAudAmount(entry.balance + applied) };
         }),
       );
 
-      for (const [goalId, amount] of Object.entries(allocations)) {
-        if (amount <= 0) continue;
+      for (const [goalId, applied] of appliedByGoal) {
         const goal = savingsGoals.find((entry) => entry.id === goalId);
-        if (!goal || isSavingsGoalAllocationLocked(goal)) continue;
+        if (!goal) continue;
         appendLedger(
           vaultCopy.savings.allocatedToGoalTemplate
-            .replace("{amount}", formatMoney(amount))
+            .replace("{amount}", formatMoney(applied))
             .replace("{goal}", goal.name),
-          { amount },
+          { amount: applied },
         );
       }
     },

@@ -246,13 +246,13 @@ export function PersonalizationGateForm() {
           <div className="space-y-3">
             <Button
               type="button"
-              variant="cta"
+              variant="secondary-outline"
               fullWidth
               onClick={handleCreateProfile}
             >
               Create Profile
             </Button>
-            <Button type="submit" variant="secondary-outline" fullWidth>
+            <Button type="submit" variant="cta" fullWidth>
               Continue without a profile
             </Button>
           </div>

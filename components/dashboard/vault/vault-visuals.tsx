@@ -1,6 +1,5 @@
 "use client";
 
-import type { FoundationJarRole } from "@/lib/dashboard/destination-jars";
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
 import { isSavingsBucket } from "@/lib/dashboard/vault-buckets";
 import { cn } from "@/lib/utils/cn";
@@ -376,17 +375,4 @@ export function GoalProgressBar({
       />
     </div>
   );
-}
-
-export function roleLabel(role: FoundationJarRole | "custom"): string {
-  switch (role) {
-    case "save":
-      return "Save";
-    case "spend":
-      return "Spend";
-    case "give":
-      return "Give";
-    default:
-      return "Bucket";
-  }
 }

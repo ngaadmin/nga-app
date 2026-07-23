@@ -13,6 +13,10 @@ import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
 import {
+  parsePositiveVaultAmount,
+  VAULT_AMOUNT_STEP,
+} from "@/lib/dashboard/vault-amount-input";
+import {
   isSavingsGoalAllocationLocked,
   savingsGoalPercentAchieved,
   savingsGoalProgress,
@@ -34,17 +38,8 @@ const spendConfirmBtnClass =
   "rounded-lg border border-[#FDA4AF] bg-[#FDA4AF]/25 px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] disabled:opacity-40";
 const ghostBtnClass =
   "rounded-lg border border-[#BDE9FB] bg-white px-3 py-1.5 font-heading text-sm font-bold text-[#031F82]";
-const ALLOCATION_STEP = 0.5;
 
 type GoalActionMode = "change-target" | "spend";
-
-function parsePositiveAmount(rawValue: string): number | null {
-  const trimmed = rawValue.trim();
-  if (!trimmed) return null;
-  const parsed = Number.parseFloat(trimmed);
-  if (!Number.isFinite(parsed) || parsed <= 0) return null;
-  return roundToHalfStep(parsed);
-}
 
 function PremiumGoalsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const copy = copyMatrix.dashboard.vault.savings;
@@ -109,7 +104,7 @@ function GoalAllocationSliderRow({
           type="range"
           min={0}
           max={poolTotal}
-          step={ALLOCATION_STEP}
+          step={VAULT_AMOUNT_STEP}
           value={draft}
           disabled={headroom <= 0}
           onChange={(e) => onSliderChange(goal.id, Number.parseFloat(e.target.value))}
@@ -135,7 +130,7 @@ function ChangeGoalTargetPanel({
   const [amountInput, setAmountInput] = useState(String(goal.targetAmount));
 
   function run() {
-    const amount = parsePositiveAmount(amountInput);
+    const amount = parsePositiveVaultAmount(amountInput);
     if (amount === null) return;
     onUpdateTarget(amount);
     onClose();
@@ -149,7 +144,7 @@ function ChangeGoalTargetPanel({
         <input
           type="number"
           min={0}
-          step={ALLOCATION_STEP}
+          step={VAULT_AMOUNT_STEP}
           value={amountInput}
           onChange={(e) => setAmountInput(e.target.value)}
           placeholder={savingsCopy.goalTargetLabel}
@@ -181,7 +176,7 @@ function SpendGoalPanel({
   const [amountInput, setAmountInput] = useState("");
 
   function run() {
-    const amount = parsePositiveAmount(amountInput);
+    const amount = parsePositiveVaultAmount(amountInput);
     if (amount === null || amount > goal.balance) return;
     onSpend(amount);
     setAmountInput("");
@@ -202,7 +197,7 @@ function SpendGoalPanel({
         <input
           type="number"
           min={0}
-          step={ALLOCATION_STEP}
+          step={VAULT_AMOUNT_STEP}
           value={amountInput}
           onChange={(e) => setAmountInput(e.target.value)}
           placeholder={savingsCopy.spendAmountLabel}
@@ -506,7 +501,7 @@ export function SaveJarExpandedPanel({
               <input
                 type="number"
                 min={0}
-                step={ALLOCATION_STEP}
+                step={VAULT_AMOUNT_STEP}
                 value={newGoalTarget}
                 onChange={(e) => setNewGoalTarget(e.target.value)}
                 placeholder={savingsCopy.goalTargetLabel}

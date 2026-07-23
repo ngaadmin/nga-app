@@ -19,14 +19,17 @@ import {
   vaultFieldInputClass,
   vaultGhostBtnClass,
 } from "@/components/dashboard/vault/vault-transfer-controls";
+import { VaultAllocationSlider } from "@/components/dashboard/vault/vault-allocation-slider";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
 import {
   parsePositiveVaultAmount,
-  roundToSliderStep,
+  capAllocationDrafts,
+  clampVaultAllocationEntry,
+  sumAllocationDraftValues,
+  vaultSliderMaxForEntry,
   VAULT_AMOUNT_STEP,
-  VAULT_SLIDER_STEP,
 } from "@/lib/dashboard/vault-amount-input";
 import {
   savingsGoalPercentAchieved,
@@ -76,36 +79,40 @@ function GoalAllocationSliderRow({
   goal,
   draft,
   poolTotal,
+  sliderMax,
   onSliderChange,
 }: {
   goal: SavingsGoal;
   draft: number;
   poolTotal: number;
+  sliderMax: number;
   onSliderChange: (goalId: string, value: number) => void;
 }) {
   const { formatMoney } = useCurrency();
 
   return (
-    <div className="py-1.5">
-      <div className="flex items-center justify-between gap-2">
+    <div className="py-2.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2">
         <span className="truncate font-heading text-xs font-bold text-[#031F82]">
           {goal.emoji} {goal.name}
         </span>
-        <span className="shrink-0 font-heading text-xs font-extrabold text-[#15803D]">
+        <span className="shrink-0 font-heading text-xs font-extrabold tabular-nums text-[#15803D]">
           {formatMoney(draft)}
         </span>
+        <div className="col-span-2 min-w-0">
+          <VaultAllocationSlider
+            value={draft}
+            max={sliderMax}
+            poolTotal={poolTotal}
+            onChange={(nextValue) => onSliderChange(goal.id, nextValue)}
+            accentColor="#22C55E"
+            trackClassName="bg-[#22C55E]/20"
+            ariaLabel={`Assign to ${goal.name}`}
+            disabled={poolTotal <= 0 || sliderMax <= 0}
+            className="-my-2"
+          />
+        </div>
       </div>
-      <input
-        type="range"
-        min={0}
-        max={poolTotal}
-        step={VAULT_SLIDER_STEP}
-        value={draft}
-        disabled={poolTotal <= 0}
-        onChange={(e) => onSliderChange(goal.id, Number.parseFloat(e.target.value))}
-        className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#22C55E]/20 accent-[#22C55E] disabled:opacity-40"
-        aria-label={`Assign to ${goal.name}`}
-      />
     </div>
   );
 }
@@ -336,8 +343,14 @@ export function SaveJarExpandedPanel({
     if (unassignedSavings <= 0) {
       setGoalAllocationDrafts({});
       setAllocationOpen(false);
+      return;
     }
-  }, [unassignedSavings]);
+
+    setGoalAllocationDrafts((current) => {
+      if (sumAllocationDraftValues(current) <= unassignedSavings) return current;
+      return capAllocationDrafts(current, unassignedSavings, goalIds);
+    });
+  }, [goalIds, unassignedSavings]);
 
   useEffect(() => {
     setGoalAllocationDrafts((current) => {
@@ -351,17 +364,26 @@ export function SaveJarExpandedPanel({
   const handleGoalSliderChange = useCallback(
     (goalId: string, nextValue: number) => {
       setGoalAllocationDrafts((current) => {
-        const others = goalIds
-          .filter((id) => id !== goalId)
-          .reduce((sum, id) => sum + (current[id] ?? 0), 0);
-        const clamped = roundToSliderStep(
-          Math.min(Math.max(0, nextValue), Math.max(0, unassignedSavings - others)),
+        const others = roundAudAmount(
+          goalIds
+            .filter((id) => id !== goalId)
+            .reduce((sum, id) => sum + (current[id] ?? 0), 0),
         );
+        const clamped = clampVaultAllocationEntry(unassignedSavings, others, nextValue);
         return { ...current, [goalId]: clamped };
       });
     },
     [goalIds, unassignedSavings],
   );
+
+  function handleAssignGoals() {
+    if (!hasAllocationDraft) return;
+    onAssignGoals(
+      capAllocationDrafts(goalAllocationDrafts, unassignedSavings, goalIds),
+    );
+    setGoalAllocationDrafts({});
+    setAllocationOpen(false);
+  }
 
   function handleCreateGoal(event: FormEvent) {
     event.preventDefault();
@@ -371,13 +393,6 @@ export function SaveJarExpandedPanel({
     setNewGoalName("");
     setNewGoalTarget("");
     setManageGoalsOpen(false);
-  }
-
-  function handleAssignGoals() {
-    if (!hasAllocationDraft) return;
-    onAssignGoals(goalAllocationDrafts);
-    setGoalAllocationDrafts({});
-    setAllocationOpen(false);
   }
 
   function handleManageGoalsClick() {
@@ -458,13 +473,18 @@ export function SaveJarExpandedPanel({
                 </span>
               )}
             </div>
-            <div className="divide-y divide-[#BDE9FB]/30">
+            <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
               {goals.map((goal) => (
                 <GoalAllocationSliderRow
                   key={goal.id}
                   goal={goal}
                   draft={goalAllocationDrafts[goal.id] ?? 0}
                   poolTotal={unassignedSavings}
+                  sliderMax={vaultSliderMaxForEntry(
+                    unassignedSavings,
+                    goalAllocationDrafts,
+                    goal.id,
+                  )}
                   onSliderChange={handleGoalSliderChange}
                 />
               ))}

@@ -25,9 +25,13 @@ import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   parsePositiveVaultAmount,
-  roundToSliderStep,
+  capAllocationDrafts,
+  clampVaultAllocationEntry,
+  isVaultAllocationComplete,
+  sumAllocationDraftValues,
+  vaultAllocationRemaining,
+  vaultSliderMaxForEntry,
   VAULT_AMOUNT_STEP,
-  VAULT_SLIDER_STEP,
 } from "@/lib/dashboard/vault-amount-input";
 import {
   canAddVaultBucket,
@@ -42,6 +46,7 @@ import {
 } from "@/lib/dashboard/vault-buckets";
 import { SaveJarExpandedPanel } from "@/components/dashboard/vault/vault-save-jar-panel";
 import { BucketExpandedPanel } from "@/components/dashboard/vault/vault-bucket-expanded-panel";
+import { VaultAllocationSlider } from "@/components/dashboard/vault/vault-allocation-slider";
 import type { SpendingCategory, SpendingCategoryId } from "@/lib/dashboard/spending-categories";
 import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
@@ -68,35 +73,48 @@ function AllocationSliderRow({
   bucket,
   draft,
   poolTotal,
+  sliderMax,
   onSliderChange,
 }: {
   bucket: VaultBucket;
   draft: number;
   poolTotal: number;
+  sliderMax: number;
   onSliderChange: (bucketId: string, value: number) => void;
 }) {
   const { formatMoney } = useCurrency();
   const theme = bucketTheme(bucket);
 
   return (
-    <div className="py-2">
-      <div className="flex items-center gap-3">
-        <JarFillVisual size="sm" emoji={bucket.emoji} theme={theme} fillPercent={poolTotal > 0 ? (draft / poolTotal) * 100 : 0} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className={cn("font-heading text-xs font-bold", theme.label)}>{bucket.name}</span>
-            <span className="font-heading text-xs font-extrabold text-[#031F82]">{formatMoney(draft)}</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={poolTotal}
-            step={VAULT_SLIDER_STEP}
+    <div className="py-2.5">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
+        <div className="row-span-2 shrink-0 self-center">
+          <JarFillVisual
+            size="sm"
+            emoji={bucket.emoji}
+            theme={theme}
+            fillPercent={poolTotal > 0 ? (draft / poolTotal) * 100 : 0}
+          />
+        </div>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <span className={cn("truncate font-heading text-xs font-bold", theme.label)}>
+            {bucket.name}
+          </span>
+          <span className="shrink-0 font-heading text-xs font-extrabold tabular-nums text-[#031F82]">
+            {formatMoney(draft)}
+          </span>
+        </div>
+        <div className="col-start-2 min-w-0">
+          <VaultAllocationSlider
             value={draft}
-            onChange={(e) => onSliderChange(bucket.id, Number.parseFloat(e.target.value))}
-            className={cn("mt-1.5 h-1.5 w-full cursor-pointer appearance-none rounded-full", theme.track)}
-            style={{ accentColor: theme.accent }}
-            aria-label={`Allocate to ${bucket.name}`}
+            max={sliderMax}
+            poolTotal={poolTotal}
+            onChange={(nextValue) => onSliderChange(bucket.id, nextValue)}
+            accentColor={theme.accent}
+            trackClassName={theme.track}
+            ariaLabel={`Allocate to ${bucket.name}`}
+            disabled={poolTotal <= 0 || sliderMax <= 0}
+            className="-my-2"
           />
         </div>
       </div>
@@ -176,10 +194,9 @@ export function VaultBudgetHub({
 
   const poolTotal = roundAudAmount(Math.max(0, moneyToAllocate));
   const allocatedTotal = sumAllocations(allocationDrafts);
-  const remainingTotal = roundAudAmount(Math.max(0, poolTotal - allocatedTotal));
-  const isFullyAllocated = poolTotal > 0 && Math.abs(remainingTotal) < 0.01;
+  const remainingTotal = vaultAllocationRemaining(allocatedTotal, poolTotal);
+  const isFullyAllocated = isVaultAllocationComplete(allocatedTotal, poolTotal);
   const showAllocation = poolTotal > 0;
-  const showBucketsOverview = !showAllocation;
   const expandedBucket = buckets.find((b) => b.id === expandedBucketId) ?? null;
 
   const displayBuckets = useMemo(
@@ -188,8 +205,16 @@ export function VaultBudgetHub({
   );
 
   useEffect(() => {
-    if (poolTotal <= 0) setAllocationDrafts({});
-  }, [poolTotal]);
+    if (poolTotal <= 0) {
+      setAllocationDrafts({});
+      return;
+    }
+
+    setAllocationDrafts((current) => {
+      if (sumAllocationDraftValues(current) <= poolTotal) return current;
+      return capAllocationDrafts(current, poolTotal, bucketIds);
+    });
+  }, [bucketIds, poolTotal]);
 
   useEffect(() => {
     setAllocationDrafts((current) => {
@@ -203,10 +228,12 @@ export function VaultBudgetHub({
   const handleSliderChange = useCallback(
     (bucketId: string, nextValue: number) => {
       setAllocationDrafts((current) => {
-        const others = bucketIds.filter((id) => id !== bucketId).reduce((s, id) => s + (current[id] ?? 0), 0);
-        const clamped = roundToSliderStep(
-          Math.min(Math.max(0, nextValue), Math.max(0, poolTotal - others)),
+        const others = roundAudAmount(
+          bucketIds
+            .filter((id) => id !== bucketId)
+            .reduce((sum, id) => sum + (current[id] ?? 0), 0),
         );
+        const clamped = clampVaultAllocationEntry(poolTotal, others, nextValue);
         return { ...current, [bucketId]: clamped };
       });
     },
@@ -353,25 +380,32 @@ export function VaultBudgetHub({
                 </p>
               )}
             </div>
-            <div className="divide-y divide-[#BDE9FB]/30">
+            <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
               {buckets.map((bucket) => (
                 <AllocationSliderRow
                   key={bucket.id}
                   bucket={bucket}
                   draft={allocationDrafts[bucket.id] ?? 0}
                   poolTotal={poolTotal}
+                  sliderMax={vaultSliderMaxForEntry(poolTotal, allocationDrafts, bucket.id)}
                   onSliderChange={handleSliderChange}
                 />
               ))}
             </div>
-            <button type="button" onClick={() => onLockIn(allocationDrafts)} disabled={!isFullyAllocated} className={cn("h-touch w-full px-4 py-2.5", orangeCtaClass)}>
+            <button
+              type="button"
+              onClick={() =>
+                onLockIn(capAllocationDrafts(allocationDrafts, poolTotal, bucketIds))
+              }
+              disabled={!isFullyAllocated}
+              className={cn("h-touch w-full px-4 py-2.5", orangeCtaClass)}
+            >
               {copy.lockItIn}
             </button>
           </section>
         ) : null}
 
-        {showBucketsOverview ? (
-          <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-5">
+        <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-5">
             <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.bucketsOverviewTitle}</h2>
             <div className={cn("mt-3 grid gap-2", buckets.length <= 3 ? "grid-cols-3" : "grid-cols-3 sm:grid-cols-4")}>
               {buckets.map((bucket) => {
@@ -465,8 +499,7 @@ export function VaultBudgetHub({
                 </button>
               ) : null}
             </div>
-          </section>
-        ) : null}
+        </section>
       </div>
 
       <PremiumRenameModal isOpen={premiumModalOpen} onClose={() => setPremiumModalOpen(false)} />

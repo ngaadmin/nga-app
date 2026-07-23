@@ -43,8 +43,6 @@ import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
-const splitBtnClass =
-  "shrink-0 rounded-lg border border-[#0CC1E0] bg-white px-2.5 py-2 font-heading text-[10px] font-bold leading-tight text-[#031F82] disabled:opacity-40 sm:text-xs";
 const confirmBtnClass =
   "rounded-lg border border-[#0CC1E0] bg-white px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] disabled:opacity-40";
 
@@ -206,8 +204,7 @@ function GoalFundsActions({
   }
 
   const canUseFunds = goal.balance > 0;
-  const canTransfer =
-    goal.balance > 0 || transferLocations.some((entry) => entry.balance > 0);
+  const canMoveOut = goal.balance > 0 && transferLocations.length > 0;
 
   return (
     <div className="space-y-2 border-t border-[#BDE9FB]/40 pt-2">
@@ -220,10 +217,10 @@ function GoalFundsActions({
         >
           {savingsCopy.spendMoney}
         </button>
-        {canTransfer ? (
+        {canMoveOut ? (
           <VaultTransferToggle
             isOpen={moveOpen}
-            disabled={transferLocations.length === 0}
+            disabled={!canMoveOut}
             onToggle={onToggleMove}
           />
         ) : null}
@@ -264,7 +261,6 @@ function GoalFundsActions({
 
       <VaultTransferControls
         contextId={goal.id}
-        contextLabel={goal.name}
         contextBalance={goal.balance}
         locations={transferLocations}
         isOpen={moveOpen}
@@ -415,22 +411,29 @@ export function SaveJarExpandedPanel({
         </div>
 
         {unassignedSavings > 0 ? (
-          <div className="mt-2 flex items-end justify-between gap-3 border-b border-[#BDE9FB]/50 pb-2">
-            <div>
-              <p className="font-heading text-base font-extrabold text-[#031F82]">
-                {savingsCopy.savingsToAllocateLabel}
-              </p>
-              <span className="mt-1.5 inline-block rounded-full bg-[#FFA503] px-2.5 py-0.5 font-heading text-xs font-bold text-[#031F82]">
-                {formatMoney(unassignedSavings)}
-              </span>
-            </div>
+          <div className="mt-2 border-b border-[#BDE9FB]/50 pb-2">
+            <p className="font-heading text-base font-extrabold text-[#031F82]">
+              {savingsCopy.savingsToAllocateLabel}
+            </p>
             <button
               type="button"
               onClick={() => setAllocationOpen((open) => !open)}
               disabled={!canSplitGoals}
-              className={splitBtnClass}
+              aria-expanded={allocationOpen}
+              aria-label={`${savingsCopy.savingsToAllocateLabel}: ${formatMoney(unassignedSavings)}. ${savingsCopy.clickToAllocateHint}`}
+              className={cn(
+                "mt-1.5 flex flex-wrap items-center gap-2 text-left",
+                canSplitGoals && "cursor-pointer",
+              )}
             >
-              {allocationOpen ? savingsCopy.hideAllocation : savingsCopy.splitAcrossGoals}
+              <span className="rounded-full bg-[#FFA503] px-2.5 py-0.5 font-heading text-xs font-bold text-[#031F82]">
+                {formatMoney(unassignedSavings)}
+              </span>
+              {canSplitGoals && !allocationOpen ? (
+                <span className="font-heading text-xs font-bold text-[#0CC1E0] underline-offset-2 hover:underline">
+                  {savingsCopy.clickToAllocateHint}
+                </span>
+              ) : null}
             </button>
           </div>
         ) : null}
@@ -489,8 +492,6 @@ export function SaveJarExpandedPanel({
               const transferLocations = buildVaultTransferLocations(
                 buckets,
                 goals,
-                moneyToAllocate,
-                poolLabel,
                 goal.id,
               );
 

@@ -48,6 +48,33 @@ export function savingsGoalPercentAchieved(goal: SavingsGoal): number {
   return Math.round((goal.balance / goal.targetAmount) * 100);
 }
 
+export function isSavingsGoalAtTarget(goal: SavingsGoal): boolean {
+  return goal.targetAmount > 0 && goal.balance >= goal.targetAmount;
+}
+
+/** True when balance crosses from below target to at/above target. */
+export function savingsGoalJustHitTarget(
+  before: SavingsGoal,
+  after: SavingsGoal,
+): boolean {
+  if (!isSavingsGoalAtTarget(after)) return false;
+  if (before.targetAmount <= 0) return after.balance > 0;
+  return before.balance < before.targetAmount;
+}
+
+export function findGoalsJustHitTarget(
+  before: readonly SavingsGoal[],
+  after: readonly SavingsGoal[],
+): SavingsGoal[] {
+  return after.filter((afterGoal) => {
+    const beforeGoal = before.find((entry) => entry.id === afterGoal.id);
+    if (!beforeGoal) {
+      return isSavingsGoalAtTarget(afterGoal);
+    }
+    return savingsGoalJustHitTarget(beforeGoal, afterGoal);
+  });
+}
+
 export function sumSavingsGoalBalances(goals: readonly SavingsGoal[]): number {
   return roundAudAmount(goals.reduce((total, goal) => total + goal.balance, 0));
 }

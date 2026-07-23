@@ -199,8 +199,7 @@ function BucketFundsActions({
 
   const selectedCategory = categories.find((entry) => entry.id === categoryId) ?? categories[0];
   const canUseFunds = bucket.balance > 0;
-  const canTransfer =
-    bucket.balance > 0 || transferLocations.some((entry) => entry.balance > 0);
+  const canMoveOut = bucket.balance > 0 && transferLocations.length > 0;
 
   useEffect(() => {
     if (!spendOpen) setSpendAmount("");
@@ -227,7 +226,7 @@ function BucketFundsActions({
     categoryManagement.onManageClick();
   }
 
-  const showActionRow = showSpend || canTransfer;
+  const showActionRow = showSpend || canMoveOut;
 
   return (
     <div className="space-y-2 border-t border-[#BDE9FB]/40 pt-2">
@@ -245,10 +244,10 @@ function BucketFundsActions({
           ) : (
             <span aria-hidden />
           )}
-          {canTransfer ? (
+          {canMoveOut ? (
             <VaultTransferToggle
               isOpen={moveOpen}
-              disabled={transferLocations.length === 0}
+              disabled={!canMoveOut}
               onToggle={onToggleMove}
             />
           ) : null}
@@ -290,7 +289,6 @@ function BucketFundsActions({
 
       <VaultTransferControls
         contextId={bucket.id}
-        contextLabel={bucket.name}
         contextBalance={bucket.balance}
         locations={transferLocations}
         isOpen={moveOpen}
@@ -353,14 +351,8 @@ export function BucketExpandedPanel({
 
   const transferLocations = useMemo(
     () =>
-      buildVaultTransferLocations(
-        buckets,
-        goals,
-        moneyToAllocate,
-        poolLabel,
-        bucket.id,
-      ),
-    [bucket.id, buckets, goals, moneyToAllocate, poolLabel],
+      buildVaultTransferLocations(buckets, goals, bucket.id),
+    [bucket.id, buckets, goals],
   );
 
   function handleAddCategory(event: FormEvent) {
@@ -382,8 +374,7 @@ export function BucketExpandedPanel({
 
   const hasActions =
     showSpend ||
-    bucket.balance > 0 ||
-    transferLocations.some((entry) => entry.balance > 0);
+    (bucket.balance > 0 && transferLocations.length > 0);
 
   return (
     <>

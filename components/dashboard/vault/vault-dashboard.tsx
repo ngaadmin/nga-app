@@ -20,6 +20,13 @@ import {
   spawnRainCoins,
   type RainCoin,
 } from "@/components/dashboard/vault/vault-coin-rain";
+import {
+  ConfettiRainOverlay,
+  CONFETTI_RAIN_DURATION_MS,
+  SavingsGoalAchievedCallout,
+  spawnConfettiPieces,
+  type ConfettiPiece,
+} from "@/components/dashboard/vault/vault-confetti-rain";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -48,7 +55,9 @@ import {
   defaultSavingsGoal,
   computeTotalSavings,
   ensureFreemiumStarterGoals,
+  findGoalsJustHitTarget,
   resolveVaultSavingsGoals,
+  type SavingsGoal,
   type SavingsGoalId,
 } from "@/lib/dashboard/savings-goals";
 import {
@@ -471,6 +480,9 @@ export function VaultDashboard() {
     },
   ]);
   const [coinRain, setCoinRain] = useState<RainCoin[]>([]);
+  const [confettiRain, setConfettiRain] = useState<ConfettiPiece[]>([]);
+  const [savingsGoalCalloutVisible, setSavingsGoalCalloutVisible] = useState(false);
+  const savingsGoalCalloutTimerRef = useRef<number | null>(null);
 
   const [yearsSaved, setYearsSaved] = useState(5);
   const [weeklyTopUp, setWeeklyTopUp] = useState(
@@ -577,6 +589,17 @@ export function VaultDashboard() {
     }, COIN_RAIN_DURATION_MS + 200);
   }, []);
 
+  const triggerConfettiRain = useCallback(() => {
+    const burst = spawnConfettiPieces();
+    setConfettiRain((current) => [...current, ...burst]);
+
+    window.setTimeout(() => {
+      setConfettiRain((current) =>
+        current.filter((piece) => !burst.some((entry) => entry.id === piece.id)),
+      );
+    }, CONFETTI_RAIN_DURATION_MS + 200);
+  }, []);
+
 
   const appendLedger = useCallback(
     (
@@ -599,6 +622,40 @@ export function VaultDashboard() {
         },
         ...current,
       ]);
+    },
+    [],
+  );
+
+  const celebrateGoalsJustHit = useCallback(
+    (beforeGoals: readonly SavingsGoal[], afterGoals: readonly SavingsGoal[]) => {
+      const hitGoals = findGoalsJustHitTarget(beforeGoals, afterGoals);
+      if (hitGoals.length === 0) return;
+
+      triggerConfettiRain();
+      setSavingsGoalCalloutVisible(true);
+      if (savingsGoalCalloutTimerRef.current !== null) {
+        window.clearTimeout(savingsGoalCalloutTimerRef.current);
+      }
+      savingsGoalCalloutTimerRef.current = window.setTimeout(() => {
+        setSavingsGoalCalloutVisible(false);
+        savingsGoalCalloutTimerRef.current = null;
+      }, CONFETTI_RAIN_DURATION_MS + 200);
+
+      for (const goal of hitGoals) {
+        appendLedger(
+          vaultCopy.savings.goalHitTargetLogTemplate.replace("{goal}", goal.name),
+          { highlight: true },
+        );
+      }
+    },
+    [appendLedger, triggerConfettiRain, vaultCopy.savings.goalHitTargetLogTemplate],
+  );
+
+  useEffect(
+    () => () => {
+      if (savingsGoalCalloutTimerRef.current !== null) {
+        window.clearTimeout(savingsGoalCalloutTimerRef.current);
+      }
     },
     [],
   );
@@ -697,17 +754,18 @@ export function VaultDashboard() {
       }
 
       if (fromIsGoal || toIsGoal) {
-        setSavingsGoals((current) =>
-          current.map((entry) => {
-            if (fromIsGoal && entry.id === from) {
-              return { ...entry, balance: roundAudAmount(entry.balance - amount) };
-            }
-            if (toIsGoal && entry.id === to) {
-              return { ...entry, balance: roundAudAmount(entry.balance + amount) };
-            }
-            return entry;
-          }),
-        );
+        const beforeGoals = savingsGoals;
+        const nextGoals = beforeGoals.map((entry) => {
+          if (fromIsGoal && entry.id === from) {
+            return { ...entry, balance: roundAudAmount(entry.balance - amount) };
+          }
+          if (toIsGoal && entry.id === to) {
+            return { ...entry, balance: roundAudAmount(entry.balance + amount) };
+          }
+          return entry;
+        });
+        setSavingsGoals(nextGoals);
+        celebrateGoalsJustHit(beforeGoals, nextGoals);
       }
 
       const fromName = resolveVaultTransferLocationLabel(
@@ -733,6 +791,7 @@ export function VaultDashboard() {
     [
       appendLedger,
       budgetCopy.poolLabel,
+      celebrateGoalsJustHit,
       formatMoney,
       moneyToAllocate,
       savingsGoals,
@@ -933,14 +992,16 @@ export function VaultDashboard() {
 
       if (appliedTotal <= 0 || appliedTotal > saveJarBalance + 0.001) return;
 
+      const beforeGoals = savingsGoals;
+      const nextGoals = beforeGoals.map((entry) => {
+        const applied = appliedByGoal.get(entry.id) ?? 0;
+        if (applied <= 0) return entry;
+        return { ...entry, balance: roundAudAmount(entry.balance + applied) };
+      });
+
       adjustBucketBalance(SAVINGS_JAR_ID, -appliedTotal, setJars, setCustomBuckets);
-      setSavingsGoals((current) =>
-        current.map((entry) => {
-          const applied = appliedByGoal.get(entry.id) ?? 0;
-          if (applied <= 0) return entry;
-          return { ...entry, balance: roundAudAmount(entry.balance + applied) };
-        }),
-      );
+      setSavingsGoals(nextGoals);
+      celebrateGoalsJustHit(beforeGoals, nextGoals);
 
       for (const [goalId, applied] of appliedByGoal) {
         const goal = savingsGoals.find((entry) => entry.id === goalId);
@@ -955,6 +1016,7 @@ export function VaultDashboard() {
     },
     [
       appendLedger,
+      celebrateGoalsJustHit,
       formatMoney,
       saveJarBalance,
       savingsGoals,
@@ -968,6 +1030,12 @@ export function VaultDashboard() {
   return (
     <div className="relative mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-2 overflow-x-hidden bg-white px-3 py-5 pb-10">
       <CoinRainOverlay coins={coinRain} />
+      <ConfettiRainOverlay pieces={confettiRain} />
+      <SavingsGoalAchievedCallout
+        isVisible={savingsGoalCalloutVisible}
+        message={vaultCopy.savings.goalAchievedCallout}
+        kicker={vaultCopy.savings.goalAchievedCalloutKicker}
+      />
 
       <VaultBudgetHub
         isPremium={isPremium}

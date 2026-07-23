@@ -1,4 +1,3 @@
-import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   isSavingsGoalMoveTarget,
   type VaultBucket,
@@ -21,14 +20,12 @@ export function isVaultTransferLocationId(value: string): value is VaultTransfer
 export function buildVaultTransferLocations(
   buckets: readonly VaultBucket[],
   goals: readonly SavingsGoal[],
-  moneyToAllocate: number,
-  poolLabel: string,
   excludeId?: VaultTransferLocationId,
 ): VaultTransferLocation[] {
   const bucketLocations: VaultTransferLocation[] = buckets.map((bucket) => ({
     id: bucket.id,
     label: `${bucket.emoji} ${bucket.name}`,
-    balance: bucket.id === SAVINGS_JAR_ID ? bucket.balance : bucket.balance,
+    balance: bucket.balance,
   }));
 
   const goalLocations: VaultTransferLocation[] = goals.map((goal) => ({
@@ -37,15 +34,7 @@ export function buildVaultTransferLocations(
     balance: goal.balance,
   }));
 
-  const poolLocation: VaultTransferLocation = {
-    id: "pool",
-    label: poolLabel,
-    balance: moneyToAllocate,
-  };
-
-  return [...bucketLocations, ...goalLocations, poolLocation].filter(
-    (entry) => entry.id !== excludeId,
-  );
+  return [...bucketLocations, ...goalLocations].filter((entry) => entry.id !== excludeId);
 }
 
 export function resolveVaultTransferLocationLabel(

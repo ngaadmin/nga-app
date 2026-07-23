@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { useCurrency } from "@/lib/dashboard/currency-context";
-import { roundAudAmount } from "@/lib/dashboard/destination-jars";
 import { parsePositiveVaultAmount, VAULT_AMOUNT_STEP } from "@/lib/dashboard/vault-amount-input";
 import type { VaultTransferLocation, VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
 import { cn } from "@/lib/utils/cn";
@@ -19,14 +17,8 @@ export const vaultActionPanelClass = "space-y-2 rounded-lg bg-[#FAFDFF]/80 py-2"
 export const vaultFieldInputClass =
   "rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]";
 
-const amountChipClass =
-  "rounded-full border border-[#BDE9FB] bg-white px-2.5 py-1 font-heading text-[10px] font-bold text-[#031F82] transition-colors hover:border-[#0CC1E0] hover:bg-[#F0FBFF]";
-
-type TransferDirection = "out" | "in";
-
 export type VaultTransferControlsProps = {
   contextId: VaultTransferLocationId;
-  contextLabel: string;
   contextBalance: number;
   locations: VaultTransferLocation[];
   isOpen: boolean;
@@ -36,18 +28,8 @@ export type VaultTransferControlsProps = {
   showToggle?: boolean;
 };
 
-function buildAmountPresets(balance: number): number[] {
-  const safeBalance = roundAudAmount(Math.max(0, balance));
-  if (safeBalance <= 0) return [];
-
-  const candidates = [1, 5, 10, 25, 50].filter((value) => value < safeBalance);
-  const unique = Array.from(new Set([...candidates, safeBalance])).sort((a, b) => a - b);
-  return unique.slice(-4);
-}
-
 export function VaultTransferControls({
   contextId,
-  contextLabel,
   contextBalance,
   locations,
   isOpen,
@@ -58,48 +40,33 @@ export function VaultTransferControls({
 }: VaultTransferControlsProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
-  const { formatMoney } = useCurrency();
 
-  const [direction, setDirection] = useState<TransferDirection>("out");
-  const [counterpartId, setCounterpartId] = useState<string>(locations[0]?.id ?? "pool");
+  const [destinationId, setDestinationId] = useState<string>(locations[0]?.id ?? "");
   const [amountInput, setAmountInput] = useState("");
 
-  const counterpart = locations.find((entry) => entry.id === counterpartId);
-  const sourceBalance =
-    direction === "out" ? contextBalance : (counterpart?.balance ?? 0);
-  const presets = useMemo(() => buildAmountPresets(sourceBalance), [sourceBalance]);
-  const canMoveOut = contextBalance > 0;
-  const canMoveIn = locations.some((entry) => entry.balance > 0);
-  const canTransfer = canMoveOut || canMoveIn;
+  const canMoveOut = contextBalance > 0 && locations.length > 0;
 
   useEffect(() => {
-    if (!isOpen) {
-      setAmountInput("");
-      setDirection("out");
-    }
+    if (!isOpen) setAmountInput("");
   }, [isOpen]);
 
   useEffect(() => {
-    if (!locations.some((entry) => entry.id === counterpartId)) {
-      setCounterpartId(locations[0]?.id ?? "pool");
+    if (!locations.some((entry) => entry.id === destinationId)) {
+      setDestinationId(locations[0]?.id ?? "");
     }
-  }, [counterpartId, locations]);
+  }, [destinationId, locations]);
 
   function confirmTransfer() {
     const amount = parsePositiveVaultAmount(amountInput);
-    if (amount === null || amount > sourceBalance) return;
+    if (amount === null || amount > contextBalance) return;
 
-    const from = direction === "out" ? contextId : (counterpartId as VaultTransferLocationId);
-    const to = direction === "out" ? (counterpartId as VaultTransferLocationId) : contextId;
-    if (from === to) return;
+    const to = destinationId as VaultTransferLocationId;
+    if (!to || to === contextId) return;
 
-    onTransfer(from, to, amount);
+    onTransfer(contextId, to, amount);
     setAmountInput("");
     onClose();
   }
-
-  const moveOutLabel = savingsCopy.moveOutOfTemplate.replace("{name}", contextLabel);
-  const moveInLabel = savingsCopy.moveIntoTemplate.replace("{name}", contextLabel);
 
   return (
     <div className={showToggle ? "space-y-2" : undefined}>
@@ -107,7 +74,7 @@ export function VaultTransferControls({
         <button
           type="button"
           onClick={onToggle}
-          disabled={!canTransfer || locations.length === 0}
+          disabled={!canMoveOut}
           className={cn(vaultActionLinkClass, isOpen && vaultActionLinkActiveClass)}
         >
           {savingsCopy.moveMoney}
@@ -116,20 +83,7 @@ export function VaultTransferControls({
 
       {isOpen ? (
         <div className={vaultActionPanelClass}>
-          <div className="flex min-w-0 flex-wrap gap-2">
-            {presets.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setAmountInput(String(preset))}
-                className={cn(
-                  amountChipClass,
-                  amountInput === String(preset) && "border-[#0CC1E0] bg-[#F0FBFF]",
-                )}
-              >
-                {preset === sourceBalance ? "All" : formatMoney(preset)}
-              </button>
-            ))}
+          <div className="flex min-w-0 gap-2">
             <input
               type="number"
               min={0}
@@ -140,55 +94,24 @@ export function VaultTransferControls({
               aria-label={budgetCopy.moveAmountLabel}
               className={cn("w-24 shrink-0", vaultFieldInputClass)}
             />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setDirection("out")}
-              disabled={!canMoveOut}
-              className={cn(
-                "rounded-lg px-2 py-1 font-heading text-[10px] font-bold disabled:opacity-40",
-                direction === "out"
-                  ? "bg-[#031F82] text-white"
-                  : "border border-[#BDE9FB] text-[#031F82]",
-              )}
+            <select
+              value={destinationId}
+              onChange={(e) => setDestinationId(e.target.value)}
+              aria-label={budgetCopy.moveDestinationLabel}
+              className={cn("min-w-0 flex-1", vaultFieldInputClass)}
             >
-              {moveOutLabel}
-            </button>
-            <button
-              type="button"
-              onClick={() => setDirection("in")}
-              disabled={!canMoveIn}
-              className={cn(
-                "rounded-lg px-2 py-1 font-heading text-[10px] font-bold disabled:opacity-40",
-                direction === "in"
-                  ? "bg-[#031F82] text-white"
-                  : "border border-[#BDE9FB] text-[#031F82]",
-              )}
-            >
-              {moveInLabel}
-            </button>
+              {locations.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
           </div>
-
-          <select
-            value={counterpartId}
-            onChange={(e) => setCounterpartId(e.target.value)}
-            aria-label={budgetCopy.moveDestinationLabel}
-            className={cn("w-full", vaultFieldInputClass)}
-          >
-            {locations.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.label}
-              </option>
-            ))}
-          </select>
-
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={confirmTransfer}
-              disabled={sourceBalance <= 0}
+              disabled={contextBalance <= 0}
               className={vaultConfirmLinkClass}
             >
               {savingsCopy.moveConfirm}

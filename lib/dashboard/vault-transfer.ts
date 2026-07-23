@@ -13,10 +13,6 @@ export type VaultTransferLocation = {
   balance: number;
 };
 
-export function isVaultTransferLocationId(value: string): value is VaultTransferLocationId {
-  return value === "pool" || value.startsWith("goal-") || !value.startsWith("goal-");
-}
-
 export function buildVaultTransferLocations(
   buckets: readonly VaultBucket[],
   goals: readonly SavingsGoal[],

@@ -309,8 +309,6 @@ export type BucketExpandedPanelProps = {
   bucket: VaultBucket;
   buckets: VaultBucket[];
   goals: SavingsGoal[];
-  moneyToAllocate: number;
-  poolLabel: string;
   isPremium: boolean;
   spendingCategories: SpendingCategory[];
   onMarkSpent: (amount: number, categoryLabel: string) => void;
@@ -328,8 +326,6 @@ export function BucketExpandedPanel({
   bucket,
   buckets,
   goals,
-  moneyToAllocate,
-  poolLabel,
   isPremium,
   spendingCategories,
   onMarkSpent,

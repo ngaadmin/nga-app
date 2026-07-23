@@ -289,8 +289,6 @@ export type SaveJarPanelProps = {
   buckets: VaultBucket[];
   isPremium: boolean;
   goals: SavingsGoal[];
-  moneyToAllocate: number;
-  poolLabel: string;
   onAddGoal: (name: string, targetAmount: number) => void;
   onUpdateGoalTarget: (goalId: SavingsGoalId, targetAmount: number) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
@@ -308,8 +306,6 @@ export function SaveJarExpandedPanel({
   buckets,
   isPremium,
   goals,
-  moneyToAllocate,
-  poolLabel,
   onAddGoal,
   onUpdateGoalTarget,
   onAssignGoals,

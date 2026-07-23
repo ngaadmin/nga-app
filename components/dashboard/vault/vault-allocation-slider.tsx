@@ -9,10 +9,10 @@ import {
 } from "react";
 import {
   pointerValueFromClientX,
-  resolveVaultSliderStep,
   roundToSliderStep,
   VAULT_SLIDER_THUMB_INSET_PX,
 } from "@/lib/dashboard/vault-allocation-slider";
+import { VAULT_SLIDER_STEP } from "@/lib/dashboard/vault-amount-input";
 import { cn } from "@/lib/utils/cn";
 
 type VaultAllocationSliderProps = {
@@ -50,13 +50,12 @@ export function VaultAllocationSlider({
 
   const commit = useCallback(
     (next: number) => {
-      const step = resolveVaultSliderStep(poolTotal);
-      const clamped = roundToSliderStep(Math.min(max, Math.max(0, next)), step);
+      const clamped = roundToSliderStep(Math.min(max, Math.max(0, next)), VAULT_SLIDER_STEP);
       if (clamped === valueRef.current) return;
       valueRef.current = clamped;
       onChange(clamped);
     },
-    [max, onChange, poolTotal],
+    [max, onChange],
   );
 
   const readPointerValue = useCallback(
@@ -96,7 +95,7 @@ export function VaultAllocationSlider({
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (disabled || max <= 0) return;
 
-    const step = resolveVaultSliderStep(poolTotal);
+    const step = VAULT_SLIDER_STEP;
     let next = valueRef.current;
 
     switch (event.key) {

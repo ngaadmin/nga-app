@@ -439,8 +439,6 @@ export function VaultBudgetHub({
                   buckets={buckets}
                   isPremium={isPremium}
                   goals={goals}
-                  moneyToAllocate={moneyToAllocate}
-                  poolLabel={copy.poolLabel}
                   onAddGoal={onAddGoal}
                   onUpdateGoalTarget={onUpdateGoalTarget}
                   onAssignGoals={onAssignGoals}
@@ -453,8 +451,6 @@ export function VaultBudgetHub({
                   bucket={expandedBucket}
                   buckets={buckets}
                   goals={goals}
-                  moneyToAllocate={moneyToAllocate}
-                  poolLabel={copy.poolLabel}
                   isPremium={isPremium}
                   spendingCategories={spendingCategories}
                   onVaultTransfer={onVaultTransfer}

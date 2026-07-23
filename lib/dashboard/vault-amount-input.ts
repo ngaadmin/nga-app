@@ -5,10 +5,6 @@ export const VAULT_AMOUNT_STEP = 0.5;
 /** Whole-dollar steps for Vault allocation sliders. */
 export const VAULT_SLIDER_STEP = 1;
 
-export function resolveVaultSliderStep(_maxAmount?: number): number {
-  return VAULT_SLIDER_STEP;
-}
-
 /** Drag dampening scales down large jumps so thumbs are easier to land precisely. */
 export function resolveVaultSliderDampening(maxAmount: number): number {
   if (maxAmount <= 10) return 0.82;
@@ -55,9 +51,8 @@ export function clampVaultAllocationEntry(
   othersTotal: number,
   nextValue: number,
 ): number {
-  const step = resolveVaultSliderStep(poolTotal);
   const cap = roundAudAmount(Math.max(0, poolTotal - othersTotal));
-  return roundToSliderStep(Math.min(Math.max(0, nextValue), cap), step);
+  return roundToSliderStep(Math.min(Math.max(0, nextValue), cap));
 }
 
 /** Trim drafts in order when their combined total exceeds the pool. */
@@ -66,13 +61,12 @@ export function capAllocationDrafts(
   poolTotal: number,
   entryOrder: readonly string[],
 ): Record<string, number> {
-  const step = resolveVaultSliderStep(poolTotal);
   let remaining = poolTotal;
   const next: Record<string, number> = {};
 
   for (const id of entryOrder) {
     const raw = drafts[id] ?? 0;
-    const assigned = roundToSliderStep(Math.min(Math.max(0, raw), remaining), step);
+    const assigned = roundToSliderStep(Math.min(Math.max(0, raw), remaining));
     next[id] = assigned;
     remaining = roundAudAmount(Math.max(0, remaining - assigned));
   }

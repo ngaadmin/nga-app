@@ -1,7 +1,7 @@
 import {
   resolveVaultSliderDampening,
-  resolveVaultSliderStep,
   roundToSliderStep,
+  VAULT_SLIDER_STEP,
 } from "@/lib/dashboard/vault-amount-input";
 
 /** Half-width of the 28px slider thumb — keeps thumb inside the track bounds. */
@@ -25,7 +25,6 @@ export function pointerValueFromClientX(
   if (poolTotal <= 0 || sliderMax <= 0) return 0;
 
   const thumbInsetPx = options.thumbInsetPx ?? VAULT_SLIDER_THUMB_INSET_PX;
-  const step = resolveVaultSliderStep(poolTotal);
   const dampening = resolveVaultSliderDampening(poolTotal);
   const usableLeft = rect.left + thumbInsetPx;
   const usableWidth = Math.max(1, rect.width - thumbInsetPx * 2);
@@ -34,7 +33,7 @@ export function pointerValueFromClientX(
 
   let next = mode === "direct" ? raw : previousValue + (raw - previousValue) * dampening;
   next = Math.min(Math.max(0, next), sliderMax);
-  return roundToSliderStep(next, step);
+  return roundToSliderStep(next, VAULT_SLIDER_STEP);
 }
 
-export { resolveVaultSliderStep, roundToSliderStep };
+export { roundToSliderStep };

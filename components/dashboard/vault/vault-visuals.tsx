@@ -239,11 +239,8 @@ type PieSegment = {
   label: string;
 };
 
-function buildPieSegments(
-  buckets: readonly VaultBucket[],
-  poolAmount: number,
-): PieSegment[] {
-  const segments: PieSegment[] = buckets
+function buildPieSegments(buckets: readonly VaultBucket[]): PieSegment[] {
+  return buckets
     .filter((bucket) => bucket.balance > 0)
     .map((bucket) => ({
       id: bucket.id,
@@ -251,17 +248,6 @@ function buildPieSegments(
       color: bucketTheme(bucket).accent,
       label: bucket.name,
     }));
-
-  if (poolAmount > 0) {
-    segments.push({
-      id: "pool",
-      value: poolAmount,
-      color: "#FFA503",
-      label: "To allocate",
-    });
-  }
-
-  return segments;
 }
 
 function polarToCartesian(cx: number, cy: number, radius: number, angleDeg: number) {
@@ -297,16 +283,14 @@ function describePieWedge(
 
 type BucketPieChartProps = {
   buckets: readonly VaultBucket[];
-  poolAmount?: number;
   size?: number;
 };
 
 export function BucketPieChart({
   buckets,
-  poolAmount = 0,
   size = 56,
 }: BucketPieChartProps) {
-  const segments = buildPieSegments(buckets, poolAmount);
+  const segments = buildPieSegments(buckets);
   const total = segments.reduce((sum, segment) => sum + segment.value, 0);
   const radius = size / 2;
   const pieRadius = radius - 1;
@@ -339,14 +323,12 @@ export function BucketPieChart({
 
 type BucketPieLegendProps = {
   buckets: readonly VaultBucket[];
-  poolAmount?: number;
   variant?: "on-dark" | "on-light";
   layout?: "horizontal" | "vertical";
 };
 
 export function BucketPieLegend({
   buckets,
-  poolAmount = 0,
   variant = "on-dark",
   layout = "horizontal",
 }: BucketPieLegendProps) {
@@ -357,7 +339,7 @@ export function BucketPieLegend({
     <ul
       className={cn(
         layout === "vertical"
-          ? "flex min-w-0 flex-1 flex-col gap-1"
+          ? "flex min-w-0 flex-1 flex-col justify-center gap-0.5"
           : "mt-2 flex flex-wrap gap-x-3 gap-y-1",
       )}
     >
@@ -373,12 +355,6 @@ export function BucketPieLegend({
             <span className="truncate">{bucket.name}</span>
           </li>
         ))}
-      {poolAmount > 0 ? (
-        <li className={cn("flex items-center gap-1.5 font-sans text-xs", labelClass)}>
-          <span className="size-2 shrink-0 rounded-full bg-[#FFA503]" aria-hidden />
-          <span>To allocate</span>
-        </li>
-      ) : null}
     </ul>
   );
 }

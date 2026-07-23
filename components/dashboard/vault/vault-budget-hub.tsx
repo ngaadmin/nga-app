@@ -250,33 +250,49 @@ export function VaultBudgetHub({
   const bucketLimit = maxVaultBuckets(isPremium);
   const canAddMore = canAddVaultBucket(buckets.length, isPremium);
 
+  function scrollToAllocationSection() {
+    document
+      .getElementById("vault-allocation-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <>
       <div className="w-full min-w-0 space-y-6 overflow-x-hidden">
-        <div className="flex min-w-0 gap-2">
-          <div className="min-w-0 flex-[2] rounded-xl bg-[#031F82] px-4 py-4 text-white shadow-sm">
-            <p className="font-heading text-xs font-bold uppercase tracking-wide text-white/70">
-              {copy.totalBalanceLabel}
-            </p>
-            <p className="mt-0.5 font-heading text-xl font-extrabold leading-tight">
-              {formatMoney(totalBalance)}
-            </p>
-            {poolTotal > 0 ? (
-              <span className="mt-1.5 inline-block rounded-full bg-[#FFA503] px-2.5 py-0.5 font-heading text-xs font-bold text-[#031F82]">
-                +{formatMoney(poolTotal)} to allocate
-              </span>
-            ) : null}
-            <div className="mt-3 flex items-center gap-3">
-              <BucketPieChart
-                buckets={displayBuckets}
-                poolAmount={poolTotal}
-                size={64}
-              />
-              <BucketPieLegend
-                buckets={displayBuckets}
-                poolAmount={poolTotal}
-                layout="vertical"
-              />
+        <div className="flex min-w-0 items-stretch gap-2">
+          <div className="flex min-h-full min-w-0 flex-[2] flex-col rounded-xl border border-white/10 bg-gradient-to-br from-[#3D5F8C] to-[#2E4A72] p-3 text-white shadow-sm">
+            <div className="grid flex-1 grid-rows-[auto_auto_minmax(0,1fr)] gap-1.5">
+              <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-white/65">
+                {copy.totalBalanceLabel}
+              </p>
+              <div className="flex items-end justify-between gap-2">
+                <p className="font-heading text-xl font-extrabold leading-none">
+                  {formatMoney(totalBalance)}
+                </p>
+                {poolTotal > 0 ? (
+                  <button
+                    type="button"
+                    onClick={scrollToAllocationSection}
+                    aria-label={copy.toAllocateAriaLabel.replace(
+                      "{amount}",
+                      formatMoney(poolTotal),
+                    )}
+                    className="shrink-0 rounded-full bg-[#FFA503] px-2 py-1 text-center font-heading text-[10px] font-bold leading-tight text-[#031F82] transition-all hover:brightness-105 active:scale-[0.98]"
+                  >
+                    <span className="block tabular-nums">
+                      {copy.toAllocateAmountTemplate.replace(
+                        "{amount}",
+                        formatMoney(poolTotal),
+                      )}
+                    </span>
+                    <span className="block">{copy.toAllocateActionLabel}</span>
+                  </button>
+                ) : null}
+              </div>
+              <div className="grid min-h-0 grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-2">
+                <BucketPieChart buckets={displayBuckets} size={52} />
+                <BucketPieLegend buckets={displayBuckets} layout="vertical" />
+              </div>
             </div>
           </div>
           <FuturePotentialCompactButton
@@ -320,7 +336,11 @@ export function VaultBudgetHub({
         </section>
 
         {showAllocation ? (
-          <section aria-label={copy.sectionTitle} className="space-y-4 border-t border-[#BDE9FB]/40 pt-5">
+          <section
+            id="vault-allocation-section"
+            aria-label={copy.sectionTitle}
+            className="scroll-mt-4 space-y-4 border-t border-[#BDE9FB]/40 pt-5"
+          >
             <div className="flex items-end justify-between gap-3">
               <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.sectionTitle}</h2>
               {isFullyAllocated ? (

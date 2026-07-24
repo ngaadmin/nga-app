@@ -8,8 +8,11 @@ export type BucketSortScreenConfig<TBucket extends string = string> = WithDeclar
   buckets: readonly SortBucket<TBucket>[];
   items: readonly SortItem<TBucket>[];
   successMessage?: string;
+  /** Bold heading above the intro (e.g. "Wants or Needs?"). */
+  title?: string;
   /** Two-column layout with running spent total (L3 Screen 2). */
-  layout?: "default" | "spent-total" | "steps-row";
+  layout?: "default" | "spent-total" | "steps-row" | "stable-grid";
   /** Expected total when all items are sorted (shown in spent-total header). */
   targetTotal?: number;
+  emphasizeInstruction?: boolean;
 }>;

@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  lessonHoldButtonClass,
+  lessonHoldButtonCompleteClass,
+  lessonNarrativeClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -61,7 +66,7 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
-      signalLessonIncorrectAnswer(flow.flashScreen);
+      signalLessonIncorrectAnswer(flow.flashScreen, { flash: false });
       setHint(
         screen.releaseHint ??
           "(Must hold down fully for 2 seconds to activate)",
@@ -90,7 +95,7 @@ export function HoldToFillScreen({
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.narrative}</p>
+      <p className={lessonNarrativeClass}>{screen.narrative}</p>
       <div className="relative mt-8 flex flex-col items-center">
         <button
           type="button"
@@ -100,8 +105,8 @@ export function HoldToFillScreen({
           onPointerCancel={endHold}
           style={{ touchAction: "none" }}
           className={cn(
-            "select-none rounded-2xl border-b-4 border-[#099FB8] bg-[#0CC1E0] px-6 py-5 font-heading text-sm font-extrabold uppercase tracking-wide text-[#031F82] shadow-md transition-transform active:scale-[0.98]",
-            complete && "border-[#6366F1] bg-[#6366F1] text-white",
+            lessonHoldButtonClass,
+            complete && lessonHoldButtonCompleteClass,
           )}
         >
           {complete ? screen.frozenLabel : screen.holdLabel}

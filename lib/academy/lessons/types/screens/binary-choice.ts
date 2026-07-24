@@ -36,4 +36,7 @@ export type BinaryChoiceScreenConfig = WithDeclarative<{
   lockCorrectSelections?: boolean;
   /** persist = keep wrong selected (radio-list); shake = transient dud feedback (button list). */
   wrongInteraction?: "persist" | "shake";
+  /** neutral-selected = sunken tile only; colored = green/red tiles (default). */
+  choiceFeedback?: "colored" | "neutral-selected";
+  emphasizeInstruction?: boolean;
 }>;

@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
-import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
+import {
+  lessonEyebrowClass,
+  lessonIconLabelClass,
+  lessonIconTapClass,
+  lessonIconTapSelectedClass,
+  lessonIntroClass,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -23,8 +29,8 @@ export function SpotlightRoundsScreen({
 }) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
-  const [allDone, setAllDone] = useState(false);
   const round = screen.rounds[roundIndex];
+  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const pick = (which: "a" | "b") => {
     if (!round) return;
@@ -35,13 +41,12 @@ export function SpotlightRoundsScreen({
       if (onPersistentError) {
         onPersistentError(round.error);
       } else {
-        signalLessonIncorrectAnswer(flow.flashScreen);
+        signalLessonIncorrectAnswer(flow.flashScreen, { flash: !neutralSelected });
       }
       return;
     }
     celebrateLessonCorrectAnswer(flow.flashScreen);
     if (roundIndex + 1 >= screen.rounds.length) {
-      setAllDone(true);
       flow.markScreenReady(screenIndex);
       return;
     }
@@ -49,58 +54,42 @@ export function SpotlightRoundsScreen({
     setChoice(null);
   };
 
+  if (!round) return null;
+
+  const renderOption = (which: "a" | "b", icon: string, label: string) => {
+    const selected = choice === which;
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <button
+          type="button"
+          aria-pressed={selected}
+          onClick={() => pick(which)}
+          className={cn(
+            lessonIconTapClass,
+            selected && lessonIconTapSelectedClass,
+          )}
+        >
+          <span className="text-5xl leading-none" aria-hidden>
+            {icon}
+          </span>
+        </button>
+        <p className={cn(lessonIconLabelClass, "max-w-[13rem] sm:max-w-[15rem]")}>{label}</p>
+      </div>
+    );
+  };
+
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.prompt}</p>
-      <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-        {allDone ? "Complete" : `Round ${roundIndex + 1} of ${screen.rounds.length}`}
+      <p className={lessonIntroClass(screen.emphasizeInstruction === true)}>
+        {screen.prompt}
       </p>
-      {allDone ? (
-        <div className={cn(lessonCardClass, "mt-6 py-8 text-center")}>
-          <p className="font-heading text-sm font-bold text-[#22C55E]">All done</p>
-        </div>
-      ) : round ? (
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <LessonChoiceButton
-            onClick={() => pick("a")}
-            selected={choice === "a"}
-            variant={
-              choice === "a"
-                ? round.correct === "a"
-                  ? "correct"
-                  : "wrong"
-                : "neutral"
-            }
-            className="min-h-[7rem]"
-          >
-            <span className="flex items-start gap-2">
-              <span className="shrink-0 text-2xl" aria-hidden>
-                {round.iconA}
-              </span>
-              <span>{round.optionA}</span>
-            </span>
-          </LessonChoiceButton>
-          <LessonChoiceButton
-            onClick={() => pick("b")}
-            selected={choice === "b"}
-            variant={
-              choice === "b"
-                ? round.correct === "b"
-                  ? "correct"
-                  : "wrong"
-                : "neutral"
-            }
-            className="min-h-[7rem]"
-          >
-            <span className="flex items-start gap-2">
-              <span className="shrink-0 text-2xl" aria-hidden>
-                {round.iconB}
-              </span>
-              <span>{round.optionB}</span>
-            </span>
-          </LessonChoiceButton>
-        </div>
-      ) : null}
+      <p className={cn("mt-3", lessonEyebrowClass)}>
+        {`Round ${roundIndex + 1} of ${screen.rounds.length}`}
+      </p>
+      <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2">
+        {renderOption("a", round.iconA, round.optionA)}
+        {renderOption("b", round.iconB, round.optionB)}
+      </div>
     </>
   );
 }

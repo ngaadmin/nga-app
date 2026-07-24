@@ -1,9 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { LessonWordDropGame } from "@/components/academy/lesson/lesson-word-drop-game";
+import {
+  lessonInstructionClass,
+  lessonNarrativeClass,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { WordDropScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -20,6 +24,8 @@ function SingleBlankWordDropScreen({
   const [choice, setChoice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
+
   const handleChoice = (option: string) => {
     setChoice(option);
     if (option === screen.correctOption) {
@@ -30,44 +36,42 @@ function SingleBlankWordDropScreen({
     }
     setError(screen.wrongError);
     flow.incrementMistake();
-    signalLessonIncorrectAnswer(flow.flashScreen);
+    signalLessonIncorrectAnswer(flow.flashScreen, { flash: false });
   };
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+      <p className={lessonNarrativeClass}>
         {screen.narrativeBefore}{" "}
-        <span className="inline-block min-w-[5rem] border-b-2 border-dashed border-[#0CC1E0] px-2 font-heading font-extrabold text-[#031F82]">
+        <span className="inline-block min-w-[5rem] border-b-2 border-dashed border-[#0CC1E0] px-2 font-heading text-lg font-extrabold text-[#031F82]">
           {choice ?? "______"}
         </span>{" "}
         {screen.narrativeAfter}
       </p>
-      <div className={cn(lessonCardClass, "mt-5 space-y-2")}>
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-          {screen.promptLabel ?? "Word Drop"}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {screen.options.map((option) => (
-            <LessonChoiceButton
-              key={option}
-              onClick={() => handleChoice(option)}
-              selected={choice === option}
-              variant={
-                choice === option
-                  ? option === screen.correctOption
-                    ? "correct"
-                    : "wrong"
-                  : "neutral"
-              }
-              className="w-auto px-5 py-2 text-xs"
-            >
-              {option}
-            </LessonChoiceButton>
-          ))}
-        </div>
+      <p className={cn("mt-5", lessonInstructionClass)}>
+        {screen.promptLabel ?? "Pick the word that fits"}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {screen.options.map((option) => (
+          <LessonChoiceButton
+            key={option}
+            onClick={() => handleChoice(option)}
+            selected={choice === option}
+            variant={
+              neutralSelected || choice !== option
+                ? "neutral"
+                : option === screen.correctOption
+                  ? "correct"
+                  : "wrong"
+            }
+            className="w-auto px-6 py-3"
+          >
+            {option}
+          </LessonChoiceButton>
+        ))}
       </div>
       {error ? (
-        <p className="mt-4 rounded-xl bg-[#FFF7ED] px-3 py-2 font-sans text-xs text-[#031F82]">
+        <p className="mt-4 rounded-xl bg-[#FFF7ED] px-3 py-2 font-sans text-base text-[#031F82]">
           {error}
         </p>
       ) : null}

@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import { lessonSuccessMessageClass } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonIntroClass,
+  lessonPromptClass,
+  lessonSuccessMessageClass,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { BinaryChoiceScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -42,6 +47,8 @@ export function BinaryChoiceScreen({
       isMultiCorrect &&
       !isRadioList);
   const correctKeys = choiceOptions.filter((option) => option.isCorrect).map((o) => o.key);
+  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
+  const promptClass = lessonIntroClass(screen.emphasizeInstruction === true);
 
   const [optionOrder] = useState<ChoiceKey[]>(() => {
     const keys = choiceOptions.map((option) => option.key);
@@ -121,7 +128,7 @@ export function BinaryChoiceScreen({
     setError(selected?.feedback ?? screen.wrongError);
     flow.incrementMistake();
     signalLessonIncorrectAnswer(flow.flashScreen, {
-      flash: screen.errorStyle !== "banner",
+      flash: screen.errorStyle !== "banner" && !neutralSelected,
     });
   };
 
@@ -181,7 +188,7 @@ export function BinaryChoiceScreen({
       );
       flow.incrementMistake();
       signalLessonIncorrectAnswer(flow.flashScreen, {
-        flash: screen.errorStyle !== "banner",
+        flash: screen.errorStyle !== "banner" && !neutralSelected,
       });
       scheduleDudFeedbackReset(which);
       return;
@@ -193,13 +200,14 @@ export function BinaryChoiceScreen({
     setError(selected.feedback ?? screen.wrongError);
     flow.incrementMistake();
     signalLessonIncorrectAnswer(flow.flashScreen, {
-      flash: screen.errorStyle !== "banner",
+      flash: screen.errorStyle !== "banner" && !neutralSelected,
     });
   };
 
   const pick = isMultiCorrect ? pickMulti : pickSingle;
 
   const getVariant = (key: ChoiceKey): "neutral" | "correct" | "wrong" => {
+    if (neutralSelected) return "neutral";
     if (isMultiCorrect) {
       if (shakingKey === key) return "neutral";
       if (lockedCorrect.has(key)) {
@@ -260,7 +268,7 @@ export function BinaryChoiceScreen({
             className="flex w-full items-center gap-3 py-2.5 text-left"
           >
             {renderRadioIndicator(variant)}
-            <span className="font-heading text-sm font-bold leading-snug text-[#031F82]">
+            <span className="font-heading text-base font-bold leading-snug text-[#031F82]">
               {option.label}
             </span>
           </button>
@@ -308,12 +316,12 @@ export function BinaryChoiceScreen({
         ) : null}
 
         {screen.scenePrompt ? (
-          <p className="mt-4 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-            {screen.scenePrompt}
-          </p>
-        ) : null}
+        <p className="mt-4 font-sans text-base font-normal leading-relaxed text-[#1E3A5F]">
+          {screen.scenePrompt}
+        </p>
+      ) : null}
 
-        <p className="mt-4 font-sans text-sm font-bold leading-relaxed text-[#031F82]">
+        <p className={cn("mt-4", lessonPromptClass)}>
           {screen.prompt}
         </p>
 
@@ -340,7 +348,7 @@ export function BinaryChoiceScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.prompt}</p>
+      <p className={promptClass}>{screen.prompt}</p>
       <div className="mt-5 space-y-3">{renderOptionList()}</div>
       {success ? (
         <p className={lessonSuccessMessageClass}>{success}</p>

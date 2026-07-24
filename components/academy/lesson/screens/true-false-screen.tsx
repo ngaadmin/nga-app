@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
+import {
+  lessonIntroClass,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { TrueFalseScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
-import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
 export function TrueFalseScreen({
@@ -20,6 +22,7 @@ export function TrueFalseScreen({
   onPersistentError?: (message: string) => void;
 }) {
   const [choice, setChoice] = useState<"true" | "false" | null>(null);
+  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const pick = (option: "true" | "false") => {
     setChoice(option);
@@ -32,36 +35,33 @@ export function TrueFalseScreen({
     if (onPersistentError) {
       onPersistentError(screen.wrongError);
     } else {
-      signalLessonIncorrectAnswer(flow.flashScreen);
+      signalLessonIncorrectAnswer(flow.flashScreen, { flash: !neutralSelected });
     }
   };
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.prompt}</p>
-      <div className={cn(lessonCardClass, "mt-5")}>
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-          {screen.promptLabel ?? "True or False"}
-        </p>
-        <div className="mt-3 flex gap-3">
-          {(["true", "false"] as const).map((option) => (
-            <LessonChoiceButton
-              key={option}
-              onClick={() => pick(option)}
-              selected={choice === option}
-              variant={
-                choice === option
-                  ? option === screen.correctAnswer
-                    ? "correct"
-                    : "wrong"
-                  : "neutral"
-              }
-              className="flex-1 text-center uppercase"
-            >
-              {option}
-            </LessonChoiceButton>
-          ))}
-        </div>
+      <p className={lessonIntroClass(screen.emphasizeInstruction === true)}>
+        {screen.prompt}
+      </p>
+      <div className="mt-6 flex gap-3">
+        {(["true", "false"] as const).map((option) => (
+          <LessonChoiceButton
+            key={option}
+            onClick={() => pick(option)}
+            selected={choice === option}
+            variant={
+              neutralSelected || choice !== option
+                ? "neutral"
+                : option === screen.correctAnswer
+                  ? "correct"
+                  : "wrong"
+            }
+            className="flex-1"
+          >
+            {option === "true" ? "True" : "False"}
+          </LessonChoiceButton>
+        ))}
       </div>
     </>
   );

@@ -7,4 +7,6 @@ export type TrueFalseScreenConfig = WithDeclarative<{
   correctAnswer: "true" | "false";
   wrongError: string;
   promptLabel?: string;
+  choiceFeedback?: "colored" | "neutral-selected";
+  emphasizeInstruction?: boolean;
 }>;

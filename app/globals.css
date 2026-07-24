@@ -83,6 +83,150 @@
   .layer-island {
     isolation: isolate;
   }
+
+  .lesson-range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 0.75rem;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #bde9fb, #0cc1e0);
+  }
+
+  .lesson-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: 3px solid #031f82;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgb(3 31 130 / 0.25);
+    cursor: grab;
+  }
+
+  .lesson-range-slider::-moz-range-thumb {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: 3px solid #031f82;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgb(3 31 130 / 0.25);
+    cursor: grab;
+  }
+
+  .lesson-range-slider:active::-webkit-slider-thumb {
+    cursor: grabbing;
+    transform: scale(1.05);
+  }
+
+  /* Skill completion medal — coin body with embossed vector relief icon. */
+  .lesson-skill-medal__coin {
+    --medal-size: 7.25rem;
+    --medal-border: 5px;
+    --medal-field-inset: 14px;
+    --medal-icon-gap: 4px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--medal-size);
+    height: var(--medal-size);
+    border-radius: 50%;
+    isolation: isolate;
+  }
+
+  @media (min-width: 640px) {
+    .lesson-skill-medal__coin {
+      --medal-size: 8rem;
+      --medal-icon-gap: 5px;
+    }
+  }
+
+  .lesson-skill-medal__coin--unlocked {
+    background: radial-gradient(
+      circle at 32% 28%,
+      #ffffff 0%,
+      #f0f8fc 18%,
+      #e8f4fc 42%,
+      #c5dfef 78%,
+      #a8cce0 100%
+    );
+    border: var(--medal-border) solid #b8d4e8;
+    box-shadow:
+      0 5px 14px rgb(3 31 130 / 0.12),
+      inset 0 2px 3px rgb(255 255 255 / 0.85),
+      inset 0 -5px 10px rgb(3 31 130 / 0.1);
+  }
+
+  .lesson-skill-medal__coin--bronze {
+    background: radial-gradient(
+      circle at 32% 26%,
+      #f5d08a 0%,
+      #e8a84a 22%,
+      #d97706 52%,
+      #b45309 82%,
+      #78350f 100%
+    );
+    border: var(--medal-border) solid #78350f;
+    box-shadow:
+      0 6px 16px rgb(120 53 15 / 0.38),
+      inset 0 2px 3px rgb(255 255 255 / 0.22),
+      inset 0 -6px 12px rgb(60 30 0 / 0.35);
+  }
+
+  .lesson-skill-medal__rim {
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .lesson-skill-medal__coin--unlocked .lesson-skill-medal__rim {
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.55),
+      inset 0 0 0 2px rgb(168 204 224 / 0.35);
+  }
+
+  .lesson-skill-medal__coin--bronze .lesson-skill-medal__rim {
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.18),
+      inset 0 0 0 2px rgb(120 53 15 / 0.28);
+  }
+
+  .lesson-skill-medal__field {
+    position: absolute;
+    inset: var(--medal-field-inset);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .lesson-skill-medal__coin--unlocked .lesson-skill-medal__field {
+    box-shadow:
+      inset 0 4px 10px rgb(3 31 130 / 0.12),
+      inset 0 -3px 6px rgb(255 255 255 / 0.5);
+  }
+
+  .lesson-skill-medal__coin--bronze .lesson-skill-medal__field {
+    box-shadow:
+      inset 0 5px 12px rgb(40 20 0 / 0.32),
+      inset 0 -2px 5px rgb(255 255 255 / 0.1);
+  }
+
+  .lesson-skill-medal__relief {
+    position: absolute;
+    inset: calc(var(--medal-field-inset) + var(--medal-icon-gap));
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .lesson-skill-medal__icon {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
 }
 
 @layer base {

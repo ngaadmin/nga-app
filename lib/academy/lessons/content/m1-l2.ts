@@ -34,6 +34,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "bucket-sort",
     id: "want-vs-need-sort",
+    title: "Wants or Needs?",
     intro:
       "Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'",
     buckets: [

@@ -16,4 +16,6 @@ export type WordDropScreenConfig = WithDeclarative<{
     correctOption: string;
   }[];
   successMessage?: string;
+  /** neutral-selected = sunken tile only; colored = green/red tiles (default). */
+  choiceFeedback?: "colored" | "neutral-selected";
 }>;

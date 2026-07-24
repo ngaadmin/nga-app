@@ -1,10 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
-
-const nextButtonClass =
-  "h-touch w-full max-w-md rounded-nga-lg border-b-4 border-[#099FB8] bg-[#0CC1E0] px-6 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:border-b-4 disabled:opacity-40 disabled:active:translate-y-0";
 
 type AcademyLessonShellProps = {
   lessonLabel: string;
@@ -31,10 +29,10 @@ export function AcademyLessonShell({
       style={{ touchAction: "pan-y" }}
     >
       <header className="shrink-0 border-b border-[#BDE9FB]/40 px-4 py-3">
-        <p className="text-center font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+        <p className="text-center font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0] sm:text-sm">
           {lessonLabel}
         </p>
-        <p className="mt-1 text-center font-heading text-xs font-extrabold text-[#031F82]">
+        <p className="mt-1 text-center font-heading text-sm font-medium text-[#031F82] sm:text-base">
           Screen {currentScreenIndex + 1} of {totalScreens}
         </p>
         <div className="mt-2 flex justify-center gap-1.5">
@@ -66,13 +64,13 @@ export function AcademyLessonShell({
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-[#BDE9FB]/40 bg-white px-4 py-4 pb-6">
+      <footer className="flex shrink-0 justify-center border-t border-[#BDE9FB]/40 bg-white px-4 py-4 pb-6">
         {footerSlot ?? (
           <button
             type="button"
             onClick={onNext}
             disabled={!canAdvance}
-            className={nextButtonClass}
+            className={lessonNextButtonClass}
           >
             Next
           </button>

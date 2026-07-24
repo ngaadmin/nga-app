@@ -16,4 +16,5 @@ export type LinkMatchScreenConfig = WithDeclarative<{
   wrongError?: string;
   submitLabel?: string;
   successMessage?: string;
+  emphasizeInstruction?: boolean;
 }>;

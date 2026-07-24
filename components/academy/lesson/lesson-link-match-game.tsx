@@ -12,7 +12,7 @@ import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shel
 import {
   lessonChoiceBaseClass,
   lessonChoiceStateClass,
-  lessonSortChipClass,
+  lessonSortRowClass,
   lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
@@ -368,7 +368,7 @@ export function LessonLinkMatchGame({
               <div
                 className={cn(
                   lessonChoiceBaseClass,
-                  "cursor-default rounded-2xl py-3 text-sm shadow-none active:translate-y-0 active:border-b-4",
+                  "cursor-default rounded-full py-4 text-base shadow-none active:scale-100",
                   (isComplete || isRowLocked) &&
                     isRowMatched &&
                     lessonChoiceStateClass(true, "correct"),
@@ -414,8 +414,7 @@ export function LessonLinkMatchGame({
                   }
                 }}
                 className={cn(
-                  lessonSortChipClass,
-                  "w-full touch-none rounded-2xl py-3 text-sm select-none",
+                  lessonSortRowClass,
                   !isComplete &&
                     !isRowLocked &&
                     "cursor-grab active:cursor-grabbing",
@@ -424,7 +423,8 @@ export function LessonLinkMatchGame({
                     isRowMatched &&
                     lessonChoiceStateClass(true, "correct"),
                   isPulsing && matchPulseClass,
-                  isDragging && "z-raised scale-[1.02] opacity-90 shadow-md",
+                  isDragging &&
+                    "border-[#066B7C] bg-[#099FB8]/25 shadow-[inset_0_4px_12px_rgba(3,31,130,0.2)]",
                 )}
                 style={{ touchAction: isRowLocked ? "auto" : "none" }}
               >
@@ -436,7 +436,7 @@ export function LessonLinkMatchGame({
       </div>
 
       {!isComplete ? (
-        <p className="text-center font-sans text-xs text-[#1E3A5F]/75">
+        <p className="text-center font-sans text-sm text-[#1E3A5F]/80 sm:text-base">
           Drag possibilities up or down until each one lines up with its event.
           Correct matches lock in place.
         </p>

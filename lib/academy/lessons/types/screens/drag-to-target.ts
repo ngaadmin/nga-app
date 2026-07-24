@@ -11,4 +11,5 @@ export type DragToTargetScreenConfig = WithDeclarative<{
   /** Visual stack depth for coin-style drags. Default 5. */
   coinCount?: number;
   successMessage: string;
+  emphasizeInstruction?: boolean;
 }>;

@@ -13,7 +13,7 @@ import {
   lessonGoldClaimClass,
   lessonSortBucketActiveClass,
   lessonSortBucketClass,
-  lessonSortChipClass,
+  lessonSortRowClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 
@@ -302,8 +302,8 @@ export function LessonSavingsGoalGame({
                     type="button"
                     onPointerDown={(event) => handleChipPointerDown(itemId, event)}
                     className={cn(
-                      lessonSortChipClass,
-                      "flex items-center justify-between gap-1 px-2 py-2 text-left",
+                      lessonSortRowClass,
+                      "min-h-[2.75rem] justify-between px-2 py-2 text-[10px] sm:text-xs",
                       isDragging && "opacity-30",
                     )}
                   >
@@ -389,8 +389,8 @@ export function LessonSavingsGoalGame({
         <OverlayPortal>
           <div
             className={cn(
-              lessonSortChipClass,
-              "pointer-events-none fixed z-overlay w-[9rem] px-2 py-2 text-[11px] shadow-lg",
+              lessonSortRowClass,
+              "pointer-events-none fixed w-[9rem] px-2 py-2 text-left text-[11px] shadow-lg",
             )}
             style={{
               left: dragState.x,

@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
+import {
+  lessonEyebrowClass,
+  lessonIconLabelClass,
+  lessonIconTapClass,
+  lessonIconTapSelectedClass,
+  lessonIntroClass,
+  lessonSuccessMessageClass,
+  usesNeutralTapFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import type { TapRevealScreenConfig } from "@/lib/academy/lessons/types";
 import {
@@ -19,6 +27,10 @@ export function TapRevealScreen({
   const [tapped, setTapped] = useState<Set<string>>(new Set());
   const tapDisplay = screen.tapDisplay ?? "emoji-label";
   const revealDisplay = screen.revealDisplay ?? "emoji-label";
+  const tapLayout = screen.tapLayout ?? "icon-grid";
+  const neutralSelection = usesNeutralTapFeedback(screen.selectionFeedback);
+  const isIconGrid = tapLayout !== "default";
+  const introClass = lessonIntroClass(screen.emphasizeInstruction === true);
 
   useEffect(() => {
     if (screen.items.length === 0 && screen.advance?.mode === "auto-ready") {
@@ -33,11 +45,9 @@ export function TapRevealScreen({
   if (screen.items.length === 0) {
     return (
       <>
-        <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
+        <p className={introClass}>{screen.intro}</p>
         {screen.successMessage ? (
-          <p className="mt-4 rounded-xl bg-[#DCFCE7] px-3 py-2 font-sans text-xs text-[#031F82]">
-            {screen.successMessage}
-          </p>
+          <p className={lessonSuccessMessageClass}>{screen.successMessage}</p>
         ) : null}
       </>
     );
@@ -57,7 +67,7 @@ export function TapRevealScreen({
     });
 
     if (isShortTermSpend) {
-      signalLessonIncorrectAnswer(flow.flashScreen);
+      signalLessonIncorrectAnswer(flow.flashScreen, { flash: false });
     } else {
       celebrateLessonCorrectAnswer(flow.flashScreen);
     }
@@ -69,15 +79,15 @@ export function TapRevealScreen({
     }
     if (tapDisplay === "emoji-only" && item.emoji) {
       return (
-        <span className="text-2xl leading-none" aria-hidden>
+        <span className="text-5xl leading-none" aria-hidden>
           {item.emoji}
         </span>
       );
     }
     if (item.emoji) {
       return (
-        <span className="flex flex-col items-center gap-1">
-          <span className="text-xl leading-none" aria-hidden>
+        <span className="flex flex-col items-center gap-2">
+          <span className="text-4xl leading-none" aria-hidden>
             {item.emoji}
           </span>
           <span>{item.label}</span>
@@ -93,18 +103,18 @@ export function TapRevealScreen({
     }
     if (revealDisplay === "emoji-only" && item.emoji) {
       return (
-        <span className="text-xl leading-none" aria-hidden>
+        <span className="text-3xl leading-none" aria-hidden>
           {item.emoji}
         </span>
       );
     }
     if (item.emoji) {
       return (
-        <span className="inline-flex items-center gap-1">
-          <span className="text-base leading-none" aria-hidden>
+        <span className="inline-flex flex-col items-center gap-1">
+          <span className="text-3xl leading-none" aria-hidden>
             {item.emoji}
           </span>
-          <span>{item.label}</span>
+          <span className={lessonIconLabelClass}>{item.label}</span>
         </span>
       );
     }
@@ -113,10 +123,40 @@ export function TapRevealScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <p className={introClass}>{screen.intro}</p>
+
+      <div className={cn("mt-6 grid grid-cols-2 gap-5", isIconGrid && "gap-6")}>
         {screen.items.map((item) => {
           const isTapped = tapped.has(item.id);
+
+          if (isIconGrid) {
+            return (
+              <div key={item.id} className="flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  aria-label={item.label}
+                  aria-pressed={isTapped}
+                  disabled={isTapped}
+                  onClick={() => handleTap(item.id)}
+                  className={cn(
+                    lessonIconTapClass,
+                    isTapped && lessonIconTapSelectedClass,
+                    isTapped && "pointer-events-none",
+                  )}
+                >
+                  {item.emoji ? (
+                    <span className="text-5xl leading-none grayscale-[0.1]" aria-hidden>
+                      {item.emoji}
+                    </span>
+                  ) : (
+                    renderTapChip(item)
+                  )}
+                </button>
+                <span className={lessonIconLabelClass}>{item.label}</span>
+              </div>
+            );
+          }
+
           return (
             <LessonChoiceButton
               key={item.id}
@@ -125,36 +165,40 @@ export function TapRevealScreen({
               onClick={() => handleTap(item.id)}
               selected={isTapped}
               variant={
-                isTapped
-                  ? item.bucket === "short" || item.bucket === "want"
+                neutralSelection || !isTapped
+                  ? "neutral"
+                  : item.bucket === "short" || item.bucket === "want"
                     ? "wrong"
                     : "correct"
-                  : "neutral"
               }
-              className={cn("text-xs", isTapped && "pointer-events-none")}
+              className={cn(isTapped && "pointer-events-none")}
             >
               {renderTapChip(item)}
             </LessonChoiceButton>
           );
         })}
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-3">
+
+      <div className="mt-8 grid grid-cols-2 gap-4">
         {screen.buckets.map((bucket) => {
           const toneClass =
             bucket.tone === "short" || bucket.tone === "want"
-              ? "text-[#E11D48]"
-              : "text-[#22C55E]";
+              ? "text-[#BE123C]"
+              : "text-[#15803D]";
+          const revealed = screen.items.filter(
+            (item) => item.bucket === bucket.id && tapped.has(item.id),
+          );
+
           return (
-            <div key={bucket.id} className={cn(lessonCardClass, "min-h-[5.5rem]")}>
-              <p className={cn("font-heading text-[9px] font-bold uppercase", toneClass)}>
-                {bucket.label}
-              </p>
-              <ul className="mt-2 flex flex-col items-center gap-2 font-sans text-[11px] leading-snug text-[#1E3A5F]">
-                {screen.items
-                  .filter((item) => item.bucket === bucket.id && tapped.has(item.id))
-                  .map((item) => (
-                    <li key={item.id}>{renderRevealEntry(item)}</li>
-                  ))}
+            <div
+              key={bucket.id}
+              className="min-h-[7rem] rounded-3xl border-2 border-dashed border-[#BDE9FB]/70 bg-[#F7FBFF]/50 px-3 py-4"
+            >
+              <p className={cn(lessonEyebrowClass, toneClass)}>{bucket.label}</p>
+              <ul className="mt-3 flex flex-wrap justify-center gap-4">
+                {revealed.map((item) => (
+                  <li key={item.id}>{renderRevealEntry(item)}</li>
+                ))}
               </ul>
             </div>
           );

@@ -26,4 +26,5 @@ export type SavingsGoalScreenConfig = WithDeclarative<{
     label: string;
     alt?: string;
   };
+  emphasizeInstruction?: boolean;
 }>;

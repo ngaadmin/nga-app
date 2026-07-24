@@ -41,7 +41,7 @@ export const AcademyContextBanner = forwardRef<
           }}
           aria-label="Current Academy lesson"
         >
-          <p className="text-center font-heading text-xs font-bold leading-snug text-white sm:text-sm">
+          <p className="text-center font-heading text-sm font-bold leading-snug text-white sm:text-base">
             {context.label}
           </p>
         </div>

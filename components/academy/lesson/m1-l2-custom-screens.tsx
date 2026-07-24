@@ -5,13 +5,56 @@ import { M1_L2_CUSTOM } from "@/lib/academy/lessons/content/m1-l2";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   cnLessonChoice,
-  lessonSortChipClass,
+  lessonGiftTapClass,
+  lessonGiftTapRevealedClass,
+  lessonIntroClass,
+  lessonInstructionClass,
+  lessonEyebrowClass,
+  lessonRangeSliderClass,
+  lessonSortRowClass,
   lessonSubmitAnswerClass,
+  lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
-import { useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 const submitAnswerClass = lessonSubmitAnswerClass;
+
+function resolveRankRowIndexFromPointer(
+  clientY: number,
+  order: readonly string[],
+  rowElements: Partial<Record<string, HTMLDivElement | null>>,
+): number {
+  for (let index = 0; index < order.length; index += 1) {
+    const row = rowElements[order[index]!];
+    if (!row) continue;
+
+    const rect = row.getBoundingClientRect();
+    if (clientY >= rect.top && clientY <= rect.bottom) {
+      return index;
+    }
+  }
+
+  const lastId = order[order.length - 1];
+  const lastRow = lastId ? rowElements[lastId] : null;
+  if (lastRow && clientY > lastRow.getBoundingClientRect().bottom) {
+    return order.length - 1;
+  }
+
+  const firstId = order[0];
+  const firstRow = firstId ? rowElements[firstId] : null;
+  if (firstRow && clientY < firstRow.getBoundingClientRect().top) {
+    return 0;
+  }
+
+  return 0;
+}
 
 type BudgetState = {
   busChecked: boolean;
@@ -130,7 +173,7 @@ function BudgetWalletScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{config.intro}</p>
+      <p className={lessonIntroClass()}>{config.intro}</p>
       <div className={cn(lessonCardClass, "mt-5 text-center")}>
         <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
           {config.walletLabel}
@@ -192,43 +235,39 @@ function ReserveSliderScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{config.intro}</p>
-      <div className="mt-5 flex justify-center gap-3">
+      <p className={lessonIntroClass()}>{config.intro}</p>
+      <div className="mt-5 flex justify-center gap-6">
         <div
           className={cn(
-            lessonCardClass,
-            "flex w-28 shrink-0 flex-col items-center p-3 text-center transition-opacity",
-            reservedAmount >= config.target
-              ? "border-2 border-[#031F82] bg-[#BDE9FB]/30"
-              : "opacity-80",
+            "flex w-28 shrink-0 flex-col items-center text-center transition-opacity",
+            reservedAmount >= config.target ? "opacity-100" : "opacity-80",
           )}
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#031F82]/10 text-2xl">
+          <span className="text-4xl leading-none" aria-hidden>
             📱
           </span>
-          <p className="mt-2 font-heading text-[10px] font-extrabold text-[#031F82]">
+          <p className="mt-2 font-sans text-base font-medium text-[#031F82] sm:text-lg">
             {config.phoneCaseLabel}
           </p>
-          <p className="font-heading text-xs font-bold text-[#0CC1E0]">
+          <p className="font-heading text-base font-bold text-[#0CC1E0]">
             ${config.phoneCaseAmount}
           </p>
         </div>
         <div
           className={cn(
-            lessonCardClass,
-            "flex w-28 shrink-0 flex-col items-center p-3 text-center transition-all",
+            "flex w-28 shrink-0 flex-col items-center text-center transition-all",
             energyDrinkLocked
               ? "pointer-events-none opacity-35 grayscale"
               : "opacity-100",
           )}
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFA503]/15 text-2xl">
+          <span className="text-4xl leading-none" aria-hidden>
             ⚡
           </span>
-          <p className="mt-2 font-heading text-[10px] font-extrabold text-[#031F82]">
+          <p className="mt-2 font-sans text-base font-medium text-[#031F82] sm:text-lg">
             {config.energyDrinkLabel}
           </p>
-          <p className="font-heading text-xs font-bold text-[#FFA503]">
+          <p className="font-heading text-base font-bold text-[#FFA503]">
             ${config.energyDrinkAmount}
           </p>
         </div>
@@ -245,10 +284,10 @@ function ReserveSliderScreen({
             onDismissError();
             setReservedAmount(Number.parseInt(event.target.value, 10));
           }}
-          className="h-5 w-full cursor-pointer accent-[#031F82]"
+          className={lessonRangeSliderClass}
           aria-label="Reserve amount for brother's phone case"
         />
-        <p className="mt-3 text-center font-heading text-xs font-bold text-[#031F82]">
+        <p className="mt-3 text-center font-sans text-base font-medium text-[#031F82] sm:text-lg">
           ${reservedAmount} secured · ${spendableToday} free today
         </p>
       </div>
@@ -277,16 +316,91 @@ function RankStackScreen({
   );
   const [dragRankId, setDragRankId] = useState<RankItemId | null>(null);
 
+  const rankOrderRef = useRef(rankOrder);
+  rankOrderRef.current = rankOrder;
+  const rowRefs = useRef<Partial<Record<RankItemId, HTMLDivElement | null>>>({});
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const captureTargetRef = useRef<HTMLElement | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
+
   const correctOrder = [...config.correctOrder];
 
-  const moveRankItem = (fromIndex: number, toIndex: number) => {
-    if (fromIndex === toIndex || rankSubmitted) return;
-    const next = [...rankOrder];
-    const [moved] = next.splice(fromIndex, 1);
-    if (!moved) return;
-    next.splice(toIndex, 0, moved);
-    setRankOrder(next);
-    onDismissError();
+  const moveRankItem = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (fromIndex === toIndex || rankSubmitted) return;
+      setRankOrder((current) => {
+        const next = [...current];
+        const [moved] = next.splice(fromIndex, 1);
+        if (!moved) return current;
+        next.splice(toIndex, 0, moved);
+        rankOrderRef.current = next;
+        return next;
+      });
+      onDismissError();
+    },
+    [onDismissError, rankSubmitted],
+  );
+
+  const releasePointerCapture = useCallback(() => {
+    const target = captureTargetRef.current;
+    const pointerId = activePointerIdRef.current;
+    if (target && pointerId !== null && target.hasPointerCapture(pointerId)) {
+      target.releasePointerCapture(pointerId);
+    }
+    captureTargetRef.current = null;
+    activePointerIdRef.current = null;
+  }, []);
+
+  const endDrag = useCallback(() => {
+    releasePointerCapture();
+    setDragRankId(null);
+  }, [releasePointerCapture]);
+
+  useEffect(() => () => endDrag(), [endDrag]);
+
+  const reorderDraggedRank = useCallback(
+    (clientY: number) => {
+      if (!dragRankId || rankSubmitted) return;
+
+      const fromIndex = rankOrderRef.current.indexOf(dragRankId);
+      if (fromIndex < 0) return;
+
+      const toIndex = resolveRankRowIndexFromPointer(
+        clientY,
+        rankOrderRef.current,
+        rowRefs.current,
+      );
+      if (toIndex >= 0 && fromIndex !== toIndex) {
+        moveRankItem(fromIndex, toIndex);
+      }
+    },
+    [dragRankId, moveRankItem, rankSubmitted],
+  );
+
+  const handleRankPointerDown = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    itemId: RankItemId,
+  ) => {
+    if (rankSubmitted) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const captureTarget = boardRef.current ?? event.currentTarget;
+    captureTargetRef.current = captureTarget;
+    activePointerIdRef.current = event.pointerId;
+    captureTarget.setPointerCapture(event.pointerId);
+    setDragRankId(itemId);
+  };
+
+  const handleBoardPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragRankId || activePointerIdRef.current !== event.pointerId) return;
+    reorderDraggedRank(event.clientY);
+  };
+
+  const handleBoardPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) return;
+    endDrag();
   };
 
   const getRankSubmitError = (order: RankItemId[]): string => {
@@ -322,40 +436,55 @@ function RankStackScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{config.intro}</p>
-      <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        {config.dragHint}
-      </p>
-      <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-        {config.axisLabel}
-      </p>
-      <div className="mt-3 space-y-2">
+      <p className={lessonIntroClass()}>{config.intro}</p>
+      <p className={cn("mt-2", lessonInstructionClass)}>{config.dragHint}</p>
+      <p className={lessonEyebrowClass}>{config.axisLabel}</p>
+      <div
+        ref={boardRef}
+        className="mt-3 space-y-2"
+        onPointerMove={handleBoardPointerMove}
+        onPointerUp={handleBoardPointerUp}
+        onPointerCancel={handleBoardPointerUp}
+      >
         {rankOrder.map((itemId, index) => {
           const item = config.items.find((entry) => entry.id === itemId);
           if (!item) return null;
+          const isDragging = dragRankId === itemId;
           return (
             <div
               key={itemId}
-              draggable={!rankSubmitted}
-              onDragStart={() => setDragRankId(itemId)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.stopPropagation();
-                if (dragRankId === null) return;
-                const fromIndex = rankOrder.indexOf(dragRankId);
-                moveRankItem(fromIndex, index);
-                setDragRankId(null);
+              ref={(node) => {
+                rowRefs.current[itemId] = node;
               }}
-              onDragEnd={() => setDragRankId(null)}
+              role="button"
+              tabIndex={rankSubmitted ? -1 : 0}
+              aria-grabbed={isDragging}
+              aria-label={`Reorder: ${item.label}`}
+              onPointerDown={(event) => handleRankPointerDown(event, itemId)}
+              onKeyDown={(event) => {
+                if (rankSubmitted) return;
+                if (event.key === "ArrowUp" && index > 0) {
+                  event.preventDefault();
+                  moveRankItem(index, index - 1);
+                }
+                if (event.key === "ArrowDown" && index < rankOrder.length - 1) {
+                  event.preventDefault();
+                  moveRankItem(index, index + 1);
+                }
+              }}
               className={cn(
-                lessonSortChipClass,
-                "w-full text-left",
+                lessonSortRowClass,
                 !rankSubmitted && "cursor-grab active:cursor-grabbing",
                 rankSubmitted && "border-[#22C55E] bg-[#DCFCE7]/50",
+                isDragging &&
+                  "z-raised border-[#066B7C] bg-[#099FB8]/25 shadow-[inset_0_4px_12px_rgba(3,31,130,0.2)]",
               )}
+              style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <span className="mr-2 font-heading text-[#0CC1E0]">{index + 1}.</span>
-              {item.label}
+              <span className="mr-3 w-6 shrink-0 text-left font-heading font-bold text-[#0CC1E0]">
+                {index + 1}.
+              </span>
+              <span className="min-w-0 flex-1 text-left">{item.label}</span>
             </div>
           );
         })}
@@ -375,9 +504,7 @@ function RankStackScreen({
         </div>
       ) : null}
       {rankSuccessMessage ? (
-        <p className="mt-4 rounded-xl bg-[#DCFCE7] px-4 py-3 font-sans text-sm text-[#031F82]">
-          {rankSuccessMessage}
-        </p>
+        <p className={lessonSuccessMessageClass}>{rankSuccessMessage}</p>
       ) : null}
     </>
   );
@@ -400,13 +527,13 @@ function GiftRevealScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{config.intro}</p>
+      <p className={lessonIntroClass()}>{config.intro}</p>
       <div className="mt-6 flex items-end justify-between gap-2 px-2">
         <div className="text-center">
           <p className="text-4xl" aria-hidden>
             {config.characterLeft.emoji}
           </p>
-          <p className="mt-1 font-heading text-[10px] font-bold text-[#031F82]">
+          <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">
             {config.characterLeft.label}
           </p>
         </div>
@@ -418,9 +545,8 @@ function GiftRevealScreen({
           }}
           disabled={revealed}
           className={cn(
-            "rounded-2xl border-b-4 border-[#9A5F00] bg-gradient-to-br from-[#FFE082] to-[#FFA503] px-6 py-4 text-4xl shadow-md transition-transform hover:scale-105 active:scale-95",
-            revealed &&
-              "scale-110 border-[#22C55E] bg-[#DCFCE7] shadow-[0_0_24px_rgba(34,197,94,0.45)]",
+            lessonGiftTapClass,
+            revealed && lessonGiftTapRevealedClass,
           )}
           aria-label="Tap gift box"
         >
@@ -430,7 +556,7 @@ function GiftRevealScreen({
           <p className="text-4xl" aria-hidden>
             {config.characterRight.emoji}
           </p>
-          <p className="mt-1 font-heading text-[10px] font-bold text-[#031F82]">
+          <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">
             {config.characterRight.label}
           </p>
         </div>

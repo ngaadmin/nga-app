@@ -12,4 +12,6 @@ export type SpotlightRoundsScreenConfig = WithDeclarative<{
     correct: "a" | "b";
     error: string;
   }[];
+  choiceFeedback?: "colored" | "neutral-selected";
+  emphasizeInstruction?: boolean;
 }>;

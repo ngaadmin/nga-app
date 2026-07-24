@@ -10,7 +10,11 @@ import {
 import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import {
   lessonChoiceStateClass,
-  lessonSortChipClass,
+  lessonInstructionClass,
+  lessonNarrativeClass,
+  lessonSortBucketErrorClass,
+  lessonSortPoolChipClass,
+  lessonSortRowClass,
   lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
@@ -336,7 +340,7 @@ export function LessonWordDropGame({
       onPointerUp={handleBoardPointerUp}
       onPointerCancel={handleBoardPointerUp}
     >
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+      <p className={lessonInstructionClass}>
         {parts.map((part, index) => (
           <span key={`${part}-${index}`}>
             {part}
@@ -373,10 +377,10 @@ export function LessonWordDropGame({
               "ring-2 ring-[#0CC1E0]/35",
           )}
         >
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+          <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0]">
             {promptLabel}
           </p>
-          <p className="font-sans text-xs text-[#1E3A5F]/75">
+          <p className={lessonNarrativeClass}>
             Drag a word into each blank. Drag a filled word back here to change
             your answer.
           </p>
@@ -393,8 +397,7 @@ export function LessonWordDropGame({
                   startDrag(event, option, null);
                 }}
                 className={cn(
-                  lessonSortChipClass,
-                  "touch-none px-4 py-2 text-xs select-none",
+                  lessonSortPoolChipClass,
                   dragState?.word === option &&
                     dragState.fromBlankIndex === null &&
                     "opacity-40",
@@ -413,10 +416,7 @@ export function LessonWordDropGame({
       ) : null}
 
       {error ? (
-        <p
-          className="rounded-xl border-2 border-[#E11D48] bg-[#FEE2E2]/50 px-3 py-2 font-sans text-xs text-[#031F82]"
-          role="alert"
-        >
+        <p className={cn("mt-4", lessonSortBucketErrorClass, "px-3 py-2 font-sans text-xs text-[#031F82]")} role="alert">
           {error}
         </p>
       ) : null}
@@ -425,8 +425,8 @@ export function LessonWordDropGame({
         <OverlayPortal className="overflow-visible">
           <div
             className={cn(
-              lessonSortChipClass,
-              "pointer-events-none fixed shadow-lg",
+              lessonSortRowClass,
+              "pointer-events-none fixed text-left shadow-lg",
             )}
             style={{
               left: dragState.x,

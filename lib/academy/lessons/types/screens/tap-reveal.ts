@@ -12,4 +12,10 @@ export type TapRevealScreenConfig<TBucket extends string = string> = WithDeclara
   tapDisplay?: "emoji-only" | "emoji-label" | "label";
   /** Sorted bucket lists: emoji-only, label-only, or emoji + label. Default emoji-label. */
   revealDisplay?: "emoji-only" | "emoji-label" | "label";
+  /** icon-grid = large icons with labels below; default = compact tiles. */
+  tapLayout?: "default" | "icon-grid";
+  /** neutral = sunken highlight only; colored = green/red selection (default). */
+  selectionFeedback?: "neutral" | "colored";
+  /** Render intro in bold instruction style. */
+  emphasizeInstruction?: boolean;
 }>;

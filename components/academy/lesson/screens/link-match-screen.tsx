@@ -2,7 +2,10 @@
 
 import { useCallback, useRef, useState } from "react";
 import { LessonLinkMatchGame } from "@/components/academy/lesson/lesson-link-match-game";
-import { lessonSuccessMessageClass } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonIntroClass,
+  lessonSuccessMessageClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { LinkMatchScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -31,12 +34,12 @@ export function LinkMatchScreen({
   }, []);
 
   const handleMismatch = useCallback(() => {
-    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen, { flash: false });
   }, []);
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.intro}</p>
+      <p className={lessonIntroClass(screen.emphasizeInstruction === true)}>{screen.intro}</p>
       <LessonLinkMatchGame
         pairs={screen.pairs}
         eventColumnLabel={screen.eventColumnLabel}

@@ -38,6 +38,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     correctOption: "Spent",
     wrongError:
       "Not quite! Holly's friends are showing off - what's her brain pushing her to do with that $25?",
+    promptLabel: "Pick the word that fits",
   },
   {
     type: "binary-choice",
@@ -60,7 +61,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     type: "tap-reveal",
     id: "tap-short-vs-long",
     intro:
-      "Holly's $25 is gone and she only had a few minutes of excitement. Tap these items to see the difference between short fun and longer fun!",
+      "Holly's $25 is gone and she only had a few minutes of excitement. Tap each item to see whether it's short fun or longer fun!",
     tapDisplay: "emoji-only",
     revealDisplay: "emoji-only",
     buckets: [
@@ -77,7 +78,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "bucket-sort",
     id: "sort-short-vs-long",
-    intro: "Your turn! Sort these items into the correct bucket.",
+    intro: "Your turn! Drag each item into the correct bucket.",
     buckets: [
       { id: "short", label: "Short Fun" },
       { id: "long", label: "More Fun for Longer" },

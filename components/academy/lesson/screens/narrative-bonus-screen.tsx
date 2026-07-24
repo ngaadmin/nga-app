@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { lessonGoldClaimClass } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonGoldClaimClass,
+  lessonNarrativeClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { NarrativeBonusScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -36,9 +39,9 @@ export function NarrativeBonusScreen({
 
   return (
     <>
-      <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{screen.narrative}</p>
+      <p className={lessonNarrativeClass}>{screen.narrative}</p>
       {screen.successMessage ? (
-        <p className="mt-4 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+        <p className={cn("mt-4", lessonNarrativeClass)}>
           {screen.successMessage}
         </p>
       ) : null}

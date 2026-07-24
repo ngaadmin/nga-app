@@ -11,8 +11,10 @@ export type BucketSortScreenConfig<TBucket extends string = string> = WithDeclar
   /** Bold heading above the intro (e.g. "Wants or Needs?"). */
   title?: string;
   /** Two-column layout with running spent total (L3 Screen 2). */
-  layout?: "default" | "spent-total" | "steps-row" | "stable-grid";
+  layout?: "default" | "spent-total" | "steps-row" | "stable-grid" | "statement-sort";
   /** Expected total when all items are sorted (shown in spent-total header). */
   targetTotal?: number;
+  /** Left-column heading for spent-total layout (e.g. "Holly's purchases"). */
+  poolColumnLabel?: string;
   emphasizeInstruction?: boolean;
 }>;

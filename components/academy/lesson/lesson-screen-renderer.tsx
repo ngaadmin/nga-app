@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import type { LessonRewards, ScreenConfig } from "@/lib/academy/lessons/types";
 import { LESSON_CASH_IN_LABEL } from "@/components/academy/lesson/lesson-shared-styles";
@@ -26,134 +27,139 @@ export type LessonScreenRendererProps = {
   onDismissPersistentError?: () => void;
 };
 
-export function LessonScreenRenderer({
-  screen,
-  screenIndex,
-  flow,
-  rewards,
-  awardBonusXp,
-  onPersistentError,
-  onDismissPersistentError,
-}: LessonScreenRendererProps) {
-  switch (screen.type) {
-    case "word-drop":
-      return (
-        <WordDropScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-        />
-      );
-    case "binary-choice":
-      return (
-        <BinaryChoiceScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "true-false":
-      return (
-        <TrueFalseScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-          onPersistentError={onPersistentError}
-        />
-      );
-    case "tap-reveal":
-      return (
-        <TapRevealScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "link-match":
-      return (
-        <LinkMatchScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "bucket-sort":
-      return (
-        <BucketSortScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-          onPersistentError={onPersistentError}
-          onDismissPersistentError={onDismissPersistentError}
-        />
-      );
-    case "drag-to-target":
-      return (
-        <DragToTargetScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "savings-goal":
-      return (
-        <SavingsGoalScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "hold-to-fill":
-      return (
-        <HoldToFillScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "narrative-bonus":
-      return (
-        <NarrativeBonusScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-          awardBonusXp={awardBonusXp}
-        />
-      );
-    case "spotlight-rounds":
-      return (
-        <SpotlightRoundsScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-          onPersistentError={onPersistentError}
-          onDismissError={onDismissPersistentError}
-        />
-      );
-    case "completion":
-      return (
-        <CompletionScreen
-          screen={screen}
-          screenIndex={screenIndex}
-          flow={flow}
-          rewards={rewards}
-        />
-      );
-    case "custom":
-      return null;
-    default:
-      return null;
-  }
+type ScreenRenderer = (props: LessonScreenRendererProps) => ReactNode;
+
+/** Maps each shipped screen type to its adapter component. */
+const LESSON_SCREEN_RENDERERS: Partial<
+  Record<ScreenConfig["type"], ScreenRenderer>
+> = {
+  "word-drop": ({ screen, screenIndex, flow }) => (
+    <WordDropScreen
+      screen={screen as Extract<ScreenConfig, { type: "word-drop" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+    />
+  ),
+  "binary-choice": ({ screen, screenIndex, flow, rewards }) => (
+    <BinaryChoiceScreen
+      screen={screen as Extract<ScreenConfig, { type: "binary-choice" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "true-false": ({ screen, screenIndex, flow, rewards, onPersistentError }) => (
+    <TrueFalseScreen
+      screen={screen as Extract<ScreenConfig, { type: "true-false" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      onPersistentError={onPersistentError}
+    />
+  ),
+  "tap-reveal": ({ screen, screenIndex, flow, rewards }) => (
+    <TapRevealScreen
+      screen={screen as Extract<ScreenConfig, { type: "tap-reveal" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "link-match": ({ screen, screenIndex, flow, rewards }) => (
+    <LinkMatchScreen
+      screen={screen as Extract<ScreenConfig, { type: "link-match" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "bucket-sort": ({
+    screen,
+    screenIndex,
+    flow,
+    rewards,
+    onPersistentError,
+    onDismissPersistentError,
+  }) => (
+    <BucketSortScreen
+      screen={screen as Extract<ScreenConfig, { type: "bucket-sort" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      onPersistentError={onPersistentError}
+      onDismissPersistentError={onDismissPersistentError}
+    />
+  ),
+  "drag-to-target": ({ screen, screenIndex, flow, rewards }) => (
+    <DragToTargetScreen
+      screen={screen as Extract<ScreenConfig, { type: "drag-to-target" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "savings-goal": ({ screen, screenIndex, flow, rewards }) => (
+    <SavingsGoalScreen
+      screen={screen as Extract<ScreenConfig, { type: "savings-goal" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "hold-to-fill": ({ screen, screenIndex, flow, rewards }) => (
+    <HoldToFillScreen
+      screen={screen as Extract<ScreenConfig, { type: "hold-to-fill" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "narrative-bonus": ({
+    screen,
+    screenIndex,
+    flow,
+    rewards,
+    awardBonusXp,
+  }) => (
+    <NarrativeBonusScreen
+      screen={screen as Extract<ScreenConfig, { type: "narrative-bonus" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      awardBonusXp={awardBonusXp}
+    />
+  ),
+  "spotlight-rounds": ({
+    screen,
+    screenIndex,
+    flow,
+    rewards,
+    onPersistentError,
+    onDismissPersistentError,
+  }) => (
+    <SpotlightRoundsScreen
+      screen={screen as Extract<ScreenConfig, { type: "spotlight-rounds" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      onPersistentError={onPersistentError}
+      onDismissError={onDismissPersistentError}
+    />
+  ),
+  completion: ({ screen, screenIndex, flow, rewards }) => (
+    <CompletionScreen
+      screen={screen as Extract<ScreenConfig, { type: "completion" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  custom: () => null,
+};
+
+export function LessonScreenRenderer(props: LessonScreenRendererProps) {
+  const render = LESSON_SCREEN_RENDERERS[props.screen.type];
+  return render ? render(props) : null;
 }
 
 export function getCompletionFooterLabel(
@@ -167,3 +173,8 @@ export function getCompletionFooterLabel(
   }
   return LESSON_CASH_IN_LABEL;
 }
+
+/** Screen types registered in the renderer (for audits and tooling). */
+export const REGISTERED_LESSON_SCREEN_TYPES = Object.keys(
+  LESSON_SCREEN_RENDERERS,
+) as ScreenConfig["type"][];

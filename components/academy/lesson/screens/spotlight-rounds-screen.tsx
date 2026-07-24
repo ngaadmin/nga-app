@@ -3,12 +3,12 @@
 import { useState } from "react";
 import {
   lessonEyebrowClass,
-  lessonIconLabelClass,
-  lessonIconTapClass,
-  lessonIconTapSelectedClass,
-  lessonIntroClass,
   usesNeutralChoiceFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  LessonIconOption,
+  LessonScreenLayout,
+} from "@/components/academy/lesson/lesson-ui";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -56,33 +56,22 @@ export function SpotlightRoundsScreen({
 
   if (!round) return null;
 
-  const renderOption = (which: "a" | "b", icon: string, label: string) => {
-    const selected = choice === which;
-    return (
-      <div className="flex flex-col items-center gap-3">
-        <button
-          type="button"
-          aria-pressed={selected}
-          onClick={() => pick(which)}
-          className={cn(
-            lessonIconTapClass,
-            selected && lessonIconTapSelectedClass,
-          )}
-        >
-          <span className="text-5xl leading-none" aria-hidden>
-            {icon}
-          </span>
-        </button>
-        <p className={cn(lessonIconLabelClass, "max-w-[13rem] sm:max-w-[15rem]")}>{label}</p>
-      </div>
-    );
-  };
+  const renderOption = (which: "a" | "b", icon: string, label: string) => (
+    <LessonIconOption
+      label={label}
+      emoji={icon}
+      display="emoji-label"
+      selected={choice === which}
+      labelClassName="max-w-[13rem] sm:max-w-[15rem]"
+      onClick={() => pick(which)}
+    />
+  );
 
   return (
-    <>
-      <p className={lessonIntroClass(screen.emphasizeInstruction === true)}>
-        {screen.prompt}
-      </p>
+    <LessonScreenLayout
+      prompt={screen.prompt}
+      emphasizeInstruction={screen.emphasizeInstruction === true}
+    >
       <p className={cn("mt-3", lessonEyebrowClass)}>
         {`Round ${roundIndex + 1} of ${screen.rounds.length}`}
       </p>
@@ -90,6 +79,6 @@ export function SpotlightRoundsScreen({
         {renderOption("a", round.iconA, round.optionA)}
         {renderOption("b", round.iconB, round.optionB)}
       </div>
-    </>
+    </LessonScreenLayout>
   );
 }

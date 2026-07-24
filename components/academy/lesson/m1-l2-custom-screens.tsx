@@ -1,6 +1,10 @@
 "use client";
 
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
+import {
+  LessonCard,
+  LessonColumnLabel,
+  LessonSuccessBanner,
+} from "@/components/academy/lesson/lesson-ui";
 import { M1_L2_CUSTOM } from "@/lib/academy/lessons/content/m1-l2";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
@@ -13,7 +17,6 @@ import {
   lessonRangeSliderClass,
   lessonSortRowClass,
   lessonSubmitAnswerClass,
-  lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -174,10 +177,8 @@ function BudgetWalletScreen({
   return (
     <>
       <p className={lessonIntroClass()}>{config.intro}</p>
-      <div className={cn(lessonCardClass, "mt-5 text-center")}>
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-          {config.walletLabel}
-        </p>
+      <LessonCard className="mt-5 text-center">
+        <LessonColumnLabel>{config.walletLabel}</LessonColumnLabel>
         <p
           className={cn(
             "mt-2 font-heading text-3xl font-extrabold",
@@ -186,7 +187,7 @@ function BudgetWalletScreen({
         >
           ${Math.max(0, budgetRemaining)}
         </p>
-      </div>
+      </LessonCard>
       <div className="mt-4 space-y-2">
         {config.items.map((item) => {
           const checked =
@@ -504,7 +505,7 @@ function RankStackScreen({
         </div>
       ) : null}
       {rankSuccessMessage ? (
-        <p className={lessonSuccessMessageClass}>{rankSuccessMessage}</p>
+        <LessonSuccessBanner>{rankSuccessMessage}</LessonSuccessBanner>
       ) : null}
     </>
   );

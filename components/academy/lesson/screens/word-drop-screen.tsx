@@ -6,8 +6,9 @@ import { LessonWordDropGame } from "@/components/academy/lesson/lesson-word-drop
 import {
   lessonInstructionClass,
   lessonNarrativeClass,
-  usesNeutralChoiceFeedback,
+  resolveChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonErrorBanner } from "@/components/academy/lesson/lesson-ui";
 import type { WordDropScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -23,8 +24,6 @@ function SingleBlankWordDropScreen({
 }: CoreScreenProps<WordDropScreenConfig>) {
   const [choice, setChoice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const handleChoice = (option: string) => {
     setChoice(option);
@@ -57,24 +56,17 @@ function SingleBlankWordDropScreen({
             key={option}
             onClick={() => handleChoice(option)}
             selected={choice === option}
-            variant={
-              neutralSelected || choice !== option
-                ? "neutral"
-                : option === screen.correctOption
-                  ? "correct"
-                  : "wrong"
-            }
+            variant={resolveChoiceVariant(
+              choice === option,
+              option === screen.correctOption,
+            )}
             className="w-auto px-6 py-3"
           >
             {option}
           </LessonChoiceButton>
         ))}
       </div>
-      {error ? (
-        <p className="mt-4 rounded-xl bg-[#FFF7ED] px-3 py-2 font-sans text-base text-[#031F82]">
-          {error}
-        </p>
-      ) : null}
+      {error ? <LessonErrorBanner>{error}</LessonErrorBanner> : null}
     </>
   );
 }

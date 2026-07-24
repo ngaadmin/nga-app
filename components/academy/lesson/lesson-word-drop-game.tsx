@@ -7,16 +7,16 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import {
+  lessonBlankSlotClass,
+  lessonBlankSlotFilledClass,
   lessonChoiceStateClass,
   lessonInstructionClass,
   lessonNarrativeClass,
   lessonSortBucketErrorClass,
   lessonSortPoolChipClass,
-  lessonSortRowClass,
-  lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonCard, LessonColumnLabel, LessonSuccessBanner } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { cn } from "@/lib/utils/cn";
 
@@ -310,10 +310,8 @@ export function LessonWordDropGame({
 
   const blankSlotClass = (index: number, filled: boolean) =>
     cn(
-      "inline-flex min-h-[2rem] min-w-[5rem] items-center justify-center rounded-xl border-2 border-dashed px-2 py-1 align-middle font-heading text-xs font-extrabold text-[#031F82] transition-colors",
-      filled
-        ? "border-[#0CC1E0] bg-[#BDE9FB]/30"
-        : "border-[#0CC1E0]/70 bg-white",
+      filled ? lessonBlankSlotFilledClass : lessonBlankSlotClass,
+      "align-middle text-xs font-extrabold transition-colors",
       hoverBlankIndex === index &&
         "border-[#0CC1E0] bg-[#BDE9FB]/45 ring-2 ring-[#0CC1E0]/35",
       error &&
@@ -367,19 +365,16 @@ export function LessonWordDropGame({
       </p>
 
       {!isComplete ? (
-        <div
+        <LessonCard
           ref={poolRef}
           className={cn(
-            lessonCardClass,
             "space-y-2 transition-colors",
             hoverPool &&
               dragState?.fromBlankIndex !== null &&
               "ring-2 ring-[#0CC1E0]/35",
           )}
         >
-          <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0]">
-            {promptLabel}
-          </p>
+          <LessonColumnLabel className="text-xs">{promptLabel}</LessonColumnLabel>
           <p className={lessonNarrativeClass}>
             Drag a word into each blank. Drag a filled word back here to change
             your answer.
@@ -408,11 +403,11 @@ export function LessonWordDropGame({
               </button>
             ))}
           </div>
-        </div>
+        </LessonCard>
       ) : null}
 
       {isComplete && successMessage ? (
-        <p className={lessonSuccessMessageClass}>{successMessage}</p>
+        <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
       ) : null}
 
       {error ? (
@@ -425,8 +420,8 @@ export function LessonWordDropGame({
         <OverlayPortal className="overflow-visible">
           <div
             className={cn(
-              lessonSortRowClass,
-              "pointer-events-none fixed text-left shadow-lg",
+              lessonSortPoolChipClass,
+              "pointer-events-none fixed shadow-lg",
             )}
             style={{
               left: dragState.x,

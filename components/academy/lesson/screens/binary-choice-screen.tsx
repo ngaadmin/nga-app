@@ -3,17 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
-  lessonIntroClass,
-  lessonPromptClass,
-  lessonSuccessMessageClass,
+  lessonChoiceStackClass,
   usesNeutralChoiceFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  LessonImagePlaceholder,
+  LessonScreenLayout,
+} from "@/components/academy/lesson/lesson-ui";
 import type { BinaryChoiceScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
-import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
 export function BinaryChoiceScreen({
@@ -48,7 +49,6 @@ export function BinaryChoiceScreen({
       !isRadioList);
   const correctKeys = choiceOptions.filter((option) => option.isCorrect).map((o) => o.key);
   const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
-  const promptClass = lessonIntroClass(screen.emphasizeInstruction === true);
 
   const [optionOrder] = useState<ChoiceKey[]>(() => {
     const keys = choiceOptions.map((option) => option.key);
@@ -114,6 +114,24 @@ export function BinaryChoiceScreen({
 
   const optionByKey = new Map(choiceOptions.map((option) => [option.key, option]));
 
+  /** Derive Next-button readiness from the current selection only. */
+  const syncMultiSelectCompletion = useCallback(
+    (locked: ReadonlySet<ChoiceKey>, wrong: ReadonlySet<ChoiceKey>) => {
+      const allCorrectSelected = correctKeys.every((key) => locked.has(key));
+      const hasWrongSelected = wrong.size > 0;
+
+      if (allCorrectSelected && !hasWrongSelected) {
+        setError(null);
+        setSuccess(screen.successMessage ?? null);
+        flow.markScreenReady(screenIndex);
+      } else {
+        setSuccess(null);
+        flow.clearScreenReady(screenIndex);
+      }
+    },
+    [correctKeys, flow, screen.successMessage, screenIndex],
+  );
+
   const pickSingle = (which: ChoiceKey) => {
     setChoice(which);
     const selected = optionByKey.get(which);
@@ -141,8 +159,7 @@ export function BinaryChoiceScreen({
       const nextLocked = new Set(lockedCorrect);
       nextLocked.delete(which);
       setLockedCorrect(nextLocked);
-      setSuccess(null);
-      flow.clearScreenReady(screenIndex);
+      syncMultiSelectCompletion(nextLocked, wrongPicked);
       return;
     }
 
@@ -150,9 +167,9 @@ export function BinaryChoiceScreen({
       const nextWrong = new Set(wrongPicked);
       nextWrong.delete(which);
       setWrongPicked(nextWrong);
-      if (nextWrong.size === 0) {
-        setError(null);
-      }
+      setError(null);
+      clearScheduledDudReset();
+      syncMultiSelectCompletion(lockedCorrect, nextWrong);
       return;
     }
 
@@ -160,27 +177,12 @@ export function BinaryChoiceScreen({
       clearScheduledDudReset();
       const nextLocked = new Set(lockedCorrect).add(which);
       setLockedCorrect(nextLocked);
-      setError(null);
       celebrateLessonCorrectAnswer(flow.flashScreen);
-
-      if (correctKeys.every((key) => nextLocked.has(key))) {
-        setSuccess(screen.successMessage ?? null);
-        flow.markScreenReady(screenIndex);
-      } else {
-        flow.clearScreenReady(screenIndex);
-      }
+      syncMultiSelectCompletion(nextLocked, wrongPicked);
       return;
     }
 
     if (wrongIsShake) {
-      setWrongPicked((current) => {
-        if (!current.has(which)) return current;
-        const next = new Set(current);
-        next.delete(which);
-        return next;
-      });
-      setSuccess(null);
-      flow.clearScreenReady(screenIndex);
       setError(
         selected.feedback ??
           screen.wrongError ??
@@ -191,28 +193,26 @@ export function BinaryChoiceScreen({
         flash: screen.errorStyle !== "banner" && !neutralSelected,
       });
       scheduleDudFeedbackReset(which);
+      syncMultiSelectCompletion(lockedCorrect, wrongPicked);
       return;
     }
 
-    setWrongPicked((current) => new Set(current).add(which));
-    setSuccess(null);
-    flow.clearScreenReady(screenIndex);
+    const nextWrong = new Set(wrongPicked).add(which);
+    setWrongPicked(nextWrong);
     setError(selected.feedback ?? screen.wrongError);
     flow.incrementMistake();
     signalLessonIncorrectAnswer(flow.flashScreen, {
       flash: screen.errorStyle !== "banner" && !neutralSelected,
     });
+    syncMultiSelectCompletion(lockedCorrect, nextWrong);
   };
 
   const pick = isMultiCorrect ? pickMulti : pickSingle;
 
   const getVariant = (key: ChoiceKey): "neutral" | "correct" | "wrong" => {
-    if (neutralSelected) return "neutral";
     if (isMultiCorrect) {
       if (shakingKey === key) return "neutral";
-      if (lockedCorrect.has(key)) {
-        return lockCorrectSelections ? "neutral" : "correct";
-      }
+      if (lockedCorrect.has(key)) return "correct";
       if (wrongPicked.has(key)) return "wrong";
       return "neutral";
     }
@@ -230,56 +230,18 @@ export function BinaryChoiceScreen({
 
   const isRadioListLayout = isRadioList;
 
-  const renderRadioIndicator = (variant: "neutral" | "correct" | "wrong") => (
-    <span
-      className={cn(
-        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-        variant === "correct" && "border-[#16A34A] bg-[#86EFAC]",
-        variant === "wrong" && "border-[#E11D48] bg-[#FDA4AF]",
-        variant === "neutral" && "border-[#BDE9FB] bg-white",
-      )}
-      aria-hidden
-    >
-      {variant === "correct" ? (
-        <span className="h-2.5 w-2.5 rounded-full bg-[#16A34A]" />
-      ) : null}
-      {variant === "wrong" ? (
-        <span className="h-2.5 w-2.5 rounded-full bg-[#E11D48]" />
-      ) : null}
-    </span>
-  );
-
   const renderOptionList = () =>
     optionOrder.map((key) => {
       const option = optionByKey.get(key);
       if (!option) return null;
       const variant = getVariant(key);
       const selected = isSelected(key);
-
-      if (isRadioListLayout) {
-        return (
-          <button
-            key={key}
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              pick(key);
-            }}
-            className="flex w-full items-center gap-3 py-2.5 text-left"
-          >
-            {renderRadioIndicator(variant)}
-            <span className="font-heading text-base font-bold leading-snug text-[#031F82]">
-              {option.label}
-            </span>
-          </button>
-        );
-      }
-
       const isLockedCorrect = lockCorrectSelections && lockedCorrect.has(key);
 
       return (
         <LessonChoiceButton
           key={key}
+          layout={isRadioListLayout ? "radio-row" : "pill"}
           onClick={(event) => {
             event.stopPropagation();
             pick(key);
@@ -299,72 +261,40 @@ export function BinaryChoiceScreen({
 
   if (isRadioListLayout) {
     return (
-      <>
+      <LessonScreenLayout
+        prompt={screen.prompt}
+        emphasizeInstruction={screen.emphasizeInstruction === true}
+        successMessage={success}
+        errorMessage={error}
+        errorVariant={screen.errorStyle === "banner" ? "banner" : "inline"}
+      >
         {screen.imagePlaceholder ? (
-          <div
-            className="flex aspect-[5/3] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-4 text-center"
-            role="img"
-            aria-label={screen.imagePlaceholder.alt ?? screen.imagePlaceholder.label}
-          >
-            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-              Image placeholder
-            </p>
-            <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">
-              {screen.imagePlaceholder.label}
-            </p>
-          </div>
+          <LessonImagePlaceholder
+            label={screen.imagePlaceholder.label}
+            alt={screen.imagePlaceholder.alt}
+          />
         ) : null}
 
         {screen.scenePrompt ? (
-        <p className="mt-4 font-sans text-base font-normal leading-relaxed text-[#1E3A5F]">
-          {screen.scenePrompt}
-        </p>
-      ) : null}
-
-        <p className={cn("mt-4", lessonPromptClass)}>
-          {screen.prompt}
-        </p>
-
-        <div className="mt-3 space-y-1">{renderOptionList()}</div>
-
-        {success ? (
-          <p className={lessonSuccessMessageClass}>{success}</p>
-        ) : null}
-        {error ? (
-          <p
-            className={cn(
-              "mt-4 font-sans text-xs",
-              screen.errorStyle === "banner"
-                ? "rounded-xl bg-[#FFF7ED] px-3 py-2 text-[#031F82]"
-                : "text-[#E11D48]",
-            )}
-          >
-            {error}
+          <p className="mt-4 font-sans text-base font-normal leading-relaxed text-[#1E3A5F]">
+            {screen.scenePrompt}
           </p>
         ) : null}
-      </>
+
+        <div className="mt-3 space-y-1">{renderOptionList()}</div>
+      </LessonScreenLayout>
     );
   }
 
   return (
-    <>
-      <p className={promptClass}>{screen.prompt}</p>
-      <div className="mt-5 space-y-3">{renderOptionList()}</div>
-      {success ? (
-        <p className={lessonSuccessMessageClass}>{success}</p>
-      ) : null}
-      {error ? (
-        <p
-          className={cn(
-            "mt-4 font-sans text-xs",
-            screen.errorStyle === "banner"
-              ? "rounded-xl bg-[#FFF7ED] px-3 py-2 text-[#031F82]"
-              : "text-[#E11D48]",
-          )}
-        >
-          {error}
-        </p>
-      ) : null}
-    </>
+    <LessonScreenLayout
+      prompt={screen.prompt}
+      emphasizeInstruction={screen.emphasizeInstruction === true}
+      successMessage={success}
+      errorMessage={error}
+      errorVariant={screen.errorStyle === "banner" ? "banner" : "inline"}
+    >
+      <div className={lessonChoiceStackClass}>{renderOptionList()}</div>
+    </LessonScreenLayout>
   );
 }

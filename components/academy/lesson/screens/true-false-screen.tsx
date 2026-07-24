@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import {
-  lessonIntroClass,
-  usesNeutralChoiceFeedback,
-} from "@/components/academy/lesson/lesson-shared-styles";
+import { usesNeutralChoiceFeedback, resolveChoiceVariant } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import type { TrueFalseScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -40,29 +38,26 @@ export function TrueFalseScreen({
   };
 
   return (
-    <>
-      <p className={lessonIntroClass(screen.emphasizeInstruction === true)}>
-        {screen.prompt}
-      </p>
+    <LessonScreenLayout
+      prompt={screen.prompt}
+      emphasizeInstruction={screen.emphasizeInstruction === true}
+    >
       <div className="mt-6 flex gap-3">
         {(["true", "false"] as const).map((option) => (
           <LessonChoiceButton
             key={option}
             onClick={() => pick(option)}
             selected={choice === option}
-            variant={
-              neutralSelected || choice !== option
-                ? "neutral"
-                : option === screen.correctAnswer
-                  ? "correct"
-                  : "wrong"
-            }
+            variant={resolveChoiceVariant(
+              choice === option,
+              option === screen.correctAnswer,
+            )}
             className="flex-1"
           >
             {option === "true" ? "True" : "False"}
           </LessonChoiceButton>
         ))}
       </div>
-    </>
+    </LessonScreenLayout>
   );
 }

@@ -8,13 +8,21 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { lessonCardClass } from "@/components/academy/lesson/academy-lesson-shell";
 import {
   lessonChoiceBaseClass,
   lessonChoiceStateClass,
+  lessonMatchPulseClass,
   lessonSortRowClass,
-  lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  LessonCard,
+  LessonGameBoard,
+  LessonGameHint,
+  LessonMatchColumnHeaders,
+  LessonMatchConnector,
+  LessonMatchRow,
+  LessonSuccessBanner,
+} from "@/components/academy/lesson/lesson-ui";
 import { cn } from "@/lib/utils/cn";
 
 export type LessonLinkMatchPair = {
@@ -322,24 +330,18 @@ export function LessonLinkMatchGame({
     });
   };
 
-  const matchPulseClass =
-    "ring-4 ring-[#22C55E]/70 border-[#16A34A] shadow-[0_0_0_4px_rgba(34,197,94,0.28)]";
+  const matchPulseClass = lessonMatchPulseClass;
 
   return (
-    <div className="mt-5 space-y-4">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-x-2 gap-y-1 px-0.5">
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-          {eventColumnLabel}
-        </p>
-        <span className="w-4" aria-hidden />
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-          {benefitColumnLabel}
-        </p>
-      </div>
+    <LessonGameBoard>
+      <LessonMatchColumnHeaders
+        left={eventColumnLabel}
+        right={benefitColumnLabel}
+      />
 
-      <div
+      <LessonCard
         ref={boardRef}
-        className={cn(lessonCardClass, "space-y-2 p-3 sm:p-4")}
+        className="space-y-2 p-3 sm:p-4"
         onPointerMove={handleBoardPointerMove}
         onPointerUp={handleBoardPointerUp}
         onPointerCancel={handleBoardPointerUp}
@@ -358,12 +360,11 @@ export function LessonLinkMatchGame({
           const isDragging = dragBenefitId === benefitId;
 
           return (
-            <div
+            <LessonMatchRow
               key={`match-row-${rowIndex}`}
               ref={(node) => {
                 rowRefs.current[rowIndex] = node;
               }}
-              className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2"
             >
               <div
                 className={cn(
@@ -378,14 +379,13 @@ export function LessonLinkMatchGame({
                 {eventPair.event}
               </div>
 
-              <div
-                className={cn(
-                  "h-px w-4 shrink-0 rounded-full",
-                  isPulsing || isRowLocked || (isComplete && isRowMatched)
-                    ? "bg-[#16A34A]"
-                    : "bg-[#0CC1E0]",
-                )}
-                aria-hidden
+              <LessonMatchConnector
+                matched={
+                  isPulsing ||
+                  isRowLocked ||
+                  (isComplete && isRowMatched)
+                }
+                pulsing={isPulsing}
               />
 
               <div
@@ -430,19 +430,19 @@ export function LessonLinkMatchGame({
               >
                 {benefitPair.benefit}
               </div>
-            </div>
+            </LessonMatchRow>
           );
         })}
-      </div>
+      </LessonCard>
 
       {!isComplete ? (
-        <p className="text-center font-sans text-sm text-[#1E3A5F]/80 sm:text-base">
+        <LessonGameHint>
           Drag possibilities up or down until each one lines up with its event.
           Correct matches lock in place.
-        </p>
+        </LessonGameHint>
       ) : (
-        <p className={cn(lessonSuccessMessageClass, "text-center")}>All matched!</p>
+        <LessonSuccessBanner centered>All matched!</LessonSuccessBanner>
       )}
-    </div>
+    </LessonGameBoard>
   );
 }

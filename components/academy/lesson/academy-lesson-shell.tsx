@@ -98,7 +98,5 @@ export function LessonScreenPane({
   );
 }
 
-export const lessonCardClass =
-  "rounded-2xl border-0 bg-white p-4 shadow-md";
-
+export { lessonCardClass } from "@/components/academy/lesson/lesson-shared-styles";
 export { lessonChoiceBaseClass as lessonChoiceClass } from "@/components/academy/lesson/lesson-shared-styles";

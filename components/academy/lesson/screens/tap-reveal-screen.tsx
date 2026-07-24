@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import {
   lessonEyebrowClass,
-  lessonIconLabelClass,
-  lessonIconTapClass,
-  lessonIconTapSelectedClass,
-  lessonIntroClass,
-  lessonSuccessMessageClass,
+  lessonIconGridClass,
   usesNeutralTapFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
+import {
+  LessonIconOption,
+  LessonIconReveal,
+  LessonRevealBucket,
+  LessonScreenLayout,
+} from "@/components/academy/lesson/lesson-ui";
 import type { TapRevealScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -27,10 +28,7 @@ export function TapRevealScreen({
   const [tapped, setTapped] = useState<Set<string>>(new Set());
   const tapDisplay = screen.tapDisplay ?? "emoji-label";
   const revealDisplay = screen.revealDisplay ?? "emoji-label";
-  const tapLayout = screen.tapLayout ?? "icon-grid";
   const neutralSelection = usesNeutralTapFeedback(screen.selectionFeedback);
-  const isIconGrid = tapLayout !== "default";
-  const introClass = lessonIntroClass(screen.emphasizeInstruction === true);
 
   useEffect(() => {
     if (screen.items.length === 0 && screen.advance?.mode === "auto-ready") {
@@ -41,17 +39,6 @@ export function TapRevealScreen({
       flow.markScreenReady(screenIndex);
     }
   }, [flow, screen.advance?.mode, screen.items.length, screenIndex, tapped.size]);
-
-  if (screen.items.length === 0) {
-    return (
-      <>
-        <p className={introClass}>{screen.intro}</p>
-        {screen.successMessage ? (
-          <p className={lessonSuccessMessageClass}>{screen.successMessage}</p>
-        ) : null}
-      </>
-    );
-  }
 
   const handleTap = (itemId: string) => {
     const item = screen.items.find((entry) => entry.id === itemId);
@@ -73,108 +60,46 @@ export function TapRevealScreen({
     }
   };
 
-  const renderTapChip = (item: TapRevealScreenConfig["items"][number]) => {
-    if (tapDisplay === "label") {
-      return item.label;
-    }
-    if (tapDisplay === "emoji-only" && item.emoji) {
-      return (
-        <span className="text-5xl leading-none" aria-hidden>
-          {item.emoji}
-        </span>
-      );
-    }
-    if (item.emoji) {
-      return (
-        <span className="flex flex-col items-center gap-2">
-          <span className="text-4xl leading-none" aria-hidden>
-            {item.emoji}
-          </span>
-          <span>{item.label}</span>
-        </span>
-      );
-    }
-    return item.label;
-  };
-
-  const renderRevealEntry = (item: TapRevealScreenConfig["items"][number]) => {
-    if (revealDisplay === "label") {
-      return item.label;
-    }
-    if (revealDisplay === "emoji-only" && item.emoji) {
-      return (
-        <span className="text-3xl leading-none" aria-hidden>
-          {item.emoji}
-        </span>
-      );
-    }
-    if (item.emoji) {
-      return (
-        <span className="inline-flex flex-col items-center gap-1">
-          <span className="text-3xl leading-none" aria-hidden>
-            {item.emoji}
-          </span>
-          <span className={lessonIconLabelClass}>{item.label}</span>
-        </span>
-      );
-    }
-    return item.label;
-  };
+  if (screen.items.length === 0) {
+    return (
+      <LessonScreenLayout
+        intro={screen.intro}
+        emphasizeInstruction={screen.emphasizeInstruction === true}
+        successMessage={screen.successMessage}
+      >
+        {null}
+      </LessonScreenLayout>
+    );
+  }
 
   return (
-    <>
-      <p className={introClass}>{screen.intro}</p>
-
-      <div className={cn("mt-6 grid grid-cols-2 gap-5", isIconGrid && "gap-6")}>
+    <LessonScreenLayout
+      intro={screen.intro}
+      emphasizeInstruction={screen.emphasizeInstruction === true}
+    >
+      <div className={lessonIconGridClass}>
         {screen.items.map((item) => {
           const isTapped = tapped.has(item.id);
-
-          if (isIconGrid) {
-            return (
-              <div key={item.id} className="flex flex-col items-center gap-2">
-                <button
-                  type="button"
-                  aria-label={item.label}
-                  aria-pressed={isTapped}
-                  disabled={isTapped}
-                  onClick={() => handleTap(item.id)}
-                  className={cn(
-                    lessonIconTapClass,
-                    isTapped && lessonIconTapSelectedClass,
-                    isTapped && "pointer-events-none",
-                  )}
-                >
-                  {item.emoji ? (
-                    <span className="text-5xl leading-none grayscale-[0.1]" aria-hidden>
-                      {item.emoji}
-                    </span>
-                  ) : (
-                    renderTapChip(item)
-                  )}
-                </button>
-                <span className={lessonIconLabelClass}>{item.label}</span>
-              </div>
-            );
-          }
+          const bucketTone = screen.buckets.find((bucket) => bucket.id === item.bucket)?.tone;
+          const isShortTermSpend = bucketTone === "short" || bucketTone === "want";
 
           return (
-            <LessonChoiceButton
+            <LessonIconOption
               key={item.id}
-              aria-label={item.label}
-              aria-disabled={isTapped}
-              onClick={() => handleTap(item.id)}
+              label={item.label}
+              emoji={item.emoji}
+              display={tapDisplay}
               selected={isTapped}
-              variant={
-                neutralSelection || !isTapped
-                  ? "neutral"
-                  : item.bucket === "short" || item.bucket === "want"
-                    ? "wrong"
-                    : "correct"
+              disabled={isTapped}
+              chipClassName={
+                !neutralSelection && isTapped
+                  ? isShortTermSpend
+                    ? "border-[#BE123C] bg-[#FDA4AF]/40"
+                    : "border-[#16A34A] bg-[#86EFAC]/40"
+                  : undefined
               }
-              className={cn(isTapped && "pointer-events-none")}
-            >
-              {renderTapChip(item)}
-            </LessonChoiceButton>
+              onClick={() => handleTap(item.id)}
+            />
           );
         })}
       </div>
@@ -190,20 +115,23 @@ export function TapRevealScreen({
           );
 
           return (
-            <div
-              key={bucket.id}
-              className="min-h-[7rem] rounded-3xl border-2 border-dashed border-[#BDE9FB]/70 bg-[#F7FBFF]/50 px-3 py-4"
-            >
+            <LessonRevealBucket key={bucket.id}>
               <p className={cn(lessonEyebrowClass, toneClass)}>{bucket.label}</p>
               <ul className="mt-3 flex flex-wrap justify-center gap-4">
                 {revealed.map((item) => (
-                  <li key={item.id}>{renderRevealEntry(item)}</li>
+                  <li key={item.id}>
+                    <LessonIconReveal
+                      label={item.label}
+                      emoji={item.emoji}
+                      display={revealDisplay}
+                    />
+                  </li>
                 ))}
               </ul>
-            </div>
+            </LessonRevealBucket>
           );
         })}
       </div>
-    </>
+    </LessonScreenLayout>
   );
 }

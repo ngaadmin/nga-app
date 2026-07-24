@@ -1,4 +1,5 @@
 import type { CohortLessonDefinition, ScreenConfig } from "@/lib/academy/lessons/types";
+import type { ScreenOverrideMap } from "@/lib/academy/lessons/cohort-overrides";
 
 const M1_L3_META = {
   milestoneId: 3,
@@ -8,7 +9,7 @@ const M1_L3_META = {
   lessonTitle: "Keep Some Money Aside",
   shellLabel: "Module 1 · Lesson 3 · Keep Some Money Aside",
   totalScreens: 8,
-  shippedCohorts: ["explorer"],
+  shippedCohorts: ["explorer", "pathfinder"],
   characters: {
     lead: "Mia",
     support: "Senna",
@@ -55,6 +56,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     ],
     layout: "spent-total",
     targetTotal: 40,
+    poolColumnLabel: "Mia's purchases",
     successMessage: "Mia has no money left to pay for new headphones.",
     advance: { mode: "all-items-sorted" },
   },
@@ -82,7 +84,6 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
         benefit: "I can buy my favourite toy for less",
       },
     ],
-    successMessage: "Match successful!",
     advance: { mode: "on-complete" },
   },
   {
@@ -99,16 +100,19 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     items: [
       {
         id: "pocket-money",
+        emoji: "💵",
         label: "Get your pocket money.",
         bucket: "step1",
       },
       {
         id: "buffer",
+        emoji: "🫙",
         label: "Move a small amount to your 'Buffer' jar.",
         bucket: "step2",
       },
       {
         id: "fun",
+        emoji: "🎮",
         label: "Spend what is left on fun.",
         bucket: "step3",
       },
@@ -198,6 +202,76 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   },
 ];
 
+const M1_L3_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
+  "hook-finish-sentence": {
+    prompt:
+      "Holly spent all her pocket money. She accidentally steps on her sister's headphones and breaks them. Holly's sister crashes out because:",
+    optionA: { label: "Holly has no money to buy a new pair", isCorrect: true },
+    optionB: {
+      label: "Holly tries to fix them with sticky tape and now they're even worse",
+      isCorrect: false,
+    },
+  },
+  "spent-triage": {
+    intro:
+      "Where did the money go? Holly needs $40 for new headphones, but her wallet is empty. Drag the items Holly bought into the 'Spent' bucket.",
+    poolColumnLabel: "Holly's purchases",
+    successMessage: "Holly has no money left to pay for new headphones.",
+  },
+  "spare-vs-spend-match": {
+    intro:
+      "Senna explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:",
+  },
+  "spare-cash-steps": {
+    intro:
+      "Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.",
+    items: [
+      {
+        id: "pocket-money",
+        label: "Get your pocket money.",
+        bucket: "step1",
+      },
+      {
+        id: "buffer",
+        label: "Move some of that money to your jar for 'Emergencies'.",
+        bucket: "step2",
+      },
+      {
+        id: "fun",
+        label: "Spend what is left on fun.",
+        bucket: "step3",
+      },
+    ],
+    successMessage:
+      "Perfect! Cash for Emergencies first, then fun. You're ready for anything!",
+  },
+  "mia-priority-choice": {
+    prompt:
+      "Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Holly do?",
+  },
+  "reflection-word-drop": {
+    blanks: [
+      { options: ["save", "spend"], correctOption: "spend" },
+      {
+        options: ["Cash for Emergencies", "Borrowed money"],
+        correctOption: "Cash for Emergencies",
+      },
+      { options: ["replace", "throw away"], correctOption: "replace" },
+    ],
+    successMessage:
+      "Exactly! Cash for Emergencies gave Holly options when she needed them.",
+  },
+  "resolution-benefits-choice": {
+    prompt:
+      "Holly could fix the problem because she had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+  },
+  "milestone-splash": {
+    skillLearnedLabel: "Skill Learned: Choose to keep Cash for Emergencies",
+    bodyCopy:
+      "Lesson complete! You've unlocked a huge secret: Having Cash for Emergencies means you're ready for whatever comes next.",
+  },
+};
+
 export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L3_META,
   rewards: M1_L3_REWARDS,
@@ -209,6 +283,7 @@ export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
     pathfinder: {
       characterName: "Holly",
       rewards: { xpReward: 50, perfectStreakBonus: 0 },
+      screenOverrides: M1_L3_PATHFINDER_OVERRIDES,
     },
   },
 };

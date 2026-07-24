@@ -70,21 +70,25 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     items: [
       {
         id: "see-offer",
+        emoji: "🏷️",
         label: 'Senna sees the "Limited Time" offer.',
         bucket: "step1",
       },
       {
         id: "remember",
+        emoji: "🛑",
         label: "He stops and remembers the price might drop later.",
         bucket: "step2",
       },
       {
         id: "wait",
+        emoji: "⏳",
         label: "He waits two days to check the price again.",
         bucket: "step3",
       },
       {
         id: "buy-if-cheaper",
+        emoji: "💸",
         label: "Senna only buys it, if the price is cheaper than before.",
         bucket: "step4",
       },
@@ -96,40 +100,47 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "bucket-sort",
     id: "rush-vs-think-sort",
+    layout: "statement-sort",
     intro:
       "Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?",
     buckets: [
-      { id: "rushing", label: "I'm Rushing" },
-      { id: "thinking", label: "I'm Thinking" },
+      { id: "rushing", label: "I'm Rushing", tone: "rush", icon: "⚡" },
+      { id: "thinking", label: "I'm Thinking", tone: "think", icon: "🧠" },
     ],
     items: [
       {
         id: "need-now",
+        emoji: "🔥",
         label: "It looks cool, I need it right now!",
         bucket: "rushing",
       },
       {
         id: "left-out",
+        emoji: "👥",
         label: "Everyone has it, I don't want to be left out.",
         bucket: "rushing",
       },
       {
         id: "limited-time",
+        emoji: "⏰",
         label: "It's a 'limited time' offer - I have to buy it now!",
         bucket: "rushing",
       },
       {
         id: "ask-friends",
+        emoji: "💬",
         label: "I'll ask my friends if it's actually any good.",
         bucket: "thinking",
       },
       {
         id: "wait-cheaper",
+        emoji: "💰",
         label: "I can wait and get it cheaper later.",
         bucket: "thinking",
       },
       {
         id: "sleep-on-it",
+        emoji: "😴",
         label: "I'll sleep on it and decide tomorrow.",
         bucket: "thinking",
       },

@@ -12,7 +12,9 @@ import {
   lessonSortBucketActiveClass,
   lessonSortBucketClass,
   lessonSortBucketErrorClass,
+  lessonTwoColumnGridClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonColumnLabel } from "@/components/academy/lesson/lesson-ui";
 import { cn } from "@/lib/utils/cn";
 
 type DragState = {
@@ -34,6 +36,8 @@ type LessonDragToTargetGameProps = {
   onMiss?: () => void;
 };
 
+const TARGET_DROP_HIT_PADDING_PX = 24;
+
 export function LessonDragToTargetGame({
   sourceLabel,
   targetLabel,
@@ -48,7 +52,7 @@ export function LessonDragToTargetGame({
   const [isOverTarget, setIsOverTarget] = useState(false);
   const [missedDrop, setMissedDrop] = useState(false);
 
-  const sourceRef = useRef<HTMLDivElement | null>(null);
+  const boardRef = useRef<HTMLDivElement | null>(null);
   const targetRef = useRef<HTMLDivElement | null>(null);
   const stackRef = useRef<HTMLButtonElement | null>(null);
   const captureTargetRef = useRef<HTMLElement | null>(null);
@@ -83,11 +87,12 @@ export function LessonDragToTargetGame({
     const node = targetRef.current;
     if (!node) return false;
     const rect = node.getBoundingClientRect();
+    const pad = TARGET_DROP_HIT_PADDING_PX;
     return (
-      clientX >= rect.left &&
-      clientX <= rect.right &&
-      clientY >= rect.top &&
-      clientY <= rect.bottom
+      clientX >= rect.left - pad &&
+      clientX <= rect.right + pad &&
+      clientY >= rect.top - pad &&
+      clientY <= rect.bottom + pad
     );
   }, []);
 
@@ -103,10 +108,15 @@ export function LessonDragToTargetGame({
     const stack = stackRef.current;
     if (!stack) return;
 
+    event.preventDefault();
+    event.stopPropagation();
+
     const rect = stack.getBoundingClientRect();
-    captureTargetRef.current = event.currentTarget;
+    const captureTarget = boardRef.current ?? event.currentTarget;
+    captureTargetRef.current = captureTarget;
     activePointerIdRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    captureTarget.setPointerCapture(event.pointerId);
+
     setDragState({
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
@@ -118,7 +128,9 @@ export function LessonDragToTargetGame({
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    if (!dragState || deposited) return;
+    if (!dragState || deposited || activePointerIdRef.current !== event.pointerId) {
+      return;
+    }
     setDragState((current) =>
       current
         ? {
@@ -132,6 +144,8 @@ export function LessonDragToTargetGame({
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) return;
+
     if (!dragState || deposited) {
       endDrag();
       return;
@@ -145,6 +159,10 @@ export function LessonDragToTargetGame({
     onMissRef.current?.();
     setMissedDrop(true);
     window.setTimeout(() => setMissedDrop(false), 500);
+    endDrag();
+  };
+
+  const handlePointerCancel = () => {
     endDrag();
   };
 
@@ -171,30 +189,30 @@ export function LessonDragToTargetGame({
 
   return (
     <div
+      ref={boardRef}
       className="mt-5 touch-none select-none"
+      style={{ touchAction: "none" }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={endDrag}
+      onPointerCancel={handlePointerCancel}
     >
-      <div className="grid grid-cols-2 gap-3">
+      <div className={lessonTwoColumnGridClass}>
         <div
-          ref={sourceRef}
           className={cn(
             lessonSortBucketClass,
             "flex min-h-[10rem] flex-col items-center justify-center gap-3 p-4 text-center transition-colors",
             missedDrop && lessonSortBucketErrorClass,
           )}
         >
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-            {sourceLabel}
-          </p>
+          <LessonColumnLabel>{sourceLabel}</LessonColumnLabel>
           {!deposited && !dragState ? (
             <button
               ref={stackRef}
               type="button"
               onPointerDown={handleStackPointerDown}
-              className="cursor-grab rounded-xl p-2 active:cursor-grabbing"
+              className="cursor-grab rounded-full p-3 active:cursor-grabbing"
               aria-label={`Drag coins from ${sourceLabel}`}
+              style={{ touchAction: "none" }}
             >
               {renderCoinStack(true)}
             </button>
@@ -213,9 +231,7 @@ export function LessonDragToTargetGame({
             (isOverTarget || deposited) && lessonSortBucketActiveClass,
           )}
         >
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-            {targetLabel}
-          </p>
+          <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
           <div
             className={cn(
               "relative flex h-20 w-20 items-center justify-center rounded-full bg-[#FFF7ED] text-5xl transition-transform",

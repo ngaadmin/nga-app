@@ -38,8 +38,8 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     intro:
       "Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'",
     buckets: [
-      { id: "want", label: "Things Lars wants" },
-      { id: "need", label: "Things Lars needs" },
+      { id: "want", label: "Things Lars wants", tone: "want", icon: "✨" },
+      { id: "need", label: "Things Lars needs", tone: "need", icon: "🛡️" },
     ],
     items: [
       {

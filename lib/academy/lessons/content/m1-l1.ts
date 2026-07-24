@@ -80,8 +80,8 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     id: "sort-short-vs-long",
     intro: "Your turn! Drag each item into the correct bucket.",
     buckets: [
-      { id: "short", label: "Short Fun" },
-      { id: "long", label: "More Fun for Longer" },
+      { id: "short", label: "Short Fun", tone: "short", icon: "⏱️" },
+      { id: "long", label: "More Fun for Longer", tone: "long", icon: "🌱" },
     ],
     items: [
       { id: "bubble-tea", emoji: "🧋", label: "Giant bubble tea", bucket: "short" },

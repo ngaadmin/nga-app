@@ -145,9 +145,7 @@ export function BinaryChoiceScreen({
     setSuccess(null);
     setError(selected?.feedback ?? screen.wrongError);
     flow.incrementMistake();
-    signalLessonIncorrectAnswer(flow.flashScreen, {
-      flash: screen.errorStyle !== "banner" && !neutralSelected,
-    });
+    signalLessonIncorrectAnswer(flow.flashScreen);
   };
 
   const pickMulti = (which: ChoiceKey) => {
@@ -189,9 +187,7 @@ export function BinaryChoiceScreen({
           "Not quite! That button is trying to do the thinking for you. Don't let it!",
       );
       flow.incrementMistake();
-      signalLessonIncorrectAnswer(flow.flashScreen, {
-        flash: screen.errorStyle !== "banner" && !neutralSelected,
-      });
+      signalLessonIncorrectAnswer(flow.flashScreen);
       scheduleDudFeedbackReset(which);
       syncMultiSelectCompletion(lockedCorrect, wrongPicked);
       return;

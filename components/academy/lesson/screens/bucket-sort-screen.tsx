@@ -64,7 +64,7 @@ export function BucketSortScreen({
       intro={screen.intro}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       successMessage={completeMessage}
-      fill={screen.layout === "steps-row"}
+      fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}
     >
       {game}
     </LessonScreenLayout>

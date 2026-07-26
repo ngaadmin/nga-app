@@ -37,7 +37,6 @@ export function RankOrderScreen({
         items={screen.items}
         correctOrder={screen.correctOrder}
         errors={screen.errors}
-        successMessage={screen.successMessage}
         onComplete={handleComplete}
         onMistake={handleMistake}
         onSuccess={handleSuccess}

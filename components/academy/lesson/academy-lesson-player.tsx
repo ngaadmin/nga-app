@@ -76,7 +76,7 @@ function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
             <p className="font-sans text-sm text-[#031F82]">
               {extensions.persistentError}
             </p>
-            <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]/60">
+            <p className="mt-2 font-heading text-sm font-medium uppercase tracking-wide text-[#1E3A5F]/60">
               Tap anywhere to dismiss
             </p>
           </div>

@@ -35,6 +35,9 @@ export function NarrativeBonusScreen({
     awardBonusXp?.(screen.bonusXp);
     celebrateLessonCorrectAnswer(flow.flashScreen);
     flow.markScreenReady(screenIndex);
+    window.requestAnimationFrame(() => {
+      flow.handleNext({ canAdvance: true });
+    });
   };
 
   return (

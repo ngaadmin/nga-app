@@ -35,19 +35,19 @@ function SingleBlankWordDropScreen({
     }
     setError(screen.wrongError);
     flow.incrementMistake();
-    signalLessonIncorrectAnswer(flow.flashScreen, { flash: false });
+    signalLessonIncorrectAnswer(flow.flashScreen);
   };
 
   return (
     <>
       <p className={lessonNarrativeClass}>
         {screen.narrativeBefore}{" "}
-        <span className="inline-block min-w-[5rem] border-b-2 border-dashed border-[#0CC1E0] px-2 font-heading text-lg font-extrabold text-[#031F82]">
+        <span className="inline-block min-w-[4.5rem] border-b-2 border-dashed border-[#0CC1E0] px-2 text-center font-heading text-base font-medium text-[#031F82]">
           {choice ?? "______"}
         </span>{" "}
         {screen.narrativeAfter}
       </p>
-      <p className={cn("mt-5", lessonInstructionClass)}>
+      <p className={cn("mt-2", lessonInstructionClass)}>
         {screen.promptLabel ?? "Pick the word that fits"}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">

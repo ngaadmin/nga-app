@@ -67,7 +67,7 @@ export function LessonAllocationSliderGame({
                 {goal.emoji}
               </span>
             ) : null}
-            <p className="mt-2 font-sans text-base font-medium text-[#031F82] sm:text-lg">
+            <p className="mt-2 font-sans text-base font-medium text-[#031F82]">
               {goal.label}
             </p>
             <p className="font-heading text-base font-bold text-[#0CC1E0]">
@@ -90,7 +90,7 @@ export function LessonAllocationSliderGame({
                 {item.emoji}
               </span>
             ) : null}
-            <p className="mt-2 font-sans text-base font-medium text-[#031F82] sm:text-lg">
+            <p className="mt-2 font-sans text-base font-medium text-[#031F82]">
               {item.label}
             </p>
             <p className="font-heading text-base font-bold text-[#FFA503]">
@@ -123,7 +123,7 @@ export function LessonAllocationSliderGame({
               : "Reserve amount"
           }
         />
-        <p className="mt-3 text-center font-sans text-base font-medium text-[#031F82] sm:text-lg">
+        <p className="mt-2 text-center font-sans text-base font-medium text-[#031F82]">
           ${reservedAmount} secured · ${spendableToday} free today
         </p>
       </div>

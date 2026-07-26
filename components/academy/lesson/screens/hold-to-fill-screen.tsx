@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   lessonHoldButtonClass,
   lessonHoldButtonCompleteClass,
-  lessonNarrativeClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import {
-  celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
@@ -22,6 +22,12 @@ export function HoldToFillScreen({
   flow,
 }: StandardScreenProps<HoldToFillScreenConfig>) {
   const holdMs = screen.holdDurationMs ?? DEFAULT_HOLD_MS;
+  const { completeMessage, handleComplete, handleSuccess } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+    successMessage: screen.successMessage,
+  });
+
   const [progress, setProgress] = useState(0);
   const [complete, setComplete] = useState(false);
   const [isHolding, setIsHolding] = useState(false);
@@ -44,8 +50,8 @@ export function HoldToFillScreen({
       if (nextProgress >= 1) {
         setComplete(true);
         setIsHolding(false);
-        celebrateLessonCorrectAnswer(flow.flashScreen);
-        flow.markScreenReady(screenIndex);
+        handleSuccess();
+        handleComplete();
         holdStartRef.current = null;
         return;
       }
@@ -66,10 +72,10 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
-      signalLessonIncorrectAnswer(flow.flashScreen, { flash: false });
+      signalLessonIncorrectAnswer(flow.flashScreen, { flash: true });
       setHint(
         screen.releaseHint ??
-          "(Must hold down fully for 2 seconds to activate)",
+          "Hold down fully for 2 seconds to activate.",
       );
     }
   };
@@ -83,22 +89,12 @@ export function HoldToFillScreen({
     [],
   );
 
-  if (complete && screen.clearOnSuccess) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <p className="rounded-xl bg-[#DCFCE7] px-5 py-6 font-heading text-base font-extrabold leading-snug text-[#031F82]">
-          {screen.successMessage}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative flex flex-1 flex-col">
-      <p className={lessonNarrativeClass}>{screen.narrative}</p>
-      <div className="relative mt-8 flex flex-col items-center">
+    <LessonScreenLayout intro={screen.narrative} successMessage={completeMessage} fill>
+      <div className="relative flex flex-1 flex-col items-center justify-center">
         <button
           type="button"
+          disabled={complete}
           onPointerDown={startHold}
           onPointerUp={endHold}
           onPointerLeave={endHold}
@@ -111,7 +107,7 @@ export function HoldToFillScreen({
         >
           {complete ? screen.frozenLabel : screen.holdLabel}
         </button>
-        <div className="mt-4 h-3 w-full max-w-xs overflow-hidden rounded-full border border-[#BDE9FB]/60 bg-[#E8F7FC]">
+        <div className="mt-3 h-3 w-full max-w-xs overflow-hidden rounded-full border border-[#BDE9FB]/60 bg-[#E8F7FC]">
           <div
             className="h-full rounded-full bg-gradient-to-r from-[#0CC1E0] to-[#099FB8]"
             style={{
@@ -120,15 +116,12 @@ export function HoldToFillScreen({
             }}
           />
         </div>
-        {complete && !screen.clearOnSuccess ? (
-          <p className="mt-4 rounded-xl bg-[#DCFCE7] px-4 py-3 text-center font-heading text-sm font-extrabold text-[#031F82]">
-            {screen.successMessage}
+        {hint ? (
+          <p className="mt-2 font-sans text-sm font-medium text-[#1E3A5F]/80">
+            {hint}
           </p>
         ) : null}
-        {hint ? (
-          <p className="mt-3 font-sans text-xs text-[#1E3A5F]/80">{hint}</p>
-        ) : null}
       </div>
-    </div>
+    </LessonScreenLayout>
   );
 }

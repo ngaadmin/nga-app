@@ -15,7 +15,6 @@ import {
   lessonRankOrderNumberClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonSuccessBanner } from "@/components/academy/lesson/lesson-ui";
 import { cn } from "@/lib/utils/cn";
 import type { RankOrderItem } from "@/lib/academy/lessons/types/screens/rank-order";
 
@@ -27,7 +26,6 @@ type LessonRankOrderGameProps = {
   items: readonly RankOrderItem[];
   correctOrder: readonly string[];
   errors: Record<string, string>;
-  successMessage?: string;
   onComplete: () => void;
   onMistake: () => void;
   onSuccess?: () => void;
@@ -64,7 +62,6 @@ export function LessonRankOrderGame({
   items,
   correctOrder,
   errors,
-  successMessage,
   onComplete,
   onMistake,
   onSuccess,
@@ -77,9 +74,6 @@ export function LessonRankOrderGame({
     [...items].map((item) => item.id).reverse(),
   );
   const [rankSubmitted, setRankSubmitted] = useState(false);
-  const [rankSuccessMessage, setRankSuccessMessage] = useState<string | null>(
-    null,
-  );
   const [dragRankId, setDragRankId] = useState<ItemId | null>(null);
 
   const rankOrderRef = useRef(rankOrder);
@@ -194,7 +188,6 @@ export function LessonRankOrderGame({
 
     if (valid) {
       onDismissError?.();
-      setRankSuccessMessage(successMessage ?? null);
       setRankSubmitted(true);
       onSuccess?.();
       onComplete();
@@ -212,7 +205,7 @@ export function LessonRankOrderGame({
       <p className={lessonEyebrowClass}>{axisLabel}</p>
       <div
         ref={boardRef}
-        className="mt-3 space-y-2.5"
+        className="mt-2 space-y-2"
         onPointerMove={handleBoardPointerMove}
         onPointerUp={handleBoardPointerUp}
         onPointerCancel={handleBoardPointerUp}
@@ -258,14 +251,14 @@ export function LessonRankOrderGame({
                 )}
                 style={{ touchAction: rankSubmitted ? "auto" : "none" }}
               >
-                <span className="min-w-0 flex-1 text-left">{item.label}</span>
+                <span className="min-w-0 flex-1 text-center">{item.label}</span>
               </div>
             </div>
           );
         })}
       </div>
       {!rankSubmitted ? (
-        <div className="mt-5 flex justify-center">
+        <div className="mt-3 flex justify-center">
           <button
             type="button"
             onClick={(event) => {
@@ -277,9 +270,6 @@ export function LessonRankOrderGame({
             {submitLabel}
           </button>
         </div>
-      ) : null}
-      {rankSuccessMessage ? (
-        <LessonSuccessBanner>{rankSuccessMessage}</LessonSuccessBanner>
       ) : null}
     </>
   );

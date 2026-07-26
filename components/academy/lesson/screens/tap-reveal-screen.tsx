@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   lessonEyebrowClass,
   lessonIconGridClass,
+  resolveChoiceVariant,
   usesNeutralTapFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
@@ -17,8 +18,16 @@ import {
   celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
-import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
+
+function shuffleItems<T>(items: readonly T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j]!, next[i]!];
+  }
+  return next;
+}
 
 export function TapRevealScreen({
   screen,
@@ -26,6 +35,10 @@ export function TapRevealScreen({
   flow,
 }: StandardScreenProps<TapRevealScreenConfig>) {
   const [tapped, setTapped] = useState<Set<string>>(new Set());
+  const displayItems = useMemo(
+    () => shuffleItems(screen.items),
+    [screen.items],
+  );
   const tapDisplay = screen.tapDisplay ?? "emoji-label";
   const revealDisplay = screen.revealDisplay ?? "emoji-label";
   const neutralSelection = usesNeutralTapFeedback(screen.selectionFeedback);
@@ -54,7 +67,7 @@ export function TapRevealScreen({
     });
 
     if (isShortTermSpend) {
-      signalLessonIncorrectAnswer(flow.flashScreen, { flash: false });
+      signalLessonIncorrectAnswer(flow.flashScreen);
     } else {
       celebrateLessonCorrectAnswer(flow.flashScreen);
     }
@@ -78,7 +91,7 @@ export function TapRevealScreen({
       emphasizeInstruction={screen.emphasizeInstruction === true}
     >
       <div className={lessonIconGridClass}>
-        {screen.items.map((item) => {
+        {displayItems.map((item) => {
           const isTapped = tapped.has(item.id);
           const bucketTone = screen.buckets.find((bucket) => bucket.id === item.bucket)?.tone;
           const isShortTermSpend = bucketTone === "short" || bucketTone === "want";
@@ -91,12 +104,10 @@ export function TapRevealScreen({
               display={tapDisplay}
               selected={isTapped}
               disabled={isTapped}
-              chipClassName={
-                !neutralSelection && isTapped
-                  ? isShortTermSpend
-                    ? "border-[#BE123C] bg-[#FDA4AF]/40"
-                    : "border-[#16A34A] bg-[#86EFAC]/40"
-                  : undefined
+              selectionVariant={
+                neutralSelection || !isTapped
+                  ? "neutral"
+                  : resolveChoiceVariant(true, !isShortTermSpend)
               }
               onClick={() => handleTap(item.id)}
             />
@@ -104,20 +115,16 @@ export function TapRevealScreen({
         })}
       </div>
 
-      <div className="mt-8 grid grid-cols-2 gap-4">
+      <div className="mt-6 grid grid-cols-2 gap-3">
         {screen.buckets.map((bucket) => {
-          const toneClass =
-            bucket.tone === "short" || bucket.tone === "want"
-              ? "text-[#BE123C]"
-              : "text-[#15803D]";
           const revealed = screen.items.filter(
             (item) => item.bucket === bucket.id && tapped.has(item.id),
           );
 
           return (
             <LessonRevealBucket key={bucket.id}>
-              <p className={cn(lessonEyebrowClass, toneClass)}>{bucket.label}</p>
-              <ul className="mt-3 flex flex-wrap justify-center gap-4">
+              <p className={lessonEyebrowClass}>{bucket.label}</p>
+              <ul className="mt-2 flex flex-wrap justify-center gap-3">
                 {revealed.map((item) => (
                   <li key={item.id}>
                     <LessonIconReveal

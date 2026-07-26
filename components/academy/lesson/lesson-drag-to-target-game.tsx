@@ -8,13 +8,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
-import {
-  lessonSortBucketActiveClass,
-  lessonSortBucketClass,
-  lessonTwoColumnGridClass,
-} from "@/components/academy/lesson/lesson-shared-styles";
+import { lessonTwoColumnGridClass } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonColumnLabel } from "@/components/academy/lesson/lesson-ui";
-import { cn } from "@/lib/utils/cn";
 
 type DragState = {
   offsetX: number;
@@ -48,8 +43,6 @@ export function LessonDragToTargetGame({
 }: LessonDragToTargetGameProps) {
   const [deposited, setDeposited] = useState(false);
   const [dragState, setDragState] = useState<DragState | null>(null);
-  const [isOverTarget, setIsOverTarget] = useState(false);
-  const [missedDrop, setMissedDrop] = useState(false);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const targetRef = useRef<HTMLDivElement | null>(null);
@@ -77,7 +70,6 @@ export function LessonDragToTargetGame({
   const endDrag = useCallback(() => {
     releasePointerCapture();
     setDragState(null);
-    setIsOverTarget(false);
   }, [releasePointerCapture]);
 
   useEffect(() => () => endDrag(), [endDrag]);
@@ -139,7 +131,6 @@ export function LessonDragToTargetGame({
           }
         : null,
     );
-    setIsOverTarget(isPointOverTarget(event.clientX, event.clientY));
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
@@ -156,8 +147,6 @@ export function LessonDragToTargetGame({
     }
 
     onMissRef.current?.();
-    setMissedDrop(true);
-    window.setTimeout(() => setMissedDrop(false), 500);
     endDrag();
   };
 
@@ -196,12 +185,7 @@ export function LessonDragToTargetGame({
       onPointerCancel={handlePointerCancel}
     >
       <div className={lessonTwoColumnGridClass}>
-        <div
-          className={cn(
-            "flex min-h-[10rem] flex-col items-center justify-center gap-2 text-center transition-colors",
-            missedDrop && "rounded-2xl ring-2 ring-[#F59E0B]/40",
-          )}
-        >
+        <div className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center">
           <LessonColumnLabel>{sourceLabel}</LessonColumnLabel>
           {!deposited && !dragState ? (
             <button
@@ -223,21 +207,10 @@ export function LessonDragToTargetGame({
 
         <div
           ref={targetRef}
-          className={cn(
-            lessonSortBucketClass,
-            "flex min-h-[10rem] flex-col items-center justify-center gap-3 p-4 text-center transition-colors",
-            (isOverTarget || deposited) && lessonSortBucketActiveClass,
-          )}
+          className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center"
         >
           <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
-          <div
-            className={cn(
-              "relative flex h-20 w-20 items-center justify-center rounded-full bg-[#FFF7ED] text-5xl transition-transform",
-              isOverTarget && !deposited && "scale-105 ring-2 ring-[#0CC1E0]/50",
-              deposited && "scale-110 ring-2 ring-[#0CC1E0]/60",
-            )}
-            aria-hidden
-          >
+          <div className="relative flex h-20 w-20 items-center justify-center text-5xl">
             🐷
             {deposited ? (
               <div className="absolute inset-0 flex items-center justify-center text-xl">

@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   lessonEyebrowClass,
-  usesNeutralChoiceFeedback,
+  resolveChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonIconOption,
@@ -18,6 +18,9 @@ import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
 type SideLayout = { left: "a" | "b"; right: "a" | "b" };
+
+/** Matches lesson flow error flash duration (use-lesson-flow.ts). */
+const FEEDBACK_RECOVERY_MS = 450;
 
 function buildRoundSideLayouts(roundCount: number): SideLayout[] {
   return Array.from({ length: roundCount }, () =>
@@ -39,34 +42,59 @@ export function SpotlightRoundsScreen({
 }) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
+  const recoveryTimeoutRef = useRef<number | null>(null);
   const round = screen.rounds[roundIndex];
-  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const roundSideLayouts = useMemo(
     () => buildRoundSideLayouts(screen.rounds.length),
     [screen.rounds.length],
   );
 
+  useEffect(
+    () => () => {
+      if (recoveryTimeoutRef.current !== null) {
+        window.clearTimeout(recoveryTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
+  const scheduleChoiceReset = () => {
+    if (recoveryTimeoutRef.current !== null) {
+      window.clearTimeout(recoveryTimeoutRef.current);
+    }
+    recoveryTimeoutRef.current = window.setTimeout(() => {
+      setChoice(null);
+      recoveryTimeoutRef.current = null;
+    }, FEEDBACK_RECOVERY_MS);
+  };
+
   const pick = (which: "a" | "b") => {
-    if (!round) return;
+    if (!round || choice !== null) return;
     setChoice(which);
     onDismissError?.();
+
     if (which !== round.correct) {
       flow.incrementMistake();
       if (onPersistentError) {
         onPersistentError(round.error);
-      } else {
-        signalLessonIncorrectAnswer(flow.flashScreen, { flash: !neutralSelected });
       }
+      signalLessonIncorrectAnswer(flow.flashScreen);
+      scheduleChoiceReset();
       return;
     }
+
     celebrateLessonCorrectAnswer(flow.flashScreen);
     if (roundIndex + 1 >= screen.rounds.length) {
       flow.markScreenReady(screenIndex);
       return;
     }
-    setRoundIndex((current) => current + 1);
-    setChoice(null);
+
+    recoveryTimeoutRef.current = window.setTimeout(() => {
+      setRoundIndex((current) => current + 1);
+      setChoice(null);
+      recoveryTimeoutRef.current = null;
+    }, FEEDBACK_RECOVERY_MS);
   };
 
   if (!round) return null;
@@ -80,12 +108,20 @@ export function SpotlightRoundsScreen({
 
   const renderSide = (which: "a" | "b") => {
     const meta = optionMeta[which];
+    const isChosen = choice === which;
+    const isCorrectChoice = which === round.correct;
     return (
       <LessonIconOption
         label={meta.label}
         emoji={meta.icon}
         display="emoji-label"
-        selected={choice === which}
+        selected={isChosen}
+        disabled={choice !== null}
+        selectionVariant={
+          isChosen
+            ? resolveChoiceVariant(true, isCorrectChoice)
+            : "neutral"
+        }
         labelClassName="max-w-[13rem] sm:max-w-[15rem]"
         onClick={() => pick(which)}
       />

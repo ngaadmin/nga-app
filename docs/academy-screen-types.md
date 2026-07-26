@@ -32,11 +32,12 @@ Use the shared tokens in `lesson-shared-styles.ts`. **Never scale option text ab
 
 | Role | Tailwind / token | Used for |
 |------|------------------|----------|
-| **Prompt / instructional text** | `text-base font-medium` — `lessonPromptClass`, `lessonInstructionClass`, `lessonIntroClass()` | Main question, intro copy, narrative |
-| **Section / column titles** | `text-sm font-semibold uppercase tracking-wide` — `LessonColumnLabel`, `lessonEyebrowClass` | “Round 1 of 3”, bucket labels, match columns, wallet label |
-| **Option / answer text** | `text-base font-medium` — `lessonOptionTextClass`, interactive card classes | Choices, sort rows, match cells, budget item labels |
-| **Feedback banners** | `text-sm font-medium` — `lessonSuccessMessageClass`, `lessonErrorBannerClass` | Success strip, trap toast, inline errors |
-| **Next / Submit / Claim** | `text-base font-semibold` — `lessonNextButtonClass`, `lessonSubmitAnswerClass`, `lessonGoldClaimClass` | Footer actions |
+| **Prompt / instructional text** | `text-lg font-medium` — `lessonPromptClass`, `lessonInstructionClass`, `lessonIntroClass()` | Main question, intro copy, narrative |
+| **Section / column titles** | `text-base font-semibold uppercase tracking-wide` — `LessonColumnLabel`, `lessonEyebrowClass` | “Round 1 of 3”, bucket labels, match columns, wallet label |
+| **Option / answer text** | `text-lg font-medium` — `lessonOptionTextClass`, interactive card classes | Choices, sort rows, match cells, budget item labels |
+| **Feedback banners** | `text-base font-medium` — `lessonSuccessMessageClass`, `lessonErrorBannerClass` | Success strip, trap toast, inline errors |
+| **Next / Submit / Claim** | `text-lg font-semibold` — `lessonNextButtonClass`, `lessonSubmitAnswerClass`, `lessonGoldClaimClass` | Footer actions |
+| **Sort / tap icon emojis** | `lessonIconEmojiClass` (circles), `lessonSortItemEmojiClass` (inline cards) | Tap-reveal, bucket-sort, statement-sort — one locked size, no smaller variants |
 
 ### Illustrations
 
@@ -489,7 +490,7 @@ Reusable UI primitives — not separate `type` strings. Lesson adapters compose 
 | Component / token | Role |
 |-------------------|------|
 | `LessonScreenLayout` | Prompt + game area + success banner shell |
-| `LessonColumnLabel` | Section / column titles (`text-sm font-semibold uppercase tracking-wide`) |
+| `LessonColumnLabel` | Section / column titles (`text-base font-semibold uppercase tracking-wide`) |
 | `LessonChoiceButton` + `LessonChoiceIndicator` | Pill and radio-list answers with ✓/✕ |
 | `LessonIconOption` | Circular emoji options (spotlight, tap-reveal) |
 | `LessonSortPool`, `LessonSortStatementCard`, `LessonSortBucket` | Statement-sort pool + buckets |

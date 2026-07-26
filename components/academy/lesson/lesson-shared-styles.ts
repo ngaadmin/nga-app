@@ -5,34 +5,34 @@ import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
 export const LESSON_MAX_LIVES = 3;
 
 /** Minimum comfortable size for interactive cards, chips, and list rows. */
-export const lessonInteractiveTextClass = "text-base font-medium";
+export const lessonInteractiveTextClass = "text-lg font-medium";
 
 /** Gentle top offset so short screens don't hug the chrome. */
 export const lessonScreenContentOffsetClass = "pt-2 sm:pt-3";
 
 /** Top instructional / prompt copy. */
 export const lessonPromptClass =
-  "font-sans text-base font-medium leading-relaxed text-[#1E3A5F]";
+  "font-sans text-lg font-medium leading-relaxed text-[#1E3A5F]";
 
 /** Short task directive — same scale as prompt. */
 export const lessonInstructionClass =
-  "font-heading text-base font-medium leading-snug text-[#031F82]";
+  "font-heading text-lg font-medium leading-snug text-[#031F82]";
 
 /** Secondary narrative body copy beneath instructions. */
 export const lessonNarrativeClass =
-  "font-sans text-base font-medium leading-relaxed text-[#1E3A5F]";
+  "font-sans text-lg font-medium leading-relaxed text-[#1E3A5F]";
 
 /** Small section labels (Round 1 of 3, axis labels). */
 export const lessonEyebrowClass =
-  "font-heading text-sm font-semibold tracking-wide text-[#0CC1E0]";
+  "font-heading text-base font-semibold tracking-wide text-[#0CC1E0]";
 
 /** Option / answer text inside interactive cards. */
 export const lessonOptionTextClass =
-  "text-center font-heading text-base font-medium leading-snug text-[#031F82]";
+  "text-center font-heading text-lg font-medium leading-snug text-[#031F82]";
 
 /** Labels beneath standalone icons. */
 export const lessonIconLabelClass =
-  "text-center font-sans text-base font-medium leading-snug text-[#031F82]";
+  "text-center font-sans text-lg font-medium leading-snug text-[#031F82]";
 
 /** Prompt by default; pass true for short instruction lines only. */
 export function lessonIntroClass(emphasizeInstruction = false): string {
@@ -51,15 +51,19 @@ export function usesNeutralTapFeedback(
   return selectionFeedback !== "colored";
 }
 
-export const lessonCircleSizeClass = "size-[4.75rem] sm:size-20";
+export const lessonCircleSizeClass = "size-[5.25rem] sm:size-[5.75rem]";
 
 /** Emoji glyph inside circular lesson options. */
 export const lessonIconEmojiClass =
-  "text-4xl leading-none sm:text-[2.75rem]";
+  "text-[2.75rem] leading-none sm:text-[3.25rem]";
+
+/** Inline emoji in sort statement cards, placed items, and step pills. */
+export const lessonSortItemEmojiClass =
+  "shrink-0 text-[1.75rem] leading-none sm:text-[2rem]";
 
 /** Monogram fallback when no emoji is provided. */
 export const lessonIconMonogramClass =
-  "font-heading text-xl font-extrabold uppercase text-[#031F82] sm:text-2xl";
+  "font-heading text-2xl font-extrabold uppercase text-[#031F82] sm:text-3xl";
 
 /** Standard 2-column icon grid for tap / sort pools. */
 export const lessonIconGridClass = "mt-3 grid grid-cols-2 gap-4 sm:gap-5";
@@ -91,8 +95,8 @@ export const lessonSortGridPlaceholderClass = cn(
   lessonCircleSizeClass,
 );
 
-/** Compact drag pool for bucket-sort — fits on mobile without scrolling off-screen. */
-export const lessonSortCompactCircleClass = "size-[4.25rem] sm:size-[4.75rem]";
+/** Compact drag pool — same touch target as default (no undersized icons). */
+export const lessonSortCompactCircleClass = lessonCircleSizeClass;
 
 export const lessonSortPoolWrapClass =
   "flex flex-wrap justify-center gap-x-4 gap-y-3 sm:gap-x-5 sm:gap-y-4";
@@ -110,19 +114,19 @@ export const lessonSortStatementListClass = "flex flex-col gap-1.5";
 
 /** Lightweight draggable statement card — compact rounded rectangle. */
 export const lessonSortStatementCardClass =
-  "flex w-full cursor-grab touch-none select-none items-center justify-center gap-2 rounded-2xl border border-[#BDE9FB] bg-white px-3 py-2 text-center font-heading text-base font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99]";
+  "flex w-full cursor-grab touch-none select-none items-center justify-center gap-2 rounded-2xl border border-[#BDE9FB] bg-white px-3 py-2.5 text-center font-heading text-lg font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99]";
 
 /** Generous draggable cards for spent-total bucket-sort layouts. */
 export const lessonSpentTotalItemCardClass =
-  "flex w-full min-h-[4.5rem] cursor-grab touch-none select-none flex-col items-center justify-center gap-0.5 rounded-2xl border-2 border-[#BDE9FB] bg-white px-3 py-2.5 text-center font-heading text-base font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99] sm:min-h-[5rem] sm:gap-1 sm:py-3";
+  "flex w-full min-h-[4.5rem] cursor-grab touch-none select-none flex-col items-center justify-center gap-0.5 rounded-2xl border-2 border-[#BDE9FB] bg-white px-3 py-2.5 text-center font-heading text-lg font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99] sm:min-h-[5rem] sm:gap-1 sm:py-3";
 
 /** Compact read-only card inside a bucket after drop. */
 export const lessonSortStatementPlacedClass =
-  "rounded-xl border border-[#BDE9FB]/80 bg-white/90 px-2.5 py-1.5 text-center font-heading text-base font-medium leading-snug text-[#031F82]";
+  "rounded-xl border border-[#BDE9FB]/80 bg-white/90 px-2.5 py-2 text-center font-heading text-lg font-medium leading-snug text-[#031F82]";
 
 /** Read-only spent-total item inside the Spent column. */
 export const lessonSpentTotalItemPlacedClass =
-  "flex flex-col items-center justify-center gap-0.5 rounded-xl border border-[#BDE9FB]/80 bg-white px-3 py-2 text-center font-heading text-base font-medium leading-snug text-[#031F82] sm:gap-1 sm:py-2.5";
+  "flex flex-col items-center justify-center gap-0.5 rounded-xl border border-[#BDE9FB]/80 bg-white px-3 py-2 text-center font-heading text-lg font-medium leading-snug text-[#031F82] sm:gap-1 sm:py-2.5";
 
 export type LessonSortBucketTone = SortBucketTone;
 
@@ -217,11 +221,13 @@ export const lessonSequenceRowClass = "flex h-full w-full min-w-0 items-stretch"
 
 /** Draggable step pill — matches slot shape on the right. */
 export const lessonSequenceStepCardClass =
-  "flex w-full min-h-[2.5rem] cursor-grab touch-none select-none items-center justify-center gap-2 rounded-full border border-[#BDE9FB] bg-white px-3 py-1.5 text-center font-heading text-base font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99] sm:min-h-[2.75rem]";
+  "flex w-full min-h-[2.75rem] cursor-grab touch-none select-none items-center justify-center gap-2 rounded-full border border-[#BDE9FB] bg-white px-3 py-2 text-center font-heading text-lg font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99] sm:min-h-[3rem]";
 
 /** Small emoji/icon well inside step cards. */
-export const lessonSequenceStepIconClass =
-  "flex size-7 shrink-0 items-center justify-center rounded-full bg-[#F0F9FF] text-base leading-none";
+export const lessonSequenceStepIconClass = cn(
+  "flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F0F9FF]",
+  lessonSortItemEmojiClass,
+);
 
 /** Empty drop slot — same rounded pill as pool cards. */
 export const lessonSequenceSlotClass =
@@ -241,7 +247,7 @@ export const lessonSequenceSlotFilledClass =
 
 /** Placed step inside a slot — identical pill to the pool card. */
 export const lessonSequenceStepPlacedClass =
-  "flex h-full w-full items-center justify-center gap-2 rounded-full px-3 py-1.5 text-center font-heading text-base font-medium leading-snug text-[#031F82]";
+  "flex h-full w-full items-center justify-center gap-2 rounded-full px-3 py-2 text-center font-heading text-lg font-medium leading-snug text-[#031F82]";
 
 export const lessonSequenceStepBadgeClass =
   "absolute -left-0.5 -top-0.5 z-raised flex size-5 items-center justify-center rounded-full bg-[#031F82] font-heading text-[10px] font-bold leading-none text-white";
@@ -250,7 +256,7 @@ export const lessonSequencePoolCompleteClass =
   "col-start-1 row-start-1 flex items-center justify-center rounded-full border border-dashed border-[#BDE9FB]/60 bg-[#F7FBFF]/50";
 
 export const lessonChoiceLayoutClass =
-  "flex w-full items-center justify-center rounded-full px-4 py-3 text-center font-heading text-base font-medium leading-snug text-[#031F82] shadow-sm transition-all";
+  "flex w-full items-center justify-center rounded-full px-4 py-3 text-center font-heading text-lg font-medium leading-snug text-[#031F82] shadow-sm transition-all";
 
 export const lessonChoiceBaseClass = cn(
   lessonChoiceLayoutClass,
@@ -306,18 +312,18 @@ export function cnLessonChoice(
 
 /** Uniform-height drag/sort row — pill-shaped for consistency with choice buttons. */
 export const lessonSortRowClass =
-  "flex min-h-[3rem] w-full cursor-grab touch-none select-none items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white px-4 py-2.5 text-center font-heading text-base font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
+  "flex min-h-[3rem] w-full cursor-grab touch-none select-none items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white px-4 py-2.5 text-center font-heading text-lg font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
 
 /** Rank-order card only (number sits outside in its own column). */
 export const lessonRankOrderCardClass =
-  "flex min-h-[3rem] w-full min-w-0 flex-1 cursor-grab touch-none select-none items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white px-4 py-2.5 text-center font-heading text-base font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
+  "flex min-h-[3rem] w-full min-w-0 flex-1 cursor-grab touch-none select-none items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white px-4 py-2.5 text-center font-heading text-lg font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
 
 export const lessonRankOrderNumberClass =
-  "flex w-7 shrink-0 items-center justify-center font-heading text-base font-semibold text-[#0CC1E0]";
+  "flex w-8 shrink-0 items-center justify-center font-heading text-lg font-semibold text-[#0CC1E0]";
 
 /** Compact pill pool chip (word-drop, drag pools). */
 export const lessonSortPoolChipClass =
-  "inline-flex min-h-[2.75rem] cursor-grab touch-none select-none items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white px-4 py-2 font-heading text-base font-medium text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.98]";
+  "inline-flex min-h-[2.75rem] cursor-grab touch-none select-none items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white px-4 py-2 font-heading text-lg font-medium text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.98]";
 
 /** @deprecated Prefer lessonSortRowClass for full-width sort lists. */
 export const lessonSortChipClass = lessonSortRowClass;
@@ -335,18 +341,25 @@ export const lessonSortBucketSuccessClass =
   "border-[#16A34A] bg-[#DCFCE7]/40 ring-2 ring-[#22C55E]/35";
 
 export const lessonGoldClaimClass =
-  "flex h-touch w-full max-w-md items-center justify-center rounded-full border-2 border-[#C88202] bg-[#FFA503] px-6 py-4 text-center font-heading text-base font-extrabold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:scale-[0.99] disabled:opacity-60";
+  "flex h-touch w-full max-w-md items-center justify-center rounded-full border-2 border-[#C88202] bg-[#FFA503] px-6 py-4 text-center font-heading text-lg font-extrabold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:scale-[0.99] disabled:opacity-60";
 
 export const lessonGiftTapClass = cn(
-  "flex shrink-0 items-center justify-center rounded-full border-2 border-[#0CC1E0] bg-[#F7FBFF] text-3xl shadow-sm transition-all hover:bg-[#E8F4FC] active:scale-[0.97]",
-  "size-16 sm:size-[4.5rem]",
+  "flex shrink-0 items-center justify-center rounded-full border-2 border-[#0CC1E0] bg-[#F7FBFF] text-5xl shadow-md transition-all hover:bg-[#E8F4FC] active:scale-[0.97]",
+  "size-24 sm:size-28",
 );
 
 export const lessonGiftTapRevealedClass =
   "border-[#22C55E] bg-[#DCFCE7] shadow-[inset_0_3px_8px_rgba(34,197,94,0.16)]";
 
+/** Character emoji beside the gift reveal tap target. */
+export const lessonGiftCharacterEmojiClass = "text-5xl leading-none sm:text-6xl";
+
+/** Character name under gift reveal emojis. */
+export const lessonGiftCharacterLabelClass =
+  "mt-2 font-heading text-base font-semibold text-[#031F82]";
+
 export const lessonHoldButtonClass =
-  "flex h-12 w-full max-w-md select-none items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-base font-semibold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
+  "flex h-12 w-full max-w-md select-none items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
 
 export const lessonHoldButtonCompleteClass =
   "border-[#099FB8] bg-[#0CC1E0] text-[#031F82] opacity-90";
@@ -354,10 +367,10 @@ export const lessonHoldButtonCompleteClass =
 export const LESSON_CASH_IN_LABEL = "[ CASH IN YOUR POINTS ]";
 
 export const lessonSubmitAnswerClass =
-  "mx-auto flex h-12 w-full max-w-xs items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-base font-semibold normal-case tracking-normal text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
+  "mx-auto flex h-12 w-full max-w-xs items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold normal-case tracking-normal text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
 
 export const lessonNextButtonClass =
-  "mx-auto flex h-12 w-full max-w-md items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-base font-semibold normal-case tracking-normal text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
+  "mx-auto flex h-12 w-full max-w-md items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold normal-case tracking-normal text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
 
 // ─── Layout surfaces ─────────────────────────────────────────────────────────
 
@@ -377,29 +390,29 @@ export const lessonTwoColumnGridClass = "grid grid-cols-2 gap-2.5";
 // ─── Column labels & section headers ─────────────────────────────────────────
 
 export const lessonColumnLabelClass =
-  "font-heading text-sm font-semibold uppercase tracking-wide text-[#0CC1E0]";
+  "font-heading text-base font-semibold uppercase tracking-wide text-[#0CC1E0]";
 
 export const lessonColumnLabelInkClass =
-  "font-heading text-sm font-semibold uppercase tracking-wide text-[#031F82]";
+  "font-heading text-base font-semibold uppercase tracking-wide text-[#031F82]";
 
 export const lessonColumnLabelSuccessClass =
-  "font-heading text-sm font-semibold uppercase tracking-wide text-[#16A34A]";
+  "font-heading text-base font-semibold uppercase tracking-wide text-[#16A34A]";
 
 export const lessonColumnLabelMutedClass =
-  "font-heading text-sm font-semibold uppercase tracking-wide text-[#1E3A5F]/50";
+  "font-heading text-base font-semibold uppercase tracking-wide text-[#1E3A5F]/50";
 
 // ─── Feedback banners ────────────────────────────────────────────────────────
 
 export const lessonSuccessMessageClass =
-  "mt-2 shrink-0 rounded-xl bg-[#DCFCE7] px-3 py-2 font-sans text-sm font-medium leading-relaxed text-[#031F82]";
+  "mt-2 shrink-0 rounded-xl bg-[#DCFCE7] px-3 py-2.5 font-sans text-base font-medium leading-relaxed text-[#031F82]";
 
 export const lessonErrorBannerClass =
-  "mt-2 shrink-0 rounded-xl bg-[#FFF7ED] px-3 py-2 font-sans text-sm font-medium text-[#031F82]";
+  "mt-2 shrink-0 rounded-xl bg-[#FFF7ED] px-3 py-2.5 font-sans text-base font-medium text-[#031F82]";
 
-export const lessonInlineErrorClass = "mt-3 font-sans text-sm font-medium text-[#E11D48]";
+export const lessonInlineErrorClass = "mt-3 font-sans text-base font-medium text-[#E11D48]";
 
 export const lessonGameHintClass =
-  "text-center font-sans text-sm font-medium text-[#1E3A5F]/80";
+  "text-center font-sans text-base font-medium text-[#1E3A5F]/80";
 
 // ─── Match / link rows ───────────────────────────────────────────────────────
 
@@ -443,7 +456,7 @@ export const lessonSpentTotalBarClass = "py-2 text-center";
 export const lessonSpentTotalBarCompleteClass = "py-2 text-center";
 
 export const lessonSpentTotalCaptionClass =
-  "font-heading text-sm font-medium text-[#1E3A5F]/70";
+  "font-heading text-base font-medium text-[#1E3A5F]/70";
 
 export const lessonSpentTotalAmountClass =
   "font-heading text-2xl font-semibold tabular-nums text-[#031F82] sm:text-3xl";

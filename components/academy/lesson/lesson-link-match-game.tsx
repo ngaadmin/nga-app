@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 import {
+  lessonOptionTextClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
+import {
   LessonGameBoard,
   LessonGameHint,
   LessonMatchColumnHeaders,
@@ -23,13 +26,9 @@ type LessonLinkMatchGameProps = {
   onMismatch?: () => void;
 };
 
-/** Same as top prompt — text-base font-medium */
-const MATCH_OPTION_TEXT =
-  "text-center text-base font-medium leading-snug text-[#031F82]";
-
 const MATCH_CELL_BASE = cn(
   "flex min-h-[4.25rem] w-full items-center justify-center rounded-2xl px-2.5 py-2 transition-colors sm:min-h-[4.5rem] sm:px-3 sm:py-2.5",
-  MATCH_OPTION_TEXT,
+  lessonOptionTextClass,
 );
 
 const MATCH_DEFAULT_CLASS = "bg-white shadow-sm ring-1 ring-inset ring-[#BDE9FB]";

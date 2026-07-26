@@ -21,7 +21,6 @@ import {
   lessonIconMonogramClass,
   lessonIconOptionStackClass,
   lessonIconTapSelectedClass,
-  lessonSortCompactCircleClass,
   lessonSortBucketActiveClass,
   lessonSortBucketCompactClass,
   lessonSortBucketErrorClass,
@@ -55,6 +54,7 @@ import {
   lessonSpentTotalCaptionClass,
   lessonSortBucketNeutralSurfaceClass,
   lessonSuccessMessageClass,
+  lessonSortItemEmojiClass,
   lessonWrongSelectionChipClass,
   type LessonChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -424,7 +424,7 @@ export function LessonSortPool({
 }: LessonSortPoolProps) {
   if (isEmpty) {
     return (
-      <p className="shrink-0 py-1 text-center font-heading text-sm font-bold text-[#22C55E]">
+      <p className={cn("shrink-0 py-1 text-center", lessonColumnLabelSuccessClass)}>
         {emptyLabel}
       </p>
     );
@@ -469,7 +469,7 @@ export const LessonSortStatementCard = forwardRef<
       {...props}
     >
       {emoji ? (
-        <span className="shrink-0 text-lg leading-none" aria-hidden>
+        <span className={lessonSortItemEmojiClass} aria-hidden>
           {emoji}
         </span>
       ) : null}
@@ -501,7 +501,7 @@ export function LessonSortStatementPlaced({
     <div className={cn(lessonSortStatementPlacedClass, className)}>
       <span className="flex items-center justify-center gap-1.5 text-center">
         {emoji ? (
-          <span className="shrink-0 leading-none" aria-hidden>
+          <span className={lessonSortItemEmojiClass} aria-hidden>
             {emoji}
           </span>
         ) : null}
@@ -579,21 +579,19 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
         <div
           className={cn(
             prominentNeutralHeader
-              ? "flex flex-col items-center justify-center gap-1 text-center font-heading text-sm font-semibold uppercase tracking-wide text-[#031F82]"
+              ? cn(
+                  "flex flex-col items-center justify-center gap-1 text-center",
+                  lessonColumnLabelInkClass,
+                )
               : cn(
-                  "flex items-center justify-center gap-1.5 text-center font-heading text-sm font-semibold uppercase tracking-wide",
+                  "flex items-center justify-center gap-1.5 text-center",
+                  lessonColumnLabelClass,
                   lessonSortBucketHeaderClass(bucketId, tone),
                 ),
           )}
         >
           {headerIcon ? (
-            <span
-              className={cn(
-                "leading-none",
-                prominentNeutralHeader ? "text-xl sm:text-2xl" : "text-lg",
-              )}
-              aria-hidden
-            >
+            <span className={lessonSortItemEmojiClass} aria-hidden>
               {headerIcon}
             </span>
           ) : null}
@@ -641,7 +639,7 @@ export function LessonSequenceSortBoard({
         {children}
       </div>
       {poolComplete ? (
-        <p className="mt-2 text-center font-heading text-sm font-bold text-[#22C55E]">
+        <p className={cn("mt-2 text-center", lessonColumnLabelSuccessClass)}>
           All sorted!
         </p>
       ) : null}
@@ -812,32 +810,21 @@ export const LessonIconOption = forwardRef<
   const showEmoji = display !== "label" && Boolean(emoji);
   const showLabelBelow =
     !hideLabel && display !== "emoji-only" && display !== "label";
-  const isWrongSelection = selected && selectionVariant === "wrong";
-  const isCorrectSelection = selected && selectionVariant === "correct";
+  const isWrongSelection = selectionVariant === "wrong";
+  const isCorrectSelection = selectionVariant === "correct";
   const showSuccessBadge = isCorrectSelection;
+  const showWrongBadge = isWrongSelection;
 
   const circleContent = showEmoji ? (
-    <span
-      className={cn(
-        isCompact ? "text-3xl leading-none sm:text-[2.125rem]" : lessonIconEmojiClass,
-      )}
-      aria-hidden
-    >
+    <span className={lessonIconEmojiClass} aria-hidden>
       {emoji}
     </span>
   ) : display === "label" ? (
-    <span className="px-2 text-center font-heading text-base font-medium leading-snug text-[#031F82]">
+    <span className={cn(lessonIconLabelClass, "px-2")}>
       {label}
     </span>
   ) : (
-    <span
-      className={cn(
-        isCompact
-          ? "font-heading text-lg font-extrabold uppercase text-[#031F82]"
-          : lessonIconMonogramClass,
-      )}
-      aria-hidden
-    >
+    <span className={lessonIconMonogramClass} aria-hidden>
       {label.trim().charAt(0) || "?"}
     </span>
   );
@@ -851,9 +838,11 @@ export const LessonIconOption = forwardRef<
       disabled={disabled}
       className={cn(
         "relative flex shrink-0 items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-[#F7FBFF] shadow-sm transition-all hover:bg-[#EEF6FC] active:scale-[0.98]",
-        isCompact ? lessonSortCompactCircleClass : lessonCircleSizeClass,
+        lessonCircleSizeClass,
         isWrongSelection && lessonWrongSelectionChipClass,
-        !isWrongSelection && selected && lessonIconTapSelectedClass,
+        isCorrectSelection &&
+          "border-[#16A34A] bg-[#F0FDF4] shadow-sm",
+        selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
         disabled && "pointer-events-none opacity-60",
         chipClassName,
       )}
@@ -868,17 +857,45 @@ export const LessonIconOption = forwardRef<
           ✓
         </span>
       ) : null}
+      {showWrongBadge ? (
+        <span
+          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#E11D48] text-[10px] font-extrabold text-white shadow-sm"
+          aria-hidden
+        >
+          ✕
+        </span>
+      ) : null}
     </button>
   ) : (
     <div
       className={cn(
-        "pointer-events-none flex shrink-0 items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-[#F7FBFF] shadow-sm",
-        isCompact ? lessonSortCompactCircleClass : lessonCircleSizeClass,
+        "relative pointer-events-none flex shrink-0 items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-[#F7FBFF] shadow-sm",
+        lessonCircleSizeClass,
+        isWrongSelection && lessonWrongSelectionChipClass,
+        isCorrectSelection &&
+          "border-[#16A34A] bg-[#F0FDF4] shadow-sm",
+        selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
         chipClassName,
       )}
       aria-hidden={showLabelBelow}
     >
       {circleContent}
+      {showSuccessBadge ? (
+        <span
+          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-[10px] font-extrabold text-white shadow-sm"
+          aria-hidden
+        >
+          ✓
+        </span>
+      ) : null}
+      {showWrongBadge ? (
+        <span
+          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#E11D48] text-[10px] font-extrabold text-white shadow-sm"
+          aria-hidden
+        >
+          ✕
+        </span>
+      ) : null}
     </div>
   );
 
@@ -912,11 +929,15 @@ export function LessonIconReveal({
   label,
   emoji,
   display = "emoji-label",
+  selected = false,
+  selectionVariant = "neutral",
   className,
 }: {
   label: string;
   emoji?: string;
   display?: LessonIconDisplayMode;
+  selected?: boolean;
+  selectionVariant?: LessonChoiceVariant;
   className?: string;
 }) {
   if (display === "label") {
@@ -931,6 +952,8 @@ export function LessonIconReveal({
       emoji={emoji}
       display={display}
       interactive={false}
+      selected={selected}
+      selectionVariant={selectionVariant}
       className={className}
     />
   );

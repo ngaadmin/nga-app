@@ -14,8 +14,11 @@ import {
   lessonSortBucketActiveClass,
   lessonSortBucketErrorClass,
   lessonSortStatementCardClass,
+  lessonSortStatementPlacedClass,
   lessonSpentTotalItemCardClass,
   lessonSpentTotalItemPlacedClass,
+  lessonSortItemEmojiClass,
+  lessonGameHintClass,
   lessonTwoColumnGridClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
@@ -82,7 +85,7 @@ function renderSpentTotalItemContent(item: {
   return (
     <>
       {item.emoji ? (
-        <span className="text-xl leading-none sm:text-2xl" aria-hidden>
+        <span className={lessonSortItemEmojiClass} aria-hidden>
           {item.emoji}
         </span>
       ) : null}
@@ -385,7 +388,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         ) : (
           <span className="flex w-full items-center justify-center gap-2 text-center">
             {item.emoji ? (
-              <span className="shrink-0 text-lg leading-none" aria-hidden>
+              <span className={lessonSortItemEmojiClass} aria-hidden>
                 {item.emoji}
               </span>
             ) : null}
@@ -422,7 +425,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         className={
           isSpentTotalLayout
             ? lessonSpentTotalItemPlacedClass
-            : "rounded-xl border border-[#BDE9FB]/80 bg-white px-2 py-2 text-center font-heading text-base font-medium text-[#031F82] shadow-sm"
+            : lessonSortStatementPlacedClass
         }
       >
         {isSpentTotalLayout ? (
@@ -431,7 +434,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           <span className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
               {item.emoji ? (
-                <span className="shrink-0 text-base leading-none" aria-hidden>
+                <span className={lessonSortItemEmojiClass} aria-hidden>
                   {item.emoji}
                 </span>
               ) : null}
@@ -469,7 +472,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         >
           {placedIds.map((itemId) => renderPlacedItem(itemId))}
           {placedIds.length === 0 ? (
-            <p className="py-1 text-center font-sans text-sm font-medium text-[#1E3A5F]/45">
+            <p className={cn("py-1 text-center opacity-60", lessonGameHintClass)}>
               Drop here
             </p>
           ) : null}
@@ -494,7 +497,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         <div className="mt-3 space-y-3">
           {placedIds.map((itemId) => renderPlacedItem(itemId))}
           {placedIds.length === 0 ? (
-            <p className="py-2 text-center font-sans text-sm font-medium text-[#1E3A5F]/50">
+            <p className={cn("py-2 text-center opacity-60", lessonGameHintClass)}>
               Drop statements here
             </p>
           ) : null}
@@ -579,7 +582,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           }}
         >
           {draggedItem.emoji ? (
-            <span className="shrink-0 text-xl leading-none" aria-hidden>
+            <span className={lessonSortItemEmojiClass} aria-hidden>
               {draggedItem.emoji}
             </span>
           ) : null}

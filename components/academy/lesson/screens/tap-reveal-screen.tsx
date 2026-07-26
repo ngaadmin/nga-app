@@ -91,24 +91,16 @@ export function TapRevealScreen({
       emphasizeInstruction={screen.emphasizeInstruction === true}
     >
       <div className={lessonIconGridClass}>
-        {displayItems.map((item) => {
-          const isTapped = tapped.has(item.id);
-          const bucketTone = screen.buckets.find((bucket) => bucket.id === item.bucket)?.tone;
-          const isShortTermSpend = bucketTone === "short" || bucketTone === "want";
-
+        {displayItems
+          .filter((item) => !tapped.has(item.id))
+          .map((item) => {
           return (
             <LessonIconOption
               key={item.id}
               label={item.label}
               emoji={item.emoji}
               display={tapDisplay}
-              selected={isTapped}
-              disabled={isTapped}
-              selectionVariant={
-                neutralSelection || !isTapped
-                  ? "neutral"
-                  : resolveChoiceVariant(true, !isShortTermSpend)
-              }
+              selectionVariant="neutral"
               onClick={() => handleTap(item.id)}
             />
           );
@@ -125,15 +117,27 @@ export function TapRevealScreen({
             <LessonRevealBucket key={bucket.id}>
               <p className={lessonEyebrowClass}>{bucket.label}</p>
               <ul className="mt-2 flex flex-wrap justify-center gap-3">
-                {revealed.map((item) => (
-                  <li key={item.id}>
-                    <LessonIconReveal
-                      label={item.label}
-                      emoji={item.emoji}
-                      display={revealDisplay}
-                    />
-                  </li>
-                ))}
+                {revealed.map((item) => {
+                  const bucketTone = bucket.tone;
+                  const isShortTermSpend =
+                    bucketTone === "short" || bucketTone === "want";
+
+                  return (
+                    <li key={item.id}>
+                      <LessonIconReveal
+                        label={item.label}
+                        emoji={item.emoji}
+                        display={revealDisplay}
+                        selected
+                        selectionVariant={
+                          neutralSelection
+                            ? "neutral"
+                            : resolveChoiceVariant(true, !isShortTermSpend)
+                        }
+                      />
+                    </li>
+                  );
+                })}
               </ul>
             </LessonRevealBucket>
           );

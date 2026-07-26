@@ -1,9 +1,13 @@
 "use client";
 
 import {
+  lessonGameHintClass,
+  lessonGiftCharacterEmojiClass,
+  lessonGiftCharacterLabelClass,
   lessonGiftTapClass,
   lessonGiftTapRevealedClass,
   lessonIntroClass,
+  lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { M1_L2_CUSTOM } from "@/lib/academy/lessons/content/m1-l2";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -54,46 +58,53 @@ function GiftRevealScreen({
   return (
     <>
       <p className={lessonIntroClass()}>{config.intro}</p>
-      <div className="mt-6 flex items-end justify-between gap-2 px-2">
-        <div className="text-center">
-          <p className="text-4xl" aria-hidden>
-            {config.characterLeft.emoji}
-          </p>
-          <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">
-            {config.characterLeft.label}
-          </p>
+
+      <div className="mt-8 flex flex-col items-center gap-6 px-2 sm:mt-10">
+        <div className="flex w-full max-w-md items-end justify-center gap-3 sm:gap-5">
+          <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+            <span className={lessonGiftCharacterEmojiClass} aria-hidden>
+              {config.characterLeft.emoji}
+            </span>
+            <p className={lessonGiftCharacterLabelClass}>
+              {config.characterLeft.label}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleTap();
+            }}
+            disabled={revealed}
+            className={cn(
+              lessonGiftTapClass,
+              "mx-1 shrink-0",
+              revealed && lessonGiftTapRevealedClass,
+            )}
+            aria-label="Tap gift box"
+          >
+            {revealed ? "🎁✨" : "🎁"}
+          </button>
+
+          <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+            <span className={lessonGiftCharacterEmojiClass} aria-hidden>
+              {config.characterRight.emoji}
+            </span>
+            <p className={lessonGiftCharacterLabelClass}>
+              {config.characterRight.label}
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleTap();
-          }}
-          disabled={revealed}
-          className={cn(
-            lessonGiftTapClass,
-            revealed && lessonGiftTapRevealedClass,
-          )}
-          aria-label="Tap gift box"
-        >
-          {revealed ? "🎁✨" : "🎁"}
-        </button>
-        <div className="text-center">
-          <p className="text-4xl" aria-hidden>
-            {config.characterRight.emoji}
-          </p>
-          <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">
-            {config.characterRight.label}
-          </p>
-        </div>
-      </div>
-      {revealed ? (
-        <div className="mt-5 rounded-xl border border-[#22C55E]/40 bg-[#DCFCE7] px-4 py-4 shadow-md">
-          <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+
+        {!revealed ? (
+          <p className={lessonGameHintClass}>Tap the gift to reveal</p>
+        ) : (
+          <div className={cn(lessonSuccessMessageClass, "w-full max-w-md")} role="status">
             {config.revealMessage}
-          </p>
-        </div>
-      ) : null}
+          </div>
+        )}
+      </div>
     </>
   );
 }

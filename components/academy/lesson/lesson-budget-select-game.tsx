@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   cnLessonChoice,
   lessonIntroClass,
@@ -21,6 +21,7 @@ type LessonBudgetSelectGameProps = {
     itemHints?: Record<string, string>;
   };
   onComplete: () => void;
+  onIncomplete?: () => void;
   onMistake: () => void;
   onPersistentError?: (message: string) => void;
   onDismissError?: () => void;
@@ -39,6 +40,7 @@ export function LessonBudgetSelectGame({
   correctIds,
   errors,
   onComplete,
+  onIncomplete,
   onMistake,
   onPersistentError,
   onDismissError,
@@ -80,20 +82,35 @@ export function LessonBudgetSelectGame({
   );
 
   const tryComplete = useCallback(
-    (nextChecked: ReadonlySet<string>, nextSpent: number) => {
-      if (setsMatch(nextChecked, correctIds) && nextSpent <= total) {
-        onDismissError?.();
-        onComplete();
-        return true;
-      }
-      return false;
-    },
-    [correctIds, onComplete, onDismissError],
+    (nextChecked: ReadonlySet<string>, nextSpent: number) =>
+      setsMatch(nextChecked, correctIds) && nextSpent <= total,
+    [correctIds, total],
   );
 
+  const wasCompleteRef = useRef(false);
+
   useEffect(() => {
-    if (tryComplete(checkedIds, budgetSpent)) return;
-  }, [budgetSpent, checkedIds, tryComplete]);
+    const isCorrect = tryComplete(checkedIds, budgetSpent);
+    if (isCorrect) {
+      if (!wasCompleteRef.current) {
+        wasCompleteRef.current = true;
+        onDismissError?.();
+        onComplete();
+      }
+      return;
+    }
+    if (wasCompleteRef.current) {
+      wasCompleteRef.current = false;
+      onIncomplete?.();
+    }
+  }, [
+    budgetSpent,
+    checkedIds,
+    onComplete,
+    onDismissError,
+    onIncomplete,
+    tryComplete,
+  ]);
 
   const toggle = (itemId: string, nextChecked: boolean) => {
     onDismissError?.();
@@ -137,7 +154,7 @@ export function LessonBudgetSelectGame({
           ${Math.max(0, budgetRemaining)}
         </p>
       </LessonCard>
-      <div className="mt-4 space-y-2.5" role="group" aria-label="Budget items">
+      <div className="mt-3 space-y-2" role="group" aria-label="Budget items">
         {items.map((item) => {
           const checked = checkedIds.has(item.id);
           const label =
@@ -145,7 +162,7 @@ export function LessonBudgetSelectGame({
               ? `${item.emoji} ${item.label}`
               : item.label;
           return (
-            <div key={item.id} className="flex items-center gap-3">
+            <div key={item.id} className="flex items-center gap-2.5">
               <input
                 type="checkbox"
                 id={`budget-${item.id}`}
@@ -154,17 +171,17 @@ export function LessonBudgetSelectGame({
                   event.stopPropagation();
                   toggle(item.id, event.target.checked);
                 }}
-                className="h-6 w-6 shrink-0 cursor-pointer accent-[#0CC1E0]"
+                className="h-5 w-5 shrink-0 cursor-pointer accent-[#0CC1E0]"
                 aria-label={label}
               />
               <label
                 htmlFor={`budget-${item.id}`}
                 className={cn(
                   cnLessonChoice(checked, "neutral"),
-                  "min-h-[3.25rem] flex-1 cursor-pointer items-center px-4 py-3 sm:min-h-[3.5rem]",
+                  "min-h-[3rem] flex-1 cursor-pointer items-center px-3 py-2.5",
                 )}
               >
-                <span className="text-sm sm:text-base">
+                <span className="w-full text-center text-base font-medium">
                   {label}
                   {item.price > 0 ? (
                     <span className="ml-1 font-heading text-[#0CC1E0]">

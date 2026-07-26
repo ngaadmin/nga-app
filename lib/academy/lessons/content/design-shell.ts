@@ -400,8 +400,8 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
       },
     },
     successMessage: "Needs covered — wants can wait.",
+    advance: { mode: "on-complete" },
     authoring: { pedagogicalStage: "apply", gameArchetype: "budget-select" },
-    ...AUTO_READY,
   },
   // Pedagogical role: Reward
   {

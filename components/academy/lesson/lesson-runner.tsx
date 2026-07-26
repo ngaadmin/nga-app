@@ -65,7 +65,8 @@ export function LessonRunner({
     if (!screen) return;
 
     const autoReady =
-      screen.advance?.mode === "auto-ready" ||
+      (screen.advance?.mode === "auto-ready" &&
+        screen.type !== "budget-select") ||
       (screen.type === "narrative-bonus" &&
         screen.bonusXp === 0 &&
         screen.autoReadyWhenNoBonus !== false);

@@ -13,6 +13,7 @@ type UseLessonScreenFlowOptions = {
   successMessage?: string;
   onBeforeComplete?: () => void;
   flashOnMistake?: boolean;
+  flashOnMismatch?: boolean;
 };
 
 /**
@@ -23,7 +24,8 @@ export function useLessonScreenFlow({
   flow,
   successMessage,
   onBeforeComplete,
-  flashOnMistake = false,
+  flashOnMistake = true,
+  flashOnMismatch = true,
 }: UseLessonScreenFlowOptions) {
   const [completeMessage, setCompleteMessage] = useState<string | null>(null);
   const flowRef = useRef(flow);
@@ -37,6 +39,11 @@ export function useLessonScreenFlow({
     flowRef.current.markScreenReady(screenIndex);
   }, [onBeforeComplete, screenIndex, successMessage]);
 
+  const handleIncomplete = useCallback(() => {
+    setCompleteMessage(null);
+    flowRef.current.clearScreenReady(screenIndex);
+  }, [screenIndex]);
+
   const handleSuccess = useCallback(() => {
     celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
   }, []);
@@ -49,13 +56,16 @@ export function useLessonScreenFlow({
   }, [flashOnMistake]);
 
   const handleMismatch = useCallback(() => {
-    signalLessonIncorrectAnswer(flowRef.current.flashScreen, { flash: false });
-  }, []);
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen, {
+      flash: flashOnMismatch,
+    });
+  }, [flashOnMismatch]);
 
   return {
     completeMessage,
     flowRef,
     handleComplete,
+    handleIncomplete,
     handleSuccess,
     handleMistake,
     handleMismatch,

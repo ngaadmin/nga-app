@@ -12,7 +12,6 @@ import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonColumnLabelClass,
   lessonGoldClaimClass,
-  lessonInteractiveTextClass,
   lessonSortBucketActiveClass,
   lessonSortRowClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -65,15 +64,15 @@ function shuffleIds(ids: readonly string[]): string[] {
 
 function renderItemLabel(item: SavingsGoalGameItem) {
   return (
-    <>
-      <span className={cn("min-w-0 flex-1 leading-snug", lessonInteractiveTextClass)}>
+    <span className="flex w-full items-center justify-center gap-2 text-center text-base font-medium leading-snug text-[#031F82]">
+      <span className="min-w-0">
         {item.emoji ? `${item.emoji} ` : ""}
         {item.label}
       </span>
-      <span className="shrink-0 font-heading text-sm font-extrabold text-[#0CC1E0] sm:text-base">
+      <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
         {formatDollars(item.price)}
       </span>
-    </>
+    </span>
   );
 }
 
@@ -303,7 +302,7 @@ export function LessonSavingsGoalGame({
                     onPointerDown={(event) => handleChipPointerDown(itemId, event)}
                     className={cn(
                       lessonSortRowClass,
-                      "min-h-[3rem] justify-between px-3 py-2.5",
+                      "min-h-[2.75rem] justify-center px-3 py-2",
                       isDragging && "opacity-30",
                     )}
                   >
@@ -337,14 +336,14 @@ export function LessonSavingsGoalGame({
                 return (
                   <div
                     key={itemId}
-                    className="flex min-h-[3rem] items-center justify-between gap-2 rounded-full border border-[#BDE9FB] bg-white px-3 py-2.5 font-heading font-bold text-[#031F82]"
+                    className="flex min-h-[2.75rem] items-center justify-center gap-2 rounded-full border border-[#BDE9FB] bg-white px-3 py-2 text-center font-heading text-base font-medium text-[#031F82]"
                   >
                     {renderItemLabel(item)}
                   </div>
                 );
               })
             ) : (
-              <p className="flex flex-1 items-center justify-center text-center font-sans text-sm text-[#1E3A5F]/50">
+              <p className="flex flex-1 items-center justify-center text-center font-sans text-sm font-medium text-[#1E3A5F]/50">
                 Drop items here
               </p>
             )}
@@ -388,7 +387,7 @@ export function LessonSavingsGoalGame({
           <div
             className={cn(
               lessonSortRowClass,
-              "pointer-events-none fixed px-3 py-2.5 text-left shadow-lg",
+              "pointer-events-none fixed px-3 py-2 text-center shadow-lg",
             )}
             style={{
               left: dragState.x,

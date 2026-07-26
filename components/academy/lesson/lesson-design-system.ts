@@ -17,8 +17,6 @@ export {
   LessonIllustrationSlot,
   LessonImagePlaceholder,
   LessonMatchColumnHeaders,
-  LessonMatchConnector,
-  LessonMatchRow,
   LessonRevealBucket,
   LessonScreenIntro,
   LessonScreenLayout,

@@ -46,16 +46,17 @@ import {
   lessonInstructionClass,
   lessonIntroClass,
   lessonMatchColumnHeaderGridClass,
-  lessonMatchConnectorClass,
   lessonMatchConnectorSpacerClass,
-  lessonMatchRowGridClass,
   lessonRevealBucketClass,
   lessonScreenFillClass,
   lessonSpentTotalBarClass,
   lessonSpentTotalBarCompleteClass,
-  lessonSpentTotalLabelClass,
-  lessonSpentTotalLabelCompleteClass,
+  lessonSpentTotalAmountClass,
+  lessonSpentTotalCaptionClass,
+  lessonSortBucketNeutralSurfaceClass,
   lessonSuccessMessageClass,
+  lessonWrongSelectionChipClass,
+  type LessonChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
@@ -282,36 +283,6 @@ export function LessonMatchColumnHeaders({
   );
 }
 
-type LessonMatchConnectorProps = {
-  matched?: boolean;
-  pulsing?: boolean;
-  className?: string;
-};
-
-export function LessonMatchConnector({
-  matched = false,
-  pulsing = false,
-  className,
-}: LessonMatchConnectorProps) {
-  return (
-    <div
-      className={cn(lessonMatchConnectorClass(matched, pulsing), className)}
-      aria-hidden
-    />
-  );
-}
-
-export const LessonMatchRow = forwardRef<
-  HTMLDivElement,
-  HTMLAttributes<HTMLDivElement>
->(function LessonMatchRow({ children, className, ...props }, ref) {
-  return (
-    <div ref={ref} className={cn(lessonMatchRowGridClass, className)} {...props}>
-      {children}
-    </div>
-  );
-});
-
 type LessonIllustrationSlotProps = LessonIllustration & {
   className?: string;
 };
@@ -397,16 +368,31 @@ export function LessonRevealBucket({
 }
 
 type LessonSpentTotalBarProps = {
-  label: string;
+  /** @deprecated Prefer caption + amount */
+  label?: string;
+  caption?: string;
+  amount?: string;
   complete?: boolean;
   className?: string;
 };
 
 export function LessonSpentTotalBar({
   label,
+  caption = "Total Amount Spent",
+  amount,
   complete = false,
   className,
 }: LessonSpentTotalBarProps) {
+  if (label && !amount) {
+    const match = label.match(/^(.*?):\s*(\$.+)$/);
+    if (match) {
+      caption = match[1]!.trim();
+      amount = match[2]!.trim();
+    } else {
+      amount = label;
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -414,15 +400,9 @@ export function LessonSpentTotalBar({
         className,
       )}
     >
-      <p
-        className={
-          complete
-            ? lessonSpentTotalLabelCompleteClass
-            : lessonSpentTotalLabelClass
-        }
-        aria-live="polite"
-      >
-        {label}
+      <p className={lessonSpentTotalCaptionClass}>{caption}</p>
+      <p className={lessonSpentTotalAmountClass} aria-live="polite">
+        {amount ?? "$0"}
       </p>
     </div>
   );
@@ -489,11 +469,11 @@ export const LessonSortStatementCard = forwardRef<
       {...props}
     >
       {emoji ? (
-        <span className="shrink-0 text-base leading-none sm:text-lg" aria-hidden>
+        <span className="shrink-0 text-lg leading-none" aria-hidden>
           {emoji}
         </span>
       ) : null}
-      <span className="min-w-0 flex-1 leading-snug">{label}</span>
+      <span className="min-w-0 flex-1 text-center leading-snug">{label}</span>
       {price !== undefined ? (
         <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
           ${price}
@@ -519,13 +499,13 @@ export function LessonSortStatementPlaced({
 }: LessonSortStatementPlacedProps) {
   return (
     <div className={cn(lessonSortStatementPlacedClass, className)}>
-      <span className="flex items-start gap-1.5">
+      <span className="flex items-center justify-center gap-1.5 text-center">
         {emoji ? (
           <span className="shrink-0 leading-none" aria-hidden>
             {emoji}
           </span>
         ) : null}
-        <span className="min-w-0 flex-1">{label}</span>
+        <span className="min-w-0">{label}</span>
         {price !== undefined ? (
           <span className="shrink-0 font-extrabold text-[#0CC1E0]">${price}</span>
         ) : null}
@@ -540,7 +520,7 @@ export function LessonSortBucketRow({
   className,
 }: LessonUiProps) {
   return (
-    <div className={cn("grid shrink-0 grid-cols-2 gap-2", className)}>
+    <div className={cn("grid min-h-0 shrink-0 grid-cols-2 gap-2.5", className)}>
       {children}
     </div>
   );
@@ -553,6 +533,10 @@ type LessonSortBucketProps = HTMLAttributes<HTMLDivElement> & {
   icon?: string;
   active?: boolean;
   error?: boolean;
+  /** Statement-sort: larger centred neutral header, no tone colours on title/icon. */
+  prominentNeutralHeader?: boolean;
+  /** Grow to fill remaining vertical space in statement-sort layouts. */
+  fillHeight?: boolean;
 };
 
 /** Tinted drop bucket with optional header icon for statement-sort layouts. */
@@ -565,6 +549,8 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       icon,
       active = false,
       error = false,
+      prominentNeutralHeader = false,
+      fillHeight = false,
       children,
       className,
       ...props
@@ -577,9 +563,13 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       <div
         ref={ref}
         className={cn(
-          "flex flex-col rounded-2xl border-2 border-dashed p-2 transition-colors",
-          lessonSortBucketCompactClass,
-          lessonSortBucketSurfaceClass(bucketId, tone),
+          "flex flex-col rounded-2xl border-2 border-dashed p-2.5 transition-colors sm:p-3",
+          fillHeight
+            ? "min-h-0 flex-1"
+            : lessonSortBucketCompactClass,
+          prominentNeutralHeader
+            ? lessonSortBucketNeutralSurfaceClass
+            : lessonSortBucketSurfaceClass(bucketId, tone),
           active && lessonSortBucketActiveClass,
           error && lessonSortBucketErrorClass,
           className,
@@ -588,18 +578,30 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       >
         <div
           className={cn(
-            "flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide sm:text-sm",
-            lessonSortBucketHeaderClass(bucketId, tone),
+            prominentNeutralHeader
+              ? "flex flex-col items-center justify-center gap-1 text-center font-heading text-sm font-semibold uppercase tracking-wide text-[#031F82]"
+              : cn(
+                  "flex items-center justify-center gap-1.5 text-center font-heading text-sm font-semibold uppercase tracking-wide",
+                  lessonSortBucketHeaderClass(bucketId, tone),
+                ),
           )}
         >
           {headerIcon ? (
-            <span className="text-base leading-none" aria-hidden>
+            <span
+              className={cn(
+                "leading-none",
+                prominentNeutralHeader ? "text-xl sm:text-2xl" : "text-lg",
+              )}
+              aria-hidden
+            >
               {headerIcon}
             </span>
           ) : null}
-          <span className="min-w-0 flex-1 leading-tight">{label}</span>
+          <span className={cn("leading-tight", prominentNeutralHeader && "w-full")}>
+            {label}
+          </span>
         </div>
-        <div className="mt-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
           {children}
         </div>
       </div>
@@ -750,7 +752,7 @@ export const LessonSequenceSlot = forwardRef<HTMLDivElement, LessonSequenceSlotP
           {stepIndex + 1}
         </span>
         {isEmpty ? (
-          <p className="w-full text-center font-sans text-xs text-[#1E3A5F]/45 sm:text-sm">
+          <p className="w-full text-center font-sans text-sm font-medium text-[#1E3A5F]/45">
             Drop here
           </p>
         ) : (
@@ -776,6 +778,8 @@ type LessonIconOptionProps = {
   labelClassName?: string;
   interactive?: boolean;
   size?: "default" | "compact";
+  /** Drives global correct/wrong chip styling. Wrong = red border, no tick. */
+  selectionVariant?: LessonChoiceVariant;
 } & Omit<HTMLAttributes<HTMLButtonElement>, "children">;
 
 /**
@@ -799,6 +803,7 @@ export const LessonIconOption = forwardRef<
     labelClassName,
     interactive = true,
     size = "default",
+    selectionVariant = "neutral",
     ...buttonProps
   },
   ref,
@@ -807,6 +812,9 @@ export const LessonIconOption = forwardRef<
   const showEmoji = display !== "label" && Boolean(emoji);
   const showLabelBelow =
     !hideLabel && display !== "emoji-only" && display !== "label";
+  const isWrongSelection = selected && selectionVariant === "wrong";
+  const isCorrectSelection = selected && selectionVariant === "correct";
+  const showSuccessBadge = isCorrectSelection;
 
   const circleContent = showEmoji ? (
     <span
@@ -818,14 +826,14 @@ export const LessonIconOption = forwardRef<
       {emoji}
     </span>
   ) : display === "label" ? (
-    <span className="px-3 font-heading text-sm font-semibold leading-snug text-[#031F82] sm:text-base">
+    <span className="px-2 text-center font-heading text-base font-medium leading-snug text-[#031F82]">
       {label}
     </span>
   ) : (
     <span
       className={cn(
         isCompact
-          ? "font-heading text-xl font-extrabold uppercase text-[#031F82] sm:text-2xl"
+          ? "font-heading text-lg font-extrabold uppercase text-[#031F82]"
           : lessonIconMonogramClass,
       )}
       aria-hidden
@@ -844,16 +852,17 @@ export const LessonIconOption = forwardRef<
       className={cn(
         "relative flex shrink-0 items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-[#F7FBFF] shadow-sm transition-all hover:bg-[#EEF6FC] active:scale-[0.98]",
         isCompact ? lessonSortCompactCircleClass : lessonCircleSizeClass,
-        selected && lessonIconTapSelectedClass,
+        isWrongSelection && lessonWrongSelectionChipClass,
+        !isWrongSelection && selected && lessonIconTapSelectedClass,
         disabled && "pointer-events-none opacity-60",
         chipClassName,
       )}
       {...buttonProps}
     >
       {circleContent}
-      {selected ? (
+      {showSuccessBadge ? (
         <span
-          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#066B7C] text-[10px] font-extrabold text-white shadow-sm"
+          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-[10px] font-extrabold text-white shadow-sm"
           aria-hidden
         >
           ✓
@@ -887,7 +896,7 @@ export const LessonIconOption = forwardRef<
         <span
           className={cn(
             lessonIconLabelClass,
-            isCompact && "text-sm leading-tight sm:text-base",
+            isCompact && "leading-tight",
             labelClassName,
           )}
         >

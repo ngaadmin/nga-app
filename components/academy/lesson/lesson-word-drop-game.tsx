@@ -13,7 +13,6 @@ import {
   lessonChoiceStateClass,
   lessonInstructionClass,
   lessonNarrativeClass,
-  lessonSortBucketErrorClass,
   lessonSortPoolChipClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonCard, LessonColumnLabel, LessonSuccessBanner } from "@/components/academy/lesson/lesson-ui";
@@ -311,7 +310,7 @@ export function LessonWordDropGame({
   const blankSlotClass = (index: number, filled: boolean) =>
     cn(
       filled ? lessonBlankSlotFilledClass : lessonBlankSlotClass,
-      "align-middle text-xs font-extrabold transition-colors",
+      "align-middle text-base font-medium transition-colors",
       hoverBlankIndex === index &&
         "border-[#0CC1E0] bg-[#BDE9FB]/45 ring-2 ring-[#0CC1E0]/35",
       error &&
@@ -374,7 +373,7 @@ export function LessonWordDropGame({
               "ring-2 ring-[#0CC1E0]/35",
           )}
         >
-          <LessonColumnLabel className="text-xs">{promptLabel}</LessonColumnLabel>
+          <LessonColumnLabel>{promptLabel}</LessonColumnLabel>
           <p className={lessonNarrativeClass}>
             Drag a word into each blank. Drag a filled word back here to change
             your answer.
@@ -411,7 +410,7 @@ export function LessonWordDropGame({
       ) : null}
 
       {error ? (
-        <p className={cn("mt-4", lessonSortBucketErrorClass, "px-3 py-2 font-sans text-xs text-[#031F82]")} role="alert">
+        <p className={cn("mt-3 px-3 py-2 font-sans text-sm font-medium text-[#031F82]")} role="alert">
           {error}
         </p>
       ) : null}

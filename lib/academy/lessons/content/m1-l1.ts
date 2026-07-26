@@ -130,7 +130,6 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     holdLabel: "🔕 HOLD TO SILENCE 🔕",
     frozenLabel: "🔕 SILENCED 🔕",
     successMessage: "Thank you! Holly's had time to think.",
-    clearOnSuccess: true,
     holdDurationMs: 2000,
   },
   {
@@ -213,7 +212,6 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "❄️ HOLD TO FREEZE ❄️",
     frozenLabel: "❄️ FROZEN ❄️",
     successMessage: "Success! Lars has to wait 24 hours.",
-    clearOnSuccess: false,
   },
   resolution: {
     narrative:
@@ -314,7 +312,6 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     frozenLabel: "⏸️ PAUSED ⏸️",
     successMessage:
       "Dash pauses and realizes: 'It's just a flash sale. I don't really need this right now and there will always be another deal.'",
-    clearOnSuccess: true,
   },
   resolution: {
     narrative:

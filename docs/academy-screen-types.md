@@ -1,25 +1,108 @@
 # Academy lesson screen types
 
-Living inventory of standardized screen types in the Academy lesson system. Content authors set the `type` field in lesson screen configs (`lib/academy/lessons/content/*.ts` or spreadsheet import). Renderers are registered in `components/academy/lesson/lesson-screen-renderer.tsx`.
+**Single source of truth** for Academy lesson screens — layout, typography, feedback, illustrations, advance rules, and every registered `type` string.
+
+When authoring a new lesson screen or reviewing UI work, say: **“Follow `docs/academy-screen-types.md`.”**  
+The design shell (`/dashboard/academy/lesson/shell`, milestone `9001`) is the live QA reference for these locked rules.
 
 **Related code**
 
-- Type definitions: `lib/academy/lessons/types/screens/`
-- Screen adapters: `components/academy/lesson/screens/`
-- Shared UI / design system: `components/academy/lesson/lesson-ui.tsx`, `lesson-design-system.ts`
-- Pedagogical stage map: `lib/academy/lessons/spreadsheet-schema.ts` (`SCREEN_INDEX_TO_STAGE`)
-- Workbook archetype → type map: `GAME_ARCHETYPE_TO_TYPE` in the same file
+| Area | Location |
+|------|----------|
+| Type definitions | `lib/academy/lessons/types/screens/` |
+| Screen adapters | `components/academy/lesson/screens/` |
+| Game engines | `components/academy/lesson/lesson-*-game.tsx` |
+| Shared tokens & feedback | `components/academy/lesson/lesson-shared-styles.ts` |
+| Shared UI | `components/academy/lesson/lesson-ui.tsx`, `lesson-design-system.ts` |
+| Renderer registry | `components/academy/lesson/lesson-screen-renderer.tsx` |
+| Design shell content | `lib/academy/lessons/content/design-shell.ts` |
+| Pedagogical stage map | `lib/academy/lessons/spreadsheet-schema.ts` (`SCREEN_INDEX_TO_STAGE`) |
 
-All screen configs extend `WithDeclarative` (`lib/academy/lessons/types/declarative.ts`) with optional `authoring` metadata and `advance` policy.
+All screen configs extend `WithDeclarative` (`lib/academy/lessons/types/declarative.ts`) with optional `authoring`, `advance`, and `illustration`.
+
+---
+
+## Global locked rules
+
+These rules apply to **every** lesson unless a type-specific section below says otherwise. They match the current design shell.
+
+### Typography scale
+
+Use the shared tokens in `lesson-shared-styles.ts`. **Never scale option text above the prompt.**
+
+| Role | Tailwind / token | Used for |
+|------|------------------|----------|
+| **Prompt / instructional text** | `text-base font-medium` — `lessonPromptClass`, `lessonInstructionClass`, `lessonIntroClass()` | Main question, intro copy, narrative |
+| **Section / column titles** | `text-sm font-semibold uppercase tracking-wide` — `LessonColumnLabel`, `lessonEyebrowClass` | “Round 1 of 3”, bucket labels, match columns, wallet label |
+| **Option / answer text** | `text-base font-medium` — `lessonOptionTextClass`, interactive card classes | Choices, sort rows, match cells, budget item labels |
+| **Feedback banners** | `text-sm font-medium` — `lessonSuccessMessageClass`, `lessonErrorBannerClass` | Success strip, trap toast, inline errors |
+| **Next / Submit / Claim** | `text-base font-semibold` — `lessonNextButtonClass`, `lessonSubmitAnswerClass`, `lessonGoldClaimClass` | Footer actions |
+
+### Illustrations
+
+Illustrations are **optional** per screen via `illustration?: { emoji?, label?, alt? }` on the screen config. Rendered by `LessonIllustrationSlot` below lesson chrome, above prompt copy.
+
+**Omit by default on dense screens** (preserve vertical space; avoid scrolling to reach Next):
+
+- `bucket-sort` — all layouts (`statement-sort`, `steps-row`, `spent-total`)
+- `rank-order`
+- `link-match`
+- `savings-goal`
+- `budget-select`
+- `spotlight-rounds`
+- `allocation-slider`
+- `completion`
+
+**Allowed on lighter screens** (use when a scene helps the hook or narrative):
+
+- `word-drop`
+- `binary-choice`
+- `true-false`
+- `hold-to-fill`
+- `drag-to-target`
+- `narrative-bonus`
+
+`tap-reveal` and other interaction-heavy types should also omit illustrations unless a scene is essential.
+
+### Feedback (global)
+
+Every incorrect user action must produce **clear red feedback**. Wrong answers **never** receive a success tick.
+
+| Outcome | Visual treatment |
+|---------|------------------|
+| **Correct** | Green border + green ✓ (`LessonChoiceIndicator`, `resolveChoiceVariant(..., true)`) |
+| **Incorrect** | Red border + red ✕ / red flash — `lessonWrongSelectionChipClass`, `signalLessonIncorrectAnswer()` screen ring flash |
+| **Screen flash** | Lesson root gets `ring-4 ring-[#E11D48]/70` on error, `ring-[#22C55E]/70` on success (~450 ms) |
+
+Applies to pills, radio lists, icon options, and persistent error toasts. Only the **chosen** option shows correct/wrong styling — unchosen options stay neutral.
+
+### Lesson chrome & layout
+
+- **Minimal chrome:** lives (3 hearts), slim progress bar, optional XP chip — `AcademyLessonShell`
+- **No forced scrolling to reach Next:** dense screen types compress layout; content area may scroll internally but the footer Next button stays visible without scrolling the page
+- **Next** is disabled until the screen is marked ready (`markScreenReady`) or an explicit advance override applies
+- **Last screen:** footer shows **Cash In / Collect Points** (`lessonGoldClaimClass`), not Next
+
+### Locked interaction behaviours
+
+| Type | Locked behaviour |
+|------|------------------|
+| **`link-match`** (Tap-and-Pair) | Tap left event → solid cyan highlight persists. Tap matching right benefit → pair locks with a **distinct solid brand colour** (each pair a different colour). Wrong pair → clear both selections + red screen flash. No submit button. |
+| **`rank-order`** | Rank numbers (`1`, `2`, …) sit **outside** the draggable cards in a dedicated column — not inside the pill. Submit validates full order. |
+| **`drag-to-target`** | Emoji/icon stack is the **direct drag source** — no outer tile wrapper around the draggable coins/icons. |
+| **`budget-select`** | Checkboxes sit **outside** item tiles. **Next only when** the selected set **exactly matches** `correctIds` **and** total spend ≤ `total`. Wrong or partial selection keeps Next disabled; unchecking after success clears ready state. Advance: `on-complete` (never `auto-ready`). |
+| **`spotlight-rounds`** | Wrong pick gets red treatment only — **never a green tick**. After ~450 ms the round recovers (choice clears) so the user can retry; screen must not freeze. |
+| **`narrative-bonus`** | When `bonusXp > 0`, the award/claim button **awards XP and advances in one tap** (`markScreenReady` + `handleNext`). |
+| **`bucket-sort` / `statement-sort`** | Bucket headers use **neutral** surfaces — no rush/think red/green bucket tints on the header row. |
 
 ---
 
 ## Registered type strings
 
-These are the exact `type` values in `ScreenConfig`. There is **no** `"multiple-choice"`, `"drag-and-sort"`, or `"slider"` type — those interactions map to the types below.
+Exact `type` values in `ScreenConfig`. There is **no** `"multiple-choice"`, `"drag-and-sort"`, or `"slider"` type — those map to the types below.
 
-| # | `type` string | Adapter component | Game engine (if any) |
-|---|---------------|-----------------|----------------------|
+| # | `type` string | Adapter | Game engine |
+|---|---------------|---------|-------------|
 | 1 | `word-drop` | `WordDropScreen` | `LessonWordDropGame` |
 | 2 | `binary-choice` | `BinaryChoiceScreen` | — |
 | 3 | `true-false` | `TrueFalseScreen` | — |
@@ -30,7 +113,7 @@ These are the exact `type` values in `ScreenConfig`. There is **no** `"multiple-
 | 8 | `spotlight-rounds` | `SpotlightRoundsScreen` | — |
 | 9 | `hold-to-fill` | `HoldToFillScreen` | — |
 | 10 | `drag-to-target` | `DragToTargetScreen` | `LessonDragToTargetGame` |
-| 11 | `savings-goal` | `SavingsGoalScreen` | — |
+| 11 | `savings-goal` | `SavingsGoalScreen` | `LessonSavingsGoalGame` |
 | 12 | `allocation-slider` | `AllocationSliderScreen` | `LessonAllocationSliderGame` |
 | 13 | `budget-select` | `BudgetSelectScreen` | `LessonBudgetSelectGame` |
 | 14 | `narrative-bonus` | `NarrativeBonusScreen` | — |
@@ -56,7 +139,7 @@ Default lesson scaffold (`lib/academy/lessons/content/_template.ts`):
 | 7 | Reward | Celebration | `narrative-bonus` |
 | 8 | Close | Lesson Recap | `completion` |
 
-Lessons may swap types by screen (e.g. L2 uses `true-false` and `custom`; L3/L4 add `link-match`, `spent-total`, `steps-row`, `drag-to-target`, `savings-goal`).
+Lessons may swap types by screen (e.g. L2 uses `true-false`, `budget-select`, `rank-order`; L3/L4 add `link-match`, `spent-total`, `drag-to-target`, `savings-goal`).
 
 ---
 
@@ -64,7 +147,9 @@ Lessons may swap types by screen (e.g. L2 uses `true-false` and `custom`; L3/L4 
 
 ### `word-drop`
 
-**Best for:** Screen 1 (Hook) — fill-in-the-blank concept drop.
+**Best for:** Hook — fill-in-the-blank concept drop.
+
+**Illustration:** Allowed.
 
 **Props** (`lib/academy/lessons/types/screens/word-drop.ts`):
 
@@ -75,16 +160,20 @@ Lessons may swap types by screen (e.g. L2 uses `true-false` and `custom`; L3/L4 
 | `correctOption` | Correct answer (single-blank mode) |
 | `wrongError` | Error copy |
 | `promptLabel?` | Instruction (default: "Pick the word that fits") |
-| `prompt?` + `blanks[]` | **Multi-blank variant** — `[blank]` tokens; each blank has `options` + `correctOption` |
+| `prompt?` + `blanks[]` | Multi-blank variant — `[blank]` tokens; each blank has `options` + `correctOption` |
 | `successMessage?`, `choiceFeedback?` | Optional success + feedback style |
 
-**Variants:** Single-blank (L1 hook) vs multi-blank (L3 reflection).
+**Variants:** Single-blank vs multi-blank (`blanks[]`).
+
+**Advance:** `on-complete`.
 
 ---
 
 ### `binary-choice`
 
-**Best for:** Screens 2, 5, 6 (Core / Apply) — sentence finisher, trap question, multi-select checks.
+**Best for:** Core / Apply — sentence finisher, trap question, multi-select checks.
+
+**Illustration:** Allowed (`imagePlaceholder` for inline scene, or top-level `illustration`).
 
 **Props** (`lib/academy/lessons/types/screens/binary-choice.ts`):
 
@@ -101,54 +190,62 @@ Lessons may swap types by screen (e.g. L2 uses `true-false` and `custom`; L3/L4 
 | `scenePrompt?`, `imagePlaceholder?` | Scene + illustration placeholder |
 | `choiceFeedback?`, `emphasizeInstruction?` | Visual options |
 
-**Behavior variants (same type, different props):**
+**Behaviour variants (same type, different props):**
 
 - **Single choice** — default
-- **Multi-correct** — select all correct answers (`selectionMode: "multi-correct"`)
+- **Multi-correct** — `selectionMode: "multi-correct"`; Next when all correct selected, none wrong
 - **Trap / Quick Choice** — `errorStyle: "banner"`
-- **Scene + radio-list** — sign-reading with `imagePlaceholder` + `optionLayout: "radio-list"`
+- **Scene + radio-list** — sign-reading layout
 
-Multi-select completion re-evaluates from the **current** selection only (all correct selected, no wrong selected).
+**Advance:** `on-complete`.
 
 ---
 
 ### `true-false`
 
-**Best for:** Screen 1–2 (Hook / early Core) — fast fact check.
+**Best for:** Hook / early Core — fast fact check.
+
+**Illustration:** Allowed.
 
 **Props:** `prompt`, `correctAnswer: "true" | "false"`, `wrongError`, `promptLabel?`, `choiceFeedback?`, `emphasizeInstruction?`
+
+**Advance:** `on-complete`.
 
 ---
 
 ### `tap-reveal`
 
-**Best for:** Screen 3 (Core) — Flash Tap; explore items before sorting.
+**Best for:** Core — Flash Tap; explore items before sorting.
+
+**Illustration:** Omit by default (dense grid).
 
 **Props** (`lib/academy/lessons/types/screens/tap-reveal.ts`):
 
 | Prop | Purpose |
 |------|---------|
 | `intro` | Instruction |
-| `items[]` | `{ id, label, emoji?, bucket }` |
+| `items[]` | `{ id, label, emoji?, bucket }` — shuffled on mount |
 | `buckets[]` | `{ id, label, tone: "short" \| "long" \| "want" \| "need" }` |
 | `tapDisplay?` / `revealDisplay?` | `"emoji-only"`, `"emoji-label"`, `"label"` |
 | `tapLayout?` | `"default"` or `"icon-grid"` |
 | `selectionFeedback?` | `"neutral"` or `"colored"` |
 
-**Advance:** typically `all-taps-revealed`.
+**Advance:** `all-taps-revealed` or `auto-ready` when no items.
 
 ---
 
 ### `bucket-sort`
 
-**Best for:** Screen 4 (Core) and apply-phase sorting / triage / sequencing.
+**Best for:** Core / Apply — sorting, triage, sequencing, spent tracking.
+
+**Illustration:** Omit (all layouts).
 
 **Props** (`lib/academy/lessons/types/screens/bucket-sort.ts`):
 
 | Prop | Purpose |
 |------|---------|
 | `intro`, `title?` | Instruction + optional heading |
-| `buckets[]` | `{ id, label, tone?, icon? }` — see `SortBucket` in `shared-blocks.ts` |
+| `buckets[]` | `{ id, label, tone?, icon? }` |
 | `items[]` | `{ id, label, emoji?, bucket, price?, wrongDropError? }` |
 | `layout?` | See layout variants below |
 | `targetTotal?`, `poolColumnLabel?` | For `spent-total` layout |
@@ -156,32 +253,65 @@ Multi-select completion re-evaluates from the **current** selection only (all co
 
 **Layout variants (`layout`):**
 
-| Layout | Engine | Use case | Shipped in |
-|--------|--------|----------|------------|
-| **`statement-sort`** *(default)* | `LessonBucketSortGame` | Scrollable pool + two tinted buckets; statement/emoji cards | L1 short/long, L2 want/need, L4 rush/think |
-| **`steps-row`** | `LessonSequenceSortGame` | Shuffled pills left → numbered ordered slots right | L3 spare-cash steps, L4 pause-sequence |
-| **`spent-total`** | `LessonBucketSortGame` | Purchases pool + single spent bucket + running total bar | L3 spent triage |
-| **`stable-grid`** / **`default`** | `LessonBucketSortGame` | Legacy aliases; same rendering as `statement-sort` | Not used in current content |
+| Layout | Engine | Use case |
+|--------|--------|----------|
+| **`statement-sort`** *(default)* | `LessonBucketSortGame` | Scrollable pool + two neutral-header buckets |
+| **`steps-row`** | `LessonSequenceSortGame` | Shuffled pills → numbered ordered slots |
+| **`spent-total`** | `LessonBucketSortGame` | Purchases pool + spent bucket + vertical total cards |
+| **`stable-grid`** / **`default`** | `LessonBucketSortGame` | Legacy aliases → `statement-sort` |
 
-Omit `layout` to get `statement-sort`. Set `layout: "steps-row"` explicitly for sequence ordering.
+Omit `layout` for `statement-sort`. **Locked:** bucket column headers use neutral surfaces, not semantic red/green tints.
 
-**Bucket tones** (optional on `buckets`): `rush`, `think`, `want`, `need`, `short`, `long` — inferred from bucket id when omitted.
+**Advance:** `all-items-sorted` or `on-complete`.
 
 ---
 
 ### `link-match`
 
-**Best for:** Screen 4–5 (Core / Apply) — connect events to outcomes.
+**Best for:** Core / Apply — connect events to outcomes (Tap-and-Pair).
 
-**Props:** `intro`, `pairs[]` (`{ id, event, benefit }`), `eventColumnLabel?`, `benefitColumnLabel?`, `wrongError?`, `submitLabel?`, `successMessage?`, `emphasizeInstruction?`
+**Illustration:** Omit.
+
+**Props:** `intro`, `pairs[]` (`{ id, event, benefit }`), `eventColumnLabel?`, `benefitColumnLabel?`, `wrongError?`, `successMessage?`, `emphasizeInstruction?`
+
+**Locked behaviour:** See [Locked interaction behaviours](#locked-interaction-behaviours) — cyan left selection, distinct pair colours, mismatch flash.
+
+**Advance:** `on-complete` when all pairs locked.
+
+---
+
+### `rank-order`
+
+**Best for:** Apply — full-list drag reorder with Submit.
+
+**Illustration:** Omit.
+
+**Props** (`lib/academy/lessons/types/screens/rank-order.ts`):
+
+| Prop | Purpose |
+|------|---------|
+| `intro`, `dragHint?`, `axisLabel?` | Instructions |
+| `submitLabel?` | Default: "Submit Answer" |
+| `items[]` | `{ id, label }` |
+| `correctOrder` | Ordered item ids, top → bottom |
+| `errors` | Keyed by wrong item id or rule key |
+| `successMessage?` | |
+
+**Locked behaviour:** Rank numbers outside cards; Submit validates order.
+
+**Advance:** `on-complete`.
 
 ---
 
 ### `spotlight-rounds`
 
-**Best for:** Screen 3–5 (Core / Apply) — 3-round Pick One / Spotlight challenge.
+**Best for:** Core / Apply — multi-round Pick One challenge.
+
+**Illustration:** Omit.
 
 **Props:** `prompt`, `rounds[]` (`{ iconA, optionA, iconB, optionB, correct: "a"|"b", error }`), `choiceFeedback?`, `emphasizeInstruction?`
+
+**Locked behaviour:** Wrong answer → red only, no tick; auto-recover after ~450 ms.
 
 **Advance:** `spotlight-rounds-complete`.
 
@@ -189,62 +319,126 @@ Omit `layout` to get `statement-sort`. Set `layout: "steps-row"` explicitly for 
 
 ### `hold-to-fill`
 
-**Best for:** Screen 6 (Apply) — hold-to-freeze / hold-to-silence impulse pause.
+**Best for:** Apply — hold-to-freeze / impulse pause.
 
-**Props:** `narrative`, `holdLabel`, `frozenLabel`, `successMessage`, `clearOnSuccess?`, `holdDurationMs?`, `releaseHint?`
+**Illustration:** Allowed.
+
+**Props:** `narrative`, `holdLabel`, `frozenLabel`, `successMessage`, `holdDurationMs?`, `releaseHint?`
+
+**Advance:** `on-complete` after hold completes.
 
 ---
 
 ### `drag-to-target`
 
-**Best for:** Screen 6–7 (Apply / Reward) — swipe/drag from source zone to target (e.g. coins → piggy bank).
+**Best for:** Apply / Reward — drag from source zone to target (e.g. coins → piggy bank).
+
+**Illustration:** Allowed.
 
 **Props:** `intro`, `sourceLabel`, `targetLabel`, `itemEmoji?`, `coinCount?`, `successMessage`, `emphasizeInstruction?`
+
+**Locked behaviour:** Icons are the direct drag source — no outer tiles.
+
+**Advance:** `on-complete`.
 
 ---
 
 ### `savings-goal`
 
-**Best for:** Screen 7 (Reward) — drag skipped purchases into savings; meter fills toward goal.
+**Best for:** Reward — drag skipped purchases into savings; meter fills toward goal.
+
+**Illustration:** Omit.
 
 **Props:** `intro`, `meterLabel`, `targetAmount`, `poolColumnLabel`, `dropZoneLabel`, `items[]`, `workshopSignTitle`, `lockedLabel`, `unlockedLabel`, `goalAchievedLabel`, `successMessage?`, `imagePlaceholder?`, `emphasizeInstruction?`
+
+**Advance:** `on-complete`.
+
+---
+
+### `allocation-slider`
+
+**Best for:** Apply — reserve vs spend split on a continuous slider.
+
+**Illustration:** Omit.
+
+**Props** (`lib/academy/lessons/types/screens/allocation-slider.ts`):
+
+| Prop | Purpose |
+|------|---------|
+| `intro`, `total`, `targetMin` | Budget cap and minimum reserve |
+| `reserveGoals[]` | `{ id, label, amount, emoji? }` |
+| `spendItems?` | Optional today-spend items |
+| `sliderError`, `successMessage?` | |
+
+**Advance:** `on-complete`.
+
+---
+
+### `budget-select`
+
+**Best for:** Apply — multi-select under a budget cap (needs vs wants).
+
+**Illustration:** Omit.
+
+**Props** (`lib/academy/lessons/types/screens/budget-select.ts`):
+
+| Prop | Purpose |
+|------|---------|
+| `intro`, `walletLabel?`, `total` | Wallet display + cap |
+| `items[]` | `{ id, label, price, emoji? }` |
+| `correctIds` | Exact set of ids that must be checked |
+| `errors.overBudget`, `errors.wrongSelection`, `errors.itemHints?` | Feedback copy |
+| `successMessage?` | |
+
+**Locked behaviour:** Checkboxes outside tiles; exact-set + budget gate for Next. See [Locked interaction behaviours](#locked-interaction-behaviours).
+
+**Advance:** **`on-complete` only** — never `auto-ready`.
 
 ---
 
 ### `narrative-bonus`
 
-**Best for:** Screen 7 (Reward / Celebration) — resolution + optional bonus XP tap.
+**Best for:** Reward — resolution + optional bonus XP.
+
+**Illustration:** Allowed.
 
 **Props:** `narrative`, `bonusXp`, `bonusTapLabel`, `successMessage?`, `autoReadyWhenNoBonus?`
+
+**Locked behaviour:** When `bonusXp > 0`, claim button awards XP and advances in one tap.
+
+**Advance:** `auto-ready` when `bonusXp === 0`; otherwise ready after claim.
 
 ---
 
 ### `completion`
 
-**Best for:** Screen 8 (Close) — lesson recap / milestone splash.
+**Best for:** Close — lesson recap / milestone splash.
+
+**Illustration:** Omit.
 
 **Props:** `skillLearnedLabel?`, `pointsLabel?`, `bodyCopy?`, `returnButtonLabel?`, `useStandardPane?`
 
 **Helpers:** `explorerCompletionScreen()`, `teenCompletionScreen({ skillTitle, xpReward })` in `lib/academy/lessons/completion-screen.ts`.
 
+**Footer:** Cash In / Collect Points — not Next.
+
 ---
 
 ### `custom`
 
-**Best for:** One-off interactions not yet promoted to shared types. Renderer returns `null`; lesson hooks render bespoke UI.
+**Best for:** One-off interactions not yet promoted to shared types.
 
 **Props:** `renderer` (string key), `configRef?` (key into lesson `custom` bag)
 
-**M1-L2 renderers** (`components/academy/lesson/m1-l2-custom-screens.tsx`):
+**M1-L2 remaining custom renderer:**
 
-| `renderer` | Interaction | Workbook archetype |
-|------------|-------------|-------------------|
-| `m1-l2-budget-wallet` | Checkbox items with budget cap | The Budget Balance |
-| `m1-l2-reserve-slider` | Allocation range slider | The Allocation Slider |
-| `m1-l2-rank-stack` | Full vertical list drag-reorder + Submit | The Sequence Stack |
-| `m1-l2-gift-reveal` | Tap gift reveal | The Reveal Tap |
+| `renderer` | Interaction |
+|------------|-------------|
+| `m1-l2-gift-reveal` | Tap gift reveal (lesson close beat) |
 
-Validated on Next via `advance: { mode: "validate-on-next", rules: [...] }`.
+Legacy custom renderers (`m1-l2-budget-wallet`, `m1-l2-reserve-slider`, `m1-l2-rank-stack`) are **superseded** by `budget-select`, `allocation-slider`, and `rank-order`.
+
+Validated via `advance: { mode: "on-complete" }` when the screen marks itself ready.
 
 ---
 
@@ -255,12 +449,13 @@ Common `advance.mode` values (`declarative.ts`):
 | Mode | When Next enables |
 |------|-------------------|
 | `on-complete` | Screen calls `markScreenReady` after success |
-| `auto-ready` | Auto on visit (`lesson-runner` effect) |
+| `auto-ready` | Auto on visit (`lesson-runner` effect) — **not for `budget-select`** |
 | `manual-next` | Author-controlled |
 | `all-taps-revealed` | All tap-reveal items opened |
 | `all-items-sorted` | All bucket-sort / sequence items placed |
-| `spotlight-rounds-complete` | All spotlight rounds answered |
-| `validate-on-next` | Custom validation rules on Next (custom screens) |
+| `spotlight-rounds-complete` | All spotlight rounds answered correctly |
+
+Screens that become incomplete after success (e.g. `budget-select` uncheck) must call `clearScreenReady`.
 
 ---
 
@@ -275,56 +470,58 @@ Common `advance.mode` values (`declarative.ts`):
 | `bucket-sort` | ✓ | ✓ | ✓ | ✓ |
 | `spotlight-rounds` | | ✓ | | |
 | `link-match` | | | ✓ | |
+| `rank-order` | | ✓ | | |
+| `budget-select` | | ✓ | | |
+| `allocation-slider` | | ✓ | | |
 | `hold-to-fill` | ✓ | | | |
 | `drag-to-target` | | | | ✓ |
 | `savings-goal` | | | | ✓ |
 | `narrative-bonus` | ✓ | | | |
 | `completion` | ✓ | ✓ | ✓ | ✓ |
-| `custom` | | ✓ (×4) | | |
+| `custom` | | ✓ (gift) | | |
 
 ---
 
 ## Shared design system (not content types)
 
-Reusable UI primitives — not separate `type` strings. Lesson adapters compose these; content authors usually only set screen `type` and data fields.
+Reusable UI primitives — not separate `type` strings. Lesson adapters compose these; authors set screen `type` and data fields.
 
-| Component / module | Role |
-|--------------------|------|
-| `LessonScreenLayout` | Standard intro / prompt / success / error shell |
-| `LessonChoiceButton` + `LessonChoiceIndicator` | Pill and radio-list answers |
+| Component / token | Role |
+|-------------------|------|
+| `LessonScreenLayout` | Prompt + game area + success banner shell |
+| `LessonColumnLabel` | Section / column titles (`text-sm font-semibold uppercase tracking-wide`) |
+| `LessonChoiceButton` + `LessonChoiceIndicator` | Pill and radio-list answers with ✓/✕ |
+| `LessonIconOption` | Circular emoji options (spotlight, tap-reveal) |
 | `LessonSortPool`, `LessonSortStatementCard`, `LessonSortBucket` | Statement-sort pool + buckets |
-| `LessonSequenceSortBoard`, `LessonSequenceStepCard`, `LessonSequenceSlot` | Step-order (`steps-row`) UI |
-| `lesson-design-system.ts` | Barrel export for tokens + primitives |
+| `LessonSequenceSortBoard` | Step-order (`steps-row`) UI |
+| `LessonIllustrationSlot` | Optional scene slot |
+| `lesson-shared-styles.ts` | Typography, feedback, choice, and layout tokens |
+| `lesson-design-system.ts` | Barrel export |
 
-Fix layout once in these components; future lessons need only content updates in `m1-l*.ts`.
-
----
-
-## Candidates for future standardization
-
-Only list types that solve a **repeated** interaction need not cleanly covered by existing types:
-
-| Candidate | Why | Current workaround |
-|-----------|-----|-------------------|
-| **`slider` / `allocation-slider`** | Continuous split/threshold | L2 `custom:m1-l2-reserve-slider` — promote after a second lesson needs it |
-| **`rank-order`** | Reorder **all** items in one column with Submit | L2 `custom:m1-l2-rank-stack` — differs from `steps-row` (pool → fixed slots) |
-| **`budget-select`** | Multi-select under a budget cap | L2 `custom:m1-l2-budget-wallet` |
-
-**Do not add new types for:**
-
-- Multi-select → `binary-choice` + `selectionMode: "multi-correct"`
-- Statement / category sort → `bucket-sort` + `statement-sort` (default)
-- Step ordering → `bucket-sort` + `steps-row`
-- Priced triage → `bucket-sort` + `spent-total`
-- Swipe-to-save → `drag-to-target` or `savings-goal`
-- Single / trap MCQ → `binary-choice` variants
+Fix layout once in these components; future lessons need only content updates.
 
 ---
 
 ## Adding a new lesson screen
 
-1. Pick the closest `type` from this doc (or `custom` if truly one-off).
-2. Add a screen object to the lesson's `baseScreens` in `lib/academy/lessons/content/m1-l*.ts`, or use spreadsheet import (`templates/lesson-authoring/`).
-3. For bucket-sort, set `layout` only when not using default `statement-sort`.
-4. For multi-answer checks, use `binary-choice` with `selectionMode: "multi-correct"` — do not create a new type.
-5. If the interaction repeats across lessons, promote the `custom` renderer to a registered type and adapter in `lesson-screen-renderer.tsx`.
+1. **Follow this doc** — typography, illustrations, feedback, and type-specific locked behaviours.
+2. Pick the closest `type` from [Registered type strings](#registered-type-strings) (or `custom` if truly one-off).
+3. Add a screen object to `lib/academy/lessons/content/m1-l*.ts`, or use spreadsheet import (`templates/lesson-authoring/`).
+4. Set `advance.mode` appropriately (`budget-select` → always `on-complete`).
+5. Omit `illustration` on dense types unless you have a strong reason.
+6. For multi-answer checks, use `binary-choice` + `selectionMode: "multi-correct"` — do not create a new type.
+7. For bucket-sort, set `layout` only when not using default `statement-sort`.
+8. QA against the design shell (`/dashboard/academy/lesson/shell`) before shipping.
+9. If an interaction repeats across lessons, promote a `custom` renderer to a registered type in `lesson-screen-renderer.tsx`.
+
+**Do not add new types for:**
+
+- Multi-select → `binary-choice` + `selectionMode: "multi-correct"`
+- Statement / category sort → `bucket-sort` + `statement-sort`
+- Step ordering → `bucket-sort` + `steps-row`
+- Priced triage → `bucket-sort` + `spent-total`
+- Budget cap multi-select → `budget-select`
+- Full-list reorder + Submit → `rank-order`
+- Reserve slider → `allocation-slider`
+- Swipe-to-save → `drag-to-target` or `savings-goal`
+- Single / trap MCQ → `binary-choice` variants

@@ -23,13 +23,6 @@ function mergeAdvance(
   patch?: AdvancePolicy,
 ): AdvancePolicy | undefined {
   if (!patch) return base;
-  if (!base) return patch;
-  if (patch.mode === "validate-on-next" && base.mode === "validate-on-next") {
-    return {
-      mode: "validate-on-next",
-      rules: patch.rules.length ? patch.rules : base.rules,
-    };
-  }
   return patch;
 }
 

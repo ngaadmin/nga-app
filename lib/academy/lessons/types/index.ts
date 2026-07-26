@@ -47,9 +47,9 @@
  * }
  * ```
  *
- * @example Custom screen (M1-L2 budget checkboxes)
+ * @example Budget-select screen (M1-L2 wallet)
  * ```ts
- * { type: "custom", id: "budget-wallet", renderer: "m1-l2-budget-wallet" }
+ * { type: "budget-select", id: "budget-wallet", total: 30, correctIds: ["bus", "cable"], ... }
  * ```
  */
 

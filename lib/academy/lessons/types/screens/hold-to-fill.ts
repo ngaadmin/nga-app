@@ -7,8 +7,6 @@ export type HoldToFillScreenConfig = WithDeclarative<{
   holdLabel: string;
   frozenLabel: string;
   successMessage: string;
-  /** When true, success message replaces the entire screen UI */
-  clearOnSuccess?: boolean;
   holdDurationMs?: number;
   releaseHint?: string;
 }>;

@@ -19,7 +19,6 @@ export type {
   DeclarativeScreenFields,
   PedagogicalStage,
   ScreenAuthoringMeta,
-  ValidationRule,
   WithDeclarative,
 } from "@/lib/academy/lessons/types";
 export {

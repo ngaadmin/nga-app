@@ -138,7 +138,6 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     holdLabel: "🔕 HOLD TO SILENCE 🔕",
     frozenLabel: "🔕 SILENCED 🔕",
     successMessage: "Thank you! Holly's had time to think.",
-    clearOnSuccess: true,
     holdDurationMs: 2000,
   },
   {
@@ -245,7 +244,6 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "❄️ HOLD TO FREEZE ❄️",
     frozenLabel: "❄️ FROZEN ❄️",
     successMessage: "Success! Lars has to wait 24 hours.",
-    clearOnSuccess: false,
   },
   "resolution": {
     narrative: "The freeze worked! The next morning Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset.",
@@ -353,7 +351,6 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "⏸️ HOLD TO PAUSE ⏸️",
     frozenLabel: "⏸️ PAUSED ⏸️",
     successMessage: "Dash pauses and realizes: 'It's just a flash sale. I don't really need this right now and there will always be another deal.'",
-    clearOnSuccess: true,
   },
   "resolution": {
     narrative: "Dash walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.",

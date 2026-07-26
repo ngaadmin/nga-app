@@ -145,7 +145,6 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     holdLabel: "🔕 HOLD TO SILENCE 🔕",
     frozenLabel: "🔕 SILENCED 🔕",
     successMessage: "REPLACE: success quote after hold completes",
-    clearOnSuccess: true,
     holdDurationMs: 2000,
   },
 
@@ -216,7 +215,6 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "❄️ HOLD TO FREEZE ❄️",
     frozenLabel: "❄️ FROZEN ❄️",
     successMessage: "REPLACE: Lars success message",
-    clearOnSuccess: false,
   },
   resolution: {
     narrative: "REPLACE: Lars resolution (no bonus tap)",
@@ -274,7 +272,6 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "⏸️ HOLD TO PAUSE ⏸️",
     frozenLabel: "⏸️ PAUSED ⏸️",
     successMessage: "REPLACE: Dash success quote",
-    clearOnSuccess: true,
   },
   resolution: {
     narrative: "REPLACE: Dash celebration + bonus XP copy",

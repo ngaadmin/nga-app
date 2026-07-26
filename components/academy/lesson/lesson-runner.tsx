@@ -5,12 +5,16 @@ import {
   LessonScreenPane,
 } from "@/components/academy/lesson/academy-lesson-shell";
 import {
+  LessonScreenChromeProvider,
+  LessonScreenIllustration,
+} from "@/components/academy/lesson/lesson-screen-chrome";
+import {
   getCompletionFooterLabel,
   LessonScreenRenderer,
 } from "@/components/academy/lesson/lesson-screen-renderer";
-import { lessonGoldClaimClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { lessonGoldClaimClass, lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
-import type { ResolvedLessonContent } from "@/lib/academy/lessons/types";
+import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import { useEffect, type ReactNode } from "react";
 
@@ -24,6 +28,21 @@ type LessonRunnerProps = {
   canAdvance?: boolean;
   onNext?: () => void;
 };
+
+const DENSE_LESSON_SCREEN_TYPES = new Set<ScreenConfig["type"]>([
+  "tap-reveal",
+  "bucket-sort",
+  "link-match",
+  "rank-order",
+  "spotlight-rounds",
+  "savings-goal",
+  "allocation-slider",
+  "budget-select",
+]);
+
+function isDenseLessonScreen(screen: ScreenConfig): boolean {
+  return DENSE_LESSON_SCREEN_TYPES.has(screen.type);
+}
 
 export function LessonRunner({
   content,
@@ -64,9 +83,10 @@ export function LessonRunner({
       )}
     >
       <AcademyLessonShell
-        lessonLabel={content.meta.shellLabel}
         currentScreenIndex={flow.screenIndex}
         totalScreens={content.meta.totalScreens}
+        mistakes={flow.screenMistakes}
+        xpReward={content.rewards.xpReward}
         canAdvance={
           canAdvance ?? (flow.canAdvanceDefault && !flow.isLastScreen)
         }
@@ -90,19 +110,31 @@ export function LessonRunner({
             isActive={index === flow.screenIndex}
           >
             {index === flow.screenIndex ? (
-              screen.type === "custom" ? (
-                renderCustomScreen?.(index, screen.renderer)
-              ) : (
-                <LessonScreenRenderer
-                  screen={screen}
-                  screenIndex={index}
-                  flow={flow}
-                  rewards={content.rewards}
-                  awardBonusXp={awardBonusXp}
-                  onPersistentError={onPersistentError}
-                  onDismissPersistentError={onDismissPersistentError}
-                />
-              )
+              <LessonScreenChromeProvider illustration={screen.illustration}>
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                  <LessonScreenIllustration />
+                  <div
+                    className={cn(
+                      "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+                      !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
+                    )}
+                  >
+                    {screen.type === "custom" ? (
+                      renderCustomScreen?.(index, screen.renderer)
+                    ) : (
+                      <LessonScreenRenderer
+                        screen={screen}
+                        screenIndex={index}
+                        flow={flow}
+                        rewards={content.rewards}
+                        awardBonusXp={awardBonusXp}
+                        onPersistentError={onPersistentError}
+                        onDismissPersistentError={onDismissPersistentError}
+                      />
+                    )}
+                  </div>
+                </div>
+              </LessonScreenChromeProvider>
             ) : null}
           </LessonScreenPane>
         ))}

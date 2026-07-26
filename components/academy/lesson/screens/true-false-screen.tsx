@@ -42,7 +42,7 @@ export function TrueFalseScreen({
       prompt={screen.prompt}
       emphasizeInstruction={screen.emphasizeInstruction === true}
     >
-      <div className="mt-6 flex gap-3">
+      <div className="mt-4 flex gap-3">
         {(["true", "false"] as const).map((option) => (
           <LessonChoiceButton
             key={option}

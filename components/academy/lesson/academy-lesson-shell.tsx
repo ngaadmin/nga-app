@@ -1,55 +1,92 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  LESSON_MAX_LIVES,
+  lessonNextButtonClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyLessonShellProps = {
-  lessonLabel: string;
   currentScreenIndex: number;
   totalScreens: number;
+  mistakes: number;
+  maxLives?: number;
+  xpReward?: number;
   canAdvance: boolean;
   onNext: () => void;
   children: ReactNode;
   footerSlot?: ReactNode;
 };
 
+function LessonLifeHeart({ filled }: { filled: boolean }) {
+  return (
+    <span
+      className={cn(
+        "text-base leading-none sm:text-lg",
+        filled ? "text-[#E11D48]" : "text-[#BDE9FB]",
+      )}
+      aria-hidden
+    >
+      {filled ? "♥" : "♡"}
+    </span>
+  );
+}
+
 export function AcademyLessonShell({
-  lessonLabel,
   currentScreenIndex,
   totalScreens,
+  mistakes,
+  maxLives = LESSON_MAX_LIVES,
+  xpReward = 0,
   canAdvance,
   onNext,
   children,
   footerSlot,
 }: AcademyLessonShellProps) {
+  const livesRemaining = Math.max(0, maxLives - mistakes);
+  const progressPercent =
+    totalScreens > 1
+      ? Math.round((currentScreenIndex / (totalScreens - 1)) * 100)
+      : 100;
+
   return (
     <div
       className="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col bg-white"
       style={{ touchAction: "pan-y" }}
     >
-      <header className="shrink-0 border-b border-[#BDE9FB]/40 px-4 py-3">
-        <p className="text-center font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0] sm:text-sm">
-          {lessonLabel}
-        </p>
-        <p className="mt-1 text-center font-heading text-sm font-medium text-[#031F82] sm:text-base">
-          Screen {currentScreenIndex + 1} of {totalScreens}
-        </p>
-        <div className="mt-2 flex justify-center gap-1.5">
-          {Array.from({ length: totalScreens }, (_, index) => (
-            <span
-              key={index}
-              className={cn(
-                "h-1.5 w-6 rounded-full transition-colors",
-                index === currentScreenIndex
-                  ? "bg-[#0CC1E0]"
-                  : index < currentScreenIndex
-                    ? "bg-[#031F82]/30"
-                    : "bg-[#BDE9FB]/60",
-              )}
-              aria-hidden
-            />
-          ))}
+      <header className="shrink-0 border-b border-[#BDE9FB]/40 px-3 py-2">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex shrink-0 items-center gap-0.5"
+            aria-label={`${livesRemaining} of ${maxLives} lives remaining`}
+          >
+            {Array.from({ length: maxLives }, (_, index) => (
+              <LessonLifeHeart key={index} filled={index < livesRemaining} />
+            ))}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div
+              className="h-1 overflow-hidden rounded-full bg-[#BDE9FB]/50"
+              role="progressbar"
+              aria-valuenow={currentScreenIndex + 1}
+              aria-valuemin={1}
+              aria-valuemax={totalScreens}
+              aria-label={`Screen ${currentScreenIndex + 1} of ${totalScreens}`}
+            >
+              <div
+                className="h-full rounded-full bg-[#0CC1E0] transition-[width] duration-300 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {xpReward > 0 ? (
+            <span className="shrink-0 rounded-full bg-[#FFA503]/15 px-2 py-0.5 font-heading text-[10px] font-bold text-[#C88202] sm:text-xs">
+              +{xpReward} XP
+            </span>
+          ) : null}
         </div>
       </header>
 
@@ -64,7 +101,7 @@ export function AcademyLessonShell({
         </div>
       </div>
 
-      <footer className="flex shrink-0 justify-center border-t border-[#BDE9FB]/40 bg-white px-4 py-4 pb-6">
+      <footer className="flex shrink-0 justify-center border-t border-[#BDE9FB]/40 bg-white px-3 py-3 pb-4">
         {footerSlot ?? (
           <button
             type="button"
@@ -89,7 +126,7 @@ export function LessonScreenPane({
 }) {
   return (
     <div
-      className="flex h-full w-full shrink-0 flex-col overflow-y-auto px-4 py-5"
+      className="flex h-full w-full shrink-0 flex-col overflow-hidden px-3 py-3"
       aria-hidden={!isActive}
       inert={isActive ? undefined : true}
     >

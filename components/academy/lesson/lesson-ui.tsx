@@ -10,6 +10,9 @@ import {
   lessonGameAreaClass,
   lessonGameBoardClass,
   lessonGameHintClass,
+  lessonIllustrationEmojiClass,
+  lessonIllustrationLabelClass,
+  lessonIllustrationSlotClass,
   lessonImagePlaceholderClass,
   lessonImagePlaceholderCompactClass,
   lessonInlineErrorClass,
@@ -30,7 +33,6 @@ import {
   lessonSortStatementPlacedClass,
   resolveSortBucketIcon,
   lessonSequenceGridClass,
-  lessonSequencePoolCompleteClass,
   lessonSequenceSlotActiveClass,
   lessonSequenceSlotClass,
   lessonSequenceSlotErrorClass,
@@ -55,6 +57,7 @@ import {
   lessonSpentTotalLabelCompleteClass,
   lessonSuccessMessageClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
 import { cn } from "@/lib/utils/cn";
 
@@ -309,6 +312,37 @@ export const LessonMatchRow = forwardRef<
   );
 });
 
+type LessonIllustrationSlotProps = LessonIllustration & {
+  className?: string;
+};
+
+/** Modest centred scene slot — sits below lesson chrome, above prompt copy. */
+export function LessonIllustrationSlot({
+  emoji,
+  label,
+  alt,
+  className,
+}: LessonIllustrationSlotProps) {
+  const ariaLabel = alt ?? label ?? "Lesson illustration";
+
+  return (
+    <div
+      className={cn(lessonIllustrationSlotClass, "mb-3 shrink-0", className)}
+      role="img"
+      aria-label={ariaLabel}
+    >
+      {emoji ? (
+        <span className={lessonIllustrationEmojiClass} aria-hidden>
+          {emoji}
+        </span>
+      ) : null}
+      {label ? (
+        <p className={lessonIllustrationLabelClass}>{label}</p>
+      ) : null}
+    </div>
+  );
+}
+
 type LessonImagePlaceholderProps = {
   label: string;
   alt?: string;
@@ -408,21 +442,21 @@ export function LessonSortPool({
   isEmpty = false,
   className,
 }: LessonSortPoolProps) {
+  if (isEmpty) {
+    return (
+      <p className="shrink-0 py-1 text-center font-heading text-sm font-bold text-[#22C55E]">
+        {emptyLabel}
+      </p>
+    );
+  }
+
   return (
-    <LessonCard className={cn("shrink p-2.5", className)}>
-      <LessonColumnLabel tone="muted" className="text-xs sm:text-sm">
-        {label}
-      </LessonColumnLabel>
-      {isEmpty ? (
-        <p className="mt-1.5 text-center font-heading text-sm font-bold text-[#22C55E]">
-          {emptyLabel}
-        </p>
-      ) : (
-        <div className={cn(lessonSortPoolScrollClass, "mt-1.5")}>
-          <div className={lessonSortStatementListClass}>{children}</div>
-        </div>
-      )}
-    </LessonCard>
+    <div className={cn("shrink-0", className)}>
+      <LessonColumnLabel tone="muted">{label}</LessonColumnLabel>
+      <div className={cn(lessonSortPoolScrollClass, "mt-1.5")}>
+        <div className={lessonSortStatementListClass}>{children}</div>
+      </div>
+    </div>
   );
 }
 
@@ -554,7 +588,7 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       >
         <div
           className={cn(
-            "flex items-center gap-1.5 font-heading text-[10px] font-bold uppercase tracking-wide sm:text-xs",
+            "flex items-center gap-1.5 font-heading text-xs font-bold uppercase tracking-wide sm:text-sm",
             lessonSortBucketHeaderClass(bucketId, tone),
           )}
         >
@@ -586,26 +620,30 @@ export function LessonSequenceSortBoard({
   className,
 }: LessonSequenceSortBoardProps) {
   return (
-    <LessonCard className={cn("flex min-h-0 flex-1 flex-col p-3 sm:p-4", className)}>
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col rounded-2xl border-2 border-[#BDE9FB]/80 bg-[#F7FBFF]/40 p-3 sm:p-4",
+        className,
+      )}
+    >
       <div
-        className={lessonSequenceGridClass}
-        style={{
-          gridTemplateRows: `repeat(${rowCount}, minmax(2.625rem, 1fr))`,
-        }}
+        className={cn(
+          poolComplete ? "grid grid-cols-1 gap-y-2" : lessonSequenceGridClass,
+        )}
+        style={
+          poolComplete
+            ? undefined
+            : { gridTemplateRows: `repeat(${rowCount}, minmax(2.75rem, 1fr))` }
+        }
       >
-        {poolComplete ? (
-          <div
-            className={lessonSequencePoolCompleteClass}
-            style={{ gridRow: `1 / span ${rowCount}` }}
-          >
-            <p className="text-center font-heading text-xs font-bold text-[#22C55E]">
-              All sorted!
-            </p>
-          </div>
-        ) : null}
         {children}
       </div>
-    </LessonCard>
+      {poolComplete ? (
+        <p className="mt-2 text-center font-heading text-sm font-bold text-[#22C55E]">
+          All sorted!
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -712,7 +750,7 @@ export const LessonSequenceSlot = forwardRef<HTMLDivElement, LessonSequenceSlotP
           {stepIndex + 1}
         </span>
         {isEmpty ? (
-          <p className="w-full text-center font-sans text-[10px] text-[#1E3A5F]/45 sm:text-xs">
+          <p className="w-full text-center font-sans text-xs text-[#1E3A5F]/45 sm:text-sm">
             Drop here
           </p>
         ) : (

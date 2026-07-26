@@ -31,9 +31,17 @@ export type ValidationRule =
   | { kind: "all-taps-revealed" }
   | { kind: "spotlight-rounds-complete" };
 
+export type LessonIllustration = {
+  emoji?: string;
+  label?: string;
+  alt?: string;
+};
+
 export type DeclarativeScreenFields = {
   authoring?: ScreenAuthoringMeta;
   advance?: AdvancePolicy;
+  /** Optional scene illustration shown below lesson chrome, above prompt copy. */
+  illustration?: LessonIllustration;
 };
 
 export type WithDeclarative<T> = T & DeclarativeScreenFields;

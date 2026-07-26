@@ -40,13 +40,25 @@ export function LessonChoiceButton({
       : "neutral";
 
   if (layout === "radio-row") {
+    const rowVariant: LessonChoiceVariant = locked
+      ? "correct"
+      : selected
+        ? variant
+        : "neutral";
+
     return (
       <button
         type={type}
         aria-pressed={isPressed}
         className={cn(
-          "flex w-full items-center gap-3 rounded-xl py-2.5 text-left transition-colors",
-          isPressed && "bg-[#EEF6FC]/80",
+          "flex w-full items-center gap-3 rounded-xl border-2 px-2 py-2.5 text-left transition-colors",
+          isPressed
+            ? rowVariant === "correct"
+              ? "border-[#16A34A] bg-[#F0FDF4]"
+              : rowVariant === "wrong"
+                ? "border-[#E11D48] bg-[#FFF1F2]"
+                : "border-[#066B7C] bg-[#EEF6FC]/80"
+            : "border-transparent bg-transparent",
           className,
         )}
         {...props}

@@ -25,6 +25,8 @@ export type UseLessonFlowOptions = {
   skillSlug: string;
   xpReward: number;
   perfectStreakBonus: number;
+  /** Dev-only design shell — skip XP and milestone writes on Cash In. */
+  isDesignShell?: boolean;
   /** Defaults to /dashboard/academy */
   exitHref?: string;
 };
@@ -40,6 +42,7 @@ export function useLessonFlow({
   skillSlug,
   xpReward,
   perfectStreakBonus,
+  isDesignShell = false,
   exitHref = "/dashboard/academy",
 }: UseLessonFlowOptions) {
   const router = useRouter();
@@ -162,30 +165,34 @@ export function useLessonFlow({
   const handleCashInPoints = useCallback(() => {
     if (lessonComplete) return;
     setLessonComplete(true);
-    awardLessonXp(xpReward);
-    if (perfectStreak && perfectStreakBonus > 0) {
-      awardLessonXp(perfectStreakBonus);
-    }
 
-    const milestones = readAcademyMilestones();
-    const alreadyCompleted = milestones.some(
-      (node) => node.id === milestoneId && node.status === "completed",
-    );
+    if (!isDesignShell) {
+      awardLessonXp(xpReward);
+      if (perfectStreak && perfectStreakBonus > 0) {
+        awardLessonXp(perfectStreakBonus);
+      }
 
-    if (!alreadyCompleted) {
-      const session = readGhostAccessSession();
-      const cohort = session?.birthYear
-        ? getMasteryCohortFromBirthYear(session.birthYear)
-        : "explorer";
-      applyLessonSkillTierProgress(milestoneId, cohort);
-      const updated = completeAcademyMilestone(milestoneId, milestones);
-      saveAcademyMilestones(updated);
+      const milestones = readAcademyMilestones();
+      const alreadyCompleted = milestones.some(
+        (node) => node.id === milestoneId && node.status === "completed",
+      );
+
+      if (!alreadyCompleted) {
+        const session = readGhostAccessSession();
+        const cohort = session?.birthYear
+          ? getMasteryCohortFromBirthYear(session.birthYear)
+          : "explorer";
+        applyLessonSkillTierProgress(milestoneId, cohort);
+        const updated = completeAcademyMilestone(milestoneId, milestones);
+        saveAcademyMilestones(updated);
+      }
     }
 
     router.push(exitHref);
   }, [
     awardLessonXp,
     exitHref,
+    isDesignShell,
     lessonComplete,
     milestoneId,
     perfectStreak,

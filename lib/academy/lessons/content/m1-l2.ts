@@ -113,54 +113,55 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       },
     ],
   },
-  { type: "custom", id: "budget-wallet", renderer: "m1-l2-budget-wallet", configRef: "budget", advance: { mode: "validate-on-next", rules: [{ kind: "budget-wallet", correctIds: ["bus", "cable"], maxTotal: 30, errors: { overBudget: "Uncheck the item you don't really 'need'.", missingCable: "Wait! Your phone is dead without that cable. Uncheck the drink and secure your phone lifeline!", missingBus: "Hold up! You're stranded at school without that Bus Pass. Swap out the drink for a ride home!" } }] } },
-  { type: "custom", id: "reserve-slider", renderer: "m1-l2-reserve-slider", configRef: "reserve", advance: { mode: "validate-on-next", rules: [{ kind: "reserve-slider", targetMin: 20, total: 25, errorMessage: "Not quite! If you leave less than $20 in the reserve, you won't have enough to buy your brother's gift next week. Slide the line to protect the full $20!" }] } },
-  { type: "custom", id: "rank-stack", renderer: "m1-l2-rank-stack", configRef: "rank", advance: { mode: "validate-on-next", rules: [{ kind: "rank-order", correctOrder: ["keep", "cheaper", "borrow"], errors: { borrow: "Not quite! Borrowing money creates debt and you don't want to do that for something you 'want' but can do without. This is the option to avoid and should be at the very bottom of our list. Try again!", cheaperTop: "Not quite! While that is an okay choice, there's a better option to choose first in this list. Try again!" } }] } },
-  { type: "custom", id: "gift-reveal", renderer: "m1-l2-gift-reveal", configRef: "gift", advance: { mode: "on-complete" } },  explorerCompletionScreen(),
-];
-
-export const M1_L2_CUSTOM = {
-  budget: {
-    total: 30,
+  {
+    type: "budget-select",
+    id: "budget-wallet",
     intro: "You have $30 left. Check the boxes to buy what you actually need.",
     walletLabel: "Digital Wallet",
+    total: 30,
     items: [
-      { id: "bus", label: "🚍 Bus Pass ($15)", price: 15 },
-      { id: "drink", label: "⚡ Energy Drink ($10)", price: 10 },
-      { id: "cable", label: "🔌 Phone Cable ($15)", price: 15 },
+      { id: "bus", label: "Bus Pass", price: 15, emoji: "🚍" },
+      { id: "drink", label: "Energy Drink", price: 10, emoji: "⚡" },
+      { id: "cable", label: "Phone Cable", price: 15, emoji: "🔌" },
     ],
     correctIds: ["bus", "cable"],
     errors: {
       overBudget: "Uncheck the item you don't really 'need'.",
-      missingCable:
-        "Wait! Your phone is dead without that cable. Uncheck the drink and secure your phone lifeline!",
-      missingBus:
-        "Hold up! You're stranded at school without that Bus Pass. Swap out the drink for a ride home!",
       wrongSelection: "Uncheck the item you don't really 'need'.",
+      itemHints: {
+        cable:
+          "Wait! Your phone is dead without that cable. Uncheck the drink and secure your phone lifeline!",
+        bus: "Hold up! You're stranded at school without that Bus Pass. Swap out the drink for a ride home!",
+      },
     },
+    advance: { mode: "on-complete" },
   },
-  reserve: {
-    total: 25,
-    target: 20,
-    energyDrinkPrice: 10,
+  {
+    type: "allocation-slider",
+    id: "reserve-slider",
     intro:
       "Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.",
-    phoneCaseLabel: "Phone Case",
-    phoneCaseAmount: 20,
-    energyDrinkLabel: "Energy Drink",
-    energyDrinkAmount: 10,
+    total: 25,
+    targetMin: 20,
+    reserveGoals: [
+      { id: "phone-case", label: "Phone Case", amount: 20, emoji: "📱" },
+    ],
+    spendItems: [
+      { id: "energy-drink", label: "Energy Drink", amount: 10, emoji: "⚡" },
+    ],
     sliderError:
       "Not quite! If you leave less than $20 in the reserve, you won't have enough to buy your brother's gift next week. Slide the line to protect the full $20!",
+    advance: { mode: "on-complete" },
   },
-  rank: {
+  {
+    type: "rank-order",
+    id: "rank-stack",
     intro:
       "Drag the choices in the correct order, starting with what would be best for Lars to do.",
     dragHint:
       "Drag the choices in the correct order, starting with what would be best for Lars to do.",
     axisLabel: "Best → Avoid",
     submitLabel: "Submit Answer",
-    successMessage:
-      "Perfect sequence! Keeping the $5 safe first, then only spending what you have left without borrowing money is correct. That's smart spending control that Lars can count on.",
     items: [
       { id: "keep", label: "Don't buy anything - keep the $5." },
       { id: "cheaper", label: "Choose something cheaper for $5 to enjoy now." },
@@ -170,10 +171,17 @@ export const M1_L2_CUSTOM = {
     errors: {
       borrow:
         "Not quite! Borrowing money creates debt and you don't want to do that for something you 'want' but can do without. This is the option to avoid and should be at the very bottom of our list. Try again!",
-      cheaperTop:
+      cheaper:
         "Not quite! While that is an okay choice, there's a better option to choose first in this list. Try again!",
     },
+    successMessage:
+      "Perfect sequence! Keeping the $5 safe first, then only spending what you have left without borrowing money is correct. That's smart spending control that Lars can count on.",
+    advance: { mode: "on-complete" },
   },
+  { type: "custom", id: "gift-reveal", renderer: "m1-l2-gift-reveal", configRef: "gift", advance: { mode: "on-complete" } },  explorerCompletionScreen(),
+];
+
+export const M1_L2_CUSTOM = {
   gift: {
     intro:
       "Fast forward to next week! Tap the gift box to help Lars deliver his promise to Senna.",

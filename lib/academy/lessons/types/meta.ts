@@ -49,6 +49,8 @@ export type LessonMeta = {
   lessonKey?: string;
   characters?: CharacterTokenMap;
   shippedCohorts?: readonly MasteryCohort[];
+  /** Dev-only visual QA shell — never listed on the Academy map. */
+  isDesignShell?: boolean;
 };
 
 export type CohortContentMap<T> = {

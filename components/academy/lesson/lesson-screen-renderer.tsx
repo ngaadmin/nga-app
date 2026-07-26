@@ -4,12 +4,15 @@ import type { ReactNode } from "react";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import type { LessonRewards, ScreenConfig } from "@/lib/academy/lessons/types";
 import { LESSON_CASH_IN_LABEL } from "@/components/academy/lesson/lesson-shared-styles";
+import { AllocationSliderScreen } from "./screens/allocation-slider-screen";
 import { BinaryChoiceScreen } from "./screens/binary-choice-screen";
+import { BudgetSelectScreen } from "./screens/budget-select-screen";
 import { BucketSortScreen } from "./screens/bucket-sort-screen";
 import { CompletionScreen } from "./screens/completion-screen";
 import { DragToTargetScreen } from "./screens/drag-to-target-screen";
 import { HoldToFillScreen } from "./screens/hold-to-fill-screen";
 import { LinkMatchScreen } from "./screens/link-match-screen";
+import { RankOrderScreen } from "./screens/rank-order-screen";
 import { NarrativeBonusScreen } from "./screens/narrative-bonus-screen";
 import { SavingsGoalScreen } from "./screens/savings-goal-screen";
 import { SpotlightRoundsScreen } from "./screens/spotlight-rounds-screen";
@@ -71,6 +74,57 @@ const LESSON_SCREEN_RENDERERS: Partial<
       screenIndex={screenIndex}
       flow={flow}
       rewards={rewards}
+    />
+  ),
+  "budget-select": ({
+    screen,
+    screenIndex,
+    flow,
+    rewards,
+    onPersistentError,
+    onDismissPersistentError,
+  }) => (
+    <BudgetSelectScreen
+      screen={screen as Extract<ScreenConfig, { type: "budget-select" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      onPersistentError={onPersistentError}
+      onDismissPersistentError={onDismissPersistentError}
+    />
+  ),
+  "allocation-slider": ({
+    screen,
+    screenIndex,
+    flow,
+    rewards,
+    onPersistentError,
+    onDismissPersistentError,
+  }) => (
+    <AllocationSliderScreen
+      screen={screen as Extract<ScreenConfig, { type: "allocation-slider" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      onPersistentError={onPersistentError}
+      onDismissPersistentError={onDismissPersistentError}
+    />
+  ),
+  "rank-order": ({
+    screen,
+    screenIndex,
+    flow,
+    rewards,
+    onPersistentError,
+    onDismissPersistentError,
+  }) => (
+    <RankOrderScreen
+      screen={screen as Extract<ScreenConfig, { type: "rank-order" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+      onPersistentError={onPersistentError}
+      onDismissPersistentError={onDismissPersistentError}
     />
   ),
   "bucket-sort": ({

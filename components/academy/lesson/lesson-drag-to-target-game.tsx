@@ -11,7 +11,6 @@ import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonSortBucketActiveClass,
   lessonSortBucketClass,
-  lessonSortBucketErrorClass,
   lessonTwoColumnGridClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonColumnLabel } from "@/components/academy/lesson/lesson-ui";
@@ -167,11 +166,11 @@ export function LessonDragToTargetGame({
   };
 
   const renderCoinStack = (interactive: boolean) => (
-    <div className="relative mx-auto h-16 w-16">
+    <div className="relative h-20 w-20">
       {Array.from({ length: coinCount }, (_, index) => (
         <span
           key={index}
-          className="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-2xl"
+          className="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl"
           style={{
             transform: `translate(calc(-50% + ${index * 2}px), calc(-50% - ${index * 4}px))`,
             zIndex: index,
@@ -190,7 +189,7 @@ export function LessonDragToTargetGame({
   return (
     <div
       ref={boardRef}
-      className="mt-5 touch-none select-none"
+      className="mt-4 touch-none select-none"
       style={{ touchAction: "none" }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -199,9 +198,8 @@ export function LessonDragToTargetGame({
       <div className={lessonTwoColumnGridClass}>
         <div
           className={cn(
-            lessonSortBucketClass,
-            "flex min-h-[10rem] flex-col items-center justify-center gap-3 p-4 text-center transition-colors",
-            missedDrop && lessonSortBucketErrorClass,
+            "flex min-h-[10rem] flex-col items-center justify-center gap-2 text-center transition-colors",
+            missedDrop && "rounded-2xl ring-2 ring-[#F59E0B]/40",
           )}
         >
           <LessonColumnLabel>{sourceLabel}</LessonColumnLabel>
@@ -210,16 +208,16 @@ export function LessonDragToTargetGame({
               ref={stackRef}
               type="button"
               onPointerDown={handleStackPointerDown}
-              className="cursor-grab rounded-full p-3 active:cursor-grabbing"
+              className="cursor-grab rounded-full p-1 active:cursor-grabbing"
               aria-label={`Drag coins from ${sourceLabel}`}
               style={{ touchAction: "none" }}
             >
               {renderCoinStack(true)}
             </button>
           ) : deposited ? (
-            <p className="font-sans text-xs text-[#1E3A5F]/60">Coins saved!</p>
+            <p className="font-sans text-sm text-[#1E3A5F]/60">Coins saved!</p>
           ) : (
-            <div className="h-16 w-16" aria-hidden />
+            <div className="h-20 w-20" aria-hidden />
           )}
         </div>
 

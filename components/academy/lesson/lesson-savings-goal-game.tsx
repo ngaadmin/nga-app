@@ -10,9 +10,10 @@ import {
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
+  lessonColumnLabelClass,
   lessonGoldClaimClass,
+  lessonInteractiveTextClass,
   lessonSortBucketActiveClass,
-  lessonSortBucketClass,
   lessonSortRowClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
@@ -62,14 +63,14 @@ function shuffleIds(ids: readonly string[]): string[] {
   return next;
 }
 
-function renderItemLabel(item: SavingsGoalGameItem, size: "pool" | "saved") {
+function renderItemLabel(item: SavingsGoalGameItem) {
   return (
     <>
-      <span className={cn("min-w-0 flex-1 leading-tight", size === "pool" ? "text-[11px]" : "text-[10px]")}>
+      <span className={cn("min-w-0 flex-1 leading-snug", lessonInteractiveTextClass)}>
         {item.emoji ? `${item.emoji} ` : ""}
         {item.label}
       </span>
-      <span className="shrink-0 font-heading text-[10px] font-extrabold text-[#0CC1E0]">
+      <span className="shrink-0 font-heading text-sm font-extrabold text-[#0CC1E0] sm:text-base">
         {formatDollars(item.price)}
       </span>
     </>
@@ -248,6 +249,9 @@ export function LessonSavingsGoalGame({
   const draggedItem = dragState ? itemById.get(dragState.itemId) : null;
   const progressPercent = Math.min(100, (savedTotal / targetAmount) * 100);
 
+  const columnShellClass =
+    "flex min-h-0 flex-col gap-1.5 rounded-2xl border-2 border-dashed border-[#BDE9FB]/80 bg-[#F7FBFF]/50 p-2.5";
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col touch-none select-none"
@@ -257,11 +261,9 @@ export function LessonSavingsGoalGame({
     >
       <div className="mb-2 shrink-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-            {meterLabel}
-          </p>
+          <p className={lessonColumnLabelClass}>{meterLabel}</p>
           <p
-            className="font-heading text-[10px] font-extrabold tabular-nums text-[#031F82]"
+            className="font-heading text-sm font-extrabold tabular-nums text-[#031F82]"
             aria-live="polite"
           >
             {formatDollars(savedTotal)} / {formatDollars(targetAmount)}
@@ -283,11 +285,9 @@ export function LessonSavingsGoalGame({
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-2">
-        <div className="flex min-h-0 flex-col gap-1 rounded-xl bg-white p-2 shadow-md">
-          <p className="shrink-0 font-heading text-[9px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-            {poolColumnLabel}
-          </p>
-          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+        <div className={columnShellClass}>
+          <p className={cn("shrink-0", lessonColumnLabelClass)}>{poolColumnLabel}</p>
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
             {poolIds.length > 0 ? (
               poolIds.map((itemId) => {
                 const item = itemById.get(itemId);
@@ -303,16 +303,16 @@ export function LessonSavingsGoalGame({
                     onPointerDown={(event) => handleChipPointerDown(itemId, event)}
                     className={cn(
                       lessonSortRowClass,
-                      "min-h-[2.75rem] justify-between px-2 py-2 text-[10px] sm:text-xs",
+                      "min-h-[3rem] justify-between px-3 py-2.5",
                       isDragging && "opacity-30",
                     )}
                   >
-                    {renderItemLabel(item, "pool")}
+                    {renderItemLabel(item)}
                   </button>
                 );
               })
             ) : (
-              <p className="flex flex-1 items-center justify-center text-center font-heading text-[10px] font-bold text-[#22C55E]">
+              <p className="flex flex-1 items-center justify-center text-center font-heading text-sm font-bold text-[#22C55E]">
                 All moved!
               </p>
             )}
@@ -322,16 +322,14 @@ export function LessonSavingsGoalGame({
         <div
           ref={dropZoneRef}
           className={cn(
-            lessonSortBucketClass,
-            "flex min-h-0 flex-col gap-1 p-2 transition-all duration-300",
+            columnShellClass,
+            "transition-all duration-300",
             (isOverDropZone || dropZoneGlow) && lessonSortBucketActiveClass,
             goalAchieved && "border-[#16A34A] bg-[#DCFCE7]/40 ring-2 ring-[#22C55E]/40",
           )}
         >
-          <p className="shrink-0 font-heading text-[9px] font-bold uppercase tracking-wide text-[#031F82]">
-            {dropZoneLabel}
-          </p>
-          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+          <p className={cn("shrink-0", lessonColumnLabelClass)}>{dropZoneLabel}</p>
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
             {depositedIds.length > 0 ? (
               depositedIds.map((itemId) => {
                 const item = itemById.get(itemId);
@@ -339,14 +337,14 @@ export function LessonSavingsGoalGame({
                 return (
                   <div
                     key={itemId}
-                    className="flex items-center justify-between gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 font-heading font-bold text-[#031F82]"
+                    className="flex min-h-[3rem] items-center justify-between gap-2 rounded-full border border-[#BDE9FB] bg-white px-3 py-2.5 font-heading font-bold text-[#031F82]"
                   >
-                    {renderItemLabel(item, "saved")}
+                    {renderItemLabel(item)}
                   </div>
                 );
               })
             ) : (
-              <p className="flex flex-1 items-center justify-center text-center font-sans text-[10px] text-[#1E3A5F]/50">
+              <p className="flex flex-1 items-center justify-center text-center font-sans text-sm text-[#1E3A5F]/50">
                 Drop items here
               </p>
             )}
@@ -356,16 +354,16 @@ export function LessonSavingsGoalGame({
 
       <div
         className={cn(
-          "mt-2 shrink-0 rounded-xl border border-[#BDE9FB] bg-[#F7FBFF] px-2 py-2 text-center transition-all duration-300",
+          "mt-2 shrink-0 rounded-xl border border-[#BDE9FB] bg-[#F7FBFF] px-3 py-2.5 text-center transition-all duration-300",
           goalAchieved && "border-[#22C55E] bg-[#DCFCE7]/45",
         )}
       >
-        <p className="font-heading text-[10px] font-extrabold leading-tight text-[#031F82]">
+        <p className="font-heading text-sm font-extrabold leading-snug text-[#031F82]">
           {workshopSignTitle}
         </p>
-        <div className="mt-1.5 flex flex-col items-center gap-1">
+        <div className="mt-2 flex flex-col items-center gap-1.5">
           {goalAchieved ? (
-            <p className="font-heading text-[10px] font-extrabold uppercase tracking-wide text-[#16A34A]">
+            <p className="font-heading text-sm font-extrabold uppercase tracking-wide text-[#16A34A]">
               {goalAchievedLabel}
             </p>
           ) : null}
@@ -373,12 +371,12 @@ export function LessonSavingsGoalGame({
             <button
               type="button"
               onClick={onAdvance}
-              className={cn(lessonGoldClaimClass, "h-auto min-h-0 w-full max-w-none py-2 text-[10px]")}
+              className={cn(lessonGoldClaimClass, "h-auto min-h-0 w-full max-w-none py-2.5 text-sm")}
             >
               {unlockedLabel}
             </button>
           ) : (
-            <span className="inline-flex items-center justify-center rounded-nga-md border border-[#BDE9FB] bg-[#E8F6FC] px-3 py-1 font-heading text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]/50">
+            <span className="inline-flex items-center justify-center rounded-full border border-[#BDE9FB] bg-[#E8F6FC] px-3 py-1.5 font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/50">
               {lockedLabel}
             </span>
           )}
@@ -390,7 +388,7 @@ export function LessonSavingsGoalGame({
           <div
             className={cn(
               lessonSortRowClass,
-              "pointer-events-none fixed w-[9rem] px-2 py-2 text-left text-[11px] shadow-lg",
+              "pointer-events-none fixed px-3 py-2.5 text-left shadow-lg",
             )}
             style={{
               left: dragState.x,
@@ -398,7 +396,7 @@ export function LessonSavingsGoalGame({
               width: dragState.width,
             }}
           >
-            {renderItemLabel(draggedItem, "pool")}
+            {renderItemLabel(draggedItem)}
           </div>
         </OverlayPortal>
       ) : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   lessonEyebrowClass,
   usesNeutralChoiceFeedback,
@@ -17,6 +17,16 @@ import {
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
+type SideLayout = { left: "a" | "b"; right: "a" | "b" };
+
+function buildRoundSideLayouts(roundCount: number): SideLayout[] {
+  return Array.from({ length: roundCount }, () =>
+    Math.random() < 0.5
+      ? { left: "a" as const, right: "b" as const }
+      : { left: "b" as const, right: "a" as const },
+  );
+}
+
 export function SpotlightRoundsScreen({
   screen,
   screenIndex,
@@ -31,6 +41,11 @@ export function SpotlightRoundsScreen({
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
   const round = screen.rounds[roundIndex];
   const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
+
+  const roundSideLayouts = useMemo(
+    () => buildRoundSideLayouts(screen.rounds.length),
+    [screen.rounds.length],
+  );
 
   const pick = (which: "a" | "b") => {
     if (!round) return;
@@ -56,16 +71,26 @@ export function SpotlightRoundsScreen({
 
   if (!round) return null;
 
-  const renderOption = (which: "a" | "b", icon: string, label: string) => (
-    <LessonIconOption
-      label={label}
-      emoji={icon}
-      display="emoji-label"
-      selected={choice === which}
-      labelClassName="max-w-[13rem] sm:max-w-[15rem]"
-      onClick={() => pick(which)}
-    />
-  );
+  const sideLayout = roundSideLayouts[roundIndex] ?? { left: "a", right: "b" };
+
+  const optionMeta = {
+    a: { icon: round.iconA, label: round.optionA },
+    b: { icon: round.iconB, label: round.optionB },
+  };
+
+  const renderSide = (which: "a" | "b") => {
+    const meta = optionMeta[which];
+    return (
+      <LessonIconOption
+        label={meta.label}
+        emoji={meta.icon}
+        display="emoji-label"
+        selected={choice === which}
+        labelClassName="max-w-[13rem] sm:max-w-[15rem]"
+        onClick={() => pick(which)}
+      />
+    );
+  };
 
   return (
     <LessonScreenLayout
@@ -76,8 +101,8 @@ export function SpotlightRoundsScreen({
         {`Round ${roundIndex + 1} of ${screen.rounds.length}`}
       </p>
       <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2">
-        {renderOption("a", round.iconA, round.optionA)}
-        {renderOption("b", round.iconB, round.optionB)}
+        {renderSide(sideLayout.left)}
+        {renderSide(sideLayout.right)}
       </div>
     </LessonScreenLayout>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
@@ -10,6 +10,7 @@ import {
   readUserSession,
   hasCompletedPersonalizationGate,
 } from "@/lib/onboarding/ghost-session";
+import { cn } from "@/lib/utils/cn";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ type DashboardShellProps = {
 
 export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
 
   useEffect(() => {
     const session = readUserSession();
@@ -31,9 +34,16 @@ export function DashboardShell({ children }: DashboardShellProps) {
       <DashboardBottomNav />
 
       <div className="flex min-h-dvh flex-col md:pl-64">
-        <DashboardStatusHeader />
+        {!isLessonRoute ? <DashboardStatusHeader /> : null}
 
-        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-6 pb-28 sm:px-6 md:pb-8">
+        <main
+          className={cn(
+            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            isLessonRoute
+              ? "px-0 py-0 pb-20"
+              : "px-4 py-6 pb-28 sm:px-6 md:pb-8",
+          )}
+        >
           {children}
         </main>
       </div>

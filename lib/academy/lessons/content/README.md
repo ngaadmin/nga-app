@@ -2,6 +2,8 @@
 
 **Authors:** spreadsheet only → **[templates/lesson-authoring/INSTRUCTIONS.md](../../../templates/lesson-authoring/INSTRUCTIONS.md)**
 
+**Developers:** screen type inventory → **[docs/academy-screen-types.md](../../../docs/academy-screen-types.md)**
+
 Two files to fill: `Lesson-Details.csv` + `Screens.csv`
 
 ```bash

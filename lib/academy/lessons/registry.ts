@@ -1,4 +1,8 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import {
+  DESIGN_SHELL_LESSON_DEFINITION,
+  DESIGN_SHELL_MILESTONE_ID,
+} from "@/lib/academy/lessons/content/design-shell";
 import { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
 import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
@@ -55,11 +59,20 @@ export function getShippedLessonIdsForCohort(
     .sort((a, b) => a - b);
 }
 
+export function isDesignShellLesson(milestoneId: number): boolean {
+  return milestoneId === DESIGN_SHELL_MILESTONE_ID;
+}
+
 export function getLessonDefinition(
   milestoneId: number,
 ): CohortLessonDefinition | null {
+  if (isDesignShellLesson(milestoneId)) {
+    return DESIGN_SHELL_LESSON_DEFINITION;
+  }
   return LESSON_DEFINITIONS[milestoneId] ?? null;
 }
+
+export { DESIGN_SHELL_MILESTONE_ID };
 
 export function resolveLessonForMilestone(
   milestoneId: number,

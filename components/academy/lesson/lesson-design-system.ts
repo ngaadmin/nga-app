@@ -14,6 +14,7 @@ export {
   LessonGameHint,
   LessonIconOption,
   LessonIconReveal,
+  LessonIllustrationSlot,
   LessonImagePlaceholder,
   LessonMatchColumnHeaders,
   LessonMatchConnector,
@@ -55,3 +56,9 @@ export {
   LessonScreenPane,
   AcademyLessonShell,
 } from "@/components/academy/lesson/academy-lesson-shell";
+
+export {
+  LessonScreenChromeProvider,
+  LessonScreenIllustration,
+  useLessonScreenIllustration,
+} from "@/components/academy/lesson/lesson-screen-chrome";

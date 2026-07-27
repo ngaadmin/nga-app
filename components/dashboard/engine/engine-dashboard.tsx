@@ -14,6 +14,22 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
+import {
+  engineBodyClass,
+  engineBodyMutedClass,
+  engineCardTitleClass,
+  engineCtaLabelClass,
+  engineEmptyHelperClass,
+  engineEmptyTitleClass,
+  engineJourneyEyebrowClass,
+  engineModalTitleClass,
+  enginePanelTitleClass,
+  enginePremiumEyebrowClass,
+  engineProgressMetaClass,
+  engineSecondaryActionClass,
+  engineSectionHeadingClass,
+  engineStatusBadgeClass,
+} from "@/components/dashboard/engine/engine-dashboard-styles";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
   LightbulbIcon,
@@ -282,13 +298,13 @@ function ventureNodeSlotHeightPx(index: number, total: number): number {
 }
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
 
 const greenCtaClass =
-  "rounded-nga-lg border-b-4 border-[#15803D] bg-[#22C55E] font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
+  "rounded-nga-lg border-b-4 border-[#15803D] bg-[#22C55E] text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
 
 const crimsonCtaClass =
-  "rounded-nga-lg border-b-4 border-[#991B1B] bg-[#DC2626] font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
+  "rounded-nga-lg border-b-4 border-[#991B1B] bg-[#DC2626] text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
 
 function resolveEngineProfile(): EngineProfile {
   const session = readGhostAccessSession();
@@ -365,12 +381,12 @@ function InProgressCarousel({
     <section aria-labelledby="in-progress-ventures-heading">
       <DashboardSectionHeading
         id="in-progress-ventures-heading"
-        className="mb-3"
+        className={cn(engineSectionHeadingClass, "mb-3")}
       >
         In Progress Ventures
       </DashboardSectionHeading>
       {ventures.length === 0 ? (
-        <p className="py-3 font-sans text-xs text-[#1E3A5F]/70">
+        <p className={cn("py-3", engineEmptyHelperClass)}>
           No active ventures yet - pick a business idea below to launch.
         </p>
       ) : (
@@ -383,7 +399,7 @@ function InProgressCarousel({
               <div
                 key={venture.id}
                 className={cn(
-                  "relative w-[5.75rem] shrink-0 snap-center transition-all",
+                  "relative w-[7.25rem] shrink-0 snap-center transition-all",
                   floatingTileClass,
                   isSelected && "shadow-lg ring-2 ring-[#0CC1E0]/25",
                 )}
@@ -404,21 +420,26 @@ function InProgressCarousel({
                   type="button"
                   onClick={() => onSelect(venture.id)}
                   aria-pressed={isSelected}
-                  className="flex w-full flex-col rounded-2xl p-2"
+                  className="flex w-full flex-col rounded-2xl p-2.5"
                 >
-                  <span className="text-xl leading-none" aria-hidden>
+                  <span className="text-2xl leading-none" aria-hidden>
                     {idea.emoji}
                   </span>
-                  <span className="mt-1 line-clamp-2 min-h-[2rem] font-heading text-[10px] font-bold leading-tight text-[#031F82]">
+                  <span
+                    className={cn(
+                      "mt-1.5 line-clamp-2 min-h-[2.5rem]",
+                      engineCardTitleClass,
+                    )}
+                  >
                     {idea.title}
                   </span>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#BDE9FB]">
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#BDE9FB]">
                     <div
                       className="h-full rounded-full bg-[#0CC1E0] transition-all duration-300"
                       style={{ width: `${venture.progressPercent}%` }}
                     />
                   </div>
-                  <span className="mt-1 font-heading text-[9px] font-bold text-[#0CC1E0]">
+                  <span className={cn("mt-1", engineProgressMetaClass)}>
                     {venture.progressPercent}%
                   </span>
                 </button>
@@ -453,7 +474,7 @@ function BusinessIdeasCarousel({
     >
       <DashboardSectionHeading
         id="all-business-ideas-heading"
-        className="mb-3"
+        className={cn(engineSectionHeadingClass, "mb-3")}
       >
         All Business Ideas
       </DashboardSectionHeading>
@@ -474,7 +495,7 @@ function BusinessIdeasCarousel({
               aria-label={idea.title}
               aria-pressed={isDrawerOpen}
               className={cn(
-                "relative flex w-[4.75rem] shrink-0 snap-center flex-col items-center justify-center p-2 text-center transition-all",
+                "relative flex w-[6.5rem] shrink-0 snap-center flex-col items-center justify-center p-2.5 text-center transition-all",
                 floatingTileClass,
                 isMilestoneLocked && "pointer-events-none opacity-40",
                 isDrawerOpen && "shadow-lg ring-2 ring-[#0CC1E0]/30",
@@ -495,16 +516,18 @@ function BusinessIdeasCarousel({
 
               {isInProgress ? (
                 <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-white/55 backdrop-blur-[1px]">
-                  <span className="rounded-full bg-[#0CC1E0]/90 px-1.5 py-0.5 font-heading text-[8px] font-bold uppercase tracking-wide text-white">
+                  <span className={engineStatusBadgeClass}>
                     In Progress
                   </span>
                 </span>
               ) : null}
 
-              <span className="text-base leading-none" aria-hidden>
+              <span className="text-xl leading-none" aria-hidden>
                 {idea.emoji}
               </span>
-              <span className="mt-1 line-clamp-2 w-full font-heading text-[9px] font-bold leading-tight text-[#031F82]">
+              <span
+                className={cn("mt-1.5 line-clamp-2 w-full", engineCardTitleClass)}
+              >
                 {idea.title}
               </span>
             </button>
@@ -642,10 +665,10 @@ function VentureJourneyMap({
       className={cn("flex h-full min-h-0 flex-col p-3", floatingTileClass)}
     >
       <div className="shrink-0 pb-2">
-        <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+        <p className={engineJourneyEyebrowClass}>
           Active Journey
         </p>
-        <h2 className="font-heading text-sm font-extrabold text-[#031F82]">
+        <h2 className={enginePanelTitleClass}>
           {venture.emoji} {venture.title}
         </h2>
       </div>
@@ -712,10 +735,10 @@ function EmptyJourneyPlaceholder() {
         "shadow-sm",
       )}
     >
-      <p className="font-heading text-sm font-extrabold text-[#031F82]">
+      <p className={engineEmptyTitleClass}>
         Your roadmap is waiting
       </p>
-      <p className="mt-2 font-sans text-xs leading-relaxed text-[#1E3A5F]/80">
+      <p className={cn("mt-2", engineBodyMutedClass)}>
         Tap any business idea above, read Finn&apos;s brief, and hit launch to
         start building.
       </p>
@@ -751,12 +774,12 @@ function DiscoveryBriefDrawer({
             {idea.emoji}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+            <p className={engineJourneyEyebrowClass}>
               Discovery Brief
             </p>
             <h2
               id="discovery-brief-title"
-              className="font-heading text-lg font-extrabold text-[#031F82]"
+              className={enginePanelTitleClass}
             >
               {idea.title}
             </h2>
@@ -771,7 +794,7 @@ function DiscoveryBriefDrawer({
           </button>
         </div>
 
-        <p className="mt-4 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+        <p className={cn("mt-4", engineBodyClass)}>
           {BUSINESS_IDEA_BRIEFS[idea.id]}
         </p>
 
@@ -782,6 +805,7 @@ function DiscoveryBriefDrawer({
             className={cn(
               "mt-5 h-touch w-full px-6 shadow-nga-pop",
               orangeCtaClass,
+              engineCtaLabelClass,
             )}
           >
             View Active Roadmap
@@ -793,6 +817,7 @@ function DiscoveryBriefDrawer({
             className={cn(
               "mt-5 h-touch w-full px-6 shadow-nga-pop",
               orangeCtaClass,
+              engineCtaLabelClass,
             )}
           >
             LAUNCH THIS BUSINESS
@@ -832,13 +857,13 @@ function CloseBusinessConfirm({
           </span>
           <h2
             id="close-business-title"
-            className="mt-3 font-heading text-lg font-extrabold text-[#031F82]"
+            className={cn("mt-3", enginePanelTitleClass)}
           >
             Close {ventureTitle}?
           </h2>
           <p
             id="close-business-warning"
-            className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]"
+            className={cn("mt-3", engineBodyClass)}
           >
             {warningLead}
           </p>
@@ -847,14 +872,14 @@ function CloseBusinessConfirm({
         <button
           type="button"
           onClick={onKeepBuilding}
-          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", greenCtaClass)}
+          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", greenCtaClass, engineCtaLabelClass)}
         >
           Keep Building
         </button>
         <button
           type="button"
           onClick={onCloseShop}
-          className={cn("mt-3 h-touch w-full px-6 shadow-nga-pop", crimsonCtaClass)}
+          className={cn("mt-3 h-touch w-full px-6 shadow-nga-pop", crimsonCtaClass, engineCtaLabelClass)}
         >
           Close Shop
         </button>
@@ -875,30 +900,33 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
       labelledBy="engine-paywall-title"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
     >
-        <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#DCB766]">
+        <p className={enginePremiumEyebrowClass}>
           Premium unlock
         </p>
         <h2
           id="engine-paywall-title"
-          className="mt-2 font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl"
+          className={cn("mt-2", engineModalTitleClass)}
         >
           Level up {ventureTitle}
         </h2>
-        <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+        <p className={cn("mt-3", engineBodyClass)}>
           Finn says this business idea runs on premium fuel. Unlock The Engine Pro
           to launch bigger plays, track sharper metrics, and stack XP faster.
         </p>
 
         <button
           type="button"
-          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", orangeCtaClass)}
+          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", orangeCtaClass, engineCtaLabelClass)}
         >
           Unlock Premium Access
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="mt-3 w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/60"
+          className={cn(
+            "mt-3 w-full rounded-nga-lg px-4 py-2.5 transition-colors hover:bg-[#BDE9FB]/60",
+            engineSecondaryActionClass,
+          )}
         >
           Not yet - keep exploring
         </button>
@@ -1058,7 +1086,7 @@ export function EngineDashboard() {
       >
         <DashboardSectionHeading
           id="venture-journey-map-heading"
-          className="mb-4"
+          className={cn(engineSectionHeadingClass, "mb-4")}
         >
           Your Venture Journey Map
         </DashboardSectionHeading>

@@ -91,6 +91,11 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     id: "spare-cash-steps",
     intro:
       "Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.",
+    illustration: {
+      emoji: "🫙",
+      label: "Build your Spare Cash",
+      alt: "Pocket money, buffer jar, and fun spending steps",
+    },
     layout: "steps-row",
     buckets: [
       { id: "step1", label: "Step 1" },

@@ -26,20 +26,25 @@ import {
   lessonSortBucketErrorClass,
   lessonSortBucketHeaderClass,
   lessonSortBucketSurfaceClass,
-  lessonSortPoolScrollClass,
+  lessonSortPoolStaticClass,
   lessonSortStatementCardClass,
   lessonSortStatementListClass,
   lessonSortStatementPlacedClass,
+  lessonPricedItemRowClass,
+  lessonPricedItemTextClass,
+  lessonPricedItemPriceClass,
   resolveSortBucketIcon,
-  lessonSequenceGridClass,
+  lessonSequenceDestinationSectionClass,
+  lessonSequencePoolSectionClass,
+  lessonSequenceShellClass,
+  lessonSequenceNumberClass,
+  lessonSequenceNumberedRowClass,
   lessonSequenceSlotActiveClass,
   lessonSequenceSlotClass,
   lessonSequenceSlotErrorClass,
   lessonSequenceSlotFilledClass,
   lessonSequenceSlotLockedClass,
-  lessonSequenceStepBadgeClass,
   lessonSequenceStepCardClass,
-  lessonSequenceStepIconClass,
   lessonSequenceStepPlacedClass,
   lessonCircleSizeClass,
   lessonInstructionClass,
@@ -433,7 +438,7 @@ export function LessonSortPool({
   return (
     <div className={cn("shrink-0", className)}>
       <LessonColumnLabel tone="muted">{label}</LessonColumnLabel>
-      <div className={cn(lessonSortPoolScrollClass, "mt-1.5")}>
+      <div className={cn(lessonSortPoolStaticClass, "mt-1")}>
         <div className={lessonSortStatementListClass}>{children}</div>
       </div>
     </div>
@@ -455,6 +460,8 @@ export const LessonSortStatementCard = forwardRef<
   { label, emoji, price, isDragging = false, className, type = "button", ...props },
   ref,
 ) {
+  const usePricedRow = Boolean(emoji && price !== undefined);
+
   return (
     <button
       ref={ref}
@@ -462,23 +469,28 @@ export const LessonSortStatementCard = forwardRef<
       aria-label={label}
       className={cn(
         lessonSortStatementCardClass,
+        usePricedRow && "justify-start text-left",
         isDragging && "opacity-40",
         className,
       )}
       style={{ touchAction: "none", ...props.style }}
       {...props}
     >
-      {emoji ? (
-        <span className={lessonSortItemEmojiClass} aria-hidden>
-          {emoji}
-        </span>
-      ) : null}
-      <span className="min-w-0 flex-1 text-center leading-snug">{label}</span>
-      {price !== undefined ? (
-        <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
-          ${price}
-        </span>
-      ) : null}
+      {usePricedRow ? (
+        <LessonPricedSortItemContent label={label} emoji={emoji} price={price} />
+      ) : (
+        <>
+          {emoji ? (
+            <span className={lessonSortItemEmojiClass} aria-hidden>
+              {emoji}
+            </span>
+          ) : null}
+          <span className="min-w-0 flex-1 text-center leading-snug">{label}</span>
+          {price !== undefined ? (
+            <span className={lessonPricedItemPriceClass}>${price}</span>
+          ) : null}
+        </>
+      )}
     </button>
   );
 });
@@ -497,20 +509,57 @@ export function LessonSortStatementPlaced({
   price,
   className,
 }: LessonSortStatementPlacedProps) {
+  const usePricedRow = Boolean(emoji && price !== undefined);
+
   return (
     <div className={cn(lessonSortStatementPlacedClass, className)}>
-      <span className="flex items-center justify-center gap-1.5 text-center">
-        {emoji ? (
-          <span className={lessonSortItemEmojiClass} aria-hidden>
-            {emoji}
-          </span>
-        ) : null}
-        <span className="min-w-0">{label}</span>
+      {usePricedRow ? (
+        <LessonPricedSortItemContent label={label} emoji={emoji} price={price} />
+      ) : (
+        <span className="flex items-center justify-center gap-1.5 text-center">
+          {emoji ? (
+            <span className={lessonSortItemEmojiClass} aria-hidden>
+              {emoji}
+            </span>
+          ) : null}
+          <span className="min-w-0">{label}</span>
+          {price !== undefined ? (
+            <span className={lessonPricedItemPriceClass}>${price}</span>
+          ) : null}
+        </span>
+      )}
+    </div>
+  );
+}
+
+type LessonPricedSortItemContentProps = {
+  label: string;
+  emoji?: string;
+  price?: number;
+  formatPrice?: (price: number) => string;
+};
+
+/** Icon-left row with name and price stacked — shared by spent-total and priced sort cards. */
+export function LessonPricedSortItemContent({
+  label,
+  emoji,
+  price,
+  formatPrice = (amount) => `$${amount}`,
+}: LessonPricedSortItemContentProps) {
+  return (
+    <span className={lessonPricedItemRowClass}>
+      {emoji ? (
+        <span className={lessonSortItemEmojiClass} aria-hidden>
+          {emoji}
+        </span>
+      ) : null}
+      <span className={lessonPricedItemTextClass}>
+        <span className="min-w-0 leading-snug">{label}</span>
         {price !== undefined ? (
-          <span className="shrink-0 font-extrabold text-[#0CC1E0]">${price}</span>
+          <span className={lessonPricedItemPriceClass}>{formatPrice(price)}</span>
         ) : null}
       </span>
-    </div>
+    </span>
   );
 }
 
@@ -563,7 +612,8 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       <div
         ref={ref}
         className={cn(
-          "flex flex-col rounded-2xl border-2 border-dashed p-2.5 transition-colors sm:p-3",
+          "flex flex-col rounded-2xl border-2 border-dashed transition-colors",
+          prominentNeutralHeader ? "p-2 sm:p-2.5" : "p-2.5 sm:p-3",
           fillHeight
             ? "min-h-0 flex-1"
             : lessonSortBucketCompactClass,
@@ -580,7 +630,7 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
           className={cn(
             prominentNeutralHeader
               ? cn(
-                  "flex flex-col items-center justify-center gap-1 text-center",
+                  "flex flex-col items-center justify-center gap-0.5 text-center",
                   lessonColumnLabelInkClass,
                 )
               : cn(
@@ -599,7 +649,13 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
             {label}
           </span>
         </div>
-        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
+        <div
+          className={cn(
+            "mt-1.5 flex flex-col gap-1",
+            fillHeight && "min-h-0 flex-1",
+            prominentNeutralHeader ? "overflow-visible" : "min-h-0 flex-1 gap-1.5 overflow-y-auto",
+          )}
+        >
           {children}
         </div>
       </div>
@@ -607,39 +663,34 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
   },
 );
 
-type LessonSequenceSortBoardProps = LessonUiProps & {
-  rowCount: number;
+type LessonSequenceSortBoardProps = {
+  pool?: ReactNode;
+  destination: ReactNode;
   poolComplete?: boolean;
+  poolClassName?: string;
+  className?: string;
 };
 
-/** Two-column grid: shuffled steps on the left, ordered slots on the right. */
+/** Vertical steps-row board — shuffled pool on top, numbered slots below. */
 export function LessonSequenceSortBoard({
-  children,
-  rowCount,
+  pool,
+  destination,
   poolComplete = false,
+  poolClassName,
   className,
 }: LessonSequenceSortBoardProps) {
+  const showPool = !poolComplete && pool;
+
   return (
-    <div
-      className={cn(
-        "flex min-h-0 flex-1 flex-col rounded-2xl border-2 border-[#BDE9FB]/80 bg-[#F7FBFF]/40 p-3 sm:p-4",
-        className,
-      )}
-    >
-      <div
-        className={cn(
-          poolComplete ? "grid grid-cols-1 gap-y-2" : lessonSequenceGridClass,
-        )}
-        style={
-          poolComplete
-            ? undefined
-            : { gridTemplateRows: `repeat(${rowCount}, minmax(2.75rem, 1fr))` }
-        }
-      >
-        {children}
-      </div>
+    <div className={cn(lessonSequenceShellClass, className)}>
+      {showPool ? (
+        <div className={cn(lessonSequencePoolSectionClass, poolClassName)}>
+          {pool}
+        </div>
+      ) : null}
+      <div className={lessonSequenceDestinationSectionClass}>{destination}</div>
       {poolComplete ? (
-        <p className={cn("mt-2 text-center", lessonColumnLabelSuccessClass)}>
+        <p className={cn("shrink-0 text-center", lessonColumnLabelSuccessClass)}>
           All sorted!
         </p>
       ) : null}
@@ -649,16 +700,15 @@ export function LessonSequenceSortBoard({
 
 type LessonSequenceStepCardProps = {
   label: string;
-  emoji?: string;
   isDragging?: boolean;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children">;
 
-/** Draggable step pill for sequence-sort pools. */
+/** Draggable step pill for sequence-sort pools — text only. */
 export const LessonSequenceStepCard = forwardRef<
   HTMLButtonElement,
   LessonSequenceStepCardProps
 >(function LessonSequenceStepCard(
-  { label, emoji, isDragging = false, className, type = "button", ...props },
+  { label, isDragging = false, className, type = "button", ...props },
   ref,
 ) {
   return (
@@ -674,42 +724,49 @@ export const LessonSequenceStepCard = forwardRef<
       style={{ touchAction: "none", ...props.style }}
       {...props}
     >
-      {emoji ? (
-        <span className={lessonSequenceStepIconClass} aria-hidden>
-          {emoji}
-        </span>
-      ) : null}
-      <span className="min-w-0 flex-1 leading-snug">{label}</span>
+      <span className="w-full text-left leading-snug">{label}</span>
     </button>
   );
 });
 
 type LessonSequenceStepPlacedProps = {
   label: string;
-  emoji?: string;
   className?: string;
 };
 
-/** Read-only step pill shown inside a filled slot. */
+/** Read-only step pill shown inside a filled slot — text only. */
 export function LessonSequenceStepPlaced({
   label,
-  emoji,
   className,
 }: LessonSequenceStepPlacedProps) {
   return (
     <div className={cn(lessonSequenceStepPlacedClass, className)}>
-      {emoji ? (
-        <span className={lessonSequenceStepIconClass} aria-hidden>
-          {emoji}
-        </span>
-      ) : null}
-      <span className="min-w-0 flex-1 leading-snug">{label}</span>
+      <span className="w-full text-left leading-snug">{label}</span>
+    </div>
+  );
+}
+
+type LessonSequenceNumberedRowProps = LessonUiProps & {
+  stepNumber: number;
+};
+
+/** Step index outside the card/slot — matches rank-order layout. */
+export function LessonSequenceNumberedRow({
+  stepNumber,
+  children,
+  className,
+}: LessonSequenceNumberedRowProps) {
+  return (
+    <div className={cn(lessonSequenceNumberedRowClass, className)}>
+      <span className={lessonSequenceNumberClass} aria-hidden>
+        {stepNumber}
+      </span>
+      {children}
     </div>
   );
 }
 
 type LessonSequenceSlotProps = HTMLAttributes<HTMLDivElement> & {
-  stepIndex: number;
   stepLabel: string;
   active?: boolean;
   error?: boolean;
@@ -721,7 +778,6 @@ type LessonSequenceSlotProps = HTMLAttributes<HTMLDivElement> & {
 export const LessonSequenceSlot = forwardRef<HTMLDivElement, LessonSequenceSlotProps>(
   function LessonSequenceSlot(
     {
-      stepIndex,
       stepLabel,
       active = false,
       error = false,
@@ -736,6 +792,7 @@ export const LessonSequenceSlot = forwardRef<HTMLDivElement, LessonSequenceSlotP
     return (
       <div
         ref={ref}
+        aria-label={stepLabel}
         className={cn(
           lessonSequenceSlotClass,
           active && lessonSequenceSlotActiveClass,
@@ -746,11 +803,8 @@ export const LessonSequenceSlot = forwardRef<HTMLDivElement, LessonSequenceSlotP
         )}
         {...props}
       >
-        <span className={lessonSequenceStepBadgeClass} aria-label={stepLabel}>
-          {stepIndex + 1}
-        </span>
         {isEmpty ? (
-          <p className="w-full text-center font-sans text-sm font-medium text-[#1E3A5F]/45">
+          <p className={cn("w-full text-center opacity-60", lessonGameHintClass)}>
             Drop here
           </p>
         ) : (

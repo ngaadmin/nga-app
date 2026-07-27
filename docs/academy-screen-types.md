@@ -34,10 +34,11 @@ Use the shared tokens in `lesson-shared-styles.ts`. **Never scale option text ab
 |------|------------------|----------|
 | **Prompt / instructional text** | `text-lg font-medium` — `lessonPromptClass`, `lessonInstructionClass`, `lessonIntroClass()` | Main question, intro copy, narrative |
 | **Section / column titles** | `text-base font-semibold uppercase tracking-wide` — `LessonColumnLabel`, `lessonEyebrowClass` | “Round 1 of 3”, bucket labels, match columns, wallet label |
-| **Option / answer text** | `text-lg font-medium` — `lessonOptionTextClass`, interactive card classes | Choices, sort rows, match cells, budget item labels |
+| **Option / answer text** | `text-base font-medium` — `lessonOptionTextClass`, interactive card classes | Choices, sort rows, match cells, budget item labels — **never larger than prompt** |
 | **Feedback banners** | `text-base font-medium` — `lessonSuccessMessageClass`, `lessonErrorBannerClass` | Success strip, trap toast, inline errors |
 | **Next / Submit / Claim** | `text-lg font-semibold` — `lessonNextButtonClass`, `lessonSubmitAnswerClass`, `lessonGoldClaimClass` | Footer actions |
 | **Sort / tap icon emojis** | `lessonIconEmojiClass` (circles), `lessonSortItemEmojiClass` (inline cards) | Tap-reveal, bucket-sort, statement-sort — one locked size, no smaller variants |
+| **Steps-row pool cards** | Text only in full-width cards; scene emoji in `LessonIllustrationSlot` | Vertical pool (top) + numbered slots (bottom); numbers outside slots |
 
 ### Illustrations
 
@@ -45,7 +46,7 @@ Illustrations are **optional** per screen via `illustration?: { emoji?, label?, 
 
 **Omit by default on dense screens** (preserve vertical space; avoid scrolling to reach Next):
 
-- `bucket-sort` — all layouts (`statement-sort`, `steps-row`, `spent-total`)
+- `bucket-sort` — `statement-sort`, `spent-total` ( **`steps-row` uses illustration for scene emoji** — pool cards are text-only)
 - `rank-order`
 - `link-match`
 - `savings-goal`
@@ -94,7 +95,7 @@ Applies to pills, radio lists, icon options, and persistent error toasts. Only t
 | **`budget-select`** | Checkboxes sit **outside** item tiles. **Next only when** the selected set **exactly matches** `correctIds` **and** total spend ≤ `total`. Wrong or partial selection keeps Next disabled; unchecking after success clears ready state. Advance: `on-complete` (never `auto-ready`). |
 | **`spotlight-rounds`** | Wrong pick gets red treatment only — **never a green tick**. After ~450 ms the round recovers (choice clears) so the user can retry; screen must not freeze. |
 | **`narrative-bonus`** | When `bonusXp > 0`, the award/claim button **awards XP and advances in one tap** (`markScreenReady` + `handleNext`). |
-| **`bucket-sort` / `statement-sort`** | Bucket headers use **neutral** surfaces — no rush/think red/green bucket tints on the header row. |
+| **`bucket-sort` / `statement-sort`** | Bucket headers use **neutral** surfaces — no rush/think red/green bucket tints on the header row. Statement pool shows **all cards without internal scroll**. |
 
 ---
 
@@ -195,6 +196,7 @@ Lessons may swap types by screen (e.g. L2 uses `true-false`, `budget-select`, `r
 
 - **Single choice** — default
 - **Multi-correct** — `selectionMode: "multi-correct"`; Next when all correct selected, none wrong
+- **All of the above** — auto-detected when exactly one correct option’s label matches phrases like “All of the above”; other options show neutral selected state until the catch-all is chosen (no red on individual true statements)
 - **Trap / Quick Choice** — `errorStyle: "banner"`
 - **Scene + radio-list** — sign-reading layout
 
@@ -256,9 +258,9 @@ Lessons may swap types by screen (e.g. L2 uses `true-false`, `budget-select`, `r
 
 | Layout | Engine | Use case |
 |--------|--------|----------|
-| **`statement-sort`** *(default)* | `LessonBucketSortGame` | Scrollable pool + two neutral-header buckets |
-| **`steps-row`** | `LessonSequenceSortGame` | Shuffled pills → numbered ordered slots |
-| **`spent-total`** | `LessonBucketSortGame` | Purchases pool + spent bucket + vertical total cards |
+| **`statement-sort`** *(default)* | `LessonBucketSortGame` | Full visible pool (no scroll) + two neutral-header buckets |
+| **`steps-row`** | `LessonSequenceSortGame` | Vertical stack: shuffled text pool (top) → numbered drop slots (bottom); pool collapses as items are placed |
+| **`spent-total`** | `LessonBucketSortGame` | Purchases pool + spent bucket + horizontal priced cards (icon left, name/price right) |
 | **`stable-grid`** / **`default`** | `LessonBucketSortGame` | Legacy aliases → `statement-sort` |
 
 Omit `layout` for `statement-sort`. **Locked:** bucket column headers use neutral surfaces, not semantic red/green tints.

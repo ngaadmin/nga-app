@@ -13,6 +13,7 @@ import {
   lessonIntroClass,
   lessonRankOrderCardClass,
   lessonRankOrderNumberClass,
+  lessonOptionTextClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
@@ -251,7 +252,9 @@ export function LessonRankOrderGame({
                 )}
                 style={{ touchAction: rankSubmitted ? "auto" : "none" }}
               >
-                <span className="min-w-0 flex-1 text-center">{item.label}</span>
+                <span className={cn(lessonOptionTextClass, "w-full px-1")}>
+                  {item.label}
+                </span>
               </div>
             </div>
           );

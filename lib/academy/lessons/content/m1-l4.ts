@@ -60,6 +60,11 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     id: "pause-sequence",
     intro:
       'Lars asks Senna why he waited. Senna explains: "Remember the last time we all bought that game skin on day one? Two days later, it was half-price. I felt I wasted half of my money."\n\nDrag each step into the correct order:',
+    illustration: {
+      emoji: "⏸️",
+      label: "Pause before you buy",
+      alt: "Senna pauses before a limited-time offer",
+    },
     layout: "steps-row",
     buckets: [
       { id: "step1", label: "Step 1" },

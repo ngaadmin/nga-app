@@ -29,6 +29,7 @@ import {
   LessonSortPool,
   LessonSortStatementCard,
   LessonSortStatementPlaced,
+  LessonPricedSortItemContent,
   LessonSpentTotalBar,
 } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
@@ -76,28 +77,6 @@ type DragState = {
 type PendingSideEffect<TBucket extends string> =
   | { kind: "wrong"; itemId: string; bucketId: TBucket }
   | { kind: "correct"; willComplete: boolean };
-
-function renderSpentTotalItemContent(item: {
-  emoji?: string;
-  label: string;
-  price?: number;
-}) {
-  return (
-    <>
-      {item.emoji ? (
-        <span className={lessonSortItemEmojiClass} aria-hidden>
-          {item.emoji}
-        </span>
-      ) : null}
-      <span className="w-full text-center">{item.label}</span>
-      {item.price !== undefined ? (
-        <span className="font-extrabold text-[#0CC1E0]">
-          {formatDollars(item.price)}
-        </span>
-      ) : null}
-    </>
-  );
-}
 
 function formatDollars(amount: number): string {
   return `$${amount}`;
@@ -383,8 +362,13 @@ export function LessonBucketSortGame<TBucket extends string>({
         )}
         style={{ touchAction: "none" }}
       >
-        {isSpentTotalLayout ? (
-          renderSpentTotalItemContent(item)
+        {isSpentTotalLayout || (item.emoji && item.price !== undefined) ? (
+          <LessonPricedSortItemContent
+            label={item.label}
+            emoji={item.emoji}
+            price={item.price}
+            formatPrice={formatDollars}
+          />
         ) : (
           <span className="flex w-full items-center justify-center gap-2 text-center">
             {item.emoji ? (
@@ -429,7 +413,19 @@ export function LessonBucketSortGame<TBucket extends string>({
         }
       >
         {isSpentTotalLayout ? (
-          renderSpentTotalItemContent(item)
+          <LessonPricedSortItemContent
+            label={item.label}
+            emoji={item.emoji}
+            price={item.price}
+            formatPrice={formatDollars}
+          />
+        ) : item.emoji && item.price !== undefined ? (
+          <LessonPricedSortItemContent
+            label={item.label}
+            emoji={item.emoji}
+            price={item.price}
+            formatPrice={formatDollars}
+          />
         ) : (
           <span className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
@@ -556,7 +552,12 @@ export function LessonBucketSortGame<TBucket extends string>({
                 width: dragState.width,
               }}
             >
-              {renderSpentTotalItemContent(draggedItem)}
+              <LessonPricedSortItemContent
+                label={draggedItem.label}
+                emoji={draggedItem.emoji}
+                price={draggedItem.price}
+                formatPrice={formatDollars}
+              />
             </div>
           </OverlayPortal>
         ) : null}
@@ -581,17 +582,28 @@ export function LessonBucketSortGame<TBucket extends string>({
             minHeight: dragState.height,
           }}
         >
-          {draggedItem.emoji ? (
-            <span className={lessonSortItemEmojiClass} aria-hidden>
-              {draggedItem.emoji}
-            </span>
-          ) : null}
-          <span className="min-w-0 flex-1 leading-snug">{draggedItem.label}</span>
-          {draggedItem.price !== undefined ? (
-            <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
-              {formatDollars(draggedItem.price)}
-            </span>
-          ) : null}
+          {draggedItem.emoji && draggedItem.price !== undefined ? (
+            <LessonPricedSortItemContent
+              label={draggedItem.label}
+              emoji={draggedItem.emoji}
+              price={draggedItem.price}
+              formatPrice={formatDollars}
+            />
+          ) : (
+            <>
+              {draggedItem.emoji ? (
+                <span className={lessonSortItemEmojiClass} aria-hidden>
+                  {draggedItem.emoji}
+                </span>
+              ) : null}
+              <span className="min-w-0 flex-1 leading-snug">{draggedItem.label}</span>
+              {draggedItem.price !== undefined ? (
+                <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
+                  {formatDollars(draggedItem.price)}
+                </span>
+              ) : null}
+            </>
+          )}
         </div>
       </OverlayPortal>
     );
@@ -601,7 +613,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <div
         ref={boardRef}
-        className={cn(lessonSortBoardClass, "flex min-h-0 flex-1 flex-col gap-3")}
+        className={cn(lessonSortBoardClass, "flex min-h-0 flex-1 flex-col gap-2")}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}

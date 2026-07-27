@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -10,12 +9,12 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
+  lessonOptionTextClass,
   lessonSequenceBoardClass,
-  lessonSequenceRowClass,
   lessonSequenceStepCardClass,
-  lessonSequenceStepIconClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
+  LessonSequenceNumberedRow,
   LessonSequenceSortBoard,
   LessonSequenceSlot,
   LessonSequenceStepCard,
@@ -70,7 +69,7 @@ function shuffleIds(ids: readonly string[]): string[] {
   return next;
 }
 
-/** Drag steps from a shuffled pool into ordered slots — used for pause-sequence and similar screens. */
+/** Drag steps from a shuffled pool into vertically stacked numbered slots. */
 export function LessonSequenceSortGame<TStep extends string>({
   items,
   steps,
@@ -298,7 +297,31 @@ export function LessonSequenceSortGame<TStep extends string>({
   };
 
   const draggedItem = dragState ? itemById.get(dragState.itemId) : null;
-  const rowCount = steps.length;
+
+  const destinationRows = steps.map((step, rowIndex) => {
+    const placedIds = stepItems[step.id] ?? [];
+    const placedItem = placedIds[0] ? itemById.get(placedIds[0]) : null;
+    const isFilled = placedIds.length > 0;
+
+    return (
+      <LessonSequenceNumberedRow key={step.id} stepNumber={rowIndex + 1}>
+        <LessonSequenceSlot
+          ref={(node) => {
+            slotRefs.current[step.id] = node;
+          }}
+          stepLabel={step.label}
+          active={activeStepId === step.id}
+          error={errorStepId === step.id}
+          locked={lockedStepIds.has(step.id)}
+          isEmpty={!isFilled}
+        >
+          {placedItem ? (
+            <LessonSequenceStepPlaced label={placedItem.label} />
+          ) : null}
+        </LessonSequenceSlot>
+      </LessonSequenceNumberedRow>
+    );
+  });
 
   return (
     <div
@@ -308,56 +331,27 @@ export function LessonSequenceSortGame<TStep extends string>({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
-      <LessonSequenceSortBoard rowCount={rowCount} poolComplete={poolIds.length === 0}>
-        {steps.map((step, rowIndex) => {
-          const placedIds = stepItems[step.id] ?? [];
-          const placedItem = placedIds[0] ? itemById.get(placedIds[0]) : null;
+      <LessonSequenceSortBoard
+        poolComplete={isComplete}
+        poolClassName={poolIds.length > 2 ? "max-h-[26vh]" : undefined}
+        pool={poolIds.map((itemId) => {
+          const item = itemById.get(itemId);
+          if (!item) return null;
 
           return (
-            <Fragment key={step.id}>
-              {poolIds.length > 0 ? (
-                <div className={lessonSequenceRowClass}>
-                  {poolIds[rowIndex] ? (
-                    <LessonSequenceStepCard
-                      ref={(node) => {
-                        chipRefs.current[poolIds[rowIndex]!] = node;
-                      }}
-                      label={itemById.get(poolIds[rowIndex]!)!.label}
-                      emoji={itemById.get(poolIds[rowIndex]!)!.emoji}
-                      isDragging={dragState?.itemId === poolIds[rowIndex]}
-                      onPointerDown={(event) =>
-                        handleChipPointerDown(poolIds[rowIndex]!, event)
-                      }
-                    />
-                  ) : (
-                    <div className="h-full w-full min-w-0" aria-hidden />
-                  )}
-                </div>
-              ) : null}
-              <div className={lessonSequenceRowClass}>
-                <LessonSequenceSlot
-                  ref={(node) => {
-                    slotRefs.current[step.id] = node;
-                  }}
-                  stepIndex={rowIndex}
-                  stepLabel={step.label}
-                  active={activeStepId === step.id}
-                  error={errorStepId === step.id}
-                  locked={lockedStepIds.has(step.id)}
-                  isEmpty={placedIds.length === 0}
-                >
-                  {placedItem ? (
-                    <LessonSequenceStepPlaced
-                      label={placedItem.label}
-                      emoji={placedItem.emoji}
-                    />
-                  ) : null}
-                </LessonSequenceSlot>
-              </div>
-            </Fragment>
+            <LessonSequenceStepCard
+              key={itemId}
+              ref={(node) => {
+                chipRefs.current[itemId] = node;
+              }}
+              label={item.label}
+              isDragging={dragState?.itemId === itemId}
+              onPointerDown={(event) => handleChipPointerDown(itemId, event)}
+            />
           );
         })}
-      </LessonSequenceSortBoard>
+        destination={destinationRows}
+      />
 
       {draggedItem && dragState ? (
         <OverlayPortal className="overflow-visible">
@@ -373,12 +367,9 @@ export function LessonSequenceSortGame<TStep extends string>({
               minHeight: dragState.height,
             }}
           >
-            {draggedItem.emoji ? (
-              <span className={lessonSequenceStepIconClass} aria-hidden>
-                {draggedItem.emoji}
-              </span>
-            ) : null}
-            <span className="min-w-0 flex-1 leading-snug">{draggedItem.label}</span>
+            <span className={cn(lessonOptionTextClass, "w-full text-left")}>
+              {draggedItem.label}
+            </span>
           </div>
         </OverlayPortal>
       ) : null}

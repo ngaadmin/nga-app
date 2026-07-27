@@ -103,6 +103,41 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     ...AUTO_READY,
   },
   {
+    type: "binary-choice",
+    id: "shell-all-of-the-above",
+    prompt: "What helps you stay in control of a free trial? Select the best answer.",
+    optionA: { label: "Set a reminder before the trial ends.", isCorrect: false },
+    optionB: { label: "Know what you'll be charged after day 7.", isCorrect: false },
+    optionC: { label: "Cancel if you don't want to keep it.", isCorrect: false },
+    optionD: { label: "All of the above.", isCorrect: true },
+    wrongError: "Look again — is there a better answer?",
+    successMessage: "Exactly — all of those moves work together.",
+    errorStyle: "inline-red",
+    advance: { mode: "on-complete" },
+    authoring: {
+      pedagogicalStage: "core",
+      gameArchetype: "binary-choice/all-of-the-above",
+    },
+  },
+  {
+    type: "binary-choice",
+    id: "shell-multi-correct",
+    selectionMode: "multi-correct",
+    optionLayout: "radio-list",
+    prompt: "Which lines on this sign are pressure tricks?",
+    optionA: { label: "DON'T MISS OUT!", isCorrect: true },
+    optionB: { label: "ONLY 2 LEFT!", isCorrect: true },
+    optionC: { label: "Made in France", isCorrect: false },
+    wrongError: "That's just info on the sign — not a pressure trick.",
+    successMessage: "Nice — you spotted the rush lines.",
+    errorStyle: "inline-red",
+    advance: { mode: "on-complete" },
+    authoring: {
+      pedagogicalStage: "core",
+      gameArchetype: "binary-choice/multi-correct",
+    },
+  },
+  {
     type: "true-false",
     id: "shell-true-false",
     prompt:
@@ -180,6 +215,11 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     id: "shell-steps-row",
     layout: "steps-row",
     intro: "Put these spare-cash steps in the right order.",
+    illustration: {
+      emoji: "🫙",
+      label: "Spare cash steps",
+      alt: "Pocket money, buffer jar, and fun spending",
+    },
     buckets: [
       { id: "step1", label: "Step 1" },
       { id: "step2", label: "Step 2" },

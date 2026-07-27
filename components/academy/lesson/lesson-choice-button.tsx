@@ -68,7 +68,7 @@ export function LessonChoiceButton({
           variant={indicatorVariant}
           mode="radio"
         />
-        <span className="min-w-0 flex-1 font-heading text-base font-bold leading-snug text-[#031F82]">
+        <span className="min-w-0 flex-1 font-heading text-base font-medium leading-snug text-[#031F82]">
           {children}
         </span>
       </button>

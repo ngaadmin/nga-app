@@ -10,6 +10,7 @@ import {
   LessonImagePlaceholder,
   LessonScreenLayout,
 } from "@/components/academy/lesson/lesson-ui";
+import { findAllOfTheAboveCorrectKey } from "@/lib/academy/lessons/all-of-the-above";
 import type { BinaryChoiceScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -48,6 +49,8 @@ export function BinaryChoiceScreen({
       isMultiCorrect &&
       !isRadioList);
   const correctKeys = choiceOptions.filter((option) => option.isCorrect).map((o) => o.key);
+  const allOfTheAboveKey = findAllOfTheAboveCorrectKey(choiceOptions);
+  const isAllOfTheAboveQuestion = allOfTheAboveKey !== null;
   const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const [optionOrder] = useState<ChoiceKey[]>(() => {
@@ -66,6 +69,9 @@ export function BinaryChoiceScreen({
     () => new Set(),
   );
   const [wrongPicked, setWrongPicked] = useState<ReadonlySet<ChoiceKey>>(
+    () => new Set(),
+  );
+  const [neutralPicked, setNeutralPicked] = useState<ReadonlySet<ChoiceKey>>(
     () => new Set(),
   );
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +123,20 @@ export function BinaryChoiceScreen({
   /** Derive Next-button readiness from the current selection only. */
   const syncMultiSelectCompletion = useCallback(
     (locked: ReadonlySet<ChoiceKey>, wrong: ReadonlySet<ChoiceKey>) => {
+      if (isAllOfTheAboveQuestion && allOfTheAboveKey) {
+        const selectedAllOfTheAbove = locked.has(allOfTheAboveKey);
+
+        if (selectedAllOfTheAbove) {
+          setError(null);
+          setSuccess(screen.successMessage ?? null);
+          flow.markScreenReady(screenIndex);
+        } else {
+          setSuccess(null);
+          flow.clearScreenReady(screenIndex);
+        }
+        return;
+      }
+
       const allCorrectSelected = correctKeys.every((key) => locked.has(key));
       const hasWrongSelected = wrong.size > 0;
 
@@ -129,10 +149,39 @@ export function BinaryChoiceScreen({
         flow.clearScreenReady(screenIndex);
       }
     },
-    [correctKeys, flow, screen.successMessage, screenIndex],
+    [
+      allOfTheAboveKey,
+      correctKeys,
+      flow,
+      isAllOfTheAboveQuestion,
+      screen.successMessage,
+      screenIndex,
+    ],
   );
 
+  const pickSingleAllOfTheAbove = (which: ChoiceKey) => {
+    setChoice(which);
+    setError(null);
+    setSuccess(null);
+
+    if (which === allOfTheAboveKey) {
+      celebrateLessonCorrectAnswer(flow.flashScreen);
+      setSuccess(
+        optionByKey.get(which)?.feedback ?? screen.successMessage ?? null,
+      );
+      flow.markScreenReady(screenIndex);
+      return;
+    }
+
+    flow.clearScreenReady(screenIndex);
+  };
+
   const pickSingle = (which: ChoiceKey) => {
+    if (isAllOfTheAboveQuestion) {
+      pickSingleAllOfTheAbove(which);
+      return;
+    }
+
     setChoice(which);
     const selected = optionByKey.get(which);
     if (selected?.isCorrect) {
@@ -148,7 +197,48 @@ export function BinaryChoiceScreen({
     signalLessonIncorrectAnswer(flow.flashScreen);
   };
 
+  const pickMultiAllOfTheAbove = (which: ChoiceKey) => {
+    const selected = optionByKey.get(which);
+    if (!selected || !allOfTheAboveKey) return;
+
+    if (which === allOfTheAboveKey) {
+      if (lockedCorrect.has(which)) {
+        if (lockCorrectSelections) return;
+        const nextLocked = new Set<ChoiceKey>();
+        setLockedCorrect(nextLocked);
+        syncMultiSelectCompletion(nextLocked, wrongPicked);
+        return;
+      }
+
+      clearScheduledDudReset();
+      const nextLocked = new Set<ChoiceKey>([allOfTheAboveKey]);
+      setLockedCorrect(nextLocked);
+      celebrateLessonCorrectAnswer(flow.flashScreen);
+      syncMultiSelectCompletion(nextLocked, wrongPicked);
+      return;
+    }
+
+    if (neutralPicked.has(which)) {
+      const nextNeutral = new Set(neutralPicked);
+      nextNeutral.delete(which);
+      setNeutralPicked(nextNeutral);
+      setError(null);
+      syncMultiSelectCompletion(lockedCorrect, wrongPicked);
+      return;
+    }
+
+    clearScheduledDudReset();
+    setError(null);
+    setNeutralPicked(new Set(neutralPicked).add(which));
+    syncMultiSelectCompletion(lockedCorrect, wrongPicked);
+  };
+
   const pickMulti = (which: ChoiceKey) => {
+    if (isAllOfTheAboveQuestion) {
+      pickMultiAllOfTheAbove(which);
+      return;
+    }
+
     const selected = optionByKey.get(which);
     if (!selected) return;
 
@@ -206,6 +296,17 @@ export function BinaryChoiceScreen({
   const pick = isMultiCorrect ? pickMulti : pickSingle;
 
   const getVariant = (key: ChoiceKey): "neutral" | "correct" | "wrong" => {
+    if (isAllOfTheAboveQuestion && allOfTheAboveKey) {
+      if (isMultiCorrect) {
+        if (shakingKey === key) return "neutral";
+        if (lockedCorrect.has(key) && key === allOfTheAboveKey) return "correct";
+        return "neutral";
+      }
+
+      if (choice !== key) return "neutral";
+      return key === allOfTheAboveKey ? "correct" : "neutral";
+    }
+
     if (isMultiCorrect) {
       if (shakingKey === key) return "neutral";
       if (lockedCorrect.has(key)) return "correct";
@@ -217,6 +318,18 @@ export function BinaryChoiceScreen({
   };
 
   const isSelected = (key: ChoiceKey): boolean => {
+    if (isAllOfTheAboveQuestion) {
+      if (isMultiCorrect) {
+        if (shakingKey === key) return false;
+        return (
+          lockedCorrect.has(key) ||
+          neutralPicked.has(key) ||
+          wrongPicked.has(key)
+        );
+      }
+      return choice === key;
+    }
+
     if (isMultiCorrect) {
       if (shakingKey === key) return false;
       return lockedCorrect.has(key) || wrongPicked.has(key);

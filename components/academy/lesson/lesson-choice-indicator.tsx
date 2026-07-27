@@ -39,7 +39,8 @@ export function LessonChoiceIndicator({
     return null;
   }
 
-  const glyph = variant === "wrong" ? "✕" : "✓";
+  const glyph =
+    variant === "wrong" ? "✕" : variant === "correct" ? "✓" : "•";
   const glyphColor =
     variant === "wrong"
       ? "text-[#E11D48]"

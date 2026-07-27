@@ -1,10 +1,16 @@
 "use client";
 
+import {
+  academyMomentumLabelClass,
+  academyMomentumUnitClass,
+  academyMomentumValueClass,
+} from "@/components/academy/academy-journey-styles";
 import { GhostModeBadge } from "@/components/dashboard/ghost-mode-badge";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { FlameIcon, XpStarIcon } from "@/lib/dashboard/icons";
 import { TACTILE_PRESS } from "@/lib/dashboard/styles";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
+import { cn } from "@/lib/utils/cn";
 
 type AcademyMomentumHeaderProps = {
   dayStreak: number;
@@ -25,13 +31,13 @@ export function AcademyMomentumHeader({
         <div className="rounded-2xl border-0 bg-white p-3 shadow-md">
           <div className="flex items-center gap-1.5">
             <FlameIcon className="size-5 shrink-0 text-nga-cta" />
-            <span className="font-heading text-[10px] font-bold text-nga-slate sm:text-xs">
+            <span className={academyMomentumLabelClass}>
               {streakCopy.label}
             </span>
           </div>
-          <p className="mt-1 font-heading text-lg font-extrabold leading-none text-nga-primary sm:text-xl">
+          <p className={cn("mt-1", academyMomentumValueClass)}>
             {dayStreak}
-            <span className="ml-1 text-[10px] font-bold text-nga-slate sm:text-xs">
+            <span className={academyMomentumUnitClass}>
               {streakCopy.unit}
             </span>
           </p>
@@ -42,11 +48,11 @@ export function AcademyMomentumHeader({
         >
           <div className="flex items-center gap-1.5">
             <XpStarIcon className="size-4 shrink-0 text-nga-accent" />
-            <span className="font-heading text-[10px] font-bold text-nga-slate sm:text-xs">
+            <span className={academyMomentumLabelClass}>
               {journeyCopy.xpLabel}
             </span>
           </div>
-          <p className="mt-1 font-heading text-lg font-extrabold leading-none text-nga-primary sm:text-xl">
+          <p className={cn("mt-1", academyMomentumValueClass)}>
             {xp}
           </p>
         </div>

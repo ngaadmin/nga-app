@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useMemo } from "react";
+import { academyContextBannerLabelClass } from "@/components/academy/academy-journey-styles";
 import {
   getAcademyPhaseTheme,
   resolveAcademyContextBanner,
@@ -41,7 +42,7 @@ export const AcademyContextBanner = forwardRef<
           }}
           aria-label="Current Academy lesson"
         >
-          <p className="text-center font-heading text-sm font-bold leading-snug text-white sm:text-base">
+          <p className={academyContextBannerLabelClass}>
             {context.label}
           </p>
         </div>

@@ -9,11 +9,16 @@ import {
   type AcademyLessonMilestoneNode,
   type AcademyLevelId,
 } from "@/lib/dashboard/academy-state";
+import {
+  academyJourneyMetaClass,
+  academyModuleDescriptionClass,
+  academyModuleTitleClass,
+} from "@/components/academy/academy-journey-styles";
 import { LockIcon } from "@/lib/dashboard/icons";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
-export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 92;
+export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 118;
 export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 20;
 
 type AcademyModuleSignpostProps = {
@@ -45,7 +50,7 @@ export function AcademyModuleSignpost({
     >
       <div
         className={cn(
-          "flex w-full max-w-[min(100%,20rem)] flex-col justify-center rounded-2xl border px-4 py-2.5",
+          "flex w-full max-w-[min(100%,22rem)] flex-col justify-center rounded-2xl border px-4 py-3",
           "bg-white/70 backdrop-blur-md",
           isLocked && "opacity-95",
         )}
@@ -57,21 +62,21 @@ export function AcademyModuleSignpost({
         <div className="flex items-center justify-center gap-1.5">
           {isLocked ? (
             <span style={{ color: phase.fill }} aria-hidden>
-              <LockIcon className="size-3.5 shrink-0" />
+              <LockIcon className="size-4 shrink-0" />
             </span>
           ) : null}
           <p
-            className="text-center font-heading text-xs font-extrabold leading-tight text-[#031F82] sm:text-sm"
+            className={academyModuleTitleClass}
             style={{ textShadow: `0 0 12px ${phase.ring}` }}
           >
             Module {moduleNumber}: {title}
           </p>
         </div>
-        <p className="mt-1 text-center font-sans text-[10px] font-medium leading-snug text-nga-slate sm:text-[11px]">
+        <p className={cn("mt-1", academyModuleDescriptionClass)}>
           {description}
         </p>
         <p
-          className="mt-0.5 text-center font-heading text-[9px] font-bold uppercase tracking-wide sm:text-[10px]"
+          className={cn("mt-1 text-center", academyJourneyMetaClass)}
           style={{ color: phase.shadow }}
         >
           {LESSONS_PER_LEVEL} Lessons

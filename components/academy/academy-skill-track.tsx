@@ -14,6 +14,7 @@ import {
   ACADEMY_MODULE_SIGNPOST_GAP_PX,
   ACADEMY_MODULE_SIGNPOST_HEIGHT_PX,
 } from "@/components/academy/academy-module-signpost";
+import { academyJourneyHeadingClass } from "@/components/academy/academy-journey-styles";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { resolveActiveStepIndex } from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
@@ -327,7 +328,10 @@ export function AcademySkillTrack({
       aria-labelledby="academy-journey-heading"
       className="relative z-base w-full max-w-full bg-white pb-4"
     >
-      <DashboardSectionHeading id="academy-journey-heading" className="mb-3 px-1">
+      <DashboardSectionHeading
+        id="academy-journey-heading"
+        className={cn(academyJourneyHeadingClass, "mb-3 px-1")}
+      >
         {copy.heading}
       </DashboardSectionHeading>
 

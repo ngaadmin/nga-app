@@ -3,7 +3,6 @@
 import { useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { BirthYearSettingsModal } from "@/components/dashboard/birth-year-settings-modal";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
@@ -435,12 +434,10 @@ export function HomeDashboard() {
   const [parentHubUnlocked, setParentHubUnlocked] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<"verify" | "setup">("verify");
-  const [birthYearModalOpen, setBirthYearModalOpen] = useState(false);
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinConfirmInput, setPinConfirmInput] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
-  const [openBirthYearAfterPin, setOpenBirthYearAfterPin] = useState(false);
 
   const simulatedParentEmail = useMemo(
     () => resolveSimulatedParentEmail(username),
@@ -452,8 +449,7 @@ export function HomeDashboard() {
     router.push("/onboarding/start");
   }
 
-  function openPinGate(options?: { thenBirthYear?: boolean }) {
-    setOpenBirthYearAfterPin(Boolean(options?.thenBirthYear));
+  function openPinGate() {
     setPinError(null);
     setPinInput("");
     setPinConfirmInput("");
@@ -473,11 +469,6 @@ export function HomeDashboard() {
       setPinInput("");
       setPinConfirmInput("");
       setParentHubUnlocked(true);
-
-      if (openBirthYearAfterPin) {
-        setBirthYearModalOpen(true);
-        setOpenBirthYearAfterPin(false);
-      }
       return;
     }
 
@@ -490,11 +481,6 @@ export function HomeDashboard() {
     setPinInput("");
     setPinConfirmInput("");
     setParentHubUnlocked(true);
-
-    if (openBirthYearAfterPin) {
-      setBirthYearModalOpen(true);
-      setOpenBirthYearAfterPin(false);
-    }
   }
 
   function handlePinCancel() {
@@ -502,15 +488,6 @@ export function HomeDashboard() {
     setPinInput("");
     setPinConfirmInput("");
     setPinError(null);
-    setOpenBirthYearAfterPin(false);
-  }
-
-  function handleOpenBirthYearFromHub() {
-    if (parentHubUnlocked) {
-      setBirthYearModalOpen(true);
-      return;
-    }
-    openPinGate({ thenBirthYear: true });
   }
 
   return (
@@ -551,14 +528,8 @@ export function HomeDashboard() {
           isUnlocked={parentHubUnlocked}
           onRequestUnlock={() => openPinGate()}
           onLock={() => setParentHubUnlocked(false)}
-          onOpenBirthYear={handleOpenBirthYearFromHub}
         />
       </div>
-
-      <BirthYearSettingsModal
-        isOpen={birthYearModalOpen}
-        onClose={() => setBirthYearModalOpen(false)}
-      />
 
       <ChangeParentPinModal
         isOpen={changePinModalOpen}

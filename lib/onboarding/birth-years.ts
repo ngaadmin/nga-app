@@ -1,3 +1,6 @@
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
+
 /** Inclusive birth-year window for onboarding (adults may sign up on behalf of youth). */
 export const BIRTH_YEAR_MIN = 1950;
 
@@ -37,4 +40,15 @@ export function getYouthBirthYears(referenceDate = new Date()): number[] {
     years.push(referenceYear - age);
   }
   return years;
+}
+
+/** Birth years within a cohort's eligible youth age band. */
+export function getYouthBirthYearsForCohort(
+  cohort: MasteryCohort,
+  referenceDate = new Date(),
+): number[] {
+  const referenceYear = referenceDate.getFullYear();
+  return getYouthBirthYears(referenceDate).filter(
+    (year) => getMasteryCohortFromBirthYear(year, referenceYear) === cohort,
+  );
 }

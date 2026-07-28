@@ -1,30 +1,63 @@
 "use client";
 
+import { useState } from "react";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { CalendarIcon, ShieldIcon } from "@/lib/dashboard/icons";
+import { ShieldIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
+import { ParentHubFeatureItem } from "@/components/dashboard/settings/parent-hub-feature-item";
 import { ParentConversionRatePanel } from "@/components/dashboard/settings/parent-conversion-rate-panel";
 import { ParentCurrencyPanel } from "@/components/dashboard/settings/parent-currency-panel";
+import { ParentLearningTrackPanel } from "@/components/dashboard/settings/parent-learning-track-panel";
+import { useCurrency } from "@/lib/dashboard/currency-context";
+import {
+  formatConversionRateLabel,
+} from "@/lib/dashboard/point-conversion";
+import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import {
+  getMasteryCohortFromBirthYear,
+  masteryCohortAgeRangeLabel,
+  masteryCohortLabel,
+} from "@/lib/dashboard/mastery-cohort";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
-const tealOutlineClass =
-  "rounded-nga-lg border-2 border-[#0CC1E0] bg-white px-3 py-2 font-heading text-xs font-bold text-[#031F82] transition-colors hover:bg-[#BDE9FB]/25 active:bg-[#BDE9FB]/40";
+type ParentHubFeatureId = "pointsConversion" | "learningTrack" | "currency";
 
 type ParentHubSectionProps = {
   isUnlocked: boolean;
   onRequestUnlock: () => void;
   onLock: () => void;
-  onOpenBirthYear: () => void;
 };
 
 export function ParentHubSection({
   isUnlocked,
   onRequestUnlock,
   onLock,
-  onOpenBirthYear,
 }: ParentHubSectionProps) {
   const copy = copyMatrix.dashboard.settings.parentHub;
+  const featuresCopy = copyMatrix.dashboard.settings.parentHubFeatures;
+  const { currency, currencyCode } = useCurrency();
+  const { audPer100Xp } = useDashboardWallet();
+  const session = useUserSession();
+  const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
+
+  const currentCohort = session?.birthYear
+    ? getMasteryCohortFromBirthYear(session.birthYear)
+    : null;
+  const trackSummary = currentCohort
+    ? `${masteryCohortLabel(currentCohort)} · Ages ${masteryCohortAgeRangeLabel(currentCohort)}`
+    : featuresCopy.learningTrackSummaryLocked;
+
+  const [expandedFeature, setExpandedFeature] = useState<ParentHubFeatureId | null>(null);
+
+  function toggleFeature(id: ParentHubFeatureId) {
+    if (!isUnlocked) {
+      onRequestUnlock();
+      return;
+    }
+    setExpandedFeature((current) => (current === id ? null : id));
+  }
 
   return (
     <section
@@ -67,43 +100,42 @@ export function ParentHubSection({
         </span>
       </button>
 
-      {isUnlocked ? (
-        <div id="parent-hub-panel" className="space-y-5 p-4 pt-3">
+      <div id="parent-hub-panel" className="space-y-3 p-4 pt-3">
+        <ParentHubFeatureItem
+          id="parent-hub-points-conversion"
+          title={featuresCopy.pointsConversion}
+          summary={isUnlocked ? conversionRateLabel : featuresCopy.pointsConversionSummaryLocked}
+          isExpanded={isUnlocked && expandedFeature === "pointsConversion"}
+          onToggle={() => toggleFeature("pointsConversion")}
+        >
           <ParentConversionRatePanel isEditable />
+        </ParentHubFeatureItem>
 
-          <div className="border-t border-[#BDE9FB]/60 pt-4">
-            <ParentCurrencyPanel isEditable />
-          </div>
+        <ParentHubFeatureItem
+          id="parent-hub-learning-track"
+          title={featuresCopy.learningTrack}
+          summary={isUnlocked ? trackSummary : featuresCopy.learningTrackSummaryLocked}
+          isExpanded={isUnlocked && expandedFeature === "learningTrack"}
+          onToggle={() => toggleFeature("learningTrack")}
+        >
+          <ParentLearningTrackPanel isEditable />
+        </ParentHubFeatureItem>
 
-          <div className="border-t border-[#BDE9FB]/60 pt-4">
-            <p className="font-heading text-sm font-extrabold text-[#031F82]">
-              {copyMatrix.dashboard.settings.birthYear.modalTitle}
-            </p>
-            <p className="mt-1 font-sans text-xs leading-relaxed text-[#1E3A5F]">
-              {copy.birthYearHint}
-            </p>
-            <button
-              type="button"
-              onClick={onOpenBirthYear}
-              className={cn("mt-3 inline-flex items-center gap-2", tealOutlineClass)}
-            >
-              <CalendarIcon className="size-4 text-[#0CC1E0]" />
-              {copyMatrix.dashboard.settings.account.birthYearTrack}
-            </button>
-          </div>
+        <ParentHubFeatureItem
+          id="parent-hub-currency"
+          title={featuresCopy.currency}
+          summary={
+            isUnlocked
+              ? `${currency.flag} ${currency.label}`
+              : featuresCopy.currencySummaryLocked
+          }
+          isExpanded={isUnlocked && expandedFeature === "currency"}
+          onToggle={() => toggleFeature("currency")}
+        >
+          <ParentCurrencyPanel isEditable />
+        </ParentHubFeatureItem>
 
-          <button
-            type="button"
-            onClick={onLock}
-            className="w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/40"
-          >
-            {copy.lockHub}
-          </button>
-        </div>
-      ) : (
-        <div id="parent-hub-panel" className="space-y-4 px-4 pb-4">
-          <ParentConversionRatePanel isEditable={false} />
-          <ParentCurrencyPanel isEditable={false} />
+        {!isUnlocked ? (
           <button
             type="button"
             onClick={onRequestUnlock}
@@ -113,8 +145,16 @@ export function ParentHubSection({
           >
             {copy.unlockButton}
           </button>
-        </div>
-      )}
+        ) : (
+          <button
+            type="button"
+            onClick={onLock}
+            className="w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/40"
+          >
+            {copy.lockHub}
+          </button>
+        )}
+      </div>
     </section>
   );
 }

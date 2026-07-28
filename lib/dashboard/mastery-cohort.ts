@@ -100,3 +100,9 @@ export function masteryCohortAgeRangeLabel(cohort: MasteryCohort): string {
   const { minAge, maxAge } = MASTERY_COHORT[cohort];
   return `${minAge}-${maxAge}`;
 }
+
+export const MASTERY_COHORT_ORDER: readonly MasteryCohort[] = [
+  "explorer",
+  "pathfinder",
+  "maverick",
+];

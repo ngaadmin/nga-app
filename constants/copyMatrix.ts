@@ -24,7 +24,7 @@ export const copyMatrix = {
         enabledHint: "Parent Hub is unlocked - you can adjust these settings.",
         pinTitle: "Parent PIN Required",
         pinBody:
-          "Enter the parent PIN to open Parent Hub. Kids can't change conversion rate, currency, or age track on their own.",
+          "Enter the parent PIN to open Parent Hub. Kids can't change conversion rate, learning track, or currency on their own.",
         setupTitle: "Set Parent PIN",
         setupBody:
           "No parent PIN yet. Choose a 4-digit code to secure Parent Hub.",
@@ -40,13 +40,42 @@ export const copyMatrix = {
       parentHub: {
         title: "Parent Hub",
         lockedSubtext: "PIN required for parent-only controls",
-        unlockedSubtext: "Conversion rate, currency & age track",
+        unlockedSubtext: "Tap a feature to expand and manage it",
         lockedBadge: "Locked",
         unlockedBadge: "Open",
         unlockButton: "Enter Parent PIN",
         lockHub: "Lock Parent Hub",
-        birthYearHint:
-          "Update birth year to refresh Academy modules, skills, and lesson tracks.",
+      },
+      parentHubFeatures: {
+        pointsConversion: "Points conversion",
+        pointsConversionSummaryLocked: "Set the XP-to-cash rate for Vault cash-in",
+        learningTrack: "Change learning track",
+        learningTrackSummaryLocked: "View and update the learner age track",
+        currency: "Display currency",
+        currencySummaryLocked: "Choose currency shown in The Vault",
+      },
+      learningTrack: {
+        intro:
+          "Each learning track is built for a specific age band — lessons, scenarios, and skills match how learners that age think and operate.",
+        tierUpdateNote:
+          "Changing the learner tier updates Academy content to age-relevant scenarios and skills.",
+        progressResetWarningTitle: "Progress reset",
+        progressResetWarning:
+          "Switching tracks resets Academy lesson progress and skill trophies. Vault balances and XP stay put.",
+        progressResetConfirmed:
+          "Academy progress and skill trophies were reset for the new track.",
+        currentBadge: "Current",
+        agesTemplate: "Ages {range}",
+        skillsTemplate: "{count} skills",
+        birthYearLabel: "Birth year",
+        save: "Save Track",
+        savedTitle: "Track Updated",
+        savedBodyTemplate:
+          "Birth year saved. You are now on the {track} track (ages {range}).",
+        savedAcknowledge: "Got it",
+        invalidYear: "Pick a valid birth year.",
+        unchanged: "That birth year is already saved.",
+        lockedHint: "Unlock Parent Hub to change the learning track.",
       },
       currency: {
         heading: "Display Currency",
@@ -137,7 +166,7 @@ export const copyMatrix = {
       description:
         "Bite-sized learning missions. Master the 24 core financial skills through interactive games.",
       journey: {
-        heading: "Your Academy Journey",
+        heading: "Your Mission Map",
         xpLabel: "XP",
         lockedLabel: "Locked",
         nodes: [

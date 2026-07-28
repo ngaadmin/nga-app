@@ -1,18 +1,22 @@
 "use client";
 
+import { Fragment, useEffect, useMemo, useState, type ComponentType } from "react";
 import {
-  Fragment,
-  useEffect,
-  useMemo,
-  useState,
-  type ComponentType,
-} from "react";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
-import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
+  buildVentureCarouselSlotMap,
+  getAllVenturesForCarousel,
+  getVentureBlueprintById,
+  VENTURE_BLUEPRINTS,
+  type VentureBlueprint,
+  type VentureBlueprintId,
+  type VentureCarouselSlot,
+} from "@/lib/engine/venture-blueprints";
 import {
   getMasteryCohortFromBirthYear,
+  masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import {
   engineBodyClass,
@@ -32,6 +36,7 @@ import {
 } from "@/components/dashboard/engine/engine-dashboard-styles";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
+  CalendarIcon,
   LightbulbIcon,
   LockIcon,
   SparklesIcon,
@@ -50,29 +55,6 @@ import { cn } from "@/lib/utils/cn";
 const REFERENCE_YEAR = 2026;
 const DEMO_ACTIVE_STEP_INDEX = 2;
 
-type VentureTier = "freemium" | "premium";
-
-type VentureBlueprintId =
-  | "dog-walking"
-  | "lawn-mowing"
-  | "lemonade-stand"
-  | "car-wash"
-  | "pet-sitting"
-  | "handmade-crafts"
-  | "furniture-flipping"
-  | "digital-art-shop"
-  | "tech-support-tutoring";
-
-type BusinessIdea = {
-  id: VentureBlueprintId;
-  title: string;
-  emoji: string;
-  tier: VentureTier;
-  row: 1 | 2 | 3;
-};
-
-type VentureAccessState = "free_launch" | "premium_unlock" | "milestone_locked";
-
 type InProgressVenture = {
   id: VentureBlueprintId;
   progressPercent: number;
@@ -87,144 +69,29 @@ type JourneyMilestone = {
 };
 
 type EngineProfile = {
-  birthYear: number;
   ageTier: MasteryCohort;
   isPremium: boolean;
 };
 
 const DEFAULT_ENGINE_PROFILE: EngineProfile = {
-  birthYear: 2013,
   ageTier: "explorer",
   isPremium: false,
 };
+
+function resolveEngineProfile(): EngineProfile {
+  const session = readGhostAccessSession();
+  if (!session) return DEFAULT_ENGINE_PROFILE;
+
+  return {
+    ageTier: getMasteryCohortFromBirthYear(session.birthYear, REFERENCE_YEAR),
+    isPremium: false,
+  };
+}
 
 const INITIAL_IN_PROGRESS: InProgressVenture[] = [
   { id: "dog-walking", progressPercent: 40 },
   { id: "lawn-mowing", progressPercent: 10 },
 ];
-
-const BUSINESS_IDEAS: readonly BusinessIdea[] = [
-  { id: "dog-walking", title: "Dog Walking", emoji: "🐕", tier: "freemium", row: 1 },
-  { id: "lawn-mowing", title: "Lawn Mowing", emoji: "🌿", tier: "freemium", row: 1 },
-  {
-    id: "lemonade-stand",
-    title: "Lemonade Stand",
-    emoji: "🍋",
-    tier: "freemium",
-    row: 1,
-  },
-  { id: "car-wash", title: "Car Wash", emoji: "🚗", tier: "premium", row: 2 },
-  { id: "pet-sitting", title: "Pet Sitting", emoji: "🐾", tier: "premium", row: 2 },
-  {
-    id: "handmade-crafts",
-    title: "Handmade Crafts",
-    emoji: "🧁",
-    tier: "premium",
-    row: 2,
-  },
-  {
-    id: "furniture-flipping",
-    title: "Furniture Flipping",
-    emoji: "🪑",
-    tier: "premium",
-    row: 3,
-  },
-  {
-    id: "digital-art-shop",
-    title: "Digital Art Shop",
-    emoji: "🎨",
-    tier: "premium",
-    row: 3,
-  },
-  {
-    id: "tech-support-tutoring",
-    title: "Tech Support",
-    emoji: "💻",
-    tier: "premium",
-    row: 3,
-  },
-] as const;
-
-const BUSINESS_IDEA_BRIEFS: Record<VentureBlueprintId, string> = {
-  "dog-walking":
-    "Finn's take: leashes up, neighborhood mapped, tails wagging - you're about to turn daily walks into steady cash. Low startup, high smiles.",
-  "lawn-mowing":
-    "Finn's take: grab the mower, quote your first yard, and watch grass clippings turn into green in your pocket. Summer hustle, unlocked.",
-  "lemonade-stand":
-    "Finn's take: ice cold, price bold, corner claimed - this classic play teaches pricing, pitch, and profit in one sunny afternoon.",
-  "car-wash":
-    "Finn's take: buckets, suds, shine - neighbors love a clean ride and you'll love repeat bookings. Premium hustle for founders ready to level up.",
-  "pet-sitting":
-    "Finn's take: trusted sitter energy wins every time. Build a care checklist, earn trust, and stack bookings while pet parents travel stress-free.",
-  "handmade-crafts":
-    "Finn's take: your creativity is inventory. Prototype one killer product, price it right, and sell at the maker's market like a pro.",
-  "furniture-flipping":
-    "Finn's take: find the rough gem, restore the glow, flip for profit. Eye for value plus elbow grease equals founder flex.",
-  "digital-art-shop":
-    "Finn's take: brand your style, upload your art, open shop online - your designs deserve a storefront and your first sale is waiting.",
-  "tech-support-tutoring":
-    "Finn's take: you already speak tech fluently. Package that skill, help one person, then another - digital helper status incoming.",
-};
-
-const VENTURE_JOURNEY_STEPS: Record<
-  VentureBlueprintId,
-  readonly [string, string, string, string]
-> = {
-  "dog-walking": [
-    "Pick Your Route",
-    "Land First Client",
-    "Set Walk Rates",
-    "Build the Pack",
-  ],
-  "lawn-mowing": [
-    "Gear Check",
-    "First Yard Quote",
-    "Mow & Collect",
-    "Repeat Clients",
-  ],
-  "lemonade-stand": [
-    "Recipe Test",
-    "Stand Setup",
-    "Price Per Cup",
-    "Busy Corner Launch",
-  ],
-  "car-wash": [
-    "Kit Inventory",
-    "Practice Wash",
-    "Neighborhood Flyers",
-    "Premium Detailer",
-  ],
-  "pet-sitting": [
-    "Pet Safety 101",
-    "Care Checklist",
-    "First Booking",
-    "Vacation Pro",
-  ],
-  "handmade-crafts": [
-    "Pick Your Craft",
-    "Prototype Product",
-    "Price Your Goods",
-    "Maker's Market",
-  ],
-  "furniture-flipping": [
-    "Find a Piece",
-    "Clean & Repair",
-    "List for Sale",
-    "Flip Profit Loop",
-  ],
-  "digital-art-shop": [
-    "Style Your Brand",
-    "Upload Designs",
-    "Open Your Shop",
-    "First Online Sale",
-  ],
-  "tech-support-tutoring": [
-    "Skill Audit",
-    "Help Session Prep",
-    "First Client Call",
-    "Digital Helper Pro",
-  ],
-};
 
 const floatingTileClass = "rounded-2xl border-0 bg-white shadow-md";
 
@@ -306,36 +173,8 @@ const greenCtaClass =
 const crimsonCtaClass =
   "rounded-nga-lg border-b-4 border-[#991B1B] bg-[#DC2626] text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
 
-function resolveEngineProfile(): EngineProfile {
-  const session = readGhostAccessSession();
-  if (!session) return DEFAULT_ENGINE_PROFILE;
-
-  return {
-    birthYear: session.birthYear,
-    ageTier: getMasteryCohortFromBirthYear(session.birthYear, REFERENCE_YEAR),
-    isPremium: false,
-  };
-}
-
-function getVentureAccessState(
-  idea: BusinessIdea,
-  profile: EngineProfile,
-): VentureAccessState {
-  if (idea.tier === "freemium") return "free_launch";
-  if (idea.row === 3 && profile.ageTier === "explorer") {
-    return "milestone_locked";
-  }
-  return "premium_unlock";
-}
-
-function getBusinessIdeaById(id: VentureBlueprintId): BusinessIdea {
-  const match = BUSINESS_IDEAS.find((entry) => entry.id === id);
-  if (!match) throw new Error(`Unknown business idea: ${id}`);
-  return match;
-}
-
 function buildJourneyMilestones(ventureId: VentureBlueprintId): JourneyMilestone[] {
-  const steps = VENTURE_JOURNEY_STEPS[ventureId];
+  const steps = getVentureBlueprintById(ventureId).journeySteps;
   return steps.map((title, index) => ({
     id: `${ventureId}-step-${index + 1}`,
     title,
@@ -364,6 +203,34 @@ function CloseIcon({ className }: { className?: string }) {
   );
 }
 
+function PremiumTierLockBadge({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex items-center justify-center rounded-full bg-[#DCB766] p-0.5 shadow-sm",
+        className,
+      )}
+      aria-hidden
+    >
+      <LockIcon className="size-2.5 text-[#031F82]" />
+    </span>
+  );
+}
+
+function AgeTrackLockBadge({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "flex items-center justify-center rounded-full bg-[#E8F7FC] p-0.5 ring-1 ring-[#BDE9FB]",
+        className,
+      )}
+      aria-hidden
+    >
+      <CalendarIcon className="size-2.5 text-[#099FB8]" />
+    </span>
+  );
+}
+
 type InProgressCarouselProps = {
   ventures: readonly InProgressVenture[];
   selectedId: VentureBlueprintId | null;
@@ -383,16 +250,17 @@ function InProgressCarousel({
         id="in-progress-ventures-heading"
         className={cn(engineSectionHeadingClass, "mb-3")}
       >
-        In Progress Ventures
+        In Progress Businesses
       </DashboardSectionHeading>
       {ventures.length === 0 ? (
         <p className={cn("py-3", engineEmptyHelperClass)}>
           No active ventures yet - pick a business idea below to launch.
         </p>
       ) : (
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="w-full min-w-0 overflow-x-auto overscroll-x-contain px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max min-w-full snap-x snap-mandatory gap-3">
           {ventures.map((venture) => {
-            const idea = getBusinessIdeaById(venture.id);
+            const idea = getVentureBlueprintById(venture.id);
             const isSelected = selectedId === venture.id;
 
             return (
@@ -446,23 +314,84 @@ function InProgressCarousel({
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </section>
   );
 }
 
+type BusinessIdeaTileProps = {
+  idea: VentureBlueprint;
+  slot: VentureCarouselSlot;
+  isInProgress: boolean;
+  isDrawerOpen: boolean;
+  onTap: (idea: VentureBlueprint) => void;
+};
+
+function BusinessIdeaTile({
+  idea,
+  slot,
+  isInProgress,
+  isDrawerOpen,
+  onTap,
+}: BusinessIdeaTileProps) {
+  const isPremiumLocked = slot === "premium_locked";
+  const isAgeLocked = slot === "age_locked";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onTap(idea)}
+      aria-label={idea.title}
+      aria-pressed={isDrawerOpen}
+      className={cn(
+        "relative flex w-[6.25rem] shrink-0 snap-start flex-col items-center justify-center p-2.5 text-center transition-all",
+        floatingTileClass,
+        isDrawerOpen && "shadow-lg ring-2 ring-[#0CC1E0]/30",
+        isAgeLocked && "opacity-55",
+        "active:scale-[0.98]",
+      )}
+    >
+      {isPremiumLocked ? (
+        <span className="absolute right-0.5 top-0.5">
+          <PremiumTierLockBadge />
+        </span>
+      ) : null}
+
+      {isAgeLocked ? (
+        <span className="absolute right-0.5 top-0.5">
+          <AgeTrackLockBadge />
+        </span>
+      ) : null}
+
+      {isInProgress ? (
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-white/55 backdrop-blur-[1px]">
+          <span className={engineStatusBadgeClass}>In Progress</span>
+        </span>
+      ) : null}
+
+      <span className="text-xl leading-none" aria-hidden>
+        {idea.emoji}
+      </span>
+      <span className={cn("mt-1.5 line-clamp-2 w-full", engineCardTitleClass)}>
+        {idea.title}
+      </span>
+    </button>
+  );
+}
+
 type BusinessIdeasCarouselProps = {
-  ideas: readonly BusinessIdea[];
-  accessById: Record<VentureBlueprintId, VentureAccessState>;
+  ideas: readonly VentureBlueprint[];
+  slotById: Record<VentureBlueprintId, VentureCarouselSlot>;
   inProgressIds: ReadonlySet<VentureBlueprintId>;
   selectedDiscoveryId: VentureBlueprintId | null;
-  onIdeaTap: (idea: BusinessIdea) => void;
+  onIdeaTap: (idea: VentureBlueprint) => void;
 };
 
 function BusinessIdeasCarousel({
   ideas,
-  accessById,
+  slotById,
   inProgressIds,
   selectedDiscoveryId,
   onIdeaTap,
@@ -470,69 +399,33 @@ function BusinessIdeasCarousel({
   return (
     <section
       aria-labelledby="all-business-ideas-heading"
-      className="mt-8"
+      className="mt-8 min-w-0"
     >
       <DashboardSectionHeading
         id="all-business-ideas-heading"
-        className={cn(engineSectionHeadingClass, "mb-3")}
+        className={cn(engineSectionHeadingClass, "mb-1")}
       >
         All Business Ideas
       </DashboardSectionHeading>
-      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ideas.map((idea) => {
-          const accessState = accessById[idea.id];
-          const isMilestoneLocked = accessState === "milestone_locked";
-          const isPremiumUnlock = accessState === "premium_unlock";
-          const isInProgress = inProgressIds.has(idea.id);
-          const isDrawerOpen = selectedDiscoveryId === idea.id;
-
-          return (
-            <button
+      <p className={cn("mb-3", engineProgressMetaClass)}>
+        {ideas.length} ventures · swipe to browse
+      </p>
+      <div
+        className="w-full min-w-0 overflow-x-auto overscroll-x-contain px-1 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        aria-label={`${VENTURE_BLUEPRINTS.length} business ideas`}
+      >
+        <div className="flex w-max snap-x snap-mandatory gap-2">
+          {ideas.map((idea) => (
+            <BusinessIdeaTile
               key={idea.id}
-              type="button"
-              disabled={isMilestoneLocked}
-              onClick={() => onIdeaTap(idea)}
-              aria-label={idea.title}
-              aria-pressed={isDrawerOpen}
-              className={cn(
-                "relative flex w-[6.5rem] shrink-0 snap-center flex-col items-center justify-center p-2.5 text-center transition-all",
-                floatingTileClass,
-                isMilestoneLocked && "pointer-events-none opacity-40",
-                isDrawerOpen && "shadow-lg ring-2 ring-[#0CC1E0]/30",
-                !isMilestoneLocked && "active:scale-[0.98]",
-              )}
-            >
-              {isPremiumUnlock ? (
-                <span className="absolute right-0.5 top-0.5 flex items-center gap-0.5 rounded-full bg-[#DCB766] px-1 py-0.5 shadow-sm">
-                  <LockIcon className="size-2 text-[#031F82]" />
-                </span>
-              ) : null}
-
-              {isMilestoneLocked ? (
-                <span className="absolute right-0.5 top-0.5 text-gray-400">
-                  <LockIcon className="size-2.5" />
-                </span>
-              ) : null}
-
-              {isInProgress ? (
-                <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-white/55 backdrop-blur-[1px]">
-                  <span className={engineStatusBadgeClass}>
-                    In Progress
-                  </span>
-                </span>
-              ) : null}
-
-              <span className="text-xl leading-none" aria-hidden>
-                {idea.emoji}
-              </span>
-              <span
-                className={cn("mt-1.5 line-clamp-2 w-full", engineCardTitleClass)}
-              >
-                {idea.title}
-              </span>
-            </button>
-          );
-        })}
+              idea={idea}
+              slot={slotById[idea.id]}
+              isInProgress={inProgressIds.has(idea.id)}
+              isDrawerOpen={selectedDiscoveryId === idea.id}
+              onTap={onIdeaTap}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -635,7 +528,7 @@ function VentureJourneyNode({
 }
 
 type VentureJourneyMapProps = {
-  venture: BusinessIdea;
+  venture: VentureBlueprint;
   milestones: readonly JourneyMilestone[];
   onLaunchStep: (ventureId: VentureBlueprintId, stepTitle: string) => void;
 };
@@ -747,10 +640,10 @@ function EmptyJourneyPlaceholder() {
 }
 
 type DiscoveryBriefDrawerProps = {
-  idea: BusinessIdea;
+  idea: VentureBlueprint;
   isAlreadyInProgress: boolean;
   onClose: () => void;
-  onLaunch: (idea: BusinessIdea) => void;
+  onLaunch: (idea: VentureBlueprint) => void;
 };
 
 function DiscoveryBriefDrawer({
@@ -794,9 +687,7 @@ function DiscoveryBriefDrawer({
           </button>
         </div>
 
-        <p className={cn("mt-4", engineBodyClass)}>
-          {BUSINESS_IDEA_BRIEFS[idea.id]}
-        </p>
+        <p className={cn("mt-4", engineBodyClass)}>{idea.description}</p>
 
         {isAlreadyInProgress ? (
           <button
@@ -887,6 +778,52 @@ function CloseBusinessConfirm({
   );
 }
 
+type CohortUnavailableModalProps = {
+  ventureTitle: string;
+  cohortLabel: string;
+  onClose: () => void;
+};
+
+function CohortUnavailableModal({
+  ventureTitle,
+  cohortLabel,
+  onClose,
+}: CohortUnavailableModalProps) {
+  return (
+    <ModalShell
+      isOpen
+      onClose={onClose}
+      labelledBy="engine-cohort-unavailable-title"
+      panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
+    >
+      <p className={engineJourneyEyebrowClass}>Learning track</p>
+      <h2
+        id="engine-cohort-unavailable-title"
+        className={cn("mt-2", engineModalTitleClass)}
+      >
+        Not on your track yet
+      </h2>
+      <p className={cn("mt-3", engineBodyClass)}>
+        {ventureTitle} isn&apos;t available on your current {cohortLabel}{" "}
+        learning track. Some business ventures stay locked for age-safety reasons
+        until you&apos;re ready — keep leveling up in The Academy to unlock
+        more.
+      </p>
+      <button
+        type="button"
+        onClick={onClose}
+        className={cn(
+          "mt-5 h-touch w-full px-6 shadow-nga-pop",
+          orangeCtaClass,
+          engineCtaLabelClass,
+        )}
+      >
+        Got it
+      </button>
+    </ModalShell>
+  );
+}
+
 type PaywallModalProps = {
   ventureTitle: string;
   onClose: () => void;
@@ -910,8 +847,8 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
           Level up {ventureTitle}
         </h2>
         <p className={cn("mt-3", engineBodyClass)}>
-          Finn says this business idea runs on premium fuel. Unlock The Engine Pro
-          to launch bigger plays, track sharper metrics, and stack XP faster.
+          This business idea requires a premium subscription. Upgrade your
+          account to unlock this venture and start building.
         </p>
 
         <button
@@ -950,10 +887,14 @@ export function EngineDashboard() {
     useState<InProgressVenture[]>(INITIAL_IN_PROGRESS);
   const [selectedVentureId, setSelectedVentureId] =
     useState<VentureBlueprintId | null>(INITIAL_IN_PROGRESS[0]?.id ?? null);
-  const [discoveryIdea, setDiscoveryIdea] = useState<BusinessIdea | null>(null);
+  const [discoveryIdea, setDiscoveryIdea] = useState<VentureBlueprint | null>(
+    null,
+  );
   const [closeConfirmId, setCloseConfirmId] =
     useState<VentureBlueprintId | null>(null);
-  const [paywallIdea, setPaywallIdea] = useState<BusinessIdea | null>(null);
+  const [paywallIdea, setPaywallIdea] = useState<VentureBlueprint | null>(null);
+  const [cohortBlockedIdea, setCohortBlockedIdea] =
+    useState<VentureBlueprint | null>(null);
 
   useEffect(() => {
     const sync = () => setProfile(resolveEngineProfile());
@@ -967,17 +908,19 @@ export function EngineDashboard() {
     [inProgressVentures],
   );
 
-  const accessById = useMemo(() => {
-    const map = {} as Record<VentureBlueprintId, VentureAccessState>;
-    for (const idea of BUSINESS_IDEAS) {
-      map[idea.id] = getVentureAccessState(idea, profile);
-    }
-    return map;
-  }, [profile]);
+  const sortedVentureIdeas = useMemo(
+    () => getAllVenturesForCarousel(profile.ageTier, profile.isPremium),
+    [profile.ageTier, profile.isPremium],
+  );
+
+  const carouselSlotById = useMemo(
+    () => buildVentureCarouselSlotMap(profile.ageTier, profile.isPremium),
+    [profile.ageTier, profile.isPremium],
+  );
 
   const selectedIdea = useMemo(() => {
     if (!selectedVentureId) return null;
-    return getBusinessIdeaById(selectedVentureId);
+    return getVentureBlueprintById(selectedVentureId);
   }, [selectedVentureId]);
 
   const journeyMilestones = useMemo(() => {
@@ -987,14 +930,18 @@ export function EngineDashboard() {
 
   const closeConfirmIdea = useMemo(() => {
     if (!closeConfirmId) return null;
-    return getBusinessIdeaById(closeConfirmId);
+    return getVentureBlueprintById(closeConfirmId);
   }, [closeConfirmId]);
 
-  function handleBusinessIdeaTap(idea: BusinessIdea) {
-    const accessState = accessById[idea.id];
-    if (accessState === "milestone_locked") return;
+  function handleBusinessIdeaTap(idea: VentureBlueprint) {
+    const slot = carouselSlotById[idea.id];
 
-    if (accessState === "premium_unlock" && !profile.isPremium) {
+    if (slot === "age_locked") {
+      setCohortBlockedIdea(idea);
+      return;
+    }
+
+    if (slot === "premium_locked") {
       setPaywallIdea(idea);
       return;
     }
@@ -1002,7 +949,7 @@ export function EngineDashboard() {
     setDiscoveryIdea((current) => (current?.id === idea.id ? null : idea));
   }
 
-  function handleLaunchBusiness(idea: BusinessIdea) {
+  function handleLaunchBusiness(idea: VentureBlueprint) {
     if (inProgressIds.has(idea.id)) {
       setSelectedVentureId(idea.id);
       setDiscoveryIdea(null);
@@ -1035,7 +982,15 @@ export function EngineDashboard() {
   }
 
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden bg-white px-1 pb-2">
+    <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white px-1 pb-2">
+      {cohortBlockedIdea ? (
+        <CohortUnavailableModal
+          ventureTitle={cohortBlockedIdea.title}
+          cohortLabel={masteryCohortLabel(profile.ageTier)}
+          onClose={() => setCohortBlockedIdea(null)}
+        />
+      ) : null}
+
       {paywallIdea ? (
         <PaywallModal
           ventureTitle={paywallIdea.title}
@@ -1061,7 +1016,7 @@ export function EngineDashboard() {
         />
       ) : null}
 
-      <div className="shrink-0">
+      <div className="min-w-0 shrink-0 w-full">
         <InProgressCarousel
           ventures={inProgressVentures}
           selectedId={selectedVentureId}
@@ -1070,10 +1025,10 @@ export function EngineDashboard() {
         />
       </div>
 
-      <div className="shrink-0">
+      <div className="min-w-0 shrink-0 w-full">
         <BusinessIdeasCarousel
-          ideas={BUSINESS_IDEAS}
-          accessById={accessById}
+          ideas={sortedVentureIdeas}
+          slotById={carouselSlotById}
           inProgressIds={inProgressIds}
           selectedDiscoveryId={discoveryIdea?.id ?? null}
           onIdeaTap={handleBusinessIdeaTap}
@@ -1088,7 +1043,7 @@ export function EngineDashboard() {
           id="venture-journey-map-heading"
           className={cn(engineSectionHeadingClass, "mb-4")}
         >
-          Your Venture Journey Map
+          Your Business Journey
         </DashboardSectionHeading>
         {selectedIdea ? (
           <VentureJourneyMap

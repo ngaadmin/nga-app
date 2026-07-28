@@ -20,6 +20,9 @@ import {
 } from "@/lib/academy/lessons/utils";
 import type { StandardScreenProps } from "./types";
 
+/** Locked global rule — tap-reveal always shows emoji with label below (all cohorts). */
+const TAP_REVEAL_ITEM_DISPLAY = "emoji-label" as const;
+
 function shuffleItems<T>(items: readonly T[]): T[] {
   const next = [...items];
   for (let i = next.length - 1; i > 0; i -= 1) {
@@ -39,8 +42,6 @@ export function TapRevealScreen({
     () => shuffleItems(screen.items),
     [screen.items],
   );
-  const tapDisplay = screen.tapDisplay ?? "emoji-label";
-  const revealDisplay = screen.revealDisplay ?? "emoji-label";
   const neutralSelection = usesNeutralTapFeedback(screen.selectionFeedback);
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export function TapRevealScreen({
               key={item.id}
               label={item.label}
               emoji={item.emoji}
-              display={tapDisplay}
+              display={TAP_REVEAL_ITEM_DISPLAY}
               selectionVariant="neutral"
               onClick={() => handleTap(item.id)}
             />
@@ -127,7 +128,7 @@ export function TapRevealScreen({
                       <LessonIconReveal
                         label={item.label}
                         emoji={item.emoji}
-                        display={revealDisplay}
+                        display={TAP_REVEAL_ITEM_DISPLAY}
                         selected
                         selectionVariant={
                           neutralSelection

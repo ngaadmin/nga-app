@@ -74,7 +74,7 @@ export function resolveActiveAcademyMilestone(
   return safe[0] ?? null;
 }
 
-/** Build the banner copy: "Module X, Lesson Y: Z". */
+/** Build the banner copy: current module name only. */
 export function resolveAcademyContextBanner(
   milestones: readonly AcademyLessonMilestoneNode[],
 ): AcademyContextBannerState {
@@ -89,7 +89,7 @@ export function resolveAcademyContextBanner(
     moduleNumber,
     lessonNumber,
     topic,
-    label: `Module ${moduleNumber}, Lesson ${lessonNumber}: ${topic}`,
+    label: `Module ${moduleNumber}: ${ACADEMY_MODULE_TITLES[moduleNumber]}`,
   };
 }
 

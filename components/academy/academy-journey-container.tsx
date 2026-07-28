@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AcademyJourney } from "@/components/academy/academy-journey";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
+import { LEARNING_PROGRESS_RESET_EVENT } from "@/lib/dashboard/learning-progress-reset";
 import type { AcademyLessonMilestoneNode } from "@/lib/dashboard/academy-state";
 
 export function AcademyJourneyContainer() {
@@ -12,8 +13,16 @@ export function AcademyJourneyContainer() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMilestones(readAcademyMilestones());
+    function refreshMilestones() {
+      setMilestones(readAcademyMilestones());
+    }
+
+    refreshMilestones();
     setHydrated(true);
+    window.addEventListener(LEARNING_PROGRESS_RESET_EVENT, refreshMilestones);
+    return () => {
+      window.removeEventListener(LEARNING_PROGRESS_RESET_EVENT, refreshMilestones);
+    };
   }, []);
 
   if (!hydrated) {

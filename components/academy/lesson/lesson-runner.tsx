@@ -14,7 +14,11 @@ import {
 } from "@/components/academy/lesson/lesson-screen-renderer";
 import { lessonGoldClaimClass, lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
-import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
+import {
+  isDenseLessonScreen,
+  resolveLessonScreenIllustration,
+} from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
+import type { ResolvedLessonContent } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import { useEffect, type ReactNode } from "react";
 
@@ -28,21 +32,6 @@ type LessonRunnerProps = {
   canAdvance?: boolean;
   onNext?: () => void;
 };
-
-const DENSE_LESSON_SCREEN_TYPES = new Set<ScreenConfig["type"]>([
-  "tap-reveal",
-  "bucket-sort",
-  "link-match",
-  "rank-order",
-  "spotlight-rounds",
-  "savings-goal",
-  "allocation-slider",
-  "budget-select",
-]);
-
-function isDenseLessonScreen(screen: ScreenConfig): boolean {
-  return DENSE_LESSON_SCREEN_TYPES.has(screen.type);
-}
 
 export function LessonRunner({
   content,
@@ -111,7 +100,9 @@ export function LessonRunner({
             isActive={index === flow.screenIndex}
           >
             {index === flow.screenIndex ? (
-              <LessonScreenChromeProvider illustration={screen.illustration}>
+              <LessonScreenChromeProvider
+                illustration={resolveLessonScreenIllustration(screen)}
+              >
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                   <LessonScreenIllustration />
                   <div

@@ -1,87 +1,109 @@
 "use client";
 
 import {
-  ACADEMY_MODULE_DESCRIPTIONS,
   ACADEMY_MODULE_TITLES,
   getAcademyPhaseTheme,
   isModuleSignpostLocked,
-  LESSONS_PER_LEVEL,
   type AcademyLessonMilestoneNode,
   type AcademyLevelId,
 } from "@/lib/dashboard/academy-state";
-import {
-  academyJourneyMetaClass,
-  academyModuleDescriptionClass,
-  academyModuleTitleClass,
-} from "@/components/academy/academy-journey-styles";
 import { LockIcon } from "@/lib/dashboard/icons";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
-export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 118;
-export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 20;
+export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 56;
+export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 24;
+/** Extra breathing room below Module 1 signpost before the first lesson node. */
+export const ACADEMY_MODULE_ONE_SIGNPOST_GAP_PX = 40;
+
+/** First lesson milestone — used for START HERE placement. */
+export const ACADEMY_JOURNEY_ENTRY_MILESTONE_ID = 1;
 
 type AcademyModuleSignpostProps = {
   moduleNumber: AcademyLevelId;
   milestones: readonly AcademyLessonMilestoneNode[];
   masteryCohort: MasteryCohort;
+  isActive?: boolean;
+  launchable?: boolean;
+  onLaunch?: () => void;
 };
 
 export function AcademyModuleSignpost({
   moduleNumber,
   milestones,
   masteryCohort,
+  isActive = false,
+  launchable = false,
+  onLaunch,
 }: AcademyModuleSignpostProps) {
   const phase = getAcademyPhaseTheme(moduleNumber);
   const title = ACADEMY_MODULE_TITLES[moduleNumber];
-  const description = ACADEMY_MODULE_DESCRIPTIONS[moduleNumber];
   const isLocked = isModuleSignpostLocked(
     moduleNumber,
     milestones,
     masteryCohort,
   );
+  const useDarkSignpostInk = moduleNumber === 3 || moduleNumber === 6;
+
+  const tileBody = (
+    <div
+      className={cn(
+        "relative flex w-full max-w-[min(100%,22rem)] items-center justify-center rounded-2xl border-0 border-b-[4px] px-4 py-2.5 transition-all duration-75",
+        isLocked && "opacity-90",
+        isActive && launchable && "group-active:translate-y-[2px] group-active:border-b-[2px]",
+      )}
+      style={{
+        backgroundColor: phase.fill,
+        borderBottomColor: phase.shadow,
+        boxShadow: isActive
+          ? `0 4px 0 ${phase.shadow}`
+          : `0 2px 0 ${phase.shadow}`,
+      }}
+    >
+      <div className="relative flex min-w-0 items-center justify-center gap-1.5">
+        {isLocked ? (
+          <span
+            className={cn(
+              "shrink-0",
+              useDarkSignpostInk ? "text-[#031F82]/80" : "text-white/90",
+            )}
+            aria-hidden
+          >
+            <LockIcon className="size-4" />
+          </span>
+        ) : null}
+        <p
+          className={cn(
+            "min-w-0 truncate font-heading text-lg font-bold leading-snug",
+            useDarkSignpostInk
+              ? "text-[#031F82]"
+              : "text-white drop-shadow-sm",
+          )}
+        >
+          Module {moduleNumber}: {title}
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div
-      className="relative z-raised flex w-full shrink-0 justify-center px-2"
+      className="relative z-base flex w-full shrink-0 justify-center px-2"
       style={{ height: ACADEMY_MODULE_SIGNPOST_HEIGHT_PX }}
       role="region"
       aria-label={`Module ${moduleNumber}: ${title}`}
     >
-      <div
-        className={cn(
-          "flex w-full max-w-[min(100%,22rem)] flex-col justify-center rounded-2xl border px-4 py-3",
-          "bg-white/70 backdrop-blur-md",
-          isLocked && "opacity-95",
-        )}
-        style={{
-          borderColor: phase.fill,
-          boxShadow: `0 2px 0 ${phase.shadow}, 0 4px 20px ${phase.ring}`,
-        }}
-      >
-        <div className="flex items-center justify-center gap-1.5">
-          {isLocked ? (
-            <span style={{ color: phase.fill }} aria-hidden>
-              <LockIcon className="size-4 shrink-0" />
-            </span>
-          ) : null}
-          <p
-            className={academyModuleTitleClass}
-            style={{ textShadow: `0 0 12px ${phase.ring}` }}
-          >
-            Module {moduleNumber}: {title}
-          </p>
-        </div>
-        <p className={cn("mt-1", academyModuleDescriptionClass)}>
-          {description}
-        </p>
-        <p
-          className={cn("mt-1 text-center", academyJourneyMetaClass)}
-          style={{ color: phase.shadow }}
+      {launchable && onLaunch ? (
+        <button
+          type="button"
+          onClick={onLaunch}
+          className="group w-full max-w-[min(100%,22rem)] rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary"
         >
-          {LESSONS_PER_LEVEL} Lessons
-        </p>
-      </div>
+          {tileBody}
+        </button>
+      ) : (
+        tileBody
+      )}
     </div>
   );
 }

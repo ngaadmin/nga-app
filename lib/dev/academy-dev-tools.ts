@@ -6,20 +6,11 @@ export const DEV_TESTING_UNLOCKED_LESSON_IDS = [1, 2, 3, 4] as const;
 
 const DEV_TESTING_UNLOCKED_SET = new Set<number>(DEV_TESTING_UNLOCKED_LESSON_IDS);
 
-/** Dev-only display overlay: shipped test lessons render as active instead of locked. */
+/** Dev-only: launch eligibility is handled in `canLaunchAcademyLesson` — do not mutate progress status. */
 export function applyDevShippedLessonUnlocks(
   milestones: readonly AcademyLessonMilestoneNode[],
 ): AcademyLessonMilestoneNode[] {
-  if (!isDevClient()) {
-    return [...milestones];
-  }
-
-  return milestones.map((node) => {
-    if (DEV_TESTING_UNLOCKED_SET.has(node.id) && node.status === "locked") {
-      return { ...node, status: "active" as const };
-    }
-    return node;
-  });
+  return [...milestones];
 }
 
 export function isDevTestingUnlockedLesson(milestoneId: number): boolean {

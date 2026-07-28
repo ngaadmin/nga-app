@@ -62,3 +62,8 @@ export {
   LessonScreenIllustration,
   useLessonScreenIllustration,
 } from "@/components/academy/lesson/lesson-screen-chrome";
+
+export {
+  isDenseLessonScreen,
+  resolveLessonScreenIllustration,
+} from "@/lib/academy/lessons/resolve-lesson-screen-illustration";

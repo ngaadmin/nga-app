@@ -229,8 +229,7 @@ Lessons may swap types by screen (e.g. L2 uses `true-false`, `budget-select`, `r
 | `intro` | Instruction |
 | `items[]` | `{ id, label, emoji?, bucket }` — shuffled on mount |
 | `buckets[]` | `{ id, label, tone: "short" \| "long" \| "want" \| "need" }` |
-| `tapDisplay?` / `revealDisplay?` | `"emoji-only"`, `"emoji-label"`, `"label"` |
-| `tapLayout?` | `"default"` or `"icon-grid"` |
+| **Item display (locked)** | Emoji in circle + **label below** via `LessonIconOption` / `LessonIconReveal` — all cohorts |
 | `selectionFeedback?` | `"neutral"` or `"colored"` |
 
 **Advance:** `all-taps-revealed` or `auto-ready` when no items.
@@ -249,7 +248,7 @@ Lessons may swap types by screen (e.g. L2 uses `true-false`, `budget-select`, `r
 |------|---------|
 | `intro`, `title?` | Instruction + optional heading |
 | `buckets[]` | `{ id, label, tone?, icon? }` |
-| `items[]` | `{ id, label, emoji?, bucket, price?, wrongDropError? }` |
+| `items[]` | `{ id, label, emoji?, bucket, price?, wrongDropError? }` — **label always shown** (inline with emoji in statement/spent cards) |
 | `layout?` | See layout variants below |
 | `targetTotal?`, `poolColumnLabel?` | For `spent-total` layout |
 | `successMessage?`, `emphasizeInstruction?` | |

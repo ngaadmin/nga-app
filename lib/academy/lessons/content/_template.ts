@@ -85,14 +85,11 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   },
 
   // ── Row 3 · The Flash Tap ────────────────────────────────────────────────
-  // Archetype: The Flash Tap → type: "tap-reveal"
-  // Teen default: icon-only. Explorer override switches to emoji-label.
+  // Archetype: The Flash Tap → type: "tap-reveal" (emoji + label locked in TapRevealScreen)
   {
     type: "tap-reveal",
     id: "tap-short-vs-long",
     intro: "REPLACE: tap intro from Excel",
-    tapDisplay: "emoji-only",
-    revealDisplay: "emoji-only",
     buckets: [
       { id: "short", label: "Short Fun", tone: "short" },
       { id: "long", label: "More Fun for Longer", tone: "long" },
@@ -187,8 +184,6 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
   "tap-short-vs-long": {
     intro: "REPLACE: Lars screen 3 intro",
-    tapDisplay: "emoji-label",
-    revealDisplay: "emoji-label",
     items: [
       { id: "worms", emoji: "🍬", label: "Sour Worms", bucket: "short" },
       { id: "popcorn", emoji: "🍿", label: "Cinema Popcorn", bucket: "short" },

@@ -2,6 +2,7 @@ import {
   createPhase1MilestoneScaffold,
   type AcademyLessonMilestoneNode,
 } from "@/lib/dashboard/academy-state";
+import { resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
 import { applyDevShippedLessonUnlocks } from "@/lib/dev/academy-dev-tools";
 import {
   readPersisted,
@@ -12,6 +13,24 @@ export const ACADEMY_PROGRESS_STORAGE_KEY = "nga_academy_progress_v1";
 
 export function defaultAcademyMilestones(): AcademyLessonMilestoneNode[] {
   return createPhase1MilestoneScaffold(1);
+}
+
+/** Repair multi-active or out-of-order progress from legacy dev overlays. */
+function enforceSequentialAcademyProgress(
+  milestones: readonly AcademyLessonMilestoneNode[],
+): AcademyLessonMilestoneNode[] {
+  const continueId = resolveContinueMilestoneId(milestones);
+  if (continueId == null) return [...milestones];
+
+  return milestones.map((node) => {
+    if (node.id < continueId) {
+      return { ...node, status: "completed" as const };
+    }
+    if (node.id === continueId) {
+      return { ...node, status: "active" as const };
+    }
+    return { ...node, status: "locked" as const };
+  });
 }
 
 export function readAcademyMilestones(): AcademyLessonMilestoneNode[] {
@@ -27,7 +46,9 @@ export function readAcademyMilestones(): AcademyLessonMilestoneNode[] {
     if (!Array.isArray(parsed) || parsed.length === 0) {
       return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
     }
-    return applyDevShippedLessonUnlocks(parsed);
+    return applyDevShippedLessonUnlocks(
+      enforceSequentialAcademyProgress(parsed),
+    );
   } catch {
     return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
   }

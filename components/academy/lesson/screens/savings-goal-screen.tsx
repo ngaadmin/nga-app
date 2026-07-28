@@ -34,21 +34,6 @@ export function SavingsGoalScreen({
         {screen.intro}
       </p>
 
-      {screen.imagePlaceholder ? (
-        <div
-          className="mt-2 flex h-20 w-full shrink-0 flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-3 text-center"
-          role="img"
-          aria-label={screen.imagePlaceholder.alt ?? screen.imagePlaceholder.label}
-        >
-          <p className="font-heading text-[9px] font-bold uppercase tracking-wide text-[#0CC1E0]">
-            Image placeholder
-          </p>
-          <p className="mt-0.5 font-heading text-[11px] font-bold leading-tight text-[#031F82]">
-            {screen.imagePlaceholder.label}
-          </p>
-        </div>
-      ) : null}
-
       <div className="mt-2 flex min-h-0 flex-1 flex-col">
         <LessonSavingsGoalGame
           meterLabel={screen.meterLabel}

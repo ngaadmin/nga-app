@@ -155,8 +155,6 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     id: "shell-tap-reveal",
     intro:
       "Tap each purchase to reveal whether it is a need or a want. Subscription traps hide in the wants pile!",
-    tapDisplay: "emoji-only",
-    revealDisplay: "emoji-only",
     buckets: [
       { id: "need", label: "Need", tone: "need" },
       { id: "want", label: "Want", tone: "want" },

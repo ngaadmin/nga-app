@@ -8,9 +8,13 @@ export type TapRevealScreenConfig<TBucket extends string = string> = WithDeclara
   items: readonly TapRevealItem<TBucket>[];
   buckets: readonly TapRevealBucket<TBucket>[];
   successMessage?: string;
-  /** Tap chips: emoji-only, label-only, or emoji + label (Explorer). Default emoji-label. */
+  /**
+   * @deprecated Ignored — tap-reveal always renders emoji + label (see TapRevealScreen).
+   */
   tapDisplay?: "emoji-only" | "emoji-label" | "label";
-  /** Sorted bucket lists: emoji-only, label-only, or emoji + label. Default emoji-label. */
+  /**
+   * @deprecated Ignored — reveal buckets always render emoji + label (see TapRevealScreen).
+   */
   revealDisplay?: "emoji-only" | "emoji-label" | "label";
   /** icon-grid = large icons with labels below; default = compact tiles. */
   tapLayout?: "default" | "icon-grid";

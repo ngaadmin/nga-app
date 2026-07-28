@@ -62,8 +62,6 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     id: "tap-short-vs-long",
     intro:
       "Holly's $25 is gone and she only had a few minutes of excitement. Tap each item to see whether it's short fun or longer fun!",
-    tapDisplay: "emoji-only",
-    revealDisplay: "emoji-only",
     buckets: [
       { id: "short", label: "Short Fun", tone: "short" },
       { id: "long", label: "More Fun for Longer", tone: "long" },
@@ -168,8 +166,6 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   "tap-short-vs-long": {
     intro:
       "Lars's money is gone and he only had 10 minutes of fun. Tap these items to see the difference!",
-    tapDisplay: "emoji-label",
-    revealDisplay: "emoji-label",
     items: [
       { id: "worms", emoji: "🍬", label: "Sour Worms", bucket: "short" },
       { id: "popcorn", emoji: "🍿", label: "Cinema Popcorn", bucket: "short" },

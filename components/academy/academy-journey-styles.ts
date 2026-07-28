@@ -9,11 +9,11 @@
 export const academyJourneyHeadingClass =
   "text-center font-heading text-xl font-extrabold text-nga-primary sm:text-2xl";
 
-/** Module card title — matches lesson prompt (`text-lg`). */
+/** Module signpost title on solid phase fill — matches lesson prompt (`text-lg`). */
 export const academyModuleTitleClass =
-  "text-center font-heading text-lg font-bold leading-snug text-[#031F82]";
+  "text-center font-heading text-lg font-bold leading-snug text-white drop-shadow-sm";
 
-/** Module description and primary map copy — option-scale minimum (`text-base`). */
+/** @deprecated Module descriptions removed from journey map tiles. */
 export const academyModuleDescriptionClass =
   "text-center font-sans text-base font-medium leading-snug text-nga-slate";
 

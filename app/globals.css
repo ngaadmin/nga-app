@@ -56,6 +56,7 @@
   --z-index-dev: 80;
 
   --animate-lesson-shake: lesson-choice-shake 0.45s ease-in-out;
+  --animate-academy-active-pulse: academy-active-pulse 2s ease-in-out infinite;
 }
 
 @layer components {
@@ -246,6 +247,18 @@
     }
     80% {
       transform: translateX(3px);
+    }
+  }
+
+  @keyframes academy-active-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgb(255 165 3 / 0.55);
+      opacity: 1;
+    }
+    50% {
+      box-shadow: 0 0 0 14px rgb(255 165 3 / 0);
+      opacity: 0.85;
     }
   }
 

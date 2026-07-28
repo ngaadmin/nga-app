@@ -7,7 +7,6 @@ import {
   usesNeutralChoiceFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
-  LessonImagePlaceholder,
   LessonScreenLayout,
 } from "@/components/academy/lesson/lesson-ui";
 import { findAllOfTheAboveCorrectKey } from "@/lib/academy/lessons/all-of-the-above";
@@ -377,13 +376,6 @@ export function BinaryChoiceScreen({
         errorMessage={error}
         errorVariant={screen.errorStyle === "banner" ? "banner" : "inline"}
       >
-        {screen.imagePlaceholder ? (
-          <LessonImagePlaceholder
-            label={screen.imagePlaceholder.label}
-            alt={screen.imagePlaceholder.alt}
-          />
-        ) : null}
-
         {screen.scenePrompt ? (
           <p className="mt-4 font-sans text-base font-normal leading-relaxed text-[#1E3A5F]">
             {screen.scenePrompt}

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
+import { resolveChoiceSelectionVariant } from "@/lib/academy/lessons/choice-evaluation";
 
 /** Default mistake budget shown as hearts in lesson chrome. */
 export const LESSON_MAX_LIVES = 3;
@@ -309,9 +310,13 @@ export const lessonChoiceLockedCorrectClass =
 export function resolveChoiceVariant(
   isChosen: boolean,
   isCorrect: boolean,
+  useNeutralFeedback = false,
 ): LessonChoiceVariant {
-  if (!isChosen) return "neutral";
-  return isCorrect ? "correct" : "wrong";
+  return resolveChoiceSelectionVariant({
+    isSelected: isChosen,
+    isCorrect,
+    useNeutralFeedback,
+  });
 }
 
 export function lessonChoiceStateClass(

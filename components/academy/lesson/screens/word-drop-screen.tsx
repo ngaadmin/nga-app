@@ -7,6 +7,7 @@ import {
   lessonInstructionClass,
   lessonNarrativeClass,
   resolveChoiceVariant,
+  usesNeutralChoiceFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonErrorBanner } from "@/components/academy/lesson/lesson-ui";
 import type { WordDropScreenConfig } from "@/lib/academy/lessons/types";
@@ -24,6 +25,7 @@ function SingleBlankWordDropScreen({
 }: CoreScreenProps<WordDropScreenConfig>) {
   const [choice, setChoice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const handleChoice = (option: string) => {
     setChoice(option);
@@ -59,6 +61,7 @@ function SingleBlankWordDropScreen({
             variant={resolveChoiceVariant(
               choice === option,
               option === screen.correctOption,
+              neutralSelected,
             )}
             className="w-auto px-6 py-3"
           >

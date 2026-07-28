@@ -18,12 +18,24 @@ export function playLessonSuccessPing(): void {
 
 export type LessonFlashTone = "success" | "error";
 
+type LessonCorrectFeedbackOptions = {
+  /** Screen-wide green flash (default true). */
+  flash?: boolean;
+  /** Success ping (default true). */
+  sound?: boolean;
+};
+
 /** Shared sound + screen flash when a learner answers correctly. */
 export function celebrateLessonCorrectAnswer(
   flashScreen?: (tone: LessonFlashTone) => void,
+  options?: LessonCorrectFeedbackOptions,
 ): void {
-  playLessonSuccessPing();
-  flashScreen?.("success");
+  if (options?.sound !== false) {
+    playLessonSuccessPing();
+  }
+  if (options?.flash !== false) {
+    flashScreen?.("success");
+  }
 }
 
 export function triggerLessonErrorVibration(): void {

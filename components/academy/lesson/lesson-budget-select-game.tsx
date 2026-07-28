@@ -6,6 +6,10 @@ import {
   lessonIntroClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonCard, LessonColumnLabel } from "@/components/academy/lesson/lesson-ui";
+import {
+  hasIncorrectSelection,
+  isPartialCorrectSelection,
+} from "@/lib/academy/lessons/choice-evaluation";
 import { cn } from "@/lib/utils/cn";
 import type { BudgetSelectItem } from "@/lib/academy/lessons/types/screens/budget-select";
 
@@ -62,19 +66,20 @@ export function LessonBudgetSelectGame({
   const resolveError = useCallback(
     (nextChecked: ReadonlySet<string>, nextSpent: number): string => {
       if (nextSpent > total) return errors.overBudget;
-
       if (setsMatch(nextChecked, correctIds)) return "";
 
-      for (const id of correctIds) {
-        if (!nextChecked.has(id) && errors.itemHints?.[id]) {
-          return errors.itemHints[id]!;
+      if (hasIncorrectSelection(nextChecked, correctIds)) {
+        for (const id of nextChecked) {
+          if (!correctIds.includes(id) && errors.itemHints?.[id]) {
+            return errors.itemHints[id]!;
+          }
         }
+        return errors.wrongSelection;
       }
 
-      const wrongSelected = [...nextChecked].some(
-        (id) => !correctIds.includes(id),
-      );
-      if (wrongSelected) return errors.wrongSelection;
+      if (isPartialCorrectSelection(nextChecked, correctIds)) {
+        return "";
+      }
 
       return errors.wrongSelection;
     },
@@ -157,6 +162,12 @@ export function LessonBudgetSelectGame({
       <div className="mt-3 space-y-2" role="group" aria-label="Budget items">
         {items.map((item) => {
           const checked = checkedIds.has(item.id);
+          const isCorrectItem = correctIds.includes(item.id);
+          const selectionVariant = checked
+            ? isCorrectItem
+              ? "correct"
+              : "wrong"
+            : "neutral";
           const label =
             item.emoji && !item.label.includes(item.emoji)
               ? `${item.emoji} ${item.label}`
@@ -177,7 +188,7 @@ export function LessonBudgetSelectGame({
               <label
                 htmlFor={`budget-${item.id}`}
                 className={cn(
-                  cnLessonChoice(checked, "neutral"),
+                  cnLessonChoice(checked, selectionVariant),
                   "min-h-[3rem] flex-1 cursor-pointer items-center px-3 py-2.5",
                 )}
               >

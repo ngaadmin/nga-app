@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import { resolveChoiceVariant } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  resolveChoiceVariant,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import type { TrueFalseScreenConfig } from "@/lib/academy/lessons/types";
 import {
@@ -20,6 +23,7 @@ export function TrueFalseScreen({
   onPersistentError?: (message: string) => void;
 }) {
   const [choice, setChoice] = useState<"true" | "false" | null>(null);
+  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const pick = (option: "true" | "false") => {
     setChoice(option);
@@ -50,6 +54,7 @@ export function TrueFalseScreen({
             variant={resolveChoiceVariant(
               choice === option,
               option === screen.correctAnswer,
+              neutralSelected,
             )}
             className="flex-1"
           >

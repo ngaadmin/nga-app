@@ -12,9 +12,8 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
 export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 56;
-export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 24;
-/** Extra breathing room below Module 1 signpost before the first lesson node. */
-export const ACADEMY_MODULE_ONE_SIGNPOST_GAP_PX = 40;
+/** Vertical space between every module header tile and its first lesson node. */
+export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 72;
 
 /** First lesson milestone — used for START HERE placement. */
 export const ACADEMY_JOURNEY_ENTRY_MILESTONE_ID = 1;

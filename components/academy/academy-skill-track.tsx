@@ -12,13 +12,10 @@ import { useRouter } from "next/navigation";
 import {
   AcademyModuleSignpost,
   ACADEMY_JOURNEY_ENTRY_MILESTONE_ID,
-  ACADEMY_MODULE_ONE_SIGNPOST_GAP_PX,
   ACADEMY_MODULE_SIGNPOST_GAP_PX,
   ACADEMY_MODULE_SIGNPOST_HEIGHT_PX,
 } from "@/components/academy/academy-module-signpost";
 import { AcademyJourneyDirectionSign } from "@/components/academy/academy-journey-sign";
-import { academyJourneyHeadingClass } from "@/components/academy/academy-journey-styles";
-import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { resolveActiveStepIndex, resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
@@ -274,7 +271,6 @@ export function AcademySkillTrack({
   scrollContainerRef,
 }: AcademySkillTrackProps) {
   const router = useRouter();
-  const copy = copyMatrix.dashboard.academy.journey;
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
   const masteryCohort = useLessonMasteryCohort();
@@ -317,11 +313,7 @@ export function AcademySkillTrack({
     const nodeGaps = (safeMilestones.length - 1) * NODE_GAP_PX;
     const signpostBlocks = safeMilestones.reduce((sum, milestone) => {
       if (!isFirstMilestoneInModule(milestone.id)) return sum;
-      const gapPx =
-        milestone.levelGroup === 1
-          ? ACADEMY_MODULE_ONE_SIGNPOST_GAP_PX
-          : ACADEMY_MODULE_SIGNPOST_GAP_PX;
-      return sum + ACADEMY_MODULE_SIGNPOST_HEIGHT_PX + gapPx;
+      return sum + ACADEMY_MODULE_SIGNPOST_HEIGHT_PX + ACADEMY_MODULE_SIGNPOST_GAP_PX;
     }, 0);
 
     return slotHeights + nodeGaps + signpostBlocks;
@@ -360,19 +352,10 @@ export function AcademySkillTrack({
 
   return (
     <section
-      aria-labelledby="academy-journey-heading"
-      className="relative z-base w-full max-w-full bg-white pb-4"
+      aria-label="Academy journey map"
+      className="relative z-base w-full max-w-full bg-white pb-4 pt-1"
     >
-      <div className="mb-3 w-full px-4 text-center">
-        <DashboardSectionHeading
-          id="academy-journey-heading"
-          className={academyJourneyHeadingClass}
-        >
-          {copy.heading}
-        </DashboardSectionHeading>
-      </div>
-
-      <div className="relative mx-auto w-full max-w-full px-1 pt-4">
+      <div className="relative mx-auto w-full max-w-full px-1">
         <div
           className="relative w-full"
           style={{ height: trackHeightPx }}
@@ -395,7 +378,7 @@ export function AcademySkillTrack({
                       <div
                         className={cn(
                           "relative flex w-full justify-center px-2",
-                          milestone.levelGroup === 1 && "-mt-3",
+                          milestone.levelGroup === 1 && "-mt-2",
                         )}
                       >
                         <AcademyModuleSignpost
@@ -406,12 +389,7 @@ export function AcademySkillTrack({
                       </div>
                       <div
                         className="shrink-0"
-                        style={{
-                          height:
-                            milestone.levelGroup === 1
-                              ? ACADEMY_MODULE_ONE_SIGNPOST_GAP_PX
-                              : ACADEMY_MODULE_SIGNPOST_GAP_PX,
-                        }}
+                        style={{ height: ACADEMY_MODULE_SIGNPOST_GAP_PX }}
                         aria-hidden
                       />
                     </>

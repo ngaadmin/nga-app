@@ -204,7 +204,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
   "impulse-pause": {
     narrative:
-      "Don't tap buy! Stop the rush with a 24-Hour Buy Freeze. Give your brain time to cool down.",
+      "Help Lars by giving him a 'buy freeze' so his brain has time to think.",
     holdLabel: "❄️ HOLD TO FREEZE ❄️",
     frozenLabel: "❄️ FROZEN ❄️",
     successMessage: "Success! Lars has to wait 24 hours.",

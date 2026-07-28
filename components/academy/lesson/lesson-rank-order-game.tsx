@@ -202,7 +202,9 @@ export function LessonRankOrderGame({
   return (
     <>
       <p className={lessonIntroClass()}>{intro}</p>
-      <p className={cn("mt-2", lessonInstructionClass)}>{dragHint}</p>
+      {dragHint && dragHint !== intro ? (
+        <p className={cn("mt-2", lessonInstructionClass)}>{dragHint}</p>
+      ) : null}
       <p className={lessonEyebrowClass}>{axisLabel}</p>
       <div
         ref={boardRef}

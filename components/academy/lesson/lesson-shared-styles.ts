@@ -235,7 +235,7 @@ export const lessonSequenceShellClass =
 
 /** Shuffled source pool — top section, collapses when empty. */
 export const lessonSequencePoolSectionClass =
-  "shrink-0 space-y-1.5 overflow-y-auto overscroll-contain";
+  "shrink-0 space-y-1.5 overflow-visible";
 
 /** Numbered drop targets — bottom section, shifts up as pool shrinks. */
 export const lessonSequenceDestinationSectionClass = "shrink-0 space-y-1.5";

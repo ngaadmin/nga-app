@@ -53,7 +53,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       {
         id: "cable",
         emoji: "🔌",
-        label: "Broken Phone Cable",
+        label: "Replace broken phone cable",
         bucket: "need",
         wrongDropError:
           "Wait! If your phone cable is broken, your phone dies. That's a Need!",

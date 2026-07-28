@@ -11,15 +11,19 @@ const DENSE_LESSON_SCREEN_TYPES = new Set<ScreenConfig["type"]>([
   "allocation-slider",
   "budget-select",
   "completion",
+  "bucket-sort",
 ]);
 
 /** True when the screen type should not render `LessonIllustrationSlot`. */
 export function isDenseLessonScreen(screen: ScreenConfig): boolean {
-  if (screen.type === "bucket-sort") {
-    return screen.layout !== "steps-row";
-  }
-
   return DENSE_LESSON_SCREEN_TYPES.has(screen.type);
+}
+
+/** True when the shared top illustration slot is part of this screen template. */
+export function supportsLessonScreenIllustration(
+  screen: ScreenConfig,
+): boolean {
+  return !isDenseLessonScreen(screen);
 }
 
 type ImagePlaceholderLike = {

@@ -25,10 +25,7 @@ export function RankOrderScreen({
     });
 
   return (
-    <LessonScreenLayout
-      successMessage={completeMessage}
-      emphasizeInstruction={screen.emphasizeInstruction === true}
-    >
+    <LessonScreenLayout successMessage={completeMessage}>
       <LessonRankOrderGame
         intro={screen.intro}
         dragHint={screen.dragHint}

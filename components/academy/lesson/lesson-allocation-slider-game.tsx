@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   lessonIntroClass,
   lessonRangeSliderClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonGameHint } from "@/components/academy/lesson/lesson-ui";
 import { cn } from "@/lib/utils/cn";
 import type { AllocationSliderItem } from "@/lib/academy/lessons/types/screens/allocation-slider";
 
@@ -16,9 +17,8 @@ type LessonAllocationSliderGameProps = {
   spendItems?: readonly AllocationSliderItem[];
   sliderError: string;
   onComplete: () => void;
-  onMistake: () => void;
-  onPersistentError?: (message: string) => void;
-  onDismissError?: () => void;
+  onIncomplete?: () => void;
+  onSuccess?: () => void;
 };
 
 export function LessonAllocationSliderGame({
@@ -29,12 +29,13 @@ export function LessonAllocationSliderGame({
   spendItems = [],
   sliderError,
   onComplete,
-  onMistake,
-  onPersistentError,
-  onDismissError,
+  onIncomplete,
+  onSuccess,
 }: LessonAllocationSliderGameProps) {
   const [reservedAmount, setReservedAmount] = useState(0);
+  const [hasAdjustedSlider, setHasAdjustedSlider] = useState(false);
   const spendableToday = total - reservedAmount;
+  const meetsTarget = reservedAmount >= targetMin;
 
   const primaryGoal = reserveGoals[0];
   const primarySpend = spendItems[0];
@@ -42,13 +43,22 @@ export function LessonAllocationSliderGame({
     primarySpend !== undefined &&
     reservedAmount >= targetMin &&
     spendableToday < primarySpend.amount;
+  const wasCompleteRef = useRef(false);
 
   useEffect(() => {
-    if (reservedAmount >= targetMin) {
-      onDismissError?.();
-      onComplete();
+    if (meetsTarget) {
+      if (!wasCompleteRef.current) {
+        wasCompleteRef.current = true;
+        onSuccess?.();
+        onComplete();
+      }
+      return;
     }
-  }, [onComplete, onDismissError, reservedAmount, targetMin]);
+    if (wasCompleteRef.current) {
+      wasCompleteRef.current = false;
+      onIncomplete?.();
+    }
+  }, [meetsTarget, onComplete, onIncomplete, onSuccess]);
 
   return (
     <>
@@ -99,7 +109,7 @@ export function LessonAllocationSliderGame({
           </div>
         ))}
       </div>
-      <div className="mt-auto pt-6">
+      <div className="mt-auto overflow-x-hidden px-4 pt-6">
         <input
           type="range"
           min={0}
@@ -108,13 +118,9 @@ export function LessonAllocationSliderGame({
           value={reservedAmount}
           onChange={(event) => {
             event.stopPropagation();
-            onDismissError?.();
             const next = Number.parseInt(event.target.value, 10);
+            setHasAdjustedSlider(true);
             setReservedAmount(next);
-            if (next < targetMin) {
-              onMistake();
-              onPersistentError?.(sliderError);
-            }
           }}
           className={lessonRangeSliderClass}
           aria-label={
@@ -126,6 +132,11 @@ export function LessonAllocationSliderGame({
         <p className="mt-2 text-center font-sans text-base font-medium text-[#031F82]">
           ${reservedAmount} secured · ${spendableToday} free today
         </p>
+        <div className="mt-3 min-h-[1.75rem]">
+          {hasAdjustedSlider && !meetsTarget ? (
+            <LessonGameHint className="text-center">{sliderError}</LessonGameHint>
+          ) : null}
+        </div>
       </div>
     </>
   );

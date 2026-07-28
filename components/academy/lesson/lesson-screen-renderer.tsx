@@ -93,21 +93,12 @@ const LESSON_SCREEN_RENDERERS: Partial<
       onDismissPersistentError={onDismissPersistentError}
     />
   ),
-  "allocation-slider": ({
-    screen,
-    screenIndex,
-    flow,
-    rewards,
-    onPersistentError,
-    onDismissPersistentError,
-  }) => (
+  "allocation-slider": ({ screen, screenIndex, flow, rewards }) => (
     <AllocationSliderScreen
       screen={screen as Extract<ScreenConfig, { type: "allocation-slider" }>}
       screenIndex={screenIndex}
       flow={flow}
       rewards={rewards}
-      onPersistentError={onPersistentError}
-      onDismissPersistentError={onDismissPersistentError}
     />
   ),
   "rank-order": ({

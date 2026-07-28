@@ -88,7 +88,23 @@
   .lesson-range-slider {
     -webkit-appearance: none;
     appearance: none;
+    display: block;
+    width: 100%;
+    height: 2rem;
+    margin: 0;
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  .lesson-range-slider::-webkit-slider-runnable-track {
     height: 0.75rem;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #bde9fb, #0cc1e0);
+  }
+
+  .lesson-range-slider::-moz-range-track {
+    height: 0.75rem;
+    border: none;
     border-radius: 9999px;
     background: linear-gradient(to right, #bde9fb, #0cc1e0);
   }
@@ -98,6 +114,7 @@
     appearance: none;
     width: 2rem;
     height: 2rem;
+    margin-top: calc((0.75rem - 2rem) / 2);
     border-radius: 9999px;
     border: 3px solid #031f82;
     background: #ffffff;

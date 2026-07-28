@@ -167,6 +167,8 @@ type LessonScreenLayoutProps = LessonScreenIntroProps & {
   errorMessage?: string | null;
   errorVariant?: "banner" | "inline";
   fill?: boolean;
+  /** Keeps success banner space in fill layouts to avoid slider layout jumps. */
+  reserveSuccessSlot?: boolean;
   gameClassName?: string;
   className?: string;
 };
@@ -184,9 +186,12 @@ export function LessonScreenLayout({
   errorMessage,
   errorVariant = "banner",
   fill = false,
+  reserveSuccessSlot = false,
   gameClassName,
   className,
 }: LessonScreenLayoutProps) {
+  const showSuccessSlot = Boolean(successMessage) || reserveSuccessSlot;
+
   if (fill) {
     return (
       <div className={cn(lessonScreenFillClass, className)}>
@@ -200,8 +205,12 @@ export function LessonScreenLayout({
         {errorMessage ? (
           <LessonErrorBanner variant={errorVariant}>{errorMessage}</LessonErrorBanner>
         ) : null}
-        {successMessage ? (
-          <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
+        {showSuccessSlot ? (
+          <div className="min-h-[4.75rem] shrink-0">
+            {successMessage ? (
+              <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
+            ) : null}
+          </div>
         ) : null}
       </div>
     );

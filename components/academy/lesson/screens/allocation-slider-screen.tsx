@@ -10,24 +10,22 @@ export function AllocationSliderScreen({
   screen,
   screenIndex,
   flow,
-  onPersistentError,
-  onDismissPersistentError,
-}: StandardScreenProps<AllocationSliderScreenConfig> & {
-  onPersistentError?: (message: string) => void;
-  onDismissPersistentError?: () => void;
-}) {
-  const { completeMessage, handleComplete, handleMistake } = useLessonScreenFlow(
-    {
-      screenIndex,
-      flow,
-      successMessage: screen.successMessage,
-      onBeforeComplete: onDismissPersistentError,
-    },
-  );
+}: StandardScreenProps<AllocationSliderScreenConfig>) {
+  const {
+    completeMessage,
+    handleComplete,
+    handleIncomplete,
+    handleSuccess,
+  } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+    successMessage: screen.successMessage,
+  });
 
   return (
     <LessonScreenLayout
       successMessage={completeMessage}
+      reserveSuccessSlot={Boolean(screen.successMessage)}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       fill
     >
@@ -39,9 +37,8 @@ export function AllocationSliderScreen({
         spendItems={screen.spendItems}
         sliderError={screen.sliderError}
         onComplete={handleComplete}
-        onMistake={handleMistake}
-        onPersistentError={onPersistentError}
-        onDismissError={onDismissPersistentError}
+        onIncomplete={handleIncomplete}
+        onSuccess={handleSuccess}
       />
     </LessonScreenLayout>
   );

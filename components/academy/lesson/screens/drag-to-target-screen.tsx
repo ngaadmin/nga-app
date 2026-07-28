@@ -29,6 +29,9 @@ export function DragToTargetScreen({
         targetLabel={screen.targetLabel}
         itemEmoji={screen.itemEmoji}
         coinCount={screen.coinCount}
+        targetEmoji={screen.targetEmoji}
+        targetImagePlaceholder={screen.targetImagePlaceholder}
+        sourceEmptyMessage={screen.sourceEmptyMessage}
         onComplete={handleComplete}
         onSuccess={handleSuccess}
         onMiss={handleMismatch}

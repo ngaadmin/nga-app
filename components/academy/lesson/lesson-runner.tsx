@@ -17,6 +17,7 @@ import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   isDenseLessonScreen,
   resolveLessonScreenIllustration,
+  supportsLessonScreenIllustration,
 } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import type { ResolvedLessonContent } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
@@ -101,6 +102,7 @@ export function LessonRunner({
           >
             {index === flow.screenIndex ? (
               <LessonScreenChromeProvider
+                showIllustrationSlot={supportsLessonScreenIllustration(screen)}
                 illustration={resolveLessonScreenIllustration(screen)}
               >
                 <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

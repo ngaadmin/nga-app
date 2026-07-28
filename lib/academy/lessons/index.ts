@@ -1,5 +1,5 @@
 export { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
-export { M1_L2_LESSON_DEFINITION, M1_L2_CUSTOM } from "@/lib/academy/lessons/content/m1-l2";
+export { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 export { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
 export { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
 export {

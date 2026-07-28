@@ -94,8 +94,8 @@ export const GAME_ARCHETYPE_TO_TYPE: Record<string, string> = {
   "savings goal": "savings-goal",
   "the drag to target": "drag-to-target",
   "drag to target": "drag-to-target",
-  "the reveal tap": "custom:gift-reveal",
-  "reveal tap": "custom:gift-reveal",
+  "the reveal tap": "drag-to-target",
+  "reveal tap": "drag-to-target",
 };
 
 export function normalizeArchetype(raw: string): string {

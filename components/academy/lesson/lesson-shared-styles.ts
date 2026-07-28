@@ -366,21 +366,6 @@ export const lessonSortBucketSuccessClass =
 export const lessonGoldClaimClass =
   "flex h-touch w-full max-w-md items-center justify-center rounded-full border-2 border-[#C88202] bg-[#FFA503] px-6 py-4 text-center font-heading text-lg font-extrabold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:scale-[0.99] disabled:opacity-60";
 
-export const lessonGiftTapClass = cn(
-  "flex shrink-0 items-center justify-center rounded-full border-2 border-[#0CC1E0] bg-[#F7FBFF] text-5xl shadow-md transition-all hover:bg-[#E8F4FC] active:scale-[0.97]",
-  "size-24 sm:size-28",
-);
-
-export const lessonGiftTapRevealedClass =
-  "border-[#22C55E] bg-[#DCFCE7] shadow-[inset_0_3px_8px_rgba(34,197,94,0.16)]";
-
-/** Character emoji beside the gift reveal tap target. */
-export const lessonGiftCharacterEmojiClass = "text-5xl leading-none sm:text-6xl";
-
-/** Character name under gift reveal emojis. */
-export const lessonGiftCharacterLabelClass =
-  "mt-2 font-heading text-base font-semibold text-[#031F82]";
-
 export const lessonHoldButtonClass =
   "flex h-12 w-full max-w-md select-none items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
 

@@ -2,9 +2,13 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
-import { LessonIllustrationSlot } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonIllustrationSlot,
+  LessonIllustrationSlotReserve,
+} from "@/components/academy/lesson/lesson-ui";
 
 type LessonScreenChromeContextValue = {
+  showIllustrationSlot: boolean;
   illustration?: LessonIllustration;
 };
 
@@ -12,14 +16,18 @@ const LessonScreenChromeContext =
   createContext<LessonScreenChromeContextValue | null>(null);
 
 export function LessonScreenChromeProvider({
+  showIllustrationSlot,
   illustration,
   children,
 }: {
+  showIllustrationSlot: boolean;
   illustration?: LessonIllustration;
   children: ReactNode;
 }) {
   return (
-    <LessonScreenChromeContext.Provider value={{ illustration }}>
+    <LessonScreenChromeContext.Provider
+      value={{ showIllustrationSlot, illustration }}
+    >
       {children}
     </LessonScreenChromeContext.Provider>
   );
@@ -29,9 +37,18 @@ export function useLessonScreenIllustration(): LessonIllustration | undefined {
   return useContext(LessonScreenChromeContext)?.illustration;
 }
 
-/** Renders the shared illustration slot when the active screen defines one. */
+export function useLessonScreenIllustrationSlotEnabled(): boolean {
+  return useContext(LessonScreenChromeContext)?.showIllustrationSlot === true;
+}
+
+/** Shared top illustration region — lighter screen types only. */
 export function LessonScreenIllustration() {
-  const illustration = useLessonScreenIllustration();
-  if (!illustration) return null;
-  return <LessonIllustrationSlot {...illustration} />;
+  const context = useContext(LessonScreenChromeContext);
+  if (!context?.showIllustrationSlot) return null;
+
+  if (context.illustration) {
+    return <LessonIllustrationSlot {...context.illustration} />;
+  }
+
+  return <LessonIllustrationSlotReserve />;
 }

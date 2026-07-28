@@ -9,7 +9,10 @@ import {
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { lessonTwoColumnGridClass } from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonColumnLabel } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonColumnLabel,
+  LessonImagePlaceholder,
+} from "@/components/academy/lesson/lesson-ui";
 
 type DragState = {
   offsetX: number;
@@ -25,6 +28,12 @@ type LessonDragToTargetGameProps = {
   targetLabel: string;
   itemEmoji?: string;
   coinCount?: number;
+  targetEmoji?: string;
+  targetImagePlaceholder?: {
+    label: string;
+    alt?: string;
+  };
+  sourceEmptyMessage?: string;
   onComplete: () => void;
   onSuccess?: () => void;
   onMiss?: () => void;
@@ -37,6 +46,9 @@ export function LessonDragToTargetGame({
   targetLabel,
   itemEmoji = "🪙",
   coinCount = 5,
+  targetEmoji = "🐷",
+  targetImagePlaceholder,
+  sourceEmptyMessage = "Coins saved!",
   onComplete,
   onSuccess,
   onMiss,
@@ -170,7 +182,7 @@ export function LessonDragToTargetGame({
         </span>
       ))}
       {interactive ? (
-        <span className="sr-only">Drag coins to the piggy bank</span>
+        <span className="sr-only">{`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}</span>
       ) : null}
     </div>
   );
@@ -193,13 +205,13 @@ export function LessonDragToTargetGame({
               type="button"
               onPointerDown={handleStackPointerDown}
               className="cursor-grab rounded-full p-1 active:cursor-grabbing"
-              aria-label={`Drag coins from ${sourceLabel}`}
+              aria-label={`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}
               style={{ touchAction: "none" }}
             >
               {renderCoinStack(true)}
             </button>
           ) : deposited ? (
-            <p className="font-sans text-sm text-[#1E3A5F]/60">Coins saved!</p>
+            <p className="font-sans text-sm text-[#1E3A5F]/60">{sourceEmptyMessage}</p>
           ) : (
             <div className="h-20 w-20" aria-hidden />
           )}
@@ -210,14 +222,29 @@ export function LessonDragToTargetGame({
           className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center"
         >
           <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
-          <div className="relative flex h-20 w-20 items-center justify-center text-5xl">
-            🐷
-            {deposited ? (
-              <div className="absolute inset-0 flex items-center justify-center text-xl">
-                {renderCoinStack(false)}
-              </div>
-            ) : null}
-          </div>
+          {targetImagePlaceholder ? (
+            <div className="relative w-full max-w-[8.5rem]">
+              <LessonImagePlaceholder
+                label={targetImagePlaceholder.label}
+                alt={targetImagePlaceholder.alt}
+                size="compact"
+              />
+              {deposited ? (
+                <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-2">
+                  {renderCoinStack(false)}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="relative flex h-20 w-20 items-center justify-center text-5xl">
+              {targetEmoji}
+              {deposited ? (
+                <div className="absolute inset-0 flex items-center justify-center text-xl">
+                  {renderCoinStack(false)}
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
 

@@ -178,24 +178,34 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       "Perfect sequence! Keeping the $5 safe first, then only spending what you have left without borrowing money is correct. That's smart spending control that Lars can count on.",
     advance: { mode: "on-complete" },
   },
-  { type: "custom", id: "gift-reveal", renderer: "m1-l2-gift-reveal", configRef: "gift", advance: { mode: "on-complete" } },  explorerCompletionScreen(),
-];
-
-export const M1_L2_CUSTOM = {
-  gift: {
+  {
+    type: "drag-to-target",
+    id: "gift-delivery",
     intro:
-      "Fast forward to next week! Tap the gift box to help Lars deliver his promise to Senna.",
-    characterLeft: { emoji: "🧑", label: "Lars" },
-    characterRight: { emoji: "🧒", label: "Senna" },
-    revealMessage:
-      "Lesson Complete! By securing your needs before spending on temporary wants, you ensure your promises are always safe and your goals are reached.",
+      "Fast forward to next week! Drag the gift to Senna to help Lars deliver his promise.",
+    sourceLabel: "Gift",
+    targetLabel: "Senna",
+    itemEmoji: "🎁",
+    coinCount: 1,
+    targetImagePlaceholder: {
+      label: "Senna",
+      alt: "Senna receiving a birthday gift",
+    },
+    sourceEmptyMessage: "Gift delivered!",
+    illustration: {
+      label: "Lars delivering Senna's birthday gift",
+      alt: "Lars giving Senna a wrapped birthday present",
+    },
+    successMessage:
+      "By securing your needs before spending on temporary wants, you ensure your promises are always safe and your goals are reached.",
+    advance: { mode: "on-complete" },
   },
-} as const;
+  explorerCompletionScreen(),
+];
 
 export const M1_L2_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L2_META,
   rewards: M1_L2_REWARDS,
-  custom: M1_L2_CUSTOM,
   baseScreens: M1_L2_BASE_SCREENS,
   byCohort: {
     explorer: {

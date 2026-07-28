@@ -319,6 +319,16 @@ export function LessonIllustrationSlot({
   );
 }
 
+/** Reserved illustration frame for lighter screen types without scene content yet. */
+export function LessonIllustrationSlotReserve({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(lessonIllustrationSlotClass, "mb-3 shrink-0", className)}
+      aria-hidden
+    />
+  );
+}
+
 type LessonImagePlaceholderProps = {
   label: string;
   alt?: string;

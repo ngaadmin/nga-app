@@ -15,6 +15,7 @@ export {
   LessonIconOption,
   LessonIconReveal,
   LessonIllustrationSlot,
+  LessonIllustrationSlotReserve,
   LessonImagePlaceholder,
   LessonMatchColumnHeaders,
   LessonRevealBucket,
@@ -61,9 +62,11 @@ export {
   LessonScreenChromeProvider,
   LessonScreenIllustration,
   useLessonScreenIllustration,
+  useLessonScreenIllustrationSlotEnabled,
 } from "@/components/academy/lesson/lesson-screen-chrome";
 
 export {
   isDenseLessonScreen,
   resolveLessonScreenIllustration,
+  supportsLessonScreenIllustration,
 } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";

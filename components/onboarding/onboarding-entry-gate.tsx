@@ -29,7 +29,7 @@ export function OnboardingEntryGate() {
               Get started
             </ButtonLink>
             <ButtonLink
-              href="/onboarding/sign-in"
+              href="/onboarding/start"
               variant="secondary-outline"
               fullWidth
             >

@@ -738,7 +738,7 @@ export function SaveJarExpandedPanel({ bucket, onClose }: SaveJarPanelProps) {
         </button>
       </div>
       <p className="mt-2 font-sans text-xs leading-snug text-[#1E3A5F]/70">
-        {formatMoney(bucket.balance)} unassigned in your Save Jar. Use the{" "}
+        {formatMoney(bucket.balance)} unassigned in my Save Jar. Use the{" "}
         {savingsCopy.sectionTitle} section above to allocate funds and manage goals.
       </p>
     </div>

@@ -455,7 +455,91 @@ export function VaultBudgetHub({
           onClose={onCloseCalculator}
         />
 
-        <section aria-label="Deposit income">
+        <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-5">
+            <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.bucketsOverviewTitle}</h2>
+            <div className={cn("mt-3 grid gap-2", buckets.length <= 3 ? "grid-cols-3" : "grid-cols-3 sm:grid-cols-4")}>
+              {buckets.map((bucket) => {
+                const theme = bucketTheme(bucket);
+                const isActive = expandedBucketId === bucket.id;
+                const shownBalance = savingsBucketDisplayBalance(bucket, totalSavings);
+                return (
+                  <button
+                    key={bucket.id}
+                    type="button"
+                    onClick={() => toggleBucket(bucket.id)}
+                    aria-expanded={isActive}
+                    className={cn(
+                      "flex flex-col items-center rounded-xl border-2 px-1 py-2 transition-colors",
+                      isActive ? "bg-transparent" : "border-transparent hover:bg-[#F7FBFF]",
+                    )}
+                    style={isActive ? { borderColor: theme.accent } : undefined}
+                  >
+                    <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
+                    <p className={cn("mt-1.5 font-heading text-xs font-bold leading-tight", theme.label)}>{bucket.name}</p>
+                    <p className="font-heading text-sm font-extrabold text-[#031F82]">{formatMoney(shownBalance)}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {expandedBucket ? (
+              expandedBucket.id === SAVINGS_JAR_ID ? (
+                <SaveJarExpandedPanel
+                  bucket={expandedBucket}
+                  onClose={() => setExpandedBucketId(null)}
+                />
+              ) : (
+                <BucketExpandedPanel
+                  bucket={expandedBucket}
+                  buckets={buckets}
+                  goals={goals}
+                  isPremium={isPremium}
+                  spendingCategories={spendingCategories}
+                  onVaultTransfer={onVaultTransfer}
+                  onMarkSpent={(amount, categoryLabel) =>
+                    onMarkSpent(expandedBucket.id, amount, categoryLabel)
+                  }
+                  onAddCustomCategory={onAddCustomSpendingCategory}
+                  onRenameCategory={onRenameSpendingCategory}
+                  onClose={() => setExpandedBucketId(null)}
+                />
+              )
+            ) : null}
+
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              {expandedBucket && renameBucketId !== expandedBucket.id ? (
+                <button type="button" onClick={() => startRename(expandedBucket)} className="font-heading text-[10px] font-bold text-[#0CC1E0]">
+                  {copy.renameBucket}
+                </button>
+              ) : null}
+              {renameBucketId ? (
+                <input
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onBlur={saveRename}
+                  onKeyDown={(e) => { if (e.key === "Enter") saveRename(); if (e.key === "Escape") setRenameBucketId(null); }}
+                  className="rounded border border-[#BDE9FB] px-2 py-0.5 text-xs font-bold outline-none"
+                  autoFocus
+                />
+              ) : null}
+              <button type="button" onClick={onAddCustomBucket} disabled={!canAddMore} className="font-heading text-[10px] font-bold text-[#DCB766] disabled:opacity-40">
+                + {copy.addCustomBucket} ({buckets.length}/{bucketLimit})
+              </button>
+              {expandedBucket && isCustomBucketId(expandedBucket.id) ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteBucket(expandedBucket)}
+                  disabled={expandedBucket.balance > 0}
+                  title={expandedBucket.balance > 0 ? copy.deleteBucketDisabledHint : undefined}
+                  className="font-heading text-[10px] font-bold text-[#BE123C] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {copy.deleteBucket}
+                </button>
+              ) : null}
+            </div>
+        </section>
+
+        <section aria-label="Deposit income" className="border-t border-[#BDE9FB]/40 pt-5">
           <form onSubmit={handleDepositSubmit} className="space-y-3">
             <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.depositHeading}</h2>
             <div className="grid min-w-0 grid-cols-[minmax(8rem,9.25rem)_minmax(0,1fr)_auto] items-stretch gap-2">
@@ -560,90 +644,6 @@ export function VaultBudgetHub({
           onSpendFromGoal={onSpendFromGoal}
           onVaultTransfer={onVaultTransfer}
         />
-
-        <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-5">
-            <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.bucketsOverviewTitle}</h2>
-            <div className={cn("mt-3 grid gap-2", buckets.length <= 3 ? "grid-cols-3" : "grid-cols-3 sm:grid-cols-4")}>
-              {buckets.map((bucket) => {
-                const theme = bucketTheme(bucket);
-                const isActive = expandedBucketId === bucket.id;
-                const shownBalance = savingsBucketDisplayBalance(bucket, totalSavings);
-                return (
-                  <button
-                    key={bucket.id}
-                    type="button"
-                    onClick={() => toggleBucket(bucket.id)}
-                    aria-expanded={isActive}
-                    className={cn(
-                      "flex flex-col items-center rounded-xl border-2 px-1 py-2 transition-colors",
-                      isActive ? "bg-transparent" : "border-transparent hover:bg-[#F7FBFF]",
-                    )}
-                    style={isActive ? { borderColor: theme.accent } : undefined}
-                  >
-                    <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
-                    <p className={cn("mt-1.5 font-heading text-xs font-bold leading-tight", theme.label)}>{bucket.name}</p>
-                    <p className="font-heading text-sm font-extrabold text-[#031F82]">{formatMoney(shownBalance)}</p>
-                  </button>
-                );
-              })}
-            </div>
-
-            {expandedBucket ? (
-              expandedBucket.id === SAVINGS_JAR_ID ? (
-                <SaveJarExpandedPanel
-                  bucket={expandedBucket}
-                  onClose={() => setExpandedBucketId(null)}
-                />
-              ) : (
-                <BucketExpandedPanel
-                  bucket={expandedBucket}
-                  buckets={buckets}
-                  goals={goals}
-                  isPremium={isPremium}
-                  spendingCategories={spendingCategories}
-                  onVaultTransfer={onVaultTransfer}
-                  onMarkSpent={(amount, categoryLabel) =>
-                    onMarkSpent(expandedBucket.id, amount, categoryLabel)
-                  }
-                  onAddCustomCategory={onAddCustomSpendingCategory}
-                  onRenameCategory={onRenameSpendingCategory}
-                  onClose={() => setExpandedBucketId(null)}
-                />
-              )
-            ) : null}
-
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              {expandedBucket && renameBucketId !== expandedBucket.id ? (
-                <button type="button" onClick={() => startRename(expandedBucket)} className="font-heading text-[10px] font-bold text-[#0CC1E0]">
-                  {copy.renameBucket}
-                </button>
-              ) : null}
-              {renameBucketId ? (
-                <input
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  onBlur={saveRename}
-                  onKeyDown={(e) => { if (e.key === "Enter") saveRename(); if (e.key === "Escape") setRenameBucketId(null); }}
-                  className="rounded border border-[#BDE9FB] px-2 py-0.5 text-xs font-bold outline-none"
-                  autoFocus
-                />
-              ) : null}
-              <button type="button" onClick={onAddCustomBucket} disabled={!canAddMore} className="font-heading text-[10px] font-bold text-[#DCB766] disabled:opacity-40">
-                + {copy.addCustomBucket} ({buckets.length}/{bucketLimit})
-              </button>
-              {expandedBucket && isCustomBucketId(expandedBucket.id) ? (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteBucket(expandedBucket)}
-                  disabled={expandedBucket.balance > 0}
-                  title={expandedBucket.balance > 0 ? copy.deleteBucketDisabledHint : undefined}
-                  className="font-heading text-[10px] font-bold text-[#BE123C] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {copy.deleteBucket}
-                </button>
-              ) : null}
-            </div>
-        </section>
       </div>
 
       <PremiumRenameModal isOpen={premiumModalOpen} onClose={() => setPremiumModalOpen(false)} />

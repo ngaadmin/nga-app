@@ -139,17 +139,17 @@ export const copyMatrix = {
         confirmBody:
           "This action does not move real money. The cash amount displayed is a virtual representation for your child's ledger. You will need to fulfill this payout independently via cash, allowance pocket money, or your preferred banking app.",
         confirmAcknowledge: "Got it",
-        cashInHeading: "Cash In Your Points",
+        cashInHeading: "Cash In My Points",
         cashInRateHint:
           "Conversion rate has been set to {rate}. Cash out when you are ready!",
         xpAvailableTemplate: "{points} XP available",
         noPointsError: "No XP to cash in yet - keep learning!",
         claimingLabel: "Claiming…",
-        childPayoutReadoutTemplate: "You will receive {amount} straight into your Save Jar",
+        childPayoutReadoutTemplate: "I will receive {amount} straight into my Save Jar",
         claimCashReward: "Claim Cash Reward",
         successTitle: "Points Converted!",
         successBodyTemplate:
-          "Points Converted! {amount} has been safely deposited straight into your Save Jar. Head over to the Vault to check your growth, or shift your funds to another jar if you have a different plan!",
+          "Points Converted! {amount} has been safely deposited straight into my Save Jar. Head over to the Vault to check my growth, or shift my funds to another jar if I have a different plan!",
         successAcknowledge: "Let's Go!",
         parentEmail: {
           draftLabel: "Parent notification",
@@ -224,14 +224,14 @@ export const copyMatrix = {
     vault: {
       title: "The Vault",
       description:
-        "Your wealth cockpit. Track your assets, revenue, and watch your net worth climb.",
-      cashInTileLabel: "Cash In Your Points",
+        "My wealth cockpit. Track my assets, revenue, and watch my net worth climb.",
+      cashInTileLabel: "Cash In My Points",
       cashInTileSubtext: "{points} XP ready to convert",
       budget: {
         sectionTitle: "Budget Allocation",
         depositHeading: "Got some money? Add it here!",
         depositSectionDisclaimer:
-          "Enter real-world cash you earned from allowance, jobs, gifts, or money in your bank. This is a virtual learning simulator: nothing here connects to real payments or accounts.",
+          "Enter real-world cash I earned from allowance, jobs, gifts, or money in my bank. This is a virtual learning simulator: nothing here connects to real payments or accounts.",
         depositButton: "Deposit Income",
         poolLabel: "Money to Allocate",
         currencySettingsNote:
@@ -253,12 +253,12 @@ export const copyMatrix = {
         actionCancel: "Cancel",
         bucketEmptyHint: "Nothing in this bucket yet.",
         manageSpendingCategories: "Manage Spending Categories",
-        manageCategoriesHeading: "Your spending categories",
+        manageCategoriesHeading: "My spending categories",
         customCategoryPlaceholder: "New category name",
         addCategory: "Add Category",
         premiumCategoriesTitle: "Custom Spending Categories",
         premiumCategoriesBody:
-          "Premium lets you rename the built-in categories and add your own. Perfect when your spending style is more than snacks and fun.",
+          "Premium lets me rename the built-in categories and add my own. Perfect when my spending style is more than snacks and fun.",
         defaultCategories: {
           foodSnacks: "Food & Snacks",
           funEntertainment: "Fun & Entertainment",
@@ -272,9 +272,9 @@ export const copyMatrix = {
         addCustomBucket: "Add Bucket",
         renameBucket: "Rename",
         bucketLimitTemplate: "{count} / {max} buckets",
-        premiumRenameTitle: "Level Up Your Vault",
+        premiumRenameTitle: "Level Up My Vault",
         premiumRenameBody:
-          "Renaming Save, Spend, and Give is a Premium perk. Freemium keeps the classic trio - upgrade to name them your way.",
+          "Renaming Save, Spend, and Give is a Premium perk. Freemium keeps the classic trio - upgrade to name them my way.",
         premiumUnlock: "Unlock Premium Tier",
         premiumLater: "Maybe later",
         moveTitle: "Move Money",
@@ -287,11 +287,11 @@ export const copyMatrix = {
         moveCancel: "Cancel",
         movePoolOption: "Money to Allocate",
         spentLogTemplate: "Spent {amount} on {category} from {bucket}",
-        lockedInTemplate: "Locked {amount} into your jars",
+        lockedInTemplate: "Locked {amount} into my jars",
         depositLogTemplate: "Deposited {amount} from {source} to allocate",
-        bucketsOverviewTitle: "Your Budget Items",
+        bucketsOverviewTitle: "My Budget Items",
         allocateHeading: "Split It Up",
-        totalBalanceLabel: "Your Money",
+        totalBalanceLabel: "My Money",
         virtualMoneyDisclaimer:
           "This is a virtual money simulator for learning. It represents real-world cash or bank savings.",
         futurePotentialLabel: "Future Potential",
@@ -299,7 +299,7 @@ export const copyMatrix = {
         changeLimitsLink: "Change limits",
         premiumCompoundingTitle: "Custom Calculator Limits",
         premiumCompoundingBody:
-          "Premium unlocks longer timelines (up to 30 years) and bigger weekly top-ups (up to $100). Tune the compound calculator to match your real savings plan.",
+          "Premium unlocks longer timelines (up to 30 years) and bigger weekly top-ups (up to $100). Tune the compound calculator to match my real savings plan.",
         weeklyTopUpLabel: "Weekly Top-Up",
       },
       savings: {
@@ -327,7 +327,7 @@ export const copyMatrix = {
         addGoal: "Add Savings Goal",
         premiumGoalsTitle: "Multiple Savings Goals",
         premiumGoalsBody:
-          "Premium lets you set named targets, track progress bars, and allocate straight from your Save Jar. One goal is great - several is founder mode.",
+          "Premium lets me set named targets, track progress bars, and allocate straight from my Save Jar. One goal is great - several is founder mode.",
         goalNameLabel: "Goal name",
         goalTargetLabel: "Target amount",
         createGoal: "Create Goal",

@@ -17,7 +17,7 @@ export function resolveFinnAddressName(
 }
 
 export function buildHighRoiWarningCopy(displayName: string): string {
-  return `Whoa there, ${displayName}! High outsized returns usually carry much higher risk. In the real world, returns over 12% are highly volatile and not guaranteed. Always protect your capital baseline!`;
+  return `Whoa there, ${displayName}! High outsized returns usually carry much higher risk. In the real world, returns over 12% are highly volatile and not guaranteed. Always protect my capital baseline!`;
 }
 
 export function buildCloseBusinessWarningLead(displayName: string): string {

@@ -526,7 +526,7 @@ export function VaultDashboard() {
   const futureSubtext =
     totalSavings > 0
       ? `${expectedRoi}% ROI · ${yearsSaved} yrs`
-      : "Save first to unlock your forecast";
+      : "Save first to unlock my forecast";
 
   const compoundingLimits = useMemo(
     () => resolveCompoundingLimits(masteryCohort, isPremium),

@@ -77,6 +77,7 @@ import {
   type VaultIncomeSourceId,
 } from "@/lib/dashboard/vault-income-sources";
 import {
+  computeVaultTransferState,
   resolveVaultTransferLocationLabel,
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
@@ -429,6 +430,7 @@ export function VaultDashboard() {
     setMoneyToAllocate,
     jars,
     setJars,
+    customBuckets,
     setCustomBuckets,
     savingsGoals,
     setSavingsGoals,
@@ -713,58 +715,35 @@ export function VaultDashboard() {
 
   const handleVaultTransfer = useCallback(
     (from: VaultTransferLocationId, to: VaultTransferLocationId, amount: number) => {
-      if (amount <= 0 || from === to) return;
+      const beforeGoals = savingsGoals;
+      const nextState = computeVaultTransferState(from, to, amount, {
+        moneyToAllocate,
+        jars,
+        customBuckets,
+        savingsGoals,
+        vaultBuckets,
+      });
+      if (!nextState) return;
 
-      const resolveBalance = (id: VaultTransferLocationId): number => {
-        if (id === "pool") return moneyToAllocate;
-        if (isSavingsGoalMoveTarget(id)) {
-          return savingsGoals.find((entry) => entry.id === id)?.balance ?? 0;
-        }
-        return vaultBuckets.find((entry) => entry.id === id)?.balance ?? 0;
-      };
+      setMoneyToAllocate(nextState.moneyToAllocate);
+      setJars(nextState.jars);
+      setCustomBuckets(nextState.customBuckets);
+      setSavingsGoals(nextState.savingsGoals);
 
-      if (amount > resolveBalance(from)) return;
-
-      const fromIsGoal = isSavingsGoalMoveTarget(from);
-      const toIsGoal = isSavingsGoalMoveTarget(to);
-
-      if (from === "pool") {
-        setMoneyToAllocate((current) => roundAudAmount(current - amount));
-      } else if (!fromIsGoal) {
-        adjustBucketBalance(from, -amount, setJars, setCustomBuckets);
-      }
-
-      if (to === "pool") {
-        setMoneyToAllocate((current) => roundAudAmount(current + amount));
-      } else if (!toIsGoal) {
-        adjustBucketBalance(to, amount, setJars, setCustomBuckets);
-      }
-
-      if (fromIsGoal || toIsGoal) {
-        const beforeGoals = savingsGoals;
-        const nextGoals = beforeGoals.map((entry) => {
-          if (fromIsGoal && entry.id === from) {
-            return { ...entry, balance: roundAudAmount(entry.balance - amount) };
-          }
-          if (toIsGoal && entry.id === to) {
-            return { ...entry, balance: roundAudAmount(entry.balance + amount) };
-          }
-          return entry;
-        });
-        setSavingsGoals(nextGoals);
-        celebrateGoalsJustHit(beforeGoals, nextGoals);
+      if (isSavingsGoalMoveTarget(from) || isSavingsGoalMoveTarget(to)) {
+        celebrateGoalsJustHit(beforeGoals, nextState.savingsGoals);
       }
 
       const fromName = resolveVaultTransferLocationLabel(
         from,
         vaultBuckets,
-        savingsGoals,
+        beforeGoals,
         budgetCopy.poolLabel,
       );
       const toName = resolveVaultTransferLocationLabel(
         to,
         vaultBuckets,
-        savingsGoals,
+        nextState.savingsGoals,
         budgetCopy.poolLabel,
       );
       appendLedger(
@@ -779,7 +758,9 @@ export function VaultDashboard() {
       appendLedger,
       budgetCopy.poolLabel,
       celebrateGoalsJustHit,
+      customBuckets,
       formatMoney,
+      jars,
       moneyToAllocate,
       savingsGoals,
       setCustomBuckets,

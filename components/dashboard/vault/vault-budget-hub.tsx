@@ -486,6 +486,10 @@ export function VaultBudgetHub({
               expandedBucket.id === SAVINGS_JAR_ID ? (
                 <SaveJarExpandedPanel
                   bucket={expandedBucket}
+                  buckets={buckets}
+                  goals={goals}
+                  totalSavings={totalSavings}
+                  onVaultTransfer={onVaultTransfer}
                   onClose={() => setExpandedBucketId(null)}
                 />
               ) : (

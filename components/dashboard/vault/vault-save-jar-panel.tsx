@@ -24,7 +24,7 @@ import { VaultExpandableSectionHeader } from "@/components/dashboard/vault/vault
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { useAutoExpandOnIncrease } from "@/lib/dashboard/use-auto-expand-on-increase";
-import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
+import { roundAudAmount, roundToHalfStep, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   parsePositiveVaultAmount,
   capAllocationDrafts,
@@ -43,6 +43,8 @@ import {
 import { sumAllocations, type VaultBucket } from "@/lib/dashboard/vault-buckets";
 import {
   buildVaultTransferLocations,
+  buildSaveJarTransferDestinations,
+  buildSaveJarTransferSources,
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
 import { cn } from "@/lib/utils/cn";
@@ -716,17 +718,198 @@ export function VaultSavingsGoalsSection({
 
 export type SaveJarPanelProps = {
   bucket: VaultBucket;
+  buckets: VaultBucket[];
+  goals: SavingsGoal[];
+  totalSavings: number;
+  onVaultTransfer: (
+    from: VaultTransferLocationId,
+    to: VaultTransferLocationId,
+    amount: number,
+  ) => void;
   onClose: () => void;
 };
 
-export function SaveJarExpandedPanel({ bucket, onClose }: SaveJarPanelProps) {
+function SaveJarHeaderMoveControls({
+  unassignedBalance,
+  buckets,
+  goals,
+  moveOpen,
+  onToggleMove,
+  onTransfer,
+  onClose,
+}: {
+  unassignedBalance: number;
+  buckets: VaultBucket[];
+  goals: SavingsGoal[];
+  moveOpen: boolean;
+  onToggleMove: () => void;
+  onTransfer: (
+    from: VaultTransferLocationId,
+    to: VaultTransferLocationId,
+    amount: number,
+  ) => void;
+  onClose: () => void;
+}) {
+  const savingsCopy = copyMatrix.dashboard.vault.savings;
+  const budgetCopy = copyMatrix.dashboard.vault.budget;
+  const { formatMoney } = useCurrency();
+
+  const sources = useMemo(
+    () =>
+      buildSaveJarTransferSources(
+        unassignedBalance,
+        goals,
+        savingsCopy.unallocatedSourceLabel,
+      ),
+    [goals, savingsCopy.unallocatedSourceLabel, unassignedBalance],
+  );
+
+  const fundedSources = sources.filter((entry) => entry.balance > 0);
+
+  const [sourceId, setSourceId] = useState<VaultTransferLocationId>(
+    fundedSources[0]?.id ?? SAVINGS_JAR_ID,
+  );
+  const [destinationId, setDestinationId] = useState<string>("");
+  const [amountInput, setAmountInput] = useState("");
+
+  const sourceBalance =
+    sources.find((entry) => entry.id === sourceId)?.balance ?? 0;
+
+  const destinations = useMemo(
+    () => buildSaveJarTransferDestinations(buckets, sourceId),
+    [buckets, sourceId],
+  );
+
+  const canMove = fundedSources.length > 0 && destinations.length > 0;
+
+  useEffect(() => {
+    if (!moveOpen) setAmountInput("");
+  }, [moveOpen]);
+
+  useEffect(() => {
+    if (sources.some((entry) => entry.id === sourceId && entry.balance > 0)) return;
+    const nextSource = sources.find((entry) => entry.balance > 0);
+    setSourceId(nextSource?.id ?? SAVINGS_JAR_ID);
+  }, [sourceId, sources]);
+
+  useEffect(() => {
+    if (!destinations.some((entry) => entry.id === destinationId)) {
+      setDestinationId(destinations[0]?.id ?? "");
+    }
+  }, [destinationId, destinations]);
+
+  function confirmTransfer() {
+    const amount = parsePositiveVaultAmount(amountInput);
+    if (amount === null || amount > sourceBalance) return;
+
+    const to = destinationId as VaultTransferLocationId;
+    if (!to || to === sourceId) return;
+
+    onTransfer(sourceId, to, amount);
+    setAmountInput("");
+    onClose();
+  }
+
+  return (
+    <div className="space-y-2 border-t border-[#BDE9FB]/40 pt-2">
+      <div className="flex items-center justify-end gap-x-4 gap-y-1">
+        <VaultTransferToggle
+          isOpen={moveOpen}
+          disabled={!canMove}
+          onToggle={onToggleMove}
+        />
+      </div>
+
+      {moveOpen && canMove ? (
+        <div className={vaultActionPanelClass}>
+          <label className="block space-y-1">
+            <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+              {savingsCopy.moveSourceLabel}
+            </span>
+            <select
+              value={sourceId}
+              onChange={(event) =>
+                setSourceId(event.target.value as VaultTransferLocationId)
+              }
+              aria-label={savingsCopy.moveSourceLabel}
+              className={cn("w-full", vaultFieldInputClass)}
+            >
+              {sources.map((entry) => (
+                <option
+                  key={entry.id}
+                  value={entry.id}
+                  disabled={entry.balance <= 0}
+                >
+                  {entry.label} {formatMoney(entry.balance)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="flex min-w-0 gap-2">
+            <input
+              type="number"
+              min={0}
+              step={VAULT_AMOUNT_STEP}
+              value={amountInput}
+              onChange={(event) => setAmountInput(event.target.value)}
+              placeholder={budgetCopy.moveAmountLabel}
+              aria-label={budgetCopy.moveAmountLabel}
+              className={cn("w-24 shrink-0", vaultFieldInputClass)}
+            />
+            <select
+              value={destinationId}
+              onChange={(event) => setDestinationId(event.target.value)}
+              aria-label={budgetCopy.moveDestinationLabel}
+              className={cn("min-w-0 flex-1", vaultFieldInputClass)}
+            >
+              {destinations.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={confirmTransfer}
+              disabled={sourceBalance <= 0}
+              className={vaultConfirmLinkClass}
+            >
+              {savingsCopy.moveConfirm}
+            </button>
+            <button type="button" onClick={onClose} className={vaultGhostBtnClass}>
+              {savingsCopy.spendCancel}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function SaveJarExpandedPanel({
+  bucket,
+  buckets,
+  goals,
+  totalSavings,
+  onVaultTransfer,
+  onClose,
+}: SaveJarPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { formatMoney } = useCurrency();
+  const [moveOpen, setMoveOpen] = useState(false);
+
+  const unassignedBalance = roundAudAmount(Math.max(0, bucket.balance));
+  const canMoveFunds =
+    unassignedBalance > 0 || goals.some((goal) => goal.balance > 0);
 
   return (
     <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-heading text-base font-extrabold text-[#031F82]">
+        <p className="font-heading text-sm font-extrabold text-[#031F82]">
           {bucket.emoji} {savingsCopy.sectionTitle}
         </p>
         <button
@@ -737,9 +920,30 @@ export function SaveJarExpandedPanel({ bucket, onClose }: SaveJarPanelProps) {
           Close
         </button>
       </div>
+
+      <p className="mt-2 font-heading text-lg font-extrabold leading-tight text-[#031F82]">
+        {formatMoney(totalSavings)}
+      </p>
+
+      {canMoveFunds ? (
+        <SaveJarHeaderMoveControls
+          unassignedBalance={unassignedBalance}
+          buckets={buckets}
+          goals={goals}
+          moveOpen={moveOpen}
+          onToggleMove={() => setMoveOpen((open) => !open)}
+          onTransfer={onVaultTransfer}
+          onClose={() => setMoveOpen(false)}
+        />
+      ) : (
+        <p className="mt-2 font-sans text-[10px] text-[#1E3A5F]/70">
+          {copyMatrix.dashboard.vault.budget.bucketEmptyHint}
+        </p>
+      )}
+
       <p className="mt-2 font-sans text-xs leading-snug text-[#1E3A5F]/70">
-        {formatMoney(bucket.balance)} unassigned in my Save Jar. Use the{" "}
-        {savingsCopy.sectionTitle} section above to allocate funds and manage goals.
+        {formatMoney(unassignedBalance)} {savingsCopy.unallocatedSourceLabel.toLowerCase()}. Use
+        the {savingsCopy.sectionTitle} section above to allocate funds and manage goals.
       </p>
     </div>
   );

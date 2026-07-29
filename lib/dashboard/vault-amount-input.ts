@@ -5,15 +5,6 @@ export const VAULT_AMOUNT_STEP = 0.5;
 /** Whole-dollar steps for Vault allocation sliders. */
 export const VAULT_SLIDER_STEP = 1;
 
-/** Drag dampening scales down large jumps so thumbs are easier to land precisely. */
-export function resolveVaultSliderDampening(maxAmount: number): number {
-  if (maxAmount <= 10) return 0.82;
-  if (maxAmount <= 30) return 0.5;
-  if (maxAmount <= 80) return 0.34;
-  if (maxAmount <= 200) return 0.22;
-  return 0.16;
-}
-
 export function roundToSliderStep(amount: number, step: number = VAULT_SLIDER_STEP): number {
   if (step <= 0) return Math.max(0, amount);
   return Math.round(Math.max(0, amount) / step) * step;

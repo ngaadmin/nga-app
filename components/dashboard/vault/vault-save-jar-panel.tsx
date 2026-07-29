@@ -20,13 +20,16 @@ import {
   vaultGhostBtnClass,
 } from "@/components/dashboard/vault/vault-transfer-controls";
 import { VaultAllocationSlider } from "@/components/dashboard/vault/vault-allocation-slider";
+import { VaultExpandableSectionHeader } from "@/components/dashboard/vault/vault-expandable-section-header";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
+import { useAutoExpandOnIncrease } from "@/lib/dashboard/use-auto-expand-on-increase";
 import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
 import {
   parsePositiveVaultAmount,
   capAllocationDrafts,
   clampVaultAllocationEntry,
+  isVaultAllocationComplete,
   sumAllocationDraftValues,
   vaultSliderMaxForEntry,
   VAULT_AMOUNT_STEP,
@@ -45,7 +48,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40 transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed";
 const confirmBtnClass =
   "rounded-lg border border-[#0CC1E0] bg-white px-3 py-1.5 font-heading text-sm font-bold text-[#031F82] disabled:opacity-40";
 
@@ -75,31 +78,54 @@ function PremiumGoalsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   );
 }
 
-function GoalAllocationSliderRow({
+function GoalAllocationInputRow({
   goal,
   draft,
   poolTotal,
   sliderMax,
+  inputValue,
+  onInputChange,
+  onInputBlur,
+  onInputFocus,
   onSliderChange,
 }: {
   goal: SavingsGoal;
   draft: number;
   poolTotal: number;
   sliderMax: number;
+  inputValue: string;
+  onInputChange: (goalId: string, rawValue: string) => void;
+  onInputBlur: (goalId: string) => void;
+  onInputFocus: (goalId: string) => void;
   onSliderChange: (goalId: string, value: number) => void;
 }) {
-  const { formatMoney } = useCurrency();
+  const { formatMoney, currencySymbol } = useCurrency();
 
   return (
     <div className="py-2.5">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2">
-        <span className="truncate font-heading text-xs font-bold text-[#031F82]">
-          {goal.emoji} {goal.name}
-        </span>
-        <span className="shrink-0 font-heading text-xs font-extrabold tabular-nums text-[#15803D]">
-          {formatMoney(draft)}
-        </span>
-        <div className="col-span-2 min-w-0">
+      <p className="mb-1.5 truncate font-heading text-xs font-bold text-[#031F82]">
+        {goal.emoji} {goal.name}
+      </p>
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="flex h-14 w-10 shrink-0 items-center justify-center self-center rounded-lg border border-[#BDE9FB]/60 bg-[#FAFDFF] text-lg leading-none">
+          {goal.emoji}
+        </div>
+        <label className="flex w-[5.75rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5">
+          <span className="shrink-0 font-heading text-xs font-bold text-[#031F82]">
+            {currencySymbol}
+          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={inputValue}
+            onChange={(event) => onInputChange(goal.id, event.target.value)}
+            onFocus={() => onInputFocus(goal.id)}
+            onBlur={() => onInputBlur(goal.id)}
+            aria-label={`Amount to allocate to ${goal.name}`}
+            className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+          />
+        </label>
+        <div className="min-w-0 flex-1">
           <VaultAllocationSlider
             value={draft}
             max={sliderMax}
@@ -107,9 +133,9 @@ function GoalAllocationSliderRow({
             onChange={(nextValue) => onSliderChange(goal.id, nextValue)}
             accentColor="#22C55E"
             trackClassName="bg-[#22C55E]/20"
-            ariaLabel={`Assign to ${goal.name}`}
+            ariaLabel={`Assign to ${goal.name}: ${formatMoney(draft)} of ${formatMoney(poolTotal)}`}
             disabled={poolTotal <= 0 || sliderMax <= 0}
-            className="-my-2"
+            className="-my-2 [&>div]:min-h-7 [&>div]:px-1 [&>div]:py-0"
           />
         </div>
       </div>
@@ -284,8 +310,8 @@ function GoalFundsActions({
   );
 }
 
-export type SaveJarPanelProps = {
-  bucket: VaultBucket;
+export type VaultSavingsGoalsSectionProps = {
+  unassignedSavings: number;
   buckets: VaultBucket[];
   isPremium: boolean;
   goals: SavingsGoal[];
@@ -298,11 +324,10 @@ export type SaveJarPanelProps = {
     to: VaultTransferLocationId,
     amount: number,
   ) => void;
-  onClose: () => void;
 };
 
-export function SaveJarExpandedPanel({
-  bucket,
+export function VaultSavingsGoalsSection({
+  unassignedSavings,
   buckets,
   isPremium,
   goals,
@@ -311,42 +336,47 @@ export function SaveJarExpandedPanel({
   onAssignGoals,
   onSpendFromGoal,
   onVaultTransfer,
-  onClose,
-}: SaveJarPanelProps) {
+}: VaultSavingsGoalsSectionProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { formatMoney, currencySymbol } = useCurrency();
 
   const goalIds = useMemo(() => goals.map((goal) => goal.id), [goals]);
-  const unassignedSavings = roundAudAmount(Math.max(0, bucket.balance));
+  const poolTotal = roundAudAmount(Math.max(0, unassignedSavings));
 
-  const [allocationOpen, setAllocationOpen] = useState(false);
   const [premiumGoalsOpen, setPremiumGoalsOpen] = useState(false);
   const [manageGoalsOpen, setManageGoalsOpen] = useState(false);
   const [newGoalName, setNewGoalName] = useState("");
   const [newGoalTarget, setNewGoalTarget] = useState("");
   const [goalAllocationDrafts, setGoalAllocationDrafts] = useState<Record<string, number>>({});
+  const [goalAllocationInputs, setGoalAllocationInputs] = useState<Record<string, string>>({});
+  const [focusedGoalAllocationId, setFocusedGoalAllocationId] = useState<string | null>(null);
+  const [savingsSectionOpen, setSavingsSectionOpen] = useState(false);
   const [activeGoalAction, setActiveGoalAction] = useState<{
     goalId: SavingsGoalId;
     mode: GoalActionMode;
   } | null>(null);
 
   const allocatedTotal = sumAllocations(goalAllocationDrafts);
-  const remainingTotal = roundAudAmount(Math.max(0, unassignedSavings - allocatedTotal));
+  const remainingTotal = roundAudAmount(Math.max(0, poolTotal - allocatedTotal));
+  const isFullyAllocated = isVaultAllocationComplete(allocatedTotal, poolTotal);
   const hasAllocationDraft = allocatedTotal > 0;
-  const canSplitGoals = unassignedSavings > 0 && goals.length > 0;
+  const canSplitGoals = goals.length > 0;
+
+  useAutoExpandOnIncrease(poolTotal, setSavingsSectionOpen);
 
   useEffect(() => {
-    if (unassignedSavings <= 0) {
+    if (poolTotal <= 0) {
       setGoalAllocationDrafts({});
-      setAllocationOpen(false);
+      setGoalAllocationInputs({});
+      setFocusedGoalAllocationId(null);
       return;
     }
 
     setGoalAllocationDrafts((current) => {
-      if (sumAllocationDraftValues(current) <= unassignedSavings) return current;
-      return capAllocationDrafts(current, unassignedSavings, goalIds);
+      if (sumAllocationDraftValues(current) <= poolTotal) return current;
+      return capAllocationDrafts(current, poolTotal, goalIds);
     });
-  }, [goalIds, unassignedSavings]);
+  }, [goalIds, poolTotal]);
 
   useEffect(() => {
     setGoalAllocationDrafts((current) => {
@@ -365,20 +395,77 @@ export function SaveJarExpandedPanel({
             .filter((id) => id !== goalId)
             .reduce((sum, id) => sum + (current[id] ?? 0), 0),
         );
-        const clamped = clampVaultAllocationEntry(unassignedSavings, others, nextValue);
+        const clamped = clampVaultAllocationEntry(poolTotal, others, nextValue);
         return { ...current, [goalId]: clamped };
       });
     },
-    [goalIds, unassignedSavings],
+    [goalIds, poolTotal],
+  );
+
+  const getGoalAllocationInputValue = useCallback(
+    (goalId: string, draft: number) => {
+      if (focusedGoalAllocationId === goalId) {
+        return goalAllocationInputs[goalId] ?? (draft > 0 ? String(draft) : "");
+      }
+      return draft > 0 ? String(draft) : "";
+    },
+    [focusedGoalAllocationId, goalAllocationInputs],
+  );
+
+  const handleGoalAllocationInputChange = useCallback(
+    (goalId: string, rawValue: string) => {
+      if (rawValue !== "" && !/^\d*\.?\d*$/.test(rawValue)) return;
+
+      setGoalAllocationInputs((current) => ({ ...current, [goalId]: rawValue }));
+
+      if (rawValue === "" || rawValue === ".") {
+        handleGoalSliderChange(goalId, 0);
+        return;
+      }
+
+      const parsed = Number.parseFloat(rawValue);
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        handleGoalSliderChange(goalId, parsed);
+      }
+    },
+    [handleGoalSliderChange],
+  );
+
+  const handleGoalAllocationInputFocus = useCallback(
+    (goalId: string) => {
+      setFocusedGoalAllocationId(goalId);
+      setGoalAllocationInputs((current) => {
+        const draft = goalAllocationDrafts[goalId] ?? 0;
+        if (current[goalId] !== undefined) return current;
+        return {
+          ...current,
+          [goalId]: draft > 0 ? String(draft) : "",
+        };
+      });
+    },
+    [goalAllocationDrafts],
+  );
+
+  const handleGoalAllocationInputBlur = useCallback(
+    (goalId: string) => {
+      setFocusedGoalAllocationId((current) => (current === goalId ? null : current));
+      const draft = goalAllocationDrafts[goalId] ?? 0;
+      setGoalAllocationInputs((current) => ({
+        ...current,
+        [goalId]: draft > 0 ? String(draft) : "",
+      }));
+    },
+    [goalAllocationDrafts],
   );
 
   function handleAssignGoals() {
     if (!hasAllocationDraft) return;
     onAssignGoals(
-      capAllocationDrafts(goalAllocationDrafts, unassignedSavings, goalIds),
+      capAllocationDrafts(goalAllocationDrafts, poolTotal, goalIds),
     );
     setGoalAllocationDrafts({});
-    setAllocationOpen(false);
+    setGoalAllocationInputs({});
+    setFocusedGoalAllocationId(null);
   }
 
   function handleCreateGoal(event: FormEvent) {
@@ -405,101 +492,88 @@ export function SaveJarExpandedPanel({
     );
   }
 
+  const goalAllocationBadge = isFullyAllocated ? (
+    <span className="rounded-full bg-[#22C55E]/15 px-2.5 py-0.5 font-heading text-xs font-bold text-[#15803D]">
+      {savingsCopy.fullyAllocatedLabel}
+    </span>
+  ) : (
+    <div className="text-right">
+      <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#FFA503]">
+        {savingsCopy.savingsToAllocateLabel}
+      </p>
+      <p className="mt-0.5 font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
+        {formatMoney(remainingTotal)}
+      </p>
+    </div>
+  );
+
   return (
     <>
-      <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-heading text-lg font-extrabold text-[#031F82]">
-            {bucket.emoji} {savingsCopy.sectionTitle}
-          </p>
-          <button
-            type="button"
-            onClick={onClose}
-            className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
-          >
-            Close
-          </button>
-        </div>
+      <section
+        id="vault-savings-goals-section"
+        aria-label={savingsCopy.sectionTitle}
+        className="scroll-mt-4 space-y-4 border-t border-[#BDE9FB]/40 pt-5"
+      >
+        <VaultExpandableSectionHeader
+          title={savingsCopy.sectionTitle}
+          isOpen={savingsSectionOpen}
+          onToggle={() => setSavingsSectionOpen((open) => !open)}
+          onClose={() => setSavingsSectionOpen(false)}
+          badge={goalAllocationBadge}
+        />
 
-        {unassignedSavings > 0 ? (
-          <div className="mt-2 border-b border-[#BDE9FB]/50 pb-2">
-            <p className="font-heading text-base font-extrabold text-[#031F82]">
-              {savingsCopy.savingsToAllocateLabel}
-            </p>
-            <button
-              type="button"
-              onClick={() => setAllocationOpen((open) => !open)}
-              disabled={!canSplitGoals}
-              aria-expanded={allocationOpen}
-              aria-label={`${savingsCopy.savingsToAllocateLabel}: ${formatMoney(unassignedSavings)}. ${savingsCopy.clickToAllocateHint}`}
-              className={cn(
-                "mt-1.5 flex flex-wrap items-center gap-2 text-left",
-                canSplitGoals && "cursor-pointer",
-              )}
-            >
-              <span className="rounded-full bg-[#FFA503] px-2.5 py-0.5 font-heading text-xs font-bold text-[#031F82]">
-                {formatMoney(unassignedSavings)}
-              </span>
-              {canSplitGoals && !allocationOpen ? (
-                <span className="font-heading text-xs font-bold text-[#0CC1E0] underline-offset-2 hover:underline">
-                  {savingsCopy.clickToAllocateHint}
-                </span>
-              ) : null}
-            </button>
-          </div>
-        ) : null}
-
-        {allocationOpen && canSplitGoals ? (
-          <div className="mt-2 space-y-2 border-b border-[#BDE9FB]/50 pb-2">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-heading text-xs font-extrabold text-[#031F82]">
-                {savingsCopy.goalAllocationHeading}
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            savingsSectionOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0",
+          )}
+          aria-hidden={!savingsSectionOpen}
+        >
+          <div className="space-y-4 overflow-hidden">
+            {canSplitGoals ? (
+              <>
+                <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
+                  {goals.map((goal) => (
+                    <GoalAllocationInputRow
+                      key={goal.id}
+                      goal={goal}
+                      draft={goalAllocationDrafts[goal.id] ?? 0}
+                      poolTotal={poolTotal}
+                      sliderMax={vaultSliderMaxForEntry(
+                        poolTotal,
+                        goalAllocationDrafts,
+                        goal.id,
+                      )}
+                      inputValue={getGoalAllocationInputValue(
+                        goal.id,
+                        goalAllocationDrafts[goal.id] ?? 0,
+                      )}
+                      onInputChange={handleGoalAllocationInputChange}
+                      onInputBlur={handleGoalAllocationInputBlur}
+                      onInputFocus={handleGoalAllocationInputFocus}
+                      onSliderChange={handleGoalSliderChange}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAssignGoals}
+                  disabled={!hasAllocationDraft}
+                  className={cn("h-touch w-full px-4 py-2.5", orangeCtaClass)}
+                >
+                  {savingsCopy.assignToGoals}
+                </button>
+              </>
+            ) : (
+              <p className="font-sans text-xs leading-snug text-[#1E3A5F]/70">
+                {savingsCopy.noGoalsYet}
               </p>
-              {hasAllocationDraft && remainingTotal > 0 ? (
-                <span className="font-heading text-[10px] font-bold text-[#FFA503]">
-                  {savingsCopy.goalRemainingLabel}: {formatMoney(remainingTotal)}
-                </span>
-              ) : hasAllocationDraft ? (
-                <span className="rounded-full bg-[#22C55E]/15 px-2 py-0.5 font-heading text-[10px] font-bold text-[#15803D]">
-                  {formatMoney(allocatedTotal)} ready
-                </span>
-              ) : (
-                <span className="font-heading text-[10px] font-bold text-[#1E3A5F]/60">
-                  {formatMoney(unassignedSavings)} available
-                </span>
-              )}
-            </div>
-            <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
-              {goals.map((goal) => (
-                <GoalAllocationSliderRow
-                  key={goal.id}
-                  goal={goal}
-                  draft={goalAllocationDrafts[goal.id] ?? 0}
-                  poolTotal={unassignedSavings}
-                  sliderMax={vaultSliderMaxForEntry(
-                    unassignedSavings,
-                    goalAllocationDrafts,
-                    goal.id,
-                  )}
-                  onSliderChange={handleGoalSliderChange}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={handleAssignGoals}
-              disabled={!hasAllocationDraft}
-              className={cn("h-touch w-full px-3 py-2", orangeCtaClass)}
-            >
-              {savingsCopy.assignToGoals}
-            </button>
-          </div>
-        ) : null}
+            )}
 
-        {goals.length === 0 ? (
-          <p className="mt-2 font-sans text-sm text-[#1E3A5F]/70">{savingsCopy.noGoalsYet}</p>
-        ) : (
-          <ul className="mt-2 space-y-2">
+            {goals.length > 0 ? (
+              <ul className="space-y-2 border-t border-[#BDE9FB]/40 pt-4">
             {goals.map((goal) => {
               const progress = savingsGoalProgress(goal);
               const percentAchieved = savingsGoalPercentAchieved(goal);
@@ -517,7 +591,7 @@ export function SaveJarExpandedPanel({
                   className="space-y-2 rounded-lg border border-[#BDE9FB]/60 bg-[#FAFDFF]/80 p-2.5"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">
+                    <p className="min-w-0 truncate font-heading text-xs font-bold text-[#031F82]">
                       {goal.emoji} {goal.name}
                     </p>
                     <button
@@ -595,45 +669,78 @@ export function SaveJarExpandedPanel({
                 </li>
               );
             })}
-          </ul>
-        )}
+              </ul>
+            ) : null}
 
-        {manageGoalsOpen && isPremium ? (
-          <form onSubmit={handleCreateGoal} className="mt-2 space-y-2 border-t border-[#BDE9FB]/50 pt-2">
-            <input
-              value={newGoalName}
-              onChange={(e) => setNewGoalName(e.target.value)}
-              placeholder={savingsCopy.goalNameLabel}
-              className="w-full rounded-lg border border-[#BDE9FB] px-3 py-2 text-base outline-none focus:border-[#0CC1E0]"
-            />
-            <div className="flex min-w-0 gap-2">
-              <span className="py-2 font-bold text-[#031F82]">{currencySymbol}</span>
-              <input
-                type="number"
-                min={0}
-                step={VAULT_AMOUNT_STEP}
-                value={newGoalTarget}
-                onChange={(e) => setNewGoalTarget(e.target.value)}
-                placeholder={savingsCopy.goalTargetLabel}
-                className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] px-3 py-2 text-base outline-none focus:border-[#0CC1E0]"
-              />
-              <button type="submit" className={cn("shrink-0 px-3 py-2", orangeCtaClass)}>
-                {savingsCopy.createGoal}
-              </button>
-            </div>
-          </form>
-        ) : null}
+            {manageGoalsOpen && isPremium ? (
+              <form onSubmit={handleCreateGoal} className="space-y-2 border-t border-[#BDE9FB]/50 pt-2">
+                <input
+                  value={newGoalName}
+                  onChange={(e) => setNewGoalName(e.target.value)}
+                  placeholder={savingsCopy.goalNameLabel}
+                  className="w-full rounded-lg border border-[#BDE9FB] px-3 py-2 text-base outline-none focus:border-[#0CC1E0]"
+                />
+                <div className="flex min-w-0 gap-2">
+                  <span className="py-2 font-bold text-[#031F82]">{currencySymbol}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={VAULT_AMOUNT_STEP}
+                    value={newGoalTarget}
+                    onChange={(e) => setNewGoalTarget(e.target.value)}
+                    placeholder={savingsCopy.goalTargetLabel}
+                    className="min-w-0 flex-1 rounded-lg border border-[#BDE9FB] px-3 py-2 text-base outline-none focus:border-[#0CC1E0]"
+                  />
+                  <button type="submit" className={cn("shrink-0 px-3 py-2", orangeCtaClass)}>
+                    {savingsCopy.createGoal}
+                  </button>
+                </div>
+              </form>
+            ) : null}
 
-        <button
-          type="button"
-          onClick={handleManageGoalsClick}
-          className="mt-3 font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
-        >
-          {savingsCopy.manageSavingsGoals}
-        </button>
-      </div>
+            <button
+              type="button"
+              onClick={handleManageGoalsClick}
+              className="font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
+            >
+              {savingsCopy.manageSavingsGoals}
+            </button>
+          </div>
+        </div>
+      </section>
 
       <PremiumGoalsModal isOpen={premiumGoalsOpen} onClose={() => setPremiumGoalsOpen(false)} />
     </>
+  );
+}
+
+export type SaveJarPanelProps = {
+  bucket: VaultBucket;
+  onClose: () => void;
+};
+
+export function SaveJarExpandedPanel({ bucket, onClose }: SaveJarPanelProps) {
+  const savingsCopy = copyMatrix.dashboard.vault.savings;
+  const { formatMoney } = useCurrency();
+
+  return (
+    <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-heading text-base font-extrabold text-[#031F82]">
+          {bucket.emoji} {savingsCopy.sectionTitle}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+        >
+          Close
+        </button>
+      </div>
+      <p className="mt-2 font-sans text-xs leading-snug text-[#1E3A5F]/70">
+        {formatMoney(bucket.balance)} unassigned in your Save Jar. Use the{" "}
+        {savingsCopy.sectionTitle} section above to allocate funds and manage goals.
+      </p>
+    </div>
   );
 }

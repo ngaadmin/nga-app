@@ -30,8 +30,6 @@ import {
   isVaultAllocationComplete,
   sumAllocationDraftValues,
   vaultAllocationRemaining,
-  vaultSliderMaxForEntry,
-  VAULT_AMOUNT_STEP,
 } from "@/lib/dashboard/vault-amount-input";
 import {
   canAddVaultBucket,
@@ -44,12 +42,19 @@ import {
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import { SaveJarExpandedPanel } from "@/components/dashboard/vault/vault-save-jar-panel";
+import { SaveJarExpandedPanel, VaultSavingsGoalsSection } from "@/components/dashboard/vault/vault-save-jar-panel";
 import { BucketExpandedPanel } from "@/components/dashboard/vault/vault-bucket-expanded-panel";
-import { VaultAllocationSlider } from "@/components/dashboard/vault/vault-allocation-slider";
+import { VaultAllocationMeter } from "@/components/dashboard/vault/vault-allocation-meter";
+import { VaultExpandableSectionHeader } from "@/components/dashboard/vault/vault-expandable-section-header";
 import type { SpendingCategory, SpendingCategoryId } from "@/lib/dashboard/spending-categories";
 import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
+import {
+  DEFAULT_VAULT_INCOME_SOURCE_ID,
+  VAULT_INCOME_SOURCES,
+  type VaultIncomeSourceId,
+} from "@/lib/dashboard/vault-income-sources";
+import { useAutoExpandOnIncrease } from "@/lib/dashboard/use-auto-expand-on-increase";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -69,26 +74,33 @@ function PremiumRenameModal({ isOpen, onClose }: { isOpen: boolean; onClose: () 
 
 export type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
 
-function AllocationSliderRow({
+function AllocationInputRow({
   bucket,
   draft,
   poolTotal,
-  sliderMax,
-  onSliderChange,
+  inputValue,
+  onInputChange,
+  onInputBlur,
+  onInputFocus,
 }: {
   bucket: VaultBucket;
   draft: number;
   poolTotal: number;
-  sliderMax: number;
-  onSliderChange: (bucketId: string, value: number) => void;
+  inputValue: string;
+  onInputChange: (bucketId: string, rawValue: string) => void;
+  onInputBlur: (bucketId: string) => void;
+  onInputFocus: (bucketId: string) => void;
 }) {
-  const { formatMoney } = useCurrency();
+  const { formatMoney, currencySymbol } = useCurrency();
   const theme = bucketTheme(bucket);
 
   return (
     <div className="py-2.5">
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-        <div className="row-span-2 shrink-0 self-center">
+      <p className={cn("mb-1.5 truncate font-heading text-xs font-bold", theme.label)}>
+        {bucket.name}
+      </p>
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="shrink-0 self-center">
           <JarFillVisual
             size="sm"
             emoji={bucket.emoji}
@@ -96,25 +108,29 @@ function AllocationSliderRow({
             fillPercent={poolTotal > 0 ? (draft / poolTotal) * 100 : 0}
           />
         </div>
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <span className={cn("truncate font-heading text-xs font-bold", theme.label)}>
-            {bucket.name}
+        <label className="flex w-[5.75rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5">
+          <span className="shrink-0 font-heading text-xs font-bold text-[#031F82]">
+            {currencySymbol}
           </span>
-          <span className="shrink-0 font-heading text-xs font-extrabold tabular-nums text-[#031F82]">
-            {formatMoney(draft)}
-          </span>
-        </div>
-        <div className="col-start-2 min-w-0">
-          <VaultAllocationSlider
+          <input
+            type="text"
+            inputMode="decimal"
+            value={inputValue}
+            onChange={(event) => onInputChange(bucket.id, event.target.value)}
+            onFocus={() => onInputFocus(bucket.id)}
+            onBlur={() => onInputBlur(bucket.id)}
+            aria-label={`Amount to allocate to ${bucket.name}`}
+            className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+          />
+        </label>
+        <div className="min-w-0 flex-1">
+          <VaultAllocationMeter
             value={draft}
-            max={sliderMax}
             poolTotal={poolTotal}
-            onChange={(nextValue) => onSliderChange(bucket.id, nextValue)}
             accentColor={theme.accent}
             trackClassName={theme.track}
-            ariaLabel={`Allocate to ${bucket.name}`}
-            disabled={poolTotal <= 0 || sliderMax <= 0}
-            className="-my-2"
+            ariaLabel={`${bucket.name} allocation: ${formatMoney(draft)} of ${formatMoney(poolTotal)}`}
+            className="[&>div]:min-h-7 [&>div]:px-1 [&>div]:py-0"
           />
         </div>
       </div>
@@ -132,9 +148,10 @@ type VaultBudgetHubProps = {
   futureSubtext: string;
   calculatorOpen: boolean;
   onToggleCalculator: () => void;
+  onCloseCalculator: () => void;
   calculatorPanel: ReactNode;
   goals: SavingsGoal[];
-  onDeposit: (amount: number) => void;
+  onDeposit: (amount: number, source: VaultIncomeSourceId) => void;
   onLockIn: (allocations: Record<string, number>) => void;
   onVaultTransfer: (
     from: VaultTransferLocationId,
@@ -164,6 +181,7 @@ export function VaultBudgetHub({
   futureSubtext,
   calculatorOpen,
   onToggleCalculator,
+  onCloseCalculator,
   calculatorPanel,
   goals,
   onDeposit,
@@ -186,18 +204,30 @@ export function VaultBudgetHub({
   const bucketIds = useMemo(() => buckets.map((b) => b.id), [buckets]);
 
   const [depositInput, setDepositInput] = useState("");
+  const [incomeSource, setIncomeSource] = useState<VaultIncomeSourceId>(
+    DEFAULT_VAULT_INCOME_SOURCE_ID,
+  );
+  const [allocationInputs, setAllocationInputs] = useState<Record<string, string>>({});
+  const [focusedAllocationBucketId, setFocusedAllocationBucketId] = useState<string | null>(
+    null,
+  );
   const [allocationDrafts, setAllocationDrafts] = useState<Record<string, number>>({});
+  const [allocationSectionOpen, setAllocationSectionOpen] = useState(false);
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [renameBucketId, setRenameBucketId] = useState<VaultBucketId | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
   const poolTotal = roundAudAmount(Math.max(0, moneyToAllocate));
+  const saveJarBucket = buckets.find((bucket) => bucket.id === SAVINGS_JAR_ID);
+  const unassignedSavings = roundAudAmount(Math.max(0, saveJarBucket?.balance ?? 0));
   const allocatedTotal = sumAllocations(allocationDrafts);
   const remainingTotal = vaultAllocationRemaining(allocatedTotal, poolTotal);
   const isFullyAllocated = isVaultAllocationComplete(allocatedTotal, poolTotal);
-  const showAllocation = poolTotal > 0;
+  const hasAllocationDraft = allocatedTotal > 0;
   const expandedBucket = buckets.find((b) => b.id === expandedBucketId) ?? null;
+
+  useAutoExpandOnIncrease(poolTotal, setAllocationSectionOpen);
 
   const displayBuckets = useMemo(
     () => withSavingsBucketDisplayTotal(buckets, totalSavings),
@@ -225,7 +255,14 @@ export function VaultBudgetHub({
     });
   }, [bucketIds]);
 
-  const handleSliderChange = useCallback(
+  useEffect(() => {
+    if (poolTotal <= 0) {
+      setAllocationInputs({});
+      setFocusedAllocationBucketId(null);
+    }
+  }, [poolTotal]);
+
+  const handleAllocationChange = useCallback(
     (bucketId: string, nextValue: number) => {
       setAllocationDrafts((current) => {
         const others = roundAudAmount(
@@ -240,11 +277,76 @@ export function VaultBudgetHub({
     [bucketIds, poolTotal],
   );
 
+  const getAllocationInputValue = useCallback(
+    (bucketId: string, draft: number) => {
+      if (focusedAllocationBucketId === bucketId) {
+        return allocationInputs[bucketId] ?? (draft > 0 ? String(draft) : "");
+      }
+      return draft > 0 ? String(draft) : "";
+    },
+    [allocationInputs, focusedAllocationBucketId],
+  );
+
+  const handleAllocationInputChange = useCallback(
+    (bucketId: string, rawValue: string) => {
+      if (rawValue !== "" && !/^\d*\.?\d*$/.test(rawValue)) return;
+
+      setAllocationInputs((current) => ({ ...current, [bucketId]: rawValue }));
+
+      if (rawValue === "" || rawValue === ".") {
+        handleAllocationChange(bucketId, 0);
+        return;
+      }
+
+      const parsed = Number.parseFloat(rawValue);
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        handleAllocationChange(bucketId, parsed);
+      }
+    },
+    [handleAllocationChange],
+  );
+
+  const handleAllocationInputFocus = useCallback(
+    (bucketId: string) => {
+      setFocusedAllocationBucketId(bucketId);
+      setAllocationInputs((current) => {
+        const draft = allocationDrafts[bucketId] ?? 0;
+        if (current[bucketId] !== undefined) return current;
+        return {
+          ...current,
+          [bucketId]: draft > 0 ? String(draft) : "",
+        };
+      });
+    },
+    [allocationDrafts],
+  );
+
+  const handleAllocationInputBlur = useCallback(
+    (bucketId: string) => {
+      setFocusedAllocationBucketId((current) => (current === bucketId ? null : current));
+      const draft = allocationDrafts[bucketId] ?? 0;
+      setAllocationInputs((current) => ({
+        ...current,
+        [bucketId]: draft > 0 ? String(draft) : "",
+      }));
+    },
+    [allocationDrafts],
+  );
+
+  const handleLockInSubmit = useCallback(() => {
+    if (allocatedTotal <= 0) return;
+
+    onLockIn(allocationDrafts);
+    setAllocationDrafts({});
+    setAllocationInputs({});
+    setFocusedAllocationBucketId(null);
+  }, [allocatedTotal, allocationDrafts, onLockIn]);
+
   function handleDepositSubmit(event: FormEvent) {
     event.preventDefault();
     const amount = parsePositiveVaultAmount(depositInput);
     if (amount === null) return;
-    onDeposit(amount);
+    onDeposit(amount, incomeSource);
     setDepositInput("");
   }
 
@@ -278,10 +380,26 @@ export function VaultBudgetHub({
   const canAddMore = canAddVaultBucket(buckets.length, isPremium);
 
   function scrollToAllocationSection() {
+    setAllocationSectionOpen(true);
     document
       .getElementById("vault-allocation-section")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  const allocationBadge = isFullyAllocated ? (
+    <span className="rounded-full bg-[#22C55E]/15 px-2.5 py-0.5 font-heading text-xs font-bold text-[#15803D]">
+      {copy.fullyAllocatedLabel}
+    </span>
+  ) : (
+    <div className="text-right">
+      <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#FFA503]">
+        {copy.remainingLabel}
+      </p>
+      <p className="mt-0.5 font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
+        {formatMoney(remainingTotal)}
+      </p>
+    </div>
+  );
 
   return (
     <>
@@ -334,26 +452,44 @@ export function VaultBudgetHub({
         <FuturePotentialCalculator
           isOpen={calculatorOpen}
           calculatorPanel={calculatorPanel}
-          onClose={onToggleCalculator}
+          onClose={onCloseCalculator}
         />
 
         <section aria-label="Deposit income">
           <form onSubmit={handleDepositSubmit} className="space-y-3">
             <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.depositHeading}</h2>
-            <div className="flex min-w-0 gap-2">
-              <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#BDE9FB] bg-white px-3 py-3">
-                <span className="font-heading text-base font-bold text-[#031F82]">{currencySymbol}</span>
+            <div className="grid min-w-0 grid-cols-[minmax(8rem,9.25rem)_minmax(0,1fr)_auto] items-stretch gap-2">
+              <label className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[#BDE9FB] bg-white px-2.5 py-3">
+                <span className="shrink-0 font-heading text-base font-bold text-[#031F82]">{currencySymbol}</span>
                 <input
-                  type="number"
-                  min={0}
-                  step={VAULT_AMOUNT_STEP}
+                  type="text"
                   inputMode="decimal"
                   value={depositInput}
-                  onChange={(e) => setDepositInput(e.target.value)}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    if (next === "" || /^\d*\.?\d*$/.test(next)) {
+                      setDepositInput(next);
+                    }
+                  }}
                   placeholder="0.00"
-                  className="w-full min-w-0 bg-transparent font-sans text-base text-[#031F82] outline-none"
+                  aria-label={copy.depositHeading}
+                  className="min-w-0 flex-1 bg-transparent font-sans text-base text-[#031F82] outline-none"
                 />
               </label>
+              <select
+                value={incomeSource}
+                onChange={(event) =>
+                  setIncomeSource(event.target.value as VaultIncomeSourceId)
+                }
+                aria-label="Income source"
+                className="min-w-0 rounded-xl border border-[#BDE9FB] bg-white px-3 py-3 font-sans text-base text-[#031F82] outline-none focus:border-[#0CC1E0]"
+              >
+                {VAULT_INCOME_SOURCES.map((source) => (
+                  <option key={source.id} value={source.id}>
+                    {source.label}
+                  </option>
+                ))}
+              </select>
               <button type="submit" className={cn("shrink-0 px-5 py-3", orangeCtaClass)}>Add</button>
             </div>
             <p className="font-sans text-xs leading-snug text-[#1E3A5F]/70">
@@ -362,48 +498,68 @@ export function VaultBudgetHub({
           </form>
         </section>
 
-        {showAllocation ? (
-          <section
-            id="vault-allocation-section"
-            aria-label={copy.sectionTitle}
-            className="scroll-mt-4 space-y-4 border-t border-[#BDE9FB]/40 pt-5"
+        <section
+          id="vault-allocation-section"
+          aria-label={copy.sectionTitle}
+          className="scroll-mt-4 space-y-4 border-t border-[#BDE9FB]/40 pt-5"
+        >
+          <VaultExpandableSectionHeader
+            title={copy.sectionTitle}
+            isOpen={allocationSectionOpen}
+            onToggle={() => setAllocationSectionOpen((open) => !open)}
+            onClose={() => setAllocationSectionOpen(false)}
+            badge={allocationBadge}
+          />
+          <div
+            className={cn(
+              "grid transition-all duration-300 ease-in-out",
+              allocationSectionOpen
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0",
+            )}
+            aria-hidden={!allocationSectionOpen}
           >
-            <div className="flex items-end justify-between gap-3">
-              <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.sectionTitle}</h2>
-              {isFullyAllocated ? (
-                <span className="rounded-full bg-[#22C55E]/15 px-2.5 py-0.5 font-heading text-xs font-bold text-[#15803D]">
-                  {copy.fullyAllocatedLabel}
-                </span>
-              ) : (
-                <p className="font-heading text-sm font-extrabold text-[#FFA503]">
-                  {copy.remainingLabel}: {formatMoney(remainingTotal)}
-                </p>
-              )}
+            <div className="space-y-4 overflow-hidden">
+              <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
+                {buckets.map((bucket) => (
+                  <AllocationInputRow
+                    key={bucket.id}
+                    bucket={bucket}
+                    draft={allocationDrafts[bucket.id] ?? 0}
+                    poolTotal={poolTotal}
+                    inputValue={getAllocationInputValue(
+                      bucket.id,
+                      allocationDrafts[bucket.id] ?? 0,
+                    )}
+                    onInputChange={handleAllocationInputChange}
+                    onInputBlur={handleAllocationInputBlur}
+                    onInputFocus={handleAllocationInputFocus}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleLockInSubmit}
+                disabled={!hasAllocationDraft}
+                className={cn("h-touch w-full px-4 py-2.5", orangeCtaClass)}
+              >
+                {copy.lockItIn}
+              </button>
             </div>
-            <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
-              {buckets.map((bucket) => (
-                <AllocationSliderRow
-                  key={bucket.id}
-                  bucket={bucket}
-                  draft={allocationDrafts[bucket.id] ?? 0}
-                  poolTotal={poolTotal}
-                  sliderMax={vaultSliderMaxForEntry(poolTotal, allocationDrafts, bucket.id)}
-                  onSliderChange={handleSliderChange}
-                />
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                onLockIn(capAllocationDrafts(allocationDrafts, poolTotal, bucketIds))
-              }
-              disabled={!isFullyAllocated}
-              className={cn("h-touch w-full px-4 py-2.5", orangeCtaClass)}
-            >
-              {copy.lockItIn}
-            </button>
-          </section>
-        ) : null}
+          </div>
+        </section>
+
+        <VaultSavingsGoalsSection
+          unassignedSavings={unassignedSavings}
+          buckets={buckets}
+          isPremium={isPremium}
+          goals={goals}
+          onAddGoal={onAddGoal}
+          onUpdateGoalTarget={onUpdateGoalTarget}
+          onAssignGoals={onAssignGoals}
+          onSpendFromGoal={onSpendFromGoal}
+          onVaultTransfer={onVaultTransfer}
+        />
 
         <section aria-label={copy.bucketsOverviewTitle} className="border-t border-[#BDE9FB]/40 pt-5">
             <h2 className="font-heading text-base font-extrabold text-[#031F82]">{copy.bucketsOverviewTitle}</h2>
@@ -436,14 +592,6 @@ export function VaultBudgetHub({
               expandedBucket.id === SAVINGS_JAR_ID ? (
                 <SaveJarExpandedPanel
                   bucket={expandedBucket}
-                  buckets={buckets}
-                  isPremium={isPremium}
-                  goals={goals}
-                  onAddGoal={onAddGoal}
-                  onUpdateGoalTarget={onUpdateGoalTarget}
-                  onAssignGoals={onAssignGoals}
-                  onSpendFromGoal={onSpendFromGoal}
-                  onVaultTransfer={onVaultTransfer}
                   onClose={() => setExpandedBucketId(null)}
                 />
               ) : (

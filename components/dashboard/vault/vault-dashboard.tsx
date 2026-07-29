@@ -73,6 +73,10 @@ import {
   resolveFutureSavingsPotential,
 } from "@/lib/dashboard/vault-compounding-defaults";
 import {
+  getVaultIncomeSourceLabel,
+  type VaultIncomeSourceId,
+} from "@/lib/dashboard/vault-income-sources";
+import {
   resolveVaultTransferLocationLabel,
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
@@ -230,10 +234,44 @@ function CompoundingCalculatorPanel({
   onWeeklyTopUpChange,
   onExpectedRoiChange,
 }: CompoundingCalculatorPanelProps) {
-  const { formatMoney } = useCurrency();
+  const { formatMoney, currencySymbol } = useCurrency();
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const showHighRoiWarning = expectedRoi >= HIGH_ROI_WARNING_THRESHOLD;
   const [premiumLimitsOpen, setPremiumLimitsOpen] = useState(false);
+  const [weeklyTopUpInput, setWeeklyTopUpInput] = useState("");
+  const [weeklyTopUpFocused, setWeeklyTopUpFocused] = useState(false);
+
+  const weeklyTopUpDisplayValue = weeklyTopUpFocused
+    ? weeklyTopUpInput
+    : weeklyTopUp > 0
+      ? String(weeklyTopUp)
+      : "";
+
+  function handleWeeklyTopUpInputChange(rawValue: string) {
+    if (rawValue !== "" && !/^\d*\.?\d*$/.test(rawValue)) return;
+
+    setWeeklyTopUpInput(rawValue);
+
+    if (rawValue === "" || rawValue === ".") {
+      onWeeklyTopUpChange(0);
+      return;
+    }
+
+    const parsed = Number.parseFloat(rawValue);
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      onWeeklyTopUpChange(Math.min(weeklyTopUpMax, parsed));
+    }
+  }
+
+  function handleWeeklyTopUpInputFocus() {
+    setWeeklyTopUpFocused(true);
+    setWeeklyTopUpInput(weeklyTopUp > 0 ? String(weeklyTopUp) : "");
+  }
+
+  function handleWeeklyTopUpInputBlur() {
+    setWeeklyTopUpFocused(false);
+    setWeeklyTopUpInput(weeklyTopUp > 0 ? String(weeklyTopUp) : "");
+  }
 
   return (
     <>
@@ -298,10 +336,20 @@ function CompoundingCalculatorPanel({
       </label>
 
       <label className="block">
-        <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-          Weekly Top-Up
-          <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
-            {formatMoney(weeklyTopUp)}
+        <span className="flex items-center justify-between gap-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+          {budgetCopy.weeklyTopUpLabel}
+          <span className="flex shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-0.5">
+            <span className="font-heading text-xs font-bold text-[#031F82]">{currencySymbol}</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={weeklyTopUpDisplayValue}
+              onChange={(event) => handleWeeklyTopUpInputChange(event.target.value)}
+              onFocus={handleWeeklyTopUpInputFocus}
+              onBlur={handleWeeklyTopUpInputBlur}
+              aria-label={budgetCopy.weeklyTopUpLabel}
+              className="w-14 bg-transparent text-right font-sans text-sm tabular-nums text-[#0CC1E0] outline-none"
+            />
           </span>
         </span>
         <input
@@ -316,23 +364,6 @@ function CompoundingCalculatorPanel({
           }}
           className="mt-1 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
         />
-        {isPremium ? (
-          <input
-            type="number"
-            min={0}
-            max={weeklyTopUpMax}
-            step={1}
-            value={weeklyTopUp}
-            onChange={(event) => {
-              const next = Number.parseInt(event.target.value, 10);
-              if (Number.isFinite(next)) {
-                onWeeklyTopUpChange(Math.min(weeklyTopUpMax, Math.max(0, next)));
-              }
-            }}
-            className="mt-1.5 w-full rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
-            aria-label="Custom weekly top-up"
-          />
-        ) : null}
       </label>
 
       {!isPremium ? (
@@ -633,10 +664,12 @@ export function VaultDashboard() {
   }, [searchParams]);
 
   const handleDeposit = useCallback(
-    (amount: number) => {
+    (amount: number, source: VaultIncomeSourceId) => {
       setMoneyToAllocate((current) => roundAudAmount(current + amount));
       appendLedger(
-        budgetCopy.depositLogTemplate.replace("{amount}", formatMoney(amount)),
+        budgetCopy.depositLogTemplate
+          .replace("{amount}", formatMoney(amount))
+          .replace("{source}", getVaultIncomeSourceLabel(source)),
         { category: "deposit", amount, flow: "in" },
       );
     },
@@ -1007,6 +1040,7 @@ export function VaultDashboard() {
         futureSubtext={futureSubtext}
         calculatorOpen={calculatorOpen}
         onToggleCalculator={() => setCalculatorOpen((open) => !open)}
+        onCloseCalculator={() => setCalculatorOpen(false)}
         calculatorPanel={
           <CompoundingCalculatorPanel
             savingsBalance={totalSavings}

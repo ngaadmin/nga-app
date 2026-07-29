@@ -4,11 +4,13 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
   type KeyboardEvent,
   type PointerEvent,
 } from "react";
 import {
   pointerValueFromClientX,
+  pointerValueFromClientXStepped,
   roundToSliderStep,
   VAULT_SLIDER_THUMB_INSET_PX,
 } from "@/lib/dashboard/vault-allocation-slider";
@@ -43,28 +45,62 @@ export function VaultAllocationSlider({
   const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const valueRef = useRef(value);
+  const previewValueRef = useRef(value);
+  const [previewValue, setPreviewValue] = useState<number | null>(null);
 
   useEffect(() => {
     valueRef.current = value;
+    if (!draggingRef.current) {
+      previewValueRef.current = value;
+    }
   }, [value]);
 
   const commit = useCallback(
-    (next: number) => {
-      const clamped = roundToSliderStep(Math.min(max, Math.max(0, next)), VAULT_SLIDER_STEP);
-      if (clamped === valueRef.current) return;
-      valueRef.current = clamped;
-      onChange(clamped);
+    (nextPreview: number, steppedValue: number) => {
+      const clampedPreview = Math.min(max, Math.max(0, nextPreview));
+      const clampedStep = roundToSliderStep(
+        Math.min(max, Math.max(0, steppedValue)),
+        VAULT_SLIDER_STEP,
+      );
+
+      previewValueRef.current = clampedPreview;
+      setPreviewValue(clampedPreview);
+
+      if (clampedStep === valueRef.current) return;
+      valueRef.current = clampedStep;
+      onChange(clampedStep);
     },
     [max, onChange],
   );
 
-  const readPointerValue = useCallback(
+  const readPointerValues = useCallback(
     (clientX: number, mode: "direct" | "dampened") => {
       const rect = trackRef.current?.getBoundingClientRect();
-      if (!rect) return valueRef.current;
-      return pointerValueFromClientX(clientX, rect, max, valueRef.current, mode, {
-        poolTotal,
-      });
+      if (!rect) {
+        return {
+          preview: previewValueRef.current,
+          stepped: valueRef.current,
+        };
+      }
+
+      return {
+        preview: pointerValueFromClientX(
+          clientX,
+          rect,
+          max,
+          previewValueRef.current,
+          mode,
+          { poolTotal },
+        ),
+        stepped: pointerValueFromClientXStepped(
+          clientX,
+          rect,
+          max,
+          valueRef.current,
+          mode,
+          { poolTotal },
+        ),
+      };
     },
     [max, poolTotal],
   );
@@ -73,20 +109,32 @@ export function VaultAllocationSlider({
     if (disabled || max <= 0) return;
     draggingRef.current = true;
     event.currentTarget.setPointerCapture(event.pointerId);
-    commit(readPointerValue(event.clientX, "dampened"));
+    const next = readPointerValues(event.clientX, "direct");
+    commit(next.preview, next.stepped);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
     if (disabled || !draggingRef.current) return;
-    commit(readPointerValue(event.clientX, "dampened"));
+    const next = readPointerValues(event.clientX, "dampened");
+    commit(next.preview, next.stepped);
   }
 
-  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
-    if (disabled || max <= 0) return;
-    if (draggingRef.current) {
-      commit(readPointerValue(event.clientX, "direct"));
+  function endDrag(event: PointerEvent<HTMLDivElement>) {
+    if (disabled || max <= 0) {
+      draggingRef.current = false;
+      setPreviewValue(null);
+      return;
     }
+
+    if (draggingRef.current) {
+      const next = readPointerValues(event.clientX, "dampened");
+      commit(next.preview, next.stepped);
+    }
+
     draggingRef.current = false;
+    previewValueRef.current = valueRef.current;
+    setPreviewValue(null);
+
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -118,11 +166,12 @@ export function VaultAllocationSlider({
     }
 
     event.preventDefault();
-    commit(next);
+    commit(next, next);
   }
 
+  const displayValue = previewValue ?? value;
   const fillPercent =
-    poolTotal > 0 ? Math.min(100, (value / poolTotal) * 100) : 0;
+    poolTotal > 0 ? Math.min(100, (displayValue / poolTotal) * 100) : 0;
   const thumbLeft = `calc(${VAULT_SLIDER_THUMB_INSET_PX}px + (100% - ${VAULT_SLIDER_THUMB_INSET_PX * 2}px) * ${fillPercent / 100})`;
 
   return (
@@ -138,8 +187,8 @@ export function VaultAllocationSlider({
         aria-disabled={disabled || max <= 0}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
         onKeyDown={handleKeyDown}
         className={cn(
           "relative flex min-h-11 w-full min-w-0 touch-none select-none items-center px-3.5 py-2",

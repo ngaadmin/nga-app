@@ -5,17 +5,28 @@ import {
   allocationCoinStackPercent,
   computeAllocationCoinStacks,
 } from "@/lib/dashboard/vault-v2/allocation-coin-stacks";
+import { cn } from "@/lib/utils/cn";
 
-const COIN_SIZE_PX = 12;
-const COIN_OVERLAP_PX = 3;
+const COIN_SIZE_PX = 16;
+/** Tight poker-chip overlap — each coin sits ~10px above the previous. */
+const COIN_OVERLAP_PX = 10;
+const STACK_COLUMN_GAP_PX = 4;
 
-function GoldCoin({ sizePx }: { sizePx: number }) {
-  const fontSize = Math.max(7, Math.round(sizePx * 0.42));
+function GoldCoin({ sizePx, stackIndex }: { sizePx: number; stackIndex: number }) {
+  const fontSize = Math.max(8, Math.round(sizePx * 0.4));
 
   return (
     <span
-      className="relative inline-flex shrink-0 items-center justify-center rounded-full border border-[#B87400] bg-gradient-to-br from-[#FFF1A8] via-[#FFC933] to-[#E08A00] shadow-[0_1px_0_#9A6200,inset_0_1px_3px_rgba(255,255,255,0.55)]"
-      style={{ width: sizePx, height: sizePx }}
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center rounded-full",
+        "border-2 border-[#B87400] bg-gradient-to-br from-[#FFF1A8] via-[#FFC933] to-[#E08A00]",
+        "shadow-[0_2px_0_#9A6200,inset_0_2px_4px_rgba(255,255,255,0.55)]",
+      )}
+      style={{
+        width: sizePx,
+        height: sizePx,
+        zIndex: stackIndex,
+      }}
       aria-hidden
     >
       <span
@@ -25,6 +36,29 @@ function GoldCoin({ sizePx }: { sizePx: number }) {
         $
       </span>
     </span>
+  );
+}
+
+function CoinStackColumn({ height }: { height: number }) {
+  const stackHeight =
+    height <= 0 ? 0 : COIN_SIZE_PX + (height - 1) * (COIN_SIZE_PX - COIN_OVERLAP_PX);
+
+  return (
+    <div
+      className="relative shrink-0"
+      style={{ width: COIN_SIZE_PX + 2, height: stackHeight }}
+      aria-hidden
+    >
+      {Array.from({ length: height }, (_, coinIndex) => (
+        <div
+          key={coinIndex}
+          className="absolute left-0"
+          style={{ bottom: coinIndex * (COIN_SIZE_PX - COIN_OVERLAP_PX) }}
+        >
+          <GoldCoin sizePx={COIN_SIZE_PX} stackIndex={coinIndex} />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -44,10 +78,16 @@ export function VaultV2CoinStackVisual({
     [allocatedAmount, poolTotal],
   );
   const percent = allocationCoinStackPercent(allocatedAmount, poolTotal);
+  const maxStackHeight = stacks.length > 0 ? Math.max(...stacks) : 0;
+  const columnHeight =
+    maxStackHeight <= 0
+      ? COIN_SIZE_PX
+      : COIN_SIZE_PX + (maxStackHeight - 1) * (COIN_SIZE_PX - COIN_OVERLAP_PX);
 
   return (
     <div
       className={className}
+      style={{ minHeight: columnHeight }}
       role="img"
       aria-label={
         percent > 0
@@ -56,21 +96,12 @@ export function VaultV2CoinStackVisual({
       }
     >
       {stacks.length > 0 ? (
-        <div className="flex items-end justify-end gap-0.5">
+        <div
+          className="flex items-end justify-end"
+          style={{ gap: STACK_COLUMN_GAP_PX }}
+        >
           {stacks.map((height, stackIndex) => (
-            <div
-              key={`stack-${stackIndex}-${height}`}
-              className="flex flex-col-reverse items-center"
-            >
-              {Array.from({ length: height }, (_, coinIndex) => (
-                <div
-                  key={coinIndex}
-                  style={{ marginTop: coinIndex > 0 ? -COIN_OVERLAP_PX : 0 }}
-                >
-                  <GoldCoin sizePx={COIN_SIZE_PX} />
-                </div>
-              ))}
-            </div>
+            <CoinStackColumn key={`stack-${stackIndex}-${height}`} height={height} />
           ))}
         </div>
       ) : null}

@@ -3,7 +3,6 @@
 import { useCallback, useMemo } from "react";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
   roundAudAmount,
   SAVINGS_JAR_ID,
@@ -42,7 +41,7 @@ import {
   type CustomVaultBucketPersisted,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import { useVaultLedger } from "@/lib/dashboard/vault-ledger-context";
+import { useVaultV2Profile } from "@/lib/dashboard/vault-v2/vault-v2-profile-context";
 
 /** Premium billing is not wired yet — Vault V2 defaults to freemium limits. */
 const VAULT_V2_IS_PREMIUM = false;
@@ -99,8 +98,8 @@ export function useVaultV2Actions() {
   const budgetCopy = vaultCopy.budget;
   const { formatMoney } = useCurrency();
   const masteryCohort = useMasteryCohort();
-  const { appendLedger } = useVaultLedger();
   const {
+    appendLedger,
     moneyToAllocate,
     setMoneyToAllocate,
     jars,
@@ -114,7 +113,7 @@ export function useVaultV2Actions() {
     customSpendingCategories,
     setCustomSpendingCategories,
     vaultBuckets,
-  } = useDashboardWallet();
+  } = useVaultV2Profile();
 
   const spendingCategories = useMemo(
     () =>

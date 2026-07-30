@@ -3,7 +3,7 @@
 import {
   BucketEmojiIcon,
   bucketTheme,
-} from "@/components/dashboard/vault/vault-visuals";
+} from "@/components/dashboard/vault-v2/vault-v2-visuals";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { SettingsIcon } from "@/lib/dashboard/icons";

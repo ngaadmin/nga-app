@@ -9,7 +9,7 @@ import {
 import {
   BucketEmojiIcon,
   bucketTheme,
-} from "@/components/dashboard/vault/vault-visuals";
+} from "@/components/dashboard/vault-v2/vault-v2-visuals";
 import { VaultV2CoinStackVisual } from "@/components/dashboard/vault-v2/vault-v2-coin-stack-visual";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";

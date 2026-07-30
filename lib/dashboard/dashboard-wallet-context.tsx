@@ -15,20 +15,6 @@ import {
   saveDashboardWalletState,
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
-  balanceMapFromJars,
-  jarsFromBalanceMap,
-  roundAudAmount,
-  SAVINGS_JAR_ID,
-  type DestinationJar,
-} from "@/lib/dashboard/destination-jars";
-import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
-import { mergeVaultBuckets } from "@/lib/dashboard/vault-buckets";
-import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
-import type {
-  CustomSpendingCategory,
-  SpendingCategoryOverrides,
-} from "@/lib/dashboard/spending-categories";
-import {
   audPerXpBlockFromSliderIndex,
   convertPointsToAud,
 } from "@/lib/dashboard/point-conversion";
@@ -43,34 +29,7 @@ type DashboardWalletContextValue = {
   lifetimePointsEarned: number;
   audSliderIndex: number;
   audPer100Xp: number;
-  moneyToAllocate: number;
-  jars: DestinationJar[];
-  customBuckets: CustomVaultBucketPersisted[];
-  savingsGoals: SavingsGoal[];
-  spendingCategoryOverrides: SpendingCategoryOverrides;
-  customSpendingCategories: CustomSpendingCategory[];
-  vaultBuckets: ReturnType<typeof mergeVaultBuckets>;
   setAudSliderIndex: (index: number) => void;
-  setMoneyToAllocate: (updater: number | ((current: number) => number)) => void;
-  setJars: (updater: DestinationJar[] | ((current: DestinationJar[]) => DestinationJar[])) => void;
-  setCustomBuckets: (
-    updater:
-      | CustomVaultBucketPersisted[]
-      | ((current: CustomVaultBucketPersisted[]) => CustomVaultBucketPersisted[]),
-  ) => void;
-  setSavingsGoals: (
-    updater: SavingsGoal[] | ((current: SavingsGoal[]) => SavingsGoal[]),
-  ) => void;
-  setSpendingCategoryOverrides: (
-    updater:
-      | SpendingCategoryOverrides
-      | ((current: SpendingCategoryOverrides) => SpendingCategoryOverrides),
-  ) => void;
-  setCustomSpendingCategories: (
-    updater:
-      | CustomSpendingCategory[]
-      | ((current: CustomSpendingCategory[]) => CustomSpendingCategory[]),
-  ) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
   awardLessonXp: (points: number) => void;
 };
@@ -91,23 +50,6 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     () => defaults.lifetimePointsEarned,
   );
   const [audSliderIndex, setAudSliderIndex] = useState(() => defaults.audSliderIndex);
-  const [moneyToAllocate, setMoneyToAllocateState] = useState(
-    () => defaults.moneyToAllocate,
-  );
-  const [jars, setJarsState] = useState<DestinationJar[]>(() =>
-    jarsFromBalanceMap(defaults.jarBalances),
-  );
-  const [customBuckets, setCustomBucketsState] = useState<CustomVaultBucketPersisted[]>(
-    () => defaults.customBuckets ?? [],
-  );
-  const [savingsGoals, setSavingsGoalsState] = useState<SavingsGoal[]>(
-    () => defaults.savingsGoals ?? [],
-  );
-  const [spendingCategoryOverrides, setSpendingCategoryOverridesState] =
-    useState<SpendingCategoryOverrides>(() => defaults.spendingCategoryOverrides ?? {});
-  const [customSpendingCategories, setCustomSpendingCategoriesState] = useState<
-    CustomSpendingCategory[]
-  >(() => defaults.customSpendingCategories ?? []);
   const [walletHydrated, setWalletHydrated] = useState(false);
 
   useEffect(() => {
@@ -116,12 +58,6 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       setTotalPoints(persisted.totalPoints);
       setLifetimePointsEarned(persisted.lifetimePointsEarned);
       setAudSliderIndex(persisted.audSliderIndex);
-      setMoneyToAllocateState(persisted.moneyToAllocate);
-      setJarsState(jarsFromBalanceMap(persisted.jarBalances));
-      setCustomBucketsState(persisted.customBuckets ?? []);
-      setSavingsGoalsState(persisted.savingsGoals ?? []);
-      setSpendingCategoryOverridesState(persisted.spendingCategoryOverrides ?? {});
-      setCustomSpendingCategoriesState(persisted.customSpendingCategories ?? []);
     }
     setWalletHydrated(true);
   }, []);
@@ -133,47 +69,12 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       totalPoints,
       lifetimePointsEarned,
       audSliderIndex,
-      moneyToAllocate,
-      jarBalances: balanceMapFromJars(jars),
-      customBuckets,
-      savingsGoals,
-      spendingCategoryOverrides,
-      customSpendingCategories,
     });
-  }, [
-    audSliderIndex,
-    customBuckets,
-    customSpendingCategories,
-    jars,
-    lifetimePointsEarned,
-    moneyToAllocate,
-    savingsGoals,
-    spendingCategoryOverrides,
-    totalPoints,
-    walletHydrated,
-  ]);
+  }, [audSliderIndex, lifetimePointsEarned, totalPoints, walletHydrated]);
 
   const audPer100Xp = useMemo(
     () => audPerXpBlockFromSliderIndex(audSliderIndex),
     [audSliderIndex],
-  );
-
-  const setMoneyToAllocate = useCallback(
-    (updater: number | ((current: number) => number)) => {
-      setMoneyToAllocateState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
-    },
-    [],
-  );
-
-  const setJars = useCallback(
-    (updater: DestinationJar[] | ((current: DestinationJar[]) => DestinationJar[])) => {
-      setJarsState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
-    },
-    [],
   );
 
   const claimPointsForVault = useCallback(
@@ -192,73 +93,10 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
 
       const audAmount = convertPointsToAud(safePoints, audPer100Xp);
       setTotalPoints((current) => current - safePoints);
-      setJarsState((current) =>
-        current.map((jar) =>
-          jar.id === SAVINGS_JAR_ID
-            ? {
-                ...jar,
-                balance: roundAudAmount(jar.balance + audAmount),
-              }
-            : jar,
-        ),
-      );
 
       return { success: true, audAmount, pointsClaimed: safePoints };
     },
     [audPer100Xp, totalPoints],
-  );
-
-  const setCustomBuckets = useCallback(
-    (
-      updater:
-        | CustomVaultBucketPersisted[]
-        | ((current: CustomVaultBucketPersisted[]) => CustomVaultBucketPersisted[]),
-    ) => {
-      setCustomBucketsState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
-    },
-    [],
-  );
-
-  const setSavingsGoals = useCallback(
-    (updater: SavingsGoal[] | ((current: SavingsGoal[]) => SavingsGoal[])) => {
-      setSavingsGoalsState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
-    },
-    [],
-  );
-
-  const setSpendingCategoryOverrides = useCallback(
-    (
-      updater:
-        | SpendingCategoryOverrides
-        | ((current: SpendingCategoryOverrides) => SpendingCategoryOverrides),
-    ) => {
-      setSpendingCategoryOverridesState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
-    },
-    [],
-  );
-
-  const setCustomSpendingCategories = useCallback(
-    (
-      updater:
-        | CustomSpendingCategory[]
-        | ((current: CustomSpendingCategory[]) => CustomSpendingCategory[]),
-    ) => {
-      setCustomSpendingCategoriesState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
-    },
-    [],
-  );
-
-  const vaultBuckets = useMemo(
-    () => mergeVaultBuckets(jars, customBuckets),
-    [customBuckets, jars],
   );
 
   const awardLessonXp = useCallback((points: number) => {
@@ -275,20 +113,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       lifetimePointsEarned,
       audSliderIndex,
       audPer100Xp,
-      moneyToAllocate,
-      jars,
-      customBuckets,
-      savingsGoals,
-      spendingCategoryOverrides,
-      customSpendingCategories,
-      vaultBuckets,
       setAudSliderIndex,
-      setMoneyToAllocate,
-      setJars,
-      setCustomBuckets,
-      setSavingsGoals,
-      setSpendingCategoryOverrides,
-      setCustomSpendingCategories,
       claimPointsForVault,
       awardLessonXp,
     }),
@@ -297,21 +122,8 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       audSliderIndex,
       awardLessonXp,
       claimPointsForVault,
-      customBuckets,
-      jars,
-      moneyToAllocate,
-      savingsGoals,
-      setCustomBuckets,
-      setCustomSpendingCategories,
-      setJars,
-      setMoneyToAllocate,
-      setSavingsGoals,
-      setSpendingCategoryOverrides,
-      spendingCategoryOverrides,
-      customSpendingCategories,
       lifetimePointsEarned,
       totalPoints,
-      vaultBuckets,
     ],
   );
 

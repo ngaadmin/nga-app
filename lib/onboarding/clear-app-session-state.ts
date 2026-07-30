@@ -3,6 +3,7 @@ import { DASHBOARD_WALLET_STORAGE_KEY } from "@/lib/dashboard/dashboard-wallet-s
 import { CURRENCY_PREFERENCE_STORAGE_KEY } from "@/lib/dashboard/currency/currency-storage";
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
+import { VAULT_V2_PROFILE_STORAGE_KEY, VAULT_V2_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault-v2/vault-v2-profile-storage";
 import { GHOST_SESSION_STORAGE_KEY } from "@/lib/onboarding/ghost-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
 import { GHOST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/ghost-progress-snapshot";
@@ -20,6 +21,8 @@ export const APP_SESSION_STORAGE_KEYS = [
   CURRENCY_PREFERENCE_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,
   VAULT_SKILL_PROGRESS_STORAGE_KEY,
+  VAULT_V2_SESSION_STORAGE_KEY,
+  VAULT_V2_PROFILE_STORAGE_KEY,
   PARENT_PIN_STORAGE_KEY,
 ] as const;
 

@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { DashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import {
   ONBOARDING_START_PATH,
@@ -31,8 +30,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   return (
     <div className="min-h-dvh w-full max-w-full overflow-x-hidden bg-white">
-      <DashboardSidebar />
-      <DashboardBottomNav />
+      <DashboardNavigation />
 
       <div className="flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden md:pl-64">
         {!isLessonRoute ? <DashboardStatusHeader /> : null}

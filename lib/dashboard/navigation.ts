@@ -26,7 +26,6 @@ export type DashboardNavLinkItem = {
 
 export type DashboardNavItem = DashboardNavLinkItem & {
   id: DashboardPillar;
-  href: `/dashboard/${DashboardPillar}`;
 };
 
 export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
@@ -45,8 +44,10 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
   {
     id: "vault",
     label: "The Vault",
-    href: "/dashboard/vault",
+    href: "/dashboard/vault-v2",
     Icon: VaultIcon,
+    matchesPath: (pathname) =>
+      pathname === "/dashboard/vault-v2" || pathname.startsWith("/dashboard/vault-v2/"),
   },
   {
     id: "achievements",
@@ -63,7 +64,7 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
 ] as const;
 
 export const DASHBOARD_SETTINGS_HREF = "/dashboard/settings" as const;
-export const VAULT_CASH_IN_HREF = "/dashboard/vault?cashIn=1" as const;
+export const VAULT_CASH_IN_HREF = "/dashboard/vault-v2?cashIn=1" as const;
 export const DASHBOARD_DEFAULT_HREF = "/dashboard/academy" as const;
 
 export function isNavItemActive(pathname: string, href: string): boolean {

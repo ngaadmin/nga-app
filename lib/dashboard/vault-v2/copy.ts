@@ -1,9 +1,7 @@
-/** Vault V2 copy — delete with the rest of `vault-v2/` on cutover. */
+/** Vault V2 copy — primary Vault experience. */
 export const vaultV2Copy = {
-  title: "The Vault 2.0",
-  description: "Beta redesign of The Vault — manage your money, jars, and deposits.",
-  betaBadge: "Beta",
-  betaNavLabel: "Vault 2.0 (Beta)",
+  title: "The Vault",
+  description: "Manage your money, jars, and deposits.",
   allocationSectionTitle: "Allocate Money",
   closeModalLabel: "Close",
   budgetJarsSectionLabel: "Budget Jars",

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BucketEmojiIcon,
   bucketTheme,
-} from "@/components/dashboard/vault/vault-visuals";
+} from "@/components/dashboard/vault-v2/vault-v2-visuals";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { PencilIcon, TrashIcon } from "@/lib/dashboard/icons";

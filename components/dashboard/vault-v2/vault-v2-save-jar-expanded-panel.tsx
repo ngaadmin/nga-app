@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GoalProgressBar } from "@/components/dashboard/vault/vault-visuals";
+import { GoalProgressBar } from "@/components/dashboard/vault-v2/vault-v2-visuals";
 import { VaultV2MoveMoneyForm, VaultV2SaveJarMoveMoneyForm } from "@/components/dashboard/vault-v2/vault-v2-move-money-form";
 import { VaultV2SavingsGoalAllocationModal } from "@/components/dashboard/vault-v2/vault-v2-savings-goal-allocation-modal";
 import { copyMatrix } from "@/constants/copyMatrix";

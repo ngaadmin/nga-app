@@ -3,6 +3,11 @@ import { DASHBOARD_WALLET_STORAGE_KEY } from "@/lib/dashboard/dashboard-wallet-s
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
 import {
+  readVaultV2SessionRaw,
+  writeVaultV2SessionRaw,
+} from "@/lib/dashboard/vault-v2/profile-persist";
+import { VAULT_V2_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault-v2/vault-v2-profile-storage";
+import {
   readPersisted,
   removePersisted,
   writePersisted,
@@ -16,6 +21,7 @@ export type GhostProgressSnapshot = {
   capturedAt: string;
   ghostSession: UserSession | null;
   wallet: string | null;
+  vaultV2Session: string | null;
   academyProgress: string | null;
   skillProgress: string | null;
   parentPin: string | null;
@@ -36,6 +42,7 @@ export function captureGhostProgressSnapshot(): GhostProgressSnapshot {
     capturedAt: new Date().toISOString(),
     ghostSession: readUserSession(),
     wallet: readPersisted(DASHBOARD_WALLET_STORAGE_KEY),
+    vaultV2Session: readVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY),
     academyProgress: readPersisted(ACADEMY_PROGRESS_STORAGE_KEY),
     skillProgress: readPersisted(VAULT_SKILL_PROGRESS_STORAGE_KEY),
     parentPin:
@@ -70,6 +77,9 @@ export function mergeGhostProgressSnapshot(): boolean {
 
   if (snapshot.wallet !== null) {
     writePersisted(DASHBOARD_WALLET_STORAGE_KEY, snapshot.wallet);
+  }
+  if (snapshot.vaultV2Session !== null) {
+    writeVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY, snapshot.vaultV2Session);
   }
   if (snapshot.academyProgress !== null) {
     writePersisted(ACADEMY_PROGRESS_STORAGE_KEY, snapshot.academyProgress);

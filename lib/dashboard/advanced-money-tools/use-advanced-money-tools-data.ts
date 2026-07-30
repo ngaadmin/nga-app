@@ -1,22 +1,20 @@
 "use client";
 
 import { useMemo } from "react";
-import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { roundAudAmount, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   computeTotalSavings,
   resolveVaultSavingsGoals,
 } from "@/lib/dashboard/savings-goals";
-import { useVaultLedger } from "@/lib/dashboard/vault-ledger-context";
+import { useVaultV2Profile } from "@/lib/dashboard/vault-v2/vault-v2-profile-context";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 
 /** Premium billing is not wired yet — defaults to freemium limits. */
 const ADVANCED_MONEY_TOOLS_IS_PREMIUM = false;
 
 export function useAdvancedMoneyToolsData() {
-  const { ledger } = useVaultLedger();
+  const { ledger, jars, savingsGoals } = useVaultV2Profile();
   const masteryCohort = useMasteryCohort();
-  const { jars, savingsGoals } = useDashboardWallet();
 
   const vaultGoals = useMemo(
     () =>

@@ -2,7 +2,7 @@
 
 import { CurrencyProvider } from "@/lib/dashboard/currency-context";
 import { DashboardWalletProvider } from "@/lib/dashboard/dashboard-wallet-context";
-import { VaultLedgerProvider } from "@/lib/dashboard/vault-ledger-context";
+import { VaultV2ProfileProvider } from "@/lib/dashboard/vault-v2/vault-v2-profile-context";
 
 type DashboardProvidersProps = {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ export function DashboardProviders({ children }: DashboardProvidersProps) {
   return (
     <CurrencyProvider>
       <DashboardWalletProvider>
-        <VaultLedgerProvider>{children}</VaultLedgerProvider>
+        <VaultV2ProfileProvider>{children}</VaultV2ProfileProvider>
       </DashboardWalletProvider>
     </CurrencyProvider>
   );

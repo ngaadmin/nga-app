@@ -23,6 +23,7 @@ import {
   vaultV2JarTileNameClass,
   vaultV2JarsCarouselTrackClass,
   vaultV2JarsCarouselViewportClass,
+  vaultV2ManageJarsButtonClass,
 } from "@/lib/dashboard/vault-v2/vault-v2-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
@@ -50,25 +51,23 @@ export function VaultV2MyMoneyCard({
       aria-label={copy.totalBalanceLabel}
       className="relative w-full min-w-0 overflow-visible rounded-xl border border-white/10 bg-gradient-to-br from-[#3D5F8C] to-[#2E4A72] p-4 text-white shadow-sm"
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
-          <div className="min-w-0">
-            <h2 className={vaultV2CardMainTitleClass}>{copy.totalBalanceLabel}</h2>
-            <p className={vaultV2CardBalanceClass} aria-live="polite">
-              {formatMoney(totalBalance)}
-            </p>
-          </div>
+      {onManageJarsClick ? (
+        <button
+          type="button"
+          onClick={onManageJarsClick}
+          aria-label={vaultV2Copy.manageBudgetJarsLabel}
+          className={vaultV2ManageJarsButtonClass}
+        >
+          <SettingsIcon className="size-5 shrink-0 text-white" />
+        </button>
+      ) : null}
 
-          {onManageJarsClick ? (
-            <button
-              type="button"
-              onClick={onManageJarsClick}
-              aria-label={vaultV2Copy.manageBudgetJarsLabel}
-              className="z-10 flex size-9 shrink-0 items-center justify-center self-start rounded-lg text-white transition-colors hover:bg-white/10 hover:text-white active:bg-white/15"
-            >
-              <SettingsIcon className="size-5 shrink-0 text-white" aria-hidden />
-            </button>
-          ) : null}
+      <div className="space-y-4">
+        <div className="min-w-0 pr-11">
+          <h2 className={vaultV2CardMainTitleClass}>{copy.totalBalanceLabel}</h2>
+          <p className={vaultV2CardBalanceClass} aria-live="polite">
+            {formatMoney(totalBalance)}
+          </p>
         </div>
 
         <div
@@ -77,8 +76,9 @@ export function VaultV2MyMoneyCard({
             "touch-pan-x [-webkit-overflow-scrolling:touch]",
           )}
           aria-label={vaultV2Copy.budgetJarsSectionLabel}
+          role="list"
         >
-          <div className={cn(vaultV2JarsCarouselTrackClass, "flex-row flex-nowrap")}>
+          <div className={vaultV2JarsCarouselTrackClass}>
             {buckets.map((bucket) => {
               const theme = bucketTheme(bucket);
               const isActive = expandedBucketId === bucket.id;
@@ -88,6 +88,7 @@ export function VaultV2MyMoneyCard({
                 <button
                   key={bucket.id}
                   type="button"
+                  role="listitem"
                   onClick={() => onToggleBucket(bucket.id)}
                   aria-expanded={isActive}
                   className={cn(

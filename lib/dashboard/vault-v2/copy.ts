@@ -4,9 +4,6 @@ export const vaultV2Copy = {
   description: "Beta redesign of The Vault — manage your money, jars, and deposits.",
   betaBadge: "Beta",
   betaNavLabel: "Vault 2.0 (Beta)",
-  dashboardHeading: "The Vault",
-  dashboardBody:
-    "Tap a jar to move money or mark spending. Add new income below when it lands.",
   allocationSectionTitle: "Allocate Money",
   closeModalLabel: "Close",
   budgetJarsSectionLabel: "Budget Jars",

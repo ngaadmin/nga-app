@@ -7,7 +7,6 @@ import { VaultV2DepositSection } from "@/components/dashboard/vault-v2/vault-v2-
 import { VaultV2ManageBudgetJarsModal } from "@/components/dashboard/vault-v2/vault-v2-manage-budget-jars-modal";
 import { VaultV2MyMoneyCard } from "@/components/dashboard/vault-v2/vault-v2-my-money-card";
 import { useVaultV2Actions } from "@/lib/dashboard/vault-v2/use-vault-v2-actions";
-import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
 import type { VaultBucketId } from "@/lib/dashboard/vault-buckets";
 import type { VaultIncomeSourceId } from "@/lib/dashboard/vault-income-sources";
 import { vaultV2BucketsWithDisplayNames } from "@/lib/dashboard/vault-v2/bucket-display-name";
@@ -57,20 +56,6 @@ export function VaultV2Dashboard() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="space-y-1 text-center">
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <h1 className="font-heading text-lg font-extrabold text-[#031F82]">
-            {vaultV2Copy.dashboardHeading}
-          </h1>
-          <span className="rounded-full bg-[#FFA503]/20 px-2.5 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wide text-[#C88202]">
-            {vaultV2Copy.betaBadge}
-          </span>
-        </div>
-        <p className="font-sans text-sm leading-snug text-[#1E3A5F]/80">
-          {vaultV2Copy.dashboardBody}
-        </p>
-      </div>
-
       <VaultV2MyMoneyCard
         buckets={displayBuckets}
         totalSavings={totalSavings}

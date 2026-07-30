@@ -52,7 +52,7 @@ export function AcademyIcon({ className }: IconProps) {
   );
 }
 
-/** Checkered flag icon for The Engine navigation. */
+/** Rocket icon for The Engine navigation. */
 export function EngineIcon({ className }: IconProps) {
   return (
     <svg
@@ -65,23 +65,30 @@ export function EngineIcon({ className }: IconProps) {
       aria-hidden
     >
       <path
-        d="M5 3v18"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5 4h12l-1.5 2L17 8l-1.5 2L17 12l-1.5 2L17 16l-1.5 2L17 20H5"
+        d="M12 4 15.5 10.5V16H8.5V10.5L12 4Z"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinejoin="round"
       />
-      <rect x="7" y="6" width="3" height="3" fill="currentColor" />
-      <rect x="13" y="6" width="3" height="3" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="7" y="12" width="3" height="3" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="13" y="12" width="3" height="3" fill="currentColor" />
-      <rect x="7" y="18" width="3" height="3" fill="currentColor" />
-      <rect x="13" y="18" width="3" height="3" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M8.5 13.5 5 18.5 8.5 16.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.5 13.5 19 18.5 15.5 16.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="10.5" r="1.25" fill="currentColor" />
+      <path
+        d="M9.5 16 9 19.5M12 16v3.5M14.5 16l.5 3.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

@@ -7,9 +7,11 @@ import {
   DASHBOARD_DEFAULT_HREF,
   DASHBOARD_NAV_ITEMS,
 } from "@/lib/dashboard/navigation";
+import { withVaultV2BetaNavItem } from "@/lib/dashboard/vault-v2/beta-nav";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 export function DashboardSidebar() {
+  const navItems = withVaultV2BetaNavItem(DASHBOARD_NAV_ITEMS);
   return (
     <aside
       style={zLayerStyle("chrome")}
@@ -36,7 +38,7 @@ export function DashboardSidebar() {
         className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-6"
         aria-label="Main navigation"
       >
-        {DASHBOARD_NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <DashboardNavLink key={item.id} item={item} variant="sidebar" />
         ))}
       </nav>

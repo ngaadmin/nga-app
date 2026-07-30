@@ -1,39 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import type { DashboardNavItem } from "@/lib/dashboard/navigation";
+import { usePathname } from "next/navigation";
+import type { DashboardNavLinkItem } from "@/lib/dashboard/navigation";
 import { isNavItemActive } from "@/lib/dashboard/navigation";
 import { TACTILE_PRESS } from "@/lib/dashboard/styles";
 import { cn } from "@/lib/utils/cn";
 
 type DashboardNavLinkProps = {
-  item: DashboardNavItem;
+  item: DashboardNavLinkItem;
   variant: "sidebar" | "bottom";
 };
 
 export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const isActive = isNavItemActive(pathname, item.href);
+  const isActive = item.matchesPath
+    ? item.matchesPath(pathname)
+    : isNavItemActive(pathname, item.href);
   const { Icon } = item;
 
-  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey ||
-      event.button !== 0
-    ) {
-      return;
+  function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (isActive) {
+      event.preventDefault();
     }
-
-    event.preventDefault();
-    if (!isActive) {
-      router.push(item.href);
-    }
-  };
+  }
 
   if (variant === "bottom") {
     return (

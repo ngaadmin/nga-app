@@ -49,7 +49,7 @@ export function VaultV2MyMoneyCard({
   return (
     <section
       aria-label={copy.totalBalanceLabel}
-      className="relative isolate w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#3D5F8C] to-[#2E4A72] p-4 text-white shadow-sm"
+      className="relative isolate w-full min-w-0 max-w-full overflow-hidden rounded-xl border-b-4 border-b-nga-secondary-shadow bg-nga-secondary p-4 text-white shadow-sm"
     >
       {onManageJarsClick ? (
         <button

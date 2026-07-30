@@ -21,6 +21,7 @@ import {
   findGoalsJustHitTarget,
   resolveVaultSavingsGoals,
   type SavingsGoal,
+  type SavingsGoalId,
 } from "@/lib/dashboard/savings-goals";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import {
@@ -33,6 +34,8 @@ import {
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
 import {
+  canAddVaultBucket,
+  defaultCustomBucket,
   isCustomBucketId,
   isSavingsGoalMoveTarget,
   sumAllocations,
@@ -363,6 +366,130 @@ export function useVaultV2Actions() {
     [setCustomSpendingCategories, setSpendingCategoryOverrides],
   );
 
+  const handleAssignGoals = useCallback(
+    (allocations: Record<string, number>) => {
+      const appliedByGoal = new Map<SavingsGoalId, number>();
+      let appliedTotal = 0;
+
+      for (const [goalId, rawAmount] of Object.entries(allocations)) {
+        const amount = rawAmount ?? 0;
+        if (amount <= 0) continue;
+        const applied = roundAudAmount(amount);
+        appliedByGoal.set(goalId as SavingsGoalId, applied);
+        appliedTotal = roundAudAmount(appliedTotal + applied);
+      }
+
+      if (appliedTotal <= 0 || appliedTotal > saveJarBalance + 0.001) return;
+
+      const beforeGoals = savingsGoals;
+      const nextGoals = beforeGoals.map((entry) => {
+        const applied = appliedByGoal.get(entry.id) ?? 0;
+        if (applied <= 0) return entry;
+        return { ...entry, balance: roundAudAmount(entry.balance + applied) };
+      });
+
+      adjustBucketBalance(SAVINGS_JAR_ID, -appliedTotal, setJars, setCustomBuckets);
+      setSavingsGoals(nextGoals);
+      celebrateGoalsJustHit(beforeGoals, nextGoals);
+
+      for (const [goalId, applied] of appliedByGoal) {
+        const goal = savingsGoals.find((entry) => entry.id === goalId);
+        if (!goal) continue;
+        appendLedger(
+          vaultCopy.savings.allocatedToGoalTemplate
+            .replace("{amount}", formatMoney(applied))
+            .replace("{goal}", goal.name),
+          { category: "savings_goal", amount: applied },
+        );
+      }
+    },
+    [
+      appendLedger,
+      celebrateGoalsJustHit,
+      formatMoney,
+      saveJarBalance,
+      savingsGoals,
+      setCustomBuckets,
+      setJars,
+      setSavingsGoals,
+      vaultCopy.savings.allocatedToGoalTemplate,
+    ],
+  );
+
+  const handleRenameBucket = useCallback(
+    (bucketId: VaultBucketId, name: string, emoji?: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+
+      if (isCustomBucketId(bucketId)) {
+        setCustomBuckets((current) =>
+          current.map((bucket) =>
+            bucket.id === bucketId
+              ? {
+                  ...bucket,
+                  name: trimmed,
+                  ...(emoji !== undefined ? { emoji } : {}),
+                }
+              : bucket,
+          ),
+        );
+        return;
+      }
+
+      setJars((current) =>
+        current.map((jar) =>
+          jar.id === bucketId
+            ? {
+                ...jar,
+                name: trimmed,
+                ...(emoji !== undefined ? { emoji } : {}),
+              }
+            : jar,
+        ),
+      );
+    },
+    [setCustomBuckets, setJars],
+  );
+
+  const handleAddCustomBucket = useCallback(
+    (name: string, emoji: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      if (!canAddVaultBucket(vaultBuckets.length, VAULT_V2_IS_PREMIUM)) return;
+
+      setCustomBuckets((current) => [
+        ...current,
+        defaultCustomBucket(trimmed, emoji.trim() || "💰"),
+      ]);
+    },
+    [setCustomBuckets, vaultBuckets.length],
+  );
+
+  const handleDeleteCustomBucket = useCallback(
+    (bucketId: VaultBucketId, fallbackBucketId?: VaultBucketId) => {
+      if (!isCustomBucketId(bucketId)) return;
+
+      const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
+      if (!bucket) return;
+
+      if (bucket.balance > 0) {
+        if (!fallbackBucketId || fallbackBucketId === bucketId) return;
+        const amount = bucket.balance;
+        adjustBucketBalance(
+          fallbackBucketId,
+          amount,
+          setJars,
+          setCustomBuckets,
+        );
+        adjustBucketBalance(bucketId, -amount, setJars, setCustomBuckets);
+      }
+
+      setCustomBuckets((current) => current.filter((entry) => entry.id !== bucketId));
+      appendLedger(`Removed bucket: ${bucket.name}`, { category: "setup" });
+    },
+    [appendLedger, setCustomBuckets, setJars, vaultBuckets],
+  );
+
   return {
     isPremium: VAULT_V2_IS_PREMIUM,
     ledger,
@@ -377,6 +504,10 @@ export function useVaultV2Actions() {
     handleMarkSpent,
     handleAddCustomSpendingCategory,
     handleRenameSpendingCategory,
+    handleAssignGoals,
+    handleRenameBucket,
+    handleAddCustomBucket,
+    handleDeleteCustomBucket,
   };
 }
 

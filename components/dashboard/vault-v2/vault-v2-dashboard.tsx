@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { VaultV2AllocationModal } from "@/components/dashboard/vault-v2/vault-v2-allocation-modal";
 import { VaultV2BucketDrilldown } from "@/components/dashboard/vault-v2/vault-v2-bucket-drilldown";
 import { VaultV2DepositSection } from "@/components/dashboard/vault-v2/vault-v2-deposit-section";
+import { VaultV2ManageBudgetJarsModal } from "@/components/dashboard/vault-v2/vault-v2-manage-budget-jars-modal";
 import { VaultV2MyMoneyCard } from "@/components/dashboard/vault-v2/vault-v2-my-money-card";
 import { useVaultV2Actions } from "@/lib/dashboard/vault-v2/use-vault-v2-actions";
 import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
@@ -25,10 +26,15 @@ export function VaultV2Dashboard() {
     handleMarkSpent,
     handleAddCustomSpendingCategory,
     handleRenameSpendingCategory,
+    handleAssignGoals,
+    handleRenameBucket,
+    handleAddCustomBucket,
+    handleDeleteCustomBucket,
   } = useVaultV2Actions();
 
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
+  const [manageJarsModalOpen, setManageJarsModalOpen] = useState(false);
 
   const displayBuckets = useMemo(
     () => vaultV2BucketsWithDisplayNames(vaultBuckets),
@@ -70,6 +76,7 @@ export function VaultV2Dashboard() {
         totalSavings={totalSavings}
         expandedBucketId={expandedBucketId}
         onToggleBucket={toggleBucket}
+        onManageJarsClick={() => setManageJarsModalOpen(true)}
       />
 
       {expandedBucket ? (
@@ -84,18 +91,37 @@ export function VaultV2Dashboard() {
           onMarkSpent={handleMarkSpent}
           onAddCustomCategory={handleAddCustomSpendingCategory}
           onRenameCategory={handleRenameSpendingCategory}
+          onAssignGoals={handleAssignGoals}
           onClose={() => setExpandedBucketId(null)}
         />
       ) : null}
 
-      <VaultV2DepositSection onDeposit={handleDepositAndOpenAllocation} />
+      {!expandedBucket ? (
+        <VaultV2DepositSection onDeposit={handleDepositAndOpenAllocation} />
+      ) : null}
 
       <VaultV2AllocationModal
         isOpen={allocationModalOpen}
         onClose={() => setAllocationModalOpen(false)}
         buckets={displayBuckets}
+        totalSavings={totalSavings}
         moneyToAllocate={moneyToAllocate}
         onLockIn={handleLockIn}
+      />
+
+      <VaultV2ManageBudgetJarsModal
+        isOpen={manageJarsModalOpen}
+        onClose={() => setManageJarsModalOpen(false)}
+        buckets={vaultBuckets}
+        isPremium={isPremium}
+        onRenameBucket={handleRenameBucket}
+        onAddCustomBucket={handleAddCustomBucket}
+        onDeleteCustomBucket={handleDeleteCustomBucket}
+        onBucketDeleted={(bucketId) => {
+          if (expandedBucketId === bucketId) {
+            setExpandedBucketId(null);
+          }
+        }}
       />
     </div>
   );

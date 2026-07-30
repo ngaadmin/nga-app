@@ -8,16 +8,49 @@ export function sumEffectiveAllocationInputs(
   focusedBucketId: string | null,
 ): number {
   return roundAudAmount(
-    bucketIds.reduce((sum, id) => {
-      if (focusedBucketId === id && inputs[id] !== undefined) {
-        const raw = inputs[id];
-        if (raw === "" || raw === ".") return sum;
-        const parsed = Number.parseFloat(raw);
-        if (Number.isFinite(parsed) && parsed >= 0) return sum + parsed;
-        return sum;
-      }
-      return sum + (drafts[id] ?? 0);
-    }, 0),
+    bucketIds.reduce((sum, id) => sum + effectiveAllocationEntryAmount(
+      id,
+      drafts,
+      inputs,
+      focusedBucketId,
+    ), 0),
+  );
+}
+
+/** Live amount for one bucket row (focused input when typing, otherwise draft). */
+export function effectiveAllocationEntryAmount(
+  bucketId: string,
+  drafts: Record<string, number>,
+  inputs: Record<string, string>,
+  focusedBucketId: string | null,
+): number {
+  if (focusedBucketId === bucketId && inputs[bucketId] !== undefined) {
+    const raw = inputs[bucketId];
+    if (raw === "" || raw === ".") return 0;
+    const parsed = Number.parseFloat(raw);
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+    return 0;
+  }
+  return drafts[bucketId] ?? 0;
+}
+
+/** Sum effective amounts for all buckets except one id. */
+export function sumEffectiveAllocationInputsExcept(
+  bucketId: string,
+  bucketIds: readonly string[],
+  drafts: Record<string, number>,
+  inputs: Record<string, string>,
+  focusedBucketId: string | null,
+): number {
+  return roundAudAmount(
+    bucketIds
+      .filter((id) => id !== bucketId)
+      .reduce(
+        (sum, id) =>
+          sum +
+          effectiveAllocationEntryAmount(id, drafts, inputs, focusedBucketId),
+        0,
+      ),
   );
 }
 

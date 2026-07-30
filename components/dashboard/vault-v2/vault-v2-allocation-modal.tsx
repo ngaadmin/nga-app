@@ -21,7 +21,7 @@ import {
   sumAllocationDraftValues,
 } from "@/lib/dashboard/vault-amount-input";
 import {
-  sumAllocations,
+  savingsBucketDisplayBalance,
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
@@ -29,18 +29,33 @@ import { vaultV2BucketDisplayName } from "@/lib/dashboard/vault-v2/bucket-displa
 import {
   isAllocationOverPool,
   sumEffectiveAllocationInputs,
+  sumEffectiveAllocationInputsExcept,
   vaultAllocationRemainingDisplay,
 } from "@/lib/dashboard/vault-v2/allocation-remaining";
+import { ALLOCATION_COIN_SIZE_PX } from "@/lib/dashboard/vault-v2/allocation-coin-stacks";
 import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
+const allocationRowClass =
+  "flex w-full min-w-0 items-end gap-x-2 py-2.5";
+
+const allocationJarInfoClass =
+  "flex w-[5.75rem] shrink-0 flex-col items-center justify-end gap-0.5 self-stretch pb-0.5";
+
+const allocationCoinSlotClass =
+  "flex min-h-0 min-w-0 flex-1 items-end justify-end overflow-visible [container-type:inline-size]";
+
+const allocationAmountInputClass =
+  "flex h-9 w-[5.25rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2";
+
 function AllocationInputRow({
   bucket,
   draft,
   poolTotal,
+  totalSavings,
   inputValue,
   onInputChange,
   onInputBlur,
@@ -49,30 +64,43 @@ function AllocationInputRow({
   bucket: VaultBucket;
   draft: number;
   poolTotal: number;
+  totalSavings: number;
   inputValue: string;
   onInputChange: (bucketId: string, rawValue: string) => void;
   onInputBlur: (bucketId: string) => void;
   onInputFocus: (bucketId: string) => void;
 }) {
-  const { currencySymbol } = useCurrency();
+  const { currencySymbol, formatMoney } = useCurrency();
   const theme = bucketTheme(bucket);
   const displayName = vaultV2BucketDisplayName(bucket);
+  const currentBalance = savingsBucketDisplayBalance(bucket, totalSavings);
 
   return (
-    <div className="flex min-w-0 items-end gap-1.5 py-2.5">
-      <div className="flex w-[4.25rem] shrink-0 flex-col items-center">
+    <div className={allocationRowClass}>
+      <div className={allocationJarInfoClass}>
         <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
         <p
           className={cn(
-            "mt-1 line-clamp-2 text-center font-heading text-xs font-bold leading-tight",
+            "line-clamp-2 w-full text-center font-heading text-[11px] font-bold leading-tight",
             theme.label,
           )}
         >
           {displayName}
         </p>
+        <p className="w-full truncate text-center font-heading text-[10px] font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
+          {formatMoney(currentBalance)}
+        </p>
       </div>
 
-      <label className="flex w-[5.25rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5">
+      <div className={allocationCoinSlotClass}>
+        <VaultV2CoinStackVisual
+          allocatedAmount={draft}
+          poolTotal={poolTotal}
+          coinSizePx={ALLOCATION_COIN_SIZE_PX - 2}
+        />
+      </div>
+
+      <label className={allocationAmountInputClass}>
         <span className="shrink-0 font-heading text-xs font-bold text-[#031F82]">
           {currencySymbol}
         </span>
@@ -84,15 +112,9 @@ function AllocationInputRow({
           onFocus={() => onInputFocus(bucket.id)}
           onBlur={() => onInputBlur(bucket.id)}
           aria-label={`Amount to allocate to ${displayName}`}
-          className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+          className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm leading-none tabular-nums text-[#031F82] outline-none"
         />
       </label>
-
-      <VaultV2CoinStackVisual
-        allocatedAmount={draft}
-        poolTotal={poolTotal}
-        className="ml-auto flex min-w-[3.5rem] flex-1 items-end justify-end pl-1"
-      />
     </div>
   );
 }
@@ -101,6 +123,7 @@ type VaultV2AllocationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   buckets: VaultBucket[];
+  totalSavings: number;
   moneyToAllocate: number;
   onLockIn: (allocations: Record<string, number>) => void;
 };
@@ -109,6 +132,7 @@ export function VaultV2AllocationModal({
   isOpen,
   onClose,
   buckets,
+  totalSavings,
   moneyToAllocate,
   onLockIn,
 }: VaultV2AllocationModalProps) {
@@ -122,7 +146,6 @@ export function VaultV2AllocationModal({
   const [inputWasCapped, setInputWasCapped] = useState(false);
 
   const poolTotal = roundAudAmount(Math.max(0, moneyToAllocate));
-  const allocatedTotal = sumAllocations(allocationDrafts);
   const effectiveAllocatedTotal = useMemo(
     () =>
       sumEffectiveAllocationInputs(
@@ -138,7 +161,7 @@ export function VaultV2AllocationModal({
     effectiveAllocatedTotal,
   );
   const isOverAllocated = isAllocationOverPool(poolTotal, effectiveAllocatedTotal);
-  const hasAllocationDraft = allocatedTotal > 0;
+  const hasAllocationDraft = effectiveAllocatedTotal > 0;
   const canLockIn = hasAllocationDraft && !isOverAllocated;
 
   useEffect(() => {
@@ -213,10 +236,12 @@ export function VaultV2AllocationModal({
       const parsed = Number.parseFloat(rawValue);
       if (!Number.isFinite(parsed) || parsed < 0) return;
 
-      const othersTotal = roundAudAmount(
-        bucketIds
-          .filter((id) => id !== bucketId)
-          .reduce((sum, id) => sum + (allocationDrafts[id] ?? 0), 0),
+      const othersTotal = sumEffectiveAllocationInputsExcept(
+        bucketId,
+        bucketIds,
+        allocationDrafts,
+        allocationInputs,
+        focusedAllocationBucketId,
       );
       const capped = clampVaultAllocationEntry(poolTotal, othersTotal, parsed);
       const wasCapped = capped !== parsed;
@@ -231,7 +256,7 @@ export function VaultV2AllocationModal({
       setInputWasCapped(wasCapped);
       handleAllocationChange(bucketId, capped);
     },
-    [allocationDrafts, bucketIds, handleAllocationChange, poolTotal],
+    [allocationDrafts, allocationInputs, bucketIds, focusedAllocationBucketId, handleAllocationChange, poolTotal],
   );
 
   const handleAllocationInputFocus = useCallback(
@@ -263,14 +288,14 @@ export function VaultV2AllocationModal({
   );
 
   const handleLockInSubmit = useCallback(() => {
-    if (!canLockIn || isAllocationOverPool(poolTotal, allocatedTotal)) return;
+    if (!canLockIn || isAllocationOverPool(poolTotal, effectiveAllocatedTotal)) return;
 
     onLockIn(allocationDrafts);
     setAllocationDrafts({});
     setAllocationInputs({});
     setFocusedAllocationBucketId(null);
     onClose();
-  }, [allocatedTotal, allocationDrafts, canLockIn, onClose, onLockIn, poolTotal]);
+  }, [allocationDrafts, canLockIn, effectiveAllocatedTotal, onClose, onLockIn, poolTotal]);
 
   return (
     <ModalShell
@@ -279,7 +304,7 @@ export function VaultV2AllocationModal({
       align="center"
       labelledBy="vault-v2-allocation-title"
       backdropClassName="bg-[#031F82]/50"
-      panelClassName="max-w-lg rounded-2xl border-0 bg-white p-5 shadow-md"
+      panelClassName="w-full max-w-sm rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:px-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -317,24 +342,26 @@ export function VaultV2AllocationModal({
         </button>
       </div>
 
-      <div className="mt-4 max-h-[min(60vh,24rem)] overflow-y-auto">
-        <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
+      <div className="mt-4 max-h-[min(60vh,24rem)] overflow-y-auto overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
+        <ul className="min-w-0 divide-y divide-[#BDE9FB]/30 overflow-visible">
           {buckets.map((bucket) => (
-            <AllocationInputRow
-              key={bucket.id}
-              bucket={bucket}
-              draft={allocationDrafts[bucket.id] ?? 0}
-              poolTotal={poolTotal}
-              inputValue={getAllocationInputValue(
-                bucket.id,
-                allocationDrafts[bucket.id] ?? 0,
-              )}
-              onInputChange={handleAllocationInputChange}
-              onInputBlur={handleAllocationInputBlur}
-              onInputFocus={handleAllocationInputFocus}
-            />
+            <li key={bucket.id}>
+              <AllocationInputRow
+                bucket={bucket}
+                draft={allocationDrafts[bucket.id] ?? 0}
+                poolTotal={poolTotal}
+                totalSavings={totalSavings}
+                inputValue={getAllocationInputValue(
+                  bucket.id,
+                  allocationDrafts[bucket.id] ?? 0,
+                )}
+                onInputChange={handleAllocationInputChange}
+                onInputBlur={handleAllocationInputBlur}
+                onInputFocus={handleAllocationInputFocus}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
       <button

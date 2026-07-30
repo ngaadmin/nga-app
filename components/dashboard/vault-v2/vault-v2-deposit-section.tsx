@@ -9,6 +9,7 @@ import {
   VAULT_INCOME_SOURCES,
   type VaultIncomeSourceId,
 } from "@/lib/dashboard/vault-income-sources";
+import { vaultV2LightSectionTitleClass } from "@/lib/dashboard/vault-v2/vault-v2-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -37,7 +38,7 @@ export function VaultV2DepositSection({ onDeposit }: VaultV2DepositSectionProps)
   return (
     <section aria-label="Deposit income" className="border-t border-[#BDE9FB]/40 pt-5">
       <form onSubmit={handleDepositSubmit} className="space-y-3">
-        <h2 className="font-heading text-base font-extrabold text-[#031F82]">
+        <h2 className={vaultV2LightSectionTitleClass}>
           {copy.depositHeading}
         </h2>
         <div className="grid min-w-0 grid-cols-[minmax(8rem,9.25rem)_minmax(0,1fr)_auto] items-stretch gap-2">

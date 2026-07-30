@@ -2,15 +2,15 @@
 
 import { useMemo } from "react";
 import {
+  ALLOCATION_COIN_SIZE_PX,
+  ALLOCATION_COIN_STACK_GAP_PX,
   allocationCoinStackPercent,
+  allocationCoinTrackWidthForStacks,
   computeAllocationCoinStacks,
 } from "@/lib/dashboard/vault-v2/allocation-coin-stacks";
 import { cn } from "@/lib/utils/cn";
 
-const COIN_SIZE_PX = 16;
-/** Tight poker-chip overlap — each coin sits ~10px above the previous. */
 const COIN_OVERLAP_PX = 10;
-const STACK_COLUMN_GAP_PX = 4;
 
 function GoldCoin({ sizePx, stackIndex }: { sizePx: number; stackIndex: number }) {
   const fontSize = Math.max(8, Math.round(sizePx * 0.4));
@@ -39,23 +39,30 @@ function GoldCoin({ sizePx, stackIndex }: { sizePx: number; stackIndex: number }
   );
 }
 
-function CoinStackColumn({ height }: { height: number }) {
+function CoinStackColumn({
+  height,
+  coinSizePx,
+}: {
+  height: number;
+  coinSizePx: number;
+}) {
   const stackHeight =
-    height <= 0 ? 0 : COIN_SIZE_PX + (height - 1) * (COIN_SIZE_PX - COIN_OVERLAP_PX);
+    height <= 0 ? 0 : coinSizePx + (height - 1) * (coinSizePx - COIN_OVERLAP_PX);
+  const columnWidthPx = coinSizePx + 2;
 
   return (
     <div
-      className="relative shrink-0"
-      style={{ width: COIN_SIZE_PX + 2, height: stackHeight }}
+      className="relative shrink-0 overflow-visible"
+      style={{ width: columnWidthPx, height: stackHeight }}
       aria-hidden
     >
       {Array.from({ length: height }, (_, coinIndex) => (
         <div
           key={coinIndex}
           className="absolute left-0"
-          style={{ bottom: coinIndex * (COIN_SIZE_PX - COIN_OVERLAP_PX) }}
+          style={{ bottom: coinIndex * (coinSizePx - COIN_OVERLAP_PX) }}
         >
-          <GoldCoin sizePx={COIN_SIZE_PX} stackIndex={coinIndex} />
+          <GoldCoin sizePx={coinSizePx} stackIndex={coinIndex} />
         </div>
       ))}
     </div>
@@ -65,14 +72,17 @@ function CoinStackColumn({ height }: { height: number }) {
 type VaultV2CoinStackVisualProps = {
   allocatedAmount: number;
   poolTotal: number;
+  coinSizePx?: number;
   className?: string;
 };
 
 export function VaultV2CoinStackVisual({
   allocatedAmount,
   poolTotal,
+  coinSizePx = ALLOCATION_COIN_SIZE_PX,
   className,
 }: VaultV2CoinStackVisualProps) {
+  const stackGapPx = ALLOCATION_COIN_STACK_GAP_PX;
   const stacks = useMemo(
     () => computeAllocationCoinStacks(allocatedAmount, poolTotal),
     [allocatedAmount, poolTotal],
@@ -81,28 +91,50 @@ export function VaultV2CoinStackVisual({
   const maxStackHeight = stacks.length > 0 ? Math.max(...stacks) : 0;
   const columnHeight =
     maxStackHeight <= 0
-      ? COIN_SIZE_PX
-      : COIN_SIZE_PX + (maxStackHeight - 1) * (COIN_SIZE_PX - COIN_OVERLAP_PX);
+      ? coinSizePx
+      : coinSizePx + (maxStackHeight - 1) * (coinSizePx - COIN_OVERLAP_PX);
+  const contentWidthPx = allocationCoinTrackWidthForStacks(
+    stacks.length,
+    coinSizePx,
+    stackGapPx,
+  );
+  const stackVisualHeightPx = columnHeight + 6;
 
   return (
     <div
-      className={className}
-      style={{ minHeight: columnHeight }}
-      role="img"
-      aria-label={
-        percent > 0
-          ? `${percent} percent allocated as ${stacks.reduce((sum, height) => sum + height, 0)} gold coins`
-          : "No coins allocated"
-      }
+      className={cn("inline-flex w-auto max-w-full items-end justify-start", className)}
+      style={{ height: stacks.length > 0 ? stackVisualHeightPx : undefined }}
     >
       {stacks.length > 0 ? (
         <div
-          className="flex items-end justify-end"
-          style={{ gap: STACK_COLUMN_GAP_PX }}
+          className="inline-flex origin-bottom-left items-end justify-start"
+          style={{
+            width: contentWidthPx,
+            height: columnHeight,
+            transform:
+              contentWidthPx > 0
+                ? `scaleX(min(1, calc(100cqw / ${contentWidthPx}px)))`
+                : undefined,
+          }}
+          role="img"
+          aria-label={
+            percent > 0
+              ? `${percent} percent allocated as ${stacks.reduce((sum, height) => sum + height, 0)} gold coins`
+              : "No coins allocated"
+          }
         >
-          {stacks.map((height, stackIndex) => (
-            <CoinStackColumn key={`stack-${stackIndex}-${height}`} height={height} />
-          ))}
+          <div
+            className="flex items-end justify-start"
+            style={{ gap: stackGapPx }}
+          >
+            {stacks.map((height, stackIndex) => (
+              <CoinStackColumn
+                key={`stack-${stackIndex}-${height}`}
+                height={height}
+                coinSizePx={coinSizePx}
+              />
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

@@ -5,7 +5,7 @@ import { AdvancedMoneyToolsCompoundingPanel } from "@/components/dashboard/advan
 import { AdvancedMoneyToolsLedgerPanel } from "@/components/dashboard/advanced-money-tools/advanced-money-tools-ledger-panel";
 import {
   AdvancedMoneyToolsToolCard,
-  FuturePotentialTile,
+  GrowthPotentialTile,
   LedgerTile,
 } from "@/components/dashboard/advanced-money-tools/advanced-money-tools-tool-card";
 import { copyMatrix } from "@/constants/copyMatrix";
@@ -20,19 +20,16 @@ export function AdvancedMoneyToolsDashboard() {
   const { formatMoney } = useCurrency();
   const { username, isLoading } = useDashboardUser();
   const displayName = resolveFinnAddressName(username, isLoading);
-  const budgetCopy = copyMatrix.dashboard.vault.budget;
   const ledgerCopy = copyMatrix.dashboard.vault.ledger;
   const { isPremium, ledger, totalSavings } = useAdvancedMoneyToolsData();
 
-  const [expandedTool, setExpandedTool] = useState<"future-potential" | "ledger" | null>(
-    "future-potential",
-  );
+  const [expandedTool, setExpandedTool] = useState<"growth-potential" | "ledger" | null>(null);
 
   const compounding = useAdvancedMoneyToolsCompounding(totalSavings, isPremium);
   const highRoiWarningCopy = buildHighRoiWarningCopy(displayName);
   const ledgerTitle = ledgerCopy.titleTemplate.replace("{name}", displayName);
 
-  function toggleTool(tool: "future-potential" | "ledger") {
+  function toggleTool(tool: "growth-potential" | "ledger") {
     setExpandedTool((current) => (current === tool ? null : tool));
   }
 
@@ -49,18 +46,18 @@ export function AdvancedMoneyToolsDashboard() {
 
       <div className="space-y-4">
         <AdvancedMoneyToolsToolCard
-          title={budgetCopy.futurePotentialLabel}
-          description={advancedMoneyToolsCopy.futurePotentialDescription}
+          title={advancedMoneyToolsCopy.growthPotentialLabel}
+          description={advancedMoneyToolsCopy.growthPotentialDescription}
           tile={
-            <FuturePotentialTile
-              title={budgetCopy.futurePotentialLabel}
+            <GrowthPotentialTile
+              title={advancedMoneyToolsCopy.growthPotentialLabel}
               projectedAmount={formatMoney(compounding.futureSavingsPotential)}
               subtext={compounding.futureSubtext}
             />
           }
-          isExpanded={expandedTool === "future-potential"}
-          onToggle={() => toggleTool("future-potential")}
-          expandAriaLabel={advancedMoneyToolsCopy.futurePotentialExpandAriaLabel}
+          isExpanded={expandedTool === "growth-potential"}
+          onToggle={() => toggleTool("growth-potential")}
+          expandAriaLabel={advancedMoneyToolsCopy.growthPotentialExpandAriaLabel}
         >
           <AdvancedMoneyToolsCompoundingPanel
             savingsBalance={totalSavings}

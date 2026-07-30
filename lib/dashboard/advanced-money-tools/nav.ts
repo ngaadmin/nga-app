@@ -14,7 +14,7 @@ export const ADVANCED_MONEY_TOOLS_NAV_ITEM: DashboardNavLinkItem = {
 
 export const ADVANCED_MONEY_TOOLS_HREF = ADVANCED_MONEY_TOOLS_NAV_ITEM.href;
 
-/** Inserts Advanced Money Tools after the Vault V2 beta entry when present, otherwise after The Vault. */
+/** Inserts Advanced Money after Achievements and before Settings. */
 export function withAdvancedMoneyToolsNavItem(
   items: readonly DashboardNavLinkItem[],
 ): DashboardNavLinkItem[] {
@@ -23,16 +23,8 @@ export function withAdvancedMoneyToolsNavItem(
   for (const item of items) {
     next.push(item);
 
-    if (item.id === "vault-v2-beta" || item.id === "vault") {
-      const alreadyAdded = next.some((entry) => entry.id === "advanced-money-tools");
-      if (!alreadyAdded && item.id === "vault-v2-beta") {
-        next.push(ADVANCED_MONEY_TOOLS_NAV_ITEM);
-      } else if (!alreadyAdded && item.id === "vault") {
-        const hasVaultV2Beta = items.some((entry) => entry.id === "vault-v2-beta");
-        if (!hasVaultV2Beta) {
-          next.push(ADVANCED_MONEY_TOOLS_NAV_ITEM);
-        }
-      }
+    if (item.id === "achievements") {
+      next.push(ADVANCED_MONEY_TOOLS_NAV_ITEM);
     }
   }
 

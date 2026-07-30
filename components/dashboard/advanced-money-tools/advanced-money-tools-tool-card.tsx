@@ -42,26 +42,41 @@ export function AdvancedMoneyToolsToolCard({
         </div>
       </button>
 
-      {isExpanded && children ? (
-        <div className="border-t border-[#BDE9FB]/60 px-4 pb-4 pt-3">{children}</div>
+      {children ? (
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+          )}
+          aria-hidden={!isExpanded}
+        >
+          <div
+            className={cn(
+              "overflow-hidden border-t border-[#BDE9FB]/60 px-4 pb-4 pt-3",
+              !isExpanded && "pointer-events-none",
+            )}
+          >
+            {children}
+          </div>
+        </div>
       ) : null}
     </article>
   );
 }
 
-type FuturePotentialTileProps = {
+type GrowthPotentialTileProps = {
   title: string;
   projectedAmount: string;
   subtext: string;
   className?: string;
 };
 
-export function FuturePotentialTile({
+export function GrowthPotentialTile({
   title,
   projectedAmount,
   subtext,
   className,
-}: FuturePotentialTileProps) {
+}: GrowthPotentialTileProps) {
   return (
     <div
       className={cn(

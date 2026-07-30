@@ -1,7 +1,7 @@
 "use client";
 
-import { BucketExpandedPanel } from "@/components/dashboard/vault/vault-bucket-expanded-panel";
-import { SaveJarExpandedPanel } from "@/components/dashboard/vault/vault-save-jar-panel";
+import { VaultV2BucketExpandedPanel } from "@/components/dashboard/vault-v2/vault-v2-bucket-expanded-panel";
+import { VaultV2SaveJarExpandedPanel } from "@/components/dashboard/vault-v2/vault-v2-save-jar-expanded-panel";
 import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
 import type { SpendingCategory, SpendingCategoryId } from "@/lib/dashboard/spending-categories";
@@ -41,7 +41,7 @@ export function VaultV2BucketDrilldown({
 }: VaultV2BucketDrilldownProps) {
   if (bucket.id === SAVINGS_JAR_ID) {
     return (
-      <SaveJarExpandedPanel
+      <VaultV2SaveJarExpandedPanel
         bucket={bucket}
         buckets={buckets}
         goals={goals}
@@ -53,7 +53,7 @@ export function VaultV2BucketDrilldown({
   }
 
   return (
-    <BucketExpandedPanel
+    <VaultV2BucketExpandedPanel
       bucket={bucket}
       buckets={buckets}
       goals={goals}

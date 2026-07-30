@@ -27,6 +27,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#031F82",
 };
 
@@ -38,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${inter.variable} font-sans antialiased`}
+        className={`${poppins.variable} ${inter.variable} font-sans antialiased overflow-x-hidden max-w-full`}
       >
         {children}
         <div id="overlay-root" aria-hidden="true" />

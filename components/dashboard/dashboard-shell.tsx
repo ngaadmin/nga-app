@@ -29,11 +29,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }, [router]);
 
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh w-full max-w-full overflow-x-hidden bg-white">
       <DashboardSidebar />
       <DashboardBottomNav />
 
-      <div className="flex min-h-dvh flex-col md:pl-64">
+      <div className="flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden md:pl-64">
         {!isLessonRoute ? <DashboardStatusHeader /> : null}
 
         <main

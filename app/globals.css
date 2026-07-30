@@ -281,10 +281,18 @@
 
   html {
     @apply antialiased scroll-smooth;
+    overflow-x: hidden;
+    max-width: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
     @apply bg-nga-panel text-nga-ink font-sans min-h-dvh;
+    overflow-x: hidden;
+    max-width: 100%;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
   }
 
   h1,

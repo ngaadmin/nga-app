@@ -10,15 +10,15 @@ export const vaultV2CardBalanceClass =
 
 /** Manage-jars gear — top-right of card, 20px icon in touch target. */
 export const vaultV2ManageJarsButtonClass =
-  "absolute right-3 top-3 z-20 flex size-9 shrink-0 items-center justify-center rounded-lg bg-white/15 text-white ring-1 ring-white/25 transition-colors hover:bg-white/25 hover:text-white active:bg-white/30";
+  "absolute right-3 top-3 z-raised flex size-9 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-white/15 text-white ring-1 ring-white/25 transition-colors hover:bg-white/25 hover:text-white active:bg-white/30";
 
 /** Horizontal carousel viewport for budget jar tiles. */
 export const vaultV2JarsCarouselViewportClass =
-  "w-full min-w-0 overflow-x-auto overflow-y-hidden overscroll-x-contain scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "nga-horizontal-scroll w-full max-w-full min-w-0 overflow-x-auto overflow-y-hidden overscroll-x-contain scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 /** Snap track — jars stay in a single horizontal row. */
 export const vaultV2JarsCarouselTrackClass =
-  "inline-flex w-max flex-row flex-nowrap items-start gap-2.5";
+  "flex w-max flex-row flex-nowrap items-start gap-2.5";
 
 /** Fixed-width jar tile — prevents vertical growth when many jars exist. */
 export const vaultV2JarCarouselTileClass =

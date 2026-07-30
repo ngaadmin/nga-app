@@ -7,11 +7,11 @@ import {
   DASHBOARD_DEFAULT_HREF,
   DASHBOARD_NAV_ITEMS,
 } from "@/lib/dashboard/navigation";
-import { withVaultV2BetaNavItem } from "@/lib/dashboard/vault-v2/beta-nav";
+import { withDashboardNavExtensions } from "@/lib/dashboard/dashboard-nav-extensions";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 export function DashboardSidebar() {
-  const navItems = withVaultV2BetaNavItem(DASHBOARD_NAV_ITEMS);
+  const navItems = withDashboardNavExtensions(DASHBOARD_NAV_ITEMS);
   return (
     <aside
       style={zLayerStyle("chrome")}

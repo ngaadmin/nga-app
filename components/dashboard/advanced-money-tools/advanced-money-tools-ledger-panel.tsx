@@ -14,7 +14,7 @@ import {
 } from "@/lib/dashboard/vault-ledger";
 import { cn } from "@/lib/utils/cn";
 
-type VaultV2LedgerCopy = {
+type AdvancedMoneyToolsLedgerCopy = {
   periodWeek: string;
   periodMonth: string;
   periodYear: string;
@@ -28,9 +28,9 @@ type VaultV2LedgerCopy = {
   categories: Record<LedgerCategory, string>;
 };
 
-type VaultV2LedgerPanelProps = {
+type AdvancedMoneyToolsLedgerPanelProps = {
   ledger: LedgerEntry[];
-  copy: VaultV2LedgerCopy;
+  copy: AdvancedMoneyToolsLedgerCopy;
 };
 
 const PERIOD_LABEL_KEYS = {
@@ -38,7 +38,7 @@ const PERIOD_LABEL_KEYS = {
   month: "periodMonth",
   year: "periodYear",
   all: "periodAll",
-} as const satisfies Record<LedgerTimePeriod, keyof VaultV2LedgerCopy>;
+} as const satisfies Record<LedgerTimePeriod, keyof AdvancedMoneyToolsLedgerCopy>;
 
 const PERIOD_OPTIONS: LedgerTimePeriod[] = ["week", "month", "year", "all"];
 
@@ -52,7 +52,7 @@ const periodToggleIdleClass =
 type LedgerSectionProps = {
   heading: string;
   entries: LedgerEntry[];
-  copy: VaultV2LedgerCopy;
+  copy: AdvancedMoneyToolsLedgerCopy;
   variant: "in" | "out" | "neutral";
 };
 
@@ -105,7 +105,10 @@ function LedgerSection({ heading, entries, copy, variant }: LedgerSectionProps) 
   );
 }
 
-export function VaultV2LedgerPanel({ ledger, copy }: VaultV2LedgerPanelProps) {
+export function AdvancedMoneyToolsLedgerPanel({
+  ledger,
+  copy,
+}: AdvancedMoneyToolsLedgerPanelProps) {
   const { formatMoney } = useCurrency();
   const [period, setPeriod] = useState<LedgerTimePeriod>("month");
 

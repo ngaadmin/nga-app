@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
-type VaultV2MoreToolsToolCardProps = {
+type AdvancedMoneyToolsToolCardProps = {
   title: string;
   description: string;
   tile: ReactNode;
@@ -13,7 +13,7 @@ type VaultV2MoreToolsToolCardProps = {
   expandAriaLabel: string;
 };
 
-export function VaultV2MoreToolsToolCard({
+export function AdvancedMoneyToolsToolCard({
   title,
   description,
   tile,
@@ -21,7 +21,7 @@ export function VaultV2MoreToolsToolCard({
   isExpanded,
   onToggle,
   expandAriaLabel,
-}: VaultV2MoreToolsToolCardProps) {
+}: AdvancedMoneyToolsToolCardProps) {
   return (
     <article className="overflow-hidden rounded-xl border border-[#BDE9FB] bg-white shadow-sm">
       <button
@@ -49,19 +49,19 @@ export function VaultV2MoreToolsToolCard({
   );
 }
 
-type VaultV2FuturePotentialTileProps = {
+type FuturePotentialTileProps = {
   title: string;
   projectedAmount: string;
   subtext: string;
   className?: string;
 };
 
-export function VaultV2FuturePotentialTile({
+export function FuturePotentialTile({
   title,
   projectedAmount,
   subtext,
   className,
-}: VaultV2FuturePotentialTileProps) {
+}: FuturePotentialTileProps) {
   return (
     <div
       className={cn(
@@ -88,13 +88,13 @@ export function VaultV2FuturePotentialTile({
   );
 }
 
-type VaultV2LedgerTileProps = {
+type LedgerTileProps = {
   title: string;
   subtitle: string;
   className?: string;
 };
 
-export function VaultV2LedgerTile({ title, subtitle, className }: VaultV2LedgerTileProps) {
+export function LedgerTile({ title, subtitle, className }: LedgerTileProps) {
   return (
     <div
       className={cn(

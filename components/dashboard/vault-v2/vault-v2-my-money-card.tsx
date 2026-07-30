@@ -49,7 +49,7 @@ export function VaultV2MyMoneyCard({
   return (
     <section
       aria-label={copy.totalBalanceLabel}
-      className="relative w-full min-w-0 overflow-visible rounded-xl border border-white/10 bg-gradient-to-br from-[#3D5F8C] to-[#2E4A72] p-4 text-white shadow-sm"
+      className="relative isolate w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#3D5F8C] to-[#2E4A72] p-4 text-white shadow-sm"
     >
       {onManageJarsClick ? (
         <button
@@ -71,10 +71,7 @@ export function VaultV2MyMoneyCard({
         </div>
 
         <div
-          className={cn(
-            vaultV2JarsCarouselViewportClass,
-            "touch-pan-x [-webkit-overflow-scrolling:touch]",
-          )}
+          className={vaultV2JarsCarouselViewportClass}
           aria-label={vaultV2Copy.budgetJarsSectionLabel}
           role="list"
         >

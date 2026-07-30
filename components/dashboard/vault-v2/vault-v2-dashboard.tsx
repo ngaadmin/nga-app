@@ -5,7 +5,6 @@ import { VaultV2AllocationModal } from "@/components/dashboard/vault-v2/vault-v2
 import { VaultV2BucketDrilldown } from "@/components/dashboard/vault-v2/vault-v2-bucket-drilldown";
 import { VaultV2DepositSection } from "@/components/dashboard/vault-v2/vault-v2-deposit-section";
 import { VaultV2ManageBudgetJarsModal } from "@/components/dashboard/vault-v2/vault-v2-manage-budget-jars-modal";
-import { VaultV2MoreToolsView } from "@/components/dashboard/vault-v2/vault-v2-more-tools-view";
 import { VaultV2MyMoneyCard } from "@/components/dashboard/vault-v2/vault-v2-my-money-card";
 import { useVaultV2Actions } from "@/lib/dashboard/vault-v2/use-vault-v2-actions";
 import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
@@ -16,7 +15,6 @@ import { vaultV2BucketsWithDisplayNames } from "@/lib/dashboard/vault-v2/bucket-
 export function VaultV2Dashboard() {
   const {
     isPremium,
-    ledger,
     moneyToAllocate,
     vaultBuckets,
     vaultGoals,
@@ -37,7 +35,6 @@ export function VaultV2Dashboard() {
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [manageJarsModalOpen, setManageJarsModalOpen] = useState(false);
-  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
 
   const displayBuckets = useMemo(
     () => vaultV2BucketsWithDisplayNames(vaultBuckets),
@@ -56,26 +53,6 @@ export function VaultV2Dashboard() {
   function handleDepositAndOpenAllocation(amount: number, source: VaultIncomeSourceId) {
     handleDeposit(amount, source);
     setAllocationModalOpen(true);
-  }
-
-  function openMoreTools() {
-    setExpandedBucketId(null);
-    setMoreToolsOpen(true);
-  }
-
-  function closeMoreTools() {
-    setMoreToolsOpen(false);
-  }
-
-  if (moreToolsOpen) {
-    return (
-      <VaultV2MoreToolsView
-        totalSavings={totalSavings}
-        isPremium={isPremium}
-        ledger={ledger}
-        onBack={closeMoreTools}
-      />
-    );
   }
 
   return (
@@ -122,16 +99,6 @@ export function VaultV2Dashboard() {
       {!expandedBucket ? (
         <VaultV2DepositSection onDeposit={handleDepositAndOpenAllocation} />
       ) : null}
-
-      <div className="flex justify-center pt-1">
-        <button
-          type="button"
-          onClick={openMoreTools}
-          className="font-heading text-sm font-bold text-[#1E3A5F]/55 transition-colors hover:text-[#0CC1E0]"
-        >
-          {vaultV2Copy.moreToolsLink}
-        </button>
-      </div>
 
       <VaultV2AllocationModal
         isOpen={allocationModalOpen}

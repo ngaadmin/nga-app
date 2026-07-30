@@ -1,12 +1,12 @@
 "use client";
 
 import { DashboardNavLink } from "@/components/dashboard/dashboard-nav-link";
+import { withDashboardNavExtensions } from "@/lib/dashboard/dashboard-nav-extensions";
 import { DASHBOARD_NAV_ITEMS } from "@/lib/dashboard/navigation";
-import { withVaultV2BetaNavItem } from "@/lib/dashboard/vault-v2/beta-nav";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 export function DashboardBottomNav() {
-  const navItems = withVaultV2BetaNavItem(DASHBOARD_NAV_ITEMS);
+  const navItems = withDashboardNavExtensions(DASHBOARD_NAV_ITEMS);
   return (
     <nav
       style={zLayerStyle("chrome")}

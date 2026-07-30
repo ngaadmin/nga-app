@@ -3,35 +3,32 @@
 import { useState } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/copy";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { HIGH_ROI_WARNING_THRESHOLD } from "@/lib/dashboard/vault-compounding";
-import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82]";
 
-type VaultV2PremiumCompoundingLimitsModalProps = {
+type PremiumCompoundingLimitsModalProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-function VaultV2PremiumCompoundingLimitsModal({
-  isOpen,
-  onClose,
-}: VaultV2PremiumCompoundingLimitsModalProps) {
+function PremiumCompoundingLimitsModal({ isOpen, onClose }: PremiumCompoundingLimitsModalProps) {
   const copy = copyMatrix.dashboard.vault.budget;
 
   return (
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      labelledBy="vault-v2-premium-compounding-title"
+      labelledBy="advanced-money-tools-premium-compounding-title"
       backdropClassName="bg-[#031F82]/45"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5"
     >
       <h2
-        id="vault-v2-premium-compounding-title"
+        id="advanced-money-tools-premium-compounding-title"
         className="font-heading text-lg font-extrabold text-[#031F82]"
       >
         {copy.premiumCompoundingTitle}
@@ -51,7 +48,7 @@ function VaultV2PremiumCompoundingLimitsModal({
   );
 }
 
-export type VaultV2CompoundingCalculatorPanelProps = {
+export type AdvancedMoneyToolsCompoundingPanelProps = {
   savingsBalance: number;
   projectedTotal: number;
   isPremium: boolean;
@@ -66,7 +63,7 @@ export type VaultV2CompoundingCalculatorPanelProps = {
   onExpectedRoiChange: (value: number) => void;
 };
 
-export function VaultV2CompoundingCalculatorPanel({
+export function AdvancedMoneyToolsCompoundingPanel({
   savingsBalance,
   projectedTotal,
   isPremium,
@@ -79,7 +76,7 @@ export function VaultV2CompoundingCalculatorPanel({
   onYearsSavedChange,
   onWeeklyTopUpChange,
   onExpectedRoiChange,
-}: VaultV2CompoundingCalculatorPanelProps) {
+}: AdvancedMoneyToolsCompoundingPanelProps) {
   const { formatMoney, currencySymbol } = useCurrency();
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const showHighRoiWarning = expectedRoi >= HIGH_ROI_WARNING_THRESHOLD;
@@ -124,10 +121,10 @@ export function VaultV2CompoundingCalculatorPanel({
       <div
         className="space-y-3 rounded-xl bg-[#F7FBFF]/80 p-3"
         role="region"
-        aria-label={vaultV2Copy.compoundingCalculatorAriaLabel}
+        aria-label={advancedMoneyToolsCopy.compoundingCalculatorAriaLabel}
       >
         <p className="font-sans text-xs text-[#1E3A5F]">
-          {vaultV2Copy.projectedLabel}{" "}
+          {advancedMoneyToolsCopy.projectedLabel}{" "}
           <span className="font-semibold text-[#031F82]">{formatMoney(projectedTotal)}</span>
         </p>
 
@@ -145,7 +142,7 @@ export function VaultV2CompoundingCalculatorPanel({
 
         <label className="block">
           <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-            {vaultV2Copy.yearsSavedLabel}
+            {advancedMoneyToolsCopy.yearsSavedLabel}
             <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
               {yearsSaved}
             </span>
@@ -176,7 +173,7 @@ export function VaultV2CompoundingCalculatorPanel({
                 }
               }}
               className="mt-1.5 w-full rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#0CC1E0]"
-              aria-label={vaultV2Copy.customYearsSavedAriaLabel}
+              aria-label={advancedMoneyToolsCopy.customYearsSavedAriaLabel}
             />
           ) : null}
         </label>
@@ -224,7 +221,7 @@ export function VaultV2CompoundingCalculatorPanel({
 
         <label className="block">
           <span className="flex items-center justify-between font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
-            {vaultV2Copy.expectedRoiLabel}
+            {advancedMoneyToolsCopy.expectedRoiLabel}
             <span className="rounded-full bg-[#BDE9FB]/30 px-2 py-0.5 text-[#0CC1E0]">
               {expectedRoi}%
             </span>
@@ -249,7 +246,7 @@ export function VaultV2CompoundingCalculatorPanel({
           </div>
         ) : null}
       </div>
-      <VaultV2PremiumCompoundingLimitsModal
+      <PremiumCompoundingLimitsModal
         isOpen={premiumLimitsOpen}
         onClose={() => setPremiumLimitsOpen(false)}
       />

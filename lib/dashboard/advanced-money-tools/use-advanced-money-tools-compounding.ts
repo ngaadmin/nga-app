@@ -9,7 +9,7 @@ import {
 import { projectCompoundSavings } from "@/lib/dashboard/vault-compounding";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 
-export function useVaultV2Compounding(totalSavings: number, isPremium: boolean) {
+export function useAdvancedMoneyToolsCompounding(totalSavings: number, isPremium: boolean) {
   const cohort = useMasteryCohort();
   const compoundingDefaults = useMemo(
     () => getVaultCompoundingDefaults(cohort),

@@ -2,6 +2,7 @@
 
 import { CurrencyProvider } from "@/lib/dashboard/currency-context";
 import { DashboardWalletProvider } from "@/lib/dashboard/dashboard-wallet-context";
+import { VaultLedgerProvider } from "@/lib/dashboard/vault-ledger-context";
 
 type DashboardProvidersProps = {
   children: React.ReactNode;
@@ -10,7 +11,9 @@ type DashboardProvidersProps = {
 export function DashboardProviders({ children }: DashboardProvidersProps) {
   return (
     <CurrencyProvider>
-      <DashboardWalletProvider>{children}</DashboardWalletProvider>
+      <DashboardWalletProvider>
+        <VaultLedgerProvider>{children}</VaultLedgerProvider>
+      </DashboardWalletProvider>
     </CurrencyProvider>
   );
 }

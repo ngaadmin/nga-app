@@ -85,6 +85,13 @@
     isolation: isolate;
   }
 
+  /** Horizontal swipe regions — overrides body touch-action: pan-y on mobile. */
+  .nga-horizontal-scroll {
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
   .lesson-range-slider {
     -webkit-appearance: none;
     appearance: none;

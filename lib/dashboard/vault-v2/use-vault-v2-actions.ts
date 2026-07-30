@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
@@ -42,11 +42,7 @@ import {
   type CustomVaultBucketPersisted,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import {
-  type LedgerCategory,
-  type LedgerEntry,
-  type LedgerFlow,
-} from "@/lib/dashboard/vault-ledger";
+import { useVaultLedger } from "@/lib/dashboard/vault-ledger-context";
 
 /** Premium billing is not wired yet — Vault V2 defaults to freemium limits. */
 const VAULT_V2_IS_PREMIUM = false;
@@ -64,10 +60,6 @@ function defaultSpendingCategoryLabels(): Record<DefaultSpendingCategoryId, stri
 
 function isDefaultSpendingCategoryId(id: SpendingCategoryId): id is DefaultSpendingCategoryId {
   return (DEFAULT_SPENDING_CATEGORY_IDS as readonly string[]).includes(id);
-}
-
-function createLedgerId(): string {
-  return `ledger-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
 function adjustBucketBalance(
@@ -105,9 +97,9 @@ function adjustBucketBalance(
 export function useVaultV2Actions() {
   const vaultCopy = copyMatrix.dashboard.vault;
   const budgetCopy = vaultCopy.budget;
-  const ledgerCopy = vaultCopy.ledger;
   const { formatMoney } = useCurrency();
   const masteryCohort = useMasteryCohort();
+  const { appendLedger } = useVaultLedger();
   const {
     moneyToAllocate,
     setMoneyToAllocate,
@@ -123,16 +115,6 @@ export function useVaultV2Actions() {
     setCustomSpendingCategories,
     vaultBuckets,
   } = useDashboardWallet();
-
-  const ledgerCounter = useRef(0);
-  const [ledger, setLedger] = useState<LedgerEntry[]>([
-    {
-      id: "ledger-welcome",
-      message: ledgerCopy.welcomeMessage,
-      category: "info",
-      timestamp: Date.now(),
-    },
-  ]);
 
   const spendingCategories = useMemo(
     () =>
@@ -157,33 +139,6 @@ export function useVaultV2Actions() {
   const totalSavings = useMemo(
     () => computeTotalSavings(saveJarBalance, vaultGoals),
     [saveJarBalance, vaultGoals],
-  );
-
-  const appendLedger = useCallback(
-    (
-      message: string,
-      options: {
-        category: LedgerCategory;
-        highlight?: boolean;
-        amount?: number;
-        flow?: LedgerFlow;
-      },
-    ) => {
-      ledgerCounter.current += 1;
-      setLedger((current) => [
-        {
-          id: `ledger-${ledgerCounter.current}-${createLedgerId()}`,
-          message,
-          category: options.category,
-          highlight: options.highlight,
-          timestamp: Date.now(),
-          amount: options.amount,
-          flow: options.flow,
-        },
-        ...current,
-      ]);
-    },
-    [],
   );
 
   const celebrateGoalsJustHit = useCallback(
@@ -492,7 +447,6 @@ export function useVaultV2Actions() {
 
   return {
     isPremium: VAULT_V2_IS_PREMIUM,
-    ledger,
     moneyToAllocate,
     vaultBuckets,
     vaultGoals,

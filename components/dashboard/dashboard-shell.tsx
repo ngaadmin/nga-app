@@ -38,7 +38,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
         <main
           className={cn(
-            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
             isLessonRoute
               ? "px-0 py-0 pb-20"
               : "px-4 py-6 pb-28 sm:px-6 md:pb-8",

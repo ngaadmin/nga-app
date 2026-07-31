@@ -35,3 +35,7 @@ export const vaultV2JarTileBalanceClass =
 /** Section title on light Vault V2 surfaces (deposit, expanded panels). */
 export const vaultV2LightSectionTitleClass =
   "font-heading text-base font-extrabold leading-snug tracking-normal text-[#031F82]";
+
+/** Muted helper copy for virtual-money simulator disclaimers. */
+export const vaultV2SimulatorDisclaimerClass =
+  "font-sans text-sm leading-relaxed text-[#1E3A5F]/70";

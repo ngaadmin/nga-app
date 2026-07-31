@@ -230,8 +230,11 @@ export const copyMatrix = {
       budget: {
         sectionTitle: "Budget Allocation",
         depositHeading: "Got some money? Add it here!",
-        depositSectionDisclaimer:
-          "Enter real-world cash I earned from allowance, jobs, gifts, or money in my bank. This is a virtual learning simulator: nothing here connects to real payments or accounts.",
+        depositSectionDisclaimerLead:
+          "Enter real-world cash from allowance, jobs, or gifts to practice budgeting in ",
+        depositSectionDisclaimerEmphasis: "this virtual learning simulator",
+        depositSectionDisclaimerRest:
+          ". Nothing here connects to real bank accounts, payments, or financial institutions.",
         depositButton: "Deposit Income",
         poolLabel: "Money to Allocate",
         currencySettingsNote:
@@ -293,7 +296,7 @@ export const copyMatrix = {
         allocateHeading: "Split It Up",
         totalBalanceLabel: "My Money",
         virtualMoneyDisclaimer:
-          "This is a virtual money simulator for learning. It represents real-world cash or bank savings.",
+          "This is a virtual learning simulator for practicing real-world financial management. Nothing here connects to real bank accounts, payments, or financial institutions.",
         futurePotentialLabel: "Future Potential",
         currentSavingsLabel: "Current Savings",
         changeLimitsLink: "Change limits",

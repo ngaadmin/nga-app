@@ -110,9 +110,7 @@ export function VaultV2Dashboard() {
         />
       ) : null}
 
-      {!expandedBucket ? (
-        <VaultV2DepositSection onDeposit={handleDepositAndOpenAllocation} />
-      ) : null}
+      <VaultV2DepositSection onDeposit={handleDepositAndOpenAllocation} />
 
       <VaultV2AllocationModal
         isOpen={allocationModalOpen}

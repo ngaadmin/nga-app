@@ -9,7 +9,10 @@ import {
   VAULT_INCOME_SOURCES,
   type VaultIncomeSourceId,
 } from "@/lib/dashboard/vault-income-sources";
-import { vaultV2LightSectionTitleClass } from "@/lib/dashboard/vault-v2/vault-v2-my-money-card-styles";
+import {
+  vaultV2LightSectionTitleClass,
+  vaultV2SimulatorDisclaimerClass,
+} from "@/lib/dashboard/vault-v2/vault-v2-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -36,7 +39,10 @@ export function VaultV2DepositSection({ onDeposit }: VaultV2DepositSectionProps)
   }
 
   return (
-    <section aria-label="Deposit income" className="border-t border-[#BDE9FB]/40 pt-5">
+    <section
+      aria-label="Deposit income"
+      className="border-t border-[#BDE9FB]/40 pb-1 pt-5"
+    >
       <form onSubmit={handleDepositSubmit} className="space-y-3">
         <h2 className={vaultV2LightSectionTitleClass}>
           {copy.depositHeading}
@@ -79,8 +85,10 @@ export function VaultV2DepositSection({ onDeposit }: VaultV2DepositSectionProps)
             Add
           </button>
         </div>
-        <p className="font-sans text-xs leading-snug text-[#1E3A5F]/70">
-          {copy.depositSectionDisclaimer}
+        <p className={cn(vaultV2SimulatorDisclaimerClass, "mt-3")}>
+          {copy.depositSectionDisclaimerLead}
+          <span className="font-bold">{copy.depositSectionDisclaimerEmphasis}</span>
+          {copy.depositSectionDisclaimerRest}
         </p>
       </form>
     </section>

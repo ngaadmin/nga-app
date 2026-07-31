@@ -447,20 +447,43 @@ export const lessonMatchConnectorSpacerClass = "w-4 shrink-0";
 export const lessonRevealBucketClass =
   "rounded-3xl border-2 border-dashed border-[#BDE9FB]/70 bg-[#F7FBFF]/50 p-4 transition-colors";
 
-export const lessonImagePlaceholderClass =
-  "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-4 text-center";
+/** Shared outer frame for top-of-screen lesson media (registry images, emoji fallbacks, reserves). */
+export const lessonIllustrationMediaFrameClass =
+  "mx-auto mb-3 flex w-full min-w-0 max-w-full shrink-0 flex-col items-center justify-center px-2 py-2";
 
-/** Modest scene slot below lesson chrome — fixed height for layout stability. */
-export const lessonIllustrationSlotClass =
-  "mx-auto flex h-[3rem] w-full max-w-[10rem] flex-col items-center justify-center rounded-xl border border-[#BDE9FB]/80 bg-[#F7FBFF]/90 px-2 text-center shadow-sm sm:h-[3.25rem] sm:max-w-[11rem]";
+/** Modest scene slot below lesson chrome — fixed min-height for layout stability. */
+export const lessonIllustrationSlotClass = cn(
+  lessonIllustrationMediaFrameClass,
+  "h-[3rem] min-h-[3rem] max-w-[10rem] rounded-xl border border-[#BDE9FB]/80 bg-[#F7FBFF]/90 text-center shadow-sm sm:h-[3.25rem] sm:max-w-[11rem]",
+);
+
+/** Registry image slot — responsive width/height on mobile viewports. */
+export const lessonIllustrationImageSlotClass = cn(
+  lessonIllustrationMediaFrameClass,
+  "min-h-[3.25rem] overflow-hidden rounded-xl border border-[#BDE9FB]/80 bg-[#F7FBFF]/90 shadow-sm sm:max-w-[16rem]",
+);
+
+/** Lesson registry / media `<img>` — explicit bounds prevent 0px collapse and overflow. */
+export const lessonIllustrationImageClass =
+  "block h-auto max-h-[220px] w-full max-w-full min-h-[3rem] object-contain object-center";
 
 export const lessonIllustrationEmojiClass = "text-2xl leading-none sm:text-[1.75rem]";
 
 export const lessonIllustrationLabelClass =
-  "mt-0.5 font-heading text-base font-medium text-[#1E3A5F]/70";
+  "mt-0.5 max-w-full font-heading text-base font-medium text-[#1E3A5F]/70";
+
+export const lessonImagePlaceholderClass =
+  "flex w-full min-w-0 max-w-full min-h-[5rem] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-4 py-3 text-center";
 
 export const lessonImagePlaceholderCompactClass =
-  "flex aspect-square w-full max-w-[8rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-3 text-center";
+  "flex aspect-square w-full min-w-0 max-w-full min-h-[5rem] max-w-[8rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF] px-3 py-2 text-center";
+
+/** Inline media inside games (drag targets, scene blocks). */
+export const lessonInlineMediaShellClass =
+  "relative w-full min-w-0 max-w-full shrink-0";
+
+export const lessonInlineMediaImageClass =
+  "block h-auto max-h-[220px] w-full max-w-full min-h-[3rem] object-contain object-center";
 
 // ─── Spent-total bar (L3 drag-and-drop) ──────────────────────────────────────
 

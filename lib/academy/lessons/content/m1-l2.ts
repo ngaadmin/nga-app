@@ -24,6 +24,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "true-false",
     id: "empty-jar-hook",
+    illustrationId: "pair-senna-lars-walking",
     prompt:
       "Tomorrow is Senna's birthday. Lars opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Lars can still buy the present.",
     correctAnswer: "false",
@@ -181,6 +182,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "drag-to-target",
     id: "gift-delivery",
+    illustrationId: "pair-senna-lars-walking",
     intro:
       "Fast forward to next week! Drag the gift to Senna to help Lars deliver his promise.",
     sourceLabel: "Gift",

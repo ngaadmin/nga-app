@@ -1,3 +1,4 @@
+import type { IllustrationId } from "@/lib/academy/illustrations/illustration-registry";
 import type { ScreenAuthoringMeta } from "./meta";
 
 export type AdvancePolicy =
@@ -12,6 +13,8 @@ export type LessonIllustration = {
   emoji?: string;
   label?: string;
   alt?: string;
+  /** Public URL path from the illustration registry (e.g. `/assets/illustrations/...`). */
+  src?: string;
 };
 
 export type DeclarativeScreenFields = {
@@ -19,6 +22,8 @@ export type DeclarativeScreenFields = {
   advance?: AdvancePolicy;
   /** Optional scene illustration shown below lesson chrome, above prompt copy. */
   illustration?: LessonIllustration;
+  /** Registry key for a reusable asset under `public/assets/illustrations/`. */
+  illustrationId?: IllustrationId;
 };
 
 export type WithDeclarative<T> = T & DeclarativeScreenFields;

@@ -223,7 +223,7 @@ export function LessonDragToTargetGame({
         >
           <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
           {targetImagePlaceholder ? (
-            <div className="relative w-full max-w-[8.5rem]">
+            <div className="relative w-full min-w-0 max-w-full shrink-0">
               <LessonImagePlaceholder
                 label={targetImagePlaceholder.label}
                 alt={targetImagePlaceholder.alt}

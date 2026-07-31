@@ -30,6 +30,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "hook-finish-sentence",
+    illustrationId: "mia-questioning",
     prompt:
       "Mia spent all her pocket money. She accidentally steps on her sister's headphones and breaks them. Mia's sister crashes out because:",
     optionA: { label: "Mia has no money to buy a new pair", isCorrect: true },
@@ -129,6 +130,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "mia-priority-choice",
+    illustrationId: "mia-thinking",
     prompt:
       "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
     optionA: {
@@ -152,6 +154,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "word-drop",
     id: "reflection-word-drop",
+    illustrationId: "mia-happy",
     prompt:
       "Because I didn't [blank] everything, I had [blank] to [blank] the headphones immediately.",
     blanks: [
@@ -170,6 +173,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "resolution-benefits-choice",
+    illustrationId: "mia-working",
     prompt:
       "Mia could fix the problem because she had spare cash. What are the other benefits of not spending all of your money? Select the best answer:",
     optionA: {

@@ -105,11 +105,13 @@ export function LessonRunner({
                 showIllustrationSlot={supportsLessonScreenIllustration(screen)}
                 illustration={resolveLessonScreenIllustration(screen)}
               >
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                  <LessonScreenIllustration />
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                  <div className="w-full min-w-0 shrink-0">
+                    <LessonScreenIllustration />
+                  </div>
                   <div
                     className={cn(
-                      "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain",
+                      "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain",
                       !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
                     )}
                   >

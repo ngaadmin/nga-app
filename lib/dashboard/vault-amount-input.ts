@@ -1,5 +1,11 @@
 import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
 
+/** Hard cap for vault currency inputs — avoids UI wrap and JS precision issues. */
+export const VAULT_MAX_AMOUNT = 1_000_000_000;
+
+/** Maximum digit count (excluding decimal separator) for vault amount inputs. */
+export const VAULT_MAX_INPUT_DIGITS = 12;
+
 export const VAULT_AMOUNT_STEP = 0.5;
 
 /** Whole-dollar steps for Vault allocation sliders. */
@@ -78,10 +84,56 @@ export function isVaultAllocationComplete(
   return vaultAllocationRemaining(allocatedTotal, poolTotal) <= 0;
 }
 
+function countAmountDigits(rawValue: string): number {
+  return rawValue.replace(/[^\d]/g, "").length;
+}
+
+/** Restrict keystrokes to a valid decimal string within digit / value caps. */
+export function sanitizeVaultAmountInput(rawValue: string): {
+  value: string;
+  hitCap: boolean;
+} {
+  const trimmed = rawValue.trim();
+  if (!trimmed) return { value: "", hitCap: false };
+
+  let normalized = trimmed.replace(/[^\d.]/g, "");
+  const firstDot = normalized.indexOf(".");
+  if (firstDot !== -1) {
+    normalized =
+      normalized.slice(0, firstDot + 1) +
+      normalized.slice(firstDot + 1).replace(/\./g, "");
+  }
+
+  let hitCap = false;
+  if (countAmountDigits(normalized) > VAULT_MAX_INPUT_DIGITS) {
+    hitCap = true;
+    while (countAmountDigits(normalized) > VAULT_MAX_INPUT_DIGITS) {
+      normalized = normalized.slice(0, -1);
+    }
+  }
+
+  const parsed = Number.parseFloat(normalized);
+  if (Number.isFinite(parsed) && parsed > VAULT_MAX_AMOUNT) {
+    hitCap = true;
+    return { value: String(VAULT_MAX_AMOUNT), hitCap: true };
+  }
+
+  return { value: normalized, hitCap };
+}
+
 export function parsePositiveVaultAmount(rawValue: string): number | null {
   const trimmed = rawValue.trim();
   if (!trimmed) return null;
   const parsed = Number.parseFloat(trimmed);
   if (!Number.isFinite(parsed) || parsed <= 0) return null;
-  return roundToHalfStep(parsed);
+  return roundToHalfStep(Math.min(parsed, VAULT_MAX_AMOUNT));
+}
+
+/** Parses a savings target — empty or zero clears the target without touching balance. */
+export function parseVaultTargetAmount(rawValue: string): number {
+  const trimmed = rawValue.trim();
+  if (!trimmed) return 0;
+  const parsed = Number.parseFloat(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return roundAudAmount(Math.min(parsed, VAULT_MAX_AMOUNT));
 }

@@ -8,6 +8,7 @@ import { VaultAllocationModal } from "@/components/dashboard/vault/vault-allocat
 import { VaultBucketDrilldown } from "@/components/dashboard/vault/vault-bucket-drilldown";
 import { VaultDepositSection } from "@/components/dashboard/vault/vault-deposit-section";
 import { VaultManageBudgetJarsModal } from "@/components/dashboard/vault/vault-manage-budget-jars-modal";
+import { VaultManageSavingsGoalsModal } from "@/components/dashboard/vault/vault-manage-savings-goals-modal";
 import { VaultMyMoneyCard } from "@/components/dashboard/vault/vault-my-money-card";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
@@ -38,11 +39,18 @@ export function VaultDashboard() {
     handleRenameBucket,
     handleAddCustomBucket,
     handleDeleteCustomBucket,
+    handleUpdateGoalDetails,
+    handleAddGoal,
+    handleDeleteGoal,
+    handleResetGoalBalance,
+    handleResetBucketBalance,
+    handleResetAllBalances,
   } = useVaultActions();
 
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [manageJarsModalOpen, setManageJarsModalOpen] = useState(false);
+  const [manageGoalsModalOpen, setManageGoalsModalOpen] = useState(false);
   const [cashInOpen, setCashInOpen] = useState(
     () => searchParams.get("cashIn") === "1",
   );
@@ -106,6 +114,7 @@ export function VaultDashboard() {
           onAddCustomCategory={handleAddCustomSpendingCategory}
           onRenameCategory={handleRenameSpendingCategory}
           onAssignGoals={handleAssignGoals}
+          onManageGoalsClick={() => setManageGoalsModalOpen(true)}
           onClose={() => setExpandedBucketId(null)}
         />
       ) : null}
@@ -134,6 +143,20 @@ export function VaultDashboard() {
             setExpandedBucketId(null);
           }
         }}
+      />
+
+      <VaultManageSavingsGoalsModal
+        isOpen={manageGoalsModalOpen}
+        onClose={() => setManageGoalsModalOpen(false)}
+        goals={vaultGoals}
+        buckets={vaultBuckets}
+        isPremium={isPremium}
+        onUpdateGoalDetails={handleUpdateGoalDetails}
+        onAddGoal={handleAddGoal}
+        onDeleteGoal={handleDeleteGoal}
+        onResetGoalBalance={handleResetGoalBalance}
+        onResetBucketBalance={handleResetBucketBalance}
+        onResetAllBalances={handleResetAllBalances}
       />
 
       <ModalShell

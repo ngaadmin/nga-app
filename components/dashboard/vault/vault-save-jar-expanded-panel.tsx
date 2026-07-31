@@ -6,6 +6,7 @@ import { VaultMoveMoneyForm, VaultSaveJarMoveMoneyForm } from "@/components/dash
 import { VaultSavingsGoalAllocationModal } from "@/components/dashboard/vault/vault-savings-goal-allocation-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
+import { SettingsIcon } from "@/lib/dashboard/icons";
 import { roundAudAmount, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import {
@@ -13,6 +14,11 @@ import {
   savingsGoalProgress,
 } from "@/lib/dashboard/savings-goals";
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
+import {
+  vaultLightSectionTitleClass,
+  vaultManageJarsButtonClass,
+} from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import {
   buildSaveJarTransferDestinations,
   buildSaveJarTransferSources,
@@ -39,6 +45,7 @@ export type VaultSaveJarExpandedPanelProps = {
     amount: number,
   ) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
+  onManageGoalsClick?: () => void;
   onClose: () => void;
 };
 
@@ -49,6 +56,7 @@ export function VaultSaveJarExpandedPanel({
   totalSavings,
   onVaultTransfer,
   onAssignGoals,
+  onManageGoalsClick,
   onClose,
 }: VaultSaveJarExpandedPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
@@ -107,13 +115,13 @@ export function VaultSaveJarExpandedPanel({
     <>
       <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-heading text-sm font-extrabold text-[#031F82]">
+          <p className={vaultLightSectionTitleClass}>
             {bucket.emoji} {savingsCopy.sectionTitle}
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+            className="shrink-0 font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
           >
             Close
           </button>
@@ -197,7 +205,35 @@ export function VaultSaveJarExpandedPanel({
         )}
 
         {goals.length > 0 ? (
-          <ul className="mt-3 space-y-2 border-t border-[#BDE9FB]/40 pt-3">
+          <div className="relative mt-3 border-t border-[#BDE9FB]/40 pt-3">
+            <div className="mb-2 flex items-center justify-between gap-2 pr-10">
+              <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
+                {savingsCopy.sectionTitle}
+              </p>
+              {onManageGoalsClick ? (
+                <button
+                  type="button"
+                  onClick={onManageGoalsClick}
+                  className="inline-flex min-h-touch items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
+                >
+                  {vaultCopy.manageSavingsGoalsLabel}
+                </button>
+              ) : null}
+            </div>
+            {onManageGoalsClick ? (
+              <button
+                type="button"
+                onClick={onManageGoalsClick}
+                aria-label={vaultCopy.goalSettingsLabel}
+                className={cn(
+                  vaultManageJarsButtonClass,
+                  "right-0 top-0 bg-[#BDE9FB]/30 text-[#031F82] ring-[#BDE9FB]/60 hover:bg-[#BDE9FB]/50",
+                )}
+              >
+                <SettingsIcon className="size-5 shrink-0" />
+              </button>
+            ) : null}
+          <ul className="space-y-2">
             {goals.map((goal) => {
               const progress = savingsGoalProgress(goal);
               const percentAchieved = savingsGoalPercentAchieved(goal);
@@ -290,10 +326,40 @@ export function VaultSaveJarExpandedPanel({
               );
             })}
           </ul>
+          </div>
         ) : (
-          <p className="mt-3 border-t border-[#BDE9FB]/40 pt-3 font-sans text-xs leading-snug text-[#1E3A5F]/70">
-            {savingsCopy.noGoalsYet}
-          </p>
+          <div className="relative mt-3 border-t border-[#BDE9FB]/40 pt-3">
+            {onManageGoalsClick ? (
+              <>
+                <div className="mb-2 flex items-center justify-between gap-2 pr-10">
+                  <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
+                    {savingsCopy.sectionTitle}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onManageGoalsClick}
+                    className="inline-flex min-h-touch items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
+                  >
+                    {vaultCopy.manageSavingsGoalsLabel}
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={onManageGoalsClick}
+                  aria-label={vaultCopy.goalSettingsLabel}
+                  className={cn(
+                    vaultManageJarsButtonClass,
+                    "right-0 top-0 bg-[#BDE9FB]/30 text-[#031F82] ring-[#BDE9FB]/60 hover:bg-[#BDE9FB]/50",
+                  )}
+                >
+                  <SettingsIcon className="size-5 shrink-0" />
+                </button>
+              </>
+            ) : null}
+            <p className="font-sans text-xs leading-snug text-[#1E3A5F]/70">
+              {savingsCopy.noGoalsYet}
+            </p>
+          </div>
         )}
       </div>
 

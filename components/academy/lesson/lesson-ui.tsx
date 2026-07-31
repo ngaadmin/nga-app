@@ -10,9 +10,6 @@ import {
   lessonGameAreaClass,
   lessonGameBoardClass,
   lessonGameHintClass,
-  lessonIllustrationEmojiClass,
-  lessonIllustrationLabelClass,
-  lessonIllustrationSlotClass,
   lessonImagePlaceholderClass,
   lessonImagePlaceholderCompactClass,
   lessonInlineErrorClass,
@@ -63,7 +60,6 @@ import {
   lessonWrongSelectionChipClass,
   type LessonChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
 import { cn } from "@/lib/utils/cn";
 
@@ -297,46 +293,10 @@ export function LessonMatchColumnHeaders({
   );
 }
 
-type LessonIllustrationSlotProps = LessonIllustration & {
-  className?: string;
-};
-
-/** Modest centred scene slot — sits below lesson chrome, above prompt copy. */
-export function LessonIllustrationSlot({
-  emoji,
-  label,
-  alt,
-  className,
-}: LessonIllustrationSlotProps) {
-  const ariaLabel = alt ?? label ?? "Lesson illustration";
-
-  return (
-    <div
-      className={cn(lessonIllustrationSlotClass, "mb-3 shrink-0", className)}
-      role="img"
-      aria-label={ariaLabel}
-    >
-      {emoji ? (
-        <span className={lessonIllustrationEmojiClass} aria-hidden>
-          {emoji}
-        </span>
-      ) : null}
-      {label ? (
-        <p className={lessonIllustrationLabelClass}>{label}</p>
-      ) : null}
-    </div>
-  );
-}
-
-/** Reserved illustration frame for lighter screen types without scene content yet. */
-export function LessonIllustrationSlotReserve({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(lessonIllustrationSlotClass, "mb-3 shrink-0", className)}
-      aria-hidden
-    />
-  );
-}
+export {
+  LessonIllustrationSlot,
+  LessonIllustrationSlotReserve,
+} from "@/components/academy/lesson/lesson-illustration-slot";
 
 type LessonImagePlaceholderProps = {
   label: string;
@@ -363,7 +323,9 @@ export function LessonImagePlaceholder({
       aria-label={alt ?? label}
     >
       <LessonColumnLabel>Image placeholder</LessonColumnLabel>
-      <p className="mt-1 font-heading text-sm font-bold text-[#031F82]">{label}</p>
+      <p className="mt-1 max-w-full font-heading text-sm font-bold leading-snug text-[#031F82]">
+        {label}
+      </p>
     </div>
   );
 }

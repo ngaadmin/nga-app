@@ -26,4 +26,35 @@ export const vaultCopy = {
   deleteJar: "Delete jar",
   addJarToList: "Add to list",
   doneEditing: "Done",
+  manageSavingsGoalsLabel: "Manage Goals",
+  manageSavingsGoalsTitle: "Manage Savings Goals",
+  manageSavingsGoalsBody:
+    "Set targets, rename goals, add custom savings goals, or reset balances. Clearing a target never wipes saved progress.",
+  goalSettingsLabel: "Goal Settings",
+  addSavingsGoal: "+ Add Goal",
+  goalNameLabel: "Goal name",
+  goalTargetLabel: "Target amount",
+  goalIconLabel: "Icon",
+  saveGoalChanges: "Save Changes",
+  resetGoalBalance: "Reset Balance",
+  resetGoalBalanceConfirmTitle: "Reset this goal balance?",
+  resetGoalBalanceConfirmBody:
+    "Are you sure you want to reset this item to $0? Saved progress in this goal will be cleared.",
+  resetBucketBalance: "Reset Balance",
+  resetBucketBalanceConfirmTitle: "Reset this jar balance?",
+  resetBucketBalanceConfirmBody:
+    "Are you sure you want to reset this item to $0? Money in this jar will be cleared.",
+  resetAllBalances: "Reset All Balances",
+  resetAllBalancesConfirmTitle: "Reset everything to $0?",
+  resetAllBalancesConfirmBody:
+    "Are you sure you want to reset ALL jars, goals, and income balances to $0? This cannot be undone.",
+  resetConfirm: "Yes, reset",
+  resetCancel: "Cancel",
+  maxAmountReachedNotice: "Maximum amount reached",
+  premiumGoalsLockedTitle: "Premium Savings Goals",
+  premiumGoalsLockedBody:
+    "Premium unlocks custom savings goals beyond your two starter targets.",
+  deleteGoal: "Delete goal",
+  deleteGoalConfirmTitle: "Delete this goal?",
+  deleteGoalConfirmBody: "This custom goal will be removed from your vault.",
 } as const;

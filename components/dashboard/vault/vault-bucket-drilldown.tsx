@@ -24,6 +24,7 @@ type VaultBucketDrilldownProps = {
   onAddCustomCategory: (label: string) => void;
   onRenameCategory: (categoryId: SpendingCategoryId, label: string) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
+  onManageGoalsClick?: () => void;
   onClose: () => void;
 };
 
@@ -39,6 +40,7 @@ export function VaultBucketDrilldown({
   onAddCustomCategory,
   onRenameCategory,
   onAssignGoals,
+  onManageGoalsClick,
   onClose,
 }: VaultBucketDrilldownProps) {
   if (bucket.id === SAVINGS_JAR_ID) {
@@ -50,6 +52,7 @@ export function VaultBucketDrilldown({
         totalSavings={totalSavings}
         onVaultTransfer={onVaultTransfer}
         onAssignGoals={onAssignGoals}
+        onManageGoalsClick={onManageGoalsClick}
         onClose={onClose}
       />
     );

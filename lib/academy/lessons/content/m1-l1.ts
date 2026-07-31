@@ -144,12 +144,14 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
 
 const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
+    illustrationId: "lars-happy",
     narrativeBefore:
       "Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be",
     wrongError:
       "Not quite! Look how fast Lars is running - what is his brain telling him to do?",
   },
   "short-fun-reality": {
+    illustrationId: "lars-thinking",
     prompt:
       "Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy, but ten minutes later...",
     optionA: {
@@ -192,6 +194,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     ],
   },
   "countdown-trap": {
+    illustrationId: "lars-working",
     prompt:
       "Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
     optionA: { label: "To trick his brain into buying fast.", isCorrect: true },
@@ -210,6 +213,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     successMessage: "Success! Lars has to wait 24 hours.",
   },
   resolution: {
+    illustrationId: "lars-celebrating",
     narrative:
       "The freeze worked! The next morning, Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",
     bonusXp: 0,

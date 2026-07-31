@@ -1,6 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import {
+  sanitizeVaultAmountInput,
+} from "@/lib/dashboard/vault-amount-input";
 import {
   vaultActionButtonRowClass,
   vaultActionFieldRowClass,
@@ -12,6 +15,7 @@ import {
   vaultPrimaryBtnClass,
   vaultSecondaryBtnClass,
 } from "@/lib/dashboard/vault/vault-action-form-styles";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
 type VaultActionPanelProps = {
@@ -52,27 +56,37 @@ export function VaultAmountField({
   ariaLabel,
   onBlur,
 }: VaultAmountFieldProps) {
+  const [hitCap, setHitCap] = useState(false);
+
+  function handleChange(nextRaw: string) {
+    const { value: next, hitCap: capped } = sanitizeVaultAmountInput(nextRaw);
+    setHitCap(capped);
+    onChange(next);
+  }
+
   return (
-    <label className={vaultAmountFieldShellClass}>
-      <span className="shrink-0 font-heading text-base font-bold text-[#031F82]">
-        {currencySymbol}
-      </span>
-      <input
-        type="text"
-        inputMode="decimal"
-        value={value}
-        onChange={(event) => {
-          const next = event.target.value;
-          if (next === "" || /^\d*\.?\d*$/.test(next)) {
-            onChange(next);
-          }
-        }}
-        onBlur={onBlur}
-        placeholder="0.00"
-        aria-label={ariaLabel}
-        className={vaultAmountInputClass}
-      />
-    </label>
+    <div className="min-w-0">
+      <label className={vaultAmountFieldShellClass}>
+        <span className="shrink-0 font-heading text-base font-bold text-[#031F82]">
+          {currencySymbol}
+        </span>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={value}
+          onChange={(event) => handleChange(event.target.value)}
+          onBlur={onBlur}
+          placeholder="0.00"
+          aria-label={ariaLabel}
+          className={vaultAmountInputClass}
+        />
+      </label>
+      {hitCap ? (
+        <p className="mt-1 font-sans text-[10px] text-[#1E3A5F]/70" role="status">
+          {vaultCopy.maxAmountReachedNotice}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

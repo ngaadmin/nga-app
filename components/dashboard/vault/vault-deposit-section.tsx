@@ -3,12 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { parsePositiveVaultAmount } from "@/lib/dashboard/vault-amount-input";
+import { parsePositiveVaultAmount, sanitizeVaultAmountInput } from "@/lib/dashboard/vault-amount-input";
 import {
   DEFAULT_VAULT_INCOME_SOURCE_ID,
   VAULT_INCOME_SOURCES,
   type VaultIncomeSourceId,
 } from "@/lib/dashboard/vault-income-sources";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
   vaultLightSectionTitleClass,
   vaultSimulatorDisclaimerClass,
@@ -26,6 +27,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const { currencySymbol } = useCurrency();
   const [depositInput, setDepositInput] = useState("");
+  const [amountCapHit, setAmountCapHit] = useState(false);
   const [incomeSource, setIncomeSource] = useState<VaultIncomeSourceId>(
     DEFAULT_VAULT_INCOME_SOURCE_ID,
   );
@@ -57,10 +59,9 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
               inputMode="decimal"
               value={depositInput}
               onChange={(event) => {
-                const next = event.target.value;
-                if (next === "" || /^\d*\.?\d*$/.test(next)) {
-                  setDepositInput(next);
-                }
+                const { value: next, hitCap } = sanitizeVaultAmountInput(event.target.value);
+                setAmountCapHit(hitCap);
+                setDepositInput(next);
               }}
               placeholder="0.00"
               aria-label={copy.depositHeading}
@@ -85,6 +86,11 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
             Add
           </button>
         </div>
+        {amountCapHit ? (
+          <p className="font-sans text-[10px] text-[#1E3A5F]/70" role="status">
+            {vaultCopy.maxAmountReachedNotice}
+          </p>
+        ) : null}
         <p className={cn(vaultSimulatorDisclaimerClass, "mt-3")}>
           {copy.depositSectionDisclaimerLead}
           <span className="font-bold">{copy.depositSectionDisclaimerEmphasis}</span>

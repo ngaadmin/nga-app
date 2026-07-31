@@ -1,3 +1,7 @@
+import {
+  getIllustrationPath,
+  isIllustrationId,
+} from "@/lib/academy/illustrations/illustration-registry";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import type { ScreenConfig } from "@/lib/academy/lessons/types";
 
@@ -42,12 +46,37 @@ function imagePlaceholderToIllustration(
   };
 }
 
+function humanizeIllustrationId(id: string): string {
+  return id.replace(/-/g, " ");
+}
+
+function resolveRegistryIllustration(
+  screen: ScreenConfig,
+): LessonIllustration | undefined {
+  const { illustrationId, illustration: legacy } = screen;
+  if (!illustrationId || !isIllustrationId(illustrationId)) {
+    return undefined;
+  }
+
+  return {
+    src: getIllustrationPath(illustrationId),
+    alt: legacy?.alt ?? humanizeIllustrationId(illustrationId),
+    emoji: legacy?.emoji,
+    label: legacy?.label,
+  };
+}
+
 /** Shared rule: illustration slot only on lighter screen types, when content defines one. */
 export function resolveLessonScreenIllustration(
   screen: ScreenConfig,
 ): LessonIllustration | undefined {
   if (isDenseLessonScreen(screen)) {
     return undefined;
+  }
+
+  const fromRegistry = resolveRegistryIllustration(screen);
+  if (fromRegistry) {
+    return fromRegistry;
   }
 
   if (screen.illustration) {

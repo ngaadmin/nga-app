@@ -14,6 +14,7 @@ import { roundAudAmount } from "@/lib/dashboard/destination-jars";
 import {
   capAllocationDrafts,
   clampVaultAllocationEntry,
+  sanitizeVaultAmountInput,
   sumAllocationDraftValues,
 } from "@/lib/dashboard/vault-amount-input";
 import { sumAllocations } from "@/lib/dashboard/vault-buckets";
@@ -189,16 +190,19 @@ export function VaultSavingsGoalAllocationModal({
 
   const handleAllocationInputChange = useCallback(
     (goalId: string, rawValue: string) => {
-      if (rawValue !== "" && !/^\d*\.?\d*$/.test(rawValue)) return;
+      const { value: sanitized, hitCap: digitCap } = sanitizeVaultAmountInput(rawValue);
+      const working = sanitized;
 
-      if (rawValue === "" || rawValue === ".") {
-        setAllocationInputs((current) => ({ ...current, [goalId]: rawValue }));
+      if (working !== "" && !/^\d*\.?\d*$/.test(working)) return;
+
+      if (working === "" || working === ".") {
+        setAllocationInputs((current) => ({ ...current, [goalId]: working }));
         handleAllocationChange(goalId, 0);
-        setInputWasCapped(false);
+        setInputWasCapped(digitCap);
         return;
       }
 
-      const parsed = Number.parseFloat(rawValue);
+      const parsed = Number.parseFloat(working);
       if (!Number.isFinite(parsed) || parsed < 0) return;
 
       const othersTotal = roundAudAmount(
@@ -207,13 +211,13 @@ export function VaultSavingsGoalAllocationModal({
           .reduce((sum, id) => sum + (allocationDrafts[id] ?? 0), 0),
       );
       const capped = clampVaultAllocationEntry(poolTotal, othersTotal, parsed);
-      const wasCapped = capped !== parsed;
+      const wasCapped = capped !== parsed || digitCap;
       const nextInput =
         wasCapped && capped > 0
           ? String(capped)
           : wasCapped && capped === 0
             ? "0"
-            : rawValue;
+            : working;
 
       setAllocationInputs((current) => ({ ...current, [goalId]: nextInput }));
       setInputWasCapped(wasCapped);

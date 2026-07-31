@@ -87,8 +87,28 @@ export function computeTotalSavings(
   return roundAudAmount(unassignedSaveJarBalance + sumSavingsGoalBalances(goals));
 }
 
+/** When true, custom goals beyond freemium starters are available without Premium. */
+export const VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL = true;
+
 export function isFreemiumSystemGoal(id: SavingsGoalId): boolean {
   return id === FREEMIUM_BIG_SAVINGS_GOAL_ID || id === FREEMIUM_EMERGENCY_GOAL_ID;
+}
+
+export function isCustomSavingsGoal(id: SavingsGoalId): boolean {
+  return !isFreemiumSystemGoal(id);
+}
+
+export function countCustomSavingsGoals(goals: readonly SavingsGoal[]): number {
+  return goals.filter((goal) => isCustomSavingsGoal(goal.id)).length;
+}
+
+/** Future Premium gate — unrestricted while `VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL`. */
+export function canAddCustomSavingsGoal(isPremium: boolean): boolean {
+  return isPremium || VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL;
+}
+
+export function canDeleteSavingsGoal(id: SavingsGoalId): boolean {
+  return isCustomSavingsGoal(id);
 }
 
 /** Cohort-scaled target for the primary freemium savings goal. */
@@ -144,6 +164,8 @@ export function ensureFreemiumStarterGoals(
     if (!existing) return template;
     return {
       ...template,
+      name: existing.name.trim() || template.name,
+      emoji: existing.emoji.trim() || template.emoji,
       balance: roundAudAmount(Math.max(0, existing.balance)),
       targetAmount: roundAudAmount(Math.max(0, existing.targetAmount)),
     };
@@ -157,7 +179,14 @@ export function resolveVaultSavingsGoals(
   isPremium: boolean,
 ): SavingsGoal[] {
   if (isPremium) {
-    return goals.filter((goal) => !isFreemiumSystemGoal(goal.id));
+    const custom = goals.filter((goal) => isCustomSavingsGoal(goal.id));
+    return custom.length > 0 ? custom : ensureFreemiumStarterGoals(goals, cohort);
   }
-  return ensureFreemiumStarterGoals(goals, cohort);
+
+  const starters = ensureFreemiumStarterGoals(goals, cohort);
+  if (VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL) {
+    const custom = goals.filter((goal) => isCustomSavingsGoal(goal.id));
+    return [...starters, ...custom];
+  }
+  return starters;
 }

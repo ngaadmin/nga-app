@@ -52,7 +52,7 @@ export const copyMatrix = {
         learningTrack: "Change learning track",
         learningTrackSummaryLocked: "View and update the learner age track",
         currency: "Display currency",
-        currencySummaryLocked: "Choose currency shown in The Vault",
+        currencySummaryLocked: "Choose currency shown in Vault",
       },
       learningTrack: {
         intro:
@@ -80,9 +80,9 @@ export const copyMatrix = {
       currency: {
         heading: "Display Currency",
         summary:
-          "Choose the currency shown across The Vault and XP cash-in. Amounts stay the same - only the symbol and format change.",
+          "Choose the currency shown across Vault and XP cash-in. Amounts stay the same - only the symbol and format change.",
         lockedHint: "Unlock Parent Hub to change currency.",
-        savedNote: "Currency updated across The Vault.",
+        savedNote: "Currency updated across Vault.",
       },
       birthYear: {
         pinBody:
@@ -123,9 +123,9 @@ export const copyMatrix = {
         heading: "Parent Points Conversion Rate",
         rateTemplate: " XP = $1.00 AUD",
         summary:
-          "When your child cashes in XP from The Vault, converted cash goes straight into their Save Jar at this rate.",
+          "When your child cashes in XP from Vault, converted cash goes straight into their Save Jar at this rate.",
         vaultCashInHint:
-          "Open Parent Hub (PIN required) to set the conversion rate. Kids cash in XP from The Vault.",
+          "Open Parent Hub (PIN required) to set the conversion rate. Kids cash in XP from Vault.",
         convertNowHeading: "Convert Now",
         convertFullBalance: "Convert Full Points Balance",
         customAmountLabel: "Custom points to convert",
@@ -162,7 +162,7 @@ export const copyMatrix = {
       },
     },
     academy: {
-      title: "The Academy",
+      title: "Academy",
       description:
         "Bite-sized learning missions. Master the 24 core financial skills through interactive games.",
       journey: {
@@ -216,13 +216,13 @@ export const copyMatrix = {
         ],
       },
     },
-    engine: {
-      title: "The Engine",
+    launchpad: {
+      title: "Launchpad",
       description:
         "Launch your business. Choose a Venture Pack blueprint and start earning real cash.",
     },
     vault: {
-      title: "The Vault",
+      title: "Vault",
       description:
         "My wealth cockpit. Track my assets, revenue, and watch my net worth climb.",
       cashInTileLabel: "Cash In My Points",
@@ -434,5 +434,5 @@ export const copyMatrix = {
 
 export type DashboardCopyPillar = keyof Pick<
   typeof copyMatrix.dashboard,
-  "settings" | "academy" | "engine" | "vault" | "achievements"
+  "settings" | "academy" | "launchpad" | "vault" | "achievements"
 >;

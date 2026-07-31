@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { VaultV2CoinStackVisual } from "@/components/dashboard/vault-v2/vault-v2-coin-stack-visual";
+import { VaultCoinStackVisual } from "@/components/dashboard/vault/vault-coin-stack-visual";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -22,8 +22,8 @@ import {
   isAllocationOverPool,
   sumEffectiveAllocationInputs,
   vaultAllocationRemainingDisplay,
-} from "@/lib/dashboard/vault-v2/allocation-remaining";
-import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
+} from "@/lib/dashboard/vault/allocation-remaining";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -75,7 +75,7 @@ function GoalAllocationInputRow({
         />
       </label>
 
-      <VaultV2CoinStackVisual
+      <VaultCoinStackVisual
         allocatedAmount={draft}
         poolTotal={poolTotal}
         className="ml-auto flex min-w-[3.5rem] flex-1 items-end justify-end pl-1"
@@ -84,7 +84,7 @@ function GoalAllocationInputRow({
   );
 }
 
-type VaultV2SavingsGoalAllocationModalProps = {
+type VaultSavingsGoalAllocationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   goals: SavingsGoal[];
@@ -92,13 +92,13 @@ type VaultV2SavingsGoalAllocationModalProps = {
   onAssignGoals: (allocations: Record<string, number>) => void;
 };
 
-export function VaultV2SavingsGoalAllocationModal({
+export function VaultSavingsGoalAllocationModal({
   isOpen,
   onClose,
   goals,
   poolBalance,
   onAssignGoals,
-}: VaultV2SavingsGoalAllocationModalProps) {
+}: VaultSavingsGoalAllocationModalProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const { formatMoney } = useCurrency();
@@ -273,14 +273,14 @@ export function VaultV2SavingsGoalAllocationModal({
       isOpen={isOpen}
       onClose={onClose}
       align="center"
-      labelledBy="vault-v2-savings-goal-allocation-title"
+      labelledBy="vault-savings-goal-allocation-title"
       backdropClassName="bg-[#031F82]/50"
       panelClassName="max-w-lg rounded-2xl border-0 bg-white p-5 shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2
-            id="vault-v2-savings-goal-allocation-title"
+            id="vault-savings-goal-allocation-title"
             className="font-heading text-lg font-extrabold text-[#031F82]"
           >
             {savingsCopy.goalAllocationHeading}
@@ -309,7 +309,7 @@ export function VaultV2SavingsGoalAllocationModal({
         <button
           type="button"
           onClick={onClose}
-          aria-label={vaultV2Copy.closeModalLabel}
+          aria-label={vaultCopy.closeModalLabel}
           className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
         >
           ✕

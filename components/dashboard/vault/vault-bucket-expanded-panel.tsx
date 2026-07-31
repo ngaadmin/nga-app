@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { VaultV2MoveMoneyForm } from "@/components/dashboard/vault-v2/vault-v2-move-money-form";
-import { VaultV2SpendMoneyForm } from "@/components/dashboard/vault-v2/vault-v2-spend-money-form";
+import { VaultMoveMoneyForm } from "@/components/dashboard/vault/vault-move-money-form";
+import { VaultSpendMoneyForm } from "@/components/dashboard/vault/vault-spend-money-form";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import {
@@ -20,9 +20,9 @@ import {
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
 import {
-  vaultV2ActionLinkActiveClass,
-  vaultV2ActionLinkClass,
-} from "@/lib/dashboard/vault-v2/vault-v2-action-form-styles";
+  vaultActionLinkActiveClass,
+  vaultActionLinkClass,
+} from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -36,12 +36,12 @@ function PremiumCategoriesModal({ isOpen, onClose }: { isOpen: boolean; onClose:
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      labelledBy="vault-v2-premium-categories-title"
+      labelledBy="vault-premium-categories-title"
       backdropClassName="bg-[#031F82]/45"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5"
     >
       <h2
-        id="vault-v2-premium-categories-title"
+        id="vault-premium-categories-title"
         className="font-heading text-lg font-extrabold text-[#031F82]"
       >
         {copy.premiumCategoriesTitle}
@@ -61,7 +61,7 @@ function PremiumCategoriesModal({ isOpen, onClose }: { isOpen: boolean; onClose:
   );
 }
 
-export type VaultV2BucketExpandedPanelProps = {
+export type VaultBucketExpandedPanelProps = {
   bucket: VaultBucket;
   buckets: VaultBucket[];
   goals: SavingsGoal[];
@@ -78,7 +78,7 @@ export type VaultV2BucketExpandedPanelProps = {
   onClose: () => void;
 };
 
-export function VaultV2BucketExpandedPanel({
+export function VaultBucketExpandedPanel({
   bucket,
   buckets,
   goals,
@@ -89,7 +89,7 @@ export function VaultV2BucketExpandedPanel({
   onAddCustomCategory,
   onRenameCategory,
   onClose,
-}: VaultV2BucketExpandedPanelProps) {
+}: VaultBucketExpandedPanelProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { formatMoney } = useCurrency();
@@ -139,7 +139,7 @@ export function VaultV2BucketExpandedPanel({
                     setActiveAction((current) => (current === "spend" ? null : "spend"))
                   }
                   disabled={!canUseFunds}
-                  className={cn(vaultV2ActionLinkClass, spendOpen && vaultV2ActionLinkActiveClass)}
+                  className={cn(vaultActionLinkClass, spendOpen && vaultActionLinkActiveClass)}
                 >
                   {savingsCopy.spendMoney}
                 </button>
@@ -153,7 +153,7 @@ export function VaultV2BucketExpandedPanel({
                     setActiveAction((current) => (current === "move" ? null : "move"))
                   }
                   disabled={!canMoveOut}
-                  className={cn(vaultV2ActionLinkClass, moveOpen && vaultV2ActionLinkActiveClass)}
+                  className={cn(vaultActionLinkClass, moveOpen && vaultActionLinkActiveClass)}
                 >
                   {savingsCopy.moveMoney}
                 </button>
@@ -161,7 +161,7 @@ export function VaultV2BucketExpandedPanel({
             </div>
 
             {spendOpen && canUseFunds ? (
-              <VaultV2SpendMoneyForm
+              <VaultSpendMoneyForm
                 maxAmount={bucket.balance}
                 categories={spendingCategories}
                 isPremium={isPremium}
@@ -174,7 +174,7 @@ export function VaultV2BucketExpandedPanel({
             ) : null}
 
             {moveOpen && canMoveOut ? (
-              <VaultV2MoveMoneyForm
+              <VaultMoveMoneyForm
                 contextId={bucket.id}
                 contextBalance={bucket.balance}
                 locations={transferLocations}

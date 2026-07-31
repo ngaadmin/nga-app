@@ -3,10 +3,10 @@ import { DASHBOARD_WALLET_STORAGE_KEY } from "@/lib/dashboard/dashboard-wallet-s
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
 import {
-  readVaultV2SessionRaw,
-  writeVaultV2SessionRaw,
-} from "@/lib/dashboard/vault-v2/profile-persist";
-import { VAULT_V2_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault-v2/vault-v2-profile-storage";
+  readVaultSessionRaw,
+  writeVaultSessionRaw,
+} from "@/lib/dashboard/vault/profile-persist";
+import { VAULT_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault/vault-profile-storage";
 import {
   readPersisted,
   removePersisted,
@@ -21,7 +21,9 @@ export type GhostProgressSnapshot = {
   capturedAt: string;
   ghostSession: UserSession | null;
   wallet: string | null;
-  vaultV2Session: string | null;
+  /** @deprecated Legacy field name — read for backward-compatible restore. */
+  vaultV2Session?: string | null;
+  vaultSession: string | null;
   academyProgress: string | null;
   skillProgress: string | null;
   parentPin: string | null;
@@ -42,7 +44,7 @@ export function captureGhostProgressSnapshot(): GhostProgressSnapshot {
     capturedAt: new Date().toISOString(),
     ghostSession: readUserSession(),
     wallet: readPersisted(DASHBOARD_WALLET_STORAGE_KEY),
-    vaultV2Session: readVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY),
+    vaultSession: readVaultSessionRaw(VAULT_SESSION_STORAGE_KEY),
     academyProgress: readPersisted(ACADEMY_PROGRESS_STORAGE_KEY),
     skillProgress: readPersisted(VAULT_SKILL_PROGRESS_STORAGE_KEY),
     parentPin:
@@ -62,7 +64,11 @@ export function readGhostProgressSnapshot(): GhostProgressSnapshot | null {
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw) as GhostProgressSnapshot;
+    const parsed = JSON.parse(raw) as GhostProgressSnapshot;
+    return {
+      ...parsed,
+      vaultSession: parsed.vaultSession ?? parsed.vaultV2Session ?? null,
+    };
   } catch {
     return null;
   }
@@ -78,8 +84,9 @@ export function mergeGhostProgressSnapshot(): boolean {
   if (snapshot.wallet !== null) {
     writePersisted(DASHBOARD_WALLET_STORAGE_KEY, snapshot.wallet);
   }
-  if (snapshot.vaultV2Session !== null) {
-    writeVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY, snapshot.vaultV2Session);
+  const vaultSession = snapshot.vaultSession ?? snapshot.vaultV2Session;
+  if (vaultSession !== null && vaultSession !== undefined) {
+    writeVaultSessionRaw(VAULT_SESSION_STORAGE_KEY, vaultSession);
   }
   if (snapshot.academyProgress !== null) {
     writePersisted(ACADEMY_PROGRESS_STORAGE_KEY, snapshot.academyProgress);

@@ -3,7 +3,7 @@
 import {
   BucketEmojiIcon,
   bucketTheme,
-} from "@/components/dashboard/vault-v2/vault-v2-visuals";
+} from "@/components/dashboard/vault/vault-visuals";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { SettingsIcon } from "@/lib/dashboard/icons";
@@ -13,21 +13,21 @@ import {
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import { vaultV2BucketDisplayName } from "@/lib/dashboard/vault-v2/bucket-display-name";
-import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
+import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
-  vaultV2CardBalanceClass,
-  vaultV2CardMainTitleClass,
-  vaultV2JarCarouselTileClass,
-  vaultV2JarTileBalanceClass,
-  vaultV2JarTileNameClass,
-  vaultV2JarsCarouselTrackClass,
-  vaultV2JarsCarouselViewportClass,
-  vaultV2ManageJarsButtonClass,
-} from "@/lib/dashboard/vault-v2/vault-v2-my-money-card-styles";
+  vaultCardBalanceClass,
+  vaultCardMainTitleClass,
+  vaultJarCarouselTileClass,
+  vaultJarTileBalanceClass,
+  vaultJarTileNameClass,
+  vaultJarsCarouselTrackClass,
+  vaultJarsCarouselViewportClass,
+  vaultManageJarsButtonClass,
+} from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
-type VaultV2MyMoneyCardProps = {
+type VaultMyMoneyCardProps = {
   buckets: VaultBucket[];
   totalSavings: number;
   expandedBucketId: VaultBucketId | null;
@@ -35,13 +35,13 @@ type VaultV2MyMoneyCardProps = {
   onManageJarsClick?: () => void;
 };
 
-export function VaultV2MyMoneyCard({
+export function VaultMyMoneyCard({
   buckets,
   totalSavings,
   expandedBucketId,
   onToggleBucket,
   onManageJarsClick,
-}: VaultV2MyMoneyCardProps) {
+}: VaultMyMoneyCardProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const { formatMoney } = useCurrency();
   const totalBalance = sumVaultWealthBalance(buckets, totalSavings);
@@ -55,8 +55,8 @@ export function VaultV2MyMoneyCard({
         <button
           type="button"
           onClick={onManageJarsClick}
-          aria-label={vaultV2Copy.manageBudgetJarsLabel}
-          className={vaultV2ManageJarsButtonClass}
+          aria-label={vaultCopy.manageBudgetJarsLabel}
+          className={vaultManageJarsButtonClass}
         >
           <SettingsIcon className="size-5 shrink-0 text-white" />
         </button>
@@ -64,18 +64,18 @@ export function VaultV2MyMoneyCard({
 
       <div className="space-y-4">
         <div className="min-w-0 pr-11">
-          <h2 className={vaultV2CardMainTitleClass}>{copy.totalBalanceLabel}</h2>
-          <p className={vaultV2CardBalanceClass} aria-live="polite">
+          <h2 className={vaultCardMainTitleClass}>{copy.totalBalanceLabel}</h2>
+          <p className={vaultCardBalanceClass} aria-live="polite">
             {formatMoney(totalBalance)}
           </p>
         </div>
 
         <div
-          className={vaultV2JarsCarouselViewportClass}
-          aria-label={vaultV2Copy.budgetJarsSectionLabel}
+          className={vaultJarsCarouselViewportClass}
+          aria-label={vaultCopy.budgetJarsSectionLabel}
           role="list"
         >
-          <div className={vaultV2JarsCarouselTrackClass}>
+          <div className={vaultJarsCarouselTrackClass}>
             {buckets.map((bucket) => {
               const theme = bucketTheme(bucket);
               const isActive = expandedBucketId === bucket.id;
@@ -89,16 +89,16 @@ export function VaultV2MyMoneyCard({
                   onClick={() => onToggleBucket(bucket.id)}
                   aria-expanded={isActive}
                   className={cn(
-                    vaultV2JarCarouselTileClass,
+                    vaultJarCarouselTileClass,
                     isActive ? "bg-white/10" : "border-transparent hover:bg-white/5",
                   )}
                   style={isActive ? { borderColor: theme.accent } : undefined}
                 >
                   <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
-                  <p className={vaultV2JarTileNameClass}>
-                    {vaultV2BucketDisplayName(bucket)}
+                  <p className={vaultJarTileNameClass}>
+                    {vaultBucketDisplayName(bucket)}
                   </p>
-                  <p className={vaultV2JarTileBalanceClass}>{formatMoney(shownBalance)}</p>
+                  <p className={vaultJarTileBalanceClass}>{formatMoney(shownBalance)}</p>
                 </button>
               );
             })}

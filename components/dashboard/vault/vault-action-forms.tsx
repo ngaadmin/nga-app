@@ -2,42 +2,42 @@
 
 import type { ReactNode } from "react";
 import {
-  vaultV2ActionButtonRowClass,
-  vaultV2ActionFieldRowClass,
-  vaultV2ActionPanelClass,
-  vaultV2AmountFieldShellClass,
-  vaultV2AmountInputClass,
-  vaultV2FieldInputClass,
-  vaultV2FieldLabelClass,
-  vaultV2PrimaryBtnClass,
-  vaultV2SecondaryBtnClass,
-} from "@/lib/dashboard/vault-v2/vault-v2-action-form-styles";
+  vaultActionButtonRowClass,
+  vaultActionFieldRowClass,
+  vaultActionPanelClass,
+  vaultAmountFieldShellClass,
+  vaultAmountInputClass,
+  vaultFieldInputClass,
+  vaultFieldLabelClass,
+  vaultPrimaryBtnClass,
+  vaultSecondaryBtnClass,
+} from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
-type VaultV2ActionPanelProps = {
+type VaultActionPanelProps = {
   children: ReactNode;
   className?: string;
 };
 
-export function VaultV2ActionPanel({ children, className }: VaultV2ActionPanelProps) {
-  return <div className={cn(vaultV2ActionPanelClass, className)}>{children}</div>;
+export function VaultActionPanel({ children, className }: VaultActionPanelProps) {
+  return <div className={cn(vaultActionPanelClass, className)}>{children}</div>;
 }
 
-type VaultV2ActionFieldRowProps = {
+type VaultActionFieldRowProps = {
   amountField: ReactNode;
   secondaryField: ReactNode;
 };
 
-export function VaultV2ActionFieldRow({ amountField, secondaryField }: VaultV2ActionFieldRowProps) {
+export function VaultActionFieldRow({ amountField, secondaryField }: VaultActionFieldRowProps) {
   return (
-    <div className={vaultV2ActionFieldRowClass}>
+    <div className={vaultActionFieldRowClass}>
       {amountField}
       {secondaryField}
     </div>
   );
 }
 
-type VaultV2AmountFieldProps = {
+type VaultAmountFieldProps = {
   currencySymbol: string;
   value: string;
   onChange: (value: string) => void;
@@ -45,15 +45,15 @@ type VaultV2AmountFieldProps = {
   onBlur?: () => void;
 };
 
-export function VaultV2AmountField({
+export function VaultAmountField({
   currencySymbol,
   value,
   onChange,
   ariaLabel,
   onBlur,
-}: VaultV2AmountFieldProps) {
+}: VaultAmountFieldProps) {
   return (
-    <label className={vaultV2AmountFieldShellClass}>
+    <label className={vaultAmountFieldShellClass}>
       <span className="shrink-0 font-heading text-base font-bold text-[#031F82]">
         {currencySymbol}
       </span>
@@ -70,13 +70,13 @@ export function VaultV2AmountField({
         onBlur={onBlur}
         placeholder="0.00"
         aria-label={ariaLabel}
-        className={vaultV2AmountInputClass}
+        className={vaultAmountInputClass}
       />
     </label>
   );
 }
 
-type VaultV2SelectFieldProps = {
+type VaultSelectFieldProps = {
   value: string;
   onChange: (value: string) => void;
   ariaLabel: string;
@@ -84,42 +84,42 @@ type VaultV2SelectFieldProps = {
   className?: string;
 };
 
-export function VaultV2SelectField({
+export function VaultSelectField({
   value,
   onChange,
   ariaLabel,
   children,
   className,
-}: VaultV2SelectFieldProps) {
+}: VaultSelectFieldProps) {
   return (
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
       aria-label={ariaLabel}
-      className={cn(vaultV2FieldInputClass, className)}
+      className={cn(vaultFieldInputClass, className)}
     >
       {children}
     </select>
   );
 }
 
-type VaultV2LabeledSelectFieldProps = VaultV2SelectFieldProps & {
+type VaultLabeledSelectFieldProps = VaultSelectFieldProps & {
   label: string;
 };
 
-export function VaultV2LabeledSelectField({
+export function VaultLabeledSelectField({
   label,
   ...selectProps
-}: VaultV2LabeledSelectFieldProps) {
+}: VaultLabeledSelectFieldProps) {
   return (
     <label className="block space-y-1">
-      <span className={vaultV2FieldLabelClass}>{label}</span>
-      <VaultV2SelectField {...selectProps} />
+      <span className={vaultFieldLabelClass}>{label}</span>
+      <VaultSelectField {...selectProps} />
     </label>
   );
 }
 
-type VaultV2ActionButtonRowProps = {
+type VaultActionButtonRowProps = {
   primaryLabel: string;
   secondaryLabel: string;
   onPrimary: () => void;
@@ -127,24 +127,24 @@ type VaultV2ActionButtonRowProps = {
   primaryDisabled?: boolean;
 };
 
-export function VaultV2ActionButtonRow({
+export function VaultActionButtonRow({
   primaryLabel,
   secondaryLabel,
   onPrimary,
   onSecondary,
   primaryDisabled = false,
-}: VaultV2ActionButtonRowProps) {
+}: VaultActionButtonRowProps) {
   return (
-    <div className={vaultV2ActionButtonRowClass}>
+    <div className={vaultActionButtonRowClass}>
       <button
         type="button"
         onClick={onPrimary}
         disabled={primaryDisabled}
-        className={vaultV2PrimaryBtnClass}
+        className={vaultPrimaryBtnClass}
       >
         {primaryLabel}
       </button>
-      <button type="button" onClick={onSecondary} className={vaultV2SecondaryBtnClass}>
+      <button type="button" onClick={onSecondary} className={vaultSecondaryBtnClass}>
         {secondaryLabel}
       </button>
     </div>

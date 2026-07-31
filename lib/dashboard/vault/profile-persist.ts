@@ -1,7 +1,7 @@
 import { isDevClient } from "@/lib/dev/client-persist";
 
 /** Guest play — cleared when the browser session ends. */
-export function readVaultV2SessionRaw(key: string): string | null {
+export function readVaultSessionRaw(key: string): string | null {
   if (typeof window === "undefined") return null;
 
   if (isDevClient()) {
@@ -18,7 +18,7 @@ export function readVaultV2SessionRaw(key: string): string | null {
   return window.sessionStorage.getItem(key);
 }
 
-export function writeVaultV2SessionRaw(key: string, value: string): void {
+export function writeVaultSessionRaw(key: string, value: string): void {
   if (typeof window === "undefined") return;
 
   if (isDevClient()) {
@@ -27,7 +27,7 @@ export function writeVaultV2SessionRaw(key: string, value: string): void {
   window.sessionStorage.setItem(key, value);
 }
 
-export function removeVaultV2SessionRaw(key: string): void {
+export function removeVaultSessionRaw(key: string): void {
   if (typeof window === "undefined") return;
 
   window.sessionStorage.removeItem(key);
@@ -37,17 +37,17 @@ export function removeVaultV2SessionRaw(key: string): void {
 }
 
 /** Registered profiles — survives browser restarts. */
-export function readVaultV2ProfileRaw(key: string): string | null {
+export function readVaultProfileRaw(key: string): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(key);
 }
 
-export function writeVaultV2ProfileRaw(key: string, value: string): void {
+export function writeVaultProfileRaw(key: string, value: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(key, value);
 }
 
-export function removeVaultV2ProfileRaw(key: string): void {
+export function removeVaultProfileRaw(key: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(key);
 }

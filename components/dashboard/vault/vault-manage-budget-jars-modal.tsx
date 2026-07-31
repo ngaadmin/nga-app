@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BucketEmojiIcon,
   bucketTheme,
-} from "@/components/dashboard/vault-v2/vault-v2-visuals";
+} from "@/components/dashboard/vault/vault-visuals";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { PencilIcon, TrashIcon } from "@/lib/dashboard/icons";
@@ -15,8 +15,8 @@ import {
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import { vaultV2BucketDisplayName } from "@/lib/dashboard/vault-v2/bucket-display-name";
-import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
+import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
 const JAR_EMOJI_PRESETS = [
@@ -99,7 +99,7 @@ function EmojiPickerGrid({
   );
 }
 
-type VaultV2ManageBudgetJarsModalProps = {
+type VaultManageBudgetJarsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   buckets: VaultBucket[];
@@ -113,7 +113,7 @@ type VaultV2ManageBudgetJarsModalProps = {
   onBucketDeleted?: (bucketId: VaultBucketId) => void;
 };
 
-export function VaultV2ManageBudgetJarsModal({
+export function VaultManageBudgetJarsModal({
   isOpen,
   onClose,
   buckets,
@@ -122,7 +122,7 @@ export function VaultV2ManageBudgetJarsModal({
   onAddCustomBucket,
   onDeleteCustomBucket,
   onBucketDeleted,
-}: VaultV2ManageBudgetJarsModalProps) {
+}: VaultManageBudgetJarsModalProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
 
   const [drafts, setDrafts] = useState<Record<string, JarDraft>>({});
@@ -316,7 +316,7 @@ export function VaultV2ManageBudgetJarsModal({
         isOpen={isOpen}
         onClose={handleCancel}
         align="center"
-        labelledBy="vault-v2-manage-jars-title"
+        labelledBy="vault-manage-jars-title"
         backdropClassName="bg-[#031F82]/50"
         panelClassName="flex max-h-[min(92vh,36rem)] max-w-lg flex-col rounded-2xl border-0 bg-white p-0 shadow-md"
       >
@@ -324,19 +324,19 @@ export function VaultV2ManageBudgetJarsModal({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2
-                id="vault-v2-manage-jars-title"
+                id="vault-manage-jars-title"
                 className="font-heading text-lg font-extrabold text-[#031F82]"
               >
-                {vaultV2Copy.manageBudgetJarsTitle}
+                {vaultCopy.manageBudgetJarsTitle}
               </h2>
               <p className="mt-1 font-sans text-xs leading-snug text-[#1E3A5F]/70">
-                {vaultV2Copy.manageBudgetJarsBody}
+                {vaultCopy.manageBudgetJarsBody}
               </p>
             </div>
             <button
               type="button"
               onClick={handleCancel}
-              aria-label={vaultV2Copy.closeModalLabel}
+              aria-label={vaultCopy.closeModalLabel}
               className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
             >
               ✕
@@ -353,25 +353,25 @@ export function VaultV2ManageBudgetJarsModal({
               !canAddMore && "opacity-40",
             )}
           >
-            {vaultV2Copy.addBudgetJar}
+            {vaultCopy.addBudgetJar}
           </button>
 
           {addFormOpen ? (
             <div className="mt-3 space-y-3 rounded-xl border border-[#BDE9FB] bg-[#FAFDFF]/80 p-3">
               <label className="block">
                 <span className={manageModalFieldLabelClass}>
-                  {vaultV2Copy.jarNameLabel}
+                  {vaultCopy.jarNameLabel}
                 </span>
                 <input
                   type="text"
                   value={newJarName}
                   onChange={(event) => setNewJarName(event.target.value)}
-                  placeholder={vaultV2Copy.jarNamePlaceholder}
+                  placeholder={vaultCopy.jarNamePlaceholder}
                   className="mt-1 w-full rounded-lg border border-[#BDE9FB] bg-white px-2.5 py-1.5 font-sans text-sm text-[#031F82] outline-none focus:border-[#0CC1E0]"
                 />
               </label>
               <div>
-                <p className={manageModalFieldLabelClass}>{vaultV2Copy.jarIconLabel}</p>
+                <p className={manageModalFieldLabelClass}>{vaultCopy.jarIconLabel}</p>
                 <div className="mt-1">
                   <EmojiPickerGrid selected={newJarEmoji} onSelect={setNewJarEmoji} />
                 </div>
@@ -382,13 +382,13 @@ export function VaultV2ManageBudgetJarsModal({
                 disabled={!newJarName.trim()}
                 className={cn("h-touch w-full", manageModalPrimaryBtnClass)}
               >
-                {vaultV2Copy.addJarToList}
+                {vaultCopy.addJarToList}
               </button>
             </div>
           ) : null}
 
           <p className="mt-3 text-center font-heading text-xs font-bold text-[#1E3A5F]/60">
-            {vaultV2Copy.bucketLimitTemplate
+            {vaultCopy.bucketLimitTemplate
               .replace("{count}", String(totalJarCount))
               .replace("{max}", String(bucketLimit))}
           </p>
@@ -413,7 +413,7 @@ export function VaultV2ManageBudgetJarsModal({
               const isEditing = editingRowId === rowId;
               const displayName =
                 row.kind === "existing"
-                  ? vaultV2BucketDisplayName({
+                  ? vaultBucketDisplayName({
                       ...row.bucket,
                       name: draft.name,
                       emoji: draft.emoji,
@@ -435,7 +435,7 @@ export function VaultV2ManageBudgetJarsModal({
                         <button
                           type="button"
                           onClick={() => toggleEdit(rowId)}
-                          aria-label={vaultV2Copy.editJar}
+                          aria-label={vaultCopy.editJar}
                           className="flex size-8 items-center justify-center rounded-lg text-[#1E3A5F]/55 transition-colors hover:bg-[#BDE9FB]/30 hover:text-[#031F82]"
                         >
                           <PencilIcon className="size-4" />
@@ -457,7 +457,7 @@ export function VaultV2ManageBudgetJarsModal({
                               }
                               setDeleteTarget(row.bucket);
                             }}
-                            aria-label={vaultV2Copy.deleteJar}
+                            aria-label={vaultCopy.deleteJar}
                             className="flex size-8 items-center justify-center rounded-lg text-[#BE123C]/70 transition-colors hover:bg-[#FEE2E2]/60 hover:text-[#BE123C]"
                           >
                             <TrashIcon className="size-4" />
@@ -469,7 +469,7 @@ export function VaultV2ManageBudgetJarsModal({
                     <div className="space-y-3">
                       <label className="block">
                         <span className={manageModalFieldLabelClass}>
-                          {vaultV2Copy.jarNameLabel}
+                          {vaultCopy.jarNameLabel}
                         </span>
                         <input
                           type="text"
@@ -486,7 +486,7 @@ export function VaultV2ManageBudgetJarsModal({
                       </label>
                       <div>
                         <p className={manageModalFieldLabelClass}>
-                          {vaultV2Copy.jarIconLabel}
+                          {vaultCopy.jarIconLabel}
                         </p>
                         <div className="mt-1">
                           <EmojiPickerGrid
@@ -502,7 +502,7 @@ export function VaultV2ManageBudgetJarsModal({
                         onClick={() => setEditingRowId(null)}
                         className="font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
                       >
-                        {vaultV2Copy.doneEditing}
+                        {vaultCopy.doneEditing}
                       </button>
                     </div>
                   )}
@@ -519,7 +519,7 @@ export function VaultV2ManageBudgetJarsModal({
               onClick={handleCancel}
               className={manageModalSecondaryBtnClass}
             >
-              {vaultV2Copy.cancelChanges}
+              {vaultCopy.cancelChanges}
             </button>
             <button
               type="button"
@@ -527,7 +527,7 @@ export function VaultV2ManageBudgetJarsModal({
               disabled={!hasChanges}
               className={manageModalPrimaryBtnClass}
             >
-              {vaultV2Copy.saveChanges}
+              {vaultCopy.saveChanges}
             </button>
           </div>
         </div>
@@ -537,27 +537,27 @@ export function VaultV2ManageBudgetJarsModal({
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         align="center"
-        labelledBy="vault-v2-delete-jar-title"
+        labelledBy="vault-delete-jar-title"
         backdropClassName="bg-[#031F82]/55"
         panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
       >
         <h2
-          id="vault-v2-delete-jar-title"
+          id="vault-delete-jar-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
         >
-          {vaultV2Copy.deleteJarConfirmTitle}
+          {vaultCopy.deleteJarConfirmTitle}
         </h2>
         <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
           {deleteNeedsFallback
-            ? vaultV2Copy.deleteJarWithBalanceBody
-            : vaultV2Copy.deleteJarConfirmBody}
+            ? vaultCopy.deleteJarWithBalanceBody
+            : vaultCopy.deleteJarConfirmBody}
         </p>
 
         {deleteTarget && deleteNeedsFallback ? (
           <div className="mt-3">
             <label className="block">
               <span className={manageModalFieldLabelClass}>
-                {vaultV2Copy.deleteJarFallbackLabel}
+                {vaultCopy.deleteJarFallbackLabel}
               </span>
               <select
                 value={deleteFallbackId}
@@ -568,7 +568,7 @@ export function VaultV2ManageBudgetJarsModal({
               >
                 {fallbackOptions.map((bucket) => (
                   <option key={bucket.id} value={bucket.id}>
-                    {vaultV2BucketDisplayName(bucket)}
+                    {vaultBucketDisplayName(bucket)}
                   </option>
                 ))}
               </select>
@@ -590,7 +590,7 @@ export function VaultV2ManageBudgetJarsModal({
             disabled={!canConfirmDelete}
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
-            {vaultV2Copy.deleteJarConfirm}
+            {vaultCopy.deleteJarConfirm}
           </button>
         </div>
       </ModalShell>

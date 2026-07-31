@@ -2,14 +2,14 @@ import type { ComponentType } from "react";
 import {
   AcademyIcon,
   AchievementsIcon,
-  EngineIcon,
+  LaunchpadIcon,
   SettingsIcon,
   VaultIcon,
 } from "@/lib/dashboard/icons";
 
 export type DashboardPillar =
   | "academy"
-  | "engine"
+  | "launchpad"
   | "vault"
   | "achievements"
   | "settings";
@@ -31,23 +31,23 @@ export type DashboardNavItem = DashboardNavLinkItem & {
 export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
   {
     id: "academy",
-    label: "The Academy",
+    label: "Academy",
     href: "/dashboard/academy",
     Icon: AcademyIcon,
   },
   {
-    id: "engine",
-    label: "The Engine",
-    href: "/dashboard/engine",
-    Icon: EngineIcon,
+    id: "launchpad",
+    label: "Launchpad",
+    href: "/dashboard/launchpad",
+    Icon: LaunchpadIcon,
   },
   {
     id: "vault",
-    label: "The Vault",
-    href: "/dashboard/vault-v2",
+    label: "Vault",
+    href: "/dashboard/vault",
     Icon: VaultIcon,
     matchesPath: (pathname) =>
-      pathname === "/dashboard/vault-v2" || pathname.startsWith("/dashboard/vault-v2/"),
+      pathname === "/dashboard/vault" || pathname.startsWith("/dashboard/vault/"),
   },
   {
     id: "achievements",
@@ -64,7 +64,7 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
 ] as const;
 
 export const DASHBOARD_SETTINGS_HREF = "/dashboard/settings" as const;
-export const VAULT_CASH_IN_HREF = "/dashboard/vault-v2?cashIn=1" as const;
+export const VAULT_CASH_IN_HREF = "/dashboard/vault?cashIn=1" as const;
 export const DASHBOARD_DEFAULT_HREF = "/dashboard/academy" as const;
 
 export function isNavItemActive(pathname: string, href: string): boolean {

@@ -2,16 +2,16 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import {
-  VaultV2ActionButtonRow,
-  VaultV2ActionFieldRow,
-  VaultV2ActionPanel,
-  VaultV2AmountField,
-  VaultV2SelectField,
-} from "@/components/dashboard/vault-v2/vault-v2-action-forms";
+  VaultActionButtonRow,
+  VaultActionFieldRow,
+  VaultActionPanel,
+  VaultAmountField,
+  VaultSelectField,
+} from "@/components/dashboard/vault/vault-action-forms";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { parsePositiveVaultAmount } from "@/lib/dashboard/vault-amount-input";
-import { vaultV2FieldInputClass } from "@/lib/dashboard/vault-v2/vault-v2-action-form-styles";
+import { vaultFieldInputClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import type {
   SpendingCategory,
   SpendingCategoryId,
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils/cn";
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
-type VaultV2SpendMoneyFormProps = {
+type VaultSpendMoneyFormProps = {
   maxAmount: number;
   categories: SpendingCategory[];
   isPremium: boolean;
@@ -32,7 +32,7 @@ type VaultV2SpendMoneyFormProps = {
   onRenameCategory: (categoryId: SpendingCategoryId, label: string) => void;
 };
 
-export function VaultV2SpendMoneyForm({
+export function VaultSpendMoneyForm({
   maxAmount,
   categories,
   isPremium,
@@ -41,7 +41,7 @@ export function VaultV2SpendMoneyForm({
   onPremiumCategoriesRequest,
   onAddCustomCategory,
   onRenameCategory,
-}: VaultV2SpendMoneyFormProps) {
+}: VaultSpendMoneyFormProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { currencySymbol } = useCurrency();
@@ -95,10 +95,10 @@ export function VaultV2SpendMoneyForm({
   }
 
   return (
-    <VaultV2ActionPanel>
-      <VaultV2ActionFieldRow
+    <VaultActionPanel>
+      <VaultActionFieldRow
         amountField={
-          <VaultV2AmountField
+          <VaultAmountField
             currencySymbol={currencySymbol}
             value={amountInput}
             onChange={setAmountInput}
@@ -107,7 +107,7 @@ export function VaultV2SpendMoneyForm({
         }
         secondaryField={
           <div className="flex min-w-0 flex-col justify-center gap-1">
-            <VaultV2SelectField
+            <VaultSelectField
               value={categoryId}
               onChange={(value) => setCategoryId(value as SpendingCategoryId)}
               ariaLabel={budgetCopy.spendCategoryLabel}
@@ -117,7 +117,7 @@ export function VaultV2SpendMoneyForm({
                   {category.label}
                 </option>
               ))}
-            </VaultV2SelectField>
+            </VaultSelectField>
             <button
               type="button"
               onClick={handleManageCategoriesClick}
@@ -146,7 +146,7 @@ export function VaultV2SpendMoneyForm({
                           if (event.key === "Enter") handleRenameBlur(category.id);
                         }}
                         aria-label={`Rename ${category.label}`}
-                        className={cn("min-w-0 flex-1", vaultV2FieldInputClass)}
+                        className={cn("min-w-0 flex-1", vaultFieldInputClass)}
                       />
                     </li>
                   ))}
@@ -156,7 +156,7 @@ export function VaultV2SpendMoneyForm({
                     value={newCategoryLabel}
                     onChange={(event) => setNewCategoryLabel(event.target.value)}
                     placeholder={budgetCopy.customCategoryPlaceholder}
-                    className={cn("min-w-0 flex-1", vaultV2FieldInputClass)}
+                    className={cn("min-w-0 flex-1", vaultFieldInputClass)}
                   />
                   <button type="submit" className={cn("shrink-0 px-3", orangeCtaClass)}>
                     {budgetCopy.addCategory}
@@ -168,13 +168,13 @@ export function VaultV2SpendMoneyForm({
         }
       />
 
-      <VaultV2ActionButtonRow
+      <VaultActionButtonRow
         primaryLabel={budgetCopy.spendConfirm}
         secondaryLabel={savingsCopy.spendCancel}
         onPrimary={confirmSpend}
         onSecondary={onClose}
         primaryDisabled={maxAmount <= 0}
       />
-    </VaultV2ActionPanel>
+    </VaultActionPanel>
   );
 }

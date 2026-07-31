@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
-  VaultV2ActionButtonRow,
-  VaultV2ActionFieldRow,
-  VaultV2ActionPanel,
-  VaultV2AmountField,
-  VaultV2LabeledSelectField,
-  VaultV2SelectField,
-} from "@/components/dashboard/vault-v2/vault-v2-action-forms";
+  VaultActionButtonRow,
+  VaultActionFieldRow,
+  VaultActionPanel,
+  VaultAmountField,
+  VaultLabeledSelectField,
+  VaultSelectField,
+} from "@/components/dashboard/vault/vault-action-forms";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { parsePositiveVaultAmount } from "@/lib/dashboard/vault-amount-input";
@@ -17,7 +17,7 @@ import type {
   VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
 
-type VaultV2MoveMoneyFormProps = {
+type VaultMoveMoneyFormProps = {
   contextId: VaultTransferLocationId;
   contextBalance: number;
   locations: VaultTransferLocation[];
@@ -29,13 +29,13 @@ type VaultV2MoveMoneyFormProps = {
   onClose: () => void;
 };
 
-export function VaultV2MoveMoneyForm({
+export function VaultMoveMoneyForm({
   contextId,
   contextBalance,
   locations,
   onTransfer,
   onClose,
-}: VaultV2MoveMoneyFormProps) {
+}: VaultMoveMoneyFormProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { currencySymbol } = useCurrency();
@@ -62,10 +62,10 @@ export function VaultV2MoveMoneyForm({
   }
 
   return (
-    <VaultV2ActionPanel>
-      <VaultV2ActionFieldRow
+    <VaultActionPanel>
+      <VaultActionFieldRow
         amountField={
-          <VaultV2AmountField
+          <VaultAmountField
             currencySymbol={currencySymbol}
             value={amountInput}
             onChange={setAmountInput}
@@ -73,7 +73,7 @@ export function VaultV2MoveMoneyForm({
           />
         }
         secondaryField={
-          <VaultV2SelectField
+          <VaultSelectField
             value={destinationId}
             onChange={setDestinationId}
             ariaLabel={budgetCopy.moveDestinationLabel}
@@ -83,21 +83,21 @@ export function VaultV2MoveMoneyForm({
                 {entry.label}
               </option>
             ))}
-          </VaultV2SelectField>
+          </VaultSelectField>
         }
       />
-      <VaultV2ActionButtonRow
+      <VaultActionButtonRow
         primaryLabel={savingsCopy.moveConfirm}
         secondaryLabel={savingsCopy.spendCancel}
         onPrimary={confirmTransfer}
         onSecondary={onClose}
         primaryDisabled={contextBalance <= 0}
       />
-    </VaultV2ActionPanel>
+    </VaultActionPanel>
   );
 }
 
-type VaultV2SaveJarMoveMoneyFormProps = {
+type VaultSaveJarMoveMoneyFormProps = {
   sources: VaultTransferLocation[];
   destinations: VaultTransferLocation[];
   sourceId: VaultTransferLocationId;
@@ -111,7 +111,7 @@ type VaultV2SaveJarMoveMoneyFormProps = {
   onClose: () => void;
 };
 
-export function VaultV2SaveJarMoveMoneyForm({
+export function VaultSaveJarMoveMoneyForm({
   sources,
   destinations,
   sourceId,
@@ -119,7 +119,7 @@ export function VaultV2SaveJarMoveMoneyForm({
   onSourceChange,
   onTransfer,
   onClose,
-}: VaultV2SaveJarMoveMoneyFormProps) {
+}: VaultSaveJarMoveMoneyFormProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { currencySymbol, formatMoney } = useCurrency();
@@ -146,8 +146,8 @@ export function VaultV2SaveJarMoveMoneyForm({
   }
 
   return (
-    <VaultV2ActionPanel>
-      <VaultV2LabeledSelectField
+    <VaultActionPanel>
+      <VaultLabeledSelectField
         label={savingsCopy.moveSourceLabel}
         value={sourceId}
         onChange={(value) => onSourceChange(value as VaultTransferLocationId)}
@@ -158,11 +158,11 @@ export function VaultV2SaveJarMoveMoneyForm({
             {entry.label} {formatMoney(entry.balance)}
           </option>
         ))}
-      </VaultV2LabeledSelectField>
+      </VaultLabeledSelectField>
 
-      <VaultV2ActionFieldRow
+      <VaultActionFieldRow
         amountField={
-          <VaultV2AmountField
+          <VaultAmountField
             currencySymbol={currencySymbol}
             value={amountInput}
             onChange={setAmountInput}
@@ -170,7 +170,7 @@ export function VaultV2SaveJarMoveMoneyForm({
           />
         }
         secondaryField={
-          <VaultV2SelectField
+          <VaultSelectField
             value={destinationId}
             onChange={setDestinationId}
             ariaLabel={budgetCopy.moveDestinationLabel}
@@ -180,17 +180,17 @@ export function VaultV2SaveJarMoveMoneyForm({
                 {entry.label}
               </option>
             ))}
-          </VaultV2SelectField>
+          </VaultSelectField>
         }
       />
 
-      <VaultV2ActionButtonRow
+      <VaultActionButtonRow
         primaryLabel={savingsCopy.moveConfirm}
         secondaryLabel={savingsCopy.spendCancel}
         onPrimary={confirmTransfer}
         onSecondary={onClose}
         primaryDisabled={sourceBalance <= 0}
       />
-    </VaultV2ActionPanel>
+    </VaultActionPanel>
   );
 }

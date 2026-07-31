@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeAllocationCoinStacks } from "@/lib/dashboard/vault-v2/allocation-coin-stacks";
+import { computeAllocationCoinStacks } from "@/lib/dashboard/vault/allocation-coin-stacks";
 
 describe("computeAllocationCoinStacks", () => {
   it("returns empty stacks when nothing is allocated", () => {

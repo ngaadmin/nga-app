@@ -16,21 +16,25 @@ import {
   readPersisted,
 } from "@/lib/dev/client-persist";
 import {
-  readVaultV2ProfileRaw,
-  readVaultV2SessionRaw,
-  removeVaultV2ProfileRaw,
-  removeVaultV2SessionRaw,
-  writeVaultV2ProfileRaw,
-  writeVaultV2SessionRaw,
-} from "@/lib/dashboard/vault-v2/profile-persist";
+  readVaultProfileRaw,
+  readVaultSessionRaw,
+  removeVaultProfileRaw,
+  removeVaultSessionRaw,
+  writeVaultProfileRaw,
+  writeVaultSessionRaw,
+} from "@/lib/dashboard/vault/profile-persist";
 import type { UserSession } from "@/lib/onboarding/ghost-session";
 
-export const VAULT_V2_SESSION_STORAGE_KEY = "nga_vault_v2_session_v1";
-export const VAULT_V2_PROFILE_STORAGE_KEY = "nga_vault_v2_profile_v1";
+export const VAULT_SESSION_STORAGE_KEY = "nga_vault_session_v1";
+export const VAULT_PROFILE_STORAGE_KEY = "nga_vault_profile_v1";
 
-export const VAULT_V2_PROFILE_SCHEMA_VERSION = 1;
+/** Legacy keys — migrated on read. */
+const LEGACY_VAULT_SESSION_STORAGE_KEY = "nga_vault_v2_session_v1";
+const LEGACY_VAULT_PROFILE_STORAGE_KEY = "nga_vault_v2_profile_v1";
 
-export type PersistedVaultV2Profile = {
+export const VAULT_PROFILE_SCHEMA_VERSION = 1;
+
+export type PersistedVaultProfile = {
   schemaVersion: number;
   moneyToAllocate: number;
   jarBalances: JarBalanceMap;
@@ -41,9 +45,9 @@ export type PersistedVaultV2Profile = {
   ledger: LedgerEntry[];
 };
 
-export function freshVaultV2ProfileState(): PersistedVaultV2Profile {
+export function freshVaultProfileState(): PersistedVaultProfile {
   return {
-    schemaVersion: VAULT_V2_PROFILE_SCHEMA_VERSION,
+    schemaVersion: VAULT_PROFILE_SCHEMA_VERSION,
     moneyToAllocate: 0,
     jarBalances: defaultJarBalances(),
     customBuckets: [],
@@ -75,8 +79,8 @@ function parseLedgerEntry(value: unknown): LedgerEntry | null {
   return entry as LedgerEntry;
 }
 
-function normalizeVaultV2Profile(raw: Partial<PersistedVaultV2Profile>): PersistedVaultV2Profile {
-  const defaults = freshVaultV2ProfileState();
+function normalizeVaultProfile(raw: Partial<PersistedVaultProfile>): PersistedVaultProfile {
+  const defaults = freshVaultProfileState();
 
   const jarBalances = isJarBalanceMap(raw.jarBalances)
     ? {
@@ -87,7 +91,7 @@ function normalizeVaultV2Profile(raw: Partial<PersistedVaultV2Profile>): Persist
     : defaults.jarBalances;
 
   return {
-    schemaVersion: VAULT_V2_PROFILE_SCHEMA_VERSION,
+    schemaVersion: VAULT_PROFILE_SCHEMA_VERSION,
     moneyToAllocate:
       typeof raw.moneyToAllocate === "number" && Number.isFinite(raw.moneyToAllocate)
         ? Math.max(0, raw.moneyToAllocate)
@@ -136,31 +140,61 @@ function normalizeVaultV2Profile(raw: Partial<PersistedVaultV2Profile>): Persist
   };
 }
 
+function migrateLegacyKeyIfNeeded(
+  currentKey: string,
+  legacyKey: string,
+  readFn: (key: string) => string | null,
+  writeFn: (key: string, value: string) => void,
+  removeFn: (key: string) => void,
+): string | null {
+  const current = readFn(currentKey);
+  if (current !== null) return current;
+
+  const legacy = readFn(legacyKey);
+  if (legacy === null) return null;
+
+  writeFn(currentKey, legacy);
+  removeFn(legacyKey);
+  return legacy;
+}
+
 function readRawForSession(session: UserSession | null): string | null {
   if (session?.accessMode === "registered") {
-    return readVaultV2ProfileRaw(VAULT_V2_PROFILE_STORAGE_KEY);
+    return migrateLegacyKeyIfNeeded(
+      VAULT_PROFILE_STORAGE_KEY,
+      LEGACY_VAULT_PROFILE_STORAGE_KEY,
+      readVaultProfileRaw,
+      writeVaultProfileRaw,
+      removeVaultProfileRaw,
+    );
   }
-  return readVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY);
+  return migrateLegacyKeyIfNeeded(
+    VAULT_SESSION_STORAGE_KEY,
+    LEGACY_VAULT_SESSION_STORAGE_KEY,
+    readVaultSessionRaw,
+    writeVaultSessionRaw,
+    removeVaultSessionRaw,
+  );
 }
 
 function writeRawForSession(session: UserSession | null, value: string): void {
   if (session?.accessMode === "registered") {
-    writeVaultV2ProfileRaw(VAULT_V2_PROFILE_STORAGE_KEY, value);
+    writeVaultProfileRaw(VAULT_PROFILE_STORAGE_KEY, value);
     return;
   }
-  writeVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY, value);
+  writeVaultSessionRaw(VAULT_SESSION_STORAGE_KEY, value);
 }
 
-function vaultFieldsFromLegacyWalletRaw(raw: string): PersistedVaultV2Profile | null {
+function vaultFieldsFromLegacyWalletRaw(raw: string): PersistedVaultProfile | null {
   try {
-    const parsed = JSON.parse(raw) as Partial<PersistedVaultV2Profile> & {
+    const parsed = JSON.parse(raw) as Partial<PersistedVaultProfile> & {
       jarBalances?: JarBalanceMap;
     };
     if (!parsed || typeof parsed !== "object") return null;
     if (!isJarBalanceMap(parsed.jarBalances) && typeof parsed.moneyToAllocate !== "number") {
       return null;
     }
-    return normalizeVaultV2Profile(parsed);
+    return normalizeVaultProfile(parsed);
   } catch {
     return null;
   }
@@ -171,7 +205,7 @@ function readLegacyWalletRaw(): string | null {
   return readPersisted(DASHBOARD_WALLET_STORAGE_KEY);
 }
 
-function hasLegacyWalletVaultData(profile: PersistedVaultV2Profile): boolean {
+function hasLegacyWalletVaultData(profile: PersistedVaultProfile): boolean {
   return (
     profile.moneyToAllocate > 0 ||
     profile.jarBalances["save-jar"] > 0 ||
@@ -184,19 +218,19 @@ function hasLegacyWalletVaultData(profile: PersistedVaultV2Profile): boolean {
   );
 }
 
-export function readVaultV2ProfileState(
+export function readVaultProfileState(
   session: UserSession | null = null,
-): PersistedVaultV2Profile {
+): PersistedVaultProfile {
   if (typeof window === "undefined") {
-    return freshVaultV2ProfileState();
+    return freshVaultProfileState();
   }
 
   const raw = readRawForSession(session);
   if (raw) {
     try {
-      return normalizeVaultV2Profile(JSON.parse(raw) as Partial<PersistedVaultV2Profile>);
+      return normalizeVaultProfile(JSON.parse(raw) as Partial<PersistedVaultProfile>);
     } catch {
-      return freshVaultV2ProfileState();
+      return freshVaultProfileState();
     }
   }
 
@@ -208,52 +242,61 @@ export function readVaultV2ProfileState(
     }
   }
 
-  return freshVaultV2ProfileState();
+  return freshVaultProfileState();
 }
 
-export function saveVaultV2ProfileState(
-  state: PersistedVaultV2Profile,
+export function saveVaultProfileState(
+  state: PersistedVaultProfile,
   session: UserSession | null = null,
 ): void {
   if (typeof window === "undefined") return;
 
   writeRawForSession(
     session,
-    JSON.stringify({ ...state, schemaVersion: VAULT_V2_PROFILE_SCHEMA_VERSION }),
+    JSON.stringify({ ...state, schemaVersion: VAULT_PROFILE_SCHEMA_VERSION }),
   );
 }
 
 /** Promotes guest session vault data into the registered profile store. */
-export function migrateVaultV2SessionToProfile(): PersistedVaultV2Profile | null {
+export function migrateVaultSessionToProfile(): PersistedVaultProfile | null {
   if (typeof window === "undefined") return null;
 
-  const sessionRaw = readVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY);
+  const sessionRaw = migrateLegacyKeyIfNeeded(
+    VAULT_SESSION_STORAGE_KEY,
+    LEGACY_VAULT_SESSION_STORAGE_KEY,
+    readVaultSessionRaw,
+    writeVaultSessionRaw,
+    removeVaultSessionRaw,
+  );
   if (!sessionRaw) return null;
 
   try {
-    const profile = normalizeVaultV2Profile(
-      JSON.parse(sessionRaw) as Partial<PersistedVaultV2Profile>,
+    const profile = normalizeVaultProfile(
+      JSON.parse(sessionRaw) as Partial<PersistedVaultProfile>,
     );
-    writeVaultV2ProfileRaw(
-      VAULT_V2_PROFILE_STORAGE_KEY,
-      JSON.stringify({ ...profile, schemaVersion: VAULT_V2_PROFILE_SCHEMA_VERSION }),
+    writeVaultProfileRaw(
+      VAULT_PROFILE_STORAGE_KEY,
+      JSON.stringify({ ...profile, schemaVersion: VAULT_PROFILE_SCHEMA_VERSION }),
     );
-    removeVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY);
+    removeVaultSessionRaw(VAULT_SESSION_STORAGE_KEY);
+    removeVaultSessionRaw(LEGACY_VAULT_SESSION_STORAGE_KEY);
     return profile;
   } catch {
     return null;
   }
 }
 
-export function clearVaultV2SessionState(): void {
-  removeVaultV2SessionRaw(VAULT_V2_SESSION_STORAGE_KEY);
+export function clearVaultSessionState(): void {
+  removeVaultSessionRaw(VAULT_SESSION_STORAGE_KEY);
+  removeVaultSessionRaw(LEGACY_VAULT_SESSION_STORAGE_KEY);
 }
 
-export function clearVaultV2ProfileState(): void {
-  removeVaultV2ProfileRaw(VAULT_V2_PROFILE_STORAGE_KEY);
+export function clearVaultProfileState(): void {
+  removeVaultProfileRaw(VAULT_PROFILE_STORAGE_KEY);
+  removeVaultProfileRaw(LEGACY_VAULT_PROFILE_STORAGE_KEY);
 }
 
-export function clearAllVaultV2Storage(): void {
-  clearVaultV2SessionState();
-  clearVaultV2ProfileState();
+export function clearAllVaultStorage(): void {
+  clearVaultSessionState();
+  clearVaultProfileState();
 }

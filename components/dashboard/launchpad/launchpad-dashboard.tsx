@@ -9,7 +9,7 @@ import {
   type VentureBlueprint,
   type VentureBlueprintId,
   type VentureCarouselSlot,
-} from "@/lib/engine/venture-blueprints";
+} from "@/lib/launchpad/venture-blueprints";
 import {
   getMasteryCohortFromBirthYear,
   masteryCohortLabel,
@@ -19,21 +19,21 @@ import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import {
-  engineBodyClass,
-  engineBodyMutedClass,
-  engineCardTitleClass,
-  engineCtaLabelClass,
-  engineEmptyHelperClass,
-  engineEmptyTitleClass,
-  engineJourneyEyebrowClass,
-  engineModalTitleClass,
-  enginePanelTitleClass,
-  enginePremiumEyebrowClass,
-  engineProgressMetaClass,
-  engineSecondaryActionClass,
-  engineSectionHeadingClass,
-  engineStatusBadgeClass,
-} from "@/components/dashboard/engine/engine-dashboard-styles";
+  launchpadBodyClass,
+  launchpadBodyMutedClass,
+  launchpadCardTitleClass,
+  launchpadCtaLabelClass,
+  launchpadEmptyHelperClass,
+  launchpadEmptyTitleClass,
+  launchpadJourneyEyebrowClass,
+  launchpadModalTitleClass,
+  launchpadPanelTitleClass,
+  launchpadPremiumEyebrowClass,
+  launchpadProgressMetaClass,
+  launchpadSecondaryActionClass,
+  launchpadSectionHeadingClass,
+  launchpadStatusBadgeClass,
+} from "@/components/dashboard/launchpad/launchpad-dashboard-styles";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
   CalendarIcon,
@@ -68,19 +68,19 @@ type JourneyMilestone = {
   status: JourneyNodeStatus;
 };
 
-type EngineProfile = {
+type LaunchpadProfile = {
   ageTier: MasteryCohort;
   isPremium: boolean;
 };
 
-const DEFAULT_ENGINE_PROFILE: EngineProfile = {
+const DEFAULT_LAUNCHPAD_PROFILE: LaunchpadProfile = {
   ageTier: "explorer",
   isPremium: false,
 };
 
-function resolveEngineProfile(): EngineProfile {
+function resolveLaunchpadProfile(): LaunchpadProfile {
   const session = readGhostAccessSession();
-  if (!session) return DEFAULT_ENGINE_PROFILE;
+  if (!session) return DEFAULT_LAUNCHPAD_PROFILE;
 
   return {
     ageTier: getMasteryCohortFromBirthYear(session.birthYear, REFERENCE_YEAR),
@@ -248,12 +248,12 @@ function InProgressCarousel({
     <section aria-labelledby="in-progress-ventures-heading">
       <DashboardSectionHeading
         id="in-progress-ventures-heading"
-        className={cn(engineSectionHeadingClass, "mb-3")}
+        className={cn(launchpadSectionHeadingClass, "mb-3")}
       >
         In Progress Businesses
       </DashboardSectionHeading>
       {ventures.length === 0 ? (
-        <p className={cn("py-3", engineEmptyHelperClass)}>
+        <p className={cn("py-3", launchpadEmptyHelperClass)}>
           No active ventures yet - pick a business idea below to launch.
         </p>
       ) : (
@@ -296,7 +296,7 @@ function InProgressCarousel({
                   <span
                     className={cn(
                       "mt-1.5 line-clamp-2 min-h-[2.5rem]",
-                      engineCardTitleClass,
+                      launchpadCardTitleClass,
                     )}
                   >
                     {idea.title}
@@ -307,7 +307,7 @@ function InProgressCarousel({
                       style={{ width: `${venture.progressPercent}%` }}
                     />
                   </div>
-                  <span className={cn("mt-1", engineProgressMetaClass)}>
+                  <span className={cn("mt-1", launchpadProgressMetaClass)}>
                     {venture.progressPercent}%
                   </span>
                 </button>
@@ -367,14 +367,14 @@ function BusinessIdeaTile({
 
       {isInProgress ? (
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-white/55 backdrop-blur-[1px]">
-          <span className={engineStatusBadgeClass}>In Progress</span>
+          <span className={launchpadStatusBadgeClass}>In Progress</span>
         </span>
       ) : null}
 
       <span className="text-xl leading-none" aria-hidden>
         {idea.emoji}
       </span>
-      <span className={cn("mt-1.5 line-clamp-2 w-full", engineCardTitleClass)}>
+      <span className={cn("mt-1.5 line-clamp-2 w-full", launchpadCardTitleClass)}>
         {idea.title}
       </span>
     </button>
@@ -403,11 +403,11 @@ function BusinessIdeasCarousel({
     >
       <DashboardSectionHeading
         id="all-business-ideas-heading"
-        className={cn(engineSectionHeadingClass, "mb-1")}
+        className={cn(launchpadSectionHeadingClass, "mb-1")}
       >
         All Business Ideas
       </DashboardSectionHeading>
-      <p className={cn("mb-3", engineProgressMetaClass)}>
+      <p className={cn("mb-3", launchpadProgressMetaClass)}>
         {ideas.length} ventures · swipe to browse
       </p>
       <div
@@ -558,10 +558,10 @@ function VentureJourneyMap({
       className={cn("flex h-full min-h-0 flex-col p-3", floatingTileClass)}
     >
       <div className="shrink-0 pb-2">
-        <p className={engineJourneyEyebrowClass}>
+        <p className={launchpadJourneyEyebrowClass}>
           Active Journey
         </p>
-        <h2 className={enginePanelTitleClass}>
+        <h2 className={launchpadPanelTitleClass}>
           {venture.emoji} {venture.title}
         </h2>
       </div>
@@ -628,10 +628,10 @@ function EmptyJourneyPlaceholder() {
         "shadow-sm",
       )}
     >
-      <p className={engineEmptyTitleClass}>
+      <p className={launchpadEmptyTitleClass}>
         Your roadmap is waiting
       </p>
-      <p className={cn("mt-2", engineBodyMutedClass)}>
+      <p className={cn("mt-2", launchpadBodyMutedClass)}>
         Tap any business idea above, read Finn&apos;s brief, and hit launch to
         start building.
       </p>
@@ -667,12 +667,12 @@ function DiscoveryBriefDrawer({
             {idea.emoji}
           </span>
           <div className="min-w-0 flex-1">
-            <p className={engineJourneyEyebrowClass}>
+            <p className={launchpadJourneyEyebrowClass}>
               Discovery Brief
             </p>
             <h2
               id="discovery-brief-title"
-              className={enginePanelTitleClass}
+              className={launchpadPanelTitleClass}
             >
               {idea.title}
             </h2>
@@ -687,7 +687,7 @@ function DiscoveryBriefDrawer({
           </button>
         </div>
 
-        <p className={cn("mt-4", engineBodyClass)}>{idea.description}</p>
+        <p className={cn("mt-4", launchpadBodyClass)}>{idea.description}</p>
 
         {isAlreadyInProgress ? (
           <button
@@ -696,7 +696,7 @@ function DiscoveryBriefDrawer({
             className={cn(
               "mt-5 h-touch w-full px-6 shadow-nga-pop",
               orangeCtaClass,
-              engineCtaLabelClass,
+              launchpadCtaLabelClass,
             )}
           >
             View Active Roadmap
@@ -708,7 +708,7 @@ function DiscoveryBriefDrawer({
             className={cn(
               "mt-5 h-touch w-full px-6 shadow-nga-pop",
               orangeCtaClass,
-              engineCtaLabelClass,
+              launchpadCtaLabelClass,
             )}
           >
             LAUNCH THIS BUSINESS
@@ -748,13 +748,13 @@ function CloseBusinessConfirm({
           </span>
           <h2
             id="close-business-title"
-            className={cn("mt-3", enginePanelTitleClass)}
+            className={cn("mt-3", launchpadPanelTitleClass)}
           >
             Close {ventureTitle}?
           </h2>
           <p
             id="close-business-warning"
-            className={cn("mt-3", engineBodyClass)}
+            className={cn("mt-3", launchpadBodyClass)}
           >
             {warningLead}
           </p>
@@ -763,14 +763,14 @@ function CloseBusinessConfirm({
         <button
           type="button"
           onClick={onKeepBuilding}
-          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", greenCtaClass, engineCtaLabelClass)}
+          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", greenCtaClass, launchpadCtaLabelClass)}
         >
           Keep Building
         </button>
         <button
           type="button"
           onClick={onCloseShop}
-          className={cn("mt-3 h-touch w-full px-6 shadow-nga-pop", crimsonCtaClass, engineCtaLabelClass)}
+          className={cn("mt-3 h-touch w-full px-6 shadow-nga-pop", crimsonCtaClass, launchpadCtaLabelClass)}
         >
           Close Shop
         </button>
@@ -793,20 +793,20 @@ function CohortUnavailableModal({
     <ModalShell
       isOpen
       onClose={onClose}
-      labelledBy="engine-cohort-unavailable-title"
+      labelledBy="launchpad-cohort-unavailable-title"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
     >
-      <p className={engineJourneyEyebrowClass}>Learning track</p>
+      <p className={launchpadJourneyEyebrowClass}>Learning track</p>
       <h2
-        id="engine-cohort-unavailable-title"
-        className={cn("mt-2", engineModalTitleClass)}
+        id="launchpad-cohort-unavailable-title"
+        className={cn("mt-2", launchpadModalTitleClass)}
       >
         Not on your track yet
       </h2>
-      <p className={cn("mt-3", engineBodyClass)}>
+      <p className={cn("mt-3", launchpadBodyClass)}>
         {ventureTitle} isn&apos;t available on your current {cohortLabel}{" "}
         learning track. Some business ventures stay locked for age-safety reasons
-        until you&apos;re ready — keep leveling up in The Academy to unlock
+        until you&apos;re ready — keep leveling up in Academy to unlock
         more.
       </p>
       <button
@@ -815,7 +815,7 @@ function CohortUnavailableModal({
         className={cn(
           "mt-5 h-touch w-full px-6 shadow-nga-pop",
           orangeCtaClass,
-          engineCtaLabelClass,
+          launchpadCtaLabelClass,
         )}
       >
         Got it
@@ -834,26 +834,26 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
     <ModalShell
       isOpen
       onClose={onClose}
-      labelledBy="engine-paywall-title"
+      labelledBy="launchpad-paywall-title"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
     >
-        <p className={enginePremiumEyebrowClass}>
+        <p className={launchpadPremiumEyebrowClass}>
           Premium unlock
         </p>
         <h2
-          id="engine-paywall-title"
-          className={cn("mt-2", engineModalTitleClass)}
+          id="launchpad-paywall-title"
+          className={cn("mt-2", launchpadModalTitleClass)}
         >
           Level up {ventureTitle}
         </h2>
-        <p className={cn("mt-3", engineBodyClass)}>
+        <p className={cn("mt-3", launchpadBodyClass)}>
           This business idea requires a premium subscription. Upgrade your
           account to unlock this venture and start building.
         </p>
 
         <button
           type="button"
-          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", orangeCtaClass, engineCtaLabelClass)}
+          className={cn("mt-5 h-touch w-full px-6 shadow-nga-pop", orangeCtaClass, launchpadCtaLabelClass)}
         >
           Unlock Premium Access
         </button>
@@ -862,7 +862,7 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
           onClick={onClose}
           className={cn(
             "mt-3 w-full rounded-nga-lg px-4 py-2.5 transition-colors hover:bg-[#BDE9FB]/60",
-            engineSecondaryActionClass,
+            launchpadSecondaryActionClass,
           )}
         >
           Not yet - keep exploring
@@ -871,7 +871,7 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
   );
 }
 
-export function EngineDashboard() {
+export function LaunchpadDashboard() {
   const { username, isLoading: isUserLoading } = useDashboardUser();
   const finnAddressName = useMemo(
     () => resolveFinnAddressName(username, isUserLoading),
@@ -882,7 +882,7 @@ export function EngineDashboard() {
     [finnAddressName],
   );
 
-  const [profile, setProfile] = useState<EngineProfile>(DEFAULT_ENGINE_PROFILE);
+  const [profile, setProfile] = useState<LaunchpadProfile>(DEFAULT_LAUNCHPAD_PROFILE);
   const [inProgressVentures, setInProgressVentures] =
     useState<InProgressVenture[]>(INITIAL_IN_PROGRESS);
   const [selectedVentureId, setSelectedVentureId] =
@@ -897,7 +897,7 @@ export function EngineDashboard() {
     useState<VentureBlueprint | null>(null);
 
   useEffect(() => {
-    const sync = () => setProfile(resolveEngineProfile());
+    const sync = () => setProfile(resolveLaunchpadProfile());
     sync();
     window.addEventListener(USER_SESSION_UPDATED_EVENT, sync);
     return () => window.removeEventListener(USER_SESSION_UPDATED_EVENT, sync);
@@ -978,7 +978,7 @@ export function EngineDashboard() {
   }
 
   function handleLaunchStep(ventureId: VentureBlueprintId, stepTitle: string) {
-    console.log(`Engine step launch: ${ventureId} - ${stepTitle}`);
+    console.log(`Launchpad step launch: ${ventureId} - ${stepTitle}`);
   }
 
   return (
@@ -1041,7 +1041,7 @@ export function EngineDashboard() {
       >
         <DashboardSectionHeading
           id="venture-journey-map-heading"
-          className={cn(engineSectionHeadingClass, "mb-4")}
+          className={cn(launchpadSectionHeadingClass, "mb-4")}
         >
           Your Business Journey
         </DashboardSectionHeading>

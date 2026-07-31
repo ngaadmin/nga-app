@@ -7,7 +7,7 @@ import {
   allocationCoinStackPercent,
   allocationCoinTrackWidthForStacks,
   computeAllocationCoinStacks,
-} from "@/lib/dashboard/vault-v2/allocation-coin-stacks";
+} from "@/lib/dashboard/vault/allocation-coin-stacks";
 import { cn } from "@/lib/utils/cn";
 
 const COIN_OVERLAP_PX = 10;
@@ -69,19 +69,19 @@ function CoinStackColumn({
   );
 }
 
-type VaultV2CoinStackVisualProps = {
+type VaultCoinStackVisualProps = {
   allocatedAmount: number;
   poolTotal: number;
   coinSizePx?: number;
   className?: string;
 };
 
-export function VaultV2CoinStackVisual({
+export function VaultCoinStackVisual({
   allocatedAmount,
   poolTotal,
   coinSizePx = ALLOCATION_COIN_SIZE_PX,
   className,
-}: VaultV2CoinStackVisualProps) {
+}: VaultCoinStackVisualProps) {
   const stackGapPx = ALLOCATION_COIN_STACK_GAP_PX;
   const stacks = useMemo(
     () => computeAllocationCoinStacks(allocatedAmount, poolTotal),

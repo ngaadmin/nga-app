@@ -51,3 +51,4 @@
 - **Layer Discipline:** Use the project's centralized stacking conventions; do not introduce ad-hoc z-index values.
 - **Render Safety:** Never trigger parent state updates synchronously during another component's render or inside that component's state updater functions.
 - **Ghost-First Delivery:** Ship with local persistence and in-memory registries until remote auth/database integration is explicitly in scope for the task at hand.
+- **Dashboard Pillars:** User-facing section titles are **Academy**, **Launchpad**, and **Vault** (no "The " prefix). Routes: `/dashboard/academy`, `/dashboard/launchpad`, `/dashboard/vault`. Legacy URLs `/dashboard/engine` and `/dashboard/vault-v2` redirect permanently.

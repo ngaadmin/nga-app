@@ -4,23 +4,23 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CashInPointsPanel } from "@/components/dashboard/points/cash-in-points-panel";
 import type { PointsConvertedPayload } from "@/components/dashboard/points/cash-in-points-panel";
-import { VaultV2AllocationModal } from "@/components/dashboard/vault-v2/vault-v2-allocation-modal";
-import { VaultV2BucketDrilldown } from "@/components/dashboard/vault-v2/vault-v2-bucket-drilldown";
-import { VaultV2DepositSection } from "@/components/dashboard/vault-v2/vault-v2-deposit-section";
-import { VaultV2ManageBudgetJarsModal } from "@/components/dashboard/vault-v2/vault-v2-manage-budget-jars-modal";
-import { VaultV2MyMoneyCard } from "@/components/dashboard/vault-v2/vault-v2-my-money-card";
+import { VaultAllocationModal } from "@/components/dashboard/vault/vault-allocation-modal";
+import { VaultBucketDrilldown } from "@/components/dashboard/vault/vault-bucket-drilldown";
+import { VaultDepositSection } from "@/components/dashboard/vault/vault-deposit-section";
+import { VaultManageBudgetJarsModal } from "@/components/dashboard/vault/vault-manage-budget-jars-modal";
+import { VaultMyMoneyCard } from "@/components/dashboard/vault/vault-my-money-card";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { useVaultV2Actions } from "@/lib/dashboard/vault-v2/use-vault-v2-actions";
-import { useVaultV2Profile } from "@/lib/dashboard/vault-v2/vault-v2-profile-context";
+import { useVaultActions } from "@/lib/dashboard/vault/use-vault-actions";
+import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
 import type { VaultBucketId } from "@/lib/dashboard/vault-buckets";
 import type { VaultIncomeSourceId } from "@/lib/dashboard/vault-income-sources";
-import { vaultV2BucketsWithDisplayNames } from "@/lib/dashboard/vault-v2/bucket-display-name";
+import { vaultBucketsWithDisplayNames } from "@/lib/dashboard/vault/bucket-display-name";
 
-export function VaultV2Dashboard() {
+export function VaultDashboard() {
   const vaultCopy = copyMatrix.dashboard.vault;
   const searchParams = useSearchParams();
-  const { creditSaveJar, appendLedger } = useVaultV2Profile();
+  const { creditSaveJar, appendLedger } = useVaultProfile();
   const {
     isPremium,
     moneyToAllocate,
@@ -38,7 +38,7 @@ export function VaultV2Dashboard() {
     handleRenameBucket,
     handleAddCustomBucket,
     handleDeleteCustomBucket,
-  } = useVaultV2Actions();
+  } = useVaultActions();
 
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
@@ -65,7 +65,7 @@ export function VaultV2Dashboard() {
   );
 
   const displayBuckets = useMemo(
-    () => vaultV2BucketsWithDisplayNames(vaultBuckets),
+    () => vaultBucketsWithDisplayNames(vaultBuckets),
     [vaultBuckets],
   );
 
@@ -85,7 +85,7 @@ export function VaultV2Dashboard() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <VaultV2MyMoneyCard
+      <VaultMyMoneyCard
         buckets={displayBuckets}
         totalSavings={totalSavings}
         expandedBucketId={expandedBucketId}
@@ -94,7 +94,7 @@ export function VaultV2Dashboard() {
       />
 
       {expandedBucket ? (
-        <VaultV2BucketDrilldown
+        <VaultBucketDrilldown
           bucket={expandedBucket}
           buckets={displayBuckets}
           goals={vaultGoals}
@@ -110,9 +110,9 @@ export function VaultV2Dashboard() {
         />
       ) : null}
 
-      <VaultV2DepositSection onDeposit={handleDepositAndOpenAllocation} />
+      <VaultDepositSection onDeposit={handleDepositAndOpenAllocation} />
 
-      <VaultV2AllocationModal
+      <VaultAllocationModal
         isOpen={allocationModalOpen}
         onClose={() => setAllocationModalOpen(false)}
         buckets={displayBuckets}
@@ -121,7 +121,7 @@ export function VaultV2Dashboard() {
         onLockIn={handleLockIn}
       />
 
-      <VaultV2ManageBudgetJarsModal
+      <VaultManageBudgetJarsModal
         isOpen={manageJarsModalOpen}
         onClose={() => setManageJarsModalOpen(false)}
         buckets={vaultBuckets}
@@ -139,12 +139,12 @@ export function VaultV2Dashboard() {
       <ModalShell
         isOpen={cashInOpen}
         onClose={() => setCashInOpen(false)}
-        labelledBy="vault-v2-cash-in-title"
+        labelledBy="vault-cash-in-title"
         backdropClassName="bg-[#031F82]/45"
         panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
       >
         <h2
-          id="vault-v2-cash-in-title"
+          id="vault-cash-in-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
         >
           {vaultCopy.cashInTileLabel}

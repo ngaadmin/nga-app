@@ -9,8 +9,8 @@ import {
 import {
   BucketEmojiIcon,
   bucketTheme,
-} from "@/components/dashboard/vault-v2/vault-v2-visuals";
-import { VaultV2CoinStackVisual } from "@/components/dashboard/vault-v2/vault-v2-coin-stack-visual";
+} from "@/components/dashboard/vault/vault-visuals";
+import { VaultCoinStackVisual } from "@/components/dashboard/vault/vault-coin-stack-visual";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -25,15 +25,15 @@ import {
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import { vaultV2BucketDisplayName } from "@/lib/dashboard/vault-v2/bucket-display-name";
+import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import {
   isAllocationOverPool,
   sumEffectiveAllocationInputs,
   sumEffectiveAllocationInputsExcept,
   vaultAllocationRemainingDisplay,
-} from "@/lib/dashboard/vault-v2/allocation-remaining";
-import { ALLOCATION_COIN_SIZE_PX } from "@/lib/dashboard/vault-v2/allocation-coin-stacks";
-import { vaultV2Copy } from "@/lib/dashboard/vault-v2/copy";
+} from "@/lib/dashboard/vault/allocation-remaining";
+import { ALLOCATION_COIN_SIZE_PX } from "@/lib/dashboard/vault/allocation-coin-stacks";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -72,7 +72,7 @@ function AllocationInputRow({
 }) {
   const { currencySymbol, formatMoney } = useCurrency();
   const theme = bucketTheme(bucket);
-  const displayName = vaultV2BucketDisplayName(bucket);
+  const displayName = vaultBucketDisplayName(bucket);
   const currentBalance = savingsBucketDisplayBalance(bucket, totalSavings);
 
   return (
@@ -93,7 +93,7 @@ function AllocationInputRow({
       </div>
 
       <div className={allocationCoinSlotClass}>
-        <VaultV2CoinStackVisual
+        <VaultCoinStackVisual
           allocatedAmount={draft}
           poolTotal={poolTotal}
           coinSizePx={ALLOCATION_COIN_SIZE_PX - 2}
@@ -119,7 +119,7 @@ function AllocationInputRow({
   );
 }
 
-type VaultV2AllocationModalProps = {
+type VaultAllocationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   buckets: VaultBucket[];
@@ -128,14 +128,14 @@ type VaultV2AllocationModalProps = {
   onLockIn: (allocations: Record<string, number>) => void;
 };
 
-export function VaultV2AllocationModal({
+export function VaultAllocationModal({
   isOpen,
   onClose,
   buckets,
   totalSavings,
   moneyToAllocate,
   onLockIn,
-}: VaultV2AllocationModalProps) {
+}: VaultAllocationModalProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const { formatMoney } = useCurrency();
   const bucketIds = useMemo(() => buckets.map((bucket) => bucket.id), [buckets]);
@@ -302,14 +302,14 @@ export function VaultV2AllocationModal({
       isOpen={isOpen}
       onClose={onClose}
       align="center"
-      labelledBy="vault-v2-allocation-title"
+      labelledBy="vault-allocation-title"
       backdropClassName="bg-[#031F82]/50"
       panelClassName="w-full max-w-sm rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:px-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2
-            id="vault-v2-allocation-title"
+            id="vault-allocation-title"
             className="font-heading text-lg font-extrabold text-[#031F82]"
           >
             {copy.poolLabel}
@@ -335,7 +335,7 @@ export function VaultV2AllocationModal({
         <button
           type="button"
           onClick={onClose}
-          aria-label={vaultV2Copy.closeModalLabel}
+          aria-label={vaultCopy.closeModalLabel}
           className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
         >
           ✕

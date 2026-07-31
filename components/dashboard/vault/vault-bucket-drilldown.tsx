@@ -1,14 +1,14 @@
 "use client";
 
-import { VaultV2BucketExpandedPanel } from "@/components/dashboard/vault-v2/vault-v2-bucket-expanded-panel";
-import { VaultV2SaveJarExpandedPanel } from "@/components/dashboard/vault-v2/vault-v2-save-jar-expanded-panel";
+import { VaultBucketExpandedPanel } from "@/components/dashboard/vault/vault-bucket-expanded-panel";
+import { VaultSaveJarExpandedPanel } from "@/components/dashboard/vault/vault-save-jar-expanded-panel";
 import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
 import type { SpendingCategory, SpendingCategoryId } from "@/lib/dashboard/spending-categories";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
 import type { VaultBucket, VaultBucketId } from "@/lib/dashboard/vault-buckets";
 
-type VaultV2BucketDrilldownProps = {
+type VaultBucketDrilldownProps = {
   bucket: VaultBucket;
   buckets: VaultBucket[];
   goals: SavingsGoal[];
@@ -27,7 +27,7 @@ type VaultV2BucketDrilldownProps = {
   onClose: () => void;
 };
 
-export function VaultV2BucketDrilldown({
+export function VaultBucketDrilldown({
   bucket,
   buckets,
   goals,
@@ -40,10 +40,10 @@ export function VaultV2BucketDrilldown({
   onRenameCategory,
   onAssignGoals,
   onClose,
-}: VaultV2BucketDrilldownProps) {
+}: VaultBucketDrilldownProps) {
   if (bucket.id === SAVINGS_JAR_ID) {
     return (
-      <VaultV2SaveJarExpandedPanel
+      <VaultSaveJarExpandedPanel
         bucket={bucket}
         buckets={buckets}
         goals={goals}
@@ -56,7 +56,7 @@ export function VaultV2BucketDrilldown({
   }
 
   return (
-    <VaultV2BucketExpandedPanel
+    <VaultBucketExpandedPanel
       bucket={bucket}
       buckets={buckets}
       goals={goals}

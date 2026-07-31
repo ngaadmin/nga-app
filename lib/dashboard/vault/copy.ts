@@ -1,6 +1,6 @@
-/** Vault V2 copy — primary Vault experience. */
-export const vaultV2Copy = {
-  title: "The Vault",
+/** Vault dashboard copy. */
+export const vaultCopy = {
+  title: "Vault",
   description: "Manage your money, jars, and deposits.",
   allocationSectionTitle: "Allocate Money",
   closeModalLabel: "Close",

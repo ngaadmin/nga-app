@@ -4,7 +4,7 @@ import {
   sumEffectiveAllocationInputs,
   vaultAllocationEntryCap,
   vaultAllocationRemainingDisplay,
-} from "@/lib/dashboard/vault-v2/allocation-remaining";
+} from "@/lib/dashboard/vault/allocation-remaining";
 
 describe("allocation remaining", () => {
   it("subtracts effective inputs from the pool for display", () => {

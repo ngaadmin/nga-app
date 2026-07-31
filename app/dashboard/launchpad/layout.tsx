@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { copyMatrix } from "@/constants/copyMatrix";
 
 export const metadata: Metadata = {
-  title: copyMatrix.dashboard.engine.title,
-  description: copyMatrix.dashboard.engine.description,
+  title: copyMatrix.dashboard.launchpad.title,
+  description: copyMatrix.dashboard.launchpad.description,
 };
 
-export default function EngineLayout({
+export default function LaunchpadLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

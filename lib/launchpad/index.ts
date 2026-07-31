@@ -16,4 +16,4 @@ export {
   type VentureCarouselSlot,
   type VentureCohortLabel,
   type VentureTier,
-} from "@/lib/engine/venture-blueprints";
+} from "@/lib/launchpad/venture-blueprints";

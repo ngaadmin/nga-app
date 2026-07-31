@@ -24,7 +24,7 @@ export function HomeIcon({ className }: IconProps) {
   );
 }
 
-/** Book / mentor placeholder for The Academy. */
+/** Book / mentor placeholder for Academy. */
 export function AcademyIcon({ className }: IconProps) {
   return (
     <svg
@@ -52,8 +52,8 @@ export function AcademyIcon({ className }: IconProps) {
   );
 }
 
-/** Rocket icon for The Engine navigation. */
-export function EngineIcon({ className }: IconProps) {
+/** Rocket icon for Launchpad navigation. */
+export function LaunchpadIcon({ className }: IconProps) {
   return (
     <svg
       className={className}
@@ -93,7 +93,7 @@ export function EngineIcon({ className }: IconProps) {
   );
 }
 
-/** Banking vault / safe icon for The Vault navigation. */
+/** Banking vault / safe icon for Vault navigation. */
 export function VaultIcon({ className }: IconProps) {
   return (
     <svg

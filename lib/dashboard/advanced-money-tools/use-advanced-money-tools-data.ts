@@ -6,14 +6,14 @@ import {
   computeTotalSavings,
   resolveVaultSavingsGoals,
 } from "@/lib/dashboard/savings-goals";
-import { useVaultV2Profile } from "@/lib/dashboard/vault-v2/vault-v2-profile-context";
+import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 
 /** Premium billing is not wired yet — defaults to freemium limits. */
 const ADVANCED_MONEY_TOOLS_IS_PREMIUM = false;
 
 export function useAdvancedMoneyToolsData() {
-  const { ledger, jars, savingsGoals } = useVaultV2Profile();
+  const { ledger, jars, savingsGoals } = useVaultProfile();
   const masteryCohort = useMasteryCohort();
 
   const vaultGoals = useMemo(

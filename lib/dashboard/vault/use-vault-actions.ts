@@ -41,10 +41,10 @@ import {
   type CustomVaultBucketPersisted,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
-import { useVaultV2Profile } from "@/lib/dashboard/vault-v2/vault-v2-profile-context";
+import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
 
-/** Premium billing is not wired yet — Vault V2 defaults to freemium limits. */
-const VAULT_V2_IS_PREMIUM = false;
+/** Premium billing is not wired yet — Vault defaults to freemium limits. */
+const VAULT_IS_PREMIUM = false;
 
 function defaultSpendingCategoryLabels(): Record<DefaultSpendingCategoryId, string> {
   const labels = copyMatrix.dashboard.vault.budget.defaultCategories;
@@ -93,7 +93,7 @@ function adjustBucketBalance(
   );
 }
 
-export function useVaultV2Actions() {
+export function useVaultActions() {
   const vaultCopy = copyMatrix.dashboard.vault;
   const budgetCopy = vaultCopy.budget;
   const { formatMoney } = useCurrency();
@@ -113,7 +113,7 @@ export function useVaultV2Actions() {
     customSpendingCategories,
     setCustomSpendingCategories,
     vaultBuckets,
-  } = useVaultV2Profile();
+  } = useVaultProfile();
 
   const spendingCategories = useMemo(
     () =>
@@ -126,7 +126,7 @@ export function useVaultV2Actions() {
   );
 
   const vaultGoals = useMemo(
-    () => resolveVaultSavingsGoals(savingsGoals, masteryCohort, VAULT_V2_IS_PREMIUM),
+    () => resolveVaultSavingsGoals(savingsGoals, masteryCohort, VAULT_IS_PREMIUM),
     [masteryCohort, savingsGoals],
   );
 
@@ -409,7 +409,7 @@ export function useVaultV2Actions() {
     (name: string, emoji: string) => {
       const trimmed = name.trim();
       if (!trimmed) return;
-      if (!canAddVaultBucket(vaultBuckets.length, VAULT_V2_IS_PREMIUM)) return;
+      if (!canAddVaultBucket(vaultBuckets.length, VAULT_IS_PREMIUM)) return;
 
       setCustomBuckets((current) => [
         ...current,
@@ -445,7 +445,7 @@ export function useVaultV2Actions() {
   );
 
   return {
-    isPremium: VAULT_V2_IS_PREMIUM,
+    isPremium: VAULT_IS_PREMIUM,
     moneyToAllocate,
     vaultBuckets,
     vaultGoals,
@@ -464,4 +464,4 @@ export function useVaultV2Actions() {
   };
 }
 
-export type VaultV2Actions = ReturnType<typeof useVaultV2Actions>;
+export type VaultActions = ReturnType<typeof useVaultActions>;

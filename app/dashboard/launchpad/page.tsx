@@ -1,5 +1,5 @@
-﻿import { EngineDashboard } from "@/components/dashboard/engine/engine-dashboard";
+﻿import { LaunchpadDashboard } from "@/components/dashboard/launchpad/launchpad-dashboard";
 
-export default function EnginePage() {
-  return <EngineDashboard />;
+export default function LaunchpadPage() {
+  return <LaunchpadDashboard />;
 }

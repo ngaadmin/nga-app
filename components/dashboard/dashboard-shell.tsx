@@ -19,7 +19,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
-  const isVaultV2Route = pathname.startsWith("/dashboard/vault-v2");
+  const isVaultRoute = pathname.startsWith("/dashboard/vault");
 
   useEffect(() => {
     const session = readUserSession();
@@ -40,7 +40,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
             isLessonRoute
               ? "px-0 py-0 pb-20"
-              : isVaultV2Route
+              : isVaultRoute
                 ? "px-4 py-3 pb-28 sm:px-6 md:pb-8"
                 : "px-4 py-6 pb-28 sm:px-6 md:pb-8",
           )}

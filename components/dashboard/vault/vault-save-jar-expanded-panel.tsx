@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { GoalProgressBar } from "@/components/dashboard/vault-v2/vault-v2-visuals";
-import { VaultV2MoveMoneyForm, VaultV2SaveJarMoveMoneyForm } from "@/components/dashboard/vault-v2/vault-v2-move-money-form";
-import { VaultV2SavingsGoalAllocationModal } from "@/components/dashboard/vault-v2/vault-v2-savings-goal-allocation-modal";
+import { GoalProgressBar } from "@/components/dashboard/vault/vault-visuals";
+import { VaultMoveMoneyForm, VaultSaveJarMoveMoneyForm } from "@/components/dashboard/vault/vault-move-money-form";
+import { VaultSavingsGoalAllocationModal } from "@/components/dashboard/vault/vault-savings-goal-allocation-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
@@ -20,15 +20,15 @@ import {
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
 import {
-  vaultV2ActionLinkActiveClass,
-  vaultV2ActionLinkClass,
-} from "@/lib/dashboard/vault-v2/vault-v2-action-form-styles";
+  vaultActionLinkActiveClass,
+  vaultActionLinkClass,
+} from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
-export type VaultV2SaveJarExpandedPanelProps = {
+export type VaultSaveJarExpandedPanelProps = {
   bucket: VaultBucket;
   buckets: VaultBucket[];
   goals: SavingsGoal[];
@@ -42,7 +42,7 @@ export type VaultV2SaveJarExpandedPanelProps = {
   onClose: () => void;
 };
 
-export function VaultV2SaveJarExpandedPanel({
+export function VaultSaveJarExpandedPanel({
   bucket,
   buckets,
   goals,
@@ -50,7 +50,7 @@ export function VaultV2SaveJarExpandedPanel({
   onVaultTransfer,
   onAssignGoals,
   onClose,
-}: VaultV2SaveJarExpandedPanelProps) {
+}: VaultSaveJarExpandedPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const { formatMoney } = useCurrency();
@@ -170,8 +170,8 @@ export function VaultV2SaveJarExpandedPanel({
                 onClick={() => setJarMoveOpen((open) => !open)}
                 disabled={!canMoveJar}
                 className={cn(
-                  vaultV2ActionLinkClass,
-                  jarMoveOpen && vaultV2ActionLinkActiveClass,
+                  vaultActionLinkClass,
+                  jarMoveOpen && vaultActionLinkActiveClass,
                 )}
               >
                 {savingsCopy.moveMoney}
@@ -179,7 +179,7 @@ export function VaultV2SaveJarExpandedPanel({
             </div>
 
             {jarMoveOpen && canMoveJar ? (
-              <VaultV2SaveJarMoveMoneyForm
+              <VaultSaveJarMoveMoneyForm
                 sources={sources}
                 destinations={destinations}
                 sourceId={sourceId}
@@ -223,9 +223,9 @@ export function VaultV2SaveJarExpandedPanel({
                         type="button"
                         onClick={() => toggleGoalMove(goal.id)}
                         className={cn(
-                          vaultV2ActionLinkClass,
+                          vaultActionLinkClass,
                           "shrink-0 text-right",
-                          moveOpen && vaultV2ActionLinkActiveClass,
+                          moveOpen && vaultActionLinkActiveClass,
                         )}
                       >
                         {savingsCopy.moveMoney}
@@ -278,7 +278,7 @@ export function VaultV2SaveJarExpandedPanel({
                   />
 
                   {moveOpen && canMoveGoal ? (
-                    <VaultV2MoveMoneyForm
+                    <VaultMoveMoneyForm
                       contextId={goal.id}
                       contextBalance={goal.balance}
                       locations={transferLocations}
@@ -297,7 +297,7 @@ export function VaultV2SaveJarExpandedPanel({
         )}
       </div>
 
-      <VaultV2SavingsGoalAllocationModal
+      <VaultSavingsGoalAllocationModal
         isOpen={allocationModalOpen}
         onClose={() => setAllocationModalOpen(false)}
         goals={goals}

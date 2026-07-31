@@ -31,11 +31,11 @@ import type {
   SpendingCategoryOverrides,
 } from "@/lib/dashboard/spending-categories";
 import {
-  freshVaultV2ProfileState,
-  migrateVaultV2SessionToProfile,
-  readVaultV2ProfileState,
-  saveVaultV2ProfileState,
-} from "@/lib/dashboard/vault-v2/vault-v2-profile-storage";
+  freshVaultProfileState,
+  migrateVaultSessionToProfile,
+  readVaultProfileState,
+  saveVaultProfileState,
+} from "@/lib/dashboard/vault/vault-profile-storage";
 import { readUserSession } from "@/lib/onboarding/ghost-session";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
@@ -46,7 +46,7 @@ type AppendLedgerOptions = {
   flow?: LedgerFlow;
 };
 
-type VaultV2ProfileContextValue = {
+type VaultProfileContextValue = {
   moneyToAllocate: number;
   jars: DestinationJar[];
   customBuckets: CustomVaultBucketPersisted[];
@@ -79,7 +79,7 @@ type VaultV2ProfileContextValue = {
   creditSaveJar: (amount: number) => void;
 };
 
-const VaultV2ProfileContext = createContext<VaultV2ProfileContextValue | null>(null);
+const VaultProfileContext = createContext<VaultProfileContextValue | null>(null);
 
 function createLedgerId(): string {
   return `ledger-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -94,12 +94,12 @@ function buildWelcomeLedgerEntry(): LedgerEntry {
   };
 }
 
-type VaultV2ProfileProviderProps = {
+type VaultProfileProviderProps = {
   children: ReactNode;
 };
 
-export function VaultV2ProfileProvider({ children }: VaultV2ProfileProviderProps) {
-  const defaults = freshVaultV2ProfileState();
+export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
+  const defaults = freshVaultProfileState();
   const welcomeMessage = copyMatrix.dashboard.vault.ledger.welcomeMessage;
 
   const [moneyToAllocate, setMoneyToAllocateState] = useState(defaults.moneyToAllocate);
@@ -125,7 +125,7 @@ export function VaultV2ProfileProvider({ children }: VaultV2ProfileProviderProps
   const hydrateFromStorage = useCallback(() => {
     const session = readUserSession();
     sessionRef.current = session;
-    const persisted = readVaultV2ProfileState(session);
+    const persisted = readVaultProfileState(session);
 
     setMoneyToAllocateState(persisted.moneyToAllocate);
     setJarsState(jarsFromBalanceMap(persisted.jarBalances));
@@ -155,7 +155,7 @@ export function VaultV2ProfileProvider({ children }: VaultV2ProfileProviderProps
         previous?.accessMode === "ghost" &&
         next?.accessMode === "registered"
       ) {
-        migrateVaultV2SessionToProfile();
+        migrateVaultSessionToProfile();
       }
 
       hydrateFromStorage();
@@ -168,7 +168,7 @@ export function VaultV2ProfileProvider({ children }: VaultV2ProfileProviderProps
   useEffect(() => {
     if (!hydrated) return;
 
-    saveVaultV2ProfileState(
+    saveVaultProfileState(
       {
         schemaVersion: 1,
         moneyToAllocate,
@@ -335,22 +335,22 @@ export function VaultV2ProfileProvider({ children }: VaultV2ProfileProviderProps
   );
 
   return (
-    <VaultV2ProfileContext.Provider value={value}>
+    <VaultProfileContext.Provider value={value}>
       {children}
-    </VaultV2ProfileContext.Provider>
+    </VaultProfileContext.Provider>
   );
 }
 
-export function useVaultV2Profile(): VaultV2ProfileContextValue {
-  const context = useContext(VaultV2ProfileContext);
+export function useVaultProfile(): VaultProfileContextValue {
+  const context = useContext(VaultProfileContext);
   if (!context) {
-    throw new Error("useVaultV2Profile must be used within VaultV2ProfileProvider");
+    throw new Error("useVaultProfile must be used within VaultProfileProvider");
   }
   return context;
 }
 
-/** @deprecated Use useVaultV2Profile — kept for ledger call sites during cutover. */
-export function useVaultLedger(): Pick<VaultV2ProfileContextValue, "ledger" | "appendLedger"> {
-  const { ledger, appendLedger } = useVaultV2Profile();
+/** @deprecated Use useVaultProfile — kept for ledger call sites during cutover. */
+export function useVaultLedger(): Pick<VaultProfileContextValue, "ledger" | "appendLedger"> {
+  const { ledger, appendLedger } = useVaultProfile();
   return { ledger, appendLedger };
 }

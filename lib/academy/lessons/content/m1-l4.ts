@@ -252,7 +252,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     successMessage: "Goal Achieved! Lars saved enough for the Wheelie Workshop.",
     advance: { mode: "on-complete" },
   },
-  explorerCompletionScreen("milestone-splash"),
+  explorerCompletionScreen("milestone-splash", "medal-skill1-bronze"),
 ];
 
 export const M1_L4_LESSON_DEFINITION: CohortLessonDefinition = {

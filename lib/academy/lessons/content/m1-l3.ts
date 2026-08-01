@@ -207,6 +207,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     bodyCopy:
       "Lesson complete! You've unlocked a huge secret: Having some spare cash means you're ready for whatever comes next.",
     useStandardPane: false,
+    medalId: "medal-skill3-unlock",
     advance: { mode: "manual-next" },
   },
 ];

@@ -139,7 +139,11 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
     autoReadyWhenNoBonus: false,
   },
-  teenCompletionScreen({ skillTitle: "Stop & Think", xpReward: 50 }),
+  teenCompletionScreen({
+    skillTitle: "Stop & Think",
+    xpReward: 50,
+    medalId: "medal-skill1-unlocked",
+  }),
 ];
 
 const EXPLORER_OVERRIDES: ScreenOverrideMap = {
@@ -206,6 +210,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
       "Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it.",
   },
   "impulse-pause": {
+    illustrationId: "concept-coin-stack",
     narrative:
       "Help Lars by giving him a 'buy freeze' so his brain has time to think.",
     holdLabel: "❄️ HOLD TO FREEZE ❄️",
@@ -222,7 +227,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
   "milestone-splash": {
     _replace: true,
-    ...explorerCompletionScreen(),
+    ...explorerCompletionScreen("milestone-splash", "medal-skill1-unlocked"),
   },
 };
 

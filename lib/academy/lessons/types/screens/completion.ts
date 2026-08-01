@@ -1,4 +1,5 @@
 import type { WithDeclarative } from "../declarative";
+import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
 
 export type CompletionScreenConfig = WithDeclarative<{
   type: "completion";
@@ -9,4 +10,6 @@ export type CompletionScreenConfig = WithDeclarative<{
   bodyCopy?: string;
   returnButtonLabel?: string;
   useStandardPane?: boolean;
+  /** Skill medal asset from `public/assets/illustrations/medal/`. */
+  medalId?: MedalIllustrationId;
 }>;

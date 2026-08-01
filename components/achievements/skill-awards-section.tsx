@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 import { ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS } from "@/components/achievements/achievements-carousel";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
+import {
+  getMedalIllustrationPath,
+  medalIdForSkillNumber,
+} from "@/lib/academy/illustrations/medal-registry";
 import { LockIcon } from "@/lib/dashboard/icons";
 import {
   totalSkillsToMasterForMasteryCohort,
@@ -110,26 +114,43 @@ type SkillCarouselCardProps = {
 function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
   const isLocked = skill.tier === "locked";
   const isUnlocked = skill.tier === "unlocked";
+  const isBronze = skill.tier === "bronze";
+  const medalId =
+    isUnlocked || isBronze
+      ? medalIdForSkillNumber(skill.skillNumber, isBronze ? "bronze" : "unlocked")
+      : undefined;
+  const medalSrc = medalId ? getMedalIllustrationPath(medalId) : undefined;
 
   return (
     <article className="flex w-[5.5rem] shrink-0 snap-center flex-col items-center px-1 text-center sm:w-[6rem]">
       <div className="relative">
-        <div
-          className={cn(
-            "flex size-14 items-center justify-center rounded-full sm:size-16",
-            medalCoinStyles(skill.tier),
-          )}
-        >
-          <span
+        {medalSrc ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={medalSrc}
+            alt={`${skill.label} medal`}
+            className="block size-14 object-contain object-center sm:size-16"
+            decoding="async"
+            loading="lazy"
+          />
+        ) : (
+          <div
             className={cn(
-              "text-xl leading-none sm:text-2xl",
-              isLocked ? "grayscale" : "drop-shadow-sm",
+              "flex size-14 items-center justify-center rounded-full sm:size-16",
+              medalCoinStyles(skill.tier),
             )}
-            aria-hidden
           >
-            {skill.medalEmoji}
-          </span>
-        </div>
+            <span
+              className={cn(
+                "text-xl leading-none sm:text-2xl",
+                isLocked ? "grayscale" : "drop-shadow-sm",
+              )}
+              aria-hidden
+            >
+              {skill.medalEmoji}
+            </span>
+          </div>
+        )}
         {isLocked ? (
           <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-white/90 shadow-sm">
             <LockIcon className="size-2.5 text-gray-400" />

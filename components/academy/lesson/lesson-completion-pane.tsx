@@ -2,6 +2,7 @@ import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal
 import {
   formatLessonSkillUnlockLine,
 } from "@/lib/dashboard/skill-trophies";
+import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 
 type LessonCompletionPaneProps = {
@@ -10,6 +11,7 @@ type LessonCompletionPaneProps = {
   perfectStreak: boolean;
   achievementSkillId: string;
   skillMedalTier: Extract<SkillTrophyTier, "unlocked" | "bronze"> | null;
+  medalId?: MedalIllustrationId;
 };
 
 export function LessonCompletionPane({
@@ -18,6 +20,7 @@ export function LessonCompletionPane({
   perfectStreak,
   achievementSkillId,
   skillMedalTier,
+  medalId,
 }: LessonCompletionPaneProps) {
   if (!skillMedalTier) {
     return (
@@ -53,7 +56,11 @@ export function LessonCompletionPane({
       ) : null}
 
       <div className="mt-10">
-        <LessonSkillMedal skillSlug={achievementSkillId} tier={skillMedalTier} />
+        <LessonSkillMedal
+          skillSlug={achievementSkillId}
+          tier={skillMedalTier}
+          medalId={medalId}
+        />
       </div>
 
       <p className="mt-4 font-heading text-base font-extrabold text-[#031F82]">

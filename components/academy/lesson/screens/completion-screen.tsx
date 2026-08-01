@@ -19,6 +19,7 @@ export function CompletionScreen({
         perfectStreak={flow.perfectStreak}
         achievementSkillId={flow.progressSkillSlug}
         skillMedalTier={flow.skillMedalTier}
+        medalId={screen.medalId}
       />
     );
   }
@@ -53,6 +54,7 @@ export function CompletionScreen({
           <LessonSkillMedal
             skillSlug={flow.progressSkillSlug}
             tier={flow.skillMedalTier}
+            medalId={screen.medalId}
           />
         </div>
       ) : null}

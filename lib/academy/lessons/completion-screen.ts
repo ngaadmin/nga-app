@@ -1,3 +1,4 @@
+import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
 import type { CompletionScreenConfig } from "@/lib/academy/lessons/types";
 
 /**
@@ -9,11 +10,13 @@ import type { CompletionScreenConfig } from "@/lib/academy/lessons/types";
  */
 export function explorerCompletionScreen(
   id = "milestone-splash",
+  medalId?: MedalIllustrationId,
 ): CompletionScreenConfig {
   return {
     type: "completion",
     id,
     useStandardPane: true,
+    ...(medalId ? { medalId } : {}),
   };
 }
 
@@ -27,6 +30,7 @@ export function teenCompletionScreen(options: {
   xpReward: number;
   id?: string;
   returnButtonLabel?: string;
+  medalId?: MedalIllustrationId;
 }): CompletionScreenConfig {
   return {
     type: "completion",
@@ -36,5 +40,6 @@ export function teenCompletionScreen(options: {
     returnButtonLabel:
       options.returnButtonLabel ?? "Return to Learning Journey",
     useStandardPane: false,
+    ...(options.medalId ? { medalId: options.medalId } : {}),
   };
 }

@@ -447,25 +447,26 @@ export const lessonMatchConnectorSpacerClass = "w-4 shrink-0";
 export const lessonRevealBucketClass =
   "rounded-3xl border-2 border-dashed border-[#BDE9FB]/70 bg-[#F7FBFF]/50 p-4 transition-colors";
 
-/** Shared outer frame for top-of-screen lesson media (registry images, emoji fallbacks, reserves). */
+/** Shared layout for top-of-screen lesson media — no border, background, or shadow. */
 export const lessonIllustrationMediaFrameClass =
-  "mx-auto mb-3 flex w-full min-w-0 max-w-full shrink-0 flex-col items-center justify-center px-2 py-2";
+  "mx-auto mb-3 w-full min-w-0 max-w-full shrink-0 px-2 py-2 sm:max-w-[16rem]";
 
 /** Modest scene slot below lesson chrome — fixed min-height for layout stability. */
 export const lessonIllustrationSlotClass = cn(
   lessonIllustrationMediaFrameClass,
-  "h-[3rem] min-h-[3rem] max-w-[10rem] rounded-xl border border-[#BDE9FB]/80 bg-[#F7FBFF]/90 text-center shadow-sm sm:h-[3.25rem] sm:max-w-[11rem]",
+  "flex flex-col items-center justify-center text-center",
+  "h-[3rem] min-h-[3rem] max-w-[10rem] sm:h-[3.25rem] sm:max-w-[11rem]",
 );
 
-/** Registry image slot — responsive width/height on mobile viewports. */
-export const lessonIllustrationImageSlotClass = cn(
+/** Registry image — frameless, sits directly on the lesson background. */
+export const lessonIllustrationImageClass = cn(
   lessonIllustrationMediaFrameClass,
-  "min-h-[3.25rem] overflow-hidden rounded-xl border border-[#BDE9FB]/80 bg-[#F7FBFF]/90 shadow-sm sm:max-w-[16rem]",
+  "block h-auto max-h-[220px] min-h-[3rem] border-0 bg-transparent shadow-none outline-none",
+  "object-contain object-center",
 );
 
-/** Lesson registry / media `<img>` — explicit bounds prevent 0px collapse and overflow. */
-export const lessonIllustrationImageClass =
-  "block h-auto max-h-[220px] w-full max-w-full min-h-[3rem] object-contain object-center";
+/** @deprecated Use `lessonIllustrationImageClass` — wrapper removed; kept for imports. */
+export const lessonIllustrationImageSlotClass = lessonIllustrationImageClass;
 
 export const lessonIllustrationEmojiClass = "text-2xl leading-none sm:text-[1.75rem]";
 

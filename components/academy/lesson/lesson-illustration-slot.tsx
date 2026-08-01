@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   lessonIllustrationEmojiClass,
   lessonIllustrationImageClass,
-  lessonIllustrationImageSlotClass,
   lessonIllustrationLabelClass,
   lessonIllustrationSlotClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -41,6 +40,8 @@ function LessonIllustrationFallback({
   );
 }
 
+type ImageLoadStatus = "idle" | "loading" | "loaded" | "failed";
+
 /** Modest centred scene slot — sits below lesson chrome, above prompt copy. */
 export function LessonIllustrationSlot({
   emoji,
@@ -49,28 +50,49 @@ export function LessonIllustrationSlot({
   src,
   className,
 }: LessonIllustrationSlotProps) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [imageStatus, setImageStatus] = useState<ImageLoadStatus>("idle");
 
   useEffect(() => {
-    setImageFailed(false);
+    if (!src) {
+      setImageStatus("idle");
+      return;
+    }
+
+    let cancelled = false;
+    setImageStatus("loading");
+
+    const probe = new Image();
+    probe.onload = () => {
+      if (cancelled) return;
+      setImageStatus(probe.naturalWidth > 0 ? "loaded" : "failed");
+    };
+    probe.onerror = () => {
+      if (!cancelled) setImageStatus("failed");
+    };
+    probe.src = src;
+
+    return () => {
+      cancelled = true;
+    };
   }, [src]);
 
-  if (src && !imageFailed) {
+  if (src && imageStatus === "loaded") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";
 
     return (
-      <div className={cn(lessonIllustrationImageSlotClass, className)}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={ariaLabel}
-          className={lessonIllustrationImageClass}
-          decoding="async"
-          loading="eager"
-          onError={() => setImageFailed(true)}
-        />
-      </div>
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={src}
+        alt={ariaLabel}
+        className={cn(lessonIllustrationImageClass, className)}
+        decoding="async"
+        loading="eager"
+      />
     );
+  }
+
+  if (src && imageStatus === "loading") {
+    return null;
   }
 
   if (emoji || label) {
@@ -84,7 +106,7 @@ export function LessonIllustrationSlot({
     );
   }
 
-  return <LessonIllustrationSlotReserve className={className} />;
+  return null;
 }
 
 /** Reserved illustration frame for lighter screen types without scene content yet. */

@@ -3,7 +3,7 @@ import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
 import { resolveChoiceSelectionVariant } from "@/lib/academy/lessons/choice-evaluation";
 
 /** Default mistake budget shown as hearts in lesson chrome. */
-export const LESSON_MAX_LIVES = 3;
+export const LESSON_MAX_LIVES = 4;
 
 /** Minimum comfortable size for interactive cards, chips, and list rows. */
 export const lessonInteractiveTextClass = "text-lg font-medium";
@@ -370,6 +370,25 @@ export const lessonSortBucketSuccessClass =
 
 export const lessonGoldClaimClass =
   "flex h-touch w-full max-w-md items-center justify-center rounded-full border-2 border-[#C88202] bg-[#FFA503] px-6 py-4 text-center font-heading text-lg font-extrabold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:scale-[0.99] disabled:opacity-60";
+
+/** Screen 8 completion shell — centred celebration column. */
+export const lessonCompletionShellClass =
+  "flex min-h-0 w-full flex-1 flex-col items-center justify-center px-3 py-4 text-center sm:px-4";
+
+export const lessonCompletionHeaderClass =
+  "font-heading text-lg font-extrabold uppercase tracking-[0.12em] text-[#031F82] sm:text-xl";
+
+export const lessonCompletionEyebrowClass =
+  "font-heading text-xs font-bold uppercase tracking-[0.16em] text-[#0CC1E0] sm:text-sm";
+
+export const lessonCompletionSkillLineClass =
+  "mt-4 max-w-[18rem] font-heading text-base font-semibold leading-snug text-[#031F82] sm:text-lg";
+
+export const lessonCompletionRewardsCardClass =
+  "mt-6 w-full max-w-xs rounded-2xl border border-[#BDE9FB]/60 bg-white px-5 py-4 shadow-md";
+
+export const lessonCompletionHeroMedalClass =
+  "max-h-[11rem] w-full max-w-[11rem] sm:max-h-[14rem] sm:max-w-[14rem]";
 
 export const lessonHoldButtonClass =
   "flex h-12 w-full max-w-md select-none items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";

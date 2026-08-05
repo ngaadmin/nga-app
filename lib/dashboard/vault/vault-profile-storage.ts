@@ -23,7 +23,7 @@ import {
   writeVaultProfileRaw,
   writeVaultSessionRaw,
 } from "@/lib/dashboard/vault/profile-persist";
-import type { UserSession } from "@/lib/onboarding/ghost-session";
+import type { UserSession } from "@/lib/onboarding/guest-session";
 
 export const VAULT_SESSION_STORAGE_KEY = "nga_vault_session_v1";
 export const VAULT_PROFILE_STORAGE_KEY = "nga_vault_profile_v1";

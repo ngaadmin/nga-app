@@ -94,7 +94,7 @@ export function reserveGenericProfileId(): { id: string; username: string } {
   throw new Error("No generic profile IDs are available.");
 }
 
-/** Returns a recycled generic ID when a ghost profile converts to a saved account. */
+/** Returns a recycled generic ID when a guest profile converts to a saved account. */
 export function releaseGenericProfileId(id: string): void {
   if (!id || typeof window === "undefined") return;
 

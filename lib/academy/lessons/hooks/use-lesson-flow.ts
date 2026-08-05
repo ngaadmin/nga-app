@@ -15,7 +15,7 @@ import {
 } from "@/lib/dashboard/skill-trophies";
 import { lessonNumberForMilestoneId } from "@/lib/dashboard/academy-state";
 import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 
 export type ScreenFlash = "none" | "error" | "success";
 
@@ -61,6 +61,19 @@ export function useLessonFlow({
   const flashTimeoutRef = useRef<number | null>(null);
   const pendingActionsRef = useRef<PendingFlowAction[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
+  const activeMilestoneRef = useRef(milestoneId);
+
+  /** New lesson session — restore full lives (max 4 via LESSON_MAX_LIVES). */
+  useEffect(() => {
+    if (activeMilestoneRef.current === milestoneId) return;
+    activeMilestoneRef.current = milestoneId;
+    setScreenIndex(0);
+    setScreenReady(Array.from({ length: totalScreens }, () => false));
+    setScreenFlash("none");
+    setScreenMistakes(0);
+    setLessonComplete(false);
+    pendingActionsRef.current = [];
+  }, [milestoneId, totalScreens]);
 
   const applyFlash = useCallback((kind: ScreenFlash) => {
     if (flashTimeoutRef.current !== null) {
@@ -178,7 +191,7 @@ export function useLessonFlow({
       );
 
       if (!alreadyCompleted) {
-        const session = readGhostAccessSession();
+        const session = readGuestAccessSession();
         const cohort = session?.birthYear
           ? getMasteryCohortFromBirthYear(session.birthYear)
           : "explorer";

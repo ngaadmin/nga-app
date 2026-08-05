@@ -1,4 +1,4 @@
-/** Dev-only: mirror ghost-phase keys in localStorage so progress survives HMR and tab restarts. */
+/** Dev-only: mirror guest-phase keys in localStorage so progress survives HMR and tab restarts. */
 
 export function isDevClient(): boolean {
   return process.env.NODE_ENV === "development";

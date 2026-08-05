@@ -55,6 +55,8 @@ const SINE_FREQUENCY = 0.72;
 
 const LESSON_NODE_SIZE_PX = 61;
 const NODE_GAP_PX = 32;
+/** Top inset for Module 1 banner only — keeps later modules tightly spaced. */
+const MODULE_1_TOP_PADDING_PX = 28;
 
 /** Smooth horizontal offset (0–100%) from node index. */
 function academySnakeAnchorX(index: number): number {
@@ -313,31 +315,52 @@ export function AcademySkillTrack({
     const nodeGaps = (safeMilestones.length - 1) * NODE_GAP_PX;
     const signpostBlocks = safeMilestones.reduce((sum, milestone) => {
       if (!isFirstMilestoneInModule(milestone.id)) return sum;
-      return sum + ACADEMY_MODULE_SIGNPOST_HEIGHT_PX + ACADEMY_MODULE_SIGNPOST_GAP_PX;
+      const moduleOnePad =
+        milestone.levelGroup === 1 ? MODULE_1_TOP_PADDING_PX : 0;
+      return (
+        sum +
+        moduleOnePad +
+        ACADEMY_MODULE_SIGNPOST_HEIGHT_PX +
+        ACADEMY_MODULE_SIGNPOST_GAP_PX
+      );
     }, 0);
 
     return slotHeights + nodeGaps + signpostBlocks;
   }, [safeMilestones]);
 
   useEffect(() => {
+    if (safeMilestones.length === 0) return;
     if (lastFocusedStepRef.current === continueStepIndex) return;
 
-    const activeEl = activeNodeRef.current;
     const scrollContainer = scrollContainerRef?.current;
-    if (!activeEl || !scrollContainer) return;
+    if (!scrollContainer) return;
+
+    let cancelled = false;
+    let frame2 = 0;
 
     const runFocus = () => {
+      if (cancelled) return;
+      const activeEl = activeNodeRef.current;
+      if (!activeEl) return;
       focusActiveNodeInScrollContainer(scrollContainer, activeEl);
+      lastFocusedStepRef.current = continueStepIndex;
     };
 
+    // Layout may still be settling after hydration / module signposts.
     runFocus();
-    const frame = requestAnimationFrame(() => {
+    const frame1 = requestAnimationFrame(() => {
       runFocus();
-      lastFocusedStepRef.current = continueStepIndex;
+      frame2 = requestAnimationFrame(runFocus);
     });
+    const settleTimer = window.setTimeout(runFocus, 120);
 
-    return () => cancelAnimationFrame(frame);
-  }, [continueStepIndex, scrollContainerRef]);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+      window.clearTimeout(settleTimer);
+    };
+  }, [continueStepIndex, safeMilestones.length, scrollContainerRef]);
 
   const showStartHereSign =
     continueMilestoneId === ACADEMY_JOURNEY_ENTRY_MILESTONE_ID;
@@ -353,7 +376,7 @@ export function AcademySkillTrack({
   return (
     <section
       aria-label="Academy journey map"
-      className="relative z-base w-full max-w-full bg-white pb-4 pt-1"
+      className="relative z-base w-full max-w-full bg-white pb-4"
     >
       <div className="relative mx-auto w-full max-w-full px-1">
         <div
@@ -376,10 +399,12 @@ export function AcademySkillTrack({
                   {showModuleSignpost ? (
                     <>
                       <div
-                        className={cn(
-                          "relative flex w-full justify-center px-2",
-                          milestone.levelGroup === 1 && "-mt-2",
-                        )}
+                        className="relative flex w-full justify-center px-2"
+                        style={
+                          milestone.levelGroup === 1
+                            ? { paddingTop: MODULE_1_TOP_PADDING_PX }
+                            : undefined
+                        }
                       >
                         <AcademyModuleSignpost
                           moduleNumber={milestone.levelGroup}

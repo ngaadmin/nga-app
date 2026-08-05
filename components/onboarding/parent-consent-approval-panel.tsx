@@ -10,7 +10,7 @@ import {
   approveParentConsent,
   readPendingParentConsentByToken,
 } from "@/lib/onboarding/parent-consent-pending";
-import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/ghost-session";
+import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 
 const EMAIL_HELPER_TEXT =
   "Your email stays private and is never used for marketing unless you give us permission.";

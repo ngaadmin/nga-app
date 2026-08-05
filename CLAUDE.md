@@ -42,7 +42,7 @@
 - **Input Safety:** Standardize on basic input sanitization for form components to prevent obvious injection risks.
 - **Type Approach:** Favor clean TypeScript definitions, but allow standard type-casting or flexible interfaces during rapid UI prototyping.
 - **Database Readiness:** Write query structures that cleanly isolate user data, keeping future Supabase Row Level Security (RLS) integration in mind without hardcoding authentication barriers into early static views.
-- **Data Minimization:** Prioritize capturing the minimum required attributes for the active user state (e.g., local state for ghost play).
+- **Data Minimization:** Prioritize capturing the minimum required attributes for the active user state (e.g., local state for guest play).
 
 ### Architectural Invariants
 - **Separation of Concerns:** UI in `components/`; domain logic, content definitions, and persistence in `lib/`. Routes in `app/` compose only — no embedded lesson/hub copy or orchestration logic.
@@ -50,5 +50,5 @@
 - **Shell Independence:** Global app chrome (navigation, layout shell) must remain usable regardless of local feature state (games, modals, drag interactions).
 - **Layer Discipline:** Use the project's centralized stacking conventions; do not introduce ad-hoc z-index values.
 - **Render Safety:** Never trigger parent state updates synchronously during another component's render or inside that component's state updater functions.
-- **Ghost-First Delivery:** Ship with local persistence and in-memory registries until remote auth/database integration is explicitly in scope for the task at hand.
+- **Guest-First Delivery:** Ship with local persistence and in-memory registries until remote auth/database integration is explicitly in scope for the task at hand.
 - **Dashboard Pillars:** User-facing section titles are **Academy**, **Launchpad**, and **Vault** (no "The " prefix). Routes: `/dashboard/academy`, `/dashboard/launchpad`, `/dashboard/vault`. Legacy URLs `/dashboard/engine` and `/dashboard/vault-v2` redirect permanently.

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { readUserSession, isGhostSession } from "@/lib/onboarding/ghost-session";
+import { readUserSession, isGuestSession } from "@/lib/onboarding/guest-session";
 
 export type DashboardUserState = {
   username: string;
   joinDate: string | null;
-  isGhostMode: boolean;
+  isGuestMode: boolean;
   isLoading: boolean;
 };
 
@@ -16,7 +16,7 @@ export function useDashboardUser(): DashboardUserState {
   const [state, setState] = useState<DashboardUserState>({
     username: GUEST_USERNAME,
     joinDate: null,
-    isGhostMode: false,
+    isGuestMode: false,
     isLoading: true,
   });
 
@@ -26,7 +26,7 @@ export function useDashboardUser(): DashboardUserState {
       setState({
         username: session.username,
         joinDate: session.createdAt,
-        isGhostMode: isGhostSession(session),
+        isGuestMode: isGuestSession(session),
         isLoading: false,
       });
       return;
@@ -34,7 +34,7 @@ export function useDashboardUser(): DashboardUserState {
     setState({
       username: GUEST_USERNAME,
       joinDate: null,
-      isGhostMode: false,
+      isGuestMode: false,
       isLoading: false,
     });
   }, []);

@@ -15,7 +15,7 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { readGhostAccessSession } from "@/lib/onboarding/ghost-session";
+import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import {
@@ -79,7 +79,7 @@ const DEFAULT_LAUNCHPAD_PROFILE: LaunchpadProfile = {
 };
 
 function resolveLaunchpadProfile(): LaunchpadProfile {
-  const session = readGhostAccessSession();
+  const session = readGuestAccessSession();
   if (!session) return DEFAULT_LAUNCHPAD_PROFILE;
 
   return {

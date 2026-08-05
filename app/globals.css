@@ -166,6 +166,22 @@
     }
   }
 
+  .lesson-skill-medal__coin--hero {
+    --medal-size: 11rem;
+    --medal-border: 6px;
+    --medal-field-inset: 18px;
+    --medal-icon-gap: 5px;
+  }
+
+  @media (min-width: 640px) {
+    .lesson-skill-medal__coin--hero {
+      --medal-size: 14rem;
+      --medal-border: 7px;
+      --medal-field-inset: 22px;
+      --medal-icon-gap: 6px;
+    }
+  }
+
   .lesson-skill-medal__coin--unlocked {
     background: radial-gradient(
       circle at 32% 28%,

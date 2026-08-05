@@ -1,0 +1,45 @@
+# =============================================================================
+# .cursorindexingignore - exclude from codebase indexing only
+# Files remain @-mentionable / readable unless also listed in .cursorignore.
+# Cursor also auto-ignores .gitignore + a default media/binary list.
+# =============================================================================
+
+# --- Dependencies & build (explicit; also in .gitignore / defaults) ---
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+.vercel/
+.turbo/
+.cache/
+*.tsbuildinfo
+package-lock.json
+
+# --- Media assets ---
+public/assets/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.svg
+*.ico
+*.mp4
+*.mp3
+*.woff
+*.woff2
+*.ttf
+*.otf
+
+# --- Generated / authoring bulk ---
+lib/academy/lessons/content/data/
+templates/lesson-authoring/
+tools/output/
+.tmp-*/
+**/.tmp-*/
+
+# --- Large reference docs (also hard-blocked in .cursorignore) ---
+DECISIONS_LOG.md
+SPRINTS.md

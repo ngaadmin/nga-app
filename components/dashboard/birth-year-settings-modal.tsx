@@ -11,7 +11,7 @@ import {
 } from "@/lib/dashboard/mastery-cohort";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { getYouthBirthYears } from "@/lib/onboarding/birth-years";
-import { updateUserBirthYear } from "@/lib/onboarding/ghost-session";
+import { updateUserBirthYear } from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =

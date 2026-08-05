@@ -8,7 +8,7 @@ import {
   ONBOARDING_START_PATH,
   readUserSession,
   hasCompletedPersonalizationGate,
-} from "@/lib/onboarding/ghost-session";
+} from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
 
 type DashboardShellProps = {

@@ -2,38 +2,49 @@ import {
   getMasteryCohortFromBirthYear,
   masteryCohortAgeRangeLabel,
   masteryCohortLabel,
+  type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { resetLearningProgress } from "@/lib/dashboard/learning-progress-reset";
 import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
 import {
+  getSessionCurriculumCohort,
   readUserSession,
-  updateUserBirthYear,
-} from "@/lib/onboarding/ghost-session";
+  updateUserCurriculumCohort,
+} from "@/lib/onboarding/guest-session";
 
 export type ChangeLearningTrackResult =
   | { ok: true; cohortChanged: boolean; trackLabel: string; ageRange: string }
   | { ok: false; reason: "invalid" | "unchanged" | "no_session" };
 
-export function changeUserLearningTrack(birthYear: number): ChangeLearningTrackResult {
+/**
+ * Parent Settings curriculum override.
+ *
+ * `birthYear` is interpreted as a picker value that maps to a target learning
+ * track (via the conservative age → cohort matrix). Legal `session.birthYear`,
+ * compliance `ageTier`, parent email, and Parent Portal requirements are
+ * left untouched — only `curriculumCohort` (content/difficulty) changes.
+ */
+export function changeUserLearningTrack(
+  birthYear: number,
+): ChangeLearningTrackResult {
   const session = readUserSession();
   if (!session) return { ok: false, reason: "no_session" };
   if (!isEligibleBirthYear(birthYear)) return { ok: false, reason: "invalid" };
-  if (session.birthYear === birthYear) return { ok: false, reason: "unchanged" };
 
-  const previousCohort = getMasteryCohortFromBirthYear(session.birthYear);
-  const nextCohort = getMasteryCohortFromBirthYear(birthYear);
-  const cohortChanged = previousCohort !== nextCohort;
+  const nextCohort: MasteryCohort = getMasteryCohortFromBirthYear(birthYear);
+  const previousCohort = getSessionCurriculumCohort(session);
+  if (previousCohort === nextCohort) {
+    return { ok: false, reason: "unchanged" };
+  }
 
-  const updated = updateUserBirthYear(birthYear);
+  const updated = updateUserCurriculumCohort(nextCohort);
   if (!updated) return { ok: false, reason: "invalid" };
 
-  if (cohortChanged) {
-    resetLearningProgress();
-  }
+  resetLearningProgress();
 
   return {
     ok: true,
-    cohortChanged,
+    cohortChanged: true,
     trackLabel: masteryCohortLabel(nextCohort),
     ageRange: masteryCohortAgeRangeLabel(nextCohort),
   };

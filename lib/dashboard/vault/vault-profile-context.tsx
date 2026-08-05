@@ -36,7 +36,7 @@ import {
   readVaultProfileState,
   saveVaultProfileState,
 } from "@/lib/dashboard/vault/vault-profile-storage";
-import { readUserSession } from "@/lib/onboarding/ghost-session";
+import { readUserSession } from "@/lib/onboarding/guest-session";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
 type AppendLedgerOptions = {
@@ -152,7 +152,7 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
       sessionRef.current = next;
 
       if (
-        previous?.accessMode === "ghost" &&
+        previous?.accessMode === "guest" &&
         next?.accessMode === "registered"
       ) {
         migrateVaultSessionToProfile();

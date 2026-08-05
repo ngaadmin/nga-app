@@ -1,4 +1,14 @@
+"use client";
+
+import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
+import { LessonCompletionRewardsCard } from "@/components/academy/lesson/lesson-completion-rewards-card";
 import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
+import {
+  lessonCompletionEyebrowClass,
+  lessonCompletionHeaderClass,
+  lessonCompletionShellClass,
+  lessonCompletionSkillLineClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import {
   formatLessonSkillUnlockLine,
 } from "@/lib/dashboard/skill-trophies";
@@ -22,50 +32,37 @@ export function LessonCompletionPane({
   skillMedalTier,
   medalId,
 }: LessonCompletionPaneProps) {
-  if (!skillMedalTier) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <p className="font-heading text-xl font-semibold uppercase tracking-wide text-[#031F82]">
-          Lesson Complete!
-        </p>
-        <p className="mt-8 font-heading text-base font-extrabold text-[#FFA503]">
-          Points Awarded: {xpReward} XP
-        </p>
-        {perfectStreak ? (
-          <p className="mt-2 font-heading text-base font-extrabold text-[#22C55E]">
-            +{perfectStreakBonus} XP Perfect Streak Bonus
-          </p>
-        ) : null}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-1 flex-col items-center justify-center text-center">
-      <p className="font-heading text-xl font-extrabold uppercase tracking-wide text-[#031F82]">
-        Lesson Complete!
-      </p>
+    <>
+      <LessonCompletionConfetti />
 
-      <p className="mt-8 font-heading text-base font-extrabold text-[#FFA503]">
-        Points Awarded: {xpReward} XP
-      </p>
-      {perfectStreak ? (
-        <p className="mt-2 font-heading text-base font-extrabold text-[#22C55E]">
-          +{perfectStreakBonus} XP Perfect Streak Bonus
-        </p>
-      ) : null}
+      <div className={lessonCompletionShellClass}>
+        <p className={lessonCompletionEyebrowClass}>Achievement Unlocked</p>
+        <h2 className={`${lessonCompletionHeaderClass} mt-1`}>Lesson Complete!</h2>
 
-      <div className="mt-10">
-        <LessonSkillMedal
-          skillSlug={achievementSkillId}
-          tier={skillMedalTier}
-          medalId={medalId}
+        {skillMedalTier ? (
+          <>
+            <div className="mt-5 flex w-full justify-center sm:mt-6">
+              <LessonSkillMedal
+                skillSlug={achievementSkillId}
+                tier={skillMedalTier}
+                medalId={medalId}
+                size="hero"
+              />
+            </div>
+
+            <p className={lessonCompletionSkillLineClass}>
+              {formatLessonSkillUnlockLine(achievementSkillId, skillMedalTier)}
+            </p>
+          </>
+        ) : null}
+
+        <LessonCompletionRewardsCard
+          xpReward={xpReward}
+          perfectStreakBonus={perfectStreakBonus}
+          perfectStreak={perfectStreak}
         />
       </div>
-
-      <p className="mt-4 font-heading text-base font-extrabold text-[#031F82]">
-        {formatLessonSkillUnlockLine(achievementSkillId, skillMedalTier)}
-      </p>
-    </div>
+    </>
   );
 }

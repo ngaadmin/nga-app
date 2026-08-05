@@ -1,0 +1,40 @@
+﻿{
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/out": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.vercel": true,
+    "**/.turbo": true,
+    "**/.cache": true,
+    "**/*.tsbuildinfo": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/out": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.vercel": true,
+    "**/package-lock.json": true,
+    "**/*.tsbuildinfo": true,
+    "public/assets/**": true,
+    "lib/academy/lessons/content/data/**": true,
+    "templates/lesson-authoring/**": true,
+    "tools/output/**": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/out/**": true,
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/coverage/**": true,
+    "**/.vercel/**": true,
+    "**/.turbo/**": true,
+    "**/.cache/**": true
+  }
+}

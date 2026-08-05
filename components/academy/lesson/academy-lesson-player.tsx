@@ -8,7 +8,7 @@ import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-definition";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { isDesignShellLesson, isLessonShippedForCohort } from "@/lib/academy/lessons/registry";
-import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/ghost-session";
+import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;

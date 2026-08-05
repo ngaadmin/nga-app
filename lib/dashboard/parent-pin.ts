@@ -36,7 +36,7 @@ export function resetParentPinToRecovery(): void {
   saveParentPin(RECOVERY_PARENT_PIN);
 }
 
-/** Simulated parent email for ghost-session recovery dispatch. */
+/** Simulated parent email for guest-session recovery dispatch. */
 export function resolveSimulatedParentEmail(username: string): string {
   const safe =
     username.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "") || "parent";

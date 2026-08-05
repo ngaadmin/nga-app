@@ -5,6 +5,9 @@ import {
 } from "@/lib/academy/illustrations/medal-registry";
 import { SkillMedalReliefIcon } from "@/components/academy/lesson/skill-medal-icons";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
+import {
+  lessonCompletionHeroMedalClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 
@@ -14,10 +17,14 @@ type LessonSkillMedalProps = {
   medalId?: MedalIllustrationId;
   label?: string;
   className?: string;
+  size?: "default" | "hero";
 };
 
-const lessonSkillMedalImageClass =
-  "block h-auto max-h-[8rem] w-full max-w-[8rem] border-0 bg-transparent object-contain object-center shadow-none";
+const lessonSkillMedalImageClassBySize = {
+  default:
+    "block h-auto max-h-[8rem] w-full max-w-[8rem] border-0 bg-transparent object-contain object-center shadow-none",
+  hero: "block h-auto w-full max-w-full border-0 bg-transparent object-contain object-center shadow-none",
+} as const;
 
 function resolveMedalId(
   skillSlug: string,
@@ -45,6 +52,7 @@ export function LessonSkillMedal({
   medalId,
   label,
   className,
+  size = "default",
 }: LessonSkillMedalProps) {
   const resolvedMedalId = resolveMedalId(skillSlug, tier, medalId);
   const medalSrc = resolvedMedalId
@@ -55,12 +63,18 @@ export function LessonSkillMedal({
 
   if (medalSrc) {
     return (
-      <div className={cn("flex flex-col items-center", className)}>
+      <div
+        className={cn(
+          "flex flex-col items-center",
+          size === "hero" && lessonCompletionHeroMedalClass,
+          className,
+        )}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={medalSrc}
           alt={`${skillName} ${isBronze ? "bronze" : "unlocked"} medal`}
-          className={lessonSkillMedalImageClass}
+          className={lessonSkillMedalImageClassBySize[size]}
           decoding="async"
           loading="eager"
         />
@@ -74,10 +88,17 @@ export function LessonSkillMedal({
   }
 
   return (
-    <div className={cn("flex flex-col items-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center",
+        size === "hero" && lessonCompletionHeroMedalClass,
+        className,
+      )}
+    >
       <div
         className={cn(
           "lesson-skill-medal__coin",
+          size === "hero" && "lesson-skill-medal__coin--hero",
           isBronze
             ? "lesson-skill-medal__coin--bronze"
             : "lesson-skill-medal__coin--unlocked",

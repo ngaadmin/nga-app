@@ -2,7 +2,7 @@
 
 import { useLayoutEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { clearUserSession, ONBOARDING_START_PATH } from "@/lib/onboarding/ghost-session";
+import { clearUserSession, ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
 
 /**
  * Clears only the user session so "Get started" always requires the age gate,

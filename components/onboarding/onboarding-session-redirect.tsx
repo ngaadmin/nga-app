@@ -6,9 +6,9 @@ import {
   DASHBOARD_ACADEMY_PATH,
   hasCompletedPersonalizationGate,
   readUserSession,
-} from "@/lib/onboarding/ghost-session";
+} from "@/lib/onboarding/guest-session";
 
-/** Sends completed ghost sessions straight to the Academy map. */
+/** Sends completed guest sessions straight to the Academy map. */
 export function OnboardingSessionRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -1,11 +1,58 @@
-﻿# Dependencies & build artifacts
+﻿# =============================================================================
+# .cursorignore - hard-block from AI context (Agent, Tab, Inline Edit, @mentions)
+# Syntax: .gitignore. See also .cursorindexingignore (index-only).
+# =============================================================================
+
+# --- Dependencies & package manager ---
 node_modules/
+.pnp
+.pnp.*
+.yarn/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+
+# --- Build / cache / deploy artifacts ---
 .next/
 out/
+build/
+dist/
+coverage/
+.vercel/
+.turbo/
+.cache/
+*.tsbuildinfo
 tsconfig.tsbuildinfo
-package-lock.json
 
-# Import pipeline scratch & outputs
+# --- Secrets & local env (never feed to models) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+**/credentials.json
+**/secrets.json
+
+# --- Media & binary assets (token-heavy; not useful as text context) ---
+public/assets/
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.webp
+*.gif
+*.ico
+*.pdf
+*.docx
+*.mp4
+*.mp3
+*.woff
+*.woff2
+*.ttf
+*.otf
+
+# --- Import pipeline scratch & generated lesson dumps ---
 .tmp-*
 **/.tmp-*/
 lib/academy/lessons/content/data/
@@ -13,6 +60,16 @@ templates/lesson-authoring/
 tools/output/
 tools/import-*.mjs
 
-# Long documentation
+
+# --- Logs & OS junk ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+Thumbs.db
+
+# --- Project documentation ---
 DECISIONS_LOG.md
 SPRINTS.md

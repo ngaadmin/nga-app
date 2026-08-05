@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   DASHBOARD_ACADEMY_PATH,
   readUserSession,
-} from "@/lib/onboarding/ghost-session";
+} from "@/lib/onboarding/guest-session";
 
-/** Registered users skip signup — ghost sessions may convert here. */
+/** Registered users skip signup — guest sessions may convert here. */
 export function OnboardingSignUpRedirect() {
   const router = useRouter();
 

@@ -23,11 +23,14 @@ export type SendOnboardingEmailResult = {
 const RESEND_API_URL = "https://api.resend.com/emails";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Verified Resend sending domain — must match resend.com/domains. */
+const DEFAULT_FROM_ADDRESS =
+  "NextGenAchievers <onboarding@mail.nextgenachievers.com>";
+
 function resolveFromAddress(): string {
-  return (
-    process.env.RESEND_FROM_EMAIL?.trim() ||
-    "NextGenAchievers <onboarding@nextgenachievers.app>"
-  );
+  const configured = process.env.RESEND_FROM_EMAIL?.trim();
+  if (configured) return configured;
+  return DEFAULT_FROM_ADDRESS;
 }
 
 /**

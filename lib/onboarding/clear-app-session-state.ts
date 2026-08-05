@@ -8,6 +8,7 @@ import { GUEST_SESSION_STORAGE_KEY } from "@/lib/onboarding/guest-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
 import { GUEST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/guest-progress-snapshot";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
+import { REGISTERED_ACCOUNTS_STORAGE_KEY } from "@/lib/onboarding/registered-accounts";
 
 import { clearAllPersistedNgaKeys } from "@/lib/dev/client-persist";
 
@@ -27,7 +28,10 @@ export const APP_SESSION_STORAGE_KEYS = [
   PARENT_PIN_STORAGE_KEY,
 ] as const;
 
-/** Removes every persisted guest-session artifact so onboarding runs from scratch. */
+/** Keys that must survive logout so returning users can log back in. */
+const PRESERVED_ON_LOGOUT_KEYS = [REGISTERED_ACCOUNTS_STORAGE_KEY] as const;
+
+/** Removes active session artifacts while preserving durable registered accounts. */
 export function clearAllAppSessionState(): void {
   if (typeof window === "undefined") return;
 
@@ -35,5 +39,5 @@ export function clearAllAppSessionState(): void {
     window.sessionStorage.removeItem(key);
   }
 
-  clearAllPersistedNgaKeys();
+  clearAllPersistedNgaKeys([...PRESERVED_ON_LOGOUT_KEYS]);
 }

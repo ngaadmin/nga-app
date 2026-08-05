@@ -42,9 +42,13 @@ export {
   updateUserBirthYear,
   updateUserCurriculumCohort,
   GUEST_SESSION_STORAGE_KEY,
+  ONBOARDING_ENTRY_PATH,
   ONBOARDING_PARENT_CONSENT_PATH,
+  ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_PATH,
   ONBOARDING_SIGN_UP_PENDING_PATH,
+  ONBOARDING_START_PATH,
+  DASHBOARD_ACADEMY_PATH,
   type AccessMode,
   type AccountLifecycleStatus,
   type AccountRole,
@@ -58,6 +62,12 @@ export {
   type UserSession,
 } from "./guest-session";
 export { changeUserLearningTrack } from "./change-learning-track";
+export {
+  authenticateRegisteredAccount,
+  clearRegisteredAccounts,
+  REGISTERED_ACCOUNTS_STORAGE_KEY,
+  upsertRegisteredAccount,
+} from "./registered-accounts";
 export { finalizeRegisteredSignup } from "./signup-finalize";
 export {
   approveParentConsent,

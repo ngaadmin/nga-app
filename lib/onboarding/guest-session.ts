@@ -23,6 +23,7 @@ const LEGACY_GHOST_SESSION_STORAGE_KEY = "nga_ghost_session";
 
 export const ONBOARDING_ENTRY_PATH = "/onboarding" as const;
 export const ONBOARDING_START_PATH = "/onboarding/start" as const;
+export const ONBOARDING_SIGN_IN_PATH = "/onboarding/sign-in" as const;
 export const ONBOARDING_SIGN_UP_PATH = "/onboarding/sign-up" as const;
 export const ONBOARDING_SIGN_UP_PENDING_PATH =
   "/onboarding/sign-up/pending" as const;
@@ -649,3 +650,4 @@ export function hasCompletedPersonalizationGate(
     session.username.trim().length > 0
   );
 }
+

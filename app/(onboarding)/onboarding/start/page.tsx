@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { PersonalizationGateForm } from "@/components/onboarding/personalization-gate-form";
-import { OnboardingFreshStartReset } from "@/components/onboarding/onboarding-fresh-start-reset";
-import { OnboardingPersonalizationFresh } from "@/components/onboarding/onboarding-personalization-fresh";
-import { OnboardingSessionRedirect } from "@/components/onboarding/onboarding-session-redirect";
+import { OnboardingStartClient } from "@/components/onboarding/onboarding-start-client";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
@@ -13,13 +10,8 @@ export const metadata: Metadata = {
 
 export default function OnboardingStartPage() {
   return (
-    <>
-      <SearchParamsBoundary>
-        <OnboardingFreshStartReset />
-        <OnboardingPersonalizationFresh />
-        <OnboardingSessionRedirect />
-      </SearchParamsBoundary>
-      <PersonalizationGateForm />
-    </>
+    <SearchParamsBoundary>
+      <OnboardingStartClient />
+    </SearchParamsBoundary>
   );
 }

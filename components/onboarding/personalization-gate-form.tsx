@@ -13,7 +13,9 @@ import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   createGuestAccessSession,
   DASHBOARD_ACADEMY_PATH,
+  isGuestSession,
   ONBOARDING_SIGN_UP_PATH,
+  readUserSession,
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
@@ -36,6 +38,16 @@ export function PersonalizationGateForm() {
   }>({});
 
   useEffect(() => {
+    const existing = readUserSession();
+    if (existing && isGuestSession(existing) && existing.username.trim()) {
+      setUsername(existing.username);
+      setGenericProfileId(existing.genericProfileId ?? null);
+      if (existing.birthYearLocked && isEligibleBirthYear(existing.birthYear)) {
+        setBirthYear(String(existing.birthYear));
+      }
+      return;
+    }
+
     try {
       const generated = reserveGenericProfileId();
       setUsername(generated.username);
@@ -251,13 +263,13 @@ export function PersonalizationGateForm() {
           <div className="space-y-3">
             <Button
               type="button"
-              variant="secondary-outline"
+              variant="cta"
               fullWidth
               onClick={handleCreateProfile}
             >
               Create Profile
             </Button>
-            <Button type="submit" variant="cta" fullWidth>
+            <Button type="submit" variant="secondary-outline" fullWidth>
               Continue without a profile
             </Button>
           </div>

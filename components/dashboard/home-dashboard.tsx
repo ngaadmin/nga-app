@@ -6,6 +6,7 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
+import { ONBOARDING_SIGN_IN_PATH } from "@/lib/onboarding/guest-session";
 import {
   BillingCardIcon,
   KeyIcon,
@@ -446,7 +447,7 @@ export function HomeDashboard() {
 
   function handleLogOut() {
     clearAllAppSessionState();
-    router.push("/onboarding/start");
+    router.push(ONBOARDING_SIGN_IN_PATH);
   }
 
   function openPinGate() {

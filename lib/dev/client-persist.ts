@@ -40,15 +40,17 @@ export function removePersisted(key: string): void {
   }
 }
 
-/** Clear all nga_* keys from both stores (dev reset). */
-export function clearAllPersistedNgaKeys(): void {
+/** Clear all nga_* keys from both stores (dev reset), optionally preserving some. */
+export function clearAllPersistedNgaKeys(preserveKeys: string[] = []): void {
   if (typeof window === "undefined") return;
+
+  const preserve = new Set(preserveKeys);
 
   const removeFrom = (store: Storage) => {
     const keys: string[] = [];
     for (let i = 0; i < store.length; i += 1) {
       const key = store.key(i);
-      if (key?.startsWith("nga_")) keys.push(key);
+      if (key?.startsWith("nga_") && !preserve.has(key)) keys.push(key);
     }
     for (const key of keys) store.removeItem(key);
   };

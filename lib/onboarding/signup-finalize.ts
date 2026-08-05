@@ -8,6 +8,7 @@ import {
   saveUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 
 export type FinalizeSignupOptions = {
   /**
@@ -95,6 +96,7 @@ export function finalizeRegisteredSignup(
   }
 
   saveUserSession(enforced);
+  upsertRegisteredAccount(enforced);
   mergeGuestProgressSnapshot();
   dispatchOnboardingEmails(enforced, options);
   return enforced;

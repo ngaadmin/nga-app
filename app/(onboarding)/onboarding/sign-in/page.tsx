@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
+import { SignInForm } from "@/components/onboarding/sign-in-form";
 
 export const metadata: Metadata = {
-  title: "Sign In",
+  title: "Log Back In",
   description: "Welcome back to NextGenAchievers.",
 };
 
-/** Legacy alias — guest access resumes via the personalization gate. */
 export default function OnboardingSignInPage() {
-  redirect(ONBOARDING_START_PATH);
+  return <SignInForm />;
 }

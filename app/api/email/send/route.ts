@@ -12,6 +12,8 @@ const EMAIL_TYPES: readonly OnboardingEmailType[] = [
   "EXPLORER_PARENT",
   "PATHFINDER_PARENT",
   "MAVERICK_WELCOME",
+  "USERNAME_RECOVERY",
+  "CREDENTIAL_RECOVERY",
 ] as const;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,6 +58,12 @@ function parseData(
     return { username, token };
   }
 
+  if (type === "CREDENTIAL_RECOVERY") {
+    const recoveryCode = readString(data, "recoveryCode");
+    if (!recoveryCode) return null;
+    return { username, recoveryCode };
+  }
+
   return { username };
 }
 
@@ -76,7 +84,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME.",
+            "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME | USERNAME_RECOVERY | CREDENTIAL_RECOVERY.",
         },
         { status: 400 },
       );
@@ -101,7 +109,9 @@ export async function POST(request: Request) {
           error:
             body.type === "EXPLORER_PARENT"
               ? "data.username and data.token are required."
-              : "data.username is required.",
+              : body.type === "CREDENTIAL_RECOVERY"
+                ? "data.username and data.recoveryCode are required."
+                : "data.username is required.",
         },
         { status: 400 },
       );

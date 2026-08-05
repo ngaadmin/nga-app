@@ -1,7 +1,9 @@
 export type OnboardingEmailType =
   | "EXPLORER_PARENT"
   | "PATHFINDER_PARENT"
-  | "MAVERICK_WELCOME";
+  | "MAVERICK_WELCOME"
+  | "USERNAME_RECOVERY"
+  | "CREDENTIAL_RECOVERY";
 
 export type ExplorerParentEmailData = {
   username: string;
@@ -16,10 +18,21 @@ export type MaverickWelcomeEmailData = {
   username: string;
 };
 
+export type UsernameRecoveryEmailData = {
+  username: string;
+};
+
+export type CredentialRecoveryEmailData = {
+  username: string;
+  recoveryCode: string;
+};
+
 export type OnboardingEmailDataMap = {
   EXPLORER_PARENT: ExplorerParentEmailData;
   PATHFINDER_PARENT: PathfinderParentEmailData;
   MAVERICK_WELCOME: MaverickWelcomeEmailData;
+  USERNAME_RECOVERY: UsernameRecoveryEmailData;
+  CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
 };
 
 export type BuiltEmail = {
@@ -282,6 +295,90 @@ export function buildMaverickWelcomeEmail(
   return { subject, html, text };
 }
 
+export function buildUsernameRecoveryEmail(
+  data: UsernameRecoveryEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = data.username.trim() || "learner";
+  const base = resolveAppUrl(appUrl);
+  const signInUrl = `${base}/onboarding/sign-in`;
+
+  const subject = "Your NextGenAchievers username";
+  const text = [
+    `Here's the username linked to this email: ${username}`,
+    "",
+    `Log back in: ${signInUrl}`,
+    "",
+    "- NextGenAchievers",
+  ].join("\n");
+
+  const html = wrapHtml({
+    header: "Your username is ready",
+    preheader: `Username reminder for ${username}`,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        Here's the username linked to this email:
+      </p>
+      <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#031F82;">
+        ${escapeHtml(username)}
+      </p>
+      ${ctaButton("Log Back In", signInUrl)}
+    `,
+  });
+
+  return { subject, html, text, preheader: `Username reminder for ${username}` };
+}
+
+export function buildCredentialRecoveryEmail(
+  data: CredentialRecoveryEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = data.username.trim() || "learner";
+  const recoveryCode = data.recoveryCode.trim();
+  const base = resolveAppUrl(appUrl);
+  const signInUrl = `${base}/onboarding/sign-in`;
+
+  const subject = "Reset your NextGenAchievers passcode / PIN";
+  const text = [
+    `Hi — a passcode / PIN reset was requested for ${username}.`,
+    "",
+    `Temporary recovery code: ${recoveryCode}`,
+    `Use this code as your current passcode or Parent PIN, then change it after you log in.`,
+    "",
+    `Reset / log in: ${signInUrl}`,
+    "",
+    "- NextGenAchievers",
+  ].join("\n");
+
+  const html = wrapHtml({
+    header: "Passcode / PIN reset",
+    preheader: "Your temporary recovery code is inside",
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        A passcode / PIN reset was requested for
+        <strong>${escapeHtml(username)}</strong>.
+      </p>
+      <p style="margin:0 0 8px;font-size:16px;">
+        Temporary recovery code:
+      </p>
+      <p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:0.2em;color:#031F82;">
+        ${escapeHtml(recoveryCode)}
+      </p>
+      <p style="margin:0 0 16px;font-size:14px;color:#5B6B7C;">
+        Use this as your current passcode or Parent PIN, then set a new one after you log in.
+      </p>
+      ${ctaButton("Log Back In", signInUrl)}
+    `,
+  });
+
+  return {
+    subject,
+    html,
+    text,
+    preheader: "Your temporary recovery code is inside",
+  };
+}
+
 export function buildOnboardingEmail<T extends OnboardingEmailType>(
   type: T,
   data: OnboardingEmailDataMap[T],
@@ -301,6 +398,16 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "MAVERICK_WELCOME":
       return buildMaverickWelcomeEmail(
         data as MaverickWelcomeEmailData,
+        appUrl,
+      );
+    case "USERNAME_RECOVERY":
+      return buildUsernameRecoveryEmail(
+        data as UsernameRecoveryEmailData,
+        appUrl,
+      );
+    case "CREDENTIAL_RECOVERY":
+      return buildCredentialRecoveryEmail(
+        data as CredentialRecoveryEmailData,
         appUrl,
       );
     default: {

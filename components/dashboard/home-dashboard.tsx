@@ -508,6 +508,7 @@ export function HomeDashboard() {
           <SettingsRow
             icon={KeyIcon}
             label={copy.account.passwordReset}
+            onClick={() => router.push("/onboarding/sign-in")}
           />
           <SettingsRow
             icon={LockIcon}

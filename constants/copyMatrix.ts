@@ -1,6 +1,26 @@
 export const COPY_USERNAME_TOKEN = "[Username]" as const;
 
 export const copyMatrix = {
+  onboarding: {
+    signIn: {
+      forgotUsername: "Forgot Username?",
+      forgotPasscode: "Forgot Passcode / PIN?",
+      recoveryEmailLabel: "Email on file",
+      recoveryEmailPlaceholder: "parent@example.com or your email",
+      recoveryUsernameSubmit: "Send Username",
+      recoveryCredentialSubmit: "Send Reset Code",
+      recoveryCancel: "Back to log in",
+      recoveryUsernameHint:
+        "We'll email the username linked to this parent or profile address.",
+      recoveryCredentialHint:
+        "We'll reset the Parent PIN and email a temporary passcode / PIN to this address.",
+      recoverySending: "Sending…",
+      recoveryUsernameSuccess:
+        "If that email is on file, we sent the username there. Check the inbox (and spam).",
+      recoveryCredentialSuccess:
+        "If that email is on file, we sent a reset code there. Use it to log in, then set a new passcode or PIN.",
+    },
+  },
   dashboard: {
     greeting: "Hey, [Username]! Let's build wealth.",
     subheading: "Pick your path",

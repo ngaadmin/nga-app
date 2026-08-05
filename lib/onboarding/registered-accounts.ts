@@ -1,4 +1,10 @@
 import {
+  dispatchParentPinRecoveryEmail,
+  RECOVERY_PARENT_PIN,
+  resetParentPinToRecovery,
+} from "@/lib/dashboard/parent-pin";
+import { requestOnboardingEmailSend } from "@/lib/email/request-send";
+import {
   hashCredential,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
@@ -6,8 +12,16 @@ import {
 /** Durable local registry — survives logout so returning users can log back in. */
 export const REGISTERED_ACCOUNTS_STORAGE_KEY = "nga_registered_accounts_v1";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 type RegisteredAccountsStore = {
   accounts: UserSession[];
+};
+
+export type CredentialRecoveryResult = {
+  /** Always true for UI — never reveal whether the email exists. */
+  accepted: true;
+  recipientEmail: string;
 };
 
 function readStore(): RegisteredAccountsStore {
@@ -44,6 +58,11 @@ function normalizeIdentifier(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function normalizeRecoveryEmail(value: string): string | null {
+  const trimmed = normalizeIdentifier(value);
+  return trimmed && EMAIL_PATTERN.test(trimmed) ? trimmed : null;
+}
+
 function accountMatchesIdentifier(
   account: UserSession,
   identifier: string,
@@ -72,6 +91,19 @@ function credentialMatchesAccount(
 
   if (account.passcodeHash && account.passcodeHash === digest) return true;
   if (account.passwordHash && account.passwordHash === digest) return true;
+
+  return false;
+}
+
+function accountMatchesEmail(account: UserSession, email: string): boolean {
+  const needle = normalizeIdentifier(email);
+  if (!needle) return false;
+
+  const learner = (account.learnerEmail ?? account.email)?.trim().toLowerCase();
+  if (learner && learner === needle) return true;
+
+  const parent = account.parentEmail?.trim().toLowerCase();
+  if (parent && parent === needle) return true;
 
   return false;
 }
@@ -108,6 +140,89 @@ export function authenticateRegisteredAccount(
   );
 
   return match ?? null;
+}
+
+export function findRegisteredAccountsByEmail(email: string): UserSession[] {
+  const normalized = normalizeRecoveryEmail(email);
+  if (!normalized) return [];
+  return readStore().accounts.filter((account) =>
+    accountMatchesEmail(account, normalized),
+  );
+}
+
+/**
+ * Emails the username(s) linked to the parent/profile email on file.
+ * Always resolves as accepted so the UI never discloses account existence.
+ */
+export async function recoverUsernameByEmail(
+  email: string,
+): Promise<CredentialRecoveryResult | { accepted: false; error: string }> {
+  const recipientEmail = normalizeRecoveryEmail(email);
+  if (!recipientEmail) {
+    return { accepted: false, error: "Enter a valid email address." };
+  }
+
+  const accounts = findRegisteredAccountsByEmail(recipientEmail);
+  for (const account of accounts) {
+    await requestOnboardingEmailSend({
+      type: "USERNAME_RECOVERY",
+      recipientEmail,
+      data: { username: account.username },
+    });
+  }
+
+  return { accepted: true, recipientEmail };
+}
+
+/**
+ * Resets Parent PIN via the existing recovery path and emails a temporary
+ * passcode/PIN recovery code to the profile email on file.
+ */
+export async function recoverCredentialByEmail(
+  email: string,
+): Promise<CredentialRecoveryResult | { accepted: false; error: string }> {
+  const recipientEmail = normalizeRecoveryEmail(email);
+  if (!recipientEmail) {
+    return { accepted: false, error: "Enter a valid email address." };
+  }
+
+  const accounts = findRegisteredAccountsByEmail(recipientEmail);
+  const recoveryDigest = hashCredential(RECOVERY_PARENT_PIN);
+
+  // Existing Parent PIN reset path (Settings / Parent Hub).
+  resetParentPinToRecovery();
+
+  for (const account of accounts) {
+    const updated: UserSession = { ...account };
+
+    // Explorers log in with passcode; Pathfinder/Maverick with password.
+    if (account.ageTier === "explorer" || account.passcodeHash) {
+      updated.passcodeHash = recoveryDigest;
+    }
+    if (account.ageTier !== "explorer") {
+      updated.passwordHash = recoveryDigest;
+    }
+
+    upsertRegisteredAccount(updated);
+
+    await dispatchParentPinRecoveryEmail(recipientEmail);
+    await requestOnboardingEmailSend({
+      type: "CREDENTIAL_RECOVERY",
+      recipientEmail,
+      data: {
+        username: account.username,
+        recoveryCode: RECOVERY_PARENT_PIN,
+      },
+    });
+  }
+
+  // If no local account matched, still run the PIN reset email simulation when
+  // an email was provided so the button always does something useful in demos.
+  if (accounts.length === 0) {
+    await dispatchParentPinRecoveryEmail(recipientEmail);
+  }
+
+  return { accepted: true, recipientEmail };
 }
 
 export function clearRegisteredAccounts(): void {

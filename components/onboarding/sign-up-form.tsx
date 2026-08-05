@@ -78,10 +78,8 @@ export function SignUpForm() {
   const isPathfinder = ageTier === "pathfinder";
   const isMaverick = ageTier === "maverick";
 
-  // Explorers always start blank so guest handles stay reusable in the pool.
-  const [username, setUsername] = useState(() =>
-    ageTier === "explorer" ? "" : (existingSession?.username?.trim() ?? ""),
-  );
+  // Never prefill guest Finnster handles — every cohort chooses a new username.
+  const [username, setUsername] = useState("");
   const [passcode, setPasscode] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,12 +110,11 @@ export function SignUpForm() {
       next.username =
         "Use 2-20 letters, numbers, underscores, or hyphens only.";
     } else if (
-      isExplorer &&
       existingSession?.genericProfileId &&
       existingSession.username &&
       trimmedUsername.toLowerCase() === existingSession.username.toLowerCase()
     ) {
-      // Guest Finnster handles stay in the reusable pool - Explorers must pick a new username.
+      // Guest handles return to the pool on register — block reusing the temp nickname.
       next.username = USERNAME_TAKEN_ERROR;
     }
 

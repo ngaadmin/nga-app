@@ -9,6 +9,7 @@ import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-yea
 import {
   approveParentConsent,
   readPendingParentConsentByToken,
+  type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 
@@ -20,18 +21,28 @@ type ApprovalState = "loading" | "ready" | "approved" | "invalid";
 export function ParentConsentApprovalPanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") ?? "";
+  const token = (searchParams.get("token") ?? "").trim();
 
   const [state, setState] = useState<ApprovalState>("loading");
-  const pending = token ? readPendingParentConsentByToken(token) : null;
+  const [pending, setPending] = useState<PendingParentConsent | null>(null);
 
   useEffect(() => {
-    if (!token || !pending) {
+    if (!token) {
+      setPending(null);
       setState("invalid");
       return;
     }
+
+    const resolved = readPendingParentConsentByToken(token);
+    if (!resolved) {
+      setPending(null);
+      setState("invalid");
+      return;
+    }
+
+    setPending(resolved);
     setState("ready");
-  }, [pending, token]);
+  }, [token]);
 
   function handleApprove() {
     if (!token) return;
@@ -44,7 +55,17 @@ export function ParentConsentApprovalPanel() {
     router.push(DASHBOARD_ACADEMY_PATH);
   }
 
-  if (state === "invalid") {
+  if (state === "loading") {
+    return (
+      <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+        <div className="mx-auto w-full max-w-md px-1 text-center">
+          <p className="font-sans text-sm text-nga-slate">Loading approval…</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (state === "invalid" || !pending) {
     return (
       <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
         <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
@@ -61,10 +82,6 @@ export function ParentConsentApprovalPanel() {
         </div>
       </section>
     );
-  }
-
-  if (!pending) {
-    return null;
   }
 
   return (

@@ -29,15 +29,117 @@ export type PendingParentConsent = {
   passcodeHash?: string;
 };
 
+/** Compact payload embedded in email-safe consent tokens (cross-device). */
+type ConsentTokenPayloadV1 = {
+  v: 1;
+  e: string;
+  u: string;
+  y: number;
+  c: string;
+  p?: string;
+};
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FOUR_DIGIT_PATTERN = /^\d{4}$/;
 const CONSENT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-function generateConsentToken(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
+function toBase64Url(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]!);
   }
-  return `consent-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function fromBase64Url(value: string): string {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padLen = (4 - (padded.length % 4)) % 4;
+  const withPad = padded + "=".repeat(padLen);
+  const binary = atob(withPad);
+  const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
+  const createdAt = Date.parse(createdAtIso);
+  if (!Number.isFinite(createdAt) || Date.now() - createdAt > CONSENT_TTL_MS) {
+    return false;
+  }
+  return requiresParentConsentForBirthYear(birthYear);
+}
+
+/**
+ * Encode pending consent fields into a portable token so email CTAs work on
+ * any device/browser (not only the child's local session storage).
+ */
+export function encodeConsentToken(input: {
+  parentEmail: string;
+  childUsername: string;
+  birthYear: number;
+  createdAt: string;
+  passcodeHash?: string;
+}): string {
+  const payload: ConsentTokenPayloadV1 = {
+    v: 1,
+    e: input.parentEmail,
+    u: input.childUsername,
+    y: input.birthYear,
+    c: input.createdAt,
+  };
+  if (input.passcodeHash) {
+    payload.p = input.passcodeHash;
+  }
+  return toBase64Url(JSON.stringify(payload));
+}
+
+/** Decode a portable consent token. Returns null if malformed or expired. */
+export function decodeConsentToken(token: string): PendingParentConsent | null {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
+
+  try {
+    const raw = fromBase64Url(trimmed);
+    const parsed = JSON.parse(raw) as Partial<ConsentTokenPayloadV1>;
+    if (
+      parsed.v !== 1 ||
+      typeof parsed.e !== "string" ||
+      typeof parsed.u !== "string" ||
+      typeof parsed.y !== "number" ||
+      !Number.isInteger(parsed.y) ||
+      typeof parsed.c !== "string"
+    ) {
+      return null;
+    }
+
+    const parentEmail = parsed.e.trim().toLowerCase();
+    const childUsername = parsed.u.trim();
+    if (!parentEmail || !EMAIL_PATTERN.test(parentEmail) || !childUsername) {
+      return null;
+    }
+    if (!isConsentStillValid(parsed.c, parsed.y)) {
+      return null;
+    }
+
+    const passcodeHash =
+      typeof parsed.p === "string" && parsed.p.trim()
+        ? parsed.p.trim()
+        : undefined;
+
+    return {
+      token: trimmed,
+      parentEmail,
+      childUsername,
+      birthYear: parsed.y,
+      createdAt: parsed.c,
+      passcodeHash,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function resolvePasscodeHash(input: {
@@ -56,10 +158,45 @@ function resolvePasscodeHash(input: {
   return undefined;
 }
 
+/**
+ * Pending consent must survive email opens in a new tab/device. Production
+ * `readPersisted` is sessionStorage-only, so mirror this key in localStorage.
+ */
+function readPendingConsentRaw(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const local = window.localStorage.getItem(PENDING_PARENT_CONSENT_KEY);
+    if (local) return local;
+  } catch {
+    // ignore quota / privacy mode
+  }
+  return readPersisted(PENDING_PARENT_CONSENT_KEY);
+}
+
+function writePendingConsentRaw(value: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(PENDING_PARENT_CONSENT_KEY, value);
+  } catch {
+    // ignore quota / privacy mode
+  }
+  writePersisted(PENDING_PARENT_CONSENT_KEY, value);
+}
+
+function removePendingConsentRaw(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(PENDING_PARENT_CONSENT_KEY);
+  } catch {
+    // ignore
+  }
+  removePersisted(PENDING_PARENT_CONSENT_KEY);
+}
+
 export function readPendingParentConsent(): PendingParentConsent | null {
   if (typeof window === "undefined") return null;
 
-  const raw = readPersisted(PENDING_PARENT_CONSENT_KEY);
+  const raw = readPendingConsentRaw();
   if (!raw) return null;
 
   try {
@@ -68,18 +205,14 @@ export function readPendingParentConsent(): PendingParentConsent | null {
       typeof parsed.token !== "string" ||
       typeof parsed.parentEmail !== "string" ||
       typeof parsed.childUsername !== "string" ||
-      !Number.isInteger(parsed.birthYear)
+      !Number.isInteger(parsed.birthYear) ||
+      typeof parsed.createdAt !== "string"
     ) {
       return null;
     }
 
-    const createdAt = Date.parse(parsed.createdAt);
-    if (!Number.isFinite(createdAt) || Date.now() - createdAt > CONSENT_TTL_MS) {
+    if (!isConsentStillValid(parsed.createdAt, parsed.birthYear)) {
       clearPendingParentConsent();
-      return null;
-    }
-
-    if (!requiresParentConsentForBirthYear(parsed.birthYear)) {
       return null;
     }
 
@@ -89,17 +222,25 @@ export function readPendingParentConsent(): PendingParentConsent | null {
   }
 }
 
+/**
+ * Resolve pending consent for an email/magic link token.
+ * Prefers same-device storage, then decodes portable self-contained tokens.
+ */
 export function readPendingParentConsentByToken(
   token: string,
 ): PendingParentConsent | null {
+  const trimmed = token.trim();
+  if (!trimmed) return null;
+
   const pending = readPendingParentConsent();
-  if (!pending || pending.token !== token) return null;
-  return pending;
+  if (pending && pending.token === trimmed) return pending;
+
+  return decodeConsentToken(trimmed);
 }
 
 /**
  * Starts Explorer VPC: backs up guest progress, creates a PENDING_CONSENT
- * registered profile (no learner email), and stores the consent token.
+ * registered profile (no learner email), and stores a portable consent token.
  */
 export function createPendingParentConsent(input: {
   parentEmail: string;
@@ -125,7 +266,14 @@ export function createPendingParentConsent(input: {
   }
 
   const passcodeHash = resolvePasscodeHash(input);
-  const token = generateConsentToken();
+  const createdAt = new Date().toISOString();
+  const token = encodeConsentToken({
+    parentEmail,
+    childUsername,
+    birthYear: input.birthYear,
+    createdAt,
+    passcodeHash,
+  });
 
   captureGuestProgressSnapshot();
 
@@ -147,13 +295,11 @@ export function createPendingParentConsent(input: {
     parentEmail,
     childUsername,
     birthYear: input.birthYear,
-    createdAt: new Date().toISOString(),
+    createdAt,
     passcodeHash,
   };
 
-  if (typeof window !== "undefined") {
-    writePersisted(PENDING_PARENT_CONSENT_KEY, JSON.stringify(pending));
-  }
+  writePendingConsentRaw(JSON.stringify(pending));
 
   return pending;
 }
@@ -226,8 +372,7 @@ export function approveParentConsent(
 }
 
 export function clearPendingParentConsent(): void {
-  if (typeof window === "undefined") return;
-  removePersisted(PENDING_PARENT_CONSENT_KEY);
+  removePendingConsentRaw();
 }
 
 export function buildParentConsentApprovalPath(token: string): string {

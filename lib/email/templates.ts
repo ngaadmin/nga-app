@@ -38,13 +38,15 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function resolveAppUrl(appUrl?: string): string {
-  const raw =
-    appUrl?.trim() ||
-    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-    "https://nga-app-three.vercel.app";
-  return raw.replace(/\/$/, "");
+/** Live production origin used for every onboarding/consent email CTA. */
+export const PRODUCTION_APP_URL = "https://nga-app-three.vercel.app";
+
+/**
+ * Email CTAs always point at the live production app — never localhost,
+ * preview hosts, or the request Origin, regardless of where send was triggered.
+ */
+function resolveAppUrl(_appUrl?: string): string {
+  return PRODUCTION_APP_URL;
 }
 
 function ctaButton(label: string, href: string): string {

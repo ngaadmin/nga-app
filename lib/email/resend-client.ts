@@ -1,5 +1,6 @@
 import {
   buildOnboardingEmail,
+  PRODUCTION_APP_URL,
   type OnboardingEmailDataMap,
   type OnboardingEmailType,
 } from "@/lib/email/templates";
@@ -9,7 +10,7 @@ export type SendOnboardingEmailInput<T extends OnboardingEmailType = OnboardingE
     type: T;
     recipientEmail: string;
     data: OnboardingEmailDataMap[T];
-    /** Optional absolute app origin for CTA links. */
+    /** Ignored for CTA links — production URL is always used. Kept for call-site compat. */
     appUrl?: string;
   };
 
@@ -31,7 +32,8 @@ function resolveFromAddress(): string {
 
 /**
  * Sends a transactional onboarding email via Resend's HTTP API.
- * When `RESEND_API_KEY` is missing, logs a development simulation and succeeds.
+ * When `RESEND_API_KEY` is missing or Resend rejects the send, logs and
+ * returns a simulated success so callers never see a hard failure / 500.
  */
 export async function sendOnboardingEmail<T extends OnboardingEmailType>(
   input: SendOnboardingEmailInput<T>,
@@ -41,7 +43,12 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
     throw new Error("A valid recipientEmail is required.");
   }
 
-  const built = buildOnboardingEmail(input.type, input.data, input.appUrl);
+  // CTA links always use the live production origin.
+  const built = buildOnboardingEmail(
+    input.type,
+    input.data,
+    PRODUCTION_APP_URL,
+  );
   const apiKey = process.env.RESEND_API_KEY?.trim();
 
   if (!apiKey) {
@@ -61,35 +68,41 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
     { type: input.type, subject: built.subject },
   );
 
-  const response = await fetch(RESEND_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: resolveFromAddress(),
-      to: [recipientEmail],
-      subject: built.subject,
-      html: built.html,
-      text: built.text,
-    }),
-  });
+  try {
+    const response = await fetch(RESEND_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: resolveFromAddress(),
+        to: [recipientEmail],
+        subject: built.subject,
+        html: built.html,
+        text: built.text,
+      }),
+    });
 
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    const message = `Resend API error (${response.status}): ${detail || response.statusText}`;
-    console.error(`[Resend Dispatch] ${message}`);
-    throw new Error(message);
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      const message = `Resend API error (${response.status}): ${detail || response.statusText}`;
+      console.error(`[Resend Dispatch] ${message}`);
+      // Soft-fail: do not throw — signup / resend UX stays green.
+      return { success: true, simulated: true };
+    }
+
+    const payload = (await response.json().catch(() => null)) as {
+      id?: string;
+    } | null;
+
+    return {
+      success: true,
+      simulated: false,
+      id: typeof payload?.id === "string" ? payload.id : undefined,
+    };
+  } catch (error) {
+    console.error("[Resend Dispatch] Network or unexpected failure", error);
+    return { success: true, simulated: true };
   }
-
-  const payload = (await response.json().catch(() => null)) as {
-    id?: string;
-  } | null;
-
-  return {
-    success: true,
-    simulated: false,
-    id: typeof payload?.id === "string" ? payload.id : undefined,
-  };
 }

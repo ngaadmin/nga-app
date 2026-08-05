@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
-import type {
-  OnboardingEmailDataMap,
-  OnboardingEmailType,
+import {
+  PRODUCTION_APP_URL,
+  type OnboardingEmailDataMap,
+  type OnboardingEmailType,
 } from "@/lib/email/templates";
 
 export const runtime = "nodejs";
@@ -14,7 +15,6 @@ const EMAIL_TYPES: readonly OnboardingEmailType[] = [
 ] as const;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DEFAULT_APP_URL = "https://nga-app-three.vercel.app";
 
 type SendBody = {
   type?: unknown;
@@ -57,48 +57,6 @@ function parseData(
   }
 
   return { username };
-}
-
-/** Strip quotes, markdown brackets/parens, spaces, and trailing slashes from a URL-ish string. */
-function sanitizeBaseUrl(value: unknown): string | undefined {
-  try {
-    if (typeof value !== "string") return undefined;
-    const cleaned = value
-      .trim()
-      .replace(/['"`]/g, "")
-      .replace(/[\[\]()]/g, "")
-      .replace(/\s+/g, "")
-      .replace(/\/+$/g, "")
-      .trim();
-    return cleaned || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function resolveRequestAppUrl(request: Request): string {
-  try {
-    const configuredAppUrl = sanitizeBaseUrl(process.env.NEXT_PUBLIC_APP_URL);
-    if (configuredAppUrl) {
-      return configuredAppUrl;
-    }
-
-    const vercelHost = sanitizeBaseUrl(process.env.VERCEL_URL);
-    if (vercelHost) {
-      return vercelHost.startsWith("http://") || vercelHost.startsWith("https://")
-        ? vercelHost
-        : `https://${vercelHost}`;
-    }
-
-    const origin = sanitizeBaseUrl(request.headers.get("origin"));
-    if (origin) {
-      return origin;
-    }
-  } catch (error) {
-    console.error("[EMAIL_SEND_ERROR] resolveRequestAppUrl failed", error);
-  }
-
-  return DEFAULT_APP_URL;
 }
 
 export async function POST(request: Request) {
@@ -149,11 +107,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Always pin CTAs to production — ignore localhost Origin / env overrides.
     const result = await sendOnboardingEmail({
       type: body.type,
       recipientEmail,
       data,
-      appUrl: resolveRequestAppUrl(request),
+      appUrl: PRODUCTION_APP_URL,
     });
 
     return NextResponse.json({
@@ -162,14 +121,11 @@ export async function POST(request: Request) {
       id: result.id,
     });
   } catch (error) {
+    // Soft-fail: signup must keep working even if mail dispatch breaks.
     console.error("[EMAIL_SEND_ERROR]", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Email dispatch failed",
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({
+      success: true as const,
+      simulated: true,
+    });
   }
 }

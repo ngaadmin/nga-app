@@ -59,15 +59,15 @@ function parseData(
   return { username };
 }
 
-/** Strip quotes, markdown brackets/parens, and trailing slashes from a URL-ish string. */
+/** Strip quotes, markdown brackets/parens, spaces, and trailing slashes from a URL-ish string. */
 function sanitizeBaseUrl(value: unknown): string | undefined {
   try {
     if (typeof value !== "string") return undefined;
     const cleaned = value
       .trim()
-      .replace(/^['"`]+|['"`]+$/g, "")
-      .replace(/^\[|\]$/g, "")
-      .replace(/^\(|\)$/g, "")
+      .replace(/['"`]/g, "")
+      .replace(/[\[\]()]/g, "")
+      .replace(/\s+/g, "")
       .replace(/\/+$/g, "")
       .trim();
     return cleaned || undefined;
@@ -93,14 +93,6 @@ function resolveRequestAppUrl(request: Request): string {
     const origin = sanitizeBaseUrl(request.headers.get("origin"));
     if (origin) {
       return origin;
-    }
-
-    const host = sanitizeBaseUrl(request.headers.get("host"));
-    if (host) {
-      const proto =
-        sanitizeBaseUrl(request.headers.get("x-forwarded-proto")) || "https";
-      const scheme = proto.includes("://") ? "https" : proto;
-      return `${scheme}://${host.replace(/^https?:\/\//, "")}`;
     }
   } catch (error) {
     console.error("[EMAIL_SEND_ERROR] resolveRequestAppUrl failed", error);
@@ -171,10 +163,12 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[EMAIL_SEND_ERROR]", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to send email.";
     return NextResponse.json(
-      { success: false, error: message },
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Email dispatch failed",
+      },
       { status: 500 },
     );
   }

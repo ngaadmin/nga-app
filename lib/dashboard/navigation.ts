@@ -1,5 +1,9 @@
 import type { ComponentType } from "react";
 import {
+  SHOW_LAUNCHPAD,
+  isTestingVisibleNavId,
+} from "@/lib/dashboard/feature-flags";
+import {
   AcademyIcon,
   AchievementsIcon,
   LaunchpadIcon,
@@ -66,6 +70,21 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
 export const DASHBOARD_SETTINGS_HREF = "/dashboard/settings" as const;
 export const VAULT_CASH_IN_HREF = "/dashboard/vault?cashIn=1" as const;
 export const DASHBOARD_DEFAULT_HREF = "/dashboard/academy" as const;
+
+/**
+ * Filters primary chrome nav for the active feature-flag surface.
+ * Launchpad (and other non-testing items) stay in `DASHBOARD_NAV_ITEMS`;
+ * they are only omitted from rendered navigation while suppressed.
+ */
+export function filterDashboardNavForFeatureFlags<T extends DashboardNavLinkItem>(
+  items: readonly T[],
+): T[] {
+  if (SHOW_LAUNCHPAD) {
+    return [...items];
+  }
+
+  return items.filter((item) => isTestingVisibleNavId(item.id));
+}
 
 export function isNavItemActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);

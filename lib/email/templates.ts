@@ -26,6 +26,7 @@ export type BuiltEmail = {
   subject: string;
   html: string;
   text: string;
+  preheader?: string;
 };
 
 function escapeHtml(value: string): string {
@@ -42,7 +43,7 @@ function resolveAppUrl(appUrl?: string): string {
     appUrl?.trim() ||
     process.env.NEXT_PUBLIC_APP_URL?.trim() ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
-    "http://localhost:3000";
+    "https://nga-app-three.vercel.app";
   return raw.replace(/\/$/, "");
 }
 
@@ -70,10 +71,27 @@ function ctaButton(label: string, href: string): string {
   `;
 }
 
-function wrapHtml(bodyInner: string): string {
+function wrapHtml(options: {
+  header: string;
+  bodyInner: string;
+  preheader?: string;
+  footer?: string;
+}): string {
+  const preheader = options.preheader
+    ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+        ${escapeHtml(options.preheader)}
+      </div>`
+    : "";
+  const footer = options.footer
+    ? `<p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        ${options.footer}
+      </p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
   <body style="margin:0;padding:0;background:#F7F7F7;">
+    ${preheader}
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F7F7F7;padding:24px 12px;">
       <tr>
         <td align="center">
@@ -83,7 +101,11 @@ function wrapHtml(bodyInner: string): string {
                 <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
                   NextGenAchievers
                 </p>
-                ${bodyInner}
+                <h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
+                  ${escapeHtml(options.header)}
+                </h1>
+                ${options.bodyInner}
+                ${footer}
               </td>
             </tr>
           </table>
@@ -103,46 +125,71 @@ export function buildExplorerParentEmail(
   const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
 
-  const subject = `Action Required: Approve ${username}'s NextGenAchievers Account`;
+  const subject =
+    "Action Required: Your child wants to save their progress on NextGenAchiever$";
+  const preheader =
+    "Approve their account and help them build practical money habits safely.";
+  const header = "Welcome to NextGenAchiever$";
 
   const text = [
     "Hi there,",
     "",
-    `Your child (username: ${username}) wants to save their progress on NextGenAchievers — the fun, real-world way to learn money skills.`,
+    "Your child has just jumped into NextGenAchiever$\u2122 - an interactive, hands-on app that turns essential money habits and real-world budgeting into an engaging learning experience.",
     "",
-    "Because they are under 14, COPPA & privacy guidelines require your permission before we can sync their badges, streaks, and Vault savings across devices.",
+    "Kids spend plenty of time on screens, but this time it's spent building practical skills that set them up for life.",
     "",
-    `Approve ${username}'s Profile: ${approveUrl}`,
+    "NextGenAchiever$ is strictly an educational tool - not a financial product. There are no real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside a 100% safe, virtualized environment designed purely for learning and practice.",
     "",
-    "When you click to approve, you'll set up a 4-digit Parent PIN to manage master account settings.",
+    "To back up their earned points, streaks, and badges across devices, they need a parent or guardian to approve their profile:",
+    `Selected Username: ${username} (We strictly advise anonymous handles so your child's real name and personal information stay completely safe online).`,
     "",
-    "Your email stays private and is never used for marketing unless you give us explicit permission.",
+    `How to approve: Click the button below to approve ${username}'s profile and set your 4-digit Parent PIN so you can manage their account settings and oversight options.`,
+    "",
+    `Approve Account & Set Parent PIN: ${approveUrl}`,
+    "",
+    "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
     "",
     "- NextGenAchievers",
   ].join("\n");
 
-  const html = wrapHtml(`
-    <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
-    <p style="margin:0 0 16px;font-size:16px;">
-      Your child (username: <strong>${safeName}</strong>) wants to save their progress on
-      NextGenAchievers — the fun, real-world way to learn money skills.
-    </p>
-    <p style="margin:0 0 16px;font-size:16px;">
-      Because they are under 14, COPPA &amp; privacy guidelines require your permission
-      before we can sync their badges, streaks, and Vault savings across devices.
-    </p>
-    ${ctaButton(`Approve ${username}'s Profile`, approveUrl)}
-    <p style="margin:0 0 16px;font-size:15px;">
-      When you click to approve, you&apos;ll set up a 4-digit Parent PIN to manage master
-      account settings.
-    </p>
-    <p style="margin:0;font-size:13px;color:#5B6B7C;">
-      Your email stays private and is never used for marketing unless you give us
-      explicit permission.
-    </p>
-  `);
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your child has just jumped into NextGenAchiever$&trade; - an interactive, hands-on app that turns
+        essential money habits and real-world budgeting into an engaging learning experience.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Kids spend plenty of time on screens, but this time it&apos;s spent building practical skills
+        that set them up for life.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        NextGenAchiever$ is strictly an educational tool - not a financial product. There are no
+        real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside
+        a 100% safe, virtualized environment designed purely for learning and practice.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        To back up their earned points, streaks, and badges across devices, they need a parent or
+        guardian to approve their profile:
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        <strong>Selected Username: ${safeName}</strong>
+        (We strictly advise anonymous handles so your child&apos;s real name and personal information
+        stay completely safe online).
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        How to approve: Click the button below to approve ${safeName}&apos;s profile and set your
+        4-digit Parent PIN so you can manage their account settings and oversight options.
+      </p>
+      ${ctaButton("Approve Account & Set Parent PIN", approveUrl)}
+    `,
+    footer:
+      "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
+  });
 
-  return { subject, html, text };
+  return { subject, preheader, html, text };
 }
 
 export function buildPathfinderParentEmail(
@@ -154,40 +201,51 @@ export function buildPathfinderParentEmail(
   const dashboardClaimUrl = `${base}/onboarding/parent-consent?username=${encodeURIComponent(username)}`;
   const safeName = escapeHtml(username);
 
-  const subject = `${username} just created a NextGenAchievers Account`;
+  const subject = `${username} just started learning on NextGenAchiever$`;
+  const preheader =
+    "Set up your Parent Dashboard to follow their practical money journey.";
+  const header = "Welcome to NextGenAchiever$\u2122";
 
   const text = [
     "Hi there,",
     "",
-    `${username} (ages 13–15) has created a Pathfinder account on NextGenAchievers to master real-world financial literacy.`,
+    `Your teenager has created a Pathfinder account on NextGenAchiever$\u2122 using the username ${username} to learn practical, real-world skills in earning, saving, and smart spending.`,
     "",
-    "As a parent or guardian, you can set up a Parent Dashboard to view their progress, manage Vault controls, and support their journey.",
+    "We know how much teens love screen time - so we made sure that time is spent mastering real-world skills they will actually use. NextGenAchiever$ is strictly an educational tool, not a financial product. There are no real-money transactions or financial risks - just interactive, gamified learning in a completely safe, virtualized environment.",
     "",
-    `Claim Parent Dashboard: ${dashboardClaimUrl}`,
+    "Their account is active so they can start learning right away. As a parent or guardian, you can claim your free Parent Dashboard to follow their progress, see their earned badges, and manage Vault permissions.",
     "",
-    "Your email stays private and is never used for marketing unless you give us explicit permission.",
+    `Create Parent Dashboard: ${dashboardClaimUrl}`,
     "",
     "- NextGenAchievers",
   ].join("\n");
 
-  const html = wrapHtml(`
-    <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
-    <p style="margin:0 0 16px;font-size:16px;">
-      <strong>${safeName}</strong> (ages 13–15) has created a Pathfinder account on
-      NextGenAchievers to master real-world financial literacy.
-    </p>
-    <p style="margin:0 0 16px;font-size:16px;">
-      As a parent or guardian, you can set up a Parent Dashboard to view their progress,
-      manage Vault controls, and support their journey.
-    </p>
-    ${ctaButton("Claim Parent Dashboard", dashboardClaimUrl)}
-    <p style="margin:0;font-size:13px;color:#5B6B7C;">
-      Your email stays private and is never used for marketing unless you give us
-      explicit permission.
-    </p>
-  `);
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your teenager has created a Pathfinder account on NextGenAchiever$&trade; using the username
+        <strong>${safeName}</strong> to learn practical, real-world skills in earning, saving, and
+        smart spending.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        We know how much teens love screen time - so we made sure that time is spent mastering
+        real-world skills they will actually use. NextGenAchiever$ is strictly an educational tool,
+        not a financial product. There are no real-money transactions or financial risks - just
+        interactive, gamified learning in a completely safe, virtualized environment.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Their account is active so they can start learning right away. As a parent or guardian, you
+        can claim your free Parent Dashboard to follow their progress, see their earned badges, and
+        manage Vault permissions.
+      </p>
+      ${ctaButton("Create Parent Dashboard", dashboardClaimUrl)}
+    `,
+  });
 
-  return { subject, html, text };
+  return { subject, preheader, html, text };
 }
 
 export function buildMaverickWelcomeEmail(
@@ -196,31 +254,28 @@ export function buildMaverickWelcomeEmail(
 ): BuiltEmail {
   const username = data.username.trim() || "Maverick";
   const base = resolveAppUrl(appUrl);
-  const dashboardUrl = `${base}/dashboard`;
-  const safeName = escapeHtml(username);
+  const academyUrl = `${base}/dashboard/academy`;
 
   const subject = `Welcome to NextGenAchievers, ${username}!`;
 
   const text = [
-    `Welcome aboard, ${username}!`,
+    "Welcome to NextGenAchievers! Your account is ready. Jump in to start building real-world financial skills, completing modules, and mastering your financial future.",
     "",
-    "You're now on the Maverick track (16+). Get ready to master cash flow, investment strategies, and real-world business building.",
-    "",
-    `Go to Dashboard: ${dashboardUrl}`,
+    `Launch Academy: ${academyUrl}`,
     "",
     "- NextGenAchievers",
   ].join("\n");
 
-  const html = wrapHtml(`
-    <p style="margin:0 0 16px;font-size:16px;">
-      Welcome aboard, <strong>${safeName}</strong>!
-    </p>
-    <p style="margin:0 0 16px;font-size:16px;">
-      You&apos;re now on the Maverick track (16+). Get ready to master cash flow,
-      investment strategies, and real-world business building.
-    </p>
-    ${ctaButton("Go to Dashboard", dashboardUrl)}
-  `);
+  const html = wrapHtml({
+    header: `Welcome to NextGenAchievers, ${username}!`,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        Welcome to NextGenAchievers! Your account is ready. Jump in to start building real-world
+        financial skills, completing modules, and mastering your financial future.
+      </p>
+      ${ctaButton("Launch Academy", academyUrl)}
+    `,
+  });
 
   return { subject, html, text };
 }

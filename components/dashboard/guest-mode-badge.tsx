@@ -69,7 +69,7 @@ export function GuestModeBadge({
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        aria-label={`${displayLabel} — tap to save your progress`}
+        aria-label={`${displayLabel} - tap to save your progress`}
         className={itemClass}
       >
         {inner}

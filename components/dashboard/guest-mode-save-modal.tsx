@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils/cn";
 type GuestModeSaveModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  /** Optional override — falls back to session / pending consent parent email. */
+  /** Optional override - falls back to session / pending consent parent email. */
   parentEmail?: string | null;
 };
 

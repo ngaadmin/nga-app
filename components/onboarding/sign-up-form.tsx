@@ -28,6 +28,13 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSCODE_PATTERN = /^\d{4}$/;
 
+const INVALID_EMAIL_ERROR =
+  "Please enter a valid email address (e.g. name@example.com).";
+const SAME_EMAIL_ERROR =
+  "Please enter a parent or guardian's email address that is different from your own.";
+const USERNAME_TAKEN_ERROR =
+  "That username is already taken. Try adding a favorite number!";
+
 const EXPLORER_ACCENT_CLASS = "text-nga-explorer";
 
 const fieldBase =
@@ -104,6 +111,14 @@ export function SignUpForm() {
     } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
       next.username =
         "Use 2-20 letters, numbers, underscores, or hyphens only.";
+    } else if (
+      isExplorer &&
+      existingSession?.genericProfileId &&
+      existingSession.username &&
+      trimmedUsername.toLowerCase() === existingSession.username.toLowerCase()
+    ) {
+      // Guest Finnster handles stay in the reusable pool - Explorers must pick a new username.
+      next.username = USERNAME_TAKEN_ERROR;
     }
 
     if (isExplorer) {
@@ -119,7 +134,7 @@ export function SignUpForm() {
         next.parentEmail =
           "Enter a parent or guardian email so they can approve your account.";
       } else if (!EMAIL_PATTERN.test(trimmedParent)) {
-        next.parentEmail = "Enter a valid parent or guardian email address.";
+        next.parentEmail = INVALID_EMAIL_ERROR;
       }
     }
 
@@ -128,7 +143,7 @@ export function SignUpForm() {
       if (!trimmedLearner) {
         next.learnerEmail = "Enter your email so we can save your account.";
       } else if (!EMAIL_PATTERN.test(trimmedLearner)) {
-        next.learnerEmail = "Enter a valid email address.";
+        next.learnerEmail = INVALID_EMAIL_ERROR;
       }
 
       if (!password) {
@@ -145,14 +160,13 @@ export function SignUpForm() {
         next.parentEmail =
           "Enter a parent or guardian email for the Parent Dashboard.";
       } else if (!EMAIL_PATTERN.test(trimmedParent)) {
-        next.parentEmail = "Enter a valid parent or guardian email address.";
+        next.parentEmail = INVALID_EMAIL_ERROR;
       } else if (
         trimmedLearner &&
         EMAIL_PATTERN.test(trimmedLearner) &&
         trimmedParent === trimmedLearner
       ) {
-        next.parentEmail =
-          "Please enter a parent or guardian's email address that is different from your own.";
+        next.parentEmail = SAME_EMAIL_ERROR;
       }
     }
 
@@ -226,14 +240,16 @@ export function SignUpForm() {
             >
               {isExplorer
                 ? "Pick a Username (Do NOT use your real name)"
-                : "Username"}
+                : isPathfinder
+                  ? "Choose a Username"
+                  : "Username"}
             </label>
             <input
               id="signup-username"
               name="username"
               type="text"
               autoComplete="username"
-              placeholder={isExplorer ? "e.g. CashDragon88" : "Pick a username"}
+              placeholder={isExplorer ? "e.g. CashDragon88" : "Choose a username"}
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
@@ -332,14 +348,14 @@ export function SignUpForm() {
                   htmlFor="signup-learner-email"
                   className="block font-heading text-sm font-bold text-nga-primary"
                 >
-                  Your Email
+                  Your Email Address
                 </label>
                 <input
                   id="signup-learner-email"
                   name="learnerEmail"
                   type="email"
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder="name@example.com"
                   value={learnerEmail}
                   onChange={(e) => {
                     setLearnerEmail(e.target.value);
@@ -367,7 +383,7 @@ export function SignUpForm() {
                   htmlFor="signup-password"
                   className="block font-heading text-sm font-bold text-nga-primary"
                 >
-                  Password
+                  Create a Password
                 </label>
                 <input
                   id="signup-password"

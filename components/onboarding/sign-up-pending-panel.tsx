@@ -129,7 +129,7 @@ export function SignUpPendingPanel() {
               void handleResend();
             }}
           >
-            {isResending ? "Resending…" : "Resend Approval Email"}
+            {isResending ? "Resending..." : "Resend Approval Email"}
           </Button>
         </div>
       </div>

@@ -10,9 +10,9 @@ type LockedBirthYearSummaryProps = {
   birthYear: number;
   ageTier?: MasteryCohort;
   className?: string;
-  /** Signup — cohort track summary for the learner. */
+  /** Signup - cohort track summary for the learner. */
   signup?: boolean;
-  /** Parent consent — cohort track summary for the parent/guardian. */
+  /** Parent consent - cohort track summary for the parent/guardian. */
   parentConsent?: boolean;
 };
 

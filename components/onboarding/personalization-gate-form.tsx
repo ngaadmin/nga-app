@@ -119,8 +119,11 @@ export function PersonalizationGateForm() {
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            Start Playing the Money Game
+            Welcome to NextGenAchievers
           </h1>
+          <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
+            The fun, real-world way to learn money skills.
+          </p>
         </div>
 
         <form

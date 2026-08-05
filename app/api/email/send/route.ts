@@ -14,6 +14,7 @@ const EMAIL_TYPES: readonly OnboardingEmailType[] = [
 ] as const;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_APP_URL = "https://nga-app-three.vercel.app";
 
 type SendBody = {
   type?: unknown;
@@ -58,76 +59,104 @@ function parseData(
   return { username };
 }
 
-function resolveRequestAppUrl(request: Request): string | undefined {
-  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (configuredAppUrl) {
-    return configuredAppUrl.replace(/\/$/, "");
+/** Strip quotes, markdown brackets/parens, and trailing slashes from a URL-ish string. */
+function sanitizeBaseUrl(value: unknown): string | undefined {
+  try {
+    if (typeof value !== "string") return undefined;
+    const cleaned = value
+      .trim()
+      .replace(/^['"`]+|['"`]+$/g, "")
+      .replace(/^\[|\]$/g, "")
+      .replace(/^\(|\)$/g, "")
+      .replace(/\/+$/g, "")
+      .trim();
+    return cleaned || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveRequestAppUrl(request: Request): string {
+  try {
+    const configuredAppUrl = sanitizeBaseUrl(process.env.NEXT_PUBLIC_APP_URL);
+    if (configuredAppUrl) {
+      return configuredAppUrl;
+    }
+
+    const vercelHost = sanitizeBaseUrl(process.env.VERCEL_URL);
+    if (vercelHost) {
+      return vercelHost.startsWith("http://") || vercelHost.startsWith("https://")
+        ? vercelHost
+        : `https://${vercelHost}`;
+    }
+
+    const origin = sanitizeBaseUrl(request.headers.get("origin"));
+    if (origin) {
+      return origin;
+    }
+
+    const host = sanitizeBaseUrl(request.headers.get("host"));
+    if (host) {
+      const proto =
+        sanitizeBaseUrl(request.headers.get("x-forwarded-proto")) || "https";
+      const scheme = proto.includes("://") ? "https" : proto;
+      return `${scheme}://${host.replace(/^https?:\/\//, "")}`;
+    }
+  } catch (error) {
+    console.error("[EMAIL_SEND_ERROR] resolveRequestAppUrl failed", error);
   }
 
-  const vercelUrl = process.env.VERCEL_URL?.trim();
-  if (vercelUrl) {
-    return `https://${vercelUrl.replace(/\/$/, "")}`;
-  }
-
-  const origin = request.headers.get("origin")?.trim();
-  if (origin) {
-    return origin.replace(/\/$/, "");
-  }
-
-  const host = request.headers.get("host")?.trim();
-  if (!host) return undefined;
-  const proto = request.headers.get("x-forwarded-proto") || "http";
-  return `${proto}://${host.replace(/\/$/, "")}`;
+  return DEFAULT_APP_URL;
 }
 
 export async function POST(request: Request) {
-  let body: SendBody;
   try {
-    body = (await request.json()) as SendBody;
-  } catch {
-    return NextResponse.json(
-      { success: false, error: "Invalid JSON body." },
-      { status: 400 },
-    );
-  }
+    let body: SendBody;
+    try {
+      body = (await request.json()) as SendBody;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON body." },
+        { status: 400 },
+      );
+    }
 
-  if (!isEmailType(body.type)) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME.",
-      },
-      { status: 400 },
-    );
-  }
+    if (!isEmailType(body.type)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME.",
+        },
+        { status: 400 },
+      );
+    }
 
-  const recipientEmail =
-    typeof body.recipientEmail === "string"
-      ? body.recipientEmail.trim().toLowerCase()
-      : "";
-  if (!recipientEmail || !EMAIL_PATTERN.test(recipientEmail)) {
-    return NextResponse.json(
-      { success: false, error: "A valid recipientEmail is required." },
-      { status: 400 },
-    );
-  }
+    const recipientEmail =
+      typeof body.recipientEmail === "string"
+        ? body.recipientEmail.trim().toLowerCase()
+        : "";
+    if (!recipientEmail || !EMAIL_PATTERN.test(recipientEmail)) {
+      return NextResponse.json(
+        { success: false, error: "A valid recipientEmail is required." },
+        { status: 400 },
+      );
+    }
 
-  const data = parseData(body.type, body.data);
-  if (!data) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          body.type === "EXPLORER_PARENT"
-            ? "data.username and data.token are required."
-            : "data.username is required.",
-      },
-      { status: 400 },
-    );
-  }
+    const data = parseData(body.type, body.data);
+    if (!data) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            body.type === "EXPLORER_PARENT"
+              ? "data.username and data.token are required."
+              : "data.username is required.",
+        },
+        { status: 400 },
+      );
+    }
 
-  try {
     const result = await sendOnboardingEmail({
       type: body.type,
       recipientEmail,
@@ -141,13 +170,12 @@ export async function POST(request: Request) {
       id: result.id,
     });
   } catch (error) {
+    console.error("[EMAIL_SEND_ERROR]", error);
     const message =
       error instanceof Error ? error.message : "Failed to send email.";
-    console.error("[api/email/send]", message);
-    const isResendError = message.includes("Resend API error");
     return NextResponse.json(
-      { success: false, simulated: false, error: message },
-      { status: isResendError ? 500 : 502 },
+      { success: false, error: message },
+      { status: 500 },
     );
   }
 }

@@ -1,40 +1,75 @@
 "use client";
 
 import { useState } from "react";
-import { GhostModeSaveModal } from "@/components/dashboard/ghost-mode-save-modal";
+import {
+  STATUS_BANNER_ICON_CLASS,
+  STATUS_BANNER_ITEM_CLASS,
+} from "@/components/dashboard/status-banner-layout";
+import { GuestModeSaveModal } from "@/components/dashboard/guest-mode-save-modal";
 import { cn } from "@/lib/utils/cn";
 
-type GhostModeBadgeProps = {
+type GuestModeBadgeProps = {
   className?: string;
   size?: "sm" | "md";
+  /**
+   * Guest handle / username shown inline.
+   * Defaults to the classic "Guest Mode (Unsaved)" label.
+   */
+  label?: string;
+  /** When false, renders a static label (no save-progress modal). */
+  interactive?: boolean;
 };
 
-export function GhostModeBadge({ className, size = "md" }: GhostModeBadgeProps) {
+export function GuestModeBadge({
+  className,
+  size = "md",
+  label,
+  interactive = true,
+}: GuestModeBadgeProps) {
+  void size;
   const [modalOpen, setModalOpen] = useState(false);
+  const displayLabel = label?.trim() || "Guest Mode (Unsaved)";
+
+  const itemClass = cn(
+    STATUS_BANNER_ITEM_CLASS,
+    interactive && "transition-opacity hover:opacity-70 active:opacity-55",
+    className,
+  );
+
+  const inner = (
+    <>
+      <span
+        className={cn(
+          STATUS_BANNER_ICON_CLASS,
+          "rounded-full bg-[#FFA503]",
+          interactive ? "animate-pulse" : null,
+        )}
+        aria-hidden
+      />
+      <span className="truncate">{displayLabel}</span>
+    </>
+  );
+
+  if (!interactive) {
+    return (
+      <span className={itemClass} title={displayLabel}>
+        {inner}
+      </span>
+    );
+  }
 
   return (
     <>
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        aria-label="Ghost Mode - tap to save your progress with a free account"
-        className={cn(
-          "inline-flex items-center gap-2 rounded-full bg-[#BDE9FB]/40 font-heading font-bold text-[#031F82] transition-all hover:bg-[#BDE9FB]/60 active:scale-[0.98]",
-          size === "sm" ? "px-2.5 py-1 text-[10px] sm:text-xs" : "px-3 py-1.5 text-xs sm:text-sm",
-          className,
-        )}
+        aria-label={`${displayLabel} - tap to save your progress with a free account`}
+        className={itemClass}
       >
-        <span
-          className={cn(
-            "shrink-0 animate-pulse rounded-full bg-[#FFA503]",
-            size === "sm" ? "size-1.5" : "size-2",
-          )}
-          aria-hidden
-        />
-        Ghost Mode (Unsaved)
+        {inner}
       </button>
 
-      <GhostModeSaveModal
+      <GuestModeSaveModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
       />

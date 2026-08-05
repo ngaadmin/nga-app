@@ -1,66 +1,73 @@
 "use client";
 
 import {
-  academyMomentumLabelClass,
-  academyMomentumUnitClass,
-  academyMomentumValueClass,
-} from "@/components/academy/academy-journey-styles";
-import { GhostModeBadge } from "@/components/dashboard/ghost-mode-badge";
+  STATUS_BANNER_ICON_CLASS,
+  StatusBannerLayout,
+} from "@/components/dashboard/status-banner-layout";
+import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
+import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { FlameIcon, XpStarIcon } from "@/lib/dashboard/icons";
-import { TACTILE_PRESS } from "@/lib/dashboard/styles";
-import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
+import { SnowflakeIcon, XpStarIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyMomentumHeaderProps = {
-  dayStreak: number;
+  username: string;
   xp: number;
+  streakFreezes: number;
 };
 
 export function AcademyMomentumHeader({
-  dayStreak,
+  username,
   xp,
+  streakFreezes,
 }: AcademyMomentumHeaderProps) {
-  const { isGhostMode, isLoading } = useDashboardUser();
-  const streakCopy = copyMatrix.home.streak;
+  const shieldCopy = copyMatrix.home.shield;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
 
   return (
-    <div className="sticky top-0 z-sticky shrink-0 bg-white px-1 py-2">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border-0 bg-white p-3 shadow-md">
-          <div className="flex items-center gap-1.5">
-            <FlameIcon className="size-5 shrink-0 text-nga-cta" />
-            <span className={academyMomentumLabelClass}>
-              {streakCopy.label}
-            </span>
-          </div>
-          <p className={cn("mt-1", academyMomentumValueClass)}>
-            {dayStreak}
-            <span className={academyMomentumUnitClass}>
-              {streakCopy.unit}
-            </span>
-          </p>
-        </div>
-
-        <div
-          className={`flex flex-col justify-center rounded-2xl border-0 bg-white p-3 shadow-md ${TACTILE_PRESS}`}
-        >
-          <div className="flex items-center gap-1.5">
-            <XpStarIcon className="size-4 shrink-0 text-nga-accent" />
-            <span className={academyMomentumLabelClass}>
-              {journeyCopy.xpLabel}
-            </span>
-          </div>
-          <p className={cn("mt-1", academyMomentumValueClass)}>
-            {xp}
-          </p>
-        </div>
-      </div>
-
-      {isGhostMode && !isLoading ? (
-        <GhostModeBadge className="mt-2" size="sm" />
-      ) : null}
-    </div>
+    <StatusBannerLayout
+      aria-label="Academy stats"
+      left={
+        <StatusMetricPill
+          interactive
+          icon={
+            <XpStarIcon
+              className={cn(STATUS_BANNER_ICON_CLASS, "text-nga-accent")}
+            />
+          }
+          value={xp}
+          unitLabel={journeyCopy.xpLabel}
+          ariaLabel={`${xp} ${journeyCopy.xpLabel}`}
+          info={{
+            title: "Your XP",
+            body: "Points you earn by crushing Academy lessons. Stack them up, then cash in from Vault when you're ready.",
+          }}
+        />
+      }
+      center={
+        <UserHandleControl
+          username={username}
+          size="sm"
+          className="min-w-0 max-w-full"
+        />
+      }
+      right={
+        <StatusMetricPill
+          interactive
+          icon={
+            <SnowflakeIcon
+              className={cn(STATUS_BANNER_ICON_CLASS, "text-nga-secondary")}
+            />
+          }
+          value={streakFreezes}
+          ariaLabel={`${streakFreezes} ${shieldCopy.activeLabel}`}
+          title={shieldCopy.label}
+          info={{
+            title: shieldCopy.label,
+            body: "Streak freezes keep your day streak safe if you miss a day. Earn more by staying consistent in Academy.",
+          }}
+        />
+      }
+    />
   );
 }

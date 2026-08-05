@@ -1,30 +1,46 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { GhostModeBadge } from "@/components/dashboard/ghost-mode-badge";
+import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
+import { StatusBannerLayout } from "@/components/dashboard/status-banner-layout";
+import { UserHandleControl } from "@/components/dashboard/user-handle-control";
+import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { zLayerStyle } from "@/lib/ui/layers";
-import { cn } from "@/lib/utils/cn";
 
+/**
+ * Shell-level status strip. Keeps the profile handle pinned to the same center
+ * slot on every non-lesson dashboard route. Academy renders the full stats row
+ * (XP · handle · freezes); other routes render the centered handle alone.
+ */
 export function DashboardStatusHeader() {
   const pathname = usePathname();
-  const { isGhostMode, isLoading } = useDashboardUser();
   const isAcademyRoute = pathname.startsWith("/dashboard/academy");
-  const showGhostMode = isGhostMode && !isLoading && !isAcademyRoute;
-
-  if (!showGhostMode) {
-    return null;
-  }
+  const { username } = useDashboardUser();
+  const { lifetimePointsEarned } = useDashboardWallet();
+  const streakFreezes = DASHBOARD_HOME_PLACEHOLDER_STATE.streakFreezes;
 
   return (
     <header
       data-dashboard-status-header
       style={zLayerStyle("sticky")}
-      className="sticky top-0 bg-white/95 px-4 py-2 backdrop-blur-sm sm:px-6"
+      className="sticky top-0"
     >
-      <div className="mx-auto flex w-full max-w-md justify-center">
-        <GhostModeBadge className={cn("max-w-full")} size="sm" />
-      </div>
+      {isAcademyRoute ? (
+        <AcademyMomentumHeader
+          username={username}
+          xp={lifetimePointsEarned}
+          streakFreezes={streakFreezes}
+        />
+      ) : (
+        <StatusBannerLayout
+          aria-label="Profile"
+          center={
+            <UserHandleControl size="sm" className="min-w-0 max-w-full" />
+          }
+        />
+      )}
     </header>
   );
 }

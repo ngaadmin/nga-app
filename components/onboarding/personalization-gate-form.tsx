@@ -11,11 +11,11 @@ import {
 } from "@/lib/onboarding/birth-years";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
-  createGhostAccessSession,
+  createGuestAccessSession,
   DASHBOARD_ACADEMY_PATH,
   ONBOARDING_SIGN_UP_PATH,
-  saveGhostAccessSession,
-} from "@/lib/onboarding/ghost-session";
+  saveGuestAccessSession,
+} from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_#-]{2,20}$/;
@@ -68,7 +68,7 @@ export function PersonalizationGateForm() {
     return Object.keys(next).length === 0;
   }
 
-  function persistGhostSession(): boolean {
+  function persistGuestSession(): boolean {
     let reservedId = genericProfileId;
     if (!reservedId) {
       try {
@@ -82,19 +82,19 @@ export function PersonalizationGateForm() {
       }
     }
 
-    const session = createGhostAccessSession({
+    const session = createGuestAccessSession({
       username: username.trim(),
       birthYear: Number(birthYear),
       genericProfileId: reservedId,
     });
-    saveGhostAccessSession(session);
+    saveGuestAccessSession(session);
     return true;
   }
 
   function handleContinueWithoutProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validate()) return;
-    if (!persistGhostSession()) return;
+    if (!persistGuestSession()) return;
     router.push(DASHBOARD_ACADEMY_PATH);
   }
 
@@ -108,7 +108,7 @@ export function PersonalizationGateForm() {
       return;
     }
     if (!validate()) return;
-    if (!persistGhostSession()) return;
+    if (!persistGuestSession()) return;
     router.push(ONBOARDING_SIGN_UP_PATH);
   }
 
@@ -171,7 +171,7 @@ export function PersonalizationGateForm() {
               htmlFor="birth-year"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Birth year
+              What year was the learner born?
             </label>
             <div className="relative">
               <select
@@ -196,7 +196,7 @@ export function PersonalizationGateForm() {
                 )}
               >
                 <option value="" disabled>
-                  Select your birth year
+                  Select birth year
                 </option>
                 {birthYears.map((year) => (
                   <option key={year} value={year} className="text-nga-ink">
@@ -227,10 +227,12 @@ export function PersonalizationGateForm() {
             </div>
             <p
               id="birth-year-hint"
-              className="font-sans text-sm italic leading-relaxed text-nga-slate"
+              className="font-sans text-sm leading-relaxed text-nga-slate"
             >
-              (We use this to make sure your challenges are a perfect match for
-              your age!)
+              <span className="font-bold text-nga-primary">IMPORTANT:</span>{" "}
+              Enter the birth year of the learner (the player). We use this to
+              set the right learning level and age-appropriate tools. We never
+              share this information.
             </p>
             {errors.birthYear ? (
               <p

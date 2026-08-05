@@ -12,13 +12,19 @@ type GuestModeBadgeProps = {
   className?: string;
   size?: "sm" | "md";
   /**
-   * Guest handle / username shown inline.
-   * Defaults to the classic "Guest Mode (Unsaved)" label.
+   * Auto-assigned guest handle / username shown as "Playing as [handle]".
    */
   label?: string;
   /** When false, renders a static label (no save-progress modal). */
   interactive?: boolean;
 };
+
+function formatPlayingAsLabel(handle?: string): string {
+  const trimmed = handle?.trim();
+  if (!trimmed) return "Playing as Guest";
+  if (trimmed.toLowerCase().startsWith("playing as ")) return trimmed;
+  return `Playing as ${trimmed}`;
+}
 
 export function GuestModeBadge({
   className,
@@ -28,7 +34,7 @@ export function GuestModeBadge({
 }: GuestModeBadgeProps) {
   void size;
   const [modalOpen, setModalOpen] = useState(false);
-  const displayLabel = label?.trim() || "Guest Mode (Unsaved)";
+  const displayLabel = formatPlayingAsLabel(label);
 
   const itemClass = cn(
     STATUS_BANNER_ITEM_CLASS,
@@ -63,7 +69,7 @@ export function GuestModeBadge({
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        aria-label={`${displayLabel} - tap to save your progress with a free account`}
+        aria-label={`${displayLabel} — tap to save your progress`}
         className={itemClass}
       >
         {inner}

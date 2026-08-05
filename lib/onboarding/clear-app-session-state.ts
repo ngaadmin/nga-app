@@ -4,18 +4,19 @@ import { CURRENCY_PREFERENCE_STORAGE_KEY } from "@/lib/dashboard/currency/curren
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
 import { VAULT_PROFILE_STORAGE_KEY, VAULT_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault/vault-profile-storage";
-import { GHOST_SESSION_STORAGE_KEY } from "@/lib/onboarding/ghost-session";
+import { GUEST_SESSION_STORAGE_KEY } from "@/lib/onboarding/guest-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
-import { GHOST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/ghost-progress-snapshot";
+import { GUEST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/guest-progress-snapshot";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
 
 import { clearAllPersistedNgaKeys } from "@/lib/dev/client-persist";
 
-/** All sessionStorage keys written by the ghost-phase app shell. */
+/** All sessionStorage keys written by the guest-phase app shell. */
 export const APP_SESSION_STORAGE_KEYS = [
-  GHOST_SESSION_STORAGE_KEY,
+  GUEST_SESSION_STORAGE_KEY,
+  "nga_ghost_session", // legacy guest session key
   GENERIC_PROFILE_POOL_STORAGE_KEY,
-  GHOST_PROGRESS_SNAPSHOT_KEY,
+  GUEST_PROGRESS_SNAPSHOT_KEY,
   PENDING_PARENT_CONSENT_KEY,
   DASHBOARD_WALLET_STORAGE_KEY,
   CURRENCY_PREFERENCE_STORAGE_KEY,
@@ -26,7 +27,7 @@ export const APP_SESSION_STORAGE_KEYS = [
   PARENT_PIN_STORAGE_KEY,
 ] as const;
 
-/** Removes every persisted ghost-session artifact so onboarding runs from scratch. */
+/** Removes every persisted guest-session artifact so onboarding runs from scratch. */
 export function clearAllAppSessionState(): void {
   if (typeof window === "undefined") return;
 

@@ -21,19 +21,21 @@ export function OnboardingEntryGate() {
 
         <div className="order-2 flex flex-col items-center text-center lg:order-none lg:items-start lg:text-left">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15]">
-            The free, fun, and effective way to master real-world money
-            skills!
+            Welcome to NextGenAchievers
           </h1>
+          <p className="mt-4 max-w-md font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
+            The fun, real-world way to learn money skills.
+          </p>
           <div className="mt-8 flex w-full max-w-sm flex-col gap-4">
             <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
-              Get started
+              Try the Free App
             </ButtonLink>
             <ButtonLink
-              href="/onboarding/start"
+              href="/onboarding/sign-in"
               variant="secondary-outline"
               fullWidth
             >
-              I already have an account
+              Create Account / Sign In
             </ButtonLink>
           </div>
         </div>

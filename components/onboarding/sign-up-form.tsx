@@ -5,20 +5,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button } from "@/components/ui/button";
-import {
-  captureGhostProgressSnapshot,
-} from "@/lib/onboarding/ghost-progress-snapshot";
+import { captureGuestProgressSnapshot } from "@/lib/onboarding/guest-progress-snapshot";
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
   ONBOARDING_SIGN_UP_PENDING_PATH,
   ONBOARDING_START_PATH,
   readUserSession,
-} from "@/lib/onboarding/ghost-session";
+} from "@/lib/onboarding/guest-session";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
-  requiresParentConsent,
+  type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
   buildParentConsentApprovalPath,
@@ -28,14 +26,32 @@ import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const EMAIL_HELPER_TEXT =
-  "Your email stays private and is never used for marketing unless you give us permission.";
+const PASSCODE_PATTERN = /^\d{4}$/;
 
 const EXPLORER_ACCENT_CLASS = "text-nga-explorer";
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
+
+type FormErrors = {
+  username?: string;
+  passcode?: string;
+  learnerEmail?: string;
+  password?: string;
+  parentEmail?: string;
+  form?: string;
+};
+
+function cohortHeader(cohort: MasteryCohort): string {
+  switch (cohort) {
+    case "explorer":
+      return "Save Your Free Explorer Profile";
+    case "pathfinder":
+      return "Create Your Free Pathfinder Account";
+    case "maverick":
+      return "Create Your Free Maverick Account";
+  }
+}
 
 export function SignUpForm() {
   const router = useRouter();
@@ -51,15 +67,19 @@ export function SignUpForm() {
   }, [existingSession?.birthYear, searchParams]);
 
   const ageTier = birthYear ? getMasteryCohortFromBirthYear(birthYear) : null;
-  const needsParentConsent = ageTier ? requiresParentConsent(ageTier) : false;
+  const isExplorer = ageTier === "explorer";
+  const isPathfinder = ageTier === "pathfinder";
+  const isMaverick = ageTier === "maverick";
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState<{
-    username?: string;
-    email?: string;
-    form?: string;
-  }>({});
+  // Explorers always start blank so guest handles stay reusable in the pool.
+  const [username, setUsername] = useState(() =>
+    ageTier === "explorer" ? "" : (existingSession?.username?.trim() ?? ""),
+  );
+  const [passcode, setPasscode] = useState("");
+  const [learnerEmail, setLearnerEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
+  const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     if (!birthYear || !existingSession?.birthYearLocked) {
@@ -67,24 +87,73 @@ export function SignUpForm() {
     }
   }, [birthYear, existingSession?.birthYearLocked, router]);
 
-  function validate(): boolean {
-    const next: typeof errors = {};
-    const trimmed = username.trim();
-    const trimmedEmail = email.trim();
+  function clearError(key: keyof FormErrors) {
+    if (errors[key]) {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  }
 
-    if (!trimmed) {
-      next.username = "Pick a nickname for your saved profile.";
-    } else if (!USERNAME_PATTERN.test(trimmed)) {
+  function validate(): boolean {
+    const next: FormErrors = {};
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) {
+      next.username = isExplorer
+        ? "Pick a username for your Explorer profile."
+        : "Pick a username for your account.";
+    } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
       next.username =
         "Use 2-20 letters, numbers, underscores, or hyphens only.";
     }
 
-    if (!trimmedEmail) {
-      next.email = needsParentConsent
-        ? "Enter a parent or guardian email so they can approve your account."
-        : "Enter your email so we can save your account.";
-    } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
-      next.email = "Enter a valid email address.";
+    if (isExplorer) {
+      const trimmedPasscode = passcode.trim();
+      if (!trimmedPasscode) {
+        next.passcode = "Create a 4-digit secret passcode.";
+      } else if (!PASSCODE_PATTERN.test(trimmedPasscode)) {
+        next.passcode = "Passcode must be exactly 4 digits.";
+      }
+
+      const trimmedParent = parentEmail.trim().toLowerCase();
+      if (!trimmedParent) {
+        next.parentEmail =
+          "Enter a parent or guardian email so they can approve your account.";
+      } else if (!EMAIL_PATTERN.test(trimmedParent)) {
+        next.parentEmail = "Enter a valid parent or guardian email address.";
+      }
+    }
+
+    if (isPathfinder || isMaverick) {
+      const trimmedLearner = learnerEmail.trim().toLowerCase();
+      if (!trimmedLearner) {
+        next.learnerEmail = "Enter your email so we can save your account.";
+      } else if (!EMAIL_PATTERN.test(trimmedLearner)) {
+        next.learnerEmail = "Enter a valid email address.";
+      }
+
+      if (!password) {
+        next.password = "Create a password to secure your account.";
+      } else if (password.trim().length < 6) {
+        next.password = "Use at least 6 characters for your password.";
+      }
+    }
+
+    if (isPathfinder) {
+      const trimmedParent = parentEmail.trim().toLowerCase();
+      const trimmedLearner = learnerEmail.trim().toLowerCase();
+      if (!trimmedParent) {
+        next.parentEmail =
+          "Enter a parent or guardian email for the Parent Dashboard.";
+      } else if (!EMAIL_PATTERN.test(trimmedParent)) {
+        next.parentEmail = "Enter a valid parent or guardian email address.";
+      } else if (
+        trimmedLearner &&
+        EMAIL_PATTERN.test(trimmedLearner) &&
+        trimmedParent === trimmedLearner
+      ) {
+        next.parentEmail =
+          "Please enter a parent or guardian's email address that is different from your own.";
+      }
     }
 
     setErrors(next);
@@ -93,14 +162,15 @@ export function SignUpForm() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!birthYear || !validate()) return;
+    if (!birthYear || !ageTier || !validate()) return;
 
     try {
-      if (needsParentConsent) {
+      if (isExplorer) {
         const pending = createPendingParentConsent({
-          parentEmail: email.trim(),
+          parentEmail: parentEmail.trim(),
           childUsername: username.trim(),
           birthYear,
+          passcode: passcode.trim(),
         });
         router.push(
           `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
@@ -108,12 +178,14 @@ export function SignUpForm() {
         return;
       }
 
-      captureGhostProgressSnapshot();
+      captureGuestProgressSnapshot();
       const session = convertToRegisteredProfile({
         username: username.trim(),
-        email: email.trim(),
         birthYear,
         accountRole: "child",
+        learnerEmail: learnerEmail.trim(),
+        password,
+        parentEmail: isPathfinder ? parentEmail.trim() : undefined,
       });
       finalizeRegisteredSignup(session);
       router.push(DASHBOARD_ACADEMY_PATH);
@@ -129,8 +201,6 @@ export function SignUpForm() {
     return null;
   }
 
-  const isGhostConversion = existingSession?.accessMode === "ghost";
-
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
@@ -138,24 +208,8 @@ export function SignUpForm() {
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            {needsParentConsent
-              ? "Almost There, Explorer!"
-              : "Create Your Free Profile"}
+            {cohortHeader(ageTier)}
           </h1>
-          <p
-            className={cn(
-              "font-sans text-sm leading-relaxed",
-              needsParentConsent
-                ? cn(EXPLORER_ACCENT_CLASS, "font-semibold")
-                : "text-nga-slate",
-            )}
-          >
-            {needsParentConsent
-              ? "Explorers under 14 need a parent or guardian to give the approval before we can save your profile."
-              : isGhostConversion
-                ? "Your points, skills, and lesson progress carry over automatically."
-                : "Save your streak, points, and skills across every visit."}
-          </p>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
@@ -170,93 +224,250 @@ export function SignUpForm() {
               htmlFor="signup-username"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Username
+              {isExplorer
+                ? "Pick a Username (Do NOT use your real name)"
+                : "Username"}
             </label>
             <input
               id="signup-username"
               name="username"
               type="text"
               autoComplete="username"
-              placeholder="Pick a username"
+              placeholder={isExplorer ? "e.g. CashDragon88" : "Pick a username"}
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
-                if (errors.username) {
-                  setErrors((prev) => ({ ...prev, username: undefined }));
-                }
+                clearError("username");
               }}
               aria-invalid={Boolean(errors.username)}
+              aria-describedby={
+                isExplorer && !errors.username
+                  ? "signup-username-tip"
+                  : undefined
+              }
               className={cn(
                 fieldBase,
                 errors.username && "border-red-400 focus:border-red-500",
               )}
             />
             {errors.username ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p
+                className="font-sans text-sm font-medium text-red-600"
+                role="alert"
+              >
                 {errors.username}
+              </p>
+            ) : isExplorer ? (
+              <p
+                id="signup-username-tip"
+                className={cn(
+                  "font-sans text-sm leading-relaxed",
+                  EXPLORER_ACCENT_CLASS,
+                )}
+              >
+                Tip: To protect your privacy online, never use your real full
+                name as your username!
               </p>
             ) : null}
           </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="signup-email"
-              className={cn(
-                "block font-heading text-sm font-bold",
-                needsParentConsent
-                  ? EXPLORER_ACCENT_CLASS
-                  : "text-nga-primary",
-              )}
-            >
-              {needsParentConsent ? "Parent or guardian email" : "Your email"}
-            </label>
-            <input
-              id="signup-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder={
-                needsParentConsent ? "parent@example.com" : "you@example.com"
-              }
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) {
-                  setErrors((prev) => ({ ...prev, email: undefined }));
-                }
-              }}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={
-                errors.email ? undefined : "signup-email-hint"
-              }
-              className={cn(
-                fieldBase,
-                errors.email && "border-red-400 focus:border-red-500",
-              )}
-            />
-            {errors.email ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
-                {errors.email}
-              </p>
-            ) : (
-              <p
-                id="signup-email-hint"
-                className="font-sans text-sm italic text-nga-slate"
+          {isExplorer ? (
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-passcode"
+                className={cn(
+                  "block font-heading text-sm font-bold",
+                  EXPLORER_ACCENT_CLASS,
+                )}
               >
-                {EMAIL_HELPER_TEXT}
-              </p>
-            )}
-          </div>
+                Create a 4-Digit Secret Passcode
+              </label>
+              <input
+                id="signup-passcode"
+                name="passcode"
+                type="password"
+                inputMode="numeric"
+                autoComplete="new-password"
+                maxLength={4}
+                pattern="\d{4}"
+                placeholder="••••"
+                value={passcode}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  setPasscode(digits);
+                  clearError("passcode");
+                }}
+                aria-invalid={Boolean(errors.passcode)}
+                aria-describedby={
+                  errors.passcode ? undefined : "signup-passcode-hint"
+                }
+                className={cn(
+                  fieldBase,
+                  "tracking-[0.35em]",
+                  errors.passcode && "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.passcode ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.passcode}
+                </p>
+              ) : (
+                <p
+                  id="signup-passcode-hint"
+                  className="font-sans text-sm italic text-nga-slate"
+                >
+                  You&apos;ll use this passcode to log back in.
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          {isPathfinder || isMaverick ? (
+            <>
+              <div className="space-y-2">
+                <label
+                  htmlFor="signup-learner-email"
+                  className="block font-heading text-sm font-bold text-nga-primary"
+                >
+                  Your Email
+                </label>
+                <input
+                  id="signup-learner-email"
+                  name="learnerEmail"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={learnerEmail}
+                  onChange={(e) => {
+                    setLearnerEmail(e.target.value);
+                    clearError("learnerEmail");
+                  }}
+                  aria-invalid={Boolean(errors.learnerEmail)}
+                  className={cn(
+                    fieldBase,
+                    errors.learnerEmail &&
+                      "border-red-400 focus:border-red-500",
+                  )}
+                />
+                {errors.learnerEmail ? (
+                  <p
+                    className="font-sans text-sm font-medium text-red-600"
+                    role="alert"
+                  >
+                    {errors.learnerEmail}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="signup-password"
+                  className="block font-heading text-sm font-bold text-nga-primary"
+                >
+                  Password
+                </label>
+                <input
+                  id="signup-password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    clearError("password");
+                  }}
+                  aria-invalid={Boolean(errors.password)}
+                  className={cn(
+                    fieldBase,
+                    errors.password && "border-red-400 focus:border-red-500",
+                  )}
+                />
+                {errors.password ? (
+                  <p
+                    className="font-sans text-sm font-medium text-red-600"
+                    role="alert"
+                  >
+                    {errors.password}
+                  </p>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+
+          {isExplorer || isPathfinder ? (
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-parent-email"
+                className={cn(
+                  "block font-heading text-sm font-bold",
+                  isExplorer ? EXPLORER_ACCENT_CLASS : "text-nga-primary",
+                )}
+              >
+                Parent or Guardian&apos;s Email Address
+              </label>
+              <input
+                id="signup-parent-email"
+                name="parentEmail"
+                type="email"
+                autoComplete="email"
+                placeholder="parent@example.com"
+                value={parentEmail}
+                onChange={(e) => {
+                  setParentEmail(e.target.value);
+                  clearError("parentEmail");
+                }}
+                aria-invalid={Boolean(errors.parentEmail)}
+                aria-describedby={
+                  errors.parentEmail ? undefined : "signup-parent-email-hint"
+                }
+                className={cn(
+                  fieldBase,
+                  errors.parentEmail && "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.parentEmail ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.parentEmail}
+                </p>
+              ) : (
+                <p
+                  id="signup-parent-email-hint"
+                  className="font-sans text-sm italic leading-relaxed text-nga-slate"
+                >
+                  {isExplorer
+                    ? "We need a parent or guardian's permission before you can sync progress across multiple devices and unlock other app features."
+                    : "We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions."}
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          {isExplorer ? (
+            <p className="font-sans text-sm leading-relaxed text-nga-slate">
+              Your parent or guardian&apos;s email stays private and is only
+              used to manage account approvals and safety.
+            </p>
+          ) : null}
 
           {errors.form ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p
+              className="font-sans text-sm font-medium text-red-600"
+              role="alert"
+            >
               {errors.form}
             </p>
           ) : null}
 
           <Button type="submit" variant="cta" fullWidth>
-            {needsParentConsent
-              ? "Send Consent Email to Parent / Guardian"
+            {isExplorer
+              ? "Ask Parent to Approve & Save"
               : "Create My Free Account"}
           </Button>
         </form>

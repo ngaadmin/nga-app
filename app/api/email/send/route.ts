@@ -59,12 +59,25 @@ function parseData(
 }
 
 function resolveRequestAppUrl(request: Request): string | undefined {
-  const origin = request.headers.get("origin");
-  if (origin) return origin;
-  const host = request.headers.get("host");
+  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configuredAppUrl) {
+    return configuredAppUrl.replace(/\/$/, "");
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/\/$/, "")}`;
+  }
+
+  const origin = request.headers.get("origin")?.trim();
+  if (origin) {
+    return origin.replace(/\/$/, "");
+  }
+
+  const host = request.headers.get("host")?.trim();
   if (!host) return undefined;
   const proto = request.headers.get("x-forwarded-proto") || "http";
-  return `${proto}://${host}`;
+  return `${proto}://${host.replace(/\/$/, "")}`;
 }
 
 export async function POST(request: Request) {

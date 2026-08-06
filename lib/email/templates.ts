@@ -55,7 +55,7 @@ function escapeHtml(value: string): string {
 export const PRODUCTION_APP_URL = "https://nga-app-three.vercel.app";
 
 /**
- * Email CTAs always point at the live production app — never localhost,
+ * Email CTAs always point at the live production app - never localhost,
  * preview hosts, or the request Origin, regardless of where send was triggered.
  */
 function resolveAppUrl(_appUrl?: string): string {
@@ -338,12 +338,12 @@ export function buildCredentialRecoveryEmail(
   const base = resolveAppUrl(appUrl);
   const signInUrl = `${base}/onboarding/sign-in`;
 
-  const subject = "Reset your NextGenAchievers passcode / PIN";
+  const subject = "Reset your NextGenAchievers password";
   const text = [
-    `Hi — a passcode / PIN reset was requested for ${username}.`,
+    `Hi - a password reset was requested for ${username}.`,
     "",
     `Temporary recovery code: ${recoveryCode}`,
-    `Use this code as your current passcode or Parent PIN, then change it after you log in.`,
+    `Use this code as your current password, then change it after you log in.`,
     "",
     `Reset / log in: ${signInUrl}`,
     "",
@@ -351,11 +351,11 @@ export function buildCredentialRecoveryEmail(
   ].join("\n");
 
   const html = wrapHtml({
-    header: "Passcode / PIN reset",
+    header: "Password reset",
     preheader: "Your temporary recovery code is inside",
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
-        A passcode / PIN reset was requested for
+        A password reset was requested for
         <strong>${escapeHtml(username)}</strong>.
       </p>
       <p style="margin:0 0 8px;font-size:16px;">
@@ -365,7 +365,7 @@ export function buildCredentialRecoveryEmail(
         ${escapeHtml(recoveryCode)}
       </p>
       <p style="margin:0 0 16px;font-size:14px;color:#5B6B7C;">
-        Use this as your current passcode or Parent PIN, then set a new one after you log in.
+        Use this as your current password, then set a new one after you log in.
       </p>
       ${ctaButton("Log Back In", signInUrl)}
     `,

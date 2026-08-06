@@ -91,7 +91,7 @@ export function SignInForm() {
     setRecoveryNotice(
       recoveryMode === "username"
         ? copy.recoveryUsernameSuccess
-        : copy.recoveryCredentialSuccess,
+        : "If that email is on file, we sent a reset code there. Use it to log in, then set a new password.",
     );
   }
 
@@ -106,7 +106,7 @@ export function SignInForm() {
       next.identifier = "Enter your username or email.";
     }
     if (!trimmedCredential) {
-      next.credential = "Enter your password or 4-digit passcode.";
+      next.credential = "Enter your password.";
     }
 
     if (Object.keys(next).length > 0) {
@@ -139,7 +139,7 @@ export function SignInForm() {
             Log Back In
           </h1>
           <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
-            Welcome back — pick up your streak, badges, and money skills.
+            Welcome back - pick up your streak, badges, and money skills.
           </p>
         </div>
 
@@ -149,12 +149,12 @@ export function SignInForm() {
               <h2 className="font-heading text-xl font-extrabold text-nga-primary">
                 {recoveryMode === "username"
                   ? copy.forgotUsername
-                  : copy.forgotPasscode}
+                  : "Forgot Password?"}
               </h2>
               <p className="font-sans text-sm leading-relaxed text-nga-slate">
                 {recoveryMode === "username"
                   ? copy.recoveryUsernameHint
-                  : copy.recoveryCredentialHint}
+                  : "We'll email a temporary password reset code to this address."}
               </p>
             </div>
 
@@ -264,14 +264,14 @@ export function SignInForm() {
                   htmlFor="sign-in-credential"
                   className="block font-heading text-sm font-bold text-nga-primary"
                 >
-                  Password or passcode
+                  Password
                 </label>
                 <button
                   type="button"
                   onClick={() => openRecovery("credential")}
                   className="shrink-0 font-heading text-xs font-bold text-nga-secondary underline-offset-2 hover:underline"
                 >
-                  {copy.forgotPasscode}
+                  Forgot Password?
                 </button>
               </div>
               <input
@@ -279,7 +279,7 @@ export function SignInForm() {
                 name="credential"
                 type="password"
                 autoComplete="current-password"
-                placeholder="Password or 4-digit passcode"
+                placeholder="Password"
                 value={credential}
                 onChange={(e) => {
                   setCredential(e.target.value);

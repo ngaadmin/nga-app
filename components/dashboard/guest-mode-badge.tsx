@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  STATUS_BANNER_ICON_CLASS,
-  STATUS_BANNER_ITEM_CLASS,
-} from "@/components/dashboard/status-banner-layout";
+import { STATUS_BANNER_ITEM_CLASS } from "@/components/dashboard/status-banner-layout";
 import { GuestModeSaveModal } from "@/components/dashboard/guest-mode-save-modal";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { cn } from "@/lib/utils/cn";
 
 type GuestModeBadgeProps = {
@@ -35,6 +33,11 @@ export function GuestModeBadge({
   void size;
   const [modalOpen, setModalOpen] = useState(false);
   const displayLabel = formatPlayingAsLabel(label);
+  const session = useUserSession();
+  const showSaveProgressHint =
+    interactive &&
+    session?.accessMode === "guest" &&
+    session.ageTier === "explorer";
 
   const itemClass = cn(
     STATUS_BANNER_ITEM_CLASS,
@@ -43,17 +46,14 @@ export function GuestModeBadge({
   );
 
   const inner = (
-    <>
-      <span
-        className={cn(
-          STATUS_BANNER_ICON_CLASS,
-          "rounded-full bg-[#FFA503]",
-          interactive ? "animate-pulse" : null,
-        )}
-        aria-hidden
-      />
+    <span className="flex min-w-0 flex-col items-center text-center">
       <span className="truncate">{displayLabel}</span>
-    </>
+      {showSaveProgressHint ? (
+        <span className="font-bold text-red-600">
+          click here to save your progress
+        </span>
+      ) : null}
+    </span>
   );
 
   if (!interactive) {

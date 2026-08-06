@@ -26,7 +26,6 @@ import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PASSCODE_PATTERN = /^\d{4}$/;
 
 const INVALID_EMAIL_ERROR =
   "Please enter a valid email address (e.g. name@example.com).";
@@ -42,7 +41,6 @@ const fieldBase =
 
 type FormErrors = {
   username?: string;
-  passcode?: string;
   learnerEmail?: string;
   password?: string;
   parentEmail?: string;
@@ -78,9 +76,8 @@ export function SignUpForm() {
   const isPathfinder = ageTier === "pathfinder";
   const isMaverick = ageTier === "maverick";
 
-  // Never prefill guest Finnster handles — every cohort chooses a new username.
+  // Never prefill guest Finnster handles - every cohort chooses a new username.
   const [username, setUsername] = useState("");
-  const [passcode, setPasscode] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -114,18 +111,11 @@ export function SignUpForm() {
       existingSession.username &&
       trimmedUsername.toLowerCase() === existingSession.username.toLowerCase()
     ) {
-      // Guest handles return to the pool on register — block reusing the temp nickname.
+      // Guest handles return to the pool on register - block reusing the temp nickname.
       next.username = USERNAME_TAKEN_ERROR;
     }
 
     if (isExplorer) {
-      const trimmedPasscode = passcode.trim();
-      if (!trimmedPasscode) {
-        next.passcode = "Create a 4-digit secret passcode.";
-      } else if (!PASSCODE_PATTERN.test(trimmedPasscode)) {
-        next.passcode = "Passcode must be exactly 4 digits.";
-      }
-
       const trimmedParent = parentEmail.trim().toLowerCase();
       if (!trimmedParent) {
         next.parentEmail =
@@ -135,18 +125,18 @@ export function SignUpForm() {
       }
     }
 
+    if (!password) {
+      next.password = "Create a password to secure your account.";
+    } else if (password.trim().length < 6) {
+      next.password = "Use at least 6 characters for your password.";
+    }
+
     if (isPathfinder || isMaverick) {
       const trimmedLearner = learnerEmail.trim().toLowerCase();
       if (!trimmedLearner) {
         next.learnerEmail = "Enter your email so we can save your account.";
       } else if (!EMAIL_PATTERN.test(trimmedLearner)) {
         next.learnerEmail = INVALID_EMAIL_ERROR;
-      }
-
-      if (!password) {
-        next.password = "Create a password to secure your account.";
-      } else if (password.trim().length < 6) {
-        next.password = "Use at least 6 characters for your password.";
       }
     }
 
@@ -181,7 +171,7 @@ export function SignUpForm() {
           parentEmail: parentEmail.trim(),
           childUsername: username.trim(),
           birthYear,
-          passcode: passcode.trim(),
+          passcode: password.trim(),
         });
         router.push(
           `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
@@ -284,132 +274,91 @@ export function SignUpForm() {
             ) : null}
           </div>
 
-          {isExplorer ? (
+          {isPathfinder || isMaverick ? (
             <div className="space-y-2">
               <label
-                htmlFor="signup-passcode"
-                className={cn(
-                  "block font-heading text-sm font-bold",
-                  EXPLORER_ACCENT_CLASS,
-                )}
+                htmlFor="signup-learner-email"
+                className="block font-heading text-sm font-bold text-nga-primary"
               >
-                Create a 4-Digit Secret Passcode
+                Your Email Address
               </label>
               <input
-                id="signup-passcode"
-                name="passcode"
-                type="password"
-                inputMode="numeric"
-                autoComplete="new-password"
-                maxLength={4}
-                pattern="\d{4}"
-                placeholder="••••"
-                value={passcode}
+                id="signup-learner-email"
+                name="learnerEmail"
+                type="email"
+                autoComplete="email"
+                placeholder="name@example.com"
+                value={learnerEmail}
                 onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
-                  setPasscode(digits);
-                  clearError("passcode");
+                  setLearnerEmail(e.target.value);
+                  clearError("learnerEmail");
                 }}
-                aria-invalid={Boolean(errors.passcode)}
-                aria-describedby={
-                  errors.passcode ? undefined : "signup-passcode-hint"
-                }
+                aria-invalid={Boolean(errors.learnerEmail)}
                 className={cn(
                   fieldBase,
-                  "tracking-[0.35em]",
-                  errors.passcode && "border-red-400 focus:border-red-500",
+                  errors.learnerEmail &&
+                    "border-red-400 focus:border-red-500",
                 )}
               />
-              {errors.passcode ? (
+              {errors.learnerEmail ? (
                 <p
                   className="font-sans text-sm font-medium text-red-600"
                   role="alert"
                 >
-                  {errors.passcode}
+                  {errors.learnerEmail}
                 </p>
-              ) : (
-                <p
-                  id="signup-passcode-hint"
-                  className="font-sans text-sm italic text-nga-slate"
-                >
-                  You&apos;ll use this passcode to log back in.
-                </p>
-              )}
+              ) : null}
             </div>
           ) : null}
 
-          {isPathfinder || isMaverick ? (
-            <>
-              <div className="space-y-2">
-                <label
-                  htmlFor="signup-learner-email"
-                  className="block font-heading text-sm font-bold text-nga-primary"
-                >
-                  Your Email Address
-                </label>
-                <input
-                  id="signup-learner-email"
-                  name="learnerEmail"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="name@example.com"
-                  value={learnerEmail}
-                  onChange={(e) => {
-                    setLearnerEmail(e.target.value);
-                    clearError("learnerEmail");
-                  }}
-                  aria-invalid={Boolean(errors.learnerEmail)}
-                  className={cn(
-                    fieldBase,
-                    errors.learnerEmail &&
-                      "border-red-400 focus:border-red-500",
-                  )}
-                />
-                {errors.learnerEmail ? (
-                  <p
-                    className="font-sans text-sm font-medium text-red-600"
-                    role="alert"
-                  >
-                    {errors.learnerEmail}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="signup-password"
-                  className="block font-heading text-sm font-bold text-nga-primary"
-                >
-                  Create a Password
-                </label>
-                <input
-                  id="signup-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    clearError("password");
-                  }}
-                  aria-invalid={Boolean(errors.password)}
-                  className={cn(
-                    fieldBase,
-                    errors.password && "border-red-400 focus:border-red-500",
-                  )}
-                />
-                {errors.password ? (
-                  <p
-                    className="font-sans text-sm font-medium text-red-600"
-                    role="alert"
-                  >
-                    {errors.password}
-                  </p>
-                ) : null}
-              </div>
-            </>
-          ) : null}
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-password"
+              className={cn(
+                "block font-heading text-sm font-bold",
+                isExplorer ? EXPLORER_ACCENT_CLASS : "text-nga-primary",
+              )}
+            >
+              Create a Password
+            </label>
+            <input
+              id="signup-password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Create a password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearError("password");
+              }}
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={
+                errors.password || !isExplorer
+                  ? undefined
+                  : "signup-password-hint"
+              }
+              className={cn(
+                fieldBase,
+                errors.password && "border-red-400 focus:border-red-500",
+              )}
+            />
+            {errors.password ? (
+              <p
+                className="font-sans text-sm font-medium text-red-600"
+                role="alert"
+              >
+                {errors.password}
+              </p>
+            ) : isExplorer ? (
+              <p
+                id="signup-password-hint"
+                className="font-sans text-sm italic text-nga-slate"
+              >
+                You&apos;ll use this password to log back in.
+              </p>
+            ) : null}
+          </div>
 
           {isExplorer || isPathfinder ? (
             <div className="space-y-2">

@@ -19,14 +19,20 @@ import {
   buildVaultTransferLocations,
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
   vaultActionLinkActiveClass,
   vaultActionLinkClass,
+  vaultActionLinkSeparatorClass,
+  vaultActionResetLinkClass,
 } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
+
+const destructiveCtaClass =
+  "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 type BucketActionMode = "spend" | "move";
 
@@ -73,6 +79,7 @@ export type VaultBucketExpandedPanelProps = {
     to: VaultTransferLocationId,
     amount: number,
   ) => void;
+  onResetBucketBalance: () => void;
   onAddCustomCategory: (label: string) => void;
   onRenameCategory: (categoryId: SpendingCategoryId, label: string) => void;
   onClose: () => void;
@@ -86,6 +93,7 @@ export function VaultBucketExpandedPanel({
   spendingCategories,
   onMarkSpent,
   onVaultTransfer,
+  onResetBucketBalance,
   onAddCustomCategory,
   onRenameCategory,
   onClose,
@@ -96,6 +104,7 @@ export function VaultBucketExpandedPanel({
 
   const [activeAction, setActiveAction] = useState<BucketActionMode | null>(null);
   const [premiumCategoriesOpen, setPremiumCategoriesOpen] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   const showSpend = canMarkBucketAsSpent(bucket);
   const transferLocations = useMemo(
@@ -105,7 +114,8 @@ export function VaultBucketExpandedPanel({
 
   const canUseFunds = bucket.balance > 0;
   const canMoveOut = bucket.balance > 0 && transferLocations.length > 0;
-  const hasActions = showSpend || canMoveOut;
+  const canReset = bucket.balance > 0;
+  const hasActions = showSpend || canMoveOut || canReset;
   const spendOpen = showSpend && activeAction === "spend";
   const moveOpen = activeAction === "move";
 
@@ -131,7 +141,7 @@ export function VaultBucketExpandedPanel({
 
         {hasActions ? (
           <div className="mt-2 space-y-2 border-t border-[#BDE9FB]/40 pt-2">
-            <div className="flex items-center justify-between gap-x-4 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               {showSpend ? (
                 <button
                   type="button"
@@ -143,9 +153,12 @@ export function VaultBucketExpandedPanel({
                 >
                   {savingsCopy.spendMoney}
                 </button>
-              ) : (
-                <span aria-hidden />
-              )}
+              ) : null}
+              {showSpend && canMoveOut ? (
+                <span className={vaultActionLinkSeparatorClass} aria-hidden>
+                  |
+                </span>
+              ) : null}
               {canMoveOut ? (
                 <button
                   type="button"
@@ -156,6 +169,20 @@ export function VaultBucketExpandedPanel({
                   className={cn(vaultActionLinkClass, moveOpen && vaultActionLinkActiveClass)}
                 >
                   {savingsCopy.moveMoney}
+                </button>
+              ) : null}
+              {(showSpend || canMoveOut) && canReset ? (
+                <span className={vaultActionLinkSeparatorClass} aria-hidden>
+                  |
+                </span>
+              ) : null}
+              {canReset ? (
+                <button
+                  type="button"
+                  onClick={() => setResetConfirmOpen(true)}
+                  className={vaultActionResetLinkClass}
+                >
+                  {vaultCopy.resetBalanceToZero}
                 </button>
               ) : null}
             </div>
@@ -196,6 +223,44 @@ export function VaultBucketExpandedPanel({
         isOpen={premiumCategoriesOpen}
         onClose={() => setPremiumCategoriesOpen(false)}
       />
+
+      <ModalShell
+        isOpen={resetConfirmOpen}
+        onClose={() => setResetConfirmOpen(false)}
+        align="center"
+        labelledBy="vault-reset-jar-balance-title"
+        backdropClassName="bg-[#031F82]/55"
+        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
+      >
+        <h2
+          id="vault-reset-jar-balance-title"
+          className="font-heading text-lg font-extrabold text-[#031F82]"
+        >
+          {vaultCopy.resetBucketBalanceConfirmTitle}
+        </h2>
+        <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
+          {vaultCopy.resetBucketBalanceConfirmBody}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setResetConfirmOpen(false)}
+            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
+          >
+            {vaultCopy.resetCancel}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onResetBucketBalance();
+              setResetConfirmOpen(false);
+            }}
+            className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
+          >
+            {vaultCopy.resetConfirm}
+          </button>
+        </div>
+      </ModalShell>
     </>
   );
 }

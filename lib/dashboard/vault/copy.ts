@@ -29,7 +29,7 @@ export const vaultCopy = {
   manageSavingsGoalsLabel: "Manage Goals",
   manageSavingsGoalsTitle: "Manage Savings Goals",
   manageSavingsGoalsBody:
-    "Set targets, rename goals, add custom savings goals, or reset balances. Clearing a target never wipes saved progress.",
+    "Set targets, rename goals, add custom savings goals, or reset a goal balance. Clearing a target never wipes saved progress.",
   goalSettingsLabel: "Goal Settings",
   addSavingsGoal: "+ Add Goal",
   goalNameLabel: "Goal name",
@@ -41,6 +41,7 @@ export const vaultCopy = {
   resetGoalBalanceConfirmBody:
     "Are you sure you want to reset this item to $0? Saved progress in this goal will be cleared.",
   resetBucketBalance: "Reset Balance",
+  resetBalanceToZero: "Reset balance to zero",
   resetBucketBalanceConfirmTitle: "Reset this jar balance?",
   resetBucketBalanceConfirmBody:
     "Are you sure you want to reset this item to $0? Money in this jar will be cleared.",

@@ -344,6 +344,7 @@ export const copyMatrix = {
         goalTargetUnset: "Not set",
         goalTargetUpdatedTemplate: "Updated {goal} target to {amount}",
         manageSavingsGoals: "Manage Savings Goals",
+        firstGoalsCallout: "Set your first savings goals now!",
         noGoalsYet: "No savings goals yet.",
         goalHitTargetLogTemplate: "{goal} hit its savings target. Nice work!",
         goalAchievedCallout: "Savings goal achieved!",

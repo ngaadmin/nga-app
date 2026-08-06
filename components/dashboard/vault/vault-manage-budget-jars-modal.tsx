@@ -419,7 +419,6 @@ export function VaultManageBudgetJarsModal({
                       emoji: draft.emoji,
                     })
                   : draft.name.trim() || row.pending.name;
-
               return (
                 <li
                   key={rowId}
@@ -594,6 +593,7 @@ export function VaultManageBudgetJarsModal({
           </button>
         </div>
       </ModalShell>
+
     </>
   );
 }

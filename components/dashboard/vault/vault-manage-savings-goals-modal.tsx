@@ -11,8 +11,6 @@ import {
   type SavingsGoal,
   type SavingsGoalId,
 } from "@/lib/dashboard/savings-goals";
-import type { VaultBucket, VaultBucketId } from "@/lib/dashboard/vault-buckets";
-import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import {
   parseVaultTargetAmount,
   sanitizeVaultAmountInput,
@@ -70,10 +68,7 @@ type ManageRow =
   | { kind: "existing"; goal: SavingsGoal }
   | { kind: "pending"; pending: PendingAdd };
 
-type ConfirmReset =
-  | { kind: "goal"; goal: SavingsGoal }
-  | { kind: "bucket"; bucket: VaultBucket }
-  | { kind: "all" };
+type ConfirmReset = { goal: SavingsGoal };
 
 function EmojiPickerGrid({
   selected,
@@ -152,7 +147,6 @@ export type VaultManageSavingsGoalsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   goals: SavingsGoal[];
-  buckets: VaultBucket[];
   isPremium: boolean;
   onUpdateGoalDetails: (
     goalId: SavingsGoalId,
@@ -161,22 +155,17 @@ export type VaultManageSavingsGoalsModalProps = {
   onAddGoal: (name: string, targetAmount: number, emoji: string) => void;
   onDeleteGoal: (goalId: SavingsGoalId) => void;
   onResetGoalBalance: (goalId: SavingsGoalId) => void;
-  onResetBucketBalance: (bucketId: VaultBucketId) => void;
-  onResetAllBalances: () => void;
 };
 
 export function VaultManageSavingsGoalsModal({
   isOpen,
   onClose,
   goals,
-  buckets,
   isPremium,
   onUpdateGoalDetails,
   onAddGoal,
   onDeleteGoal,
   onResetGoalBalance,
-  onResetBucketBalance,
-  onResetAllBalances,
 }: VaultManageSavingsGoalsModalProps) {
   const { formatWholeMoney: formatMoney } = useCurrency();
 
@@ -359,37 +348,17 @@ export function VaultManageSavingsGoalsModal({
 
   function confirmResetAction() {
     if (!confirmReset) return;
-
-    if (confirmReset.kind === "goal") {
-      onResetGoalBalance(confirmReset.goal.id);
-    } else if (confirmReset.kind === "bucket") {
-      onResetBucketBalance(confirmReset.bucket.id);
-    } else {
-      onResetAllBalances();
-      resetLocalState();
-      onClose();
-    }
-
+    onResetGoalBalance(confirmReset.goal.id);
     setConfirmReset(null);
   }
 
-  const confirmTitle =
-    confirmReset?.kind === "goal"
-      ? vaultCopy.resetGoalBalanceConfirmTitle
-      : confirmReset?.kind === "bucket"
-        ? vaultCopy.resetBucketBalanceConfirmTitle
-        : confirmReset?.kind === "all"
-          ? vaultCopy.resetAllBalancesConfirmTitle
-          : "";
+  const confirmTitle = confirmReset
+    ? vaultCopy.resetGoalBalanceConfirmTitle
+    : "";
 
-  const confirmBody =
-    confirmReset?.kind === "goal"
-      ? vaultCopy.resetGoalBalanceConfirmBody
-      : confirmReset?.kind === "bucket"
-        ? vaultCopy.resetBucketBalanceConfirmBody
-        : confirmReset?.kind === "all"
-          ? vaultCopy.resetAllBalancesConfirmBody
-          : "";
+  const confirmBody = confirmReset
+    ? vaultCopy.resetGoalBalanceConfirmBody
+    : "";
 
   return (
     <>
@@ -570,10 +539,10 @@ export function VaultManageSavingsGoalsModal({
                           ) : null}
                         </div>
                       </div>
-                      {row.kind === "existing" && balance > 0 ? (
+                      {row.kind === "existing" ? (
                         <button
                           type="button"
-                          onClick={() => setConfirmReset({ kind: "goal", goal: row.goal })}
+                          onClick={() => setConfirmReset({ goal: row.goal })}
                           className={resetLinkClass}
                         >
                           {vaultCopy.resetGoalBalance}
@@ -626,6 +595,15 @@ export function VaultManageSavingsGoalsModal({
                           />
                         </div>
                       </div>
+                      {row.kind === "existing" ? (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmReset({ goal: row.goal })}
+                          className={resetLinkClass}
+                        >
+                          {vaultCopy.resetGoalBalance}
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => setEditingRowId(null)}
@@ -639,50 +617,9 @@ export function VaultManageSavingsGoalsModal({
               );
             })}
           </ul>
-
-          {buckets.length > 0 ? (
-            <div className="mt-5 border-t border-[#BDE9FB]/40 pt-4">
-              <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
-                {vaultCopy.budgetJarsSectionLabel}
-              </p>
-              <ul className="mt-2 space-y-2">
-                {buckets.map((bucket) => (
-                  <li
-                    key={bucket.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-[#BDE9FB]/60 bg-white px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-heading text-xs font-bold text-[#031F82]">
-                        {vaultBucketDisplayName(bucket)}
-                      </p>
-                      <p className="font-heading text-xs font-extrabold tabular-nums text-[#031F82]">
-                        {formatMoney(bucket.balance)}
-                      </p>
-                    </div>
-                    {bucket.balance > 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmReset({ kind: "bucket", bucket })}
-                        className={cn(resetLinkClass, "shrink-0")}
-                      >
-                        {vaultCopy.resetBucketBalance}
-                      </button>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
         </div>
 
-        <div className="shrink-0 space-y-3 border-t border-[#BDE9FB]/40 bg-white px-5 py-4">
-          <button
-            type="button"
-            onClick={() => setConfirmReset({ kind: "all" })}
-            className={cn("h-touch w-full px-4", destructiveCtaClass)}
-          >
-            {vaultCopy.resetAllBalances}
-          </button>
+        <div className="shrink-0 border-t border-[#BDE9FB]/40 bg-white px-5 py-4">
           <div className="flex gap-2">
             <button
               type="button"

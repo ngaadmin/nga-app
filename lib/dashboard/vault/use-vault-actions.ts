@@ -550,8 +550,10 @@ export function useVaultActions() {
   const handleResetBucketBalance = useCallback(
     (bucketId: VaultBucketId) => {
       const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
-      if (!bucket || bucket.balance <= 0) return;
-      adjustBucketBalance(bucketId, -bucket.balance, setJars, setCustomBuckets);
+      if (!bucket) return;
+      if (bucket.balance > 0) {
+        adjustBucketBalance(bucketId, -bucket.balance, setJars, setCustomBuckets);
+      }
       appendLedger(`Reset ${bucket.name} balance to $0`, { category: "setup" });
     },
     [appendLedger, setCustomBuckets, setJars, vaultBuckets],

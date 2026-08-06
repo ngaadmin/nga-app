@@ -44,7 +44,6 @@ export function VaultDashboard() {
     handleDeleteGoal,
     handleResetGoalBalance,
     handleResetBucketBalance,
-    handleResetAllBalances,
   } = useVaultActions();
 
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
@@ -114,6 +113,7 @@ export function VaultDashboard() {
           onAddCustomCategory={handleAddCustomSpendingCategory}
           onRenameCategory={handleRenameSpendingCategory}
           onAssignGoals={handleAssignGoals}
+          onResetBucketBalance={handleResetBucketBalance}
           onManageGoalsClick={() => setManageGoalsModalOpen(true)}
           onClose={() => setExpandedBucketId(null)}
         />
@@ -149,14 +149,11 @@ export function VaultDashboard() {
         isOpen={manageGoalsModalOpen}
         onClose={() => setManageGoalsModalOpen(false)}
         goals={vaultGoals}
-        buckets={vaultBuckets}
         isPremium={isPremium}
         onUpdateGoalDetails={handleUpdateGoalDetails}
         onAddGoal={handleAddGoal}
         onDeleteGoal={handleDeleteGoal}
         onResetGoalBalance={handleResetGoalBalance}
-        onResetBucketBalance={handleResetBucketBalance}
-        onResetAllBalances={handleResetAllBalances}
       />
 
       <ModalShell

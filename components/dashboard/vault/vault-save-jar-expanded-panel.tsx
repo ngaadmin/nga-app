@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { GoalProgressBar } from "@/components/dashboard/vault/vault-visuals";
 import { VaultMoveMoneyForm, VaultSaveJarMoveMoneyForm } from "@/components/dashboard/vault/vault-move-money-form";
 import { VaultSavingsGoalAllocationModal } from "@/components/dashboard/vault/vault-savings-goal-allocation-modal";
+import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { SettingsIcon } from "@/lib/dashboard/icons";
 import { roundAudAmount, SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import {
+  areAllSavingsGoalTargetsUnset,
   savingsGoalPercentAchieved,
   savingsGoalProgress,
 } from "@/lib/dashboard/savings-goals";
@@ -28,11 +30,16 @@ import {
 import {
   vaultActionLinkActiveClass,
   vaultActionLinkClass,
+  vaultActionLinkSeparatorClass,
+  vaultActionResetLinkClass,
 } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+
+const destructiveCtaClass =
+  "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 export type VaultSaveJarExpandedPanelProps = {
   bucket: VaultBucket;
@@ -44,6 +51,7 @@ export type VaultSaveJarExpandedPanelProps = {
     to: VaultTransferLocationId,
     amount: number,
   ) => void;
+  onResetBucketBalance: () => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
   onManageGoalsClick?: () => void;
   onClose: () => void;
@@ -55,6 +63,7 @@ export function VaultSaveJarExpandedPanel({
   goals,
   totalSavings,
   onVaultTransfer,
+  onResetBucketBalance,
   onAssignGoals,
   onManageGoalsClick,
   onClose,
@@ -65,11 +74,14 @@ export function VaultSaveJarExpandedPanel({
   const [jarMoveOpen, setJarMoveOpen] = useState(false);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [activeGoalMoveId, setActiveGoalMoveId] = useState<SavingsGoalId | null>(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   const unassignedBalance = roundAudAmount(Math.max(0, bucket.balance));
   const canMoveFunds =
     unassignedBalance > 0 || goals.some((goal) => goal.balance > 0);
+  const canResetJar = unassignedBalance > 0;
   const canAllocate = unassignedBalance > 0 && goals.length > 0;
+  const showFirstGoalsCallout = areAllSavingsGoalTargetsUnset(goals);
 
   const sources = useMemo(
     () =>
@@ -170,20 +182,36 @@ export function VaultSaveJarExpandedPanel({
           </div>
         </button>
 
-        {canMoveFunds ? (
+        {canMoveFunds || canResetJar ? (
           <div className="mt-2 space-y-2 border-t border-[#BDE9FB]/40 pt-2">
-            <div className="flex items-center justify-end gap-x-4 gap-y-1">
-              <button
-                type="button"
-                onClick={() => setJarMoveOpen((open) => !open)}
-                disabled={!canMoveJar}
-                className={cn(
-                  vaultActionLinkClass,
-                  jarMoveOpen && vaultActionLinkActiveClass,
-                )}
-              >
-                {savingsCopy.moveMoney}
-              </button>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {canMoveFunds ? (
+                <button
+                  type="button"
+                  onClick={() => setJarMoveOpen((open) => !open)}
+                  disabled={!canMoveJar}
+                  className={cn(
+                    vaultActionLinkClass,
+                    jarMoveOpen && vaultActionLinkActiveClass,
+                  )}
+                >
+                  {savingsCopy.moveMoney}
+                </button>
+              ) : null}
+              {canMoveFunds && canResetJar ? (
+                <span className={vaultActionLinkSeparatorClass} aria-hidden>
+                  |
+                </span>
+              ) : null}
+              {canResetJar ? (
+                <button
+                  type="button"
+                  onClick={() => setResetConfirmOpen(true)}
+                  className={vaultActionResetLinkClass}
+                >
+                  {vaultCopy.resetBalanceToZero}
+                </button>
+              ) : null}
             </div>
 
             {jarMoveOpen && canMoveJar ? (
@@ -233,6 +261,14 @@ export function VaultSaveJarExpandedPanel({
                 <SettingsIcon className="size-5 shrink-0" />
               </button>
             ) : null}
+          {showFirstGoalsCallout ? (
+            <p
+              className="mb-2 rounded-lg border border-[#FFA503]/50 bg-[#FFA503]/15 px-3 py-2 text-center font-heading text-sm font-extrabold leading-snug text-[#031F82]"
+              role="status"
+            >
+              {savingsCopy.firstGoalsCallout}
+            </p>
+          ) : null}
           <ul className="space-y-2">
             {goals.map((goal) => {
               const progress = savingsGoalProgress(goal);
@@ -370,6 +406,44 @@ export function VaultSaveJarExpandedPanel({
         poolBalance={unassignedBalance}
         onAssignGoals={onAssignGoals}
       />
+
+      <ModalShell
+        isOpen={resetConfirmOpen}
+        onClose={() => setResetConfirmOpen(false)}
+        align="center"
+        labelledBy="vault-reset-save-jar-balance-title"
+        backdropClassName="bg-[#031F82]/55"
+        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
+      >
+        <h2
+          id="vault-reset-save-jar-balance-title"
+          className="font-heading text-lg font-extrabold text-[#031F82]"
+        >
+          {vaultCopy.resetBucketBalanceConfirmTitle}
+        </h2>
+        <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
+          {vaultCopy.resetBucketBalanceConfirmBody}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setResetConfirmOpen(false)}
+            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
+          >
+            {vaultCopy.resetCancel}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onResetBucketBalance();
+              setResetConfirmOpen(false);
+            }}
+            className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
+          >
+            {vaultCopy.resetConfirm}
+          </button>
+        </div>
+      </ModalShell>
     </>
   );
 }

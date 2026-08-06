@@ -111,47 +111,39 @@ export function canDeleteSavingsGoal(id: SavingsGoalId): boolean {
   return isCustomSavingsGoal(id);
 }
 
-/** Cohort-scaled target for the primary freemium savings goal. */
-export function freemiumDefaultGoalTarget(cohort: MasteryCohort): number {
-  switch (cohort) {
-    case "explorer":
-      return 50;
-    case "pathfinder":
-      return 100;
-    case "maverick":
-      return 250;
-  }
+/**
+ * @deprecated Starter goals no longer preset targets (always $0 for new accounts).
+ * Kept for call-site compatibility / suggested amounts in future UI.
+ */
+export function freemiumDefaultGoalTarget(_cohort: MasteryCohort): number {
+  return 0;
 }
 
-function freemiumEmergencyGoalTarget(cohort: MasteryCohort): number {
-  switch (cohort) {
-    case "explorer":
-      return 25;
-    case "pathfinder":
-      return 50;
-    case "maverick":
-      return 100;
-  }
-}
-
-/** Fixed freemium starter goals — balances start at zero for fresh profiles. */
-export function buildFreemiumStarterGoals(cohort: MasteryCohort): SavingsGoal[] {
+/** Fixed freemium starter goals — targets and balances start at zero for fresh profiles. */
+export function buildFreemiumStarterGoals(_cohort: MasteryCohort): SavingsGoal[] {
   return [
     {
       id: FREEMIUM_BIG_SAVINGS_GOAL_ID,
       name: "Big Savings Goal",
-      targetAmount: freemiumDefaultGoalTarget(cohort),
+      targetAmount: 0,
       balance: 0,
       emoji: "🎯",
     },
     {
       id: FREEMIUM_EMERGENCY_GOAL_ID,
       name: "Emergency Money",
-      targetAmount: freemiumEmergencyGoalTarget(cohort),
+      targetAmount: 0,
       balance: 0,
       emoji: "🛡️",
     },
   ];
+}
+
+/** True when goals exist but none have a non-zero savings target yet. */
+export function areAllSavingsGoalTargetsUnset(
+  goals: readonly SavingsGoal[],
+): boolean {
+  return goals.length > 0 && goals.every((goal) => goal.targetAmount <= 0);
 }
 
 /** Merge persisted freemium goals with required starter templates. */

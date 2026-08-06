@@ -18,14 +18,17 @@ import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
   vaultCardBalanceClass,
   vaultCardMainTitleClass,
-  vaultJarCarouselTileClass,
+  vaultJarGridTileClass,
   vaultJarTileBalanceClass,
   vaultJarTileNameClass,
-  vaultJarsCarouselTrackClass,
-  vaultJarsCarouselViewportClass,
+  vaultJarsGridTrackClass,
+  vaultJarsGridViewportClass,
+  vaultJarsGridViewportScrollClass,
   vaultManageJarsButtonClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
+
+const MAX_JARS_PER_ROW = 4;
 
 type VaultMyMoneyCardProps = {
   buckets: VaultBucket[];
@@ -45,6 +48,9 @@ export function VaultMyMoneyCard({
   const copy = copyMatrix.dashboard.vault.budget;
   const { formatWholeMoney: formatMoney } = useCurrency();
   const totalBalance = sumVaultWealthBalance(buckets, totalSavings);
+  const columnCount =
+    buckets.length === 0 ? 1 : Math.min(MAX_JARS_PER_ROW, buckets.length);
+  const wrapsToMultipleRows = buckets.length > MAX_JARS_PER_ROW;
 
   return (
     <section
@@ -71,15 +77,26 @@ export function VaultMyMoneyCard({
         </div>
 
         <div
-          className={vaultJarsCarouselViewportClass}
+          className={cn(
+            vaultJarsGridViewportClass,
+            wrapsToMultipleRows && vaultJarsGridViewportScrollClass,
+          )}
           aria-label={vaultCopy.budgetJarsSectionLabel}
           role="list"
         >
-          <div className={vaultJarsCarouselTrackClass}>
+          <div
+            className={vaultJarsGridTrackClass}
+            style={{
+              gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+            }}
+          >
             {buckets.map((bucket) => {
               const theme = bucketTheme(bucket);
               const isActive = expandedBucketId === bucket.id;
-              const shownBalance = savingsBucketDisplayBalance(bucket, totalSavings);
+              const shownBalance = savingsBucketDisplayBalance(
+                bucket,
+                totalSavings,
+              );
 
               return (
                 <button
@@ -89,16 +106,24 @@ export function VaultMyMoneyCard({
                   onClick={() => onToggleBucket(bucket.id)}
                   aria-expanded={isActive}
                   className={cn(
-                    vaultJarCarouselTileClass,
-                    isActive ? "bg-white/10" : "border-transparent hover:bg-white/5",
+                    vaultJarGridTileClass,
+                    isActive
+                      ? "bg-white/10"
+                      : "border-transparent hover:bg-white/5",
                   )}
                   style={isActive ? { borderColor: theme.accent } : undefined}
                 >
-                  <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
+                  <BucketEmojiIcon
+                    size="lg"
+                    emoji={bucket.emoji}
+                    theme={theme}
+                  />
                   <p className={vaultJarTileNameClass}>
                     {vaultBucketDisplayName(bucket)}
                   </p>
-                  <p className={vaultJarTileBalanceClass}>{formatMoney(shownBalance)}</p>
+                  <p className={vaultJarTileBalanceClass}>
+                    {formatMoney(shownBalance)}
+                  </p>
                 </button>
               );
             })}

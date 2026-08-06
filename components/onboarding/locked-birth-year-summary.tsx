@@ -46,6 +46,19 @@ export function LockedBirthYearSummary({
   }
 
   if (signup) {
+    if (tier === "explorer") {
+      return (
+        <div className={cn("text-center", className)}>
+          <p className="font-heading text-xl font-bold text-nga-primary sm:text-2xl">
+            {tierLabel}
+          </p>
+          <p className="mt-2 font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
+            For learners aged 12 and under
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className={cohortBoxClass}>
         <p className={cohortTitleClass}>{tierLabel}</p>

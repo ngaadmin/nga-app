@@ -34,8 +34,6 @@ const SAME_EMAIL_ERROR =
 const USERNAME_TAKEN_ERROR =
   "That username is already taken. Try adding a favorite number!";
 
-const EXPLORER_ACCENT_CLASS = "text-nga-explorer";
-
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
 
@@ -81,6 +79,7 @@ export function SignUpForm() {
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
@@ -220,13 +219,20 @@ export function SignUpForm() {
             signup
           />
 
+          {isExplorer ? (
+            <p className="font-sans text-sm font-bold leading-relaxed text-purple-700">
+              We need a parent or guardian&apos;s permission before we can
+              finalise your profile and save your progress and achievements.
+            </p>
+          ) : null}
+
           <div className="space-y-2">
             <label
               htmlFor="signup-username"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
               {isExplorer
-                ? "Pick a Username (Do NOT use your real name)"
+                ? "Username"
                 : isPathfinder
                   ? "Choose a Username"
                   : "Username"}
@@ -263,13 +269,10 @@ export function SignUpForm() {
             ) : isExplorer ? (
               <p
                 id="signup-username-tip"
-                className={cn(
-                  "font-sans text-sm leading-relaxed",
-                  EXPLORER_ACCENT_CLASS,
-                )}
+                className="font-sans text-sm italic leading-relaxed text-purple-700"
               >
                 Tip: To protect your privacy online, never use your real full
-                name as your username!
+                name as a username!
               </p>
             ) : null}
           </div>
@@ -314,12 +317,9 @@ export function SignUpForm() {
           <div className="space-y-2">
             <label
               htmlFor="signup-password"
-              className={cn(
-                "block font-heading text-sm font-bold",
-                isExplorer ? EXPLORER_ACCENT_CLASS : "text-nga-primary",
-              )}
+              className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Create a Password
+              {isExplorer ? "Create your password" : "Create a Password"}
             </label>
             <input
               id="signup-password"
@@ -333,11 +333,6 @@ export function SignUpForm() {
                 clearError("password");
               }}
               aria-invalid={Boolean(errors.password)}
-              aria-describedby={
-                errors.password || !isExplorer
-                  ? undefined
-                  : "signup-password-hint"
-              }
               className={cn(
                 fieldBase,
                 errors.password && "border-red-400 focus:border-red-500",
@@ -350,13 +345,6 @@ export function SignUpForm() {
               >
                 {errors.password}
               </p>
-            ) : isExplorer ? (
-              <p
-                id="signup-password-hint"
-                className="font-sans text-sm italic text-nga-slate"
-              >
-                You&apos;ll use this password to log back in.
-              </p>
             ) : null}
           </div>
 
@@ -364,12 +352,11 @@ export function SignUpForm() {
             <div className="space-y-2">
               <label
                 htmlFor="signup-parent-email"
-                className={cn(
-                  "block font-heading text-sm font-bold",
-                  isExplorer ? EXPLORER_ACCENT_CLASS : "text-nga-primary",
-                )}
+                className="block font-heading text-sm font-bold text-nga-primary"
               >
-                Parent or Guardian&apos;s Email Address
+                {isExplorer
+                  ? "Parent or guardian's email address"
+                  : "Parent or Guardian's Email Address"}
               </label>
               <input
                 id="signup-parent-email"
@@ -404,18 +391,11 @@ export function SignUpForm() {
                   className="font-sans text-sm italic leading-relaxed text-nga-slate"
                 >
                   {isExplorer
-                    ? "We need a parent or guardian's permission before you can sync progress across multiple devices and unlock other app features."
+                    ? "Your parent or guardian's email stays private and is only used to manage account approvals and safety."
                     : "We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions."}
                 </p>
               )}
             </div>
-          ) : null}
-
-          {isExplorer ? (
-            <p className="font-sans text-sm leading-relaxed text-nga-slate">
-              Your parent or guardian&apos;s email stays private and is only
-              used to manage account approvals and safety.
-            </p>
           ) : null}
 
           {errors.form ? (
@@ -427,9 +407,25 @@ export function SignUpForm() {
             </p>
           ) : null}
 
+          {isExplorer ? (
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+              />
+              <span className="font-sans text-sm leading-relaxed text-nga-slate">
+                Yes, send me occasional tips, progress ideas and updates that
+                help me support my child&apos;s money skills journey. (You can
+                unsubscribe anytime.)
+              </span>
+            </label>
+          ) : null}
+
           <Button type="submit" variant="cta" fullWidth>
             {isExplorer
-              ? "Ask Parent to Approve & Save"
+              ? "Request Parent Approval"
               : "Create My Free Account"}
           </Button>
         </form>

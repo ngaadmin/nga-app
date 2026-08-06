@@ -54,10 +54,10 @@ export function GuestModeSaveModal({
         id="guest-save-title"
         className="font-heading text-xl font-extrabold leading-tight text-[#031F82] sm:text-2xl"
       >
-        Don&apos;t lose your badges!
+        Don&apos;t lose your achievements!
       </h2>
       <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Create your profile to save your points, streaks, and achievements.
+        Create your free profile to save your points, streaks and skills awards.
       </p>
 
       <Link

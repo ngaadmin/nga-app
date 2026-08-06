@@ -138,29 +138,39 @@ export function buildExplorerParentEmail(
   const username = data.username.trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
+  const privacyUrl = `${base}/privacy`;
+  const learningPath = "Explorer — for learners aged 12 and under";
   const safeName = escapeHtml(username);
+  const safePath = escapeHtml(learningPath);
+  const safePrivacy = escapeHtml(privacyUrl);
 
   const subject =
-    "Action Required: Your child wants to save their progress on NextGenAchiever$";
+    "Action required: Your child wants to join NextGenAchiever$ for learning essential money skills";
   const preheader =
-    "Approve their account and help them build practical money habits safely.";
-  const header = "Welcome to NextGenAchiever$";
+    "Approve their profile to save progress and create your master account.";
+  const header = "Welcome to NextGenAchiever$\u2122";
 
   const text = [
     "Hi there,",
     "",
-    "Your child has just jumped into NextGenAchiever$\u2122 - an interactive, hands-on app that turns essential money habits and real-world budgeting into an engaging learning experience.",
+    "Congratulations! Your child has started their journey of learning the essential money habits that can set them up for a life of financial freedom on the NextGenAchiever$ app.",
     "",
-    "Kids spend plenty of time on screens, but this time it's spent building practical skills that set them up for life.",
+    "We know how much kids love screen time - so we made sure that time is spent mastering real-world money skills they will actually need.",
     "",
-    "NextGenAchiever$ is strictly an educational tool - not a financial product. There are no real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside a 100% safe, virtualized environment designed purely for learning and practice.",
+    "Don't worry! NextGenAchiever$ is strictly an educational tool - not a financial product.",
+    "There are no real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside a 100% safe, virtualized environment designed purely for learning and practice.",
     "",
-    "To back up their earned points, streaks, and badges across devices, they need a parent or guardian to approve their profile:",
-    `Selected Username: ${username} (We strictly advise anonymous handles so your child's real name and personal information stay completely safe online).`,
+    "To make their profile official and save their progress, they need a parent or guardian to approve.",
+    `Profile name: ${username}`,
+    `Learning path chosen: ${learningPath}`,
     "",
-    `How to approve: Click the button below to approve ${username}'s profile and set your 4-digit Parent PIN so you can manage their account settings and oversight options.`,
+    "Once you approve, we will save their username, progress, achievements and activity in the app so they don't lose their work. You'll be able to view their progress and delete the account at any time. We do not sell or share your child's information with third parties for advertising.",
     "",
-    `Approve Account & Set Parent PIN: ${approveUrl}`,
+    `Full details on what we collect and how we use it are here: ${privacyUrl}`,
+    "",
+    "How to approve: Click the button below to create your master account. This lets you manage parental controls and track your learner's progress.",
+    "",
+    `APPROVE & CREATE ACCOUNT: ${approveUrl}`,
     "",
     "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
     "",
@@ -173,32 +183,44 @@ export function buildExplorerParentEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your child has just jumped into NextGenAchiever$&trade; - an interactive, hands-on app that turns
-        essential money habits and real-world budgeting into an engaging learning experience.
+        Congratulations! Your child has started their journey of learning the essential money habits
+        that can set them up for a life of financial freedom on the NextGenAchiever$ app.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Kids spend plenty of time on screens, but this time it&apos;s spent building practical skills
-        that set them up for life.
+        We know how much kids love screen time - so we made sure that time is spent mastering
+        real-world money skills they will actually need.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ is strictly an educational tool - not a financial product. There are no
-        real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside
-        a 100% safe, virtualized environment designed purely for learning and practice.
+        Don&apos;t worry! NextGenAchiever$ is strictly an educational tool - not a financial product.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        To back up their earned points, streaks, and badges across devices, they need a parent or
-        guardian to approve their profile:
+        There are no real-money transactions, live bank links, or hidden micro-purchases. Everything
+        happens inside a 100% safe, virtualized environment designed purely for learning and practice.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        <strong>Selected Username: ${safeName}</strong>
-        (We strictly advise anonymous handles so your child&apos;s real name and personal information
-        stay completely safe online).
+        To make their profile official and save their progress, they need a parent or guardian to approve.
+      </p>
+      <p style="margin:0 0 8px;font-size:16px;">
+        <strong>Profile name:</strong> ${safeName}
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        How to approve: Click the button below to approve ${safeName}&apos;s profile and set your
-        4-digit Parent PIN so you can manage their account settings and oversight options.
+        <strong>Learning path chosen:</strong> ${safePath}
       </p>
-      ${ctaButton("Approve Account & Set Parent PIN", approveUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        Once you approve, we will save their username, progress, achievements and activity in the app
+        so they don&apos;t lose their work. You&apos;ll be able to view their progress and delete the
+        account at any time. We do not sell or share your child&apos;s information with third parties
+        for advertising.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Full details on what we collect and how we use it are here:
+        <a href="${safePrivacy}" style="color:#0CC1E0;font-weight:700;">${safePrivacy}</a>
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        How to approve: Click the button below to create your master account. This lets you manage
+        parental controls and track your learner&apos;s progress.
+      </p>
+      ${ctaButton("APPROVE & CREATE ACCOUNT", approveUrl)}
     `,
     footer:
       "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
@@ -214,23 +236,25 @@ export function buildPathfinderParentEmail(
   const username = data.username.trim() || "Your learner";
   const base = resolveAppUrl(appUrl);
   const dashboardClaimUrl = `${base}/onboarding/parent-consent?username=${encodeURIComponent(username)}`;
-  const safeName = escapeHtml(username);
 
   const subject = `${username} just started learning on NextGenAchiever$`;
   const preheader =
-    "Set up your Parent Dashboard to follow their practical money journey.";
+    "Claim your free Parent dashboard to follow their progress.";
   const header = "Welcome to NextGenAchiever$\u2122";
 
   const text = [
     "Hi there,",
     "",
-    `Your teenager has created a Pathfinder account on NextGenAchiever$\u2122 using the username ${username} to learn practical, real-world skills in earning, saving, and smart spending.`,
+    "Your teenager has created an account with us. This means they started their journey of learning the essential money habits that can set them up for a life of financial freedom.",
     "",
-    "We know how much teens love screen time - so we made sure that time is spent mastering real-world skills they will actually use. NextGenAchiever$ is strictly an educational tool, not a financial product. There are no real-money transactions or financial risks - just interactive, gamified learning in a completely safe, virtualized environment.",
+    "We know how much teens love screen time - so we made sure that time is spent mastering real-world money skills they will actually need.",
     "",
-    "Their account is active so they can start learning right away. As a parent or guardian, you can claim your free Parent Dashboard to follow their progress, see their earned badges, and manage Vault permissions.",
+    "Don't worry! NextGenAchiever$\u2122 is strictly an educational tool - not a financial product.",
+    "There are no real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside a 100% safe, virtualized environment designed purely for learning and practice.",
     "",
-    `Create Parent Dashboard: ${dashboardClaimUrl}`,
+    "Their account is active so they can start learning and playing right away. As a parent or guardian, you can claim your free Parent dashboard to follow their progress, see the skills they've learned and manage other permissions.",
+    "",
+    `Create Parent Login: ${dashboardClaimUrl}`,
     "",
     "- NextGenAchievers",
   ].join("\n");
@@ -241,22 +265,26 @@ export function buildPathfinderParentEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your teenager has created a Pathfinder account on NextGenAchiever$&trade; using the username
-        <strong>${safeName}</strong> to learn practical, real-world skills in earning, saving, and
-        smart spending.
+        Your teenager has created an account with us. This means they started their journey of
+        learning the essential money habits that can set them up for a life of financial freedom.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         We know how much teens love screen time - so we made sure that time is spent mastering
-        real-world skills they will actually use. NextGenAchiever$ is strictly an educational tool,
-        not a financial product. There are no real-money transactions or financial risks - just
-        interactive, gamified learning in a completely safe, virtualized environment.
+        real-world money skills they will actually need.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Their account is active so they can start learning right away. As a parent or guardian, you
-        can claim your free Parent Dashboard to follow their progress, see their earned badges, and
-        manage Vault permissions.
+        Don&apos;t worry! NextGenAchiever$&trade; is strictly an educational tool - not a financial product.
       </p>
-      ${ctaButton("Create Parent Dashboard", dashboardClaimUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        There are no real-money transactions, live bank links, or hidden micro-purchases. Everything
+        happens inside a 100% safe, virtualized environment designed purely for learning and practice.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Their account is active so they can start learning and playing right away. As a parent or
+        guardian, you can claim your free Parent dashboard to follow their progress, see the skills
+        they&apos;ve learned and manage other permissions.
+      </p>
+      ${ctaButton("CREATE PARENT LOGIN", dashboardClaimUrl)}
     `,
   });
 
@@ -271,28 +299,52 @@ export function buildMaverickWelcomeEmail(
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
-  const subject = `Welcome to NextGenAchievers, ${username}!`;
+  const subject = `Welcome to NextGenAchiever$, ${username}!`;
+  const preheader = "Your account is ready - jump into Academy.";
+  const header = "Welcome to NextGenAchiever$\u2122!";
 
   const text = [
-    "Welcome to NextGenAchievers! Your account is ready. Jump in to start building real-world financial skills, completing modules, and mastering your financial future.",
+    "Welcome to NextGenAchiever$\u2122!",
+    "",
+    "Your account is ready. Jump in to start building real-world financial skills. Complete modules, play with the advanced money tools and manage your (virtual) money in the Vault.",
+    "",
+    "NextGenAchiever$\u2122 is strictly an educational tool - not a financial product.",
+    "There are no real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside a 100% safe, virtualized environment designed purely for learning and practice.",
+    "",
+    "Congratulations, you're on your way to mastering your financial future!",
     "",
     `Launch Academy: ${academyUrl}`,
+    "",
+    "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
     "",
     "- NextGenAchievers",
   ].join("\n");
 
   const html = wrapHtml({
-    header: `Welcome to NextGenAchievers, ${username}!`,
+    header,
+    preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
-        Welcome to NextGenAchievers! Your account is ready. Jump in to start building real-world
-        financial skills, completing modules, and mastering your financial future.
+        Your account is ready. Jump in to start building real-world financial skills. Complete
+        modules, play with the advanced money tools and manage your (virtual) money in the Vault.
       </p>
-      ${ctaButton("Launch Academy", academyUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        NextGenAchiever$&trade; is strictly an educational tool - not a financial product.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        There are no real-money transactions, live bank links, or hidden micro-purchases. Everything
+        happens inside a 100% safe, virtualized environment designed purely for learning and practice.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Congratulations, you&apos;re on your way to mastering your financial future!
+      </p>
+      ${ctaButton("LAUNCH ACADEMY", academyUrl)}
     `,
+    footer:
+      "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
   });
 
-  return { subject, html, text };
+  return { subject, preheader, html, text };
 }
 
 export function buildUsernameRecoveryEmail(

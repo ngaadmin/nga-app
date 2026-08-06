@@ -3,20 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
-import { Button } from "@/components/ui/button";
-import { ButtonLink } from "@/components/ui/button";
-import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
+import { Button, ButtonLink } from "@/components/ui/button";
 import {
-  approveParentConsent,
   readPendingParentConsentByToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
-import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 
-const EMAIL_HELPER_TEXT =
-  "Your email stays private and is never used for marketing unless you give us permission.";
-
-type ApprovalState = "loading" | "ready" | "approved" | "invalid";
+type ApprovalState = "loading" | "ready" | "invalid";
 
 export function ParentConsentApprovalPanel() {
   const router = useRouter();
@@ -45,14 +38,10 @@ export function ParentConsentApprovalPanel() {
   }, [token]);
 
   function handleApprove() {
-    if (!token) return;
-    const session = approveParentConsent(token);
-    if (!session) {
-      setState("invalid");
-      return;
-    }
-    setState("approved");
-    router.push(DASHBOARD_ACADEMY_PATH);
+    if (!token || !pending) return;
+    router.push(
+      `/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(token)}`,
+    );
   }
 
   if (state === "loading") {
@@ -89,42 +78,38 @@ export function ParentConsentApprovalPanel() {
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
         <OnboardingProgress value={100} />
 
-        <div className="space-y-3 text-center">
+        <div className="space-y-4 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary">
-            Parent consent
+            Parent/Guardian Consent
           </h1>
-          <p className="font-sans text-sm leading-relaxed text-nga-slate">
-            You&apos;re approving a free NextGenAchievers profile for{" "}
-            <span className="font-semibold text-nga-primary">
-              {pending.childUsername}
-            </span>
-            . You&apos;ll own the master account; their progress is saved once
-            you approve.
-          </p>
+          <div className="space-y-3 font-sans text-sm leading-relaxed text-nga-ink sm:text-base">
+            <p>
+              You&apos;ve been asked to approve a free NextGenAchiever$ profile
+              for{" "}
+              <span className="font-semibold text-nga-primary">
+                {pending.childUsername}
+              </span>
+              .
+            </p>
+            <p>
+              NextGenAchiever$ is the leading app for teaching kids essential
+              money skills through games and hands-on business building
+              activities.
+            </p>
+            <p>
+              We take the protection of minors online very seriously and follow
+              all applicable rules for users under 13 and under 16.
+            </p>
+            <p>
+              In approving this profile, you will own the master account and can
+              track your child&apos;s progress. You can also delete the account
+              at any time.
+            </p>
+          </div>
         </div>
-
-        <div className="rounded-nga-lg border-2 border-nga-panel bg-nga-mist/30 px-4 py-3 font-sans text-sm text-nga-ink">
-          <p>
-            Master Account Email Address:{" "}
-            <span className="font-semibold">{pending.parentEmail}</span>
-          </p>
-          <p className="mt-2 text-nga-slate">
-            You can review their activity through the parent dashboard in a
-            later release.
-          </p>
-        </div>
-
-        <LockedBirthYearSummary
-          birthYear={pending.birthYear}
-          parentConsent
-        />
-
-        <p className="font-sans text-sm italic leading-relaxed text-nga-slate text-center">
-          {EMAIL_HELPER_TEXT}
-        </p>
 
         <Button type="button" variant="cta" fullWidth onClick={handleApprove}>
-          Approve &amp; Create Profile
+          APPROVE AND CREATE MASTER PROFILE
         </Button>
       </div>
     </section>

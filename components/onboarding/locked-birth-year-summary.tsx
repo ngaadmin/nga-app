@@ -46,25 +46,15 @@ export function LockedBirthYearSummary({
   }
 
   if (signup) {
-    if (tier === "explorer") {
-      return (
-        <div className={cn("text-center", className)}>
-          <p className="font-heading text-xl font-bold text-nga-primary sm:text-2xl">
-            {tierLabel}
-          </p>
-          <p className="mt-2 font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
-            For learners aged 12 and under
-          </p>
-        </div>
-      );
-    }
-
     return (
-      <div className={cohortBoxClass}>
-        <p className={cohortTitleClass}>{tierLabel}</p>
-        <p className="mt-3 font-sans text-sm leading-relaxed text-nga-slate">
-          You&apos;re on the {tierLabel} track, for learners aged{" "}
-          {masteryCohortAgeRangeLabel(tier)}.
+      <div className={cn("text-center", className)}>
+        <p className="font-heading text-xl font-bold text-nga-primary sm:text-2xl">
+          {tierLabel}
+        </p>
+        <p className="mt-2 font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
+          {tier === "explorer"
+            ? "For learners aged 12 and under"
+            : `For learners aged ${masteryCohortAgeRangeLabel(tier)}`}
         </p>
       </div>
     );

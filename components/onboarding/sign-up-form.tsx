@@ -243,11 +243,7 @@ export function SignUpForm() {
               htmlFor="signup-username"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              {isExplorer
-                ? "Username"
-                : isPathfinder
-                  ? "Choose a Username"
-                  : "Username"}
+              Username
             </label>
             <input
               id="signup-username"
@@ -331,7 +327,7 @@ export function SignUpForm() {
               htmlFor="signup-password"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              {isExplorer ? "Create your password" : "Create a Password"}
+              Create your password
             </label>
             <input
               id="signup-password"
@@ -366,9 +362,7 @@ export function SignUpForm() {
                 htmlFor="signup-parent-email"
                 className="block font-heading text-sm font-bold text-nga-primary"
               >
-                {isExplorer
-                  ? "Parent or guardian's email address"
-                  : "Parent or Guardian's Email Address"}
+                Parent or guardian&apos;s email address
               </label>
               <input
                 id="signup-parent-email"
@@ -427,9 +421,9 @@ export function SignUpForm() {
               className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
             />
             <span className="font-sans text-sm leading-relaxed text-nga-slate">
-              Yes, send me occasional tips, progress ideas and updates that help
-              me support my child&apos;s money skills journey. (You can
-              unsubscribe anytime.)
+              {isExplorer
+                ? "Yes, send me occasional tips, progress ideas and updates that help me support my child's money skills journey. (You can unsubscribe anytime.)"
+                : "Yes, send me occasional tips, progress ideas and updates that help me support my money skills journey. (You can unsubscribe anytime.)"}
             </span>
           </label>
 

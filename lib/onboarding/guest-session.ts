@@ -554,7 +554,9 @@ export function convertToRegisteredProfile(
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     convertedAt: new Date().toISOString(),
     consentApprovedAt: input.consentApprovedAt,
-    marketingOptIn: input.marketingOptIn === true,
+    // Minors never opt in during child onboarding — parent master may later.
+    marketingOptIn:
+      ageTier === "explorer" ? false : input.marketingOptIn === true,
   };
 }
 

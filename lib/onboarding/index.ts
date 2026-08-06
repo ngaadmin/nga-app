@@ -65,7 +65,9 @@ export { changeUserLearningTrack } from "./change-learning-track";
 export {
   authenticateRegisteredAccount,
   clearRegisteredAccounts,
+  findRegisteredAccountByUsername,
   findRegisteredAccountsByEmail,
+  isRegisteredUsernameTaken,
   recoverCredentialByEmail,
   recoverUsernameByEmail,
   REGISTERED_ACCOUNTS_STORAGE_KEY,

@@ -12,7 +12,7 @@ import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 
 export type FinalizeSignupOptions = {
   /**
-   * Explorer VPC approval token — required to dispatch EXPLORER_PARENT.
+   * Explorer VPC approval token - required to dispatch EXPLORER_PARENT.
    * Generate the token before calling finalize when creating pending consent.
    */
   explorerConsentToken?: string;
@@ -20,10 +20,10 @@ export type FinalizeSignupOptions = {
   skipEmail?: boolean;
 };
 
-function dispatchOnboardingEmails(
+async function dispatchOnboardingEmails(
   session: UserSession,
   options?: FinalizeSignupOptions,
-): void {
+): Promise<void> {
   if (typeof window === "undefined" || options?.skipEmail) return;
 
   const username = session.username.trim();
@@ -37,7 +37,7 @@ function dispatchOnboardingEmails(
     session.parentEmail &&
     options?.explorerConsentToken
   ) {
-    void requestOnboardingEmailSend({
+    const result = await requestOnboardingEmailSend({
       type: "EXPLORER_PARENT",
       recipientEmail: session.parentEmail,
       data: {
@@ -45,6 +45,11 @@ function dispatchOnboardingEmails(
         token: options.explorerConsentToken,
       },
     });
+    if (!result.success) {
+      throw new Error(
+        "We could not send the parent approval email. Check the parent or guardian email address and try again.",
+      );
+    }
     return;
   }
 
@@ -74,10 +79,10 @@ function dispatchOnboardingEmails(
  * merges guest lesson milestones, XP, badges, and Vault balances into it.
  * Triggers cohort-appropriate transactional email when applicable.
  */
-export function finalizeRegisteredSignup(
+export async function finalizeRegisteredSignup(
   session: UserSession,
   options?: FinalizeSignupOptions,
-): UserSession {
+): Promise<UserSession> {
   if (typeof window !== "undefined") {
     // Capture any still-live guest assets before the registered write lands.
     ensureGuestProgressSnapshot();
@@ -95,9 +100,15 @@ export function finalizeRegisteredSignup(
     throw new Error("Registered profiles cannot remain in GUEST lifecycle state.");
   }
 
-  saveUserSession(enforced);
-  upsertRegisteredAccount(enforced);
+  // Explorers never collect marketing consent during child onboarding.
+  const withMarketingGate =
+    enforced.ageTier === "explorer"
+      ? { ...enforced, marketingOptIn: false }
+      : enforced;
+
+  saveUserSession(withMarketingGate);
+  upsertRegisteredAccount(withMarketingGate);
   mergeGuestProgressSnapshot();
-  dispatchOnboardingEmails(enforced, options);
-  return enforced;
+  await dispatchOnboardingEmails(withMarketingGate, options);
+  return withMarketingGate;
 }

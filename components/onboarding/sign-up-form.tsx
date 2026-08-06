@@ -12,7 +12,6 @@ import {
   ONBOARDING_SIGN_UP_PENDING_PATH,
   ONBOARDING_START_PATH,
   readUserSession,
-  saveUserSession,
 } from "@/lib/onboarding/guest-session";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
@@ -26,7 +25,10 @@ import {
   readPendingParentConsentByToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
-import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
+import {
+  findRegisteredAccountByUsername,
+  upsertRegisteredAccount,
+} from "@/lib/onboarding/registered-accounts";
 import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
@@ -38,6 +40,44 @@ const SAME_EMAIL_ERROR =
   "Please enter a parent or guardian's email address that is different from your own.";
 const USERNAME_TAKEN_ERROR =
   "That username is already taken. Try adding a favorite number!";
+
+function resolveSignupFailureMessage(error: unknown, isExplorer: boolean): string {
+  const message = error instanceof Error ? error.message.trim() : "";
+
+  if (message) {
+    if (/username is already taken/i.test(message)) {
+      return USERNAME_TAKEN_ERROR;
+    }
+    if (/parent approval email|parent or guardian email|valid parent/i.test(message)) {
+      return message;
+    }
+    if (/secure parent approval link|consent token/i.test(message)) {
+      return "We could not create a secure parent approval link. Please try again in a moment.";
+    }
+    if (/password must be at least 6|password \(at least 6\)/i.test(message)) {
+      return "Use at least 6 characters for your password.";
+    }
+    if (/birth year|eligible range|ages 10-12|Explorer profiles/i.test(message)) {
+      return message;
+    }
+    if (/learner email/i.test(message)) {
+      return message;
+    }
+    if (/Username is required|Pick a username/i.test(message)) {
+      return isExplorer
+        ? "Pick a username for your Explorer profile."
+        : "Pick a username for your account.";
+    }
+    // Prefer the thrown message when it is already user-facing.
+    if (message.length <= 180 && !/finalizeRegisteredSignup|requires a registered/i.test(message)) {
+      return message;
+    }
+  }
+
+  return isExplorer
+    ? "We could not start parent approval for this Explorer profile. Check your details and try again."
+    : "We could not create your profile. Check your details and try again.";
+}
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
@@ -157,6 +197,16 @@ export function SignUpForm() {
       trimmedUsername.toLowerCase() === existingSession.username.toLowerCase()
     ) {
       next.username = USERNAME_TAKEN_ERROR;
+    } else if (!isParentMaster && trimmedUsername) {
+      // Username must be unique; the same parent email may link many children.
+      const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
+      if (
+        existingAccount &&
+        existingAccount.accountStatus === "ACTIVE" &&
+        existingAccount.accessMode === "registered"
+      ) {
+        next.username = USERNAME_TAKEN_ERROR;
+      }
     }
 
     if (isExplorer) {
@@ -167,6 +217,7 @@ export function SignUpForm() {
       } else if (!EMAIL_PATTERN.test(trimmedParent)) {
         next.parentEmail = INVALID_EMAIL_ERROR;
       }
+      // Pre-existing parent emails are allowed — multiple Explorers may share one.
     }
 
     if (!password) {
@@ -248,13 +299,16 @@ export function SignUpForm() {
         accountStatus: "ACTIVE",
         marketingOptIn,
       });
-      finalizeRegisteredSignup(parentSession, { skipEmail: true });
+      await finalizeRegisteredSignup(parentSession, { skipEmail: true });
       // Keep child in the durable registry (already upserted during approve).
       upsertRegisteredAccount(childSession);
       router.push(DASHBOARD_ACADEMY_PATH);
-    } catch {
+    } catch (error) {
+      const message = resolveSignupFailureMessage(error, false);
       setErrors({
-        form: "We could not create your master profile. Check your details and try again.",
+        form: /could not create your profile/i.test(message)
+          ? "We could not create your parent master profile. Check your details and try again."
+          : message,
       });
     }
   }
@@ -277,15 +331,6 @@ export function SignUpForm() {
           birthYear,
           passcode: password.trim(),
         });
-        const session = readUserSession();
-        if (session) {
-          const withMarketing = {
-            ...session,
-            marketingOptIn: marketingOptIn === true,
-          };
-          saveUserSession(withMarketing);
-          upsertRegisteredAccount(withMarketing);
-        }
         router.push(
           `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
         );
@@ -302,12 +347,12 @@ export function SignUpForm() {
         parentEmail: isPathfinder ? parentEmail.trim() : undefined,
         marketingOptIn,
       });
-      finalizeRegisteredSignup(session);
+      await finalizeRegisteredSignup(session);
       router.push(DASHBOARD_ACADEMY_PATH);
-    } catch {
+    } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        form: "We could not create your profile. Check your details and try again.",
+        form: resolveSignupFailureMessage(error, isExplorer),
       }));
     }
   }
@@ -695,19 +740,21 @@ export function SignUpForm() {
             </p>
           ) : null}
 
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={marketingOptIn}
-              onChange={(e) => setMarketingOptIn(e.target.checked)}
-              className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
-            />
-            <span className="font-sans text-sm leading-relaxed text-nga-slate">
-              {isExplorer
-                ? "Yes, send me occasional tips, progress ideas and updates that help me support my child's money skills journey. (You can unsubscribe anytime.)"
-                : "Yes, send me occasional tips, progress ideas and updates that help me support my money skills journey. (You can unsubscribe anytime.)"}
-            </span>
-          </label>
+          {!isExplorer ? (
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+              />
+              <span className="font-sans text-sm leading-relaxed text-nga-slate">
+                Yes, send me occasional tips, progress ideas and updates that
+                help me support my money skills journey. (You can unsubscribe
+                anytime.)
+              </span>
+            </label>
+          ) : null}
 
           <Button type="submit" variant="cta" fullWidth>
             {isExplorer

@@ -162,6 +162,28 @@ export function upsertRegisteredAccount(session: UserSession): void {
   writeStore({ accounts: nextAccounts });
 }
 
+/** Look up a registered profile by username (case-insensitive). */
+export function findRegisteredAccountByUsername(
+  username: string,
+): UserSession | null {
+  if (typeof window === "undefined") return null;
+  const key = username.trim().toLowerCase();
+  if (!key) return null;
+  return (
+    readStore().accounts.find(
+      (account) => account.username.trim().toLowerCase() === key,
+    ) ?? null
+  );
+}
+
+/**
+ * Username uniqueness only — parent/guardian emails may link many child
+ * profiles and must never be treated as a duplicate-account key.
+ */
+export function isRegisteredUsernameTaken(username: string): boolean {
+  return findRegisteredAccountByUsername(username) !== null;
+}
+
 /**
  * Authenticate against the durable local registry.
  * Identifier may be username, learner email, or parent email.

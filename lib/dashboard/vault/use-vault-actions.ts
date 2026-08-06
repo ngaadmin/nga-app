@@ -207,12 +207,13 @@ export function useVaultActions() {
 
   const handleVaultTransfer = useCallback(
     (from: VaultTransferLocationId, to: VaultTransferLocationId, amount: number) => {
-      const beforeGoals = savingsGoals;
+      const beforeGoals = vaultGoals;
       const nextState = computeVaultTransferState(from, to, amount, {
         moneyToAllocate,
         jars,
         customBuckets,
-        savingsGoals,
+        // Resolved goals so freemium starters (not yet persisted) can receive money.
+        savingsGoals: vaultGoals,
         vaultBuckets,
       });
       if (!nextState) return;
@@ -254,13 +255,13 @@ export function useVaultActions() {
       formatMoney,
       jars,
       moneyToAllocate,
-      savingsGoals,
       setCustomBuckets,
       setJars,
       setMoneyToAllocate,
       setSavingsGoals,
       vaultBuckets,
       vaultCopy.savings.vaultTransferLogTemplate,
+      vaultGoals,
     ],
   );
 
@@ -339,7 +340,9 @@ export function useVaultActions() {
 
       if (appliedTotal <= 0 || appliedTotal > saveJarBalance + 0.001) return;
 
-      const beforeGoals = savingsGoals;
+      // Use resolved UI goals so freemium starters receive credits even before
+      // they have been written into persisted savingsGoals.
+      const beforeGoals = vaultGoals;
       const nextGoals = beforeGoals.map((entry) => {
         const applied = appliedByGoal.get(entry.id) ?? 0;
         if (applied <= 0) return entry;
@@ -351,7 +354,7 @@ export function useVaultActions() {
       celebrateGoalsJustHit(beforeGoals, nextGoals);
 
       for (const [goalId, applied] of appliedByGoal) {
-        const goal = savingsGoals.find((entry) => entry.id === goalId);
+        const goal = beforeGoals.find((entry) => entry.id === goalId);
         if (!goal) continue;
         appendLedger(
           vaultCopy.savings.allocatedToGoalTemplate
@@ -366,11 +369,11 @@ export function useVaultActions() {
       celebrateGoalsJustHit,
       formatMoney,
       saveJarBalance,
-      savingsGoals,
       setCustomBuckets,
       setJars,
       setSavingsGoals,
       vaultCopy.savings.allocatedToGoalTemplate,
+      vaultGoals,
     ],
   );
 
@@ -534,18 +537,39 @@ export function useVaultActions() {
 
   const handleResetGoalBalance = useCallback(
     (goalId: SavingsGoalId) => {
-      setSavingsGoals((current) =>
-        current.map((goal) =>
-          goal.id === goalId ? { ...goal, balance: 0 } : goal,
-        ),
-      );
-      const goal = savingsGoals.find((entry) => entry.id === goalId);
+      const goal =
+        vaultGoals.find((entry) => entry.id === goalId) ??
+        savingsGoals.find((entry) => entry.id === goalId);
+      setSavingsGoals((current) => {
+        const existing = current.find((entry) => entry.id === goalId);
+        if (existing) {
+          return current.map((entry) =>
+            entry.id === goalId ? { ...entry, balance: 0 } : entry,
+          );
+        }
+        const baseline = resolveVaultSavingsGoals(
+          current,
+          masteryCohort,
+          VAULT_IS_PREMIUM,
+        ).find((entry) => entry.id === goalId);
+        if (!baseline) return current;
+        return [...current, { ...baseline, balance: 0 }];
+      });
       if (goal) {
         appendLedger(`Reset ${goal.name} balance to $0`, { category: "setup" });
       }
     },
-    [appendLedger, savingsGoals, setSavingsGoals],
+    [appendLedger, masteryCohort, savingsGoals, setSavingsGoals, vaultGoals],
   );
+
+  const handleResetAllSavingsGoalBalances = useCallback(() => {
+    setSavingsGoals((current) =>
+      resolveVaultSavingsGoals(current, masteryCohort, VAULT_IS_PREMIUM).map(
+        (goal) => ({ ...goal, balance: 0 }),
+      ),
+    );
+    appendLedger("Reset all savings goal balances to $0", { category: "setup" });
+  }, [appendLedger, masteryCohort, setSavingsGoals]);
 
   const handleResetBucketBalance = useCallback(
     (bucketId: VaultBucketId) => {
@@ -595,6 +619,7 @@ export function useVaultActions() {
     handleAddGoal,
     handleDeleteGoal,
     handleResetGoalBalance,
+    handleResetAllSavingsGoalBalances,
     handleResetBucketBalance,
     handleResetAllBalances,
   };

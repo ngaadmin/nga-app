@@ -4,6 +4,7 @@ export const vaultCopy = {
   description: "Manage your money, jars, and deposits.",
   allocationSectionTitle: "Allocate Money",
   closeModalLabel: "Close",
+  backToOverview: "Back to overview",
   budgetJarsSectionLabel: "Budget Jars",
   manageBudgetJarsLabel: "Manage Budget Jars",
   manageBudgetJarsTitle: "Manage Budget Jars",
@@ -42,9 +43,13 @@ export const vaultCopy = {
     "Are you sure you want to reset this item to $0? Saved progress in this goal will be cleared.",
   resetBucketBalance: "Reset Balance",
   resetBalanceToZero: "Reset balance to zero",
+  setAllBalancesToZero: "Set all balances to zero",
   resetBucketBalanceConfirmTitle: "Reset this jar balance?",
   resetBucketBalanceConfirmBody:
     "Are you sure you want to reset this item to $0? Money in this jar will be cleared.",
+  resetAllGoalBalancesConfirmTitle: "Set all goal balances to $0?",
+  resetAllGoalBalancesConfirmBody:
+    "Are you sure you want to reset every savings goal balance to $0? Saved progress in these goals will be cleared.",
   resetAllBalances: "Reset All Balances",
   resetAllBalancesConfirmTitle: "Reset everything to $0?",
   resetAllBalancesConfirmBody:

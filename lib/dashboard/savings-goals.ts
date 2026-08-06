@@ -139,11 +139,17 @@ export function buildFreemiumStarterGoals(_cohort: MasteryCohort): SavingsGoal[]
   ];
 }
 
-/** True when goals exist but none have a non-zero savings target yet. */
+/**
+ * True when goals exist, none have a non-zero target yet, and every balance
+ * is still zero — used for the first-goals callout.
+ */
 export function areAllSavingsGoalTargetsUnset(
   goals: readonly SavingsGoal[],
 ): boolean {
-  return goals.length > 0 && goals.every((goal) => goal.targetAmount <= 0);
+  return (
+    goals.length > 0 &&
+    goals.every((goal) => goal.targetAmount <= 0 && goal.balance <= 0)
+  );
 }
 
 /** Merge persisted freemium goals with required starter templates. */

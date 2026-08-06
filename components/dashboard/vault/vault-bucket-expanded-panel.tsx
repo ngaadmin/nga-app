@@ -123,16 +123,26 @@ export function VaultBucketExpandedPanel({
     <>
       <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-heading text-sm font-extrabold text-[#031F82]">
+          <p className="min-w-0 font-heading text-sm font-extrabold text-[#031F82]">
             {bucket.emoji} {bucket.name}
           </p>
-          <button
-            type="button"
-            onClick={onClose}
-            className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
-          >
-            Close
-          </button>
+          <div className="flex shrink-0 items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
+            >
+              <span aria-hidden>←</span>
+              {vaultCopy.backToOverview}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <p className="mt-2 font-heading text-lg font-extrabold leading-tight text-[#031F82]">

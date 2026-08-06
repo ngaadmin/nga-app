@@ -3,7 +3,7 @@
 import { VaultBucketExpandedPanel } from "@/components/dashboard/vault/vault-bucket-expanded-panel";
 import { VaultSaveJarExpandedPanel } from "@/components/dashboard/vault/vault-save-jar-expanded-panel";
 import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
-import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
+import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import type { SpendingCategory, SpendingCategoryId } from "@/lib/dashboard/spending-categories";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
 import type { VaultBucket, VaultBucketId } from "@/lib/dashboard/vault-buckets";
@@ -25,6 +25,8 @@ type VaultBucketDrilldownProps = {
   onAddCustomCategory: (label: string) => void;
   onRenameCategory: (categoryId: SpendingCategoryId, label: string) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
+  onResetGoalBalance: (goalId: SavingsGoalId) => void;
+  onResetAllGoalBalances: () => void;
   onManageGoalsClick?: () => void;
   onClose: () => void;
 };
@@ -42,6 +44,8 @@ export function VaultBucketDrilldown({
   onAddCustomCategory,
   onRenameCategory,
   onAssignGoals,
+  onResetGoalBalance,
+  onResetAllGoalBalances,
   onManageGoalsClick,
   onClose,
 }: VaultBucketDrilldownProps) {
@@ -53,8 +57,9 @@ export function VaultBucketDrilldown({
         goals={goals}
         totalSavings={totalSavings}
         onVaultTransfer={onVaultTransfer}
-        onResetBucketBalance={() => onResetBucketBalance(bucket.id)}
         onAssignGoals={onAssignGoals}
+        onResetGoalBalance={onResetGoalBalance}
+        onResetAllGoalBalances={onResetAllGoalBalances}
         onManageGoalsClick={onManageGoalsClick}
         onClose={onClose}
       />

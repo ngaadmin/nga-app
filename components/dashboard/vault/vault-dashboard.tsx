@@ -43,6 +43,7 @@ export function VaultDashboard() {
     handleAddGoal,
     handleDeleteGoal,
     handleResetGoalBalance,
+    handleResetAllSavingsGoalBalances,
     handleResetBucketBalance,
   } = useVaultActions();
 
@@ -81,6 +82,9 @@ export function VaultDashboard() {
     [displayBuckets, expandedBucketId],
   );
 
+  const hideDepositSection =
+    expandedBucket !== null || manageGoalsModalOpen;
+
   function toggleBucket(bucketId: VaultBucketId) {
     setExpandedBucketId((current) => (current === bucketId ? null : bucketId));
   }
@@ -113,13 +117,17 @@ export function VaultDashboard() {
           onAddCustomCategory={handleAddCustomSpendingCategory}
           onRenameCategory={handleRenameSpendingCategory}
           onAssignGoals={handleAssignGoals}
+          onResetGoalBalance={handleResetGoalBalance}
+          onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
           onResetBucketBalance={handleResetBucketBalance}
           onManageGoalsClick={() => setManageGoalsModalOpen(true)}
           onClose={() => setExpandedBucketId(null)}
         />
       ) : null}
 
-      <VaultDepositSection onDeposit={handleDepositAndOpenAllocation} />
+      {!hideDepositSection ? (
+        <VaultDepositSection onDeposit={handleDepositAndOpenAllocation} />
+      ) : null}
 
       <VaultAllocationModal
         isOpen={allocationModalOpen}

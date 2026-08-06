@@ -105,6 +105,11 @@ export function VaultMyMoneyCard({
                   role="listitem"
                   onClick={() => onToggleBucket(bucket.id)}
                   aria-expanded={isActive}
+                  aria-label={
+                    isActive
+                      ? `Close ${vaultBucketDisplayName(bucket)} details`
+                      : `Open ${vaultBucketDisplayName(bucket)} details`
+                  }
                   className={cn(
                     vaultJarGridTileClass,
                     isActive

@@ -17,10 +17,7 @@ import {
 } from "@/lib/dashboard/savings-goals";
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
-import {
-  vaultLightSectionTitleClass,
-  vaultManageJarsButtonClass,
-} from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { vaultLightSectionTitleClass } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import {
   buildSaveJarTransferDestinations,
   buildSaveJarTransferSources,
@@ -30,7 +27,6 @@ import {
 import {
   vaultActionLinkActiveClass,
   vaultActionLinkClass,
-  vaultActionLinkSeparatorClass,
   vaultActionResetLinkClass,
 } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
@@ -40,6 +36,10 @@ const orangeCtaClass =
 
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+
+type ResetConfirm =
+  | { kind: "goal"; goal: SavingsGoal }
+  | { kind: "all" };
 
 export type VaultSaveJarExpandedPanelProps = {
   bucket: VaultBucket;
@@ -51,8 +51,9 @@ export type VaultSaveJarExpandedPanelProps = {
     to: VaultTransferLocationId,
     amount: number,
   ) => void;
-  onResetBucketBalance: () => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
+  onResetGoalBalance: (goalId: SavingsGoalId) => void;
+  onResetAllGoalBalances: () => void;
   onManageGoalsClick?: () => void;
   onClose: () => void;
 };
@@ -63,8 +64,9 @@ export function VaultSaveJarExpandedPanel({
   goals,
   totalSavings,
   onVaultTransfer,
-  onResetBucketBalance,
   onAssignGoals,
+  onResetGoalBalance,
+  onResetAllGoalBalances,
   onManageGoalsClick,
   onClose,
 }: VaultSaveJarExpandedPanelProps) {
@@ -74,14 +76,14 @@ export function VaultSaveJarExpandedPanel({
   const [jarMoveOpen, setJarMoveOpen] = useState(false);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [activeGoalMoveId, setActiveGoalMoveId] = useState<SavingsGoalId | null>(null);
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState<ResetConfirm | null>(null);
 
   const unassignedBalance = roundAudAmount(Math.max(0, bucket.balance));
   const canMoveFunds =
     unassignedBalance > 0 || goals.some((goal) => goal.balance > 0);
-  const canResetJar = unassignedBalance > 0;
   const canAllocate = unassignedBalance > 0 && goals.length > 0;
   const showFirstGoalsCallout = areAllSavingsGoalTargetsUnset(goals);
+  const canResetAnyGoal = goals.some((goal) => goal.balance > 0);
 
   const sources = useMemo(
     () =>
@@ -123,20 +125,54 @@ export function VaultSaveJarExpandedPanel({
     setActiveGoalMoveId((current) => (current === goalId ? null : goalId));
   }
 
+  function confirmResetAction() {
+    if (!resetConfirm) return;
+    if (resetConfirm.kind === "goal") {
+      onResetGoalBalance(resetConfirm.goal.id);
+    } else {
+      onResetAllGoalBalances();
+    }
+    setResetConfirm(null);
+  }
+
+  const confirmTitle =
+    resetConfirm?.kind === "goal"
+      ? vaultCopy.resetGoalBalanceConfirmTitle
+      : resetConfirm?.kind === "all"
+        ? vaultCopy.resetAllGoalBalancesConfirmTitle
+        : "";
+
+  const confirmBody =
+    resetConfirm?.kind === "goal"
+      ? vaultCopy.resetGoalBalanceConfirmBody
+      : resetConfirm?.kind === "all"
+        ? vaultCopy.resetAllGoalBalancesConfirmBody
+        : "";
+
   return (
     <>
       <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className={vaultLightSectionTitleClass}>
+          <p className={cn(vaultLightSectionTitleClass, "min-w-0")}>
             {bucket.emoji} {savingsCopy.sectionTitle}
           </p>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
-          >
-            Close
-          </button>
+          <div className="flex shrink-0 items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
+            >
+              <span aria-hidden>←</span>
+              {vaultCopy.backToOverview}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <div className="mt-2">
@@ -182,37 +218,19 @@ export function VaultSaveJarExpandedPanel({
           </div>
         </button>
 
-        {canMoveFunds || canResetJar ? (
+        {canMoveFunds ? (
           <div className="mt-2 space-y-2 border-t border-[#BDE9FB]/40 pt-2">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              {canMoveFunds ? (
-                <button
-                  type="button"
-                  onClick={() => setJarMoveOpen((open) => !open)}
-                  disabled={!canMoveJar}
-                  className={cn(
-                    vaultActionLinkClass,
-                    jarMoveOpen && vaultActionLinkActiveClass,
-                  )}
-                >
-                  {savingsCopy.moveMoney}
-                </button>
-              ) : null}
-              {canMoveFunds && canResetJar ? (
-                <span className={vaultActionLinkSeparatorClass} aria-hidden>
-                  |
-                </span>
-              ) : null}
-              {canResetJar ? (
-                <button
-                  type="button"
-                  onClick={() => setResetConfirmOpen(true)}
-                  className={vaultActionResetLinkClass}
-                >
-                  {vaultCopy.resetBalanceToZero}
-                </button>
-              ) : null}
-            </div>
+            <button
+              type="button"
+              onClick={() => setJarMoveOpen((open) => !open)}
+              disabled={!canMoveJar}
+              className={cn(
+                vaultActionLinkClass,
+                jarMoveOpen && vaultActionLinkActiveClass,
+              )}
+            >
+              {savingsCopy.moveMoney}
+            </button>
 
             {jarMoveOpen && canMoveJar ? (
               <VaultSaveJarMoveMoneyForm
@@ -233,8 +251,8 @@ export function VaultSaveJarExpandedPanel({
         )}
 
         {goals.length > 0 ? (
-          <div className="relative mt-3 border-t border-[#BDE9FB]/40 pt-3">
-            <div className="mb-2 flex items-center justify-between gap-2 pr-10">
+          <div className="mt-3 border-t border-[#BDE9FB]/40 pt-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
               <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
                 {savingsCopy.sectionTitle}
               </p>
@@ -242,32 +260,21 @@ export function VaultSaveJarExpandedPanel({
                 <button
                   type="button"
                   onClick={onManageGoalsClick}
-                  className="inline-flex min-h-touch items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
+                  className="inline-flex min-h-touch items-center gap-1.5 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
                 >
+                  <SettingsIcon className="size-4 shrink-0" />
                   {vaultCopy.manageSavingsGoalsLabel}
                 </button>
               ) : null}
             </div>
-            {onManageGoalsClick ? (
-              <button
-                type="button"
-                onClick={onManageGoalsClick}
-                aria-label={vaultCopy.goalSettingsLabel}
-                className={cn(
-                  vaultManageJarsButtonClass,
-                  "right-0 top-0 bg-[#BDE9FB]/30 text-[#031F82] ring-[#BDE9FB]/60 hover:bg-[#BDE9FB]/50",
-                )}
-              >
-                <SettingsIcon className="size-5 shrink-0" />
-              </button>
-            ) : null}
-          {showFirstGoalsCallout ? (
-            <p
-              className="mb-2 rounded-lg border border-[#FFA503]/50 bg-[#FFA503]/15 px-3 py-2 text-center font-heading text-sm font-extrabold leading-snug text-[#031F82]"
-              role="status"
+          {showFirstGoalsCallout && onManageGoalsClick ? (
+            <button
+              type="button"
+              onClick={onManageGoalsClick}
+              className="mb-2 w-full rounded-lg bg-nga-secondary px-3 py-2.5 text-center font-heading text-sm font-extrabold leading-snug text-white transition-colors hover:brightness-[1.05] active:brightness-[0.98]"
             >
               {savingsCopy.firstGoalsCallout}
-            </p>
+            </button>
           ) : null}
           <ul className="space-y-2">
             {goals.map((goal) => {
@@ -358,39 +365,45 @@ export function VaultSaveJarExpandedPanel({
                       onClose={() => setActiveGoalMoveId(null)}
                     />
                   ) : null}
+
+                  <button
+                    type="button"
+                    onClick={() => setResetConfirm({ kind: "goal", goal })}
+                    disabled={goal.balance <= 0}
+                    className={vaultActionResetLinkClass}
+                  >
+                    {vaultCopy.resetBalanceToZero}
+                  </button>
                 </li>
               );
             })}
           </ul>
+
+          <button
+            type="button"
+            onClick={() => setResetConfirm({ kind: "all" })}
+            disabled={!canResetAnyGoal}
+            className={cn("mt-3 w-full text-center", vaultActionResetLinkClass)}
+          >
+            {vaultCopy.setAllBalancesToZero}
+          </button>
           </div>
         ) : (
-          <div className="relative mt-3 border-t border-[#BDE9FB]/40 pt-3">
+          <div className="mt-3 border-t border-[#BDE9FB]/40 pt-3">
             {onManageGoalsClick ? (
-              <>
-                <div className="mb-2 flex items-center justify-between gap-2 pr-10">
-                  <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
-                    {savingsCopy.sectionTitle}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onManageGoalsClick}
-                    className="inline-flex min-h-touch items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
-                  >
-                    {vaultCopy.manageSavingsGoalsLabel}
-                  </button>
-                </div>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
+                  {savingsCopy.sectionTitle}
+                </p>
                 <button
                   type="button"
                   onClick={onManageGoalsClick}
-                  aria-label={vaultCopy.goalSettingsLabel}
-                  className={cn(
-                    vaultManageJarsButtonClass,
-                    "right-0 top-0 bg-[#BDE9FB]/30 text-[#031F82] ring-[#BDE9FB]/60 hover:bg-[#BDE9FB]/50",
-                  )}
+                  className="inline-flex min-h-touch items-center gap-1.5 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
                 >
-                  <SettingsIcon className="size-5 shrink-0" />
+                  <SettingsIcon className="size-4 shrink-0" />
+                  {vaultCopy.manageSavingsGoalsLabel}
                 </button>
-              </>
+              </div>
             ) : null}
             <p className="font-sans text-xs leading-snug text-[#1E3A5F]/70">
               {savingsCopy.noGoalsYet}
@@ -408,36 +421,33 @@ export function VaultSaveJarExpandedPanel({
       />
 
       <ModalShell
-        isOpen={resetConfirmOpen}
-        onClose={() => setResetConfirmOpen(false)}
+        isOpen={resetConfirm !== null}
+        onClose={() => setResetConfirm(null)}
         align="center"
-        labelledBy="vault-reset-save-jar-balance-title"
+        labelledBy="vault-reset-savings-goal-balance-title"
         backdropClassName="bg-[#031F82]/55"
         panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
       >
         <h2
-          id="vault-reset-save-jar-balance-title"
+          id="vault-reset-savings-goal-balance-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
         >
-          {vaultCopy.resetBucketBalanceConfirmTitle}
+          {confirmTitle}
         </h2>
         <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
-          {vaultCopy.resetBucketBalanceConfirmBody}
+          {confirmBody}
         </p>
         <div className="mt-4 flex gap-2">
           <button
             type="button"
-            onClick={() => setResetConfirmOpen(false)}
+            onClick={() => setResetConfirm(null)}
             className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
           >
             {vaultCopy.resetCancel}
           </button>
           <button
             type="button"
-            onClick={() => {
-              onResetBucketBalance();
-              setResetConfirmOpen(false);
-            }}
+            onClick={confirmResetAction}
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
             {vaultCopy.resetConfirm}

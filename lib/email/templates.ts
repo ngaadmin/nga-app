@@ -20,11 +20,18 @@ export type MaverickWelcomeEmailData = {
 
 export type UsernameRecoveryEmailData = {
   username: string;
+  cohort?: "explorer" | "pathfinder" | "maverick";
+  /** Parent master username (Explorer recovery). */
+  masterUsername?: string;
+  /** Linked Explorer usernames (Explorer recovery). */
+  linkedUsernames?: string[];
 };
 
 export type CredentialRecoveryEmailData = {
   username: string;
   recoveryCode: string;
+  /** Explorer uses parent-facing subject + masked username. */
+  cohort?: "explorer" | "pathfinder" | "maverick";
 };
 
 export type OnboardingEmailDataMap = {
@@ -352,10 +359,72 @@ export function buildUsernameRecoveryEmail(
   appUrl?: string,
 ): BuiltEmail {
   const username = data.username.trim() || "learner";
+  const isExplorer = data.cohort === "explorer";
   const base = resolveAppUrl(appUrl);
   const signInUrl = `${base}/onboarding/sign-in`;
 
-  const subject = "Your NextGenAchievers username";
+  if (isExplorer) {
+    const masterUsername =
+      (data.masterUsername?.trim() || username) || "Master";
+    const linked = (
+      data.linkedUsernames?.length
+        ? data.linkedUsernames
+        : [username]
+    )
+      .map((name) => name.trim())
+      .filter(Boolean);
+
+    const subject = "Your NextGenAchiever$ usernames";
+    const preheader = "Your Master and Explorer usernames are inside";
+
+    const linkedLines = linked.map((name) => `- ${name}`);
+    const text = [
+      "Here are the usernames linked to this email:",
+      "",
+      `Master: ${masterUsername}`,
+      "Explorer accounts:",
+      ...linkedLines,
+      "",
+      `Log back in: ${signInUrl}`,
+      "",
+      "- NextGenAchievers",
+    ].join("\n");
+
+    const linkedHtml = linked
+      .map(
+        (name) =>
+          `<li style="margin:0 0 6px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(name)}</li>`,
+      )
+      .join("");
+
+    const html = wrapHtml({
+      header: subject,
+      preheader,
+      bodyInner: `
+        <p style="margin:0 0 16px;font-size:16px;">
+          Here are the usernames linked to this email:
+        </p>
+        <p style="margin:0 0 8px;font-size:16px;">
+          <strong>Master:</strong>
+          <span style="font-size:18px;font-weight:700;color:#031F82;">
+            ${escapeHtml(masterUsername)}
+          </span>
+        </p>
+        <p style="margin:0 0 8px;font-size:16px;">
+          <strong>Explorer accounts:</strong>
+        </p>
+        <ul style="margin:0 0 16px;padding-left:20px;">
+          ${linkedHtml}
+        </ul>
+        ${ctaButton("Log Back In", signInUrl)}
+      `,
+    });
+
+    return { subject, html, text, preheader };
+  }
+
+  const subject = "Your NextGenAchiever$ username";
+  const preheader = `Username reminder for ${username}`;
   const text = [
     `Here's the username linked to this email: ${username}`,
     "",
@@ -365,8 +434,8 @@ export function buildUsernameRecoveryEmail(
   ].join("\n");
 
   const html = wrapHtml({
-    header: "Your username is ready",
-    preheader: `Username reminder for ${username}`,
+    header: subject,
+    preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
         Here's the username linked to this email:
@@ -378,24 +447,39 @@ export function buildUsernameRecoveryEmail(
     `,
   });
 
-  return { subject, html, text, preheader: `Username reminder for ${username}` };
+  return { subject, html, text, preheader };
+}
+
+function maskUsernameForParent(username: string): string {
+  const trimmed = username.trim();
+  if (trimmed.length <= 3) return trimmed;
+  const middleCount = Math.max(trimmed.length - 3, 1);
+  return `${trimmed[0]}${"•".repeat(middleCount)}${trimmed.slice(-2)}`;
 }
 
 export function buildCredentialRecoveryEmail(
   data: CredentialRecoveryEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "learner";
+  const rawUsername = data.username.trim() || "learner";
+  const isExplorer = data.cohort === "explorer";
+  const displayUsername = isExplorer
+    ? maskUsernameForParent(rawUsername)
+    : rawUsername;
   const recoveryCode = data.recoveryCode.trim();
   const base = resolveAppUrl(appUrl);
   const signInUrl = `${base}/onboarding/sign-in`;
 
-  const subject = "Reset your NextGenAchievers password";
+  const subject = isExplorer
+    ? "Reset your child's NextGenAchiever$ password"
+    : "Reset your NextGenAchiever$ password";
+  const preheader = "Your temporary password is inside";
+
   const text = [
-    `Hi - a password reset was requested for ${username}.`,
+    `Hi - a password reset was requested for ${displayUsername}.`,
     "",
-    `Temporary recovery code: ${recoveryCode}`,
-    `Use this code as your current password, then change it after you log in.`,
+    `Temporary password: ${recoveryCode}`,
+    `Use this as the current password, then set a new one after you log in.`,
     "",
     `Reset / log in: ${signInUrl}`,
     "",
@@ -404,20 +488,20 @@ export function buildCredentialRecoveryEmail(
 
   const html = wrapHtml({
     header: "Password reset",
-    preheader: "Your temporary recovery code is inside",
+    preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
         A password reset was requested for
-        <strong>${escapeHtml(username)}</strong>.
+        <strong>${escapeHtml(displayUsername)}</strong>.
       </p>
       <p style="margin:0 0 8px;font-size:16px;">
-        Temporary recovery code:
+        Temporary password:
       </p>
       <p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:0.2em;color:#031F82;">
         ${escapeHtml(recoveryCode)}
       </p>
       <p style="margin:0 0 16px;font-size:14px;color:#5B6B7C;">
-        Use this as your current password, then set a new one after you log in.
+        Use this as the current password, then set a new one after you log in.
       </p>
       ${ctaButton("Log Back In", signInUrl)}
     `,
@@ -427,7 +511,7 @@ export function buildCredentialRecoveryEmail(
     subject,
     html,
     text,
-    preheader: "Your temporary recovery code is inside",
+    preheader,
   };
 }
 

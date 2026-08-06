@@ -12,6 +12,7 @@ import {
   ONBOARDING_SIGN_UP_PENDING_PATH,
   ONBOARDING_START_PATH,
   readUserSession,
+  saveUserSession,
 } from "@/lib/onboarding/guest-session";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
@@ -22,6 +23,7 @@ import {
   buildParentConsentApprovalPath,
   createPendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
+import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
@@ -172,6 +174,15 @@ export function SignUpForm() {
           birthYear,
           passcode: password.trim(),
         });
+        const session = readUserSession();
+        if (session) {
+          const withMarketing = {
+            ...session,
+            marketingOptIn: marketingOptIn === true,
+          };
+          saveUserSession(withMarketing);
+          upsertRegisteredAccount(withMarketing);
+        }
         router.push(
           `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
         );
@@ -186,6 +197,7 @@ export function SignUpForm() {
         learnerEmail: learnerEmail.trim(),
         password,
         parentEmail: isPathfinder ? parentEmail.trim() : undefined,
+        marketingOptIn,
       });
       finalizeRegisteredSignup(session);
       router.push(DASHBOARD_ACADEMY_PATH);
@@ -407,21 +419,19 @@ export function SignUpForm() {
             </p>
           ) : null}
 
-          {isExplorer ? (
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={marketingOptIn}
-                onChange={(e) => setMarketingOptIn(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
-              />
-              <span className="font-sans text-sm leading-relaxed text-nga-slate">
-                Yes, send me occasional tips, progress ideas and updates that
-                help me support my child&apos;s money skills journey. (You can
-                unsubscribe anytime.)
-              </span>
-            </label>
-          ) : null}
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+            />
+            <span className="font-sans text-sm leading-relaxed text-nga-slate">
+              Yes, send me occasional tips, progress ideas and updates that help
+              me support my child&apos;s money skills journey. (You can
+              unsubscribe anytime.)
+            </span>
+          </label>
 
           <Button type="submit" variant="cta" fullWidth>
             {isExplorer

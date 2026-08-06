@@ -17,6 +17,7 @@ import {
   authenticateRegisteredAccount,
   recoverCredentialByEmail,
   recoverUsernameByEmail,
+  setRegisteredAccountPassword,
 } from "@/lib/onboarding/registered-accounts";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
 import { cn } from "@/lib/utils/cn";
@@ -28,6 +29,8 @@ type FormErrors = {
   identifier?: string;
   credential?: string;
   recoveryEmail?: string;
+  newPassword?: string;
+  confirmPassword?: string;
   form?: string;
 };
 
@@ -43,9 +46,19 @@ export function SignInForm() {
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [forcePasswordChange, setForcePasswordChange] = useState(false);
+  const [pendingUsername, setPendingUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    if (hasCompletedPersonalizationGate(readUserSession())) {
+    const session = readUserSession();
+    if (session?.mustChangePassword) {
+      setForcePasswordChange(true);
+      setPendingUsername(session.username);
+      return;
+    }
+    if (hasCompletedPersonalizationGate(session) && !session?.mustChangePassword) {
       router.replace(DASHBOARD_ACADEMY_PATH);
     }
   }, [router]);
@@ -128,6 +141,51 @@ export function SignInForm() {
 
     saveUserSession(session);
     dispatchUserSessionUpdated();
+
+    if (session.mustChangePassword) {
+      setPendingUsername(session.username);
+      setForcePasswordChange(true);
+      setNewPassword("");
+      setConfirmPassword("");
+      setErrors({});
+      return;
+    }
+
+    router.push(DASHBOARD_ACADEMY_PATH);
+  }
+
+  function handlePasswordChangeSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const next: FormErrors = {};
+    const trimmedNew = newPassword.trim();
+    const trimmedConfirm = confirmPassword.trim();
+
+    if (!trimmedNew) {
+      next.newPassword = "Enter a new password.";
+    } else if (trimmedNew.length < 6) {
+      next.newPassword = "Use at least 6 characters for your password.";
+    }
+    if (!trimmedConfirm) {
+      next.confirmPassword = "Confirm your new password.";
+    } else if (trimmedNew && trimmedConfirm !== trimmedNew) {
+      next.confirmPassword = "Passwords don't match.";
+    }
+
+    if (Object.keys(next).length > 0) {
+      setErrors(next);
+      return;
+    }
+
+    const updated = setRegisteredAccountPassword(pendingUsername, trimmedNew);
+    if (!updated) {
+      setErrors({
+        form: "We could not update your password. Try signing in again.",
+      });
+      return;
+    }
+
+    saveUserSession(updated);
+    dispatchUserSessionUpdated();
     router.push(DASHBOARD_ACADEMY_PATH);
   }
 
@@ -136,25 +194,118 @@ export function SignInForm() {
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            Log Back In
+            {forcePasswordChange ? "Set a new password" : "Log Back In"}
           </h1>
-          <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
-            Welcome back - pick up your streak, badges, and money skills.
-          </p>
+          {forcePasswordChange ? (
+            <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
+              You signed in with a temporary password. Choose a new one to
+              continue.
+            </p>
+          ) : null}
         </div>
 
-        {recoveryMode ? (
+        {forcePasswordChange ? (
+          <form
+            className="space-y-6"
+            onSubmit={handlePasswordChangeSubmit}
+            noValidate
+          >
+            <div className="space-y-2">
+              <label
+                htmlFor="new-password"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                New password
+              </label>
+              <input
+                id="new-password"
+                name="newPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="At least 6 characters"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  clearError("newPassword");
+                  clearError("form");
+                }}
+                aria-invalid={Boolean(errors.newPassword)}
+                className={cn(
+                  fieldBase,
+                  errors.newPassword && "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.newPassword ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.newPassword}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="confirm-password"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                Confirm new password
+              </label>
+              <input
+                id="confirm-password"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Re-enter your new password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  clearError("confirmPassword");
+                  clearError("form");
+                }}
+                aria-invalid={Boolean(errors.confirmPassword)}
+                className={cn(
+                  fieldBase,
+                  errors.confirmPassword &&
+                    "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.confirmPassword ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.confirmPassword}
+                </p>
+              ) : null}
+            </div>
+
+            {errors.form ? (
+              <p
+                className="font-sans text-sm font-medium text-red-600"
+                role="alert"
+              >
+                {errors.form}
+              </p>
+            ) : null}
+
+            <Button type="submit" variant="cta" fullWidth>
+              Save new password
+            </Button>
+          </form>
+        ) : recoveryMode ? (
           <form className="space-y-6" onSubmit={handleRecoverySubmit} noValidate>
             <div className="space-y-2 text-center sm:text-left">
               <h2 className="font-heading text-xl font-extrabold text-nga-primary">
                 {recoveryMode === "username"
                   ? copy.forgotUsername
-                  : "Forgot Password?"}
+                  : "Forgot password?"}
               </h2>
               <p className="font-sans text-sm leading-relaxed text-nga-slate">
                 {recoveryMode === "username"
                   ? copy.recoveryUsernameHint
-                  : "We'll email a temporary password reset code to this address."}
+                  : "We'll email a temporary code to the address we have on file for your profile."}
               </p>
             </div>
 
@@ -220,12 +371,21 @@ export function SignInForm() {
         ) : (
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="space-y-2">
-              <label
-                htmlFor="sign-in-identifier"
-                className="block font-heading text-sm font-bold text-nga-primary"
-              >
-                Username or email
-              </label>
+              <div className="flex items-center justify-between gap-3">
+                <label
+                  htmlFor="sign-in-identifier"
+                  className="block font-heading text-sm font-bold text-nga-primary"
+                >
+                  Username or email
+                </label>
+                <button
+                  type="button"
+                  onClick={() => openRecovery("username")}
+                  className="shrink-0 font-heading text-xs font-bold text-nga-secondary underline-offset-2 hover:underline"
+                >
+                  {copy.forgotUsername}
+                </button>
+              </div>
               <input
                 id="sign-in-identifier"
                 name="identifier"
@@ -271,7 +431,7 @@ export function SignInForm() {
                   onClick={() => openRecovery("credential")}
                   className="shrink-0 font-heading text-xs font-bold text-nga-secondary underline-offset-2 hover:underline"
                 >
-                  Forgot Password?
+                  Forgot password?
                 </button>
               </div>
               <input
@@ -306,16 +466,6 @@ export function SignInForm() {
               ) : null}
             </div>
 
-            <div className="text-right">
-              <button
-                type="button"
-                onClick={() => openRecovery("username")}
-                className="font-heading text-xs font-bold text-nga-secondary underline-offset-2 hover:underline"
-              >
-                {copy.forgotUsername}
-              </button>
-            </div>
-
             {errors.form ? (
               <p
                 className="font-sans text-sm font-medium text-red-600"
@@ -331,22 +481,24 @@ export function SignInForm() {
           </form>
         )}
 
-        <p className="text-center font-sans text-sm text-nga-slate">
-          New here?{" "}
-          <Link
-            href={`${ONBOARDING_START_PATH}?fresh=1`}
-            className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
-          >
-            Create a free account
-          </Link>
-          {" · "}
-          <Link
-            href={ONBOARDING_ENTRY_PATH}
-            className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
-          >
-            Back to welcome
-          </Link>
-        </p>
+        {!forcePasswordChange ? (
+          <p className="text-center font-sans text-sm text-nga-slate">
+            New here?{" "}
+            <Link
+              href={`${ONBOARDING_START_PATH}?fresh=1`}
+              className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
+            >
+              Create a free account
+            </Link>
+            {" · "}
+            <Link
+              href={ONBOARDING_ENTRY_PATH}
+              className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
+            >
+              Back to welcome
+            </Link>
+          </p>
+        ) : null}
       </div>
     </section>
   );

@@ -9,7 +9,7 @@ import {
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 
-/** Durable local registry — survives logout so returning users can log back in. */
+/** Durable local registry - survives logout so returning users can log back in. */
 export const REGISTERED_ACCOUNTS_STORAGE_KEY = "nga_registered_accounts_v1";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,7 +19,7 @@ type RegisteredAccountsStore = {
 };
 
 export type CredentialRecoveryResult = {
-  /** Always true for UI — never reveal whether the email exists. */
+  /** Always true for UI - never reveal whether the email exists. */
   accepted: true;
   recipientEmail: string;
 };
@@ -139,7 +139,57 @@ export function authenticateRegisteredAccount(
       credentialMatchesAccount(account, credential),
   );
 
-  return match ?? null;
+  if (!match) return null;
+
+  const recoveryDigest = hashCredential(RECOVERY_PARENT_PIN);
+  const usedTempRecovery =
+    hashCredential(credential) === recoveryDigest ||
+    match.mustChangePassword === true;
+
+  if (usedTempRecovery) {
+    return { ...match, mustChangePassword: true };
+  }
+
+  return match;
+}
+
+/**
+ * Replace the temporary recovery credential with a new password and clear the
+ * must-change flag so the user can continue into the app.
+ */
+export function setRegisteredAccountPassword(
+  username: string,
+  password: string,
+): UserSession | null {
+  if (typeof window === "undefined") return null;
+
+  const trimmedUsername = username.trim();
+  const trimmedPassword = password.trim();
+  if (!trimmedUsername || trimmedPassword.length < 6) return null;
+
+  const store = readStore();
+  const index = store.accounts.findIndex(
+    (account) =>
+      account.username.trim().toLowerCase() === trimmedUsername.toLowerCase(),
+  );
+  if (index < 0) return null;
+
+  const existing = store.accounts[index]!;
+  const digest = hashCredential(trimmedPassword);
+  const updated: UserSession = {
+    ...existing,
+    mustChangePassword: false,
+  };
+
+  if (existing.ageTier === "explorer" || existing.passcodeHash) {
+    updated.passcodeHash = digest;
+  }
+  if (existing.ageTier !== "explorer") {
+    updated.passwordHash = digest;
+  }
+
+  upsertRegisteredAccount(updated);
+  return updated;
 }
 
 export function findRegisteredAccountsByEmail(email: string): UserSession[] {
@@ -193,7 +243,10 @@ export async function recoverCredentialByEmail(
   resetParentPinToRecovery();
 
   for (const account of accounts) {
-    const updated: UserSession = { ...account };
+    const updated: UserSession = {
+      ...account,
+      mustChangePassword: true,
+    };
 
     // Explorers log in with passcode; Pathfinder/Maverick with password.
     if (account.ageTier === "explorer" || account.passcodeHash) {

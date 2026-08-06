@@ -18,7 +18,7 @@ import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events
 
 export const GUEST_SESSION_STORAGE_KEY = "nga_guest_session";
 
-/** Legacy storage key — read once for migration. */
+/** Legacy storage key - read once for migration. */
 const LEGACY_GHOST_SESSION_STORAGE_KEY = "nga_ghost_session";
 
 export const ONBOARDING_ENTRY_PATH = "/onboarding" as const;
@@ -33,7 +33,7 @@ export const DASHBOARD_ACADEMY_PATH = "/dashboard/academy" as const;
 
 export type AccessMode = "guest" | "registered";
 
-/** @deprecated Use AccessMode — kept for existing imports. */
+/** @deprecated Use AccessMode - kept for existing imports. */
 export type GuestAccessMode = "guest";
 
 /** @deprecated Use MasteryCohort from `@/lib/dashboard/mastery-cohort`. */
@@ -58,7 +58,7 @@ export type RegisteredProfileInput = {
   birthYear: number;
   accountRole: AccountRole;
   /**
-   * Learner email — required for Pathfinders/Mavericks.
+   * Learner email - required for Pathfinders/Mavericks.
    * Strictly omitted for Explorers (COPPA).
    */
   learnerEmail?: string | null;
@@ -69,24 +69,26 @@ export type RegisteredProfileInput = {
   email?: string;
   /** Required for Explorers and Pathfinders; optional for Mavericks. */
   parentEmail?: string | null;
-  /** Plain 4-digit Explorer handle passcode — stored as passcodeHash. */
+  /** Plain 4-digit Explorer handle passcode - stored as passcodeHash. */
   passcode?: string;
   passcodeHash?: string;
-  /** Plain learner password — stored as passwordHash (Pathfinder/Maverick). */
+  /** Plain learner password - stored as passwordHash (Pathfinder/Maverick). */
   password?: string;
   passwordHash?: string;
-  /** Plain 4-digit Parent PIN from consent approval — stored as parentPinHash. */
+  /** Plain 4-digit Parent PIN from consent approval - stored as parentPinHash. */
   parentPin?: string;
   parentPinHash?: string;
   consentApprovedAt?: string;
   /** Override lifecycle status; otherwise derived from cohort + consent. */
   accountStatus?: RegisteredAccountStatus;
+  /** Marketing email opt-in collected at create-profile. */
+  marketingOptIn?: boolean;
 };
 
 export type UserSession = {
   accessMode: AccessMode;
   username: string;
-  /** Legal birth year — source of truth for parental / COPPA age gates. */
+  /** Legal birth year - source of truth for parental / COPPA age gates. */
   birthYear: number;
   birthYearLocked: boolean;
   /**
@@ -96,7 +98,7 @@ export type UserSession = {
   ageTier: MasteryCohort;
   /**
    * Optional learning-content track override (Parent Settings).
-   * Changes Academy difficulty only — must not clear Parent Portal / consent rules.
+   * Changes Academy difficulty only - must not clear Parent Portal / consent rules.
    */
   curriculumCohort?: MasteryCohort;
   /**
@@ -104,17 +106,17 @@ export type UserSession = {
    * Alias field name: accountLifecycleStatus / accountState.
    */
   accountStatus?: AccountLifecycleStatus;
-  /** @deprecated Prefer accountStatus — same value when persisted by newer clients. */
+  /** @deprecated Prefer accountStatus - same value when persisted by newer clients. */
   accountLifecycleStatus?: AccountLifecycleStatus;
   /** @deprecated Prefer accountStatus. */
   accountState?: AccountLifecycleStatus;
   createdAt: string;
   /**
-   * Learner email — never set for Explorers.
+   * Learner email - never set for Explorers.
    * @deprecated Prefer learnerEmail; kept in sync for older readers.
    */
   email?: string;
-  /** Learner email — omitted for Explorers. */
+  /** Learner email - omitted for Explorers. */
   learnerEmail?: string;
   parentEmail?: string;
   accountRole?: AccountRole;
@@ -127,9 +129,13 @@ export type UserSession = {
   passcodeHash?: string;
   /** Hashed learner password (Pathfinder / Maverick). */
   passwordHash?: string;
+  /** When true, user must set a new password before continuing after recovery login. */
+  mustChangePassword?: boolean;
+  /** Marketing email opt-in collected at create-profile. */
+  marketingOptIn?: boolean;
 };
 
-/** @deprecated Use UserSession — kept for existing imports. */
+/** @deprecated Use UserSession - kept for existing imports. */
 export type GuestAccessSession = UserSession;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -254,7 +260,7 @@ function resolveAccountStatus(
 
 /**
  * Re-assert cohort email + lifecycle rules on a registered session.
- * Mutates nothing — returns a corrected copy.
+ * Mutates nothing - returns a corrected copy.
  */
 export function enforceCohortAccountState(session: UserSession): UserSession {
   if (session.accessMode === "guest") {
@@ -536,6 +542,7 @@ export function convertToRegisteredProfile(
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     convertedAt: new Date().toISOString(),
     consentApprovedAt: input.consentApprovedAt,
+    marketingOptIn: input.marketingOptIn === true,
   };
 }
 
@@ -564,7 +571,7 @@ export function updateUserBirthYear(birthYear: number): UserSession | null {
 }
 
 /**
- * Parent Settings curriculum override — learning content / difficulty only.
+ * Parent Settings curriculum override - learning content / difficulty only.
  * Legal birth year, ageTier, parent email, and portal requirements are unchanged.
  */
 export function updateUserCurriculumCohort(
@@ -593,7 +600,7 @@ export function getSessionCurriculumCohort(session: UserSession): MasteryCohort 
   });
 }
 
-/** @deprecated Use saveUserSession — kept for existing imports. */
+/** @deprecated Use saveUserSession - kept for existing imports. */
 export function saveGuestAccessSession(session: UserSession): void {
   saveUserSession(session);
 }
@@ -620,7 +627,7 @@ export function readUserSession(): UserSession | null {
   }
 }
 
-/** @deprecated Use readUserSession — kept for existing imports. */
+/** @deprecated Use readUserSession - kept for existing imports. */
 export function readGuestAccessSession(): UserSession | null {
   return readUserSession();
 }
@@ -631,7 +638,7 @@ export function clearUserSession(): void {
   removePersisted(LEGACY_GHOST_SESSION_STORAGE_KEY);
 }
 
-/** @deprecated Use clearUserSession — kept for existing imports. */
+/** @deprecated Use clearUserSession - kept for existing imports. */
 export function clearGuestAccessSession(): void {
   clearUserSession();
 }

@@ -16,6 +16,7 @@ const EMAIL_TYPES: readonly Exclude<
   "CREDENTIAL_RECOVERY"
 >[] = [
   "EXPLORER_PARENT",
+  "EXPLORER_PARENT_RESEND",
   "PATHFINDER_PARENT",
   "MAVERICK_WELCOME",
   "USERNAME_RECOVERY",
@@ -59,7 +60,7 @@ function parseData(
   const username = readString(data, "username");
   if (!username) return null;
 
-  if (type === "EXPLORER_PARENT") {
+  if (type === "EXPLORER_PARENT" || type === "EXPLORER_PARENT_RESEND") {
     const token = readString(data, "token");
     if (!token) return null;
     return { username, token };
@@ -168,7 +169,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME | USERNAME_RECOVERY.",
+            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | MAVERICK_WELCOME | USERNAME_RECOVERY.",
         },
         { status: 400 },
       );
@@ -191,7 +192,8 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            body.type === "EXPLORER_PARENT"
+            body.type === "EXPLORER_PARENT" ||
+            body.type === "EXPLORER_PARENT_RESEND"
               ? "data.username and data.token are required."
               : "data.username is required.",
         },
@@ -199,8 +201,13 @@ export async function POST(request: Request) {
       );
     }
 
-    if (body.type === "EXPLORER_PARENT") {
-      const explorerData = data as OnboardingEmailDataMap["EXPLORER_PARENT"];
+    if (
+      body.type === "EXPLORER_PARENT" ||
+      body.type === "EXPLORER_PARENT_RESEND"
+    ) {
+      const explorerData = data as
+        | OnboardingEmailDataMap["EXPLORER_PARENT"]
+        | OnboardingEmailDataMap["EXPLORER_PARENT_RESEND"];
       const claims = verifyConsentToken(explorerData.token);
       if (!claims) {
         return NextResponse.json(

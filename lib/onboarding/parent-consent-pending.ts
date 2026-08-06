@@ -1,9 +1,11 @@
+import { isConsentTokenUnexpired } from "@/lib/auth/consent-token";
 import {
   readPersisted,
   removePersisted,
   writePersisted,
 } from "@/lib/dev/client-persist";
 import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
+import { requestOnboardingEmailSend } from "@/lib/email/request-send";
 import {
   captureGuestProgressSnapshot,
   ensureGuestProgressSnapshot,
@@ -32,19 +34,20 @@ export type PendingParentConsent = {
   passcodeHash?: string;
 };
 
+export type ConsentTokenLookup =
+  | { status: "valid"; pending: PendingParentConsent }
+  | { status: "expired"; pending: PendingParentConsent }
+  | { status: "invalid" };
+
 type PendingConsentStore = {
   entries: PendingParentConsent[];
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FOUR_DIGIT_PATTERN = /^\d{4}$/;
-const CONSENT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
-  const createdAt = Date.parse(createdAtIso);
-  if (!Number.isFinite(createdAt) || Date.now() - createdAt > CONSENT_TTL_MS) {
-    return false;
-  }
+  if (!isConsentTokenUnexpired(createdAtIso)) return false;
   return requiresParentConsentForBirthYear(birthYear);
 }
 
@@ -239,48 +242,168 @@ function localPendingMatchesSignedClaims(
   return localHash === signedHash;
 }
 
-async function fetchSignedPendingConsent(
+async function fetchConsentTokenLookup(
   token: string,
-): Promise<PendingParentConsent | null> {
+): Promise<ConsentTokenLookup> {
   try {
     const response = await fetch(
       `/api/auth/consent-token?token=${encodeURIComponent(token)}`,
     );
     const json = (await response.json().catch(() => null)) as {
       success?: boolean;
+      expired?: boolean;
       pending?: PendingParentConsent;
     } | null;
-    if (!response.ok || !json?.pending) return null;
-    return json.pending;
+
+    if (!json?.pending) return { status: "invalid" };
+
+    if (response.status === 410 || json.expired === true) {
+      return { status: "expired", pending: json.pending };
+    }
+
+    if (!response.ok || json.success !== true) {
+      return { status: "invalid" };
+    }
+
+    return { status: "valid", pending: json.pending };
   } catch {
-    return null;
+    return { status: "invalid" };
   }
+}
+
+function mergeLocalPendingClaims(
+  signed: PendingParentConsent,
+): PendingParentConsent {
+  const local = findLocalPendingByToken(signed.token);
+  if (local) {
+    if (localPendingMatchesSignedClaims(local, signed)) {
+      return local;
+    }
+    // Local record was altered - discard that entry and trust signed claims.
+    clearPendingParentConsent(signed.token);
+  }
+  return signed;
+}
+
+/**
+ * Inspect a consent link: valid, expired (claims still readable), or invalid.
+ */
+export async function lookupConsentToken(
+  token: string,
+): Promise<ConsentTokenLookup> {
+  const trimmed = token.trim();
+  if (!trimmed) return { status: "invalid" };
+
+  const lookup = await fetchConsentTokenLookup(trimmed);
+  if (lookup.status === "invalid") return lookup;
+
+  return {
+    status: lookup.status,
+    pending: mergeLocalPendingClaims(lookup.pending),
+  };
 }
 
 /**
  * Resolve pending consent for an email/magic link token.
  * Always verifies the signed token; same-device local storage is used only when
  * its claims still match the signed payload (rejects client-altered records).
+ * Expired tokens return null — use {@link lookupConsentToken} for resend UX.
  */
 export async function readPendingParentConsentByToken(
   token: string,
 ): Promise<PendingParentConsent | null> {
-  const trimmed = token.trim();
-  if (!trimmed) return null;
+  const lookup = await lookupConsentToken(token);
+  return lookup.status === "valid" ? lookup.pending : null;
+}
 
-  const signed = await fetchSignedPendingConsent(trimmed);
-  if (!signed) return null;
-
-  const local = findLocalPendingByToken(trimmed);
-  if (local) {
-    if (localPendingMatchesSignedClaims(local, signed)) {
-      return local;
-    }
-    // Local record was altered - discard that entry and trust signed claims.
-    clearPendingParentConsent(trimmed);
+/**
+ * Issue a fresh 24h approval link for the same pending Explorer profile and
+ * email it to the parent. Does not create a new learner account.
+ */
+export async function resendParentConsentApproval(
+  token: string,
+): Promise<PendingParentConsent> {
+  const lookup = await lookupConsentToken(token);
+  if (lookup.status === "invalid") {
+    throw new Error(
+      "This approval link is no longer valid, so we could not resend it.",
+    );
   }
 
-  return signed;
+  const claims = lookup.pending;
+  const account = findRegisteredAccountByUsername(claims.childUsername);
+
+  if (account?.accountStatus === "ACTIVE") {
+    throw new Error(
+      "This Explorer profile is already approved. No new approval email is needed.",
+    );
+  }
+
+  const childUsername = (account?.username ?? claims.childUsername).trim();
+  const parentEmail = (
+    account?.parentEmail ??
+    claims.parentEmail
+  )
+    .trim()
+    .toLowerCase();
+  const birthYear = account?.birthYear ?? claims.birthYear;
+  const passcodeHash =
+    account?.passcodeHash?.trim() || claims.passcodeHash?.trim() || undefined;
+
+  if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
+    throw new Error(
+      "We could not find a parent email on this pending profile to resend to.",
+    );
+  }
+  if (!requiresParentConsentForBirthYear(birthYear)) {
+    throw new Error(
+      "Parent approval is only required for Explorer profiles (ages 10-12).",
+    );
+  }
+  if (!passcodeHash) {
+    throw new Error(
+      "We could not resend approval for this profile. Ask your learner to restart signup.",
+    );
+  }
+
+  const createdAt = new Date().toISOString();
+  const nextToken = await encodeConsentToken({
+    parentEmail,
+    childUsername,
+    birthYear,
+    createdAt,
+    passcodeHash,
+  });
+
+  const pending: PendingParentConsent = {
+    token: nextToken,
+    parentEmail,
+    childUsername,
+    birthYear,
+    createdAt,
+    passcodeHash,
+  };
+
+  // Replace any prior pending entry for this learner; keep the registered profile.
+  upsertLocalPendingConsent(pending);
+
+  const sendResult = await requestOnboardingEmailSend({
+    type: "EXPLORER_PARENT_RESEND",
+    recipientEmail: parentEmail,
+    data: {
+      username: childUsername,
+      token: nextToken,
+    },
+  });
+
+  if (!sendResult.success) {
+    throw new Error(
+      sendResult.error ||
+        "We could not resend the approval email. Please try again shortly.",
+    );
+  }
+
+  return pending;
 }
 
 /**

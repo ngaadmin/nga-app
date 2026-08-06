@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
 import {
   approveParentConsent,
-  readPendingParentConsentByToken,
+  lookupConsentToken,
+  resendParentConsentApproval,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 
@@ -15,8 +16,10 @@ type ApprovalState =
   | "ready"
   | "approving"
   | "success"
+  | "expired"
   | "invalid"
-  | "error";
+  | "error"
+  | "resent";
 
 const SUCCESS_NAV_DELAY_MS = 1100;
 
@@ -28,6 +31,8 @@ export function ParentConsentApprovalPanel() {
   const [state, setState] = useState<ApprovalState>("loading");
   const [pending, setPending] = useState<PendingParentConsent | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const resendInFlightRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,21 +47,28 @@ export function ParentConsentApprovalPanel() {
         return;
       }
 
-      const resolved = await readPendingParentConsentByToken(token);
+      const lookup = await lookupConsentToken(token);
       if (cancelled) return;
 
-      if (!resolved) {
-        setPending(null);
-        setErrorMessage(
-          "This approval link is no longer valid. Ask your learner to create their profile again so a fresh parent email can be sent.",
-        );
-        setState("invalid");
+      if (lookup.status === "valid") {
+        setPending(lookup.pending);
+        setErrorMessage(null);
+        setState("ready");
         return;
       }
 
-      setPending(resolved);
-      setErrorMessage(null);
-      setState("ready");
+      if (lookup.status === "expired") {
+        setPending(lookup.pending);
+        setErrorMessage(null);
+        setState("expired");
+        return;
+      }
+
+      setPending(null);
+      setErrorMessage(
+        "This approval link is no longer valid. You can ask your learner to resend approval from their device, or restart signup if needed.",
+      );
+      setState("invalid");
     }
 
     void load();
@@ -99,9 +111,33 @@ export function ParentConsentApprovalPanel() {
       setState("success");
     } catch {
       setErrorMessage(
-        "Something went wrong while approving. Please try again, or restart signup for a new approval email.",
+        "Something went wrong while approving. Please try again, or resend a fresh approval email.",
       );
       setState("error");
+    }
+  }
+
+  async function handleResend() {
+    if (!token || resendInFlightRef.current) return;
+
+    resendInFlightRef.current = true;
+    setIsResending(true);
+    setErrorMessage(null);
+
+    try {
+      const nextPending = await resendParentConsentApproval(token);
+      setPending(nextPending);
+      setState("resent");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "We could not resend the approval email. Please try again shortly.",
+      );
+      setState((current) => (current === "resent" ? current : "expired"));
+    } finally {
+      resendInFlightRef.current = false;
+      setIsResending(false);
     }
   }
 
@@ -115,22 +151,85 @@ export function ParentConsentApprovalPanel() {
     );
   }
 
+  if (state === "expired" || state === "resent") {
+    return (
+      <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+        <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
+          <h1 className="font-heading text-2xl font-extrabold text-nga-primary">
+            {state === "resent"
+              ? "Approval email sent again"
+              : "This approval link has expired"}
+          </h1>
+          <p className="font-sans text-sm text-nga-slate">
+            {state === "resent"
+              ? `We sent a fresh approval link to the parent email on file${
+                  pending?.childUsername
+                    ? ` for ${pending.childUsername}`
+                    : ""
+                }. Check your inbox and use the newest email.`
+              : `This link is older than 24 hours${
+                  pending?.childUsername
+                    ? ` for ${pending.childUsername}`
+                    : ""
+                }. Resend a fresh approval email for the same pending profile — no need to create a new account.`}
+          </p>
+          {errorMessage ? (
+            <p
+              className="font-sans text-sm font-medium text-red-600"
+              role="alert"
+            >
+              {errorMessage}
+            </p>
+          ) : null}
+          <Button
+            type="button"
+            variant="cta"
+            fullWidth
+            onClick={() => {
+              void handleResend();
+            }}
+            disabled={isResending}
+            aria-busy={isResending || undefined}
+          >
+            {isResending ? "Sending…" : "Resend approval email"}
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   if (state === "invalid" || state === "error") {
+    const canResend = Boolean(pending) && Boolean(token);
     return (
       <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
         <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
           <h1 className="font-heading text-2xl font-extrabold text-nga-primary">
             {state === "invalid"
-              ? "This consent link expired"
+              ? "This approval link is not valid"
               : "Approval could not be completed"}
           </h1>
           <p className="font-sans text-sm text-nga-slate">
             {errorMessage ??
-              "This approval link is no longer valid. Ask your learner to create their profile again so a fresh parent email can be sent."}
+              "This approval link is no longer valid. Try resending a fresh approval email for the same pending profile."}
           </p>
-          <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
-            Restart signup
-          </ButtonLink>
+          {canResend ? (
+            <Button
+              type="button"
+              variant="cta"
+              fullWidth
+              onClick={() => {
+                void handleResend();
+              }}
+              disabled={isResending}
+              aria-busy={isResending || undefined}
+            >
+              {isResending ? "Sending…" : "Resend approval email"}
+            </Button>
+          ) : (
+            <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
+              Restart signup
+            </ButtonLink>
+          )}
         </div>
       </section>
     );

@@ -79,6 +79,12 @@ export {
   buildParentConsentApprovalPath,
   clearPendingParentConsent,
   createPendingParentConsent,
+  lookupConsentToken,
   PENDING_PARENT_CONSENT_KEY,
   readPendingParentConsent,
+  resendParentConsentApproval,
+} from "./parent-consent-pending";
+export type {
+  ConsentTokenLookup,
+  PendingParentConsent,
 } from "./parent-consent-pending";

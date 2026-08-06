@@ -1,5 +1,6 @@
 export type OnboardingEmailType =
   | "EXPLORER_PARENT"
+  | "EXPLORER_PARENT_RESEND"
   | "PATHFINDER_PARENT"
   | "MAVERICK_WELCOME"
   | "USERNAME_RECOVERY"
@@ -9,6 +10,9 @@ export type ExplorerParentEmailData = {
   username: string;
   token: string;
 };
+
+/** Same payload shape as the initial Explorer parent approval email. */
+export type ExplorerParentResendEmailData = ExplorerParentEmailData;
 
 export type PathfinderParentEmailData = {
   username: string;
@@ -36,6 +40,7 @@ export type CredentialRecoveryEmailData = {
 
 export type OnboardingEmailDataMap = {
   EXPLORER_PARENT: ExplorerParentEmailData;
+  EXPLORER_PARENT_RESEND: ExplorerParentResendEmailData;
   PATHFINDER_PARENT: PathfinderParentEmailData;
   MAVERICK_WELCOME: MaverickWelcomeEmailData;
   USERNAME_RECOVERY: UsernameRecoveryEmailData;
@@ -236,6 +241,54 @@ export function buildExplorerParentEmail(
         The Team at NextGenAchiever$
       </p>
     `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
+export function buildExplorerParentResendEmail(
+  data: ExplorerParentResendEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = data.username.trim() || "your learner";
+  const base = resolveAppUrl(appUrl);
+  const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
+  const safeName = escapeHtml(username);
+
+  const subject = "Here's your NextGenAchiever$ approval link again";
+  const preheader = "Your previous approval link expired. Use this fresh link.";
+  const header = "Your approval link is ready";
+
+  const text = [
+    "Hi there,",
+    "",
+    `Your previous approval link for ${username}'s NextGenAchiever$ profile has expired.`,
+    "Use the fresh link below to approve their profile and continue. Nothing else has changed.",
+    "",
+    `APPROVE & CREATE ACCOUNT: ${approveUrl}`,
+    "",
+    "If you did not request this, you can ignore this email.",
+    "",
+    "The Team at NextGenAchiever$",
+  ].join("\n");
+
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your previous approval link for <strong>${safeName}</strong>&apos;s NextGenAchiever$
+        profile has expired. Use the fresh link below to approve their profile and continue.
+        Nothing else has changed.
+      </p>
+      ${ctaButton("APPROVE & CREATE ACCOUNT", approveUrl)}
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
+      </p>
+    `,
+    footer:
+      "If you did not request this, you can ignore this email.",
   });
 
   return { subject, preheader, html, text };
@@ -529,6 +582,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "EXPLORER_PARENT":
       return buildExplorerParentEmail(
         data as ExplorerParentEmailData,
+        appUrl,
+      );
+    case "EXPLORER_PARENT_RESEND":
+      return buildExplorerParentResendEmail(
+        data as ExplorerParentResendEmailData,
         appUrl,
       );
     case "PATHFINDER_PARENT":

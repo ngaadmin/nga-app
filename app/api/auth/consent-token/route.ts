@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  isConsentTokenUnexpired,
   signConsentToken,
   verifyConsentToken,
   type ConsentTokenClaims,
@@ -10,7 +11,6 @@ import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohor
 export const runtime = "nodejs";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const CONSENT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function clientKey(request: Request): string {
   return (
@@ -20,12 +20,15 @@ function clientKey(request: Request): string {
   );
 }
 
-function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
-  const createdAt = Date.parse(createdAtIso);
-  if (!Number.isFinite(createdAt) || Date.now() - createdAt > CONSENT_TTL_MS) {
-    return false;
-  }
-  return requiresParentConsentForBirthYear(birthYear);
+function toPendingPayload(token: string, claims: ConsentTokenClaims) {
+  return {
+    token,
+    parentEmail: claims.parentEmail,
+    childUsername: claims.childUsername,
+    birthYear: claims.birthYear,
+    createdAt: claims.createdAt,
+    passcodeHash: claims.passcodeHash,
+  };
 }
 
 /** Issue a signed parental consent token. */
@@ -115,22 +118,29 @@ export async function GET(request: NextRequest) {
   }
 
   const claims = verifyConsentToken(token);
-  if (!claims || !isConsentStillValid(claims.createdAt, claims.birthYear)) {
+  if (!claims || !requiresParentConsentForBirthYear(claims.birthYear)) {
     return NextResponse.json(
       { success: false, error: "Invalid or expired consent token." },
       { status: 400 },
     );
   }
 
+  const pending = toPendingPayload(token, claims);
+
+  if (!isConsentTokenUnexpired(claims.createdAt)) {
+    return NextResponse.json(
+      {
+        success: false as const,
+        expired: true as const,
+        error: "Consent token has expired.",
+        pending,
+      },
+      { status: 410 },
+    );
+  }
+
   return NextResponse.json({
     success: true as const,
-    pending: {
-      token,
-      parentEmail: claims.parentEmail,
-      childUsername: claims.childUsername,
-      birthYear: claims.birthYear,
-      createdAt: claims.createdAt,
-      passcodeHash: claims.passcodeHash,
-    },
+    pending,
   });
 }

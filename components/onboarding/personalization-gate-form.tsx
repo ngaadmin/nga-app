@@ -63,7 +63,7 @@ export function PersonalizationGateForm() {
     const trimmed = username.trim();
 
     if (!trimmed) {
-      next.username = "Pick a nickname to continue.";
+      next.username = "Pick a username to continue.";
     } else if (!USERNAME_PATTERN.test(trimmed)) {
       next.username =
         "Use 2-20 letters, numbers, underscores, hyphens, or # only.";
@@ -148,14 +148,14 @@ export function PersonalizationGateForm() {
               htmlFor="username"
               className="block font-heading text-sm font-bold text-nga-primary"
             >
-              Nickname
+              Username
             </label>
             <input
               id="username"
               name="username"
               type="text"
               autoComplete="username"
-              placeholder="Pick a cool nickname..."
+              placeholder="Pick a cool username..."
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);

@@ -135,7 +135,11 @@ export function SignUpForm() {
   const isPathfinder = !isParentMaster && ageTier === "pathfinder";
   const isMaverick = !isParentMaster && ageTier === "maverick";
 
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() =>
+    !isParentMaster && existingSession?.username?.trim()
+      ? existingSession.username.trim()
+      : "",
+  );
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -199,15 +203,9 @@ export function SignUpForm() {
     } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
       next.username =
         "Use 2-20 letters, numbers, underscores, or hyphens only.";
-    } else if (
-      !isParentMaster &&
-      existingSession?.genericProfileId &&
-      existingSession.username &&
-      trimmedUsername.toLowerCase() === existingSession.username.toLowerCase()
-    ) {
-      next.username = USERNAME_TAKEN_ERROR;
     } else if (!isParentMaster && trimmedUsername) {
       // Username must be unique; the same parent email may link many children.
+      // Guest-step username is inherited and is not "taken".
       const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
       if (
         existingAccount &&

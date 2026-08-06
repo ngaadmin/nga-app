@@ -46,8 +46,13 @@ async function dispatchOnboardingEmails(
       },
     });
     if (!result.success) {
+      const detail =
+        "error" in result && typeof result.error === "string"
+          ? result.error.trim()
+          : "";
       throw new Error(
-        "We could not send the parent approval email. Check the parent or guardian email address and try again.",
+        detail ||
+          "We could not send the parent approval email. Check the parent or guardian email address and try again.",
       );
     }
     return;

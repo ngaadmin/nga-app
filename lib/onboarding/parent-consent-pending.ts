@@ -74,11 +74,19 @@ export async function encodeConsentToken(input: {
   createdAt: string;
   passcodeHash?: string;
 }): Promise<string> {
-  const response = await fetch("/api/auth/consent-token", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
+  let response: Response;
+  try {
+    response = await fetch("/api/auth/consent-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  } catch {
+    throw new Error(
+      "We could not reach the approval-link service. Check your connection and try again.",
+    );
+  }
+
   const json = (await response.json().catch(() => null)) as {
     success?: boolean;
     token?: string;
@@ -86,9 +94,16 @@ export async function encodeConsentToken(input: {
   } | null;
 
   if (!response.ok || !json?.token) {
+    if (typeof json?.error === "string" && json.error.trim()) {
+      throw new Error(json.error.trim());
+    }
+    if (response.status === 429) {
+      throw new Error(
+        "Too many approval-link requests from this device. Wait about a minute, then try again.",
+      );
+    }
     throw new Error(
-      json?.error ||
-        "We could not create a secure parent approval link. Please try again.",
+      "We could not create the parent approval link for this Explorer. Please try again.",
     );
   }
   return json.token;
@@ -448,6 +463,8 @@ export async function createPendingParentConsent(input: {
       "That username is already taken. Try a different username for this Explorer.",
     );
   }
+  // PENDING_CONSENT profiles may be recreated (retry). A shared parent/guardian
+  // email across different usernames is always allowed.
 
   const passcodeHash = resolvePasscodeHash(input);
   if (!passcodeHash) {

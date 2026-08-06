@@ -33,10 +33,16 @@ function toPendingPayload(token: string, claims: ConsentTokenClaims) {
 
 /** Issue a signed parental consent token. */
 export async function POST(request: Request) {
-  const limit = consumeRateLimit(`consent-issue:${clientKey(request)}`, 20, 60_000);
+  // Higher budget: one parent may create several Explorer profiles (and resend
+  // links) in a short window. Limit is per IP, not per email.
+  const limit = consumeRateLimit(`consent-issue:${clientKey(request)}`, 60, 60_000);
   if (!limit.allowed) {
     return NextResponse.json(
-      { success: false, error: "Too many requests. Try again shortly." },
+      {
+        success: false,
+        error:
+          "Too many approval-link requests from this device. Wait about a minute, then try again.",
+      },
       { status: 429 },
     );
   }

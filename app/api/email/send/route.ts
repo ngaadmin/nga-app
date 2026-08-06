@@ -97,6 +97,7 @@ function clientKey(request: Request): string {
 function isAllowedOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
+  const host = request.headers.get("host");
   const candidates = [origin, referer].filter(Boolean) as string[];
   if (candidates.length === 0) {
     // Same-origin fetches from some browsers may omit Origin on POST in odd cases;
@@ -116,6 +117,10 @@ function isAllowedOrigin(request: Request): boolean {
   }
   const vercelUrl = process.env.VERCEL_URL?.trim();
   if (vercelUrl) allowedHosts.add(vercelUrl.replace(/^https?:\/\//, ""));
+  // Allow the deployment host the browser is actually using (custom domains, previews).
+  if (host?.trim()) {
+    allowedHosts.add(host.trim().toLowerCase());
+  }
 
   return candidates.some((value) => {
     try {
@@ -135,14 +140,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const limit = consumeRateLimit(`email-send:${clientKey(request)}`, 10, 60_000);
-    if (!limit.allowed) {
-      return NextResponse.json(
-        { success: false, error: "Too many email requests. Try again shortly." },
-        { status: 429 },
-      );
-    }
-
     let body: SendBody;
     try {
       body = (await request.json()) as SendBody;
@@ -150,6 +147,32 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "Invalid JSON body." },
         { status: 400 },
+      );
+    }
+
+    const rateUsername =
+      body.data && typeof body.data === "object" && !Array.isArray(body.data)
+        ? readString(body.data as Record<string, unknown>, "username")
+        : undefined;
+    const rateRecipient =
+      typeof body.recipientEmail === "string"
+        ? body.recipientEmail.trim().toLowerCase()
+        : "";
+    // Per learner (+ recipient) so sibling Explorers sharing one parent email
+    // do not block each other after resends on another profile.
+    const limit = consumeRateLimit(
+      `email-send:${clientKey(request)}:${rateRecipient}:${rateUsername ?? "unknown"}`,
+      12,
+      60_000,
+    );
+    if (!limit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Too many approval emails for this profile. Wait about a minute, then try again.",
+        },
+        { status: 429 },
       );
     }
 

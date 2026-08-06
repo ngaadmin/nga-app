@@ -48,11 +48,18 @@ function resolveSignupFailureMessage(error: unknown, isExplorer: boolean): strin
     if (/username is already taken/i.test(message)) {
       return USERNAME_TAKEN_ERROR;
     }
-    if (/parent approval email|parent or guardian email|valid parent/i.test(message)) {
+    if (/too many approval|too many email|try again shortly|wait about a minute/i.test(message)) {
       return message;
     }
-    if (/secure parent approval link|consent token/i.test(message)) {
-      return "We could not create a secure parent approval link. Please try again in a moment.";
+    if (
+      /parent approval email|parent or guardian email|valid parent|approval link|approval-link/i.test(
+        message,
+      )
+    ) {
+      return message;
+    }
+    if (/consent token signature|consent token email|consent token username/i.test(message)) {
+      return "We could not verify the approval link for this Explorer. Please try sending again.";
     }
     if (/password must be at least 6|password \(at least 6\)/i.test(message)) {
       return "Use at least 6 characters for your password.";

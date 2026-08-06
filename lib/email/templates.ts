@@ -146,7 +146,7 @@ export function buildExplorerParentEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
   const privacyUrl = `${base}/privacy`;
-  const learningPath = "Explorer — for learners aged 12 and under";
+  const learningPath = "Explorer - for learners aged 12 and under";
   const safeName = escapeHtml(username);
   const safePath = escapeHtml(learningPath);
   const safePrivacy = escapeHtml(privacyUrl);
@@ -181,7 +181,7 @@ export function buildExplorerParentEmail(
     "",
     "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
     "",
-    "- NextGenAchievers",
+    "The Team at NextGenAchiever$",
   ].join("\n");
 
   const html = wrapHtml({
@@ -190,28 +190,28 @@ export function buildExplorerParentEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Congratulations! Your child has started their journey of learning the essential money habits
-        that can set them up for a life of financial freedom on the NextGenAchiever$ app.
+        <strong>Congratulations! Your child has started their journey of learning the essential money habits
+        that can set them up for a life of financial freedom on the NextGenAchiever$ app.</strong>
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         We know how much kids love screen time - so we made sure that time is spent mastering
         real-world money skills they will actually need.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Don&apos;t worry! NextGenAchiever$ is strictly an educational tool - not a financial product.
+        <strong>Don&apos;t worry! NextGenAchiever$ is strictly an educational tool - not a financial product.</strong>
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         There are no real-money transactions, live bank links, or hidden micro-purchases. Everything
         happens inside a 100% safe, virtualized environment designed purely for learning and practice.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        To make their profile official and save their progress, they need a parent or guardian to approve.
+        <strong>To make their profile official and save their progress, they need a parent or guardian to approve.</strong>
       </p>
       <p style="margin:0 0 8px;font-size:16px;">
-        <strong>Profile name:</strong> ${safeName}
+        <strong>Profile name: ${safeName}</strong>
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        <strong>Learning path chosen:</strong> ${safePath}
+        <strong>Learning path chosen: ${safePath}</strong>
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         Once you approve, we will save their username, progress, achievements and activity in the app
@@ -228,9 +228,14 @@ export function buildExplorerParentEmail(
         parental controls and track your learner&apos;s progress.
       </p>
       ${ctaButton("APPROVE & CREATE ACCOUNT", approveUrl)}
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        If you did not request this account, you can safely ignore this email or contact
+        support@nextgenachievers.com.
+      </p>
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
+      </p>
     `,
-    footer:
-      "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
   });
 
   return { subject, preheader, html, text };

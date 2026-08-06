@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
@@ -137,6 +137,8 @@ export function SignUpForm() {
   const [pendingConsent, setPendingConsent] =
     useState<PendingParentConsent | null>(null);
   const [parentConsentLoading, setParentConsentLoading] = useState(isParentMaster);
+  const [isSendingApprovalEmail, setIsSendingApprovalEmail] = useState(false);
+  const approvalEmailInFlightRef = useRef(false);
 
   useEffect(() => {
     if (isParentMaster) return;
@@ -323,8 +325,12 @@ export function SignUpForm() {
 
     if (!birthYear || !ageTier || !validate()) return;
 
-    try {
-      if (isExplorer) {
+    if (isExplorer) {
+      if (approvalEmailInFlightRef.current) return;
+      approvalEmailInFlightRef.current = true;
+      setIsSendingApprovalEmail(true);
+
+      try {
         const pending = await createPendingParentConsent({
           parentEmail: parentEmail.trim(),
           childUsername: username.trim(),
@@ -334,9 +340,18 @@ export function SignUpForm() {
         router.push(
           `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
         );
-        return;
+      } catch (error) {
+        approvalEmailInFlightRef.current = false;
+        setIsSendingApprovalEmail(false);
+        setErrors((prev) => ({
+          ...prev,
+          form: resolveSignupFailureMessage(error, true),
+        }));
       }
+      return;
+    }
 
+    try {
       captureGuestProgressSnapshot();
       const session = convertToRegisteredProfile({
         username: username.trim(),
@@ -352,7 +367,7 @@ export function SignUpForm() {
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        form: resolveSignupFailureMessage(error, isExplorer),
+        form: resolveSignupFailureMessage(error, false),
       }));
     }
   }
@@ -756,9 +771,17 @@ export function SignUpForm() {
             </label>
           ) : null}
 
-          <Button type="submit" variant="cta" fullWidth>
+          <Button
+            type="submit"
+            variant="cta"
+            fullWidth
+            disabled={isSendingApprovalEmail}
+            aria-busy={isSendingApprovalEmail || undefined}
+          >
             {isExplorer
-              ? "Request Parent Approval"
+              ? isSendingApprovalEmail
+                ? "Sending…"
+                : "Request Parent Approval"
               : "Create My Free Account"}
           </Button>
         </form>

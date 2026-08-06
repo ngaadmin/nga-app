@@ -29,40 +29,9 @@ export type PendingParentConsent = {
   passcodeHash?: string;
 };
 
-/** Compact payload embedded in email-safe consent tokens (cross-device). */
-type ConsentTokenPayloadV1 = {
-  v: 1;
-  e: string;
-  u: string;
-  y: number;
-  c: string;
-  p?: string;
-};
-
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FOUR_DIGIT_PATTERN = /^\d{4}$/;
 const CONSENT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-function toBase64Url(value: string): string {
-  const bytes = new TextEncoder().encode(value);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 1) {
-    binary += String.fromCharCode(bytes[i]!);
-  }
-  return btoa(binary)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-}
-
-function fromBase64Url(value: string): string {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padLen = (4 - (padded.length % 4)) % 4;
-  const withPad = padded + "=".repeat(padLen);
-  const binary = atob(withPad);
-  const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
 
 function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
   const createdAt = Date.parse(createdAtIso);
@@ -73,73 +42,39 @@ function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
 }
 
 /**
- * Encode pending consent fields into a portable token so email CTAs work on
- * any device/browser (not only the child's local session storage).
+ * Ask the server to HMAC-sign a portable consent token.
+ * Unsigned local tokens are no longer issued.
  */
-export function encodeConsentToken(input: {
+export async function encodeConsentToken(input: {
   parentEmail: string;
   childUsername: string;
   birthYear: number;
   createdAt: string;
   passcodeHash?: string;
-}): string {
-  const payload: ConsentTokenPayloadV1 = {
-    v: 1,
-    e: input.parentEmail,
-    u: input.childUsername,
-    y: input.birthYear,
-    c: input.createdAt,
-  };
-  if (input.passcodeHash) {
-    payload.p = input.passcodeHash;
+}): Promise<string> {
+  const response = await fetch("/api/auth/consent-token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const json = (await response.json().catch(() => null)) as {
+    success?: boolean;
+    token?: string;
+    error?: string;
+  } | null;
+
+  if (!response.ok || !json?.token) {
+    throw new Error(json?.error || "Could not issue a signed consent token.");
   }
-  return toBase64Url(JSON.stringify(payload));
+  return json.token;
 }
 
-/** Decode a portable consent token. Returns null if malformed or expired. */
-export function decodeConsentToken(token: string): PendingParentConsent | null {
-  const trimmed = token.trim();
-  if (!trimmed) return null;
-
-  try {
-    const raw = fromBase64Url(trimmed);
-    const parsed = JSON.parse(raw) as Partial<ConsentTokenPayloadV1>;
-    if (
-      parsed.v !== 1 ||
-      typeof parsed.e !== "string" ||
-      typeof parsed.u !== "string" ||
-      typeof parsed.y !== "number" ||
-      !Number.isInteger(parsed.y) ||
-      typeof parsed.c !== "string"
-    ) {
-      return null;
-    }
-
-    const parentEmail = parsed.e.trim().toLowerCase();
-    const childUsername = parsed.u.trim();
-    if (!parentEmail || !EMAIL_PATTERN.test(parentEmail) || !childUsername) {
-      return null;
-    }
-    if (!isConsentStillValid(parsed.c, parsed.y)) {
-      return null;
-    }
-
-    const passcodeHash =
-      typeof parsed.p === "string" && parsed.p.trim()
-        ? parsed.p.trim()
-        : undefined;
-
-    return {
-      token: trimmed,
-      parentEmail,
-      childUsername,
-      birthYear: parsed.y,
-      createdAt: parsed.c,
-      passcodeHash,
-    };
-  } catch {
-    return null;
-  }
+/**
+ * Legacy unsigned tokens are rejected. Prefer
+ * {@link readPendingParentConsentByToken} which verifies via the server.
+ */
+export function decodeConsentToken(_token: string): PendingParentConsent | null {
+  return null;
 }
 
 function resolvePasscodeHash(input: {
@@ -150,10 +85,11 @@ function resolvePasscodeHash(input: {
     return input.passcodeHash.trim();
   }
   if (typeof input.passcode === "string" && input.passcode.length > 0) {
-    if (!FOUR_DIGIT_PATTERN.test(input.passcode.trim())) {
-      throw new Error("Explorer passcode must be exactly 4 digits.");
+    const trimmed = input.passcode.trim();
+    if (trimmed.length < 6 && !FOUR_DIGIT_PATTERN.test(trimmed)) {
+      throw new Error("Explorer password must be at least 6 characters.");
     }
-    return hashCredential(input.passcode);
+    return hashCredential(trimmed);
   }
   return undefined;
 }
@@ -222,34 +158,84 @@ export function readPendingParentConsent(): PendingParentConsent | null {
   }
 }
 
+/** True when local pending claims still match the signed token payload. */
+function localPendingMatchesSignedClaims(
+  local: PendingParentConsent,
+  signed: PendingParentConsent,
+): boolean {
+  if (
+    local.parentEmail.trim().toLowerCase() !==
+    signed.parentEmail.trim().toLowerCase()
+  ) {
+    return false;
+  }
+  if (local.childUsername.trim() !== signed.childUsername.trim()) {
+    return false;
+  }
+  if (local.birthYear !== signed.birthYear) {
+    return false;
+  }
+  const localHash = local.passcodeHash?.trim() ?? "";
+  const signedHash = signed.passcodeHash?.trim() ?? "";
+  return localHash === signedHash;
+}
+
+async function fetchSignedPendingConsent(
+  token: string,
+): Promise<PendingParentConsent | null> {
+  try {
+    const response = await fetch(
+      `/api/auth/consent-token?token=${encodeURIComponent(token)}`,
+    );
+    const json = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      pending?: PendingParentConsent;
+    } | null;
+    if (!response.ok || !json?.pending) return null;
+    return json.pending;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Resolve pending consent for an email/magic link token.
- * Prefers same-device storage, then decodes portable self-contained tokens.
+ * Always verifies the signed token; same-device local storage is used only when
+ * its claims still match the signed payload (rejects client-altered records).
  */
-export function readPendingParentConsentByToken(
+export async function readPendingParentConsentByToken(
   token: string,
-): PendingParentConsent | null {
+): Promise<PendingParentConsent | null> {
   const trimmed = token.trim();
   if (!trimmed) return null;
 
-  const pending = readPendingParentConsent();
-  if (pending && pending.token === trimmed) return pending;
+  const signed = await fetchSignedPendingConsent(trimmed);
+  if (!signed) return null;
 
-  return decodeConsentToken(trimmed);
+  const pending = readPendingParentConsent();
+  if (pending && pending.token === trimmed) {
+    if (localPendingMatchesSignedClaims(pending, signed)) {
+      return pending;
+    }
+    // Local record was altered - discard and trust signed claims only.
+    clearPendingParentConsent();
+  }
+
+  return signed;
 }
 
 /**
  * Starts Explorer VPC: backs up guest progress, creates a PENDING_CONSENT
  * registered profile (no learner email), and stores a portable consent token.
  */
-export function createPendingParentConsent(input: {
+export async function createPendingParentConsent(input: {
   parentEmail: string;
   childUsername: string;
   birthYear: number;
-  /** 4-digit Explorer handle passcode. */
+  /** Explorer login password (min 6 characters). */
   passcode?: string;
   passcodeHash?: string;
-}): PendingParentConsent {
+}): Promise<PendingParentConsent> {
   const parentEmail = input.parentEmail.trim().toLowerCase();
   const childUsername = input.childUsername.trim();
 
@@ -261,13 +247,13 @@ export function createPendingParentConsent(input: {
   }
   if (!requiresParentConsentForBirthYear(input.birthYear)) {
     throw new Error(
-      "Parent consent is only required for Explorers ages 10–12 (conservative age gate).",
+      "Parent consent is only required for Explorers ages 10-12 (conservative age gate).",
     );
   }
 
   const passcodeHash = resolvePasscodeHash(input);
   const createdAt = new Date().toISOString();
-  const token = encodeConsentToken({
+  const token = await encodeConsentToken({
     parentEmail,
     childUsername,
     birthYear: input.birthYear,
@@ -277,7 +263,7 @@ export function createPendingParentConsent(input: {
 
   captureGuestProgressSnapshot();
 
-  // Explorers: PENDING_CONSENT, parentEmail + username (+ passcode when provided), no learner email.
+  // Explorers: PENDING_CONSENT, parentEmail + username (+ password hash), no learner email.
   const pendingSession = convertToRegisteredProfile({
     username: childUsername,
     birthYear: input.birthYear,
@@ -310,12 +296,12 @@ export type ApproveParentConsentOptions = {
   parentPinHash?: string;
 };
 
-/** Simulated magic-link approval — activates parent-linked account and merges guest progress. */
-export function approveParentConsent(
+/** Simulated magic-link approval - activates parent-linked account and merges guest progress. */
+export async function approveParentConsent(
   token: string,
   options: ApproveParentConsentOptions = {},
-): UserSession | null {
-  const pending = readPendingParentConsentByToken(token);
+): Promise<UserSession | null> {
+  const pending = await readPendingParentConsentByToken(token);
   if (!pending) return null;
 
   ensureGuestProgressSnapshot();

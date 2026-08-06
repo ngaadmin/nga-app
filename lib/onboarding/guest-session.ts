@@ -1,3 +1,7 @@
+import {
+  hashCredential as hashCredentialV2,
+  verifyCredential,
+} from "@/lib/auth/credential-hash";
 import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
 import {
   defaultAccountStatusForBirthYear,
@@ -15,6 +19,8 @@ import {
   writePersisted,
 } from "@/lib/dev/client-persist";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
+
+export { verifyCredential };
 
 export const GUEST_SESSION_STORAGE_KEY = "nga_guest_session";
 
@@ -131,6 +137,8 @@ export type UserSession = {
   passwordHash?: string;
   /** When true, user must set a new password before continuing after recovery login. */
   mustChangePassword?: boolean;
+  /** ISO expiry for a server-issued temporary recovery password. */
+  temporaryPasswordExpiresAt?: string;
   /** Marketing email opt-in collected at create-profile. */
   marketingOptIn?: boolean;
 };
@@ -141,15 +149,9 @@ export type GuestAccessSession = UserSession;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FOUR_DIGIT_PATTERN = /^\d{4}$/;
 
-/** Lightweight local credential digest (guest-first; not a substitute for server auth). */
+/** Salted credential digest (`nga2_`). Legacy `nga1_` hashes still verify. */
 export function hashCredential(value: string): string {
-  const normalized = value.trim();
-  let hash = 2166136261;
-  for (let i = 0; i < normalized.length; i += 1) {
-    hash ^= normalized.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return `nga1_${(hash >>> 0).toString(16)}`;
+  return hashCredentialV2(value);
 }
 
 function normalizeEmail(value: string | null | undefined): string | undefined {
@@ -163,10 +165,14 @@ function resolvePasscodeHash(input: RegisteredProfileInput): string | undefined 
     return input.passcodeHash.trim();
   }
   if (typeof input.passcode === "string" && input.passcode.length > 0) {
-    if (!FOUR_DIGIT_PATTERN.test(input.passcode.trim())) {
-      throw new Error("Explorer passcode must be exactly 4 digits.");
+    const trimmed = input.passcode.trim();
+    // Explorer login credential is a password (min 6). Legacy 4-digit values still hash.
+    if (trimmed.length < 6 && !FOUR_DIGIT_PATTERN.test(trimmed)) {
+      throw new Error(
+        "Explorer password must be at least 6 characters.",
+      );
     }
-    return hashCredential(input.passcode);
+    return hashCredential(trimmed);
   }
   return undefined;
 }
@@ -409,6 +415,12 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
       typeof parsed.passcodeHash === "string" ? parsed.passcodeHash : undefined,
     passwordHash:
       typeof parsed.passwordHash === "string" ? parsed.passwordHash : undefined,
+    mustChangePassword: parsed.mustChangePassword === true,
+    temporaryPasswordExpiresAt:
+      typeof parsed.temporaryPasswordExpiresAt === "string"
+        ? parsed.temporaryPasswordExpiresAt
+        : undefined,
+    marketingOptIn: parsed.marketingOptIn === true,
   };
 
   return session;
@@ -496,7 +508,7 @@ export function convertToRegisteredProfile(
 
   if (requirements.requiresPasscode && input.passcode !== undefined && !passcodeHash) {
     throw new Error(
-      "A 4-digit passcode is required for Explorer handle login.",
+      "A password is required for Explorer handle login.",
     );
   }
   if (requirements.requiresPassword && input.password !== undefined && !passwordHash) {

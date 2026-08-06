@@ -17,8 +17,8 @@ import {
   dispatchParentPinRecoveryEmail,
   isParentPinConfigured,
   isValidPinFormat,
+  issueParentPinRecovery,
   resolveSimulatedParentEmail,
-  resetParentPinToRecovery,
   saveParentPin,
   verifyParentPin,
 } from "@/lib/dashboard/parent-pin";
@@ -292,8 +292,11 @@ function ChangeParentPinModal({
     setIsRecovering(true);
 
     try {
-      resetParentPinToRecovery();
-      const result = await dispatchParentPinRecoveryEmail(parentEmail);
+      const recoveryCode = issueParentPinRecovery();
+      const result = await dispatchParentPinRecoveryEmail(
+        parentEmail,
+        recoveryCode,
+      );
       setRecoveryNotice(
         copy.forgotPinSuccess
           .replace("{code}", result.recoveryCode)

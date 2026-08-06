@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { verifyConsentToken } from "@/lib/auth/consent-token";
+import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import {
   PRODUCTION_APP_URL,
@@ -8,12 +10,15 @@ import {
 
 export const runtime = "nodejs";
 
-const EMAIL_TYPES: readonly OnboardingEmailType[] = [
+/** Public browser send types - CREDENTIAL_RECOVERY is server-issued only. */
+const EMAIL_TYPES: readonly Exclude<
+  OnboardingEmailType,
+  "CREDENTIAL_RECOVERY"
+>[] = [
   "EXPLORER_PARENT",
   "PATHFINDER_PARENT",
   "MAVERICK_WELCOME",
   "USERNAME_RECOVERY",
-  "CREDENTIAL_RECOVERY",
 ] as const;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,7 +29,9 @@ type SendBody = {
   data?: unknown;
 };
 
-function isEmailType(value: unknown): value is OnboardingEmailType {
+function isPublicEmailType(
+  value: unknown,
+): value is Exclude<OnboardingEmailType, "CREDENTIAL_RECOVERY"> {
   return (
     typeof value === "string" &&
     (EMAIL_TYPES as readonly string[]).includes(value)
@@ -45,9 +52,9 @@ function readString(
 }
 
 function parseData(
-  type: OnboardingEmailType,
+  type: Exclude<OnboardingEmailType, "CREDENTIAL_RECOVERY">,
   raw: unknown,
-): OnboardingEmailDataMap[OnboardingEmailType] | null {
+): OnboardingEmailDataMap[Exclude<OnboardingEmailType, "CREDENTIAL_RECOVERY">] | null {
   const data = asRecord(raw);
   const username = readString(data, "username");
   if (!username) return null;
@@ -58,17 +65,83 @@ function parseData(
     return { username, token };
   }
 
-  if (type === "CREDENTIAL_RECOVERY") {
-    const recoveryCode = readString(data, "recoveryCode");
-    if (!recoveryCode) return null;
-    return { username, recoveryCode };
+  if (type === "USERNAME_RECOVERY") {
+    return {
+      username,
+      cohort: readString(data, "cohort") as
+        | "explorer"
+        | "pathfinder"
+        | "maverick"
+        | undefined,
+      masterUsername: readString(data, "masterUsername"),
+      linkedUsernames: Array.isArray(data.linkedUsernames)
+        ? data.linkedUsernames.filter(
+            (entry): entry is string => typeof entry === "string",
+          )
+        : undefined,
+    };
   }
 
   return { username };
 }
 
+function clientKey(request: Request): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    "unknown"
+  );
+}
+
+function isAllowedOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+  const candidates = [origin, referer].filter(Boolean) as string[];
+  if (candidates.length === 0) {
+    // Same-origin fetches from some browsers may omit Origin on POST in odd cases;
+    // still allow in development only.
+    return process.env.NODE_ENV !== "production";
+  }
+
+  const allowedHosts = new Set<string>();
+  try {
+    allowedHosts.add(new URL(PRODUCTION_APP_URL).host);
+  } catch {
+    // ignore
+  }
+  if (process.env.NODE_ENV !== "production") {
+    allowedHosts.add("localhost:3000");
+    allowedHosts.add("127.0.0.1:3000");
+  }
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) allowedHosts.add(vercelUrl.replace(/^https?:\/\//, ""));
+
+  return candidates.some((value) => {
+    try {
+      return allowedHosts.has(new URL(value).host);
+    } catch {
+      return false;
+    }
+  });
+}
+
 export async function POST(request: Request) {
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden origin." },
+        { status: 403 },
+      );
+    }
+
+    const limit = consumeRateLimit(`email-send:${clientKey(request)}`, 10, 60_000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many email requests. Try again shortly." },
+        { status: 429 },
+      );
+    }
+
     let body: SendBody;
     try {
       body = (await request.json()) as SendBody;
@@ -79,12 +152,23 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!isEmailType(body.type)) {
+    if (body.type === "CREDENTIAL_RECOVERY") {
       return NextResponse.json(
         {
           success: false,
           error:
-            "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME | USERNAME_RECOVERY | CREDENTIAL_RECOVERY.",
+            "CREDENTIAL_RECOVERY must be issued via /api/auth/temporary-password.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!isPublicEmailType(body.type)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "type must be EXPLORER_PARENT | PATHFINDER_PARENT | MAVERICK_WELCOME | USERNAME_RECOVERY.",
         },
         { status: 400 },
       );
@@ -109,15 +193,35 @@ export async function POST(request: Request) {
           error:
             body.type === "EXPLORER_PARENT"
               ? "data.username and data.token are required."
-              : body.type === "CREDENTIAL_RECOVERY"
-                ? "data.username and data.recoveryCode are required."
-                : "data.username is required.",
+              : "data.username is required.",
         },
         { status: 400 },
       );
     }
 
-    // Always pin CTAs to production — ignore localhost Origin / env overrides.
+    if (body.type === "EXPLORER_PARENT") {
+      const explorerData = data as OnboardingEmailDataMap["EXPLORER_PARENT"];
+      const claims = verifyConsentToken(explorerData.token);
+      if (!claims) {
+        return NextResponse.json(
+          { success: false, error: "Consent token signature is invalid." },
+          { status: 400 },
+        );
+      }
+      if (claims.parentEmail !== recipientEmail) {
+        return NextResponse.json(
+          { success: false, error: "Consent token email mismatch." },
+          { status: 400 },
+        );
+      }
+      if (claims.childUsername !== explorerData.username) {
+        return NextResponse.json(
+          { success: false, error: "Consent token username mismatch." },
+          { status: 400 },
+        );
+      }
+    }
+
     const result = await sendOnboardingEmail({
       type: body.type,
       recipientEmail,
@@ -125,13 +229,22 @@ export async function POST(request: Request) {
       appUrl: PRODUCTION_APP_URL,
     });
 
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error || "Email send failed.",
+        },
+        { status: 502 },
+      );
+    }
+
     return NextResponse.json({
       success: true as const,
       simulated: result.simulated === true,
       id: result.id,
     });
   } catch (error) {
-    // Soft-fail: signup must keep working even if mail dispatch breaks.
     console.error("[EMAIL_SEND_ERROR]", error);
     return NextResponse.json({
       success: true as const,

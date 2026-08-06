@@ -1,11 +1,8 @@
-import {
-  dispatchParentPinRecoveryEmail,
-  RECOVERY_PARENT_PIN,
-  resetParentPinToRecovery,
-} from "@/lib/dashboard/parent-pin";
 import { requestOnboardingEmailSend } from "@/lib/email/request-send";
+import { isTemporaryPasswordHash } from "@/lib/auth/temporary-password";
 import {
   hashCredential,
+  verifyCredential,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 
@@ -81,16 +78,23 @@ function accountMatchesIdentifier(
   return false;
 }
 
+function storedCredentialMatches(
+  stored: string | undefined,
+  credential: string,
+): boolean {
+  if (!stored) return false;
+  return verifyCredential(credential, stored);
+}
+
 function credentialMatchesAccount(
   account: UserSession,
   credential: string,
 ): boolean {
   const trimmed = credential.trim();
   if (!trimmed) return false;
-  const digest = hashCredential(trimmed);
 
-  if (account.passcodeHash && account.passcodeHash === digest) return true;
-  if (account.passwordHash && account.passwordHash === digest) return true;
+  if (storedCredentialMatches(account.passcodeHash, trimmed)) return true;
+  if (storedCredentialMatches(account.passwordHash, trimmed)) return true;
 
   return false;
 }
@@ -106,6 +110,42 @@ function accountMatchesEmail(account: UserSession, email: string): boolean {
   if (parent && parent === needle) return true;
 
   return false;
+}
+
+function applyTemporaryPasswordHash(
+  account: UserSession,
+  passwordHash: string,
+  expiresAt: string,
+): UserSession {
+  const updated: UserSession = {
+    ...account,
+    mustChangePassword: true,
+    temporaryPasswordExpiresAt: expiresAt,
+  };
+
+  if (account.ageTier === "explorer" || account.passcodeHash) {
+    updated.passcodeHash = passwordHash;
+  }
+  if (account.ageTier !== "explorer") {
+    updated.passwordHash = passwordHash;
+  }
+
+  return updated;
+}
+
+/** Temp recovery credentials fail closed when expiry is missing or past. */
+function isTemporaryPasswordExpired(account: UserSession): boolean {
+  const hasTempHash =
+    isTemporaryPasswordHash(account.passwordHash ?? "") ||
+    isTemporaryPasswordHash(account.passcodeHash ?? "");
+  if (!hasTempHash) return false;
+
+  const expiresAt = account.temporaryPasswordExpiresAt?.trim();
+  if (!expiresAt) return true;
+
+  const expiresMs = Date.parse(expiresAt);
+  if (!Number.isFinite(expiresMs)) return true;
+  return Date.now() > expiresMs;
 }
 
 /** Upsert a registered profile into the durable local account registry. */
@@ -141,10 +181,16 @@ export function authenticateRegisteredAccount(
 
   if (!match) return null;
 
-  const recoveryDigest = hashCredential(RECOVERY_PARENT_PIN);
+  const usedTempHash =
+    isTemporaryPasswordHash(match.passwordHash ?? "") ||
+    isTemporaryPasswordHash(match.passcodeHash ?? "");
+
+  if (usedTempHash && isTemporaryPasswordExpired(match)) {
+    return null;
+  }
+
   const usedTempRecovery =
-    hashCredential(credential) === recoveryDigest ||
-    match.mustChangePassword === true;
+    match.mustChangePassword === true || usedTempHash;
 
   if (usedTempRecovery) {
     return { ...match, mustChangePassword: true };
@@ -179,6 +225,7 @@ export function setRegisteredAccountPassword(
   const updated: UserSession = {
     ...existing,
     mustChangePassword: false,
+    temporaryPasswordExpiresAt: undefined,
   };
 
   if (existing.ageTier === "explorer" || existing.passcodeHash) {
@@ -217,16 +264,34 @@ export async function recoverUsernameByEmail(
     await requestOnboardingEmailSend({
       type: "USERNAME_RECOVERY",
       recipientEmail,
-      data: { username: account.username },
+      data: {
+        username: account.username,
+        cohort: account.ageTier,
+        masterUsername:
+          account.accountRole === "parent_master"
+            ? account.username
+            : undefined,
+        linkedUsernames:
+          account.ageTier === "explorer" ? [account.username] : undefined,
+      },
     });
   }
 
   return { accepted: true, recipientEmail };
 }
 
+type TemporaryPasswordApiResult = {
+  success?: boolean;
+  passwordHash?: string;
+  expiresAt?: string;
+  error?: string;
+};
+
 /**
- * Resets Parent PIN via the existing recovery path and emails a temporary
- * passcode/PIN recovery code to the profile email on file.
+ * Requests a server-issued random temporary password (emailed server-side),
+ * then stores only the returned salted hash on matching local accounts.
+ * Does not update credentials unless the recovery email was handed off.
+ * Does not touch Parent PIN / parental-controls recovery.
  */
 export async function recoverCredentialByEmail(
   email: string,
@@ -237,42 +302,54 @@ export async function recoverCredentialByEmail(
   }
 
   const accounts = findRegisteredAccountsByEmail(recipientEmail);
-  const recoveryDigest = hashCredential(RECOVERY_PARENT_PIN);
 
-  // Existing Parent PIN reset path (Settings / Parent Hub).
-  resetParentPinToRecovery();
-
-  for (const account of accounts) {
-    const updated: UserSession = {
-      ...account,
-      mustChangePassword: true,
-    };
-
-    // Explorers log in with passcode; Pathfinder/Maverick with password.
-    if (account.ageTier === "explorer" || account.passcodeHash) {
-      updated.passcodeHash = recoveryDigest;
-    }
-    if (account.ageTier !== "explorer") {
-      updated.passwordHash = recoveryDigest;
-    }
-
-    upsertRegisteredAccount(updated);
-
-    await dispatchParentPinRecoveryEmail(recipientEmail);
-    await requestOnboardingEmailSend({
-      type: "CREDENTIAL_RECOVERY",
-      recipientEmail,
-      data: {
-        username: account.username,
-        recoveryCode: RECOVERY_PARENT_PIN,
-      },
-    });
+  // Enumeration-safe: no local match still looks like success.
+  if (accounts.length === 0) {
+    return { accepted: true, recipientEmail };
   }
 
-  // If no local account matched, still run the PIN reset email simulation when
-  // an email was provided so the button always does something useful in demos.
-  if (accounts.length === 0) {
-    await dispatchParentPinRecoveryEmail(recipientEmail);
+  let successCount = 0;
+  let lastError =
+    "Could not send a recovery email. Check your connection and try again.";
+
+  for (const account of accounts) {
+    try {
+      const response = await fetch("/api/auth/temporary-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail,
+          username: account.username,
+          cohort: account.ageTier,
+        }),
+      });
+
+      const json = (await response.json().catch(() => null)) as
+        | TemporaryPasswordApiResult
+        | null;
+
+      if (!response.ok || !json?.passwordHash || !json.expiresAt) {
+        if (typeof json?.error === "string" && json.error.trim()) {
+          lastError = json.error.trim();
+        }
+        continue;
+      }
+
+      upsertRegisteredAccount(
+        applyTemporaryPasswordHash(
+          account,
+          json.passwordHash,
+          json.expiresAt,
+        ),
+      );
+      successCount += 1;
+    } catch {
+      // Leave existing credentials; try remaining accounts.
+    }
+  }
+
+  if (successCount === 0) {
+    return { accepted: false, error: lastError };
   }
 
   return { accepted: true, recipientEmail };

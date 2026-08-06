@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { captureGuestProgressSnapshot } from "@/lib/onboarding/guest-progress-snapshot";
 import {
   convertToRegisteredProfile,
@@ -20,8 +20,11 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
+  approveParentConsent,
   buildParentConsentApprovalPath,
   createPendingParentConsent,
+  readPendingParentConsentByToken,
+  type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { cn } from "@/lib/utils/cn";
@@ -58,37 +61,75 @@ function cohortHeader(cohort: MasteryCohort): string {
   }
 }
 
+function adultBirthYear(): number {
+  return new Date().getFullYear() - 35;
+}
+
 export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingSession = useMemo(() => readUserSession(), []);
 
+  const consentToken = (searchParams.get("token") ?? "").trim();
+  const isParentMaster =
+    searchParams.get("role") === "parent_master" && Boolean(consentToken);
+
   const birthYear = useMemo(() => {
+    if (isParentMaster) return adultBirthYear();
     const fromQuery = searchParams.get("birthYear");
     if (fromQuery && Number.isInteger(Number(fromQuery))) {
       return Number(fromQuery);
     }
     return existingSession?.birthYear ?? null;
-  }, [existingSession?.birthYear, searchParams]);
+  }, [existingSession?.birthYear, isParentMaster, searchParams]);
 
   const ageTier = birthYear ? getMasteryCohortFromBirthYear(birthYear) : null;
-  const isExplorer = ageTier === "explorer";
-  const isPathfinder = ageTier === "pathfinder";
-  const isMaverick = ageTier === "maverick";
+  const isExplorer = !isParentMaster && ageTier === "explorer";
+  const isPathfinder = !isParentMaster && ageTier === "pathfinder";
+  const isMaverick = !isParentMaster && ageTier === "maverick";
 
-  // Never prefill guest Finnster handles - every cohort chooses a new username.
   const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [pendingConsent, setPendingConsent] =
+    useState<PendingParentConsent | null>(null);
+  const [parentConsentLoading, setParentConsentLoading] = useState(isParentMaster);
 
   useEffect(() => {
+    if (isParentMaster) return;
     if (!birthYear || !existingSession?.birthYearLocked) {
       router.replace(ONBOARDING_START_PATH);
     }
-  }, [birthYear, existingSession?.birthYearLocked, router]);
+  }, [birthYear, existingSession?.birthYearLocked, isParentMaster, router]);
+
+  useEffect(() => {
+    if (!isParentMaster || !consentToken) return;
+    let cancelled = false;
+
+    async function loadConsent() {
+      const pending = await readPendingParentConsentByToken(consentToken);
+      if (cancelled) return;
+      if (!pending) {
+        setPendingConsent(null);
+        setParentConsentLoading(false);
+        setErrors({
+          form: "This consent link is invalid or expired. Ask your learner to restart signup.",
+        });
+        return;
+      }
+      setPendingConsent(pending);
+      setParentEmail(pending.parentEmail);
+      setParentConsentLoading(false);
+    }
+
+    void loadConsent();
+    return () => {
+      cancelled = true;
+    };
+  }, [consentToken, isParentMaster]);
 
   function clearError(key: keyof FormErrors) {
     if (errors[key]) {
@@ -101,18 +142,20 @@ export function SignUpForm() {
     const trimmedUsername = username.trim();
 
     if (!trimmedUsername) {
-      next.username = isExplorer
-        ? "Pick a username for your Explorer profile."
-        : "Pick a username for your account.";
+      next.username = isParentMaster
+        ? "Pick a username for your parent master profile."
+        : isExplorer
+          ? "Pick a username for your Explorer profile."
+          : "Pick a username for your account.";
     } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
       next.username =
         "Use 2-20 letters, numbers, underscores, or hyphens only.";
     } else if (
+      !isParentMaster &&
       existingSession?.genericProfileId &&
       existingSession.username &&
       trimmedUsername.toLowerCase() === existingSession.username.toLowerCase()
     ) {
-      // Guest handles return to the pool on register - block reusing the temp nickname.
       next.username = USERNAME_TAKEN_ERROR;
     }
 
@@ -158,17 +201,77 @@ export function SignUpForm() {
       }
     }
 
+    if (isParentMaster) {
+      const trimmedParent = parentEmail.trim().toLowerCase();
+      if (!trimmedParent || !EMAIL_PATTERN.test(trimmedParent)) {
+        next.parentEmail = INVALID_EMAIL_ERROR;
+      }
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleParentMasterSubmit() {
+    if (!consentToken || !pendingConsent || !validate()) return;
+
+    try {
+      // Consent is normally completed on the parent-consent landing CTA.
+      // Fall back to approve only if the child is not already ACTIVE.
+      const existingChild = readUserSession();
+      const alreadyApproved =
+        existingChild?.accessMode === "registered" &&
+        existingChild.username === pendingConsent.childUsername &&
+        existingChild.birthYear === pendingConsent.birthYear &&
+        existingChild.parentEmail?.trim().toLowerCase() ===
+          pendingConsent.parentEmail.trim().toLowerCase() &&
+        (existingChild.accountStatus === "ACTIVE" ||
+          Boolean(existingChild.consentApprovedAt));
+
+      const childSession = alreadyApproved
+        ? existingChild
+        : await approveParentConsent(consentToken);
+
+      if (!childSession) {
+        setErrors({
+          form: "We could not approve this profile. The consent link may have expired. Restart signup to request a new approval email.",
+        });
+        return;
+      }
+
+      const parentSession = convertToRegisteredProfile({
+        username: username.trim(),
+        birthYear: adultBirthYear(),
+        accountRole: "parent_master",
+        learnerEmail: pendingConsent.parentEmail,
+        password: password.trim(),
+        accountStatus: "ACTIVE",
+        marketingOptIn,
+      });
+      finalizeRegisteredSignup(parentSession, { skipEmail: true });
+      // Keep child in the durable registry (already upserted during approve).
+      upsertRegisteredAccount(childSession);
+      router.push(DASHBOARD_ACADEMY_PATH);
+    } catch {
+      setErrors({
+        form: "We could not create your master profile. Check your details and try again.",
+      });
+    }
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isParentMaster) {
+      await handleParentMasterSubmit();
+      return;
+    }
+
     if (!birthYear || !ageTier || !validate()) return;
 
     try {
       if (isExplorer) {
-        const pending = createPendingParentConsent({
+        const pending = await createPendingParentConsent({
           parentEmail: parentEmail.trim(),
           childUsername: username.trim(),
           birthYear,
@@ -207,6 +310,185 @@ export function SignUpForm() {
         form: "We could not create your profile. Check your details and try again.",
       }));
     }
+  }
+
+  if (isParentMaster) {
+    if (parentConsentLoading) {
+      return (
+        <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+          <div className="mx-auto w-full max-w-md px-1 text-center">
+            <p className="font-sans text-sm text-nga-slate">
+              Loading parent approval…
+            </p>
+          </div>
+        </section>
+      );
+    }
+
+    if (!pendingConsent) {
+      return (
+        <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+          <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
+            <h1 className="font-heading text-2xl font-extrabold text-nga-primary">
+              This consent link expired
+            </h1>
+            <p className="font-sans text-sm text-nga-slate">
+              {errors.form ??
+                "This consent link is invalid or expired. Ask your learner to restart signup."}
+            </p>
+            <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
+              Restart signup
+            </ButtonLink>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+        <div className="mx-auto w-full max-w-md space-y-8 px-1">
+          <OnboardingProgress value={100} />
+          <div className="space-y-2 text-center">
+            <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
+              Create Your Parent Master Profile
+            </h1>
+            {pendingConsent ? (
+              <p className="font-sans text-sm leading-relaxed text-nga-slate">
+                Consent approved for{" "}
+                <span className="font-semibold text-nga-primary">
+                  {pendingConsent.childUsername}
+                </span>
+                . Create your parent master login to finish.
+              </p>
+            ) : null}
+          </div>
+
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-username"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                Username
+              </label>
+              <input
+                id="signup-username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                placeholder="Choose a username"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  clearError("username");
+                }}
+                aria-invalid={Boolean(errors.username)}
+                className={cn(
+                  fieldBase,
+                  errors.username && "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.username ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.username}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-parent-email"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                Parent or guardian&apos;s email address
+              </label>
+              <input
+                id="signup-parent-email"
+                name="parentEmail"
+                type="email"
+                autoComplete="email"
+                value={parentEmail}
+                readOnly
+                className={cn(fieldBase, "bg-nga-mist/40")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-password"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                Create your password
+              </label>
+              <input
+                id="signup-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Create a password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError("password");
+                }}
+                aria-invalid={Boolean(errors.password)}
+                className={cn(
+                  fieldBase,
+                  errors.password && "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.password ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.password}
+                </p>
+              ) : null}
+            </div>
+
+            {errors.form ? (
+              <div className="space-y-3">
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.form}
+                </p>
+                <ButtonLink
+                  href="/onboarding/start?fresh=1"
+                  variant="secondary"
+                  fullWidth
+                >
+                  Restart signup
+                </ButtonLink>
+              </div>
+            ) : null}
+
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+              />
+              <span className="font-sans text-sm leading-relaxed text-nga-slate">
+                Yes, send me occasional tips, progress ideas and updates that
+                help me support my child&apos;s money skills journey. (You can
+                unsubscribe anytime.)
+              </span>
+            </label>
+
+            <Button type="submit" variant="cta" fullWidth>
+              Create Master Profile
+            </Button>
+          </form>
+        </div>
+      </section>
+    );
   }
 
   if (!birthYear || !ageTier) {

@@ -13,7 +13,7 @@ export type ClientSendEmailRequest<T extends OnboardingEmailType = OnboardingEma
 
 /**
  * Browser-safe helper that posts to `/api/email/send`.
- * Never throws — signup flows must keep working if mail fails.
+ * Never throws - signup flows must keep working if mail fails.
  */
 export async function requestOnboardingEmailSend<T extends OnboardingEmailType>(
   payload: ClientSendEmailRequest<T>,
@@ -26,30 +26,31 @@ export async function requestOnboardingEmailSend<T extends OnboardingEmailType>(
     });
 
     const json = (await response.json().catch(() => null)) as
-      | (SendOnboardingEmailResult & { error?: string; success?: boolean })
+      | SendOnboardingEmailResult
+      | { success?: boolean; error?: string; simulated?: boolean; id?: string }
       | null;
 
     console.log("[Email Client Response]:", {
       status: response.status,
       ok: response.ok,
-      data: json,
-      request: {
-        type: payload.type,
-        recipientEmail: payload.recipientEmail,
-      },
+      simulated: json && "simulated" in json ? json.simulated : undefined,
+      requestType: payload.type,
     });
 
-    if (!response.ok) {
+    if (!response.ok || !json || json.success !== true) {
       return {
         success: false,
-        error: json?.error || `Email send failed (${response.status})`,
+        error:
+          (json && "error" in json && typeof json.error === "string"
+            ? json.error
+            : null) || `Email send failed (${response.status})`,
       };
     }
 
     return {
       success: true,
-      simulated: Boolean(json?.simulated),
-      id: json?.id,
+      simulated: Boolean(json.simulated),
+      id: json.id,
     };
   } catch (error) {
     const message =

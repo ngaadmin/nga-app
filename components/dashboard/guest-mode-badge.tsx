@@ -46,10 +46,10 @@ export function GuestModeBadge({
   );
 
   const inner = (
-    <span className="flex min-w-0 flex-col items-center text-center">
-      <span className="truncate">{displayLabel}</span>
+    <span className="flex min-w-0 flex-col items-center justify-center text-center">
+      <span className="min-w-0 truncate leading-tight">{displayLabel}</span>
       {showSaveProgressHint ? (
-        <span className="font-bold text-red-600">
+        <span className="font-bold leading-tight text-red-600">
           click here to save your progress
         </span>
       ) : null}

@@ -100,7 +100,7 @@ function adjustBucketBalance(
 export function useVaultActions() {
   const vaultCopy = copyMatrix.dashboard.vault;
   const budgetCopy = vaultCopy.budget;
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
   const masteryCohort = useMasteryCohort();
   const {
     appendLedger,

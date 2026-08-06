@@ -131,7 +131,7 @@ function TargetAmountField({
         </span>
         <input
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
           value={value}
           onChange={(event) => handleChange(event.target.value)}
           placeholder="Optional"
@@ -178,7 +178,7 @@ export function VaultManageSavingsGoalsModal({
   onResetBucketBalance,
   onResetAllBalances,
 }: VaultManageSavingsGoalsModalProps) {
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
 
   const [drafts, setDrafts] = useState<Record<string, GoalDraft>>({});
   const [pendingAdds, setPendingAdds] = useState<PendingAdd[]>([]);

@@ -23,6 +23,7 @@ import {
 import {
   currencySymbol,
   formatMoney,
+  formatWholeMoney,
 } from "@/lib/dashboard/currency/format-money";
 
 type CurrencyContextValue = {
@@ -31,6 +32,8 @@ type CurrencyContextValue = {
   supportedCurrencies: readonly SupportedCurrency[];
   setCurrencyCode: (code: SupportedCurrencyCode) => void;
   formatMoney: (amount: number) => string;
+  /** Vault balances — whole dollars only (no cents). */
+  formatWholeMoney: (amount: number) => string;
   currencySymbol: string;
 };
 
@@ -67,6 +70,11 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
     [currencyCode],
   );
 
+  const formatWholeMoneyForCurrency = useCallback(
+    (amount: number) => formatWholeMoney(amount, currencyCode),
+    [currencyCode],
+  );
+
   const symbol = useMemo(() => currencySymbol(currencyCode), [currencyCode]);
 
   const value = useMemo(
@@ -76,9 +84,17 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
       supportedCurrencies: SUPPORTED_CURRENCIES,
       setCurrencyCode,
       formatMoney: formatMoneyForCurrency,
+      formatWholeMoney: formatWholeMoneyForCurrency,
       currencySymbol: symbol,
     }),
-    [currency, currencyCode, formatMoneyForCurrency, setCurrencyCode, symbol],
+    [
+      currency,
+      currencyCode,
+      formatMoneyForCurrency,
+      formatWholeMoneyForCurrency,
+      setCurrencyCode,
+      symbol,
+    ],
   );
 
   return (

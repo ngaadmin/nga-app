@@ -56,14 +56,14 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
             </span>
             <input
               type="text"
-              inputMode="decimal"
+              inputMode="numeric"
               value={depositInput}
               onChange={(event) => {
                 const { value: next, hitCap } = sanitizeVaultAmountInput(event.target.value);
                 setAmountCapHit(hitCap);
                 setDepositInput(next);
               }}
-              placeholder="0.00"
+              placeholder="0"
               aria-label={copy.depositHeading}
               className="min-w-0 flex-1 bg-transparent font-sans text-base text-[#031F82] outline-none"
             />

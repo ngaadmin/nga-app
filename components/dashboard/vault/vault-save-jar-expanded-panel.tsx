@@ -61,7 +61,7 @@ export function VaultSaveJarExpandedPanel({
 }: VaultSaveJarExpandedPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
   const [jarMoveOpen, setJarMoveOpen] = useState(false);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [activeGoalMoveId, setActiveGoalMoveId] = useState<SavingsGoalId | null>(null);

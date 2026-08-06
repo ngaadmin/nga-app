@@ -276,13 +276,14 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
 
   const creditSaveJar = useCallback(
     (amount: number) => {
-      const safeAmount = roundAudAmount(amount);
+      // Vault money is whole dollars only.
+      const safeAmount = Math.round(Math.max(0, amount));
       if (safeAmount <= 0) return;
 
       setJarsState((current) =>
         current.map((jar) =>
           jar.id === SAVINGS_JAR_ID
-            ? { ...jar, balance: roundAudAmount(jar.balance + safeAmount) }
+            ? { ...jar, balance: Math.round(jar.balance + safeAmount) }
             : jar,
         ),
       );

@@ -35,7 +35,7 @@ function LessonLifeHeart({ filled }: { filled: boolean }) {
     <span
       className={cn(
         STATUS_BANNER_ICON_CLASS,
-        "inline-flex items-center justify-center text-[14px] leading-none",
+        "inline-flex items-center justify-center text-[14px] leading-tight",
         filled ? "text-[#E11D48]" : "text-[#BDE9FB]",
       )}
       aria-hidden

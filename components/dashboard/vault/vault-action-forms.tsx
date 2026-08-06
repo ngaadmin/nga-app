@@ -72,11 +72,11 @@ export function VaultAmountField({
         </span>
         <input
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
           value={value}
           onChange={(event) => handleChange(event.target.value)}
           onBlur={onBlur}
-          placeholder="0.00"
+          placeholder="0"
           aria-label={ariaLabel}
           className={vaultAmountInputClass}
         />

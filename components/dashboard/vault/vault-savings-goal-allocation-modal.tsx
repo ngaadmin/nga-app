@@ -14,6 +14,8 @@ import { roundAudAmount } from "@/lib/dashboard/destination-jars";
 import {
   capAllocationDrafts,
   clampVaultAllocationEntry,
+  formatVaultAmountInputValue,
+  parseVaultAmountInput,
   sanitizeVaultAmountInput,
   sumAllocationDraftValues,
 } from "@/lib/dashboard/vault-amount-input";
@@ -66,7 +68,7 @@ function GoalAllocationInputRow({
         </span>
         <input
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
           value={inputValue}
           onChange={(event) => onInputChange(goal.id, event.target.value)}
           onFocus={() => onInputFocus(goal.id)}
@@ -102,7 +104,7 @@ export function VaultSavingsGoalAllocationModal({
 }: VaultSavingsGoalAllocationModalProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
   const goalIds = useMemo(() => goals.map((goal) => goal.id), [goals]);
 
   const [allocationInputs, setAllocationInputs] = useState<Record<string, string>>({});
@@ -181,29 +183,27 @@ export function VaultSavingsGoalAllocationModal({
   const getAllocationInputValue = useCallback(
     (goalId: string, draft: number) => {
       if (focusedGoalId === goalId) {
-        return allocationInputs[goalId] ?? (draft > 0 ? String(draft) : "");
+        return allocationInputs[goalId] ?? formatVaultAmountInputValue(draft);
       }
-      return draft > 0 ? String(draft) : "";
+      return formatVaultAmountInputValue(draft);
     },
     [allocationInputs, focusedGoalId],
   );
 
   const handleAllocationInputChange = useCallback(
     (goalId: string, rawValue: string) => {
-      const { value: sanitized, hitCap: digitCap } = sanitizeVaultAmountInput(rawValue);
-      const working = sanitized;
+      const { value: sanitized, hitCap: digitCap } =
+        sanitizeVaultAmountInput(rawValue);
 
-      if (working !== "" && !/^\d*\.?\d*$/.test(working)) return;
-
-      if (working === "" || working === ".") {
-        setAllocationInputs((current) => ({ ...current, [goalId]: working }));
+      if (sanitized === "") {
+        setAllocationInputs((current) => ({ ...current, [goalId]: "" }));
         handleAllocationChange(goalId, 0);
         setInputWasCapped(digitCap);
         return;
       }
 
-      const parsed = Number.parseFloat(working);
-      if (!Number.isFinite(parsed) || parsed < 0) return;
+      const parsed = parseVaultAmountInput(sanitized);
+      if (parsed === null) return;
 
       const othersTotal = roundAudAmount(
         goalIds
@@ -213,11 +213,7 @@ export function VaultSavingsGoalAllocationModal({
       const capped = clampVaultAllocationEntry(poolTotal, othersTotal, parsed);
       const wasCapped = capped !== parsed || digitCap;
       const nextInput =
-        wasCapped && capped > 0
-          ? String(capped)
-          : wasCapped && capped === 0
-            ? "0"
-            : working;
+        formatVaultAmountInputValue(capped) || (capped === 0 ? "0" : "");
 
       setAllocationInputs((current) => ({ ...current, [goalId]: nextInput }));
       setInputWasCapped(wasCapped);
@@ -234,7 +230,7 @@ export function VaultSavingsGoalAllocationModal({
         if (current[goalId] !== undefined) return current;
         return {
           ...current,
-          [goalId]: draft > 0 ? String(draft) : "",
+          [goalId]: formatVaultAmountInputValue(draft),
         };
       });
     },
@@ -247,7 +243,7 @@ export function VaultSavingsGoalAllocationModal({
       const draft = allocationDrafts[goalId] ?? 0;
       setAllocationInputs((current) => ({
         ...current,
-        [goalId]: draft > 0 ? String(draft) : "",
+        [goalId]: formatVaultAmountInputValue(draft),
       }));
       setInputWasCapped(false);
     },

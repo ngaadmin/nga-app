@@ -1,14 +1,15 @@
-import { roundAudAmount, roundToHalfStep } from "@/lib/dashboard/destination-jars";
+import { roundAudAmount } from "@/lib/dashboard/destination-jars";
 
 /** Hard cap for vault currency inputs — avoids UI wrap and JS precision issues. */
 export const VAULT_MAX_AMOUNT = 1_000_000_000;
 
-/** Maximum digit count (excluding decimal separator) for vault amount inputs. */
+/** Maximum digit count for vault amount inputs (whole dollars only). */
 export const VAULT_MAX_INPUT_DIGITS = 12;
 
-export const VAULT_AMOUNT_STEP = 0.5;
+/** @deprecated Vault amounts are whole dollars — use {@link VAULT_SLIDER_STEP}. */
+export const VAULT_AMOUNT_STEP = 1;
 
-/** Whole-dollar steps for Vault allocation sliders. */
+/** Whole-dollar steps for Vault allocation sliders and amount inputs. */
 export const VAULT_SLIDER_STEP = 1;
 
 export function roundToSliderStep(amount: number, step: number = VAULT_SLIDER_STEP): number {
@@ -84,11 +85,27 @@ export function isVaultAllocationComplete(
   return vaultAllocationRemaining(allocatedTotal, poolTotal) <= 0;
 }
 
-function countAmountDigits(rawValue: string): number {
-  return rawValue.replace(/[^\d]/g, "").length;
+/** Digits only from a vault amount field (drops cents / decimal fragments). */
+function vaultAmountDigits(rawValue: string): string {
+  // Period starts a fractional/cents attempt — ignore it and anything after.
+  const wholePart = rawValue.split(".")[0] ?? "";
+  return wholePart.replace(/[^\d]/g, "");
 }
 
-/** Restrict keystrokes to a valid decimal string within digit / value caps. */
+function formatVaultAmountDigits(digits: string): string {
+  if (!digits) return "";
+  const parsed = Number.parseInt(digits, 10);
+  if (!Number.isFinite(parsed)) return "";
+  return new Intl.NumberFormat("en-AU", {
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }).format(parsed);
+}
+
+/**
+ * Restrict keystrokes to whole dollars with thousands separators
+ * (e.g. `1,000`). Cents / decimals are not accepted.
+ */
 export function sanitizeVaultAmountInput(rawValue: string): {
   value: string;
   hitCap: boolean;
@@ -96,44 +113,56 @@ export function sanitizeVaultAmountInput(rawValue: string): {
   const trimmed = rawValue.trim();
   if (!trimmed) return { value: "", hitCap: false };
 
-  let normalized = trimmed.replace(/[^\d.]/g, "");
-  const firstDot = normalized.indexOf(".");
-  if (firstDot !== -1) {
-    normalized =
-      normalized.slice(0, firstDot + 1) +
-      normalized.slice(firstDot + 1).replace(/\./g, "");
-  }
-
+  let digits = vaultAmountDigits(trimmed);
   let hitCap = false;
-  if (countAmountDigits(normalized) > VAULT_MAX_INPUT_DIGITS) {
+
+  if (digits.length > VAULT_MAX_INPUT_DIGITS) {
     hitCap = true;
-    while (countAmountDigits(normalized) > VAULT_MAX_INPUT_DIGITS) {
-      normalized = normalized.slice(0, -1);
-    }
+    digits = digits.slice(0, VAULT_MAX_INPUT_DIGITS);
   }
 
-  const parsed = Number.parseFloat(normalized);
+  const parsed = Number.parseInt(digits, 10);
   if (Number.isFinite(parsed) && parsed > VAULT_MAX_AMOUNT) {
     hitCap = true;
-    return { value: String(VAULT_MAX_AMOUNT), hitCap: true };
+    return {
+      value: formatVaultAmountDigits(String(VAULT_MAX_AMOUNT)),
+      hitCap: true,
+    };
   }
 
-  return { value: normalized, hitCap };
+  return { value: formatVaultAmountDigits(digits), hitCap };
 }
 
-export function parsePositiveVaultAmount(rawValue: string): number | null {
+/** Parses a non-negative whole-dollar vault amount (`1,000` → `1000`). Empty → null. */
+export function parseVaultAmountInput(rawValue: string): number | null {
   const trimmed = rawValue.trim();
   if (!trimmed) return null;
-  const parsed = Number.parseFloat(trimmed);
-  if (!Number.isFinite(parsed) || parsed <= 0) return null;
-  return roundToHalfStep(Math.min(parsed, VAULT_MAX_AMOUNT));
+  const digits = vaultAmountDigits(trimmed);
+  if (!digits) return null;
+  const parsed = Number.parseInt(digits, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.min(parsed, VAULT_MAX_AMOUNT);
+}
+
+/** Parses a positive whole-dollar vault amount (`1,000` → `1000`). */
+export function parsePositiveVaultAmount(rawValue: string): number | null {
+  const parsed = parseVaultAmountInput(rawValue);
+  if (parsed === null || parsed <= 0) return null;
+  return parsed;
+}
+
+/** Display helper for controlled vault amount fields (thousands separators). */
+export function formatVaultAmountInputValue(amount: number): string {
+  const whole = Math.round(Math.max(0, amount));
+  if (whole <= 0) return "";
+  return sanitizeVaultAmountInput(String(whole)).value;
 }
 
 /** Parses a savings target — empty or zero clears the target without touching balance. */
 export function parseVaultTargetAmount(rawValue: string): number {
-  const trimmed = rawValue.trim();
-  if (!trimmed) return 0;
-  const parsed = Number.parseFloat(trimmed);
+  const digits = vaultAmountDigits(rawValue);
+  if (!digits) return 0;
+  const parsed = Number.parseInt(digits, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) return 0;
-  return roundAudAmount(Math.min(parsed, VAULT_MAX_AMOUNT));
+  return Math.min(parsed, VAULT_MAX_AMOUNT);
 }

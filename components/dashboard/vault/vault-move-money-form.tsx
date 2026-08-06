@@ -122,7 +122,7 @@ export function VaultSaveJarMoveMoneyForm({
 }: VaultSaveJarMoveMoneyFormProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
-  const { currencySymbol, formatMoney } = useCurrency();
+  const { currencySymbol, formatWholeMoney: formatMoney } = useCurrency();
 
   const [destinationId, setDestinationId] = useState<string>(destinations[0]?.id ?? "");
   const [amountInput, setAmountInput] = useState("");

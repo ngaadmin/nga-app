@@ -16,9 +16,13 @@ export const STATUS_BANNER_INSET_CLASS = "px-4 sm:px-6";
 export const STATUS_BANNER_ROW_CLASS =
   "relative mx-auto flex h-9 w-full max-w-md items-center";
 
-/** Frameless inline stat / handle text — one size for every banner item. */
+/**
+ * Frameless inline stat / handle text — one size for every banner item.
+ * Shared `leading-tight` keeps XP, hearts, and username on the same vertical centre
+ * without clipping descenders (g/y/p).
+ */
 export const STATUS_BANNER_ITEM_CLASS =
-  "inline-flex min-w-0 items-center gap-1 font-heading text-xs font-bold leading-none text-[#031F82]";
+  "inline-flex h-full min-w-0 items-center gap-1 font-heading text-xs font-bold leading-tight text-[#031F82]";
 
 /** Uniform icon box aligned to banner text. */
 export const STATUS_BANNER_ICON_CLASS = "size-3.5 shrink-0";
@@ -60,22 +64,22 @@ export function StatusBannerLayout({
         >
           <div
             className={cn(
-              "relative z-base flex min-w-0 flex-1 items-center justify-start",
+              "relative z-base flex h-full min-w-0 flex-1 items-center justify-start",
               clusterGapClassName,
             )}
           >
             {left}
           </div>
 
-          <div className="pointer-events-none absolute inset-x-0 z-raised flex items-center justify-center">
-            <div className="pointer-events-auto min-w-0 max-w-[42%]">
+          <div className="pointer-events-none absolute inset-x-0 inset-y-0 z-raised flex items-center justify-center">
+            <div className="pointer-events-auto flex h-full min-w-0 max-w-[42%] items-center justify-center">
               {center}
             </div>
           </div>
 
           <div
             className={cn(
-              "relative z-base flex min-w-0 flex-1 items-center justify-end",
+              "relative z-base flex h-full min-w-0 flex-1 items-center justify-end",
               clusterGapClassName,
             )}
           >

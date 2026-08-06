@@ -92,7 +92,7 @@ export function VaultBucketExpandedPanel({
 }: VaultBucketExpandedPanelProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const savingsCopy = copyMatrix.dashboard.vault.savings;
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
 
   const [activeAction, setActiveAction] = useState<BucketActionMode | null>(null);
   const [premiumCategoriesOpen, setPremiumCategoriesOpen] = useState(false);

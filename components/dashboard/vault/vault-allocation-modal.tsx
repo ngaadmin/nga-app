@@ -18,6 +18,8 @@ import { roundAudAmount } from "@/lib/dashboard/destination-jars";
 import {
   capAllocationDrafts,
   clampVaultAllocationEntry,
+  formatVaultAmountInputValue,
+  parseVaultAmountInput,
   sanitizeVaultAmountInput,
   sumAllocationDraftValues,
 } from "@/lib/dashboard/vault-amount-input";
@@ -71,7 +73,7 @@ function AllocationInputRow({
   onInputBlur: (bucketId: string) => void;
   onInputFocus: (bucketId: string) => void;
 }) {
-  const { currencySymbol, formatMoney } = useCurrency();
+  const { currencySymbol, formatWholeMoney: formatMoney } = useCurrency();
   const theme = bucketTheme(bucket);
   const displayName = vaultBucketDisplayName(bucket);
   const currentBalance = savingsBucketDisplayBalance(bucket, totalSavings);
@@ -107,7 +109,7 @@ function AllocationInputRow({
         </span>
         <input
           type="text"
-          inputMode="decimal"
+          inputMode="numeric"
           value={inputValue}
           onChange={(event) => onInputChange(bucket.id, event.target.value)}
           onFocus={() => onInputFocus(bucket.id)}
@@ -138,7 +140,7 @@ export function VaultAllocationModal({
   onLockIn,
 }: VaultAllocationModalProps) {
   const copy = copyMatrix.dashboard.vault.budget;
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
   const bucketIds = useMemo(() => buckets.map((bucket) => bucket.id), [buckets]);
 
   const [allocationInputs, setAllocationInputs] = useState<Record<string, string>>({});
@@ -216,29 +218,29 @@ export function VaultAllocationModal({
   const getAllocationInputValue = useCallback(
     (bucketId: string, draft: number) => {
       if (focusedAllocationBucketId === bucketId) {
-        return allocationInputs[bucketId] ?? (draft > 0 ? String(draft) : "");
+        return (
+          allocationInputs[bucketId] ?? formatVaultAmountInputValue(draft)
+        );
       }
-      return draft > 0 ? String(draft) : "";
+      return formatVaultAmountInputValue(draft);
     },
     [allocationInputs, focusedAllocationBucketId],
   );
 
   const handleAllocationInputChange = useCallback(
     (bucketId: string, rawValue: string) => {
-      const { value: sanitized, hitCap: digitCap } = sanitizeVaultAmountInput(rawValue);
-      const working = sanitized;
+      const { value: sanitized, hitCap: digitCap } =
+        sanitizeVaultAmountInput(rawValue);
 
-      if (working !== "" && !/^\d*\.?\d*$/.test(working)) return;
-
-      if (working === "" || working === ".") {
-        setAllocationInputs((current) => ({ ...current, [bucketId]: working }));
+      if (sanitized === "") {
+        setAllocationInputs((current) => ({ ...current, [bucketId]: "" }));
         handleAllocationChange(bucketId, 0);
         setInputWasCapped(digitCap);
         return;
       }
 
-      const parsed = Number.parseFloat(working);
-      if (!Number.isFinite(parsed) || parsed < 0) return;
+      const parsed = parseVaultAmountInput(sanitized);
+      if (parsed === null) return;
 
       const othersTotal = sumEffectiveAllocationInputsExcept(
         bucketId,
@@ -249,12 +251,7 @@ export function VaultAllocationModal({
       );
       const capped = clampVaultAllocationEntry(poolTotal, othersTotal, parsed);
       const wasCapped = capped !== parsed || digitCap;
-      const nextInput =
-        wasCapped && capped > 0
-          ? String(capped)
-          : wasCapped && capped === 0
-            ? "0"
-            : working;
+      const nextInput = formatVaultAmountInputValue(capped) || (capped === 0 ? "0" : "");
 
       setAllocationInputs((current) => ({ ...current, [bucketId]: nextInput }));
       setInputWasCapped(wasCapped);
@@ -271,7 +268,7 @@ export function VaultAllocationModal({
         if (current[bucketId] !== undefined) return current;
         return {
           ...current,
-          [bucketId]: draft > 0 ? String(draft) : "",
+          [bucketId]: formatVaultAmountInputValue(draft),
         };
       });
     },
@@ -284,7 +281,7 @@ export function VaultAllocationModal({
       const draft = allocationDrafts[bucketId] ?? 0;
       setAllocationInputs((current) => ({
         ...current,
-        [bucketId]: draft > 0 ? String(draft) : "",
+        [bucketId]: formatVaultAmountInputValue(draft),
       }));
       setInputWasCapped(false);
     },

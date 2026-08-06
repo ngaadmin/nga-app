@@ -16,7 +16,8 @@ type UserHandleControlProps = {
 
 /**
  * Active username / guest handle.
- * In Guest Mode the handle opens the Save Progress modal (same as Vault).
+ * Uses the same banner item classes as XP / hearts so all top-bar text shares
+ * one vertical centre line.
  */
 export function UserHandleControl({
   className,
@@ -54,10 +55,10 @@ export function UserHandleControl({
 
   return (
     <span
-      className={cn(STATUS_BANNER_ITEM_CLASS, "max-w-full truncate", className)}
+      className={cn(STATUS_BANNER_ITEM_CLASS, "max-w-full", className)}
       title={displayName}
     >
-      <span className="truncate">{displayName}</span>
+      <span className="min-w-0 truncate">{displayName}</span>
     </span>
   );
 }

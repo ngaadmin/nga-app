@@ -1,4 +1,5 @@
 import { roundAudAmount } from "@/lib/dashboard/destination-jars";
+import { parseVaultAmountInput } from "@/lib/dashboard/vault-amount-input";
 
 /** Sum allocation amounts using live input text for the focused row. */
 export function sumEffectiveAllocationInputs(
@@ -25,11 +26,8 @@ export function effectiveAllocationEntryAmount(
   focusedBucketId: string | null,
 ): number {
   if (focusedBucketId === bucketId && inputs[bucketId] !== undefined) {
-    const raw = inputs[bucketId];
-    if (raw === "" || raw === ".") return 0;
-    const parsed = Number.parseFloat(raw);
-    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
-    return 0;
+    const parsed = parseVaultAmountInput(inputs[bucketId] ?? "");
+    return parsed ?? 0;
   }
   return drafts[bucketId] ?? 0;
 }

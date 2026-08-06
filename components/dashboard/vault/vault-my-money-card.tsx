@@ -43,7 +43,7 @@ export function VaultMyMoneyCard({
   onManageJarsClick,
 }: VaultMyMoneyCardProps) {
   const copy = copyMatrix.dashboard.vault.budget;
-  const { formatMoney } = useCurrency();
+  const { formatWholeMoney: formatMoney } = useCurrency();
   const totalBalance = sumVaultWealthBalance(buckets, totalSavings);
 
   return (

@@ -269,6 +269,28 @@ export function findRegisteredAccountsByEmail(email: string): UserSession[] {
   );
 }
 
+/** Active parent master profile linked to this parent/guardian email, if any. */
+export function findActiveParentMasterByEmail(
+  email: string,
+): UserSession | null {
+  const normalized = normalizeRecoveryEmail(email);
+  if (!normalized) return null;
+
+  return (
+    readStore().accounts.find((account) => {
+      if (account.accountRole !== "parent_master") return false;
+      if (account.accessMode !== "registered") return false;
+      if (account.accountStatus && account.accountStatus !== "ACTIVE") {
+        return false;
+      }
+      const masterEmail = normalizeRecoveryEmail(
+        account.learnerEmail ?? account.email ?? account.parentEmail ?? "",
+      );
+      return masterEmail === normalized;
+    }) ?? null
+  );
+}
+
 /**
  * Emails the username(s) linked to the parent/profile email on file.
  * Always resolves as accepted so the UI never discloses account existence.

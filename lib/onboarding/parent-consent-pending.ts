@@ -19,6 +19,7 @@ import {
 } from "@/lib/onboarding/guest-session";
 import {
   findRegisteredAccountByUsername,
+  upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 
@@ -526,6 +527,47 @@ export type ApproveParentConsentOptions = {
   parentPin?: string;
   parentPinHash?: string;
 };
+
+/**
+ * Master-dashboard approval: activate a PENDING_CONSENT learner linked to this
+ * parent email without changing the signed-in master session.
+ */
+export function approvePendingLearnerAccount(input: {
+  childUsername: string;
+  masterEmail: string;
+}): UserSession | null {
+  const childUsername = input.childUsername.trim();
+  const masterEmail = input.masterEmail.trim().toLowerCase();
+  if (!childUsername || !masterEmail || !EMAIL_PATTERN.test(masterEmail)) {
+    return null;
+  }
+
+  const account = findRegisteredAccountByUsername(childUsername);
+  if (!account || account.accessMode !== "registered") return null;
+  if (account.accountRole === "parent_master") return null;
+  if (account.accountStatus !== "PENDING_CONSENT") return null;
+
+  const linkedEmail = account.parentEmail?.trim().toLowerCase();
+  if (!linkedEmail || linkedEmail !== masterEmail) return null;
+
+  const activated = enforceCohortAccountState({
+    ...account,
+    consentApprovedAt: new Date().toISOString(),
+    accountStatus: "ACTIVE",
+    accountLifecycleStatus: "ACTIVE",
+    accountState: "ACTIVE",
+  });
+  upsertRegisteredAccount(activated);
+
+  const usernameKey = childUsername.toLowerCase();
+  writeAllPendingConsents(
+    readAllPendingConsents().filter(
+      (entry) => entry.childUsername.trim().toLowerCase() !== usernameKey,
+    ),
+  );
+
+  return activated;
+}
 
 /** Simulated magic-link approval - activates parent-linked account and merges guest progress. */
 export async function approveParentConsent(

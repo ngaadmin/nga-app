@@ -76,6 +76,7 @@ export {
 export { finalizeRegisteredSignup } from "./signup-finalize";
 export {
   approveParentConsent,
+  approvePendingLearnerAccount,
   buildParentConsentApprovalPath,
   clearPendingParentConsent,
   createPendingParentConsent,

@@ -44,11 +44,19 @@ export const copyMatrix = {
         childBadge: "Learner account",
         emptyChildren: "No linked learner accounts yet.",
         deleteChild: "Delete account",
+        approveChild: "Approve",
+        approveChildError:
+          "We could not approve this learner. Try again or use the approval email link.",
+        pendingApprovalBadge: "Pending approval",
         deleteMaster: "Delete master account",
+        deleteChildTitle: "Delete learner account?",
         deleteChildConfirm:
-          "Delete this learner account? This cannot be undone.",
+          "Delete this learner account? This will permanently remove all data associated with the account - including progress, achievements, and activity - and cannot be undone.",
+        deleteMasterTitle: "Delete master account?",
         deleteMasterConfirm:
-          "Delete your master account and all linked learner accounts? This cannot be undone.",
+          "Delete your master account? This will also permanently delete all linked learner accounts and all data associated with them - including progress, achievements, and activity. This cannot be undone.",
+        deleteConfirmAction: "Delete permanently",
+        deleteCancelAction: "Cancel",
         subscriptionHeading: "Subscription Status",
         subscriptionPlaceholder: "Subscription management coming soon.",
       },

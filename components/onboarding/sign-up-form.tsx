@@ -9,6 +9,7 @@ import { captureGuestProgressSnapshot } from "@/lib/onboarding/guest-progress-sn
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
+  ONBOARDING_PARENT_CONSENT_PATH,
   ONBOARDING_SIGN_UP_PENDING_PATH,
   ONBOARDING_START_PATH,
   readUserSession,
@@ -26,6 +27,7 @@ import {
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 import {
+  findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
   upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
@@ -175,6 +177,15 @@ export function SignUpForm() {
         });
         return;
       }
+
+      // Existing master accounts approve on the consent page — skip create-master.
+      if (findActiveParentMasterByEmail(pending.parentEmail)) {
+        router.replace(
+          `${ONBOARDING_PARENT_CONSENT_PATH}?token=${encodeURIComponent(consentToken)}`,
+        );
+        return;
+      }
+
       setPendingConsent(pending);
       setParentEmail(pending.parentEmail);
       setParentConsentLoading(false);
@@ -184,7 +195,7 @@ export function SignUpForm() {
     return () => {
       cancelled = true;
     };
-  }, [consentToken, isParentMaster]);
+  }, [consentToken, isParentMaster, router]);
 
   function clearError(key: keyof FormErrors) {
     if (errors[key]) {

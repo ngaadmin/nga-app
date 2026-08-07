@@ -10,14 +10,22 @@ import {
   masteryCohortLabel,
 } from "@/lib/dashboard/mastery-cohort";
 import {
+  DASHBOARD_ACADEMY_PATH,
+  saveUserSession,
+  type UserSession,
+} from "@/lib/onboarding/guest-session";
+import {
+  approveParentConsent,
   lookupConsentToken,
   resendParentConsentApproval,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
+import { findActiveParentMasterByEmail } from "@/lib/onboarding/registered-accounts";
 
 type ApprovalState =
   | "loading"
   | "ready"
+  | "approving"
   | "expired"
   | "error"
   | "resent";
@@ -29,6 +37,10 @@ export function ParentConsentApprovalPanel() {
 
   const [state, setState] = useState<ApprovalState>("loading");
   const [pending, setPending] = useState<PendingParentConsent | null>(null);
+  const [existingMaster, setExistingMaster] = useState<UserSession | null>(
+    null,
+  );
+  const [parentalConsentGiven, setParentalConsentGiven] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const resendInFlightRef = useRef(false);
@@ -40,6 +52,7 @@ export function ParentConsentApprovalPanel() {
       if (!token) {
         if (!cancelled) {
           setPending(null);
+          setExistingMaster(null);
           setErrorMessage("This approval link is missing or incomplete.");
           setState("error");
         }
@@ -51,6 +64,9 @@ export function ParentConsentApprovalPanel() {
 
       if (lookup.status === "valid") {
         setPending(lookup.pending);
+        setExistingMaster(
+          findActiveParentMasterByEmail(lookup.pending.parentEmail),
+        );
         setErrorMessage(null);
         setState("ready");
         return;
@@ -59,6 +75,7 @@ export function ParentConsentApprovalPanel() {
       // Genuine TTL expiry only — never host/signature mismatch.
       if (lookup.status === "expired") {
         setPending(lookup.pending);
+        setExistingMaster(null);
         setErrorMessage(null);
         setState("expired");
         return;
@@ -67,6 +84,7 @@ export function ParentConsentApprovalPanel() {
       // Recoverable signature failures: offer resend without the expiry page.
       if (lookup.status === "recoverable") {
         setPending(lookup.pending);
+        setExistingMaster(null);
         setErrorMessage(
           "We could not verify this approval link. Resend a fresh email for the same pending profile.",
         );
@@ -75,6 +93,7 @@ export function ParentConsentApprovalPanel() {
       }
 
       setPending(null);
+      setExistingMaster(null);
       setErrorMessage("We could not open this approval link. Please try again.");
       setState("error");
     }
@@ -86,11 +105,46 @@ export function ParentConsentApprovalPanel() {
   }, [token]);
 
   function handleContinueToMasterProfile() {
-    if (!token || !pending || state !== "ready") return;
+    if (!token || !pending || state !== "ready" || existingMaster) return;
     // Do not approve here — consent is confirmed on the Create Master Profile form.
     router.push(
       `/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(token)}`,
     );
+  }
+
+  async function handleApproveForExistingMaster() {
+    if (
+      !token ||
+      !pending ||
+      !existingMaster ||
+      !parentalConsentGiven ||
+      state === "approving"
+    ) {
+      return;
+    }
+
+    setState("approving");
+    setErrorMessage(null);
+
+    try {
+      const childSession = await approveParentConsent(token);
+      if (!childSession) {
+        setErrorMessage(
+          "We could not approve this profile. The consent link may have expired.",
+        );
+        setState("error");
+        return;
+      }
+
+      // Keep the existing master signed in after linking the new learner.
+      saveUserSession(existingMaster);
+      router.push(DASHBOARD_ACADEMY_PATH);
+    } catch {
+      setErrorMessage(
+        "Something went wrong while approving. Please try again, or resend a fresh approval email.",
+      );
+      setState("error");
+    }
   }
 
   async function handleResend() {
@@ -103,6 +157,9 @@ export function ParentConsentApprovalPanel() {
     try {
       const nextPending = await resendParentConsentApproval(token);
       setPending(nextPending);
+      setExistingMaster(
+        findActiveParentMasterByEmail(nextPending.parentEmail),
+      );
       setState("resent");
     } catch (error) {
       setErrorMessage(
@@ -213,6 +270,14 @@ export function ParentConsentApprovalPanel() {
   const learnerCohort = pending
     ? getMasteryCohortFromBirthYear(pending.birthYear)
     : null;
+  const cohortLabel = learnerCohort
+    ? masteryCohortLabel(learnerCohort)
+    : "Explorer";
+  const ageRangeLabel =
+    learnerCohort === "explorer" || !learnerCohort
+      ? "12 and under"
+      : masteryCohortAgeRangeLabel(learnerCohort);
+  const hasExistingMaster = Boolean(existingMaster);
 
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
@@ -236,18 +301,11 @@ export function ParentConsentApprovalPanel() {
           <p className="mt-2 font-heading text-xl font-extrabold leading-tight text-nga-primary sm:text-2xl">
             {pending?.childUsername}
           </p>
-          {learnerCohort ? (
-            <>
-              <p className="mt-4 font-heading text-lg font-bold text-nga-primary sm:text-xl">
-                {masteryCohortLabel(learnerCohort)}
-              </p>
-              <p className="mt-2 font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
-                Your child has been entered into the track for kids aged{" "}
-                {masteryCohortAgeRangeLabel(learnerCohort)}. You can change this
-                in the Settings section of the app.
-              </p>
-            </>
-          ) : null}
+          <p className="mt-3 font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
+            Your child has been entered into the {cohortLabel} track for kids
+            aged {ageRangeLabel}. You can change this in the Settings section of
+            the app.
+          </p>
         </div>
 
         <div className="space-y-4 font-sans text-base leading-relaxed text-nga-ink sm:text-lg">
@@ -261,10 +319,9 @@ export function ParentConsentApprovalPanel() {
             all applicable rules for users under 13 and under 16.
           </p>
           <p>
-            Please create a master account and confirm that you consent to your
-            child using the app. Your master account lets you track their
-            progress and delete your - and your child&apos;s - accounts at any
-            time.
+            {hasExistingMaster
+              ? "Confirm your consent below to link this learner to your existing master account. You can track their progress and delete accounts at any time."
+              : "Please create a master account and confirm that you consent to your child using the app. Your master account lets you track their progress and delete your - and your child's - accounts at any time."}
           </p>
         </div>
 
@@ -277,19 +334,55 @@ export function ParentConsentApprovalPanel() {
           </p>
         ) : null}
 
-        <div className="space-y-2">
-          <Button
-            type="button"
-            variant="cta"
-            fullWidth
-            onClick={handleContinueToMasterProfile}
-          >
-            Create Master Profile
-          </Button>
-          <p className="text-center font-sans text-sm leading-relaxed text-nga-slate">
-            Next: create your parent master login and confirm consent.
-          </p>
-        </div>
+        {hasExistingMaster ? (
+          <div className="space-y-4">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={parentalConsentGiven}
+                onChange={(e) => setParentalConsentGiven(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+              />
+              <span className="font-sans text-base leading-relaxed text-nga-ink">
+                I am the parent or legal guardian of{" "}
+                <span className="font-semibold text-nga-primary">
+                  {pending?.childUsername}
+                </span>
+                , and I approve their NextGenAchiever$ profile.{" "}
+                <span className="font-semibold text-nga-primary">(Required)</span>
+              </span>
+            </label>
+            <Button
+              type="button"
+              variant="cta"
+              fullWidth
+              disabled={!parentalConsentGiven || state === "approving"}
+              onClick={() => {
+                void handleApproveForExistingMaster();
+              }}
+            >
+              {state === "approving" ? "Approving…" : "Approve profile"}
+            </Button>
+            <p className="text-center font-sans text-sm leading-relaxed text-nga-slate">
+              This learner will be linked to your existing master account
+              {existingMaster?.username ? ` (${existingMaster.username})` : ""}.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Button
+              type="button"
+              variant="cta"
+              fullWidth
+              onClick={handleContinueToMasterProfile}
+            >
+              Create Master Profile
+            </Button>
+            <p className="text-center font-sans text-sm leading-relaxed text-nga-slate">
+              Next: create your parent master login and confirm consent.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

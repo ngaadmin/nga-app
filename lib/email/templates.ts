@@ -158,7 +158,7 @@ export function buildExplorerParentEmail(
   const username = data.username.trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
-  const privacyUrl = `${base}/privacy`;
+  const privacyUrl = "https://www.nextgenachievers.com/privacy";
   const learningPath = "Explorer - for learners aged 12 and under";
   const safeName = escapeHtml(username);
   const safePath = escapeHtml(learningPath);
@@ -186,7 +186,7 @@ export function buildExplorerParentEmail(
     "",
     "Once you approve, we will save their username, progress, achievements and activity in the app so they don't lose their work. You'll be able to view their progress and delete the account at any time. We do not sell or share your child's information with third parties for advertising.",
     "",
-    `Full details on what we collect and how we use it are here: ${privacyUrl}`,
+    `For full details on what we collect and how we use it, please see our Privacy Policy: ${privacyUrl}`,
     "",
     "How to approve: Click the button below to create your master account. This lets you manage parental controls and track your learner's progress.",
     "",
@@ -233,8 +233,8 @@ export function buildExplorerParentEmail(
         for advertising.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Full details on what we collect and how we use it are here:
-        <a href="${safePrivacy}" style="color:#0CC1E0;font-weight:700;">${safePrivacy}</a>
+        For full details on what we collect and how we use it, please see our
+        <a href="${safePrivacy}" style="color:#0CC1E0;font-weight:700;">Privacy Policy</a>.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         How to approve: Click the button below to create your master account. This lets you manage

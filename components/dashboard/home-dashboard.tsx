@@ -3,6 +3,7 @@
 import { useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { ParentCurrencyPanel } from "@/components/dashboard/settings/parent-currency-panel";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
@@ -529,6 +530,13 @@ export function HomeDashboard() {
             onClick={handleLogOut}
           />
         </nav>
+
+        <section
+          aria-label={copy.currency.heading}
+          className={cn(floatingPanelClass, "p-4")}
+        >
+          <ParentCurrencyPanel isEditable />
+        </section>
 
         <ParentHubSection
           isUnlocked={parentHubUnlocked}

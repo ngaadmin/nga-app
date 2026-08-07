@@ -37,6 +37,8 @@ export type PendingParentConsent = {
 export type ConsentTokenLookup =
   | { status: "valid"; pending: PendingParentConsent }
   | { status: "expired"; pending: PendingParentConsent }
+  /** Payload readable but signature/host mismatch — resend only, not approve. */
+  | { status: "recoverable"; pending: PendingParentConsent }
   | { status: "invalid" };
 
 type PendingConsentStore = {
@@ -267,17 +269,23 @@ async function fetchConsentTokenLookup(
     const json = (await response.json().catch(() => null)) as {
       success?: boolean;
       expired?: boolean;
+      recoverable?: boolean;
       pending?: PendingParentConsent;
     } | null;
 
     if (!json?.pending) return { status: "invalid" };
+
+    if (json.recoverable === true) {
+      return { status: "recoverable", pending: json.pending };
+    }
 
     if (response.status === 410 || json.expired === true) {
       return { status: "expired", pending: json.pending };
     }
 
     if (!response.ok || json.success !== true) {
-      return { status: "invalid" };
+      // Claims present but not a clean success — still allow resend UX.
+      return { status: "recoverable", pending: json.pending };
     }
 
     return { status: "valid", pending: json.pending };
@@ -345,6 +353,7 @@ export async function resendParentConsentApproval(
     );
   }
 
+  // valid | expired | recoverable — all carry the same pending profile claims
   const claims = lookup.pending;
   const account = findRegisteredAccountByUsername(claims.childUsername);
 

@@ -381,3 +381,108 @@ export function clearRegisteredAccounts(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(REGISTERED_ACCOUNTS_STORAGE_KEY);
 }
+
+/** Household email used to link a parent master account to child profiles. */
+export function resolveHouseholdEmail(session: UserSession): string | null {
+  if (session.accountRole === "parent_master") {
+    return (
+      normalizeRecoveryEmail(
+        session.learnerEmail ?? session.email ?? session.parentEmail ?? "",
+      )
+    );
+  }
+  return normalizeRecoveryEmail(session.parentEmail ?? "");
+}
+
+/**
+ * Master + child profiles linked by the household parent/guardian email.
+ * Guest-only sessions with no registry match still surface the active profile.
+ */
+export function listHouseholdAccounts(session: UserSession): {
+  master: UserSession | null;
+  children: UserSession[];
+  householdEmail: string | null;
+} {
+  const householdEmail = resolveHouseholdEmail(session);
+  if (!householdEmail) {
+    if (session.accountRole === "parent_master") {
+      return { master: session, children: [], householdEmail: null };
+    }
+    return {
+      master: null,
+      children: session.accessMode === "registered" ? [session] : [],
+      householdEmail: null,
+    };
+  }
+
+  const accounts = readStore().accounts;
+  const master =
+    accounts.find(
+      (account) =>
+        account.accountRole === "parent_master" &&
+        normalizeRecoveryEmail(
+          account.learnerEmail ?? account.email ?? account.parentEmail ?? "",
+        ) === householdEmail,
+    ) ?? null;
+
+  const children = accounts.filter(
+    (account) =>
+      account.accountRole !== "parent_master" &&
+      normalizeRecoveryEmail(account.parentEmail ?? "") === householdEmail,
+  );
+
+  return { master, children, householdEmail };
+}
+
+/** Remove one registered profile by username. */
+export function removeRegisteredAccountByUsername(username: string): boolean {
+  if (typeof window === "undefined") return false;
+  const key = username.trim().toLowerCase();
+  if (!key) return false;
+
+  const store = readStore();
+  const nextAccounts = store.accounts.filter(
+    (account) => account.username.trim().toLowerCase() !== key,
+  );
+  if (nextAccounts.length === store.accounts.length) return false;
+  writeStore({ accounts: nextAccounts });
+  return true;
+}
+
+/**
+ * Delete a parent master profile and every child linked to the same
+ * household email. Returns usernames that were removed.
+ */
+export function deleteMasterAccountCascade(masterUsername: string): string[] {
+  if (typeof window === "undefined") return [];
+
+  const master = findRegisteredAccountByUsername(masterUsername);
+  if (!master) return [];
+
+  const householdEmail =
+    resolveHouseholdEmail(master) ??
+    normalizeRecoveryEmail(
+      master.learnerEmail ?? master.email ?? master.parentEmail ?? "",
+    );
+
+  const store = readStore();
+  const removed: string[] = [];
+  const nextAccounts = store.accounts.filter((account) => {
+    const isMaster =
+      account.username.trim().toLowerCase() ===
+      masterUsername.trim().toLowerCase();
+    const isLinkedChild =
+      Boolean(householdEmail) &&
+      account.accountRole !== "parent_master" &&
+      normalizeRecoveryEmail(account.parentEmail ?? "") === householdEmail;
+
+    if (isMaster || isLinkedChild) {
+      removed.push(account.username);
+      return false;
+    }
+    return true;
+  });
+
+  writeStore({ accounts: nextAccounts });
+  return removed;
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isConsentTokenUnexpired,
+  peekConsentTokenClaims,
   signConsentToken,
   verifyConsentToken,
   type ConsentTokenClaims,
@@ -124,29 +125,55 @@ export async function GET(request: NextRequest) {
   }
 
   const claims = verifyConsentToken(token);
-  if (!claims || !requiresParentConsentForBirthYear(claims.birthYear)) {
+  if (claims) {
+    const pending = toPendingPayload(token, claims);
+
+    if (!isConsentTokenUnexpired(claims.createdAt)) {
+      return NextResponse.json(
+        {
+          success: false as const,
+          expired: true as const,
+          error: "Consent token has expired.",
+          pending,
+        },
+        { status: 410 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true as const,
+      pending,
+    });
+  }
+
+  // Signature failed but payload may still be readable (legacy host mismatch).
+  const peeked = peekConsentTokenClaims(token);
+  if (peeked) {
+    const pending = toPendingPayload(token, peeked);
+    if (!isConsentTokenUnexpired(peeked.createdAt)) {
+      return NextResponse.json(
+        {
+          success: false as const,
+          expired: true as const,
+          error: "Consent token has expired.",
+          pending,
+        },
+        { status: 410 },
+      );
+    }
     return NextResponse.json(
-      { success: false, error: "Invalid or expired consent token." },
+      {
+        success: false as const,
+        recoverable: true as const,
+        error: "Consent token signature is invalid.",
+        pending,
+      },
       { status: 400 },
     );
   }
 
-  const pending = toPendingPayload(token, claims);
-
-  if (!isConsentTokenUnexpired(claims.createdAt)) {
-    return NextResponse.json(
-      {
-        success: false as const,
-        expired: true as const,
-        error: "Consent token has expired.",
-        pending,
-      },
-      { status: 410 },
-    );
-  }
-
-  return NextResponse.json({
-    success: true as const,
-    pending,
-  });
+  return NextResponse.json(
+    { success: false, error: "Invalid consent token." },
+    { status: 400 },
+  );
 }

@@ -94,6 +94,7 @@ type FormErrors = {
   learnerEmail?: string;
   password?: string;
   parentEmail?: string;
+  parentalConsent?: string;
   form?: string;
 };
 
@@ -144,6 +145,7 @@ export function SignUpForm() {
   const [password, setPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [parentalConsentGiven, setParentalConsentGiven] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [pendingConsent, setPendingConsent] =
     useState<PendingParentConsent | null>(null);
@@ -264,6 +266,10 @@ export function SignUpForm() {
       if (!trimmedParent || !EMAIL_PATTERN.test(trimmedParent)) {
         next.parentEmail = INVALID_EMAIL_ERROR;
       }
+      if (!parentalConsentGiven) {
+        next.parentalConsent =
+          "Tick the parental consent box to approve this learner profile and create your master account.";
+      }
     }
 
     setErrors(next);
@@ -274,8 +280,7 @@ export function SignUpForm() {
     if (!consentToken || !pendingConsent || !validate()) return;
 
     try {
-      // Consent is normally completed on the parent-consent landing CTA.
-      // Fall back to approve only if the child is not already ACTIVE.
+      // Consent is confirmed only here (mandatory checkbox + form submit).
       const existingChild = readUserSession();
       const alreadyApproved =
         existingChild?.accessMode === "registered" &&
@@ -413,19 +418,22 @@ export function SignUpForm() {
       <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
         <div className="mx-auto w-full max-w-md space-y-8 px-1">
           <OnboardingProgress value={100} />
-          <div className="space-y-2 text-center">
+          <div className="space-y-3 text-center">
             <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
               Create Your Parent Master Profile
             </h1>
-            {pendingConsent ? (
-              <p className="font-sans text-sm leading-relaxed text-nga-slate">
-                Consent approved for{" "}
-                <span className="font-semibold text-nga-primary">
-                  {pendingConsent.childUsername}
-                </span>
-                . Create your parent master login to finish.
-              </p>
-            ) : null}
+            <p className="font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
+              Finish setup for this learner, then create your master login.
+            </p>
+          </div>
+
+          <div className="rounded-nga-lg border-2 border-nga-panel bg-nga-mist/40 px-4 py-5 text-center">
+            <p className="font-heading text-xs font-bold uppercase tracking-wide text-nga-slate">
+              Learner username
+            </p>
+            <p className="mt-2 font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-4xl">
+              {pendingConsent.childUsername}
+            </p>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
@@ -434,7 +442,7 @@ export function SignUpForm() {
                 htmlFor="signup-username"
                 className="block font-heading text-sm font-bold text-nga-primary"
               >
-                Username
+                Your master username
               </label>
               <input
                 id="signup-username"
@@ -533,6 +541,43 @@ export function SignUpForm() {
               </div>
             ) : null}
 
+            <div className="space-y-2">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={parentalConsentGiven}
+                  onChange={(e) => {
+                    setParentalConsentGiven(e.target.checked);
+                    clearError("parentalConsent");
+                  }}
+                  aria-invalid={Boolean(errors.parentalConsent)}
+                  aria-describedby={
+                    errors.parentalConsent
+                      ? "parental-consent-error"
+                      : undefined
+                  }
+                  className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+                />
+                <span className="font-sans text-base leading-relaxed text-nga-ink">
+                  I am the parent or legal guardian of{" "}
+                  <span className="font-semibold text-nga-primary">
+                    {pendingConsent.childUsername}
+                  </span>
+                  , and I approve their NextGenAchiever$ profile.{" "}
+                  <span className="font-semibold text-nga-primary">(Required)</span>
+                </span>
+              </label>
+              {errors.parentalConsent ? (
+                <p
+                  id="parental-consent-error"
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.parentalConsent}
+                </p>
+              ) : null}
+            </div>
+
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
@@ -547,7 +592,12 @@ export function SignUpForm() {
               </span>
             </label>
 
-            <Button type="submit" variant="cta" fullWidth>
+            <Button
+              type="submit"
+              variant="cta"
+              fullWidth
+              disabled={!parentalConsentGiven}
+            >
               Create Master Profile
             </Button>
           </form>

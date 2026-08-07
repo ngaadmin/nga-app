@@ -67,10 +67,18 @@ function escapeHtml(value: string): string {
 export const PRODUCTION_APP_URL = "https://nga-app-three.vercel.app";
 
 /**
- * Email CTAs always point at the live production app - never localhost,
- * preview hosts, or the request Origin, regardless of where send was triggered.
+ * Consent/approval links must use the same origin that signed the token.
+ * Prefer the send-route appUrl (request host); fall back to production.
  */
-function resolveAppUrl(_appUrl?: string): string {
+function resolveAppUrl(appUrl?: string): string {
+  const trimmed = appUrl?.trim();
+  if (trimmed) {
+    try {
+      return new URL(trimmed).origin;
+    } catch {
+      // fall through
+    }
+  }
   return PRODUCTION_APP_URL;
 }
 

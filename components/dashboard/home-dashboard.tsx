@@ -521,6 +521,7 @@ export function HomeDashboard() {
           <SettingsRow
             icon={BillingCardIcon}
             label={copy.account.subscriptionStatus}
+            onClick={() => router.push("/dashboard/settings/account")}
           />
           <SettingsRow
             icon={LogOutIcon}

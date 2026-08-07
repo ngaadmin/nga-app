@@ -35,6 +35,23 @@ export const copyMatrix = {
         logOut: "Log Out",
         birthYearTrack: "Birth Year / Age Track",
       },
+      accountSubscription: {
+        title: "Account & Subscription Status",
+        description: "Manage your master account, linked learners, and subscription.",
+        backLabel: "Back to Settings",
+        accountsHeading: "Accounts",
+        masterBadge: "Master account",
+        childBadge: "Learner account",
+        emptyChildren: "No linked learner accounts yet.",
+        deleteChild: "Delete account",
+        deleteMaster: "Delete master account",
+        deleteChildConfirm:
+          "Delete this learner account? This cannot be undone.",
+        deleteMasterConfirm:
+          "Delete your master account and all linked learner accounts? This cannot be undone.",
+        subscriptionHeading: "Subscription Status",
+        subscriptionPlaceholder: "Subscription management coming soon.",
+      },
       profile: {
         joinDateLabel: "Joined",
       },

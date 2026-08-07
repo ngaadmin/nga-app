@@ -94,6 +94,37 @@ function clientKey(request: Request): string {
   );
 }
 
+/** Same browser origin that issued the consent token (for email approval CTAs). */
+function requestAppUrl(request: Request): string {
+  const origin = request.headers.get("origin")?.trim();
+  if (origin) {
+    try {
+      return new URL(origin).origin;
+    } catch {
+      // fall through
+    }
+  }
+
+  const host = (
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    ""
+  )
+    .split(",")[0]
+    ?.trim();
+  if (!host) return PRODUCTION_APP_URL;
+  const protoHeader = request.headers
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim();
+  const proto =
+    protoHeader ||
+    (host.startsWith("localhost") || host.startsWith("127.0.0.1")
+      ? "http"
+      : "https");
+  return `${proto}://${host}`;
+}
+
 function isAllowedOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
@@ -256,7 +287,7 @@ export async function POST(request: Request) {
       type: body.type,
       recipientEmail,
       data,
-      appUrl: PRODUCTION_APP_URL,
+      appUrl: requestAppUrl(request),
     });
 
     if (!result.success) {

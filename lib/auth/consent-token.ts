@@ -69,17 +69,7 @@ export function signConsentToken(claims: ConsentTokenClaims): string {
   return `${TOKEN_PREFIX}.${payloadB64}.${sig}`;
 }
 
-/** Verify signature and return claims, or null if invalid. */
-export function verifyConsentToken(token: string): ConsentTokenClaims | null {
-  const trimmed = token.trim();
-  const parts = trimmed.split(".");
-  if (parts.length !== 3 || parts[0] !== TOKEN_PREFIX) return null;
-
-  const payloadB64 = parts[1]!;
-  const sig = parts[2]!;
-  const expected = signPayload(payloadB64);
-  if (!safeEqual(sig, expected)) return null;
-
+function parseConsentPayload(payloadB64: string): ConsentTokenClaims | null {
   try {
     const parsed = JSON.parse(fromBase64Url(payloadB64)) as {
       v?: number;
@@ -112,6 +102,34 @@ export function verifyConsentToken(token: string): ConsentTokenClaims | null {
   } catch {
     return null;
   }
+}
+
+/** Verify signature and return claims, or null if invalid. */
+export function verifyConsentToken(token: string): ConsentTokenClaims | null {
+  const trimmed = token.trim();
+  const parts = trimmed.split(".");
+  if (parts.length !== 3 || parts[0] !== TOKEN_PREFIX) return null;
+
+  const payloadB64 = parts[1]!;
+  const sig = parts[2]!;
+  const expected = signPayload(payloadB64);
+  if (!safeEqual(sig, expected)) return null;
+
+  return parseConsentPayload(payloadB64);
+}
+
+/**
+ * Read consent claims from the token payload without verifying the HMAC.
+ * Used only to recover resend UX when the signature fails (host/secret mismatch
+ * or a truncated email link) but the payload is still intact.
+ */
+export function peekConsentTokenClaims(
+  token: string,
+): ConsentTokenClaims | null {
+  const trimmed = token.trim();
+  const parts = trimmed.split(".");
+  if (parts.length !== 3 || parts[0] !== TOKEN_PREFIX) return null;
+  return parseConsentPayload(parts[1]!);
 }
 
 export function isSignedConsentToken(token: string): boolean {

@@ -563,6 +563,7 @@ export function convertToRegisteredProfile(
 export function saveUserSession(session: UserSession): void {
   if (typeof window === "undefined") return;
   writePersisted(GUEST_SESSION_STORAGE_KEY, JSON.stringify(session));
+  dispatchUserSessionUpdated();
 }
 
 /**

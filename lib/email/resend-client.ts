@@ -3,6 +3,7 @@ import {
   type OnboardingEmailDataMap,
   type OnboardingEmailType,
 } from "@/lib/email/templates";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export type SendOnboardingEmailInput<T extends OnboardingEmailType = OnboardingEmailType> =
   {
@@ -29,7 +30,6 @@ export type SendOnboardingEmailResult =
     };
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Verified Resend sending domain - must match resend.com/domains. */
 const DEFAULT_FROM_ADDRESS =
@@ -77,11 +77,6 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
     );
     return { success: true, simulated: true };
   }
-
-  console.log(`[Resend Dispatch] Attempting live send.`, {
-    type: input.type,
-    subject: built.subject,
-  });
 
   try {
     const response = await fetch(RESEND_API_URL, {

@@ -117,21 +117,3 @@ export function verifyConsentToken(token: string): ConsentTokenClaims | null {
 
   return parseConsentPayload(payloadB64);
 }
-
-/**
- * Read consent claims from the token payload without verifying the HMAC.
- * @deprecated Do not use for API responses or approval UX — unverified claims
- * must not be returned to clients. Kept for internal diagnostics only.
- */
-export function peekConsentTokenClaims(
-  token: string,
-): ConsentTokenClaims | null {
-  const trimmed = token.trim();
-  const parts = trimmed.split(".");
-  if (parts.length !== 3 || parts[0] !== TOKEN_PREFIX) return null;
-  return parseConsentPayload(parts[1]!);
-}
-
-export function isSignedConsentToken(token: string): boolean {
-  return token.trim().startsWith(`${TOKEN_PREFIX}.`);
-}

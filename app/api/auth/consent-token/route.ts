@@ -15,10 +15,9 @@ import {
   requiresParentConsentForBirthYear,
 } from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export const runtime = "nodejs";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function toPendingPayload(token: string, claims: ConsentTokenClaims) {
   return {

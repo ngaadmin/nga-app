@@ -46,7 +46,7 @@ function SkillNode({ node, stagger }: SkillNodeProps) {
       <button
         type="button"
         onClick={() => {
-          console.log(`Skill node clicked: ${node.id} - ${title}`);
+          // Skill-node navigation reserved for a later Academy milestone.
         }}
         className={cn(
           "group flex w-[min(100%,14rem)] flex-col items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary",

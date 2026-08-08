@@ -47,13 +47,6 @@ export async function dispatchPointsConversionParentEmail(
     window.setTimeout(resolve, 350);
   });
 
-  if (typeof console !== "undefined") {
-    console.info(
-      `[NGA Points Cash-In] Parent notification dispatched to ${payload.parentEmail}`,
-      { subject, body },
-    );
-  }
-
   return {
     dispatched: true,
     ...payload,

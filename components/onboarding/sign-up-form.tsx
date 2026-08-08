@@ -33,9 +33,9 @@ import {
   upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { cn } from "@/lib/utils/cn";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const INVALID_EMAIL_ERROR =
   "Please enter a valid email address (e.g. name@example.com).";
@@ -712,11 +712,7 @@ export function SignUpForm() {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          <LockedBirthYearSummary
-            birthYear={birthYear}
-            ageTier={ageTier}
-            signup
-          />
+          <LockedBirthYearSummary birthYear={birthYear} ageTier={ageTier} />
 
           {isExplorer ? (
             <p className="font-sans text-sm font-bold leading-relaxed text-purple-700">

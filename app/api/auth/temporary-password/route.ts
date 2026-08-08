@@ -10,10 +10,9 @@ import {
 } from "@/lib/auth/temporary-password";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export const runtime = "nodejs";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const COHORTS: readonly MasteryCohort[] = [
   "explorer",
   "pathfinder",

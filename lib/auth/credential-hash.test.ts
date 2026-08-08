@@ -13,7 +13,7 @@ describe("credential-hash", () => {
   });
 
   it("still verifies legacy nga1_ digests", () => {
-    // FNV-1a of "2580" as previously used in recovery demos.
+    // Build an nga1_ digest with the same FNV-1a path used for legacy accounts.
     let hash = 2166136261;
     const value = "legacy-pin";
     for (let i = 0; i < value.length; i += 1) {

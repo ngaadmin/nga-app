@@ -13,7 +13,8 @@ export type ClientSendEmailRequest<T extends OnboardingEmailType = OnboardingEma
 
 /**
  * Browser-safe helper that posts to `/api/email/send`.
- * Never throws - signup flows must keep working if mail fails.
+ * Never throws — returns `{ success: false }` on transport/API failure so
+ * callers can decide (e.g. Explorer approval hard-fails; other flows may soft-continue).
  */
 export async function requestOnboardingEmailSend<T extends OnboardingEmailType>(
   payload: ClientSendEmailRequest<T>,
@@ -29,13 +30,6 @@ export async function requestOnboardingEmailSend<T extends OnboardingEmailType>(
       | SendOnboardingEmailResult
       | { success?: boolean; error?: string; simulated?: boolean; id?: string }
       | null;
-
-    console.log("[Email Client Response]:", {
-      status: response.status,
-      ok: response.ok,
-      simulated: json && "simulated" in json ? json.simulated : undefined,
-      requestType: payload.type,
-    });
 
     if (!response.ok || !json || json.success !== true) {
       return {

@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "crypto";
-import { PRODUCTION_APP_URL } from "@/lib/email/templates";
+import { getDefaultAppUrl } from "@/lib/email/templates";
 
 function safeEqualString(a: string, b: string): boolean {
   const left = Buffer.from(a);
@@ -20,7 +20,8 @@ export function clientIpKey(request: Request): string {
 function allowedHostsForRequest(request: Request): Set<string> {
   const allowedHosts = new Set<string>();
   try {
-    allowedHosts.add(new URL(PRODUCTION_APP_URL).host.toLowerCase());
+    // Env-aware default (NEXT_PUBLIC_APP_URL) plus last-resort fallback host.
+    allowedHosts.add(new URL(getDefaultAppUrl()).host.toLowerCase());
   } catch {
     // ignore invalid configured URL
   }
@@ -37,15 +38,6 @@ function allowedHostsForRequest(request: Request): Set<string> {
 
   const host = request.headers.get("host")?.trim().toLowerCase();
   if (host) allowedHosts.add(host);
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (appUrl) {
-    try {
-      allowedHosts.add(new URL(appUrl).host.toLowerCase());
-    } catch {
-      // ignore
-    }
-  }
 
   return allowedHosts;
 }

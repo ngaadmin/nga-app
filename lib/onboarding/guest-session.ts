@@ -1,7 +1,4 @@
-import {
-  hashCredential as hashCredentialV2,
-  verifyCredential,
-} from "@/lib/auth/credential-hash";
+import { hashCredential as hashCredentialV2 } from "@/lib/auth/credential-hash";
 import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
 import {
   defaultAccountStatusForBirthYear,
@@ -13,14 +10,15 @@ import {
   type RegisteredAccountStatus,
 } from "@/lib/dashboard/mastery-cohort";
 import { releaseGenericProfileId } from "@/lib/onboarding/generic-profile-id";
+import { resolvePasscodeHash } from "@/lib/onboarding/resolve-passcode-hash";
 import {
   readPersisted,
   removePersisted,
   writePersisted,
 } from "@/lib/dev/client-persist";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
-
-export { verifyCredential };
+import { normalizeEmailAddress } from "@/lib/validation/email";
+import { isFourDigitPin } from "@/lib/validation/pin";
 
 export const GUEST_SESSION_STORAGE_KEY = "nga_guest_session";
 
@@ -39,19 +37,10 @@ export const DASHBOARD_ACADEMY_PATH = "/dashboard/academy" as const;
 
 export type AccessMode = "guest" | "registered";
 
-/** @deprecated Use AccessMode - kept for existing imports. */
-export type GuestAccessMode = "guest";
-
-/** @deprecated Use MasteryCohort from `@/lib/dashboard/mastery-cohort`. */
-export type ComplianceTier = MasteryCohort;
-
 export type AccountRole = "child" | "parent_master";
 
 /** Re-export for session consumers. */
 export type { AccountLifecycleStatus, RegisteredAccountStatus };
-
-/** @deprecated Prefer AccountLifecycleStatus. */
-export type AccountState = AccountLifecycleStatus;
 
 export type GuestProfileInput = {
   username: string;
@@ -75,7 +64,10 @@ export type RegisteredProfileInput = {
   email?: string;
   /** Required for Explorers and Pathfinders; optional for Mavericks. */
   parentEmail?: string | null;
-  /** Plain 4-digit Explorer handle passcode - stored as passcodeHash. */
+  /**
+   * Explorer login password (min 6). Field name is historical — digest is stored
+   * as `passcodeHash` for registry/consent-token compatibility.
+   */
   passcode?: string;
   passcodeHash?: string;
   /** Plain learner password - stored as passwordHash (Pathfinder/Maverick). */
@@ -107,14 +99,15 @@ export type UserSession = {
    * Changes Academy difficulty only - must not clear Parent Portal / consent rules.
    */
   curriculumCohort?: MasteryCohort;
-  /**
-   * Lifecycle: GUEST | PENDING_CONSENT | ACTIVE.
-   * Alias field name: accountLifecycleStatus / accountState.
-   */
+  /** Lifecycle: GUEST | PENDING_CONSENT | ACTIVE. */
   accountStatus?: AccountLifecycleStatus;
-  /** @deprecated Prefer accountStatus - same value when persisted by newer clients. */
+  /**
+   * @deprecated Read-only fallback for older localStorage. Never written on new saves.
+   */
   accountLifecycleStatus?: AccountLifecycleStatus;
-  /** @deprecated Prefer accountStatus. */
+  /**
+   * @deprecated Read-only fallback for older localStorage. Never written on new saves.
+   */
   accountState?: AccountLifecycleStatus;
   createdAt: string;
   /**
@@ -131,7 +124,10 @@ export type UserSession = {
   consentApprovedAt?: string;
   /** Hashed 4-digit Parent PIN set during consent approval. */
   parentPinHash?: string;
-  /** Hashed 4-digit Explorer handle passcode. */
+  /**
+   * Hashed Explorer login password. Field name is historical (`passcodeHash`);
+   * value is a salted password digest (min 6), not a 4-digit PIN.
+   */
   passcodeHash?: string;
   /** Hashed learner password (Pathfinder / Maverick). */
   passwordHash?: string;
@@ -146,35 +142,13 @@ export type UserSession = {
 /** @deprecated Use UserSession - kept for existing imports. */
 export type GuestAccessSession = UserSession;
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FOUR_DIGIT_PATTERN = /^\d{4}$/;
-
 /** Salted credential digest (`nga2_`). Legacy `nga1_` hashes still verify. */
 export function hashCredential(value: string): string {
   return hashCredentialV2(value);
 }
 
 function normalizeEmail(value: string | null | undefined): string | undefined {
-  if (typeof value !== "string") return undefined;
-  const trimmed = value.trim().toLowerCase();
-  return trimmed && EMAIL_PATTERN.test(trimmed) ? trimmed : undefined;
-}
-
-function resolvePasscodeHash(input: RegisteredProfileInput): string | undefined {
-  if (typeof input.passcodeHash === "string" && input.passcodeHash.trim()) {
-    return input.passcodeHash.trim();
-  }
-  if (typeof input.passcode === "string" && input.passcode.length > 0) {
-    const trimmed = input.passcode.trim();
-    // Explorer login credential is a password (min 6). Legacy 4-digit values still hash.
-    if (trimmed.length < 6 && !FOUR_DIGIT_PATTERN.test(trimmed)) {
-      throw new Error(
-        "Explorer password must be at least 6 characters.",
-      );
-    }
-    return hashCredential(trimmed);
-  }
-  return undefined;
+  return normalizeEmailAddress(value);
 }
 
 function resolvePasswordHash(input: RegisteredProfileInput): string | undefined {
@@ -192,20 +166,12 @@ function resolveParentPinHash(input: RegisteredProfileInput): string | undefined
     return input.parentPinHash.trim();
   }
   if (typeof input.parentPin === "string" && input.parentPin.length > 0) {
-    if (!FOUR_DIGIT_PATTERN.test(input.parentPin.trim())) {
+    if (!isFourDigitPin(input.parentPin)) {
       throw new Error("Parent PIN must be exactly 4 digits.");
     }
     return hashCredential(input.parentPin);
   }
   return undefined;
-}
-
-/** @deprecated Use getComplianceTierFromBirthYear. */
-export function getComplianceTier(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): MasteryCohort {
-  return getComplianceTierFromBirthYear(birthYear, referenceYear);
 }
 
 /**
@@ -273,8 +239,8 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     return {
       ...session,
       accountStatus: "GUEST",
-      accountLifecycleStatus: "GUEST",
-      accountState: "GUEST",
+      accountLifecycleStatus: undefined,
+      accountState: undefined,
       learnerEmail: undefined,
       email: undefined,
     };
@@ -326,8 +292,9 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     email: learnerEmail,
     parentEmail,
     accountStatus,
-    accountLifecycleStatus: accountStatus,
-    accountState: accountStatus,
+    // Drop deprecated aliases so they are not re-persisted.
+    accountLifecycleStatus: undefined,
+    accountState: undefined,
   };
 }
 
@@ -384,8 +351,6 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
     ageTier,
     curriculumCohort,
     accountStatus,
-    accountLifecycleStatus: accountStatus,
-    accountState: accountStatus,
     createdAt:
       typeof parsed.createdAt === "string"
         ? parsed.createdAt
@@ -446,8 +411,6 @@ export function createGuestAccessSession(
     birthYearLocked: true,
     ageTier: getComplianceTierFromBirthYear(birthYear),
     accountStatus: "GUEST",
-    accountLifecycleStatus: "GUEST",
-    accountState: "GUEST",
     createdAt: new Date().toISOString(),
     genericProfileId: input.genericProfileId,
   };
@@ -502,17 +465,29 @@ export function convertToRegisteredProfile(
   }
 
   // Credential presence is enforced by signup UI; hash whenever provided.
-  const passcodeHash = resolvePasscodeHash(input);
-  const passwordHash = resolvePasswordHash(input);
+  // Explorers: password may arrive as `passcode` (consent bridge) or `password`.
+  const passcodeHash = resolvePasscodeHash({
+    passcode: input.passcode,
+    password: ageTier === "explorer" ? input.password : undefined,
+    passcodeHash: input.passcodeHash,
+  });
+  const passwordHash =
+    ageTier === "explorer" ? undefined : resolvePasswordHash(input);
   const parentPinHash = resolveParentPinHash(input);
 
-  if (requirements.requiresPasscode && input.passcode !== undefined && !passcodeHash) {
-    throw new Error(
-      "A password is required for Explorer handle login.",
-    );
-  }
-  if (requirements.requiresPassword && input.password !== undefined && !passwordHash) {
-    throw new Error("A password is required for this age band.");
+  if (requirements.requiresPassword) {
+    if (ageTier === "explorer") {
+      if (
+        (input.passcode !== undefined ||
+          input.password !== undefined ||
+          input.passcodeHash !== undefined) &&
+        !passcodeHash
+      ) {
+        throw new Error("A password is required for Explorer login.");
+      }
+    } else if (input.password !== undefined && !passwordHash) {
+      throw new Error("A password is required for this age band.");
+    }
   }
 
   const existing = readUserSession();
@@ -544,8 +519,6 @@ export function convertToRegisteredProfile(
     ageTier,
     curriculumCohort: existing?.curriculumCohort,
     accountStatus,
-    accountLifecycleStatus: accountStatus,
-    accountState: accountStatus,
     accountRole: input.accountRole,
     parentEmail,
     passcodeHash,
@@ -651,11 +624,6 @@ export function clearUserSession(): void {
   if (typeof window === "undefined") return;
   removePersisted(GUEST_SESSION_STORAGE_KEY);
   removePersisted(LEGACY_GHOST_SESSION_STORAGE_KEY);
-}
-
-/** @deprecated Use clearUserSession - kept for existing imports. */
-export function clearGuestAccessSession(): void {
-  clearUserSession();
 }
 
 export function isGuestSession(session: UserSession | null): boolean {

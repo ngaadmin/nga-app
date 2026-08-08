@@ -7,10 +7,11 @@ import {
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import {
-  PRODUCTION_APP_URL,
+  getDefaultAppUrl,
   type OnboardingEmailDataMap,
   type OnboardingEmailType,
 } from "@/lib/email/templates";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export const runtime = "nodejs";
 
@@ -27,8 +28,6 @@ const EMAIL_TYPES: readonly Exclude<
   "MAVERICK_WELCOME",
   "USERNAME_RECOVERY",
 ] as const;
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type SendBody = {
   type?: unknown;
@@ -121,7 +120,7 @@ function requestAppUrl(request: Request): string {
   )
     .split(",")[0]
     ?.trim();
-  if (!host) return PRODUCTION_APP_URL;
+  if (!host) return getDefaultAppUrl();
   const protoHeader = request.headers
     .get("x-forwarded-proto")
     ?.split(",")[0]

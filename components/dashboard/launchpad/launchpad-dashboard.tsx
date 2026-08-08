@@ -977,8 +977,11 @@ export function LaunchpadDashboard() {
     setCloseConfirmId(null);
   }
 
-  function handleLaunchStep(ventureId: VentureBlueprintId, stepTitle: string) {
-    console.log(`Launchpad step launch: ${ventureId} - ${stepTitle}`);
+  function handleLaunchStep(
+    _ventureId: VentureBlueprintId,
+    _stepTitle: string,
+  ) {
+    // Step launch wiring reserved for a later Launchpad milestone.
   }
 
   return (

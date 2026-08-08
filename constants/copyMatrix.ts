@@ -4,7 +4,6 @@ export const copyMatrix = {
   onboarding: {
     signIn: {
       forgotUsername: "Forgot Username?",
-      forgotPasscode: "Forgot Passcode / PIN?",
       recoveryEmailLabel: "Email on file",
       recoveryEmailPlaceholder: "parent@example.com or your email",
       recoveryUsernameSubmit: "Send Username",
@@ -12,13 +11,9 @@ export const copyMatrix = {
       recoveryCancel: "Back to log in",
       recoveryUsernameHint:
         "We'll email the username linked to this parent or profile address.",
-      recoveryCredentialHint:
-        "We'll reset the Parent PIN and email a temporary passcode / PIN to this address.",
       recoverySending: "Sending…",
       recoveryUsernameSuccess:
         "If that email is on file, we sent the username there. Check the inbox (and spam).",
-      recoveryCredentialSuccess:
-        "If that email is on file, we sent a reset code there. Use it to log in, then set a new passcode or PIN.",
     },
   },
   dashboard: {
@@ -170,7 +165,7 @@ export const copyMatrix = {
         summary:
           "When your child cashes in XP from Vault, converted cash goes straight into their Save Jar at this rate.",
         vaultCashInHint:
-          "Open Parent Hub (PIN required) to set the conversion rate. Kids cash in XP from Vault.",
+          "Open Preferences (PIN required) to set the conversion rate. Kids cash in XP from Vault.",
         convertNowHeading: "Convert Now",
         convertFullBalance: "Convert Full Points Balance",
         customAmountLabel: "Custom points to convert",
@@ -283,7 +278,7 @@ export const copyMatrix = {
         depositButton: "Deposit Income",
         poolLabel: "Money to Allocate",
         currencySettingsNote:
-          "Currency can be changed in Settings → Parent Hub.",
+          "Currency can be changed in Settings → Preferences.",
         remainingLabel: "Money to allocate",
         toAllocateAmountTemplate: "+{amount}",
         toAllocateActionLabel: "to allocate",

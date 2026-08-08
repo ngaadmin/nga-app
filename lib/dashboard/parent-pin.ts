@@ -4,27 +4,21 @@ import {
   verifyCredential,
 } from "@/lib/auth/credential-hash";
 import { generateRecoveryParentPin } from "@/lib/auth/temporary-password";
+import {
+  FOUR_DIGIT_PATTERN,
+  isFourDigitPin,
+} from "@/lib/validation/pin";
 
 export const PARENT_PIN_STORAGE_KEY = "nga_parent_pin";
 
-const PIN_PATTERN = /^\d{4}$/;
-
 export function isValidPinFormat(pin: string): boolean {
-  return PIN_PATTERN.test(pin.trim());
+  return isFourDigitPin(pin);
 }
 
 export function isParentPinConfigured(): boolean {
   if (typeof window === "undefined") return false;
   const stored = window.sessionStorage.getItem(PARENT_PIN_STORAGE_KEY);
   return Boolean(stored && stored.trim());
-}
-
-/**
- * @deprecated Parent PIN is stored hashed - plaintext is never readable back.
- * Returns null always; kept for call-site compatibility.
- */
-export function getStoredParentPin(): string | null {
-  return null;
 }
 
 export function verifyParentPin(input: string): boolean {
@@ -60,11 +54,6 @@ export function issueParentPinRecovery(): string {
   return pin;
 }
 
-/** @deprecated Use {@link issueParentPinRecovery}. */
-export function resetParentPinToRecovery(): string {
-  return issueParentPinRecovery();
-}
-
 /** Simulated parent email for guest-session recovery dispatch. */
 export function resolveSimulatedParentEmail(username: string): string {
   const safe =
@@ -85,7 +74,7 @@ export async function dispatchParentPinRecoveryEmail(
   });
 
   const code = recoveryCode.trim();
-  if (!PIN_PATTERN.test(code)) {
+  if (!FOUR_DIGIT_PATTERN.test(code)) {
     throw new Error("Parent PIN recovery code must be exactly 4 digits.");
   }
 

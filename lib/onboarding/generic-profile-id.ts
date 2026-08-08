@@ -1,6 +1,5 @@
 import {
   readPersisted,
-  removePersisted,
   writePersisted,
 } from "@/lib/dev/client-persist";
 
@@ -101,9 +100,4 @@ export function releaseGenericProfileId(id: string): void {
   const pool = readPool();
   pool.inUse = pool.inUse.filter((entry) => entry !== id);
   writePool(pool);
-}
-
-export function clearGenericProfilePool(): void {
-  if (typeof window === "undefined") return;
-  removePersisted(GENERIC_PROFILE_POOL_STORAGE_KEY);
 }

@@ -1,15 +1,14 @@
+import { verifyCredential } from "@/lib/auth/credential-hash";
 import { requestOnboardingEmailSend } from "@/lib/email/request-send";
 import { isTemporaryPasswordHash } from "@/lib/auth/temporary-password";
 import {
   hashCredential,
-  verifyCredential,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 /** Durable local registry - survives logout so returning users can log back in. */
 export const REGISTERED_ACCOUNTS_STORAGE_KEY = "nga_registered_accounts_v1";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type RegisteredAccountsStore = {
   accounts: UserSession[];
@@ -174,14 +173,6 @@ export function findRegisteredAccountByUsername(
       (account) => account.username.trim().toLowerCase() === key,
     ) ?? null
   );
-}
-
-/**
- * Username uniqueness only — parent/guardian emails may link many child
- * profiles and must never be treated as a duplicate-account key.
- */
-export function isRegisteredUsernameTaken(username: string): boolean {
-  return findRegisteredAccountByUsername(username) !== null;
 }
 
 /**
@@ -446,11 +437,6 @@ export async function recoverCredentialByEmail(
   }
 
   return { accepted: true, recipientEmail };
-}
-
-export function clearRegisteredAccounts(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(REGISTERED_ACCOUNTS_STORAGE_KEY);
 }
 
 /** Household email used to link a parent master account to child profiles. */

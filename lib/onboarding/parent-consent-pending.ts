@@ -17,11 +17,14 @@ import {
   readUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import { resolvePasscodeHash } from "@/lib/onboarding/resolve-passcode-hash";
 import {
   findRegisteredAccountByUsername,
   upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
+import { isFourDigitPin } from "@/lib/validation/pin";
 
 export const PENDING_PARENT_CONSENT_KEY = "nga_pending_parent_consent_v1";
 
@@ -31,7 +34,7 @@ export type PendingParentConsent = {
   childUsername: string;
   birthYear: number;
   createdAt: string;
-  /** Explorer handle passcode digest collected at signup. */
+  /** Explorer login password digest collected at signup (field name historical). */
   passcodeHash?: string;
 };
 
@@ -51,9 +54,6 @@ export type ResendParentConsentResult = {
 type PendingConsentStore = {
   entries: PendingParentConsent[];
 };
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FOUR_DIGIT_PATTERN = /^\d{4}$/;
 
 function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
   if (!isConsentTokenUnexpired(createdAtIso)) return false;
@@ -124,23 +124,6 @@ export async function encodeConsentToken(input: {
  */
 export function decodeConsentToken(_token: string): PendingParentConsent | null {
   return null;
-}
-
-function resolvePasscodeHash(input: {
-  passcode?: string;
-  passcodeHash?: string;
-}): string | undefined {
-  if (typeof input.passcodeHash === "string" && input.passcodeHash.trim()) {
-    return input.passcodeHash.trim();
-  }
-  if (typeof input.passcode === "string" && input.passcode.length > 0) {
-    const trimmed = input.passcode.trim();
-    if (trimmed.length < 6 && !FOUR_DIGIT_PATTERN.test(trimmed)) {
-      throw new Error("Explorer password must be at least 6 characters.");
-    }
-    return hashCredential(trimmed);
-  }
-  return undefined;
 }
 
 /**
@@ -620,8 +603,6 @@ export function approvePendingLearnerAccount(input: {
     ...account,
     consentApprovedAt: new Date().toISOString(),
     accountStatus: "ACTIVE",
-    accountLifecycleStatus: "ACTIVE",
-    accountState: "ACTIVE",
   });
   upsertRegisteredAccount(activated);
 
@@ -649,7 +630,7 @@ export async function approveParentConsent(
   if (typeof options.parentPinHash === "string" && options.parentPinHash.trim()) {
     parentPinHash = options.parentPinHash.trim();
   } else if (typeof options.parentPin === "string" && options.parentPin.length > 0) {
-    if (!FOUR_DIGIT_PATTERN.test(options.parentPin.trim())) {
+    if (!isFourDigitPin(options.parentPin)) {
       throw new Error("Parent PIN must be exactly 4 digits.");
     }
     parentPinHash = hashCredential(options.parentPin);
@@ -674,8 +655,6 @@ export async function approveParentConsent(
       parentPinHash: parentPinHash ?? existing.parentPinHash,
       consentApprovedAt,
       accountStatus: "ACTIVE",
-      accountLifecycleStatus: "ACTIVE",
-      accountState: "ACTIVE",
       marketingOptIn: false,
     });
     await finalizeRegisteredSignup(session, { skipEmail: true });
@@ -711,6 +690,3 @@ export function clearPendingParentConsent(token?: string): void {
   writeAllPendingConsents(next);
 }
 
-export function buildParentConsentApprovalPath(token: string): string {
-  return `/onboarding/parent-consent?token=${encodeURIComponent(token)}`;
-}

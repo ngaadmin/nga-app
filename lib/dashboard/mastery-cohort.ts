@@ -3,9 +3,9 @@ import { SKILLS_REGISTRY } from "@/lib/skills/skills-registry";
 /**
  * Learning / mastery age bands (curriculum tracks).
  * Parental oversight and signup gates are evaluated from legal birth-year age
- * via the conservative Dec 31 rule — never from a curriculum override alone.
+ * via the conservative Dec 31 rule - never from a curriculum override alone.
  *
- * Explorers 10–12 · Pathfinders 13–15 · Mavericks 16+
+ * Explorers 10-12 · Pathfinders 13-15 · Mavericks 16+
  */
 export type MasteryCohort = "explorer" | "pathfinder" | "maverick";
 
@@ -20,9 +20,6 @@ export type AccountLifecycleStatus = "GUEST" | "PENDING_CONSENT" | "ACTIVE";
 /** Statuses assigned at registered signup (never GUEST). */
 export type RegisteredAccountStatus = Exclude<AccountLifecycleStatus, "GUEST">;
 
-/** @deprecated Prefer AccountLifecycleStatus — same enum. */
-export type AccountState = AccountLifecycleStatus;
-
 export type CohortAgeBounds = {
   id: MasteryCohort;
   label: string;
@@ -34,9 +31,15 @@ export type CohortAgeBounds = {
 export type CohortSignupRequirements = {
   /** Learner may supply their own email at signup. */
   requiresLearnerEmail: boolean;
-  /** Password credential required at signup (Pathfinder / Maverick). */
+  /**
+   * Login password required at signup (min 6 characters).
+   * True for Explorer, Pathfinder, and Maverick.
+   */
   requiresPassword: boolean;
-  /** 4-digit handle passcode required at signup (Explorer). */
+  /**
+   * @deprecated Explorers use passwords now. Always false for current cohorts;
+   * kept so older callers of {@link requiresPasscodeForBirthYear} keep compiling.
+   */
   requiresPasscode: boolean;
   /** Parent/guardian email must be collected and linked. */
   requiresParentEmail: boolean;
@@ -45,7 +48,7 @@ export type CohortSignupRequirements = {
   defaultAccountStatus: RegisteredAccountStatus;
   /**
    * Parent Portal, parent email linkage, and parent PIN remain required.
-   * Driven by legal birth-year age — curriculum overrides must not clear this.
+   * Driven by legal birth-year age - curriculum overrides must not clear this.
    */
   requiresParentPortal: boolean;
 };
@@ -60,8 +63,8 @@ export const MASTERY_COHORT = {
     minAge: 10,
     maxAge: 12,
     requiresLearnerEmail: false,
-    requiresPassword: false,
-    requiresPasscode: true,
+    requiresPassword: true,
+    requiresPasscode: false,
     requiresParentEmail: true,
     requiresParentApproval: true,
     defaultAccountStatus: "PENDING_CONSENT",
@@ -95,7 +98,7 @@ export const MASTERY_COHORT = {
   },
 } as const satisfies Record<MasteryCohort, CohortPropertyMatrixEntry>;
 
-/** @deprecated Prefer `MASTERY_COHORT` / `COHORT_PROPERTY_MATRIX` — same source. */
+/** @deprecated Prefer `MASTERY_COHORT` / `COHORT_PROPERTY_MATRIX` - same source. */
 export const COHORT_PROPERTY_MATRIX = MASTERY_COHORT;
 
 export const UNIVERSAL_MASTERY_SKILLS_COUNT = SKILLS_REGISTRY.filter(
@@ -140,7 +143,7 @@ export function getMasteryCohortFromBirthYear(
   );
 }
 
-/** Alias — legal compliance tier is always derived from birth year. */
+/** Alias - legal compliance tier is always derived from birth year. */
 export const getComplianceTierFromBirthYear = getMasteryCohortFromBirthYear;
 
 export function getSignupRequirementsForCohort(
@@ -168,7 +171,7 @@ export function getSignupRequirementsForBirthYear(
 }
 
 /**
- * Verifiable parental approval required (Explorers 10–12).
+ * Verifiable parental approval required (Explorers 10-12).
  * Accepts a cohort id for call-site compatibility; parental gates that can see
  * a curriculum override should prefer {@link requiresParentConsentForBirthYear}.
  */
@@ -194,7 +197,7 @@ export function requiresParentEmailForBirthYear(
 }
 
 /**
- * Parent Portal / parent PIN / parent email linkage — legal birth-year only.
+ * Parent Portal / parent PIN / parent email linkage - legal birth-year only.
  * A parent moving curriculum from Explorer → Pathfinder must not clear this.
  */
 export function requiresParentPortalForBirthYear(
@@ -213,7 +216,9 @@ export function defaultAccountStatusForBirthYear(
     .defaultAccountStatus;
 }
 
-/** True when cohort signup requires a 4-digit Explorer handle passcode. */
+/**
+ * @deprecated Explorers use passwords. Always false for current cohort matrix.
+ */
 export function requiresPasscodeForBirthYear(
   birthYear: number,
   referenceYear = new Date().getFullYear(),
@@ -222,7 +227,7 @@ export function requiresPasscodeForBirthYear(
     .requiresPasscode;
 }
 
-/** True when cohort signup requires a learner password. */
+/** True when cohort signup requires a login password (min 6 characters). */
 export function requiresPasswordForBirthYear(
   birthYear: number,
   referenceYear = new Date().getFullYear(),
@@ -264,7 +269,7 @@ export function maxSkillNumberForMasteryCohort(cohort: MasteryCohort): number {
   }
 }
 
-/** Highest Academy module (1–6) visible for a cohort's skill track. */
+/** Highest Academy module (1-6) visible for a cohort's skill track. */
 export function maxAcademyModuleForMasteryCohort(
   cohort: MasteryCohort,
 ): 1 | 2 | 3 | 4 | 5 | 6 {
@@ -278,12 +283,12 @@ export function maxAcademyModuleForMasteryCohort(
   }
 }
 
-/** Skills 13–18 unlock for Mavericks (16+) only. */
+/** Skills 13-18 unlock for Mavericks (16+) only. */
 export function canAccessAdvancedSkills(cohort: MasteryCohort): boolean {
   return cohort === "maverick";
 }
 
-/** Skills 13–15 unlock for Pathfinders and Mavericks. */
+/** Skills 13-15 unlock for Pathfinders and Mavericks. */
 export function canAccessPathfinderGrowthSkills(cohort: MasteryCohort): boolean {
   return cohort === "pathfinder" || cohort === "maverick";
 }

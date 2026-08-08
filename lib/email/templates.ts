@@ -81,12 +81,34 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** Live production origin used for every onboarding/consent email CTA. */
-export const PRODUCTION_APP_URL = "https://nga-app-three.vercel.app";
+/** Last-resort host when NEXT_PUBLIC_APP_URL is unset (local/misconfigured). */
+const FALLBACK_APP_URL = "https://nga-app-three.vercel.app";
+
+/**
+ * Canonical app origin for email CTAs and allowlisting.
+ * Prefers `NEXT_PUBLIC_APP_URL`, then the hardcoded production fallback.
+ */
+export function getDefaultAppUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (fromEnv) {
+    try {
+      return new URL(fromEnv).origin;
+    } catch {
+      // fall through
+    }
+  }
+  return FALLBACK_APP_URL;
+}
+
+/**
+ * @deprecated Prefer {@link getDefaultAppUrl}. Kept for existing imports.
+ * Resolves to the same env-aware origin.
+ */
+export const PRODUCTION_APP_URL = getDefaultAppUrl();
 
 /**
  * Consent/approval links must use the same origin that signed the token.
- * Prefer the send-route appUrl (request host); fall back to production.
+ * Prefer the send-route appUrl (request host); fall back to env/default.
  */
 function resolveAppUrl(appUrl?: string): string {
   const trimmed = appUrl?.trim();
@@ -97,7 +119,7 @@ function resolveAppUrl(appUrl?: string): string {
       // fall through
     }
   }
-  return PRODUCTION_APP_URL;
+  return getDefaultAppUrl();
 }
 
 function ctaButton(label: string, href: string): string {

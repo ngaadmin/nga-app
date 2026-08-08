@@ -10,6 +10,7 @@ import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
   ONBOARDING_PARENT_CONSENT_PATH,
+  ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_PENDING_PATH,
   ONBOARDING_START_PATH,
   readUserSession,
@@ -17,6 +18,7 @@ import {
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
+  requiresParentConsentForBirthYear,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -151,9 +153,15 @@ export function SignUpForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [pendingConsent, setPendingConsent] =
     useState<PendingParentConsent | null>(null);
+  /** Explorer VPC create-master vs Pathfinder optional dashboard claim. */
+  const [parentMasterFlow, setParentMasterFlow] = useState<
+    "explorer_consent" | "pathfinder_claim" | null
+  >(null);
   const [parentConsentLoading, setParentConsentLoading] = useState(isParentMaster);
   const [isSendingApprovalEmail, setIsSendingApprovalEmail] = useState(false);
   const approvalEmailInFlightRef = useRef(false);
+  const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
+  const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
 
   useEffect(() => {
     if (isParentMaster) return;
@@ -171,22 +179,49 @@ export function SignUpForm() {
       if (cancelled) return;
       if (!pending) {
         setPendingConsent(null);
+        setParentMasterFlow(null);
         setParentConsentLoading(false);
         setErrors({
-          form: "This consent link is invalid or expired. Ask your learner to restart signup.",
+          form: "This link is invalid or expired. Ask your learner to restart signup, or sign in if you already have a master account.",
         });
         return;
       }
 
-      // Existing master accounts approve on the consent page — skip create-master.
+      const flow = requiresParentConsentForBirthYear(pending.birthYear)
+        ? "explorer_consent"
+        : getMasteryCohortFromBirthYear(pending.birthYear) === "pathfinder"
+          ? "pathfinder_claim"
+          : null;
+
+      if (!flow) {
+        setPendingConsent(null);
+        setParentMasterFlow(null);
+        setParentConsentLoading(false);
+        setErrors({
+          form: "This parent link is not valid for creating a master account.",
+        });
+        return;
+      }
+
+      // Existing master: Explorers approve on the consent page; Pathfinders are already linked.
       if (findActiveParentMasterByEmail(pending.parentEmail)) {
-        router.replace(
-          `${ONBOARDING_PARENT_CONSENT_PATH}?token=${encodeURIComponent(consentToken)}`,
-        );
+        if (flow === "explorer_consent") {
+          router.replace(
+            `${ONBOARDING_PARENT_CONSENT_PATH}?token=${encodeURIComponent(consentToken)}`,
+          );
+          return;
+        }
+        setPendingConsent(null);
+        setParentMasterFlow(null);
+        setParentConsentLoading(false);
+        setErrors({
+          form: "A master account already exists for this email. Sign in to open your parent dashboard — this Pathfinder is already linked.",
+        });
         return;
       }
 
       setPendingConsent(pending);
+      setParentMasterFlow(flow);
       setParentEmail(pending.parentEmail);
       setParentConsentLoading(false);
     }
@@ -277,7 +312,8 @@ export function SignUpForm() {
       if (!trimmedParent || !EMAIL_PATTERN.test(trimmedParent)) {
         next.parentEmail = INVALID_EMAIL_ERROR;
       }
-      if (!parentalConsentGiven) {
+      // Explorer VPC only — Pathfinder claim does not require consent.
+      if (isExplorerConsentFlow && !parentalConsentGiven) {
         next.parentalConsent =
           "Tick the parental consent box to approve this learner profile and create your master account.";
       }
@@ -288,31 +324,51 @@ export function SignUpForm() {
   }
 
   async function handleParentMasterSubmit() {
-    if (!consentToken || !pendingConsent || !validate()) return;
+    if (!consentToken || !pendingConsent || !parentMasterFlow || !validate()) {
+      return;
+    }
 
     try {
-      // Consent is confirmed only here (mandatory checkbox + form submit).
-      const existingChild = readUserSession();
-      const alreadyApproved =
-        existingChild?.accessMode === "registered" &&
-        existingChild.username === pendingConsent.childUsername &&
-        existingChild.birthYear === pendingConsent.birthYear &&
-        existingChild.parentEmail?.trim().toLowerCase() ===
-          pendingConsent.parentEmail.trim().toLowerCase() &&
-        (existingChild.accountStatus === "ACTIVE" ||
-          Boolean(existingChild.consentApprovedAt));
+      if (isExplorerConsentFlow) {
+        // Consent is confirmed only here (mandatory checkbox + form submit).
+        const existingChild = readUserSession();
+        const alreadyApproved =
+          existingChild?.accessMode === "registered" &&
+          existingChild.username === pendingConsent.childUsername &&
+          existingChild.birthYear === pendingConsent.birthYear &&
+          existingChild.parentEmail?.trim().toLowerCase() ===
+            pendingConsent.parentEmail.trim().toLowerCase() &&
+          (existingChild.accountStatus === "ACTIVE" ||
+            Boolean(existingChild.consentApprovedAt));
 
-      const childSession = alreadyApproved
-        ? existingChild
-        : await approveParentConsent(consentToken);
+        const childSession = alreadyApproved
+          ? existingChild
+          : await approveParentConsent(consentToken);
 
-      if (!childSession) {
-        setErrors({
-          form: "We could not approve this profile. The consent link may have expired. Restart signup to request a new approval email.",
+        if (!childSession) {
+          setErrors({
+            form: "We could not approve this profile. The consent link may have expired. Restart signup to request a new approval email.",
+          });
+          return;
+        }
+
+        const parentSession = convertToRegisteredProfile({
+          username: username.trim(),
+          birthYear: adultBirthYear(),
+          accountRole: "parent_master",
+          learnerEmail: pendingConsent.parentEmail,
+          password: password.trim(),
+          accountStatus: "ACTIVE",
+          marketingOptIn,
         });
+        await finalizeRegisteredSignup(parentSession, { skipEmail: true });
+        // Keep child in the durable registry (already upserted during approve).
+        upsertRegisteredAccount(childSession);
+        router.push(DASHBOARD_ACADEMY_PATH);
         return;
       }
 
+      // Pathfinder claim: learner is already active — only create the master login.
       const parentSession = convertToRegisteredProfile({
         username: username.trim(),
         birthYear: adultBirthYear(),
@@ -323,8 +379,17 @@ export function SignUpForm() {
         marketingOptIn,
       });
       await finalizeRegisteredSignup(parentSession, { skipEmail: true });
-      // Keep child in the durable registry (already upserted during approve).
-      upsertRegisteredAccount(childSession);
+
+      const linkedChild = findRegisteredAccountByUsername(
+        pendingConsent.childUsername,
+      );
+      if (linkedChild) {
+        upsertRegisteredAccount({
+          ...linkedChild,
+          parentEmail: pendingConsent.parentEmail,
+        });
+      }
+
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
       const message = resolveSignupFailureMessage(error, false);
@@ -384,7 +449,8 @@ export function SignUpForm() {
         marketingOptIn,
       });
       await finalizeRegisteredSignup(session);
-      router.push(DASHBOARD_ACADEMY_PATH);
+      // replace: avoid back-stack return to the signup form after success
+      router.replace(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
@@ -411,15 +477,24 @@ export function SignUpForm() {
         <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
           <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
             <h1 className="font-heading text-2xl font-extrabold text-nga-primary">
-              This consent link expired
+              Parent link unavailable
             </h1>
             <p className="font-sans text-sm text-nga-slate">
               {errors.form ??
-                "This consent link is invalid or expired. Ask your learner to restart signup."}
+                "This link is invalid or expired. Ask your learner to restart signup."}
             </p>
-            <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
-              Restart signup
-            </ButtonLink>
+            <div className="space-y-2">
+              <ButtonLink href={ONBOARDING_SIGN_IN_PATH} variant="cta" fullWidth>
+                Sign in
+              </ButtonLink>
+              <ButtonLink
+                href="/onboarding/start?fresh=1"
+                variant="ghost"
+                fullWidth
+              >
+                Restart signup
+              </ButtonLink>
+            </div>
           </div>
         </section>
       );
@@ -434,7 +509,9 @@ export function SignUpForm() {
               Create Your Parent Master Profile
             </h1>
             <p className="font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
-              Finish setup for this learner, then create your master login.
+              {isPathfinderClaimFlow
+                ? "Optionally create your master login to follow this Pathfinder's progress."
+                : "Finish setup for this learner, then create your master login."}
             </p>
           </div>
 
@@ -442,7 +519,7 @@ export function SignUpForm() {
             <p className="font-heading text-xs font-bold uppercase tracking-wide text-nga-slate">
               Learner username
             </p>
-            <p className="mt-2 font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-4xl">
+            <p className="mt-2 font-heading text-xl font-extrabold leading-tight text-nga-primary sm:text-2xl">
               {pendingConsent.childUsername}
             </p>
           </div>
@@ -552,42 +629,46 @@ export function SignUpForm() {
               </div>
             ) : null}
 
-            <div className="space-y-2">
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={parentalConsentGiven}
-                  onChange={(e) => {
-                    setParentalConsentGiven(e.target.checked);
-                    clearError("parentalConsent");
-                  }}
-                  aria-invalid={Boolean(errors.parentalConsent)}
-                  aria-describedby={
-                    errors.parentalConsent
-                      ? "parental-consent-error"
-                      : undefined
-                  }
-                  className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
-                />
-                <span className="font-sans text-base leading-relaxed text-nga-ink">
-                  I am the parent or legal guardian of{" "}
-                  <span className="font-semibold text-nga-primary">
-                    {pendingConsent.childUsername}
+            {isExplorerConsentFlow ? (
+              <div className="space-y-2">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={parentalConsentGiven}
+                    onChange={(e) => {
+                      setParentalConsentGiven(e.target.checked);
+                      clearError("parentalConsent");
+                    }}
+                    aria-invalid={Boolean(errors.parentalConsent)}
+                    aria-describedby={
+                      errors.parentalConsent
+                        ? "parental-consent-error"
+                        : undefined
+                    }
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+                  />
+                  <span className="font-sans text-base leading-relaxed text-nga-ink">
+                    I am the parent or legal guardian of{" "}
+                    <span className="font-semibold text-nga-primary">
+                      {pendingConsent.childUsername}
+                    </span>
+                    , and I approve their NextGenAchiever$ profile.{" "}
+                    <span className="font-semibold text-nga-primary">
+                      (Required)
+                    </span>
                   </span>
-                  , and I approve their NextGenAchiever$ profile.{" "}
-                  <span className="font-semibold text-nga-primary">(Required)</span>
-                </span>
-              </label>
-              {errors.parentalConsent ? (
-                <p
-                  id="parental-consent-error"
-                  className="font-sans text-sm font-medium text-red-600"
-                  role="alert"
-                >
-                  {errors.parentalConsent}
-                </p>
-              ) : null}
-            </div>
+                </label>
+                {errors.parentalConsent ? (
+                  <p
+                    id="parental-consent-error"
+                    className="font-sans text-sm font-medium text-red-600"
+                    role="alert"
+                  >
+                    {errors.parentalConsent}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
             <label className="flex cursor-pointer items-start gap-3">
               <input
@@ -607,7 +688,7 @@ export function SignUpForm() {
               type="submit"
               variant="cta"
               fullWidth
-              disabled={!parentalConsentGiven}
+              disabled={isExplorerConsentFlow && !parentalConsentGiven}
             >
               Create Master Profile
             </Button>

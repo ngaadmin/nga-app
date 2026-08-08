@@ -8,7 +8,10 @@ import {
   saveUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
-import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
+import {
+  findActiveParentMasterByEmail,
+  upsertRegisteredAccount,
+} from "@/lib/onboarding/registered-accounts";
 
 export type FinalizeSignupOptions = {
   /**
@@ -19,6 +22,34 @@ export type FinalizeSignupOptions = {
   /** Skip outbound onboarding email (e.g. consent-approval activation). */
   skipEmail?: boolean;
 };
+
+/** Portable parent-dashboard claim token for Pathfinder FYI emails. */
+async function issuePathfinderParentClaimToken(input: {
+  parentEmail: string;
+  childUsername: string;
+  birthYear: number;
+}): Promise<string | null> {
+  try {
+    const response = await fetch("/api/auth/consent-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        parentEmail: input.parentEmail,
+        childUsername: input.childUsername,
+        birthYear: input.birthYear,
+        createdAt: new Date().toISOString(),
+      }),
+    });
+    const json = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      token?: string;
+    } | null;
+    if (!response.ok || !json?.token) return null;
+    return json.token;
+  } catch {
+    return null;
+  }
+}
 
 async function dispatchOnboardingEmails(
   session: UserSession,
@@ -59,12 +90,49 @@ async function dispatchOnboardingEmails(
   }
 
   if (cohort === "pathfinder" && session.accountStatus === "ACTIVE") {
-    if (!session.parentEmail) return;
-    void requestOnboardingEmailSend({
-      type: "PATHFINDER_PARENT",
-      recipientEmail: session.parentEmail,
-      data: { username },
-    });
+    const learnerEmail = (session.learnerEmail ?? session.email)
+      ?.trim()
+      .toLowerCase();
+    // Confirmation to the Pathfinder who just signed up (same welcome pattern as Maverick).
+    if (learnerEmail) {
+      void requestOnboardingEmailSend({
+        type: "MAVERICK_WELCOME",
+        recipientEmail: learnerEmail,
+        data: { username },
+      });
+    }
+
+    const parentEmail = session.parentEmail?.trim().toLowerCase();
+    if (!parentEmail) return;
+
+    // Parent FYI / linked notice must not block signup navigation.
+    void (async () => {
+      const existingMaster = findActiveParentMasterByEmail(parentEmail);
+      if (existingMaster) {
+        await requestOnboardingEmailSend({
+          type: "PATHFINDER_PARENT_LINKED",
+          recipientEmail: parentEmail,
+          data: {
+            username,
+            masterUsername: existingMaster.username,
+          },
+        });
+        return;
+      }
+
+      const token = await issuePathfinderParentClaimToken({
+        parentEmail,
+        childUsername: username,
+        birthYear: session.birthYear,
+      });
+      if (!token) return;
+
+      await requestOnboardingEmailSend({
+        type: "PATHFINDER_PARENT",
+        recipientEmail: parentEmail,
+        data: { username, token },
+      });
+    })();
     return;
   }
 

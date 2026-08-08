@@ -18,6 +18,7 @@ const EMAIL_TYPES: readonly Exclude<
   "EXPLORER_PARENT",
   "EXPLORER_PARENT_RESEND",
   "PATHFINDER_PARENT",
+  "PATHFINDER_PARENT_LINKED",
   "MAVERICK_WELCOME",
   "USERNAME_RECOVERY",
 ] as const;
@@ -60,10 +61,21 @@ function parseData(
   const username = readString(data, "username");
   if (!username) return null;
 
-  if (type === "EXPLORER_PARENT" || type === "EXPLORER_PARENT_RESEND") {
+  if (
+    type === "EXPLORER_PARENT" ||
+    type === "EXPLORER_PARENT_RESEND" ||
+    type === "PATHFINDER_PARENT"
+  ) {
     const token = readString(data, "token");
     if (!token) return null;
     return { username, token };
+  }
+
+  if (type === "PATHFINDER_PARENT_LINKED") {
+    return {
+      username,
+      masterUsername: readString(data, "masterUsername"),
+    };
   }
 
   if (type === "USERNAME_RECOVERY") {
@@ -223,7 +235,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | MAVERICK_WELCOME | USERNAME_RECOVERY.",
+            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | PATHFINDER_PARENT_LINKED | MAVERICK_WELCOME | USERNAME_RECOVERY.",
         },
         { status: 400 },
       );
@@ -247,7 +259,8 @@ export async function POST(request: Request) {
           success: false,
           error:
             body.type === "EXPLORER_PARENT" ||
-            body.type === "EXPLORER_PARENT_RESEND"
+            body.type === "EXPLORER_PARENT_RESEND" ||
+            body.type === "PATHFINDER_PARENT"
               ? "data.username and data.token are required."
               : "data.username is required.",
         },
@@ -257,12 +270,14 @@ export async function POST(request: Request) {
 
     if (
       body.type === "EXPLORER_PARENT" ||
-      body.type === "EXPLORER_PARENT_RESEND"
+      body.type === "EXPLORER_PARENT_RESEND" ||
+      body.type === "PATHFINDER_PARENT"
     ) {
-      const explorerData = data as
+      const tokenData = data as
         | OnboardingEmailDataMap["EXPLORER_PARENT"]
-        | OnboardingEmailDataMap["EXPLORER_PARENT_RESEND"];
-      const claims = verifyConsentToken(explorerData.token);
+        | OnboardingEmailDataMap["EXPLORER_PARENT_RESEND"]
+        | OnboardingEmailDataMap["PATHFINDER_PARENT"];
+      const claims = verifyConsentToken(tokenData.token);
       if (!claims) {
         return NextResponse.json(
           { success: false, error: "Consent token signature is invalid." },
@@ -275,7 +290,7 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
-      if (claims.childUsername !== explorerData.username) {
+      if (claims.childUsername !== tokenData.username) {
         return NextResponse.json(
           { success: false, error: "Consent token username mismatch." },
           { status: 400 },

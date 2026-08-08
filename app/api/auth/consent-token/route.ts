@@ -7,7 +7,10 @@ import {
   type ConsentTokenClaims,
 } from "@/lib/auth/consent-token";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
+import {
+  getMasteryCohortFromBirthYear,
+  requiresParentConsentForBirthYear,
+} from "@/lib/dashboard/mastery-cohort";
 
 export const runtime = "nodejs";
 
@@ -81,9 +84,20 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    if (!Number.isInteger(birthYear) || !requiresParentConsentForBirthYear(birthYear)) {
+    // Explorer VPC tokens + Pathfinder parent-dashboard claim tokens.
+    const cohort = Number.isInteger(birthYear)
+      ? getMasteryCohortFromBirthYear(birthYear)
+      : null;
+    const canIssueParentLinkToken =
+      Boolean(cohort) &&
+      (requiresParentConsentForBirthYear(birthYear) || cohort === "pathfinder");
+    if (!canIssueParentLinkToken) {
       return NextResponse.json(
-        { success: false, error: "birthYear must require parental consent." },
+        {
+          success: false,
+          error:
+            "birthYear must be an Explorer (parental consent) or Pathfinder (parent dashboard claim) profile.",
+        },
         { status: 400 },
       );
     }

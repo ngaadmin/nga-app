@@ -40,12 +40,19 @@ type PendingDelete =
   | { kind: "child"; username: string }
   | { kind: "master"; username: string };
 
-function readHousehold(): HouseholdView {
-  const session = readUserSession();
-  if (!session || session.accessMode !== "registered") {
-    return { master: null, children: [], householdEmail: null };
-  }
-  return listHouseholdAccounts(session);
+function readHouseholdForViewer(session: UserSession): HouseholdView {
+  const household = listHouseholdAccounts(session);
+  const isMaster = session.accountRole === "parent_master";
+  if (isMaster) return household;
+
+  // Learners: own account + linked master only (no siblings).
+  const selfKey = session.username.trim().toLowerCase();
+  return {
+    ...household,
+    children: household.children.filter(
+      (child) => child.username.trim().toLowerCase() === selfKey,
+    ),
+  };
 }
 
 export function AccountSubscriptionStatusPanel() {
@@ -57,6 +64,7 @@ export function AccountSubscriptionStatusPanel() {
     householdEmail: null,
   });
   const [activeUsername, setActiveUsername] = useState<string | null>(null);
+  const [isMasterViewer, setIsMasterViewer] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
     null,
   );
@@ -67,8 +75,15 @@ export function AccountSubscriptionStatusPanel() {
 
   const refresh = useCallback(() => {
     const session = readUserSession();
-    setActiveUsername(session?.username?.trim() || null);
-    setHousehold(readHousehold());
+    if (!session || session.accessMode !== "registered") {
+      setActiveUsername(null);
+      setIsMasterViewer(false);
+      setHousehold({ master: null, children: [], householdEmail: null });
+      return;
+    }
+    setActiveUsername(session.username.trim() || null);
+    setIsMasterViewer(session.accountRole === "parent_master");
+    setHousehold(readHouseholdForViewer(session));
   }, []);
 
   useEffect(() => {
@@ -89,6 +104,7 @@ export function AccountSubscriptionStatusPanel() {
   }
 
   function handleApproveChild(username: string) {
+    if (!isMasterViewer) return;
     const masterEmail = household.householdEmail;
     if (!masterEmail || approvingUsername) return;
 
@@ -113,20 +129,29 @@ export function AccountSubscriptionStatusPanel() {
     if (!pendingDelete) return;
 
     if (pendingDelete.kind === "child") {
+      const targetKey = pendingDelete.username.trim().toLowerCase();
+      const selfKey = activeUsername?.trim().toLowerCase() ?? "";
+      // Learners may only delete themselves; masters may delete any linked learner.
+      if (!isMasterViewer && targetKey !== selfKey) {
+        setPendingDelete(null);
+        return;
+      }
+
       const removed = removeRegisteredAccountByUsername(pendingDelete.username);
       setPendingDelete(null);
       if (!removed) return;
 
-      if (
-        activeUsername &&
-        activeUsername.trim().toLowerCase() ===
-          pendingDelete.username.trim().toLowerCase()
-      ) {
+      if (targetKey === selfKey) {
         leaveAfterDestructiveDelete();
         return;
       }
 
       refresh();
+      return;
+    }
+
+    if (!isMasterViewer) {
+      setPendingDelete(null);
       return;
     }
 
@@ -194,24 +219,32 @@ export function AccountSubscriptionStatusPanel() {
                       </p>
                     ) : null}
                   </div>
-                  <button
-                    type="button"
-                    className={dangerButtonClass}
-                    onClick={() =>
-                      setPendingDelete({
-                        kind: "master",
-                        username: household.master!.username,
-                      })
-                    }
-                  >
-                    {copy.deleteMaster}
-                  </button>
+                  {isMasterViewer ? (
+                    <button
+                      type="button"
+                      className={dangerButtonClass}
+                      onClick={() =>
+                        setPendingDelete({
+                          kind: "master",
+                          username: household.master!.username,
+                        })
+                      }
+                    >
+                      {copy.deleteMaster}
+                    </button>
+                  ) : null}
                 </div>
               </li>
             ) : null}
 
             {household.children.map((child) => {
               const isPending = child.accountStatus === "PENDING_CONSENT";
+              const isSelf =
+                Boolean(activeUsername) &&
+                child.username.trim().toLowerCase() ===
+                  activeUsername!.trim().toLowerCase();
+              const canDeleteChild = isMasterViewer || isSelf;
+              const canApproveChild = isMasterViewer && isPending;
               return (
                 <li
                   key={child.username}
@@ -227,32 +260,36 @@ export function AccountSubscriptionStatusPanel() {
                         {isPending ? ` · ${copy.pendingApprovalBadge}` : ""}
                       </p>
                     </div>
-                    <div className="flex shrink-0 flex-col items-stretch gap-2">
-                      {isPending ? (
-                        <button
-                          type="button"
-                          className={approveButtonClass}
-                          disabled={approvingUsername === child.username}
-                          onClick={() => handleApproveChild(child.username)}
-                        >
-                          {approvingUsername === child.username
-                            ? "Approving…"
-                            : copy.approveChild}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className={dangerButtonClass}
-                        onClick={() =>
-                          setPendingDelete({
-                            kind: "child",
-                            username: child.username,
-                          })
-                        }
-                      >
-                        {copy.deleteChild}
-                      </button>
-                    </div>
+                    {canDeleteChild || canApproveChild ? (
+                      <div className="flex shrink-0 flex-col items-stretch gap-2">
+                        {canApproveChild ? (
+                          <button
+                            type="button"
+                            className={approveButtonClass}
+                            disabled={approvingUsername === child.username}
+                            onClick={() => handleApproveChild(child.username)}
+                          >
+                            {approvingUsername === child.username
+                              ? "Approving…"
+                              : copy.approveChild}
+                          </button>
+                        ) : null}
+                        {canDeleteChild ? (
+                          <button
+                            type="button"
+                            className={dangerButtonClass}
+                            onClick={() =>
+                              setPendingDelete({
+                                kind: "child",
+                                username: child.username,
+                              })
+                            }
+                          >
+                            {copy.deleteChild}
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 </li>
               );
@@ -271,7 +308,9 @@ export function AccountSubscriptionStatusPanel() {
             </p>
           ) : null}
 
-          {household.master && household.children.length === 0 ? (
+          {isMasterViewer &&
+          household.master &&
+          household.children.length === 0 ? (
             <p className="font-sans text-sm text-[#1E3A5F]">
               {copy.emptyChildren}
             </p>

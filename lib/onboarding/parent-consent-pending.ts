@@ -37,10 +37,16 @@ export type PendingParentConsent = {
 
 export type ConsentTokenLookup =
   | { status: "valid"; pending: PendingParentConsent }
-  | { status: "expired"; pending: PendingParentConsent }
-  /** Payload readable but signature/host mismatch — resend only, not approve. */
-  | { status: "recoverable"; pending: PendingParentConsent }
+  /** Signed token past TTL — server does not return claims; local may fill UX. */
+  | { status: "expired"; pending: PendingParentConsent | null }
   | { status: "invalid" };
+
+export type ResendParentConsentResult = {
+  token: string;
+  childUsername: string;
+  /** Present only when local registry/claims were used for the resend. */
+  parentEmail?: string;
+};
 
 type PendingConsentStore = {
   entries: PendingParentConsent[];
@@ -270,23 +276,19 @@ async function fetchConsentTokenLookup(
     const json = (await response.json().catch(() => null)) as {
       success?: boolean;
       expired?: boolean;
-      recoverable?: boolean;
       pending?: PendingParentConsent;
     } | null;
 
-    if (!json?.pending) return { status: "invalid" };
-
-    if (json.recoverable === true) {
-      return { status: "recoverable", pending: json.pending };
+    if (response.status === 410 || json?.expired === true) {
+      // Server intentionally omits claims for expired tokens.
+      return {
+        status: "expired",
+        pending: findLocalPendingByToken(token),
+      };
     }
 
-    if (response.status === 410 || json.expired === true) {
-      return { status: "expired", pending: json.pending };
-    }
-
-    if (!response.ok || json.success !== true) {
-      // Claims present but not a clean success — still allow resend UX.
-      return { status: "recoverable", pending: json.pending };
+    if (!response.ok || json?.success !== true || !json.pending) {
+      return { status: "invalid" };
     }
 
     return { status: "valid", pending: json.pending };
@@ -310,7 +312,7 @@ function mergeLocalPendingClaims(
 }
 
 /**
- * Inspect a consent link: valid, expired (claims still readable), or invalid.
+ * Inspect a consent link: valid (full claims), expired (local claims only), or invalid.
  */
 export async function lookupConsentToken(
   token: string,
@@ -320,9 +322,11 @@ export async function lookupConsentToken(
 
   const lookup = await fetchConsentTokenLookup(trimmed);
   if (lookup.status === "invalid") return lookup;
+  if (lookup.status === "expired") return lookup;
+  if (!lookup.pending) return { status: "invalid" };
 
   return {
-    status: lookup.status,
+    status: "valid",
     pending: mergeLocalPendingClaims(lookup.pending),
   };
 }
@@ -342,38 +346,97 @@ export async function readPendingParentConsentByToken(
 
 /**
  * Issue a fresh 24h approval link for the same pending Explorer profile and
- * email it to the parent. Does not create a new learner account.
+ * email it to the parent. Prefers server-side resend from the signed token
+ * (works cross-device without leaking claims). Falls back to same-device local
+ * claims when the server cannot verify the token.
  */
 export async function resendParentConsentApproval(
   token: string,
-): Promise<PendingParentConsent> {
-  const lookup = await lookupConsentToken(token);
-  if (lookup.status === "invalid") {
+): Promise<ResendParentConsentResult> {
+  const trimmed = token.trim();
+  if (!trimmed) {
     throw new Error(
       "This approval link is no longer valid, so we could not resend it.",
     );
   }
 
-  // valid | expired | recoverable — all carry the same pending profile claims
-  const claims = lookup.pending;
-  const account = findRegisteredAccountByUsername(claims.childUsername);
+  // 1) Server resend: verifies signature (expired OK), emails, returns no PII.
+  let serverRejectedAsInvalid = false;
+  try {
+    const response = await fetch("/api/auth/consent-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "resend", token: trimmed }),
+    });
+    const json = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      token?: string;
+      childUsername?: string;
+      error?: string;
+    } | null;
 
+    if (response.ok && json?.success === true && json.token && json.childUsername) {
+      const local = findLocalPendingByToken(trimmed);
+      if (local) {
+        upsertLocalPendingConsent({
+          ...local,
+          token: json.token,
+          childUsername: json.childUsername,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      return {
+        token: json.token,
+        childUsername: json.childUsername,
+        parentEmail: local?.parentEmail,
+      };
+    }
+
+    const serverError =
+      typeof json?.error === "string" && json.error.trim()
+        ? json.error.trim()
+        : "We could not resend the approval email. Please try again shortly.";
+
+    // Invalid / unverifiable token → try same-device local claims.
+    if (response.status === 400) {
+      serverRejectedAsInvalid = true;
+    } else {
+      throw new Error(serverError);
+    }
+  } catch (error) {
+    if (!serverRejectedAsInvalid) {
+      // Surface non-network failures (429/502/etc). Network errors fall through.
+      if (
+        error instanceof Error &&
+        !/Failed to fetch|NetworkError|Load failed/i.test(error.message)
+      ) {
+        throw error;
+      }
+    }
+  }
+
+  // 2) Same-device fallback using local pending claims only.
+  const local = findLocalPendingByToken(trimmed);
+  if (!local) {
+    throw new Error(
+      "This approval link is no longer valid, so we could not resend it.",
+    );
+  }
+
+  const account = findRegisteredAccountByUsername(local.childUsername);
   if (account?.accountStatus === "ACTIVE") {
     throw new Error(
       "This Explorer profile is already approved. No new approval email is needed.",
     );
   }
 
-  const childUsername = (account?.username ?? claims.childUsername).trim();
-  const parentEmail = (
-    account?.parentEmail ??
-    claims.parentEmail
-  )
+  const childUsername = (account?.username ?? local.childUsername).trim();
+  const parentEmail = (account?.parentEmail ?? local.parentEmail)
     .trim()
     .toLowerCase();
-  const birthYear = account?.birthYear ?? claims.birthYear;
+  const birthYear = account?.birthYear ?? local.birthYear;
   const passcodeHash =
-    account?.passcodeHash?.trim() || claims.passcodeHash?.trim() || undefined;
+    account?.passcodeHash?.trim() || local.passcodeHash?.trim() || undefined;
 
   if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
     throw new Error(
@@ -409,7 +472,6 @@ export async function resendParentConsentApproval(
     passcodeHash,
   };
 
-  // Replace any prior pending entry for this learner; keep the registered profile.
   upsertLocalPendingConsent(pending);
 
   const sendResult = await requestOnboardingEmailSend({
@@ -428,7 +490,11 @@ export async function resendParentConsentApproval(
     );
   }
 
-  return pending;
+  return {
+    token: nextToken,
+    childUsername,
+    parentEmail,
+  };
 }
 
 /**

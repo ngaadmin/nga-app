@@ -294,6 +294,10 @@ export function findActiveParentMasterByEmail(
 /**
  * Emails the username(s) linked to the parent/profile email on file.
  * Always resolves as accepted so the UI never discloses account existence.
+ *
+ * Explorer / parent-master households get one digest email (master + all
+ * linked Explorers). Pathfinder / Maverick learner matches still get one
+ * email each for their own username.
  */
 export async function recoverUsernameByEmail(
   email: string,
@@ -304,19 +308,64 @@ export async function recoverUsernameByEmail(
   }
 
   const accounts = findRegisteredAccountsByEmail(recipientEmail);
-  for (const account of accounts) {
+  if (accounts.length === 0) {
+    return { accepted: true, recipientEmail };
+  }
+
+  const masters = accounts.filter(
+    (account) => account.accountRole === "parent_master",
+  );
+  const explorers = accounts.filter(
+    (account) =>
+      account.accountRole !== "parent_master" &&
+      account.ageTier === "explorer",
+  );
+  const otherLearners = accounts.filter(
+    (account) =>
+      account.accountRole !== "parent_master" &&
+      account.ageTier !== "explorer",
+  );
+
+  // One household digest whenever a master and/or Explorer shares this email.
+  if (masters.length > 0 || explorers.length > 0) {
+    const master = masters[0] ?? findActiveParentMasterByEmail(recipientEmail);
+    // Prefer registry Explorers; if only a master matched, still list children
+    // linked by household email from the durable store.
+    const householdExplorers =
+      explorers.length > 0
+        ? explorers
+        : master
+          ? listHouseholdAccounts(master).children.filter(
+              (child) => child.ageTier === "explorer",
+            )
+          : [];
+
+    const masterUsername = master?.username?.trim() || undefined;
+    const linkedUsernames = householdExplorers
+      .map((child) => child.username.trim())
+      .filter(Boolean);
+    const anchorUsername =
+      masterUsername || linkedUsernames[0] || accounts[0]!.username;
+
+    await requestOnboardingEmailSend({
+      type: "USERNAME_RECOVERY",
+      recipientEmail,
+      data: {
+        username: anchorUsername,
+        cohort: "explorer",
+        masterUsername,
+        linkedUsernames,
+      },
+    });
+  }
+
+  for (const account of otherLearners) {
     await requestOnboardingEmailSend({
       type: "USERNAME_RECOVERY",
       recipientEmail,
       data: {
         username: account.username,
         cohort: account.ageTier,
-        masterUsername:
-          account.accountRole === "parent_master"
-            ? account.username
-            : undefined,
-        linkedUsernames:
-          account.ageTier === "explorer" ? [account.username] : undefined,
       },
     });
   }

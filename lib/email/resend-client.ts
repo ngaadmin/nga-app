@@ -44,9 +44,9 @@ function resolveFromAddress(): string {
 /**
  * Sends a transactional onboarding email via Resend's HTTP API.
  *
- * - Missing API key: simulated success (local/dev handoff).
- * - CREDENTIAL_RECOVERY: hard-fail on Resend/network errors (no hash rotation without send).
- * - Other types: soft-fail so signup UX stays green.
+ * - Missing API key in development: simulated success for local handoff.
+ * - Missing API key in production: hard failure.
+ * - Resend / network errors: always hard failure (never masked as success).
  */
 export async function sendOnboardingEmail<T extends OnboardingEmailType>(
   input: SendOnboardingEmailInput<T>,
@@ -58,9 +58,19 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
 
   const built = buildOnboardingEmail(input.type, input.data, input.appUrl);
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const hardFailOnSendError = input.type === "CREDENTIAL_RECOVERY";
 
   if (!apiKey) {
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        `[Resend Dispatch] RESEND_API_KEY missing in production.`,
+        { type: input.type, subject: built.subject },
+      );
+      return {
+        success: false,
+        error: "Email service is not configured.",
+      };
+    }
+
     console.error(
       `[Resend Simulation] No RESEND_API_KEY found in process.env, skipping live HTTP call.`,
       { type: input.type, subject: built.subject },
@@ -93,11 +103,7 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
       const detail = await response.text().catch(() => "");
       const message = `Resend API error (${response.status}): ${detail || response.statusText}`;
       console.error(`[Resend Dispatch] ${message}`);
-      if (hardFailOnSendError) {
-        return { success: false, error: message };
-      }
-      // Soft-fail: signup / resend UX stays green.
-      return { success: true, simulated: true };
+      return { success: false, error: message };
     }
 
     const payload = (await response.json().catch(() => null)) as {
@@ -111,16 +117,12 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
     };
   } catch (error) {
     console.error("[Resend Dispatch] Network or unexpected failure", error);
-    if (hardFailOnSendError) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Email send failed unexpectedly.",
-      };
-    }
-    return { success: true, simulated: true };
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Email send failed unexpectedly.",
+    };
   }
 }
-

@@ -93,10 +93,9 @@ async function dispatchOnboardingEmails(
     const learnerEmail = (session.learnerEmail ?? session.email)
       ?.trim()
       .toLowerCase();
-    // Confirmation to the Pathfinder who just signed up (same welcome pattern as Maverick).
     if (learnerEmail) {
       void requestOnboardingEmailSend({
-        type: "MAVERICK_WELCOME",
+        type: "PATHFINDER_WELCOME",
         recipientEmail: learnerEmail,
         data: { username },
       });
@@ -151,6 +150,9 @@ async function dispatchOnboardingEmails(
  * Saves the registered session (cohort status + email rules enforced) and
  * merges guest lesson milestones, XP, badges, and Vault balances into it.
  * Triggers cohort-appropriate transactional email when applicable.
+ *
+ * Explorer PENDING_CONSENT: approval email is sent before any durable write so
+ * a failed send never leaves an orphan pending account.
  */
 export async function finalizeRegisteredSignup(
   session: UserSession,
@@ -178,6 +180,21 @@ export async function finalizeRegisteredSignup(
     enforced.ageTier === "explorer"
       ? { ...enforced, marketingOptIn: false }
       : enforced;
+
+  const isExplorerPendingConsentEmail =
+    withMarketingGate.ageTier === "explorer" &&
+    withMarketingGate.accountStatus === "PENDING_CONSENT" &&
+    Boolean(options?.explorerConsentToken) &&
+    !options?.skipEmail;
+
+  if (isExplorerPendingConsentEmail) {
+    // Email first — only persist after the approval message is handed off.
+    await dispatchOnboardingEmails(withMarketingGate, options);
+    saveUserSession(withMarketingGate);
+    upsertRegisteredAccount(withMarketingGate);
+    mergeGuestProgressSnapshot();
+    return withMarketingGate;
+  }
 
   saveUserSession(withMarketingGate);
   upsertRegisteredAccount(withMarketingGate);

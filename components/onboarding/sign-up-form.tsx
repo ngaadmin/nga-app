@@ -23,7 +23,6 @@ import {
 } from "@/lib/dashboard/mastery-cohort";
 import {
   approveParentConsent,
-  buildParentConsentApprovalPath,
   createPendingParentConsent,
   readPendingParentConsentByToken,
   type PendingParentConsent,
@@ -417,15 +416,14 @@ export function SignUpForm() {
       setIsSendingApprovalEmail(true);
 
       try {
-        const pending = await createPendingParentConsent({
+        await createPendingParentConsent({
           parentEmail: parentEmail.trim(),
           childUsername: username.trim(),
           birthYear,
           passcode: password.trim(),
         });
-        router.push(
-          `${ONBOARDING_SIGN_UP_PENDING_PATH}?email=${encodeURIComponent(pending.parentEmail)}&approval=${encodeURIComponent(buildParentConsentApprovalPath(pending.token))}`,
-        );
+        // No query params — parent email must not land in history/logs.
+        router.push(ONBOARDING_SIGN_UP_PENDING_PATH);
       } catch (error) {
         approvalEmailInFlightRef.current = false;
         setIsSendingApprovalEmail(false);

@@ -88,4 +88,5 @@ export {
 export type {
   ConsentTokenLookup,
   PendingParentConsent,
+  ResendParentConsentResult,
 } from "./parent-consent-pending";

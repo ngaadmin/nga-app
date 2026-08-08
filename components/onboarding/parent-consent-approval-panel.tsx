@@ -72,23 +72,16 @@ export function ParentConsentApprovalPanel() {
         return;
       }
 
-      // Genuine TTL expiry only — never host/signature mismatch.
+      // Genuine TTL expiry — server omits claims; local pending is optional UX.
       if (lookup.status === "expired") {
         setPending(lookup.pending);
-        setExistingMaster(null);
+        setExistingMaster(
+          lookup.pending
+            ? findActiveParentMasterByEmail(lookup.pending.parentEmail)
+            : null,
+        );
         setErrorMessage(null);
         setState("expired");
-        return;
-      }
-
-      // Recoverable signature failures: offer resend without the expiry page.
-      if (lookup.status === "recoverable") {
-        setPending(lookup.pending);
-        setExistingMaster(null);
-        setErrorMessage(
-          "We could not verify this approval link. Resend a fresh email for the same pending profile.",
-        );
-        setState("error");
         return;
       }
 
@@ -106,7 +99,7 @@ export function ParentConsentApprovalPanel() {
 
   function handleContinueToMasterProfile() {
     if (!token || !pending || state !== "ready" || existingMaster) return;
-    // Do not approve here — consent is confirmed on the Create Master Profile form.
+    // Do not approve here — consent is confirmed on the master signup form.
     router.push(
       `/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(token)}`,
     );
@@ -155,10 +148,28 @@ export function ParentConsentApprovalPanel() {
     setErrorMessage(null);
 
     try {
-      const nextPending = await resendParentConsentApproval(token);
-      setPending(nextPending);
+      const result = await resendParentConsentApproval(token);
+      setPending((current) =>
+        current
+          ? {
+              ...current,
+              token: result.token,
+              childUsername: result.childUsername,
+              parentEmail: result.parentEmail ?? current.parentEmail,
+              createdAt: new Date().toISOString(),
+            }
+          : {
+              token: result.token,
+              parentEmail: result.parentEmail ?? "",
+              childUsername: result.childUsername,
+              birthYear: 0,
+              createdAt: new Date().toISOString(),
+            },
+      );
       setExistingMaster(
-        findActiveParentMasterByEmail(nextPending.parentEmail),
+        result.parentEmail
+          ? findActiveParentMasterByEmail(result.parentEmail)
+          : null,
       );
       setState("resent");
     } catch (error) {
@@ -237,6 +248,7 @@ export function ParentConsentApprovalPanel() {
   }
 
   if (state === "error") {
+    // Invalid signatures cannot be resent server-side; local claims only.
     const canResend = Boolean(pending) && Boolean(token);
     return (
       <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
@@ -376,7 +388,7 @@ export function ParentConsentApprovalPanel() {
               fullWidth
               onClick={handleContinueToMasterProfile}
             >
-              Create Master Profile
+              APPROVE & CREATE ACCOUNT
             </Button>
             <p className="text-center font-sans text-sm leading-relaxed text-nga-slate">
               Next: create your parent master login and confirm consent.

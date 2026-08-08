@@ -3,6 +3,7 @@ export type OnboardingEmailType =
   | "EXPLORER_PARENT_RESEND"
   | "PATHFINDER_PARENT"
   | "PATHFINDER_PARENT_LINKED"
+  | "PATHFINDER_WELCOME"
   | "MAVERICK_WELCOME"
   | "USERNAME_RECOVERY"
   | "CREDENTIAL_RECOVERY";
@@ -26,6 +27,11 @@ export type PathfinderParentEmailData = {
 export type PathfinderParentLinkedEmailData = {
   username: string;
   masterUsername?: string;
+};
+
+/** Welcome email to the Pathfinder learner after signup. */
+export type PathfinderWelcomeEmailData = {
+  username: string;
 };
 
 export type MaverickWelcomeEmailData = {
@@ -53,6 +59,7 @@ export type OnboardingEmailDataMap = {
   EXPLORER_PARENT_RESEND: ExplorerParentResendEmailData;
   PATHFINDER_PARENT: PathfinderParentEmailData;
   PATHFINDER_PARENT_LINKED: PathfinderParentLinkedEmailData;
+  PATHFINDER_WELCOME: PathfinderWelcomeEmailData;
   MAVERICK_WELCOME: MaverickWelcomeEmailData;
   USERNAME_RECOVERY: UsernameRecoveryEmailData;
   CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
@@ -459,6 +466,69 @@ export function buildPathfinderParentLinkedEmail(
   return { subject, preheader, html, text };
 }
 
+export function buildPathfinderWelcomeEmail(
+  data: PathfinderWelcomeEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = data.username.trim() || "Pathfinder";
+  const base = resolveAppUrl(appUrl);
+  const academyUrl = `${base}/dashboard/academy`;
+
+  const subject = `Welcome to NextGenAchiever$, ${username}!`;
+  const preheader = "Your Pathfinder account is ready - jump into Academy.";
+  const header = "Welcome to NextGenAchiever$\u2122!";
+
+  const text = [
+    "Welcome to NextGenAchiever$!",
+    "",
+    "Your Pathfinder account is ready. Jump in to start building real-world financial skills. Complete modules, try the money tools, and manage your (virtual) money in the Vault.",
+    "",
+    "Don't worry! NextGenAchiever$ is strictly an educational tool - not a financial product.",
+    "There are no real-money transactions, live bank links, or hidden micro-purchases. Everything happens inside a 100% safe, virtualized environment designed purely for learning and practice.",
+    "",
+    "You're on the Pathfinder track for learners aged 13-15. Let's go!",
+    "",
+    `Launch Academy: ${academyUrl}`,
+    "",
+    "If you did not request this account, you can safely ignore this email or contact support@nextgenachievers.com.",
+    "",
+    "The Team at NextGenAchiever$",
+  ].join("\n");
+
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your <strong>Pathfinder</strong> account is ready. Jump in to start building real-world
+        financial skills. Complete modules, try the money tools, and manage your (virtual) money
+        in the Vault.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        <strong>Don&apos;t worry! NextGenAchiever$ is strictly an educational tool - not a financial product.</strong>
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        <strong>There are no real-money transactions, live bank links, or hidden micro-purchases.</strong>
+        Everything happens inside a 100% safe, virtualized environment designed purely for learning
+        and practice.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        You&apos;re on the Pathfinder track for learners aged 13-15. Let&apos;s go!
+      </p>
+      ${ctaButton("LAUNCH ACADEMY", academyUrl)}
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        If you did not request this account, you can safely ignore this email or contact
+        support@nextgenachievers.com.
+      </p>
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
+      </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
 export function buildMaverickWelcomeEmail(
   data: MaverickWelcomeEmailData,
   appUrl?: string,
@@ -531,38 +601,40 @@ export function buildUsernameRecoveryEmail(
   const signInUrl = `${base}/onboarding/sign-in`;
 
   if (isExplorer) {
-    const masterUsername =
-      (data.masterUsername?.trim() || username) || "Master";
-    const linked = (
-      data.linkedUsernames?.length
-        ? data.linkedUsernames
-        : [username]
-    )
+    const masterUsername = data.masterUsername?.trim() || "";
+    const linked = (data.linkedUsernames ?? [])
       .map((name) => name.trim())
       .filter(Boolean);
+    // Fallback when callers omit household fields: treat `username` as an Explorer.
+    const explorerNames =
+      linked.length > 0 ? linked : masterUsername ? [] : [username];
 
     const subject = "Your NextGenAchiever$ usernames";
     const preheader = "Your Master and Explorer usernames are inside";
 
-    const linkedLines = linked.map((name) => `- ${name}`);
-    const text = [
+    const textLines = [
       "Here are the usernames linked to this email:",
       "",
-      `Master: ${masterUsername}`,
+      masterUsername ? `Master: ${masterUsername}` : "Master: (not set up yet)",
       "Explorer accounts:",
-      ...linkedLines,
+      ...(explorerNames.length > 0
+        ? explorerNames.map((name) => `- ${name}`)
+        : ["- (none on file)"]),
       "",
       `Log back in: ${signInUrl}`,
       "",
       "- NextGenAchievers",
-    ].join("\n");
+    ];
 
-    const linkedHtml = linked
-      .map(
-        (name) =>
-          `<li style="margin:0 0 6px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(name)}</li>`,
-      )
-      .join("");
+    const linkedHtml =
+      explorerNames.length > 0
+        ? explorerNames
+            .map(
+              (name) =>
+                `<li style="margin:0 0 6px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(name)}</li>`,
+            )
+            .join("")
+        : `<li style="margin:0 0 6px;font-size:16px;color:#5B6B7C;">(none on file)</li>`;
 
     const html = wrapHtml({
       header: subject,
@@ -574,7 +646,7 @@ export function buildUsernameRecoveryEmail(
         <p style="margin:0 0 8px;font-size:16px;">
           <strong>Master:</strong>
           <span style="font-size:18px;font-weight:700;color:#031F82;">
-            ${escapeHtml(masterUsername)}
+            ${escapeHtml(masterUsername || "(not set up yet)")}
           </span>
         </p>
         <p style="margin:0 0 8px;font-size:16px;">
@@ -587,7 +659,7 @@ export function buildUsernameRecoveryEmail(
       `,
     });
 
-    return { subject, html, text, preheader };
+    return { subject, html, text: textLines.join("\n"), preheader };
   }
 
   const subject = "Your NextGenAchiever$ username";
@@ -706,6 +778,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "PATHFINDER_PARENT_LINKED":
       return buildPathfinderParentLinkedEmail(
         data as PathfinderParentLinkedEmailData,
+        appUrl,
+      );
+    case "PATHFINDER_WELCOME":
+      return buildPathfinderWelcomeEmail(
+        data as PathfinderWelcomeEmailData,
         appUrl,
       );
     case "MAVERICK_WELCOME":

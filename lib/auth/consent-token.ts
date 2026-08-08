@@ -120,8 +120,8 @@ export function verifyConsentToken(token: string): ConsentTokenClaims | null {
 
 /**
  * Read consent claims from the token payload without verifying the HMAC.
- * Used only to recover resend UX when the signature fails (host/secret mismatch
- * or a truncated email link) but the payload is still intact.
+ * @deprecated Do not use for API responses or approval UX — unverified claims
+ * must not be returned to clients. Kept for internal diagnostics only.
  */
 export function peekConsentTokenClaims(
   token: string,

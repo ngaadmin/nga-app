@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyConsentToken } from "@/lib/auth/consent-token";
+import {
+  authorizeBrowserMutation,
+  clientIpKey,
+} from "@/lib/auth/request-guard";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import {
@@ -19,6 +23,7 @@ const EMAIL_TYPES: readonly Exclude<
   "EXPLORER_PARENT_RESEND",
   "PATHFINDER_PARENT",
   "PATHFINDER_PARENT_LINKED",
+  "PATHFINDER_WELCOME",
   "MAVERICK_WELCOME",
   "USERNAME_RECOVERY",
 ] as const;
@@ -98,14 +103,6 @@ function parseData(
   return { username };
 }
 
-function clientKey(request: Request): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip")?.trim() ||
-    "unknown"
-  );
-}
-
 /** Same browser origin that issued the consent token (for email approval CTAs). */
 function requestAppUrl(request: Request): string {
   const origin = request.headers.get("origin")?.trim();
@@ -137,49 +134,13 @@ function requestAppUrl(request: Request): string {
   return `${proto}://${host}`;
 }
 
-function isAllowedOrigin(request: Request): boolean {
-  const origin = request.headers.get("origin");
-  const referer = request.headers.get("referer");
-  const host = request.headers.get("host");
-  const candidates = [origin, referer].filter(Boolean) as string[];
-  if (candidates.length === 0) {
-    // Same-origin fetches from some browsers may omit Origin on POST in odd cases;
-    // still allow in development only.
-    return process.env.NODE_ENV !== "production";
-  }
-
-  const allowedHosts = new Set<string>();
-  try {
-    allowedHosts.add(new URL(PRODUCTION_APP_URL).host);
-  } catch {
-    // ignore
-  }
-  if (process.env.NODE_ENV !== "production") {
-    allowedHosts.add("localhost:3000");
-    allowedHosts.add("127.0.0.1:3000");
-  }
-  const vercelUrl = process.env.VERCEL_URL?.trim();
-  if (vercelUrl) allowedHosts.add(vercelUrl.replace(/^https?:\/\//, ""));
-  // Allow the deployment host the browser is actually using (custom domains, previews).
-  if (host?.trim()) {
-    allowedHosts.add(host.trim().toLowerCase());
-  }
-
-  return candidates.some((value) => {
-    try {
-      return allowedHosts.has(new URL(value).host);
-    } catch {
-      return false;
-    }
-  });
-}
-
 export async function POST(request: Request) {
   try {
-    if (!isAllowedOrigin(request)) {
+    const auth = authorizeBrowserMutation(request);
+    if (!auth.ok) {
       return NextResponse.json(
-        { success: false, error: "Forbidden origin." },
-        { status: 403 },
+        { success: false, error: auth.error },
+        { status: auth.status },
       );
     }
 
@@ -204,7 +165,7 @@ export async function POST(request: Request) {
     // Per learner (+ recipient) so sibling Explorers sharing one parent email
     // do not block each other after resends on another profile.
     const limit = consumeRateLimit(
-      `email-send:${clientKey(request)}:${rateRecipient}:${rateUsername ?? "unknown"}`,
+      `email-send:${clientIpKey(request)}:${rateRecipient}:${rateUsername ?? "unknown"}`,
       12,
       60_000,
     );
@@ -235,7 +196,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | PATHFINDER_PARENT_LINKED | MAVERICK_WELCOME | USERNAME_RECOVERY.",
+            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | PATHFINDER_PARENT_LINKED | PATHFINDER_WELCOME | MAVERICK_WELCOME | USERNAME_RECOVERY.",
         },
         { status: 400 },
       );
@@ -322,9 +283,12 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[EMAIL_SEND_ERROR]", error);
-    return NextResponse.json({
-      success: true as const,
-      simulated: true,
-    });
+    return NextResponse.json(
+      {
+        success: false as const,
+        error: "Email send failed unexpectedly.",
+      },
+      { status: 500 },
+    );
   }
 }

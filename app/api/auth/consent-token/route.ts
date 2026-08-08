@@ -1,28 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isConsentTokenUnexpired,
-  peekConsentTokenClaims,
   signConsentToken,
   verifyConsentToken,
   type ConsentTokenClaims,
 } from "@/lib/auth/consent-token";
+import {
+  authorizeBrowserMutation,
+  clientIpKey,
+} from "@/lib/auth/request-guard";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
   getMasteryCohortFromBirthYear,
   requiresParentConsentForBirthYear,
 } from "@/lib/dashboard/mastery-cohort";
+import { sendOnboardingEmail } from "@/lib/email/resend-client";
 
 export const runtime = "nodejs";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function clientKey(request: Request): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip")?.trim() ||
-    "unknown"
-  );
-}
 
 function toPendingPayload(token: string, claims: ConsentTokenClaims) {
   return {
@@ -35,12 +31,27 @@ function toPendingPayload(token: string, claims: ConsentTokenClaims) {
   };
 }
 
-/** Issue a signed parental consent token. */
-export async function POST(request: Request) {
-  // Higher budget: one parent may create several Explorer profiles (and resend
-  // links) in a short window. Limit is per IP, not per email.
-  const limit = consumeRateLimit(`consent-issue:${clientKey(request)}`, 60, 60_000);
-  if (!limit.allowed) {
+type IssueBody = {
+  action?: "issue";
+  parentEmail?: unknown;
+  childUsername?: unknown;
+  birthYear?: unknown;
+  createdAt?: unknown;
+  passcodeHash?: unknown;
+};
+
+type ResendBody = {
+  action: "resend";
+  token?: unknown;
+};
+
+async function handleIssue(
+  request: Request,
+  body: IssueBody,
+): Promise<NextResponse> {
+  const ip = clientIpKey(request);
+  const ipLimit = consumeRateLimit(`consent-issue:ip:${ip}`, 20, 60_000);
+  if (!ipLimit.allowed) {
     return NextResponse.json(
       {
         success: false,
@@ -51,66 +62,205 @@ export async function POST(request: Request) {
     );
   }
 
+  const parentEmail =
+    typeof body.parentEmail === "string"
+      ? body.parentEmail.trim().toLowerCase()
+      : "";
+  const childUsername =
+    typeof body.childUsername === "string" ? body.childUsername.trim() : "";
+  const birthYear =
+    typeof body.birthYear === "number" && Number.isInteger(body.birthYear)
+      ? body.birthYear
+      : NaN;
+  const createdAt =
+    typeof body.createdAt === "string" && body.createdAt.trim()
+      ? body.createdAt.trim()
+      : new Date().toISOString();
+  const passcodeHash =
+    typeof body.passcodeHash === "string" && body.passcodeHash.trim()
+      ? body.passcodeHash.trim()
+      : undefined;
+
+  if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
+    return NextResponse.json(
+      { success: false, error: "A valid parentEmail is required." },
+      { status: 400 },
+    );
+  }
+
+  const emailLimit = consumeRateLimit(
+    `consent-issue:email:${parentEmail}`,
+    10,
+    60_000,
+  );
+  if (!emailLimit.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Too many approval-link requests for this email. Wait about a minute, then try again.",
+      },
+      { status: 429 },
+    );
+  }
+
+  if (!childUsername) {
+    return NextResponse.json(
+      { success: false, error: "childUsername is required." },
+      { status: 400 },
+    );
+  }
+
+  // Explorer VPC tokens + Pathfinder parent-dashboard claim tokens.
+  const cohort = Number.isInteger(birthYear)
+    ? getMasteryCohortFromBirthYear(birthYear)
+    : null;
+  const canIssueParentLinkToken =
+    Boolean(cohort) &&
+    (requiresParentConsentForBirthYear(birthYear) || cohort === "pathfinder");
+  if (!canIssueParentLinkToken) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "birthYear must be an Explorer (parental consent) or Pathfinder (parent dashboard claim) profile.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const token = signConsentToken({
+    parentEmail,
+    childUsername,
+    birthYear,
+    createdAt,
+    passcodeHash,
+  });
+
+  return NextResponse.json({ success: true as const, token, createdAt });
+}
+
+/**
+ * Re-issue + email a fresh approval link from a previously signed token.
+ * Accepts expired tokens; rejects invalid signatures. Does not echo PII claims.
+ */
+async function handleResend(
+  request: Request,
+  body: ResendBody,
+): Promise<NextResponse> {
+  const ip = clientIpKey(request);
+  const ipLimit = consumeRateLimit(`consent-resend:ip:${ip}`, 5, 60_000);
+  if (!ipLimit.allowed) {
+    return NextResponse.json(
+      { success: false, error: "Too many requests. Try again shortly." },
+      { status: 429 },
+    );
+  }
+
+  const token = typeof body.token === "string" ? body.token.trim() : "";
+  if (!token) {
+    return NextResponse.json(
+      { success: false, error: "token is required." },
+      { status: 400 },
+    );
+  }
+
+  const claims = verifyConsentToken(token);
+  if (!claims) {
+    return NextResponse.json(
+      { success: false, error: "Invalid consent token." },
+      { status: 400 },
+    );
+  }
+
+  if (!requiresParentConsentForBirthYear(claims.birthYear)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Parent approval resend is only available for Explorer profiles.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const emailLimit = consumeRateLimit(
+    `consent-resend:email:${claims.parentEmail}`,
+    3,
+    15 * 60_000,
+  );
+  if (!emailLimit.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Too many approval emails for this address. Try again in a few minutes.",
+      },
+      { status: 429 },
+    );
+  }
+
+  const createdAt = new Date().toISOString();
+  const nextToken = signConsentToken({
+    ...claims,
+    createdAt,
+  });
+
+  const sendResult = await sendOnboardingEmail({
+    type: "EXPLORER_PARENT_RESEND",
+    recipientEmail: claims.parentEmail,
+    data: {
+      username: claims.childUsername,
+      token: nextToken,
+    },
+  });
+
+  if (!sendResult.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          sendResult.error ||
+          "Could not resend the approval email. Try again shortly.",
+      },
+      { status: 502 },
+    );
+  }
+
+  // Minimum non-sensitive fields for UX / local token rotation.
+  return NextResponse.json({
+    success: true as const,
+    token: nextToken,
+    createdAt,
+    childUsername: claims.childUsername,
+  });
+}
+
+/** Issue a signed parental consent token, or resend from an existing signed token. */
+export async function POST(request: Request) {
+  const auth = authorizeBrowserMutation(request);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status },
+    );
+  }
+
   try {
-    const body = (await request.json()) as Partial<ConsentTokenClaims>;
-    const parentEmail =
-      typeof body.parentEmail === "string"
-        ? body.parentEmail.trim().toLowerCase()
-        : "";
-    const childUsername =
-      typeof body.childUsername === "string" ? body.childUsername.trim() : "";
-    const birthYear =
-      typeof body.birthYear === "number" && Number.isInteger(body.birthYear)
-        ? body.birthYear
-        : NaN;
-    const createdAt =
-      typeof body.createdAt === "string" && body.createdAt.trim()
-        ? body.createdAt.trim()
-        : new Date().toISOString();
-    const passcodeHash =
-      typeof body.passcodeHash === "string" && body.passcodeHash.trim()
-        ? body.passcodeHash.trim()
-        : undefined;
-
-    if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
+    let body: IssueBody | ResendBody;
+    try {
+      body = (await request.json()) as IssueBody | ResendBody;
+    } catch {
       return NextResponse.json(
-        { success: false, error: "A valid parentEmail is required." },
-        { status: 400 },
-      );
-    }
-    if (!childUsername) {
-      return NextResponse.json(
-        { success: false, error: "childUsername is required." },
-        { status: 400 },
-      );
-    }
-    // Explorer VPC tokens + Pathfinder parent-dashboard claim tokens.
-    const cohort = Number.isInteger(birthYear)
-      ? getMasteryCohortFromBirthYear(birthYear)
-      : null;
-    const canIssueParentLinkToken =
-      Boolean(cohort) &&
-      (requiresParentConsentForBirthYear(birthYear) || cohort === "pathfinder");
-    if (!canIssueParentLinkToken) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "birthYear must be an Explorer (parental consent) or Pathfinder (parent dashboard claim) profile.",
-        },
+        { success: false, error: "Invalid JSON body." },
         { status: 400 },
       );
     }
 
-    const token = signConsentToken({
-      parentEmail,
-      childUsername,
-      birthYear,
-      createdAt,
-      passcodeHash,
-    });
+    if (body && typeof body === "object" && body.action === "resend") {
+      return handleResend(request, body);
+    }
 
-    return NextResponse.json({ success: true as const, token, createdAt });
+    return handleIssue(request, body as IssueBody);
   } catch (error) {
     console.error("[CONSENT_TOKEN_ISSUE_ERROR]", error);
     return NextResponse.json(
@@ -120,9 +270,25 @@ export async function POST(request: Request) {
   }
 }
 
-/** Verify a signed consent token and return claims (no credential digests leaked beyond what's required). */
+/**
+ * Verify a signed consent token.
+ * Full claims are returned only for valid, unexpired signatures.
+ * Expired (but correctly signed) tokens return `{ expired: true }` with no PII.
+ */
 export async function GET(request: NextRequest) {
-  const limit = consumeRateLimit(`consent-verify:${clientKey(request)}`, 60, 60_000);
+  const auth = authorizeBrowserMutation(request);
+  if (!auth.ok) {
+    return NextResponse.json(
+      { success: false, error: auth.error },
+      { status: auth.status },
+    );
+  }
+
+  const limit = consumeRateLimit(
+    `consent-verify:ip:${clientIpKey(request)}`,
+    30,
+    60_000,
+  );
   if (!limit.allowed) {
     return NextResponse.json(
       { success: false, error: "Too many requests. Try again shortly." },
@@ -139,55 +305,26 @@ export async function GET(request: NextRequest) {
   }
 
   const claims = verifyConsentToken(token);
-  if (claims) {
-    const pending = toPendingPayload(token, claims);
-
-    if (!isConsentTokenUnexpired(claims.createdAt)) {
-      return NextResponse.json(
-        {
-          success: false as const,
-          expired: true as const,
-          error: "Consent token has expired.",
-          pending,
-        },
-        { status: 410 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true as const,
-      pending,
-    });
-  }
-
-  // Signature failed but payload may still be readable (legacy host mismatch).
-  const peeked = peekConsentTokenClaims(token);
-  if (peeked) {
-    const pending = toPendingPayload(token, peeked);
-    if (!isConsentTokenUnexpired(peeked.createdAt)) {
-      return NextResponse.json(
-        {
-          success: false as const,
-          expired: true as const,
-          error: "Consent token has expired.",
-          pending,
-        },
-        { status: 410 },
-      );
-    }
+  if (!claims) {
     return NextResponse.json(
-      {
-        success: false as const,
-        recoverable: true as const,
-        error: "Consent token signature is invalid.",
-        pending,
-      },
+      { success: false, error: "Invalid consent token." },
       { status: 400 },
     );
   }
 
-  return NextResponse.json(
-    { success: false, error: "Invalid consent token." },
-    { status: 400 },
-  );
+  if (!isConsentTokenUnexpired(claims.createdAt)) {
+    return NextResponse.json(
+      {
+        success: false as const,
+        expired: true as const,
+        error: "Consent token has expired.",
+      },
+      { status: 410 },
+    );
+  }
+
+  return NextResponse.json({
+    success: true as const,
+    pending: toPendingPayload(token, claims),
+  });
 }

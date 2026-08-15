@@ -225,10 +225,10 @@ function parseSignupInput(
 
   const requirements = getSignupRequirementsForBirthYear(input.birthYear);
   const learnerEmail = requirements.requiresLearnerEmail
-    ? normalizeEmailAddress(input.learnerEmail)
+    ? (normalizeEmailAddress(input.learnerEmail) ?? null)
     : null;
   const parentEmail = requirements.requiresParentEmail
-    ? normalizeEmailAddress(input.parentEmail)
+    ? (normalizeEmailAddress(input.parentEmail) ?? null)
     : null;
 
   if (requirements.requiresLearnerEmail && !learnerEmail) {

@@ -1,7 +1,19 @@
 import { redirect } from "next/navigation";
-import { ONBOARDING_ENTRY_PATH } from "@/lib/onboarding/guest-session";
+import {
+  DASHBOARD_ACADEMY_PATH,
+  ONBOARDING_START_PATH,
+} from "@/lib/onboarding/guest-session";
+import { createClient } from "@/lib/supabase/server";
 
-/** App entry sends new users into onboarding; dashboard stays at /dashboard. */
-export default function HomePage() {
-  redirect(ONBOARDING_ENTRY_PATH);
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+
+  if (data?.claims) {
+    redirect(DASHBOARD_ACADEMY_PATH);
+  }
+
+  redirect(ONBOARDING_START_PATH);
 }

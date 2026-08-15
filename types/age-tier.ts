@@ -1,6 +1,6 @@
 /**
  * Youth age bands for legal compliance (birth-year age gate) and curriculum tracks.
- * Explorers (10–12) · Pathfinders (13–15) · Mavericks (16+)
+ * Explorers (10-12) · Pathfinders (13-15) · Mavericks (16+)
  *
  * Parental oversight must always use birth-year helpers (conservative Dec 31 age).
  * Curriculum cohort overrides must not weaken Parent Portal / consent rules.

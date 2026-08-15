@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils/cn";
 
 type OnboardingProgressProps = {
-  /** 0–100 */
+  /** 0-100 */
   value: number;
   className?: string;
 };

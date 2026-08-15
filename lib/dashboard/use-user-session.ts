@@ -37,7 +37,7 @@ export function useMasteryCohort(): MasteryCohort {
   }, [session]);
 }
 
-/** Legal compliance cohort from birth year — ignores curriculum overrides. */
+/** Legal compliance cohort from birth year - ignores curriculum overrides. */
 export function useComplianceCohort(): MasteryCohort {
   const session = useUserSession();
   return useMemo(() => {

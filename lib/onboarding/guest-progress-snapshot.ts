@@ -26,9 +26,9 @@ export const GUEST_PROGRESS_SNAPSHOT_KEY = "nga_guest_progress_snapshot_v1";
 export type GuestProgressSnapshot = {
   capturedAt: string;
   guestSession: UserSession | null;
-  /** Dashboard wallet — XP / points balances. */
+  /** Dashboard wallet - XP / points balances. */
   wallet: string | null;
-  /** @deprecated Legacy field name — read for backward-compatible restore. */
+  /** @deprecated Legacy field name - read for backward-compatible restore. */
   vaultV2Session?: string | null;
   /** Guest Vault jar balances / ledger (session store). */
   vaultSession: string | null;
@@ -59,7 +59,7 @@ function buildLiveSnapshot(): GuestProgressSnapshot {
   };
 }
 
-/** Backs up guest progress before signup or parent-consent — never overwrites an existing snapshot. */
+/** Backs up guest progress before signup or parent-consent - never overwrites an existing snapshot. */
 export function captureGuestProgressSnapshot(): GuestProgressSnapshot {
   if (typeof window === "undefined") {
     throw new Error("guest progress snapshot requires a browser environment.");

@@ -36,7 +36,7 @@ export function getBirthYearRangeLabel(referenceDate = new Date()): string {
 }
 
 /**
- * Birth years that map to learner ages 10–18 under the conservative Dec 31 rule:
+ * Birth years that map to learner ages 10-18 under the conservative Dec 31 rule:
  * age = CurrentYear − BirthYear − 1  ⇒  birthYear = CurrentYear − age − 1.
  */
 export function getYouthBirthYears(referenceDate = new Date()): number[] {

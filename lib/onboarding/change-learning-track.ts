@@ -22,7 +22,7 @@ export type ChangeLearningTrackResult =
  * `birthYear` is interpreted as a picker value that maps to a target learning
  * track (via the conservative age → cohort matrix). Legal `session.birthYear`,
  * compliance `ageTier`, parent email, and Parent Portal requirements are
- * left untouched — only `curriculumCohort` (content/difficulty) changes.
+ * left untouched - only `curriculumCohort` (content/difficulty) changes.
  */
 export function changeUserLearningTrack(
   birthYear: number,

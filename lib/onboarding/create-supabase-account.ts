@@ -18,6 +18,15 @@ const EXPLORER_AUTH_EMAIL_DOMAIN = "users.nextgenachievers.invalid";
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const MIN_PASSWORD_LENGTH = 6;
 
+/** profiles.account_status values (DB check constraint). */
+export type SupabaseAccountStatus = "pending_consent" | "active";
+
+function toSupabaseAccountStatus(
+  status: RegisteredAccountStatus,
+): SupabaseAccountStatus {
+  return status === "PENDING_CONSENT" ? "pending_consent" : "active";
+}
+
 export type CreateSupabaseAccountInput = {
   username: string;
   birthYear: number;
@@ -40,7 +49,7 @@ export type CreateSupabaseAccountResult =
       username: string;
       cohort: MasteryCohort;
       accountRole: "child";
-      accountStatus: RegisteredAccountStatus;
+      accountStatus: SupabaseAccountStatus;
       /** Address stored on auth.users (placeholder for Explorers). */
       authEmail: string;
     }
@@ -72,7 +81,9 @@ export async function createSupabaseAccount(
   } = parsed.value;
   const cohort = getMasteryCohortFromBirthYear(birthYear);
   const requirements = getSignupRequirementsForBirthYear(birthYear);
-  const accountStatus = requirements.defaultAccountStatus;
+  const accountStatus = toSupabaseAccountStatus(
+    requirements.defaultAccountStatus,
+  );
   const accountRole = "child" as const;
 
   let admin;

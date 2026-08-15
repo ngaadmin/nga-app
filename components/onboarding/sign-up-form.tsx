@@ -7,6 +7,7 @@ import { OnboardingProgress } from "@/components/onboarding/onboarding-progress"
 import { Button, ButtonLink } from "@/components/ui/button";
 import { createParentMasterAndApprove } from "@/lib/onboarding/approve-consent-request";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
+import { displayUsernameOrEmpty } from "@/lib/onboarding/placeholder-username";
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
@@ -137,11 +138,7 @@ export function SignUpForm() {
   const isPathfinder = !isParentMaster && ageTier === "pathfinder";
   const isMaverick = !isParentMaster && ageTier === "maverick";
 
-  const [username, setUsername] = useState(() =>
-    !isParentMaster && existingSession?.username?.trim()
-      ? existingSession.username.trim()
-      : "",
-  );
+  const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -479,7 +476,8 @@ export function SignUpForm() {
               Learner username
             </p>
             <p className="mt-2 font-heading text-xl font-extrabold leading-tight text-nga-primary sm:text-2xl">
-              {pendingConsent.childUsername}
+              {displayUsernameOrEmpty(pendingConsent.childUsername) ||
+                "your learner"}
             </p>
           </div>
 
@@ -609,7 +607,8 @@ export function SignUpForm() {
                   <span className="font-sans text-base leading-relaxed text-nga-ink">
                     I am the parent or legal guardian of{" "}
                     <span className="font-semibold text-nga-primary">
-                      {pendingConsent.childUsername}
+                      {displayUsernameOrEmpty(pendingConsent.childUsername) ||
+                        "this learner"}
                     </span>
                     , and I approve their NextGenAchiever$ profile.{" "}
                     <span className="font-semibold text-nga-primary">

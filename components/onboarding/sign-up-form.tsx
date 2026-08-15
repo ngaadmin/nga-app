@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { captureGuestProgressSnapshot } from "@/lib/onboarding/guest-progress-snapshot";
+import { createParentMasterAndApprove } from "@/lib/onboarding/approve-consent-request";
+import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
@@ -22,15 +23,12 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
-  approveParentConsent,
-  createPendingParentConsent,
   readPendingParentConsentByToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
-  upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
@@ -328,67 +326,29 @@ export function SignUpForm() {
     }
 
     try {
-      if (isExplorerConsentFlow) {
-        // Consent is confirmed only here (mandatory checkbox + form submit).
-        const existingChild = readUserSession();
-        const alreadyApproved =
-          existingChild?.accessMode === "registered" &&
-          existingChild.username === pendingConsent.childUsername &&
-          existingChild.birthYear === pendingConsent.birthYear &&
-          existingChild.parentEmail?.trim().toLowerCase() ===
-            pendingConsent.parentEmail.trim().toLowerCase() &&
-          (existingChild.accountStatus === "ACTIVE" ||
-            Boolean(existingChild.consentApprovedAt));
+      const result = await createParentMasterAndApprove({
+        token: consentToken,
+        username: username.trim(),
+        password: password.trim(),
+        marketingOptIn,
+      });
 
-        const childSession = alreadyApproved
-          ? existingChild
-          : await approveParentConsent(consentToken);
-
-        if (!childSession) {
-          setErrors({
-            form: "We could not approve this profile. The consent link may have expired. Restart signup to request a new approval email.",
-          });
-          return;
-        }
-
-        const parentSession = convertToRegisteredProfile({
-          username: username.trim(),
-          birthYear: adultBirthYear(),
-          accountRole: "parent_master",
-          learnerEmail: pendingConsent.parentEmail,
-          password: password.trim(),
-          accountStatus: "ACTIVE",
-          marketingOptIn,
-        });
-        await finalizeRegisteredSignup(parentSession, { skipEmail: true });
-        // Keep child in the durable registry (already upserted during approve).
-        upsertRegisteredAccount(childSession);
-        router.push(DASHBOARD_ACADEMY_PATH);
+      if (!result.success) {
+        setErrors({ form: result.error });
         return;
       }
 
-      // Pathfinder claim: learner is already active — only create the master login.
+      // Local session so the dashboard gate still recognizes this parent.
       const parentSession = convertToRegisteredProfile({
-        username: username.trim(),
+        username: result.parentUsername,
         birthYear: adultBirthYear(),
         accountRole: "parent_master",
-        learnerEmail: pendingConsent.parentEmail,
+        learnerEmail: result.parentEmail,
         password: password.trim(),
         accountStatus: "ACTIVE",
         marketingOptIn,
       });
       await finalizeRegisteredSignup(parentSession, { skipEmail: true });
-
-      const linkedChild = findRegisteredAccountByUsername(
-        pendingConsent.childUsername,
-      );
-      if (linkedChild) {
-        upsertRegisteredAccount({
-          ...linkedChild,
-          parentEmail: pendingConsent.parentEmail,
-        });
-      }
-
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
       const message = resolveSignupFailureMessage(error, false);
@@ -410,49 +370,50 @@ export function SignUpForm() {
 
     if (!birthYear || !ageTier || !validate()) return;
 
-    if (isExplorer) {
-      if (approvalEmailInFlightRef.current) return;
-      approvalEmailInFlightRef.current = true;
-      setIsSendingApprovalEmail(true);
-
-      try {
-        await createPendingParentConsent({
-          parentEmail: parentEmail.trim(),
-          childUsername: username.trim(),
-          birthYear,
-          passcode: password.trim(),
-        });
-        // No query params — parent email must not land in history/logs.
-        router.push(ONBOARDING_SIGN_UP_PENDING_PATH);
-      } catch (error) {
-        approvalEmailInFlightRef.current = false;
-        setIsSendingApprovalEmail(false);
-        setErrors((prev) => ({
-          ...prev,
-          form: resolveSignupFailureMessage(error, true),
-        }));
-      }
-      return;
-    }
+    if (approvalEmailInFlightRef.current) return;
+    approvalEmailInFlightRef.current = true;
+    setIsSendingApprovalEmail(true);
 
     try {
-      captureGuestProgressSnapshot();
-      const session = convertToRegisteredProfile({
+      const result = await createSupabaseAccount({
         username: username.trim(),
         birthYear,
-        accountRole: "child",
-        learnerEmail: learnerEmail.trim(),
-        password,
-        parentEmail: isPathfinder ? parentEmail.trim() : undefined,
+        password: password.trim(),
+        learnerEmail: isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
+        parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
         marketingOptIn,
       });
-      await finalizeRegisteredSignup(session);
-      // replace: avoid back-stack return to the signup form after success
+
+      if (!result.success) {
+        approvalEmailInFlightRef.current = false;
+        setIsSendingApprovalEmail(false);
+        if (/username is already taken/i.test(result.error)) {
+          setErrors((prev) => ({
+            ...prev,
+            username: USERNAME_TAKEN_ERROR,
+            form: undefined,
+          }));
+          return;
+        }
+        setErrors((prev) => ({
+          ...prev,
+          form: resolveSignupFailureMessage(new Error(result.error), isExplorer),
+        }));
+        return;
+      }
+
+      if (result.accountStatus === "pending_consent" || result.cohort === "explorer") {
+        router.push(ONBOARDING_SIGN_UP_PENDING_PATH);
+        return;
+      }
+
       router.replace(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
+      approvalEmailInFlightRef.current = false;
+      setIsSendingApprovalEmail(false);
       setErrors((prev) => ({
         ...prev,
-        form: resolveSignupFailureMessage(error, false),
+        form: resolveSignupFailureMessage(error, isExplorer),
       }));
     }
   }
@@ -923,7 +884,9 @@ export function SignUpForm() {
               ? isSendingApprovalEmail
                 ? "Sending…"
                 : "Request Parent Approval"
-              : "Create My Free Account"}
+              : isSendingApprovalEmail
+                ? "Creating…"
+                : "Create My Free Account"}
           </Button>
         </form>
       </div>

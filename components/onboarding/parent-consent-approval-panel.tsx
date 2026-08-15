@@ -10,17 +10,19 @@ import {
   masteryCohortLabel,
 } from "@/lib/dashboard/mastery-cohort";
 import {
+  approveConsentRequest,
+  lookupParentMasterByEmail,
+} from "@/lib/onboarding/approve-consent-request";
+import {
   DASHBOARD_ACADEMY_PATH,
   saveUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 import {
-  approveParentConsent,
   lookupConsentToken,
   resendParentConsentApproval,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
-import { findActiveParentMasterByEmail } from "@/lib/onboarding/registered-accounts";
 
 type ApprovalState =
   | "loading"
@@ -63,9 +65,25 @@ export function ParentConsentApprovalPanel() {
       if (cancelled) return;
 
       if (lookup.status === "valid") {
+        const master = await lookupParentMasterByEmail(
+          lookup.pending.parentEmail,
+        );
+        if (cancelled) return;
         setPending(lookup.pending);
         setExistingMaster(
-          findActiveParentMasterByEmail(lookup.pending.parentEmail),
+          master.exists
+            ? ({
+                accessMode: "registered",
+                username: master.username ?? "",
+                birthYear: new Date().getFullYear() - 35,
+                birthYearLocked: true,
+                ageTier: "maverick",
+                accountStatus: "ACTIVE",
+                accountRole: "parent_master",
+                learnerEmail: lookup.pending.parentEmail,
+                createdAt: new Date().toISOString(),
+              } satisfies UserSession)
+            : null,
         );
         setErrorMessage(null);
         setState("ready");
@@ -75,11 +93,7 @@ export function ParentConsentApprovalPanel() {
       // Genuine TTL expiry — server omits claims; local pending is optional UX.
       if (lookup.status === "expired") {
         setPending(lookup.pending);
-        setExistingMaster(
-          lookup.pending
-            ? findActiveParentMasterByEmail(lookup.pending.parentEmail)
-            : null,
-        );
+        setExistingMaster(null);
         setErrorMessage(null);
         setState("expired");
         return;
@@ -120,17 +134,27 @@ export function ParentConsentApprovalPanel() {
     setErrorMessage(null);
 
     try {
-      const childSession = await approveParentConsent(token);
-      if (!childSession) {
-        setErrorMessage(
-          "We could not approve this profile. The consent link may have expired.",
-        );
+      const result = await approveConsentRequest(token);
+      if (!result.success) {
+        if (result.needsParentAccount) {
+          router.push(
+            `/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(token)}`,
+          );
+          return;
+        }
+        setErrorMessage(result.error);
         setState("error");
         return;
       }
 
-      // Keep the existing master signed in after linking the new learner.
-      saveUserSession(existingMaster);
+      saveUserSession({
+        ...existingMaster,
+        username: result.parentUsername || existingMaster.username,
+        learnerEmail: result.parentEmail,
+        email: result.parentEmail,
+        accountRole: "parent_master",
+        accountStatus: "ACTIVE",
+      });
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch {
       setErrorMessage(
@@ -166,11 +190,26 @@ export function ParentConsentApprovalPanel() {
               createdAt: new Date().toISOString(),
             },
       );
-      setExistingMaster(
-        result.parentEmail
-          ? findActiveParentMasterByEmail(result.parentEmail)
-          : null,
-      );
+      if (result.parentEmail) {
+        const master = await lookupParentMasterByEmail(result.parentEmail);
+        setExistingMaster(
+          master.exists
+            ? ({
+                accessMode: "registered",
+                username: master.username ?? "",
+                birthYear: new Date().getFullYear() - 35,
+                birthYearLocked: true,
+                ageTier: "maverick",
+                accountStatus: "ACTIVE",
+                accountRole: "parent_master",
+                learnerEmail: result.parentEmail,
+                createdAt: new Date().toISOString(),
+              } satisfies UserSession)
+            : null,
+        );
+      } else {
+        setExistingMaster(null);
+      }
       setState("resent");
     } catch (error) {
       setErrorMessage(

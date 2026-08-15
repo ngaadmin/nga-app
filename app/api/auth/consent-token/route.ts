@@ -5,6 +5,7 @@ import {
   verifyConsentToken,
   type ConsentTokenClaims,
 } from "@/lib/auth/consent-token";
+import { generateOpaqueConsentToken } from "@/lib/auth/consent-request-token";
 import {
   authorizeBrowserMutation,
   clientIpKey,
@@ -15,6 +16,10 @@ import {
   requiresParentConsentForBirthYear,
 } from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import {
+  lookupConsentRequestByToken,
+  rotateConsentRequestToken,
+} from "@/lib/onboarding/lookup-consent-request";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export const runtime = "nodejs";
@@ -164,15 +169,30 @@ async function handleResend(
     );
   }
 
-  const claims = verifyConsentToken(token);
-  if (!claims) {
+  const stored = await lookupConsentRequestByToken(token);
+  const hmacClaims = verifyConsentToken(token);
+
+  const parentEmail =
+    stored.status === "valid" || stored.status === "expired"
+      ? stored.request?.parentEmail
+      : hmacClaims?.parentEmail;
+  const childUsername =
+    stored.status === "valid" || stored.status === "expired"
+      ? stored.request?.childUsername
+      : hmacClaims?.childUsername;
+  const birthYear =
+    stored.status === "valid" || stored.status === "expired"
+      ? stored.request?.birthYear
+      : hmacClaims?.birthYear;
+
+  if (!parentEmail || !childUsername || birthYear == null) {
     return NextResponse.json(
       { success: false, error: "Invalid consent token." },
       { status: 400 },
     );
   }
 
-  if (!requiresParentConsentForBirthYear(claims.birthYear)) {
+  if (!requiresParentConsentForBirthYear(birthYear)) {
     return NextResponse.json(
       {
         success: false,
@@ -183,7 +203,7 @@ async function handleResend(
   }
 
   const emailLimit = consumeRateLimit(
-    `consent-resend:email:${claims.parentEmail}`,
+    `consent-resend:email:${parentEmail}`,
     3,
     15 * 60_000,
   );
@@ -199,16 +219,38 @@ async function handleResend(
   }
 
   const createdAt = new Date().toISOString();
-  const nextToken = signConsentToken({
-    ...claims,
-    createdAt,
-  });
+  const nextToken =
+    stored.status === "valid" || stored.status === "expired"
+      ? generateOpaqueConsentToken()
+      : signConsentToken({
+          parentEmail,
+          childUsername,
+          birthYear,
+          createdAt,
+          passcodeHash: hmacClaims?.passcodeHash,
+        });
+
+  if (
+    (stored.status === "valid" || stored.status === "expired") &&
+    stored.request
+  ) {
+    const rotated = await rotateConsentRequestToken({
+      requestId: stored.request.id,
+      nextToken,
+    });
+    if (!rotated) {
+      return NextResponse.json(
+        { success: false, error: "Could not refresh this approval link." },
+        { status: 502 },
+      );
+    }
+  }
 
   const sendResult = await sendOnboardingEmail({
     type: "EXPLORER_PARENT_RESEND",
-    recipientEmail: claims.parentEmail,
+    recipientEmail: parentEmail,
     data: {
-      username: claims.childUsername,
+      username: childUsername,
       token: nextToken,
     },
   });
@@ -230,7 +272,7 @@ async function handleResend(
     success: true as const,
     token: nextToken,
     createdAt,
-    childUsername: claims.childUsername,
+    childUsername,
   });
 }
 
@@ -300,6 +342,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { success: false, error: "token is required." },
       { status: 400 },
+    );
+  }
+
+  const stored = await lookupConsentRequestByToken(token);
+  if (stored.status === "valid") {
+    return NextResponse.json({
+      success: true as const,
+      pending: {
+        token,
+        parentEmail: stored.request.parentEmail,
+        childUsername: stored.request.childUsername,
+        birthYear: stored.request.birthYear,
+        createdAt: stored.request.createdAt,
+      },
+    });
+  }
+  if (stored.status === "expired") {
+    return NextResponse.json(
+      {
+        success: false as const,
+        expired: true as const,
+        error: "Consent token has expired.",
+      },
+      { status: 410 },
     );
   }
 

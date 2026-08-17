@@ -113,7 +113,7 @@ async function dispatchOnboardingEmails(
           recipientEmail: parentEmail,
           data: {
             username,
-            masterUsername: existingMaster.username,
+            masterUsername: parentEmail,
           },
         });
         return;

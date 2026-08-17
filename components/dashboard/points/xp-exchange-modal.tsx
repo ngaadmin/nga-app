@@ -3,20 +3,15 @@
 import { CashInPointsPanel } from "@/components/dashboard/points/cash-in-points-panel";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 
 type XpExchangeModalProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-/** Academy XP icon popup: exchange when a parent rate exists, otherwise ask parent. */
+/** Academy XP icon popup: always opens the exchange UI. Confirm stays gated if no rate. */
 export function XpExchangeModal({ isOpen, onClose }: XpExchangeModalProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
-  const { xpExchangeRateSet } = useDashboardWallet();
-  const title = xpExchangeRateSet
-    ? conversionCopy.cashInHeading
-    : conversionCopy.askParentTitle;
 
   return (
     <ModalShell
@@ -32,7 +27,7 @@ export function XpExchangeModal({ isOpen, onClose }: XpExchangeModalProps) {
           id="xp-exchange-title"
           className="min-w-0 flex-1 font-heading text-xl font-extrabold leading-tight text-[#031F82]"
         >
-          {title}
+          {conversionCopy.cashInHeading}
         </h2>
         <button
           type="button"

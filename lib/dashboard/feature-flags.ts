@@ -8,7 +8,7 @@ export const SHOW_LAUNCHPAD = true;
 
 /**
  * Nav item ids visible while Launchpad is suppressed during active testing.
- * Advanced Money is not a free main-tab destination.
+ * Advanced Money is added to chrome only after a testing premium unlock.
  */
 export const TESTING_VISIBLE_NAV_IDS = [
   "academy",

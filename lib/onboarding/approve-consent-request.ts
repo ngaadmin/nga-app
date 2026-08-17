@@ -20,6 +20,7 @@ export type ApproveConsentResult =
       parentUsername: string;
       parentEmail: string;
       childUsername: string;
+      childBirthYear: number | null;
     }
   | {
       success: false;
@@ -224,6 +225,195 @@ export async function lookupParentMasterByEmail(email: string): Promise<{
   return { exists: true, username: master.username };
 }
 
+export type PendingConsentRequestView = {
+  requestId: string;
+  kind: "vpc" | "parent_claim";
+  childId: string;
+  childUsername: string;
+  childBirthYear: number | null;
+  parentEmail: string;
+  expiresAt: string;
+};
+
+/**
+ * Pending guardian requests for the signed-in parent master, matched by
+ * auth email or parent_id. Same parent email as independent child signup.
+ */
+export async function listPendingConsentRequestsForParent(): Promise<
+  | { ok: true; requests: PendingConsentRequestView[] }
+  | { ok: false; error: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, error: "Sign in as a parent to see pending requests." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Could not load pending requests.",
+    };
+  }
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id, account_role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.account_role !== "parent_master") {
+    return { ok: false, error: "Only a parent master can see pending requests." };
+  }
+
+  const parentEmail = user.email?.trim().toLowerCase() ?? "";
+  const { data: byParentId, error: parentIdError } = await admin
+    .from("consent_requests")
+    .select("id, kind, child_id, parent_email, expires_at, status, parent_id")
+    .eq("status", "pending")
+    .eq("parent_id", user.id)
+    .gt("expires_at", new Date().toISOString());
+
+  const emailQuery = parentEmail
+    ? await admin
+        .from("consent_requests")
+        .select("id, kind, child_id, parent_email, expires_at, status, parent_id")
+        .eq("status", "pending")
+        .eq("parent_email", parentEmail)
+        .gt("expires_at", new Date().toISOString())
+    : { data: [] as typeof byParentId, error: null };
+
+  if (parentIdError || emailQuery.error) {
+    return {
+      ok: false,
+      error:
+        parentIdError?.message ||
+        emailQuery.error?.message ||
+        "Could not load pending requests.",
+    };
+  }
+
+  const rowsById = new Map<string, NonNullable<typeof byParentId>[number]>();
+  for (const row of [...(byParentId ?? []), ...(emailQuery.data ?? [])]) {
+    rowsById.set(row.id, row);
+  }
+  const rows = [...rowsById.values()];
+
+  const requests: PendingConsentRequestView[] = [];
+  for (const row of rows ?? []) {
+    const { data: child } = await admin
+      .from("profiles")
+      .select("username, birth_year")
+      .eq("id", row.child_id)
+      .maybeSingle();
+    if (!child?.username) continue;
+    requests.push({
+      requestId: row.id,
+      kind: row.kind === "parent_claim" ? "parent_claim" : "vpc",
+      childId: row.child_id,
+      childUsername: child.username,
+      childBirthYear:
+        typeof child.birth_year === "number" ? child.birth_year : null,
+      parentEmail: String(row.parent_email ?? parentEmail),
+      expiresAt: row.expires_at,
+    });
+  }
+
+  return { ok: true, requests };
+}
+
+/**
+ * In-app approval for a pending consent row addressed to the signed-in parent.
+ * Email approval links keep using {@link approveConsentRequest}.
+ */
+export async function approveConsentRequestInApp(
+  requestId: string,
+): Promise<ApproveConsentResult> {
+  const trimmedId = requestId.trim();
+  if (!trimmedId) {
+    return { success: false, error: "This approval request is missing." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: "Sign in as a parent to link this profile." };
+  }
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id, username, account_role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile || profile.account_role !== "parent_master") {
+    return {
+      success: false,
+      needsParentAccount: true,
+      error: "Create a parent master account to finish approving this profile.",
+    };
+  }
+
+  const { data: row, error } = await admin
+    .from("consent_requests")
+    .select(
+      "id, kind, status, child_id, parent_email, parent_id, expires_at",
+    )
+    .eq("id", trimmedId)
+    .maybeSingle();
+
+  if (error || !row) {
+    return { success: false, error: "This approval request could not be found." };
+  }
+  if (row.status !== "pending") {
+    return { success: false, error: "This approval request is no longer pending." };
+  }
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    return {
+      success: false,
+      error: "This approval request has expired. Ask the learner to resend it.",
+    };
+  }
+
+  const parentEmail = String(row.parent_email ?? "").trim().toLowerCase();
+  const userEmail = user.email?.trim().toLowerCase() ?? "";
+  const addressedToParent =
+    row.parent_id === user.id || (parentEmail && parentEmail === userEmail);
+  if (!addressedToParent) {
+    return {
+      success: false,
+      error: "This approval request is not addressed to your parent email.",
+    };
+  }
+
+  const { data: child } = await admin
+    .from("profiles")
+    .select("username")
+    .eq("id", row.child_id)
+    .maybeSingle();
+
+  return completeConsentApproval({
+    requestId: row.id,
+    kind: row.kind === "parent_claim" ? "parent_claim" : "vpc",
+    childId: row.child_id,
+    childUsername: child?.username?.trim() || "learner",
+    parentId: user.id,
+    parentUsername: profile.username,
+    parentEmail: parentEmail || userEmail,
+  });
+}
+
 async function completeConsentApproval(input: {
   requestId: string;
   kind: "vpc" | "parent_claim";
@@ -251,7 +441,7 @@ async function completeConsentApproval(input: {
 
   const { data: childProfile, error: childLookupError } = await admin
     .from("profiles")
-    .select("id, account_role, account_status, consent_approved_at")
+    .select("id, account_role, account_status, consent_approved_at, birth_year")
     .eq("id", input.childId)
     .maybeSingle();
 
@@ -343,6 +533,8 @@ async function completeConsentApproval(input: {
     parentUsername: input.parentUsername,
     parentEmail: input.parentEmail,
     childUsername: input.childUsername,
+    childBirthYear:
+      typeof childProfile.birth_year === "number" ? childProfile.birth_year : null,
   };
 }
 

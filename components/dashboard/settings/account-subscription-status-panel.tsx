@@ -1,22 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
+import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
+  approveConsentRequestInApp,
+  listPendingConsentRequestsForParent,
+  type PendingConsentRequestView,
+} from "@/lib/onboarding/approve-consent-request";
+import {
+  convertToRegisteredProfile,
+  DASHBOARD_ADD_PROFILE_PATH,
   ONBOARDING_SIGN_IN_PATH,
   readUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
-import { approvePendingLearnerAccount } from "@/lib/onboarding/parent-consent-pending";
+import {
+  approvePendingLearnerAccount,
+  listPendingConsentsForEmail,
+} from "@/lib/onboarding/parent-consent-pending";
 import {
   deleteMasterAccountCascade,
+  displayAccountIdentity,
   listHouseholdAccounts,
   removeRegisteredAccountByUsername,
+  resolveHouseholdEmail,
+  upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
+import { useSettingsParentView } from "@/lib/dashboard/testing-settings-view";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -40,10 +55,83 @@ type PendingDelete =
   | { kind: "child"; username: string }
   | { kind: "master"; username: string };
 
-function readHouseholdForViewer(session: UserSession): HouseholdView {
+type PendingLinkItem = {
+  username: string;
+  requestId?: string;
+  childBirthYear?: number | null;
+  kind?: "vpc" | "parent_claim";
+};
+
+function usernameKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function mergePendingLinks(input: {
+  children: UserSession[];
+  remote: PendingConsentRequestView[];
+  local: ReturnType<typeof listPendingConsentsForEmail>;
+}): { householdPending: PendingLinkItem[]; waitingToLink: PendingLinkItem[] } {
+  const byUsername = new Map<string, PendingLinkItem & { listed: boolean }>();
+
+  for (const child of input.children) {
+    if (child.accountStatus !== "PENDING_CONSENT") continue;
+    byUsername.set(usernameKey(child.username), {
+      username: child.username,
+      childBirthYear: child.birthYear,
+      listed: true,
+    });
+  }
+
+  for (const remote of input.remote) {
+    const key = usernameKey(remote.childUsername);
+    const existing = byUsername.get(key);
+    if (existing) {
+      existing.requestId = remote.requestId;
+      existing.childBirthYear = existing.childBirthYear ?? remote.childBirthYear;
+      existing.kind = remote.kind;
+      continue;
+    }
+    byUsername.set(key, {
+      username: remote.childUsername,
+      requestId: remote.requestId,
+      childBirthYear: remote.childBirthYear,
+      kind: remote.kind,
+      listed: false,
+    });
+  }
+
+  for (const local of input.local) {
+    const key = usernameKey(local.childUsername);
+    const existing = byUsername.get(key);
+    if (existing) {
+      existing.childBirthYear = existing.childBirthYear ?? local.birthYear;
+      continue;
+    }
+    byUsername.set(key, {
+      username: local.childUsername,
+      childBirthYear: local.birthYear,
+      listed: false,
+    });
+  }
+
+  const householdPending: PendingLinkItem[] = [];
+  const waitingToLink: PendingLinkItem[] = [];
+  for (const item of byUsername.values()) {
+    const { listed, ...pending } = item;
+    if (listed) householdPending.push(pending);
+    else waitingToLink.push(pending);
+  }
+  return { householdPending, waitingToLink };
+}
+
+function readHouseholdForViewer(
+  session: UserSession,
+  showFullHousehold: boolean,
+): HouseholdView {
   const household = listHouseholdAccounts(session);
-  const isMaster = session.accountRole === "parent_master";
-  if (isMaster) return household;
+  if (showFullHousehold || session.accountRole === "parent_master") {
+    return household;
+  }
 
   // Learners: own account + linked master only (no siblings).
   const selfKey = session.username.trim().toLowerCase();
@@ -65,6 +153,7 @@ export function AccountSubscriptionStatusPanel() {
   });
   const [activeUsername, setActiveUsername] = useState<string | null>(null);
   const [isMasterViewer, setIsMasterViewer] = useState(false);
+  const isParentSettingsView = useSettingsParentView();
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
     null,
   );
@@ -72,6 +161,9 @@ export function AccountSubscriptionStatusPanel() {
     null,
   );
   const [approveError, setApproveError] = useState<string | null>(null);
+  const [remotePending, setRemotePending] = useState<
+    PendingConsentRequestView[]
+  >([]);
 
   const refresh = useCallback(() => {
     const session = readUserSession();
@@ -79,12 +171,21 @@ export function AccountSubscriptionStatusPanel() {
       setActiveUsername(null);
       setIsMasterViewer(false);
       setHousehold({ master: null, children: [], householdEmail: null });
+      setRemotePending([]);
       return;
     }
     setActiveUsername(session.username.trim() || null);
     setIsMasterViewer(session.accountRole === "parent_master");
-    setHousehold(readHouseholdForViewer(session));
-  }, []);
+    setHousehold(readHouseholdForViewer(session, isParentSettingsView));
+
+    if (session.accountRole === "parent_master") {
+      void listPendingConsentRequestsForParent().then((result) => {
+        if (result.ok) setRemotePending(result.requests);
+      });
+    } else {
+      setRemotePending([]);
+    }
+  }, [isParentSettingsView]);
 
   useEffect(() => {
     refresh();
@@ -93,6 +194,17 @@ export function AccountSubscriptionStatusPanel() {
       window.removeEventListener(USER_SESSION_UPDATED_EVENT, refresh);
     };
   }, [refresh]);
+
+  const pendingLinks = useMemo(() => {
+    const local = household.householdEmail
+      ? listPendingConsentsForEmail(household.householdEmail)
+      : [];
+    return mergePendingLinks({
+      children: household.children,
+      remote: remotePending,
+      local,
+    });
+  }, [household.children, household.householdEmail, remotePending]);
 
   function leaveAfterDestructiveDelete() {
     clearAllAppSessionState();
@@ -104,25 +216,67 @@ export function AccountSubscriptionStatusPanel() {
   }
 
   function handleApproveChild(username: string) {
-    if (!isMasterViewer) return;
-    const masterEmail = household.householdEmail;
-    if (!masterEmail || approvingUsername) return;
+    const pending = pendingLinks.householdPending.find(
+      (item) => usernameKey(item.username) === usernameKey(username),
+    );
+    void handleLinkProfile(pending ?? { username });
+  }
 
-    setApprovingUsername(username);
-    setApproveError(null);
-
-    const activated = approvePendingLearnerAccount({
-      childUsername: username,
-      masterEmail,
-    });
-
-    setApprovingUsername(null);
-    if (!activated) {
+  async function handleLinkProfile(item: PendingLinkItem) {
+    if ((!isMasterViewer && !isParentSettingsView) || approvingUsername) return;
+    const masterEmail =
+      household.householdEmail ??
+      (readUserSession() ? resolveHouseholdEmail(readUserSession()!) : null);
+    if (!masterEmail) {
       setApproveError(copy.approveChildError);
       return;
     }
 
-    refresh();
+    setApprovingUsername(item.username);
+    setApproveError(null);
+
+    try {
+      let linkedRemotely = false;
+      if (item.requestId && isMasterViewer) {
+        const remote = await approveConsentRequestInApp(item.requestId);
+        if (!remote.success) {
+          setApproveError(remote.error || copy.approveChildError);
+          return;
+        }
+        linkedRemotely = true;
+        const birthYear =
+          remote.childBirthYear ??
+          item.childBirthYear ??
+          representativeBirthYearForCohort(
+            remote.kind === "vpc" ? "explorer" : "pathfinder",
+          );
+        const now = new Date().toISOString();
+        const childSession = convertToRegisteredProfile({
+          username: remote.childUsername,
+          birthYear,
+          accountRole: "child",
+          parentEmail: remote.parentEmail || masterEmail,
+          accountStatus: "ACTIVE",
+          consentApprovedAt: now,
+          supabaseUserId: remote.childId,
+        });
+        upsertRegisteredAccount({ ...childSession, createdAt: now });
+      }
+
+      const localActivated = approvePendingLearnerAccount({
+        childUsername: item.username,
+        masterEmail,
+      });
+      if (!linkedRemotely && !localActivated) {
+        setApproveError(copy.approveChildError);
+        return;
+      }
+      refresh();
+    } catch {
+      setApproveError(copy.approveChildError);
+    } finally {
+      setApprovingUsername(null);
+    }
   }
 
   function confirmPendingDelete() {
@@ -205,35 +359,29 @@ export function AccountSubscriptionStatusPanel() {
           <ul className="space-y-3">
             {household.master ? (
               <li className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-heading text-base font-extrabold text-[#031F82]">
-                      {household.master.username}
-                    </p>
-                    <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#0CC1E0]">
-                      {copy.masterBadge}
-                    </p>
-                    {household.householdEmail ? (
-                      <p className="mt-1 truncate font-sans text-xs text-[#1E3A5F]">
-                        {household.householdEmail}
-                      </p>
-                    ) : null}
-                  </div>
-                  {isMasterViewer ? (
-                    <button
-                      type="button"
-                      className={dangerButtonClass}
-                      onClick={() =>
-                        setPendingDelete({
-                          kind: "master",
-                          username: household.master!.username,
-                        })
-                      }
-                    >
-                      {copy.deleteMaster}
-                    </button>
-                  ) : null}
+                <div className="min-w-0">
+                  <p className="break-all font-heading text-base font-extrabold text-[#031F82]">
+                    {household.householdEmail ||
+                      displayAccountIdentity(household.master)}
+                  </p>
+                  <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#0CC1E0]">
+                    {copy.masterBadge}
+                  </p>
                 </div>
+                {isParentSettingsView ? (
+                  <button
+                    type="button"
+                    className={cn(dangerButtonClass, "mt-3 w-full")}
+                    onClick={() =>
+                      setPendingDelete({
+                        kind: "master",
+                        username: household.master!.username,
+                      })
+                    }
+                  >
+                    {copy.deleteMaster}
+                  </button>
+                ) : null}
               </li>
             ) : null}
 
@@ -243,8 +391,8 @@ export function AccountSubscriptionStatusPanel() {
                 Boolean(activeUsername) &&
                 child.username.trim().toLowerCase() ===
                   activeUsername!.trim().toLowerCase();
-              const canDeleteChild = isMasterViewer || isSelf;
-              const canApproveChild = isMasterViewer && isPending;
+              const canDeleteChild = isParentSettingsView || isSelf;
+              const canApproveChild = isParentSettingsView && isPending;
               return (
                 <li
                   key={child.username}
@@ -270,8 +418,8 @@ export function AccountSubscriptionStatusPanel() {
                             onClick={() => handleApproveChild(child.username)}
                           >
                             {approvingUsername === child.username
-                              ? "Approving…"
-                              : copy.approveChild}
+                              ? copy.linkingProfile
+                              : copy.linkProfile}
                           </button>
                         ) : null}
                         {canDeleteChild ? (
@@ -302,18 +450,81 @@ export function AccountSubscriptionStatusPanel() {
             </p>
           ) : null}
 
-          {!household.master && household.children.length === 0 ? (
-            <p className="font-sans text-sm text-[#1E3A5F]">
-              No registered accounts found for this session.
+          {isParentSettingsView && !household.master && !isMasterViewer ? (
+            <p className="font-sans text-sm font-semibold leading-relaxed text-[#031F82]">
+              {copy.needParentPrompt}
             </p>
           ) : null}
 
-          {isMasterViewer &&
+          {!household.master && household.children.length === 0 ? (
+            <p className="font-sans text-sm text-[#1E3A5F]">
+              {copy.noAccountsYet}
+            </p>
+          ) : null}
+
+          {isParentSettingsView &&
           household.master &&
-          household.children.length === 0 ? (
+          household.children.length === 0 &&
+          pendingLinks.waitingToLink.length === 0 ? (
             <p className="font-sans text-sm text-[#1E3A5F]">
               {copy.emptyChildren}
             </p>
+          ) : null}
+
+          {isParentSettingsView && pendingLinks.waitingToLink.length > 0 ? (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <h3 className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#031F82]">
+                  {copy.pendingHeading}
+                </h3>
+                <p className="font-sans text-xs leading-relaxed text-[#1E3A5F]">
+                  {copy.pendingHint}
+                </p>
+              </div>
+              <ul className="space-y-3">
+                {pendingLinks.waitingToLink.map((item) => (
+                  <li
+                    key={item.username}
+                    className="rounded-xl border-2 border-[#FFA503]/50 bg-[#FFF8EC] px-3 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-heading text-base font-extrabold text-[#031F82]">
+                          {item.username}
+                        </p>
+                        <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#C88202]">
+                          {copy.pendingApprovalBadge}
+                        </p>
+                      </div>
+                      {isMasterViewer ? (
+                        <button
+                          type="button"
+                          className={approveButtonClass}
+                          disabled={approvingUsername === item.username}
+                          onClick={() => void handleLinkProfile(item)}
+                        >
+                          {approvingUsername === item.username
+                            ? copy.linkingProfile
+                            : copy.linkProfile}
+                        </button>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {isParentSettingsView ? (
+            <button
+              type="button"
+              onClick={() => router.push(DASHBOARD_ADD_PROFILE_PATH)}
+              className="h-touch w-full rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2"
+            >
+              {household.master || isMasterViewer
+                ? copy.addProfile
+                : copy.createParentSubmit}
+            </button>
           ) : null}
         </section>
 

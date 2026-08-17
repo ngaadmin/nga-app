@@ -1,10 +1,13 @@
 import { verifyCredential } from "@/lib/auth/credential-hash";
-import { requestOnboardingEmailSend } from "@/lib/email/request-send";
 import { isTemporaryPasswordHash } from "@/lib/auth/temporary-password";
 import {
   hashCredential,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import {
+  requestHouseholdPasswordRecovery,
+  requestHouseholdUsernameRecovery,
+} from "@/lib/onboarding/household-recovery";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 /** Durable local registry - survives logout so returning users can log back in. */
@@ -298,67 +301,9 @@ export async function recoverUsernameByEmail(
     return { accepted: false, error: "Enter a valid email address." };
   }
 
-  const accounts = findRegisteredAccountsByEmail(recipientEmail);
-  if (accounts.length === 0) {
-    return { accepted: true, recipientEmail };
-  }
-
-  const masters = accounts.filter(
-    (account) => account.accountRole === "parent_master",
-  );
-  const explorers = accounts.filter(
-    (account) =>
-      account.accountRole !== "parent_master" &&
-      account.ageTier === "explorer",
-  );
-  const otherLearners = accounts.filter(
-    (account) =>
-      account.accountRole !== "parent_master" &&
-      account.ageTier !== "explorer",
-  );
-
-  // One household digest whenever a master and/or Explorer shares this email.
-  if (masters.length > 0 || explorers.length > 0) {
-    const master = masters[0] ?? findActiveParentMasterByEmail(recipientEmail);
-    // Prefer registry Explorers; if only a master matched, still list children
-    // linked by household email from the durable store.
-    const householdExplorers =
-      explorers.length > 0
-        ? explorers
-        : master
-          ? listHouseholdAccounts(master).children.filter(
-              (child) => child.ageTier === "explorer",
-            )
-          : [];
-
-    const masterUsername = master?.username?.trim() || undefined;
-    const linkedUsernames = householdExplorers
-      .map((child) => child.username.trim())
-      .filter(Boolean);
-    const anchorUsername =
-      masterUsername || linkedUsernames[0] || accounts[0]!.username;
-
-    await requestOnboardingEmailSend({
-      type: "USERNAME_RECOVERY",
-      recipientEmail,
-      data: {
-        username: anchorUsername,
-        cohort: "explorer",
-        masterUsername,
-        linkedUsernames,
-      },
-    });
-  }
-
-  for (const account of otherLearners) {
-    await requestOnboardingEmailSend({
-      type: "USERNAME_RECOVERY",
-      recipientEmail,
-      data: {
-        username: account.username,
-        cohort: account.ageTier,
-      },
-    });
+  const remote = await requestHouseholdUsernameRecovery(recipientEmail);
+  if (!remote.accepted) {
+    return remote;
   }
 
   return { accepted: true, recipientEmail };
@@ -379,15 +324,40 @@ type TemporaryPasswordApiResult = {
  */
 export async function recoverCredentialByEmail(
   email: string,
+  options?: { onlyUsername?: string },
 ): Promise<CredentialRecoveryResult | { accepted: false; error: string }> {
   const recipientEmail = normalizeRecoveryEmail(email);
   if (!recipientEmail) {
     return { accepted: false, error: "Enter a valid email address." };
   }
 
-  const accounts = findRegisteredAccountsByEmail(recipientEmail);
+  const remote = await requestHouseholdPasswordRecovery(recipientEmail, options);
+  if (!remote.accepted) {
+    return remote;
+  }
 
-  // Enumeration-safe: no local match still looks like success.
+  for (const rotation of remote.rotations) {
+    const account = findRegisteredAccountByUsername(rotation.username);
+    if (!account) continue;
+    upsertRegisteredAccount(
+      applyTemporaryPasswordHash(
+        account,
+        rotation.passwordHash,
+        rotation.expiresAt,
+      ),
+    );
+  }
+
+  if (remote.rotations.length > 0) {
+    return { accepted: true, recipientEmail };
+  }
+
+  const accounts = findRegisteredAccountsByEmail(recipientEmail).filter(
+    (account) =>
+      !options?.onlyUsername ||
+      account.username.trim().toLowerCase() ===
+        options.onlyUsername.trim().toLowerCase(),
+  );
   if (accounts.length === 0) {
     return { accepted: true, recipientEmail };
   }
@@ -403,7 +373,10 @@ export async function recoverCredentialByEmail(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipientEmail,
-          username: account.username,
+          username:
+            account.accountRole === "parent_master"
+              ? recipientEmail
+              : account.username,
           cohort: account.ageTier,
         }),
       });
@@ -449,6 +422,16 @@ export function resolveHouseholdEmail(session: UserSession): string | null {
     );
   }
   return normalizeRecoveryEmail(session.parentEmail ?? "");
+}
+
+const PARENT_IDENTITY_FALLBACK = "Parent";
+
+/** Public identity: parent email, or learner username. Never an internal stub. */
+export function displayAccountIdentity(session: UserSession): string {
+  if (session.accountRole === "parent_master") {
+    return resolveHouseholdEmail(session) || PARENT_IDENTITY_FALLBACK;
+  }
+  return session.username.trim();
 }
 
 /**

@@ -7,23 +7,22 @@ import {
   resolveVaultSavingsGoals,
 } from "@/lib/dashboard/savings-goals";
 import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
+import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
-
-/** Premium billing is not wired yet — defaults to freemium limits. */
-const ADVANCED_MONEY_TOOLS_IS_PREMIUM = false;
 
 export function useAdvancedMoneyToolsData() {
   const { ledger, jars, savingsGoals } = useVaultProfile();
   const masteryCohort = useMasteryCohort();
+  const isPremium = useTestingPremiumUnlocked();
 
   const vaultGoals = useMemo(
     () =>
       resolveVaultSavingsGoals(
         savingsGoals,
         masteryCohort,
-        ADVANCED_MONEY_TOOLS_IS_PREMIUM,
+        isPremium,
       ),
-    [masteryCohort, savingsGoals],
+    [isPremium, masteryCohort, savingsGoals],
   );
 
   const saveJarBalance = useMemo(
@@ -37,7 +36,7 @@ export function useAdvancedMoneyToolsData() {
   );
 
   return {
-    isPremium: ADVANCED_MONEY_TOOLS_IS_PREMIUM,
+    isPremium,
     ledger,
     totalSavings,
   };

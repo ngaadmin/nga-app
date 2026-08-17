@@ -5,6 +5,7 @@ import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/cop
 export const ADVANCED_MONEY_TOOLS_NAV_ITEM: DashboardNavLinkItem = {
   id: "advanced-money-tools",
   label: advancedMoneyToolsCopy.navLabel,
+  shortLabel: "Advanced",
   href: "/dashboard/advanced-money-tools",
   Icon: TrendingUpIcon,
   matchesPath: (pathname) =>
@@ -13,13 +14,3 @@ export const ADVANCED_MONEY_TOOLS_NAV_ITEM: DashboardNavLinkItem = {
 };
 
 export const ADVANCED_MONEY_TOOLS_HREF = ADVANCED_MONEY_TOOLS_NAV_ITEM.href;
-
-/**
- * Kept for reuse. Advanced Money is not injected into primary chrome —
- * it is a premium Vault destination that opens the upgrade popup on freemium.
- */
-export function withAdvancedMoneyToolsNavItem(
-  items: readonly DashboardNavLinkItem[],
-): DashboardNavLinkItem[] {
-  return [...items];
-}

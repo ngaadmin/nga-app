@@ -8,7 +8,10 @@ import {
   type MasteryCohort,
   type RegisteredAccountStatus,
 } from "@/lib/dashboard/mastery-cohort";
-import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
+import {
+  isEligibleBirthYear,
+  representativeBirthYearForCohort,
+} from "@/lib/onboarding/birth-years";
 import { issueGuardianSignupEmail } from "@/lib/onboarding/issue-guardian-signup-email";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
@@ -29,7 +32,13 @@ function toSupabaseAccountStatus(
 
 export type CreateSupabaseAccountInput = {
   username: string;
-  birthYear: number;
+  /** Required for independent child signup. Ignored when parent-add sends `cohort`. */
+  birthYear?: number;
+  /**
+   * Parent-add path: learning track chosen by the parent. Birth year is derived
+   * as a content stand-in so we never ask for a separate year.
+   */
+  cohort?: MasteryCohort;
   password: string;
   /** Required for Pathfinder / Maverick. Ignored for Explorers. */
   learnerEmail?: string | null;
@@ -40,6 +49,11 @@ export type CreateSupabaseAccountInput = {
   parentEmail?: string | null;
   /** Forced false for Explorers. */
   marketingOptIn?: boolean;
+  /**
+   * Signed-in parent master is adding this child. Skip guardian emails,
+   * create the child as already approved, and link `parent_child`.
+   */
+  parentInitiatedById?: string | null;
 };
 
 export type CreateSupabaseAccountResult =
@@ -60,13 +74,15 @@ export type CreateSupabaseAccountResult =
 
 /**
  * Creates a learner in Supabase Auth and fills the stub `profiles` row.
- * Explorer / Pathfinder then write `consent_requests` and send the existing
- * parent emails. Does not write `parent_child` yet.
+ * Standalone Explorer / Pathfinder then write `consent_requests` and send
+ * parent emails. Parent-initiated adds skip that and write `parent_child`.
  */
 export async function createSupabaseAccount(
   input: CreateSupabaseAccountInput,
 ): Promise<CreateSupabaseAccountResult> {
-  const parsed = parseSignupInput(input);
+  const claimedParentId = input.parentInitiatedById?.trim() || null;
+  const parentInitiated = Boolean(claimedParentId);
+  const parsed = parseSignupInput(input, parentInitiated);
   if (!parsed.ok) {
     return { success: false, error: parsed.error };
   }
@@ -82,9 +98,10 @@ export async function createSupabaseAccount(
   const cohort = getMasteryCohortFromBirthYear(birthYear);
   const requirements = getSignupRequirementsForBirthYear(birthYear);
   const accountStatus = toSupabaseAccountStatus(
-    requirements.defaultAccountStatus,
+    parentInitiated ? "ACTIVE" : requirements.defaultAccountStatus,
   );
   const accountRole = "child" as const;
+  const approvedAt = parentInitiated ? new Date().toISOString() : null;
 
   let admin;
   try {
@@ -97,6 +114,13 @@ export async function createSupabaseAccount(
           ? error.message
           : "Supabase admin client is not configured.",
     };
+  }
+
+  if (claimedParentId) {
+    const verified = await verifyParentInitiator(admin, claimedParentId);
+    if (!verified.ok) {
+      return { success: false, error: verified.error };
+    }
   }
 
   let usernameTaken: boolean;
@@ -118,11 +142,17 @@ export async function createSupabaseAccount(
     };
   }
 
-  // Explorers: placeholder email, auto-confirm (no mail to a fake address).
-  // Pathfinder / Maverick: real email via signUp so Auth can send confirmation.
+  // Explorers, and any parent-added child: placeholder email + admin create
+  // so we never swap the signed-in parent Auth session.
   const created =
-    cohort === "explorer"
-      ? await createExplorerAuthUser(admin, password, username)
+    cohort === "explorer" || parentInitiated
+      ? await createPlaceholderAuthUser(
+          admin,
+          password,
+          username,
+          cohort,
+          parentInitiated ? "linked" : "explorer",
+        )
       : await createLearnerAuthUser(learnerEmail!, password);
 
   if (!created.ok) {
@@ -136,14 +166,28 @@ export async function createSupabaseAccount(
     accountRole,
     accountStatus,
     marketingOptIn,
+    consentApprovedAt: approvedAt,
   });
   if (!profileSaved.ok) {
     await admin.auth.admin.deleteUser(created.userId);
     return { success: false, error: profileSaved.error };
   }
 
-  // Explorer VPC + Pathfinder parent-claim emails. Maverick skips this.
-  if (parentEmail && (cohort === "explorer" || cohort === "pathfinder")) {
+  if (claimedParentId) {
+    const linked = await linkParentChild(admin, claimedParentId, created.userId);
+    if (!linked.ok) {
+      await admin.auth.admin.deleteUser(created.userId);
+      return { success: false, error: linked.error };
+    }
+  }
+
+  // Explorer VPC + Pathfinder parent-claim emails. Skip when a parent master
+  // already created this child from Settings.
+  if (
+    !parentInitiated &&
+    parentEmail &&
+    (cohort === "explorer" || cohort === "pathfinder")
+  ) {
     try {
       const emailResult = await issueGuardianSignupEmail({
         childId: created.userId,
@@ -174,14 +218,16 @@ export async function createSupabaseAccount(
     }
   }
 
-  try {
-    const supabase = await createClient();
-    await supabase.auth.signInWithPassword({
-      email: created.authEmail,
-      password,
-    });
-  } catch {
-    // Local session still lands; the child can sign in again later.
+  if (!parentInitiated) {
+    try {
+      const supabase = await createClient();
+      await supabase.auth.signInWithPassword({
+        email: created.authEmail,
+        password,
+      });
+    } catch {
+      // Local session still lands; the child can sign in again later.
+    }
   }
 
   return {
@@ -204,8 +250,27 @@ type ParsedSignup = {
   marketingOptIn: boolean;
 };
 
+function isMasteryCohort(value: unknown): value is MasteryCohort {
+  return value === "explorer" || value === "pathfinder" || value === "maverick";
+}
+
+function resolveSignupBirthYear(
+  input: CreateSupabaseAccountInput,
+  parentInitiated: boolean,
+): number | null {
+  if (parentInitiated) {
+    if (!isMasteryCohort(input.cohort)) return null;
+    return representativeBirthYearForCohort(input.cohort);
+  }
+  if (typeof input.birthYear === "number" && isEligibleBirthYear(input.birthYear)) {
+    return input.birthYear;
+  }
+  return null;
+}
+
 function parseSignupInput(
   input: CreateSupabaseAccountInput,
+  parentInitiated = false,
 ): { ok: true; value: ParsedSignup } | { ok: false; error: string } {
   const username = input.username.trim();
   if (!username) {
@@ -218,8 +283,14 @@ function parseSignupInput(
     };
   }
 
-  if (!isEligibleBirthYear(input.birthYear)) {
-    return { ok: false, error: "Please choose a valid birth year." };
+  const birthYear = resolveSignupBirthYear(input, parentInitiated);
+  if (birthYear == null) {
+    return {
+      ok: false,
+      error: parentInitiated
+        ? "Pick a learning track for this learner."
+        : "Please choose a valid birth year.",
+    };
   }
 
   const password = input.password;
@@ -227,19 +298,21 @@ function parseSignupInput(
     return { ok: false, error: "Use at least 6 characters for your password." };
   }
 
-  const requirements = getSignupRequirementsForBirthYear(input.birthYear);
-  const learnerEmail = requirements.requiresLearnerEmail
-    ? (normalizeEmailAddress(input.learnerEmail) ?? null)
-    : null;
-  const parentEmail = requirements.requiresParentEmail
-    ? (normalizeEmailAddress(input.parentEmail) ?? null)
-    : null;
+  const requirements = getSignupRequirementsForBirthYear(birthYear);
+  const learnerEmail =
+    !parentInitiated && requirements.requiresLearnerEmail
+      ? (normalizeEmailAddress(input.learnerEmail) ?? null)
+      : null;
+  const parentEmail =
+    !parentInitiated && requirements.requiresParentEmail
+      ? (normalizeEmailAddress(input.parentEmail) ?? null)
+      : null;
 
-  if (requirements.requiresLearnerEmail && !learnerEmail) {
+  if (!parentInitiated && requirements.requiresLearnerEmail && !learnerEmail) {
     return { ok: false, error: "Please enter a valid email address." };
   }
 
-  if (requirements.requiresParentEmail && !parentEmail) {
+  if (!parentInitiated && requirements.requiresParentEmail && !parentEmail) {
     return {
       ok: false,
       error: "Please enter a parent or guardian email address.",
@@ -258,13 +331,14 @@ function parseSignupInput(
     ok: true,
     value: {
       username,
-      birthYear: input.birthYear,
+      birthYear,
       password,
       learnerEmail,
       parentEmail,
-      marketingOptIn: requirements.requiresLearnerEmail
-        ? Boolean(input.marketingOptIn)
-        : false,
+      marketingOptIn:
+        parentInitiated || !requirements.requiresLearnerEmail
+          ? false
+          : Boolean(input.marketingOptIn),
     },
   };
 }
@@ -295,6 +369,7 @@ async function saveLearnerProfile(
     accountRole: "child";
     accountStatus: SupabaseAccountStatus;
     marketingOptIn: boolean;
+    consentApprovedAt?: string | null;
   },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const payload = {
@@ -303,6 +378,9 @@ async function saveLearnerProfile(
     account_role: input.accountRole,
     account_status: input.accountStatus,
     marketing_opt_in: input.marketingOptIn,
+    ...(input.consentApprovedAt
+      ? { consent_approved_at: input.consentApprovedAt }
+      : {}),
   };
 
   const { data: updated, error: updateError } = await admin
@@ -342,33 +420,92 @@ async function saveLearnerProfile(
   return { ok: true };
 }
 
-function buildExplorerPlaceholderEmail(): string {
-  return `explorer+${crypto.randomUUID()}@${EXPLORER_AUTH_EMAIL_DOMAIN}`;
+function buildPlaceholderAuthEmail(kind: "explorer" | "linked"): string {
+  const prefix = kind === "linked" ? "linked" : "explorer";
+  return `${prefix}+${crypto.randomUUID()}@${EXPLORER_AUTH_EMAIL_DOMAIN}`;
 }
 
-async function createExplorerAuthUser(
+async function verifyParentInitiator(
+  admin: ReturnType<typeof createAdminClient>,
+  claimedParentId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.id !== claimedParentId) {
+    return {
+      ok: false,
+      error: "Sign in as a parent to add a linked profile.",
+    };
+  }
+
+  const { data: profile, error } = await admin
+    .from("profiles")
+    .select("account_role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error || profile?.account_role !== "parent_master") {
+    return {
+      ok: false,
+      error: "Only a parent master can add a linked profile this way.",
+    };
+  }
+
+  return { ok: true };
+}
+
+async function createPlaceholderAuthUser(
   admin: ReturnType<typeof createAdminClient>,
   password: string,
   username: string,
+  cohort: MasteryCohort,
+  kind: "explorer" | "linked",
 ): Promise<
   { ok: true; userId: string; authEmail: string } | { ok: false; error: string }
 > {
-  const authEmail = buildExplorerPlaceholderEmail();
+  const authEmail = buildPlaceholderAuthEmail(kind);
   const { data, error } = await admin.auth.admin.createUser({
     email: authEmail,
     password,
     email_confirm: true,
-    user_metadata: { username, cohort: "explorer" },
+    user_metadata: { username, cohort },
   });
 
   if (error || !data.user) {
     return {
       ok: false,
-      error: error?.message || "Could not create the Explorer account.",
+      error: error?.message || "Could not create the learner account.",
     };
   }
 
   return { ok: true, userId: data.user.id, authEmail };
+}
+
+async function linkParentChild(
+  admin: ReturnType<typeof createAdminClient>,
+  parentId: string,
+  childId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { error } = await admin.from("parent_child").insert({
+    parent_id: parentId,
+    child_id: childId,
+  });
+
+  if (
+    error &&
+    error.code !== "23505" &&
+    !/duplicate key|unique/i.test(error.message ?? "")
+  ) {
+    return {
+      ok: false,
+      error: error.message || "Could not link this learner to the parent account.",
+    };
+  }
+
+  return { ok: true };
 }
 
 /** Pathfinder / Maverick — uses the cookie server client so Auth can email them. */

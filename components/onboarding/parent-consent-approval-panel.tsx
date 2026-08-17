@@ -417,7 +417,9 @@ export function ParentConsentApprovalPanel() {
             </Button>
             <p className="text-center font-sans text-sm leading-relaxed text-nga-slate">
               This learner will be linked to your existing master account
-              {existingMaster?.username ? ` (${existingMaster.username})` : ""}.
+              {existingMaster?.learnerEmail
+                ? ` (${existingMaster.learnerEmail})`
+                : ""}.
             </p>
           </div>
         ) : (

@@ -122,7 +122,7 @@ async function issuePathfinderParentEmail(input: {
       recipientEmail: input.parentEmail,
       data: {
         username: input.username,
-        masterUsername: existingMaster.username,
+        masterUsername: input.parentEmail,
       },
       appUrl: input.appUrl,
     });

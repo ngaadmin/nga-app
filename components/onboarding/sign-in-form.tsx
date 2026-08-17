@@ -13,7 +13,10 @@ import {
   readUserSession,
   saveUserSession,
 } from "@/lib/onboarding/guest-session";
-import { signInSupabaseLearner } from "@/lib/onboarding/learner-account";
+import {
+  signInSupabaseLearner,
+  updateSignedInPassword,
+} from "@/lib/onboarding/learner-account";
 import {
   authenticateRegisteredAccount,
   recoverCredentialByEmail,
@@ -107,7 +110,7 @@ export function SignInForm() {
     setRecoveryNotice(
       recoveryMode === "username"
         ? copy.recoveryUsernameSuccess
-        : "If that email is on file, we sent a reset code there. Use it to log in, then set a new password.",
+        : copy.recoveryPasswordSuccess,
     );
   }
 
@@ -119,7 +122,7 @@ export function SignInForm() {
     const trimmedCredential = credential.trim();
 
     if (!trimmedIdentifier) {
-      next.identifier = "Enter your username or email.";
+      next.identifier = "Enter your email or learner username.";
     }
     if (!trimmedCredential) {
       next.credential = "Enter your password.";
@@ -187,7 +190,9 @@ export function SignInForm() {
     router.push(DASHBOARD_ACADEMY_PATH);
   }
 
-  function handlePasswordChangeSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handlePasswordChangeSubmit(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
     const next: FormErrors = {};
     const trimmedNew = newPassword.trim();
@@ -207,6 +212,17 @@ export function SignInForm() {
     if (Object.keys(next).length > 0) {
       setErrors(next);
       return;
+    }
+
+    const current = readUserSession();
+    if (current?.supabaseUserId) {
+      const remote = await updateSignedInPassword(trimmedNew);
+      if (!remote.ok) {
+        setErrors({
+          form: remote.error || "We could not update your password. Try again.",
+        });
+        return;
+      }
     }
 
     const updated = setRegisteredAccountPassword(pendingUsername, trimmedNew);
@@ -338,7 +354,7 @@ export function SignInForm() {
               <p className="font-sans text-sm leading-relaxed text-nga-slate">
                 {recoveryMode === "username"
                   ? copy.recoveryUsernameHint
-                  : "We'll email a temporary code to the address we have on file for your profile."}
+                  : copy.recoveryPasswordHint}
               </p>
             </div>
 
@@ -409,7 +425,7 @@ export function SignInForm() {
                   htmlFor="sign-in-identifier"
                   className="block font-heading text-sm font-bold text-nga-primary"
                 >
-                  Username or email
+                  Email or learner username
                 </label>
                 <button
                   type="button"
@@ -424,7 +440,7 @@ export function SignInForm() {
                 name="identifier"
                 type="text"
                 autoComplete="username"
-                placeholder="Your username or email"
+                placeholder="Email or learner username"
                 value={identifier}
                 onChange={(e) => {
                   setIdentifier(e.target.value);

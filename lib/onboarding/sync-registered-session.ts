@@ -12,7 +12,10 @@ import {
   type LearnerAccountSnapshot,
   type LearnerConsentStatus,
 } from "@/lib/onboarding/learner-account";
-import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
+import {
+  resolveHouseholdEmail,
+  upsertRegisteredAccount,
+} from "@/lib/onboarding/registered-accounts";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 
 const ADULT_OFFSET_YEARS = 35;
@@ -108,11 +111,17 @@ export function applyLearnerAccountSnapshot(
       accountRole: remote.accountRole,
       accountStatus,
       consentApprovedAt,
-      parentEmail: existing.parentEmail ?? remote.parentEmail ?? undefined,
+      mustChangePassword: remote.mustChangePassword === true,
+      parentEmail:
+        remote.accountRole === "parent_master"
+          ? (remote.learnerEmail ?? existing.parentEmail ?? remote.parentEmail ?? undefined)
+          : (existing.parentEmail ?? remote.parentEmail ?? undefined),
       learnerEmail:
         remote.accountRole === "child" && existing.ageTier === "explorer"
           ? undefined
-          : (existing.learnerEmail ?? remote.learnerEmail ?? undefined),
+          : remote.accountRole === "parent_master"
+            ? (remote.learnerEmail ?? existing.learnerEmail ?? undefined)
+            : (existing.learnerEmail ?? remote.learnerEmail ?? undefined),
     });
     saveUserSession(updated);
     upsertRegisteredAccount(updated);
@@ -123,11 +132,16 @@ export function applyLearnerAccountSnapshot(
     username: remote.username,
     birthYear,
     accountRole: remote.accountRole,
-    parentEmail: existing?.parentEmail ?? remote.parentEmail,
+    parentEmail:
+      remote.accountRole === "parent_master"
+        ? (remote.learnerEmail ?? existing?.parentEmail ?? remote.parentEmail)
+        : (existing?.parentEmail ?? remote.parentEmail),
     learnerEmail:
       remote.accountRole === "parent_master"
         ? (remote.learnerEmail ?? existing?.learnerEmail)
-        : remote.learnerEmail,
+        : remote.accountRole === "child" && existing?.ageTier === "explorer"
+          ? undefined
+          : remote.learnerEmail,
     password: options.password,
     passcodeHash: existing?.passcodeHash,
     passwordHash: existing?.passwordHash,
@@ -136,7 +150,10 @@ export function applyLearnerAccountSnapshot(
     supabaseUserId: remote.userId,
   });
 
-  return converted;
+  return {
+    ...converted,
+    mustChangePassword: remote.mustChangePassword === true,
+  };
 }
 
 /**
@@ -147,11 +164,15 @@ export async function syncLocalSessionWithSupabaseAccount(): Promise<UserSession
   if (typeof window === "undefined") return null;
 
   const local = readUserSession();
+  const parentMissingEmail =
+    local?.accountRole === "parent_master" && !resolveHouseholdEmail(local);
+
   if (
     local?.accessMode === "registered" &&
     local.accountStatus === "ACTIVE" &&
     local.consentApprovedAt &&
-    local.supabaseUserId
+    local.supabaseUserId &&
+    !parentMissingEmail
   ) {
     return local;
   }

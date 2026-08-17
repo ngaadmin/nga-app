@@ -45,6 +45,7 @@ export function CashInPointsPanel({
   const { username } = useDashboardUser();
   const session = useUserSession();
   const { creditSaveJar, appendLedger } = useVaultProfile();
+  const isParentMaster = session?.accountRole === "parent_master";
   const {
     totalPoints,
     audPer100Xp,
@@ -66,8 +67,12 @@ export function CashInPointsPanel({
   }, [totalPoints]);
 
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
-  const rateHint = conversionCopy.cashInRateHint.replace("{rate}", conversionRateLabel);
-  const isParentMaster = session?.accountRole === "parent_master";
+  const rateHint = xpExchangeRateSet
+    ? conversionCopy.cashInRateHint.replace("{rate}", conversionRateLabel)
+    : conversionCopy.rateNotSetHint;
+  const rateMissingMessage = isParentMaster
+    ? conversionCopy.askParentIfParentBody
+    : conversionCopy.askParentBody;
 
   const parsedPoints = parsePointsInput(pointsInput);
   const pointsToClaim = parsedPoints ?? 0;
@@ -105,6 +110,7 @@ export function CashInPointsPanel({
     setClaimError(null);
 
     if (!xpExchangeRateSet) {
+      setClaimError(rateMissingMessage);
       return;
     }
 
@@ -159,28 +165,6 @@ export function CashInPointsPanel({
     setParentEmailModalOpen(true);
   }
 
-  if (!xpExchangeRateSet) {
-    return (
-      <div className={cn("min-w-0", className)}>
-        {hideHeading ? null : (
-          <p className="font-heading text-sm font-extrabold text-[#031F82]">
-            {conversionCopy.askParentTitle}
-          </p>
-        )}
-        <p
-          className={cn(
-            "font-sans text-sm leading-relaxed text-[#1E3A5F]",
-            hideHeading ? "mt-0" : "mt-2",
-          )}
-        >
-          {isParentMaster
-            ? conversionCopy.askParentIfParentBody
-            : conversionCopy.askParentBody}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className={cn("min-w-0", className)}>
@@ -233,7 +217,9 @@ export function CashInPointsPanel({
         </label>
 
         <p className="mt-2 font-heading text-xs font-bold leading-snug text-[#031F82]">
-          {childPayoutReadout}
+          {xpExchangeRateSet
+            ? childPayoutReadout
+            : rateMissingMessage}
         </p>
 
         {claimError ? (

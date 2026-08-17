@@ -2,6 +2,7 @@
 
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { unlockTestingPremium } from "@/lib/dashboard/testing-premium";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -13,6 +14,8 @@ type PremiumUpgradeModalProps = {
   title: string;
   body: string;
   titleId?: string;
+  /** Called after the testing unlock is saved (e.g. open Advanced Money). */
+  onUnlock?: () => void;
 };
 
 /** Shared Premium unlock popup used by Vault and Advanced Money. */
@@ -22,8 +25,15 @@ export function PremiumUpgradeModal({
   title,
   body,
   titleId = "premium-upgrade-title",
+  onUnlock,
 }: PremiumUpgradeModalProps) {
   const copy = copyMatrix.dashboard.vault.budget;
+
+  function handleUnlock() {
+    unlockTestingPremium();
+    onUnlock?.();
+    onClose();
+  }
 
   return (
     <ModalShell
@@ -40,7 +50,11 @@ export function PremiumUpgradeModal({
         {title}
       </h2>
       <p className="mt-2 text-sm text-[#1E3A5F]">{body}</p>
-      <button type="button" className={cn("mt-4 h-touch w-full px-4", orangeCtaClass)}>
+      <button
+        type="button"
+        onClick={handleUnlock}
+        className={cn("mt-4 h-touch w-full px-4", orangeCtaClass)}
+      >
         {copy.premiumUnlock}
       </button>
       <button

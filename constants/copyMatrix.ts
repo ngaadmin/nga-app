@@ -3,17 +3,21 @@ export const COPY_USERNAME_TOKEN = "[Username]" as const;
 export const copyMatrix = {
   onboarding: {
     signIn: {
-      forgotUsername: "Forgot Username?",
-      recoveryEmailLabel: "Email on file",
-      recoveryEmailPlaceholder: "parent@example.com or your email",
+      forgotUsername: "Forgot learner username?",
+      recoveryEmailLabel: "Parent email on file",
+      recoveryEmailPlaceholder: "parent@example.com",
       recoveryUsernameSubmit: "Send Username",
-      recoveryCredentialSubmit: "Send Reset Code",
+      recoveryCredentialSubmit: "Send Reset Email",
       recoveryCancel: "Back to log in",
       recoveryUsernameHint:
-        "We'll email the username linked to this parent or profile address.",
+        "We'll email the learner username(s) linked to this parent address. Parents log in with email.",
       recoverySending: "Sending…",
       recoveryUsernameSuccess:
         "If that email is on file, we sent the username there. Check the inbox (and spam).",
+      recoveryPasswordHint:
+        "Use the parent email on file. We'll send a reset for the parent login and any linked learner logins.",
+      recoveryPasswordSuccess:
+        "If that email is on file, we sent a reset there. Use it to log in, then set a new password.",
     },
   },
   dashboard: {
@@ -25,6 +29,18 @@ export const copyMatrix = {
         "Your account cockpit - manage settings, parent tools, and point conversion.",
       account: {
         passwordReset: "Password Reset",
+        passwordResetTitle: "Reset a password",
+        passwordResetParentHint:
+          "We'll email a temporary password to your parent email. Linked learner resets go to that same inbox.",
+        passwordResetChildHint:
+          "Learner logins reset through the parent email on file. We'll send the code there.",
+        passwordResetSubmit: "Send reset email",
+        passwordResetSending: "Sending…",
+        passwordResetSuccess:
+          "If that email is on file, we sent a reset there. Check the inbox (and spam).",
+        passwordResetNeedEmail:
+          "This profile needs a parent email on file before we can send a reset.",
+        passwordResetCancel: "Cancel",
         changeParentPin: "Change Parent PIN",
         subscriptionStatus: "Account & Subscription Status",
         logOut: "Log Out",
@@ -38,6 +54,46 @@ export const copyMatrix = {
         masterBadge: "Master account",
         childBadge: "Learner account",
         emptyChildren: "No linked learner accounts yet.",
+        addLinkedProfile: "Add profile",
+        addProfile: "Add child account",
+        linkProfile: "Link profile",
+        addLinkedTitle: "Add profile",
+        addLinkedTrackHeading: "Pick their learning track",
+        addLinkedTrackHint:
+          "Choose the age range that matches this learner. That sets their tools and content.",
+        addLinkedContinue: "Continue",
+        addLinkedDetailsHeading: "Set their login",
+        addLinkedDetailsHint:
+          "They join your household as approved. Username and password recovery uses your email.",
+        addLinkedUsernameLabel: "Username",
+        addLinkedPasswordLabel: "Password",
+        addLinkedParentEmailLabel: "Parent email",
+        addLinkedParentEmailHint:
+          "This is your signed-in email. Recovery for you and this learner uses this address.",
+        addLinkedSubmit: "Add profile",
+        addLinkedSubmitting: "Adding…",
+        addLinkedBackTrack: "Back to track",
+        addLinkedBackAccounts: "Back to Accounts",
+        addLinkedNeedParent: "Create your parent profile first before you can add a child.",
+        addLinkedNeedEmail:
+          "Your parent account needs an email before you can add a profile.",
+        needParentPrompt:
+          "Create your parent profile first. Then you can add or link a learner.",
+        createParentTitle: "Create your parent profile",
+        createParentHint:
+          "This is your master login. After this, you can add a child or link a pending request.",
+        createParentEmailLabel: "Your email",
+        createParentEmailHint:
+          "This email is your parent login, and recovery for you and linked learners uses this address.",
+        createParentUsernameLabel: "Your username",
+        createParentPasswordLabel: "Password",
+        createParentSubmit: "Create parent profile",
+        createParentSubmitting: "Creating…",
+        noAccountsYet: "No registered accounts found for this session.",
+        pendingHeading: "Waiting to link",
+        pendingHint:
+          "These learners asked for approval with your email. Link them here, or use the email approval link.",
+        linkingProfile: "Linking…",
         deleteChild: "Delete account",
         approveChild: "Approve",
         approveChildError:
@@ -187,6 +243,7 @@ export const copyMatrix = {
         confirmAcknowledge: "Got it",
         cashInHeading: "Exchange XP",
         cashInRateHint: "Rate: {rate}",
+        rateNotSetHint: "Rate: not set yet",
         xpAvailableTemplate: "{points} XP available",
         noPointsError: "No XP to cash in yet. Keep learning!",
         claimingLabel: "Exchanging…",
@@ -196,11 +253,15 @@ export const copyMatrix = {
         successBodyTemplate:
           "Points Converted! {amount} has been safely deposited straight into my Save Jar. Head over to the Vault to check my growth, or shift my funds to another jar if I have a different plan!",
         successAcknowledge: "Let's Go!",
-        askParentTitle: "Ask your parent first",
+        askParentTitle: "Your XP",
+        askParentWhat:
+          "XP is what you earn by finishing Academy lessons and activities.",
+        askParentExchange:
+          "Once a parent sets an exchange rate, you can turn XP into in-app money for your Save Jar.",
         askParentBody:
-          "XP exchange isn't set up yet. Ask your parent to set the rate in their Settings. Then you can cash in here.",
+          "Ask your parent to set that rate in Settings. Then you can cash in right here.",
         askParentIfParentBody:
-          "Set the XP exchange rate in parent Settings first. Then XP can be cashed in here.",
+          "Set the XP exchange rate in Settings. Then XP can be cashed in here.",
         parentEmail: {
           draftLabel: "Parent notification",
           title: "Email sent to guardian",

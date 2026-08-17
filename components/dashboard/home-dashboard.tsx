@@ -1,13 +1,21 @@
 "use client";
 
-import { useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentCurrencyPanel } from "@/components/dashboard/settings/parent-currency-panel";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
+import { SettingsTestingViewToggle } from "@/components/dashboard/settings/settings-testing-view-toggle";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
-import { ONBOARDING_SIGN_IN_PATH } from "@/lib/onboarding/guest-session";
+import {
+  ONBOARDING_SIGN_IN_PATH,
+  readUserSession,
+} from "@/lib/onboarding/guest-session";
+import {
+  recoverCredentialByEmail,
+  resolveHouseholdEmail,
+} from "@/lib/onboarding/registered-accounts";
 import {
   BillingCardIcon,
   KeyIcon,
@@ -431,6 +439,150 @@ function ChangeParentPinModal({
   );
 }
 
+const resetEmailFieldClass =
+  "w-full rounded-xl border-2 border-[#BDE9FB] bg-[#F7FBFF] px-4 py-2.5 font-sans text-sm text-[#031F82] outline-none focus:border-[#0CC1E0]";
+
+type PasswordResetModalProps = {
+  isOpen: boolean;
+  copy: (typeof copyMatrix.dashboard.settings)["account"];
+  onClose: () => void;
+};
+
+function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+
+  const session = isOpen ? readUserSession() : null;
+  const knownEmail = session ? resolveHouseholdEmail(session) : null;
+  const isParent = session?.accountRole === "parent_master";
+  const isChild = session?.accountRole === "child";
+  const missingEmail =
+    session?.accessMode === "registered" && (isParent || isChild) && !knownEmail;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setEmail(knownEmail ?? "");
+    setError(null);
+    setNotice(null);
+    setIsSending(false);
+  }, [isOpen, knownEmail]);
+
+  function handleClose() {
+    setEmail("");
+    setError(null);
+    setNotice(null);
+    setIsSending(false);
+    onClose();
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (missingEmail) return;
+    setError(null);
+    setNotice(null);
+    setIsSending(true);
+
+    const result = await recoverCredentialByEmail(email, {
+      onlyUsername:
+        isChild && session?.username ? session.username : undefined,
+    });
+
+    setIsSending(false);
+
+    if (!result.accepted) {
+      setError(result.error);
+      return;
+    }
+
+    setNotice(copy.passwordResetSuccess);
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <ModalShell
+      isOpen={isOpen}
+      onClose={handleClose}
+      layer="toast"
+      labelledBy="password-reset-title"
+      backdropClassName="bg-[#031F82]/55"
+      panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
+    >
+      <h2
+        id="password-reset-title"
+        className="font-heading text-lg font-extrabold text-[#031F82]"
+      >
+        {copy.passwordResetTitle}
+      </h2>
+      <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+        {isChild ? copy.passwordResetChildHint : copy.passwordResetParentHint}
+      </p>
+
+      {missingEmail ? (
+        <p className="mt-3 font-sans text-sm font-semibold text-[#031F82]" role="status">
+          {copy.passwordResetNeedEmail}
+        </p>
+      ) : (
+        <form className="mt-4 space-y-3" onSubmit={handleSubmit} noValidate>
+          <label htmlFor="settings-reset-email" className="block space-y-1.5">
+            <span className="font-heading text-sm font-bold text-[#031F82]">
+              Parent email
+            </span>
+            <input
+              id="settings-reset-email"
+              name="resetEmail"
+              type="email"
+              autoComplete="email"
+              value={email}
+              readOnly={Boolean(knownEmail)}
+              onChange={(event) => {
+                if (knownEmail) return;
+                setEmail(event.target.value);
+                setError(null);
+                setNotice(null);
+              }}
+              className={cn(
+                resetEmailFieldClass,
+                knownEmail && "bg-[#F7FBFF]/70",
+              )}
+            />
+          </label>
+
+          {error ? (
+            <p className="font-sans text-xs font-semibold text-red-600" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          {notice ? (
+            <p className="rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-xs leading-relaxed text-[#031F82]">
+              {notice}
+            </p>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={isSending || !email.trim()}
+            className={cn("h-touch w-full px-6 shadow-md", orangeCtaClass)}
+          >
+            {isSending ? copy.passwordResetSending : copy.passwordResetSubmit}
+          </button>
+        </form>
+      )}
+
+      <button
+        type="button"
+        onClick={handleClose}
+        className="mt-3 w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/60"
+      >
+        {copy.passwordResetCancel}
+      </button>
+    </ModalShell>
+  );
+}
+
 export function HomeDashboard() {
   const router = useRouter();
   const { username, joinDate, isLoading } = useDashboardUser();
@@ -440,6 +592,7 @@ export function HomeDashboard() {
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pinModalMode, setPinModalMode] = useState<"verify" | "setup">("verify");
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
+  const [passwordResetOpen, setPasswordResetOpen] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinConfirmInput, setPinConfirmInput] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
@@ -505,6 +658,8 @@ export function HomeDashboard() {
           isLoading={isLoading}
         />
 
+        <SettingsTestingViewToggle />
+
         <nav
           aria-label="Account settings"
           className={cn(floatingPanelClass, "divide-y divide-[#BDE9FB]/60 px-3")}
@@ -512,7 +667,7 @@ export function HomeDashboard() {
           <SettingsRow
             icon={KeyIcon}
             label={copy.account.passwordReset}
-            onClick={() => router.push("/onboarding/sign-in")}
+            onClick={() => setPasswordResetOpen(true)}
           />
           <SettingsRow
             icon={LockIcon}
@@ -544,6 +699,12 @@ export function HomeDashboard() {
           onLock={() => setParentHubUnlocked(false)}
         />
       </div>
+
+      <PasswordResetModal
+        isOpen={passwordResetOpen}
+        copy={copy.account}
+        onClose={() => setPasswordResetOpen(false)}
+      />
 
       <ChangeParentPinModal
         isOpen={changePinModalOpen}

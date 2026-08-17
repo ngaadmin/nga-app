@@ -16,6 +16,7 @@ import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/cop
 import { ADVANCED_MONEY_TOOLS_HREF } from "@/lib/dashboard/advanced-money-tools/nav";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { useVaultActions } from "@/lib/dashboard/vault/use-vault-actions";
+import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
 import type { VaultBucketId } from "@/lib/dashboard/vault-buckets";
 import type { VaultIncomeSourceId } from "@/lib/dashboard/vault-income-sources";
 import { vaultBucketsWithDisplayNames } from "@/lib/dashboard/vault/bucket-display-name";
@@ -48,6 +49,7 @@ export function VaultDashboard() {
     handleResetAllSavingsGoalBalances,
     handleResetBucketBalance,
   } = useVaultActions();
+  const advancedMoneyUnlocked = useTestingPremiumUnlocked();
 
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
@@ -126,7 +128,7 @@ export function VaultDashboard() {
         <button
           type="button"
           onClick={() => {
-            if (isPremium) {
+            if (advancedMoneyUnlocked) {
               router.push(ADVANCED_MONEY_TOOLS_HREF);
               return;
             }
@@ -136,7 +138,7 @@ export function VaultDashboard() {
           className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left shadow-md transition-transform active:scale-[0.99]"
         >
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/40 text-[#031F82]">
-            {isPremium ? (
+            {advancedMoneyUnlocked ? (
               <span aria-hidden className="text-lg">
                 📈
               </span>
@@ -211,6 +213,7 @@ export function VaultDashboard() {
       <PremiumUpgradeModal
         isOpen={advancedMoneyUpgradeOpen}
         onClose={() => setAdvancedMoneyUpgradeOpen(false)}
+        onUnlock={() => router.push(ADVANCED_MONEY_TOOLS_HREF)}
         title={advancedMoneyToolsCopy.lockedTitle}
         body={advancedMoneyToolsCopy.lockedBody}
         titleId="vault-advanced-money-premium-title"

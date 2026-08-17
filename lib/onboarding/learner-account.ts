@@ -13,6 +13,7 @@ export type LearnerAccountSnapshot = {
   consentApprovedAt: string | null;
   parentEmail: string | null;
   learnerEmail: string | null;
+  mustChangePassword?: boolean;
 };
 
 export type LearnerConsentStatus = {
@@ -154,13 +155,14 @@ async function loadLearnerAccountById(
     .eq("id", userId)
     .maybeSingle();
 
-  if (error || !profile?.id || !profile.username) return null;
+  if (error || !profile?.id) return null;
   if (
     profile.account_role !== "child" &&
     profile.account_role !== "parent_master"
   ) {
     return null;
   }
+  if (profile.account_role === "child" && !profile.username) return null;
   if (
     profile.account_status !== "pending_consent" &&
     profile.account_status !== "active"
@@ -168,23 +170,43 @@ async function loadLearnerAccountById(
     return null;
   }
 
-  const parentEmail = await loadLatestParentEmail(admin, userId);
+  const { data: authUser } = await admin.auth.admin.getUserById(userId);
+  const mustChangePassword =
+    authUser.user?.user_metadata?.mustChangePassword === true;
+
+  const normalizedAuthEmail =
+    authEmail && EMAIL_PATTERN.test(authEmail.trim().toLowerCase())
+      ? authEmail.trim().toLowerCase()
+      : null;
+  const parentEmail =
+    profile.account_role === "parent_master"
+      ? normalizedAuthEmail
+      : await loadLatestParentEmail(admin, userId);
   const learnerEmail =
     profile.account_role === "parent_master"
-      ? authEmail
+      ? normalizedAuthEmail
       : isPlaceholderAuthEmail(authEmail)
         ? null
-        : authEmail;
+        : normalizedAuthEmail;
+
+  const username =
+    typeof profile.username === "string" && profile.username.trim()
+      ? profile.username.trim()
+      : profile.account_role === "parent_master"
+        ? `p${userId.replace(/-/g, "").slice(0, 19)}`
+        : "";
+  if (!username) return null;
 
   return {
     userId: profile.id,
-    username: profile.username,
+    username,
     birthYear: typeof profile.birth_year === "number" ? profile.birth_year : null,
     accountRole: profile.account_role,
     accountStatus: profile.account_status,
     consentApprovedAt: profile.consent_approved_at ?? null,
     parentEmail,
     learnerEmail,
+    mustChangePassword,
   };
 }
 
@@ -206,4 +228,25 @@ async function loadLatestParentEmail(
 
 function isPlaceholderAuthEmail(email: string | null): boolean {
   return Boolean(email?.toLowerCase().endsWith(".invalid"));
+}
+
+export async function updateSignedInPassword(
+  password: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const trimmed = password.trim();
+  if (trimmed.length < 6) {
+    return { ok: false, error: "Use at least 6 characters for your password." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({
+    password: trimmed,
+    data: { mustChangePassword: false },
+  });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
 }

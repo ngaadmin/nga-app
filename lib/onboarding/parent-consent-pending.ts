@@ -227,6 +227,17 @@ export function readPendingParentConsent(): PendingParentConsent | null {
   return entries[entries.length - 1] ?? null;
 }
 
+/** Local pending consents addressed to this parent/guardian email. */
+export function listPendingConsentsForEmail(
+  email: string,
+): PendingParentConsent[] {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized || !EMAIL_PATTERN.test(normalized)) return [];
+  return readAllPendingConsents().filter(
+    (entry) => entry.parentEmail.trim().toLowerCase() === normalized,
+  );
+}
+
 /** True when local pending claims still match the signed token payload. */
 function localPendingMatchesSignedClaims(
   local: PendingParentConsent,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { readUserSession, isGuestSession } from "@/lib/onboarding/guest-session";
+import { displayAccountIdentity } from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
 export type DashboardUserState = {
@@ -17,7 +18,7 @@ function readDashboardUserState(): DashboardUserState {
   const session = readUserSession();
   if (session) {
     return {
-      username: session.username,
+      username: displayAccountIdentity(session),
       joinDate: session.createdAt,
       isGuestMode: isGuestSession(session),
       isLoading: false,

@@ -29,6 +29,11 @@ export const ONBOARDING_ENTRY_PATH = "/" as const;
 export const ONBOARDING_START_PATH = "/onboarding/start" as const;
 export const ONBOARDING_SIGN_IN_PATH = "/onboarding/sign-in" as const;
 export const ONBOARDING_SIGN_UP_PATH = "/onboarding/sign-up" as const;
+export const DASHBOARD_SETTINGS_ACCOUNT_PATH =
+  "/dashboard/settings/account" as const;
+export const DASHBOARD_ADD_PROFILE_PATH =
+  "/dashboard/settings/add-profile" as const;
+export const DASHBOARD_ADD_LINKED_CHILD_PATH = DASHBOARD_ADD_PROFILE_PATH;
 export const ONBOARDING_SIGN_UP_PENDING_PATH =
   "/onboarding/sign-up/pending" as const;
 export const ONBOARDING_PARENT_CONSENT_PATH =
@@ -90,6 +95,8 @@ export type RegisteredProfileInput = {
   marketingOptIn?: boolean;
   /** Supabase Auth / profiles.id when this session is backed by a remote account. */
   supabaseUserId?: string;
+  /** Content track chosen at parent-add (or guest conversion). */
+  curriculumCohort?: MasteryCohort;
 };
 
 export type UserSession = {
@@ -271,7 +278,7 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     learnerEmail = undefined;
   }
 
-  if (requirements.requiresLearnerEmail && !learnerEmail) {
+  if (requirements.requiresLearnerEmail && !learnerEmail && !session.consentApprovedAt) {
     throw new Error("A valid learner email is required for this age band.");
   }
   if (requirements.requiresParentEmail && !parentEmail && ageTier === "explorer") {
@@ -459,11 +466,10 @@ export function convertToRegisteredProfile(
     learnerEmail = learnerEmail ?? legacyEmail;
   }
 
-  if (requirements.requiresLearnerEmail) {
-    if (!learnerEmail) {
-      throw new Error("A valid learner email is required for this age band.");
-    }
-  } else {
+  if (requirements.requiresLearnerEmail && !learnerEmail && !input.consentApprovedAt) {
+    throw new Error("A valid learner email is required for this age band.");
+  }
+  if (!requirements.requiresLearnerEmail) {
     learnerEmail = undefined;
   }
 
@@ -533,7 +539,7 @@ export function convertToRegisteredProfile(
     birthYear,
     birthYearLocked: true,
     ageTier,
-    curriculumCohort: existing?.curriculumCohort,
+    curriculumCohort: input.curriculumCohort ?? existing?.curriculumCohort,
     accountStatus,
     accountRole: input.accountRole,
     parentEmail,

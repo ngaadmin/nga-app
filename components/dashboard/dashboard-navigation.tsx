@@ -9,6 +9,7 @@ import {
   DASHBOARD_NAV_ITEMS,
 } from "@/lib/dashboard/navigation";
 import { withDashboardNavExtensions } from "@/lib/dashboard/dashboard-nav-extensions";
+import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 const DESKTOP_NAV_QUERY = "(min-width: 768px)";
@@ -37,7 +38,10 @@ function useIsDesktopNav() {
 
 export function DashboardNavigation() {
   const isDesktop = useIsDesktopNav();
-  const navItems = withDashboardNavExtensions(DASHBOARD_NAV_ITEMS);
+  const advancedMoneyUnlocked = useTestingPremiumUnlocked();
+  const navItems = withDashboardNavExtensions(DASHBOARD_NAV_ITEMS, {
+    advancedMoneyUnlocked,
+  });
 
   if (isDesktop) {
     return (

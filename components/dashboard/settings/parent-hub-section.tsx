@@ -20,6 +20,7 @@ import {
   useMasteryCohort,
   useUserSession,
 } from "@/lib/dashboard/use-user-session";
+import { useSettingsParentView, useTestingSettingsView } from "@/lib/dashboard/testing-settings-view";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
@@ -41,15 +42,18 @@ export function ParentHubSection({
   const { currencyCode } = useCurrency();
   const { audPer100Xp, xpExchangeRateSet } = useDashboardWallet();
   const session = useUserSession();
+  const testingView = useTestingSettingsView();
+  const isParentSettingsView = useSettingsParentView();
   const cohort = useMasteryCohort();
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
 
-  const isMaster = session?.accountRole === "parent_master";
-  // Exchange rate is parent-only. Learning track: Pathfinder + Maverick learners, plus master.
-  const showPointsConversion = isMaster;
+  const showPointsConversion = isParentSettingsView;
   const showLearningTrack =
-    isMaster || cohort === "pathfinder" || cohort === "maverick";
-  const requiresPin = isMaster;
+    isParentSettingsView || cohort === "pathfinder" || cohort === "maverick";
+  const requiresPin =
+    isParentSettingsView &&
+    session?.accountRole === "parent_master" &&
+    testingView !== "parent";
   const effectivelyUnlocked = !requiresPin || isUnlocked;
 
   const trackSummary = `${masteryCohortLabel(cohort)} · Ages ${masteryCohortAgeRangeLabel(cohort)}`;

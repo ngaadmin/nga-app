@@ -617,10 +617,47 @@ export function buildUsernameRecoveryEmail(
   data: UsernameRecoveryEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "learner";
-  const isExplorer = data.cohort === "explorer";
   const base = resolveAppUrl(appUrl);
   const signInUrl = `${base}/onboarding/sign-in`;
+  const linked = (data.linkedUsernames ?? [])
+    .map((name) => name.trim())
+    .filter(Boolean);
+  if (linked.length > 0) {
+    const subject = "Your NextGenAchiever$ learner usernames";
+    const preheader = "Learner usernames linked to this parent email";
+    const textLines = [
+      "Parents log in with this email. Learner logins use these usernames:",
+      "",
+      ...linked.map((name) => `- ${name}`),
+      "",
+      `Log back in: ${signInUrl}`,
+      "",
+      "- NextGenAchievers",
+    ];
+    const linkedHtml = linked
+      .map(
+        (name) =>
+          `<li style="margin:0 0 6px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(name)}</li>`,
+      )
+      .join("");
+    const html = wrapHtml({
+      header: subject,
+      preheader,
+      bodyInner: `
+        <p style="margin:0 0 16px;font-size:16px;">
+          Parents log in with this email. Learner logins use these usernames:
+        </p>
+        <ul style="margin:0 0 16px;padding-left:20px;">
+          ${linkedHtml}
+        </ul>
+        ${ctaButton("Log Back In", signInUrl)}
+      `,
+    });
+    return { subject, html, text: textLines.join("\n"), preheader };
+  }
+
+  const username = data.username.trim() || "learner";
+  const isExplorer = data.cohort === "explorer";
 
   if (isExplorer) {
     const masterUsername = data.masterUsername?.trim() || "";

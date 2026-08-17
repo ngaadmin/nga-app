@@ -7,7 +7,15 @@ import { OnboardingProgress } from "@/components/onboarding/onboarding-progress"
 import { Button, ButtonLink } from "@/components/ui/button";
 import { createParentMasterAndApprove } from "@/lib/onboarding/approve-consent-request";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
-import { displayUsernameOrEmpty } from "@/lib/onboarding/placeholder-username";
+import {
+  getBirthYearRangeLabel,
+  getEligibleBirthYears,
+  isEligibleBirthYear,
+} from "@/lib/onboarding/birth-years";
+import {
+  displayUsernameOrEmpty,
+  isInternalPlaceholderUsername,
+} from "@/lib/onboarding/placeholder-username";
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
@@ -97,6 +105,7 @@ type FormErrors = {
   password?: string;
   parentEmail?: string;
   parentalConsent?: string;
+  birthYear?: string;
   form?: string;
 };
 
@@ -119,19 +128,24 @@ export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingSession = useMemo(() => readUserSession(), []);
+  const birthYears = useMemo(() => getEligibleBirthYears(), []);
+  const birthYearLocked = existingSession?.birthYearLocked === true;
 
   const consentToken = (searchParams.get("token") ?? "").trim();
   const isParentMaster =
     searchParams.get("role") === "parent_master" && Boolean(consentToken);
 
-  const birthYear = useMemo(() => {
+  const [birthYear, setBirthYear] = useState<number | null>(() => {
     if (isParentMaster) return adultBirthYear();
     const fromQuery = searchParams.get("birthYear");
     if (fromQuery && Number.isInteger(Number(fromQuery))) {
       return Number(fromQuery);
     }
-    return existingSession?.birthYear ?? null;
-  }, [existingSession?.birthYear, isParentMaster, searchParams]);
+    if (birthYearLocked && existingSession?.birthYear) {
+      return existingSession.birthYear;
+    }
+    return null;
+  });
 
   const ageTier = birthYear ? getMasteryCohortFromBirthYear(birthYear) : null;
   const isExplorer = !isParentMaster && ageTier === "explorer";
@@ -158,11 +172,10 @@ export function SignUpForm() {
   const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
 
   useEffect(() => {
-    if (isParentMaster) return;
-    if (!birthYear || !existingSession?.birthYearLocked) {
-      router.replace(ONBOARDING_START_PATH);
+    if (isInternalPlaceholderUsername(username)) {
+      setUsername("");
     }
-  }, [birthYear, existingSession?.birthYearLocked, isParentMaster, router]);
+  }, [username]);
 
   useEffect(() => {
     if (!isParentMaster || !consentToken) return;
@@ -209,7 +222,7 @@ export function SignUpForm() {
         setParentMasterFlow(null);
         setParentConsentLoading(false);
         setErrors({
-          form: "A master account already exists for this email. Sign in to open your parent dashboard — this Pathfinder is already linked.",
+          form: "A master account already exists for this email. Sign in to open your parent dashboard - this Pathfinder is already linked.",
         });
         return;
       }
@@ -242,12 +255,13 @@ export function SignUpForm() {
         : isExplorer
           ? "Pick a username for your Explorer profile."
           : "Pick a username for your account.";
+    } else if (isInternalPlaceholderUsername(trimmedUsername)) {
+      next.username = "Pick a username you choose yourself.";
     } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
       next.username =
         "Use 2-20 letters, numbers, underscores, or hyphens only.";
     } else if (!isParentMaster && trimmedUsername) {
       // Username must be unique; the same parent email may link many children.
-      // Guest-step username is inherited and is not "taken".
       const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
       if (
         existingAccount &&
@@ -255,6 +269,14 @@ export function SignUpForm() {
         existingAccount.accessMode === "registered"
       ) {
         next.username = USERNAME_TAKEN_ERROR;
+      }
+    }
+
+    if (!isParentMaster) {
+      if (!birthYear) {
+        next.birthYear = "Select the learner's birth year to save this profile.";
+      } else if (!isEligibleBirthYear(birthYear)) {
+        next.birthYear = `Please choose a birth year between ${getBirthYearRangeLabel()}.`;
       }
     }
 
@@ -508,13 +530,19 @@ export function SignUpForm() {
               </label>
               <input
                 id="signup-username"
-                name="username"
+                name="chosen-username"
                 type="text"
-                autoComplete="username"
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 placeholder="Choose a username"
                 value={username}
                 onChange={(e) => {
-                  setUsername(e.target.value);
+                  const nextValue = e.target.value;
+                  setUsername(
+                    isInternalPlaceholderUsername(nextValue) ? "" : nextValue,
+                  );
                   clearError("username");
                 }}
                 aria-invalid={Boolean(errors.username)}
@@ -673,10 +701,6 @@ export function SignUpForm() {
     );
   }
 
-  if (!birthYear || !ageTier) {
-    return null;
-  }
-
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
@@ -684,12 +708,83 @@ export function SignUpForm() {
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            {cohortHeader(ageTier)}
+            {ageTier ? cohortHeader(ageTier) : "Save Your Progress"}
           </h1>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          <LockedBirthYearSummary birthYear={birthYear} ageTier={ageTier} />
+          {birthYearLocked && birthYear && ageTier ? (
+            <LockedBirthYearSummary birthYear={birthYear} ageTier={ageTier} />
+          ) : (
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-birth-year"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                What year was the learner born?
+              </label>
+              <div className="relative">
+                <select
+                  id="signup-birth-year"
+                  name="birthYear"
+                  value={birthYear ?? ""}
+                  onChange={(e) => {
+                    const next = Number(e.target.value);
+                    setBirthYear(Number.isInteger(next) ? next : null);
+                    clearError("birthYear");
+                  }}
+                  aria-invalid={Boolean(errors.birthYear)}
+                  className={cn(
+                    fieldBase,
+                    "appearance-none pr-10",
+                    !birthYear && "text-nga-slate/60",
+                    errors.birthYear && "border-red-400 focus:border-red-500",
+                  )}
+                >
+                  <option value="" disabled>
+                    Select birth year
+                  </option>
+                  {birthYears.map((year) => (
+                    <option key={year} value={year} className="text-nga-ink">
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                <span
+                  className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-nga-secondary"
+                  aria-hidden
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4 6L8 10L12 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <p className="font-sans text-sm leading-relaxed text-nga-slate">
+                We use this to set the right tools and parent safeguards. We
+                never share it.
+              </p>
+              {errors.birthYear ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.birthYear}
+                </p>
+              ) : null}
+            </div>
+          )}
 
           {isExplorer ? (
             <p className="font-sans text-sm font-bold leading-relaxed text-purple-700">
@@ -707,13 +802,19 @@ export function SignUpForm() {
             </label>
             <input
               id="signup-username"
-              name="username"
+              name="chosen-username"
               type="text"
-              autoComplete="username"
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder={isExplorer ? "e.g. CashDragon88" : "Choose a username"}
               value={username}
               onChange={(e) => {
-                setUsername(e.target.value);
+                const nextValue = e.target.value;
+                setUsername(
+                  isInternalPlaceholderUsername(nextValue) ? "" : nextValue,
+                );
                 clearError("username");
               }}
               aria-invalid={Boolean(errors.username)}

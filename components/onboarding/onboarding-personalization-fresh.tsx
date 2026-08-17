@@ -8,9 +8,8 @@ import {
 } from "@/lib/onboarding/guest-session";
 
 /**
- * Clears only the user session so "Try the Free App" / fresh entry always
- * requires the birth-year personalization gate (cohort assignment), without
- * wiping wallet, academy, or skill progress.
+ * Clears only the user session so a fresh "Try the Free App" visit
+ * shows the track picker again, without wiping wallet, academy, or skill progress.
  *
  * Supports `?fresh=1` and legacy `?guest=1`.
  */

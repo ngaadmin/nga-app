@@ -63,3 +63,18 @@ export function getYouthBirthYearsForCohort(
     );
   });
 }
+
+/**
+ * Mid-band birth year used only as a content stand-in for guest play.
+ * Never treat this as verified age — signup still confirms the real year.
+ */
+export function representativeBirthYearForCohort(
+  cohort: MasteryCohort,
+  referenceDate = new Date(),
+): number {
+  const years = getYouthBirthYearsForCohort(cohort, referenceDate);
+  const mid = years[Math.floor(years.length / 2)];
+  if (mid) return mid;
+  const fallbackAge = cohort === "explorer" ? 11 : cohort === "pathfinder" ? 14 : 16;
+  return referenceDate.getFullYear() - fallbackAge - 1;
+}

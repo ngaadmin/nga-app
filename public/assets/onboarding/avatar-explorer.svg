@@ -1,0 +1,5 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Explorer avatar placeholder">
+  <circle cx="100" cy="100" r="92" fill="#E8F9FD"/>
+  <text x="100" y="88" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#031F82">Explorer</text>
+  <text x="100" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#1E3A5F">Drop avatar here</text>
+</svg>

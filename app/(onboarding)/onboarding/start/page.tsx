@@ -3,9 +3,9 @@ import { OnboardingStartClient } from "@/components/onboarding/onboarding-start-
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
-  title: "Create Your Profile",
+  title: "Pick Your Track",
   description:
-    "Pick a nickname and birth year - your 5-second personalization gate.",
+    "Choose Explorer, Pathfinder, or Maverick and jump straight into the app.",
 };
 
 export default function OnboardingStartPage() {

@@ -8,7 +8,8 @@ import {
   readUserSession,
 } from "@/lib/onboarding/guest-session";
 
-/** Sends completed guest sessions straight to the Academy map. */
+/** Sends completed sessions straight to the Academy map. Not used on the
+ * track-picker screen - that view must wait for an explicit avatar tap. */
 export function OnboardingSessionRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();

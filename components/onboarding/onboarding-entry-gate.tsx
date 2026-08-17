@@ -1,41 +1,35 @@
+import Image from "next/image";
 import { ButtonLink } from "@/components/ui/button";
+
+const FINN_HOMEPAGE_SRC =
+  "/assets/illustrations/website/Finn_homepage.png";
 
 export function OnboardingEntryGate() {
   return (
-    <section className="flex flex-1 flex-col justify-center py-8 lg:py-12">
-      <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-        <div
-          className="order-1 flex min-h-[220px] items-center justify-center rounded-nga-xl border-2 border-dashed border-nga-panel bg-nga-mist/30 p-8 sm:min-h-[280px] lg:order-none lg:min-h-[360px]"
-          aria-label="Character illustration placeholder"
-        >
-          <div className="text-center">
-            <p className="font-heading text-sm font-bold uppercase tracking-widest text-nga-secondary">
-              Your guide
-            </p>
-            <p className="mt-2 max-w-xs font-sans text-sm text-nga-slate">
-              Vector character / avatar illustration ships here - your savvy
-              mentor on the money journey.
-            </p>
-          </div>
+    <section className="flex flex-1 flex-col justify-center py-6 sm:py-8">
+      <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-6">
+        <div className="order-1 flex items-center justify-center lg:order-none">
+          <Image
+            src={FINN_HOMEPAGE_SRC}
+            alt="Finn, your money-skills guide"
+            width={720}
+            height={720}
+            className="h-auto w-full max-w-[22rem] object-contain sm:max-w-[28rem] lg:max-w-none"
+            priority
+            unoptimized
+          />
         </div>
 
         <div className="order-2 flex flex-col items-center text-center lg:order-none lg:items-start lg:text-left">
-          <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15]">
-            Welcome to NextGenAchievers
+          <h1 className="font-heading text-3xl font-black leading-[1.08] tracking-tight text-nga-primary sm:text-4xl lg:text-5xl lg:leading-[1.08]">
+            Finally. A fun way to learn money skills.
           </h1>
-          <p className="mt-4 max-w-md font-sans text-base leading-relaxed text-nga-slate sm:text-lg">
-            The fun, real-world way to learn money skills.
+          <p className="mt-3 max-w-md font-sans text-base font-normal leading-relaxed text-nga-slate sm:mt-4 sm:text-lg">
+            Built like a game. Designed for real life.
           </p>
-          <div className="mt-8 flex w-full max-w-sm flex-col gap-4">
-            <ButtonLink href="/onboarding/start?fresh=1" variant="cta" fullWidth>
+          <div className="mt-6 w-full max-w-sm sm:mt-8">
+            <ButtonLink href="/onboarding/start" variant="cta" fullWidth>
               Try the Free App
-            </ButtonLink>
-            <ButtonLink
-              href="/onboarding/sign-in"
-              variant="secondary-outline"
-              fullWidth
-            >
-              Create Account / Sign In
             </ButtonLink>
           </div>
         </div>

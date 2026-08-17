@@ -35,7 +35,7 @@ export function SignUpPendingPanel() {
           </h1>
           <p className="font-sans text-sm leading-relaxed text-nga-ink sm:text-base">
             {approved
-              ? "Your parent or guardian approved your account. Your progress is saved — keep playing whenever you want."
+              ? "Your parent or guardian approved your account. Your progress is saved - keep playing whenever you want."
               : "You can keep playing on this device right now. Once your parent or guardian approves your account, your progress will be saved automatically."}
           </p>
         </div>

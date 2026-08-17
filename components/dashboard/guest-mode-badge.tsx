@@ -34,10 +34,7 @@ export function GuestModeBadge({
   const [modalOpen, setModalOpen] = useState(false);
   const displayLabel = formatPlayingAsLabel(label);
   const session = useUserSession();
-  const showSaveProgressHint =
-    interactive &&
-    session?.accessMode === "guest" &&
-    session.ageTier === "explorer";
+  const showSaveProgressHint = interactive && session?.accessMode === "guest";
 
   const itemClass = cn(
     STATUS_BANNER_ITEM_CLASS,

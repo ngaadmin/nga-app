@@ -6,7 +6,7 @@ import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-stat
 
 /**
  * Dev / QA helper: visit `/onboarding/start?reset=1` to wipe guest session data
- * and land on the birth-year personalization gate as a new user.
+ * and land on the track picker as a new user.
  */
 export function OnboardingFreshStartReset() {
   const router = useRouter();

@@ -46,6 +46,13 @@ export type GuestProfileInput = {
   username: string;
   birthYear: number;
   genericProfileId?: string;
+  /** Content track for guest play. Not a legal age verification. */
+  curriculumCohort?: MasteryCohort;
+  /**
+   * True once the learner confirmed a real birth year (account creation).
+   * Guest track-picker sessions stay unlocked.
+   */
+  birthYearLocked?: boolean;
 };
 
 export type RegisteredProfileInput = {
@@ -416,8 +423,9 @@ export function createGuestAccessSession(
     accessMode: "guest",
     username,
     birthYear,
-    birthYearLocked: true,
+    birthYearLocked: input.birthYearLocked !== false,
     ageTier: getComplianceTierFromBirthYear(birthYear),
+    curriculumCohort: input.curriculumCohort,
     accountStatus: "GUEST",
     createdAt: new Date().toISOString(),
     genericProfileId: input.genericProfileId,
@@ -639,15 +647,24 @@ export function isGuestSession(session: UserSession | null): boolean {
   return session?.accessMode === "guest" || session?.accountStatus === "GUEST";
 }
 
-/** True when the user completed the personalization gate (birth year + nickname). */
+/**
+ * True when the learner can use the app shell.
+ * Guest track selection is enough; legal birth year is confirmed at signup.
+ */
 export function hasCompletedPersonalizationGate(
   session: UserSession | null,
 ): boolean {
-  return (
-    session !== null &&
-    session.birthYearLocked &&
-    isEligibleBirthYear(session.birthYear) &&
-    session.username.trim().length > 0
-  );
+  if (!session || !session.username.trim()) return false;
+
+  if (
+    session.accessMode === "guest" &&
+    (session.curriculumCohort === "explorer" ||
+      session.curriculumCohort === "pathfinder" ||
+      session.curriculumCohort === "maverick")
+  ) {
+    return true;
+  }
+
+  return session.birthYearLocked && isEligibleBirthYear(session.birthYear);
 }
 

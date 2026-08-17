@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import {
   DASHBOARD_ACADEMY_PATH,
-  ONBOARDING_START_PATH,
+  ONBOARDING_ENTRY_PATH,
 } from "@/lib/onboarding/guest-session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,5 +15,5 @@ export default async function HomePage() {
     redirect(DASHBOARD_ACADEMY_PATH);
   }
 
-  redirect(ONBOARDING_START_PATH);
+  redirect(ONBOARDING_ENTRY_PATH);
 }

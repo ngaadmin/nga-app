@@ -20,10 +20,10 @@ export function ParentConversionRatePanel({
   className,
 }: ParentConversionRatePanelProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
-  const parentModeHint = copyMatrix.dashboard.settings.parentMode.enabledHint;
   const vaultHint = copyMatrix.dashboard.settings.conversion.vaultCashInHint;
   const { currencyCode } = useCurrency();
-  const { audSliderIndex, setAudSliderIndex, audPer100Xp } = useDashboardWallet();
+  const { audSliderIndex, setAudSliderIndex, audPer100Xp, xpExchangeRateSet } =
+    useDashboardWallet();
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
 
   if (!isEditable) {
@@ -36,7 +36,9 @@ export function ParentConversionRatePanel({
           {vaultHint}
         </p>
         <p className="mt-2 font-heading text-base font-extrabold text-[#031F82]">
-          {conversionRateLabel}
+          {xpExchangeRateSet
+            ? conversionRateLabel
+            : copyMatrix.dashboard.settings.parentHubFeatures.pointsConversionNotSet}
         </p>
       </div>
     );
@@ -66,11 +68,15 @@ export function ParentConversionRatePanel({
         />
       </label>
       <p className="mt-3 font-sans text-[10px] leading-relaxed text-[#1E3A5F]">
-        {conversionCopy.summary}
+        {xpExchangeRateSet ? conversionCopy.summary : conversionCopy.unsetHint}
       </p>
-      <p className="mt-2 font-sans text-[10px] leading-relaxed text-[#0CC1E0]">
-        {parentModeHint}
-      </p>
+      <button
+        type="button"
+        onClick={() => setAudSliderIndex(audSliderIndex)}
+        className="mt-3 h-touch w-full rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2"
+      >
+        {conversionCopy.saveRate}
+      </button>
     </div>
   );
 }

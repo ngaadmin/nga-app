@@ -8,13 +8,15 @@ import {
 export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_v2";
 
 /** Bump when persisted wallet shape or defaults change. */
-export const WALLET_SCHEMA_VERSION = 6;
+export const WALLET_SCHEMA_VERSION = 7;
 
 export type PersistedDashboardWallet = {
   schemaVersion?: number;
   totalPoints: number;
   lifetimePointsEarned: number;
   audSliderIndex: number;
+  /** True after a parent saves an XP exchange rate. */
+  xpExchangeRateSet: boolean;
 };
 
 /** Fresh profiles start with zero XP until earned in-app. */
@@ -24,6 +26,7 @@ export function freshDashboardWalletState(): PersistedDashboardWallet {
     totalPoints: 0,
     lifetimePointsEarned: 0,
     audSliderIndex: DEFAULT_AUD_SLIDER_INDEX,
+    xpExchangeRateSet: false,
   };
 }
 
@@ -63,6 +66,7 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
       totalPoints,
       lifetimePointsEarned,
       audSliderIndex: parsed.audSliderIndex,
+      xpExchangeRateSet: parsed.xpExchangeRateSet === true,
     };
   } catch {
     return null;

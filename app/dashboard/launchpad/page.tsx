@@ -1,12 +1,18 @@
-﻿import { redirect } from "next/navigation";
+﻿import type { Metadata } from "next";
 import { LaunchpadDashboard } from "@/components/dashboard/launchpad/launchpad-dashboard";
-import { SHOW_LAUNCHPAD } from "@/lib/dashboard/feature-flags";
-import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
+import { copyMatrix } from "@/constants/copyMatrix";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: copyMatrix.dashboard.launchpad.title,
+  description: copyMatrix.dashboard.launchpad.description,
+};
 
 export default function LaunchpadPage() {
-  if (!SHOW_LAUNCHPAD) {
-    redirect(DASHBOARD_DEFAULT_HREF);
-  }
-
-  return <LaunchpadDashboard />;
+  return (
+    <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col bg-white">
+      <LaunchpadDashboard />
+    </div>
+  );
 }

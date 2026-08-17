@@ -39,14 +39,14 @@ export function ParentHubSection({
   const copy = copyMatrix.dashboard.settings.parentHub;
   const featuresCopy = copyMatrix.dashboard.settings.parentHubFeatures;
   const { currencyCode } = useCurrency();
-  const { audPer100Xp } = useDashboardWallet();
+  const { audPer100Xp, xpExchangeRateSet } = useDashboardWallet();
   const session = useUserSession();
   const cohort = useMasteryCohort();
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
 
   const isMaster = session?.accountRole === "parent_master";
-  // Master: both. Learner: conversion = Maverick only; track = Pathfinder + Maverick.
-  const showPointsConversion = isMaster || cohort === "maverick";
+  // Exchange rate is parent-only. Learning track: Pathfinder + Maverick learners, plus master.
+  const showPointsConversion = isMaster;
   const showLearningTrack =
     isMaster || cohort === "pathfinder" || cohort === "maverick";
   const requiresPin = isMaster;
@@ -134,7 +134,9 @@ export function ParentHubSection({
             title={featuresCopy.pointsConversion}
             summary={
               effectivelyUnlocked
-                ? conversionRateLabel
+                ? xpExchangeRateSet
+                  ? conversionRateLabel
+                  : featuresCopy.pointsConversionNotSet
                 : featuresCopy.pointsConversionSummaryLocked
             }
             isExpanded={effectivelyUnlocked && expandedFeature === "pointsConversion"}

@@ -149,6 +149,7 @@ export function buildCohortAvailabilityMap(
   return map;
 }
 
+/** Catalog of business ventures. Freemium unlocks Lemonade Stand + Dog Walking; the rest are Premium. */
 export const VENTURE_BLUEPRINTS: readonly VentureBlueprint[] = [
   {
     id: "lemonade-stand",
@@ -186,7 +187,7 @@ export const VENTURE_BLUEPRINTS: readonly VentureBlueprint[] = [
     id: "car-wash",
     title: "Car Wash",
     emoji: "🚗",
-    tier: "freemium",
+    tier: "premium",
     cohorts: ["explorer-supervised", "pathfinder", "maverick"],
     description:
       "Turn dirty cars into quick cash while keeping your street looking spotless.",

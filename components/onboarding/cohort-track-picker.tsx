@@ -40,40 +40,40 @@ export function CohortTrackPicker() {
   }
 
   return (
-    <section className="flex flex-1 flex-col justify-start pt-4 pb-8 sm:pt-8 sm:pb-12">
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center px-0">
-        <div className="flex w-full items-start justify-center gap-1 sm:gap-8">
-          {MASTERY_COHORT_ORDER.map((cohort) => {
-            const label = masteryCohortLabel(cohort);
-            const ageRange = masteryCohortAgeRangeLabel(cohort);
+    <section className="flex min-h-0 flex-1 flex-col py-2 sm:pt-8 sm:pb-12">
+      <div className="mx-auto grid min-h-0 w-full max-w-4xl flex-1 grid-rows-3 gap-1 px-0 sm:flex-none sm:grid-cols-3 sm:grid-rows-1 sm:items-start sm:gap-8">
+        {MASTERY_COHORT_ORDER.map((cohort) => {
+          const label = masteryCohortLabel(cohort);
+          const ageRange = masteryCohortAgeRangeLabel(cohort);
 
-            return (
-              <button
-                key={cohort}
-                type="button"
-                onClick={() => handleSelect(cohort)}
-                className="flex min-w-0 flex-1 flex-col items-center bg-transparent p-0 text-center transition-transform hover:scale-[1.03] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary"
-              >
-                <span className="relative block aspect-square w-full max-w-[11.5rem] sm:max-w-[16rem]">
+          return (
+            <button
+              key={cohort}
+              type="button"
+              onClick={() => handleSelect(cohort)}
+              className="flex min-h-0 min-w-0 flex-col items-center justify-center bg-transparent px-2 py-1 text-center transition-transform hover:scale-[1.03] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary sm:px-0 sm:py-0"
+            >
+              <span className="flex min-h-0 w-full flex-1 items-center justify-center sm:relative sm:aspect-square sm:max-w-[16rem] sm:flex-none">
+                <span className="relative aspect-square h-full max-w-full sm:absolute sm:inset-0 sm:h-auto sm:w-auto sm:max-w-none">
                   <Image
                     src={TRACK_AVATAR_SRC[cohort]}
                     alt={`${label} avatar`}
                     fill
-                    sizes="(max-width: 640px) 32vw, 256px"
+                    sizes="(max-width: 639px) 42vw, 256px"
                     className="object-contain"
                     unoptimized
                   />
                 </span>
-                <span className="mt-3 font-heading text-sm font-extrabold text-nga-primary sm:text-xl">
-                  {label}
-                </span>
-                <span className="mt-1 font-heading text-xs font-bold text-nga-ink sm:text-base">
-                  {ageRange} years
-                </span>
-              </button>
-            );
-          })}
-        </div>
+              </span>
+              <span className="mt-1 shrink-0 font-heading text-2xl font-extrabold leading-tight text-nga-primary sm:mt-3 sm:text-xl">
+                {label}
+              </span>
+              <span className="mt-0.5 shrink-0 font-heading text-lg font-bold leading-tight text-nga-ink sm:mt-1 sm:text-base">
+                {ageRange} years
+              </span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

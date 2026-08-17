@@ -1,12 +1,6 @@
-import type { Metadata } from "next";
-import { AchievementsDashboard } from "@/components/achievements/achievements-dashboard";
-import { copyMatrix } from "@/constants/copyMatrix";
-
-export const metadata: Metadata = {
-  title: copyMatrix.dashboard.achievements.title,
-  description: copyMatrix.dashboard.achievements.description,
-};
+import { redirect } from "next/navigation";
+import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
 
 export default function AchievementsPage() {
-  return <AchievementsDashboard />;
+  redirect(DASHBOARD_DEFAULT_HREF);
 }

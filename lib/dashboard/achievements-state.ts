@@ -1,3 +1,14 @@
+/**
+ * Achievement content definitions.
+ *
+ * Consumers:
+ * - Skill medals: Achievements page
+ * - Money milestones (actions/savings): Vault
+ * - Learning streak milestones: Settings + top-bar day count
+ * - Monthly challenges + friends leaderboard: future Community hub
+ *   (`components/community`)
+ */
+
 export type MoneyMilestoneCategory = "action" | "streak" | "savings";
 
 export type MoneyMilestone = {
@@ -269,6 +280,16 @@ export const MONTHLY_CHALLENGES: readonly MonthlyChallenge[] = [
 /** Alternating mock: odd indices achieved (Feb, Apr, Jun, …). */
 export function isDemoMonthlyChallengeAchieved(monthIndex: number): boolean {
   return monthIndex % 2 === 1;
+}
+
+/** Months after the current calendar month are treated as upcoming. */
+export function isFutureMonthlyChallenge(monthIndex: number): boolean {
+  return monthIndex > new Date().getMonth();
+}
+
+/** Stable demo social proof for Community challenge tiles. */
+export function demoMonthlyChallengeAchieverCount(monthIndex: number): number {
+  return 380 + ((monthIndex * 173) % 1640);
 }
 
 export type AchievementFriend = {

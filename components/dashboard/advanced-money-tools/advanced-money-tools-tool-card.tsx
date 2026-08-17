@@ -132,3 +132,32 @@ export function LedgerTile({ title, subtitle, className }: LedgerTileProps) {
     </div>
   );
 }
+
+type MoneyMilestonesTileProps = {
+  title: string;
+  className?: string;
+};
+
+export function MoneyMilestonesTile({ title, className }: MoneyMilestonesTileProps) {
+  return (
+    <div
+      className={cn(
+        "flex w-full max-w-[9rem] flex-col items-center rounded-xl border-2 border-[#BDE9FB] bg-[#F0FBFF]/50 px-3 py-4 text-center",
+        className,
+      )}
+    >
+      <span
+        className="flex size-12 items-center justify-center rounded-full border-2 border-[#0CC1E0]/30 bg-white text-2xl"
+        aria-hidden
+      >
+        🏅
+      </span>
+      <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+        {title}
+      </p>
+      <p className="font-heading text-sm font-extrabold leading-tight text-[#031F82]">
+        Wins
+      </p>
+    </div>
+  );
+}

@@ -18,4 +18,15 @@ export const advancedMoneyToolsCopy = {
   yearsSavedLabel: "Years Saved",
   expectedRoiLabel: "Expected Return (ROI)",
   customYearsSavedAriaLabel: "Custom years saved",
+  moneyMilestonesLabel: "Money Milestones",
+  moneyMilestonesDescription:
+    "Financial wins only — tap an earned badge for the real-world story.",
+  moneyMilestonesExpandAriaLabel: "Open money milestone badges",
+  moneyMilestonesTileLabel: "Milestones",
+  lockedTitle: "Advanced Money is Premium",
+  lockedBody:
+    "Growth Potential, Ledger, and Money Milestones unlock with Premium. Freemium keeps the core Vault.",
+  vaultEntryLabel: "Advanced Money",
+  vaultEntryBody: "Growth Potential, Ledger, and Money Milestones.",
+  vaultEntryAriaLabel: "Open Advanced Money",
 } as const;

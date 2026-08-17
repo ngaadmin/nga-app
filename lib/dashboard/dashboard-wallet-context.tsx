@@ -29,6 +29,8 @@ type DashboardWalletContextValue = {
   lifetimePointsEarned: number;
   audSliderIndex: number;
   audPer100Xp: number;
+  /** Parent has saved an XP-to-money exchange rate. */
+  xpExchangeRateSet: boolean;
   setAudSliderIndex: (index: number) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
   awardLessonXp: (points: number) => void;
@@ -49,7 +51,12 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const [lifetimePointsEarned, setLifetimePointsEarned] = useState<number>(
     () => defaults.lifetimePointsEarned,
   );
-  const [audSliderIndex, setAudSliderIndex] = useState(() => defaults.audSliderIndex);
+  const [audSliderIndex, setAudSliderIndexState] = useState(
+    () => defaults.audSliderIndex,
+  );
+  const [xpExchangeRateSet, setXpExchangeRateSet] = useState(
+    () => defaults.xpExchangeRateSet,
+  );
   const [walletHydrated, setWalletHydrated] = useState(false);
 
   useEffect(() => {
@@ -57,7 +64,8 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     if (persisted) {
       setTotalPoints(persisted.totalPoints);
       setLifetimePointsEarned(persisted.lifetimePointsEarned);
-      setAudSliderIndex(persisted.audSliderIndex);
+      setAudSliderIndexState(persisted.audSliderIndex);
+      setXpExchangeRateSet(persisted.xpExchangeRateSet);
     }
     setWalletHydrated(true);
   }, []);
@@ -69,8 +77,20 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       totalPoints,
       lifetimePointsEarned,
       audSliderIndex,
+      xpExchangeRateSet,
     });
-  }, [audSliderIndex, lifetimePointsEarned, totalPoints, walletHydrated]);
+  }, [
+    audSliderIndex,
+    lifetimePointsEarned,
+    totalPoints,
+    walletHydrated,
+    xpExchangeRateSet,
+  ]);
+
+  const setAudSliderIndex = useCallback((index: number) => {
+    setAudSliderIndexState(index);
+    setXpExchangeRateSet(true);
+  }, []);
 
   const audPer100Xp = useMemo(
     () => audPerXpBlockFromSliderIndex(audSliderIndex),
@@ -113,6 +133,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       lifetimePointsEarned,
       audSliderIndex,
       audPer100Xp,
+      xpExchangeRateSet,
       setAudSliderIndex,
       claimPointsForVault,
       awardLessonXp,
@@ -123,7 +144,9 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       awardLessonXp,
       claimPointsForVault,
       lifetimePointsEarned,
+      setAudSliderIndex,
       totalPoints,
+      xpExchangeRateSet,
     ],
   );
 

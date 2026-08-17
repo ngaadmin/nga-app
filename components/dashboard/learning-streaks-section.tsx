@@ -1,0 +1,124 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS } from "@/components/achievements/achievements-carousel";
+import { MilestoneCongratsModal } from "@/components/achievements/milestone-congrats-modal";
+import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
+import {
+  DEMO_EARNED_STREAK_IDS,
+  LEARNING_STREAK_MILESTONES,
+  type MoneyMilestone,
+} from "@/lib/dashboard/achievements-state";
+import { cn } from "@/lib/utils/cn";
+
+type StreakBadgeProps = {
+  milestone: MoneyMilestone;
+  earned: boolean;
+  onSelect: (milestone: MoneyMilestone) => void;
+};
+
+function StreakBadge({ milestone, earned, onSelect }: StreakBadgeProps) {
+  return (
+    <button
+      type="button"
+      disabled={!earned}
+      onClick={() => earned && onSelect(milestone)}
+      aria-label={
+        earned
+          ? `${milestone.label} streak - earned, tap for details`
+          : `${milestone.label} streak - locked`
+      }
+      className={cn(
+        "flex w-[4.75rem] shrink-0 snap-center flex-col items-center px-1 py-2 text-center transition-transform sm:w-[5.25rem]",
+        earned && "cursor-pointer hover:scale-[1.03] active:scale-[0.98]",
+        !earned && "cursor-default opacity-70",
+      )}
+    >
+      <span
+        className={cn(
+          "flex size-12 items-center justify-center rounded-full text-lg sm:size-14",
+          earned
+            ? "border-b-4 border-[#C88202] bg-[#FFA503] text-[#031F82] shadow-[0_4px_12px_rgba(255,165,3,0.4)]"
+            : "border-2 border-dashed border-[#C5D0D8] bg-white text-[#8FA3B0]",
+        )}
+        aria-hidden
+      >
+        {milestone.emoji}
+      </span>
+      <span
+        className={cn(
+          "mt-2 font-heading text-[9px] font-bold leading-tight sm:text-[10px]",
+          earned ? "text-[#031F82]" : "text-[#031F82]/45",
+        )}
+      >
+        {milestone.label}
+      </span>
+    </button>
+  );
+}
+
+/** Detailed streak badges — opened from the top-bar streak icon. */
+export function LearningStreaksSection({
+  hideHeading = false,
+}: {
+  hideHeading?: boolean;
+}) {
+  const [earnedIds] = useState<ReadonlySet<string>>(DEMO_EARNED_STREAK_IDS);
+  const [activeMilestone, setActiveMilestone] = useState<MoneyMilestone | null>(
+    null,
+  );
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleSelect = useCallback((milestone: MoneyMilestone) => {
+    setActiveMilestone(milestone);
+    setModalOpen(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setModalOpen(false);
+    setActiveMilestone(null);
+  }, []);
+
+  return (
+    <section
+      aria-labelledby={hideHeading ? undefined : "learning-streaks-heading"}
+      aria-label={hideHeading ? "Learning streak badges" : undefined}
+      className="w-full shrink-0"
+    >
+      {hideHeading ? null : (
+        <>
+          <DashboardSectionHeading id="learning-streaks-heading">
+            Learning Streaks
+          </DashboardSectionHeading>
+          <p className="mt-2 text-center font-sans text-[10px] leading-relaxed text-[#1E3A5F]/80">
+            Consistency awards - show up daily and stack learning momentum.
+          </p>
+        </>
+      )}
+
+      <div
+        aria-label="Learning streak badges"
+        className={cn(
+          ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS,
+          "rounded-2xl bg-white px-2 py-3 shadow-md",
+          hideHeading ? "mt-2" : "mt-4",
+        )}
+      >
+        {LEARNING_STREAK_MILESTONES.map((milestone) => (
+          <StreakBadge
+            key={milestone.id}
+            milestone={milestone}
+            earned={earnedIds.has(milestone.id)}
+            onSelect={handleSelect}
+          />
+        ))}
+      </div>
+
+      <MilestoneCongratsModal
+        milestone={activeMilestone}
+        isOpen={modalOpen}
+        onClose={handleClose}
+      />
+    </section>
+  );
+}

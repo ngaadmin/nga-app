@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { SHOW_LAUNCHPAD } from "./lib/dashboard/feature-flags";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -17,7 +16,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    const vaultRedirects = [
+    return [
       {
         source: "/dashboard/vault-v2",
         destination: "/dashboard/vault",
@@ -28,36 +27,6 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/vault",
         permanent: true,
       },
-    ];
-
-    if (!SHOW_LAUNCHPAD) {
-      return [
-        ...vaultRedirects,
-        {
-          source: "/dashboard/launchpad",
-          destination: "/dashboard/academy",
-          permanent: false,
-        },
-        {
-          source: "/dashboard/launchpad/:path*",
-          destination: "/dashboard/academy",
-          permanent: false,
-        },
-        {
-          source: "/dashboard/engine",
-          destination: "/dashboard/academy",
-          permanent: false,
-        },
-        {
-          source: "/dashboard/engine/:path*",
-          destination: "/dashboard/academy",
-          permanent: false,
-        },
-      ];
-    }
-
-    return [
-      ...vaultRedirects,
       {
         source: "/dashboard/engine",
         destination: "/dashboard/launchpad",

@@ -15,53 +15,41 @@ export function ParentCurrencyPanel({
   className,
 }: ParentCurrencyPanelProps) {
   const copy = copyMatrix.dashboard.settings.currency;
-  const { currency, currencyCode, supportedCurrencies, setCurrencyCode, currencySymbol } =
+  const { currency, currencyCode, supportedCurrencies, setCurrencyCode } =
     useCurrency();
 
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="font-heading text-sm font-extrabold text-[#031F82]">
-        {copy.heading}
-      </p>
-      <p className="mt-1 font-sans text-xs leading-relaxed text-[#1E3A5F]">
-        {copy.summary}
-      </p>
-      <p className="mt-2 font-heading text-base font-extrabold text-[#031F82]">
-        {currency.flag} {currency.label} ({currencySymbol} · {currencyCode})
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <label
+          htmlFor="display-currency"
+          className="shrink-0 font-heading text-sm font-extrabold text-[#031F82]"
+        >
+          {copy.heading}
+        </label>
 
-      {isEditable ? (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {supportedCurrencies.map((entry) => {
-            const isActive = entry.code === currencyCode;
-            return (
-              <button
-                key={entry.code}
-                type="button"
-                onClick={() => setCurrencyCode(entry.code as SupportedCurrencyCode)}
-                className={cn(
-                  "rounded-xl border-2 px-2.5 py-2 text-left transition-all",
-                  isActive
-                    ? "border-[#0CC1E0] bg-[#BDE9FB]/25 shadow-sm"
-                    : "border-[#BDE9FB]/60 bg-white hover:border-[#0CC1E0]/50",
-                )}
-                aria-pressed={isActive}
-              >
-                <span className="font-heading text-sm font-extrabold text-[#031F82]">
-                  {entry.flag} {entry.code}
-                </span>
-                <span className="mt-0.5 block font-sans text-[10px] leading-tight text-[#1E3A5F]">
-                  {entry.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <p className="mt-2 font-sans text-[10px] leading-relaxed text-[#1E3A5F]">
-          {copy.lockedHint}
-        </p>
-      )}
+        {isEditable ? (
+          <select
+            id="display-currency"
+            value={currencyCode}
+            onChange={(event) => {
+              setCurrencyCode(event.target.value as SupportedCurrencyCode);
+            }}
+            aria-label={copy.heading}
+            className="min-w-0 max-w-[12.5rem] rounded-xl border-2 border-[#BDE9FB] bg-white px-2.5 py-1.5 font-heading text-sm font-bold text-[#031F82] outline-none focus:border-[#0CC1E0]"
+          >
+            {supportedCurrencies.map((entry) => (
+              <option key={entry.code} value={entry.code}>
+                {entry.flag} {entry.code}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="font-heading text-sm font-extrabold text-[#031F82]">
+            {currency.flag} {currencyCode}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

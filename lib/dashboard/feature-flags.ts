@@ -1,20 +1,20 @@
 /**
  * Dashboard feature flags for staged testing.
  *
- * Flip `SHOW_LAUNCHPAD` to `true` to restore Launchpad nav entry points
- * and allow direct access to `/dashboard/launchpad` (and legacy `/dashboard/engine`).
+ * Launchpad is a primary tab again (Business Launchpad). Keep this true
+ * unless the surface needs to be suppressed for a focused test pass.
  */
-export const SHOW_LAUNCHPAD = false;
+export const SHOW_LAUNCHPAD = true;
 
 /**
  * Nav item ids visible while Launchpad is suppressed during active testing.
- * Settings is included in primary chrome; Launchpad stays hidden until SHOW_LAUNCHPAD is true.
+ * Advanced Money is not a free main-tab destination.
  */
 export const TESTING_VISIBLE_NAV_IDS = [
   "academy",
+  "launchpad",
+  "community",
   "vault",
-  "achievements",
-  "advanced-money-tools",
   "settings",
 ] as const;
 

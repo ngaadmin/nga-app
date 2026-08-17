@@ -6,12 +6,13 @@ type SkillMedalVisualProps = {
   skillNumber: number;
   skillName: string;
   tier: SkillTrophyTier;
-  size?: "sm" | "hero";
+  size?: "sm" | "md" | "hero";
   className?: string;
 };
 
 const IMAGE_CLASS = {
   sm: "block size-14 object-contain object-center sm:size-16",
+  md: "block size-[4.75rem] object-contain object-center sm:size-[5.25rem] md:size-24",
   hero: "block h-auto w-full max-h-[8rem] max-w-[8rem] object-contain object-center sm:max-h-[11rem] sm:max-w-[11rem]",
 } as const;
 

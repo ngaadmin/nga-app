@@ -5,7 +5,7 @@ import {
 } from "@/lib/dashboard/feature-flags";
 import {
   AcademyIcon,
-  AchievementsIcon,
+  CommunityIcon,
   LaunchpadIcon,
   SettingsIcon,
   VaultIcon,
@@ -14,8 +14,8 @@ import {
 export type DashboardPillar =
   | "academy"
   | "launchpad"
+  | "community"
   | "vault"
-  | "achievements"
   | "settings";
 
 /** Shared nav link shape — used by pillar items and temporary beta entries. */
@@ -24,6 +24,8 @@ export type DashboardNavLinkItem = {
   label: string;
   href: string;
   Icon: ComponentType<{ className?: string }>;
+  /** Compact label for the mobile bottom bar when `label` is long. */
+  shortLabel?: string;
   /** Optional exact route matcher — use when sibling paths share a prefix. */
   matchesPath?: (pathname: string) => boolean;
 };
@@ -41,9 +43,19 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
   },
   {
     id: "launchpad",
-    label: "Launchpad",
+    label: "Business Launchpad",
+    shortLabel: "Launchpad",
     href: "/dashboard/launchpad",
     Icon: LaunchpadIcon,
+    matchesPath: (pathname) =>
+      pathname === "/dashboard/launchpad" ||
+      pathname.startsWith("/dashboard/launchpad/"),
+  },
+  {
+    id: "community",
+    label: "Community",
+    href: "/dashboard/community",
+    Icon: CommunityIcon,
   },
   {
     id: "vault",
@@ -52,12 +64,6 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
     Icon: VaultIcon,
     matchesPath: (pathname) =>
       pathname === "/dashboard/vault" || pathname.startsWith("/dashboard/vault/"),
-  },
-  {
-    id: "achievements",
-    label: "Achievements",
-    href: "/dashboard/achievements",
-    Icon: AchievementsIcon,
   },
   {
     id: "settings",
@@ -70,11 +76,12 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
 export const DASHBOARD_SETTINGS_HREF = "/dashboard/settings" as const;
 export const VAULT_CASH_IN_HREF = "/dashboard/vault?cashIn=1" as const;
 export const DASHBOARD_DEFAULT_HREF = "/dashboard/academy" as const;
+export const DASHBOARD_COMMUNITY_HREF = "/dashboard/community" as const;
 
 /**
  * Filters primary chrome nav for the active feature-flag surface.
- * Launchpad (and other non-testing items) stay in `DASHBOARD_NAV_ITEMS`;
- * they are only omitted from rendered navigation while suppressed.
+ * Launchpad stays in `DASHBOARD_NAV_ITEMS`; it is only omitted from rendered
+ * navigation while `SHOW_LAUNCHPAD` is false.
  */
 export function filterDashboardNavForFeatureFlags<T extends DashboardNavLinkItem>(
   items: readonly T[],

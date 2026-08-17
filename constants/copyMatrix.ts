@@ -87,8 +87,9 @@ export const copyMatrix = {
         lockHub: "Lock Preferences",
       },
       parentHubFeatures: {
-        pointsConversion: "Points conversion",
-        pointsConversionSummaryLocked: "Set the XP-to-cash rate for Vault cash-in",
+        pointsConversion: "XP exchange rate",
+        pointsConversionSummaryLocked: "Set how XP converts to in-app money",
+        pointsConversionNotSet: "Not set yet",
         learningTrack: "Change learning track",
         learningTrackSummaryLocked: "View and update the learner age track",
         currency: "Display currency",
@@ -118,9 +119,9 @@ export const copyMatrix = {
         lockedHint: "Unlock Preferences to change the learning track.",
       },
       currency: {
-        heading: "Display Currency",
+        heading: "Display currency",
         summary:
-          "Choose the currency shown across Vault and XP cash-in. Amounts stay the same - only the symbol and format change.",
+          "Shown in Vault and XP cash-in. Amounts stay the same, only the symbol changes.",
         lockedHint: "Currency can be changed anytime in Settings.",
         savedNote: "Currency updated across Vault.",
       },
@@ -160,16 +161,21 @@ export const copyMatrix = {
         cancel: "Cancel",
       },
       conversion: {
-        heading: "Parent Points Conversion Rate",
+        heading: "XP exchange rate",
         rateTemplate: " XP = $1.00 AUD",
         summary:
-          "When your child cashes in XP from Vault, converted cash goes straight into their Save Jar at this rate.",
+          "When your child cashes in XP, converted cash goes into their Save Jar at this rate.",
         vaultCashInHint:
-          "Open Preferences (PIN required) to set the conversion rate. Kids cash in XP from Vault.",
+          "Open parent Settings to set the XP exchange rate. Kids cash in from the XP icon.",
+        unsetHint:
+          "Save a rate so your child can exchange XP for in-app money.",
+        saveRate: "Save rate",
         convertNowHeading: "Convert Now",
-        convertFullBalance: "Convert Full Points Balance",
-        customAmountLabel: "Custom points to convert",
-        customAmountPlaceholder: "Enter points",
+        convertFullBalance: "Use all XP",
+        customAmountLabel: "XP to exchange",
+        customAmountPlaceholder: "Enter XP amount",
+        invalidAmountError: "Enter how much XP you want to exchange.",
+        overBalanceError: "That's more XP than you have right now.",
         payoutReadoutTemplate:
           "This will send {amount} to the child's unallocated income pool",
         sendToVault: "Send to Vault",
@@ -179,18 +185,22 @@ export const copyMatrix = {
         confirmBody:
           "This action does not move real money. The cash amount displayed is a virtual representation for your child's ledger. You will need to fulfill this payout independently via cash, allowance pocket money, or your preferred banking app.",
         confirmAcknowledge: "Got it",
-        cashInHeading: "Cash In My Points",
-        cashInRateHint:
-          "Conversion rate has been set to {rate}. Cash out when you are ready!",
+        cashInHeading: "Exchange XP",
+        cashInRateHint: "Rate: {rate}",
         xpAvailableTemplate: "{points} XP available",
-        noPointsError: "No XP to cash in yet - keep learning!",
-        claimingLabel: "Claiming…",
-        childPayoutReadoutTemplate: "I will receive {amount} straight into my Save Jar",
-        claimCashReward: "Claim Cash Reward",
+        noPointsError: "No XP to cash in yet. Keep learning!",
+        claimingLabel: "Exchanging…",
+        childPayoutReadoutTemplate: "You'll get {amount} in your Save Jar",
+        claimCashReward: "Confirm",
         successTitle: "Points Converted!",
         successBodyTemplate:
           "Points Converted! {amount} has been safely deposited straight into my Save Jar. Head over to the Vault to check my growth, or shift my funds to another jar if I have a different plan!",
         successAcknowledge: "Let's Go!",
+        askParentTitle: "Ask your parent first",
+        askParentBody:
+          "XP exchange isn't set up yet. Ask your parent to set the rate in their Settings. Then you can cash in here.",
+        askParentIfParentBody:
+          "Set the XP exchange rate in parent Settings first. Then XP can be cashed in here.",
         parentEmail: {
           draftLabel: "Parent notification",
           title: "Email sent to guardian",
@@ -257,9 +267,14 @@ export const copyMatrix = {
       },
     },
     launchpad: {
-      title: "Launchpad",
+      title: "Business Launchpad",
       description:
-        "Launch your business. Choose a Venture Pack blueprint and start earning real cash.",
+        "Launch your business. Two starter ventures are free — unlock the rest with Premium.",
+    },
+    community: {
+      title: "Community",
+      description:
+        "Monthly challenges and the friends leaderboard — see how you stack up.",
     },
     vault: {
       title: "Vault",
@@ -421,7 +436,7 @@ export const copyMatrix = {
     achievements: {
       title: "Achievements",
       description:
-        "Your badge cabinet - track Bronze, Silver, and Gold breakthroughs across Academy and Engine.",
+        "Your skill cabinet - track Locked, Unlocked, Bronze, Silver, and Gold across your learning track.",
     },
   },
   home: {
@@ -476,5 +491,5 @@ export const copyMatrix = {
 
 export type DashboardCopyPillar = keyof Pick<
   typeof copyMatrix.dashboard,
-  "settings" | "academy" | "launchpad" | "vault" | "achievements"
+  "settings" | "academy" | "launchpad" | "community" | "vault" | "achievements"
 >;

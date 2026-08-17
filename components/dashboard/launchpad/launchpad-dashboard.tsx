@@ -90,7 +90,7 @@ function resolveLaunchpadProfile(): LaunchpadProfile {
 
 const INITIAL_IN_PROGRESS: InProgressVenture[] = [
   { id: "dog-walking", progressPercent: 40 },
-  { id: "lawn-mowing", progressPercent: 10 },
+  { id: "lemonade-stand", progressPercent: 10 },
 ];
 
 const floatingTileClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -871,6 +871,53 @@ function PaywallModal({ ventureTitle, onClose }: PaywallModalProps) {
   );
 }
 
+type StepLaunchModalProps = {
+  venture: VentureBlueprint;
+  stepTitle: string;
+  onClose: () => void;
+};
+
+function StepLaunchModal({
+  venture,
+  stepTitle,
+  onClose,
+}: StepLaunchModalProps) {
+  return (
+    <ModalShell
+      isOpen
+      onClose={onClose}
+      labelledBy="launchpad-step-title"
+      panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
+    >
+      <p className={launchpadJourneyEyebrowClass}>
+        {venture.emoji} {venture.title}
+      </p>
+      <h2
+        id="launchpad-step-title"
+        className={cn("mt-2", launchpadModalTitleClass)}
+      >
+        {stepTitle}
+      </h2>
+      <p className={cn("mt-3", launchpadBodyClass)}>{venture.description}</p>
+      <p className={cn("mt-3", launchpadBodyMutedClass)}>
+        This mission is live on your roadmap. Knock it out, then jump to the
+        next node.
+      </p>
+      <button
+        type="button"
+        onClick={onClose}
+        className={cn(
+          "mt-5 h-touch w-full px-6 shadow-nga-pop",
+          orangeCtaClass,
+          launchpadCtaLabelClass,
+        )}
+      >
+        Back to roadmap
+      </button>
+    </ModalShell>
+  );
+}
+
 export function LaunchpadDashboard() {
   const { username, isLoading: isUserLoading } = useDashboardUser();
   const finnAddressName = useMemo(
@@ -895,6 +942,10 @@ export function LaunchpadDashboard() {
   const [paywallIdea, setPaywallIdea] = useState<VentureBlueprint | null>(null);
   const [cohortBlockedIdea, setCohortBlockedIdea] =
     useState<VentureBlueprint | null>(null);
+  const [activeStep, setActiveStep] = useState<{
+    ventureId: VentureBlueprintId;
+    stepTitle: string;
+  } | null>(null);
 
   useEffect(() => {
     const sync = () => setProfile(resolveLaunchpadProfile());
@@ -977,11 +1028,16 @@ export function LaunchpadDashboard() {
     setCloseConfirmId(null);
   }
 
+  const activeStepVenture = useMemo(() => {
+    if (!activeStep) return null;
+    return getVentureBlueprintById(activeStep.ventureId);
+  }, [activeStep]);
+
   function handleLaunchStep(
-    _ventureId: VentureBlueprintId,
-    _stepTitle: string,
+    ventureId: VentureBlueprintId,
+    stepTitle: string,
   ) {
-    // Step launch wiring reserved for a later Launchpad milestone.
+    setActiveStep({ ventureId, stepTitle });
   }
 
   return (
@@ -1016,6 +1072,14 @@ export function LaunchpadDashboard() {
           warningLead={closeBusinessWarningLead}
           onKeepBuilding={() => setCloseConfirmId(null)}
           onCloseShop={handleCloseShop}
+        />
+      ) : null}
+
+      {activeStep && activeStepVenture ? (
+        <StepLaunchModal
+          venture={activeStepVenture}
+          stepTitle={activeStep.stepTitle}
+          onClose={() => setActiveStep(null)}
         />
       ) : null}
 

@@ -533,7 +533,7 @@ export function HomeDashboard() {
 
         <section
           aria-label={copy.currency.heading}
-          className={cn(floatingPanelClass, "p-4")}
+          className={cn(floatingPanelClass, "px-4 py-3")}
         >
           <ParentCurrencyPanel isEditable />
         </section>

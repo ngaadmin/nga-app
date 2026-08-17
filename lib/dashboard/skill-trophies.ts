@@ -208,3 +208,36 @@ export function countNotYetStartedSkills(
 ): number {
   return cohortSkills.filter((skill) => skill.tier === "locked").length;
 }
+
+export type GroupedSkillTrophies = {
+  earned: VaultSkillTrophy[];
+  unlocked: VaultSkillTrophy[];
+  locked: VaultSkillTrophy[];
+};
+
+/** Skills cabinet groups: Earned (bronze+) → Unlocked → Locked. */
+export function groupSkillsByProgress(
+  skills: readonly VaultSkillTrophy[],
+): GroupedSkillTrophies {
+  const earned: VaultSkillTrophy[] = [];
+  const unlocked: VaultSkillTrophy[] = [];
+  const locked: VaultSkillTrophy[] = [];
+
+  for (const skill of skills) {
+    if (skill.tier === "locked") {
+      locked.push(skill);
+    } else if (skill.tier === "unlocked") {
+      unlocked.push(skill);
+    } else {
+      earned.push(skill);
+    }
+  }
+
+  earned.sort(
+    (a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.skillNumber - b.skillNumber,
+  );
+  unlocked.sort((a, b) => a.skillNumber - b.skillNumber);
+  locked.sort((a, b) => a.skillNumber - b.skillNumber);
+
+  return { earned, unlocked, locked };
+}

@@ -14,19 +14,12 @@ export const ADVANCED_MONEY_TOOLS_NAV_ITEM: DashboardNavLinkItem = {
 
 export const ADVANCED_MONEY_TOOLS_HREF = ADVANCED_MONEY_TOOLS_NAV_ITEM.href;
 
-/** Inserts Advanced Money after Achievements and before Settings. */
+/**
+ * Kept for reuse. Advanced Money is not injected into primary chrome —
+ * it is a premium Vault destination that opens the upgrade popup on freemium.
+ */
 export function withAdvancedMoneyToolsNavItem(
   items: readonly DashboardNavLinkItem[],
 ): DashboardNavLinkItem[] {
-  const next: DashboardNavLinkItem[] = [];
-
-  for (const item of items) {
-    next.push(item);
-
-    if (item.id === "achievements") {
-      next.push(ADVANCED_MONEY_TOOLS_NAV_ITEM);
-    }
-  }
-
-  return next;
+  return [...items];
 }

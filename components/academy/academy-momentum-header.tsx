@@ -1,47 +1,52 @@
 "use client";
 
 import {
-  STATUS_BANNER_ICON_CLASS,
+  STATUS_BANNER_ITEM_CLASS,
   StatusBannerLayout,
 } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { SnowflakeIcon, XpStarIcon } from "@/lib/dashboard/icons";
+import { AchievementsIcon, FlameIcon, XpStarIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyMomentumHeaderProps = {
   username: string;
   xp: number;
-  streakFreezes: number;
+  dayStreak: number;
+  skillsHasAttention?: boolean;
+  onSkillsClick: () => void;
+  onStreakClick: () => void;
+  onXpClick: () => void;
 };
 
 export function AcademyMomentumHeader({
   username,
   xp,
-  streakFreezes,
+  dayStreak,
+  skillsHasAttention = false,
+  onSkillsClick,
+  onStreakClick,
+  onXpClick,
 }: AcademyMomentumHeaderProps) {
-  const shieldCopy = copyMatrix.home.shield;
+  const streakCopy = copyMatrix.home.streak;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
 
   return (
     <StatusBannerLayout
       aria-label="Academy stats"
+      clusterGapClassName="gap-4"
       left={
         <StatusMetricPill
           interactive
+          onClick={onXpClick}
           icon={
-            <XpStarIcon
-              className={cn(STATUS_BANNER_ICON_CLASS, "text-nga-accent")}
-            />
+            <XpStarIcon className="size-5 shrink-0 text-nga-accent" />
           }
           value={xp}
           unitLabel={journeyCopy.xpLabel}
-          ariaLabel={`${xp} ${journeyCopy.xpLabel}`}
-          info={{
-            title: "Your XP",
-            body: "Points you earn by crushing Academy lessons. Stack them up, then cash in from Vault when you're ready.",
-          }}
+          ariaLabel={`${xp} ${journeyCopy.xpLabel}. Open XP exchange`}
+          title={journeyCopy.xpLabel}
         />
       }
       center={
@@ -52,21 +57,43 @@ export function AcademyMomentumHeader({
         />
       }
       right={
-        <StatusMetricPill
-          interactive
-          icon={
-            <SnowflakeIcon
-              className={cn(STATUS_BANNER_ICON_CLASS, "text-nga-secondary")}
+        <>
+          <StatusMetricPill
+            interactive
+            onClick={onStreakClick}
+            icon={
+              <FlameIcon className="size-5 shrink-0 text-nga-cta" />
+            }
+            value={dayStreak}
+            ariaLabel={`${dayStreak} ${streakCopy.label}`}
+            title={streakCopy.label}
+          />
+          <button
+            type="button"
+            onClick={onSkillsClick}
+            aria-label={
+              skillsHasAttention
+                ? "Open skills — new medal earned"
+                : "Open skills"
+            }
+            className={cn(
+              STATUS_BANNER_ITEM_CLASS,
+              "relative transition-opacity hover:opacity-70 active:opacity-55",
+              skillsHasAttention &&
+                "text-[#FFA503] drop-shadow-[0_0_6px_rgba(255,165,3,0.95)]",
+            )}
+          >
+            <AchievementsIcon
+              className={cn(
+                "size-5 shrink-0",
+                skillsHasAttention ? "text-[#FFA503]" : "text-[#031F82]",
+              )}
             />
-          }
-          value={streakFreezes}
-          ariaLabel={`${streakFreezes} ${shieldCopy.activeLabel}`}
-          title={shieldCopy.label}
-          info={{
-            title: shieldCopy.label,
-            body: "Streak freezes keep your day streak safe if you miss a day. Earn more by staying consistent in Academy.",
-          }}
-        />
+            {skillsHasAttention ? (
+              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#FFA503] ring-2 ring-white" />
+            ) : null}
+          </button>
+        </>
       }
     />
   );

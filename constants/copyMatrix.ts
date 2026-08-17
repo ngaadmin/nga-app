@@ -105,7 +105,15 @@ export const copyMatrix = {
           "Delete this learner account? This will permanently remove all data associated with the account - including progress, achievements, and activity - and cannot be undone.",
         deleteMasterTitle: "Delete master account?",
         deleteMasterConfirm:
-          "Delete your master account? This will also permanently delete all linked learner accounts and all data associated with them - including progress, achievements, and activity. This cannot be undone.",
+          "This cannot be undone. Deleting your master account will permanently remove:",
+        deleteMasterConfirmParent: "your parent / master account",
+        deleteMasterConfirmChildren: "ALL linked child / learner accounts",
+        deleteMasterConfirmData: "associated progress and account data",
+        deleteMasterAcknowledge:
+          "I understand this permanently deletes my household.",
+        deleteMasterDeleting: "Deleting…",
+        deleteMasterError:
+          "We could not delete this household. Your parent login is still active. Try again.",
         deleteConfirmAction: "Delete permanently",
         deleteCancelAction: "Cancel",
         subscriptionHeading: "Subscription Status",

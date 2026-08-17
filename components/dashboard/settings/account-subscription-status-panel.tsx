@@ -14,10 +14,11 @@ import {
 import {
   convertToRegisteredProfile,
   DASHBOARD_ADD_PROFILE_PATH,
-  ONBOARDING_SIGN_IN_PATH,
+  ONBOARDING_ENTRY_PATH,
   readUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import {
   approvePendingLearnerAccount,
   listPendingConsentsForEmail,
@@ -157,6 +158,10 @@ export function AccountSubscriptionStatusPanel() {
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
     null,
   );
+  const [masterDeleteAcknowledged, setMasterDeleteAcknowledged] =
+    useState(false);
+  const [isDeletingHousehold, setIsDeletingHousehold] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [approvingUsername, setApprovingUsername] = useState<string | null>(
     null,
   );
@@ -208,11 +213,20 @@ export function AccountSubscriptionStatusPanel() {
 
   function leaveAfterDestructiveDelete() {
     clearAllAppSessionState();
-    router.replace(ONBOARDING_SIGN_IN_PATH);
+    router.replace(ONBOARDING_ENTRY_PATH);
   }
 
   function closeDeleteDialog() {
+    if (isDeletingHousehold) return;
     setPendingDelete(null);
+    setMasterDeleteAcknowledged(false);
+    setDeleteError(null);
+  }
+
+  function openMasterDelete(username: string) {
+    setDeleteError(null);
+    setMasterDeleteAcknowledged(false);
+    setPendingDelete({ kind: "master", username });
   }
 
   function handleApproveChild(username: string) {
@@ -279,8 +293,8 @@ export function AccountSubscriptionStatusPanel() {
     }
   }
 
-  function confirmPendingDelete() {
-    if (!pendingDelete) return;
+  async function confirmPendingDelete() {
+    if (!pendingDelete || isDeletingHousehold) return;
 
     if (pendingDelete.kind === "child") {
       const targetKey = pendingDelete.username.trim().toLowerCase();
@@ -304,15 +318,28 @@ export function AccountSubscriptionStatusPanel() {
       return;
     }
 
-    if (!isMasterViewer) {
-      setPendingDelete(null);
+    if (!isMasterViewer || !masterDeleteAcknowledged) {
       return;
     }
 
-    const removed = deleteMasterAccountCascade(pendingDelete.username);
-    setPendingDelete(null);
-    if (removed.length === 0) return;
-    leaveAfterDestructiveDelete();
+    setIsDeletingHousehold(true);
+    setDeleteError(null);
+
+    try {
+      const result = await deleteHouseholdMasterAccount();
+      if (!result.success) {
+        setDeleteError(result.error || copy.deleteMasterError);
+        return;
+      }
+
+      deleteMasterAccountCascade(pendingDelete.username);
+      setPendingDelete(null);
+      leaveAfterDestructiveDelete();
+    } catch {
+      setDeleteError(copy.deleteMasterError);
+    } finally {
+      setIsDeletingHousehold(false);
+    }
   }
 
   const deleteDialogTitle =
@@ -373,10 +400,7 @@ export function AccountSubscriptionStatusPanel() {
                     type="button"
                     className={cn(dangerButtonClass, "mt-3 w-full")}
                     onClick={() =>
-                      setPendingDelete({
-                        kind: "master",
-                        username: household.master!.username,
-                      })
+                      openMasterDelete(household.master!.username)
                     }
                   >
                     {copy.deleteMaster}
@@ -551,6 +575,7 @@ export function AccountSubscriptionStatusPanel() {
         align="center"
         labelledBy="account-delete-title"
         describedBy="account-delete-body"
+        dismissOnBackdrop={!isDeletingHousehold}
         backdropClassName="bg-[#031F82]/55"
         panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
       >
@@ -560,26 +585,63 @@ export function AccountSubscriptionStatusPanel() {
         >
           {deleteDialogTitle}
         </h2>
-        <p
-          id="account-delete-body"
-          className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]"
-        >
-          {deleteDialogBody}
-        </p>
+        {pendingDelete?.kind === "master" ? (
+          <div id="account-delete-body" className="mt-2 space-y-3">
+            <p className="font-sans text-sm leading-snug text-[#1E3A5F]">
+              {copy.deleteMasterConfirm}
+            </p>
+            <ul className="list-disc space-y-1 pl-5 font-sans text-sm leading-snug text-[#1E3A5F]">
+              <li>{copy.deleteMasterConfirmParent}</li>
+              <li>{copy.deleteMasterConfirmChildren}</li>
+              <li>{copy.deleteMasterConfirmData}</li>
+            </ul>
+            <label className="flex items-start gap-2 font-sans text-sm leading-snug text-[#031F82]">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[#031F82]"
+                checked={masterDeleteAcknowledged}
+                disabled={isDeletingHousehold}
+                onChange={(event) =>
+                  setMasterDeleteAcknowledged(event.target.checked)
+                }
+              />
+              <span>{copy.deleteMasterAcknowledge}</span>
+            </label>
+          </div>
+        ) : (
+          <p
+            id="account-delete-body"
+            className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]"
+          >
+            {deleteDialogBody}
+          </p>
+        )}
+        {deleteError ? (
+          <p className="mt-3 font-sans text-sm font-medium text-red-600" role="alert">
+            {deleteError}
+          </p>
+        ) : null}
         <div className="mt-4 flex gap-2">
           <button
             type="button"
             onClick={closeDeleteDialog}
-            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
+            disabled={isDeletingHousehold}
+            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0] disabled:opacity-40"
           >
             {copy.deleteCancelAction}
           </button>
           <button
             type="button"
-            onClick={confirmPendingDelete}
+            onClick={() => void confirmPendingDelete()}
+            disabled={
+              isDeletingHousehold ||
+              (pendingDelete?.kind === "master" && !masterDeleteAcknowledged)
+            }
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
-            {copy.deleteConfirmAction}
+            {pendingDelete?.kind === "master" && isDeletingHousehold
+              ? copy.deleteMasterDeleting
+              : copy.deleteConfirmAction}
           </button>
         </div>
       </ModalShell>

@@ -1,41 +1,23 @@
-import { copyMatrix } from "@/constants/copyMatrix";
-
 type AcademyLevelId = 1 | 2 | 3 | 4 | 5 | 6;
 
-/** Module titles aligned with copyMatrix journey nodes (Modules 1–6). */
+/** Module titles shown on the Academy journey map (Modules 1-6). */
 export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
-  1: copyMatrix.dashboard.academy.journey.nodes[0]?.subtitle ?? "Understanding the Money Game",
-  2: copyMatrix.dashboard.academy.journey.nodes[1]?.subtitle ?? "Protecting Your Money",
-  3: copyMatrix.dashboard.academy.journey.nodes[2]?.subtitle ?? "Commanding Your Cash",
-  4:
-    copyMatrix.dashboard.academy.journey.nodes[3]?.subtitle ??
-    "Generating Your Income",
-  5: copyMatrix.dashboard.academy.journey.nodes[4]?.subtitle ?? "Multiplying Your Wealth",
-  6:
-    copyMatrix.dashboard.academy.journey.nodes[5]?.subtitle ??
-    "Mastering the System",
+  1: "How the Money Game Works",
+  2: "Protecting Your Money",
+  3: "Taking Control of Your Money",
+  4: "Generating Your Own Income",
+  5: "Growing Your Money",
+  6: "Structuring & Optimising Your Money",
 };
 
-/** Module descriptions shown on Academy intro signposts (Modules 1–6). */
+/** Short sub-headers shown under each module title. */
 export const ACADEMY_MODULE_DESCRIPTIONS: Record<AcademyLevelId, string> = {
-  1:
-    copyMatrix.dashboard.academy.journey.nodes[0]?.focusAreas ??
-    "How your daily spending choices shape your freedom and future.",
-  2:
-    copyMatrix.dashboard.academy.journey.nodes[1]?.focusAreas ??
-    "Stop money from quietly slipping away.",
-  3:
-    copyMatrix.dashboard.academy.journey.nodes[2]?.focusAreas ??
-    "Build a system that puts you in control.",
-  4:
-    copyMatrix.dashboard.academy.journey.nodes[3]?.focusAreas ??
-    "Create extra money with skills you have.",
-  5:
-    copyMatrix.dashboard.academy.journey.nodes[4]?.focusAreas ??
-    "Make your money work for you.",
-  6:
-    copyMatrix.dashboard.academy.journey.nodes[5]?.focusAreas ??
-    "Unlock how the wealthy stay ahead.",
+  1: "Money is a tool to buy freedom and choices",
+  2: "Money is lost when you can't see what's happening",
+  3: "If you don't control money, it controls you",
+  4: "Money comes from creating value for others",
+  5: "Money grows when it is put to work",
+  6: "How you structure money determines how much you keep and grow",
 };
 
 /** @deprecated Use ACADEMY_MODULE_DESCRIPTIONS — retained for imports. */
@@ -123,10 +105,10 @@ export const ACADEMY_LEVEL_PHASE_THEME: Record<
   { fill: string; shadow: string; ring: string }
 > = {
   1: { fill: "#0CC1E0", shadow: "#099FB8", ring: "rgba(12, 193, 224, 0.4)" },
-  2: { fill: "#22C55E", shadow: "#15803D", ring: "rgba(34, 197, 94, 0.4)" },
+  2: { fill: "#8B5CF6", shadow: "#6D28D9", ring: "rgba(139, 92, 246, 0.4)" },
   3: { fill: "#FFA503", shadow: "#C88202", ring: "rgba(255, 165, 3, 0.4)" },
   4: { fill: "#6366F1", shadow: "#4338CA", ring: "rgba(99, 102, 241, 0.4)" },
-  5: { fill: "#8B5CF6", shadow: "#6D28D9", ring: "rgba(139, 92, 246, 0.4)" },
+  5: { fill: "#22C55E", shadow: "#15803D", ring: "rgba(34, 197, 94, 0.4)" },
   6: { fill: "#DCB766", shadow: "#B8943F", ring: "rgba(220, 183, 102, 0.4)" },
 };
 

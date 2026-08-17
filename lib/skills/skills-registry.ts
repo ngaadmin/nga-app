@@ -5,6 +5,7 @@ export type SkillLevelId = 1 | 2 | 3 | 4 | 5 | 6;
 export type SkillLevelDefinition = {
   levelId: SkillLevelId;
   title: string;
+  subtitle: string;
   theme: string;
   isAdvancedCohortOnly: boolean;
 };
@@ -30,36 +31,42 @@ export const SKILLS_LEVELS: readonly SkillLevelDefinition[] = [
   {
     levelId: 1,
     title: "How the Money Game Works",
+    subtitle: "Money is a tool to buy freedom and choices",
     theme: "Awareness",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 2,
     title: "Protecting Your Money",
+    subtitle: "Money is lost when you can't see what's happening",
     theme: "Detection",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 3,
     title: "Taking Control of Your Money",
+    subtitle: "If you don't control money, it controls you",
     theme: "Control",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 4,
     title: "Generating Your Own Income",
+    subtitle: "Money comes from creating value for others",
     theme: "Creation",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 5,
     title: "Growing Your Money",
+    subtitle: "Money grows when it is put to work",
     theme: "Growth",
     isAdvancedCohortOnly: true,
   },
   {
     levelId: 6,
     title: "Structuring & Optimising Your Money",
+    subtitle: "How you structure money determines how much you keep and grow",
     theme: "Optimisation",
     isAdvancedCohortOnly: true,
   },

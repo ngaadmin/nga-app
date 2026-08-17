@@ -5,9 +5,9 @@ const M1_L2_META = {
   milestoneId: 2,
   levelId: 1,
   lessonNumber: 2,
-  moduleTitle: "Module 1",
+  moduleTitle: "How the Money Game Works",
   lessonTitle: "Needs vs Wants Sort",
-  shellLabel: "Module 1 · Lesson 2 · Needs vs Wants Sort",
+  shellLabel: "How the Money Game Works · Lesson 2 · Needs vs Wants Sort",
   totalScreens: 8,
   shippedCohorts: ["explorer", "pathfinder", "maverick"],
 } as const;

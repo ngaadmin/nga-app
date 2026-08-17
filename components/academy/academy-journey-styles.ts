@@ -9,13 +9,13 @@
 export const academyJourneyHeadingClass =
   "text-center font-heading text-xl font-extrabold text-nga-primary sm:text-2xl";
 
-/** Module signpost title on solid phase fill — matches lesson prompt (`text-lg`). */
+/** Module header title on the soft floating journey label. */
 export const academyModuleTitleClass =
-  "text-center font-heading text-lg font-bold leading-snug text-white drop-shadow-sm";
+  "text-center font-heading text-[0.95rem] font-extrabold leading-snug text-[#031F82] sm:text-base";
 
-/** @deprecated Module descriptions removed from journey map tiles. */
+/** Module header sub-line on the soft floating journey label. */
 export const academyModuleDescriptionClass =
-  "text-center font-sans text-base font-medium leading-snug text-nga-slate";
+  "text-center font-sans text-xs font-medium leading-snug text-[#1E3A5F]/80";
 
 /** Supporting metadata (lesson count, stat labels) — eyebrow-adjacent, still mobile-readable. */
 export const academyJourneyMetaClass =

@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { AcademyModulePreviewModal } from "@/components/academy/academy-module-preview-modal";
 import {
+  academyModuleDescriptionClass,
+  academyModuleTitleClass,
+} from "@/components/academy/academy-journey-styles";
+import {
+  ACADEMY_MODULE_DESCRIPTIONS,
   ACADEMY_MODULE_TITLES,
   getAcademyPhaseTheme,
   isModuleSignpostLocked,
@@ -13,12 +18,12 @@ import { LockIcon } from "@/lib/dashboard/icons";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
-/** Minimum vertical space reserved for module header tiles in journey map layout math. */
-export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 72;
-/** Vertical space between every module header tile and its first lesson node. */
+/** Fixed vertical space reserved for module headers in journey map layout math. */
+export const ACADEMY_MODULE_SIGNPOST_HEIGHT_PX = 120;
+/** Vertical space between every module header and its first lesson node. */
 export const ACADEMY_MODULE_SIGNPOST_GAP_PX = 72;
 
-/** First lesson milestone — used for START HERE placement. */
+/** First lesson milestone - used for START HERE placement. */
 export const ACADEMY_JOURNEY_ENTRY_MILESTONE_ID = 1;
 
 type AcademyModuleSignpostProps = {
@@ -35,61 +40,55 @@ export function AcademyModuleSignpost({
   const [previewOpen, setPreviewOpen] = useState(false);
   const phase = getAcademyPhaseTheme(moduleNumber);
   const title = ACADEMY_MODULE_TITLES[moduleNumber];
+  const subtitle = ACADEMY_MODULE_DESCRIPTIONS[moduleNumber];
   const isLocked = isModuleSignpostLocked(
     moduleNumber,
     milestones,
     masteryCohort,
   );
-  const useDarkSignpostInk = moduleNumber === 3 || moduleNumber === 6;
+  const useDarkOnFill = moduleNumber === 3 || moduleNumber === 6;
 
   return (
     <>
       <div
         className="relative z-base flex w-full shrink-0 justify-center px-2"
-        style={{ minHeight: ACADEMY_MODULE_SIGNPOST_HEIGHT_PX }}
+        style={{ height: ACADEMY_MODULE_SIGNPOST_HEIGHT_PX }}
       >
         <button
           type="button"
           onClick={() => setPreviewOpen(true)}
-          aria-label={`Module ${moduleNumber}: ${title}. Tap to preview what you will learn.`}
+          aria-label={`Module ${moduleNumber}: ${title}. ${subtitle}. Tap to preview what you will learn.`}
           aria-haspopup="dialog"
-          className="group w-full max-w-[min(100%,28rem)] rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary"
+          className="group h-full w-full max-w-[20.5rem] rounded-[1.75rem] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary"
         >
           <div
             className={cn(
-              "relative flex w-full items-center justify-center rounded-2xl border-0 border-b-[4px] px-4 py-2.5 transition-all duration-75",
-              "group-hover:brightness-[1.03] group-active:translate-y-[2px] group-active:border-b-[2px]",
-              isLocked && "opacity-90",
+              "relative flex h-full w-full flex-col items-center justify-center rounded-[1.75rem] px-5 py-3",
+              "shadow-md transition-transform duration-75",
+              "group-hover:-translate-y-0.5 group-active:translate-y-0",
+              isLocked && "opacity-80",
             )}
             style={{
-              backgroundColor: phase.fill,
-              borderBottomColor: phase.shadow,
-              boxShadow: `0 2px 0 ${phase.shadow}`,
+              backgroundColor: `color-mix(in srgb, ${phase.fill} 16%, white)`,
+              boxShadow: `0 8px 20px ${phase.ring}`,
             }}
           >
-            <div className="relative flex w-full min-w-0 items-center justify-center px-5">
-              {isLocked ? (
-                <span
-                  className={cn(
-                    "absolute left-3 top-1/2 -translate-y-1/2",
-                    useDarkSignpostInk ? "text-[#031F82]/80" : "text-white/90",
-                  )}
-                  aria-hidden
-                >
-                  <LockIcon className="size-4" />
-                </span>
-              ) : null}
-              <p
-                className={cn(
-                  "text-balance text-center font-heading text-base font-bold leading-snug sm:text-lg",
-                  useDarkSignpostInk
-                    ? "text-[#031F82]"
-                    : "text-white drop-shadow-sm",
-                )}
-              >
-                Module {moduleNumber}: {title}
-              </p>
-            </div>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-heading text-[10px] font-extrabold uppercase tracking-wider",
+                useDarkOnFill ? "text-[#031F82]" : "text-white",
+              )}
+              style={{ backgroundColor: phase.fill }}
+            >
+              {isLocked ? <LockIcon className="size-3" /> : null}
+              Module {moduleNumber}
+            </span>
+            <p className={cn("mt-1.5 line-clamp-2", academyModuleTitleClass)}>
+              {title}
+            </p>
+            <p className={cn("mt-1 line-clamp-2", academyModuleDescriptionClass)}>
+              {subtitle}
+            </p>
           </div>
         </button>
       </div>

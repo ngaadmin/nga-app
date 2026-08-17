@@ -42,7 +42,13 @@ function prefillEmail(): string {
   return (session.parentEmail ?? "").trim();
 }
 
-export function CreateParentProfilePanel() {
+type CreateParentProfilePanelProps = {
+  backHref?: string;
+};
+
+export function CreateParentProfilePanel({
+  backHref = DASHBOARD_SETTINGS_ACCOUNT_PATH,
+}: CreateParentProfilePanelProps) {
   const router = useRouter();
   const copy = copyMatrix.dashboard.settings.accountSubscription;
   const existingEmail = useMemo(() => prefillEmail(), []);
@@ -129,7 +135,7 @@ export function CreateParentProfilePanel() {
       <div className="space-y-3">
         <button
           type="button"
-          onClick={() => router.push(DASHBOARD_SETTINGS_ACCOUNT_PATH)}
+          onClick={() => router.push(backHref)}
           className="font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:text-[#031F82]"
         >
           ← {copy.addLinkedBackAccounts}

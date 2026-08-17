@@ -19,6 +19,14 @@ export const copyMatrix = {
       recoveryPasswordSuccess:
         "If that email is on file, we sent a reset there. Use it to log in, then set a new password.",
     },
+    chooseAccount: {
+      title: "Who is creating this account?",
+      hint: "Pick the option that matches you. This sets the login you get.",
+      learner: "I'm the learner",
+      learnerHint: "Save this play session as a learner login.",
+      parent: "I'm a parent",
+      parentHint: "Create a parent login with your email and password.",
+    },
   },
   dashboard: {
     greeting: "Hey, [Username]! Let's build wealth.",
@@ -90,6 +98,10 @@ export const copyMatrix = {
         createParentSubmit: "Create parent profile",
         createParentSubmitting: "Creating…",
         noAccountsYet: "No registered accounts found for this session.",
+        guestEmptyHint:
+          "You're in a temporary session. Create an account to keep this progress.",
+        guestCreateParent: "Create parent account",
+        guestSaveLearner: "Save learner progress",
         pendingHeading: "Waiting to link",
         pendingHint:
           "These learners asked for approval with your email. Link them here, or use the email approval link.",

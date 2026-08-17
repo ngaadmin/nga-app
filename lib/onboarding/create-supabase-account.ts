@@ -35,8 +35,9 @@ export type CreateSupabaseAccountInput = {
   /** Required for independent child signup. Ignored when parent-add sends `cohort`. */
   birthYear?: number;
   /**
-   * Parent-add path: learning track chosen by the parent. Birth year is derived
-   * as a content stand-in so we never ask for a separate year.
+   * Learning track. Independent Save Your Progress and parent-add both send
+   * this; birth year is derived as a content stand-in. Do not send
+   * `parentInitiatedById` from the public signup form.
    */
   cohort?: MasteryCohort;
   password: string;
@@ -258,10 +259,10 @@ function resolveSignupBirthYear(
   input: CreateSupabaseAccountInput,
   parentInitiated: boolean,
 ): number | null {
-  if (parentInitiated) {
-    if (!isMasteryCohort(input.cohort)) return null;
+  if (isMasteryCohort(input.cohort)) {
     return representativeBirthYearForCohort(input.cohort);
   }
+  if (parentInitiated) return null;
   if (typeof input.birthYear === "number" && isEligibleBirthYear(input.birthYear)) {
     return input.birthYear;
   }
@@ -287,9 +288,7 @@ function parseSignupInput(
   if (birthYear == null) {
     return {
       ok: false,
-      error: parentInitiated
-        ? "Pick a learning track for this learner."
-        : "Please choose a valid birth year.",
+      error: "Pick a learning track for this learner.",
     };
   }
 

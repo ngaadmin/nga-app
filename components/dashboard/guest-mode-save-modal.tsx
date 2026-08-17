@@ -58,7 +58,8 @@ export function GuestModeSaveModal({
         Don&apos;t lose your achievements!
       </h2>
       <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Create your free profile to save your points, streaks and skills awards.
+        Create a learner login or a parent login to keep your points, streaks
+        and skills.
       </p>
 
       <Link
@@ -66,7 +67,7 @@ export function GuestModeSaveModal({
         onClick={onClose}
         className={cn("mt-5", orangeCtaClass)}
       >
-        Save My Progress
+        Create an account
       </Link>
 
       <p className="mt-3 text-center font-sans text-xs leading-relaxed text-[#1E3A5F]">

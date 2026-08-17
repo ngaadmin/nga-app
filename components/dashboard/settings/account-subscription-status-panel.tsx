@@ -15,6 +15,9 @@ import {
   convertToRegisteredProfile,
   DASHBOARD_ADD_PROFILE_PATH,
   ONBOARDING_ENTRY_PATH,
+  ONBOARDING_SIGN_UP_LEARNER_PATH,
+  ONBOARDING_SIGN_UP_PARENT_PATH,
+  isGuestSession,
   readUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
@@ -154,6 +157,8 @@ export function AccountSubscriptionStatusPanel() {
   });
   const [activeUsername, setActiveUsername] = useState<string | null>(null);
   const [isMasterViewer, setIsMasterViewer] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const isParentSettingsView = useSettingsParentView();
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
     null,
@@ -175,10 +180,13 @@ export function AccountSubscriptionStatusPanel() {
     if (!session || session.accessMode !== "registered") {
       setActiveUsername(null);
       setIsMasterViewer(false);
+      setIsGuest(!session || isGuestSession(session));
       setHousehold({ master: null, children: [], householdEmail: null });
       setRemotePending([]);
+      setSessionReady(true);
       return;
     }
+    setIsGuest(false);
     setActiveUsername(session.username.trim() || null);
     setIsMasterViewer(session.accountRole === "parent_master");
     setHousehold(readHouseholdForViewer(session, isParentSettingsView));
@@ -190,6 +198,7 @@ export function AccountSubscriptionStatusPanel() {
     } else {
       setRemotePending([]);
     }
+    setSessionReady(true);
   }, [isParentSettingsView]);
 
   useEffect(() => {
@@ -474,13 +483,37 @@ export function AccountSubscriptionStatusPanel() {
             </p>
           ) : null}
 
-          {isParentSettingsView && !household.master && !isMasterViewer ? (
+          {isParentSettingsView && !isGuest && !household.master && !isMasterViewer ? (
             <p className="font-sans text-sm font-semibold leading-relaxed text-[#031F82]">
               {copy.needParentPrompt}
             </p>
           ) : null}
 
-          {!household.master && household.children.length === 0 ? (
+          {sessionReady && isGuest ? (
+            <div className="space-y-3">
+              <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+                {copy.guestEmptyHint}
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(`${ONBOARDING_SIGN_UP_PARENT_PATH}&from=account`)
+                }
+                className="h-touch w-full rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2"
+              >
+                {copy.guestCreateParent}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(`${ONBOARDING_SIGN_UP_LEARNER_PATH}&from=account`)
+                }
+                className="h-touch w-full rounded-nga-lg border-2 border-[#0CC1E0] bg-white px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-colors hover:bg-[#BDE9FB]/30"
+              >
+                {copy.guestSaveLearner}
+              </button>
+            </div>
+          ) : sessionReady && !household.master && household.children.length === 0 ? (
             <p className="font-sans text-sm text-[#1E3A5F]">
               {copy.noAccountsYet}
             </p>
@@ -539,7 +572,7 @@ export function AccountSubscriptionStatusPanel() {
             </div>
           ) : null}
 
-          {isParentSettingsView ? (
+          {isParentSettingsView && !isGuest ? (
             <button
               type="button"
               onClick={() => router.push(DASHBOARD_ADD_PROFILE_PATH)}

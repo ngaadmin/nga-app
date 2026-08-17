@@ -2,16 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LockedBirthYearSummary } from "@/components/onboarding/locked-birth-year-summary";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
+import { copyMatrix } from "@/constants/copyMatrix";
 import { createParentMasterAndApprove } from "@/lib/onboarding/approve-consent-request";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
-import {
-  getBirthYearRangeLabel,
-  getEligibleBirthYears,
-  isEligibleBirthYear,
-} from "@/lib/onboarding/birth-years";
+import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
   displayUsernameOrEmpty,
   isInternalPlaceholderUsername,
@@ -19,15 +16,22 @@ import {
 import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
+  DASHBOARD_SETTINGS_ACCOUNT_PATH,
+  getSessionCurriculumCohort,
   ONBOARDING_PARENT_CONSENT_PATH,
   ONBOARDING_SIGN_IN_PATH,
+  ONBOARDING_SIGN_UP_LEARNER_PATH,
+  ONBOARDING_SIGN_UP_PARENT_PATH,
+  ONBOARDING_SIGN_UP_PATH,
   ONBOARDING_SIGN_UP_PENDING_PATH,
-  ONBOARDING_START_PATH,
   readUserSession,
 } from "@/lib/onboarding/guest-session";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
+  MASTERY_COHORT_ORDER,
+  masteryCohortAgeRangeLabel,
+  masteryCohortLabel,
   requiresParentConsentForBirthYear,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -105,7 +109,7 @@ type FormErrors = {
   password?: string;
   parentEmail?: string;
   parentalConsent?: string;
-  birthYear?: string;
+  track?: string;
   form?: string;
 };
 
@@ -120,6 +124,17 @@ function cohortHeader(cohort: MasteryCohort): string {
   }
 }
 
+function trackSafeguardHint(cohort: MasteryCohort): string {
+  switch (cohort) {
+    case "explorer":
+      return "Explorer needs a parent email and parent approval before the profile is fully saved.";
+    case "pathfinder":
+      return "Pathfinder links a parent email so they can follow along. It does not block creating your account.";
+    case "maverick":
+      return "Maverick uses your email only. No parent fields are needed.";
+  }
+}
+
 function adultBirthYear(): number {
   return new Date().getFullYear() - 35;
 }
@@ -128,26 +143,20 @@ export function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const existingSession = useMemo(() => readUserSession(), []);
-  const birthYears = useMemo(() => getEligibleBirthYears(), []);
-  const birthYearLocked = existingSession?.birthYearLocked === true;
-
   const consentToken = (searchParams.get("token") ?? "").trim();
   const isParentMaster =
     searchParams.get("role") === "parent_master" && Boolean(consentToken);
+  const accountAs = (searchParams.get("as") ?? "").trim().toLowerCase();
+  const fromAccount = (searchParams.get("from") ?? "").trim() === "account";
+  const isGuestParentCreate = !isParentMaster && accountAs === "parent";
+  const showRoleChoice = !isParentMaster && accountAs !== "learner" && accountAs !== "parent";
 
-  const [birthYear, setBirthYear] = useState<number | null>(() => {
-    if (isParentMaster) return adultBirthYear();
-    const fromQuery = searchParams.get("birthYear");
-    if (fromQuery && Number.isInteger(Number(fromQuery))) {
-      return Number(fromQuery);
-    }
-    if (birthYearLocked && existingSession?.birthYear) {
-      return existingSession.birthYear;
-    }
-    return null;
+  const [cohort, setCohort] = useState<MasteryCohort | null>(() => {
+    if (isParentMaster || !existingSession) return null;
+    return getSessionCurriculumCohort(existingSession);
   });
 
-  const ageTier = birthYear ? getMasteryCohortFromBirthYear(birthYear) : null;
+  const ageTier = isParentMaster ? null : cohort;
   const isExplorer = !isParentMaster && ageTier === "explorer";
   const isPathfinder = !isParentMaster && ageTier === "pathfinder";
   const isMaverick = !isParentMaster && ageTier === "maverick";
@@ -273,10 +282,8 @@ export function SignUpForm() {
     }
 
     if (!isParentMaster) {
-      if (!birthYear) {
-        next.birthYear = "Select the learner's birth year to save this profile.";
-      } else if (!isEligibleBirthYear(birthYear)) {
-        next.birthYear = `Please choose a birth year between ${getBirthYearRangeLabel()}.`;
+      if (!cohort) {
+        next.track = "Pick the learning track for this profile.";
       }
     }
 
@@ -388,7 +395,7 @@ export function SignUpForm() {
       return;
     }
 
-    if (!birthYear || !ageTier || !validate()) return;
+    if (!cohort || !validate()) return;
 
     if (approvalEmailInFlightRef.current) return;
     approvalEmailInFlightRef.current = true;
@@ -397,7 +404,7 @@ export function SignUpForm() {
     try {
       const result = await createSupabaseAccount({
         username: username.trim(),
-        birthYear,
+        cohort,
         password: password.trim(),
         learnerEmail: isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
         parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
@@ -426,7 +433,7 @@ export function SignUpForm() {
         result.accountStatus === "pending_consent" || result.cohort === "explorer";
       const childSession = convertToRegisteredProfile({
         username: result.username,
-        birthYear,
+        birthYear: representativeBirthYearForCohort(cohort),
         accountRole: "child",
         parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
         learnerEmail:
@@ -435,6 +442,7 @@ export function SignUpForm() {
         accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
         marketingOptIn,
         supabaseUserId: result.userId,
+        curriculumCohort: cohort,
       });
       await finalizeRegisteredSignup(childSession, { skipEmail: true });
 
@@ -701,10 +709,73 @@ export function SignUpForm() {
     );
   }
 
+  if (isGuestParentCreate) {
+    return (
+      <CreateParentProfilePanel
+        backHref={
+          fromAccount ? DASHBOARD_SETTINGS_ACCOUNT_PATH : ONBOARDING_SIGN_UP_PATH
+        }
+      />
+    );
+  }
+
+  if (showRoleChoice) {
+    const choice = copyMatrix.onboarding.chooseAccount;
+    return (
+      <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+        <div className="mx-auto w-full max-w-md space-y-8 px-1">
+          <OnboardingProgress value={40} />
+          <div className="space-y-2 text-center">
+            <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
+              {choice.title}
+            </h1>
+            <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
+              {choice.hint}
+            </p>
+          </div>
+          <div className="space-y-3">
+            <ButtonLink href={ONBOARDING_SIGN_UP_LEARNER_PATH} variant="cta" fullWidth>
+              {choice.learner}
+            </ButtonLink>
+            <p className="text-center font-sans text-sm text-nga-slate">
+              {choice.learnerHint}
+            </p>
+            <ButtonLink
+              href={ONBOARDING_SIGN_UP_PARENT_PATH}
+              variant="secondary"
+              fullWidth
+            >
+              {choice.parent}
+            </ButtonLink>
+            <p className="text-center font-sans text-sm text-nga-slate">
+              {choice.parentHint}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
         <OnboardingProgress value={50} />
+
+        {fromAccount || accountAs === "learner" ? (
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                fromAccount
+                  ? DASHBOARD_SETTINGS_ACCOUNT_PATH
+                  : ONBOARDING_SIGN_UP_PATH,
+              )
+            }
+            className="font-heading text-sm font-bold text-nga-secondary transition-colors hover:text-nga-primary"
+          >
+            ← Back
+          </button>
+        ) : null}
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
@@ -713,78 +784,54 @@ export function SignUpForm() {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          {birthYearLocked && birthYear && ageTier ? (
-            <LockedBirthYearSummary birthYear={birthYear} ageTier={ageTier} />
-          ) : (
-            <div className="space-y-2">
-              <label
-                htmlFor="signup-birth-year"
-                className="block font-heading text-sm font-bold text-nga-primary"
-              >
-                What year was the learner born?
-              </label>
-              <div className="relative">
-                <select
-                  id="signup-birth-year"
-                  name="birthYear"
-                  value={birthYear ?? ""}
-                  onChange={(e) => {
-                    const next = Number(e.target.value);
-                    setBirthYear(Number.isInteger(next) ? next : null);
-                    clearError("birthYear");
-                  }}
-                  aria-invalid={Boolean(errors.birthYear)}
-                  className={cn(
-                    fieldBase,
-                    "appearance-none pr-10",
-                    !birthYear && "text-nga-slate/60",
-                    errors.birthYear && "border-red-400 focus:border-red-500",
-                  )}
-                >
-                  <option value="" disabled>
-                    Select birth year
-                  </option>
-                  {birthYears.map((year) => (
-                    <option key={year} value={year} className="text-nga-ink">
-                      {year}
-                    </option>
-                  ))}
-                </select>
-                <span
-                  className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-nga-secondary"
-                  aria-hidden
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+          <fieldset className="space-y-2">
+            <legend className="block font-heading text-sm font-bold text-nga-primary">
+              Your learning track
+            </legend>
+            <p className="font-sans text-sm leading-relaxed text-nga-slate">
+              This track sets the lessons you get and the parent safeguards we
+              apply. You can change it if the first pick was wrong.
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {MASTERY_COHORT_ORDER.map((track) => {
+                const selected = cohort === track;
+                return (
+                  <button
+                    key={track}
+                    type="button"
+                    onClick={() => {
+                      setCohort(track);
+                      clearError("track");
+                    }}
+                    aria-pressed={selected}
+                    className={cn(
+                      "rounded-nga-lg border-2 px-3 py-3 text-center transition-colors",
+                      selected
+                        ? "border-nga-secondary bg-nga-mist/60"
+                        : "border-[#E5E5E5] bg-[#F7F7F7] hover:border-nga-secondary/50",
+                    )}
                   >
-                    <path
-                      d="M4 6L8 10L12 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              </div>
-              <p className="font-sans text-sm leading-relaxed text-nga-slate">
-                We use this to set the right tools and parent safeguards. We
-                never share it.
-              </p>
-              {errors.birthYear ? (
-                <p
-                  className="font-sans text-sm font-medium text-red-600"
-                  role="alert"
-                >
-                  {errors.birthYear}
-                </p>
-              ) : null}
+                    <span className="block font-heading text-sm font-extrabold text-nga-primary">
+                      {masteryCohortLabel(track)}
+                    </span>
+                    <span className="mt-0.5 block font-sans text-xs font-semibold text-nga-slate">
+                      Ages {masteryCohortAgeRangeLabel(track)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          )}
+            {cohort ? (
+              <p className="font-sans text-sm leading-relaxed text-nga-slate">
+                {trackSafeguardHint(cohort)}
+              </p>
+            ) : null}
+            {errors.track ? (
+              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                {errors.track}
+              </p>
+            ) : null}
+          </fieldset>
 
           {isExplorer ? (
             <p className="font-sans text-sm font-bold leading-relaxed text-purple-700">

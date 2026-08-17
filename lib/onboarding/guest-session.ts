@@ -29,6 +29,10 @@ export const ONBOARDING_ENTRY_PATH = "/" as const;
 export const ONBOARDING_START_PATH = "/onboarding/start" as const;
 export const ONBOARDING_SIGN_IN_PATH = "/onboarding/sign-in" as const;
 export const ONBOARDING_SIGN_UP_PATH = "/onboarding/sign-up" as const;
+export const ONBOARDING_SIGN_UP_LEARNER_PATH =
+  "/onboarding/sign-up?as=learner" as const;
+export const ONBOARDING_SIGN_UP_PARENT_PATH =
+  "/onboarding/sign-up?as=parent" as const;
 export const DASHBOARD_SETTINGS_ACCOUNT_PATH =
   "/dashboard/settings/account" as const;
 export const DASHBOARD_ADD_PROFILE_PATH =

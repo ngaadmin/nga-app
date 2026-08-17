@@ -15,7 +15,7 @@ const M1_L4_META = {
     support: "Senna",
     explorer: "Senna",
     pathfinder: "Holly",
-    maverick: "Dash",
+    maverick: "Aiden",
   },
 } as const;
 

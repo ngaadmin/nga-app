@@ -2,11 +2,8 @@
 
 import { useMemo } from "react";
 import { ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS } from "@/components/achievements/achievements-carousel";
+import { SkillMedalVisual } from "@/components/academy/skill-medal-visual";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
-import {
-  getMedalIllustrationPath,
-  medalIdForSkillNumber,
-} from "@/lib/academy/illustrations/medal-registry";
 import { LockIcon } from "@/lib/dashboard/icons";
 import {
   totalSkillsToMasterForMasteryCohort,
@@ -15,7 +12,6 @@ import {
   countEarnedMedals,
   countNotYetStartedSkills,
   resolveVaultSkillTrophiesForCohort,
-  sortTrophiesByTier,
   type SkillTrophyTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
@@ -65,33 +61,6 @@ function SummaryStatCard({
   );
 }
 
-function medalCoinStyles(tier: SkillTrophyTier): string {
-  switch (tier) {
-    case "gold":
-      return cn(
-        "bg-gradient-to-br from-[#FFE082] via-[#FFA503] to-[#C88202]",
-        "border-b-4 border-b-[#9A5F00] shadow-[0_6px_16px_rgba(255,165,3,0.45)]",
-      );
-    case "silver":
-      return cn(
-        "bg-gradient-to-br from-[#F4F7F9] via-[#C5D0D8] to-[#8FA3B0]",
-        "border-b-4 border-b-[#6B7F8C] shadow-[0_4px_12px_rgba(143,163,176,0.4)]",
-      );
-    case "bronze":
-      return cn(
-        "bg-gradient-to-br from-[#E8C4A8] via-[#CD7F32] to-[#8B5A2B]",
-        "border-b-4 border-b-[#6B4423] shadow-[0_3px_10px_rgba(139,90,43,0.35)]",
-      );
-    case "unlocked":
-      return cn(
-        "border-2 border-[#031F82] bg-white",
-        "shadow-[0_2px_8px_rgba(3,31,130,0.12)]",
-      );
-    case "locked":
-      return "bg-gray-200 opacity-30 shadow-none";
-  }
-}
-
 function tierDisplayLabel(tier: SkillTrophyTier): string {
   switch (tier) {
     case "gold":
@@ -114,43 +83,16 @@ type SkillCarouselCardProps = {
 function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
   const isLocked = skill.tier === "locked";
   const isUnlocked = skill.tier === "unlocked";
-  const isBronze = skill.tier === "bronze";
-  const medalId =
-    isUnlocked || isBronze
-      ? medalIdForSkillNumber(skill.skillNumber, isBronze ? "bronze" : "unlocked")
-      : undefined;
-  const medalSrc = medalId ? getMedalIllustrationPath(medalId) : undefined;
 
   return (
-    <article className="flex w-[5.5rem] shrink-0 snap-center flex-col items-center px-1 text-center sm:w-[6rem]">
+    <article className="flex w-[6.5rem] shrink-0 snap-start flex-col items-center px-1 text-center sm:w-[7rem]">
       <div className="relative">
-        {medalSrc ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={medalSrc}
-            alt={`${skill.label} medal`}
-            className="block size-14 object-contain object-center sm:size-16"
-            decoding="async"
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className={cn(
-              "flex size-14 items-center justify-center rounded-full sm:size-16",
-              medalCoinStyles(skill.tier),
-            )}
-          >
-            <span
-              className={cn(
-                "text-xl leading-none sm:text-2xl",
-                isLocked ? "grayscale" : "drop-shadow-sm",
-              )}
-              aria-hidden
-            >
-              {skill.medalEmoji}
-            </span>
-          </div>
-        )}
+        <SkillMedalVisual
+          skillNumber={skill.skillNumber}
+          skillName={skill.label}
+          tier={skill.tier}
+          size="sm"
+        />
         {isLocked ? (
           <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-white/90 shadow-sm">
             <LockIcon className="size-2.5 text-gray-400" />
@@ -160,7 +102,7 @@ function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
 
       <p
         className={cn(
-          "mt-2.5 line-clamp-2 font-heading text-[9px] font-bold leading-tight",
+          "mt-2.5 line-clamp-3 font-heading text-[9px] font-bold leading-tight",
           isLocked ? "text-[#031F82]/50" : "text-[#031F82]",
         )}
       >
@@ -178,11 +120,6 @@ function SkillCarouselCard({ skill }: SkillCarouselCardProps) {
       >
         {tierDisplayLabel(skill.tier)}
       </p>
-      {skill.advancedOnly ? (
-        <p className="mt-1 font-heading text-[7px] font-bold uppercase tracking-wide text-[#031F82]/40">
-          Mavericks
-        </p>
-      ) : null}
     </article>
   );
 }
@@ -191,13 +128,11 @@ export function SkillAwardsSection() {
   const masteryCohort = useMasteryCohort();
 
   const cohortSkills = useMemo(
-    () => resolveVaultSkillTrophiesForCohort(masteryCohort),
+    () =>
+      [...resolveVaultSkillTrophiesForCohort(masteryCohort)].sort(
+        (a, b) => a.skillNumber - b.skillNumber,
+      ),
     [masteryCohort],
-  );
-
-  const orderedSkills = useMemo(
-    () => sortTrophiesByTier(cohortSkills),
-    [cohortSkills],
   );
 
   const totalSkills = totalSkillsToMasterForMasteryCohort(masteryCohort);
@@ -207,7 +142,10 @@ export function SkillAwardsSection() {
   const notStartedCount = countNotYetStartedSkills(cohortSkills);
 
   return (
-    <section aria-labelledby="skill-awards-heading" className="w-full shrink-0">
+    <section
+      aria-labelledby="skill-awards-heading"
+      className="w-full min-w-0 shrink-0"
+    >
       <DashboardSectionHeading id="skill-awards-heading">
         Your Skills
       </DashboardSectionHeading>
@@ -245,9 +183,12 @@ export function SkillAwardsSection() {
 
       <div
         aria-label="Skills carousel"
-        className={cn(ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS, "mt-3 gap-5")}
+        className={cn(
+          ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS,
+          "mt-3 gap-4 touch-pan-x",
+        )}
       >
-        {orderedSkills.map((skill) => (
+        {cohortSkills.map((skill) => (
           <SkillCarouselCard key={`skill-${skill.skillNumber}`} skill={skill} />
         ))}
       </div>

@@ -229,17 +229,17 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
 
 const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
-    narrativeBefore: "REPLACE: Dash hook text before blank",
-    wrongError: "REPLACE: Dash hook error",
+    narrativeBefore: "REPLACE: Aiden hook text before blank",
+    wrongError: "REPLACE: Aiden hook error",
   },
   "short-fun-reality": {
-    prompt: "REPLACE: Dash screen 2 prompt",
+    prompt: "REPLACE: Aiden screen 2 prompt",
     optionA: { label: "REPLACE: correct", isCorrect: true },
     optionB: { label: "REPLACE: wrong", isCorrect: false },
     wrongError: "REPLACE: error",
   },
   "tap-short-vs-long": {
-    intro: "REPLACE: Dash screen 3 intro",
+    intro: "REPLACE: Aiden screen 3 intro",
     items: [
       { id: "energy-snack", emoji: "⚡", label: "Energy drink + snack", bucket: "short" },
       { id: "scratch-ticket", emoji: "🎫", label: "Scratch-it lottery ticket", bucket: "short" },
@@ -257,19 +257,19 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     ],
   },
   "countdown-trap": {
-    prompt: "REPLACE: Dash trap prompt",
+    prompt: "REPLACE: Aiden trap prompt",
     optionA: { label: "REPLACE: correct", isCorrect: true },
     optionB: { label: "REPLACE: wrong", isCorrect: false },
     wrongError: "REPLACE: error",
   },
   "impulse-pause": {
-    narrative: "REPLACE: Dash hold narrative",
+    narrative: "REPLACE: Aiden hold narrative",
     holdLabel: "⏸️ HOLD TO PAUSE ⏸️",
     frozenLabel: "⏸️ PAUSED ⏸️",
-    successMessage: "REPLACE: Dash success quote",
+    successMessage: "REPLACE: Aiden success quote",
   },
   resolution: {
-    narrative: "REPLACE: Dash celebration + bonus XP copy",
+    narrative: "REPLACE: Aiden celebration + bonus XP copy",
     bonusXp: 50,
     bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
     autoReadyWhenNoBonus: false,
@@ -294,7 +294,7 @@ export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
       rewards: TEEN_REWARDS,
     },
     maverick: {
-      characterName: "Dash",
+      characterName: "Aiden",
       screenOverrides: MAVERICK_OVERRIDES,
       rewards: TEEN_REWARDS,
     },

@@ -202,7 +202,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       "By securing your needs before spending on temporary wants, you ensure your promises are always safe and your goals are reached.",
     advance: { mode: "on-complete" },
   },
-  explorerCompletionScreen("milestone-splash", "medal-skill2-unlock"),
+  explorerCompletionScreen("milestone-splash", "medal-skill2-unlocked"),
 ];
 
 export const M1_L2_LESSON_DEFINITION: CohortLessonDefinition = {

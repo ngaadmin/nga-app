@@ -15,7 +15,7 @@ const M1_L3_META = {
     support: "Senna",
     explorer: "Mia",
     pathfinder: "Holly",
-    maverick: "Dash",
+    maverick: "Aiden",
   },
 } as const;
 
@@ -203,11 +203,10 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "completion",
     id: "milestone-splash",
-    skillLearnedLabel: "Skill Learned: Choose to keep some spare cash",
+    skillLearnedLabel: "Skill Learned: Believe Money Can Be Made",
     bodyCopy:
       "Lesson complete! You've unlocked a huge secret: Having some spare cash means you're ready for whatever comes next.",
     useStandardPane: false,
-    medalId: "medal-skill3-unlock",
     advance: { mode: "manual-next" },
   },
 ];
@@ -276,7 +275,7 @@ const M1_L3_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
       "Holly could fix the problem because she had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
   },
   "milestone-splash": {
-    skillLearnedLabel: "Skill Learned: Choose to keep Cash for Emergencies",
+    skillLearnedLabel: "Skill Learned: Believe Money Can Be Made",
     bodyCopy:
       "Lesson complete! You've unlocked a huge secret: Having Cash for Emergencies means you're ready for whatever comes next.",
   },

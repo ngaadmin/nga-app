@@ -140,7 +140,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     autoReadyWhenNoBonus: false,
   },
   teenCompletionScreen({
-    skillTitle: "Stop & Think",
+    skillTitle: "Catch Impulse Spending",
     xpReward: 50,
     medalId: "medal-skill1-unlocked",
   }),
@@ -234,13 +234,13 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
 const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
     narrativeBefore:
-      "Dash just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be",
+      "Aiden just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be",
     wrongError:
-      "Not quite! Dash spotted those earbuds - what's his brain pushing him to do with that $40?",
+      "Not quite! Aiden spotted those earbuds - what's his brain pushing him to do with that $40?",
   },
   "short-fun-reality": {
     prompt:
-      "Dash buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",
+      "Aiden buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",
     optionA: {
       label: "...the thrill starts to wear off and his $40 is spent.",
       isCorrect: true,
@@ -254,7 +254,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
   "tap-short-vs-long": {
     intro:
-      "Dash's $40 is gone after buying the earbuds and he only had a short burst of satisfaction. Tap these items to see the difference between things that give short fun and things that give more fun for longer!",
+      "Aiden's $40 is gone after buying the earbuds and he only had a short burst of satisfaction. Tap these items to see the difference between things that give short fun and things that give more fun for longer!",
     items: [
       { id: "energy-snack", emoji: "⚡", label: "Energy drink + snack", bucket: "short" },
       {
@@ -298,29 +298,29 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
   "countdown-trap": {
     prompt:
-      'Later that day Dash receives a text message: "Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!" Why is the offer rushing him?',
+      'Later that day Aiden receives a text message: "Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!" Why is the offer rushing him?',
     optionA: {
       label: "To trick his brain into buying fast without thinking.",
       isCorrect: true,
     },
     optionB: {
-      label: "Because the company genuinely cares about Dash's safety.",
+      label: "Because the company genuinely cares about Aiden's safety.",
       isCorrect: false,
     },
     wrongError:
-      "Don't fall for the countdown! They're rushing Dash so he won't stop to think if he really wants to spend his money on it. Try again!",
+      "Don't fall for the countdown! They're rushing Aiden so he won't stop to think if he really wants to spend his money on it. Try again!",
   },
   "impulse-pause": {
     narrative:
-      "If dash had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Dash can think if he really needs the item right now.",
+      "If Aiden had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Aiden can think if he really needs the item right now.",
     holdLabel: "⏸️ HOLD TO PAUSE ⏸️",
     frozenLabel: "⏸️ PAUSED ⏸️",
     successMessage:
-      "Dash pauses and realizes: 'It's just a flash sale. I don't really need this right now and there will always be another deal.'",
+      "Aiden pauses and realizes: 'It's just a flash sale. I don't really need this right now and there will always be another deal.'",
   },
   resolution: {
     narrative:
-      "Dash walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.\n\nTap to collect 50xp for successfully avoiding the spending trap.",
+      "Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.\n\nTap to collect 50xp for successfully avoiding the spending trap.",
     bonusXp: 50,
     bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
     autoReadyWhenNoBonus: false,
@@ -346,7 +346,7 @@ export const M1_L1_LESSON_DEFINITION: CohortLessonDefinition = {
       rewards: TEEN_REWARDS,
     },
     maverick: {
-      characterName: "Dash",
+      characterName: "Aiden",
       screenOverrides: MAVERICK_OVERRIDES,
       rewards: TEEN_REWARDS,
     },

@@ -1,15 +1,41 @@
 /**
- * Skill medal assets — `public/assets/illustrations/medal/`.
- * Module 1 lessons 1–3 award unlock art; lessons 4–6 award bronze art.
+ * Skill medal assets in `public/assets/illustrations/medal/`.
+ * Filenames: medal-skill{N}-{status}.webp
+ * Status aliases on disk: unlocked | unlock | white | bronze | silver | gold.
  */
+
+export type MedalDisplayStatus =
+  | "locked"
+  | "unlocked"
+  | "bronze"
+  | "silver"
+  | "gold";
 
 export const MEDAL_ILLUSTRATION_IDS = [
   "medal-skill1-unlocked",
   "medal-skill1-bronze",
-  "medal-skill2-unlock",
+  "medal-skill1-silver",
+  "medal-skill1-gold",
+  "medal-skill2-unlocked",
   "medal-skill2-bronze",
-  "medal-skill3-unlock",
-  "medal-skill3-bronze",
+  "medal-skill2-silver",
+  "medal-skill2-gold",
+  "medal-skill5-unlocked",
+  "medal-skill5-bronze",
+  "medal-skill5-silver",
+  "medal-skill5-gold",
+  "medal-skill6-unlock",
+  "medal-skill6-bronze",
+  "medal-skill6-silver",
+  "medal-skill6-gold",
+  "medal-skill7-white",
+  "medal-skill7-bronze",
+  "medal-skill7-silver",
+  "medal-skill7-gold",
+  "medal-skill16-unlocked",
+  "medal-skill16-bronze",
+  "medal-skill16-silver",
+  "medal-skill16-gold",
 ] as const;
 
 export type MedalIllustrationId = (typeof MEDAL_ILLUSTRATION_IDS)[number];
@@ -19,10 +45,73 @@ const MEDALS_BASE = "/assets/illustrations/medal";
 export const MEDAL_ILLUSTRATION_REGISTRY: Record<MedalIllustrationId, string> = {
   "medal-skill1-unlocked": `${MEDALS_BASE}/medal-skill1-unlocked.webp`,
   "medal-skill1-bronze": `${MEDALS_BASE}/medal-skill1-bronze.webp`,
-  "medal-skill2-unlock": `${MEDALS_BASE}/medal-skill2-unlock.webp`,
+  "medal-skill1-silver": `${MEDALS_BASE}/medal-skill1-silver.webp`,
+  "medal-skill1-gold": `${MEDALS_BASE}/medal-skill1-gold.webp`,
+  "medal-skill2-unlocked": `${MEDALS_BASE}/medal-skill2-unlocked.webp`,
   "medal-skill2-bronze": `${MEDALS_BASE}/medal-skill2-bronze.webp`,
-  "medal-skill3-unlock": `${MEDALS_BASE}/medal-skill3-unlock.webp`,
-  "medal-skill3-bronze": `${MEDALS_BASE}/medal-skill3-bronze.webp`,
+  "medal-skill2-silver": `${MEDALS_BASE}/medal-skill2-silver.webp`,
+  "medal-skill2-gold": `${MEDALS_BASE}/medal-skill2-gold.webp`,
+  "medal-skill5-unlocked": `${MEDALS_BASE}/medal-skill5-unlocked.webp`,
+  "medal-skill5-bronze": `${MEDALS_BASE}/medal-skill5-bronze.webp`,
+  "medal-skill5-silver": `${MEDALS_BASE}/medal-skill5-silver.webp`,
+  "medal-skill5-gold": `${MEDALS_BASE}/medal-skill5-gold.webp`,
+  "medal-skill6-unlock": `${MEDALS_BASE}/medal-skill6-unlock.webp`,
+  "medal-skill6-bronze": `${MEDALS_BASE}/medal-skill6-bronze.webp`,
+  "medal-skill6-silver": `${MEDALS_BASE}/medal-skill6-silver.webp`,
+  "medal-skill6-gold": `${MEDALS_BASE}/medal-skill6-gold.webp`,
+  "medal-skill7-white": `${MEDALS_BASE}/medal-skill7-white.webp`,
+  "medal-skill7-bronze": `${MEDALS_BASE}/medal-skill7-bronze.webp`,
+  "medal-skill7-silver": `${MEDALS_BASE}/medal-skill7-silver.webp`,
+  "medal-skill7-gold": `${MEDALS_BASE}/medal-skill7-gold.webp`,
+  "medal-skill16-unlocked": `${MEDALS_BASE}/medal-skill16-unlocked.webp`,
+  "medal-skill16-bronze": `${MEDALS_BASE}/medal-skill16-bronze.webp`,
+  "medal-skill16-silver": `${MEDALS_BASE}/medal-skill16-silver.webp`,
+  "medal-skill16-gold": `${MEDALS_BASE}/medal-skill16-gold.webp`,
+};
+
+/** Skill numbers that currently have at least one medal file. */
+export const SKILL_NUMBERS_WITH_MEDAL_ASSETS = [1, 2, 5, 6, 7, 16] as const;
+
+const MEDAL_ID_BY_SKILL: Record<
+  number,
+  Partial<Record<MedalDisplayStatus, MedalIllustrationId>>
+> = {
+  1: {
+    unlocked: "medal-skill1-unlocked",
+    bronze: "medal-skill1-bronze",
+    silver: "medal-skill1-silver",
+    gold: "medal-skill1-gold",
+  },
+  2: {
+    unlocked: "medal-skill2-unlocked",
+    bronze: "medal-skill2-bronze",
+    silver: "medal-skill2-silver",
+    gold: "medal-skill2-gold",
+  },
+  5: {
+    unlocked: "medal-skill5-unlocked",
+    bronze: "medal-skill5-bronze",
+    silver: "medal-skill5-silver",
+    gold: "medal-skill5-gold",
+  },
+  6: {
+    unlocked: "medal-skill6-unlock",
+    bronze: "medal-skill6-bronze",
+    silver: "medal-skill6-silver",
+    gold: "medal-skill6-gold",
+  },
+  7: {
+    locked: "medal-skill7-white",
+    bronze: "medal-skill7-bronze",
+    silver: "medal-skill7-silver",
+    gold: "medal-skill7-gold",
+  },
+  16: {
+    unlocked: "medal-skill16-unlocked",
+    bronze: "medal-skill16-bronze",
+    silver: "medal-skill16-silver",
+    gold: "medal-skill16-gold",
+  },
 };
 
 export function getMedalIllustrationPath(id: MedalIllustrationId): string {
@@ -33,44 +122,43 @@ export function isMedalIllustrationId(value: string): value is MedalIllustration
   return value in MEDAL_ILLUSTRATION_REGISTRY;
 }
 
-/** Screen 8 medal art keyed by module lesson number (Module 1: lessons 1–6). */
+export function medalIdForSkillNumber(
+  skillNumber: number,
+  status: MedalDisplayStatus,
+): MedalIllustrationId | undefined {
+  return MEDAL_ID_BY_SKILL[skillNumber]?.[status];
+}
+
+export function getMedalIllustrationPathForSkill(
+  skillNumber: number,
+  status: MedalDisplayStatus,
+): string | undefined {
+  const id = medalIdForSkillNumber(skillNumber, status);
+  return id ? getMedalIllustrationPath(id) : undefined;
+}
+
+export function skillHasMedalAssets(skillNumber: number): boolean {
+  return skillNumber in MEDAL_ID_BY_SKILL;
+}
+
+/** Screen 8 medal art keyed by module lesson number (lessons 1-3 unlock, 4-6 bronze). */
 export function medalIdForLessonNumber(
   lessonNumber: number,
 ): MedalIllustrationId | undefined {
   switch (lessonNumber) {
     case 1:
-      return "medal-skill1-unlocked";
+      return medalIdForSkillNumber(1, "unlocked");
     case 2:
-      return "medal-skill2-unlock";
+      return medalIdForSkillNumber(2, "unlocked");
     case 3:
-      return "medal-skill3-unlock";
+      return medalIdForSkillNumber(3, "unlocked");
     case 4:
-      return "medal-skill1-bronze";
+      return medalIdForSkillNumber(1, "bronze");
     case 5:
-      return "medal-skill2-bronze";
+      return medalIdForSkillNumber(2, "bronze");
     case 6:
-      return "medal-skill3-bronze";
+      return medalIdForSkillNumber(3, "bronze");
     default:
       return undefined;
   }
-}
-
-/** Achievements carousel — Skills 1–3 unlock vs bronze medal art. */
-export function medalIdForSkillNumber(
-  skillNumber: number,
-  tier: "unlocked" | "bronze",
-): MedalIllustrationId | undefined {
-  if (skillNumber < 1 || skillNumber > 3) {
-    return undefined;
-  }
-
-  if (tier === "bronze") {
-    return `medal-skill${skillNumber}-bronze` as MedalIllustrationId;
-  }
-
-  if (skillNumber === 1) {
-    return "medal-skill1-unlocked";
-  }
-
-  return `medal-skill${skillNumber}-unlock` as MedalIllustrationId;
 }

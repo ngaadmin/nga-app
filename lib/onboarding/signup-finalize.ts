@@ -60,6 +60,23 @@ async function dispatchOnboardingEmails(
   const username = session.username.trim();
   if (!username) return;
 
+  if (session.accountRole === "parent_master") {
+    const parentEmail = (
+      session.learnerEmail ??
+      session.email ??
+      session.parentEmail
+    )
+      ?.trim()
+      .toLowerCase();
+    if (!parentEmail) return;
+    void requestOnboardingEmailSend({
+      type: "PARENT_WELCOME",
+      recipientEmail: parentEmail,
+      data: { username: parentEmail },
+    });
+    return;
+  }
+
   const cohort = session.ageTier;
 
   if (

@@ -20,6 +20,7 @@ const fieldBase =
 
 type FormErrors = {
   password?: string;
+  confirmPassword?: string;
   email?: string;
   form?: string;
 };
@@ -54,6 +55,7 @@ export function CreateParentProfilePanel({
   const existingEmail = useMemo(() => prefillEmail(), []);
 
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState(existingEmail);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +81,12 @@ export function CreateParentProfilePanel({
       next.password = "Create a password to secure your parent profile.";
     } else if (password.trim().length < 6) {
       next.password = "Use at least 6 characters for your password.";
+    }
+
+    if (!confirmPassword) {
+      next.confirmPassword = "Confirm the password.";
+    } else if (password && confirmPassword !== password) {
+      next.confirmPassword = "Passwords don't match.";
     }
 
     setErrors(next);
@@ -116,7 +124,7 @@ export function CreateParentProfilePanel({
         consentApprovedAt: new Date().toISOString(),
         supabaseUserId: result.parentId,
       });
-      await finalizeRegisteredSignup(parentSession, { skipEmail: true });
+      await finalizeRegisteredSignup(parentSession);
       router.replace(DASHBOARD_SETTINGS_ACCOUNT_PATH);
     } catch (error) {
       submitInFlightRef.current = false;
@@ -223,6 +231,37 @@ export function CreateParentProfilePanel({
           {errors.password ? (
             <p className="font-sans text-sm font-medium text-red-600" role="alert">
               {errors.password}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="parent-confirm-password"
+            className="block font-heading text-sm font-bold text-nga-primary"
+          >
+            {copy.createParentConfirmPasswordLabel}
+          </label>
+          <input
+            id="parent-confirm-password"
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Re-enter the password"
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              clearError("confirmPassword");
+            }}
+            aria-invalid={Boolean(errors.confirmPassword)}
+            className={cn(
+              fieldBase,
+              errors.confirmPassword && "border-red-400 focus:border-red-500",
+            )}
+          />
+          {errors.confirmPassword ? (
+            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              {errors.confirmPassword}
             </p>
           ) : null}
         </div>

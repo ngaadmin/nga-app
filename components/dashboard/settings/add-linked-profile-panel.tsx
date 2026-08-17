@@ -44,6 +44,7 @@ const fieldBase =
 type FormErrors = {
   username?: string;
   password?: string;
+  confirmPassword?: string;
   form?: string;
 };
 
@@ -59,6 +60,7 @@ export function AddLinkedProfilePanel() {
   const [cohort, setCohort] = useState<MasteryCohort | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlightRef = useRef(false);
@@ -104,6 +106,12 @@ export function AddLinkedProfilePanel() {
       next.password = "Create a password to secure this account.";
     } else if (password.trim().length < 6) {
       next.password = "Use at least 6 characters for your password.";
+    }
+
+    if (!confirmPassword) {
+      next.confirmPassword = "Confirm the password.";
+    } else if (password && confirmPassword !== password) {
+      next.confirmPassword = "Passwords don't match.";
     }
 
     setErrors(next);
@@ -354,6 +362,37 @@ export function AddLinkedProfilePanel() {
             {errors.password ? (
               <p className="font-sans text-sm font-medium text-red-600" role="alert">
                 {errors.password}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="linked-confirm-password"
+              className="block font-heading text-sm font-bold text-nga-primary"
+            >
+              {copy.addLinkedConfirmPasswordLabel}
+            </label>
+            <input
+              id="linked-confirm-password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Re-enter the password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearError("confirmPassword");
+              }}
+              aria-invalid={Boolean(errors.confirmPassword)}
+              className={cn(
+                fieldBase,
+                errors.confirmPassword && "border-red-400 focus:border-red-500",
+              )}
+            />
+            {errors.confirmPassword ? (
+              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                {errors.confirmPassword}
               </p>
             ) : null}
           </div>

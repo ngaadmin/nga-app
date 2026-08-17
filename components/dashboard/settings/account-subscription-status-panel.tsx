@@ -40,8 +40,8 @@ import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
-const dangerButtonClass =
-  "rounded-nga-lg border-2 border-red-200 bg-white px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-red-600 transition-colors hover:bg-red-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40";
+const quietDeleteClass =
+  "font-sans text-xs font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 const approveButtonClass =
   "rounded-nga-lg border-2 border-[#0CC1E0]/50 bg-white px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40";
@@ -403,18 +403,18 @@ export function AccountSubscriptionStatusPanel() {
                   <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#0CC1E0]">
                     {copy.masterBadge}
                   </p>
+                  {isMasterViewer || isParentSettingsView ? (
+                    <button
+                      type="button"
+                      className={cn(quietDeleteClass, "mt-2")}
+                      onClick={() =>
+                        openMasterDelete(household.master!.username)
+                      }
+                    >
+                      {copy.deleteMaster}
+                    </button>
+                  ) : null}
                 </div>
-                {isParentSettingsView ? (
-                  <button
-                    type="button"
-                    className={cn(dangerButtonClass, "mt-3 w-full")}
-                    onClick={() =>
-                      openMasterDelete(household.master!.username)
-                    }
-                  >
-                    {copy.deleteMaster}
-                  </button>
-                ) : null}
               </li>
             ) : null}
 
@@ -424,7 +424,8 @@ export function AccountSubscriptionStatusPanel() {
                 Boolean(activeUsername) &&
                 child.username.trim().toLowerCase() ===
                   activeUsername!.trim().toLowerCase();
-              const canDeleteChild = isParentSettingsView || isSelf;
+              const canDeleteChild =
+                isMasterViewer || isParentSettingsView || isSelf;
               const canApproveChild = isParentSettingsView && isPending;
               return (
                 <li
@@ -440,36 +441,32 @@ export function AccountSubscriptionStatusPanel() {
                         {copy.childBadge}
                         {isPending ? ` · ${copy.pendingApprovalBadge}` : ""}
                       </p>
+                      {canDeleteChild ? (
+                        <button
+                          type="button"
+                          className={cn(quietDeleteClass, "mt-2")}
+                          onClick={() =>
+                            setPendingDelete({
+                              kind: "child",
+                              username: child.username,
+                            })
+                          }
+                        >
+                          {copy.deleteChild}
+                        </button>
+                      ) : null}
                     </div>
-                    {canDeleteChild || canApproveChild ? (
-                      <div className="flex shrink-0 flex-col items-stretch gap-2">
-                        {canApproveChild ? (
-                          <button
-                            type="button"
-                            className={approveButtonClass}
-                            disabled={approvingUsername === child.username}
-                            onClick={() => handleApproveChild(child.username)}
-                          >
-                            {approvingUsername === child.username
-                              ? copy.linkingProfile
-                              : copy.linkProfile}
-                          </button>
-                        ) : null}
-                        {canDeleteChild ? (
-                          <button
-                            type="button"
-                            className={dangerButtonClass}
-                            onClick={() =>
-                              setPendingDelete({
-                                kind: "child",
-                                username: child.username,
-                              })
-                            }
-                          >
-                            {copy.deleteChild}
-                          </button>
-                        ) : null}
-                      </div>
+                    {canApproveChild ? (
+                      <button
+                        type="button"
+                        className={approveButtonClass}
+                        disabled={approvingUsername === child.username}
+                        onClick={() => handleApproveChild(child.username)}
+                      >
+                        {approvingUsername === child.username
+                          ? copy.linkingProfile
+                          : copy.linkProfile}
+                      </button>
                     ) : null}
                   </div>
                 </li>

@@ -5,6 +5,7 @@ export type OnboardingEmailType =
   | "PATHFINDER_PARENT_LINKED"
   | "PATHFINDER_WELCOME"
   | "MAVERICK_WELCOME"
+  | "PARENT_WELCOME"
   | "USERNAME_RECOVERY"
   | "CREDENTIAL_RECOVERY";
 
@@ -38,6 +39,11 @@ export type MaverickWelcomeEmailData = {
   username: string;
 };
 
+/** Welcome email after a parent / master account is created. */
+export type ParentWelcomeEmailData = {
+  username: string;
+};
+
 export type UsernameRecoveryEmailData = {
   username: string;
   cohort?: "explorer" | "pathfinder" | "maverick";
@@ -61,6 +67,7 @@ export type OnboardingEmailDataMap = {
   PATHFINDER_PARENT_LINKED: PathfinderParentLinkedEmailData;
   PATHFINDER_WELCOME: PathfinderWelcomeEmailData;
   MAVERICK_WELCOME: MaverickWelcomeEmailData;
+  PARENT_WELCOME: ParentWelcomeEmailData;
   USERNAME_RECOVERY: UsernameRecoveryEmailData;
   CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
 };
@@ -613,6 +620,61 @@ export function buildMaverickWelcomeEmail(
   return { subject, preheader, html, text };
 }
 
+export function buildParentWelcomeEmail(
+  _data: ParentWelcomeEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const base = resolveAppUrl(appUrl);
+  const accountUrl = `${base}/dashboard/settings/account`;
+
+  const subject = "Your NextGenAchiever$ parent account is ready";
+  const preheader = "Add a learner, follow progress, and manage the household.";
+  const header = "Welcome to NextGenAchiever$\u2122";
+
+  const text = [
+    "Hi there,",
+    "",
+    "Your parent account is ready. You can add learner accounts, follow their progress, and manage the household from Account settings.",
+    "",
+    "Don't worry! NextGenAchiever$ is strictly an educational tool - not a financial product.",
+    "There are no real-money transactions, live bank links, or hidden micro-purchases.",
+    "",
+    `Open Account settings: ${accountUrl}`,
+    "",
+    "If you did not create this account, you can safely ignore this email or contact support@nextgenachievers.com.",
+    "",
+    "The Team at NextGenAchiever$",
+  ].join("\n");
+
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your parent account is ready. You can add learner accounts, follow their progress,
+        and manage the household from Account settings.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        <strong>Don&apos;t worry! NextGenAchiever$ is strictly an educational tool - not a financial product.</strong>
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        There are no real-money transactions, live bank links, or hidden micro-purchases.
+      </p>
+      ${ctaButton("OPEN ACCOUNT SETTINGS", accountUrl)}
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        If you did not create this account, you can safely ignore this email or contact
+        support@nextgenachievers.com.
+      </p>
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
+      </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
 export function buildUsernameRecoveryEmail(
   data: UsernameRecoveryEmailData,
   appUrl?: string,
@@ -847,6 +909,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "MAVERICK_WELCOME":
       return buildMaverickWelcomeEmail(
         data as MaverickWelcomeEmailData,
+        appUrl,
+      );
+    case "PARENT_WELCOME":
+      return buildParentWelcomeEmail(
+        data as ParentWelcomeEmailData,
         appUrl,
       );
     case "USERNAME_RECOVERY":

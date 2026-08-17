@@ -75,6 +75,7 @@ export const copyMatrix = {
           "They join your household as approved. Username and password recovery uses your email.",
         addLinkedUsernameLabel: "Username",
         addLinkedPasswordLabel: "Password",
+        addLinkedConfirmPasswordLabel: "Confirm password",
         addLinkedParentEmailLabel: "Parent email",
         addLinkedParentEmailHint:
           "This is your signed-in email. Recovery for you and this learner uses this address.",
@@ -95,6 +96,7 @@ export const copyMatrix = {
           "This email is your parent login, and recovery for you and linked learners uses this address.",
         createParentUsernameLabel: "Your username",
         createParentPasswordLabel: "Password",
+        createParentConfirmPasswordLabel: "Confirm password",
         createParentSubmit: "Create parent profile",
         createParentSubmitting: "Creating…",
         noAccountsYet: "No registered accounts found for this session.",

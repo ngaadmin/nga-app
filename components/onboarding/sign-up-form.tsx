@@ -375,7 +375,7 @@ export function SignUpForm() {
         marketingOptIn,
         supabaseUserId: result.parentId,
       });
-      await finalizeRegisteredSignup(parentSession, { skipEmail: true });
+      await finalizeRegisteredSignup(parentSession);
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
       const message = resolveSignupFailureMessage(error, false);

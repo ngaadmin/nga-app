@@ -101,7 +101,7 @@ const MEDAL_ID_BY_SKILL: Record<
     gold: "medal-skill6-gold",
   },
   7: {
-    locked: "medal-skill7-white",
+    unlocked: "medal-skill7-white",
     bronze: "medal-skill7-bronze",
     silver: "medal-skill7-silver",
     gold: "medal-skill7-gold",
@@ -113,6 +113,12 @@ const MEDAL_ID_BY_SKILL: Record<
     gold: "medal-skill16-gold",
   },
 };
+
+export const MEDAL_PLACEHOLDER_SRC =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><circle cx="64" cy="64" r="54" fill="#F4F7F9" stroke="#BDE9FB" stroke-width="6"/><circle cx="64" cy="64" r="38" fill="#FFFFFF" stroke="#031F82" stroke-width="3" stroke-opacity="0.18"/></svg>`,
+  );
 
 export function getMedalIllustrationPath(id: MedalIllustrationId): string {
   return MEDAL_ILLUSTRATION_REGISTRY[id];
@@ -126,15 +132,23 @@ export function medalIdForSkillNumber(
   skillNumber: number,
   status: MedalDisplayStatus,
 ): MedalIllustrationId | undefined {
-  return MEDAL_ID_BY_SKILL[skillNumber]?.[status];
+  const files = MEDAL_ID_BY_SKILL[skillNumber];
+  if (!files) return undefined;
+
+  if (status === "bronze" || status === "silver" || status === "gold") {
+    return files[status];
+  }
+
+  // Locked and unlocked share the activated / white medal art.
+  return files.unlocked;
 }
 
 export function getMedalIllustrationPathForSkill(
   skillNumber: number,
   status: MedalDisplayStatus,
-): string | undefined {
+): string {
   const id = medalIdForSkillNumber(skillNumber, status);
-  return id ? getMedalIllustrationPath(id) : undefined;
+  return id ? getMedalIllustrationPath(id) : MEDAL_PLACEHOLDER_SRC;
 }
 
 export function skillHasMedalAssets(skillNumber: number): boolean {

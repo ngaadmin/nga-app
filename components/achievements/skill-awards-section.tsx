@@ -6,9 +6,6 @@ import { SkillMedalVisual } from "@/components/academy/skill-medal-visual";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { LockIcon } from "@/lib/dashboard/icons";
 import {
-  totalSkillsToMasterForMasteryCohort,
-} from "@/lib/dashboard/mastery-cohort";
-import {
   countEarnedMedals,
   countNotYetStartedSkills,
   resolveVaultSkillTrophiesForCohort,
@@ -18,46 +15,32 @@ import {
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { cn } from "@/lib/utils/cn";
 
-const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
-
-type SummaryStatCardProps = {
-  icon: string;
+type MedalCountChipProps = {
   label: string;
   value: number;
-  valueClassName?: string;
+  toneClassName: string;
 };
 
-function SummaryStatCard({
-  icon,
-  label,
-  value,
-  valueClassName,
-}: SummaryStatCardProps) {
+function MedalCountChip({ label, value, toneClassName }: MedalCountChipProps) {
   return (
-    <article
-      className={cn(
-        floatingPanelClass,
-        "flex w-[7.5rem] shrink-0 snap-center flex-col items-center px-2 py-3 text-center sm:w-[8.5rem]",
-      )}
-    >
-      <span
-        className="flex size-10 items-center justify-center rounded-full bg-[#BDE9FB]/30 text-xl"
-        aria-hidden
+    <div className="flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl bg-[#F7FBFF] px-2 py-2">
+      <p
+        className={cn(
+          "font-heading text-[10px] font-bold uppercase tracking-wide",
+          toneClassName,
+        )}
       >
-        {icon}
-      </span>
-      <p className="mt-2 font-heading text-[8px] font-bold uppercase leading-tight tracking-wide text-[#0CC1E0] sm:text-[9px]">
         {label}
       </p>
       <p
         className={cn(
-          "mt-1 font-heading text-xl font-extrabold leading-none text-[#031F82]",
-          valueClassName,
+          "mt-0.5 font-heading text-lg font-extrabold leading-none tabular-nums",
+          toneClassName,
         )}
       >
         {value}
       </p>
-    </article>
+    </div>
   );
 }
 
@@ -135,11 +118,10 @@ export function SkillAwardsSection() {
     [masteryCohort],
   );
 
-  const totalSkills = totalSkillsToMasterForMasteryCohort(masteryCohort);
   const goldCount = countEarnedMedals(cohortSkills, "gold");
   const silverCount = countEarnedMedals(cohortSkills, "silver");
   const bronzeCount = countEarnedMedals(cohortSkills, "bronze");
-  const notStartedCount = countNotYetStartedSkills(cohortSkills);
+  const lockedCount = countNotYetStartedSkills(cohortSkills);
 
   return (
     <section
@@ -151,35 +133,30 @@ export function SkillAwardsSection() {
       </DashboardSectionHeading>
 
       <div
-        aria-label="Skills summary"
-        className={cn(ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS, "mt-4")}
+        aria-label="Medal counts"
+        className="mt-3 flex w-full items-stretch gap-2"
       >
-        <SummaryStatCard icon="🎓" label="Total Skills to Master" value={totalSkills} />
-        <SummaryStatCard
-          icon="🥇"
-          label="Gold Medals"
-          value={goldCount}
-          valueClassName="text-[#FFA503]"
-        />
-        <SummaryStatCard
-          icon="🥈"
-          label="Silver Medals"
-          value={silverCount}
-          valueClassName="text-[#8FA3B0]"
-        />
-        <SummaryStatCard
-          icon="🥉"
-          label="Bronze Medals"
+        <MedalCountChip
+          label="Bronze"
           value={bronzeCount}
-          valueClassName="text-[#CD7F32]"
+          toneClassName="text-[#CD7F32]"
         />
-        <SummaryStatCard
-          icon="🔒"
-          label="Not Yet Started"
-          value={notStartedCount}
-          valueClassName="text-[#031F82]/50"
+        <MedalCountChip
+          label="Silver"
+          value={silverCount}
+          toneClassName="text-[#8FA3B0]"
+        />
+        <MedalCountChip
+          label="Gold"
+          value={goldCount}
+          toneClassName="text-[#FFA503]"
         />
       </div>
+      {lockedCount > 0 ? (
+        <p className="mt-2 text-center font-sans text-xs font-medium text-[#031F82]/45">
+          {lockedCount} still locked
+        </p>
+      ) : null}
 
       <div
         aria-label="Skills carousel"

@@ -154,6 +154,7 @@ export function ParentConsentApprovalPanel() {
         email: result.parentEmail,
         accountRole: "parent_master",
         accountStatus: "ACTIVE",
+        supabaseUserId: result.parentId,
       });
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch {

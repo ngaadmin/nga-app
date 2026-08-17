@@ -344,6 +344,7 @@ export function SignUpForm() {
         password: password.trim(),
         accountStatus: "ACTIVE",
         marketingOptIn,
+        supabaseUserId: result.parentId,
       });
       await finalizeRegisteredSignup(parentSession, { skipEmail: true });
       router.push(DASHBOARD_ACADEMY_PATH);
@@ -399,7 +400,23 @@ export function SignUpForm() {
         return;
       }
 
-      if (result.accountStatus === "pending_consent" || result.cohort === "explorer") {
+      const isPendingConsent =
+        result.accountStatus === "pending_consent" || result.cohort === "explorer";
+      const childSession = convertToRegisteredProfile({
+        username: result.username,
+        birthYear,
+        accountRole: "child",
+        parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
+        learnerEmail:
+          isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
+        password: password.trim(),
+        accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
+        marketingOptIn,
+        supabaseUserId: result.userId,
+      });
+      await finalizeRegisteredSignup(childSession, { skipEmail: true });
+
+      if (isPendingConsent) {
         router.push(ONBOARDING_SIGN_UP_PENDING_PATH);
         return;
       }

@@ -81,6 +81,8 @@ export type RegisteredProfileInput = {
   accountStatus?: RegisteredAccountStatus;
   /** Marketing email opt-in collected at create-profile. */
   marketingOptIn?: boolean;
+  /** Supabase Auth / profiles.id when this session is backed by a remote account. */
+  supabaseUserId?: string;
 };
 
 export type UserSession = {
@@ -137,6 +139,8 @@ export type UserSession = {
   temporaryPasswordExpiresAt?: string;
   /** Marketing email opt-in collected at create-profile. */
   marketingOptIn?: boolean;
+  /** Supabase Auth / profiles.id when this session is backed by a remote account. */
+  supabaseUserId?: string;
 };
 
 /** @deprecated Use UserSession - kept for existing imports. */
@@ -386,6 +390,10 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
         ? parsed.temporaryPasswordExpiresAt
         : undefined,
     marketingOptIn: parsed.marketingOptIn === true,
+    supabaseUserId:
+      typeof parsed.supabaseUserId === "string" && parsed.supabaseUserId.trim()
+        ? parsed.supabaseUserId.trim()
+        : undefined,
   };
 
   return session;
@@ -530,6 +538,7 @@ export function convertToRegisteredProfile(
     // Minors never opt in during child onboarding — parent master may later.
     marketingOptIn:
       ageTier === "explorer" ? false : input.marketingOptIn === true,
+    supabaseUserId: input.supabaseUserId?.trim() || undefined,
   };
 }
 

@@ -13,12 +13,15 @@ import {
   readUserSession,
   saveUserSession,
 } from "@/lib/onboarding/guest-session";
+import { signInSupabaseLearner } from "@/lib/onboarding/learner-account";
 import {
   authenticateRegisteredAccount,
   recoverCredentialByEmail,
   recoverUsernameByEmail,
   setRegisteredAccountPassword,
 } from "@/lib/onboarding/registered-accounts";
+import { applyLearnerAccountSnapshot } from "@/lib/onboarding/sync-registered-session";
+import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
 import { cn } from "@/lib/utils/cn";
 
@@ -108,7 +111,7 @@ export function SignInForm() {
     );
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const next: FormErrors = {};
@@ -127,23 +130,53 @@ export function SignInForm() {
       return;
     }
 
-    const session = authenticateRegisteredAccount(
+    const localSession = authenticateRegisteredAccount(
       trimmedIdentifier,
       trimmedCredential,
     );
 
-    if (!session) {
+    const remote = await signInSupabaseLearner({
+      identifier: trimmedIdentifier,
+      password: trimmedCredential,
+    });
+
+    if (remote.success) {
+      try {
+        const session = applyLearnerAccountSnapshot(remote.account, {
+          existing: localSession ?? readUserSession(),
+          password: trimmedCredential,
+        });
+        await finalizeRegisteredSignup(session, { skipEmail: true });
+        dispatchUserSessionUpdated();
+
+        if (session.mustChangePassword) {
+          setPendingUsername(session.username);
+          setForcePasswordChange(true);
+          setNewPassword("");
+          setConfirmPassword("");
+          setErrors({});
+          return;
+        }
+
+        router.push(DASHBOARD_ACADEMY_PATH);
+        return;
+      } catch {
+        // Fall through to the local registry if the remote profile cannot be applied.
+      }
+    }
+
+    if (!localSession) {
       setErrors({
-        form: "Those details don't match a saved profile on this device. Try again, or jump back in with the free app.",
+        form: "Those details don't match a saved profile. Try again, or jump back in with the free app.",
       });
       return;
     }
 
-    saveUserSession(session);
+    saveUserSession(localSession);
     dispatchUserSessionUpdated();
 
-    if (session.mustChangePassword) {
-      setPendingUsername(session.username);
+    if (localSession.mustChangePassword) {
+      setPendingUsername(localSession.username);
       setForcePasswordChange(true);
       setNewPassword("");
       setConfirmPassword("");

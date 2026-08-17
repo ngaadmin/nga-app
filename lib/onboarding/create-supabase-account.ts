@@ -122,30 +122,24 @@ export async function createSupabaseAccount(
   // Pathfinder / Maverick: real email via signUp so Auth can send confirmation.
   const created =
     cohort === "explorer"
-      ? await createExplorerAuthUser(admin, password)
+      ? await createExplorerAuthUser(admin, password, username)
       : await createLearnerAuthUser(learnerEmail!, password);
 
   if (!created.ok) {
     return { success: false, error: created.error };
   }
 
-  const { error: profileError } = await admin
-    .from("profiles")
-    .update({
-      username,
-      birth_year: birthYear,
-      account_role: accountRole,
-      account_status: accountStatus,
-      marketing_opt_in: marketingOptIn,
-    })
-    .eq("id", created.userId);
-
-  if (profileError) {
+  const profileSaved = await saveLearnerProfile(admin, {
+    userId: created.userId,
+    username,
+    birthYear,
+    accountRole,
+    accountStatus,
+    marketingOptIn,
+  });
+  if (!profileSaved.ok) {
     await admin.auth.admin.deleteUser(created.userId);
-    return {
-      success: false,
-      error: profileError.message || "Could not save the profile. Please try again.",
-    };
+    return { success: false, error: profileSaved.error };
   }
 
   // Explorer VPC + Pathfinder parent-claim emails. Maverick skips this.
@@ -178,6 +172,16 @@ export async function createSupabaseAccount(
         };
       }
     }
+  }
+
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signInWithPassword({
+      email: created.authEmail,
+      password,
+    });
+  } catch {
+    // Local session still lands; the child can sign in again later.
   }
 
   return {
@@ -282,6 +286,62 @@ async function isUsernameTaken(
   return Boolean(data);
 }
 
+async function saveLearnerProfile(
+  admin: ReturnType<typeof createAdminClient>,
+  input: {
+    userId: string;
+    username: string;
+    birthYear: number;
+    accountRole: "child";
+    accountStatus: SupabaseAccountStatus;
+    marketingOptIn: boolean;
+  },
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const payload = {
+    username: input.username,
+    birth_year: input.birthYear,
+    account_role: input.accountRole,
+    account_status: input.accountStatus,
+    marketing_opt_in: input.marketingOptIn,
+  };
+
+  const { data: updated, error: updateError } = await admin
+    .from("profiles")
+    .update(payload)
+    .eq("id", input.userId)
+    .select("id, username, account_status")
+    .maybeSingle();
+
+  if (updateError) {
+    return {
+      ok: false,
+      error: updateError.message || "Could not save the profile. Please try again.",
+    };
+  }
+  if (
+    updated?.id === input.userId &&
+    typeof updated.username === "string" &&
+    updated.username.trim().toLowerCase() === input.username.trim().toLowerCase()
+  ) {
+    return { ok: true };
+  }
+
+  const { data: inserted, error: insertError } = await admin
+    .from("profiles")
+    .insert({ id: input.userId, ...payload })
+    .select("id")
+    .maybeSingle();
+
+  if (insertError || !inserted?.id) {
+    return {
+      ok: false,
+      error:
+        insertError?.message || "Could not save the profile. Please try again.",
+    };
+  }
+  return { ok: true };
+}
+
 function buildExplorerPlaceholderEmail(): string {
   return `explorer+${crypto.randomUUID()}@${EXPLORER_AUTH_EMAIL_DOMAIN}`;
 }
@@ -289,6 +349,7 @@ function buildExplorerPlaceholderEmail(): string {
 async function createExplorerAuthUser(
   admin: ReturnType<typeof createAdminClient>,
   password: string,
+  username: string,
 ): Promise<
   { ok: true; userId: string; authEmail: string } | { ok: false; error: string }
 > {
@@ -297,6 +358,7 @@ async function createExplorerAuthUser(
     email: authEmail,
     password,
     email_confirm: true,
+    user_metadata: { username, cohort: "explorer" },
   });
 
   if (error || !data.user) {

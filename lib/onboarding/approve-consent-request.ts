@@ -160,7 +160,7 @@ export async function createParentMasterAndApprove(
   }
 
   const parentId = created.user.id;
-  const { error: profileError } = await admin
+  const { data: parentSaved, error: profileError } = await admin
     .from("profiles")
     .update({
       username,
@@ -169,13 +169,21 @@ export async function createParentMasterAndApprove(
       account_status: "active",
       marketing_opt_in: Boolean(input.marketingOptIn),
     })
-    .eq("id", parentId);
+    .eq("id", parentId)
+    .select("id, account_role, account_status")
+    .maybeSingle();
 
-  if (profileError) {
+  if (
+    profileError ||
+    !parentSaved ||
+    parentSaved.account_role !== "parent_master" ||
+    parentSaved.account_status !== "active"
+  ) {
     await admin.auth.admin.deleteUser(parentId);
     return {
       success: false,
-      error: profileError.message || "Could not save the parent profile.",
+      error:
+        profileError?.message || "Could not save the parent profile.",
     };
   }
 
@@ -241,20 +249,52 @@ async function completeConsentApproval(input: {
     };
   }
 
-  const { error: childError } = await admin
+  const { data: childProfile, error: childLookupError } = await admin
     .from("profiles")
-    .update({
-      account_status: "active",
-      consent_approved_at: approvedAt,
-    })
+    .select("id, account_role, account_status, consent_approved_at")
     .eq("id", input.childId)
-    .eq("account_role", "child");
+    .maybeSingle();
 
-  if (childError) {
+  if (childLookupError || !childProfile) {
     return {
       success: false,
-      error: childError.message || "Could not activate this learner profile.",
+      error: "Could not find this learner profile.",
     };
+  }
+  if (childProfile.account_role !== "child") {
+    return {
+      success: false,
+      error: "This approval link is not for a learner profile.",
+    };
+  }
+
+  const alreadyActive =
+    childProfile.account_status === "active" &&
+    Boolean(childProfile.consent_approved_at);
+
+  if (!alreadyActive) {
+    const { data: updatedChild, error: childError } = await admin
+      .from("profiles")
+      .update({
+        account_status: "active",
+        consent_approved_at: childProfile.consent_approved_at ?? approvedAt,
+      })
+      .eq("id", input.childId)
+      .select("id, account_status, consent_approved_at")
+      .maybeSingle();
+
+    if (
+      childError ||
+      !updatedChild ||
+      updatedChild.account_status !== "active" ||
+      !updatedChild.consent_approved_at
+    ) {
+      return {
+        success: false,
+        error:
+          childError?.message || "Could not activate this learner profile.",
+      };
+    }
   }
 
   const { error: linkError } = await admin.from("parent_child").insert({
@@ -269,7 +309,7 @@ async function completeConsentApproval(input: {
     };
   }
 
-  const { error: requestError } = await admin
+  const { data: updatedRequest, error: requestError } = await admin
     .from("consent_requests")
     .update({
       status: "approved",
@@ -278,12 +318,20 @@ async function completeConsentApproval(input: {
       parent_id: input.parentId,
     })
     .eq("id", input.requestId)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .select("id, status")
+    .maybeSingle();
 
   if (requestError) {
     return {
       success: false,
       error: requestError.message || "Could not mark this approval as complete.",
+    };
+  }
+  if (updatedRequest && updatedRequest.status !== "approved") {
+    return {
+      success: false,
+      error: "Could not mark this approval as complete.",
     };
   }
 

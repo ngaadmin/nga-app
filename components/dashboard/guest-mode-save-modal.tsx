@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
+  ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_PATH,
   readUserSession,
 } from "@/lib/onboarding/guest-session";
@@ -67,6 +68,18 @@ export function GuestModeSaveModal({
       >
         Save My Progress
       </Link>
+
+      <p className="mt-3 text-center font-sans text-xs leading-relaxed text-[#1E3A5F]">
+        Already picked a username and password?{" "}
+        <Link
+          href={ONBOARDING_SIGN_IN_PATH}
+          onClick={onClose}
+          className="font-heading font-bold text-[#0CC1E0] underline-offset-2 hover:underline"
+        >
+          Log back in
+        </Link>{" "}
+        to keep your saved profile.
+      </p>
 
       {parentEmail ? (
         <p className="mt-4 font-sans text-xs leading-relaxed text-[#1E3A5F]">

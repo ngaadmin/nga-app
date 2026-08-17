@@ -13,7 +13,7 @@ export function OnboardingHeader() {
     >
       <div className="flex w-full items-center justify-center">
         <Link
-          href="/onboarding"
+          href="/"
           className="inline-flex items-center justify-center focus-visible:outline-offset-4"
           aria-label="NextGenAchievers home"
         >

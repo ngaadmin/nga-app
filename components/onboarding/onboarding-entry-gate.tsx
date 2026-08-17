@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ButtonLink } from "@/components/ui/button";
+import { ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
 
 const FINN_HOMEPAGE_SRC =
   "/assets/illustrations/website/Finn_homepage.png";
@@ -28,7 +29,7 @@ export function OnboardingEntryGate() {
             Built like a game. Designed for real life.
           </p>
           <div className="mt-6 w-full max-w-sm sm:mt-8">
-            <ButtonLink href="/onboarding/start" variant="cta" fullWidth>
+            <ButtonLink href={ONBOARDING_START_PATH} variant="cta" fullWidth>
               Try the Free App
             </ButtonLink>
           </div>

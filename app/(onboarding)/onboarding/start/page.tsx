@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { OnboardingStartClient } from "@/components/onboarding/onboarding-start-client";
-import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Pick Your Track",
@@ -9,9 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function OnboardingStartPage() {
-  return (
-    <SearchParamsBoundary>
-      <OnboardingStartClient />
-    </SearchParamsBoundary>
-  );
+  return <OnboardingStartClient />;
 }

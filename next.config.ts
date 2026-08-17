@@ -3,6 +3,19 @@ import { SHOW_LAUNCHPAD } from "./lib/dashboard/feature-flags";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async headers() {
+    return [
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, must-revalidate",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     const vaultRedirects = [
       {

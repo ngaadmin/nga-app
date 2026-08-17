@@ -1,12 +1,10 @@
-import type { Metadata } from "next";
-import { OnboardingEntryGate } from "@/components/onboarding";
+import { redirect } from "next/navigation";
+import { ONBOARDING_ENTRY_PATH } from "@/lib/onboarding/guest-session";
 
-export const metadata: Metadata = {
-  title: "Get Started",
-  description:
-    "Join NextGenAchievers - the free, fun way to master real-world money skills.",
-};
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export default function OnboardingPage() {
-  return <OnboardingEntryGate />;
+/** Legacy welcome URL. The hero now lives at `/`. */
+export default function OnboardingAliasPage() {
+  redirect(ONBOARDING_ENTRY_PATH);
 }

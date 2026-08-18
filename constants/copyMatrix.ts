@@ -3,21 +3,32 @@ export const COPY_USERNAME_TOKEN = "[Username]" as const;
 export const copyMatrix = {
   onboarding: {
     signIn: {
-      forgotUsername: "Forgot learner username?",
-      recoveryEmailLabel: "Parent email on file",
-      recoveryEmailPlaceholder: "parent@example.com",
+      title: "Log in",
+      submit: "Log in",
+      identifierLabel: "Email or username",
+      identifierHint: "Parents use email. Use a username if that's how you signed up.",
+      identifierPlaceholder: "Email or username",
+      passwordLabel: "Password",
+      forgotPassword: "Forgot password?",
+      noAccount: "Don't have an account?",
+      createAccount: "Create an account",
+      alreadyHaveAccount: "Already have an account?",
+      heroLogIn: "Log in",
+      forgotUsername: "Forgot username?",
+      recoveryEmailLabel: "Email",
+      recoveryEmailPlaceholder: "you@example.com",
       recoveryUsernameSubmit: "Send Username",
       recoveryCredentialSubmit: "Send Reset Email",
       recoveryCancel: "Back to log in",
       recoveryUsernameHint:
-        "We'll email the learner username(s) linked to this parent address. Parents log in with email.",
+        "We'll email the username(s) linked to this address. Parents log in with email.",
       recoverySending: "Sending…",
       recoveryUsernameSuccess:
         "If that email is on file, we sent the username there. Check the inbox (and spam).",
       recoveryPasswordHint:
-        "Use the parent email on file. We'll send a reset for the parent login and any linked learner logins.",
+        "Enter your email. We'll send a reset if that address is on file.",
       recoveryPasswordSuccess:
-        "If that email is on file, we sent a reset there. Use it to log in, then set a new password.",
+        "If that email is on file, we sent a reset link there. Check the inbox (and spam).",
     },
     chooseAccount: {
       title: "Who is creating this account?",
@@ -39,9 +50,9 @@ export const copyMatrix = {
         passwordReset: "Password Reset",
         passwordResetTitle: "Reset a password",
         passwordResetParentHint:
-          "We'll email a temporary password to your parent email. Linked learner resets go to that same inbox.",
+          "We'll email a reset link to your parent email. Linked learner resets go to that same inbox.",
         passwordResetChildHint:
-          "Learner logins reset through the parent email on file. We'll send the code there.",
+          "Learner logins reset through the parent email on file. We'll send a reset link there.",
         passwordResetSubmit: "Send reset email",
         passwordResetSending: "Sending…",
         passwordResetSuccess:

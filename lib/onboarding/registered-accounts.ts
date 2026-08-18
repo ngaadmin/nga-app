@@ -114,27 +114,6 @@ function accountMatchesEmail(account: UserSession, email: string): boolean {
   return false;
 }
 
-function applyTemporaryPasswordHash(
-  account: UserSession,
-  passwordHash: string,
-  expiresAt: string,
-): UserSession {
-  const updated: UserSession = {
-    ...account,
-    mustChangePassword: true,
-    temporaryPasswordExpiresAt: expiresAt,
-  };
-
-  if (account.ageTier === "explorer" || account.passcodeHash) {
-    updated.passcodeHash = passwordHash;
-  }
-  if (account.ageTier !== "explorer") {
-    updated.passwordHash = passwordHash;
-  }
-
-  return updated;
-}
-
 /** Temp recovery credentials fail closed when expiry is missing or past. */
 function isTemporaryPasswordExpired(account: UserSession): boolean {
   const hasTempHash =
@@ -309,18 +288,9 @@ export async function recoverUsernameByEmail(
   return { accepted: true, recipientEmail };
 }
 
-type TemporaryPasswordApiResult = {
-  success?: boolean;
-  passwordHash?: string;
-  expiresAt?: string;
-  error?: string;
-};
-
 /**
- * Requests a server-issued random temporary password (emailed server-side),
- * then stores only the returned salted hash on matching local accounts.
- * Does not update credentials unless the recovery email was handed off.
- * Does not touch Parent PIN / parental-controls recovery.
+ * Emails a password reset link. Does not change any password until the user
+ * submits the reset form. Does not touch Parent PIN / parental-controls recovery.
  */
 export async function recoverCredentialByEmail(
   email: string,
@@ -334,79 +304,6 @@ export async function recoverCredentialByEmail(
   const remote = await requestHouseholdPasswordRecovery(recipientEmail, options);
   if (!remote.accepted) {
     return remote;
-  }
-
-  for (const rotation of remote.rotations) {
-    const account = findRegisteredAccountByUsername(rotation.username);
-    if (!account) continue;
-    upsertRegisteredAccount(
-      applyTemporaryPasswordHash(
-        account,
-        rotation.passwordHash,
-        rotation.expiresAt,
-      ),
-    );
-  }
-
-  if (remote.rotations.length > 0) {
-    return { accepted: true, recipientEmail };
-  }
-
-  const accounts = findRegisteredAccountsByEmail(recipientEmail).filter(
-    (account) =>
-      !options?.onlyUsername ||
-      account.username.trim().toLowerCase() ===
-        options.onlyUsername.trim().toLowerCase(),
-  );
-  if (accounts.length === 0) {
-    return { accepted: true, recipientEmail };
-  }
-
-  let successCount = 0;
-  let lastError =
-    "Could not send a recovery email. Check your connection and try again.";
-
-  for (const account of accounts) {
-    try {
-      const response = await fetch("/api/auth/temporary-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientEmail,
-          username:
-            account.accountRole === "parent_master"
-              ? recipientEmail
-              : account.username,
-          cohort: account.ageTier,
-        }),
-      });
-
-      const json = (await response.json().catch(() => null)) as
-        | TemporaryPasswordApiResult
-        | null;
-
-      if (!response.ok || !json?.passwordHash || !json.expiresAt) {
-        if (typeof json?.error === "string" && json.error.trim()) {
-          lastError = json.error.trim();
-        }
-        continue;
-      }
-
-      upsertRegisteredAccount(
-        applyTemporaryPasswordHash(
-          account,
-          json.passwordHash,
-          json.expiresAt,
-        ),
-      );
-      successCount += 1;
-    } catch {
-      // Leave existing credentials; try remaining accounts.
-    }
-  }
-
-  if (successCount === 0) {
-    return { accepted: false, error: lastError };
   }
 
   return { accepted: true, recipientEmail };

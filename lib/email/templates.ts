@@ -53,11 +53,14 @@ export type UsernameRecoveryEmailData = {
   linkedUsernames?: string[];
 };
 
-export type CredentialRecoveryEmailData = {
-  username: string;
-  recoveryCode: string;
-  /** Explorer uses parent-facing subject + masked username. */
+export type CredentialRecoveryResetLink = {
+  label: string;
+  token: string;
   cohort?: "explorer" | "pathfinder" | "maverick";
+};
+
+export type CredentialRecoveryEmailData = {
+  resets: CredentialRecoveryResetLink[];
 };
 
 export type OnboardingEmailDataMap = {
@@ -821,56 +824,82 @@ export function buildCredentialRecoveryEmail(
   data: CredentialRecoveryEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const rawUsername = data.username.trim() || "learner";
-  const isExplorer = data.cohort === "explorer";
-  const displayUsername = isExplorer
-    ? maskUsernameForParent(rawUsername)
-    : rawUsername;
-  const recoveryCode = data.recoveryCode.trim();
   const base = resolveAppUrl(appUrl);
-  const signInUrl = `${base}/onboarding/sign-in`;
-
-  const subject = isExplorer
-    ? "Reset your child's NextGenAchiever$ password"
+  const resets = (data.resets ?? []).filter(
+    (item) => item.token.trim() && item.label.trim(),
+  );
+  const isHousehold = resets.length > 1;
+  const subject = isHousehold
+    ? "Reset your NextGenAchiever$ passwords"
     : "Reset your NextGenAchiever$ password";
-  const preheader = "Your temporary password is inside";
+  const preheader = "Use the link to set a new password. Your current password stays the same until you do.";
 
-  const text = [
-    `Hi - a password reset was requested for ${displayUsername}.`,
+  const linkRows = resets.map((item) => {
+    const rawLabel = item.label.trim();
+    const label =
+      item.cohort === "explorer" ? maskUsernameForParent(rawLabel) : rawLabel;
+    const resetUrl = `${base}/onboarding/reset-password?token=${encodeURIComponent(item.token.trim())}`;
+    return { label, resetUrl };
+  });
+
+  const textLines = [
+    isHousehold
+      ? "A password reset was requested for logins linked to this email."
+      : `A password reset was requested for ${linkRows[0]?.label ?? "your login"}.`,
     "",
-    `Temporary password: ${recoveryCode}`,
-    `Use this as the current password, then set a new one after you log in.`,
+    "Your password is not changed until you open a link and save a new one.",
+    "Each link resets only that one account.",
     "",
-    `Reset / log in: ${signInUrl}`,
+    ...linkRows.flatMap((row) =>
+      isHousehold
+        ? [`${row.label}: ${row.resetUrl}`, ""]
+        : [`Set a new password: ${row.resetUrl}`, ""],
+    ),
+    "If you did not ask for this, you can ignore this email.",
     "",
     "- NextGenAchievers",
-  ].join("\n");
+  ];
+
+  const linksHtml = linkRows
+    .map((row) => {
+      const heading = isHousehold
+        ? `<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(row.label)}</p>`
+        : "";
+      return `
+        <div style="margin:0 0 20px;">
+          ${heading}
+          ${ctaButton(isHousehold ? "Set a new password" : "Set a new password", row.resetUrl)}
+        </div>
+      `;
+    })
+    .join("");
 
   const html = wrapHtml({
     header: "Password reset",
     preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
-        A password reset was requested for
-        <strong>${escapeHtml(displayUsername)}</strong>.
+        ${
+          isHousehold
+            ? "A password reset was requested for logins linked to this email."
+            : `A password reset was requested for <strong>${escapeHtml(linkRows[0]?.label ?? "your login")}</strong>.`
+        }
       </p>
-      <p style="margin:0 0 8px;font-size:16px;">
-        Temporary password:
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your current password stays the same until you open a link and save a new one.
+        ${isHousehold ? " Each link resets only that one account." : ""}
       </p>
-      <p style="margin:0 0 16px;font-size:28px;font-weight:700;letter-spacing:0.2em;color:#031F82;">
-        ${escapeHtml(recoveryCode)}
+      ${linksHtml}
+      <p style="margin:16px 0 0;font-size:14px;color:#5B6B7C;">
+        If you did not ask for this, you can ignore this email.
       </p>
-      <p style="margin:0 0 16px;font-size:14px;color:#5B6B7C;">
-        Use this as the current password, then set a new one after you log in.
-      </p>
-      ${ctaButton("Log Back In", signInUrl)}
     `,
   });
 
   return {
     subject,
     html,
-    text,
+    text: textLines.join("\n"),
     preheader,
   };
 }

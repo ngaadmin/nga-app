@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
   DASHBOARD_ACADEMY_PATH,
-  hasCompletedPersonalizationGate,
-  ONBOARDING_ENTRY_PATH,
-  ONBOARDING_START_PATH,
+  ONBOARDING_SIGN_UP_PATH,
   readUserSession,
   saveUserSession,
 } from "@/lib/onboarding/guest-session";
@@ -64,7 +62,10 @@ export function SignInForm() {
       setPendingUsername(session.username);
       return;
     }
-    if (hasCompletedPersonalizationGate(session) && !session?.mustChangePassword) {
+    if (
+      session?.accessMode === "registered" &&
+      !session.mustChangePassword
+    ) {
       router.replace(DASHBOARD_ACADEMY_PATH);
     }
   }, [router]);
@@ -122,7 +123,7 @@ export function SignInForm() {
     const trimmedCredential = credential.trim();
 
     if (!trimmedIdentifier) {
-      next.identifier = "Enter your email or learner username.";
+      next.identifier = "Enter your email or username.";
     }
     if (!trimmedCredential) {
       next.credential = "Enter your password.";
@@ -243,7 +244,7 @@ export function SignInForm() {
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            {forcePasswordChange ? "Set a new password" : "Log Back In"}
+            {forcePasswordChange ? "Set a new password" : copy.title}
           </h1>
           {forcePasswordChange ? (
             <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
@@ -349,7 +350,7 @@ export function SignInForm() {
               <h2 className="font-heading text-xl font-extrabold text-nga-primary">
                 {recoveryMode === "username"
                   ? copy.forgotUsername
-                  : "Forgot password?"}
+                  : copy.forgotPassword}
               </h2>
               <p className="font-sans text-sm leading-relaxed text-nga-slate">
                 {recoveryMode === "username"
@@ -425,7 +426,7 @@ export function SignInForm() {
                   htmlFor="sign-in-identifier"
                   className="block font-heading text-sm font-bold text-nga-primary"
                 >
-                  Email or learner username
+                  {copy.identifierLabel}
                 </label>
                 <button
                   type="button"
@@ -435,12 +436,15 @@ export function SignInForm() {
                   {copy.forgotUsername}
                 </button>
               </div>
+              <p className="font-sans text-xs leading-relaxed text-nga-slate">
+                {copy.identifierHint}
+              </p>
               <input
                 id="sign-in-identifier"
                 name="identifier"
                 type="text"
                 autoComplete="username"
-                placeholder="Email or learner username"
+                placeholder={copy.identifierPlaceholder}
                 value={identifier}
                 onChange={(e) => {
                   setIdentifier(e.target.value);
@@ -473,14 +477,14 @@ export function SignInForm() {
                   htmlFor="sign-in-credential"
                   className="block font-heading text-sm font-bold text-nga-primary"
                 >
-                  Password
+                  {copy.passwordLabel}
                 </label>
                 <button
                   type="button"
                   onClick={() => openRecovery("credential")}
                   className="shrink-0 font-heading text-xs font-bold text-nga-secondary underline-offset-2 hover:underline"
                 >
-                  Forgot password?
+                  {copy.forgotPassword}
                 </button>
               </div>
               <input
@@ -525,26 +529,19 @@ export function SignInForm() {
             ) : null}
 
             <Button type="submit" variant="cta" fullWidth>
-              Log Back In
+              {copy.submit}
             </Button>
           </form>
         )}
 
         {!forcePasswordChange ? (
           <p className="text-center font-sans text-sm text-nga-slate">
-            New here?{" "}
+            {copy.noAccount}{" "}
             <Link
-              href={`${ONBOARDING_START_PATH}?fresh=1`}
+              href={`${ONBOARDING_SIGN_UP_PATH}?from=login`}
               className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
             >
-              Create a free account
-            </Link>
-            {" · "}
-            <Link
-              href={ONBOARDING_ENTRY_PATH}
-              className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
-            >
-              Back to welcome
+              {copy.createAccount}
             </Link>
           </p>
         ) : null}

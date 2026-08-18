@@ -111,125 +111,6 @@ function ProfileHeader({
   );
 }
 
-type ParentPinGateProps = {
-  mode: "verify" | "setup";
-  isOpen: boolean;
-  title: string;
-  body: string;
-  placeholder: string;
-  confirmPlaceholder?: string;
-  newPinLabel?: string;
-  confirmLabel: string;
-  cancelLabel: string;
-  error: string | null;
-  pinValue: string;
-  confirmPinValue?: string;
-  onPinChange: (value: string) => void;
-  onConfirmPinChange?: (value: string) => void;
-  onConfirm: () => void;
-  onCancel: () => void;
-};
-
-function ParentPinGate({
-  mode,
-  isOpen,
-  title,
-  body,
-  placeholder,
-  confirmPlaceholder,
-  newPinLabel,
-  confirmLabel,
-  cancelLabel,
-  error,
-  pinValue,
-  confirmPinValue = "",
-  onPinChange,
-  onConfirmPinChange,
-  onConfirm,
-  onCancel,
-}: ParentPinGateProps) {
-  if (!isOpen) return null;
-
-  const canConfirm =
-    mode === "setup"
-      ? isValidPinFormat(pinValue) && isValidPinFormat(confirmPinValue)
-      : isValidPinFormat(pinValue);
-
-  return (
-    <ModalShell
-      isOpen={isOpen}
-      onClose={onCancel}
-      layer="toast"
-      labelledBy="parent-pin-title"
-      backdropClassName="bg-[#031F82]/55"
-      panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
-    >
-        <h2
-          id="parent-pin-title"
-          className="font-heading text-lg font-extrabold text-[#031F82]"
-        >
-          {title}
-        </h2>
-        <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-          {body}
-        </p>
-        {mode === "setup" ? (
-          <div className="mt-4 space-y-3">
-            <PinField
-              id="setup-parent-pin"
-              label={newPinLabel ?? placeholder}
-              value={pinValue}
-              onChange={(value) => {
-                onPinChange(value);
-              }}
-            />
-            <PinField
-              id="setup-parent-pin-confirm"
-              label={confirmPlaceholder ?? "Confirm new PIN"}
-              value={confirmPinValue}
-              onChange={(value) => onConfirmPinChange?.(value)}
-            />
-          </div>
-        ) : (
-          <input
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={4}
-            autoComplete="off"
-            placeholder={placeholder}
-            value={pinValue}
-            onChange={(event) => {
-              onPinChange(event.target.value.replace(/\D/g, "").slice(0, 4));
-            }}
-            aria-label={placeholder}
-            className={cn("mt-4", pinInputClass)}
-          />
-        )}
-        {error ? (
-          <p className="mt-2 font-sans text-xs font-semibold text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={!canConfirm}
-          className={cn("mt-4 h-touch w-full px-6 shadow-md", orangeCtaClass)}
-        >
-          {confirmLabel}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="mt-3 w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/60"
-        >
-          {cancelLabel}
-        </button>
-    </ModalShell>
-  );
-}
-
 type PinFieldProps = {
   id: string;
   label: string;
@@ -588,14 +469,8 @@ export function HomeDashboard() {
   const { username, joinDate, isLoading } = useDashboardUser();
   const copy = copyMatrix.dashboard.settings;
 
-  const [parentHubUnlocked, setParentHubUnlocked] = useState(false);
-  const [pinModalOpen, setPinModalOpen] = useState(false);
-  const [pinModalMode, setPinModalMode] = useState<"verify" | "setup">("verify");
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
-  const [pinInput, setPinInput] = useState("");
-  const [pinConfirmInput, setPinConfirmInput] = useState("");
-  const [pinError, setPinError] = useState<string | null>(null);
 
   const simulatedParentEmail = useMemo(
     () => resolveSimulatedParentEmail(username),
@@ -605,47 +480,6 @@ export function HomeDashboard() {
   function handleLogOut() {
     clearAllAppSessionState();
     router.push(ONBOARDING_SIGN_IN_PATH);
-  }
-
-  function openPinGate() {
-    setPinError(null);
-    setPinInput("");
-    setPinConfirmInput("");
-    setPinModalMode(isParentPinConfigured() ? "verify" : "setup");
-    setPinModalOpen(true);
-  }
-
-  function handlePinConfirm() {
-    if (pinModalMode === "setup") {
-      if (!isValidPinFormat(pinInput) || pinInput !== pinConfirmInput) {
-        setPinError(copy.parentMode.setupMismatch);
-        return;
-      }
-      saveParentPin(pinInput);
-      setPinError(null);
-      setPinModalOpen(false);
-      setPinInput("");
-      setPinConfirmInput("");
-      setParentHubUnlocked(true);
-      return;
-    }
-
-    if (!verifyParentPin(pinInput)) {
-      setPinError(copy.parentMode.pinError);
-      return;
-    }
-    setPinError(null);
-    setPinModalOpen(false);
-    setPinInput("");
-    setPinConfirmInput("");
-    setParentHubUnlocked(true);
-  }
-
-  function handlePinCancel() {
-    setPinModalOpen(false);
-    setPinInput("");
-    setPinConfirmInput("");
-    setPinError(null);
   }
 
   return (
@@ -691,11 +525,7 @@ export function HomeDashboard() {
           />
         </nav>
 
-        <ParentHubSection
-          isUnlocked={parentHubUnlocked}
-          onRequestUnlock={() => openPinGate()}
-          onLock={() => setParentHubUnlocked(false)}
-        />
+        <ParentHubSection />
       </div>
 
       <PasswordResetModal
@@ -709,37 +539,6 @@ export function HomeDashboard() {
         copy={copy.changePin}
         parentEmail={simulatedParentEmail}
         onClose={() => setChangePinModalOpen(false)}
-      />
-
-      <ParentPinGate
-        mode={pinModalMode}
-        isOpen={pinModalOpen}
-        title={
-          pinModalMode === "setup"
-            ? copy.parentMode.setupTitle
-            : copy.parentMode.pinTitle
-        }
-        body={
-          pinModalMode === "setup"
-            ? copy.parentMode.setupBody
-            : copy.parentMode.pinBody
-        }
-        placeholder={copy.parentMode.pinPlaceholder}
-        newPinLabel={copy.parentMode.setupNewLabel}
-        confirmPlaceholder={copy.parentMode.setupConfirmLabel}
-        confirmLabel={
-          pinModalMode === "setup"
-            ? copy.parentMode.setupSave
-            : copy.parentMode.pinConfirm
-        }
-        cancelLabel={copy.parentMode.pinCancel}
-        error={pinError}
-        pinValue={pinInput}
-        confirmPinValue={pinConfirmInput}
-        onPinChange={setPinInput}
-        onConfirmPinChange={setPinConfirmInput}
-        onConfirm={handlePinConfirm}
-        onCancel={handlePinCancel}
       />
     </>
   );

@@ -71,13 +71,13 @@ export function GuestModeSaveModal({
       </Link>
 
       <p className="mt-3 text-center font-sans text-xs leading-relaxed text-[#1E3A5F]">
-        Already picked a username and password?{" "}
+        Already have an account?{" "}
         <Link
           href={ONBOARDING_SIGN_IN_PATH}
           onClick={onClose}
           className="font-heading font-bold text-[#0CC1E0] underline-offset-2 hover:underline"
         >
-          Log back in
+          Log in
         </Link>{" "}
         to keep your saved profile.
       </p>

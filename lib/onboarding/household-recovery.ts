@@ -2,36 +2,35 @@
 
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
-  generateTemporaryPassword,
-  hashTemporaryPassword,
-} from "@/lib/auth/temporary-password";
+  signPasswordResetToken,
+} from "@/lib/auth/password-reset-token";
 import {
   getMasteryCohortFromBirthYear,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { getDefaultAppUrl } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import { normalizeEmailAddress } from "@/lib/validation/email";
-
-export type RecoveryRotation = {
-  username: string;
-  passwordHash: string;
-  expiresAt: string;
-};
+import { headers } from "next/headers";
 
 export type HouseholdRecoveryResult =
-  | { accepted: true; recipientEmail: string; rotations: RecoveryRotation[] }
+  | { accepted: true; recipientEmail: string }
   | { accepted: false; error: string };
 
-const TEMP_PASSWORD_TTL_MS = 60 * 60 * 1000;
+type ResetTarget = {
+  userId: string;
+  username: string;
+  label: string;
+  cohort?: MasteryCohort;
+};
 
 /**
  * Email-based household recovery. Always looks like success when the address
  * is valid so the UI never discloses whether an account exists.
  *
- * Parent email: reset the parent login and any linked learner logins, then
- * email the codes to that same address (parent-assisted child recovery).
+ * Does not change any password. Sends one email with a reset link per profile.
  */
 export async function requestHouseholdPasswordRecovery(
   email: string,
@@ -58,82 +57,86 @@ export async function requestHouseholdPasswordRecovery(
   try {
     admin = createAdminClient();
   } catch {
-    return { accepted: true, recipientEmail, rotations: [] };
+    return { accepted: true, recipientEmail };
   }
 
   const onlyUsername = options?.onlyUsername?.trim();
+  const targets: ResetTarget[] = [];
+  const seenIds = new Set<string>();
+
+  async function addTarget(target: ResetTarget | null) {
+    if (!target || seenIds.has(target.userId)) return;
+    seenIds.add(target.userId);
+    targets.push(target);
+  }
+
   if (onlyUsername) {
-    const childRotation = await rotateLinkedChildByUsername(
-      admin,
-      onlyUsername,
-      recipientEmail,
+    await addTarget(
+      await loadLinkedChildTarget(admin, onlyUsername, recipientEmail),
     );
-    return {
-      accepted: true,
-      recipientEmail,
-      rotations: childRotation ? [childRotation] : [],
-    };
-  }
+  } else {
+    const authUserId = await findAuthUserIdByEmail(recipientEmail);
+    if (authUserId) {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("id, username, account_role, birth_year")
+        .eq("id", authUserId)
+        .maybeSingle();
 
-  const rotations: RecoveryRotation[] = [];
-  const rotatedIds = new Set<string>();
+      if (profile?.account_role === "parent_master") {
+        await addTarget({
+          userId: profile.id,
+          username: profile.username?.trim() || recipientEmail,
+          label: recipientEmail,
+        });
 
-  const authUserId = await findAuthUserIdByEmail(recipientEmail);
-  if (authUserId) {
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("id, username, account_role, birth_year")
-      .eq("id", authUserId)
-      .maybeSingle();
-
-    if (profile?.account_role === "parent_master") {
-      const rotated = await rotateAndEmail(admin, {
-        userId: profile.id,
-        recipientEmail,
-        displayName: recipientEmail,
-        localUsername: profile.username ?? recipientEmail,
-        cohort: undefined,
-      });
-      if (rotated) {
-        rotations.push(rotated);
-        rotatedIds.add(profile.id);
-      }
-
-      const childIds = await listHouseholdChildIds(admin, profile.id, recipientEmail);
-      for (const childId of childIds) {
-        if (rotatedIds.has(childId)) continue;
-        const childRotation = await rotateChildLogin(admin, childId, recipientEmail);
-        if (childRotation) {
-          rotations.push(childRotation);
-          rotatedIds.add(childId);
+        const childIds = await listHouseholdChildIds(
+          admin,
+          profile.id,
+          recipientEmail,
+        );
+        for (const childId of childIds) {
+          await addTarget(await loadChildTarget(admin, childId));
         }
+      } else if (profile?.account_role === "child" && profile.username) {
+        await addTarget({
+          userId: profile.id,
+          username: profile.username.trim(),
+          label: profile.username.trim(),
+          cohort: cohortFromBirthYear(profile.birth_year),
+        });
       }
-    } else if (profile?.account_role === "child" && profile.username) {
-      const rotated = await rotateAndEmail(admin, {
-        userId: profile.id,
-        recipientEmail,
-        displayName: profile.username,
-        localUsername: profile.username,
-        cohort: cohortFromBirthYear(profile.birth_year),
-      });
-      if (rotated) {
-        rotations.push(rotated);
-        rotatedIds.add(profile.id);
-      }
+    }
+
+    const childIds = await listChildIdsByParentEmail(admin, recipientEmail);
+    for (const childId of childIds) {
+      await addTarget(await loadChildTarget(admin, childId));
     }
   }
 
-  const childIds = await listChildIdsByParentEmail(admin, recipientEmail);
-  for (const childId of childIds) {
-    if (rotatedIds.has(childId)) continue;
-    const childRotation = await rotateChildLogin(admin, childId, recipientEmail);
-    if (childRotation) {
-      rotations.push(childRotation);
-      rotatedIds.add(childId);
-    }
+  if (targets.length === 0) {
+    return { accepted: true, recipientEmail };
   }
 
-  return { accepted: true, recipientEmail, rotations };
+  const createdAt = new Date().toISOString();
+  const resets = targets.map((target) => ({
+    label: target.label,
+    token: signPasswordResetToken({
+      userId: target.userId,
+      username: target.username,
+      createdAt,
+    }),
+    cohort: target.cohort,
+  }));
+
+  await sendOnboardingEmail({
+    type: "CREDENTIAL_RECOVERY",
+    recipientEmail,
+    data: { resets },
+    appUrl: await resolveRecoveryAppUrl(),
+  });
+
+  return { accepted: true, recipientEmail };
 }
 
 /**
@@ -164,7 +167,7 @@ export async function requestHouseholdUsernameRecovery(
   try {
     admin = createAdminClient();
   } catch {
-    return { accepted: true, recipientEmail, rotations: [] };
+    return { accepted: true, recipientEmail };
   }
 
   const linkedUsernames: string[] = [];
@@ -199,7 +202,7 @@ export async function requestHouseholdUsernameRecovery(
 
   const unique = [...new Set(linkedUsernames)];
   if (unique.length === 0) {
-    return { accepted: true, recipientEmail, rotations: [] };
+    return { accepted: true, recipientEmail };
   }
 
   await sendOnboardingEmail({
@@ -211,7 +214,7 @@ export async function requestHouseholdUsernameRecovery(
     },
   });
 
-  return { accepted: true, recipientEmail, rotations: [] };
+  return { accepted: true, recipientEmail };
 }
 
 async function listHouseholdChildIds(
@@ -248,11 +251,11 @@ async function listChildIdsByParentEmail(
   return [...ids];
 }
 
-async function rotateLinkedChildByUsername(
+async function loadLinkedChildTarget(
   admin: ReturnType<typeof createAdminClient>,
   username: string,
   parentEmail: string,
-): Promise<RecoveryRotation | null> {
+): Promise<ResetTarget | null> {
   const { data: child } = await admin
     .from("profiles")
     .select("id, username, account_role, birth_year")
@@ -270,14 +273,13 @@ async function rotateLinkedChildByUsername(
     return null;
   }
 
-  return rotateChildLogin(admin, child.id, parentEmail);
+  return loadChildTarget(admin, child.id);
 }
 
-async function rotateChildLogin(
+async function loadChildTarget(
   admin: ReturnType<typeof createAdminClient>,
   childId: string,
-  recipientEmail: string,
-): Promise<RecoveryRotation | null> {
+): Promise<ResetTarget | null> {
   const { data: child } = await admin
     .from("profiles")
     .select("id, username, account_role, birth_year")
@@ -286,55 +288,29 @@ async function rotateChildLogin(
   if (!child?.id || child.account_role !== "child" || !child.username?.trim()) {
     return null;
   }
-  return rotateAndEmail(admin, {
-    userId: child.id,
-    recipientEmail,
-    displayName: child.username.trim(),
-    localUsername: child.username.trim(),
-    cohort: cohortFromBirthYear(child.birth_year),
-  });
-}
-
-async function rotateAndEmail(
-  admin: ReturnType<typeof createAdminClient>,
-  input: {
-    userId: string;
-    recipientEmail: string;
-    displayName: string;
-    localUsername: string;
-    cohort?: MasteryCohort;
-  },
-): Promise<RecoveryRotation | null> {
-  const temporaryPassword = generateTemporaryPassword();
-  const sendResult = await sendOnboardingEmail({
-    type: "CREDENTIAL_RECOVERY",
-    recipientEmail: input.recipientEmail,
-    data: {
-      username: input.displayName,
-      recoveryCode: temporaryPassword,
-      cohort: input.cohort,
-    },
-  });
-
-  if (!sendResult.success) return null;
-  if (sendResult.simulated && process.env.NODE_ENV === "production") {
-    return null;
-  }
-
-  const { error } = await admin.auth.admin.updateUserById(input.userId, {
-    password: temporaryPassword,
-    user_metadata: { mustChangePassword: true },
-  });
-  if (error) return null;
-
+  const username = child.username.trim();
   return {
-    username: input.localUsername,
-    passwordHash: hashTemporaryPassword(temporaryPassword),
-    expiresAt: new Date(Date.now() + TEMP_PASSWORD_TTL_MS).toISOString(),
+    userId: child.id,
+    username,
+    label: username,
+    cohort: cohortFromBirthYear(child.birth_year),
   };
 }
 
 function cohortFromBirthYear(birthYear: unknown): MasteryCohort | undefined {
   if (typeof birthYear !== "number") return undefined;
   return getMasteryCohortFromBirthYear(birthYear);
+}
+
+async function resolveRecoveryAppUrl(): Promise<string> {
+  try {
+    const headerList = await headers();
+    const origin = headerList.get("origin")?.trim();
+    if (origin) {
+      return new URL(origin).origin;
+    }
+  } catch {
+    // Server action without a request origin — use env / production fallback.
+  }
+  return getDefaultAppUrl();
 }

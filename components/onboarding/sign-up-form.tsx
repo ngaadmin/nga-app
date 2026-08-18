@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
@@ -17,7 +18,7 @@ import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
   DASHBOARD_SETTINGS_ACCOUNT_PATH,
-  getSessionCurriculumCohort,
+  isGuestSession,
   ONBOARDING_PARENT_CONSENT_PATH,
   ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_LEARNER_PATH,
@@ -131,12 +132,23 @@ function trackSafeguardHint(cohort: MasteryCohort): string {
     case "pathfinder":
       return "Pathfinder links a parent email so they can follow along. It does not block creating your account.";
     case "maverick":
-      return "Maverick uses your email only. No parent fields are needed.";
+      return "Maverick logs in with a username and password. No parent fields are needed.";
   }
 }
 
 function adultBirthYear(): number {
   return new Date().getFullYear() - 35;
+}
+
+function guestSelectedTrack(
+  session: ReturnType<typeof readUserSession>,
+): MasteryCohort | null {
+  if (!isGuestSession(session) || !session) return null;
+  const track = session.curriculumCohort;
+  if (track === "explorer" || track === "pathfinder" || track === "maverick") {
+    return track;
+  }
+  return null;
 }
 
 export function SignUpForm() {
@@ -147,13 +159,15 @@ export function SignUpForm() {
   const isParentMaster =
     searchParams.get("role") === "parent_master" && Boolean(consentToken);
   const accountAs = (searchParams.get("as") ?? "").trim().toLowerCase();
-  const fromAccount = (searchParams.get("from") ?? "").trim() === "account";
+  const fromParam = (searchParams.get("from") ?? "").trim();
+  const fromAccount = fromParam === "account";
+  const fromLoginCreate = fromParam === "login";
   const isGuestParentCreate = !isParentMaster && accountAs === "parent";
   const showRoleChoice = !isParentMaster && accountAs !== "learner" && accountAs !== "parent";
 
   const [cohort, setCohort] = useState<MasteryCohort | null>(() => {
-    if (isParentMaster || !existingSession) return null;
-    return getSessionCurriculumCohort(existingSession);
+    if (isParentMaster) return null;
+    return guestSelectedTrack(existingSession);
   });
 
   const ageTier = isParentMaster ? null : cohort;
@@ -735,7 +749,15 @@ export function SignUpForm() {
             </p>
           </div>
           <div className="space-y-3">
-            <ButtonLink href={ONBOARDING_SIGN_UP_LEARNER_PATH} variant="cta" fullWidth>
+            <ButtonLink
+              href={
+                fromLoginCreate
+                  ? `${ONBOARDING_SIGN_UP_LEARNER_PATH}&from=login`
+                  : ONBOARDING_SIGN_UP_LEARNER_PATH
+              }
+              variant="cta"
+              fullWidth
+            >
               {choice.learner}
             </ButtonLink>
             <p className="text-center font-sans text-sm text-nga-slate">
@@ -752,6 +774,15 @@ export function SignUpForm() {
               {choice.parentHint}
             </p>
           </div>
+          <p className="text-center font-sans text-sm text-nga-slate">
+            {copyMatrix.onboarding.signIn.alreadyHaveAccount}{" "}
+            <Link
+              href={ONBOARDING_SIGN_IN_PATH}
+              className="font-heading font-bold text-nga-secondary underline-offset-2 hover:underline"
+            >
+              {copyMatrix.onboarding.signIn.heroLogIn}
+            </Link>
+          </p>
         </div>
       </section>
     );
@@ -769,7 +800,9 @@ export function SignUpForm() {
               router.push(
                 fromAccount
                   ? DASHBOARD_SETTINGS_ACCOUNT_PATH
-                  : ONBOARDING_SIGN_UP_PATH,
+                  : fromLoginCreate
+                    ? `${ONBOARDING_SIGN_UP_PATH}?from=login`
+                    : ONBOARDING_SIGN_UP_PATH,
               )
             }
             className="font-heading text-sm font-bold text-nga-secondary transition-colors hover:text-nga-primary"
@@ -780,7 +813,11 @@ export function SignUpForm() {
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            {ageTier ? cohortHeader(ageTier) : "Save Your Progress"}
+            {fromLoginCreate
+              ? "Create your account"
+              : ageTier
+                ? cohortHeader(ageTier)
+                : "Save Your Progress"}
           </h1>
         </div>
 
@@ -891,7 +928,11 @@ export function SignUpForm() {
                 Tip: To protect your privacy online, never use your real full
                 name as a username!
               </p>
-            ) : null}
+            ) : (
+              <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
+                You&apos;ll log in with this username.
+              </p>
+            )}
           </div>
 
           {isPathfinder || isMaverick ? (
@@ -927,7 +968,11 @@ export function SignUpForm() {
                 >
                   {errors.learnerEmail}
                 </p>
-              ) : null}
+              ) : (
+                <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
+                  For account updates only. You log in with your username.
+                </p>
+              )}
             </div>
           ) : null}
 

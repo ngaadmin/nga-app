@@ -185,7 +185,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            "CREDENTIAL_RECOVERY must be issued via /api/auth/temporary-password.",
+            "CREDENTIAL_RECOVERY must be issued via household password recovery.",
         },
         { status: 400 },
       );

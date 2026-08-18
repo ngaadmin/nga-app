@@ -1,6 +1,10 @@
 import Image from "next/image";
 import { ButtonLink } from "@/components/ui/button";
-import { ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
+import { copyMatrix } from "@/constants/copyMatrix";
+import {
+  ONBOARDING_SIGN_IN_PATH,
+  ONBOARDING_START_PATH,
+} from "@/lib/onboarding/guest-session";
 
 const FINN_HOMEPAGE_SRC =
   "/assets/illustrations/website/Finn_homepage.png";
@@ -30,9 +34,16 @@ export function OnboardingEntryGate() {
           <p className="mt-2 max-w-md font-sans text-base font-normal leading-relaxed text-nga-slate sm:mt-3 sm:text-lg lg:mt-4">
             Built like a game. Designed for real life.
           </p>
-          <div className="mt-4 w-full max-w-sm sm:mt-6 lg:mt-8">
+          <div className="mt-4 flex w-full max-w-sm flex-col gap-3 sm:mt-6 lg:mt-8">
             <ButtonLink href={ONBOARDING_START_PATH} variant="cta" fullWidth>
               Try the Free App
+            </ButtonLink>
+            <ButtonLink
+              href={ONBOARDING_SIGN_IN_PATH}
+              variant="secondary-outline"
+              fullWidth
+            >
+              {copyMatrix.onboarding.signIn.heroLogIn}
             </ButtonLink>
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
   convertToRegisteredProfile,
   DASHBOARD_ADD_PROFILE_PATH,
   ONBOARDING_ENTRY_PATH,
+  ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_LEARNER_PATH,
   ONBOARDING_SIGN_UP_PARENT_PATH,
   isGuestSession,
@@ -515,6 +516,13 @@ export function AccountSubscriptionStatusPanel() {
                 className="h-touch w-full rounded-nga-lg border-2 border-[#0CC1E0] bg-white px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-colors hover:bg-[#BDE9FB]/30"
               >
                 {copy.guestSaveLearner}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(ONBOARDING_SIGN_IN_PATH)}
+                className="w-full py-2 text-center font-heading text-sm font-bold text-[#0CC1E0] underline-offset-2 hover:underline"
+              >
+                {copyMatrix.onboarding.signIn.heroLogIn}
               </button>
             </div>
           ) : sessionReady && !household.master && household.children.length === 0 ? (

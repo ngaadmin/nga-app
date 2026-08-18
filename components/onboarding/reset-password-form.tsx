@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  completePasswordReset,
-  readPasswordResetRequest,
-} from "@/lib/onboarding/complete-password-reset";
 import { ONBOARDING_SIGN_IN_PATH } from "@/lib/onboarding/guest-session";
 import { setRegisteredAccountPassword } from "@/lib/onboarding/registered-accounts";
 import { cn } from "@/lib/utils/cn";
@@ -20,8 +16,6 @@ export function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = (searchParams.get("token") ?? "").trim();
 
-  const [lookupError, setLookupError] = useState<string | null>(null);
-  const [isChecking, setIsChecking] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -31,31 +25,9 @@ export function ResetPasswordForm() {
   }>({});
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function checkToken() {
-      if (!token) {
-        setLookupError(
-          "This reset link is invalid or expired. Request a new one from Log in.",
-        );
-        setIsChecking(false);
-        return;
-      }
-
-      const result = await readPasswordResetRequest(token);
-      if (cancelled) return;
-      if (!result.ok) {
-        setLookupError(result.error);
-      }
-      setIsChecking(false);
-    }
-
-    void checkToken();
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
+  const lookupError = token
+    ? null
+    : "This reset link is invalid or expired. Request a new one from Log in.";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,16 +54,34 @@ export function ResetPasswordForm() {
     }
 
     setIsSaving(true);
-    const result = await completePasswordReset(token, trimmedNew);
-    setIsSaving(false);
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: trimmedNew }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(12_000),
+      });
+      const json = (await response.json().catch(() => null)) as
+        | { ok?: boolean; username?: string; error?: string }
+        | null;
 
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+      if (!json?.ok || typeof json.username !== "string") {
+        setFormError(
+          typeof json?.error === "string" && json.error.trim()
+            ? json.error.trim()
+            : "We could not update this password. Try again.",
+        );
+        return;
+      }
+
+      setRegisteredAccountPassword(json.username, trimmedNew);
+      router.replace(ONBOARDING_SIGN_IN_PATH);
+    } catch {
+      setFormError("We could not update this password. Try again.");
+    } finally {
+      setIsSaving(false);
     }
-
-    setRegisteredAccountPassword(result.username, trimmedNew);
-    router.replace(ONBOARDING_SIGN_IN_PATH);
   }
 
   return (
@@ -106,11 +96,7 @@ export function ResetPasswordForm() {
           </p>
         </div>
 
-        {isChecking ? (
-          <p className="text-center font-sans text-sm text-nga-slate">
-            Checking reset link…
-          </p>
-        ) : lookupError ? (
+        {lookupError ? (
           <div className="space-y-4 text-center">
             <p className="font-sans text-sm font-medium text-red-600" role="alert">
               {lookupError}
@@ -204,7 +190,7 @@ export function ResetPasswordForm() {
           </form>
         )}
 
-        {!isChecking && !lookupError ? (
+        {!lookupError ? (
           <p className="text-center font-sans text-sm text-nga-slate">
             <Link
               href={ONBOARDING_SIGN_IN_PATH}

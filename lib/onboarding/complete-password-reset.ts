@@ -30,7 +30,15 @@ export async function completePasswordReset(
   token: string,
   password: string,
 ): Promise<CompletePasswordResetResult> {
-  const claims = verifyPasswordResetToken(token);
+  let claims;
+  try {
+    claims = verifyPasswordResetToken(token);
+  } catch {
+    return {
+      ok: false,
+      error: "This reset link is invalid or expired. Request a new one from Log in.",
+    };
+  }
   if (!claims || !isPasswordResetTokenUnexpired(claims.createdAt)) {
     return {
       ok: false,

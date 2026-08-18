@@ -5,7 +5,6 @@ import {
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 import {
-  requestHouseholdPasswordRecovery,
   requestHouseholdUsernameRecovery,
 } from "@/lib/onboarding/household-recovery";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
@@ -301,12 +300,40 @@ export async function recoverCredentialByEmail(
     return { accepted: false, error: "Enter a valid email address." };
   }
 
-  const remote = await requestHouseholdPasswordRecovery(recipientEmail, options);
-  if (!remote.accepted) {
-    return remote;
-  }
+  try {
+    const response = await fetch("/api/auth/password-recovery", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: recipientEmail,
+        onlyUsername: options?.onlyUsername,
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    });
 
-  return { accepted: true, recipientEmail };
+    const json = (await response.json().catch(() => null)) as
+      | CredentialRecoveryResult
+      | { accepted?: false; error?: string }
+      | null;
+
+    if (json?.accepted === true) {
+      return { accepted: true, recipientEmail };
+    }
+
+    return {
+      accepted: false,
+      error:
+        typeof json?.error === "string" && json.error.trim()
+          ? json.error.trim()
+          : "Could not send a recovery email. Try again shortly.",
+    };
+  } catch {
+    return {
+      accepted: false,
+      error: "Could not send a recovery email. Try again shortly.",
+    };
+  }
 }
 
 /** Household email used to link a parent master account to child profiles. */

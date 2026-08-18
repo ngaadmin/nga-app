@@ -45,6 +45,8 @@ export async function findAuthUserIdByEmail(
           Authorization: `Bearer ${key}`,
           apikey: key,
         },
+        cache: "no-store",
+        signal: AbortSignal.timeout(5_000),
       },
     );
     if (!response.ok) return null;

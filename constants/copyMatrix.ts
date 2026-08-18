@@ -31,12 +31,9 @@ export const copyMatrix = {
         "If that email is on file, we sent a reset link there. Check the inbox (and spam).",
     },
     chooseAccount: {
-      title: "Who is creating this account?",
-      hint: "Pick the option that matches you. This sets the login you get.",
+      title: "Who is this account for?",
       learner: "I'm the learner",
-      learnerHint: "Save this play session as a learner login.",
       parent: "I'm a parent",
-      parentHint: "Create a parent login with your email and password.",
     },
   },
   dashboard: {

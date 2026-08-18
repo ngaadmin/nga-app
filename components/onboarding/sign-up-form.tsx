@@ -744,9 +744,6 @@ export function SignUpForm() {
             <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
               {choice.title}
             </h1>
-            <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
-              {choice.hint}
-            </p>
           </div>
           <div className="space-y-3">
             <ButtonLink
@@ -760,9 +757,6 @@ export function SignUpForm() {
             >
               {choice.learner}
             </ButtonLink>
-            <p className="text-center font-sans text-sm text-nga-slate">
-              {choice.learnerHint}
-            </p>
             <ButtonLink
               href={ONBOARDING_SIGN_UP_PARENT_PATH}
               variant="secondary"
@@ -770,9 +764,6 @@ export function SignUpForm() {
             >
               {choice.parent}
             </ButtonLink>
-            <p className="text-center font-sans text-sm text-nga-slate">
-              {choice.parentHint}
-            </p>
           </div>
           <p className="text-center font-sans text-sm text-nga-slate">
             {copyMatrix.onboarding.signIn.alreadyHaveAccount}{" "}

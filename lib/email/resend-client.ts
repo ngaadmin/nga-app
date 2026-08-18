@@ -92,6 +92,7 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
         html: built.html,
         text: built.text,
       }),
+      signal: AbortSignal.timeout(8_000),
     });
 
     if (!response.ok) {

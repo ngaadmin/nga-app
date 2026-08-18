@@ -96,23 +96,30 @@ export function SignInForm() {
     setRecoveryNotice(null);
     setIsRecovering(true);
 
-    const result =
-      recoveryMode === "username"
-        ? await recoverUsernameByEmail(recoveryEmail)
-        : await recoverCredentialByEmail(recoveryEmail);
+    try {
+      const result =
+        recoveryMode === "username"
+          ? await recoverUsernameByEmail(recoveryEmail)
+          : await recoverCredentialByEmail(recoveryEmail);
 
-    setIsRecovering(false);
+      if (!result.accepted) {
+        setErrors({ recoveryEmail: result.error });
+        return;
+      }
 
-    if (!result.accepted) {
-      setErrors({ recoveryEmail: result.error });
-      return;
+      setRecoveryNotice(
+        recoveryMode === "username"
+          ? copy.recoveryUsernameSuccess
+          : copy.recoveryPasswordSuccess,
+      );
+    } catch {
+      setErrors({
+        recoveryEmail:
+          "Could not send a recovery email. Try again shortly.",
+      });
+    } finally {
+      setIsRecovering(false);
     }
-
-    setRecoveryNotice(
-      recoveryMode === "username"
-        ? copy.recoveryUsernameSuccess
-        : copy.recoveryPasswordSuccess,
-    );
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

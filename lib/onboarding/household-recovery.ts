@@ -55,84 +55,98 @@ export async function requestHouseholdPasswordRecovery(
     return { accepted: true, recipientEmail };
   }
 
-  const onlyUsername = options?.onlyUsername?.trim();
-  const targets: ResetTarget[] = [];
-  const seenIds = new Set<string>();
+  try {
+    const onlyUsername = options?.onlyUsername?.trim();
+    const targets: ResetTarget[] = [];
+    const seenIds = new Set<string>();
 
-  async function addTarget(target: ResetTarget | null) {
-    if (!target || seenIds.has(target.userId)) return;
-    seenIds.add(target.userId);
-    targets.push(target);
-  }
+    async function addTarget(target: ResetTarget | null) {
+      if (!target || seenIds.has(target.userId)) return;
+      seenIds.add(target.userId);
+      targets.push(target);
+    }
 
-  if (onlyUsername) {
-    await addTarget(
-      await loadLinkedChildTarget(admin, onlyUsername, recipientEmail),
-    );
-  } else {
-    const authUserId = await findAuthUserIdByEmail(recipientEmail);
-    if (authUserId) {
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("id, username, account_role, birth_year")
-        .eq("id", authUserId)
-        .maybeSingle();
+    if (onlyUsername) {
+      await addTarget(
+        await loadLinkedChildTarget(admin, onlyUsername, recipientEmail),
+      );
+    } else {
+      const authUserId = await findAuthUserIdByEmail(recipientEmail);
+      if (authUserId) {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("id, username, account_role, birth_year")
+          .eq("id", authUserId)
+          .maybeSingle();
 
-      if (profile?.account_role === "parent_master") {
-        await addTarget({
-          userId: profile.id,
-          username: profile.username?.trim() || recipientEmail,
-          label: recipientEmail,
-          kind: "parent",
-        });
+        if (profile?.account_role === "parent_master") {
+          await addTarget({
+            userId: profile.id,
+            username: profile.username?.trim() || recipientEmail,
+            label: recipientEmail,
+            kind: "parent",
+          });
 
-        const childIds = await listHouseholdChildIds(
-          admin,
-          profile.id,
-          recipientEmail,
-        );
-        for (const childId of childIds) {
-          await addTarget(await loadChildTarget(admin, childId));
+          const childIds = await listHouseholdChildIds(
+            admin,
+            profile.id,
+            recipientEmail,
+          );
+          for (const childId of childIds) {
+            await addTarget(await loadChildTarget(admin, childId));
+          }
+        } else if (profile?.account_role === "child" && profile.username) {
+          await addTarget({
+            userId: profile.id,
+            username: profile.username.trim(),
+            label: profile.username.trim(),
+            kind: "child",
+          });
         }
-      } else if (profile?.account_role === "child" && profile.username) {
-        await addTarget({
-          userId: profile.id,
-          username: profile.username.trim(),
-          label: profile.username.trim(),
-          kind: "child",
-        });
+      }
+
+      const childIds = await listChildIdsByParentEmail(admin, recipientEmail);
+      for (const childId of childIds) {
+        await addTarget(await loadChildTarget(admin, childId));
       }
     }
 
-    const childIds = await listChildIdsByParentEmail(admin, recipientEmail);
-    for (const childId of childIds) {
-      await addTarget(await loadChildTarget(admin, childId));
+    if (targets.length === 0) {
+      return { accepted: true, recipientEmail };
     }
-  }
 
-  if (targets.length === 0) {
+    const createdAt = new Date().toISOString();
+    const resets = targets.map((target) => ({
+      label: target.label,
+      token: signPasswordResetToken({
+        userId: target.userId,
+        username: target.username,
+        createdAt,
+      }),
+      kind: target.kind,
+    }));
+
+    const sendResult = await sendOnboardingEmail({
+      type: "CREDENTIAL_RECOVERY",
+      recipientEmail,
+      data: { resets },
+      appUrl: getDefaultAppUrl(),
+    });
+
+    if (!sendResult.success) {
+      return {
+        accepted: false,
+        error: "Could not send a recovery email. Try again shortly.",
+      };
+    }
+
     return { accepted: true, recipientEmail };
+  } catch {
+    return {
+      accepted: false,
+      error: "Could not send a recovery email. Try again shortly.",
+    };
   }
-
-  const createdAt = new Date().toISOString();
-  const resets = targets.map((target) => ({
-    label: target.label,
-    token: signPasswordResetToken({
-      userId: target.userId,
-      username: target.username,
-      createdAt,
-    }),
-    kind: target.kind,
-  }));
-
-  await sendOnboardingEmail({
-    type: "CREDENTIAL_RECOVERY",
-    recipientEmail,
-    data: { resets },
-    appUrl: getDefaultAppUrl(),
-  });
-
-  return { accepted: true, recipientEmail };
 }
 
 /**

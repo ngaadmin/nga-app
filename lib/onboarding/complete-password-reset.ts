@@ -1,5 +1,3 @@
-"use server";
-
 import {
   isPasswordResetTokenUnexpired,
   verifyPasswordResetToken,
@@ -65,17 +63,28 @@ export async function completePasswordReset(
 
   try {
     const admin = createAdminClient();
-    const { error } = await admin.auth.admin.updateUserById(claims.userId, {
-      password: trimmedPassword,
-      user_metadata: { mustChangePassword: false },
-    });
-    if (error) {
+    const { data, error } = await admin.auth.admin.updateUserById(
+      claims.userId,
+      {
+        password: trimmedPassword,
+        user_metadata: { mustChangePassword: false },
+      },
+    );
+    if (error || !data.user?.id) {
+      console.error("[password-reset] Supabase Auth update failed", {
+        userId: claims.userId,
+        message: error?.message ?? "no user returned",
+      });
       return {
         ok: false,
         error: "We could not update this password. Try again.",
       };
     }
-  } catch {
+  } catch (error) {
+    console.error("[password-reset] Supabase Auth update threw", {
+      userId: claims.userId,
+      message: error instanceof Error ? error.message : "unknown",
+    });
     return {
       ok: false,
       error: "We could not update this password. Try again.",

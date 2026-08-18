@@ -210,7 +210,8 @@ export function setRegisteredAccountPassword(
   const store = readStore();
   const index = store.accounts.findIndex(
     (account) =>
-      account.username.trim().toLowerCase() === trimmedUsername.toLowerCase(),
+      account.username.trim().toLowerCase() === trimmedUsername.toLowerCase() ||
+      accountMatchesIdentifier(account, trimmedUsername),
   );
   if (index < 0) return null;
 

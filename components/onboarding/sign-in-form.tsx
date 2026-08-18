@@ -11,12 +11,10 @@ import {
   readUserSession,
   saveUserSession,
 } from "@/lib/onboarding/guest-session";
+import { updateSignedInPassword } from "@/lib/onboarding/learner-account";
 import {
-  signInSupabaseLearner,
-  updateSignedInPassword,
-} from "@/lib/onboarding/learner-account";
-import {
-  authenticateRegisteredAccount,
+  findRegisteredAccountByUsername,
+  findRegisteredAccountsByEmail,
   recoverCredentialByEmail,
   recoverUsernameByEmail,
   setRegisteredAccountPassword,
@@ -54,6 +52,8 @@ export function SignInForm() {
   const [pendingUsername, setPendingUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
     const session = readUserSession();
@@ -141,20 +141,46 @@ export function SignInForm() {
       return;
     }
 
-    const localSession = authenticateRegisteredAccount(
-      trimmedIdentifier,
-      trimmedCredential,
-    );
+    setIsSigningIn(true);
+    setErrors({});
+    try {
+      const response = await fetch("/api/auth/sign-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: trimmedIdentifier,
+          password: trimmedCredential,
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(12_000),
+      });
+      const remote = (await response.json().catch(() => null)) as
+        | {
+            success?: boolean;
+            account?: Parameters<typeof applyLearnerAccountSnapshot>[0];
+            error?: string;
+          }
+        | null;
 
-    const remote = await signInSupabaseLearner({
-      identifier: trimmedIdentifier,
-      password: trimmedCredential,
-    });
+      if (!remote?.success || !remote.account) {
+        setErrors({
+          form:
+            typeof remote?.error === "string" && remote.error.trim()
+              ? remote.error.trim()
+              : copy.credentialsMismatch,
+        });
+        return;
+      }
 
-    if (remote.success) {
+      const existing =
+        findRegisteredAccountByUsername(remote.account.username) ??
+        findRegisteredAccountByUsername(trimmedIdentifier) ??
+        findRegisteredAccountsByEmail(trimmedIdentifier)[0] ??
+        readUserSession();
+
       try {
         const session = applyLearnerAccountSnapshot(remote.account, {
-          existing: localSession ?? readUserSession(),
+          existing,
           password: trimmedCredential,
         });
         await finalizeRegisteredSignup(session, { skipEmail: true });
@@ -170,32 +196,14 @@ export function SignInForm() {
         }
 
         router.push(DASHBOARD_ACADEMY_PATH);
-        return;
       } catch {
-        // Fall through to the local registry if the remote profile cannot be applied.
+        setErrors({ form: copy.profileOpenFailed });
       }
+    } catch {
+      setErrors({ form: copy.signInUnavailable });
+    } finally {
+      setIsSigningIn(false);
     }
-
-    if (!localSession) {
-      setErrors({
-        form: "Those details don't match a saved profile. Try again, or jump back in with the free app.",
-      });
-      return;
-    }
-
-    saveUserSession(localSession);
-    dispatchUserSessionUpdated();
-
-    if (localSession.mustChangePassword) {
-      setPendingUsername(localSession.username);
-      setForcePasswordChange(true);
-      setNewPassword("");
-      setConfirmPassword("");
-      setErrors({});
-      return;
-    }
-
-    router.push(DASHBOARD_ACADEMY_PATH);
   }
 
   async function handlePasswordChangeSubmit(
@@ -222,28 +230,37 @@ export function SignInForm() {
       return;
     }
 
-    const current = readUserSession();
-    if (current?.supabaseUserId) {
-      const remote = await updateSignedInPassword(trimmedNew);
-      if (!remote.ok) {
+    setIsUpdatingPassword(true);
+    try {
+      const current = readUserSession();
+      if (current?.supabaseUserId) {
+        const remote = await updateSignedInPassword(trimmedNew);
+        if (!remote.ok) {
+          setErrors({
+            form: remote.error || "We could not update your password. Try again.",
+          });
+          return;
+        }
+      }
+
+      const updated = setRegisteredAccountPassword(pendingUsername, trimmedNew);
+      if (!updated) {
         setErrors({
-          form: remote.error || "We could not update your password. Try again.",
+          form: "We could not update your password. Try signing in again.",
         });
         return;
       }
-    }
 
-    const updated = setRegisteredAccountPassword(pendingUsername, trimmedNew);
-    if (!updated) {
+      saveUserSession(updated);
+      dispatchUserSessionUpdated();
+      router.push(DASHBOARD_ACADEMY_PATH);
+    } catch {
       setErrors({
-        form: "We could not update your password. Try signing in again.",
+        form: "We could not update your password. Try again.",
       });
-      return;
+    } finally {
+      setIsUpdatingPassword(false);
     }
-
-    saveUserSession(updated);
-    dispatchUserSessionUpdated();
-    router.push(DASHBOARD_ACADEMY_PATH);
   }
 
   return (
@@ -347,8 +364,13 @@ export function SignInForm() {
               </p>
             ) : null}
 
-            <Button type="submit" variant="cta" fullWidth>
-              Save new password
+            <Button
+              type="submit"
+              variant="cta"
+              fullWidth
+              disabled={isUpdatingPassword}
+            >
+              {isUpdatingPassword ? "Saving…" : "Save new password"}
             </Button>
           </form>
         ) : recoveryMode ? (
@@ -535,8 +557,13 @@ export function SignInForm() {
               </p>
             ) : null}
 
-            <Button type="submit" variant="cta" fullWidth>
-              {copy.submit}
+            <Button
+              type="submit"
+              variant="cta"
+              fullWidth
+              disabled={isSigningIn}
+            >
+              {isSigningIn ? copy.signingIn : copy.submit}
             </Button>
           </form>
         )}

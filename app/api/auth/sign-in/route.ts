@@ -4,13 +4,17 @@ import {
   clientIpKey,
 } from "@/lib/auth/request-guard";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import { completePasswordReset } from "@/lib/onboarding/complete-password-reset";
+import {
+  SIGN_IN_MISMATCH_ERROR,
+  SIGN_IN_UNAVAILABLE_ERROR,
+  signInSupabaseAccount,
+} from "@/lib/onboarding/sign-in-supabase";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
 
 type Body = {
-  token?: unknown;
+  identifier?: unknown;
   password?: unknown;
 };
 
@@ -18,19 +22,19 @@ export async function POST(request: Request) {
   const auth = authorizeBrowserMutation(request);
   if (!auth.ok) {
     return NextResponse.json(
-      { ok: false, error: auth.error },
+      { success: false, error: auth.error },
       { status: auth.status },
     );
   }
 
   const ipLimit = consumeRateLimit(
-    `password-reset:ip:${clientIpKey(request)}`,
-    8,
+    `sign-in:ip:${clientIpKey(request)}`,
+    12,
     60_000,
   );
   if (!ipLimit.allowed) {
     return NextResponse.json(
-      { ok: false, error: "Too many reset attempts. Try again in a few minutes." },
+      { success: false, error: "Too many sign-in attempts. Try again shortly." },
       { status: 429 },
     );
   }
@@ -41,35 +45,37 @@ export async function POST(request: Request) {
       body = (await request.json()) as Body;
     } catch {
       return NextResponse.json(
-        { ok: false, error: "This reset link is invalid or expired. Request a new one from Log in." },
+        { success: false, error: SIGN_IN_MISMATCH_ERROR },
         { status: 400 },
       );
     }
 
-    const token = typeof body.token === "string" ? body.token.trim() : "";
+    const identifier =
+      typeof body.identifier === "string" ? body.identifier.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
-    if (!token) {
+    if (!identifier || password.trim().length < 6) {
       return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "This reset link is invalid or expired. Request a new one from Log in.",
-        },
+        { success: false, error: SIGN_IN_MISMATCH_ERROR },
         { status: 400 },
       );
     }
 
-    const result = await completePasswordReset(token, password);
-    if (!result.ok) {
-      console.error("[password-reset] POST rejected", { error: result.error });
+    const result = await signInSupabaseAccount({
+      identifier,
+      password,
+    });
+
+    if (!result.success) {
+      console.error("[sign-in] POST rejected", { error: result.error });
     }
-    return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+
+    return NextResponse.json(result, { status: result.success ? 200 : 401 });
   } catch (error) {
-    console.error("[password-reset] Route failed", {
+    console.error("[sign-in] Route failed", {
       message: error instanceof Error ? error.message : "unknown",
     });
     return NextResponse.json(
-      { ok: false, error: "We could not update this password. Try again." },
+      { success: false, error: SIGN_IN_UNAVAILABLE_ERROR },
       { status: 500 },
     );
   }

@@ -29,6 +29,11 @@ export const copyMatrix = {
         "Enter your email. We'll send a reset if that address is on file.",
       recoveryPasswordSuccess:
         "If that email is on file, we sent a reset link there. Check the inbox (and spam).",
+      credentialsMismatch:
+        "Those details don't match. Check your email or username and password.",
+      signInUnavailable: "Could not sign in. Try again shortly.",
+      profileOpenFailed: "We could not open your profile. Try again.",
+      signingIn: "Signing in…",
     },
     chooseAccount: {
       title: "Who is this account for?",

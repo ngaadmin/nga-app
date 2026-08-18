@@ -1,12 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
 
 export async function createClient() {
   const cookieStore = await cookies();
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+  if (!url || !anonKey) {
+    throw new Error("Supabase public URL or anon key is not configured.");
+  }
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         getAll() {

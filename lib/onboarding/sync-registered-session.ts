@@ -1,4 +1,7 @@
-import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
+import {
+  isEligibleBirthYear,
+  representativeBirthYearForCohort,
+} from "@/lib/onboarding/birth-years";
 import {
   convertToRegisteredProfile,
   enforceCohortAccountState,
@@ -92,11 +95,9 @@ export function applyLearnerAccountSnapshot(
         ? existing.birthYear
         : remote.accountRole === "parent_master"
           ? adultBirthYear()
-          : existing?.birthYear;
-
-  if (!birthYear || !isEligibleBirthYear(birthYear)) {
-    throw new Error("Could not restore this profile's birth year.");
-  }
+          : representativeBirthYearForCohort(
+              existing?.curriculumCohort ?? existing?.ageTier ?? "pathfinder",
+            );
 
   const sameRegisteredUser =
     existing?.accessMode === "registered" &&

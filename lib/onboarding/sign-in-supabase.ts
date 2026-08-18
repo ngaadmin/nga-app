@@ -100,18 +100,32 @@ export async function loadLearnerAccountById(
     .eq("id", userId)
     .maybeSingle();
 
-  if (error || !profile?.id) return null;
+  if (error || !profile?.id) {
+    console.error("[sign-in] Profile lookup failed", {
+      message: error?.message ?? "missing row",
+    });
+    return null;
+  }
   if (
     profile.account_role !== "child" &&
     profile.account_role !== "parent_master"
   ) {
+    console.error("[sign-in] Profile role rejected", {
+      role: profile.account_role,
+    });
     return null;
   }
-  if (profile.account_role === "child" && !profile.username) return null;
+  if (profile.account_role === "child" && !profile.username) {
+    console.error("[sign-in] Child profile is missing a username");
+    return null;
+  }
   if (
     profile.account_status !== "pending_consent" &&
     profile.account_status !== "active"
   ) {
+    console.error("[sign-in] Profile status rejected", {
+      status: profile.account_status,
+    });
     return null;
   }
 
@@ -145,7 +159,7 @@ export async function loadLearnerAccountById(
   return {
     userId: profile.id,
     username,
-    birthYear: typeof profile.birth_year === "number" ? profile.birth_year : null,
+    birthYear: parseBirthYear(profile.birth_year),
     accountRole: profile.account_role,
     accountStatus: profile.account_status,
     consentApprovedAt: profile.consent_approved_at ?? null,
@@ -173,4 +187,14 @@ async function loadLatestParentEmail(
 
 function isPlaceholderAuthEmail(email: string | null): boolean {
   return Boolean(email?.toLowerCase().endsWith(".invalid"));
+}
+
+function parseBirthYear(value: unknown): number | null {
+  const year =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim()
+        ? Number(value)
+        : NaN;
+  return Number.isInteger(year) ? year : null;
 }

@@ -124,11 +124,23 @@ export function SignInForm() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    event.stopPropagation();
+    setIsSigningIn(true);
+    setErrors({});
+
+    const formData = new FormData(event.currentTarget);
+    const trimmedIdentifier = (
+      (typeof formData.get("identifier") === "string"
+        ? (formData.get("identifier") as string)
+        : identifier) || ""
+    ).trim();
+    const trimmedCredential = (
+      (typeof formData.get("credential") === "string"
+        ? (formData.get("credential") as string)
+        : credential) || ""
+    ).trim();
 
     const next: FormErrors = {};
-    const trimmedIdentifier = identifier.trim();
-    const trimmedCredential = credential.trim();
-
     if (!trimmedIdentifier) {
       next.identifier = "Enter your email or username.";
     }
@@ -137,12 +149,20 @@ export function SignInForm() {
     }
 
     if (Object.keys(next).length > 0) {
-      setErrors(next);
+      setErrors({
+        ...next,
+        form: "Enter your email or username and password.",
+      });
+      setIsSigningIn(false);
       return;
     }
 
-    setIsSigningIn(true);
-    setErrors({});
+    if (trimmedIdentifier !== identifier) {
+      setIdentifier(trimmedIdentifier);
+    }
+    if (trimmedCredential !== credential) {
+      setCredential(trimmedCredential);
+    }
     try {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
@@ -196,7 +216,10 @@ export function SignInForm() {
         }
 
         router.push(DASHBOARD_ACADEMY_PATH);
-      } catch {
+      } catch (error) {
+        console.error("[sign-in] Profile apply failed", {
+          message: error instanceof Error ? error.message : "unknown",
+        });
         setErrors({ form: copy.profileOpenFailed });
       }
     } catch {
@@ -448,7 +471,19 @@ export function SignInForm() {
             </button>
           </form>
         ) : (
-          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+          <form
+            className="space-y-6"
+            onSubmit={handleSubmit}
+            noValidate
+          >
+            {errors.form ? (
+              <p
+                className="font-sans text-sm font-medium text-red-600"
+                role="alert"
+              >
+                {errors.form}
+              </p>
+            ) : null}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <label

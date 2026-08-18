@@ -284,10 +284,21 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     learnerEmail = undefined;
   }
 
-  if (requirements.requiresLearnerEmail && !learnerEmail && !session.consentApprovedAt) {
+  const alreadyProvisioned = Boolean(session.supabaseUserId);
+  if (
+    !alreadyProvisioned &&
+    requirements.requiresLearnerEmail &&
+    !learnerEmail &&
+    !session.consentApprovedAt
+  ) {
     throw new Error("A valid learner email is required for this age band.");
   }
-  if (requirements.requiresParentEmail && !parentEmail && ageTier === "explorer") {
+  if (
+    !alreadyProvisioned &&
+    requirements.requiresParentEmail &&
+    !parentEmail &&
+    ageTier === "explorer"
+  ) {
     throw new Error("A parent or guardian email is required for Explorer profiles.");
   }
   if (!requirements.requiresLearnerEmail) {
@@ -472,7 +483,13 @@ export function convertToRegisteredProfile(
     learnerEmail = learnerEmail ?? legacyEmail;
   }
 
-  if (requirements.requiresLearnerEmail && !learnerEmail && !input.consentApprovedAt) {
+  const alreadyProvisioned = Boolean(input.supabaseUserId);
+  if (
+    !alreadyProvisioned &&
+    requirements.requiresLearnerEmail &&
+    !learnerEmail &&
+    !input.consentApprovedAt
+  ) {
     throw new Error("A valid learner email is required for this age band.");
   }
   if (!requirements.requiresLearnerEmail) {
@@ -482,7 +499,7 @@ export function convertToRegisteredProfile(
   if (requirements.requiresParentEmail && !parentEmail) {
     // Pathfinder transitional: older callers may only send learner email.
     // Explorers must always supply parentEmail (no learner email to fall back on).
-    if (ageTier === "explorer") {
+    if (!alreadyProvisioned && ageTier === "explorer") {
       throw new Error(
         "A parent or guardian email is required for Explorer profiles.",
       );

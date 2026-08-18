@@ -4,16 +4,11 @@ import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
   signPasswordResetToken,
 } from "@/lib/auth/password-reset-token";
-import {
-  getMasteryCohortFromBirthYear,
-  type MasteryCohort,
-} from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { getDefaultAppUrl } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import { normalizeEmailAddress } from "@/lib/validation/email";
-import { headers } from "next/headers";
 
 export type HouseholdRecoveryResult =
   | { accepted: true; recipientEmail: string }
@@ -23,7 +18,7 @@ type ResetTarget = {
   userId: string;
   username: string;
   label: string;
-  cohort?: MasteryCohort;
+  kind: "parent" | "child";
 };
 
 /**
@@ -88,6 +83,7 @@ export async function requestHouseholdPasswordRecovery(
           userId: profile.id,
           username: profile.username?.trim() || recipientEmail,
           label: recipientEmail,
+          kind: "parent",
         });
 
         const childIds = await listHouseholdChildIds(
@@ -103,7 +99,7 @@ export async function requestHouseholdPasswordRecovery(
           userId: profile.id,
           username: profile.username.trim(),
           label: profile.username.trim(),
-          cohort: cohortFromBirthYear(profile.birth_year),
+          kind: "child",
         });
       }
     }
@@ -126,14 +122,14 @@ export async function requestHouseholdPasswordRecovery(
       username: target.username,
       createdAt,
     }),
-    cohort: target.cohort,
+    kind: target.kind,
   }));
 
   await sendOnboardingEmail({
     type: "CREDENTIAL_RECOVERY",
     recipientEmail,
     data: { resets },
-    appUrl: await resolveRecoveryAppUrl(),
+    appUrl: getDefaultAppUrl(),
   });
 
   return { accepted: true, recipientEmail };
@@ -293,24 +289,6 @@ async function loadChildTarget(
     userId: child.id,
     username,
     label: username,
-    cohort: cohortFromBirthYear(child.birth_year),
+    kind: "child",
   };
-}
-
-function cohortFromBirthYear(birthYear: unknown): MasteryCohort | undefined {
-  if (typeof birthYear !== "number") return undefined;
-  return getMasteryCohortFromBirthYear(birthYear);
-}
-
-async function resolveRecoveryAppUrl(): Promise<string> {
-  try {
-    const headerList = await headers();
-    const origin = headerList.get("origin")?.trim();
-    if (origin) {
-      return new URL(origin).origin;
-    }
-  } catch {
-    // Server action without a request origin — use env / production fallback.
-  }
-  return getDefaultAppUrl();
 }

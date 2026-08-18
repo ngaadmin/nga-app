@@ -56,7 +56,7 @@ export type UsernameRecoveryEmailData = {
 export type CredentialRecoveryResetLink = {
   label: string;
   token: string;
-  cohort?: "explorer" | "pathfinder" | "maverick";
+  kind?: "parent" | "child";
 };
 
 export type CredentialRecoveryEmailData = {
@@ -813,18 +813,11 @@ export function buildUsernameRecoveryEmail(
   return { subject, html, text, preheader };
 }
 
-function maskUsernameForParent(username: string): string {
-  const trimmed = username.trim();
-  if (trimmed.length <= 3) return trimmed;
-  const middleCount = Math.max(trimmed.length - 3, 1);
-  return `${trimmed[0]}${"•".repeat(middleCount)}${trimmed.slice(-2)}`;
-}
-
 export function buildCredentialRecoveryEmail(
   data: CredentialRecoveryEmailData,
-  appUrl?: string,
+  _appUrl?: string,
 ): BuiltEmail {
-  const base = resolveAppUrl(appUrl);
+  const base = getDefaultAppUrl();
   const resets = (data.resets ?? []).filter(
     (item) => item.token.trim() && item.label.trim(),
   );
@@ -832,14 +825,15 @@ export function buildCredentialRecoveryEmail(
   const subject = isHousehold
     ? "Reset your NextGenAchiever$ passwords"
     : "Reset your NextGenAchiever$ password";
-  const preheader = "Use the link to set a new password. Your current password stays the same until you do.";
+  const preheader =
+    "Use the link to set a new password. Your current password stays the same until you do.";
 
   const linkRows = resets.map((item) => {
-    const rawLabel = item.label.trim();
-    const label =
-      item.cohort === "explorer" ? maskUsernameForParent(rawLabel) : rawLabel;
+    const label = item.label.trim();
+    const kind = item.kind === "parent" ? "parent" : "child";
+    const caption = kind === "parent" ? "Parent login" : "Username";
     const resetUrl = `${base}/onboarding/reset-password?token=${encodeURIComponent(item.token.trim())}`;
-    return { label, resetUrl };
+    return { label, caption, resetUrl };
   });
 
   const textLines = [
@@ -850,28 +844,54 @@ export function buildCredentialRecoveryEmail(
     "Your password is not changed until you open a link and save a new one.",
     "Each link resets only that one account.",
     "",
-    ...linkRows.flatMap((row) =>
-      isHousehold
-        ? [`${row.label}: ${row.resetUrl}`, ""]
-        : [`Set a new password: ${row.resetUrl}`, ""],
-    ),
+    ...linkRows.flatMap((row) => [
+      `${row.caption}: ${row.label}`,
+      `Set a new password: ${row.resetUrl}`,
+      "",
+    ]),
     "If you did not ask for this, you can ignore this email.",
     "",
     "- NextGenAchievers",
   ];
 
   const linksHtml = linkRows
-    .map((row) => {
-      const heading = isHousehold
-        ? `<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(row.label)}</p>`
-        : "";
-      return `
-        <div style="margin:0 0 20px;">
-          ${heading}
-          ${ctaButton(isHousehold ? "Set a new password" : "Set a new password", row.resetUrl)}
-        </div>
-      `;
-    })
+    .map(
+      (row) => `
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;border:1px solid #E5E5E5;border-radius:12px;">
+          <tr>
+            <td style="padding:16px 16px 8px;">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#5B6B7C;">
+                ${escapeHtml(row.caption)}
+              </p>
+              <p style="margin:0;font-size:18px;font-weight:700;color:#031F82;word-break:break-word;">
+                ${escapeHtml(row.label)}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 16px 16px;">
+              <p style="margin:12px 0 0;">
+                <a
+                  href="${escapeHtml(row.resetUrl)}"
+                  style="
+                    display: inline-block;
+                    background: #FFA503;
+                    color: #031F82;
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 15px;
+                    font-weight: 700;
+                    text-decoration: none;
+                    padding: 12px 18px;
+                    border-radius: 10px;
+                    border-bottom: 3px solid #C88202;
+                  "
+                >Set a new password</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      `,
+    )
     .join("");
 
   const html = wrapHtml({
@@ -887,7 +907,7 @@ export function buildCredentialRecoveryEmail(
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         Your current password stays the same until you open a link and save a new one.
-        ${isHousehold ? " Each link resets only that one account." : ""}
+        ${isHousehold ? " Each button resets only that one account." : ""}
       </p>
       ${linksHtml}
       <p style="margin:16px 0 0;font-size:14px;color:#5B6B7C;">

@@ -20,18 +20,18 @@ export type SupportedCurrency = {
 /** Top currencies across English-speaking target markets. */
 export const SUPPORTED_CURRENCIES: readonly SupportedCurrency[] = [
   { code: "AUD", label: "Australian Dollar", locale: "en-AU", flag: "🇦🇺" },
-  { code: "USD", label: "US Dollar", locale: "en-US", flag: "🇺🇸" },
-  { code: "GBP", label: "British Pound", locale: "en-GB", flag: "🇬🇧" },
   { code: "CAD", label: "Canadian Dollar", locale: "en-CA", flag: "🇨🇦" },
-  { code: "NZD", label: "New Zealand Dollar", locale: "en-NZ", flag: "🇳🇿" },
   { code: "EUR", label: "Euro", locale: "en-IE", flag: "🇮🇪" },
-  { code: "SGD", label: "Singapore Dollar", locale: "en-SG", flag: "🇸🇬" },
+  { code: "GBP", label: "British Pound", locale: "en-GB", flag: "🇬🇧" },
   { code: "HKD", label: "Hong Kong Dollar", locale: "en-HK", flag: "🇭🇰" },
   { code: "INR", label: "Indian Rupee", locale: "en-IN", flag: "🇮🇳" },
+  { code: "NZD", label: "New Zealand Dollar", locale: "en-NZ", flag: "🇳🇿" },
+  { code: "SGD", label: "Singapore Dollar", locale: "en-SG", flag: "🇸🇬" },
+  { code: "USD", label: "US Dollar", locale: "en-US", flag: "🇺🇸" },
   { code: "ZAR", label: "South African Rand", locale: "en-ZA", flag: "🇿🇦" },
 ] as const;
 
-export const DEFAULT_CURRENCY_CODE: SupportedCurrencyCode = "AUD";
+export const DEFAULT_CURRENCY_CODE: SupportedCurrencyCode = "USD";
 
 export function isSupportedCurrencyCode(
   value: string,

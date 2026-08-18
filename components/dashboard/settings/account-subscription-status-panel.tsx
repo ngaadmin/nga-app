@@ -36,6 +36,7 @@ import {
 } from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { useSettingsParentView } from "@/lib/dashboard/testing-settings-view";
+import { AccountRowTrack } from "@/components/dashboard/settings/account-row-track";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -220,6 +221,27 @@ export function AccountSubscriptionStatusPanel() {
     });
   }, [household.children, household.householdEmail, remotePending]);
 
+  const deletableAccounts = useMemo(() => {
+    const canManageHousehold = isMasterViewer || isParentSettingsView;
+    const children = household.children.filter((child) => {
+      const isSelf =
+        Boolean(activeUsername) &&
+        child.username.trim().toLowerCase() ===
+          activeUsername!.trim().toLowerCase();
+      return canManageHousehold || isSelf;
+    });
+    return {
+      master: canManageHousehold ? household.master : null,
+      children,
+    };
+  }, [
+    activeUsername,
+    household.children,
+    household.master,
+    isMasterViewer,
+    isParentSettingsView,
+  ]);
+
   function leaveAfterDestructiveDelete() {
     clearAllAppSessionState();
     router.replace(ONBOARDING_ENTRY_PATH);
@@ -395,25 +417,20 @@ export function AccountSubscriptionStatusPanel() {
           <ul className="space-y-3">
             {household.master ? (
               <li className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3">
-                <div className="min-w-0">
-                  <p className="break-all font-heading text-base font-extrabold text-[#031F82]">
-                    {household.householdEmail ||
-                      displayAccountIdentity(household.master)}
-                  </p>
-                  <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#0CC1E0]">
-                    {copy.masterBadge}
-                  </p>
-                  {isMasterViewer || isParentSettingsView ? (
-                    <button
-                      type="button"
-                      className={cn(quietDeleteClass, "mt-2")}
-                      onClick={() =>
-                        openMasterDelete(household.master!.username)
-                      }
-                    >
-                      {copy.deleteMaster}
-                    </button>
-                  ) : null}
+                <div className="space-y-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="break-all font-heading text-base font-extrabold leading-snug text-[#031F82]">
+                      {household.householdEmail ||
+                        displayAccountIdentity(household.master)}
+                    </p>
+                    <p className="font-sans text-xs font-semibold uppercase tracking-wide text-[#0CC1E0]">
+                      {copy.masterBadge}
+                    </p>
+                  </div>
+                  <AccountRowTrack
+                    account={household.master}
+                    canChange={false}
+                  />
                 </div>
               </li>
             ) : null}
@@ -424,50 +441,40 @@ export function AccountSubscriptionStatusPanel() {
                 Boolean(activeUsername) &&
                 child.username.trim().toLowerCase() ===
                   activeUsername!.trim().toLowerCase();
-              const canDeleteChild =
-                isMasterViewer || isParentSettingsView || isSelf;
               const canApproveChild = isParentSettingsView && isPending;
               return (
                 <li
                   key={child.username}
                   className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-heading text-base font-extrabold text-[#031F82]">
-                        {child.username}
-                      </p>
-                      <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#1E3A5F]">
-                        {copy.childBadge}
-                        {isPending ? ` · ${copy.pendingApprovalBadge}` : ""}
-                      </p>
-                      {canDeleteChild ? (
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="font-heading text-base font-extrabold leading-snug text-[#031F82]">
+                          {child.username}
+                        </p>
+                        <p className="font-sans text-xs font-semibold uppercase tracking-wide text-[#1E3A5F]">
+                          {copy.childBadge}
+                          {isPending ? ` · ${copy.pendingApprovalBadge}` : ""}
+                        </p>
+                      </div>
+                      {canApproveChild ? (
                         <button
                           type="button"
-                          className={cn(quietDeleteClass, "mt-2")}
-                          onClick={() =>
-                            setPendingDelete({
-                              kind: "child",
-                              username: child.username,
-                            })
-                          }
+                          className={approveButtonClass}
+                          disabled={approvingUsername === child.username}
+                          onClick={() => handleApproveChild(child.username)}
                         >
-                          {copy.deleteChild}
+                          {approvingUsername === child.username
+                            ? copy.linkingProfile
+                            : copy.linkProfile}
                         </button>
                       ) : null}
                     </div>
-                    {canApproveChild ? (
-                      <button
-                        type="button"
-                        className={approveButtonClass}
-                        disabled={approvingUsername === child.username}
-                        onClick={() => handleApproveChild(child.username)}
-                      >
-                        {approvingUsername === child.username
-                          ? copy.linkingProfile
-                          : copy.linkProfile}
-                      </button>
-                    ) : null}
+                    <AccountRowTrack
+                      account={child}
+                      canChange={isMasterViewer || isParentSettingsView}
+                    />
                   </div>
                 </li>
               );
@@ -580,21 +587,46 @@ export function AccountSubscriptionStatusPanel() {
                 : copy.createParentSubmit}
             </button>
           ) : null}
-        </section>
 
-        <section
-          aria-labelledby="subscription-heading"
-          className={cn(floatingPanelClass, "space-y-2 p-4")}
-        >
-          <h2
-            id="subscription-heading"
-            className="font-heading text-sm font-extrabold uppercase tracking-wide text-[#031F82]"
-          >
-            {copy.subscriptionHeading}
-          </h2>
-          <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
-            {copy.subscriptionPlaceholder}
-          </p>
+          {deletableAccounts.master ||
+          deletableAccounts.children.length > 0 ? (
+            <div className="space-y-2 border-t border-[#BDE9FB]/70 pt-3">
+              <h3 className="font-sans text-xs font-semibold uppercase tracking-wide text-[#8FA3B0]">
+                {copy.deleteSectionHeading}
+              </h3>
+              <div className="flex flex-col items-start gap-2">
+                {deletableAccounts.master ? (
+                  <button
+                    type="button"
+                    className={quietDeleteClass}
+                    onClick={() =>
+                      openMasterDelete(deletableAccounts.master!.username)
+                    }
+                  >
+                    {copy.deleteMaster}
+                  </button>
+                ) : null}
+                {deletableAccounts.children.map((child) => (
+                  <button
+                    key={child.username}
+                    type="button"
+                    className={quietDeleteClass}
+                    onClick={() =>
+                      setPendingDelete({
+                        kind: "child",
+                        username: child.username,
+                      })
+                    }
+                  >
+                    {copy.deleteChildNamed.replace(
+                      "{username}",
+                      child.username,
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
       </div>
 

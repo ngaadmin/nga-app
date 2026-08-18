@@ -369,6 +369,7 @@ export function SignUpForm() {
         username: result.parentUsername,
         birthYear: adultBirthYear(),
         accountRole: "parent_master",
+        curriculumCohort: "maverick",
         learnerEmail: result.parentEmail,
         password: password.trim(),
         accountStatus: "ACTIVE",

@@ -117,6 +117,7 @@ export function CreateParentProfilePanel({
         username: result.parentUsername,
         birthYear: adultBirthYear(),
         accountRole: "parent_master",
+        curriculumCohort: "maverick",
         learnerEmail: result.parentEmail,
         parentEmail: result.parentEmail,
         password: password.trim(),

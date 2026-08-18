@@ -6,25 +6,18 @@ import { ShieldIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
 import { ParentHubFeatureItem } from "@/components/dashboard/settings/parent-hub-feature-item";
 import { ParentConversionRatePanel } from "@/components/dashboard/settings/parent-conversion-rate-panel";
-import { ParentLearningTrackPanel } from "@/components/dashboard/settings/parent-learning-track-panel";
+import { ParentCurrencyPanel } from "@/components/dashboard/settings/parent-currency-panel";
 import {
   formatConversionRateLabel,
 } from "@/lib/dashboard/point-conversion";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import {
-  masteryCohortAgeRangeLabel,
-  masteryCohortLabel,
-} from "@/lib/dashboard/mastery-cohort";
-import {
-  useMasteryCohort,
-  useUserSession,
-} from "@/lib/dashboard/use-user-session";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useSettingsParentView, useTestingSettingsView } from "@/lib/dashboard/testing-settings-view";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
-type PreferencesFeatureId = "pointsConversion" | "learningTrack";
+type PreferencesFeatureId = "pointsConversion";
 
 type ParentHubSectionProps = {
   isUnlocked: boolean;
@@ -44,19 +37,15 @@ export function ParentHubSection({
   const session = useUserSession();
   const testingView = useTestingSettingsView();
   const isParentSettingsView = useSettingsParentView();
-  const cohort = useMasteryCohort();
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
 
   const showPointsConversion = isParentSettingsView;
-  const showLearningTrack =
-    isParentSettingsView || cohort === "pathfinder" || cohort === "maverick";
+  const showCurrency = true;
   const requiresPin =
     isParentSettingsView &&
     session?.accountRole === "parent_master" &&
     testingView !== "parent";
   const effectivelyUnlocked = !requiresPin || isUnlocked;
-
-  const trackSummary = `${masteryCohortLabel(cohort)} · Ages ${masteryCohortAgeRangeLabel(cohort)}`;
 
   const [expandedFeature, setExpandedFeature] = useState<PreferencesFeatureId | null>(
     null,
@@ -70,7 +59,7 @@ export function ParentHubSection({
     setExpandedFeature((current) => (current === id ? null : id));
   }
 
-  if (!showPointsConversion && !showLearningTrack) {
+  if (!showPointsConversion && !showCurrency) {
     return null;
   }
 
@@ -150,20 +139,10 @@ export function ParentHubSection({
           </ParentHubFeatureItem>
         ) : null}
 
-        {showLearningTrack ? (
-          <ParentHubFeatureItem
-            id="preferences-learning-track"
-            title={featuresCopy.learningTrack}
-            summary={
-              effectivelyUnlocked
-                ? trackSummary
-                : featuresCopy.learningTrackSummaryLocked
-            }
-            isExpanded={effectivelyUnlocked && expandedFeature === "learningTrack"}
-            onToggle={() => toggleFeature("learningTrack")}
-          >
-            <ParentLearningTrackPanel isEditable />
-          </ParentHubFeatureItem>
+        {showCurrency ? (
+          <div className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3">
+            <ParentCurrencyPanel isEditable />
+          </div>
         ) : null}
 
         {requiresPin ? (

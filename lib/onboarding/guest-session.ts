@@ -35,6 +35,8 @@ export const ONBOARDING_SIGN_UP_PARENT_PATH =
   "/onboarding/sign-up?as=parent" as const;
 export const DASHBOARD_SETTINGS_ACCOUNT_PATH =
   "/dashboard/settings/account" as const;
+export const DASHBOARD_SETTINGS_SUBSCRIPTION_PATH =
+  "/dashboard/settings/subscription" as const;
 export const DASHBOARD_ADD_PROFILE_PATH =
   "/dashboard/settings/add-profile" as const;
 export const DASHBOARD_ADD_LINKED_CHILD_PATH = DASHBOARD_ADD_PROFILE_PATH;

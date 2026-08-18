@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { ParentCurrencyPanel } from "@/components/dashboard/settings/parent-currency-panel";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { SettingsTestingViewToggle } from "@/components/dashboard/settings/settings-testing-view-toggle";
 import { copyMatrix } from "@/constants/copyMatrix";
@@ -18,6 +17,7 @@ import {
 } from "@/lib/onboarding/registered-accounts";
 import {
   BillingCardIcon,
+  CommunityIcon,
   KeyIcon,
   LockIcon,
   LogOutIcon,
@@ -675,9 +675,14 @@ export function HomeDashboard() {
             onClick={() => setChangePinModalOpen(true)}
           />
           <SettingsRow
-            icon={BillingCardIcon}
-            label={copy.account.subscriptionStatus}
+            icon={CommunityIcon}
+            label={copy.account.accounts}
             onClick={() => router.push("/dashboard/settings/account")}
+          />
+          <SettingsRow
+            icon={BillingCardIcon}
+            label={copy.account.subscription}
+            onClick={() => router.push("/dashboard/settings/subscription")}
           />
           <SettingsRow
             icon={LogOutIcon}
@@ -685,13 +690,6 @@ export function HomeDashboard() {
             onClick={handleLogOut}
           />
         </nav>
-
-        <section
-          aria-label={copy.currency.heading}
-          className={cn(floatingPanelClass, "px-4 py-3")}
-        >
-          <ParentCurrencyPanel isEditable />
-        </section>
 
         <ParentHubSection
           isUnlocked={parentHubUnlocked}

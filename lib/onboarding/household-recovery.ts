@@ -2,17 +2,68 @@
 
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
+  getPasswordResetTokenSecretSource,
   signPasswordResetToken,
 } from "@/lib/auth/password-reset-token";
-import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import {
+  describeEmailSendConfig,
+  sendOnboardingEmail,
+} from "@/lib/email/resend-client";
 import { getDefaultAppUrl } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
+export type PasswordRecoveryFailureReason =
+  | "token_secret_missing"
+  | "resend_not_configured"
+  | "resend_from_rejected"
+  | "resend_rejected"
+  | "unexpected";
+
 export type HouseholdRecoveryResult =
   | { accepted: true; recipientEmail: string }
-  | { accepted: false; error: string };
+  | { accepted: false; error: string; reason?: PasswordRecoveryFailureReason };
+
+function logPasswordRecoveryFailure(details: Record<string, unknown>) {
+  console.error("[password-recovery]", {
+    ...details,
+    tokenSecretSource: getPasswordResetTokenSecretSource(),
+    email: describeEmailSendConfig(),
+    appUrlConfigured: Boolean(process.env.NEXT_PUBLIC_APP_URL?.trim()),
+  });
+}
+
+function classifyResendFailure(sendError: string): {
+  reason: PasswordRecoveryFailureReason;
+  error: string;
+} {
+  const lower = sendError.toLowerCase();
+  if (sendError === "Email service is not configured.") {
+    return {
+      reason: "resend_not_configured",
+      error: "Could not send a recovery email. Email service is not configured.",
+    };
+  }
+  if (
+    lower.includes("domain is not verified") ||
+    lower.includes("invalid `from`") ||
+    lower.includes("invalid from")
+  ) {
+    return {
+      reason: "resend_from_rejected",
+      error: "Could not send a recovery email. The sender address is not verified.",
+    };
+  }
+  return {
+    reason: "resend_rejected",
+    error: "Could not send a recovery email. Try again shortly.",
+  };
+}
+
+function failureMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "unknown";
+}
 
 type ResetTarget = {
   userId: string;
@@ -116,15 +167,36 @@ export async function requestHouseholdPasswordRecovery(
     }
 
     const createdAt = new Date().toISOString();
-    const resets = targets.map((target) => ({
-      label: target.label,
-      token: signPasswordResetToken({
-        userId: target.userId,
-        username: target.username,
-        createdAt,
-      }),
-      kind: target.kind,
-    }));
+    let resets;
+    try {
+      resets = targets.map((target) => ({
+        label: target.label,
+        token: signPasswordResetToken({
+          userId: target.userId,
+          username: target.username,
+          createdAt,
+        }),
+        kind: target.kind,
+      }));
+    } catch (error) {
+      const tokenSecretSource = getPasswordResetTokenSecretSource();
+      const reason: PasswordRecoveryFailureReason =
+        tokenSecretSource === "missing" ? "token_secret_missing" : "unexpected";
+      logPasswordRecoveryFailure({
+        reason,
+        stage: "sign_reset_token",
+        targetCount: targets.length,
+        message: failureMessage(error),
+      });
+      return {
+        accepted: false,
+        reason,
+        error:
+          reason === "token_secret_missing"
+            ? "Could not send a recovery email. Reset-token secret is not configured."
+            : "Could not send a recovery email. Try again shortly.",
+      };
+    }
 
     const sendResult = await sendOnboardingEmail({
       type: "CREDENTIAL_RECOVERY",
@@ -134,16 +206,30 @@ export async function requestHouseholdPasswordRecovery(
     });
 
     if (!sendResult.success) {
+      const classified = classifyResendFailure(sendResult.error);
+      logPasswordRecoveryFailure({
+        reason: classified.reason,
+        stage: "resend_send",
+        targetCount: targets.length,
+        resendError: sendResult.error,
+      });
       return {
         accepted: false,
-        error: "Could not send a recovery email. Try again shortly.",
+        reason: classified.reason,
+        error: classified.error,
       };
     }
 
     return { accepted: true, recipientEmail };
-  } catch {
+  } catch (error) {
+    logPasswordRecoveryFailure({
+      reason: "unexpected",
+      stage: "household_recovery",
+      message: failureMessage(error),
+    });
     return {
       accepted: false,
+      reason: "unexpected",
       error: "Could not send a recovery email. Try again shortly.",
     };
   }

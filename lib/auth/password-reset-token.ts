@@ -17,11 +17,38 @@ export function isPasswordResetTokenUnexpired(createdAtIso: string): boolean {
   return Date.now() - createdAt <= PASSWORD_RESET_TOKEN_TTL_MS;
 }
 
+export type PasswordResetTokenSecretSource =
+  | "nga_token_secret"
+  | "email_api_secret"
+  | "supabase_service_role"
+  | "dev_fallback"
+  | "missing";
+
+/** Which HMAC secret is available. Never returns the secret itself. */
+export function getPasswordResetTokenSecretSource(): PasswordResetTokenSecretSource {
+  if (process.env.NGA_TOKEN_SECRET?.trim()) return "nga_token_secret";
+  if (process.env.EMAIL_API_SECRET?.trim()) return "email_api_secret";
+  if (
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SUPABASE_SECRET_KEY?.trim()
+  ) {
+    return "supabase_service_role";
+  }
+  if (process.env.NODE_ENV === "production") return "missing";
+  return "dev_fallback";
+}
+
 function getTokenSecret(): string {
-  const secret =
+  const dedicated =
     process.env.NGA_TOKEN_SECRET?.trim() ||
     process.env.EMAIL_API_SECRET?.trim();
-  if (secret) return secret;
+  if (dedicated) return dedicated;
+
+  const serviceRole =
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SUPABASE_SECRET_KEY?.trim();
+  if (serviceRole) return serviceRole;
+
   if (process.env.NODE_ENV === "production") {
     throw new Error(
       "NGA_TOKEN_SECRET (or EMAIL_API_SECRET) must be set in production.",

@@ -65,8 +65,18 @@ export async function POST(request: Request) {
       onlyUsername ? { onlyUsername } : undefined,
     );
 
+    if (!result.accepted) {
+      console.error("[password-recovery] POST rejected", {
+        reason: "reason" in result ? result.reason : undefined,
+        error: result.error,
+      });
+    }
     return NextResponse.json(result, { status: result.accepted ? 200 : 400 });
-  } catch {
+  } catch (error) {
+    console.error("[password-recovery] Route failed", {
+      reason: "unexpected",
+      message: error instanceof Error ? error.message : "unknown",
+    });
     return NextResponse.json(
       {
         accepted: false,

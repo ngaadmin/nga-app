@@ -41,6 +41,28 @@ function resolveFromAddress(): string {
   return DEFAULT_FROM_ADDRESS;
 }
 
+function fromAddressHost(from: string): string | null {
+  const match = from.match(/@([^>\s]+)/);
+  return match?.[1]?.toLowerCase() ?? null;
+}
+
+/** Safe email-dispatch snapshot for server logs. Never includes keys. */
+export function describeEmailSendConfig(): {
+  hasApiKey: boolean;
+  hasFromEmail: boolean;
+  fromHost: string | null;
+  usingDefaultFrom: boolean;
+} {
+  const configured = process.env.RESEND_FROM_EMAIL?.trim();
+  const from = resolveFromAddress();
+  return {
+    hasApiKey: Boolean(process.env.RESEND_API_KEY?.trim()),
+    hasFromEmail: Boolean(configured),
+    fromHost: fromAddressHost(from),
+    usingDefaultFrom: !configured,
+  };
+}
+
 /**
  * Sends a transactional onboarding email via Resend's HTTP API.
  *
@@ -63,7 +85,7 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
     if (process.env.NODE_ENV === "production") {
       console.error(
         `[Resend Dispatch] RESEND_API_KEY missing in production.`,
-        { type: input.type, subject: built.subject },
+        { type: input.type, subject: built.subject, ...describeEmailSendConfig() },
       );
       return {
         success: false,
@@ -99,7 +121,7 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       const message = `Resend API error (${response.status}): ${detail || response.statusText}`;
-      console.error(`[Resend Dispatch] ${message}`);
+      console.error(`[Resend Dispatch] ${message}`, describeEmailSendConfig());
       return { success: false, error: message };
     }
 

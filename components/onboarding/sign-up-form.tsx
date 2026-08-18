@@ -108,6 +108,7 @@ type FormErrors = {
   username?: string;
   learnerEmail?: string;
   password?: string;
+  confirmPassword?: string;
   parentEmail?: string;
   parentalConsent?: string;
   track?: string;
@@ -122,17 +123,6 @@ function cohortHeader(cohort: MasteryCohort): string {
       return "Create Your Free Pathfinder Account";
     case "maverick":
       return "Create Your Free Maverick Account";
-  }
-}
-
-function trackSafeguardHint(cohort: MasteryCohort): string {
-  switch (cohort) {
-    case "explorer":
-      return "Explorer needs a parent email and parent approval before the profile is fully saved.";
-    case "pathfinder":
-      return "Pathfinder links a parent email so they can follow along. It does not block creating your account.";
-    case "maverick":
-      return "Maverick logs in with a username and password. No parent fields are needed.";
   }
 }
 
@@ -178,6 +168,7 @@ export function SignUpForm() {
   const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [parentalConsentGiven, setParentalConsentGiven] = useState(false);
@@ -316,6 +307,14 @@ export function SignUpForm() {
       next.password = "Create a password to secure your account.";
     } else if (password.trim().length < 6) {
       next.password = "Use at least 6 characters for your password.";
+    }
+
+    if (!isParentMaster) {
+      if (!confirmPassword) {
+        next.confirmPassword = "Confirm your password.";
+      } else if (password && confirmPassword !== password) {
+        next.confirmPassword = "Passwords don't match.";
+      }
     }
 
     if (isPathfinder || isMaverick) {
@@ -817,9 +816,10 @@ export function SignUpForm() {
             <legend className="block font-heading text-sm font-bold text-nga-primary">
               Your learning track
             </legend>
-            <p className="font-sans text-sm leading-relaxed text-nga-slate">
-              This track sets the lessons you get and the parent safeguards we
-              apply. You can change it if the first pick was wrong.
+            <p className="font-sans text-sm text-nga-slate">
+              {cohort
+                ? "This track is already chosen. You can change it."
+                : "Pick a track. You can change it later."}
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {MASTERY_COHORT_ORDER.map((track) => {
@@ -850,24 +850,12 @@ export function SignUpForm() {
                 );
               })}
             </div>
-            {cohort ? (
-              <p className="font-sans text-sm leading-relaxed text-nga-slate">
-                {trackSafeguardHint(cohort)}
-              </p>
-            ) : null}
             {errors.track ? (
               <p className="font-sans text-sm font-medium text-red-600" role="alert">
                 {errors.track}
               </p>
             ) : null}
           </fieldset>
-
-          {isExplorer ? (
-            <p className="font-sans text-sm font-bold leading-relaxed text-purple-700">
-              We need a parent or guardian&apos;s permission before we can
-              finalise your profile and save your progress and achievements.
-            </p>
-          ) : null}
 
           <div className="space-y-2">
             <label
@@ -876,6 +864,12 @@ export function SignUpForm() {
             >
               Username
             </label>
+            <p
+              id="signup-username-tip"
+              className="font-sans text-sm font-bold text-purple-700"
+            >
+              Tip: don&apos;t use your real full name.
+            </p>
             <input
               id="signup-username"
               name="chosen-username"
@@ -894,11 +888,7 @@ export function SignUpForm() {
                 clearError("username");
               }}
               aria-invalid={Boolean(errors.username)}
-              aria-describedby={
-                isExplorer && !errors.username
-                  ? "signup-username-tip"
-                  : undefined
-              }
+              aria-describedby="signup-username-tip"
               className={cn(
                 fieldBase,
                 errors.username && "border-red-400 focus:border-red-500",
@@ -911,19 +901,7 @@ export function SignUpForm() {
               >
                 {errors.username}
               </p>
-            ) : isExplorer ? (
-              <p
-                id="signup-username-tip"
-                className="font-sans text-sm italic leading-relaxed text-purple-700"
-              >
-                Tip: To protect your privacy online, never use your real full
-                name as a username!
-              </p>
-            ) : (
-              <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
-                You&apos;ll log in with this username.
-              </p>
-            )}
+            ) : null}
           </div>
 
           {isPathfinder || isMaverick ? (
@@ -1001,14 +979,56 @@ export function SignUpForm() {
             ) : null}
           </div>
 
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-confirm-password"
+              className="block font-heading text-sm font-bold text-nga-primary"
+            >
+              Confirm password
+            </label>
+            <input
+              id="signup-confirm-password"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Re-enter your password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearError("confirmPassword");
+              }}
+              aria-invalid={Boolean(errors.confirmPassword)}
+              className={cn(
+                fieldBase,
+                errors.confirmPassword && "border-red-400 focus:border-red-500",
+              )}
+            />
+            {errors.confirmPassword ? (
+              <p
+                className="font-sans text-sm font-medium text-red-600"
+                role="alert"
+              >
+                {errors.confirmPassword}
+              </p>
+            ) : null}
+          </div>
+
           {isExplorer || isPathfinder ? (
             <div className="space-y-2">
               <label
                 htmlFor="signup-parent-email"
                 className="block font-heading text-sm font-bold text-nga-primary"
               >
-                Parent or guardian&apos;s email address
+                Parent/guardian email address
               </label>
+              {isExplorer ? (
+                <p
+                  id="signup-parent-email-hint"
+                  className="font-sans text-sm font-bold text-purple-700"
+                >
+                  A parent/guardian needs to approve this.
+                </p>
+              ) : null}
               <input
                 id="signup-parent-email"
                 name="parentEmail"
@@ -1022,7 +1042,11 @@ export function SignUpForm() {
                 }}
                 aria-invalid={Boolean(errors.parentEmail)}
                 aria-describedby={
-                  errors.parentEmail ? undefined : "signup-parent-email-hint"
+                  isExplorer
+                    ? "signup-parent-email-hint"
+                    : errors.parentEmail
+                      ? undefined
+                      : "signup-parent-email-hint"
                 }
                 className={cn(
                   fieldBase,
@@ -1036,14 +1060,12 @@ export function SignUpForm() {
                 >
                   {errors.parentEmail}
                 </p>
-              ) : (
+              ) : isExplorer ? null : (
                 <p
                   id="signup-parent-email-hint"
                   className="font-sans text-sm italic leading-relaxed text-nga-slate"
                 >
-                  {isExplorer
-                    ? "Your parent or guardian's email stays private and is only used to manage account approvals and safety."
-                    : "We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions."}
+                  We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions.
                 </p>
               )}
             </div>

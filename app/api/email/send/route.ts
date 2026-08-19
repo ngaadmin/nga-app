@@ -15,10 +15,10 @@ import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export const runtime = "nodejs";
 
-/** Public browser send types - CREDENTIAL_RECOVERY is server-issued only. */
+/** Public browser send types - recovery and deletion notices are server-issued only. */
 const EMAIL_TYPES: readonly Exclude<
   OnboardingEmailType,
-  "CREDENTIAL_RECOVERY"
+  "CREDENTIAL_RECOVERY" | "ACCOUNT_DELETED_MASTER" | "ACCOUNT_DELETED_CHILD"
 >[] = [
   "EXPLORER_PARENT",
   "EXPLORER_PARENT_RESEND",
@@ -38,7 +38,10 @@ type SendBody = {
 
 function isPublicEmailType(
   value: unknown,
-): value is Exclude<OnboardingEmailType, "CREDENTIAL_RECOVERY"> {
+): value is Exclude<
+  OnboardingEmailType,
+  "CREDENTIAL_RECOVERY" | "ACCOUNT_DELETED_MASTER" | "ACCOUNT_DELETED_CHILD"
+> {
   return (
     typeof value === "string" &&
     (EMAIL_TYPES as readonly string[]).includes(value)
@@ -58,10 +61,15 @@ function readString(
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+type PublicEmailType = Exclude<
+  OnboardingEmailType,
+  "CREDENTIAL_RECOVERY" | "ACCOUNT_DELETED_MASTER" | "ACCOUNT_DELETED_CHILD"
+>;
+
 function parseData(
-  type: Exclude<OnboardingEmailType, "CREDENTIAL_RECOVERY">,
+  type: PublicEmailType,
   raw: unknown,
-): OnboardingEmailDataMap[Exclude<OnboardingEmailType, "CREDENTIAL_RECOVERY">] | null {
+): OnboardingEmailDataMap[PublicEmailType] | null {
   const data = asRecord(raw);
   const username = readString(data, "username");
   if (!username) return null;
@@ -180,12 +188,16 @@ export async function POST(request: Request) {
       );
     }
 
-    if (body.type === "CREDENTIAL_RECOVERY") {
+    if (
+      body.type === "CREDENTIAL_RECOVERY" ||
+      body.type === "ACCOUNT_DELETED_MASTER" ||
+      body.type === "ACCOUNT_DELETED_CHILD"
+    ) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "CREDENTIAL_RECOVERY must be issued via household password recovery.",
+            "That email type must be issued by the server, not the public send route.",
         },
         { status: 400 },
       );

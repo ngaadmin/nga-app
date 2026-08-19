@@ -2,6 +2,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export type DeleteHouseholdMasterResult =
   | { success: true }
@@ -56,6 +58,19 @@ export async function deleteHouseholdMasterAccount(): Promise<DeleteHouseholdMas
   const collected = await collectHouseholdChildIds(admin, user.id, parentEmail);
   if (!collected.ok) {
     return { success: false, error: collected.error };
+  }
+
+  const childUsernames = await loadChildUsernames(admin, collected.ids);
+  if (parentEmail && EMAIL_PATTERN.test(parentEmail)) {
+    try {
+      await sendOnboardingEmail({
+        type: "ACCOUNT_DELETED_MASTER",
+        recipientEmail: parentEmail,
+        data: { childUsernames },
+      });
+    } catch {
+      // Deletion must still complete if the notice cannot be sent.
+    }
   }
 
   for (const childId of collected.ids) {
@@ -149,6 +164,23 @@ async function collectHouseholdChildIds(
   }
 
   return { ok: true, ids: [...ids] };
+}
+
+async function loadChildUsernames(
+  admin: ReturnType<typeof createAdminClient>,
+  childIds: string[],
+): Promise<string[]> {
+  const names: string[] = [];
+  for (const childId of childIds) {
+    const { data } = await admin
+      .from("profiles")
+      .select("username")
+      .eq("id", childId)
+      .maybeSingle();
+    const username = data?.username?.trim();
+    if (username) names.push(username);
+  }
+  return names;
 }
 
 async function deleteLeftoverHouseholdRows(

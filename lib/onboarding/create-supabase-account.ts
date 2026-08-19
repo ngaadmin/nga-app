@@ -13,6 +13,7 @@ import {
   representativeBirthYearForCohort,
 } from "@/lib/onboarding/birth-years";
 import { issueGuardianSignupEmail } from "@/lib/onboarding/issue-guardian-signup-email";
+import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
 /** Non-PII Auth email for Explorers (COPPA — no learner inbox). */
@@ -216,6 +217,22 @@ export async function createSupabaseAccount(
               : "We could not send the parent approval email. Please try again.",
         };
       }
+    }
+  }
+
+  if (
+    !parentInitiated &&
+    learnerEmail &&
+    (cohort === "pathfinder" || cohort === "maverick")
+  ) {
+    try {
+      await sendOnboardingEmail({
+        type: cohort === "pathfinder" ? "PATHFINDER_WELCOME" : "MAVERICK_WELCOME",
+        recipientEmail: learnerEmail,
+        data: { username },
+      });
+    } catch {
+      // Welcome mail must not block account creation.
     }
   }
 

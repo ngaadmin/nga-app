@@ -23,6 +23,7 @@ import {
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
+import { notifyAccountDeletedChild } from "@/lib/onboarding/issue-account-deleted-email";
 import {
   approvePendingLearnerAccount,
   listPendingConsentsForEmail,
@@ -30,6 +31,7 @@ import {
 import {
   deleteMasterAccountCascade,
   displayAccountIdentity,
+  findRegisteredAccountByUsername,
   listHouseholdAccounts,
   removeRegisteredAccountByUsername,
   resolveHouseholdEmail,
@@ -335,6 +337,20 @@ export function AccountSubscriptionStatusPanel() {
       if (!isMasterViewer && targetKey !== selfKey) {
         setPendingDelete(null);
         return;
+      }
+
+      const account = findRegisteredAccountByUsername(pendingDelete.username);
+      const noticeEmail =
+        household.householdEmail ??
+        account?.parentEmail ??
+        account?.learnerEmail ??
+        account?.email ??
+        null;
+      if (noticeEmail) {
+        void notifyAccountDeletedChild({
+          recipientEmail: noticeEmail,
+          username: pendingDelete.username,
+        });
       }
 
       const removed = removeRegisteredAccountByUsername(pendingDelete.username);

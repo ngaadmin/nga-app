@@ -69,7 +69,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3">
-        <div className="inline-flex min-h-11 items-center gap-2.5 rounded-xl border-2 border-[#0CC1E0]/45 bg-[#BDE9FB]/20 px-3 py-1.5">
+        <div className="inline-flex h-11 w-56 shrink-0 items-center gap-2.5 rounded-xl border-2 border-[#0CC1E0]/45 bg-[#BDE9FB]/20 px-3">
           <span className="relative size-8 shrink-0">
             <Image
               src={TRACK_AVATAR_SRC[current]}
@@ -80,7 +80,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
               unoptimized
             />
           </span>
-          <p className="font-heading text-sm font-extrabold leading-none text-[#031F82]">
+          <p className="whitespace-nowrap font-heading text-sm font-extrabold leading-none text-[#031F82]">
             {masteryCohortLabel(current)} · Ages{" "}
             {masteryCohortAgeRangeLabel(current)}
           </p>

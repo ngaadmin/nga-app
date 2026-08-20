@@ -1,13 +1,21 @@
 import { requestOnboardingEmailSend } from "@/lib/email/request-send";
+import { isEmptyAccountProgress } from "@/lib/dashboard/account-progress";
+import {
+  collectAccountProgress,
+  persistAccountProgressCacheFromLive,
+} from "@/lib/dashboard/account-progress-local";
 import {
   ensureGuestProgressSnapshot,
   mergeGuestProgressSnapshot,
+  readGuestProgressSnapshot,
 } from "@/lib/onboarding/guest-progress-snapshot";
 import {
   enforceCohortAccountState,
+  readUserSession,
   saveUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import { saveCurrentLearnerProgress } from "@/lib/onboarding/learner-progress";
 import {
   findActiveParentMasterByEmail,
   upsertRegisteredAccount,
@@ -163,6 +171,21 @@ async function dispatchOnboardingEmails(
   }
 }
 
+async function persistRegisteredAccountProgress(
+  session: UserSession,
+): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  persistAccountProgressCacheFromLive({
+    userId: session.supabaseUserId,
+    username: session.username,
+  });
+
+  const payload = collectAccountProgress();
+  if (isEmptyAccountProgress(payload)) return;
+  await saveCurrentLearnerProgress(payload);
+}
+
 /**
  * Saves the registered session (cohort status + email rules enforced) and
  * merges guest lesson milestones, XP, badges, and Vault balances into it.
@@ -175,8 +198,15 @@ export async function finalizeRegisteredSignup(
   session: UserSession,
   options?: FinalizeSignupOptions,
 ): Promise<UserSession> {
-  if (typeof window !== "undefined") {
-    // Capture any still-live guest assets before the registered write lands.
+  const prior = typeof window !== "undefined" ? readUserSession() : null;
+  const hadGuestSnapshot =
+    typeof window !== "undefined" && Boolean(readGuestProgressSnapshot());
+  // Returning login is already a registered profile (or a logged-out device).
+  // Do not snapshot empty live storage and merge it over saved account progress.
+  const shouldPreserveGuestProgress =
+    hadGuestSnapshot || prior?.accessMode === "guest";
+
+  if (typeof window !== "undefined" && shouldPreserveGuestProgress) {
     ensureGuestProgressSnapshot();
   }
 
@@ -209,13 +239,19 @@ export async function finalizeRegisteredSignup(
     await dispatchOnboardingEmails(withMarketingGate, options);
     saveUserSession(withMarketingGate);
     upsertRegisteredAccount(withMarketingGate);
-    mergeGuestProgressSnapshot();
+    if (shouldPreserveGuestProgress) {
+      mergeGuestProgressSnapshot();
+    }
+    await persistRegisteredAccountProgress(withMarketingGate);
     return withMarketingGate;
   }
 
   saveUserSession(withMarketingGate);
   upsertRegisteredAccount(withMarketingGate);
-  mergeGuestProgressSnapshot();
+  if (shouldPreserveGuestProgress) {
+    mergeGuestProgressSnapshot();
+  }
+  await persistRegisteredAccountProgress(withMarketingGate);
   await dispatchOnboardingEmails(withMarketingGate, options);
   return withMarketingGate;
 }

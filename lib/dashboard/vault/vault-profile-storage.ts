@@ -15,6 +15,7 @@ import {
 import {
   readPersisted,
 } from "@/lib/dev/client-persist";
+import { markAccountProgressDirty } from "@/lib/dashboard/account-progress-dirty";
 import {
   readVaultProfileRaw,
   readVaultSessionRaw,
@@ -255,6 +256,7 @@ export function saveVaultProfileState(
     session,
     JSON.stringify({ ...state, schemaVersion: VAULT_PROFILE_SCHEMA_VERSION }),
   );
+  markAccountProgressDirty();
 }
 
 /** Promotes guest session vault data into the registered profile store. */
@@ -280,6 +282,7 @@ export function migrateVaultSessionToProfile(): PersistedVaultProfile | null {
     );
     removeVaultSessionRaw(VAULT_SESSION_STORAGE_KEY);
     removeVaultSessionRaw(LEGACY_VAULT_SESSION_STORAGE_KEY);
+    markAccountProgressDirty();
     return profile;
   } catch {
     return null;

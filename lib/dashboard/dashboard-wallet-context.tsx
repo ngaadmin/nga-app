@@ -14,6 +14,7 @@ import {
   readDashboardWalletState,
   saveDashboardWalletState,
 } from "@/lib/dashboard/dashboard-wallet-storage";
+import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import {
   audPerXpBlockFromSliderIndex,
   convertPointsToAud,
@@ -60,18 +61,36 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const [walletHydrated, setWalletHydrated] = useState(false);
 
   useEffect(() => {
-    const persisted = readDashboardWalletState();
-    if (persisted) {
-      setTotalPoints(persisted.totalPoints);
-      setLifetimePointsEarned(persisted.lifetimePointsEarned);
-      setAudSliderIndexState(persisted.audSliderIndex);
-      setXpExchangeRateSet(persisted.xpExchangeRateSet);
+    function hydrateWallet() {
+      const persisted = readDashboardWalletState();
+      if (persisted) {
+        setTotalPoints(persisted.totalPoints);
+        setLifetimePointsEarned(persisted.lifetimePointsEarned);
+        setAudSliderIndexState(persisted.audSliderIndex);
+        setXpExchangeRateSet(persisted.xpExchangeRateSet);
+      }
+      setWalletHydrated(true);
     }
-    setWalletHydrated(true);
+
+    hydrateWallet();
+    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateWallet);
+    return () => {
+      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateWallet);
+    };
   }, []);
 
   useEffect(() => {
     if (!walletHydrated) return;
+
+    const existing = readDashboardWalletState();
+    if (
+      totalPoints === 0 &&
+      lifetimePointsEarned === 0 &&
+      existing &&
+      (existing.totalPoints > 0 || existing.lifetimePointsEarned > 0)
+    ) {
+      return;
+    }
 
     saveDashboardWalletState({
       totalPoints,

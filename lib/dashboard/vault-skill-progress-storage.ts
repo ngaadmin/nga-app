@@ -1,5 +1,6 @@
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import { resolveCanonicalSkillSlug } from "@/lib/skills/skills-registry";
+import { markAccountProgressDirty } from "@/lib/dashboard/account-progress-dirty";
 import {
   readPersisted,
   writePersisted,
@@ -44,4 +45,5 @@ export function saveVaultSkillTierOverrides(
     VAULT_SKILL_PROGRESS_STORAGE_KEY,
     JSON.stringify(overrides),
   );
+  markAccountProgressDirty();
 }

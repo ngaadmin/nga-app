@@ -4,6 +4,7 @@ import {
 } from "@/lib/dashboard/academy-state";
 import { resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
 import { applyDevShippedLessonUnlocks } from "@/lib/dev/academy-dev-tools";
+import { markAccountProgressDirty } from "@/lib/dashboard/account-progress-dirty";
 import {
   readPersisted,
   writePersisted,
@@ -62,6 +63,7 @@ export function saveAcademyMilestones(
     ACADEMY_PROGRESS_STORAGE_KEY,
     JSON.stringify(milestones),
   );
+  markAccountProgressDirty();
 }
 
 /** Mark a lesson complete and activate the next milestone node. */

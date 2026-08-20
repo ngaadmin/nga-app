@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import type { AccountProgressPayload } from "@/lib/dashboard/account-progress";
 import {
   loadLearnerAccountById,
   signInSupabaseAccount,
@@ -17,6 +18,8 @@ export type LearnerAccountSnapshot = {
   parentEmail: string | null;
   learnerEmail: string | null;
   mustChangePassword?: boolean;
+  /** Saved Academy / XP / skill / Vault state when the account has any. */
+  progress?: AccountProgressPayload | null;
 };
 
 export type LearnerConsentStatus = {

@@ -21,6 +21,7 @@ import {
 } from "@/lib/onboarding/registered-accounts";
 import { applyLearnerAccountSnapshot } from "@/lib/onboarding/sync-registered-session";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
+import { restoreRegisteredAccountProgress } from "@/lib/dashboard/account-progress-sync";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
 import { cn } from "@/lib/utils/cn";
 
@@ -204,6 +205,11 @@ export function SignInForm() {
           password: trimmedCredential,
         });
         await finalizeRegisteredSignup(session, { skipEmail: true });
+        await restoreRegisteredAccountProgress({
+          userId: remote.account.userId,
+          username: remote.account.username,
+          remotePayload: remote.account.progress ?? null,
+        });
         dispatchUserSessionUpdated();
 
         if (session.mustChangePassword) {

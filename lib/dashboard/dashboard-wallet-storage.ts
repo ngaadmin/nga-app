@@ -1,4 +1,5 @@
 import { DEFAULT_AUD_SLIDER_INDEX } from "@/lib/dashboard/point-conversion";
+import { markAccountProgressDirty } from "@/lib/dashboard/account-progress-dirty";
 import {
   readPersisted,
   removePersisted,
@@ -80,6 +81,7 @@ export function saveDashboardWalletState(state: PersistedDashboardWallet): void 
     DASHBOARD_WALLET_STORAGE_KEY,
     JSON.stringify({ ...state, schemaVersion: WALLET_SCHEMA_VERSION }),
   );
+  markAccountProgressDirty();
 }
 
 export function clearDashboardWalletState(): void {

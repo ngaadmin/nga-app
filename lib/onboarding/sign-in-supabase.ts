@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 import type { LearnerAccountSnapshot } from "@/lib/onboarding/learner-account";
+import { loadLearnerProgressByUserId } from "@/lib/onboarding/learner-progress";
 
 export const SIGN_IN_MISMATCH_ERROR =
   "Those details don't match. Check your email or username and password.";
@@ -156,6 +157,8 @@ export async function loadLearnerAccountById(
         : "";
   if (!username) return null;
 
+  const progress = await loadLearnerProgressByUserId(userId);
+
   return {
     userId: profile.id,
     username,
@@ -166,6 +169,7 @@ export async function loadLearnerAccountById(
     parentEmail,
     learnerEmail,
     mustChangePassword,
+    progress,
   };
 }
 

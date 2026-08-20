@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { ButtonLink } from "@/components/ui/button";
+import { useAccountProgressSync } from "@/lib/dashboard/account-progress-sync";
 import { useSupabaseAccountSync } from "@/lib/dashboard/use-supabase-account-sync";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 
 export function SignUpPendingPanel() {
   useSupabaseAccountSync({ intervalMs: 8000 });
+  useAccountProgressSync();
   const session = useUserSession();
   const [approved, setApproved] = useState(false);
 

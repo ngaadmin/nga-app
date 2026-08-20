@@ -37,6 +37,7 @@ import {
   saveVaultProfileState,
 } from "@/lib/dashboard/vault/vault-profile-storage";
 import { readUserSession } from "@/lib/onboarding/guest-session";
+import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
 type AppendLedgerOptions = {
@@ -162,25 +163,46 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
     }
 
     window.addEventListener(USER_SESSION_UPDATED_EVENT, handleSessionUpdated);
-    return () => window.removeEventListener(USER_SESSION_UPDATED_EVENT, handleSessionUpdated);
+    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateFromStorage);
+    return () => {
+      window.removeEventListener(USER_SESSION_UPDATED_EVENT, handleSessionUpdated);
+      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateFromStorage);
+    };
   }, [hydrateFromStorage]);
 
   useEffect(() => {
     if (!hydrated) return;
 
-    saveVaultProfileState(
-      {
-        schemaVersion: 1,
-        moneyToAllocate,
-        jarBalances: balanceMapFromJars(jars),
-        customBuckets,
-        savingsGoals,
-        spendingCategoryOverrides,
-        customSpendingCategories,
-        ledger,
-      },
-      sessionRef.current,
-    );
+    const nextState = {
+      schemaVersion: 1 as const,
+      moneyToAllocate,
+      jarBalances: balanceMapFromJars(jars),
+      customBuckets,
+      savingsGoals,
+      spendingCategoryOverrides,
+      customSpendingCategories,
+      ledger,
+    };
+    const incomingEmpty =
+      nextState.moneyToAllocate === 0 &&
+      nextState.jarBalances["save-jar"] === 0 &&
+      nextState.jarBalances["spend-jar"] === 0 &&
+      nextState.jarBalances["give-jar"] === 0 &&
+      nextState.customBuckets.length === 0 &&
+      nextState.savingsGoals.every((goal) => goal.balance === 0);
+    const existing = readVaultProfileState(sessionRef.current);
+    const existingHasValue =
+      existing.moneyToAllocate > 0 ||
+      existing.jarBalances["save-jar"] > 0 ||
+      existing.jarBalances["spend-jar"] > 0 ||
+      existing.jarBalances["give-jar"] > 0 ||
+      existing.customBuckets.length > 0 ||
+      existing.savingsGoals.some((goal) => goal.balance > 0);
+    if (incomingEmpty && existingHasValue) {
+      return;
+    }
+
+    saveVaultProfileState(nextState, sessionRef.current);
   }, [
     customBuckets,
     customSpendingCategories,

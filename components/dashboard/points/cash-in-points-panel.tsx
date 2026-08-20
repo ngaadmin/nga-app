@@ -5,6 +5,7 @@ import { PointsConvertedSuccessModal } from "@/components/dashboard/points/point
 import { PointsConversionParentEmailModal } from "@/components/dashboard/points/points-conversion-parent-email-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
+import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
   convertPointsToAud,
@@ -138,6 +139,7 @@ export function CashInPointsPanel({
         `Cashed in ${result.pointsClaimed.toLocaleString()} XP to Save Jar`,
         { category: "cash_in", amount: result.audAmount, flow: "in", highlight: true },
       );
+      await persistRegisteredProgressNow();
 
       const parentEmail = resolveParentEmailForChild(username);
       const emailDispatch = await dispatchPointsConversionParentEmail({

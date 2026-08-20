@@ -15,6 +15,7 @@ import {
 } from "@/lib/dashboard/skill-trophies";
 import { lessonNumberForMilestoneId } from "@/lib/dashboard/academy-state";
 import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
+import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 
 export type ScreenFlash = "none" | "error" | "success";
@@ -201,7 +202,9 @@ export function useLessonFlow({
       }
     }
 
-    router.push(exitHref);
+    void persistRegisteredProgressNow().finally(() => {
+      router.push(exitHref);
+    });
   }, [
     awardLessonXp,
     exitHref,

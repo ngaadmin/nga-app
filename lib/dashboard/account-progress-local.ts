@@ -12,6 +12,7 @@ import {
 } from "@/lib/dashboard/account-progress-dirty";
 import {
   ACADEMY_PROGRESS_STORAGE_KEY,
+  readAcademyMilestones,
   saveAcademyMilestones,
 } from "@/lib/dashboard/academy-progress-storage";
 import {
@@ -112,10 +113,7 @@ export function collectAccountProgress(): AccountProgressPayload {
 
   return {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
-    academyProgress: academyRaw
-      ? (parseAccountProgressPayload({ academyProgress: academyRaw })
-          ?.academyProgress ?? null)
-      : null,
+    academyProgress: academyRaw ? readAcademyMilestones() : null,
     wallet: readDashboardWalletState(),
     skillProgress: readVaultSkillTierOverrides(),
     vaultProfile: vaultProfileRaw

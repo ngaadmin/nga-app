@@ -1,5 +1,8 @@
 import { requestOnboardingEmailSend } from "@/lib/email/request-send";
-import { isEmptyAccountProgress } from "@/lib/dashboard/account-progress";
+import {
+  isEmptyAccountProgress,
+  mergeAccountProgress,
+} from "@/lib/dashboard/account-progress";
 import {
   collectAccountProgress,
   persistAccountProgressCacheFromLive,
@@ -15,11 +18,15 @@ import {
   saveUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
-import { saveLearnerProgressForUser } from "@/lib/onboarding/learner-progress";
+import {
+  loadLearnerProgressByUserId,
+  saveLearnerProgressForUser,
+} from "@/lib/onboarding/learner-progress";
 import {
   findActiveParentMasterByEmail,
   upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
+import { createClient } from "@/lib/supabase/client";
 
 export type FinalizeSignupOptions = {
   /**
@@ -183,9 +190,23 @@ async function persistRegisteredAccountProgress(
 
   const payload = collectAccountProgress();
   if (isEmptyAccountProgress(payload)) return;
-  const childId = session.supabaseUserId?.trim();
+
+  let childId: string | null = null;
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getUser();
+    childId = data.user?.id?.trim() || null;
+  } catch {
+    childId = null;
+  }
+  childId = childId || session.supabaseUserId?.trim() || null;
   if (!childId) return;
-  await saveLearnerProgressForUser(childId, payload);
+
+  const remote = await loadLearnerProgressByUserId(childId);
+  await saveLearnerProgressForUser(
+    childId,
+    mergeAccountProgress(remote, payload) ?? payload,
+  );
 }
 
 /**

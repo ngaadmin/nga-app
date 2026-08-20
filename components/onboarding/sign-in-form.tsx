@@ -208,7 +208,6 @@ export function SignInForm() {
         await restoreRegisteredAccountProgress({
           userId: remote.account.userId,
           username: remote.account.username,
-          remotePayload: remote.account.progress ?? null,
         });
         dispatchUserSessionUpdated();
 

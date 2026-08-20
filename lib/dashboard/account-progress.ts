@@ -40,9 +40,14 @@ function parseAcademyProgress(
   if (!Array.isArray(value) || value.length === 0) return null;
 
   const nodes: AcademyLessonMilestoneNode[] = [];
-  for (const entry of value) {
-    if (!isRecord(entry)) continue;
-    if (typeof entry.id !== "number" || !Number.isFinite(entry.id)) continue;
+  for (const raw of value) {
+    if (!isRecord(raw)) continue;
+    let entry = raw;
+    if (typeof entry.id !== "number" || !Number.isFinite(entry.id)) {
+      const asNumber = typeof entry.id === "string" ? Number(entry.id) : NaN;
+      if (!Number.isFinite(asNumber)) continue;
+      entry = { ...entry, id: asNumber };
+    }
     if (
       entry.status !== "active" &&
       entry.status !== "locked" &&
@@ -226,23 +231,19 @@ export function isEmptyAccountProgress(
   return !hasAcademy && !hasWallet && !hasSkills && !hasVault;
 }
 
-/** Temporary safe fields for learner_progress write/read logs (no PII). */
+/** Safe learner_progress log fields — ids, XP, and milestone counts only. */
 export function accountProgressLogFields(
   payload: AccountProgressPayload | null | undefined,
 ): {
-  hasMilestones: boolean;
-  hasXp: boolean;
-  completedLessons: number;
-  lifetimeXp: number;
+  xp: number;
+  milestoneCount: number;
 } {
-  const completedLessons = completedLessonCount(payload?.academyProgress ?? null);
+  const milestoneCount = completedLessonCount(payload?.academyProgress ?? null);
   const lifetimeXp = payload?.wallet?.lifetimePointsEarned ?? 0;
   const spendableXp = payload?.wallet?.totalPoints ?? 0;
   return {
-    hasMilestones: completedLessons > 0,
-    hasXp: lifetimeXp > 0 || spendableXp > 0,
-    completedLessons,
-    lifetimeXp,
+    xp: lifetimeXp > 0 ? lifetimeXp : spendableXp,
+    milestoneCount,
   };
 }
 

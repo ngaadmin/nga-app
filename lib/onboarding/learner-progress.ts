@@ -13,7 +13,12 @@ export async function loadLearnerProgressByUserId(
 ): Promise<AccountProgressPayload | null> {
   const trimmed = userId.trim();
   if (!trimmed) {
-    console.info("[learner-progress:read]", { userId: null, found: false });
+    console.info("[learner-progress:read]", {
+      userId: null,
+      found: "no",
+      xp: 0,
+      milestoneCount: 0,
+    });
     return null;
   }
 
@@ -26,19 +31,22 @@ export async function loadLearnerProgressByUserId(
       .maybeSingle();
 
     const parsed = error ? null : parseAccountProgressPayload(data?.payload);
+    const fields = accountProgressLogFields(parsed);
     console.info("[learner-progress:read]", {
       userId: trimmed,
-      found: Boolean(parsed),
-      rowPresent: Boolean(data?.payload),
-      error: error?.message ?? null,
-      ...accountProgressLogFields(parsed),
+      found: parsed ? "yes" : "no",
+      xp: fields.xp,
+      milestoneCount: fields.milestoneCount,
+      ...(error?.message ? { error: error.message } : {}),
     });
     if (error || !parsed) return null;
     return parsed;
   } catch (error) {
     console.info("[learner-progress:read]", {
       userId: trimmed,
-      found: false,
+      found: "no",
+      xp: 0,
+      milestoneCount: 0,
       error: error instanceof Error ? error.message : "unknown",
     });
     return null;
@@ -62,13 +70,13 @@ export async function saveLearnerProgressForUser(
   payload: AccountProgressPayload,
 ): Promise<{ ok: boolean }> {
   const trimmed = userId.trim();
-  const summary = accountProgressLogFields(payload);
+  const fields = accountProgressLogFields(payload);
 
   if (!trimmed) {
     console.info("[learner-progress:write]", {
       userId: null,
-      ok: false,
-      ...summary,
+      xp: fields.xp,
+      milestoneCount: fields.milestoneCount,
     });
     return { ok: false };
   }
@@ -86,17 +94,17 @@ export async function saveLearnerProgressForUser(
 
     console.info("[learner-progress:write]", {
       userId: trimmed,
-      ok: !error,
-      error: error?.message ?? null,
-      ...summary,
+      xp: fields.xp,
+      milestoneCount: fields.milestoneCount,
+      ...(error?.message ? { error: error.message } : {}),
     });
     return { ok: !error };
   } catch (error) {
     console.info("[learner-progress:write]", {
       userId: trimmed,
-      ok: false,
+      xp: fields.xp,
+      milestoneCount: fields.milestoneCount,
       error: error instanceof Error ? error.message : "unknown",
-      ...summary,
     });
     return { ok: false };
   }
@@ -115,11 +123,12 @@ export async function saveCurrentLearnerProgress(
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user?.id) {
+    const fields = accountProgressLogFields(payload);
     console.info("[learner-progress:write]", {
       userId: null,
-      ok: false,
+      xp: fields.xp,
+      milestoneCount: fields.milestoneCount,
       error: "no auth session",
-      ...accountProgressLogFields(payload),
     });
     return { ok: false };
   }

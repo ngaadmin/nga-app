@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import {
+  accountProgressLogFields,
   isEmptyAccountProgress,
   mergeAccountProgress,
   type AccountProgressPayload,
@@ -17,6 +18,7 @@ import {
   loadLearnerProgressByUserId,
   saveLearnerProgressForUser,
 } from "@/lib/onboarding/learner-progress";
+import { createClient } from "@/lib/supabase/client";
 
 const PUSH_DEBOUNCE_MS = 700;
 
@@ -37,14 +39,50 @@ function registeredOwner(): {
   };
 }
 
+/** Prefer the signed-in Auth uid; fall back to the local registered profile id. */
+async function resolveChildAuthUserId(): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getUser();
+    const authId = data.user?.id?.trim();
+    if (authId) return authId;
+  } catch {
+    // Missing public keys or cookie — use the local registered session id.
+  }
+
+  const session = readUserSession();
+  if (session?.accessMode !== "registered") return null;
+  return session.supabaseUserId?.trim() || null;
+}
+
+function logProgressWrite(
+  userId: string | null,
+  payload: AccountProgressPayload | null,
+): void {
+  const fields = accountProgressLogFields(payload);
+  console.info("[learner-progress:write]", {
+    userId,
+    xp: fields.xp,
+    milestoneCount: fields.milestoneCount,
+  });
+}
+
 async function pushAccountProgressNow(): Promise<void> {
   if (typeof window === "undefined" || pushInFlight) return;
   const owner = registeredOwner();
-  const childId = owner?.userId?.trim();
-  if (!owner || !childId) return;
+  if (!owner) return;
 
+  const childId = await resolveChildAuthUserId();
   const local = collectAccountProgress();
-  persistAccountProgressCacheFromLive(owner);
+  persistAccountProgressCacheFromLive({
+    userId: childId ?? owner.userId,
+    username: owner.username,
+  });
+
+  if (!childId) {
+    logProgressWrite(null, local);
+    return;
+  }
 
   pushInFlight = true;
   try {
@@ -84,14 +122,26 @@ export function scheduleAccountProgressPush(): void {
 export async function persistRegisteredProgressNow(): Promise<void> {
   if (typeof window === "undefined") return;
   const owner = registeredOwner();
-  const childId = owner?.userId?.trim();
-  if (!owner || !childId) return;
+  if (!owner) return;
 
   window.clearTimeout(pushTimer);
-  persistAccountProgressCacheFromLive(owner);
+  const childId = await resolveChildAuthUserId();
   const local = collectAccountProgress();
+  persistAccountProgressCacheFromLive({
+    userId: childId ?? owner.userId,
+    username: owner.username,
+  });
+
+  if (!childId) {
+    logProgressWrite(null, local);
+    return;
+  }
+
   if (isEmptyAccountProgress(local)) return;
-  await saveLearnerProgressForUser(childId, local);
+
+  const remote = await loadLearnerProgressByUserId(childId);
+  const payload = mergeAccountProgress(remote, local) ?? local;
+  await saveLearnerProgressForUser(childId, payload);
 }
 
 export async function restoreRegisteredAccountProgress(input?: {
@@ -106,16 +156,19 @@ export async function restoreRegisteredAccountProgress(input?: {
 
   restoreInFlight = true;
   try {
-    const childId = owner.userId?.trim();
-    const remote =
-      input?.remotePayload ??
-      (childId ? await loadLearnerProgressByUserId(childId) : null);
+    const childId = owner.userId?.trim() || (await resolveChildAuthUserId());
+    const remote = childId
+      ? await loadLearnerProgressByUserId(childId)
+      : (input?.remotePayload ?? null);
     restoreAccountProgressForUser({
-      userId: owner.userId,
+      userId: childId ?? owner.userId,
       username: owner.username,
-      remote: remote ?? null,
+      remote: remote ?? input?.remotePayload ?? null,
     });
-    persistAccountProgressCacheFromLive(owner);
+    persistAccountProgressCacheFromLive({
+      userId: childId ?? owner.userId,
+      username: owner.username,
+    });
     scheduleAccountProgressPush();
   } catch {
     restoreAccountProgressForUser({

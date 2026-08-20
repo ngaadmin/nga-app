@@ -133,9 +133,17 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       const audAmount = convertPointsToAud(safePoints, audPer100Xp);
       setTotalPoints((current) => current - safePoints);
 
+      const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
+      saveDashboardWalletState({
+        ...persisted,
+        totalPoints: Math.max(0, persisted.totalPoints - safePoints),
+        audSliderIndex,
+        xpExchangeRateSet,
+      });
+
       return { success: true, audAmount, pointsClaimed: safePoints };
     },
-    [audPer100Xp, totalPoints],
+    [audPer100Xp, audSliderIndex, totalPoints, xpExchangeRateSet],
   );
 
   const awardLessonXp = useCallback((points: number) => {
@@ -144,7 +152,16 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
 
     setTotalPoints((current) => current + safePoints);
     setLifetimePointsEarned((current) => current + safePoints);
-  }, []);
+
+    const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
+    saveDashboardWalletState({
+      ...persisted,
+      totalPoints: persisted.totalPoints + safePoints,
+      lifetimePointsEarned: persisted.lifetimePointsEarned + safePoints,
+      audSliderIndex,
+      xpExchangeRateSet,
+    });
+  }, [audSliderIndex, xpExchangeRateSet]);
 
   const value = useMemo(
     () => ({

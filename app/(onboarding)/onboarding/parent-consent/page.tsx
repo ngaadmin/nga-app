@@ -5,7 +5,7 @@ import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 export const metadata: Metadata = {
   title: "Parent Consent",
   description:
-    "Parent or guardian approval for Explorer accounts under 14.",
+    "Expired Explorer approval links can be resent from this page. Valid links continue to parent account creation.",
 };
 
 export default function ParentConsentPage() {

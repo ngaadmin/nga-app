@@ -238,7 +238,7 @@ export function buildExplorerParentEmail(
 ): BuiltEmail {
   const username = data.username.trim() || "your learner";
   const base = resolveAppUrl(appUrl);
-  const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
+  const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const learningPath = "Explorer - ages 10-12";
   const safeName = escapeHtml(username);
   const safePath = escapeHtml(learningPath);
@@ -321,7 +321,7 @@ export function buildExplorerParentResendEmail(
 ): BuiltEmail {
   const username = data.username.trim() || "your learner";
   const base = resolveAppUrl(appUrl);
-  const approveUrl = `${base}/onboarding/parent-consent?token=${encodeURIComponent(data.token)}`;
+  const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
 
   const subject = "Here's your NextGenAchiever$ approval link again";

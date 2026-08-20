@@ -33,6 +33,11 @@ export const ONBOARDING_SIGN_UP_LEARNER_PATH =
   "/onboarding/sign-up?as=learner" as const;
 export const ONBOARDING_SIGN_UP_PARENT_PATH =
   "/onboarding/sign-up?as=parent" as const;
+
+/** Email CTA + valid consent tokens land here — create parent master and approve. */
+export function parentMasterSignUpHref(token: string): string {
+  return `${ONBOARDING_SIGN_UP_PATH}?role=parent_master&token=${encodeURIComponent(token.trim())}`;
+}
 export const DASHBOARD_SETTINGS_ACCOUNT_PATH =
   "/dashboard/settings/account" as const;
 export const DASHBOARD_SETTINGS_SUBSCRIPTION_PATH =

@@ -37,7 +37,7 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
-  readPendingParentConsentByToken,
+  lookupConsentToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 import {
@@ -196,9 +196,17 @@ export function SignUpForm() {
     let cancelled = false;
 
     async function loadConsent() {
-      const pending = await readPendingParentConsentByToken(consentToken);
+      const lookup = await lookupConsentToken(consentToken);
       if (cancelled) return;
-      if (!pending) {
+
+      if (lookup.status === "expired") {
+        router.replace(
+          `${ONBOARDING_PARENT_CONSENT_PATH}?token=${encodeURIComponent(consentToken)}`,
+        );
+        return;
+      }
+
+      if (lookup.status !== "valid" || !lookup.pending) {
         setPendingConsent(null);
         setParentMasterFlow(null);
         setParentConsentLoading(false);
@@ -207,6 +215,8 @@ export function SignUpForm() {
         });
         return;
       }
+
+      const pending = lookup.pending;
 
       const flow = requiresParentConsentForBirthYear(pending.birthYear)
         ? "explorer_consent"
@@ -224,14 +234,11 @@ export function SignUpForm() {
         return;
       }
 
-      // Existing master: Explorers approve on the consent page; Pathfinders are already linked.
-      if (findActiveParentMasterByEmail(pending.parentEmail)) {
-        if (flow === "explorer_consent") {
-          router.replace(
-            `${ONBOARDING_PARENT_CONSENT_PATH}?token=${encodeURIComponent(consentToken)}`,
-          );
-          return;
-        }
+      // Pathfinder claim links are FYI only when a master already exists locally.
+      if (
+        flow === "pathfinder_claim" &&
+        findActiveParentMasterByEmail(pending.parentEmail)
+      ) {
         setPendingConsent(null);
         setParentMasterFlow(null);
         setParentConsentLoading(false);

@@ -15,7 +15,7 @@ import {
   saveUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
-import { saveCurrentLearnerProgress } from "@/lib/onboarding/learner-progress";
+import { saveLearnerProgressForUser } from "@/lib/onboarding/learner-progress";
 import {
   findActiveParentMasterByEmail,
   upsertRegisteredAccount,
@@ -183,7 +183,9 @@ async function persistRegisteredAccountProgress(
 
   const payload = collectAccountProgress();
   if (isEmptyAccountProgress(payload)) return;
-  await saveCurrentLearnerProgress(payload);
+  const childId = session.supabaseUserId?.trim();
+  if (!childId) return;
+  await saveLearnerProgressForUser(childId, payload);
 }
 
 /**

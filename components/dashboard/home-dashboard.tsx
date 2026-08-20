@@ -6,6 +6,7 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { SettingsTestingViewToggle } from "@/components/dashboard/settings/settings-testing-view-toggle";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
 import {
   ONBOARDING_SIGN_IN_PATH,
@@ -477,7 +478,8 @@ export function HomeDashboard() {
     [username],
   );
 
-  function handleLogOut() {
+  async function handleLogOut() {
+    await persistRegisteredProgressNow();
     clearAllAppSessionState();
     router.push(ONBOARDING_SIGN_IN_PATH);
   }

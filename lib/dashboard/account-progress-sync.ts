@@ -14,8 +14,8 @@ import {
 } from "@/lib/dashboard/account-progress-local";
 import { readUserSession } from "@/lib/onboarding/guest-session";
 import {
-  loadCurrentLearnerProgress,
-  saveCurrentLearnerProgress,
+  loadLearnerProgressByUserId,
+  saveLearnerProgressForUser,
 } from "@/lib/onboarding/learner-progress";
 
 const PUSH_DEBOUNCE_MS = 700;
@@ -40,14 +40,15 @@ function registeredOwner(): {
 async function pushAccountProgressNow(): Promise<void> {
   if (typeof window === "undefined" || pushInFlight) return;
   const owner = registeredOwner();
-  if (!owner) return;
+  const childId = owner?.userId?.trim();
+  if (!owner || !childId) return;
 
   const local = collectAccountProgress();
   persistAccountProgressCacheFromLive(owner);
 
   pushInFlight = true;
   try {
-    const remote = await loadCurrentLearnerProgress();
+    const remote = await loadLearnerProgressByUserId(childId);
     if (
       isEmptyAccountProgress(local) &&
       remote &&
@@ -58,7 +59,7 @@ async function pushAccountProgressNow(): Promise<void> {
 
     const payload = mergeAccountProgress(remote, local) ?? local;
     if (isEmptyAccountProgress(payload)) return;
-    await saveCurrentLearnerProgress(payload);
+    await saveLearnerProgressForUser(childId, payload);
   } catch {
     // Next dirty event or dashboard sync can retry.
   } finally {
@@ -79,6 +80,20 @@ export function scheduleAccountProgressPush(): void {
   }, PUSH_DEBOUNCE_MS);
 }
 
+/** Immediate cloud + cache write so logout cannot drop the only copy. */
+export async function persistRegisteredProgressNow(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const owner = registeredOwner();
+  const childId = owner?.userId?.trim();
+  if (!owner || !childId) return;
+
+  window.clearTimeout(pushTimer);
+  persistAccountProgressCacheFromLive(owner);
+  const local = collectAccountProgress();
+  if (isEmptyAccountProgress(local)) return;
+  await saveLearnerProgressForUser(childId, local);
+}
+
 export async function restoreRegisteredAccountProgress(input?: {
   userId?: string | null;
   username?: string | null;
@@ -91,10 +106,10 @@ export async function restoreRegisteredAccountProgress(input?: {
 
   restoreInFlight = true;
   try {
+    const childId = owner.userId?.trim();
     const remote =
-      input?.remotePayload !== undefined
-        ? input.remotePayload
-        : await loadCurrentLearnerProgress();
+      input?.remotePayload ??
+      (childId ? await loadLearnerProgressByUserId(childId) : null);
     restoreAccountProgressForUser({
       userId: owner.userId,
       username: owner.username,

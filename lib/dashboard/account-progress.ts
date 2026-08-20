@@ -226,6 +226,26 @@ export function isEmptyAccountProgress(
   return !hasAcademy && !hasWallet && !hasSkills && !hasVault;
 }
 
+/** Temporary safe fields for learner_progress write/read logs (no PII). */
+export function accountProgressLogFields(
+  payload: AccountProgressPayload | null | undefined,
+): {
+  hasMilestones: boolean;
+  hasXp: boolean;
+  completedLessons: number;
+  lifetimeXp: number;
+} {
+  const completedLessons = completedLessonCount(payload?.academyProgress ?? null);
+  const lifetimeXp = payload?.wallet?.lifetimePointsEarned ?? 0;
+  const spendableXp = payload?.wallet?.totalPoints ?? 0;
+  return {
+    hasMilestones: completedLessons > 0,
+    hasXp: lifetimeXp > 0 || spendableXp > 0,
+    completedLessons,
+    lifetimeXp,
+  };
+}
+
 function richerAcademy(
   left: AcademyLessonMilestoneNode[] | null,
   right: AcademyLessonMilestoneNode[] | null,

@@ -227,6 +227,18 @@ export function readPendingParentConsent(): PendingParentConsent | null {
   return entries[entries.length - 1] ?? null;
 }
 
+/** Latest local pending consent for this learner username, if still on-device. */
+export function findLocalPendingForUsername(
+  username: string,
+): PendingParentConsent | null {
+  const key = username.trim().toLowerCase();
+  if (!key) return null;
+  const matches = readAllPendingConsents().filter(
+    (entry) => entry.childUsername.trim().toLowerCase() === key,
+  );
+  return matches[matches.length - 1] ?? null;
+}
+
 /** Local pending consents addressed to this parent/guardian email. */
 export function listPendingConsentsForEmail(
   email: string,

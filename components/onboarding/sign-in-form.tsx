@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { registeredPlayPath } from "@/lib/onboarding/explorer-pending-consent";
 import {
-  DASHBOARD_ACADEMY_PATH,
   ONBOARDING_SIGN_UP_PATH,
   readUserSession,
   saveUserSession,
@@ -67,7 +67,7 @@ export function SignInForm() {
       session?.accessMode === "registered" &&
       !session.mustChangePassword
     ) {
-      router.replace(DASHBOARD_ACADEMY_PATH);
+      router.replace(registeredPlayPath(session));
     }
   }, [router]);
 
@@ -220,7 +220,7 @@ export function SignInForm() {
           return;
         }
 
-        router.push(DASHBOARD_ACADEMY_PATH);
+        router.push(registeredPlayPath(session));
       } catch (error) {
         console.error("[sign-in] Profile apply failed", {
           message: error instanceof Error ? error.message : "unknown",
@@ -281,7 +281,7 @@ export function SignInForm() {
 
       saveUserSession(updated);
       dispatchUserSessionUpdated();
-      router.push(DASHBOARD_ACADEMY_PATH);
+      router.push(registeredPlayPath(updated));
     } catch {
       setErrors({
         form: "We could not update your password. Try again.",

@@ -2,10 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  DASHBOARD_ACADEMY_PATH,
-  readUserSession,
-} from "@/lib/onboarding/guest-session";
+import { registeredPlayPath } from "@/lib/onboarding/explorer-pending-consent";
+import { readUserSession } from "@/lib/onboarding/guest-session";
 
 /** Registered users skip signup - guest sessions may convert here. */
 export function OnboardingSignUpRedirect() {
@@ -21,7 +19,7 @@ export function OnboardingSignUpRedirect() {
 
     const session = readUserSession();
     if (session?.accessMode === "registered") {
-      router.replace(DASHBOARD_ACADEMY_PATH);
+      router.replace(registeredPlayPath(session));
     }
   }, [isParentMasterFlow, router]);
 

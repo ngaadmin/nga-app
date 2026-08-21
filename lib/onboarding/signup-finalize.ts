@@ -224,11 +224,7 @@ export async function finalizeRegisteredSignup(
     throw new Error("Registered profiles cannot remain in GUEST lifecycle state.");
   }
 
-  // Explorers never collect marketing consent during child onboarding.
-  const withMarketingGate =
-    enforced.ageTier === "explorer"
-      ? { ...enforced, marketingOptIn: false }
-      : enforced;
+  const withMarketingGate = enforced;
 
   const isExplorerPendingConsentEmail =
     withMarketingGate.ageTier === "explorer" &&

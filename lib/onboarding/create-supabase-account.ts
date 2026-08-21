@@ -357,10 +357,7 @@ function parseSignupInput(
       password,
       learnerEmail,
       parentEmail,
-      marketingOptIn:
-        parentInitiated || !requirements.requiresLearnerEmail
-          ? false
-          : Boolean(input.marketingOptIn),
+      marketingOptIn: parentInitiated ? false : Boolean(input.marketingOptIn),
     },
   };
 }

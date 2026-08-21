@@ -307,55 +307,6 @@ export function buildExplorerParentEmail(
   return { subject, preheader, html, text };
 }
 
-export function buildExplorerParentResendEmail(
-  data: ExplorerParentResendEmailData,
-  appUrl?: string,
-): BuiltEmail {
-  const username = data.username.trim() || "your learner";
-  const base = resolveAppUrl(appUrl);
-  const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
-  const safeName = escapeHtml(username);
-
-  const subject = "Here's your NextGenAchiever$ approval link again";
-  const preheader = "Your previous approval link expired. Use this fresh link.";
-  const header = "Your approval link is ready";
-
-  const text = [
-    "Hi there,",
-    "",
-    `The previous approval link for ${username}'s NextGenAchiever$ profile expired.`,
-    "Use this fresh link to approve their Explorer profile. Nothing else has changed.",
-    "",
-    `APPROVE PROFILE: ${approveUrl}`,
-    "",
-    "If you did not request this, you can ignore this email.",
-    "",
-    "The Team at NextGenAchiever$",
-  ].join("\n");
-
-  const html = wrapHtml({
-    header,
-    preheader,
-    bodyInner: `
-      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        The previous approval link for <strong>${safeName}</strong>&apos;s NextGenAchiever$
-        profile expired. Use this fresh link to approve their Explorer profile.
-        Nothing else has changed.
-      </p>
-      ${ctaButton("APPROVE PROFILE", approveUrl)}
-      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        If you did not request this, you can ignore this email.
-      </p>
-      <p style="margin:24px 0 0;font-size:16px;">
-        The Team at NextGenAchiever$
-      </p>
-    `,
-  });
-
-  return { subject, preheader, html, text };
-}
-
 export function buildPathfinderParentEmail(
   data: PathfinderParentEmailData,
   appUrl?: string,
@@ -991,13 +942,9 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
 ): BuiltEmail {
   switch (type) {
     case "EXPLORER_PARENT":
+    case "EXPLORER_PARENT_RESEND":
       return buildExplorerParentEmail(
         data as ExplorerParentEmailData,
-        appUrl,
-      );
-    case "EXPLORER_PARENT_RESEND":
-      return buildExplorerParentResendEmail(
-        data as ExplorerParentResendEmailData,
         appUrl,
       );
     case "PATHFINDER_PARENT":

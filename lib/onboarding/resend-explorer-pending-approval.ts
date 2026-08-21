@@ -105,7 +105,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
   }
 
   const sendResult = await sendOnboardingEmail({
-    type: "EXPLORER_PARENT_RESEND",
+    type: "EXPLORER_PARENT",
     recipientEmail: parentEmail,
     data: {
       username: profile.username,

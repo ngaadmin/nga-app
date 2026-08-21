@@ -481,7 +481,7 @@ export async function resendParentConsentApproval(
   upsertLocalPendingConsent(pending);
 
   const sendResult = await requestOnboardingEmailSend({
-    type: "EXPLORER_PARENT_RESEND",
+    type: "EXPLORER_PARENT",
     recipientEmail: parentEmail,
     data: {
       username: childUsername,

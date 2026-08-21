@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ExplorerPendingConsentView } from "@/components/onboarding/explorer-pending-consent-view";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
-import { isExplorerPendingConsent } from "@/lib/onboarding/explorer-pending-consent";
+import { shouldBlockExplorerPendingPlay } from "@/lib/onboarding/explorer-pending-consent";
 import { readUserSession } from "@/lib/onboarding/guest-session";
 
 /** Blocks Academy and other dashboard play until Explorer VPC is approved. */
@@ -18,7 +18,7 @@ export function ExplorerPendingConsentGate({
     typeof window === "undefined" ? null : readUserSession(),
   );
   const session = live ?? bootSession;
-  const blocking = isExplorerPendingConsent(session);
+  const blocking = shouldBlockExplorerPendingPlay(session);
 
   return (
     <>

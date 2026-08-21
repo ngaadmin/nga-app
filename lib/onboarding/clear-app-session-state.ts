@@ -13,6 +13,7 @@ import {
   ACCOUNT_PROGRESS_CACHE_KEY,
   persistAccountProgressCacheFromLive,
 } from "@/lib/dashboard/account-progress-local";
+import { EXPLORER_PENDING_PLAY_OK_KEY } from "@/lib/onboarding/explorer-pending-consent";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
 import { REGISTERED_ACCOUNTS_STORAGE_KEY } from "@/lib/onboarding/registered-accounts";
 import { clearAllPersistedNgaKeys, removePersisted } from "@/lib/dev/client-persist";
@@ -24,6 +25,7 @@ export const APP_SESSION_STORAGE_KEYS = [
   GENERIC_PROFILE_POOL_STORAGE_KEY,
   GUEST_PROGRESS_SNAPSHOT_KEY,
   PENDING_PARENT_CONSENT_KEY,
+  EXPLORER_PENDING_PLAY_OK_KEY,
   DASHBOARD_WALLET_STORAGE_KEY,
   CURRENCY_PREFERENCE_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,

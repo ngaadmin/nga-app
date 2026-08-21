@@ -27,6 +27,7 @@ import {
   ONBOARDING_SIGN_UP_PENDING_PATH,
   readUserSession,
 } from "@/lib/onboarding/guest-session";
+import { markExplorerPendingPlayAllowed } from "@/lib/onboarding/explorer-pending-consent";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
@@ -535,7 +536,8 @@ export function SignUpForm() {
       succeeded = true;
 
       if (isPendingConsent) {
-        router.push(ONBOARDING_SIGN_UP_PENDING_PATH);
+        markExplorerPendingPlayAllowed();
+        router.push(`${ONBOARDING_SIGN_UP_PENDING_PATH}?from=signup`);
         return;
       }
 

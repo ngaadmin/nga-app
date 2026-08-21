@@ -10,27 +10,45 @@ import {
   ONBOARDING_SIGN_IN_PATH,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
+import { markExplorerPendingPlayAllowed } from "@/lib/onboarding/explorer-pending-consent";
 import {
   findLocalPendingForUsername,
   resendParentConsentApproval,
 } from "@/lib/onboarding/parent-consent-pending";
 import { resendExplorerPendingApprovalEmail } from "@/lib/onboarding/resend-explorer-pending-approval";
 
+export type ExplorerPendingConsentVariant = "justSubmitted" | "returnGate";
+
 type ExplorerPendingConsentViewProps = {
   approved: boolean;
   session: UserSession | null;
+  /** Immediate Save Progress screen vs later login gate. */
+  variant?: ExplorerPendingConsentVariant;
 };
 
 export function ExplorerPendingConsentView({
   approved,
   session,
+  variant = "returnGate",
 }: ExplorerPendingConsentViewProps) {
   const router = useRouter();
   const copy = copyMatrix.onboarding.pendingConsent;
+  const justSubmitted = variant === "justSubmitted" && !approved;
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const resendInFlightRef = useRef(false);
+
+  const heading = approved
+    ? copy.headingApproved
+    : justSubmitted
+      ? copy.headingJustSubmitted
+      : copy.heading;
+  const body = approved
+    ? copy.bodyApproved
+    : justSubmitted
+      ? copy.bodyJustSubmitted
+      : copy.body;
 
   async function leaveToLogin() {
     if (isLeaving) return;
@@ -38,6 +56,11 @@ export function ExplorerPendingConsentView({
     await signOutApp();
     router.push(ONBOARDING_SIGN_IN_PATH);
     router.refresh();
+  }
+
+  function keepPlaying() {
+    markExplorerPendingPlayAllowed();
+    router.push(DASHBOARD_ACADEMY_PATH);
   }
 
   async function handleResend() {
@@ -85,13 +108,13 @@ export function ExplorerPendingConsentView({
           id="explorer-pending-heading"
           className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]"
         >
-          {approved ? copy.headingApproved : copy.heading}
+          {heading}
         </h1>
         <p
           id="explorer-pending-body"
           className="font-sans text-sm leading-relaxed text-nga-ink sm:text-base"
         >
-          {approved ? copy.bodyApproved : copy.body}
+          {body}
         </p>
       </div>
 
@@ -110,6 +133,10 @@ export function ExplorerPendingConsentView({
             onClick={() => router.push(DASHBOARD_ACADEMY_PATH)}
           >
             {copy.continue}
+          </Button>
+        ) : justSubmitted ? (
+          <Button type="button" variant="cta" fullWidth onClick={keepPlaying}>
+            {copy.keepPlaying}
           </Button>
         ) : (
           <Button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { ExplorerPendingConsentView } from "@/components/onboarding/explorer-pending-consent-view";
 import { useAccountProgressSync } from "@/lib/dashboard/account-progress-sync";
@@ -15,6 +15,8 @@ import {
 
 export function SignUpPendingPanel() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justSubmitted = searchParams.get("from") === "signup";
   useSupabaseAccountSync({ intervalMs: 8000 });
   useAccountProgressSync();
   const session = useUserSession();
@@ -42,7 +44,11 @@ export function SignUpPendingPanel() {
     <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
       <div className="mx-auto w-full max-w-md space-y-8 px-1">
         <OnboardingProgress value={approved ? 100 : 75} />
-        <ExplorerPendingConsentView approved={approved} session={session} />
+        <ExplorerPendingConsentView
+          approved={approved}
+          session={session}
+          variant={justSubmitted ? "justSubmitted" : "returnGate"}
+        />
       </div>
     </section>
   );

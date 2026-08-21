@@ -515,7 +515,7 @@ export function SignUpForm() {
         password: password.trim(),
         learnerEmail: isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
         parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
-        marketingOptIn,
+        marketingOptIn: isExplorer ? false : marketingOptIn,
       });
 
       if (!result.success) {
@@ -545,7 +545,7 @@ export function SignUpForm() {
           isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
         password: password.trim(),
         accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
-        marketingOptIn,
+        marketingOptIn: isExplorer ? false : marketingOptIn,
         supabaseUserId: result.userId,
         curriculumCohort: cohort,
       });
@@ -1239,17 +1239,19 @@ export function SignUpForm() {
             </p>
           ) : null}
 
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={marketingOptIn}
-              onChange={(e) => setMarketingOptIn(e.target.checked)}
-              className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
-            />
-            <span className="font-sans text-sm leading-relaxed text-nga-slate">
-              Send me occasional updates about NextGenAchiever$
-            </span>
-          </label>
+          {isExplorer ? null : (
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
+              />
+              <span className="font-sans text-sm leading-relaxed text-nga-slate">
+                Send me occasional updates about NextGenAchiever$
+              </span>
+            </label>
+          )}
 
           <Button
             type="submit"

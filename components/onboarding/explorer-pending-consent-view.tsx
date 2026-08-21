@@ -39,16 +39,8 @@ export function ExplorerPendingConsentView({
   const [isLeaving, setIsLeaving] = useState(false);
   const resendInFlightRef = useRef(false);
 
-  const heading = approved
-    ? copy.headingApproved
-    : justSubmitted
-      ? copy.headingJustSubmitted
-      : copy.heading;
-  const body = approved
-    ? copy.bodyApproved
-    : justSubmitted
-      ? copy.bodyJustSubmitted
-      : copy.body;
+  const heading = approved ? copy.headingApproved : copy.heading;
+  const body = approved ? copy.bodyApproved : copy.body;
 
   async function leaveToLogin() {
     if (isLeaving) return;

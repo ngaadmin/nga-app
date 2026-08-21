@@ -1,16 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
+import {
+  getComplianceTierFromBirthYear,
+  getMasteryCohortFromBirthYear,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
-import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
+import {
+  isEligibleBirthYear,
+  representativeBirthYearForCohort,
+} from "@/lib/onboarding/birth-years";
 import {
   approveConsentRequestInApp,
   listPendingConsentRequestsForParent,
   type PendingConsentRequestView,
 } from "@/lib/onboarding/approve-consent-request";
+import {
+  listLinkedChildrenForCurrentParent,
+  type LinkedHouseholdChild,
+} from "@/lib/onboarding/list-linked-children";
 import {
   convertToRegisteredProfile,
   DASHBOARD_ADD_PROFILE_PATH,
@@ -24,15 +36,11 @@ import {
 } from "@/lib/onboarding/guest-session";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { notifyAccountDeletedChild } from "@/lib/onboarding/issue-account-deleted-email";
-import {
-  approvePendingLearnerAccount,
-  listPendingConsentsForEmail,
-} from "@/lib/onboarding/parent-consent-pending";
+import { approvePendingLearnerAccount } from "@/lib/onboarding/parent-consent-pending";
 import {
   deleteMasterAccountCascade,
   displayAccountIdentity,
   findRegisteredAccountByUsername,
-  listHouseholdAccounts,
   removeRegisteredAccountByUsername,
   resolveHouseholdEmail,
   upsertRegisteredAccount,
@@ -74,10 +82,9 @@ function usernameKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function mergePendingLinks(input: {
+function extraPendingFromRemote(input: {
   children: UserSession[];
   remote: PendingConsentRequestView[];
-  local: ReturnType<typeof listPendingConsentsForEmail>;
 }): PendingLinkItem[] {
   const listed = new Set(
     input.children.map((child) => usernameKey(child.username)),
@@ -95,34 +102,42 @@ function mergePendingLinks(input: {
     });
   }
 
-  for (const local of input.local) {
-    const key = usernameKey(local.childUsername);
-    if (listed.has(key) || extra.has(key)) continue;
-    extra.set(key, {
-      username: local.childUsername,
-      childBirthYear: local.birthYear,
-    });
-  }
-
   return [...extra.values()];
 }
 
-function readHouseholdForViewer(
-  session: UserSession,
-  showFullHousehold: boolean,
-): HouseholdView {
-  const household = listHouseholdAccounts(session);
-  if (showFullHousehold || session.accountRole === "parent_master") {
-    return household;
-  }
-
-  // Learners: own account + linked master only (no siblings).
-  const selfKey = session.username.trim().toLowerCase();
+function linkedChildToSession(
+  row: LinkedHouseholdChild,
+  parentEmail: string | null,
+): UserSession {
+  const curriculumCohort: MasteryCohort =
+    row.curriculumCohort ??
+    (row.birthYear ? getMasteryCohortFromBirthYear(row.birthYear) : "explorer");
+  const birthYear =
+    row.birthYear && isEligibleBirthYear(row.birthYear)
+      ? row.birthYear
+      : representativeBirthYearForCohort(curriculumCohort);
+  const pending = row.accountStatus === "pending_consent";
   return {
-    ...household,
-    children: household.children.filter(
-      (child) => child.username.trim().toLowerCase() === selfKey,
-    ),
+    accessMode: "registered",
+    username: row.username,
+    birthYear,
+    birthYearLocked: true,
+    ageTier: getComplianceTierFromBirthYear(birthYear),
+    curriculumCohort,
+    accountStatus: pending ? "PENDING_CONSENT" : "ACTIVE",
+    accountRole: "child",
+    parentEmail: parentEmail ?? undefined,
+    createdAt: new Date().toISOString(),
+    consentApprovedAt: pending ? undefined : (row.consentApprovedAt ?? undefined),
+    supabaseUserId: row.userId,
+  };
+}
+
+function householdForLearnerViewer(session: UserSession): HouseholdView {
+  return {
+    master: null,
+    children: session.accountRole === "child" ? [session] : [],
+    householdEmail: resolveHouseholdEmail(session),
   };
 }
 
@@ -153,32 +168,86 @@ export function AccountSubscriptionStatusPanel() {
   const [remotePending, setRemotePending] = useState<
     PendingConsentRequestView[]
   >([]);
+  const [householdLoadError, setHouseholdLoadError] = useState<string | null>(
+    null,
+  );
+  const [householdLoading, setHouseholdLoading] = useState(false);
+  const refreshGeneration = useRef(0);
 
   const refresh = useCallback(() => {
     const session = readUserSession();
+    const generation = ++refreshGeneration.current;
     if (!session || session.accessMode !== "registered") {
       setActiveUsername(null);
       setIsMasterViewer(false);
       setIsGuest(!session || isGuestSession(session));
       setHousehold({ master: null, children: [], householdEmail: null });
       setRemotePending([]);
+      setHouseholdLoadError(null);
+      setHouseholdLoading(false);
       setSessionReady(true);
       return;
     }
     setIsGuest(false);
     setActiveUsername(session.username.trim() || null);
-    setIsMasterViewer(session.accountRole === "parent_master");
-    setHousehold(readHouseholdForViewer(session, isParentSettingsView));
+    const isParent = session.accountRole === "parent_master";
+    setIsMasterViewer(isParent);
+    const householdEmail = resolveHouseholdEmail(session);
 
-    if (session.accountRole === "parent_master") {
-      void listPendingConsentRequestsForParent().then((result) => {
-        if (result.ok) setRemotePending(result.requests);
-      });
-    } else {
+    if (!isParent) {
+      setHousehold(householdForLearnerViewer(session));
       setRemotePending([]);
+      setHouseholdLoadError(null);
+      setHouseholdLoading(false);
+      setSessionReady(true);
+      return;
     }
+
+    setHousehold({
+      master: session,
+      children: [],
+      householdEmail,
+    });
+    setHouseholdLoading(true);
     setSessionReady(true);
-  }, [isParentSettingsView]);
+
+    void (async () => {
+      try {
+        const [linked, pending] = await Promise.all([
+          listLinkedChildrenForCurrentParent(),
+          listPendingConsentRequestsForParent(),
+        ]);
+        if (generation !== refreshGeneration.current) return;
+
+        if (!linked.ok) {
+          setHousehold({ master: session, children: [], householdEmail });
+          setHouseholdLoadError(
+            linked.error || "Could not load linked children. Try again.",
+          );
+        } else {
+          setHouseholdLoadError(null);
+          setHousehold({
+            master: session,
+            children: linked.children.map((child) =>
+              linkedChildToSession(child, householdEmail),
+            ),
+            householdEmail,
+          });
+        }
+
+        setRemotePending(pending.ok ? pending.requests : []);
+      } catch {
+        if (generation !== refreshGeneration.current) return;
+        setHousehold({ master: session, children: [], householdEmail });
+        setHouseholdLoadError("Could not load linked children. Try again.");
+        setRemotePending([]);
+      } finally {
+        if (generation === refreshGeneration.current) {
+          setHouseholdLoading(false);
+        }
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     refresh();
@@ -188,16 +257,14 @@ export function AccountSubscriptionStatusPanel() {
     };
   }, [refresh]);
 
-  const extraPending = useMemo(() => {
-    const local = household.householdEmail
-      ? listPendingConsentsForEmail(household.householdEmail)
-      : [];
-    return mergePendingLinks({
-      children: household.children,
-      remote: remotePending,
-      local,
-    });
-  }, [household.children, household.householdEmail, remotePending]);
+  const extraPending = useMemo(
+    () =>
+      extraPendingFromRemote({
+        children: household.children,
+        remote: remotePending,
+      }),
+    [household.children, remotePending],
+  );
 
   const deletableAccounts = useMemo(() => {
     const canManageHousehold = isMasterViewer || isParentSettingsView;
@@ -553,6 +620,12 @@ export function AccountSubscriptionStatusPanel() {
               : null}
           </ul>
 
+          {householdLoadError ? (
+            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              {householdLoadError}
+            </p>
+          ) : null}
+
           {approveError ? (
             <p className="font-sans text-sm font-medium text-red-600" role="alert">
               {approveError}
@@ -604,6 +677,8 @@ export function AccountSubscriptionStatusPanel() {
 
           {isParentSettingsView &&
           household.master &&
+          !householdLoading &&
+          !householdLoadError &&
           household.children.length === 0 &&
           extraPending.length === 0 ? (
             <p className="font-sans text-sm text-[#1E3A5F]">

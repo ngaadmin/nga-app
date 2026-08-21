@@ -54,7 +54,7 @@ export function AcademyMomentumHeader({
 
   return (
     <StatusBannerLayout
-      aria-label="Academy stats"
+      aria-label="App stats"
       clusterGapClassName="gap-4"
       left={
         <StatusMetricPill

@@ -1,19 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
 import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
 import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
-import { StatusBannerLayout, TopBarRoundIcon } from "@/components/dashboard/status-banner-layout";
-import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
-import { UserHandleControl } from "@/components/dashboard/user-handle-control";
-import { copyMatrix } from "@/constants/copyMatrix";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
-import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import {
   hasUnseenSkillProgress,
   markSkillsCupIntroSeen,
@@ -26,16 +20,13 @@ import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 /**
- * Shell-level status strip. XP stays left on every dashboard screen.
- * Streak and skills cup are Academy-only so icons do not jump between routes.
+ * Shell-level status strip. Coins, streak, and skills cup stay in the same
+ * place on every main dashboard screen.
  */
 export function DashboardStatusHeader() {
-  const pathname = usePathname();
-  const isAcademyRoute = pathname.startsWith("/dashboard/academy");
   const { username } = useDashboardUser();
   const { lifetimePointsEarned } = useDashboardWallet();
   const { dayStreak, streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
-  const journeyCopy = copyMatrix.dashboard.academy.journey;
   const masteryCohort = useMasteryCohort();
 
   const [skillsOpen, setSkillsOpen] = useState(false);
@@ -84,42 +75,17 @@ export function DashboardStatusHeader() {
         style={zLayerStyle("sticky")}
         className="sticky top-0"
       >
-        {isAcademyRoute ? (
-          <AcademyMomentumHeader
-            username={username}
-            xp={lifetimePointsEarned}
-            dayStreak={dayStreak}
-            skillsHasAttention={skillsHasAttention}
-            showSkillsCupIntro={showSkillsCupIntro}
-            onSkillsClick={openSkills}
-            onSkillsIntroSeen={dismissSkillsCupIntro}
-            onStreakClick={openStreaks}
-            onXpClick={openXpExchange}
-          />
-        ) : (
-          <StatusBannerLayout
-            aria-label="Profile"
-            clusterGapClassName="gap-4"
-            left={
-              <StatusMetricPill
-                interactive
-                onClick={openXpExchange}
-                icon={
-                  <TopBarRoundIcon>
-                    <GoldCoinIcon className="size-5" />
-                  </TopBarRoundIcon>
-                }
-                value={lifetimePointsEarned}
-                unitLabel={journeyCopy.xpLabel}
-                ariaLabel={`${lifetimePointsEarned} ${journeyCopy.xpLabel}. Open coins exchange`}
-                title={journeyCopy.xpLabel}
-              />
-            }
-            center={
-              <UserHandleControl size="sm" className="min-w-0 max-w-full" />
-            }
-          />
-        )}
+        <AcademyMomentumHeader
+          username={username}
+          xp={lifetimePointsEarned}
+          dayStreak={dayStreak}
+          skillsHasAttention={skillsHasAttention}
+          showSkillsCupIntro={showSkillsCupIntro}
+          onSkillsClick={openSkills}
+          onSkillsIntroSeen={dismissSkillsCupIntro}
+          onStreakClick={openStreaks}
+          onXpClick={openXpExchange}
+        />
       </header>
 
       <FullHeightPanel

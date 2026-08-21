@@ -446,9 +446,9 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     type: "narrative-bonus",
     id: "shell-narrative-bonus",
     narrative:
-      "You spotted the subscription trap, protected your goal, and kept spare cash ready. Tap to collect a bonus XP chip.",
+      "You spotted the subscription trap, protected your goal, and kept spare cash ready. Tap to collect a bonus coins chip.",
     bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
     autoReadyWhenNoBonus: false,
     authoring: { pedagogicalStage: "reward", gameArchetype: "narrative-bonus" },
     ...shellIllustration(15),

@@ -18,12 +18,12 @@ export function buildPointsConversionParentEmail(
   payload: PointsConversionEmailPayload,
 ): { subject: string; body: string } {
   const safeName = payload.childUsername.trim() || "Your child";
-  const subject = `${safeName} cashed in XP in NextGenAchievers`;
+  const subject = `${safeName} cashed in coins in NextGenAchievers`;
 
   const body = [
     "Hi,",
     "",
-    `${safeName} converted ${payload.pointsClaimed.toLocaleString()} XP to ${payload.amountFormatted} in NextGenAchievers.`,
+    `${safeName} converted ${payload.pointsClaimed.toLocaleString()} coins to ${payload.amountFormatted} in NextGenAchievers.`,
     "",
     `Conversion rate: ${payload.conversionRateLabel}`,
     "",

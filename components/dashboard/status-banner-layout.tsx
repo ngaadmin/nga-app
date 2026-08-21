@@ -27,6 +27,24 @@ export const STATUS_BANNER_ITEM_CLASS =
 /** Uniform icon box aligned to banner text. */
 export const STATUS_BANNER_ICON_CLASS = "size-3.5 shrink-0";
 
+/** Round orange treatment for top-bar coins, streak, and skills cup icons. */
+export const TOP_BAR_ROUND_ICON_CLASS =
+  "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-[#031F82] shadow-md";
+
+export function TopBarRoundIcon({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <span className={cn(TOP_BAR_ROUND_ICON_CLASS, className)} aria-hidden>
+      {children}
+    </span>
+  );
+}
+
 type StatusBannerLayoutProps = {
   left?: ReactNode;
   center: ReactNode;

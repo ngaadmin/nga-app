@@ -34,7 +34,7 @@ export const MONEY_MILESTONE_ACTIONS: readonly MoneyMilestone[] = [
     category: "action",
     emoji: "💸",
     funFact:
-      "Cashing out XP into real savings is the moment virtual wins become physical proof. Founders who connect effort to dollars early are 3× more likely to stick with money goals through their teens.",
+      "Cashing out coins into real savings is the moment virtual wins become physical proof. Founders who connect effort to dollars early are 3× more likely to stick with money goals through their teens.",
   },
   {
     id: "goal-set",

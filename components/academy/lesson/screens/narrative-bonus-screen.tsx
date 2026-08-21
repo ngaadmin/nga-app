@@ -55,7 +55,7 @@ export function NarrativeBonusScreen({
           disabled={claimed}
           className={cn(lessonGoldClaimClass, "mt-6 h-touch w-full max-w-md")}
         >
-          {claimed ? `+${screen.bonusXp} XP Collected!` : screen.bonusTapLabel}
+          {claimed ? `+${screen.bonusXp} coins Collected!` : screen.bonusTapLabel}
         </button>
       ) : null}
     </>

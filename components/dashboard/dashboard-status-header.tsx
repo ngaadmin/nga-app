@@ -7,13 +7,13 @@ import { SkillsCollectionPanel } from "@/components/achievements/skills-collecti
 import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
-import { StatusBannerLayout } from "@/components/dashboard/status-banner-layout";
+import { StatusBannerLayout, TopBarRoundIcon } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
-import { XpStarIcon } from "@/lib/dashboard/icons";
+import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import {
   hasUnseenSkillProgress,
   markSkillsCupIntroSeen,
@@ -105,11 +105,13 @@ export function DashboardStatusHeader() {
                 interactive
                 onClick={openXpExchange}
                 icon={
-                  <XpStarIcon className="size-5 shrink-0 text-nga-accent" />
+                  <TopBarRoundIcon>
+                    <GoldCoinIcon className="size-5" />
+                  </TopBarRoundIcon>
                 }
                 value={lifetimePointsEarned}
                 unitLabel={journeyCopy.xpLabel}
-                ariaLabel={`${lifetimePointsEarned} ${journeyCopy.xpLabel}. Open XP exchange`}
+                ariaLabel={`${lifetimePointsEarned} ${journeyCopy.xpLabel}. Open coins exchange`}
                 title={journeyCopy.xpLabel}
               />
             }

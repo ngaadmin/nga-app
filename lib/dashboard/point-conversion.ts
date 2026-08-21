@@ -46,7 +46,7 @@ export function formatConversionRateLabel(
   audPer100Xp: number,
   currencyCode: SupportedCurrencyCode = "AUD",
 ): string {
-  return `100 XP = ${formatMoney(audPer100Xp, currencyCode)}`;
+  return `100 coins = ${formatMoney(audPer100Xp, currencyCode)}`;
 }
 
 export function parsePointsInput(rawValue: string): number | null {

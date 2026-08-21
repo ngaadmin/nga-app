@@ -136,7 +136,7 @@ export function CashInPointsPanel({
 
       creditSaveJar(result.audAmount);
       appendLedger(
-        `Cashed in ${result.pointsClaimed.toLocaleString()} XP to Save Jar`,
+        `Cashed in ${result.pointsClaimed.toLocaleString()} coins to Save Jar`,
         { category: "cash_in", amount: result.audAmount, flow: "in", highlight: true },
       );
       await persistRegisteredProgressNow();

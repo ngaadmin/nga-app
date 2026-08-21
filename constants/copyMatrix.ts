@@ -217,8 +217,8 @@ export const copyMatrix = {
         lockHub: "Lock Preferences",
       },
       parentHubFeatures: {
-        pointsConversion: "XP exchange rate",
-        pointsConversionSummaryLocked: "Set how XP converts to in-app money",
+        pointsConversion: "Coins exchange rate",
+        pointsConversionSummaryLocked: "Set how coins convert to in-app money",
         pointsConversionNotSet: "Not set yet",
         learningTrack: "Change learning track",
         learningTrackSummaryLocked: "View and update the learner age track",
@@ -232,7 +232,7 @@ export const copyMatrix = {
           "Changing the learner tier updates Academy content to age-relevant scenarios and skills.",
         progressResetWarningTitle: "Progress reset",
         progressResetWarning:
-          "Switching tracks resets Academy lesson progress and skill trophies. Vault balances and XP stay put.",
+          "Switching tracks resets Academy lesson progress and skill trophies. Vault balances and coins stay put.",
         progressResetConfirmed:
           "Academy progress and skill trophies were reset for the new track.",
         currentBadge: "Current",
@@ -251,7 +251,7 @@ export const copyMatrix = {
       currency: {
         heading: "Display currency",
         summary:
-          "Shown in Vault and XP cash-in. Amounts stay the same, only the symbol changes.",
+          "Shown in Vault and coins cash-in. Amounts stay the same, only the symbol changes.",
         lockedHint: "Currency can be changed anytime in Settings.",
         savedNote: "Currency updated across Vault.",
       },
@@ -291,21 +291,21 @@ export const copyMatrix = {
         cancel: "Cancel",
       },
       conversion: {
-        heading: "XP exchange rate",
-        rateTemplate: " XP = $1.00 AUD",
+        heading: "Coins exchange rate",
+        rateTemplate: " coins = $1.00 AUD",
         summary:
-          "When your child cashes in XP, converted cash goes into their Save Jar at this rate.",
+          "When your child cashes in coins, converted cash goes into their Save Jar at this rate.",
         vaultCashInHint:
-          "Open parent Settings to set the XP exchange rate. Kids cash in from the XP icon.",
+          "Open parent Settings to set the coins exchange rate. Kids cash in from the coins icon.",
         unsetHint:
-          "Save a rate so your child can exchange XP for in-app money.",
+          "Save a rate so your child can exchange coins for in-app money.",
         saveRate: "Save rate",
         convertNowHeading: "Convert Now",
-        convertFullBalance: "Use all XP",
-        customAmountLabel: "XP to exchange",
-        customAmountPlaceholder: "Enter XP amount",
-        invalidAmountError: "Enter how much XP you want to exchange.",
-        overBalanceError: "That's more XP than you have right now.",
+        convertFullBalance: "Use all coins",
+        customAmountLabel: "Coins to exchange",
+        customAmountPlaceholder: "Enter coins amount",
+        invalidAmountError: "Enter how many coins you want to exchange.",
+        overBalanceError: "That's more coins than you have right now.",
         payoutReadoutTemplate:
           "This will send {amount} to the child's unallocated income pool",
         sendToVault: "Send to Vault",
@@ -315,11 +315,11 @@ export const copyMatrix = {
         confirmBody:
           "This action does not move real money. The cash amount displayed is a virtual representation for your child's ledger. You will need to fulfill this payout independently via cash, allowance pocket money, or your preferred banking app.",
         confirmAcknowledge: "Got it",
-        cashInHeading: "Exchange XP",
+        cashInHeading: "Exchange coins",
         cashInRateHint: "Rate: {rate}",
         rateNotSetHint: "Rate: not set yet",
-        xpAvailableTemplate: "{points} XP available",
-        noPointsError: "No XP to cash in yet. Keep learning!",
+        xpAvailableTemplate: "{points} coins available",
+        noPointsError: "No coins to cash in yet. Keep learning!",
         claimingLabel: "Exchanging…",
         childPayoutReadoutTemplate: "You'll get {amount} in your Save Jar",
         claimCashReward: "Confirm",
@@ -327,19 +327,19 @@ export const copyMatrix = {
         successBodyTemplate:
           "Points Converted! {amount} has been safely deposited straight into my Save Jar. Head over to the Vault to check my growth, or shift my funds to another jar if I have a different plan!",
         successAcknowledge: "Let's Go!",
-        askParentTitle: "Your XP",
+        askParentTitle: "Your coins",
         askParentWhat:
-          "XP is what you earn by finishing Academy lessons and activities.",
+          "Coins are what you earn by finishing Academy lessons and activities.",
         askParentExchange:
-          "Once a parent sets an exchange rate, you can turn XP into in-app money for your Save Jar.",
+          "Once a parent sets an exchange rate, you can turn coins into in-app money for your Save Jar.",
         askParentBody:
           "Ask your parent to set that rate in Settings. Then you can cash in right here.",
         askParentIfParentBody:
-          "Set the XP exchange rate in Settings. Then XP can be cashed in here.",
+          "Set the coins exchange rate in Settings. Then coins can be cashed in here.",
         parentEmail: {
           draftLabel: "Parent notification",
           title: "Email sent to guardian",
-          body: "We sent a heads-up about this XP cash-in. Draft preview below.",
+          body: "We sent a heads-up about this coins cash-in. Draft preview below.",
           toLabel: "To:",
           subjectLabel: "Subject:",
           acknowledge: "Got it",
@@ -352,7 +352,7 @@ export const copyMatrix = {
         "Bite-sized learning missions. Master the 24 core financial skills through interactive games.",
       journey: {
         heading: "Your Mission Map",
-        xpLabel: "XP",
+        xpLabel: "coins",
         lockedLabel: "Locked",
         skillsCupLabel: "Skills",
         skillsCupTip: "Your medals live in the cup. Tap it anytime.",
@@ -418,7 +418,7 @@ export const copyMatrix = {
       description:
         "My wealth cockpit. Track my assets, revenue, and watch my net worth climb.",
       cashInTileLabel: "Cash In My Points",
-      cashInTileSubtext: "{points} XP ready to convert",
+      cashInTileSubtext: "{points} coins ready to convert",
       budget: {
         sectionTitle: "Budget Allocation",
         depositHeading: "Got some money? Add it here!",
@@ -558,7 +558,7 @@ export const copyMatrix = {
         welcomeMessage: "Vault online! Deposit income, funnel it into jars, and stack wins.",
         categories: {
           deposit: "Deposit",
-          cash_in: "XP Cash-In",
+          cash_in: "Coins Cash-In",
           allocation: "Jar Allocation",
           spend: "Spending",
           transfer: "Transfer",

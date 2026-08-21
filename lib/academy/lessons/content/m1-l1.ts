@@ -134,9 +134,9 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     type: "narrative-bonus",
     id: "resolution",
     narrative:
-      "Holly chooses to keep her money instead of giving in to the rush. Tap to collect bonus 50 XP for successfully staying in control of spending.",
+      "Holly chooses to keep her money instead of giving in to the rush. Tap to collect bonus 50 coins for successfully staying in control of spending.",
     bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
     autoReadyWhenNoBonus: false,
   },
   teenCompletionScreen({
@@ -320,9 +320,9 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
   resolution: {
     narrative:
-      "Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.\n\nTap to collect 50xp for successfully avoiding the spending trap.",
+      "Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.\n\nTap to collect 50 coins for successfully avoiding the spending trap.",
     bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
     autoReadyWhenNoBonus: false,
   },
 };

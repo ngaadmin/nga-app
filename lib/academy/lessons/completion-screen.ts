@@ -36,7 +36,7 @@ export function teenCompletionScreen(options: {
     type: "completion",
     id: options.id ?? "milestone-splash",
     skillLearnedLabel: `Skill Learned: ${options.skillTitle}`,
-    pointsLabel: `Lesson points earned: ${options.xpReward} XP`,
+    pointsLabel: `Lesson coins earned: ${options.xpReward}`,
     returnButtonLabel:
       options.returnButtonLabel ?? "Return to Learning Journey",
     useStandardPane: false,

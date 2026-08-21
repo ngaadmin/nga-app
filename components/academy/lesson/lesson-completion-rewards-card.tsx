@@ -21,12 +21,12 @@ export function LessonCompletionRewardsCard({
         Points Earned
       </p>
       <p className="mt-1 font-heading text-2xl font-extrabold tabular-nums leading-none text-[#FFA503] sm:text-3xl">
-        {xpReward} XP
+        {xpReward} coins
       </p>
       {perfectStreak ? (
         <div className="mt-3 inline-flex items-center justify-center rounded-full bg-[#DCFCE7] px-3 py-1.5">
           <span className="font-heading text-sm font-extrabold tabular-nums text-[#15803D]">
-            +{perfectStreakBonus} XP Perfect Streak
+            +{perfectStreakBonus} coins Perfect Streak
           </span>
         </div>
       ) : null}

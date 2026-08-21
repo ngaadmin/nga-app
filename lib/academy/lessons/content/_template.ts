@@ -153,7 +153,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     id: "resolution",
     narrative: "REPLACE: celebration narrative",
     bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
     autoReadyWhenNoBonus: false,
   },
 
@@ -271,7 +271,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   resolution: {
     narrative: "REPLACE: Aiden celebration + bonus XP copy",
     bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
     autoReadyWhenNoBonus: false,
   },
 };

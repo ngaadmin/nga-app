@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { DEMO_ACHIEVEMENT_FRIENDS } from "@/lib/dashboard/achievements-state";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import { FlameIcon, XpStarIcon } from "@/lib/dashboard/icons";
+import { FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { cn } from "@/lib/utils/cn";
@@ -71,9 +71,9 @@ function FriendRow({
             </span>
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-[#BDE9FB]/30 px-2 py-0.5">
-            <XpStarIcon className="size-3 text-[#0CC1E0]" />
+            <GoldCoinIcon className="size-3 text-[#0CC1E0]" />
             <span className="font-heading text-[10px] font-bold text-[#031F82]">
-              {lifetimePoints.toLocaleString()} lifetime XP
+              {lifetimePoints.toLocaleString()} lifetime coins
             </span>
           </span>
         </div>
@@ -130,7 +130,7 @@ export function SocialFriendsSection() {
         </button>
       </div>
       <p className="mt-2 font-sans text-[10px] leading-relaxed text-[#1E3A5F]/80">
-        Ranked by lifetime XP - cash-outs don&apos;t shrink this score.
+        Ranked by lifetime coins - cash-outs don&apos;t shrink this score.
       </p>
 
       <ol className="mt-5 space-y-3">

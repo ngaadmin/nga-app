@@ -9,12 +9,13 @@ import {
   STATUS_BANNER_ICON_CLASS,
   STATUS_BANNER_ITEM_CLASS,
   StatusBannerLayout,
+  TopBarRoundIcon,
 } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import { XpStarIcon } from "@/lib/dashboard/icons";
+import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyLessonShellProps = {
@@ -91,9 +92,9 @@ export function AcademyLessonShell({
               <StatusMetricPill
                 interactive={false}
                 icon={
-                  <XpStarIcon
-                    className={cn(STATUS_BANNER_ICON_CLASS, "text-nga-accent")}
-                  />
+                  <TopBarRoundIcon>
+                    <GoldCoinIcon className="size-5" />
+                  </TopBarRoundIcon>
                 }
                 value={lifetimePointsEarned}
                 unitLabel={journeyCopy.xpLabel}

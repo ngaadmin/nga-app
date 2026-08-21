@@ -606,6 +606,48 @@ export function XpStarIcon({ className }: IconProps) {
   );
 }
 
+/** Gold-coin glyph for the coins balance counter. */
+export function GoldCoinIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9.25"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="6.6"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M13.2 8.15c-.75-.5-2.05-.55-2.8.05-.7.55-.7 1.4-.05 1.9.75.6 2.35.72 3.05 1.3.75.6.7 1.62-.2 2.18-.82.52-2.15.48-2.95-.18"
+        stroke="currentColor"
+        strokeWidth="1.55"
+        strokeLinecap="round"
+      />
+      <path
+        d="M12 7.15v1.35M12 15.5v1.35"
+        stroke="currentColor"
+        strokeWidth="1.55"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** Snowflake icon for streak freeze counter. */
 export function SnowflakeIcon({ className }: IconProps) {
   return (

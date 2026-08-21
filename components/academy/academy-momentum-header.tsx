@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import {
   StatusBannerLayout,
+  TOP_BAR_ROUND_ICON_CLASS,
+  TopBarRoundIcon,
 } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { AchievementsIcon, FlameIcon, XpStarIcon } from "@/lib/dashboard/icons";
+import { AchievementsIcon, FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyMomentumHeaderProps = {
@@ -59,11 +61,13 @@ export function AcademyMomentumHeader({
           interactive
           onClick={onXpClick}
           icon={
-            <XpStarIcon className="size-5 shrink-0 text-nga-accent" />
+            <TopBarRoundIcon>
+              <GoldCoinIcon className="size-5" />
+            </TopBarRoundIcon>
           }
           value={xp}
           unitLabel={journeyCopy.xpLabel}
-          ariaLabel={`${xp} ${journeyCopy.xpLabel}. Open XP exchange`}
+          ariaLabel={`${xp} ${journeyCopy.xpLabel}. Open coins exchange`}
           title={journeyCopy.xpLabel}
         />
       }
@@ -80,7 +84,9 @@ export function AcademyMomentumHeader({
             interactive
             onClick={onStreakClick}
             icon={
-              <FlameIcon className="size-5 shrink-0 text-nga-cta" />
+              <TopBarRoundIcon>
+                <FlameIcon className="size-5" />
+              </TopBarRoundIcon>
             }
             value={dayStreak}
             ariaLabel={`${dayStreak} ${streakCopy.label}`}
@@ -97,9 +103,8 @@ export function AcademyMomentumHeader({
               }
               title={journeyCopy.skillsCupLabel}
               className={cn(
-                "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full",
-                "bg-[#FFA503] text-[#031F82] shadow-md",
-                "transition-[filter,transform] hover:brightness-[1.05] active:scale-95",
+                TOP_BAR_ROUND_ICON_CLASS,
+                "relative transition-[filter,transform] hover:brightness-[1.05] active:scale-95",
                 showSkillsCupIntro && "animate-skills-cup-pulse",
               )}
             >

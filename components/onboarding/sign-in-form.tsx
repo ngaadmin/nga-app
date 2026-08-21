@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,6 @@ export function SignInForm() {
   const [recoveryUsername, setRecoveryUsername] = useState("");
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
-  const recoveryRedirectTimeoutRef = useRef<number | null>(null);
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
   const [pendingUsername, setPendingUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -80,15 +79,7 @@ export function SignInForm() {
     }
   }
 
-  function clearRecoveryRedirect() {
-    if (recoveryRedirectTimeoutRef.current != null) {
-      window.clearTimeout(recoveryRedirectTimeoutRef.current);
-      recoveryRedirectTimeoutRef.current = null;
-    }
-  }
-
   function openRecovery(mode: Exclude<RecoveryMode, null>) {
-    clearRecoveryRedirect();
     setRecoveryMode(mode);
     setRecoveryNotice(null);
     setErrors({});
@@ -97,12 +88,9 @@ export function SignInForm() {
     setRecoveryUsername(looksLikeEmail ? "" : identifier.trim());
   }
 
-  function closeRecovery(options?: { keepNotice?: boolean }) {
-    clearRecoveryRedirect();
+  function closeRecovery() {
     setRecoveryMode(null);
-    if (!options?.keepNotice) {
-      setRecoveryNotice(null);
-    }
+    setRecoveryNotice(null);
     setIsRecovering(false);
     setErrors((prev) => ({
       ...prev,
@@ -111,8 +99,6 @@ export function SignInForm() {
       form: undefined,
     }));
   }
-
-  useEffect(() => () => clearRecoveryRedirect(), []);
 
   async function handleRecoverySubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -143,17 +129,12 @@ export function SignInForm() {
         return;
       }
 
-      const successNotice =
-        recoveryMode === "username"
-          ? copy.recoveryUsernameSuccess
-          : copy.recoveryPasswordSuccess;
-      setRecoveryNotice(successNotice);
-
       if (recoveryMode === "credential") {
-        recoveryRedirectTimeoutRef.current = window.setTimeout(() => {
-          closeRecovery({ keepNotice: true });
-        }, 1600);
+        closeRecovery();
+        return;
       }
+
+      setRecoveryNotice(copy.recoveryUsernameSuccess);
     } catch {
       setErrors({
         recoveryEmail:
@@ -561,14 +542,6 @@ export function SignInForm() {
                 {errors.form}
               </p>
             ) : null}
-            {recoveryNotice ? (
-              <p
-                className="font-sans text-sm font-medium text-nga-primary"
-                role="status"
-              >
-                {recoveryNotice}
-              </p>
-            ) : null}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <label
@@ -585,9 +558,6 @@ export function SignInForm() {
                   {copy.forgotUsername}
                 </button>
               </div>
-              <p className="font-sans text-xs leading-relaxed text-nga-slate">
-                {copy.identifierHint}
-              </p>
               <input
                 id="sign-in-identifier"
                 name="identifier"

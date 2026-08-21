@@ -6,7 +6,6 @@ export const copyMatrix = {
       title: "Log in",
       submit: "Log in",
       identifierLabel: "Email or username",
-      identifierHint: "Parents use email. Use a username if that's how you signed up.",
       identifierPlaceholder: "Email or username",
       passwordLabel: "Password",
       forgotPassword: "Forgot password?",
@@ -29,8 +28,6 @@ export const copyMatrix = {
         "If that email is on file, we sent the username there. Check the inbox (and spam).",
       recoveryPasswordHint:
         "Parents and Mavericks: email is enough. If you log in with a username, enter it so we reset that one account.",
-      recoveryPasswordSuccess:
-        "If we can match one account, we sent one reset link. Check the inbox (and spam).",
       recoveryNeedAccount:
         "Enter the email for that login, or a username that identifies one account.",
       credentialsMismatch:

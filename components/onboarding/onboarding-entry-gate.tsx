@@ -11,15 +11,15 @@ const PENNY_HOMEPAGE_SRC = "/assets/illustrations/website/Penny.png";
 export function OnboardingEntryGate() {
   return (
     <section className="flex flex-col py-4 sm:py-6 lg:flex-1 lg:justify-center lg:py-8">
-      <div className="grid items-center gap-2 sm:gap-3 lg:grid-cols-2 lg:gap-6">
+      <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-8">
         <div className="order-1 flex items-center justify-center lg:order-none">
-          <div className="w-full max-w-[18rem] overflow-hidden sm:max-w-[24rem] lg:max-w-none lg:overflow-visible">
+          <div className="flex w-full max-w-[13rem] items-center justify-center sm:max-w-[15rem] lg:max-w-[16.25rem]">
             <Image
               src={PENNY_HOMEPAGE_SRC}
               alt="Penny, your money-skills guide"
               width={720}
               height={720}
-              className="-mb-[12%] -mt-[20%] h-auto w-full object-contain lg:mb-0 lg:mt-0"
+              className="h-auto max-h-[11.75rem] w-full object-contain object-center sm:max-h-[14rem] lg:max-h-[16.25rem]"
               priority
               unoptimized
             />

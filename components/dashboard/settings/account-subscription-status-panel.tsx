@@ -48,7 +48,7 @@ const quietDeleteClass =
   "font-sans text-xs font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 const approveButtonClass =
-  "rounded-nga-lg border-2 border-[#0CC1E0]/50 bg-white px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40";
+  "shrink-0 rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
 
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-red-700 bg-red-600 font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
@@ -78,58 +78,33 @@ function mergePendingLinks(input: {
   children: UserSession[];
   remote: PendingConsentRequestView[];
   local: ReturnType<typeof listPendingConsentsForEmail>;
-}): { householdPending: PendingLinkItem[]; waitingToLink: PendingLinkItem[] } {
-  const byUsername = new Map<string, PendingLinkItem & { listed: boolean }>();
-
-  for (const child of input.children) {
-    if (child.accountStatus !== "PENDING_CONSENT") continue;
-    byUsername.set(usernameKey(child.username), {
-      username: child.username,
-      childBirthYear: child.birthYear,
-      listed: true,
-    });
-  }
+}): PendingLinkItem[] {
+  const listed = new Set(
+    input.children.map((child) => usernameKey(child.username)),
+  );
+  const extra = new Map<string, PendingLinkItem>();
 
   for (const remote of input.remote) {
     const key = usernameKey(remote.childUsername);
-    const existing = byUsername.get(key);
-    if (existing) {
-      existing.requestId = remote.requestId;
-      existing.childBirthYear = existing.childBirthYear ?? remote.childBirthYear;
-      existing.kind = remote.kind;
-      continue;
-    }
-    byUsername.set(key, {
+    if (listed.has(key)) continue;
+    extra.set(key, {
       username: remote.childUsername,
       requestId: remote.requestId,
       childBirthYear: remote.childBirthYear,
       kind: remote.kind,
-      listed: false,
     });
   }
 
   for (const local of input.local) {
     const key = usernameKey(local.childUsername);
-    const existing = byUsername.get(key);
-    if (existing) {
-      existing.childBirthYear = existing.childBirthYear ?? local.birthYear;
-      continue;
-    }
-    byUsername.set(key, {
+    if (listed.has(key) || extra.has(key)) continue;
+    extra.set(key, {
       username: local.childUsername,
       childBirthYear: local.birthYear,
-      listed: false,
     });
   }
 
-  const householdPending: PendingLinkItem[] = [];
-  const waitingToLink: PendingLinkItem[] = [];
-  for (const item of byUsername.values()) {
-    const { listed, ...pending } = item;
-    if (listed) householdPending.push(pending);
-    else waitingToLink.push(pending);
-  }
-  return { householdPending, waitingToLink };
+  return [...extra.values()];
 }
 
 function readHouseholdForViewer(
@@ -213,7 +188,7 @@ export function AccountSubscriptionStatusPanel() {
     };
   }, [refresh]);
 
-  const pendingLinks = useMemo(() => {
+  const extraPending = useMemo(() => {
     const local = household.householdEmail
       ? listPendingConsentsForEmail(household.householdEmail)
       : [];
@@ -263,11 +238,61 @@ export function AccountSubscriptionStatusPanel() {
     setPendingDelete({ kind: "master", username });
   }
 
-  function handleApproveChild(username: string) {
-    const pending = pendingLinks.householdPending.find(
+  function pendingItemForUsername(username: string): PendingLinkItem {
+    const extra = extraPending.find(
       (item) => usernameKey(item.username) === usernameKey(username),
     );
-    void handleLinkProfile(pending ?? { username });
+    if (extra) return extra;
+
+    const remote = remotePending.find(
+      (item) => usernameKey(item.childUsername) === usernameKey(username),
+    );
+    const child = household.children.find(
+      (item) => usernameKey(item.username) === usernameKey(username),
+    );
+    return {
+      username,
+      requestId: remote?.requestId,
+      childBirthYear: child?.birthYear ?? remote?.childBirthYear,
+      kind: remote?.kind,
+    };
+  }
+
+  function handleApproveChild(username: string) {
+    void handleLinkProfile(pendingItemForUsername(username));
+  }
+
+  function markChildApprovedInList(
+    username: string,
+    nextChild?: UserSession | null,
+  ) {
+    const key = usernameKey(username);
+    setRemotePending((current) =>
+      current.filter((request) => usernameKey(request.childUsername) !== key),
+    );
+    setHousehold((current) => {
+      const exists = current.children.some(
+        (child) => usernameKey(child.username) === key,
+      );
+      if (exists) {
+        return {
+          ...current,
+          children: current.children.map((child) =>
+            usernameKey(child.username) === key
+              ? {
+                  ...child,
+                  accountStatus: "ACTIVE",
+                  consentApprovedAt: new Date().toISOString(),
+                }
+              : child,
+          ),
+        };
+      }
+      if (nextChild) {
+        return { ...current, children: [...current.children, nextChild] };
+      }
+      return current;
+    });
   }
 
   async function handleLinkProfile(item: PendingLinkItem) {
@@ -285,6 +310,7 @@ export function AccountSubscriptionStatusPanel() {
 
     try {
       let linkedRemotely = false;
+      let approvedChild: UserSession | null = null;
       if (item.requestId && isMasterViewer) {
         const remote = await approveConsentRequestInApp(item.requestId);
         if (!remote.success) {
@@ -309,6 +335,7 @@ export function AccountSubscriptionStatusPanel() {
           supabaseUserId: remote.childId,
         });
         upsertRegisteredAccount({ ...childSession, createdAt: now });
+        approvedChild = childSession;
       }
 
       const localActivated = approvePendingLearnerAccount({
@@ -319,6 +346,7 @@ export function AccountSubscriptionStatusPanel() {
         setApproveError(copy.approveChildError);
         return;
       }
+      markChildApprovedInList(item.username, localActivated ?? approvedChild);
       refresh();
     } catch {
       setApproveError(copy.approveChildError);
@@ -454,10 +482,6 @@ export function AccountSubscriptionStatusPanel() {
 
             {household.children.map((child) => {
               const isPending = child.accountStatus === "PENDING_CONSENT";
-              const isSelf =
-                Boolean(activeUsername) &&
-                child.username.trim().toLowerCase() ===
-                  activeUsername!.trim().toLowerCase();
               const canApproveChild = isParentSettingsView && isPending;
               return (
                 <li
@@ -496,6 +520,37 @@ export function AccountSubscriptionStatusPanel() {
                 </li>
               );
             })}
+
+            {isParentSettingsView
+              ? extraPending.map((item) => (
+                  <li
+                    key={item.username}
+                    className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 space-y-0.5">
+                        <p className="font-heading text-base font-extrabold leading-snug text-[#031F82]">
+                          {item.username}
+                        </p>
+                        <p className="font-sans text-xs font-semibold uppercase tracking-wide text-[#1E3A5F]">
+                          {copy.childBadge}
+                          {` · ${copy.pendingApprovalBadge}`}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className={approveButtonClass}
+                        disabled={approvingUsername === item.username}
+                        onClick={() => void handleLinkProfile(item)}
+                      >
+                        {approvingUsername === item.username
+                          ? copy.linkingProfile
+                          : copy.linkProfile}
+                      </button>
+                    </div>
+                  </li>
+                ))
+              : null}
           </ul>
 
           {approveError ? (
@@ -550,54 +605,10 @@ export function AccountSubscriptionStatusPanel() {
           {isParentSettingsView &&
           household.master &&
           household.children.length === 0 &&
-          pendingLinks.waitingToLink.length === 0 ? (
+          extraPending.length === 0 ? (
             <p className="font-sans text-sm text-[#1E3A5F]">
               {copy.emptyChildren}
             </p>
-          ) : null}
-
-          {isParentSettingsView && pendingLinks.waitingToLink.length > 0 ? (
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <h3 className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#031F82]">
-                  {copy.pendingHeading}
-                </h3>
-                <p className="font-sans text-xs leading-relaxed text-[#1E3A5F]">
-                  {copy.pendingHint}
-                </p>
-              </div>
-              <ul className="space-y-3">
-                {pendingLinks.waitingToLink.map((item) => (
-                  <li
-                    key={item.username}
-                    className="rounded-xl border-2 border-[#FFA503]/50 bg-[#FFF8EC] px-3 py-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-heading text-base font-extrabold text-[#031F82]">
-                          {item.username}
-                        </p>
-                        <p className="mt-0.5 font-sans text-xs font-semibold uppercase tracking-wide text-[#C88202]">
-                          {copy.pendingApprovalBadge}
-                        </p>
-                      </div>
-                      {isMasterViewer ? (
-                        <button
-                          type="button"
-                          className={approveButtonClass}
-                          disabled={approvingUsername === item.username}
-                          onClick={() => void handleLinkProfile(item)}
-                        >
-                          {approvingUsername === item.username
-                            ? copy.linkingProfile
-                            : copy.linkProfile}
-                        </button>
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
           ) : null}
 
           {isParentSettingsView && !isGuest ? (

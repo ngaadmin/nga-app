@@ -49,7 +49,7 @@ export const copyMatrix = {
       resend: "Resend approval email",
       resending: "Sending…",
       continue: "Continue in the app",
-      logOut: "Log out",
+      logOut: "Back to login",
     },
     approvalSaved: {
       heading: "Approval saved. {username} is active.",
@@ -93,8 +93,8 @@ export const copyMatrix = {
         childBadge: "Learner account",
         emptyChildren: "No linked learner accounts yet.",
         addLinkedProfile: "Add profile",
-        addProfile: "Add child account",
-        linkProfile: "Link profile",
+        addProfile: "Add a child",
+        linkProfile: "Approve profile",
         addLinkedTitle: "Add profile",
         addLinkedTrackHeading: "Pick their learning track",
         addLinkedTrackHint:
@@ -137,11 +137,11 @@ export const copyMatrix = {
         pendingHeading: "Waiting to link",
         pendingHint:
           "These learners asked for approval with your email. Link them here, or use the email approval link.",
-        linkingProfile: "Linking…",
+        linkingProfile: "Approving…",
         deleteChild: "Delete account",
         deleteChildNamed: "Delete {username} account",
         deleteSectionHeading: "Remove accounts",
-        approveChild: "Approve",
+        approveChild: "Approve profile",
         approveChildError:
           "We could not approve this learner. Try again or use the approval email link.",
         pendingApprovalBadge: "Pending approval",

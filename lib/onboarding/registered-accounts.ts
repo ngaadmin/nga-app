@@ -290,16 +290,27 @@ export async function recoverUsernameByEmail(
 }
 
 /**
- * Emails a password reset link. Does not change any password until the user
- * submits the reset form. Does not touch Parent PIN / parental-controls recovery.
+ * Emails a password reset link for exactly one account. Does not change any
+ * password until the user submits the reset form. Does not touch Parent PIN.
  */
-export async function recoverCredentialByEmail(
-  email: string,
-  options?: { onlyUsername?: string },
-): Promise<CredentialRecoveryResult | { accepted: false; error: string }> {
-  const recipientEmail = normalizeRecoveryEmail(email);
-  if (!recipientEmail) {
+export async function recoverPassword(input: {
+  email?: string;
+  username?: string;
+}): Promise<CredentialRecoveryResult | { accepted: false; error: string }> {
+  const username = input.username?.trim() ?? "";
+  const recipientEmail = input.email?.trim()
+    ? normalizeRecoveryEmail(input.email)
+    : "";
+
+  if (input.email?.trim() && !recipientEmail) {
     return { accepted: false, error: "Enter a valid email address." };
+  }
+  if (!recipientEmail && !username) {
+    return {
+      accepted: false,
+      error:
+        "Enter the email for that login, or a username that identifies one account.",
+    };
   }
 
   try {
@@ -307,8 +318,8 @@ export async function recoverCredentialByEmail(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: recipientEmail,
-        onlyUsername: options?.onlyUsername,
+        email: recipientEmail || undefined,
+        username: username || undefined,
       }),
       cache: "no-store",
       signal: AbortSignal.timeout(12_000),
@@ -320,7 +331,13 @@ export async function recoverCredentialByEmail(
       | null;
 
     if (json?.accepted === true) {
-      return { accepted: true, recipientEmail };
+      return {
+        accepted: true,
+        recipientEmail:
+          typeof json.recipientEmail === "string"
+            ? json.recipientEmail
+            : recipientEmail,
+      };
     }
 
     return {
@@ -336,6 +353,17 @@ export async function recoverCredentialByEmail(
       error: "Could not send a recovery email. Try again shortly.",
     };
   }
+}
+
+/** Settings / existing callers: one-account reset via household email. */
+export async function recoverCredentialByEmail(
+  email: string,
+  options?: { onlyUsername?: string },
+): Promise<CredentialRecoveryResult | { accepted: false; error: string }> {
+  return recoverPassword({
+    email,
+    username: options?.onlyUsername,
+  });
 }
 
 /** Household email used to link a parent master account to child profiles. */

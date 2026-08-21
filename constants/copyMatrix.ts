@@ -17,6 +17,8 @@ export const copyMatrix = {
       forgotUsername: "Forgot username?",
       recoveryEmailLabel: "Email",
       recoveryEmailPlaceholder: "you@example.com",
+      recoveryLoginUsernameLabel: "Username",
+      recoveryLoginUsernamePlaceholder: "your username",
       recoveryUsernameSubmit: "Send Username",
       recoveryCredentialSubmit: "Send Reset Email",
       recoveryCancel: "Back to log in",
@@ -26,9 +28,11 @@ export const copyMatrix = {
       recoveryUsernameSuccess:
         "If that email is on file, we sent the username there. Check the inbox (and spam).",
       recoveryPasswordHint:
-        "Enter your email. We'll send a reset if that address is on file.",
+        "Parents and Mavericks: email is enough. If you log in with a username, enter it so we reset that one account.",
       recoveryPasswordSuccess:
-        "If that email is on file, we sent a reset link there. Check the inbox (and spam).",
+        "If we can match one account, we sent one reset link. Check the inbox (and spam).",
+      recoveryNeedAccount:
+        "Enter the email for that login, or a username that identifies one account.",
       credentialsMismatch:
         "Those details don't match. Check your email or username and password.",
       signInUnavailable: "Could not sign in. Try again shortly.",
@@ -68,7 +72,7 @@ export const copyMatrix = {
         passwordReset: "Password Reset",
         passwordResetTitle: "Reset a password",
         passwordResetParentHint:
-          "We'll email a reset link to your parent email. Linked learner resets go to that same inbox.",
+          "We'll email one reset link for this login.",
         passwordResetChildHint:
           "Learner logins reset through the parent email on file. We'll send a reset link there.",
         passwordResetSubmit: "Send reset email",

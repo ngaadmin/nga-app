@@ -5,10 +5,11 @@ import { useRouter, usePathname } from "next/navigation";
 import { DashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import {
-  ONBOARDING_START_PATH,
+  ONBOARDING_ENTRY_PATH,
   readUserSession,
   hasCompletedPersonalizationGate,
 } from "@/lib/onboarding/guest-session";
+import { syncLocalSessionWithSupabaseAccount } from "@/lib/onboarding/sync-registered-session";
 import { cn } from "@/lib/utils/cn";
 
 type DashboardShellProps = {
@@ -27,10 +28,24 @@ export function DashboardShell({ children }: DashboardShellProps) {
   );
 
   useEffect(() => {
-    const session = readUserSession();
-    if (!hasCompletedPersonalizationGate(session)) {
-      router.replace(ONBOARDING_START_PATH);
+    let cancelled = false;
+
+    async function gateDashboard() {
+      if (hasCompletedPersonalizationGate(readUserSession())) return;
+
+      const synced = await syncLocalSessionWithSupabaseAccount();
+      if (cancelled) return;
+
+      const session = synced ?? readUserSession();
+      if (hasCompletedPersonalizationGate(session)) return;
+
+      router.replace(ONBOARDING_ENTRY_PATH);
     }
+
+    void gateDashboard();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return (

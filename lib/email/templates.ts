@@ -55,14 +55,10 @@ export type UsernameRecoveryEmailData = {
   linkedUsernames?: string[];
 };
 
-export type CredentialRecoveryResetLink = {
+export type CredentialRecoveryEmailData = {
   label: string;
   token: string;
   kind?: "parent" | "child";
-};
-
-export type CredentialRecoveryEmailData = {
-  resets: CredentialRecoveryResetLink[];
 };
 
 export type AccountDeletedMasterEmailData = {
@@ -803,98 +799,46 @@ export function buildCredentialRecoveryEmail(
   _appUrl?: string,
 ): BuiltEmail {
   const base = getDefaultAppUrl();
-  const resets = (data.resets ?? []).filter(
-    (item) => item.token.trim() && item.label.trim(),
-  );
-  const isHousehold = resets.length > 1;
-  const subject = isHousehold
-    ? "Reset your NextGenAchiever$ passwords"
-    : "Reset your NextGenAchiever$ password";
+  const label = data.label.trim();
+  const token = data.token.trim();
+  const kind = data.kind === "parent" ? "parent" : "child";
+  const caption = kind === "parent" ? "Parent login" : "Username";
+  const resetUrl = `${base}/onboarding/reset-password?token=${encodeURIComponent(token)}`;
+  const subject = "Reset your NextGenAchiever$ password";
   const preheader =
     "Use the link to set a new password. Your current password stays the same until you do.";
 
-  const linkRows = resets.map((item) => {
-    const label = item.label.trim();
-    const kind = item.kind === "parent" ? "parent" : "child";
-    const caption = kind === "parent" ? "Parent login" : "Username";
-    const resetUrl = `${base}/onboarding/reset-password?token=${encodeURIComponent(item.token.trim())}`;
-    return { label, caption, resetUrl };
-  });
-
-  const textLines = [
-    isHousehold
-      ? "A password reset was requested for logins linked to this email."
-      : `A password reset was requested for ${linkRows[0]?.label ?? "your login"}.`,
+  const text = [
+    `A password reset was requested for ${label || "your login"}.`,
     "",
-    "Your password is not changed until you open a link and save a new one.",
-    "Each link resets only that one account.",
+    "Your password is not changed until you open this link and save a new one.",
+    "This link resets only that one account.",
     "",
-    ...linkRows.flatMap((row) => [
-      `${row.caption}: ${row.label}`,
-      `Set a new password: ${row.resetUrl}`,
-      "",
-    ]),
+    `${caption}: ${label}`,
+    `Set a new password: ${resetUrl}`,
+    "",
     "If you did not ask for this, you can ignore this email.",
     "",
     "- NextGenAchievers",
-  ];
-
-  const linksHtml = linkRows
-    .map(
-      (row) => `
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;border:1px solid #E5E5E5;border-radius:12px;">
-          <tr>
-            <td style="padding:16px 16px 8px;">
-              <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#5B6B7C;">
-                ${escapeHtml(row.caption)}
-              </p>
-              <p style="margin:0;font-size:18px;font-weight:700;color:#031F82;word-break:break-word;">
-                ${escapeHtml(row.label)}
-              </p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 16px 16px;">
-              <p style="margin:12px 0 0;">
-                <a
-                  href="${escapeHtml(row.resetUrl)}"
-                  style="
-                    display: inline-block;
-                    background: #FFA503;
-                    color: #031F82;
-                    font-family: Arial, Helvetica, sans-serif;
-                    font-size: 15px;
-                    font-weight: 700;
-                    text-decoration: none;
-                    padding: 12px 18px;
-                    border-radius: 10px;
-                    border-bottom: 3px solid #C88202;
-                  "
-                >Set a new password</a>
-              </p>
-            </td>
-          </tr>
-        </table>
-      `,
-    )
-    .join("");
+  ].join("\n");
 
   const html = wrapHtml({
     header: "Password reset",
     preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
-        ${
-          isHousehold
-            ? "A password reset was requested for logins linked to this email."
-            : `A password reset was requested for <strong>${escapeHtml(linkRows[0]?.label ?? "your login")}</strong>.`
-        }
+        A password reset was requested for <strong>${escapeHtml(label || "your login")}</strong>.
+      </p>
+      <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#5B6B7C;">
+        ${escapeHtml(caption)}
+      </p>
+      <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#031F82;word-break:break-word;">
+        ${escapeHtml(label)}
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your current password stays the same until you open a link and save a new one.
-        ${isHousehold ? " Each button resets only that one account." : ""}
+        Your current password stays the same until you open this link and save a new one.
       </p>
-      ${linksHtml}
+      ${ctaButton("Set a new password", resetUrl)}
       <p style="margin:16px 0 0;font-size:14px;color:#5B6B7C;">
         If you did not ask for this, you can ignore this email.
       </p>
@@ -904,7 +848,7 @@ export function buildCredentialRecoveryEmail(
   return {
     subject,
     html,
-    text: textLines.join("\n"),
+    text,
     preheader,
   };
 }

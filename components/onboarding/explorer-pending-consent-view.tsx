@@ -4,8 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
-import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
+import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
   DASHBOARD_ACADEMY_PATH,
   ONBOARDING_SIGN_IN_PATH,
@@ -36,9 +35,9 @@ export function ExplorerPendingConsentView({
   async function leaveToLogin() {
     if (isLeaving) return;
     setIsLeaving(true);
-    await persistRegisteredProgressNow();
-    clearAllAppSessionState();
+    await signOutApp();
     router.push(ONBOARDING_SIGN_IN_PATH);
+    router.refresh();
   }
 
   async function handleResend() {

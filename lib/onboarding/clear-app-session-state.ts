@@ -9,11 +9,13 @@ import { VAULT_PROFILE_STORAGE_KEY, VAULT_SESSION_STORAGE_KEY } from "@/lib/dash
 import { GUEST_SESSION_STORAGE_KEY, readUserSession } from "@/lib/onboarding/guest-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
 import { GUEST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/guest-progress-snapshot";
-import { ACCOUNT_PROGRESS_CACHE_KEY, persistAccountProgressCacheFromLive } from "@/lib/dashboard/account-progress-local";
+import {
+  ACCOUNT_PROGRESS_CACHE_KEY,
+  persistAccountProgressCacheFromLive,
+} from "@/lib/dashboard/account-progress-local";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
 import { REGISTERED_ACCOUNTS_STORAGE_KEY } from "@/lib/onboarding/registered-accounts";
-
-import { clearAllPersistedNgaKeys } from "@/lib/dev/client-persist";
+import { clearAllPersistedNgaKeys, removePersisted } from "@/lib/dev/client-persist";
 
 /** All sessionStorage keys written by the guest-phase app shell. */
 export const APP_SESSION_STORAGE_KEYS = [
@@ -52,7 +54,8 @@ export function clearAllAppSessionState(): void {
   }
 
   for (const key of APP_SESSION_STORAGE_KEYS) {
-    window.sessionStorage.removeItem(key);
+    removePersisted(key);
+    window.localStorage.removeItem(key);
   }
 
   clearAllPersistedNgaKeys([...PRESERVED_ON_LOGOUT_KEYS]);

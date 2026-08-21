@@ -72,26 +72,39 @@ type ResetTarget = {
   kind: "parent" | "child";
 };
 
+type ResolvedReset = {
+  target: ResetTarget;
+  recipientEmail: string;
+};
+
+type AdminClient = ReturnType<typeof createAdminClient>;
+
 /**
- * Email-based household recovery. Always looks like success when the address
- * is valid so the UI never discloses whether an account exists.
- *
- * Does not change any password. Sends one email with a reset link per profile.
+ * Resolves exactly one account and emails one reset link.
+ * Always looks like success when the request is well-formed so the UI never
+ * discloses whether an account exists.
  */
-export async function requestHouseholdPasswordRecovery(
-  email: string,
-  options?: { onlyUsername?: string },
-): Promise<HouseholdRecoveryResult> {
-  const recipientEmail = normalizeEmailAddress(email);
-  if (!recipientEmail) {
+export async function requestHouseholdPasswordRecovery(input: {
+  email?: string;
+  username?: string;
+}): Promise<HouseholdRecoveryResult> {
+  const requestedEmail = normalizeEmailAddress(input.email ?? "");
+  const requestedUsername = input.username?.trim() ?? "";
+
+  if (input.email?.trim() && !requestedEmail) {
     return { accepted: false, error: "Enter a valid email address." };
   }
+  if (!requestedEmail && !requestedUsername) {
+    return {
+      accepted: false,
+      error: "Enter the email for that login, or a username that identifies one account.",
+    };
+  }
 
-  const limit = consumeRateLimit(
-    `household-recovery:${recipientEmail}`,
-    3,
-    15 * 60_000,
-  );
+  const rateKey = requestedEmail
+    ? `household-recovery:${requestedEmail}`
+    : `household-recovery:user:${requestedUsername.toLowerCase()}`;
+  const limit = consumeRateLimit(rateKey, 3, 15 * 60_000);
   if (!limit.allowed) {
     return {
       accepted: false,
@@ -99,85 +112,31 @@ export async function requestHouseholdPasswordRecovery(
     };
   }
 
-  let admin;
+  let admin: AdminClient;
   try {
     admin = createAdminClient();
   } catch {
-    return { accepted: true, recipientEmail };
+    return { accepted: true, recipientEmail: requestedEmail ?? "" };
   }
 
   try {
-    const onlyUsername = options?.onlyUsername?.trim();
-    const targets: ResetTarget[] = [];
-    const seenIds = new Set<string>();
+    const resolved = await resolveOneResetTarget(admin, {
+      email: requestedEmail,
+      username: requestedUsername,
+    });
 
-    async function addTarget(target: ResetTarget | null) {
-      if (!target || seenIds.has(target.userId)) return;
-      seenIds.add(target.userId);
-      targets.push(target);
-    }
-
-    if (onlyUsername) {
-      await addTarget(
-        await loadLinkedChildTarget(admin, onlyUsername, recipientEmail),
-      );
-    } else {
-      const authUserId = await findAuthUserIdByEmail(recipientEmail);
-      if (authUserId) {
-        const { data: profile } = await admin
-          .from("profiles")
-          .select("id, username, account_role, birth_year")
-          .eq("id", authUserId)
-          .maybeSingle();
-
-        if (profile?.account_role === "parent_master") {
-          await addTarget({
-            userId: profile.id,
-            username: profile.username?.trim() || recipientEmail,
-            label: recipientEmail,
-            kind: "parent",
-          });
-
-          const childIds = await listHouseholdChildIds(
-            admin,
-            profile.id,
-            recipientEmail,
-          );
-          for (const childId of childIds) {
-            await addTarget(await loadChildTarget(admin, childId));
-          }
-        } else if (profile?.account_role === "child" && profile.username) {
-          await addTarget({
-            userId: profile.id,
-            username: profile.username.trim(),
-            label: profile.username.trim(),
-            kind: "child",
-          });
-        }
-      }
-
-      const childIds = await listChildIdsByParentEmail(admin, recipientEmail);
-      for (const childId of childIds) {
-        await addTarget(await loadChildTarget(admin, childId));
-      }
-    }
-
-    if (targets.length === 0) {
-      return { accepted: true, recipientEmail };
+    if (!resolved) {
+      return { accepted: true, recipientEmail: requestedEmail ?? "" };
     }
 
     const createdAt = new Date().toISOString();
-    let resets;
+    let token: string;
     try {
-      resets = targets.map((target) => ({
-        label: target.label,
-        token: signPasswordResetToken({
-          userId: target.userId,
-          username: target.username,
-          createdAt,
-        }),
-        kind: target.kind,
-      }));
+      token = signPasswordResetToken({
+        userId: resolved.target.userId,
+        username: resolved.target.username,
+        createdAt,
+      });
     } catch (error) {
       const tokenSecretSource = getPasswordResetTokenSecretSource();
       const reason: PasswordRecoveryFailureReason =
@@ -185,7 +144,7 @@ export async function requestHouseholdPasswordRecovery(
       logPasswordRecoveryFailure({
         reason,
         stage: "sign_reset_token",
-        targetCount: targets.length,
+        targetCount: 1,
         message: failureMessage(error),
       });
       return {
@@ -200,8 +159,12 @@ export async function requestHouseholdPasswordRecovery(
 
     const sendResult = await sendOnboardingEmail({
       type: "CREDENTIAL_RECOVERY",
-      recipientEmail,
-      data: { resets },
+      recipientEmail: resolved.recipientEmail,
+      data: {
+        label: resolved.target.label,
+        token,
+        kind: resolved.target.kind,
+      },
       appUrl: getDefaultAppUrl(),
     });
 
@@ -210,7 +173,7 @@ export async function requestHouseholdPasswordRecovery(
       logPasswordRecoveryFailure({
         reason: classified.reason,
         stage: "resend_send",
-        targetCount: targets.length,
+        targetCount: 1,
         resendError: sendResult.error,
       });
       return {
@@ -220,7 +183,7 @@ export async function requestHouseholdPasswordRecovery(
       };
     }
 
-    return { accepted: true, recipientEmail };
+    return { accepted: true, recipientEmail: requestedEmail ?? "" };
   } catch (error) {
     logPasswordRecoveryFailure({
       reason: "unexpected",
@@ -314,7 +277,7 @@ export async function requestHouseholdUsernameRecovery(
 }
 
 async function listHouseholdChildIds(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: AdminClient,
   parentId: string,
   parentEmail: string,
 ): Promise<string[]> {
@@ -333,7 +296,7 @@ async function listHouseholdChildIds(
 }
 
 async function listChildIdsByParentEmail(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: AdminClient,
   parentEmail: string,
 ): Promise<string[]> {
   const { data: rows } = await admin
@@ -347,46 +310,159 @@ async function listChildIdsByParentEmail(
   return [...ids];
 }
 
-async function loadLinkedChildTarget(
-  admin: ReturnType<typeof createAdminClient>,
-  username: string,
-  parentEmail: string,
-): Promise<ResetTarget | null> {
-  const { data: child } = await admin
-    .from("profiles")
-    .select("id, username, account_role, birth_year")
-    .eq("username", username)
-    .maybeSingle();
-  if (!child?.id || child.account_role !== "child" || !child.username?.trim()) {
+async function resolveOneResetTarget(
+  admin: AdminClient,
+  input: { email?: string; username: string },
+): Promise<ResolvedReset | null> {
+  const email = input.email;
+  const username = input.username;
+
+  if (username) {
+    const profile = await loadProfileByUsername(admin, username);
+    if (!profile) return null;
+
+    if (profile.account_role === "child") {
+      const target = toChildTarget(profile);
+      if (!target) return null;
+      const authEmail = await loadAuthEmail(admin, profile.id);
+      const parentEmail = await loadChildRecoveryEmail(admin, profile.id);
+
+      if (email) {
+        if (authEmail === email || parentEmail === email) {
+          return { target, recipientEmail: email };
+        }
+        return null;
+      }
+
+      if (parentEmail) {
+        return { target, recipientEmail: parentEmail };
+      }
+      if (authEmail && !authEmail.endsWith(".invalid")) {
+        return { target, recipientEmail: authEmail };
+      }
+      return null;
+    }
+
+    if (profile.account_role === "parent_master") {
+      const authEmail = await loadAuthEmail(admin, profile.id);
+      if (!authEmail) return null;
+      if (email && authEmail !== email) return null;
+      return {
+        target: {
+          userId: profile.id,
+          username: profile.username?.trim() || authEmail,
+          label: authEmail,
+          kind: "parent",
+        },
+        recipientEmail: authEmail,
+      };
+    }
+
     return null;
   }
 
-  const parentId = await findAuthUserIdByEmail(parentEmail);
-  const linkedIds = parentId
-    ? await listHouseholdChildIds(admin, parentId, parentEmail)
-    : await listChildIdsByParentEmail(admin, parentEmail);
-  if (!linkedIds.includes(child.id)) {
-    return null;
+  if (!email) return null;
+
+  const authUserId = await findAuthUserIdByEmail(email);
+  if (!authUserId) return null;
+  const profile = await loadProfileById(admin, authUserId);
+  if (!profile) return null;
+
+  if (profile.account_role === "parent_master") {
+    return {
+      target: {
+        userId: profile.id,
+        username: profile.username?.trim() || email,
+        label: email,
+        kind: "parent",
+      },
+      recipientEmail: email,
+    };
   }
 
-  return loadChildTarget(admin, child.id);
+  if (profile.account_role === "child") {
+    const target = toChildTarget(profile);
+    return target ? { target, recipientEmail: email } : null;
+  }
+
+  return null;
 }
 
-async function loadChildTarget(
-  admin: ReturnType<typeof createAdminClient>,
-  childId: string,
-): Promise<ResetTarget | null> {
-  const { data: child } = await admin
+type ProfileRow = {
+  id: string;
+  username: string | null;
+  account_role: string | null;
+};
+
+async function loadProfileByUsername(
+  admin: AdminClient,
+  username: string,
+): Promise<ProfileRow | null> {
+  const { data } = await admin
     .from("profiles")
-    .select("id, username, account_role, birth_year")
-    .eq("id", childId)
+    .select("id, username, account_role")
+    .eq("username", username)
     .maybeSingle();
-  if (!child?.id || child.account_role !== "child" || !child.username?.trim()) {
+  if (!data?.id) return null;
+  return data;
+}
+
+async function loadProfileById(
+  admin: AdminClient,
+  userId: string,
+): Promise<ProfileRow | null> {
+  const { data } = await admin
+    .from("profiles")
+    .select("id, username, account_role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!data?.id) return null;
+  return data;
+}
+
+async function loadAuthEmail(
+  admin: AdminClient,
+  userId: string,
+): Promise<string | null> {
+  const { data, error } = await admin.auth.admin.getUserById(userId);
+  const email = data.user?.email?.trim().toLowerCase();
+  if (error || !email) return null;
+  return email;
+}
+
+async function loadChildRecoveryEmail(
+  admin: AdminClient,
+  childId: string,
+): Promise<string | null> {
+  const { data: consent } = await admin
+    .from("consent_requests")
+    .select("parent_email")
+    .eq("child_id", childId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const fromConsent = normalizeEmailAddress(
+    typeof consent?.parent_email === "string" ? consent.parent_email : "",
+  );
+  if (fromConsent) return fromConsent;
+
+  const { data: link } = await admin
+    .from("parent_child")
+    .select("parent_id")
+    .eq("child_id", childId)
+    .limit(1)
+    .maybeSingle();
+  if (!link?.parent_id) return null;
+  return loadAuthEmail(admin, link.parent_id);
+}
+
+function toChildTarget(profile: ProfileRow): ResetTarget | null {
+  const username = profile.username?.trim();
+  if (profile.account_role !== "child" || !profile.id || !username) {
     return null;
   }
-  const username = child.username.trim();
   return {
-    userId: child.id,
+    userId: profile.id,
     username,
     label: username,
     kind: "child",

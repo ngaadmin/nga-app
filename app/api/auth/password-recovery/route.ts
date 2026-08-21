@@ -12,6 +12,7 @@ export const maxDuration = 15;
 
 type Body = {
   email?: unknown;
+  username?: unknown;
   onlyUsername?: unknown;
 };
 
@@ -42,28 +43,45 @@ export async function POST(request: Request) {
       body = (await request.json()) as Body;
     } catch {
       return NextResponse.json(
-        { accepted: false, error: "Enter a valid email address." },
+        {
+          accepted: false,
+          error:
+            "Enter the email for that login, or a username that identifies one account.",
+        },
         { status: 400 },
       );
     }
 
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    if (!email || !EMAIL_PATTERN.test(email)) {
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const username =
+      typeof body.username === "string" && body.username.trim()
+        ? body.username.trim()
+        : typeof body.onlyUsername === "string" && body.onlyUsername.trim()
+          ? body.onlyUsername.trim()
+          : "";
+
+    if (email && !EMAIL_PATTERN.test(email)) {
       return NextResponse.json(
         { accepted: false, error: "Enter a valid email address." },
         { status: 400 },
       );
     }
+    if (!email && !username) {
+      return NextResponse.json(
+        {
+          accepted: false,
+          error:
+            "Enter the email for that login, or a username that identifies one account.",
+        },
+        { status: 400 },
+      );
+    }
 
-    const onlyUsername =
-      typeof body.onlyUsername === "string" && body.onlyUsername.trim()
-        ? body.onlyUsername.trim()
-        : undefined;
-
-    const result = await requestHouseholdPasswordRecovery(
-      email,
-      onlyUsername ? { onlyUsername } : undefined,
-    );
+    const result = await requestHouseholdPasswordRecovery({
+      email: email || undefined,
+      username: username || undefined,
+    });
 
     if (!result.accepted) {
       console.error("[password-recovery] POST rejected", {

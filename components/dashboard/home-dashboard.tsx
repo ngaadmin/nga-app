@@ -6,10 +6,9 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { SettingsTestingViewToggle } from "@/components/dashboard/settings/settings-testing-view-toggle";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
-import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
+import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
-  ONBOARDING_SIGN_IN_PATH,
+  ONBOARDING_ENTRY_PATH,
   readUserSession,
 } from "@/lib/onboarding/guest-session";
 import {
@@ -489,9 +488,9 @@ export function HomeDashboard() {
   );
 
   async function handleLogOut() {
-    await persistRegisteredProgressNow();
-    clearAllAppSessionState();
-    router.push(ONBOARDING_SIGN_IN_PATH);
+    await signOutApp();
+    router.replace(ONBOARDING_ENTRY_PATH);
+    router.refresh();
   }
 
   return (

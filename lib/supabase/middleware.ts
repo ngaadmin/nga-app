@@ -3,6 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
 
 export async function updateSession(request: NextRequest) {
+  // Do not refresh Auth cookies on sign-out; that would undo cookie deletion.
+  if (request.nextUrl.pathname === "/api/auth/sign-out") {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });

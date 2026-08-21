@@ -9,7 +9,7 @@ import {
   getMasteryCohortFromBirthYear,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
+import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
   isEligibleBirthYear,
   representativeBirthYearForCohort,
@@ -311,9 +311,10 @@ export function AccountSubscriptionStatusPanel() {
     isParentSettingsView,
   ]);
 
-  function leaveAfterDestructiveDelete() {
-    clearAllAppSessionState();
+  async function leaveAfterDestructiveDelete() {
+    await signOutApp();
     router.replace(ONBOARDING_ENTRY_PATH);
+    router.refresh();
   }
 
   function closeDeleteDialog() {
@@ -477,7 +478,7 @@ export function AccountSubscriptionStatusPanel() {
       if (!removed) return;
 
       if (targetKey === selfKey) {
-        leaveAfterDestructiveDelete();
+        await leaveAfterDestructiveDelete();
         return;
       }
 
@@ -501,7 +502,7 @@ export function AccountSubscriptionStatusPanel() {
 
       deleteMasterAccountCascade(pendingDelete.username);
       setPendingDelete(null);
-      leaveAfterDestructiveDelete();
+      await leaveAfterDestructiveDelete();
     } catch {
       setDeleteError(copy.deleteMasterError);
     } finally {

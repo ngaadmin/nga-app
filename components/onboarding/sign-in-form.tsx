@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { updateSignedInPassword } from "@/lib/onboarding/learner-account";
 import {
   findRegisteredAccountByUsername,
   findRegisteredAccountsByEmail,
-  recoverCredentialByEmail,
+  recoverPassword,
   recoverUsernameByEmail,
   setRegisteredAccountPassword,
 } from "@/lib/onboarding/registered-accounts";
@@ -32,6 +32,7 @@ type FormErrors = {
   identifier?: string;
   credential?: string;
   recoveryEmail?: string;
+  recoveryUsername?: string;
   newPassword?: string;
   confirmPassword?: string;
   form?: string;
@@ -47,8 +48,10 @@ export function SignInForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [recoveryMode, setRecoveryMode] = useState<RecoveryMode>(null);
   const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryUsername, setRecoveryUsername] = useState("");
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
+  const recoveryRedirectTimeoutRef = useRef<number | null>(null);
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
   const [pendingUsername, setPendingUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -77,42 +80,80 @@ export function SignInForm() {
     }
   }
 
+  function clearRecoveryRedirect() {
+    if (recoveryRedirectTimeoutRef.current != null) {
+      window.clearTimeout(recoveryRedirectTimeoutRef.current);
+      recoveryRedirectTimeoutRef.current = null;
+    }
+  }
+
   function openRecovery(mode: Exclude<RecoveryMode, null>) {
+    clearRecoveryRedirect();
     setRecoveryMode(mode);
     setRecoveryNotice(null);
     setErrors({});
     const looksLikeEmail = identifier.includes("@");
     setRecoveryEmail(looksLikeEmail ? identifier.trim() : "");
+    setRecoveryUsername(looksLikeEmail ? "" : identifier.trim());
   }
 
-  function closeRecovery() {
+  function closeRecovery(options?: { keepNotice?: boolean }) {
+    clearRecoveryRedirect();
     setRecoveryMode(null);
-    setRecoveryNotice(null);
+    if (!options?.keepNotice) {
+      setRecoveryNotice(null);
+    }
     setIsRecovering(false);
-    setErrors((prev) => ({ ...prev, recoveryEmail: undefined, form: undefined }));
+    setErrors((prev) => ({
+      ...prev,
+      recoveryEmail: undefined,
+      recoveryUsername: undefined,
+      form: undefined,
+    }));
   }
+
+  useEffect(() => () => clearRecoveryRedirect(), []);
 
   async function handleRecoverySubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRecoveryNotice(null);
+
+    if (
+      recoveryMode === "credential" &&
+      !recoveryEmail.trim() &&
+      !recoveryUsername.trim()
+    ) {
+      setErrors({ recoveryEmail: copy.recoveryNeedAccount });
+      return;
+    }
+
     setIsRecovering(true);
 
     try {
       const result =
         recoveryMode === "username"
           ? await recoverUsernameByEmail(recoveryEmail)
-          : await recoverCredentialByEmail(recoveryEmail);
+          : await recoverPassword({
+              email: recoveryEmail,
+              username: recoveryUsername,
+            });
 
       if (!result.accepted) {
         setErrors({ recoveryEmail: result.error });
         return;
       }
 
-      setRecoveryNotice(
+      const successNotice =
         recoveryMode === "username"
           ? copy.recoveryUsernameSuccess
-          : copy.recoveryPasswordSuccess,
-      );
+          : copy.recoveryPasswordSuccess;
+      setRecoveryNotice(successNotice);
+
+      if (recoveryMode === "credential") {
+        recoveryRedirectTimeoutRef.current = window.setTimeout(() => {
+          closeRecovery({ keepNotice: true });
+        }, 1600);
+      }
     } catch {
       setErrors({
         recoveryEmail:
@@ -451,6 +492,37 @@ export function SignInForm() {
               ) : null}
             </div>
 
+            {recoveryMode === "credential" ? (
+              <div className="space-y-2">
+                <label
+                  htmlFor="recovery-username"
+                  className="block font-heading text-sm font-bold text-nga-primary"
+                >
+                  {copy.recoveryLoginUsernameLabel}
+                </label>
+                <input
+                  id="recovery-username"
+                  name="recoveryUsername"
+                  type="text"
+                  autoComplete="username"
+                  placeholder={copy.recoveryLoginUsernamePlaceholder}
+                  value={recoveryUsername}
+                  onChange={(e) => {
+                    setRecoveryUsername(e.target.value);
+                    clearError("recoveryUsername");
+                    clearError("recoveryEmail");
+                    setRecoveryNotice(null);
+                  }}
+                  aria-invalid={Boolean(errors.recoveryUsername)}
+                  className={cn(
+                    fieldBase,
+                    errors.recoveryUsername &&
+                      "border-red-400 focus:border-red-500",
+                  )}
+                />
+              </div>
+            ) : null}
+
             {recoveryNotice ? (
               <p
                 className="font-sans text-sm font-medium text-nga-primary"
@@ -487,6 +559,14 @@ export function SignInForm() {
                 role="alert"
               >
                 {errors.form}
+              </p>
+            ) : null}
+            {recoveryNotice ? (
+              <p
+                className="font-sans text-sm font-medium text-nga-primary"
+                role="status"
+              >
+                {recoveryNotice}
               </p>
             ) : null}
             <div className="space-y-2">

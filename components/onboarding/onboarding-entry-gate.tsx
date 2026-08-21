@@ -6,8 +6,7 @@ import {
   ONBOARDING_START_PATH,
 } from "@/lib/onboarding/guest-session";
 
-const FINN_HOMEPAGE_SRC =
-  "/assets/illustrations/website/Finn_homepage.png";
+const PENNY_HOMEPAGE_SRC = "/assets/illustrations/website/Penny.png";
 
 export function OnboardingEntryGate() {
   return (
@@ -16,8 +15,8 @@ export function OnboardingEntryGate() {
         <div className="order-1 flex items-center justify-center lg:order-none">
           <div className="w-full max-w-[18rem] overflow-hidden sm:max-w-[24rem] lg:max-w-none lg:overflow-visible">
             <Image
-              src={FINN_HOMEPAGE_SRC}
-              alt="Finn, your money-skills guide"
+              src={PENNY_HOMEPAGE_SRC}
+              alt="Penny, your money-skills guide"
               width={720}
               height={720}
               className="-mb-[12%] -mt-[20%] h-auto w-full object-contain lg:mb-0 lg:mt-0"

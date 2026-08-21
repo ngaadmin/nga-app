@@ -336,8 +336,6 @@ export function buildExplorerParentResendEmail(
     "",
     `APPROVE PROFILE: ${approveUrl}`,
     "",
-    "If you did not request this, you can ignore this email.",
-    "",
     "The Team at NextGenAchiever$",
   ].join("\n");
 
@@ -356,7 +354,6 @@ export function buildExplorerParentResendEmail(
         The Team at NextGenAchiever$
       </p>
     `,
-    footer: "If you did not request this, you can ignore this email.",
   });
 
   return { subject, preheader, html, text };

@@ -41,16 +41,20 @@ export const copyMatrix = {
       parent: "I'm a parent",
     },
     pendingConsent: {
-      heading: "Hang tight — a grown-up needs to approve",
-      body: "A parent or guardian has to approve your account before you can keep playing. Your lessons and XP are saved and waiting for you.",
+      heading: "Hang tight. A grown-up needs to approve",
+      body: "A parent or guardian has to approve your account before you can keep playing. Your lessons and Points are saved and waiting for you.",
       headingApproved: "You're cleared to play!",
       bodyApproved:
         "Your parent or guardian said yes. Pick up right where you left off.",
       resend: "Resend approval email",
       resending: "Sending…",
-      resent: "Sent! Ask them to check their inbox (and spam).",
       continue: "Continue in the app",
       logOut: "Log out",
+    },
+    approvalSaved: {
+      heading: "Approval saved. {username} is active.",
+      body: "You can follow their progress in your parent account.",
+      logIn: "Log in",
     },
   },
   dashboard: {

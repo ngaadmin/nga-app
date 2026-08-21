@@ -7,7 +7,7 @@ import { OnboardingProgress } from "@/components/onboarding/onboarding-progress"
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { createParentMasterAndApprove } from "@/lib/onboarding/approve-consent-request";
+import { createParentMasterAndApprove, approveConsentRequest } from "@/lib/onboarding/approve-consent-request";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
 import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
@@ -181,6 +181,9 @@ export function SignUpForm() {
   >(null);
   const [parentConsentLoading, setParentConsentLoading] = useState(isParentMaster);
   const [isSendingApprovalEmail, setIsSendingApprovalEmail] = useState(false);
+  const [approvalSavedUsername, setApprovalSavedUsername] = useState<string | null>(
+    null,
+  );
   const approvalEmailInFlightRef = useRef(false);
   const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
   const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
@@ -232,6 +235,32 @@ export function SignUpForm() {
           form: "This parent link is not valid for creating a master account.",
         });
         return;
+      }
+
+      // Explorer VPC: existing parent master auto-approves; otherwise create-account.
+      if (flow === "explorer_consent") {
+        const approved = await approveConsentRequest(consentToken);
+        if (cancelled) return;
+
+        if (approved.success) {
+          setApprovalSavedUsername(approved.childUsername);
+          setPendingConsent(null);
+          setParentMasterFlow(null);
+          setParentConsentLoading(false);
+          return;
+        }
+
+        if (!approved.needsParentAccount) {
+          setPendingConsent(null);
+          setParentMasterFlow(null);
+          setParentConsentLoading(false);
+          setErrors({
+            form:
+              approved.error ||
+              "We could not approve this learner. Try again or use a fresh approval email.",
+          });
+          return;
+        }
       }
 
       // Pathfinder claim links are FYI only when a master already exists locally.
@@ -491,6 +520,29 @@ export function SignUpForm() {
             <p className="font-sans text-sm text-nga-slate">
               Loading parent approval…
             </p>
+          </div>
+        </section>
+      );
+    }
+
+    if (approvalSavedUsername) {
+      const approvalCopy = copyMatrix.onboarding.approvalSaved;
+      const heading = approvalCopy.heading.replace(
+        "{username}",
+        displayUsernameOrEmpty(approvalSavedUsername) || "your learner",
+      );
+      return (
+        <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+          <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
+            <h1 className="font-heading text-2xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
+              {heading}
+            </h1>
+            <p className="font-sans text-sm leading-relaxed text-nga-slate sm:text-base">
+              {approvalCopy.body}
+            </p>
+            <ButtonLink href={ONBOARDING_SIGN_IN_PATH} variant="cta" fullWidth>
+              {approvalCopy.logIn}
+            </ButtonLink>
           </div>
         </section>
       );

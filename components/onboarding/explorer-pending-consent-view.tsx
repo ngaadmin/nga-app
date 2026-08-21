@@ -29,10 +29,17 @@ export function ExplorerPendingConsentView({
   const router = useRouter();
   const copy = copyMatrix.onboarding.pendingConsent;
   const [isResending, setIsResending] = useState(false);
-  const [resent, setResent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const resendInFlightRef = useRef(false);
+
+  async function leaveToLogin() {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    await persistRegisteredProgressNow();
+    clearAllAppSessionState();
+    router.push(ONBOARDING_SIGN_IN_PATH);
+  }
 
   async function handleResend() {
     if (resendInFlightRef.current) return;
@@ -47,7 +54,7 @@ export function ExplorerPendingConsentView({
       if (localToken) {
         try {
           await resendParentConsentApproval(localToken);
-          setResent(true);
+          await leaveToLogin();
           return;
         } catch {
           // Fall through to the signed-in child resend path.
@@ -59,7 +66,7 @@ export function ExplorerPendingConsentView({
         setError(result.error);
         return;
       }
-      setResent(true);
+      await leaveToLogin();
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -70,14 +77,6 @@ export function ExplorerPendingConsentView({
       resendInFlightRef.current = false;
       setIsResending(false);
     }
-  }
-
-  async function handleLogOut() {
-    if (isLeaving) return;
-    setIsLeaving(true);
-    await persistRegisteredProgressNow();
-    clearAllAppSessionState();
-    router.push(ONBOARDING_SIGN_IN_PATH);
   }
 
   return (
@@ -100,12 +99,6 @@ export function ExplorerPendingConsentView({
       {error ? (
         <p className="font-sans text-sm font-medium text-red-600" role="alert">
           {error}
-        </p>
-      ) : null}
-
-      {resent && !approved ? (
-        <p className="font-sans text-sm font-medium text-nga-primary" role="status">
-          {copy.resent}
         </p>
       ) : null}
 
@@ -138,7 +131,7 @@ export function ExplorerPendingConsentView({
           variant="ghost"
           fullWidth
           onClick={() => {
-            void handleLogOut();
+            void leaveToLogin();
           }}
           disabled={isLeaving}
         >

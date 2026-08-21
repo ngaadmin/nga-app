@@ -281,7 +281,6 @@ export function buildExplorerParentEmail(
         tool - not a financial product. No real-money transactions, live bank links, or hidden
         micro-purchases.
       </p>
-      ${pennyIllustration(appUrl)}
       <p style="margin:0 0 8px;font-size:16px;">
         <strong>Profile name: ${safeName}</strong>
       </p>
@@ -302,6 +301,7 @@ export function buildExplorerParentEmail(
       <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
         If you did not request this, ignore this email or contact ${escapeHtml(SUPPORT_EMAIL)}.
       </p>
+      ${pennyIllustration(appUrl)}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -332,6 +332,8 @@ export function buildExplorerParentResendEmail(
     "",
     `APPROVE PROFILE: ${approveUrl}`,
     "",
+    "If you did not request this, you can ignore this email.",
+    "",
     "The Team at NextGenAchiever$",
   ].join("\n");
 
@@ -346,6 +348,9 @@ export function buildExplorerParentResendEmail(
         Nothing else has changed.
       </p>
       ${ctaButton("APPROVE PROFILE", approveUrl)}
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        If you did not request this, you can ignore this email.
+      </p>
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -407,7 +412,6 @@ export function buildPathfinderParentEmail(
         NextGenAchiever$ turns screen time into money sense. It is an educational tool - not a
         financial product. No real-money transactions, live bank links, or hidden micro-purchases.
       </p>
-      ${pennyIllustration(appUrl)}
       <p style="margin:0 0 8px;font-size:16px;">
         <strong>Profile name: ${safeName}</strong>
       </p>
@@ -426,6 +430,7 @@ export function buildPathfinderParentEmail(
       <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
         If you did not expect this email, ignore it or contact ${escapeHtml(SUPPORT_EMAIL)}.
       </p>
+      ${pennyIllustration(appUrl)}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -558,22 +563,24 @@ export function buildMaverickWelcomeEmail(
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
-  const subject = `Welcome to NextGenAchiever$, ${username}!`;
-  const preheader = "Your account is ready - jump into Academy.";
-  const header = "Welcome to NextGenAchiever$!";
+  const subject = `Welcome to NextGenAchiever$, ${username}`;
+  const preheader = "Your Maverick account is ready. Jump into Academy.";
+  const header = "You're in";
 
   const text = [
-    `Hey ${username},`,
+    `Hi ${username},`,
     "",
-    "Your account is ready. Jump in, complete modules, play with the advanced money tools, and manage your (virtual) money in the Vault.",
+    "Congratulations! You're officially on your way to financial independence.",
     "",
-    "NextGenAchiever$ is an educational tool - not a financial product. No real-money transactions, live bank links, or hidden micro-purchases.",
+    "Did you know? Teens who build money skills early can end up $100,000s ahead of peers who start later.",
     "",
-    "You're on your way. Let's go!",
+    "Get smart with money in the Academy, start your own business in days with Launchpad, or beat your friends in the monthly challenges.",
+    "",
+    "And yes, you can even negotiate with your parents to get paid for the points you earn in the app.",
+    "",
+    "Let's go!",
     "",
     `Launch Academy: ${academyUrl}`,
-    "",
-    `If you did not request this account, ignore this email or contact ${SUPPORT_EMAIL}.`,
     "",
     "The Team at NextGenAchiever$",
   ].join("\n");
@@ -583,24 +590,25 @@ export function buildMaverickWelcomeEmail(
     preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
-        Hey <strong>${escapeHtml(username)}</strong>,
+        Hi ${escapeHtml(username)},
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your account is ready. Jump in, complete modules, play with the advanced money tools,
-        and manage your (virtual) money in the Vault.
+        Congratulations! You&apos;re officially on your way to financial independence.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ is an educational tool - not a financial product. No real-money
-        transactions, live bank links, or hidden micro-purchases.
+        Did you know? Teens who build money skills early can end up $100,000s ahead of
+        peers who start later.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        You&apos;re on your way. Let&apos;s go!
+        Get smart with money in the Academy, start your own business in days with Launchpad,
+        or beat your friends in the monthly challenges.
       </p>
-      ${ctaButton("LAUNCH ACADEMY", academyUrl)}
-      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        If you did not request this account, ignore this email or contact
-        ${escapeHtml(SUPPORT_EMAIL)}.
+      <p style="margin:0 0 16px;font-size:16px;">
+        And yes, you can even negotiate with your parents to get paid for the points you
+        earn in the app.
       </p>
+      <p style="margin:0 0 16px;font-size:16px;">Let&apos;s go!</p>
+      ${ctaButton("Launch Academy", academyUrl)}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -681,7 +689,7 @@ export function buildUsernameRecoveryEmail(
       "",
       `Log back in: ${signInUrl}`,
       "",
-      "- NextGenAchievers",
+      "The Team at NextGenAchiever$",
     ];
     const linkedHtml = linked
       .map(
@@ -700,6 +708,9 @@ export function buildUsernameRecoveryEmail(
           ${linkedHtml}
         </ul>
         ${ctaButton("Log Back In", signInUrl)}
+        <p style="margin:24px 0 0;font-size:16px;">
+          The Team at NextGenAchiever$
+        </p>
       `,
     });
     return { subject, html, text: textLines.join("\n"), preheader };
@@ -731,7 +742,7 @@ export function buildUsernameRecoveryEmail(
       "",
       `Log back in: ${signInUrl}`,
       "",
-      "- NextGenAchievers",
+      "The Team at NextGenAchiever$",
     ];
 
     const linkedHtml =
@@ -764,6 +775,9 @@ export function buildUsernameRecoveryEmail(
           ${linkedHtml}
         </ul>
         ${ctaButton("Log Back In", signInUrl)}
+        <p style="margin:24px 0 0;font-size:16px;">
+          The Team at NextGenAchiever$
+        </p>
       `,
     });
 
@@ -777,7 +791,7 @@ export function buildUsernameRecoveryEmail(
     "",
     `Log back in: ${signInUrl}`,
     "",
-    "- NextGenAchievers",
+    "The Team at NextGenAchiever$",
   ].join("\n");
 
   const html = wrapHtml({
@@ -791,6 +805,9 @@ export function buildUsernameRecoveryEmail(
         ${escapeHtml(username)}
       </p>
       ${ctaButton("Log Back In", signInUrl)}
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
+      </p>
     `,
   });
 
@@ -822,7 +839,7 @@ export function buildCredentialRecoveryEmail(
     "",
     "If you did not ask for this, you can ignore this email.",
     "",
-    "- NextGenAchievers",
+    "The Team at NextGenAchiever$",
   ].join("\n");
 
   const html = wrapHtml({
@@ -844,6 +861,9 @@ export function buildCredentialRecoveryEmail(
       ${ctaButton("Set a new password", resetUrl)}
       <p style="margin:16px 0 0;font-size:14px;color:#5B6B7C;">
         If you did not ask for this, you can ignore this email.
+      </p>
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
       </p>
     `,
   });

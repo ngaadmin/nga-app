@@ -34,6 +34,7 @@ import {
   masteryCohortAgeRangeLabel,
   masteryCohortLabel,
   requiresParentConsentForBirthYear,
+  resolveCurriculumCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -134,11 +135,11 @@ function guestSelectedTrack(
   session: ReturnType<typeof readUserSession>,
 ): MasteryCohort | null {
   if (!isGuestSession(session) || !session) return null;
-  const track = session.curriculumCohort;
-  if (track === "explorer" || track === "pathfinder" || track === "maverick") {
-    return track;
-  }
-  return null;
+  if (!Number.isInteger(session.birthYear)) return null;
+  return resolveCurriculumCohort({
+    birthYear: session.birthYear,
+    curriculumCohort: session.curriculumCohort,
+  });
 }
 
 export function SignUpForm() {
@@ -193,6 +194,15 @@ export function SignUpForm() {
       setUsername("");
     }
   }, [username]);
+
+  // SSR cannot read localStorage, so cohort starts null. Re-seed from the
+  // guest session after mount or Explorer submit silently no-ops.
+  useEffect(() => {
+    if (isParentMaster) return;
+    const track = guestSelectedTrack(readUserSession());
+    if (!track) return;
+    setCohort((current) => current ?? track);
+  }, [isParentMaster]);
 
   useEffect(() => {
     if (!isParentMaster || !consentToken) return;
@@ -295,7 +305,7 @@ export function SignUpForm() {
     }
   }
 
-  function validate(): boolean {
+  function collectValidationErrors(): FormErrors {
     const next: FormErrors = {};
     const trimmedUsername = username.trim();
 
@@ -389,6 +399,11 @@ export function SignUpForm() {
       }
     }
 
+    return next;
+  }
+
+  function validate(): boolean {
+    const next = collectValidationErrors();
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -443,12 +458,38 @@ export function SignUpForm() {
       return;
     }
 
-    if (!cohort || !validate()) return;
-
     if (approvalEmailInFlightRef.current) return;
+
+    let nextErrors: FormErrors = {};
+    try {
+      nextErrors = collectValidationErrors();
+    } catch {
+      setErrors({
+        form: resolveSignupFailureMessage(new Error(""), isExplorer),
+      });
+      return;
+    }
+
+    if (!cohort) {
+      nextErrors.track =
+        nextErrors.track ?? "Pick the learning track for this profile.";
+    }
+
+    if (!cohort || Object.keys(nextErrors).length > 0) {
+      setErrors({
+        ...nextErrors,
+        form:
+          nextErrors.form ??
+          "Check the highlighted fields and try again.",
+      });
+      return;
+    }
+
     approvalEmailInFlightRef.current = true;
     setIsSendingApprovalEmail(true);
+    setErrors((prev) => ({ ...prev, form: undefined }));
 
+    let succeeded = false;
     try {
       const result = await createSupabaseAccount({
         username: username.trim(),
@@ -460,8 +501,6 @@ export function SignUpForm() {
       });
 
       if (!result.success) {
-        approvalEmailInFlightRef.current = false;
-        setIsSendingApprovalEmail(false);
         if (/username is already taken/i.test(result.error)) {
           setErrors((prev) => ({
             ...prev,
@@ -493,6 +532,7 @@ export function SignUpForm() {
         curriculumCohort: cohort,
       });
       await finalizeRegisteredSignup(childSession, { skipEmail: true });
+      succeeded = true;
 
       if (isPendingConsent) {
         router.push(ONBOARDING_SIGN_UP_PENDING_PATH);
@@ -501,12 +541,15 @@ export function SignUpForm() {
 
       router.replace(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
-      approvalEmailInFlightRef.current = false;
-      setIsSendingApprovalEmail(false);
       setErrors((prev) => ({
         ...prev,
         form: resolveSignupFailureMessage(error, isExplorer),
       }));
+    } finally {
+      if (!succeeded) {
+        approvalEmailInFlightRef.current = false;
+        setIsSendingApprovalEmail(false);
+      }
     }
   }
 

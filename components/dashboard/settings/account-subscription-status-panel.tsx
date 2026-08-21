@@ -172,7 +172,20 @@ export function AccountSubscriptionStatusPanel() {
     null,
   );
   const [householdLoading, setHouseholdLoading] = useState(false);
+  const [openChildMenu, setOpenChildMenu] = useState<string | null>(null);
+  const childMenuRef = useRef<HTMLDivElement>(null);
   const refreshGeneration = useRef(0);
+
+  useEffect(() => {
+    if (!openChildMenu) return;
+    function closeIfOutside(event: MouseEvent) {
+      if (!childMenuRef.current?.contains(event.target as Node)) {
+        setOpenChildMenu(null);
+      }
+    }
+    document.addEventListener("mousedown", closeIfOutside);
+    return () => document.removeEventListener("mousedown", closeIfOutside);
+  }, [openChildMenu]);
 
   const refresh = useCallback(() => {
     const session = readUserSession();
@@ -550,10 +563,17 @@ export function AccountSubscriptionStatusPanel() {
             {household.children.map((child) => {
               const isPending = child.accountStatus === "PENDING_CONSENT";
               const canApproveChild = isParentSettingsView && isPending;
+              const canDeleteChild = deletableAccounts.children.some(
+                (item) =>
+                  usernameKey(item.username) === usernameKey(child.username),
+              );
               return (
                 <li
                   key={child.username}
-                  className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3"
+                  className={cn(
+                    "rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3",
+                    openChildMenu === child.username && "relative z-raised",
+                  )}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
@@ -566,18 +586,68 @@ export function AccountSubscriptionStatusPanel() {
                           {isPending ? ` · ${copy.pendingApprovalBadge}` : ""}
                         </p>
                       </div>
-                      {canApproveChild ? (
-                        <button
-                          type="button"
-                          className={approveButtonClass}
-                          disabled={approvingUsername === child.username}
-                          onClick={() => handleApproveChild(child.username)}
-                        >
-                          {approvingUsername === child.username
-                            ? copy.linkingProfile
-                            : copy.linkProfile}
-                        </button>
-                      ) : null}
+                      <div className="flex shrink-0 items-start gap-2">
+                        {canApproveChild ? (
+                          <button
+                            type="button"
+                            className={approveButtonClass}
+                            disabled={approvingUsername === child.username}
+                            onClick={() => handleApproveChild(child.username)}
+                          >
+                            {approvingUsername === child.username
+                              ? copy.linkingProfile
+                              : copy.linkProfile}
+                          </button>
+                        ) : null}
+                        {canDeleteChild ? (
+                          <div
+                            ref={
+                              openChildMenu === child.username
+                                ? childMenuRef
+                                : undefined
+                            }
+                            className="relative"
+                          >
+                            <button
+                              type="button"
+                              className="px-1 font-heading text-lg font-bold leading-none text-[#5B6B7C] transition-colors hover:text-[#031F82]"
+                              aria-label={copy.childRowManage}
+                              aria-haspopup="menu"
+                              aria-expanded={openChildMenu === child.username}
+                              onClick={() =>
+                                setOpenChildMenu((current) =>
+                                  current === child.username
+                                    ? null
+                                    : child.username,
+                                )
+                              }
+                            >
+                              ⋯
+                            </button>
+                            {openChildMenu === child.username ? (
+                              <div
+                                role="menu"
+                                className="absolute right-0 z-raised mt-1 min-w-[9.5rem] rounded-xl border border-[#BDE9FB]/70 bg-white px-3 py-2 shadow-md"
+                              >
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={quietDeleteClass}
+                                  onClick={() => {
+                                    setOpenChildMenu(null);
+                                    setPendingDelete({
+                                      kind: "child",
+                                      username: child.username,
+                                    });
+                                  }}
+                                >
+                                  {copy.deleteChild}
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                     <AccountRowTrack
                       account={child}
@@ -698,43 +768,20 @@ export function AccountSubscriptionStatusPanel() {
             </button>
           ) : null}
 
-          {deletableAccounts.master ||
-          deletableAccounts.children.length > 0 ? (
-            <div className="space-y-2 border-t border-[#BDE9FB]/70 pt-3">
-              <h3 className="font-sans text-xs font-semibold uppercase tracking-wide text-[#8FA3B0]">
-                {copy.deleteSectionHeading}
-              </h3>
-              <div className="flex flex-col items-start gap-2">
-                {deletableAccounts.master ? (
-                  <button
-                    type="button"
-                    className={quietDeleteClass}
-                    onClick={() =>
-                      openMasterDelete(deletableAccounts.master!.username)
-                    }
-                  >
-                    {copy.deleteMaster}
-                  </button>
-                ) : null}
-                {deletableAccounts.children.map((child) => (
-                  <button
-                    key={child.username}
-                    type="button"
-                    className={quietDeleteClass}
-                    onClick={() =>
-                      setPendingDelete({
-                        kind: "child",
-                        username: child.username,
-                      })
-                    }
-                  >
-                    {copy.deleteChildNamed.replace(
-                      "{username}",
-                      child.username,
-                    )}
-                  </button>
-                ))}
-              </div>
+          {deletableAccounts.master ? (
+            <div className="space-y-1 border-t border-[#BDE9FB]/70 pt-3">
+              <button
+                type="button"
+                className={quietDeleteClass}
+                onClick={() =>
+                  openMasterDelete(deletableAccounts.master!.username)
+                }
+              >
+                {copy.deleteMaster}
+              </button>
+              <p className="font-sans text-xs leading-relaxed text-[#8FA3B0]">
+                {copy.deleteMasterHint}
+              </p>
             </div>
           ) : null}
         </section>

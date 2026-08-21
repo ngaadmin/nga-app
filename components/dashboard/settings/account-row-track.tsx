@@ -11,7 +11,7 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
-  changeAccountLearningTrack,
+  changeLinkedChildLearningTrack,
   displayAccountLearningTrack,
 } from "@/lib/onboarding/change-learning-track";
 import type { UserSession } from "@/lib/onboarding/guest-session";
@@ -38,6 +38,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
   const [open, setOpen] = useState(false);
   const [pendingCohort, setPendingCohort] = useState<MasteryCohort | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   function handleSelect(cohort: MasteryCohort) {
     if (!canChange || cohort === current) return;
@@ -46,22 +47,36 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
   }
 
   function closeConfirm() {
+    if (isSaving) return;
     setPendingCohort(null);
   }
 
-  function confirmChange() {
-    if (!pendingCohort) return;
-    const result = changeAccountLearningTrack(account.username, pendingCohort);
-    if (!result.ok) {
-      setError(
-        result.reason === "unchanged" ? trackCopy.unchanged : copy.changeTrackError,
+  async function confirmChange() {
+    if (!pendingCohort || isSaving) return;
+    setIsSaving(true);
+    try {
+      const result = await changeLinkedChildLearningTrack(
+        account,
+        pendingCohort,
       );
+      if (!result.ok) {
+        setError(
+          result.reason === "unchanged"
+            ? trackCopy.unchanged
+            : copy.changeTrackError,
+        );
+        setPendingCohort(null);
+        return;
+      }
+      setError(null);
       setPendingCohort(null);
-      return;
+      setOpen(false);
+    } catch {
+      setError(copy.changeTrackError);
+      setPendingCohort(null);
+    } finally {
+      setIsSaving(false);
     }
-    setError(null);
-    setPendingCohort(null);
-    setOpen(false);
   }
 
   const pendingLabel = pendingCohort ? masteryCohortLabel(pendingCohort) : "";
@@ -159,6 +174,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
         align="center"
         labelledBy="change-track-title"
         describedBy="change-track-body"
+        dismissOnBackdrop={!isSaving}
         backdropClassName="bg-[#031F82]/55"
         panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
       >
@@ -185,13 +201,15 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
           <button
             type="button"
             onClick={closeConfirm}
-            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
+            disabled={isSaving}
+            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0] disabled:opacity-40"
           >
             {copy.changeTrackCancelAction}
           </button>
           <button
             type="button"
-            onClick={confirmChange}
+            onClick={() => void confirmChange()}
+            disabled={isSaving}
             className={cn("flex-1 px-3 py-2", confirmCtaClass)}
           >
             {copy.changeTrackConfirmAction}

@@ -7,6 +7,7 @@ import {
 import {
   requestHouseholdUsernameRecovery,
 } from "@/lib/onboarding/household-recovery";
+import { displayUsernameOrEmpty } from "@/lib/onboarding/placeholder-username";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 /** Durable local registry - survives logout so returning users can log back in. */
@@ -351,10 +352,14 @@ export function resolveHouseholdEmail(session: UserSession): string | null {
 
 const PARENT_IDENTITY_FALLBACK = "Parent";
 
-/** Public identity: parent email, or learner username. Never an internal stub. */
+/** Public identity: parent username (email fallback), or learner username. */
 export function displayAccountIdentity(session: UserSession): string {
   if (session.accountRole === "parent_master") {
-    return resolveHouseholdEmail(session) || PARENT_IDENTITY_FALLBACK;
+    return (
+      displayUsernameOrEmpty(session.username) ||
+      resolveHouseholdEmail(session) ||
+      PARENT_IDENTITY_FALLBACK
+    );
   }
   return session.username.trim();
 }

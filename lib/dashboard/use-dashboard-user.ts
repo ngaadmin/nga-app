@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { readUserSession, isGuestSession } from "@/lib/onboarding/guest-session";
-import { displayAccountIdentity } from "@/lib/onboarding/registered-accounts";
+import {
+  displayAccountIdentity,
+  resolveHouseholdEmail,
+} from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
 export type DashboardUserState = {
   username: string;
+  /** Parent household email. Null for learners so child email is never shown. */
+  email: string | null;
   joinDate: string | null;
   isGuestMode: boolean;
   isLoading: boolean;
@@ -19,6 +24,10 @@ function readDashboardUserState(): DashboardUserState {
   if (session) {
     return {
       username: displayAccountIdentity(session),
+      email:
+        session.accountRole === "parent_master"
+          ? resolveHouseholdEmail(session)
+          : null,
       joinDate: session.createdAt,
       isGuestMode: isGuestSession(session),
       isLoading: false,
@@ -26,6 +35,7 @@ function readDashboardUserState(): DashboardUserState {
   }
   return {
     username: GUEST_USERNAME,
+    email: null,
     joinDate: null,
     isGuestMode: false,
     isLoading: false,
@@ -35,6 +45,7 @@ function readDashboardUserState(): DashboardUserState {
 export function useDashboardUser(): DashboardUserState {
   const [state, setState] = useState<DashboardUserState>({
     username: GUEST_USERNAME,
+    email: null,
     joinDate: null,
     isGuestMode: false,
     isLoading: true,

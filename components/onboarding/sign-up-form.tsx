@@ -345,12 +345,10 @@ export function SignUpForm() {
       next.password = "Use at least 6 characters for your password.";
     }
 
-    if (!isParentMaster) {
-      if (!confirmPassword) {
-        next.confirmPassword = "Confirm your password.";
-      } else if (password && confirmPassword !== password) {
-        next.confirmPassword = "Passwords don't match.";
-      }
+    if (!confirmPassword) {
+      next.confirmPassword = "Confirm your password.";
+    } else if (password && confirmPassword !== password) {
+      next.confirmPassword = "Passwords don't match.";
     }
 
     if (isPathfinder || isMaverick) {
@@ -690,6 +688,40 @@ export function SignUpForm() {
                   role="alert"
                 >
                   {errors.password}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="signup-confirm-password"
+                className="block font-heading text-sm font-bold text-nga-primary"
+              >
+                Confirm password
+              </label>
+              <input
+                id="signup-confirm-password"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Re-enter your password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  clearError("confirmPassword");
+                }}
+                aria-invalid={Boolean(errors.confirmPassword)}
+                className={cn(
+                  fieldBase,
+                  errors.confirmPassword && "border-red-400 focus:border-red-500",
+                )}
+              />
+              {errors.confirmPassword ? (
+                <p
+                  className="font-sans text-sm font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.confirmPassword}
                 </p>
               ) : null}
             </div>

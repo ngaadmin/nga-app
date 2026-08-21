@@ -146,6 +146,9 @@ export const copyMatrix = {
           "We could not approve this learner. Try again or use the approval email link.",
         pendingApprovalBadge: "Pending approval",
         deleteMaster: "Delete master account",
+        deleteMasterHint:
+          "This deletes your account and all associated child accounts.",
+        childRowManage: "Manage",
         deleteChildTitle: "Delete learner account?",
         deleteChildConfirm:
           "Delete this learner account? This will permanently remove all data associated with the account - including progress, achievements, and activity - and cannot be undone.",

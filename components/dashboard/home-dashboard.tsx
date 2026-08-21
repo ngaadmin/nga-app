@@ -79,6 +79,7 @@ function SettingsRow({ icon: Icon, label, onClick }: SettingsRowProps) {
 
 type ProfileHeaderProps = {
   username: string;
+  email?: string | null;
   joinDateLabel: string;
   joinDate: string | null;
   isLoading: boolean;
@@ -86,11 +87,15 @@ type ProfileHeaderProps = {
 
 function ProfileHeader({
   username,
+  email,
   joinDateLabel,
   joinDate,
   isLoading,
 }: ProfileHeaderProps) {
   const initial = username.trim().charAt(0).toUpperCase() || "?";
+  const showEmail =
+    Boolean(email?.trim()) &&
+    email!.trim().toLowerCase() !== username.trim().toLowerCase();
 
   return (
     <header className="flex items-center gap-4">
@@ -104,6 +109,11 @@ function ProfileHeader({
         <h1 className="truncate font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
           {isLoading ? "Loading…" : username}
         </h1>
+        {showEmail ? (
+          <p className="mt-0.5 truncate font-sans text-sm text-[#1E3A5F]">
+            {email}
+          </p>
+        ) : null}
         <p className="mt-1 font-sans text-sm text-[#1E3A5F]/75">
           {joinDateLabel} {formatJoinDate(joinDate)}
         </p>
@@ -467,15 +477,15 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
 
 export function HomeDashboard() {
   const router = useRouter();
-  const { username, joinDate, isLoading } = useDashboardUser();
+  const { username, email, joinDate, isLoading } = useDashboardUser();
   const copy = copyMatrix.dashboard.settings;
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
 
   const simulatedParentEmail = useMemo(
-    () => resolveSimulatedParentEmail(username),
-    [username],
+    () => email ?? resolveSimulatedParentEmail(username),
+    [email, username],
   );
 
   async function handleLogOut() {
@@ -489,6 +499,7 @@ export function HomeDashboard() {
       <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
         <ProfileHeader
           username={username}
+          email={email}
           joinDateLabel={copy.profile.joinDateLabel}
           joinDate={joinDate}
           isLoading={isLoading}

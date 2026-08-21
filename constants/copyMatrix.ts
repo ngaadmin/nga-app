@@ -61,6 +61,18 @@ export const copyMatrix = {
       body: "You can follow their progress in your parent account.",
       logIn: "Log in",
     },
+    parentFirstWelcome: {
+      heading: "Your parent account is ready",
+      intro: "Here is what you can do from here:",
+      points: [
+        "Follow your child's progress.",
+        "Jump into the app yourself if you want.",
+        "Build money habits and skills too.",
+      ],
+      disclaimer:
+        "NextGenAchiever$ is an educational tool - not a financial product.",
+      cta: "Open Account settings",
+    },
   },
   dashboard: {
     greeting: "Hey, [Username]! Let's build wealth.",

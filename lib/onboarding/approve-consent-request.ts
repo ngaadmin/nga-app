@@ -21,6 +21,8 @@ export type ApproveConsentResult =
       parentEmail: string;
       childUsername: string;
       childBirthYear: number | null;
+      /** True only when this call created a new parent master Auth user. */
+      createdNewParent?: boolean;
     }
   | {
       success: false;
@@ -213,7 +215,7 @@ export async function createParentMasterAndApprove(
     // Linking already succeeded; session cookie is optional.
   }
 
-  return approved;
+  return { ...approved, createdNewParent: true };
 }
 
 export async function lookupParentMasterByEmail(email: string): Promise<{

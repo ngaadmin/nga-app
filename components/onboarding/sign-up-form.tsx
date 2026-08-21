@@ -28,6 +28,7 @@ import {
   readUserSession,
 } from "@/lib/onboarding/guest-session";
 import { markExplorerPendingPlayAllowed } from "@/lib/onboarding/explorer-pending-consent";
+import { markParentFirstWelcomePending } from "@/lib/onboarding/parent-first-welcome";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
@@ -183,10 +184,12 @@ export function SignUpForm() {
   >(null);
   const [parentConsentLoading, setParentConsentLoading] = useState(isParentMaster);
   const [isSendingApprovalEmail, setIsSendingApprovalEmail] = useState(false);
+  const [isCreatingParentMaster, setIsCreatingParentMaster] = useState(false);
   const [approvalSavedUsername, setApprovalSavedUsername] = useState<string | null>(
     null,
   );
   const approvalEmailInFlightRef = useRef(false);
+  const parentMasterInFlightRef = useRef(false);
   const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
   const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
 
@@ -413,7 +416,12 @@ export function SignUpForm() {
     if (!consentToken || !pendingConsent || !parentMasterFlow || !validate()) {
       return;
     }
+    if (parentMasterInFlightRef.current) return;
+    parentMasterInFlightRef.current = true;
+    setIsCreatingParentMaster(true);
+    setErrors((prev) => ({ ...prev, form: undefined }));
 
+    let succeeded = false;
     try {
       const result = await createParentMasterAndApprove({
         token: consentToken,
@@ -440,6 +448,10 @@ export function SignUpForm() {
         supabaseUserId: result.parentId,
       });
       await finalizeRegisteredSignup(parentSession);
+      if (isExplorerConsentFlow && result.createdNewParent) {
+        markParentFirstWelcomePending(result.parentId);
+      }
+      succeeded = true;
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
       const message = resolveSignupFailureMessage(error, false);
@@ -448,6 +460,11 @@ export function SignUpForm() {
           ? "We could not create your parent master profile. Check your details and try again."
           : message,
       });
+    } finally {
+      if (!succeeded) {
+        parentMasterInFlightRef.current = false;
+        setIsCreatingParentMaster(false);
+      }
     }
   }
 
@@ -849,9 +866,15 @@ export function SignUpForm() {
               type="submit"
               variant="cta"
               fullWidth
-              disabled={isExplorerConsentFlow && !parentalConsentGiven}
+              disabled={
+                isCreatingParentMaster ||
+                (isExplorerConsentFlow && !parentalConsentGiven)
+              }
+              aria-busy={isCreatingParentMaster || undefined}
             >
-              Create Master Profile
+              {isCreatingParentMaster
+                ? "Setting up your account…"
+                : "Create Master Profile"}
             </Button>
           </form>
         </div>

@@ -3,6 +3,7 @@
 import { CurrencyProvider } from "@/lib/dashboard/currency-context";
 import { DashboardWalletProvider } from "@/lib/dashboard/dashboard-wallet-context";
 import { ExplorerPendingConsentGate } from "@/components/dashboard/explorer-pending-consent-gate";
+import { ParentFirstWelcomeModal } from "@/components/dashboard/parent-first-welcome-modal";
 import { useAccountProgressSync } from "@/lib/dashboard/account-progress-sync";
 import { useSupabaseAccountSync } from "@/lib/dashboard/use-supabase-account-sync";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
@@ -29,6 +30,7 @@ export function DashboardProviders({ children }: DashboardProvidersProps) {
       <DashboardWalletProvider>
         <VaultProfileProvider>
           <AccountSync />
+          <ParentFirstWelcomeModal />
           <ExplorerPendingConsentGate>{children}</ExplorerPendingConsentGate>
         </VaultProfileProvider>
       </DashboardWalletProvider>

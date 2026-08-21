@@ -78,7 +78,7 @@ export function AcademyLessonShell({
           left={
             <>
               <div
-                className={cn(STATUS_BANNER_ITEM_CLASS, "gap-0.5")}
+                className={cn(STATUS_BANNER_ITEM_CLASS, "shrink-0 gap-0.5")}
                 aria-label={`${livesRemaining} of ${maxLives} lives remaining`}
               >
                 {Array.from({ length: maxLives }, (_, index) => (
@@ -91,6 +91,7 @@ export function AcademyLessonShell({
 
               <StatusMetricPill
                 interactive={false}
+                className="shrink-0"
                 icon={
                   <TopBarRoundIcon>
                     <GoldCoinIcon className="size-5" />
@@ -102,7 +103,8 @@ export function AcademyLessonShell({
               />
             </>
           }
-          center={
+          center={null}
+          right={
             <UserHandleControl
               size="sm"
               interactive={false}

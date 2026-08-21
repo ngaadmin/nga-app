@@ -59,6 +59,7 @@ export function AcademyMomentumHeader({
       left={
         <StatusMetricPill
           interactive
+          className="shrink-0"
           onClick={onXpClick}
           icon={
             <TopBarRoundIcon>

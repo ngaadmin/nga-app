@@ -14,7 +14,7 @@ export const STATUS_BANNER_SHELL_CLASS =
 export const STATUS_BANNER_INSET_CLASS = "px-4 sm:px-6";
 
 export const STATUS_BANNER_ROW_CLASS =
-  "relative mx-auto flex h-9 w-full max-w-md items-center";
+  "relative mx-auto grid h-9 w-full max-w-md grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3";
 
 /**
  * Frameless inline stat / handle text — one size for every banner item.
@@ -82,22 +82,20 @@ export function StatusBannerLayout({
         >
           <div
             className={cn(
-              "relative z-base flex h-full min-w-0 flex-1 items-center justify-start",
+              "flex h-full min-w-0 items-center justify-start",
               clusterGapClassName,
             )}
           >
             {left}
           </div>
 
-          <div className="pointer-events-none absolute inset-x-0 inset-y-0 z-raised flex items-center justify-center">
-            <div className="pointer-events-auto flex h-full min-w-0 max-w-[42%] items-center justify-center">
-              {center}
-            </div>
+          <div className="flex h-full min-w-0 items-center justify-center">
+            {center}
           </div>
 
           <div
             className={cn(
-              "relative z-base flex h-full min-w-0 flex-1 items-center justify-end",
+              "flex h-full min-w-0 items-center justify-end",
               clusterGapClassName,
             )}
           >

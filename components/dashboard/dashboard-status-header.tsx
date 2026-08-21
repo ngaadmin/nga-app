@@ -16,7 +16,9 @@ import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { XpStarIcon } from "@/lib/dashboard/icons";
 import {
   hasUnseenSkillProgress,
+  markSkillsCupIntroSeen,
   markSkillsPanelSeen,
+  shouldShowSkillsCupIntro,
 } from "@/lib/dashboard/skills-attention";
 import { resolveVaultSkillTrophiesForCohort } from "@/lib/dashboard/skill-trophies";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
@@ -47,14 +49,23 @@ export function DashboardStatusHeader() {
   );
 
   const [skillsHasAttention, setSkillsHasAttention] = useState(false);
+  const [showSkillsCupIntro, setShowSkillsCupIntro] = useState(false);
 
   useEffect(() => {
     setSkillsHasAttention(hasUnseenSkillProgress(cohortSkills));
+    setShowSkillsCupIntro(shouldShowSkillsCupIntro(cohortSkills));
   }, [cohortSkills, skillsAttentionTick]);
+
+  const dismissSkillsCupIntro = useCallback(() => {
+    markSkillsCupIntroSeen();
+    setShowSkillsCupIntro(false);
+  }, []);
 
   const openSkills = useCallback(() => {
     setSkillsOpen(true);
     markSkillsPanelSeen(cohortSkills);
+    markSkillsCupIntroSeen();
+    setShowSkillsCupIntro(false);
     setSkillsAttentionTick((tick) => tick + 1);
   }, [cohortSkills]);
 
@@ -79,7 +90,9 @@ export function DashboardStatusHeader() {
             xp={lifetimePointsEarned}
             dayStreak={dayStreak}
             skillsHasAttention={skillsHasAttention}
+            showSkillsCupIntro={showSkillsCupIntro}
             onSkillsClick={openSkills}
+            onSkillsIntroSeen={dismissSkillsCupIntro}
             onStreakClick={openStreaks}
             onXpClick={openXpExchange}
           />

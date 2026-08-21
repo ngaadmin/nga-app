@@ -171,7 +171,14 @@ export function AccountSubscriptionStatusPanel() {
   const [householdLoadError, setHouseholdLoadError] = useState<string | null>(
     null,
   );
-  const [householdLoading, setHouseholdLoading] = useState(false);
+  const [householdLoading, setHouseholdLoading] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const session = readUserSession();
+    return (
+      session?.accessMode === "registered" &&
+      session.accountRole === "parent_master"
+    );
+  });
   const [openChildMenu, setOpenChildMenu] = useState<string | null>(null);
   const childMenuRef = useRef<HTMLDivElement>(null);
   const refreshGeneration = useRef(0);
@@ -216,20 +223,17 @@ export function AccountSubscriptionStatusPanel() {
       return;
     }
 
-    setHousehold({
+    setHousehold((current) => ({
       master: session,
-      children: [],
+      children: current.children,
       householdEmail,
-    });
+    }));
     setHouseholdLoading(true);
     setSessionReady(true);
 
     void (async () => {
       try {
-        const [linked, pending] = await Promise.all([
-          listLinkedChildrenForCurrentParent(),
-          listPendingConsentRequestsForParent(),
-        ]);
+        const linked = await listLinkedChildrenForCurrentParent();
         if (generation !== refreshGeneration.current) return;
 
         if (!linked.ok) {
@@ -247,19 +251,26 @@ export function AccountSubscriptionStatusPanel() {
             householdEmail,
           });
         }
-
-        setRemotePending(pending.ok ? pending.requests : []);
       } catch {
         if (generation !== refreshGeneration.current) return;
         setHousehold({ master: session, children: [], householdEmail });
         setHouseholdLoadError("Could not load linked children. Try again.");
-        setRemotePending([]);
       } finally {
         if (generation === refreshGeneration.current) {
           setHouseholdLoading(false);
         }
       }
     })();
+
+    void listPendingConsentRequestsForParent()
+      .then((pending) => {
+        if (generation !== refreshGeneration.current) return;
+        setRemotePending(pending.ok ? pending.requests : []);
+      })
+      .catch(() => {
+        if (generation !== refreshGeneration.current) return;
+        setRemotePending([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -539,7 +550,7 @@ export function AccountSubscriptionStatusPanel() {
             {copy.accountsHeading}
           </h2>
 
-          <ul className="space-y-3">
+          <ul className="space-y-3" aria-busy={householdLoading}>
             {household.master ? (
               <li className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3">
                 <div className="space-y-3">
@@ -558,6 +569,32 @@ export function AccountSubscriptionStatusPanel() {
                   />
                 </div>
               </li>
+            ) : null}
+
+            {householdLoading && household.children.length === 0 ? (
+              <>
+                <li className="sr-only" aria-live="polite">
+                  Loading linked learners
+                </li>
+                <li
+                  className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3"
+                  aria-hidden
+                >
+                  <div className="space-y-3">
+                    <div className="h-5 w-28 animate-pulse rounded bg-[#BDE9FB]/70" />
+                    <div className="h-11 w-56 animate-pulse rounded-xl bg-[#BDE9FB]/40" />
+                  </div>
+                </li>
+                <li
+                  className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3"
+                  aria-hidden
+                >
+                  <div className="space-y-3">
+                    <div className="h-5 w-24 animate-pulse rounded bg-[#BDE9FB]/70" />
+                    <div className="h-11 w-56 animate-pulse rounded-xl bg-[#BDE9FB]/40" />
+                  </div>
+                </li>
+              </>
             ) : null}
 
             {household.children.map((child) => {

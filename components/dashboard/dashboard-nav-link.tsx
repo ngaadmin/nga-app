@@ -20,7 +20,9 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
   const { Icon } = item;
 
   function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (isActive) {
+    const alreadyOnHref = pathname === item.href;
+    // Settings sub-pages stay highlighted, but the item still opens main Settings.
+    if (alreadyOnHref || (isActive && item.id !== "settings")) {
       event.preventDefault();
     }
   }

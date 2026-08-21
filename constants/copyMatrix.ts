@@ -354,6 +354,8 @@ export const copyMatrix = {
         heading: "Your Mission Map",
         xpLabel: "XP",
         lockedLabel: "Locked",
+        skillsCupLabel: "Skills",
+        skillsCupTip: "Your medals live in the cup. Tap it anytime.",
         nodes: [
           {
             id: "cash-stash",

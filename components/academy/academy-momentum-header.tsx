@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
-  STATUS_BANNER_ITEM_CLASS,
   StatusBannerLayout,
 } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
@@ -15,7 +15,9 @@ type AcademyMomentumHeaderProps = {
   xp: number;
   dayStreak: number;
   skillsHasAttention?: boolean;
+  showSkillsCupIntro?: boolean;
   onSkillsClick: () => void;
+  onSkillsIntroSeen?: () => void;
   onStreakClick: () => void;
   onXpClick: () => void;
 };
@@ -25,12 +27,28 @@ export function AcademyMomentumHeader({
   xp,
   dayStreak,
   skillsHasAttention = false,
+  showSkillsCupIntro = false,
   onSkillsClick,
+  onSkillsIntroSeen,
   onStreakClick,
   onXpClick,
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
+  const [tipVisible, setTipVisible] = useState(false);
+
+  useEffect(() => {
+    if (!showSkillsCupIntro) {
+      setTipVisible(false);
+      return;
+    }
+    setTipVisible(true);
+    const hide = window.setTimeout(() => {
+      setTipVisible(false);
+      onSkillsIntroSeen?.();
+    }, 7000);
+    return () => window.clearTimeout(hide);
+  }, [showSkillsCupIntro, onSkillsIntroSeen]);
 
   return (
     <StatusBannerLayout
@@ -68,31 +86,42 @@ export function AcademyMomentumHeader({
             ariaLabel={`${dayStreak} ${streakCopy.label}`}
             title={streakCopy.label}
           />
-          <button
-            type="button"
-            onClick={onSkillsClick}
-            aria-label={
-              skillsHasAttention
-                ? "Open skills — new medal earned"
-                : "Open skills"
-            }
-            className={cn(
-              STATUS_BANNER_ITEM_CLASS,
-              "relative transition-opacity hover:opacity-70 active:opacity-55",
-              skillsHasAttention &&
-                "text-[#FFA503] drop-shadow-[0_0_6px_rgba(255,165,3,0.95)]",
-            )}
-          >
-            <AchievementsIcon
+          <div className="relative z-raised flex h-full items-center">
+            <button
+              type="button"
+              onClick={onSkillsClick}
+              aria-label={
+                skillsHasAttention
+                  ? "Open skills cabinet. New medal earned."
+                  : "Open skills cabinet"
+              }
+              title={journeyCopy.skillsCupLabel}
               className={cn(
-                "size-5 shrink-0",
-                skillsHasAttention ? "text-[#FFA503]" : "text-[#031F82]",
+                "relative inline-flex size-8 shrink-0 items-center justify-center rounded-full",
+                "bg-[#FFA503] text-[#031F82] shadow-md",
+                "transition-[filter,transform] hover:brightness-[1.05] active:scale-95",
+                showSkillsCupIntro && "animate-skills-cup-pulse",
               )}
-            />
-            {skillsHasAttention ? (
-              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#FFA503] ring-2 ring-white" />
+            >
+              <AchievementsIcon className="size-5" />
+              {skillsHasAttention ? (
+                <span
+                  className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-[#031F82] ring-2 ring-white"
+                  aria-hidden
+                />
+              ) : null}
+            </button>
+            {tipVisible ? (
+              <div
+                role="status"
+                className="absolute right-0 top-[calc(100%+0.4rem)] w-44 rounded-xl bg-[#031F82] px-3 py-2 text-left shadow-md"
+              >
+                <p className="font-heading text-xs font-bold leading-snug text-white">
+                  {journeyCopy.skillsCupTip}
+                </p>
+              </div>
             ) : null}
-          </button>
+          </div>
         </>
       }
     />

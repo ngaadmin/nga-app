@@ -57,6 +57,7 @@
 
   --animate-lesson-shake: lesson-choice-shake 0.45s ease-in-out;
   --animate-academy-active-pulse: academy-active-pulse 2s ease-in-out infinite;
+  --animate-skills-cup-pulse: skills-cup-pulse 1.15s ease-out 1;
 }
 
 @layer components {
@@ -299,6 +300,18 @@
     50% {
       box-shadow: 0 0 0 14px rgb(255 165 3 / 0);
       opacity: 0.85;
+    }
+  }
+
+  @keyframes skills-cup-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 4px 10px rgb(200 130 2 / 0.35);
+    }
+    35% {
+      transform: scale(1.14);
+      box-shadow: 0 0 0 10px rgb(255 165 3 / 0);
     }
   }
 

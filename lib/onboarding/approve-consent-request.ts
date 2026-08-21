@@ -264,56 +264,63 @@ export async function listPendingConsentRequestsForParent(): Promise<
     };
   }
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id, account_role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const parentEmail = user.email?.trim().toLowerCase() ?? "";
+  const [profileResult, byParentId, emailQuery] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("id, account_role")
+      .eq("id", user.id)
+      .maybeSingle(),
+    admin
+      .from("consent_requests")
+      .select("id, kind, child_id, parent_email, expires_at, status, parent_id")
+      .eq("status", "pending")
+      .eq("parent_id", user.id)
+      .gt("expires_at", new Date().toISOString()),
+    parentEmail
+      ? admin
+          .from("consent_requests")
+          .select("id, kind, child_id, parent_email, expires_at, status, parent_id")
+          .eq("status", "pending")
+          .eq("parent_email", parentEmail)
+          .gt("expires_at", new Date().toISOString())
+      : Promise.resolve({ data: [] as never[], error: null }),
+  ]);
 
-  if (profile?.account_role !== "parent_master") {
+  if (profileResult.data?.account_role !== "parent_master") {
     return { ok: false, error: "Only a parent master can see pending requests." };
   }
 
-  const parentEmail = user.email?.trim().toLowerCase() ?? "";
-  const { data: byParentId, error: parentIdError } = await admin
-    .from("consent_requests")
-    .select("id, kind, child_id, parent_email, expires_at, status, parent_id")
-    .eq("status", "pending")
-    .eq("parent_id", user.id)
-    .gt("expires_at", new Date().toISOString());
-
-  const emailQuery = parentEmail
-    ? await admin
-        .from("consent_requests")
-        .select("id, kind, child_id, parent_email, expires_at, status, parent_id")
-        .eq("status", "pending")
-        .eq("parent_email", parentEmail)
-        .gt("expires_at", new Date().toISOString())
-    : { data: [] as typeof byParentId, error: null };
-
-  if (parentIdError || emailQuery.error) {
+  if (byParentId.error || emailQuery.error) {
     return {
       ok: false,
       error:
-        parentIdError?.message ||
+        byParentId.error?.message ||
         emailQuery.error?.message ||
         "Could not load pending requests.",
     };
   }
 
-  const rowsById = new Map<string, NonNullable<typeof byParentId>[number]>();
-  for (const row of [...(byParentId ?? []), ...(emailQuery.data ?? [])]) {
+  const rowsById = new Map<string, NonNullable<typeof byParentId.data>[number]>();
+  for (const row of [...(byParentId.data ?? []), ...(emailQuery.data ?? [])]) {
     rowsById.set(row.id, row);
   }
   const rows = [...rowsById.values()];
+  const childIds = [...new Set(rows.map((row) => row.child_id).filter(Boolean))];
+  const { data: childRows } = childIds.length
+    ? await admin
+        .from("profiles")
+        .select("id, username, birth_year")
+        .in("id", childIds)
+    : { data: [] as { id: string; username: string | null; birth_year: number | null }[] };
+
+  const childrenById = new Map(
+    (childRows ?? []).map((child) => [child.id, child] as const),
+  );
 
   const requests: PendingConsentRequestView[] = [];
-  for (const row of rows ?? []) {
-    const { data: child } = await admin
-      .from("profiles")
-      .select("username, birth_year")
-      .eq("id", row.child_id)
-      .maybeSingle();
+  for (const row of rows) {
+    const child = childrenById.get(row.child_id);
     if (!child?.username) continue;
     requests.push({
       requestId: row.id,

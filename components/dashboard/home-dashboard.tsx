@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
@@ -57,14 +57,31 @@ type SettingsRowProps = {
   icon: ComponentType<{ className?: string }>;
   label: string;
   onClick?: () => void;
+  busy?: boolean;
+  disabled?: boolean;
 };
 
-function SettingsRow({ icon: Icon, label, onClick }: SettingsRowProps) {
+function SettingsRow({
+  icon: Icon,
+  label,
+  onClick,
+  busy = false,
+  disabled = false,
+}: SettingsRowProps) {
+  const isDisabled = disabled || busy;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 py-3.5 text-left transition-colors hover:bg-[#BDE9FB]/15"
+      disabled={isDisabled}
+      aria-busy={busy || undefined}
+      className={cn(
+        "flex w-full items-center gap-3 py-3.5 text-left transition-colors",
+        isDisabled
+          ? "cursor-not-allowed bg-[#BDE9FB]/25 opacity-70"
+          : "hover:bg-[#BDE9FB]/15 active:bg-[#BDE9FB]/25",
+      )}
     >
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
         <Icon className="size-4" />
@@ -481,6 +498,8 @@ export function HomeDashboard() {
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const loggingOutRef = useRef(false);
 
   const simulatedParentEmail = useMemo(
     () => email ?? resolveSimulatedParentEmail(username),
@@ -488,9 +507,18 @@ export function HomeDashboard() {
   );
 
   async function handleLogOut() {
-    await signOutApp();
-    router.replace(ONBOARDING_ENTRY_PATH);
-    router.refresh();
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
+    setIsLoggingOut(true);
+
+    try {
+      await signOutApp();
+      router.replace(ONBOARDING_ENTRY_PATH);
+      router.refresh();
+    } catch {
+      loggingOutRef.current = false;
+      setIsLoggingOut(false);
+    }
   }
 
   return (
@@ -532,8 +560,11 @@ export function HomeDashboard() {
           />
           <SettingsRow
             icon={LogOutIcon}
-            label={copy.account.logOut}
-            onClick={handleLogOut}
+            label={isLoggingOut ? "Signing out…" : copy.account.logOut}
+            onClick={() => {
+              void handleLogOut();
+            }}
+            busy={isLoggingOut}
           />
         </nav>
 

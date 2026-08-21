@@ -70,17 +70,21 @@ export function ParentFirstWelcomeModal() {
           >
             {copy.heading}
           </h2>
-          <p className="font-sans text-sm font-semibold leading-snug text-nga-primary sm:text-base">
-            {copy.ready}
+          <p
+            id="parent-first-welcome-body"
+            className="font-sans text-sm leading-snug text-nga-ink sm:text-base"
+          >
+            {copy.intro}
           </p>
         </div>
-        <div
-          id="parent-first-welcome-body"
-          className="space-y-2 font-sans text-sm leading-relaxed text-nga-ink sm:text-base"
-        >
-          <p>{copy.follow}</p>
-          <p>{copy.habits}</p>
-        </div>
+        <ul className="list-disc space-y-1.5 pl-5 text-left font-sans text-sm leading-snug text-nga-ink sm:text-base">
+          {copy.points.map((point) => (
+            <li key={point}>{point}</li>
+          ))}
+        </ul>
+        <p className="font-sans text-xs leading-snug text-nga-slate">
+          {copy.disclaimer}
+        </p>
         <Button type="button" variant="cta" fullWidth onClick={continueIntoApp}>
           {copy.cta}
         </Button>

@@ -235,35 +235,31 @@ export function buildExplorerParentEmail(
   const username = data.username.trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
-  const learningPath = "Explorer - ages 10-12";
   const safeName = escapeHtml(username);
-  const safePath = escapeHtml(learningPath);
-  const safePrivacy = escapeHtml(PRIVACY_POLICY_URL);
 
-  const subject =
-    "Action required: A parent/guardian needs to approve this NextGenAchiever$ profile";
-  const preheader = "Approve this Explorer profile so their progress can be saved.";
-  const header = "A parent/guardian needs to approve this";
+  const subject = `Your child ${username} wants to build money skills - approval needed`;
+  const preheader =
+    "One quick approval saves their progress and opens your parent view";
+  const header = "Their journey to financial freedom starts here";
 
   const text = [
     "Hi there,",
     "",
-    `${username} wants to save an Explorer profile on NextGenAchiever$.`,
+    `${username} wants to save their progress on NextGenAchiever$.`,
     "",
-    "NextGenAchiever$ turns screen time into money sense. It is an educational tool - not a financial product. No real-money transactions, live bank links, or hidden micro-purchases.",
+    "It's a free app that turns screen time into money sense (but don't worry, no real cash or bank accounts involved).",
     "",
-    `Profile name: ${username}`,
-    `Learning path: ${learningPath}`,
+    "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
-    "A parent/guardian needs to approve this before we can save their progress.",
+    "Your child has chosen the Explorer track, for kids aged 10-12. And to make their profile official, we need a parent/guardian's approval.",
     "",
-    `APPROVE PROFILE: ${approveUrl}`,
+    `Approve & create account: ${approveUrl}`,
     "",
-    "After you approve, you can follow their progress and delete the account at any time. We do not sell or share your child's information with third parties for advertising.",
+    "Create your parent account to follow what they learn and achieve. You can even set an exchange rate so the points they earn can turn into real pocket money at home.",
     "",
-    `Privacy Policy: ${PRIVACY_POLICY_URL}`,
+    "If you didn't expect this, you can ignore it. The approval link expires and no account is created without you.",
     "",
-    `If you did not request this, ignore this email or contact ${SUPPORT_EMAIL}.`,
+    "Here's to them owning their future,",
     "",
     "The Team at NextGenAchiever$",
   ].join("\n");
@@ -274,35 +270,35 @@ export function buildExplorerParentEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        <strong>${safeName}</strong> wants to save an Explorer profile on NextGenAchiever$.
+        ${safeName} wants to save their progress on NextGenAchiever$.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ <strong>turns screen time into money sense</strong>. It is an educational
-        tool - not a financial product. No real-money transactions, live bank links, or hidden
-        micro-purchases.
+        It&apos;s a free app that <strong>turns screen time into money sense</strong>
+        (but don&apos;t worry, no real cash or bank accounts involved).
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Did you know? Kids who learn to save and grow money in their early teens can
+        end up $100,000s ahead of peers who start later, by middle age.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your child has chosen the Explorer track, for kids aged 10-12. And to make
+        their profile official, we need a parent/guardian&apos;s approval.
+      </p>
+      ${ctaButton("Approve & create account", approveUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        Create your parent account to follow what they learn and achieve. You can even
+        set an exchange rate so the points they earn can turn into real pocket money
+        at home.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        If you didn&apos;t expect this, you can ignore it. The approval link expires
+        and no account is created without you.
       </p>
       <p style="margin:0 0 8px;font-size:16px;">
-        <strong>Profile name: ${safeName}</strong>
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        <strong>Learning path: ${safePath}</strong>
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        A parent/guardian needs to approve this before we can save their progress.
-      </p>
-      ${ctaButton("APPROVE PROFILE", approveUrl)}
-      <p style="margin:0 0 16px;font-size:16px;">
-        After you approve, you can follow their progress and delete the account at any time.
-        We do not sell or share your child&apos;s information with third parties for advertising.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        <a href="${safePrivacy}" style="color:#0CC1E0;font-weight:700;">Privacy Policy</a>
-      </p>
-      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        If you did not request this, ignore this email or contact ${escapeHtml(SUPPORT_EMAIL)}.
+        Here&apos;s to them owning their future,
       </p>
       ${pennyIllustration(appUrl)}
-      <p style="margin:24px 0 0;font-size:16px;">
+      <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
     `,

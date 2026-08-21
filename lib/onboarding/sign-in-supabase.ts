@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
+import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import type { LearnerAccountSnapshot } from "@/lib/onboarding/learner-account";
 import { loadLearnerProgressByUserId } from "@/lib/onboarding/learner-progress";
 
@@ -29,17 +30,31 @@ export async function signInSupabaseAccount(input: {
 
   let authEmail: string | null = null;
   let userId: string | null = null;
+  let identifierKind: "email" | "username" = "username";
 
   if (EMAIL_PATTERN.test(identifier.toLowerCase())) {
+    identifierKind = "email";
     authEmail = identifier.toLowerCase();
+    userId = await findAuthUserIdByEmail(authEmail);
+    if (userId) {
+      await confirmChildAuthEmailIfNeeded(userId);
+    }
   } else {
     const resolved = await resolveAuthEmailByUsername(identifier);
     if (!resolved) {
+      console.info("[sign-in] username did not resolve to an auth user");
       return { success: false, error: SIGN_IN_MISMATCH_ERROR };
     }
     authEmail = resolved.email;
     userId = resolved.userId;
+    await confirmChildAuthEmailIfNeeded(userId);
   }
+
+  console.info("[sign-in] resolved auth user", {
+    userId,
+    identifierKind,
+    placeholderEmail: isPlaceholderAuthEmail(authEmail),
+  });
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -49,10 +64,20 @@ export async function signInSupabaseAccount(input: {
 
   if (error || !data.user) {
     console.error("[sign-in] Supabase Auth rejected sign-in", {
+      userId,
+      authUserId: data.user?.id ?? null,
+      idsMatch: Boolean(userId) && data.user?.id === userId,
       code: error?.code ?? null,
       message: error?.message ?? "no user",
     });
     return { success: false, error: SIGN_IN_MISMATCH_ERROR };
+  }
+
+  if (userId && data.user.id !== userId) {
+    console.error("[sign-in] resolved user id differs from Auth session", {
+      resolvedUserId: userId,
+      authUserId: data.user.id,
+    });
   }
 
   const account = await loadLearnerAccountById(
@@ -70,22 +95,72 @@ export async function signInSupabaseAccount(input: {
   return { success: true, account };
 }
 
-async function resolveAuthEmailByUsername(
+export async function resolveAuthEmailByUsername(
   username: string,
 ): Promise<{ userId: string; email: string } | null> {
   const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id")
-    .ilike("username", username.trim())
-    .maybeSingle();
-
+  const profile = await loadProfileByUsername(admin, username);
   if (!profile?.id) return null;
 
   const { data, error } = await admin.auth.admin.getUserById(profile.id);
   const email = data.user?.email?.trim();
   if (error || !email) return null;
   return { userId: profile.id, email };
+}
+
+function escapeIlikeExact(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+export async function loadProfileByUsername(
+  admin: ReturnType<typeof createAdminClient>,
+  username: string,
+): Promise<{
+  id: string;
+  username: string | null;
+  account_role: string | null;
+} | null> {
+  const trimmed = username.trim();
+  if (!trimmed) return null;
+
+  const exact = await admin
+    .from("profiles")
+    .select("id, username, account_role")
+    .eq("username", trimmed)
+    .maybeSingle();
+  if (exact.data?.id) return exact.data;
+
+  const { data } = await admin
+    .from("profiles")
+    .select("id, username, account_role")
+    .ilike("username", escapeIlikeExact(trimmed))
+    .maybeSingle();
+  return data?.id ? data : null;
+}
+
+async function confirmChildAuthEmailIfNeeded(userId: string): Promise<void> {
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("account_role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.account_role !== "child") return;
+
+  const { data } = await admin.auth.admin.getUserById(userId);
+  if (!data.user?.email || data.user.email_confirmed_at) return;
+
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    email_confirm: true,
+  });
+  if (error) {
+    console.error("[sign-in] could not confirm learner email", {
+      userId,
+      message: error.message,
+    });
+    return;
+  }
+  console.info("[sign-in] confirmed learner email for sign-in", { userId });
 }
 
 export async function loadLearnerAccountById(

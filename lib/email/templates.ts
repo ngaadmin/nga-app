@@ -495,22 +495,24 @@ export function buildPathfinderWelcomeEmail(
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
-  const subject = `Welcome to NextGenAchiever$, ${username}!`;
-  const preheader = "Your Pathfinder account is ready - jump into Academy.";
-  const header = "Welcome to NextGenAchiever$!";
+  const subject = `Welcome to NextGenAchiever$, ${username}`;
+  const preheader = "Your Pathfinder account is ready. Jump into Academy.";
+  const header = "You're in";
 
   const text = [
-    `Hey ${username},`,
+    `Hi ${username},`,
     "",
-    "Your Pathfinder account is ready. Jump in, complete modules, try the money tools, and manage your (virtual) money in the Vault.",
+    "Congratulations! You're officially on your way to financial independence.",
     "",
-    "NextGenAchiever$ is an educational tool - not a financial product. No real-money transactions, live bank links, or hidden micro-purchases.",
+    "Did you know? Teens who build money skills early can end up $100,000s ahead of peers who start later.",
     "",
-    "You're on the Pathfinder track (ages 13-15). Let's go!",
+    "Get smart with money in the Academy, start your own business in days with Launchpad, or beat your friends in the monthly challenges.",
+    "",
+    "And yes, you can even negotiate with your parents to get paid for the points you earn in the app.",
+    "",
+    "Let's go!",
     "",
     `Launch Academy: ${academyUrl}`,
-    "",
-    `If you did not request this account, ignore this email or contact ${SUPPORT_EMAIL}.`,
     "",
     "The Team at NextGenAchiever$",
   ].join("\n");
@@ -520,24 +522,25 @@ export function buildPathfinderWelcomeEmail(
     preheader,
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">
-        Hey <strong>${escapeHtml(username)}</strong>,
+        Hi ${escapeHtml(username)},
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your Pathfinder account is ready. Jump in, complete modules, try the money tools, and
-        manage your (virtual) money in the Vault.
+        Congratulations! You&apos;re officially on your way to financial independence.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ is an educational tool - not a financial product. No real-money
-        transactions, live bank links, or hidden micro-purchases.
+        Did you know? Teens who build money skills early can end up $100,000s ahead of
+        peers who start later.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        You&apos;re on the Pathfinder track (ages 13-15). Let&apos;s go!
+        Get smart with money in the Academy, start your own business in days with Launchpad,
+        or beat your friends in the monthly challenges.
       </p>
-      ${ctaButton("LAUNCH ACADEMY", academyUrl)}
-      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        If you did not request this account, ignore this email or contact
-        ${escapeHtml(SUPPORT_EMAIL)}.
+      <p style="margin:0 0 16px;font-size:16px;">
+        And yes, you can even negotiate with your parents to get paid for the points you
+        earn in the app.
       </p>
+      <p style="margin:0 0 16px;font-size:16px;">Let&apos;s go!</p>
+      ${ctaButton("Launch Academy", academyUrl)}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>

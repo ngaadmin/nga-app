@@ -63,10 +63,24 @@ export async function completePasswordReset(
 
   try {
     const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("id, username, account_role")
+      .eq("id", claims.userId)
+      .maybeSingle();
+
+    console.info("[password-reset] target auth user", {
+      userId: claims.userId,
+      profileId: profile?.id ?? null,
+      idsMatch: profile?.id === claims.userId,
+      role: profile?.account_role ?? null,
+    });
+
     const { data, error } = await admin.auth.admin.updateUserById(
       claims.userId,
       {
         password: trimmedPassword,
+        email_confirm: true,
         user_metadata: { mustChangePassword: false },
       },
     );
@@ -80,6 +94,11 @@ export async function completePasswordReset(
         error: "We could not update this password. Try again.",
       };
     }
+
+    console.info("[password-reset] updated auth user", {
+      userId: data.user.id,
+      confirmed: Boolean(data.user.email_confirmed_at),
+    });
   } catch (error) {
     console.error("[password-reset] Supabase Auth update threw", {
       userId: claims.userId,

@@ -122,17 +122,6 @@ async function dispatchOnboardingEmails(
   }
 
   if (cohort === "pathfinder" && session.accountStatus === "ACTIVE") {
-    const learnerEmail = (session.learnerEmail ?? session.email)
-      ?.trim()
-      .toLowerCase();
-    if (learnerEmail) {
-      void requestOnboardingEmailSend({
-        type: "PATHFINDER_WELCOME",
-        recipientEmail: learnerEmail,
-        data: { username },
-      });
-    }
-
     const parentEmail = session.parentEmail?.trim().toLowerCase();
     if (!parentEmail) return;
 
@@ -165,16 +154,6 @@ async function dispatchOnboardingEmails(
       });
     })();
     return;
-  }
-
-  if (cohort === "maverick" && session.accountStatus === "ACTIVE") {
-    const learnerEmail = session.learnerEmail ?? session.email;
-    if (!learnerEmail) return;
-    void requestOnboardingEmailSend({
-      type: "MAVERICK_WELCOME",
-      recipientEmail: learnerEmail,
-      data: { username },
-    });
   }
 }
 

@@ -12,6 +12,7 @@ import {
 import { getDefaultAppUrl } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
+import { loadProfileByUsername } from "@/lib/onboarding/sign-in-supabase";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
 export type PasswordRecoveryFailureReason =
@@ -128,6 +129,11 @@ export async function requestHouseholdPasswordRecovery(input: {
     if (!resolved) {
       return { accepted: true, recipientEmail: requestedEmail ?? "" };
     }
+
+    console.info("[password-recovery] reset target", {
+      userId: resolved.target.userId,
+      kind: resolved.target.kind,
+    });
 
     const createdAt = new Date().toISOString();
     let token: string;
@@ -393,19 +399,6 @@ type ProfileRow = {
   username: string | null;
   account_role: string | null;
 };
-
-async function loadProfileByUsername(
-  admin: AdminClient,
-  username: string,
-): Promise<ProfileRow | null> {
-  const { data } = await admin
-    .from("profiles")
-    .select("id, username, account_role")
-    .eq("username", username)
-    .maybeSingle();
-  if (!data?.id) return null;
-  return data;
-}
 
 async function loadProfileById(
   admin: AdminClient,

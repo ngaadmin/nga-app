@@ -155,7 +155,13 @@ export async function createSupabaseAccount(
           cohort,
           parentInitiated ? "linked" : "explorer",
         )
-      : await createLearnerAuthUser(learnerEmail!, password);
+      : await createLearnerAuthUser(
+          admin,
+          learnerEmail!,
+          password,
+          username,
+          cohort,
+        );
 
   if (!created.ok) {
     return { success: false, error: created.error };
@@ -524,28 +530,35 @@ async function linkParentChild(
   return { ok: true };
 }
 
-/** Pathfinder / Maverick — uses the cookie server client so Auth can email them. */
+/** Pathfinder / Maverick — admin create with email already confirmed. */
 async function createLearnerAuthUser(
+  admin: ReturnType<typeof createAdminClient>,
   learnerEmail: string,
   password: string,
+  username: string,
+  cohort: MasteryCohort,
 ): Promise<
   { ok: true; userId: string; authEmail: string } | { ok: false; error: string }
 > {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await admin.auth.admin.createUser({
     email: learnerEmail,
     password,
+    email_confirm: true,
+    user_metadata: { username, cohort },
   });
 
-  if (error) {
-    return { ok: false, error: error.message };
-  }
-
-  // Existing-email anti-enumeration: user row with no identities.
-  if (!data.user || data.user.identities?.length === 0) {
+  if (error || !data.user) {
+    const message = error?.message ?? "";
+    if (/already been registered|already registered|already exists/i.test(message)) {
+      return {
+        ok: false,
+        error:
+          "Could not create this account. Try signing in, or use another email.",
+      };
+    }
     return {
       ok: false,
-      error: "Could not create this account. Try signing in, or use another email.",
+      error: message || "Could not create this account. Please try again.",
     };
   }
 

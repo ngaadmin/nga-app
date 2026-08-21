@@ -541,7 +541,7 @@ export function SignInForm() {
             </Button>
             <button
               type="button"
-              onClick={closeRecovery}
+              onClick={() => closeRecovery()}
               className="w-full rounded-nga-lg px-4 py-2 font-heading text-sm font-bold text-nga-secondary transition-colors hover:bg-nga-mist/40"
             >
               {copy.recoveryCancel}

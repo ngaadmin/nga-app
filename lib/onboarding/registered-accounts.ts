@@ -336,7 +336,7 @@ export async function recoverPassword(input: {
         recipientEmail:
           typeof json.recipientEmail === "string"
             ? json.recipientEmail
-            : recipientEmail,
+            : recipientEmail || "",
       };
     }
 

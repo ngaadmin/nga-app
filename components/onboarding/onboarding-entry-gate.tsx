@@ -11,8 +11,8 @@ const PENNY_HOMEPAGE_SRC = "/assets/illustrations/website/Penny.png";
 export function OnboardingEntryGate() {
   return (
     <section className="flex flex-col py-4 sm:py-6 lg:flex-1 lg:justify-center lg:py-8">
-      <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-8">
-        <div className="order-1 flex items-center justify-center lg:order-none">
+      <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-3">
+        <div className="order-1 flex items-center justify-center lg:order-none lg:justify-end">
           <div className="flex w-full max-w-[15.6rem] items-center justify-center sm:max-w-[18rem] lg:max-w-[19.5rem]">
             <Image
               src={PENNY_HOMEPAGE_SRC}

@@ -59,16 +59,13 @@ export const copyMatrix = {
       logIn: "Log in",
     },
     parentFirstWelcome: {
-      heading: "Your parent account is ready",
-      intro: "Here is what you can do from here:",
-      points: [
-        "Follow your child's progress.",
-        "Jump into the app yourself if you want.",
-        "Build money habits and skills too.",
-      ],
-      disclaimer:
-        "NextGenAchiever$ is an educational tool - not a financial product.",
-      cta: "Open Account settings",
+      heading: "Let's get them started!",
+      ready: "Your NextGenAchiever$ parent account is ready.",
+      follow:
+        "Follow your child's progress. And if you want to, jump in yourself.",
+      habits:
+        "It's never too late to build stronger money habits. Use the same app to sharpen your own skills, explore new ideas, and even test a side hustle if you're curious.",
+      cta: "Open Account Settings",
     },
   },
   dashboard: {

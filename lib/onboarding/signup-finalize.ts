@@ -87,7 +87,7 @@ async function dispatchOnboardingEmails(
     void requestOnboardingEmailSend({
       type: "PARENT_WELCOME",
       recipientEmail: parentEmail,
-      data: { username: parentEmail },
+      data: { username },
     });
     return;
   }

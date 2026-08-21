@@ -62,28 +62,24 @@ export function ParentFirstWelcomeModal() {
       describedBy="parent-first-welcome-body"
       panelClassName="rounded-nga-xl border-2 border-[#BDE9FB] bg-white p-6 shadow-nga-pop"
     >
-      <div className="space-y-5 text-center">
-        <div className="space-y-3">
+      <div className="space-y-4 text-center">
+        <div className="space-y-1.5">
           <h2
             id="parent-first-welcome-heading"
             className="font-heading text-2xl font-extrabold leading-tight text-nga-primary sm:text-[1.75rem]"
           >
             {copy.heading}
           </h2>
-          <p
-            id="parent-first-welcome-body"
-            className="font-sans text-sm leading-relaxed text-nga-ink sm:text-base"
-          >
-            {copy.intro}
+          <p className="font-sans text-sm font-semibold leading-snug text-nga-primary sm:text-base">
+            {copy.ready}
           </p>
-          <ul className="space-y-2 text-left font-sans text-sm leading-relaxed text-nga-ink sm:text-base">
-            {copy.points.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-          <p className="font-sans text-sm leading-relaxed text-nga-slate">
-            {copy.disclaimer}
-          </p>
+        </div>
+        <div
+          id="parent-first-welcome-body"
+          className="space-y-2 font-sans text-sm leading-relaxed text-nga-ink sm:text-base"
+        >
+          <p>{copy.follow}</p>
+          <p>{copy.habits}</p>
         </div>
         <Button type="button" variant="cta" fullWidth onClick={continueIntoApp}>
           {copy.cta}

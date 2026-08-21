@@ -619,26 +619,28 @@ export function buildMaverickWelcomeEmail(
 }
 
 export function buildParentWelcomeEmail(
-  _data: ParentWelcomeEmailData,
+  data: ParentWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
+  const username = data.username.trim();
+  const greeting = username ? `Hi ${username},` : "Hi there,";
   const base = resolveAppUrl(appUrl);
   const accountUrl = `${base}/dashboard/settings/account`;
 
-  const subject = "Your NextGenAchiever$ parent account is ready";
-  const preheader = "Add a profile, follow progress, and manage the household.";
-  const header = "Your parent account is ready";
+  const subject = "Welcome to NextGenAchiever$";
+  const preheader = "The road to financial freedom for your child starts here";
+  const header = "Let's get them started!";
 
   const text = [
-    "Hi there,",
+    greeting,
     "",
-    "Your parent account is ready. You can add profiles, follow progress, and manage the household from Account settings.",
+    "Your NextGenAchiever$ parent account is ready.",
     "",
-    "NextGenAchiever$ is an educational tool - not a financial product. No real-money transactions, live bank links, or hidden micro-purchases.",
+    "Follow your child's progress. And if you want to, jump in yourself.",
     "",
-    `Open Account settings: ${accountUrl}`,
+    "It's never too late to build stronger money habits. Use the same app to sharpen your own skills, explore new ideas, and even test a side hustle if you're curious.",
     "",
-    `If you did not create this account, ignore this email or contact ${SUPPORT_EMAIL}.`,
+    `Open account settings: ${accountUrl}`,
     "",
     "The Team at NextGenAchiever$",
   ].join("\n");
@@ -647,20 +649,21 @@ export function buildParentWelcomeEmail(
     header,
     preheader,
     bodyInner: `
-      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your parent account is ready. You can add profiles, follow progress, and manage the
-        household from Account settings.
+        ${escapeHtml(greeting)}
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ is an educational tool - not a financial product. No real-money
-        transactions, live bank links, or hidden micro-purchases.
+        Your NextGenAchiever$ parent account is ready.
       </p>
-      ${ctaButton("OPEN ACCOUNT SETTINGS", accountUrl)}
-      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        If you did not create this account, ignore this email or contact
-        ${escapeHtml(SUPPORT_EMAIL)}.
+      <p style="margin:0 0 16px;font-size:16px;">
+        Follow your child&apos;s progress. And if you want to, jump in yourself.
       </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        It&apos;s never too late to build stronger money habits. Use the same app to
+        sharpen your own skills, explore new ideas, and even test a side hustle if
+        you&apos;re curious.
+      </p>
+      ${ctaButton("Open account settings", accountUrl)}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>

@@ -82,7 +82,7 @@ function FriendRow({
   );
 }
 
-/** Parked for the future Community / Challenges hub. */
+/** Community leaderboard. Seed rows are sample players, not the user's friends. */
 export function SocialFriendsSection() {
   const { username } = useDashboardUser();
   const { lifetimePointsEarned } = useDashboardWallet();
@@ -120,17 +120,17 @@ export function SocialFriendsSection() {
           id="social-friends-heading"
           className="flex-1 text-left sm:text-left"
         >
-          Friends Leaderboard
+          Community Leaderboard
         </DashboardSectionHeading>
         <button
           type="button"
-          className="shrink-0 rounded-nga-lg border-b-4 border-[#099FB8] bg-[#0CC1E0] px-3 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82] shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2 sm:text-xs"
+          className="shrink-0 rounded-nga-lg border-b-4 border-nga-secondary-shadow bg-nga-secondary px-3 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2 sm:text-xs"
         >
           + Invite Friends
         </button>
       </div>
-      <p className="mt-1 font-sans text-[10px] leading-snug text-[#1E3A5F]/80">
-        Ranked by lifetime coins - cash-outs don&apos;t shrink this score.
+      <p className="mt-1 font-sans text-[10px] leading-snug text-nga-slate/80">
+        Ranked by lifetime coins. Sample players show how the board will look.
       </p>
 
       <ol className="mt-3 space-y-2">

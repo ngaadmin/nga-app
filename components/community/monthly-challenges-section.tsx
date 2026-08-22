@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
+import { useState } from "react";
 import {
   demoMonthlyChallengeAchieverCount,
   isDemoMonthlyChallengeAchieved,
@@ -207,42 +207,59 @@ export function CurrentMonthChallenge() {
   );
 }
 
-/** Community hub — monthly challenge tiles. */
+/** Full 12-month grid, hidden behind All challenges until expanded. */
 export function MonthlyChallengesSection() {
+  const [showAll, setShowAll] = useState(false);
+
   return (
     <section
       aria-labelledby="monthly-challenges-heading"
       className="w-full shrink-0"
     >
-      <DashboardSectionHeading id="monthly-challenges-heading">
+      <h2 id="monthly-challenges-heading" className="sr-only">
         Monthly Challenges
-      </DashboardSectionHeading>
-      <p className="mt-1 text-center font-sans text-[10px] leading-snug text-[#1E3A5F]/80">
-        One seasonal challenge per month. Colour means you crushed it.
-      </p>
-
-      <div
-        aria-label="Monthly challenge badges"
-        className="mt-2 grid grid-cols-4 gap-1.5"
+      </h2>
+      <button
+        type="button"
+        aria-expanded={showAll}
+        aria-controls="all-monthly-challenges"
+        onClick={() => setShowAll((open) => !open)}
+        className="flex w-full items-center justify-between rounded-nga-lg border border-nga-panel bg-nga-surface px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-nga-primary"
       >
-        {MONTHLY_CHALLENGES.map((challenge, index) => {
-          const { isFuture, achieved, achieverCount } =
-            resolveChallengeView(index);
+        All challenges
+        <span aria-hidden className="text-nga-secondary">
+          {showAll ? "-" : "+"}
+        </span>
+      </button>
+      {showAll ? (
+        <div id="all-monthly-challenges">
+          <p className="mt-2 text-center font-sans text-[10px] leading-snug text-nga-slate/80">
+            One seasonal challenge per month. Colour means you crushed it.
+          </p>
+          <div
+            aria-label="Monthly challenge badges"
+            className="mt-2 grid grid-cols-4 gap-1.5"
+          >
+            {MONTHLY_CHALLENGES.map((challenge, index) => {
+              const { isFuture, achieved, achieverCount } =
+                resolveChallengeView(index);
 
-          return (
-            <MonthlyChallengeCard
-              key={challenge.id}
-              monthLabel={challenge.monthLabel}
-              fullMonthName={challenge.fullMonthName}
-              challengeIcon={challenge.challengeIcon}
-              challengeName={challenge.challengeName}
-              achieved={achieved}
-              isFuture={isFuture}
-              achieverCount={achieverCount}
-            />
-          );
-        })}
-      </div>
+              return (
+                <MonthlyChallengeCard
+                  key={challenge.id}
+                  monthLabel={challenge.monthLabel}
+                  fullMonthName={challenge.fullMonthName}
+                  challengeIcon={challenge.challengeIcon}
+                  challengeName={challenge.challengeName}
+                  achieved={achieved}
+                  isFuture={isFuture}
+                  achieverCount={achieverCount}
+                />
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

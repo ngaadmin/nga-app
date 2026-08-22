@@ -54,7 +54,7 @@ function MilestoneTile({
         className={cn(
           "flex size-[4.75rem] shrink-0 items-center justify-center rounded-full text-2xl leading-none sm:size-20",
           achieved
-            ? "bg-nga-panel text-nga-primary"
+            ? "bg-gradient-to-br from-[#EEF9FF] via-nga-panel to-[#8ED4EF] text-nga-primary shadow-[inset_0_3px_5px_rgba(255,255,255,0.85),inset_0_-2px_4px_rgba(12,193,224,0.22),0_3px_8px_rgba(3,31,130,0.16)]"
             : "border-2 border-[#D1D5DB] bg-transparent text-nga-primary/35 grayscale",
         )}
         aria-hidden

@@ -64,17 +64,6 @@ export function InviteFriendsControl() {
     setSending(false);
   }
 
-  useEffect(() => {
-    if (!open || emailNotice !== "Invite sent.") return;
-    const timer = window.setTimeout(() => {
-      setOpen(false);
-      setCopied(false);
-      setEmailNotice(null);
-      setEmailError(null);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [open, emailNotice]);
-
   const landingUrl = inviteLandingUrl();
 
   async function handleCopy() {
@@ -148,21 +137,19 @@ export function InviteFriendsControl() {
       {open ? (
         <div
           id="invite-friends-panel"
-          className="absolute right-0 z-raised mt-2 w-[17.5rem] space-y-3 rounded-2xl border border-nga-panel bg-nga-surface p-3 shadow-nga-card"
+          className="absolute right-0 z-raised mt-2 w-[17.5rem] space-y-3 rounded-2xl border border-nga-panel bg-nga-surface p-3 pt-8 shadow-nga-card"
         >
-          <div className="flex items-start justify-between gap-2">
-            <p className="font-heading text-xs font-extrabold text-nga-primary">
-              Invite a friend
-            </p>
-            <button
-              type="button"
-              onClick={closePanel}
-              className="shrink-0 rounded-md px-1.5 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary hover:bg-nga-mist/80"
-              aria-label="Close"
-            >
-              {emailNotice === "Invite sent." ? "Done" : "X"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={closePanel}
+            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md font-heading text-sm font-extrabold leading-none text-nga-primary hover:bg-nga-mist"
+            aria-label="Close"
+          >
+            X
+          </button>
+          <p className="font-heading text-xs font-extrabold text-nga-primary">
+            Invite a friend
+          </p>
           <div className="flex gap-2">
             <button
               type="button"

@@ -13,7 +13,19 @@ const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 const CURRENT_USER_RANK = 67;
 
-const COMMUNITY_SEED_PLAYERS: readonly Omit<LeaderboardEntry, "isCurrentUser">[] =
+type LeaderboardEntry = {
+  id: string;
+  avatarEmoji: string;
+  username: string;
+  dayStreak: number;
+  lifetimePoints: number;
+  isCurrentUser: boolean;
+  rank: number;
+};
+
+type SeedPlayer = Omit<LeaderboardEntry, "isCurrentUser" | "rank">;
+
+const COMMUNITY_SEED_PLAYERS: readonly SeedPlayer[] =
   [
     {
       id: "seed-1",
@@ -51,16 +63,6 @@ const COMMUNITY_SEED_PLAYERS: readonly Omit<LeaderboardEntry, "isCurrentUser">[]
       lifetimePoints: 2240,
     },
   ];
-
-type LeaderboardEntry = {
-  id: string;
-  avatarEmoji: string;
-  username: string;
-  dayStreak: number;
-  lifetimePoints: number;
-  isCurrentUser?: boolean;
-  rank?: number;
-};
 
 type FriendRowProps = {
   rank: number;
@@ -130,22 +132,26 @@ export function SocialFriendsSection() {
   const { lifetimePointsEarned } = useDashboardWallet();
   const { dayStreak } = DASHBOARD_HOME_PLACEHOLDER_STATE;
 
-  const rankedEntries = useMemo(() => {
-    const currentUser: LeaderboardEntry = {
-      id: "current-user",
-      avatarEmoji: "⭐",
-      username: username === "Guest" ? "You" : username,
-      dayStreak,
-      lifetimePoints: lifetimePointsEarned,
-      isCurrentUser: true,
-    };
-
-    return [
-      ...COMMUNITY_SEED_PLAYERS.map((player, index) => ({
+  const rankedEntries = useMemo((): LeaderboardEntry[] => {
+    const seeds: LeaderboardEntry[] = COMMUNITY_SEED_PLAYERS.map(
+      (player, index) => ({
         ...player,
         rank: index + 1,
-      })),
-      { ...currentUser, rank: CURRENT_USER_RANK },
+        isCurrentUser: false,
+      }),
+    );
+
+    return [
+      ...seeds,
+      {
+        id: "current-user",
+        avatarEmoji: "⭐",
+        username: username === "Guest" ? "You" : username,
+        dayStreak,
+        lifetimePoints: lifetimePointsEarned,
+        isCurrentUser: true,
+        rank: CURRENT_USER_RANK,
+      },
     ];
   }, [dayStreak, lifetimePointsEarned, username]);
 

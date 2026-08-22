@@ -770,8 +770,6 @@ export function buildCredentialRecoveryEmail(
   const base = getDefaultAppUrl();
   const label = data.label.trim();
   const token = data.token.trim();
-  const kind = data.kind === "parent" ? "parent" : "child";
-  const caption = kind === "parent" ? "Parent login" : "Username";
   const resetUrl = `${base}/onboarding/reset-password?token=${encodeURIComponent(token)}`;
   const subject = "Reset your NextGenAchiever$ password";
   const preheader =
@@ -783,10 +781,9 @@ export function buildCredentialRecoveryEmail(
     "Your password is not changed until you open this link and save a new one.",
     "This link resets only that one account.",
     "",
-    `${caption}: ${label}`,
     `Set a new password: ${resetUrl}`,
     "",
-    "If you did not ask for this, you can ignore this email.",
+    "If you don't need this after all, you can ignore it. The link expires on its own.",
     "",
     "The Team at NextGenAchiever$",
   ].join("\n");
@@ -798,18 +795,12 @@ export function buildCredentialRecoveryEmail(
       <p style="margin:0 0 16px;font-size:16px;">
         A password reset was requested for <strong>${escapeHtml(label || "your login")}</strong>.
       </p>
-      <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#5B6B7C;">
-        ${escapeHtml(caption)}
-      </p>
-      <p style="margin:0 0 16px;font-size:18px;font-weight:700;color:#031F82;word-break:break-word;">
-        ${escapeHtml(label)}
-      </p>
       <p style="margin:0 0 16px;font-size:16px;">
         Your current password stays the same until you open this link and save a new one.
       </p>
       ${ctaButton("Set a new password", resetUrl)}
       <p style="margin:16px 0 0;font-size:14px;color:#5B6B7C;">
-        If you did not ask for this, you can ignore this email.
+        If you don&apos;t need this after all, you can ignore it. The link expires on its own.
       </p>
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$

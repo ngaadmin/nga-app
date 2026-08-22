@@ -104,6 +104,11 @@ export function SignInForm() {
     event.preventDefault();
     setRecoveryNotice(null);
 
+    if (recoveryMode === "username" && !recoveryEmail.trim()) {
+      setErrors({ recoveryEmail: "Enter the email for that login." });
+      return;
+    }
+
     if (
       recoveryMode === "credential" &&
       !recoveryEmail.trim() &&
@@ -125,6 +130,7 @@ export function SignInForm() {
             });
 
       if (!result.accepted) {
+        setRecoveryNotice(null);
         setErrors({ recoveryEmail: result.error });
         return;
       }
@@ -134,6 +140,7 @@ export function SignInForm() {
         return;
       }
 
+      setErrors({});
       setRecoveryNotice(copy.recoveryUsernameSuccess);
     } catch {
       setErrors({
@@ -506,7 +513,7 @@ export function SignInForm() {
 
             {recoveryNotice ? (
               <p
-                className="font-sans text-sm font-medium text-nga-primary"
+                className="rounded-nga-lg bg-[#BDE9FB]/40 px-3 py-2 font-sans text-sm font-medium leading-relaxed text-nga-primary"
                 role="status"
               >
                 {recoveryNotice}

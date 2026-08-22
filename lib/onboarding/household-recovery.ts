@@ -205,8 +205,9 @@ export async function requestHouseholdPasswordRecovery(input: {
 }
 
 /**
- * Emails learner usernames linked to this parent/household address.
- * Parents log in with email, so this is for child usernames.
+ * Emails the username(s) linked to this address.
+ * Pathfinder / Maverick: the learner username on that Auth email.
+ * Parent / Explorer household: linked child usernames.
  */
 export async function requestHouseholdUsernameRecovery(
   email: string,
@@ -232,13 +233,47 @@ export async function requestHouseholdUsernameRecovery(
   try {
     admin = createAdminClient();
   } catch {
+    return {
+      accepted: false,
+      error: "Could not send a recovery email. Try again shortly.",
+    };
+  }
+
+  const userId = await findAuthUserIdByEmail(recipientEmail);
+  let ownUsername: string | null = null;
+  let ownRole: string | null = null;
+  if (userId) {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("username, account_role")
+      .eq("id", userId)
+      .maybeSingle();
+    ownUsername = profile?.username?.trim() || null;
+    ownRole = profile?.account_role ?? null;
+  }
+
+  if (ownRole === "child" && ownUsername) {
+    const sendResult = await sendOnboardingEmail({
+      type: "USERNAME_RECOVERY",
+      recipientEmail,
+      data: { username: ownUsername },
+    });
+    if (!sendResult.success) {
+      const classified = classifyResendFailure(
+        sendResult.error || "Email send failed.",
+      );
+      return {
+        accepted: false,
+        reason: classified.reason,
+        error: classified.error,
+      };
+    }
     return { accepted: true, recipientEmail };
   }
 
   const linkedUsernames: string[] = [];
-  const parentId = await findAuthUserIdByEmail(recipientEmail);
-  if (parentId) {
-    const childIds = await listHouseholdChildIds(admin, parentId, recipientEmail);
+  if (userId) {
+    const childIds = await listHouseholdChildIds(admin, userId, recipientEmail);
     for (const childId of childIds) {
       const { data: child } = await admin
         .from("profiles")
@@ -270,7 +305,7 @@ export async function requestHouseholdUsernameRecovery(
     return { accepted: true, recipientEmail };
   }
 
-  await sendOnboardingEmail({
+  const sendResult = await sendOnboardingEmail({
     type: "USERNAME_RECOVERY",
     recipientEmail,
     data: {
@@ -278,6 +313,16 @@ export async function requestHouseholdUsernameRecovery(
       linkedUsernames: unique,
     },
   });
+  if (!sendResult.success) {
+    const classified = classifyResendFailure(
+      sendResult.error || "Email send failed.",
+    );
+    return {
+      accepted: false,
+      reason: classified.reason,
+      error: classified.error,
+    };
+  }
 
   return { accepted: true, recipientEmail };
 }

@@ -316,7 +316,7 @@ export function buildPathfinderParentEmail(
   const claimUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
 
-  const subject = `Your child ${username} wants to build money skills`;
+  const subject = `${username} just started on NextGenAchiever$`;
   const preheader =
     "They're getting started. Create a parent account if you want to follow along.";
   const header = "Their journey to financial freedom starts here";

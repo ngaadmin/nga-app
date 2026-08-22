@@ -56,6 +56,25 @@ export function InviteFriendsControl() {
     );
   }, []);
 
+  function closePanel() {
+    setOpen(false);
+    setCopied(false);
+    setEmailNotice(null);
+    setEmailError(null);
+    setSending(false);
+  }
+
+  useEffect(() => {
+    if (!open || emailNotice !== "Invite sent.") return;
+    const timer = window.setTimeout(() => {
+      setOpen(false);
+      setCopied(false);
+      setEmailNotice(null);
+      setEmailError(null);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [open, emailNotice]);
+
   const landingUrl = inviteLandingUrl();
 
   async function handleCopy() {
@@ -115,7 +134,13 @@ export function InviteFriendsControl() {
         type="button"
         aria-expanded={open}
         aria-controls="invite-friends-panel"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          if (open) {
+            closePanel();
+            return;
+          }
+          setOpen(true);
+        }}
         className="rounded-nga-lg border-b-4 border-nga-secondary-shadow bg-nga-secondary px-3 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2 sm:text-xs"
       >
         + Invite Friends
@@ -125,9 +150,19 @@ export function InviteFriendsControl() {
           id="invite-friends-panel"
           className="absolute right-0 z-raised mt-2 w-[17.5rem] space-y-3 rounded-2xl border border-nga-panel bg-nga-surface p-3 shadow-nga-card"
         >
-          <p className="font-heading text-xs font-extrabold text-nga-primary">
-            Invite a friend
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="font-heading text-xs font-extrabold text-nga-primary">
+              Invite a friend
+            </p>
+            <button
+              type="button"
+              onClick={closePanel}
+              className="shrink-0 rounded-md px-1.5 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary hover:bg-nga-mist/80"
+              aria-label="Close"
+            >
+              {emailNotice === "Invite sent." ? "Done" : "X"}
+            </button>
+          </div>
           <div className="flex gap-2">
             <button
               type="button"

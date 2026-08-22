@@ -1,14 +1,18 @@
 "use client";
 
-import { MonthlyChallengesSection } from "@/components/community/monthly-challenges-section";
+import {
+  CurrentMonthChallenge,
+  MonthlyChallengesSection,
+} from "@/components/community/monthly-challenges-section";
 import { SocialFriendsSection } from "@/components/community/social-friends-section";
 
-/** Community hub: monthly challenges + friends leaderboard. */
+/** Community hub: this month + friends leaderboard, then the 12-month grid. */
 export function CommunityChallengesPanel() {
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col space-y-12 overflow-x-hidden bg-white px-1 py-4 pb-8">
-      <MonthlyChallengesSection />
+    <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col space-y-6 overflow-x-hidden bg-white px-1 py-2 pb-8">
+      <CurrentMonthChallenge />
       <SocialFriendsSection />
+      <MonthlyChallengesSection />
     </div>
   );
 }

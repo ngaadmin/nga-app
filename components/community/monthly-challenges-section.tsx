@@ -9,7 +9,31 @@ import {
 } from "@/lib/dashboard/achievements-state";
 import { cn } from "@/lib/utils/cn";
 
+type ChallengeToneProps = {
+  achieved: boolean;
+  isFuture: boolean;
+};
+
+function statusLabel({ achieved, isFuture }: ChallengeToneProps) {
+  if (achieved) return "Achieved";
+  if (isFuture) return "Upcoming";
+  return "Not Achieved";
+}
+
+function challengeToneClass({ achieved }: ChallengeToneProps) {
+  return achieved
+    ? "bg-[#031F82] text-white shadow-[0_4px_12px_rgba(3,31,130,0.28)]"
+    : "bg-[#E8EEF2] text-[#8FA3B0]";
+}
+
+function iconWellClass({ achieved }: ChallengeToneProps) {
+  return achieved
+    ? "border-b-4 border-[#FFA503] bg-[#0CC1E0] shadow-[0_4px_12px_rgba(12,193,224,0.35)]"
+    : "border-2 border-dashed border-[#C5D0D8] bg-white";
+}
+
 type MonthlyChallengeCardProps = {
+  monthLabel: string;
   fullMonthName: string;
   challengeIcon: string;
   challengeName: string;
@@ -19,6 +43,7 @@ type MonthlyChallengeCardProps = {
 };
 
 function MonthlyChallengeCard({
+  monthLabel,
   fullMonthName,
   challengeIcon,
   challengeName,
@@ -26,39 +51,35 @@ function MonthlyChallengeCard({
   isFuture,
   achieverCount,
 }: MonthlyChallengeCardProps) {
-  const greyed = !achieved;
+  const tone = { achieved, isFuture };
 
   return (
     <article
-      aria-label={`${fullMonthName}: ${challengeName} - ${achieved ? "achieved" : isFuture ? "upcoming" : "not achieved"}`}
+      aria-label={`${fullMonthName}: ${challengeName} - ${statusLabel(tone)}`}
       className={cn(
-        "flex min-h-[8.5rem] flex-col items-center justify-between rounded-2xl px-2 py-3 text-center",
-        achieved
-          ? "bg-[#031F82] text-white shadow-[0_4px_12px_rgba(3,31,130,0.28)]"
-          : "bg-[#E8EEF2] text-[#8FA3B0]",
+        "flex min-h-0 flex-col items-center justify-center rounded-xl px-1 py-1.5 text-center",
+        challengeToneClass(tone),
       )}
     >
       <h3
         className={cn(
-          "w-full font-heading text-[9px] font-extrabold uppercase tracking-wide sm:text-[10px]",
+          "w-full font-heading text-[8px] font-extrabold uppercase tracking-wide",
           achieved ? "text-white/90" : "text-[#8FA3B0]",
         )}
       >
-        {fullMonthName}
+        {monthLabel}
       </h3>
 
       <div
         className={cn(
-          "mt-2 flex size-12 items-center justify-center rounded-full sm:size-14",
-          achieved
-            ? "border-b-4 border-[#FFA503] bg-[#0CC1E0] shadow-[0_4px_12px_rgba(12,193,224,0.35)]"
-            : "border-2 border-dashed border-[#C5D0D8] bg-white",
+          "mt-1 flex size-8 items-center justify-center rounded-full",
+          iconWellClass(tone),
         )}
       >
         <span
           className={cn(
-            "text-xl leading-none sm:text-2xl",
-            greyed && "opacity-55 grayscale",
+            "text-sm leading-none",
+            !achieved && "opacity-55 grayscale",
           )}
           aria-hidden
         >
@@ -68,7 +89,7 @@ function MonthlyChallengeCard({
 
       <p
         className={cn(
-          "mt-2 line-clamp-2 font-heading text-[8px] font-bold leading-tight sm:text-[9px]",
+          "mt-1 line-clamp-2 min-h-[1.6em] font-heading text-[8px] font-bold leading-tight",
           achieved ? "text-white" : "text-[#8FA3B0]",
         )}
       >
@@ -76,21 +97,112 @@ function MonthlyChallengeCard({
       </p>
       <p
         className={cn(
-          "mt-1 font-heading text-[8px] font-bold uppercase tracking-wide",
+          "mt-0.5 font-heading text-[7px] font-bold uppercase tracking-wide",
           achieved ? "text-[#FFA503]" : "text-[#8FA3B0]/80",
         )}
       >
-        {achieved ? "Achieved" : isFuture ? "Upcoming" : "Not Achieved"}
+        {statusLabel(tone)}
       </p>
       <p
         className={cn(
-          "mt-1 font-sans text-[8px] font-medium leading-tight",
+          "mt-0.5 font-sans text-[7px] font-medium leading-tight",
           achieved ? "text-white/75" : "text-[#8FA3B0]/90",
         )}
       >
-        {achieverCount.toLocaleString()} achieved this
+        {achieverCount.toLocaleString()} achieved
       </p>
     </article>
+  );
+}
+
+function resolveChallengeView(monthIndex: number) {
+  const challenge = MONTHLY_CHALLENGES[monthIndex];
+  const isFuture = isFutureMonthlyChallenge(monthIndex);
+  const achieved = !isFuture && isDemoMonthlyChallengeAchieved(monthIndex);
+  return {
+    challenge,
+    isFuture,
+    achieved,
+    achieverCount: demoMonthlyChallengeAchieverCount(monthIndex),
+  };
+}
+
+/** Compact this-month strip so the leaderboard can sit above the 12-month grid. */
+export function CurrentMonthChallenge() {
+  const monthIndex = new Date().getMonth();
+  const { challenge, isFuture, achieved, achieverCount } =
+    resolveChallengeView(monthIndex);
+  const tone = { achieved, isFuture };
+
+  return (
+    <section aria-labelledby="this-month-challenge-heading" className="w-full">
+      <h2
+        id="this-month-challenge-heading"
+        className="font-heading text-xs font-extrabold uppercase tracking-wide text-nga-primary"
+      >
+        This Month
+      </h2>
+      <article
+        aria-label={`${challenge.fullMonthName}: ${challenge.challengeName} - ${statusLabel(tone)}`}
+        className={cn(
+          "mt-2 flex items-center gap-3 rounded-2xl px-3 py-2.5",
+          challengeToneClass(tone),
+        )}
+      >
+        <div
+          className={cn(
+            "flex size-11 shrink-0 items-center justify-center rounded-full",
+            iconWellClass(tone),
+          )}
+        >
+          <span
+            className={cn(
+              "text-xl leading-none",
+              !achieved && "opacity-55 grayscale",
+            )}
+            aria-hidden
+          >
+            {challenge.challengeIcon}
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn(
+              "font-heading text-[10px] font-extrabold uppercase tracking-wide",
+              achieved ? "text-white/90" : "text-[#8FA3B0]",
+            )}
+          >
+            {challenge.fullMonthName}
+          </p>
+          <p
+            className={cn(
+              "mt-0.5 font-heading text-sm font-extrabold leading-tight",
+              achieved ? "text-white" : "text-[#8FA3B0]",
+            )}
+          >
+            {challenge.challengeName}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span
+              className={cn(
+                "font-heading text-[9px] font-bold uppercase tracking-wide",
+                achieved ? "text-[#FFA503]" : "text-[#8FA3B0]/80",
+              )}
+            >
+              {statusLabel(tone)}
+            </span>
+            <span
+              className={cn(
+                "font-sans text-[9px] font-medium",
+                achieved ? "text-white/75" : "text-[#8FA3B0]/90",
+              )}
+            >
+              {achieverCount.toLocaleString()} achieved this
+            </span>
+          </div>
+        </div>
+      </article>
+    </section>
   );
 }
 
@@ -104,28 +216,28 @@ export function MonthlyChallengesSection() {
       <DashboardSectionHeading id="monthly-challenges-heading">
         Monthly Challenges
       </DashboardSectionHeading>
-      <p className="mt-2 text-center font-sans text-[10px] leading-relaxed text-[#1E3A5F]/80">
+      <p className="mt-1 text-center font-sans text-[10px] leading-snug text-[#1E3A5F]/80">
         One seasonal challenge per month. Colour means you crushed it.
       </p>
 
       <div
         aria-label="Monthly challenge badges"
-        className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4"
+        className="mt-2 grid grid-cols-4 gap-1.5"
       >
         {MONTHLY_CHALLENGES.map((challenge, index) => {
-          const isFuture = isFutureMonthlyChallenge(index);
-          const achieved =
-            !isFuture && isDemoMonthlyChallengeAchieved(index);
+          const { isFuture, achieved, achieverCount } =
+            resolveChallengeView(index);
 
           return (
             <MonthlyChallengeCard
               key={challenge.id}
+              monthLabel={challenge.monthLabel}
               fullMonthName={challenge.fullMonthName}
               challengeIcon={challenge.challengeIcon}
               challengeName={challenge.challengeName}
               achieved={achieved}
               isFuture={isFuture}
-              achieverCount={demoMonthlyChallengeAchieverCount(index)}
+              achieverCount={achieverCount}
             />
           );
         })}

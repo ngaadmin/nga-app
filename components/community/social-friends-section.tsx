@@ -41,7 +41,7 @@ function FriendRow({
     <li
       className={cn(
         floatingPanelClass,
-        "flex items-center gap-2 px-2 py-3 sm:gap-3 sm:px-3",
+        "flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3",
         highlight && "ring-2 ring-[#0CC1E0]/30",
       )}
     >
@@ -53,7 +53,7 @@ function FriendRow({
       </span>
 
       <span
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#BDE9FB]/35 text-lg sm:size-11 sm:text-xl"
+        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#BDE9FB]/35 text-base sm:size-9 sm:text-lg"
         aria-hidden
       >
         {avatarEmoji}
@@ -129,11 +129,11 @@ export function SocialFriendsSection() {
           + Invite Friends
         </button>
       </div>
-      <p className="mt-2 font-sans text-[10px] leading-relaxed text-[#1E3A5F]/80">
+      <p className="mt-1 font-sans text-[10px] leading-snug text-[#1E3A5F]/80">
         Ranked by lifetime coins - cash-outs don&apos;t shrink this score.
       </p>
 
-      <ol className="mt-5 space-y-3">
+      <ol className="mt-3 space-y-2">
         {rankedEntries.map((entry, index) => (
           <FriendRow
             key={entry.id}

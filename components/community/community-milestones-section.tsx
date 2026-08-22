@@ -5,35 +5,83 @@ import {
   COMMUNITY_MILESTONES,
   COMMUNITY_MILESTONE_TOTAL,
   evaluateCommunityMilestones,
+  type CommunityMilestoneId,
   type CommunityMilestoneRow,
 } from "@/lib/community/milestones";
 import { cn } from "@/lib/utils/cn";
 
-function MilestoneRow({ label, achieverCount, achieved }: CommunityMilestoneRow) {
+const MILESTONE_TILE: Record<
+  CommunityMilestoneId,
+  { icon: string; shortLabel: string }
+> = {
+  "first-session": { icon: "▶️", shortLabel: "Session" },
+  "first-lesson": { icon: "📖", shortLabel: "Lesson" },
+  "first-savings-goal": { icon: "🎯", shortLabel: "Goal set" },
+  "first-savings-deposit": { icon: "💵", shortLabel: "Deposit" },
+  "first-medal": { icon: "🏅", shortLabel: "Medal" },
+  "opened-launchpad": { icon: "🚀", shortLabel: "Launchpad" },
+  "first-module": { icon: "📦", shortLabel: "Module" },
+  "streak-3": { icon: "🔥", shortLabel: "3-day" },
+  "first-bronze": { icon: "🥉", shortLabel: "Bronze" },
+  "started-business": { icon: "💡", shortLabel: "Business" },
+  "saved-50": { icon: "💰", shortLabel: "$50" },
+  "skills-5": { icon: "⭐", shortLabel: "5 skills" },
+  "streak-7": { icon: "🔥", shortLabel: "7-day" },
+  "module-1": { icon: "1️⃣", shortLabel: "Module 1" },
+  "launchpad-step": { icon: "👟", shortLabel: "First step" },
+  "saved-100": { icon: "💰", shortLabel: "$100" },
+  "saved-250": { icon: "💰", shortLabel: "$250" },
+  "saved-500": { icon: "💰", shortLabel: "$500" },
+  "saved-1000": { icon: "💰", shortLabel: "$1000" },
+  "saved-2500": { icon: "💰", shortLabel: "$2500" },
+};
+
+function MilestoneTile({
+  id,
+  label,
+  achieverCount,
+  achieved,
+}: CommunityMilestoneRow) {
+  const tile = MILESTONE_TILE[id];
+  const caption = `${achieverCount.toLocaleString()} people`;
+
   return (
     <li
+      title={`${label}. ${achieverCount.toLocaleString()} people achieved this`}
+      aria-label={`${label} - ${achieved ? "achieved" : "not achieved"}. ${achieverCount.toLocaleString()} people achieved this`}
       className={cn(
-        "rounded-xl px-3 py-2",
+        "flex min-h-0 flex-col items-center justify-center rounded-xl px-1 py-1.5 text-center",
         achieved
-          ? "border border-nga-secondary/40 bg-nga-panel/35 text-nga-primary"
-          : "border border-dashed border-nga-panel/70 bg-nga-surface text-nga-primary/40",
+          ? "border border-nga-secondary/40 bg-nga-panel/35"
+          : "border border-dashed border-nga-panel/70 bg-nga-surface",
       )}
     >
+      <span
+        className={cn(
+          "flex size-8 items-center justify-center rounded-full text-base leading-none",
+          achieved
+            ? "bg-nga-secondary/20"
+            : "bg-white text-nga-primary/40 opacity-55 grayscale",
+        )}
+        aria-hidden
+      >
+        {tile.icon}
+      </span>
       <p
         className={cn(
-          "font-heading text-xs font-extrabold leading-snug",
+          "mt-1 line-clamp-2 font-heading text-[8px] font-bold leading-tight",
           achieved ? "text-nga-primary" : "text-nga-primary/40",
         )}
       >
-        {label}
+        {tile.shortLabel}
       </p>
       <p
         className={cn(
-          "mt-0.5 font-sans text-[10px] font-medium",
-          achieved ? "text-nga-primary/60" : "text-nga-primary/35",
+          "mt-0.5 font-sans text-[7px] font-medium leading-tight",
+          achieved ? "text-nga-primary/55" : "text-nga-primary/30",
         )}
       >
-        {achieverCount.toLocaleString()} people achieved this
+        {caption}
       </p>
     </li>
   );
@@ -77,9 +125,12 @@ export function CommunityMilestonesSection() {
         </span>
       </button>
       {open ? (
-        <ol id="community-milestones-list" className="mt-2 space-y-1.5">
+        <ol
+          id="community-milestones-list"
+          className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-4"
+        >
           {displayRows.map((row) => (
-            <MilestoneRow key={row.id} {...row} />
+            <MilestoneTile key={row.id} {...row} />
           ))}
         </ol>
       ) : null}

@@ -11,114 +11,68 @@ export type MedalDisplayStatus =
   | "silver"
   | "gold";
 
-export const MEDAL_ILLUSTRATION_IDS = [
-  "medal-skill1-unlocked",
-  "medal-skill1-bronze",
-  "medal-skill1-silver",
-  "medal-skill1-gold",
-  "medal-skill2-unlocked",
-  "medal-skill2-bronze",
-  "medal-skill2-silver",
-  "medal-skill2-gold",
-  "medal-skill5-unlocked",
-  "medal-skill5-bronze",
-  "medal-skill5-silver",
-  "medal-skill5-gold",
-  "medal-skill6-unlock",
-  "medal-skill6-bronze",
-  "medal-skill6-silver",
-  "medal-skill6-gold",
-  "medal-skill7-white",
-  "medal-skill7-bronze",
-  "medal-skill7-silver",
-  "medal-skill7-gold",
-  "medal-skill16-unlocked",
-  "medal-skill16-bronze",
-  "medal-skill16-silver",
-  "medal-skill16-gold",
-] as const;
+export type MedalDiskStatus =
+  | "unlocked"
+  | "unlock"
+  | "white"
+  | "bronze"
+  | "silver"
+  | "gold";
 
-export type MedalIllustrationId = (typeof MEDAL_ILLUSTRATION_IDS)[number];
+export type MedalIllustrationId = `medal-skill${number}-${MedalDiskStatus}`;
 
 const MEDALS_BASE = "/assets/illustrations/medal";
 
-export const MEDAL_ILLUSTRATION_REGISTRY: Record<MedalIllustrationId, string> = {
-  "medal-skill1-unlocked": `${MEDALS_BASE}/medal-skill1-unlocked.webp`,
-  "medal-skill1-bronze": `${MEDALS_BASE}/medal-skill1-bronze.webp`,
-  "medal-skill1-silver": `${MEDALS_BASE}/medal-skill1-silver.webp`,
-  "medal-skill1-gold": `${MEDALS_BASE}/medal-skill1-gold.webp`,
-  "medal-skill2-unlocked": `${MEDALS_BASE}/medal-skill2-unlocked.webp`,
-  "medal-skill2-bronze": `${MEDALS_BASE}/medal-skill2-bronze.webp`,
-  "medal-skill2-silver": `${MEDALS_BASE}/medal-skill2-silver.webp`,
-  "medal-skill2-gold": `${MEDALS_BASE}/medal-skill2-gold.webp`,
-  "medal-skill5-unlocked": `${MEDALS_BASE}/medal-skill5-unlocked.webp`,
-  "medal-skill5-bronze": `${MEDALS_BASE}/medal-skill5-bronze.webp`,
-  "medal-skill5-silver": `${MEDALS_BASE}/medal-skill5-silver.webp`,
-  "medal-skill5-gold": `${MEDALS_BASE}/medal-skill5-gold.webp`,
-  "medal-skill6-unlock": `${MEDALS_BASE}/medal-skill6-unlock.webp`,
-  "medal-skill6-bronze": `${MEDALS_BASE}/medal-skill6-bronze.webp`,
-  "medal-skill6-silver": `${MEDALS_BASE}/medal-skill6-silver.webp`,
-  "medal-skill6-gold": `${MEDALS_BASE}/medal-skill6-gold.webp`,
-  "medal-skill7-white": `${MEDALS_BASE}/medal-skill7-white.webp`,
-  "medal-skill7-bronze": `${MEDALS_BASE}/medal-skill7-bronze.webp`,
-  "medal-skill7-silver": `${MEDALS_BASE}/medal-skill7-silver.webp`,
-  "medal-skill7-gold": `${MEDALS_BASE}/medal-skill7-gold.webp`,
-  "medal-skill16-unlocked": `${MEDALS_BASE}/medal-skill16-unlocked.webp`,
-  "medal-skill16-bronze": `${MEDALS_BASE}/medal-skill16-bronze.webp`,
-  "medal-skill16-silver": `${MEDALS_BASE}/medal-skill16-silver.webp`,
-  "medal-skill16-gold": `${MEDALS_BASE}/medal-skill16-gold.webp`,
+/** Disk name for the unlocked / white medal when it is not `unlocked`. */
+const UNLOCKED_DISK_STATUS: Partial<Record<number, "unlock" | "white">> = {
+  6: "unlock",
+  7: "white",
 };
 
+const TIER_STATUSES = ["unlocked", "bronze", "silver", "gold"] as const;
+
 /** Skill numbers that currently have at least one medal file. */
-export const SKILL_NUMBERS_WITH_MEDAL_ASSETS = [1, 2, 5, 6, 7, 16] as const;
+export const SKILL_NUMBERS_WITH_MEDAL_ASSETS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+] as const;
+
+function medalIllustrationId(
+  skillNumber: number,
+  status: (typeof TIER_STATUSES)[number],
+): MedalIllustrationId {
+  const diskStatus =
+    status === "unlocked"
+      ? (UNLOCKED_DISK_STATUS[skillNumber] ?? "unlocked")
+      : status;
+  return `medal-skill${skillNumber}-${diskStatus}`;
+}
+
+export const MEDAL_ILLUSTRATION_IDS = SKILL_NUMBERS_WITH_MEDAL_ASSETS.flatMap(
+  (skillNumber) =>
+    TIER_STATUSES.map((status) => medalIllustrationId(skillNumber, status)),
+) as readonly MedalIllustrationId[];
+
+export const MEDAL_ILLUSTRATION_REGISTRY: Record<MedalIllustrationId, string> =
+  Object.fromEntries(
+    MEDAL_ILLUSTRATION_IDS.map((id) => [id, `${MEDALS_BASE}/${id}.webp`]),
+  ) as Record<MedalIllustrationId, string>;
 
 const MEDAL_ID_BY_SKILL: Record<
   number,
   Partial<Record<MedalDisplayStatus, MedalIllustrationId>>
-> = {
-  1: {
-    unlocked: "medal-skill1-unlocked",
-    bronze: "medal-skill1-bronze",
-    silver: "medal-skill1-silver",
-    gold: "medal-skill1-gold",
-  },
-  2: {
-    unlocked: "medal-skill2-unlocked",
-    bronze: "medal-skill2-bronze",
-    silver: "medal-skill2-silver",
-    gold: "medal-skill2-gold",
-  },
-  5: {
-    unlocked: "medal-skill5-unlocked",
-    bronze: "medal-skill5-bronze",
-    silver: "medal-skill5-silver",
-    gold: "medal-skill5-gold",
-  },
-  6: {
-    unlocked: "medal-skill6-unlock",
-    bronze: "medal-skill6-bronze",
-    silver: "medal-skill6-silver",
-    gold: "medal-skill6-gold",
-  },
-  7: {
-    unlocked: "medal-skill7-white",
-    bronze: "medal-skill7-bronze",
-    silver: "medal-skill7-silver",
-    gold: "medal-skill7-gold",
-  },
-  16: {
-    unlocked: "medal-skill16-unlocked",
-    bronze: "medal-skill16-bronze",
-    silver: "medal-skill16-silver",
-    gold: "medal-skill16-gold",
-  },
-};
+> = Object.fromEntries(
+  SKILL_NUMBERS_WITH_MEDAL_ASSETS.map((skillNumber) => [
+    skillNumber,
+    {
+      unlocked: medalIllustrationId(skillNumber, "unlocked"),
+      bronze: medalIllustrationId(skillNumber, "bronze"),
+      silver: medalIllustrationId(skillNumber, "silver"),
+      gold: medalIllustrationId(skillNumber, "gold"),
+    },
+  ]),
+);
 
-export const MEDAL_PLACEHOLDER_SRC =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><circle cx="64" cy="64" r="54" fill="#F4F7F9" stroke="#BDE9FB" stroke-width="6"/><circle cx="64" cy="64" r="38" fill="#FFFFFF" stroke="#031F82" stroke-width="3" stroke-opacity="0.18"/></svg>`,
-  );
+export const MEDAL_PLACEHOLDER_SRC = `${MEDALS_BASE}/medal-placeholder.svg`;
 
 export function getMedalIllustrationPath(id: MedalIllustrationId): string {
   return MEDAL_ILLUSTRATION_REGISTRY[id];

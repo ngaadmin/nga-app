@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { registeredPlayPath } from "@/lib/onboarding/explorer-pending-consent";
 import {
+  ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_PATH,
   readUserSession,
   saveUserSession,
@@ -72,6 +73,15 @@ export function SignInForm() {
       router.replace(registeredPlayPath(session));
     }
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("notice") !== "username") return;
+    setRecoveryMode(null);
+    setRecoveryNotice(copy.recoveryUsernameSuccess);
+    router.replace(ONBOARDING_SIGN_IN_PATH);
+  }, [copy.recoveryUsernameSuccess, router]);
 
   function clearError(key: keyof FormErrors) {
     if (errors[key]) {
@@ -144,6 +154,7 @@ export function SignInForm() {
       setIsRecovering(false);
       setRecoveryMode(null);
       setRecoveryNotice(copy.recoveryUsernameSuccess);
+      router.replace(`${ONBOARDING_SIGN_IN_PATH}?notice=username`);
     } catch {
       setErrors({
         recoveryEmail:
@@ -521,15 +532,15 @@ export function SignInForm() {
               >
                 {recoveryNotice}
               </p>
-            ) : null}
-
-            <Button type="submit" variant="cta" fullWidth disabled={isRecovering}>
-              {isRecovering
-                ? copy.recoverySending
-                : recoveryMode === "username"
-                  ? copy.recoveryUsernameSubmit
-                  : copy.recoveryCredentialSubmit}
-            </Button>
+            ) : (
+              <Button type="submit" variant="cta" fullWidth disabled={isRecovering}>
+                {isRecovering
+                  ? copy.recoverySending
+                  : recoveryMode === "username"
+                    ? copy.recoveryUsernameSubmit
+                    : copy.recoveryCredentialSubmit}
+              </Button>
+            )}
             <button
               type="button"
               onClick={() => closeRecovery()}

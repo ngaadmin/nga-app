@@ -145,16 +145,13 @@ export function SignInForm() {
         return;
       }
 
-      if (recoveryMode === "credential") {
-        closeRecovery();
+      closeRecovery();
+      if (recoveryMode === "username") {
+        setRecoveryNotice(copy.recoveryUsernameSuccess);
+        window.location.replace(`${ONBOARDING_SIGN_IN_PATH}?notice=username`);
         return;
       }
-
-      setErrors({});
-      setIsRecovering(false);
-      setRecoveryMode(null);
-      setRecoveryNotice(copy.recoveryUsernameSuccess);
-      router.replace(`${ONBOARDING_SIGN_IN_PATH}?notice=username`);
+      router.replace(ONBOARDING_SIGN_IN_PATH);
     } catch {
       setErrors({
         recoveryEmail:

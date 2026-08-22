@@ -171,7 +171,7 @@ const SUPPORT_EMAIL = "support@nextgenachievers.com";
 function pennyIllustration(appUrl?: string): string {
   const src = `${resolveAppUrl(appUrl)}${PENNY_IMAGE_PATH}`;
   return `
-    <p style="margin:20px 0;text-align:center;">
+    <p style="margin:20px 0;text-align:left;">
       <img
         src="${escapeHtml(src)}"
         alt="Penny"
@@ -314,34 +314,31 @@ export function buildPathfinderParentEmail(
   const username = data.username.trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const claimUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
-  const learningPath = "Pathfinder - ages 13-15";
   const safeName = escapeHtml(username);
-  const safePath = escapeHtml(learningPath);
-  const safePrivacy = escapeHtml(PRIVACY_POLICY_URL);
 
-  const subject = `${username} just started learning on NextGenAchiever$`;
+  const subject = `Your child ${username} wants to build money skills`;
   const preheader =
-    "No approval needed. Optionally create a free parent account to follow along.";
-  const header = "A Pathfinder profile is now active";
+    "They're getting started. Create a parent account if you want to follow along.";
+  const header = "Their journey to financial freedom starts here";
 
   const text = [
     "Hi there,",
     "",
-    `${username} just created a Pathfinder profile on NextGenAchiever$.`,
-    "No approval is needed - their account is already active.",
+    `${username} just started on NextGenAchiever$.`,
     "",
-    "NextGenAchiever$ turns screen time into money sense. It is an educational tool - not a financial product. No real-money transactions, live bank links, or hidden micro-purchases.",
+    "It's a free app that turns screen time into money sense, from everyday skills to first business ideas (but don't worry, no real cash or bank accounts involved).",
     "",
-    `Profile name: ${username}`,
-    `Learning path: ${learningPath}`,
+    "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
-    "As a parent/guardian, you can optionally create a free master account to follow their progress and manage permissions. You can delete accounts at any time. We do not sell or share your child's information with third parties for advertising.",
+    "They've chosen the Pathfinder track, for ages 13-15. Their account is active, so they can keep learning right away.",
     "",
-    `CREATE PARENT ACCOUNT (optional): ${claimUrl}`,
+    "Create a free parent account to follow what they learn and achieve. You can even set an exchange rate so the points they earn can turn into real pocket money at home.",
     "",
-    `Privacy Policy: ${PRIVACY_POLICY_URL}`,
+    `Create parent account: ${claimUrl}`,
     "",
-    `If you did not expect this email, ignore it or contact ${SUPPORT_EMAIL}.`,
+    "If you didn't expect this, you can ignore it. The link expires on its own.",
+    "",
+    "Here's to them owning their future,",
     "",
     "The Team at NextGenAchiever$",
   ].join("\n");
@@ -352,33 +349,35 @@ export function buildPathfinderParentEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        <strong>${safeName}</strong> just created a Pathfinder profile on NextGenAchiever$.
-        <strong>No approval is needed</strong> - their account is already active.
+        ${safeName} just started on NextGenAchiever$.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ turns screen time into money sense. It is an educational tool - not a
-        financial product. No real-money transactions, live bank links, or hidden micro-purchases.
+        It&apos;s a free app that turns screen time into money sense, from everyday
+        skills to first business ideas (but don&apos;t worry, no real cash or bank
+        accounts involved).
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Did you know? Kids who learn to save and grow money in their early teens can
+        end up $100,000s ahead of peers who start later, by middle age.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        They&apos;ve chosen the Pathfinder track, for ages 13-15. Their account is
+        active, so they can keep learning right away.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Create a free parent account to follow what they learn and achieve. You can
+        even set an exchange rate so the points they earn can turn into real pocket
+        money at home.
+      </p>
+      ${ctaButton("Create parent account", claimUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        If you didn&apos;t expect this, you can ignore it. The link expires on its own.
       </p>
       <p style="margin:0 0 8px;font-size:16px;">
-        <strong>Profile name: ${safeName}</strong>
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        <strong>Learning path: ${safePath}</strong>
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        As a parent/guardian, you can optionally create a free master account to follow their
-        progress and manage permissions. You can delete accounts at any time. We do not sell or
-        share your child&apos;s information with third parties for advertising.
-      </p>
-      ${ctaButton("CREATE PARENT ACCOUNT", claimUrl)}
-      <p style="margin:0 0 16px;font-size:16px;">
-        <a href="${safePrivacy}" style="color:#0CC1E0;font-weight:700;">Privacy Policy</a>
-      </p>
-      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        If you did not expect this email, ignore it or contact ${escapeHtml(SUPPORT_EMAIL)}.
+        Here&apos;s to them owning their future,
       </p>
       ${pennyIllustration(appUrl)}
-      <p style="margin:24px 0 0;font-size:16px;">
+      <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
     `,

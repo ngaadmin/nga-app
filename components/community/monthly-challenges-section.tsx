@@ -132,6 +132,7 @@ export function CurrentMonthChallenge() {
   const monthIndex = new Date().getMonth();
   const { challenge, isFuture, achieved, achieverCount } =
     resolveChallengeView(monthIndex);
+  if (!challenge) return null;
   const tone = { achieved, isFuture };
 
   return (

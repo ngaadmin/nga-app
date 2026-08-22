@@ -75,7 +75,7 @@ const MEDAL_ID_BY_SKILL: Record<
 export const MEDAL_PLACEHOLDER_SRC = `${MEDALS_BASE}/medal-placeholder.svg`;
 
 export function getMedalIllustrationPath(id: MedalIllustrationId): string {
-  return MEDAL_ILLUSTRATION_REGISTRY[id];
+  return MEDAL_ILLUSTRATION_REGISTRY[id] ?? `${MEDALS_BASE}/${id}.webp`;
 }
 
 export function isMedalIllustrationId(value: string): value is MedalIllustrationId {

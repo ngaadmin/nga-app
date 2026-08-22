@@ -336,8 +336,6 @@ export function buildPathfinderParentEmail(
     "",
     `Create parent account: ${claimUrl}`,
     "",
-    "If you didn't expect this, you can ignore it. The link expires on its own.",
-    "",
     "Here's to them owning their future,",
     "",
     "The Team at NextGenAchiever$",
@@ -370,9 +368,6 @@ export function buildPathfinderParentEmail(
         money at home.
       </p>
       ${ctaButton("Create parent account", claimUrl)}
-      <p style="margin:0 0 16px;font-size:16px;">
-        If you didn&apos;t expect this, you can ignore it. The link expires on its own.
-      </p>
       <p style="margin:0 0 8px;font-size:16px;">
         Here&apos;s to them owning their future,
       </p>

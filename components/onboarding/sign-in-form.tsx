@@ -141,6 +141,8 @@ export function SignInForm() {
       }
 
       setErrors({});
+      setIsRecovering(false);
+      setRecoveryMode(null);
       setRecoveryNotice(copy.recoveryUsernameSuccess);
     } catch {
       setErrors({
@@ -157,6 +159,7 @@ export function SignInForm() {
     event.stopPropagation();
     setIsSigningIn(true);
     setErrors({});
+    setRecoveryNotice(null);
 
     const formData = new FormData(event.currentTarget);
     const trimmedIdentifier = (
@@ -541,6 +544,14 @@ export function SignInForm() {
             onSubmit={handleSubmit}
             noValidate
           >
+            {recoveryNotice ? (
+              <p
+                className="rounded-nga-lg bg-[#BDE9FB]/40 px-3 py-2 font-sans text-sm font-medium leading-relaxed text-nga-primary"
+                role="status"
+              >
+                {recoveryNotice}
+              </p>
+            ) : null}
             {errors.form ? (
               <p
                 className="font-sans text-sm font-medium text-red-600"

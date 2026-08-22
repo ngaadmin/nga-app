@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { InviteFriendsControl } from "@/components/community/invite-friends-control";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
-import { DEMO_ACHIEVEMENT_FRIENDS } from "@/lib/dashboard/achievements-state";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
@@ -11,6 +11,47 @@ import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
+const CURRENT_USER_RANK = 67;
+
+const COMMUNITY_SEED_PLAYERS: readonly Omit<LeaderboardEntry, "isCurrentUser">[] =
+  [
+    {
+      id: "seed-1",
+      username: "Pat_40$",
+      avatarEmoji: "🦊",
+      dayStreak: 42,
+      lifetimePoints: 6100,
+    },
+    {
+      id: "seed-2",
+      username: "Hann4h",
+      avatarEmoji: "🐯",
+      dayStreak: 18,
+      lifetimePoints: 4820,
+    },
+    {
+      id: "seed-3",
+      username: "JonnyCa$h",
+      avatarEmoji: "🦁",
+      dayStreak: 7,
+      lifetimePoints: 3890,
+    },
+    {
+      id: "seed-4",
+      username: "$enna_14",
+      avatarEmoji: "🦉",
+      dayStreak: 63,
+      lifetimePoints: 3150,
+    },
+    {
+      id: "seed-5",
+      username: "Zah33r",
+      avatarEmoji: "🐺",
+      dayStreak: 21,
+      lifetimePoints: 2240,
+    },
+  ];
+
 type LeaderboardEntry = {
   id: string;
   avatarEmoji: string;
@@ -18,6 +59,7 @@ type LeaderboardEntry = {
   dayStreak: number;
   lifetimePoints: number;
   isCurrentUser?: boolean;
+  rank?: number;
 };
 
 type FriendRowProps = {
@@ -46,7 +88,7 @@ function FriendRow({
       )}
     >
       <span
-        className="w-8 shrink-0 text-left font-heading text-sm font-extrabold text-[#0CC1E0] sm:w-9 sm:text-base"
+        className="w-9 shrink-0 text-left font-heading text-sm font-extrabold text-[#0CC1E0] sm:w-10 sm:text-base"
         aria-label={`Rank ${rank}`}
       >
         #{rank}
@@ -98,19 +140,13 @@ export function SocialFriendsSection() {
       isCurrentUser: true,
     };
 
-    const friends: LeaderboardEntry[] = DEMO_ACHIEVEMENT_FRIENDS.map(
-      (friend) => ({
-        id: friend.id,
-        avatarEmoji: friend.avatarEmoji,
-        username: friend.username,
-        dayStreak: friend.dayStreak,
-        lifetimePoints: friend.lifetimePoints,
-      }),
-    );
-
-    return [...friends, currentUser].sort(
-      (a, b) => b.lifetimePoints - a.lifetimePoints,
-    );
+    return [
+      ...COMMUNITY_SEED_PLAYERS.map((player, index) => ({
+        ...player,
+        rank: index + 1,
+      })),
+      { ...currentUser, rank: CURRENT_USER_RANK },
+    ];
   }, [dayStreak, lifetimePointsEarned, username]);
 
   return (
@@ -122,22 +158,17 @@ export function SocialFriendsSection() {
         >
           Community Leaderboard
         </DashboardSectionHeading>
-        <button
-          type="button"
-          className="shrink-0 rounded-nga-lg border-b-4 border-nga-secondary-shadow bg-nga-secondary px-3 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2 sm:text-xs"
-        >
-          + Invite Friends
-        </button>
+        <InviteFriendsControl />
       </div>
       <p className="mt-1 font-sans text-[10px] leading-snug text-nga-slate/80">
         Ranked by lifetime coins. Sample players show how the board will look.
       </p>
 
       <ol className="mt-3 space-y-2">
-        {rankedEntries.map((entry, index) => (
+        {rankedEntries.map((entry) => (
           <FriendRow
             key={entry.id}
-            rank={index + 1}
+            rank={entry.rank}
             avatarEmoji={entry.avatarEmoji}
             username={entry.username}
             dayStreak={entry.dayStreak}

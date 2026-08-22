@@ -28,6 +28,7 @@ const EMAIL_TYPES: readonly Exclude<
   "MAVERICK_WELCOME",
   "PARENT_WELCOME",
   "USERNAME_RECOVERY",
+  "FRIEND_INVITE",
 ] as const;
 
 type SendBody = {
@@ -71,6 +72,9 @@ function parseData(
   raw: unknown,
 ): OnboardingEmailDataMap[PublicEmailType] | null {
   const data = asRecord(raw);
+  if (type === "FRIEND_INVITE") {
+    return {} as OnboardingEmailDataMap["FRIEND_INVITE"];
+  }
   const username = readString(data, "username");
   if (!username) return null;
 
@@ -208,7 +212,7 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | PATHFINDER_PARENT_LINKED | PATHFINDER_WELCOME | MAVERICK_WELCOME | PARENT_WELCOME | USERNAME_RECOVERY.",
+            "type must be EXPLORER_PARENT | EXPLORER_PARENT_RESEND | PATHFINDER_PARENT | PATHFINDER_PARENT_LINKED | PATHFINDER_WELCOME | MAVERICK_WELCOME | PARENT_WELCOME | USERNAME_RECOVERY | FRIEND_INVITE.",
         },
         { status: 400 },
       );

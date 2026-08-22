@@ -7,6 +7,7 @@ export type OnboardingEmailType =
   | "MAVERICK_WELCOME"
   | "PARENT_WELCOME"
   | "USERNAME_RECOVERY"
+  | "FRIEND_INVITE"
   | "CREDENTIAL_RECOVERY"
   | "ACCOUNT_DELETED_MASTER"
   | "ACCOUNT_DELETED_CHILD";
@@ -69,6 +70,9 @@ export type AccountDeletedChildEmailData = {
   username: string;
 };
 
+/** v1 friend invite: landing URL only, no codes or personalization. */
+export type FriendInviteEmailData = Record<string, never>;
+
 export type OnboardingEmailDataMap = {
   EXPLORER_PARENT: ExplorerParentEmailData;
   EXPLORER_PARENT_RESEND: ExplorerParentResendEmailData;
@@ -78,6 +82,7 @@ export type OnboardingEmailDataMap = {
   MAVERICK_WELCOME: MaverickWelcomeEmailData;
   PARENT_WELCOME: ParentWelcomeEmailData;
   USERNAME_RECOVERY: UsernameRecoveryEmailData;
+  FRIEND_INVITE: FriendInviteEmailData;
   CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
   ACCOUNT_DELETED_MASTER: AccountDeletedMasterEmailData;
   ACCOUNT_DELETED_CHILD: AccountDeletedChildEmailData;
@@ -920,6 +925,51 @@ export function buildAccountDeletedChildEmail(
   return { subject, preheader, html, text };
 }
 
+export function buildFriendInviteEmail(
+  _data: FriendInviteEmailData,
+  _appUrl?: string,
+): BuiltEmail {
+  const landingUrl = `${getDefaultAppUrl()}/`;
+  const subject = "Your friends are inviting you to NextGenAchiever$";
+  const preheader = "What rich families teach early, but schools don't";
+  const header = "They're already building money skills";
+
+  const text = [
+    "Hi there,",
+    "",
+    "A friend invited you in.",
+    "",
+    "This is where kids and teens learn the money skills most people never get taught, practice them through games, and can start their first small business if they're keen.",
+    "",
+    `Try the free app: ${landingUrl}`,
+    "",
+    "The Team at NextGenAchiever$",
+    "",
+    "NextGenAchiever$ is a learning app with games. No real money involved.",
+  ].join("\n");
+
+  const html = wrapHtml({
+    header,
+    preheader,
+    footer: "NextGenAchiever$ is a learning app with games. No real money involved.",
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
+      <p style="margin:0 0 16px;font-size:16px;">A friend invited you in.</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        This is where kids and teens learn the money skills most people never get
+        taught, practice them through games, and can start their first small
+        business if they&apos;re keen.
+      </p>
+      ${ctaButton("Try the free app", landingUrl)}
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchiever$
+      </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
 export function buildOnboardingEmail<T extends OnboardingEmailType>(
   type: T,
   data: OnboardingEmailDataMap[T],
@@ -960,6 +1010,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "USERNAME_RECOVERY":
       return buildUsernameRecoveryEmail(
         data as UsernameRecoveryEmailData,
+        appUrl,
+      );
+    case "FRIEND_INVITE":
+      return buildFriendInviteEmail(
+        data as FriendInviteEmailData,
         appUrl,
       );
     case "CREDENTIAL_RECOVERY":

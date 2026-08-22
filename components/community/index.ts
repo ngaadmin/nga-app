@@ -1,3 +1,3 @@
 export { CommunityChallengesPanel } from "./community-challenges-panel";
-export { MonthlyChallengesSection } from "./monthly-challenges-section";
+export { CommunityMilestonesSection } from "./community-milestones-section";
 export { SocialFriendsSection } from "./social-friends-section";

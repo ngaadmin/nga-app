@@ -22,14 +22,14 @@ function statusLabel({ achieved, isFuture }: ChallengeToneProps) {
 
 function challengeToneClass({ achieved }: ChallengeToneProps) {
   return achieved
-    ? "bg-[#031F82] text-white shadow-[0_4px_12px_rgba(3,31,130,0.28)]"
-    : "bg-[#E8EEF2] text-[#8FA3B0]";
+    ? "border border-[#0CC1E0]/40 bg-[#BDE9FB]/35 text-[#031F82]"
+    : "border border-[#BDE9FB]/50 bg-[#F7FBFF] text-[#031F82]/40";
 }
 
 function iconWellClass({ achieved }: ChallengeToneProps) {
   return achieved
-    ? "border-b-4 border-[#FFA503] bg-[#0CC1E0] shadow-[0_4px_12px_rgba(12,193,224,0.35)]"
-    : "border-2 border-dashed border-[#C5D0D8] bg-white";
+    ? "bg-[#0CC1E0]/20 ring-2 ring-[#0CC1E0]/80"
+    : "border border-dashed border-[#BDE9FB] bg-white";
 }
 
 type MonthlyChallengeCardProps = {
@@ -57,14 +57,14 @@ function MonthlyChallengeCard({
     <article
       aria-label={`${fullMonthName}: ${challengeName} - ${statusLabel(tone)}`}
       className={cn(
-        "flex min-h-0 flex-col items-center justify-center rounded-xl px-1 py-1.5 text-center",
+        "flex min-h-0 flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center",
         challengeToneClass(tone),
       )}
     >
       <h3
         className={cn(
           "w-full font-heading text-[8px] font-extrabold uppercase tracking-wide",
-          achieved ? "text-white/90" : "text-[#8FA3B0]",
+          achieved ? "text-[#031F82]/80" : "text-[#031F82]/40",
         )}
       >
         {monthLabel}
@@ -90,7 +90,7 @@ function MonthlyChallengeCard({
       <p
         className={cn(
           "mt-1 line-clamp-2 min-h-[1.6em] font-heading text-[8px] font-bold leading-tight",
-          achieved ? "text-white" : "text-[#8FA3B0]",
+          achieved ? "text-[#031F82]" : "text-[#031F82]/40",
         )}
       >
         {challengeName}
@@ -98,7 +98,7 @@ function MonthlyChallengeCard({
       <p
         className={cn(
           "mt-0.5 font-heading text-[7px] font-bold uppercase tracking-wide",
-          achieved ? "text-[#FFA503]" : "text-[#8FA3B0]/80",
+          achieved ? "text-[#C88202]" : "text-[#031F82]/35",
         )}
       >
         {statusLabel(tone)}
@@ -106,7 +106,7 @@ function MonthlyChallengeCard({
       <p
         className={cn(
           "mt-0.5 font-sans text-[7px] font-medium leading-tight",
-          achieved ? "text-white/75" : "text-[#8FA3B0]/90",
+          achieved ? "text-[#031F82]/55" : "text-[#031F82]/30",
         )}
       >
         {achieverCount.toLocaleString()} achieved
@@ -146,7 +146,7 @@ export function CurrentMonthChallenge() {
       <article
         aria-label={`${challenge.fullMonthName}: ${challenge.challengeName} - ${statusLabel(tone)}`}
         className={cn(
-          "mt-2 flex items-center gap-3 rounded-2xl px-3 py-2.5",
+          "mt-2 flex items-center gap-3 rounded-2xl px-2.5 py-2",
           challengeToneClass(tone),
         )}
       >
@@ -170,7 +170,7 @@ export function CurrentMonthChallenge() {
           <p
             className={cn(
               "font-heading text-[10px] font-extrabold uppercase tracking-wide",
-              achieved ? "text-white/90" : "text-[#8FA3B0]",
+              achieved ? "text-[#031F82]/75" : "text-[#031F82]/40",
             )}
           >
             {challenge.fullMonthName}
@@ -178,7 +178,7 @@ export function CurrentMonthChallenge() {
           <p
             className={cn(
               "mt-0.5 font-heading text-sm font-extrabold leading-tight",
-              achieved ? "text-white" : "text-[#8FA3B0]",
+              achieved ? "text-[#031F82]" : "text-[#031F82]/40",
             )}
           >
             {challenge.challengeName}
@@ -187,7 +187,7 @@ export function CurrentMonthChallenge() {
             <span
               className={cn(
                 "font-heading text-[9px] font-bold uppercase tracking-wide",
-                achieved ? "text-[#FFA503]" : "text-[#8FA3B0]/80",
+                achieved ? "text-[#C88202]" : "text-[#031F82]/35",
               )}
             >
               {statusLabel(tone)}
@@ -195,7 +195,7 @@ export function CurrentMonthChallenge() {
             <span
               className={cn(
                 "font-sans text-[9px] font-medium",
-                achieved ? "text-white/75" : "text-[#8FA3B0]/90",
+                achieved ? "text-[#031F82]/55" : "text-[#031F82]/30",
               )}
             >
               {achieverCount.toLocaleString()} achieved this

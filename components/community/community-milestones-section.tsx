@@ -14,26 +14,26 @@ const MILESTONE_TILE: Record<
   CommunityMilestoneId,
   { icon: string; shortLabel: string }
 > = {
-  "first-session": { icon: "▶️", shortLabel: "Session" },
-  "first-lesson": { icon: "📖", shortLabel: "Lesson" },
-  "first-savings-goal": { icon: "🎯", shortLabel: "Goal set" },
-  "first-savings-deposit": { icon: "💵", shortLabel: "Deposit" },
-  "first-medal": { icon: "🏅", shortLabel: "Medal" },
-  "opened-launchpad": { icon: "🚀", shortLabel: "Launchpad" },
-  "first-module": { icon: "📦", shortLabel: "Module" },
-  "streak-3": { icon: "🔥", shortLabel: "3-day" },
-  "first-bronze": { icon: "🥉", shortLabel: "Bronze" },
-  "started-business": { icon: "💡", shortLabel: "Business" },
-  "saved-50": { icon: "💰", shortLabel: "$50" },
+  "first-session": { icon: "▶️", shortLabel: "First session" },
+  "first-lesson": { icon: "📖", shortLabel: "First lesson" },
+  "first-savings-goal": { icon: "🎯", shortLabel: "Savings goal" },
+  "first-savings-deposit": { icon: "💵", shortLabel: "First deposit" },
+  "first-medal": { icon: "🏅", shortLabel: "First medal" },
+  "opened-launchpad": { icon: "🚀", shortLabel: "Open Launchpad" },
+  "first-module": { icon: "📦", shortLabel: "First module" },
+  "streak-3": { icon: "🔥", shortLabel: "3-day streak" },
+  "first-bronze": { icon: "🥉", shortLabel: "First Bronze" },
+  "started-business": { icon: "💡", shortLabel: "First business" },
+  "saved-50": { icon: "💰", shortLabel: "Saved $50" },
   "skills-5": { icon: "⭐", shortLabel: "5 skills" },
-  "streak-7": { icon: "🔥", shortLabel: "7-day" },
+  "streak-7": { icon: "🔥", shortLabel: "7-day streak" },
   "module-1": { icon: "1️⃣", shortLabel: "Module 1" },
   "launchpad-step": { icon: "👟", shortLabel: "First step" },
-  "saved-100": { icon: "💰", shortLabel: "$100" },
-  "saved-250": { icon: "💰", shortLabel: "$250" },
-  "saved-500": { icon: "💰", shortLabel: "$500" },
-  "saved-1000": { icon: "💰", shortLabel: "$1000" },
-  "saved-2500": { icon: "💰", shortLabel: "$2500" },
+  "saved-100": { icon: "💰", shortLabel: "Saved $100" },
+  "saved-250": { icon: "💰", shortLabel: "Saved $250" },
+  "saved-500": { icon: "💰", shortLabel: "Saved $500" },
+  "saved-1000": { icon: "💰", shortLabel: "Saved $1000" },
+  "saved-2500": { icon: "💰", shortLabel: "Saved $2500" },
 };
 
 function MilestoneTile({
@@ -43,25 +43,19 @@ function MilestoneTile({
   achieved,
 }: CommunityMilestoneRow) {
   const tile = MILESTONE_TILE[id];
-  const caption = `${achieverCount.toLocaleString()} people`;
 
   return (
     <li
       title={`${label}. ${achieverCount.toLocaleString()} people achieved this`}
       aria-label={`${label} - ${achieved ? "achieved" : "not achieved"}. ${achieverCount.toLocaleString()} people achieved this`}
-      className={cn(
-        "flex min-h-0 flex-col items-center justify-center rounded-xl px-1 py-1.5 text-center",
-        achieved
-          ? "border border-nga-secondary/40 bg-nga-panel/35"
-          : "border border-dashed border-nga-panel/70 bg-nga-surface",
-      )}
+      className="flex flex-col items-center text-center"
     >
       <span
         className={cn(
-          "flex size-8 items-center justify-center rounded-full text-base leading-none",
+          "flex size-[4.75rem] shrink-0 items-center justify-center rounded-full text-2xl leading-none sm:size-20",
           achieved
-            ? "bg-nga-secondary/20"
-            : "bg-white text-nga-primary/40 opacity-55 grayscale",
+            ? "bg-nga-panel text-nga-primary"
+            : "border-2 border-[#D1D5DB] bg-transparent text-nga-primary/35 grayscale",
         )}
         aria-hidden
       >
@@ -69,19 +63,19 @@ function MilestoneTile({
       </span>
       <p
         className={cn(
-          "mt-1 line-clamp-2 font-heading text-[8px] font-bold leading-tight",
-          achieved ? "text-nga-primary" : "text-nga-primary/40",
+          "mt-2 font-sans text-sm font-medium leading-snug",
+          achieved ? "text-nga-primary" : "text-nga-primary/45",
         )}
       >
         {tile.shortLabel}
       </p>
       <p
         className={cn(
-          "mt-0.5 font-sans text-[7px] font-medium leading-tight",
-          achieved ? "text-nga-primary/55" : "text-nga-primary/30",
+          "mt-0.5 font-sans text-xs font-medium leading-tight",
+          achieved ? "text-nga-slate" : "text-nga-primary/30",
         )}
       >
-        {caption}
+        {achieverCount.toLocaleString()} people
       </p>
     </li>
   );
@@ -127,7 +121,7 @@ export function CommunityMilestonesSection() {
       {open ? (
         <ol
           id="community-milestones-list"
-          className="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-4"
+          className="mt-3 grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3"
         >
           {displayRows.map((row) => (
             <MilestoneTile key={row.id} {...row} />

@@ -40,7 +40,7 @@ import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const allocationRowClass =
   "flex w-full min-w-0 items-end gap-x-2 py-2.5";
@@ -84,13 +84,13 @@ function AllocationInputRow({
         <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
         <p
           className={cn(
-            "line-clamp-2 w-full text-center font-heading text-[11px] font-bold leading-tight",
+            "line-clamp-2 w-full text-center font-heading text-sm font-bold leading-tight",
             theme.label,
           )}
         >
           {displayName}
         </p>
-        <p className="w-full truncate text-center font-heading text-[10px] font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
+        <p className="w-full truncate text-center font-heading text-sm font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
           {formatMoney(currentBalance)}
         </p>
       </div>
@@ -104,7 +104,7 @@ function AllocationInputRow({
       </div>
 
       <label className={allocationAmountInputClass}>
-        <span className="shrink-0 font-heading text-xs font-bold text-[#031F82]">
+        <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
           {currencySymbol}
         </span>
         <input
@@ -326,7 +326,7 @@ export function VaultAllocationModal({
             {formatMoney(remainingToAllocate)}
           </p>
           {isOverAllocated || inputWasCapped ? (
-            <p className="mt-1 font-heading text-xs font-bold text-[#BE123C]" role="status">
+            <p className="mt-1 font-heading text-sm font-bold text-[#BE123C]" role="status">
               {inputWasCapped
                 ? copy.remainingLabel + ": capped to available balance"
                 : `${copy.remainingLabel}: exceeds available pool`}

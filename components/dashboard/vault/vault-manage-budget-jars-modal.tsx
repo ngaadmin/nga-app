@@ -47,7 +47,7 @@ const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const manageModalFieldLabelClass =
-  "font-heading text-xs font-bold text-[#031F82]";
+  "font-heading text-sm font-bold text-[#031F82]";
 
 type JarDraft = {
   name: string;
@@ -329,7 +329,7 @@ export function VaultManageBudgetJarsModal({
               >
                 {vaultCopy.manageBudgetJarsTitle}
               </h2>
-              <p className="mt-1 font-sans text-xs leading-snug text-[#1E3A5F]/70">
+              <p className="mt-1 font-sans text-sm leading-snug text-[#1E3A5F]/70">
                 {vaultCopy.manageBudgetJarsBody}
               </p>
             </div>
@@ -387,7 +387,7 @@ export function VaultManageBudgetJarsModal({
             </div>
           ) : null}
 
-          <p className="mt-3 text-center font-heading text-xs font-bold text-[#1E3A5F]/60">
+          <p className="mt-3 text-center font-heading text-sm font-bold text-[#1E3A5F]/60">
             {vaultCopy.bucketLimitTemplate
               .replace("{count}", String(totalJarCount))
               .replace("{max}", String(bucketLimit))}
@@ -499,7 +499,7 @@ export function VaultManageBudgetJarsModal({
                       <button
                         type="button"
                         onClick={() => setEditingRowId(null)}
-                        className="font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
+                        className="font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
                       >
                         {vaultCopy.doneEditing}
                       </button>

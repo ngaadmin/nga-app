@@ -30,7 +30,7 @@ import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 function GoalAllocationInputRow({
   goal,
@@ -57,13 +57,13 @@ function GoalAllocationInputRow({
         <span className="text-2xl leading-none" aria-hidden>
           {goal.emoji}
         </span>
-        <p className="mt-1 line-clamp-2 text-center font-heading text-xs font-bold leading-tight text-[#031F82]">
+        <p className="mt-1 line-clamp-2 text-center font-heading text-sm font-bold leading-tight text-[#031F82]">
           {goal.name}
         </p>
       </div>
 
       <label className="flex w-[5.25rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5">
-        <span className="shrink-0 font-heading text-xs font-bold text-[#031F82]">
+        <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
           {currencySymbol}
         </span>
         <input
@@ -285,7 +285,7 @@ export function VaultSavingsGoalAllocationModal({
           >
             {savingsCopy.goalAllocationHeading}
           </h2>
-          <p className="mt-0.5 font-heading text-xs font-bold uppercase tracking-wide text-[#1E3A5F]/60">
+          <p className="mt-0.5 font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/60">
             {budgetCopy.poolLabel}
           </p>
           <p
@@ -299,7 +299,7 @@ export function VaultSavingsGoalAllocationModal({
             {formatMoney(remainingToAllocate)}
           </p>
           {isOverAllocated || inputWasCapped ? (
-            <p className="mt-1 font-heading text-xs font-bold text-[#BE123C]" role="status">
+            <p className="mt-1 font-heading text-sm font-bold text-[#BE123C]" role="status">
               {inputWasCapped
                 ? savingsCopy.goalRemainingLabel + ": capped to available balance"
                 : `${savingsCopy.goalRemainingLabel}: exceeds available pool`}

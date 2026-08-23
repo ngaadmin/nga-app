@@ -46,10 +46,10 @@ const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const manageModalFieldLabelClass =
-  "font-heading text-xs font-bold text-[#031F82]";
+  "font-heading text-sm font-bold text-[#031F82]";
 
 const resetLinkClass =
-  "font-heading text-[11px] font-bold text-[#BE123C]/80 underline-offset-2 transition-colors hover:text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
+  "font-heading text-sm font-bold text-[#BE123C]/80 underline-offset-2 transition-colors hover:text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
 
 type GoalDraft = {
   name: string;
@@ -121,7 +121,7 @@ function TargetAmountField({
   return (
     <div>
       <label className="flex items-center gap-1.5 rounded-lg border border-[#BDE9FB] bg-white px-2.5 py-1.5">
-        <span className="shrink-0 font-heading text-xs font-bold text-[#031F82]">
+        <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
           {currencySymbol}
         </span>
         <input
@@ -135,7 +135,7 @@ function TargetAmountField({
         />
       </label>
       {hitCap ? (
-        <p className="mt-1 font-sans text-[10px] text-[#1E3A5F]/70" role="status">
+        <p className="mt-1 font-sans text-sm text-[#1E3A5F]/70" role="status">
           {vaultCopy.maxAmountReachedNotice}
         </p>
       ) : null}
@@ -379,7 +379,7 @@ export function VaultManageSavingsGoalsModal({
               >
                 {vaultCopy.manageSavingsGoalsTitle}
               </h2>
-              <p className="mt-1 font-sans text-xs leading-snug text-[#1E3A5F]/70">
+              <p className="mt-1 font-sans text-sm leading-snug text-[#1E3A5F]/70">
                 {vaultCopy.manageSavingsGoalsBody}
               </p>
             </div>
@@ -395,10 +395,10 @@ export function VaultManageSavingsGoalsModal({
 
           {showPremiumNotice ? (
             <div className="mt-3 rounded-xl border border-[#BDE9FB] bg-[#FAFDFF]/80 p-3">
-              <p className="font-heading text-xs font-extrabold text-[#031F82]">
+              <p className="font-heading text-sm font-extrabold text-[#031F82]">
                 {vaultCopy.premiumGoalsLockedTitle}
               </p>
-              <p className="mt-1 font-sans text-xs text-[#1E3A5F]/70">
+              <p className="mt-1 font-sans text-sm text-[#1E3A5F]/70">
                 {vaultCopy.premiumGoalsLockedBody}
               </p>
             </div>
@@ -493,10 +493,10 @@ export function VaultManageSavingsGoalsModal({
                           <p className="truncate font-heading text-sm font-extrabold text-[#031F82]">
                             {displayName}
                           </p>
-                          <p className="mt-0.5 font-heading text-xs font-bold text-[#15803D]">
+                          <p className="mt-0.5 font-heading text-sm font-bold text-[#15803D]">
                             Saved: {formatMoney(balance)}
                           </p>
-                          <p className="font-heading text-xs font-bold text-[#1E3A5F]/70">
+                          <p className="font-heading text-sm font-bold text-[#1E3A5F]/70">
                             Target:{" "}
                             {parseVaultTargetAmount(draft.targetInput) > 0
                               ? formatMoney(parseVaultTargetAmount(draft.targetInput))
@@ -607,7 +607,7 @@ export function VaultManageSavingsGoalsModal({
                       <button
                         type="button"
                         onClick={() => setEditingRowId(null)}
-                        className="font-heading text-xs font-bold text-[#0CC1E0] hover:underline"
+                        className="font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
                       >
                         {vaultCopy.doneEditing}
                       </button>

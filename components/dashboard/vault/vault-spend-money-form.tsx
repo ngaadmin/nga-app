@@ -19,7 +19,7 @@ import type {
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 type VaultSpendMoneyFormProps = {
   maxAmount: number;
@@ -121,13 +121,13 @@ export function VaultSpendMoneyForm({
             <button
               type="button"
               onClick={handleManageCategoriesClick}
-              className="text-left font-heading text-[10px] font-bold text-[#0CC1E0] hover:underline"
+              className="text-left font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
             >
               {budgetCopy.manageSpendingCategories}
             </button>
             {manageCategoriesOpen && isPremium ? (
               <div className="space-y-2 pt-1">
-                <p className="font-heading text-xs font-extrabold text-[#031F82]">
+                <p className="font-heading text-sm font-extrabold text-[#031F82]">
                   {budgetCopy.manageCategoriesHeading}
                 </p>
                 <ul className="space-y-1.5">

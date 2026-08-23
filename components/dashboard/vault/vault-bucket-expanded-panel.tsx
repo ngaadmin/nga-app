@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
 
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
@@ -123,14 +123,14 @@ export function VaultBucketExpandedPanel({
     <>
       <div className="mt-2 rounded-xl border border-[#BDE9FB] bg-white p-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="min-w-0 font-heading text-sm font-extrabold text-[#031F82]">
+          <p className="min-w-0 font-heading text-base font-extrabold text-[#031F82]">
             {bucket.emoji} {bucket.name}
           </p>
           <div className="flex shrink-0 items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
+              className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
             >
               <span aria-hidden>←</span>
               {vaultCopy.backToOverview}
@@ -138,7 +138,7 @@ export function VaultBucketExpandedPanel({
             <button
               type="button"
               onClick={onClose}
-              className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+              className="font-heading text-sm font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
             >
               Close
             </button>
@@ -221,11 +221,11 @@ export function VaultBucketExpandedPanel({
             ) : null}
 
             {!canUseFunds && spendOpen ? (
-              <p className="font-sans text-[10px] text-[#1E3A5F]/70">{copy.bucketEmptyHint}</p>
+              <p className="font-sans text-sm text-[#1E3A5F]/70">{copy.bucketEmptyHint}</p>
             ) : null}
           </div>
         ) : (
-          <p className="mt-2 font-sans text-[10px] text-[#1E3A5F]/70">{copy.bucketEmptyHint}</p>
+          <p className="mt-2 font-sans text-sm text-[#1E3A5F]/70">{copy.bucketEmptyHint}</p>
         )}
       </div>
 

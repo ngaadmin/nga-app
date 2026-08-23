@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 type VaultDepositSectionProps = {
   onDeposit: (amount: number, source: VaultIncomeSourceId) => void;
@@ -87,7 +87,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
           </button>
         </div>
         {amountCapHit ? (
-          <p className="font-sans text-[10px] text-[#1E3A5F]/70" role="status">
+          <p className="font-sans text-sm text-[#1E3A5F]/70" role="status">
             {vaultCopy.maxAmountReachedNotice}
           </p>
         ) : null}

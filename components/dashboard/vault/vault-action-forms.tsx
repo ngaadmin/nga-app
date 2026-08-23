@@ -82,7 +82,7 @@ export function VaultAmountField({
         />
       </label>
       {hitCap ? (
-        <p className="mt-1 font-sans text-[10px] text-[#1E3A5F]/70" role="status">
+        <p className="mt-1 font-sans text-sm text-[#1E3A5F]/70" role="status">
           {vaultCopy.maxAmountReachedNotice}
         </p>
       ) : null}

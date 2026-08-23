@@ -42,11 +42,11 @@ export const vaultJarsCarouselTrackClass = vaultJarsGridTrackClass;
 
 /** Jar name on grid tile. */
 export const vaultJarTileNameClass =
-  "mt-1.5 line-clamp-2 min-h-[2rem] w-full text-center font-heading text-xs font-bold leading-tight text-white/90";
+  "mt-1.5 line-clamp-2 min-h-[2.25rem] w-full text-center font-heading text-sm font-bold leading-tight text-white/90";
 
 /** Jar balance — slightly smaller so large amounts keep breathing room. */
 export const vaultJarTileBalanceClass =
-  "mt-0.5 w-full break-all text-center font-heading text-[0.6875rem] font-extrabold leading-tight tabular-nums text-white sm:text-xs";
+  "mt-0.5 w-full break-all text-center font-heading text-sm font-extrabold leading-tight tabular-nums text-white";
 
 /** Section title on light Vault surfaces (deposit, expanded panels). */
 export const vaultLightSectionTitleClass =

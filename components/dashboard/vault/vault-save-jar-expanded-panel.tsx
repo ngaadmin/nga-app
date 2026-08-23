@@ -32,7 +32,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
@@ -160,7 +160,7 @@ export function VaultSaveJarExpandedPanel({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-1 font-heading text-[11px] font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
+              className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
             >
               <span aria-hidden>←</span>
               {vaultCopy.backToOverview}
@@ -168,7 +168,7 @@ export function VaultSaveJarExpandedPanel({
             <button
               type="button"
               onClick={onClose}
-              className="font-heading text-xs font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
+              className="font-heading text-sm font-bold text-[#1E3A5F]/60 hover:text-[#031F82]"
             >
               Close
             </button>
@@ -176,7 +176,7 @@ export function VaultSaveJarExpandedPanel({
         </div>
 
         <div className="mt-2">
-          <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]/60">
+          <p className="font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/60">
             {savingsCopy.totalSavingsLabel}
           </p>
           <p className="mt-0.5 font-heading text-lg font-extrabold leading-tight text-[#031F82]">
@@ -195,14 +195,14 @@ export function VaultSaveJarExpandedPanel({
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#FFA503]">
+              <p className="font-heading text-sm font-bold uppercase tracking-wide text-[#FFA503]">
                 {budgetCopy.poolLabel}
               </p>
               <p className="mt-0.5 font-heading text-xl font-extrabold leading-none tabular-nums text-[#031F82]">
                 {formatMoney(unassignedBalance)}
               </p>
               {canAllocate ? (
-                <p className="mt-1 font-sans text-[10px] text-[#1E3A5F]/60">
+                <p className="mt-1 font-sans text-sm text-[#1E3A5F]/60">
                   {savingsCopy.clickToAllocateHint}
                 </p>
               ) : null}
@@ -245,7 +245,7 @@ export function VaultSaveJarExpandedPanel({
             ) : null}
           </div>
         ) : (
-          <p className="mt-2 font-sans text-[10px] text-[#1E3A5F]/70">
+          <p className="mt-2 font-sans text-sm text-[#1E3A5F]/70">
             {budgetCopy.bucketEmptyHint}
           </p>
         )}
@@ -253,14 +253,14 @@ export function VaultSaveJarExpandedPanel({
         {goals.length > 0 ? (
           <div className="mt-3 border-t border-[#BDE9FB]/40 pt-3">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
+              <p className="font-heading text-sm font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
                 {savingsCopy.sectionTitle}
               </p>
               {onManageGoalsClick ? (
                 <button
                   type="button"
                   onClick={onManageGoalsClick}
-                  className="inline-flex min-h-touch items-center gap-1.5 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
+                  className="inline-flex min-h-touch items-center gap-1.5 font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
                 >
                   <SettingsIcon className="size-4 shrink-0" />
                   {vaultCopy.manageSavingsGoalsLabel}
@@ -294,7 +294,7 @@ export function VaultSaveJarExpandedPanel({
                   className="space-y-2 rounded-lg border border-[#BDE9FB]/60 bg-[#FAFDFF]/80 p-2.5"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 truncate font-heading text-xs font-bold text-[#031F82]">
+                    <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">
                       {goal.emoji} {goal.name}
                     </p>
                     {canMoveGoal ? (
@@ -323,7 +323,7 @@ export function VaultSaveJarExpandedPanel({
                       </p>
                       <p
                         className={cn(
-                          "mt-0.5 font-heading text-xs font-bold",
+                          "mt-0.5 font-heading text-sm font-bold",
                           goal.targetAmount > 0 && percentAchieved >= 100
                             ? "text-[#15803D]"
                             : "text-[#1E3A5F]/70",
@@ -392,20 +392,20 @@ export function VaultSaveJarExpandedPanel({
           <div className="mt-3 border-t border-[#BDE9FB]/40 pt-3">
             {onManageGoalsClick ? (
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
+                <p className="font-heading text-sm font-extrabold uppercase tracking-wide text-[#1E3A5F]/60">
                   {savingsCopy.sectionTitle}
                 </p>
                 <button
                   type="button"
                   onClick={onManageGoalsClick}
-                  className="inline-flex min-h-touch items-center gap-1.5 font-heading text-[11px] font-bold text-[#0CC1E0] hover:underline"
+                  className="inline-flex min-h-touch items-center gap-1.5 font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
                 >
                   <SettingsIcon className="size-4 shrink-0" />
                   {vaultCopy.manageSavingsGoalsLabel}
                 </button>
               </div>
             ) : null}
-            <p className="font-sans text-xs leading-snug text-[#1E3A5F]/70">
+            <p className="font-sans text-sm leading-snug text-[#1E3A5F]/70">
               {savingsCopy.noGoalsYet}
             </p>
           </div>

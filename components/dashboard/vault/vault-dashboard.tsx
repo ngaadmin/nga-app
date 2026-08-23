@@ -147,10 +147,10 @@ export function VaultDashboard() {
             )}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-heading text-sm font-extrabold text-[#031F82]">
+            <span className="block font-heading text-base font-extrabold text-[#031F82]">
               {advancedMoneyToolsCopy.vaultEntryLabel}
             </span>
-            <span className="mt-0.5 block font-sans text-[11px] leading-snug text-[#1E3A5F]/75">
+            <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]/75">
               {advancedMoneyToolsCopy.vaultEntryBody}
             </span>
           </span>

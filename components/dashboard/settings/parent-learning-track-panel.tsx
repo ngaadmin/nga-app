@@ -65,15 +65,15 @@ function TrackCard({
       <div className="flex items-start justify-between gap-2">
         <p className="font-heading text-sm font-extrabold text-[#031F82]">{meta.label}</p>
         {isCurrent ? (
-          <span className="shrink-0 rounded-full bg-[#22C55E]/15 px-2 py-0.5 font-heading text-[10px] font-bold uppercase tracking-wide text-[#15803D]">
+          <span className="shrink-0 rounded-full bg-[#22C55E]/15 px-2 py-0.5 font-heading text-xs font-bold uppercase tracking-wide text-[#15803D]">
             {copy.currentBadge}
           </span>
         ) : null}
       </div>
-      <p className="mt-1 font-sans text-xs text-[#1E3A5F]/80">
+      <p className="mt-1 font-sans text-sm text-[#1E3A5F]/80">
         {copy.agesTemplate.replace("{range}", masteryCohortAgeRangeLabel(cohort))}
       </p>
-      <p className="mt-0.5 font-sans text-xs font-semibold text-[#0CC1E0]">
+      <p className="mt-0.5 font-sans text-sm font-semibold text-[#0CC1E0]">
         {copy.skillsTemplate.replace("{count}", String(skillCount))}
       </p>
     </button>
@@ -158,7 +158,7 @@ export function ParentLearningTrackPanel({ isEditable }: ParentLearningTrackPane
   if (!isEditable) {
     return (
       <div className="min-w-0 space-y-3">
-        <p className="font-sans text-xs leading-relaxed text-[#1E3A5F]">{copy.lockedHint}</p>
+        <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{copy.lockedHint}</p>
         <div className="grid gap-2">
           {MASTERY_COHORT_ORDER.map((cohort) => (
             <TrackCard
@@ -178,8 +178,8 @@ export function ParentLearningTrackPanel({ isEditable }: ParentLearningTrackPane
   return (
     <>
       <div className="min-w-0 space-y-4">
-        <p className="font-sans text-xs leading-relaxed text-[#1E3A5F]">{copy.intro}</p>
-        <p className="font-sans text-xs leading-relaxed text-[#1E3A5F]">{copy.tierUpdateNote}</p>
+        <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{copy.intro}</p>
+        <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">{copy.tierUpdateNote}</p>
 
         <div className="grid gap-2 sm:grid-cols-3">
           {MASTERY_COHORT_ORDER.map((cohort) => (
@@ -238,10 +238,10 @@ export function ParentLearningTrackPanel({ isEditable }: ParentLearningTrackPane
             className="rounded-xl border-2 border-[#F59E0B]/40 bg-[#FFFBEB] px-3 py-3"
             role="alert"
           >
-            <p className="font-heading text-xs font-extrabold text-[#B45309]">
+            <p className="font-heading text-sm font-extrabold text-[#B45309]">
               {copy.progressResetWarningTitle}
             </p>
-            <p className="mt-1 font-sans text-xs leading-relaxed text-[#92400E]">
+            <p className="mt-1 font-sans text-sm leading-relaxed text-[#92400E]">
               {copy.progressResetWarning}
             </p>
           </div>
@@ -273,7 +273,7 @@ export function ParentLearningTrackPanel({ isEditable }: ParentLearningTrackPane
         </h2>
         <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">{savedBody}</p>
         {savedProgressReset ? (
-          <p className="mt-2 font-sans text-xs leading-relaxed text-[#92400E]">
+          <p className="mt-2 font-sans text-sm leading-relaxed text-[#92400E]">
             {copy.progressResetConfirmed}
           </p>
         ) : null}

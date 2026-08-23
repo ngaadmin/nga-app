@@ -103,7 +103,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
         {canChange ? (
           <button
             type="button"
-            className="shrink-0 font-sans text-xs font-semibold text-[#0CC1E0] underline underline-offset-2"
+            className="shrink-0 font-sans text-sm font-semibold text-[#0CC1E0] underline underline-offset-2"
             aria-expanded={open}
             onClick={() => {
               setError(null);
@@ -142,14 +142,14 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
                     unoptimized
                   />
                 </span>
-                <span className="mt-1 font-heading text-[11px] font-extrabold leading-tight text-[#031F82]">
+                <span className="mt-1 font-heading text-sm font-extrabold leading-tight text-[#031F82]">
                   {masteryCohortLabel(cohort)}
                 </span>
-                <span className="mt-0.5 font-sans text-[10px] font-semibold leading-tight text-[#1E3A5F]/80">
+                <span className="mt-0.5 font-sans text-sm font-semibold leading-tight text-[#1E3A5F]/80">
                   Ages {masteryCohortAgeRangeLabel(cohort)}
                 </span>
                 {selected ? (
-                  <span className="mt-1 font-heading text-[9px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+                  <span className="mt-1 font-heading text-xs font-bold uppercase tracking-wide text-[#0CC1E0]">
                     {trackCopy.currentBadge}
                   </span>
                 ) : (
@@ -162,7 +162,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
       ) : null}
 
       {error ? (
-        <p className="font-sans text-xs font-medium text-red-600" role="alert">
+        <p className="font-sans text-sm font-medium text-red-600" role="alert">
           {error}
         </p>
       ) : null}

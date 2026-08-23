@@ -53,7 +53,7 @@ export function ParentHubSection() {
           >
             {copy.title}
           </p>
-          <p className="mt-0.5 font-sans text-xs text-[#1E3A5F]">
+          <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]">
             {copy.unlockedSubtext}
           </p>
         </div>

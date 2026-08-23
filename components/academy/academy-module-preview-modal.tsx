@@ -40,7 +40,7 @@ export function AcademyModulePreviewModal({
       panelClassName="max-w-md rounded-2xl border-0 bg-white p-5 shadow-md sm:p-6"
     >
       <p
-        className="font-heading text-[10px] font-bold uppercase tracking-wide"
+        className="font-heading text-sm font-bold uppercase tracking-wide"
         style={{ color: phase.fill }}
       >
         Module {moduleNumber}

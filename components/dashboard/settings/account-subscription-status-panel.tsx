@@ -53,10 +53,10 @@ import { cn } from "@/lib/utils/cn";
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 const quietDeleteClass =
-  "font-sans text-xs font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
+  "font-sans text-sm font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 const approveButtonClass =
-  "shrink-0 rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
+  "shrink-0 rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
 
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-red-700 bg-red-600 font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
@@ -560,7 +560,7 @@ export function AccountSubscriptionStatusPanel() {
                       {household.householdEmail ||
                         displayAccountIdentity(household.master)}
                     </p>
-                    <p className="font-sans text-xs font-semibold uppercase tracking-wide text-[#0CC1E0]">
+                    <p className="font-sans text-sm font-semibold uppercase tracking-wide text-[#0CC1E0]">
                       {copy.masterBadge}
                     </p>
                   </div>
@@ -619,7 +619,7 @@ export function AccountSubscriptionStatusPanel() {
                         <p className="font-heading text-base font-extrabold leading-snug text-[#031F82]">
                           {child.username}
                         </p>
-                        <p className="font-sans text-xs font-semibold uppercase tracking-wide text-[#1E3A5F]">
+                        <p className="font-sans text-sm font-semibold uppercase tracking-wide text-[#1E3A5F]">
                           {copy.childBadge}
                           {isPending ? ` · ${copy.pendingApprovalBadge}` : ""}
                         </p>
@@ -707,7 +707,7 @@ export function AccountSubscriptionStatusPanel() {
                         <p className="font-heading text-base font-extrabold leading-snug text-[#031F82]">
                           {item.username}
                         </p>
-                        <p className="font-sans text-xs font-semibold uppercase tracking-wide text-[#1E3A5F]">
+                        <p className="font-sans text-sm font-semibold uppercase tracking-wide text-[#1E3A5F]">
                           {copy.childBadge}
                           {` · ${copy.pendingApprovalBadge}`}
                         </p>
@@ -817,7 +817,7 @@ export function AccountSubscriptionStatusPanel() {
               >
                 {copy.deleteMaster}
               </button>
-              <p className="font-sans text-xs leading-relaxed text-[#8FA3B0]">
+              <p className="font-sans text-sm leading-relaxed text-[#8FA3B0]">
                 {copy.deleteMasterHint}
               </p>
             </div>

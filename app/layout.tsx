@@ -25,11 +25,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: "device-width",
+  // shrink-to-fit=no stops iOS from scaling a wide layout down to ~4–6pt type.
+  width: "device-width, shrink-to-fit=no",
   initialScale: 1,
   minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
   themeColor: "#031F82",
 };
 

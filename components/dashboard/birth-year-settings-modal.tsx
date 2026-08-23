@@ -32,13 +32,13 @@ function TrackPreview({ label, birthYear }: TrackPreviewProps) {
 
   return (
     <div className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF] px-3 py-3">
-      <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]/60">
+      <p className="font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/60">
         {label}
       </p>
       <p className="mt-1 font-heading text-base font-extrabold text-[#031F82]">
         {trackLabel}
       </p>
-      <p className="mt-0.5 font-sans text-xs text-[#1E3A5F]/75">
+      <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]/75">
         Born {birthYear} · Ages {ageRange}
       </p>
     </div>
@@ -144,10 +144,10 @@ export function BirthYearSettingsModal({
               className="rounded-xl border-2 border-dashed border-[#BDE9FB]/70 bg-white px-3 py-3"
               aria-hidden
             >
-              <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#1E3A5F]/40">
+              <p className="font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/40">
                 {copy.newTrackLabel}
               </p>
-              <p className="mt-2 font-sans text-xs text-[#1E3A5F]/50">
+              <p className="mt-2 font-sans text-sm text-[#1E3A5F]/50">
                 Pick a new year to preview the track.
               </p>
             </div>

@@ -317,6 +317,7 @@
 
   html {
     @apply antialiased scroll-smooth;
+    font-size: 16px;
     overflow-x: hidden;
     max-width: 100%;
     -webkit-text-size-adjust: 100%;
@@ -325,6 +326,7 @@
 
   body {
     @apply bg-nga-panel text-nga-ink font-sans min-h-dvh;
+    font-size: 16px;
     overflow-x: hidden;
     max-width: 100%;
     overscroll-behavior-x: none;
@@ -343,4 +345,42 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-nga-secondary;
   }
+}
+
+/*
+ * Unlayered so these beat Tailwind @theme rem tokens.
+ * `.text-sm { font-size: var(--text-sm) }` with `--text-sm: 0.875rem` collapses
+ * to ~4–6px when a phone's root font-size is not 16px (or iOS shrink-to-fits).
+ * Pin tokens to CSS pixels on hubs so computed sizes cannot follow a tiny rem.
+ */
+html {
+  font-size: 16px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
+}
+
+body {
+  font-size: 16px;
+}
+
+[data-dashboard-hub] {
+  font-size: 16px;
+  --text-xs: 14px;
+  --text-sm: 16px;
+  --text-base: 17px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+}
+
+[data-dashboard-nav] {
+  font-size: 13px;
+  --text-xs: 13px;
+  --text-sm: 13px;
 }

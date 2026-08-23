@@ -76,7 +76,7 @@ function FriendRow({
       )}
     >
       <span
-        className="w-9 shrink-0 text-left font-heading text-sm font-extrabold text-[#0CC1E0] sm:w-10 sm:text-base"
+        className="w-9 shrink-0 text-left font-heading text-[16px] font-extrabold text-[#0CC1E0] sm:w-10 sm:text-[17px]"
         aria-label={`Rank ${rank}`}
       >
         #{rank}
@@ -90,19 +90,19 @@ function FriendRow({
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-heading text-sm font-extrabold text-[#031F82]">
+        <p className="truncate font-heading text-[16px] font-extrabold text-[#031F82]">
           {username}
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF7ED] px-2 py-0.5">
             <FlameIcon className="size-3 text-[#FFA503]" />
-            <span className="font-heading text-[10px] font-bold text-[#031F82]">
+            <span className="font-heading text-[16px] font-bold text-[#031F82]">
               {dayStreak} day streak
             </span>
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-[#BDE9FB]/30 px-2 py-0.5">
             <GoldCoinIcon className="size-3 text-[#0CC1E0]" />
-            <span className="font-heading text-[10px] font-bold text-[#031F82]">
+            <span className="font-heading text-[16px] font-bold text-[#031F82]">
               {lifetimePoints.toLocaleString()} lifetime coins
             </span>
           </span>
@@ -152,7 +152,7 @@ export function SocialFriendsSection() {
         </DashboardSectionHeading>
         <InviteFriendsControl />
       </div>
-      <p className="mt-1 font-sans text-[10px] leading-snug text-nga-slate/80">
+      <p className="mt-1 font-sans text-[14px] leading-snug text-nga-slate/80">
         Ranked by lifetime coins. Sample players show how the board will look.
       </p>
 

@@ -52,7 +52,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <div className="min-h-dvh w-full max-w-full overflow-x-hidden bg-white">
       <DashboardNavigation />
 
-      <div className="flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden md:pl-64">
+      <div
+        className="flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden md:pl-64"
+        {...(!isLessonRoute ? { "data-dashboard-hub": true } : {})}
+      >
         {!isLessonRoute ? <DashboardStatusHeader /> : null}
 
         <main

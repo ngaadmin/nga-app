@@ -86,7 +86,7 @@ function SettingsRow({
       <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
         <Icon className="size-4" />
       </span>
-      <span className="font-heading text-sm font-bold text-[#031F82]">
+      <span className="font-heading text-[16px] font-bold text-[#031F82]">
         {label}
       </span>
     </button>
@@ -126,11 +126,11 @@ function ProfileHeader({
           {isLoading ? "Loading…" : username}
         </h1>
         {showEmail ? (
-          <p className="mt-0.5 truncate font-sans text-sm text-[#1E3A5F]">
+          <p className="mt-0.5 truncate font-sans text-[14px] text-[#1E3A5F]">
             {email}
           </p>
         ) : null}
-        <p className="mt-1 font-sans text-sm text-[#1E3A5F]/75">
+        <p className="mt-1 font-sans text-[14px] text-[#1E3A5F]/75">
           {joinDateLabel} {formatJoinDate(joinDate)}
         </p>
       </div>
@@ -148,7 +148,7 @@ type PinFieldProps = {
 function PinField({ id, label, value, onChange }: PinFieldProps) {
   return (
     <label className="block">
-      <span className="font-heading text-xs font-bold text-[#031F82]">
+      <span className="font-heading text-sm font-bold text-[#031F82]">
         {label}
       </span>
       <input
@@ -308,13 +308,13 @@ function ChangeParentPinModal({
         </div>
 
         {error ? (
-          <p className="mt-3 font-sans text-xs font-semibold text-red-600" role="alert">
+          <p className="mt-3 font-sans text-sm font-semibold text-red-600" role="alert">
             {error}
           </p>
         ) : null}
 
         {recoveryNotice ? (
-          <p className="mt-3 rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-xs leading-relaxed text-[#031F82]">
+          <p className="mt-3 rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-sm leading-relaxed text-[#031F82]">
             {recoveryNotice}
           </p>
         ) : null}
@@ -459,13 +459,13 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
           </label>
 
           {error ? (
-            <p className="font-sans text-xs font-semibold text-red-600" role="alert">
+            <p className="font-sans text-sm font-semibold text-red-600" role="alert">
               {error}
             </p>
           ) : null}
 
           {notice ? (
-            <p className="rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-xs leading-relaxed text-[#031F82]">
+            <p className="rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-sm leading-relaxed text-[#031F82]">
               {notice}
             </p>
           ) : null}

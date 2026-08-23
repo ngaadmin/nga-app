@@ -63,7 +63,7 @@ function MilestoneTile({
       </span>
       <p
         className={cn(
-          "mt-2 font-sans text-sm font-medium leading-snug",
+          "mt-2 font-sans text-[14px] font-medium leading-snug",
           achieved ? "text-nga-primary" : "text-nga-primary/45",
         )}
       >
@@ -71,7 +71,7 @@ function MilestoneTile({
       </p>
       <p
         className={cn(
-          "mt-0.5 font-sans text-xs font-medium leading-tight",
+          "mt-0.5 font-sans text-[14px] font-medium leading-tight",
           achieved ? "text-nga-slate" : "text-nga-primary/30",
         )}
       >
@@ -108,10 +108,10 @@ export function CommunityMilestonesSection() {
         aria-expanded={open}
         aria-controls="community-milestones-list"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between gap-3 rounded-nga-lg border border-nga-panel bg-nga-surface px-3 py-2 font-heading text-xs font-bold uppercase tracking-wide text-nga-primary"
+        className="flex w-full items-center justify-between gap-3 rounded-nga-lg border border-nga-panel bg-nga-surface px-3 py-2 font-heading text-[16px] font-bold uppercase tracking-wide text-nga-primary"
       >
         <span>Milestones</span>
-        <span className="flex items-center gap-2 font-heading text-[10px] font-bold normal-case tracking-normal text-nga-slate">
+        <span className="flex items-center gap-2 font-heading text-[16px] font-bold normal-case tracking-normal text-nga-slate">
           {achievedCount}/{COMMUNITY_MILESTONE_TOTAL} achieved
           <span aria-hidden className="text-nga-secondary">
             {open ? "-" : "+"}

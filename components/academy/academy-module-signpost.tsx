@@ -75,7 +75,7 @@ export function AcademyModuleSignpost({
           >
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-heading text-[10px] font-extrabold uppercase tracking-wider",
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-heading text-xs font-extrabold uppercase tracking-wider",
                 useDarkOnFill ? "text-[#031F82]" : "text-white",
               )}
               style={{ backgroundColor: phase.fill }}

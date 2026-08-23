@@ -32,7 +32,7 @@ export function ParentConversionRatePanel({
         <p className="font-heading text-sm font-extrabold text-[#031F82]">
           {conversionCopy.heading}
         </p>
-        <p className="mt-2 font-sans text-xs leading-relaxed text-[#1E3A5F]">
+        <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">
           {vaultHint}
         </p>
         <p className="mt-2 font-heading text-base font-extrabold text-[#031F82]">
@@ -67,7 +67,7 @@ export function ParentConversionRatePanel({
           className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#BDE9FB]/50 accent-[#0CC1E0]"
         />
       </label>
-      <p className="mt-3 font-sans text-[10px] leading-relaxed text-[#1E3A5F]">
+      <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
         {xpExchangeRateSet ? conversionCopy.summary : conversionCopy.unsetHint}
       </p>
       <button

@@ -22,7 +22,7 @@ export const STATUS_BANNER_ROW_CLASS =
  * without clipping descenders (g/y/p).
  */
 export const STATUS_BANNER_ITEM_CLASS =
-  "inline-flex h-full min-w-0 items-center gap-1 font-heading text-xs font-bold leading-tight text-[#031F82]";
+  "inline-flex h-full min-w-0 items-center gap-1 font-heading text-[14px] font-bold leading-tight text-[#031F82]";
 
 /** Uniform icon box aligned to banner text. */
 export const STATUS_BANNER_ICON_CLASS = "size-3.5 shrink-0";

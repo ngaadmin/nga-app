@@ -2,7 +2,7 @@
 
 /** Primary section title (“My Money”) on the gradient card. */
 export const vaultCardMainTitleClass =
-  "font-heading text-lg font-extrabold leading-tight tracking-normal text-white sm:text-xl";
+  "font-heading text-[18px] font-extrabold leading-tight tracking-normal text-white sm:text-[20px]";
 
 /** Primary wealth total under the My Money title. */
 export const vaultCardBalanceClass =
@@ -42,16 +42,16 @@ export const vaultJarsCarouselTrackClass = vaultJarsGridTrackClass;
 
 /** Jar name on grid tile. */
 export const vaultJarTileNameClass =
-  "mt-1.5 line-clamp-2 min-h-[2.25rem] w-full text-center font-heading text-sm font-bold leading-tight text-white/90";
+  "mt-1.5 line-clamp-2 min-h-[2.25rem] w-full text-center font-heading text-[16px] font-bold leading-tight text-white/90";
 
 /** Jar balance — slightly smaller so large amounts keep breathing room. */
 export const vaultJarTileBalanceClass =
-  "mt-0.5 w-full break-all text-center font-heading text-sm font-extrabold leading-tight tabular-nums text-white";
+  "mt-0.5 w-full break-all text-center font-heading text-[16px] font-extrabold leading-tight tabular-nums text-white";
 
 /** Section title on light Vault surfaces (deposit, expanded panels). */
 export const vaultLightSectionTitleClass =
-  "font-heading text-base font-extrabold leading-snug tracking-normal text-[#031F82]";
+  "font-heading text-[17px] font-extrabold leading-snug tracking-normal text-[#031F82]";
 
 /** Muted helper copy for virtual-money simulator disclaimers. */
 export const vaultSimulatorDisclaimerClass =
-  "font-sans text-sm leading-relaxed text-[#1E3A5F]/70";
+  "font-sans text-[14px] leading-relaxed text-[#1E3A5F]/70";

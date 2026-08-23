@@ -40,7 +40,7 @@ export function ParentHubFeatureItem({
       >
         <div className="min-w-0 flex-1">
           <p className="font-heading text-sm font-extrabold text-[#031F82]">{title}</p>
-          <p className="mt-0.5 font-sans text-xs leading-relaxed text-[#1E3A5F]">{summary}</p>
+          <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">{summary}</p>
         </div>
         <span
           className={cn(

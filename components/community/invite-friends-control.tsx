@@ -130,7 +130,7 @@ export function InviteFriendsControl() {
           }
           setOpen(true);
         }}
-        className="rounded-nga-lg border-b-4 border-nga-secondary-shadow bg-nga-secondary px-3 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2 sm:text-xs"
+        className="rounded-nga-lg border-b-4 border-nga-secondary-shadow bg-nga-secondary px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2"
       >
         + Invite Friends
       </button>
@@ -147,14 +147,14 @@ export function InviteFriendsControl() {
           >
             X
           </button>
-          <p className="font-heading text-xs font-extrabold text-nga-primary">
+          <p className="font-heading text-sm font-extrabold text-nga-primary">
             Invite a friend
           </p>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => void handleCopy()}
-              className="flex-1 rounded-nga-lg border border-nga-panel bg-nga-mist/70 px-2 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary"
+              className="flex-1 rounded-nga-lg border border-nga-panel bg-nga-mist/70 px-2 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary"
             >
               {copied ? "Copied" : "Copy link"}
             </button>
@@ -162,7 +162,7 @@ export function InviteFriendsControl() {
               <button
                 type="button"
                 onClick={() => void handleShare()}
-                className="flex-1 rounded-nga-lg border border-nga-panel bg-nga-mist/70 px-2 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary"
+                className="flex-1 rounded-nga-lg border border-nga-panel bg-nga-mist/70 px-2 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary"
               >
                 Share
               </button>
@@ -171,7 +171,7 @@ export function InviteFriendsControl() {
           <form className="space-y-2" onSubmit={handleEmailSubmit}>
             <label
               htmlFor="friend-invite-email"
-              className="block font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary"
+              className="block font-heading text-sm font-bold uppercase tracking-wide text-nga-primary"
             >
               Email (optional)
             </label>
@@ -190,19 +190,19 @@ export function InviteFriendsControl() {
               className="w-full rounded-nga-lg border border-nga-panel bg-white px-3 py-2 font-sans text-sm text-nga-ink outline-none focus:border-nga-secondary"
             />
             {emailError ? (
-              <p className="font-sans text-[11px] font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-red-600" role="alert">
                 {emailError}
               </p>
             ) : null}
             {emailNotice ? (
-              <p className="font-sans text-[11px] font-medium text-nga-primary" role="status">
+              <p className="font-sans text-sm font-medium text-nga-primary" role="status">
                 {emailNotice}
               </p>
             ) : null}
             <button
               type="submit"
               disabled={sending}
-              className="w-full rounded-nga-lg border-b-4 border-nga-cta-shadow bg-nga-cta px-3 py-2 font-heading text-[10px] font-bold uppercase tracking-wide text-nga-primary disabled:opacity-60"
+              className="w-full rounded-nga-lg border-b-4 border-nga-cta-shadow bg-nga-cta px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary disabled:opacity-60"
             >
               {sending ? "Sending..." : "Send email"}
             </button>

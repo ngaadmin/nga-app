@@ -25,7 +25,7 @@ export function AcademyJourneyDirectionSign({
           side === "left" ? "-rotate-6" : "rotate-6",
         )}
       >
-        <p className="whitespace-nowrap font-heading text-xs font-extrabold uppercase leading-tight tracking-wide text-[#031F82] sm:text-sm">
+        <p className="whitespace-nowrap font-heading text-sm font-extrabold uppercase leading-tight tracking-wide text-[#031F82]">
           Start Here
         </p>
         <span

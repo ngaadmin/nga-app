@@ -263,7 +263,7 @@ export function AddLinkedProfilePanel() {
                   <span className="mt-2 font-heading text-sm font-extrabold text-[#031F82]">
                     {masteryCohortLabel(track)}
                   </span>
-                  <span className="mt-0.5 font-sans text-xs font-semibold text-[#1E3A5F]/80">
+                  <span className="mt-0.5 font-sans text-sm font-semibold text-[#1E3A5F]/80">
                     Ages {masteryCohortAgeRangeLabel(track)}
                   </span>
                 </button>

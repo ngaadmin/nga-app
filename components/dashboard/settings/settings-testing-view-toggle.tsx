@@ -12,7 +12,7 @@ export function SettingsTestingViewToggle() {
       aria-label="Testing view"
       className="rounded-2xl border-0 bg-white px-4 py-3 shadow-md"
     >
-      <p className="font-heading text-xs font-bold uppercase tracking-wide text-[#8FA3B0]">
+      <p className="font-heading text-sm font-bold uppercase tracking-wide text-[#8FA3B0]">
         Testing
       </p>
       <p className="mt-1 font-heading text-sm font-extrabold text-[#031F82]">

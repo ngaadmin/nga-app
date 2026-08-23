@@ -122,7 +122,7 @@ export function AcademyMomentumHeader({
                 role="status"
                 className="absolute right-0 top-[calc(100%+0.4rem)] w-44 rounded-xl bg-[#031F82] px-3 py-2 text-left shadow-md"
               >
-                <p className="font-heading text-xs font-bold leading-snug text-white">
+                <p className="font-heading text-sm font-bold leading-snug text-white">
                   {journeyCopy.skillsCupTip}
                 </p>
               </div>

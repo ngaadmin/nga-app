@@ -42,7 +42,7 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
         )}
       >
         <Icon className="size-6 shrink-0" />
-        <span className="text-center font-heading text-[10px] font-bold leading-tight">
+        <span className="text-center font-heading text-[13px] font-bold leading-tight">
           {item.shortLabel ??
             (item.label.startsWith("The ")
               ? item.label.replace("The ", "")

@@ -55,14 +55,14 @@ export function CohortTrackPicker() {
                 key={cohort}
                 type="button"
                 onClick={() => handleSelect(cohort)}
-                className="flex min-w-0 flex-row items-center gap-4 bg-transparent px-1 py-5 text-left transition-transform active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary sm:flex-col sm:items-center sm:gap-0 sm:px-0 sm:py-0 sm:text-center sm:hover:scale-[1.03] sm:active:scale-[0.98]"
+                className="flex min-w-0 flex-row items-center gap-4 bg-transparent px-1 py-3 text-left transition-transform active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary sm:flex-col sm:items-center sm:gap-0 sm:px-0 sm:py-0 sm:text-center sm:hover:scale-[1.03] sm:active:scale-[0.98]"
               >
-                <span className="relative size-36 shrink-0 sm:aspect-square sm:h-auto sm:w-full sm:max-w-[16rem] sm:size-auto">
+                <span className="relative size-32 shrink-0 sm:aspect-square sm:h-auto sm:w-full sm:max-w-[16rem] sm:size-auto">
                   <Image
                     src={TRACK_AVATAR_SRC[cohort]}
                     alt={`${label} avatar`}
                     fill
-                    sizes="(max-width: 639px) 144px, 256px"
+                    sizes="(max-width: 639px) 128px, 256px"
                     className="object-contain"
                     unoptimized
                   />

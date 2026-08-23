@@ -48,20 +48,6 @@ const COMMUNITY_SEED_PLAYERS: readonly SeedPlayer[] =
       dayStreak: 7,
       lifetimePoints: 3890,
     },
-    {
-      id: "seed-4",
-      username: "$enna_14",
-      avatarEmoji: "🦉",
-      dayStreak: 63,
-      lifetimePoints: 3150,
-    },
-    {
-      id: "seed-5",
-      username: "Zah33r",
-      avatarEmoji: "🐺",
-      dayStreak: 21,
-      lifetimePoints: 2240,
-    },
   ];
 
 type FriendRowProps = {
@@ -86,7 +72,7 @@ function FriendRow({
       className={cn(
         floatingPanelClass,
         "flex items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3",
-        highlight && "ring-2 ring-[#0CC1E0]/30",
+        highlight && "bg-[#BDE9FB]/50 ring-2 ring-[#0CC1E0]",
       )}
     >
       <span
@@ -133,7 +119,7 @@ export function SocialFriendsSection() {
   const { dayStreak } = DASHBOARD_HOME_PLACEHOLDER_STATE;
 
   const rankedEntries = useMemo((): LeaderboardEntry[] => {
-    const seeds: LeaderboardEntry[] = COMMUNITY_SEED_PLAYERS.map(
+    const seeds: LeaderboardEntry[] = COMMUNITY_SEED_PLAYERS.slice(0, 3).map(
       (player, index) => ({
         ...player,
         rank: index + 1,

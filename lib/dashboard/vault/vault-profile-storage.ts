@@ -1,10 +1,15 @@
 import {
   defaultJarBalances,
+  roundAudAmount,
+  sumJarBalances,
   type JarBalanceMap,
 } from "@/lib/dashboard/destination-jars";
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
 import type { LedgerEntry } from "@/lib/dashboard/vault-ledger";
-import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
+import {
+  retireEmergencyMoneyStarterGoal,
+  type SavingsGoal,
+} from "@/lib/dashboard/savings-goals";
 import type {
   CustomSpendingCategory,
   SpendingCategoryOverrides,
@@ -59,7 +64,10 @@ export function freshVaultProfileState(): PersistedVaultProfile {
   };
 }
 
-function isJarBalanceMap(value: unknown): value is JarBalanceMap {
+function isLegacyFoundationJarBalanceMap(value: unknown): value is Pick<
+  JarBalanceMap,
+  "save-jar" | "spend-jar" | "give-jar"
+> {
   if (!value || typeof value !== "object") return false;
   const record = value as Partial<JarBalanceMap>;
   return (
@@ -72,6 +80,25 @@ function isJarBalanceMap(value: unknown): value is JarBalanceMap {
   );
 }
 
+function isJarBalanceMap(value: unknown): value is JarBalanceMap {
+  return isLegacyFoundationJarBalanceMap(value);
+}
+
+function normalizeJarBalances(raw: unknown): JarBalanceMap {
+  const defaults = defaultJarBalances();
+  if (!isLegacyFoundationJarBalanceMap(raw)) return defaults;
+  const emergenciesRaw = (raw as Partial<JarBalanceMap>)["emergencies-jar"];
+  return {
+    "save-jar": Math.max(0, raw["save-jar"]),
+    "spend-jar": Math.max(0, raw["spend-jar"]),
+    "give-jar": Math.max(0, raw["give-jar"]),
+    "emergencies-jar":
+      typeof emergenciesRaw === "number" && Number.isFinite(emergenciesRaw)
+        ? Math.max(0, emergenciesRaw)
+        : 0,
+  };
+}
+
 function parseLedgerEntry(value: unknown): LedgerEntry | null {
   if (!value || typeof value !== "object") return null;
   const entry = value as Partial<LedgerEntry>;
@@ -82,14 +109,24 @@ function parseLedgerEntry(value: unknown): LedgerEntry | null {
 
 function normalizeVaultProfile(raw: Partial<PersistedVaultProfile>): PersistedVaultProfile {
   const defaults = freshVaultProfileState();
+  const jarBalances = normalizeJarBalances(raw.jarBalances);
 
-  const jarBalances = isJarBalanceMap(raw.jarBalances)
-    ? {
-        "save-jar": Math.max(0, raw.jarBalances["save-jar"]),
-        "spend-jar": Math.max(0, raw.jarBalances["spend-jar"]),
-        "give-jar": Math.max(0, raw.jarBalances["give-jar"]),
-      }
-    : defaults.jarBalances;
+  const parsedGoals = Array.isArray(raw.savingsGoals)
+    ? raw.savingsGoals.filter(
+        (entry): entry is SavingsGoal =>
+          Boolean(entry) &&
+          typeof entry === "object" &&
+          typeof (entry as SavingsGoal).id === "string" &&
+          (entry as SavingsGoal).id.startsWith("goal-") &&
+          typeof (entry as SavingsGoal).name === "string" &&
+          typeof (entry as SavingsGoal).targetAmount === "number" &&
+          typeof (entry as SavingsGoal).balance === "number",
+      )
+    : defaults.savingsGoals;
+  const retiredEmergency = retireEmergencyMoneyStarterGoal(parsedGoals);
+  jarBalances["save-jar"] = roundAudAmount(
+    Math.max(0, jarBalances["save-jar"] + retiredEmergency.returnedBalance),
+  );
 
   return {
     schemaVersion: VAULT_PROFILE_SCHEMA_VERSION,
@@ -107,18 +144,7 @@ function normalizeVaultProfile(raw: Partial<PersistedVaultProfile>): PersistedVa
             (entry as CustomVaultBucketPersisted).id.startsWith("custom-"),
         )
       : defaults.customBuckets,
-    savingsGoals: Array.isArray(raw.savingsGoals)
-      ? raw.savingsGoals.filter(
-          (entry): entry is SavingsGoal =>
-            Boolean(entry) &&
-            typeof entry === "object" &&
-            typeof (entry as SavingsGoal).id === "string" &&
-            (entry as SavingsGoal).id.startsWith("goal-") &&
-            typeof (entry as SavingsGoal).name === "string" &&
-            typeof (entry as SavingsGoal).targetAmount === "number" &&
-            typeof (entry as SavingsGoal).balance === "number",
-        )
-      : defaults.savingsGoals,
+    savingsGoals: retiredEmergency.goals,
     spendingCategoryOverrides:
       raw.spendingCategoryOverrides && typeof raw.spendingCategoryOverrides === "object"
         ? (raw.spendingCategoryOverrides as SpendingCategoryOverrides)
@@ -209,9 +235,7 @@ function readLegacyWalletRaw(): string | null {
 function hasLegacyWalletVaultData(profile: PersistedVaultProfile): boolean {
   return (
     profile.moneyToAllocate > 0 ||
-    profile.jarBalances["save-jar"] > 0 ||
-    profile.jarBalances["spend-jar"] > 0 ||
-    profile.jarBalances["give-jar"] > 0 ||
+    sumJarBalances(profile.jarBalances) > 0 ||
     profile.customBuckets.length > 0 ||
     profile.savingsGoals.length > 0 ||
     Object.keys(profile.spendingCategoryOverrides).length > 0 ||
@@ -254,7 +278,10 @@ export function saveVaultProfileState(
 
   writeRawForSession(
     session,
-    JSON.stringify({ ...state, schemaVersion: VAULT_PROFILE_SCHEMA_VERSION }),
+    JSON.stringify({
+      ...normalizeVaultProfile(state),
+      schemaVersion: VAULT_PROFILE_SCHEMA_VERSION,
+    }),
   );
   markAccountProgressDirty();
 }

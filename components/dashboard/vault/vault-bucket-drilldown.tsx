@@ -29,7 +29,9 @@ type VaultBucketDrilldownProps = {
     updates: { name?: string; emoji?: string; targetAmount?: number },
   ) => void;
   onResetAllGoalBalances: () => void;
+  onResetBucketBalance: (bucketId: VaultBucketId) => void;
   onManageGoalsClick?: () => void;
+  onAddGoalClick?: () => void;
   onClose: () => void;
 };
 
@@ -47,7 +49,9 @@ export function VaultBucketDrilldown({
   onAssignGoals,
   onUpdateGoalDetails,
   onResetAllGoalBalances,
+  onResetBucketBalance,
   onManageGoalsClick,
+  onAddGoalClick,
   onClose,
 }: VaultBucketDrilldownProps) {
   if (bucket.id === SAVINGS_JAR_ID) {
@@ -62,6 +66,7 @@ export function VaultBucketDrilldown({
         onAssignGoals={onAssignGoals}
         onUpdateGoalDetails={onUpdateGoalDetails}
         onManageGoalsClick={onManageGoalsClick}
+        onAddGoalClick={onAddGoalClick}
         onClose={onClose}
       />
     );
@@ -70,14 +75,12 @@ export function VaultBucketDrilldown({
   return (
     <VaultBucketExpandedPanel
       bucket={bucket}
-      buckets={buckets}
-      goals={goals}
       isPremium={isPremium}
       spendingCategories={spendingCategories}
-      onVaultTransfer={onVaultTransfer}
       onMarkSpent={(amount, categoryLabel) => onMarkSpent(bucket.id, amount, categoryLabel)}
       onAddCustomCategory={onAddCustomCategory}
       onRenameCategory={onRenameCategory}
+      onResetBucketBalance={onResetBucketBalance}
       onClose={onClose}
     />
   );

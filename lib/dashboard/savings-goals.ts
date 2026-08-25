@@ -91,7 +91,7 @@ export function computeTotalSavings(
 export const VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL = true;
 
 export function isFreemiumSystemGoal(id: SavingsGoalId): boolean {
-  return id === FREEMIUM_BIG_SAVINGS_GOAL_ID || id === FREEMIUM_EMERGENCY_GOAL_ID;
+  return id === FREEMIUM_BIG_SAVINGS_GOAL_ID;
 }
 
 export function isCustomSavingsGoal(id: SavingsGoalId): boolean {
@@ -129,14 +129,28 @@ export function buildFreemiumStarterGoals(_cohort: MasteryCohort): SavingsGoal[]
       balance: 0,
       emoji: "🎯",
     },
-    {
-      id: FREEMIUM_EMERGENCY_GOAL_ID,
-      name: "Emergency Money",
-      targetAmount: 0,
-      balance: 0,
-      emoji: "🛡️",
-    },
   ];
+}
+
+/**
+ * Drop the retired Emergency Money starter goal.
+ * Any remaining balance is returned so callers can fold it into unassigned Save.
+ */
+export function retireEmergencyMoneyStarterGoal(
+  goals: readonly SavingsGoal[],
+): { goals: SavingsGoal[]; returnedBalance: number } {
+  let returnedBalance = 0;
+  const next: SavingsGoal[] = [];
+  for (const goal of goals) {
+    if (goal.id === FREEMIUM_EMERGENCY_GOAL_ID) {
+      returnedBalance = roundAudAmount(
+        returnedBalance + Math.max(0, goal.balance),
+      );
+      continue;
+    }
+    next.push(goal);
+  }
+  return { goals: next, returnedBalance };
 }
 
 /**
@@ -157,8 +171,9 @@ export function ensureFreemiumStarterGoals(
   goals: readonly SavingsGoal[],
   cohort: MasteryCohort,
 ): SavingsGoal[] {
+  const { goals: withoutRetired } = retireEmergencyMoneyStarterGoal(goals);
   return buildFreemiumStarterGoals(cohort).map((template) => {
-    const existing = goals.find((goal) => goal.id === template.id);
+    const existing = withoutRetired.find((goal) => goal.id === template.id);
     if (!existing) return template;
     return {
       ...template,
@@ -176,14 +191,16 @@ export function resolveVaultSavingsGoals(
   cohort: MasteryCohort,
   isPremium: boolean,
 ): SavingsGoal[] {
+  const { goals: withoutRetired } = retireEmergencyMoneyStarterGoal(goals);
+
   if (isPremium) {
-    const custom = goals.filter((goal) => isCustomSavingsGoal(goal.id));
-    return custom.length > 0 ? custom : ensureFreemiumStarterGoals(goals, cohort);
+    const custom = withoutRetired.filter((goal) => isCustomSavingsGoal(goal.id));
+    return custom.length > 0 ? custom : ensureFreemiumStarterGoals(withoutRetired, cohort);
   }
 
-  const starters = ensureFreemiumStarterGoals(goals, cohort);
+  const starters = ensureFreemiumStarterGoals(withoutRetired, cohort);
   if (VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL) {
-    const custom = goals.filter((goal) => isCustomSavingsGoal(goal.id));
+    const custom = withoutRetired.filter((goal) => isCustomSavingsGoal(goal.id));
     return [...starters, ...custom];
   }
   return starters;

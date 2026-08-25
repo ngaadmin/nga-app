@@ -212,6 +212,23 @@ export function buildSaveJarTransferDestinations(
   );
 }
 
+/** Jar sources for the single Vault-home jar-to-jar move. */
+export function buildJarToJarTransferSources(
+  buckets: readonly VaultBucket[],
+): VaultTransferLocation[] {
+  return buckets.map(bucketLocation);
+}
+
+/** Jar destinations for the Vault-home jar-to-jar move (excludes the active source). */
+export function buildJarToJarTransferDestinations(
+  buckets: readonly VaultBucket[],
+  sourceId: VaultTransferLocationId,
+): VaultTransferLocation[] {
+  return sortBucketDestinations(
+    buckets.filter((bucket) => bucket.id !== sourceId),
+  );
+}
+
 export function resolveVaultTransferLocationLabel(
   id: VaultTransferLocationId,
   buckets: readonly VaultBucket[],

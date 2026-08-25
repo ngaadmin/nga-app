@@ -42,6 +42,16 @@ export const vaultActionButtonRowClass = "flex min-w-0 items-stretch gap-2";
 export const vaultHomeCompactCtaClass =
   "inline-flex h-8 w-[5.5rem] shrink-0 items-center justify-center rounded-nga-lg border-b-2 border-[#C88202] bg-[#FFA503] font-heading text-[11px] font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-px active:border-b disabled:cursor-not-allowed disabled:opacity-40";
 
+/** Compact orange CTA that grows with longer labels (jar use actions). */
+export const vaultHomeCompactCtaAutoClass =
+  "inline-flex h-8 shrink-0 items-center justify-center rounded-nga-lg border-b-2 border-[#C88202] bg-[#FFA503] px-3 font-heading text-[11px] font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-px active:border-b disabled:cursor-not-allowed disabled:opacity-40";
+
+export const manageSheetFieldLabelClass =
+  "font-heading text-sm font-bold text-[#031F82]";
+
+export const manageSheetSelectClass =
+  "mt-1 w-full rounded-lg border border-[#BDE9FB] bg-white px-2.5 py-2 font-sans text-sm text-[#031F82] outline-none focus:border-[#0CC1E0]";
+
 /** Compact secondary outline CTA — same height as Allocate, never orange. */
 export const vaultHomeCompactOutlineCtaClass =
   "inline-flex h-8 shrink-0 items-center justify-center rounded-nga-lg border-2 border-[#0CC1E0] bg-white px-3 font-heading text-[11px] font-bold uppercase tracking-wide text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#FAFDFF] disabled:cursor-not-allowed disabled:opacity-40";

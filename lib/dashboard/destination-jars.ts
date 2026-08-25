@@ -1,6 +1,10 @@
-export type FoundationJarRole = "save" | "spend" | "give";
+export type FoundationJarRole = "save" | "spend" | "give" | "emergencies";
 
-export type DestinationJarId = "save-jar" | "spend-jar" | "give-jar";
+export type DestinationJarId =
+  | "save-jar"
+  | "spend-jar"
+  | "give-jar"
+  | "emergencies-jar";
 
 export type DestinationJar = {
   id: DestinationJarId;
@@ -12,6 +16,7 @@ export type DestinationJar = {
 };
 
 export const SAVINGS_JAR_ID = "save-jar" as const;
+export const EMERGENCIES_JAR_ID = "emergencies-jar" as const;
 
 export const INITIAL_DESTINATION_JARS: readonly DestinationJar[] = [
   {
@@ -38,6 +43,14 @@ export const INITIAL_DESTINATION_JARS: readonly DestinationJar[] = [
     isPermanent: true,
     foundationRole: "give",
   },
+  {
+    id: EMERGENCIES_JAR_ID,
+    name: "Emergencies Jar",
+    emoji: "🚨",
+    balance: 0,
+    isPermanent: true,
+    foundationRole: "emergencies",
+  },
 ] as const;
 
 export type JarBalanceMap = Record<DestinationJarId, number>;
@@ -47,7 +60,15 @@ export function defaultJarBalances(): JarBalanceMap {
     "save-jar": 0,
     "spend-jar": 0,
     "give-jar": 0,
+    "emergencies-jar": 0,
   };
+}
+
+export function sumJarBalances(balances: JarBalanceMap): number {
+  return (Object.values(balances) as number[]).reduce(
+    (total, amount) => total + Math.max(0, amount),
+    0,
+  );
 }
 
 export function jarsFromBalanceMap(balances: JarBalanceMap): DestinationJar[] {

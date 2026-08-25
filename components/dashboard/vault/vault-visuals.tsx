@@ -40,6 +40,15 @@ export function bucketTheme(bucket: VaultBucket): BucketTheme {
       label: "text-[#6D28D9]",
     };
   }
+  if (bucket.foundationRole === "emergencies") {
+    return {
+      accent: "#F43F5E",
+      fill: "from-[#FB7185]/90 to-[#F43F5E]",
+      track: "bg-[#F43F5E]/20",
+      ring: "#F43F5E",
+      label: "text-[#BE123C]",
+    };
+  }
   return {
     accent: "#0CC1E0",
     fill: "from-[#0CC1E0]/90 to-[#0891B2]",

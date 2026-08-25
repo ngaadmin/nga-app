@@ -16,6 +16,7 @@ import {
   jarsFromBalanceMap,
   roundAudAmount,
   SAVINGS_JAR_ID,
+  sumJarBalances,
   type DestinationJar,
 } from "@/lib/dashboard/destination-jars";
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
@@ -170,13 +171,18 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
     };
   }, [hydrateFromStorage]);
 
+  const foundationJars = useMemo(
+    () => jarsFromBalanceMap(balanceMapFromJars(jars)),
+    [jars],
+  );
+
   useEffect(() => {
     if (!hydrated) return;
 
     const nextState = {
       schemaVersion: 1 as const,
       moneyToAllocate,
-      jarBalances: balanceMapFromJars(jars),
+      jarBalances: balanceMapFromJars(foundationJars),
       customBuckets,
       savingsGoals,
       spendingCategoryOverrides,
@@ -185,17 +191,13 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
     };
     const incomingEmpty =
       nextState.moneyToAllocate === 0 &&
-      nextState.jarBalances["save-jar"] === 0 &&
-      nextState.jarBalances["spend-jar"] === 0 &&
-      nextState.jarBalances["give-jar"] === 0 &&
+      sumJarBalances(nextState.jarBalances) === 0 &&
       nextState.customBuckets.length === 0 &&
       nextState.savingsGoals.every((goal) => goal.balance === 0);
     const existing = readVaultProfileState(sessionRef.current);
     const existingHasValue =
       existing.moneyToAllocate > 0 ||
-      existing.jarBalances["save-jar"] > 0 ||
-      existing.jarBalances["spend-jar"] > 0 ||
-      existing.jarBalances["give-jar"] > 0 ||
+      sumJarBalances(existing.jarBalances) > 0 ||
       existing.customBuckets.length > 0 ||
       existing.savingsGoals.some((goal) => goal.balance > 0);
     if (incomingEmpty && existingHasValue) {
@@ -207,7 +209,7 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
     customBuckets,
     customSpendingCategories,
     hydrated,
-    jars,
+    foundationJars,
     ledger,
     moneyToAllocate,
     savingsGoals,
@@ -225,9 +227,11 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
 
   const setJars = useCallback(
     (updater: DestinationJar[] | ((current: DestinationJar[]) => DestinationJar[])) => {
-      setJarsState((current) =>
-        typeof updater === "function" ? updater(current) : updater,
-      );
+      setJarsState((current) => {
+        const padded = jarsFromBalanceMap(balanceMapFromJars(current));
+        const next = typeof updater === "function" ? updater(padded) : updater;
+        return jarsFromBalanceMap(balanceMapFromJars(next));
+      });
     },
     [],
   );
@@ -302,26 +306,27 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
       const safeAmount = Math.round(Math.max(0, amount));
       if (safeAmount <= 0) return;
 
-      setJarsState((current) =>
-        current.map((jar) =>
+      setJarsState((current) => {
+        const padded = jarsFromBalanceMap(balanceMapFromJars(current));
+        return padded.map((jar) =>
           jar.id === SAVINGS_JAR_ID
             ? { ...jar, balance: Math.round(jar.balance + safeAmount) }
             : jar,
-        ),
-      );
+        );
+      });
     },
     [],
   );
 
   const vaultBuckets = useMemo(
-    () => mergeVaultBuckets(jars, customBuckets),
-    [customBuckets, jars],
+    () => mergeVaultBuckets(foundationJars, customBuckets),
+    [customBuckets, foundationJars],
   );
 
   const value = useMemo(
     () => ({
       moneyToAllocate,
-      jars,
+      jars: foundationJars,
       customBuckets,
       savingsGoals,
       spendingCategoryOverrides,
@@ -342,7 +347,7 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
       creditSaveJar,
       customBuckets,
       customSpendingCategories,
-      jars,
+      foundationJars,
       ledger,
       moneyToAllocate,
       savingsGoals,

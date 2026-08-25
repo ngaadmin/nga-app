@@ -11,6 +11,8 @@ import {
 } from "@/lib/dashboard/savings-goals";
 import { mergeVaultBuckets } from "@/lib/dashboard/vault-buckets";
 import {
+  buildJarToJarTransferDestinations,
+  buildJarToJarTransferSources,
   buildVaultTransferLocations,
   computeVaultTransferState,
   type VaultTransferWalletState,
@@ -171,8 +173,29 @@ describe("buildVaultTransferLocations", () => {
 
     expect(locations.map((entry) => entry.id)).toEqual([
       "give-jar",
+      "emergencies-jar",
       SAVINGS_JAR_ID,
       FREEMIUM_BIG_SAVINGS_GOAL_ID,
+    ]);
+  });
+});
+
+describe("buildJarToJarTransferSources", () => {
+  it("lists jars only, not goals", () => {
+    const buckets = mergeVaultBuckets(jarBalance("spend-jar", 10), []);
+    const sources = buildJarToJarTransferSources(buckets);
+    const destinations = buildJarToJarTransferDestinations(buckets, "spend-jar");
+
+    expect(sources.map((entry) => entry.id)).toEqual([
+      SAVINGS_JAR_ID,
+      "spend-jar",
+      "give-jar",
+      "emergencies-jar",
+    ]);
+    expect(destinations.map((entry) => entry.id)).toEqual([
+      "give-jar",
+      "emergencies-jar",
+      SAVINGS_JAR_ID,
     ]);
   });
 });

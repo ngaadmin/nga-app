@@ -8,6 +8,7 @@ import { VaultBucketDrilldown } from "@/components/dashboard/vault/vault-bucket-
 import { VaultDepositSection } from "@/components/dashboard/vault/vault-deposit-section";
 import { VaultManageBudgetJarsModal } from "@/components/dashboard/vault/vault-manage-budget-jars-modal";
 import { VaultManageSavingsGoalsModal } from "@/components/dashboard/vault/vault-manage-savings-goals-modal";
+import { VaultHomeJarMove } from "@/components/dashboard/vault/vault-home-jar-move";
 import { VaultMyMoneyCard } from "@/components/dashboard/vault/vault-my-money-card";
 import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -59,6 +60,7 @@ export function VaultDashboard() {
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [manageJarsModalOpen, setManageJarsModalOpen] = useState(false);
   const [manageGoalsModalOpen, setManageGoalsModalOpen] = useState(false);
+  const [manageGoalsStartOnAdd, setManageGoalsStartOnAdd] = useState(false);
   const [cashInOpen, setCashInOpen] = useState(
     () => searchParams.get("cashIn") === "1",
   );
@@ -101,6 +103,12 @@ export function VaultDashboard() {
         expandedBucketId={expandedBucketId}
         onToggleBucket={toggleBucket}
         onManageJarsClick={() => setManageJarsModalOpen(true)}
+        footer={
+          <VaultHomeJarMove
+            buckets={displayBuckets}
+            onVaultTransfer={handleVaultTransfer}
+          />
+        }
       />
 
       {moneyToAllocate > 0 && !allocationModalOpen ? (
@@ -137,7 +145,15 @@ export function VaultDashboard() {
           onAssignGoals={handleAssignGoals}
           onUpdateGoalDetails={handleUpdateGoalDetails}
           onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
-          onManageGoalsClick={() => setManageGoalsModalOpen(true)}
+          onResetBucketBalance={handleResetBucketBalance}
+          onManageGoalsClick={() => {
+            setManageGoalsStartOnAdd(false);
+            setManageGoalsModalOpen(true);
+          }}
+          onAddGoalClick={() => {
+            setManageGoalsStartOnAdd(true);
+            setManageGoalsModalOpen(true);
+          }}
           onClose={() => setExpandedBucketId(null)}
         />
       ) : null}
@@ -206,13 +222,17 @@ export function VaultDashboard() {
 
       <VaultManageSavingsGoalsModal
         isOpen={manageGoalsModalOpen}
-        onClose={() => setManageGoalsModalOpen(false)}
+        onClose={() => {
+          setManageGoalsModalOpen(false);
+          setManageGoalsStartOnAdd(false);
+        }}
         goals={vaultGoals}
         isPremium={isPremium || advancedMoneyUnlocked}
         onUpdateGoalDetails={handleUpdateGoalDetails}
         onAddGoal={handleAddGoal}
         onDeleteGoal={handleDeleteGoal}
         onResetGoalBalance={handleResetGoalBalance}
+        startOnAdd={manageGoalsStartOnAdd}
       />
 
       <ModalShell

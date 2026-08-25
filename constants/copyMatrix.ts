@@ -484,7 +484,7 @@ export const copyMatrix = {
         bucketLimitTemplate: "{count} / {max} jars",
         premiumRenameTitle: "Level Up My Vault",
         premiumRenameBody:
-          "Renaming Save, Spend, and Give is a Premium perk. Freemium keeps the classic trio - upgrade to name them my way.",
+          "Renaming Save, Spend, Give, and Emergencies is a Premium perk. Freemium keeps the starter jars - upgrade to name them my way.",
         premiumUnlock: "Unlock Premium Tier",
         premiumLater: "Maybe later",
         premiumComingSoonTitle: "Coming soon",

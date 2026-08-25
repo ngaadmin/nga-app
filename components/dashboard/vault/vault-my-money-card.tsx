@@ -5,6 +5,7 @@ import {
   bucketTheme,
 } from "@/components/dashboard/vault/vault-visuals";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { type ReactNode } from "react";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { SettingsIcon } from "@/lib/dashboard/icons";
 import {
@@ -35,6 +36,7 @@ type VaultMyMoneyCardProps = {
   expandedBucketId: VaultBucketId | null;
   onToggleBucket: (bucketId: VaultBucketId) => void;
   onManageJarsClick?: () => void;
+  footer?: ReactNode;
 };
 
 export function VaultMyMoneyCard({
@@ -43,6 +45,7 @@ export function VaultMyMoneyCard({
   expandedBucketId,
   onToggleBucket,
   onManageJarsClick,
+  footer,
 }: VaultMyMoneyCardProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const { formatWholeMoney: formatMoney } = useCurrency();
@@ -130,6 +133,8 @@ export function VaultMyMoneyCard({
           })}
         </div>
       </div>
+
+      {footer ? <div className="mt-1.5 flex justify-start">{footer}</div> : null}
     </section>
   );
 }

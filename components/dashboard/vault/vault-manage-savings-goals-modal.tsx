@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils/cn";
 
 const GOAL_EMOJI_PRESETS = [
   "🎯",
+  "💀",
   "🛡️",
   "🏖️",
   "🎮",
@@ -598,22 +599,26 @@ export function VaultManageSavingsGoalsModal({
                           />
                         </div>
                       </div>
-                      {row.kind === "existing" ? (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmReset({ goal: row.goal })}
-                          className={resetLinkClass}
-                        >
-                          {vaultCopy.resetGoalBalance}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={() => setEditingRowId(null)}
-                        className="font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
-                      >
-                        {vaultCopy.doneEditing}
-                      </button>
+                      <div className="flex w-full items-center justify-between gap-3">
+                          {row.kind === "existing" ? (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmReset({ goal: row.goal })}
+                              className={cn(resetLinkClass, "min-h-touch shrink-0")}
+                            >
+                              {vaultCopy.resetGoalBalance}
+                            </button>
+                          ) : (
+                            <span />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setEditingRowId(null)}
+                            className="min-h-touch shrink-0 font-heading text-sm font-bold text-[#0CC1E0] hover:underline"
+                          >
+                            {vaultCopy.doneEditing}
+                          </button>
+                        </div>
                     </div>
                   )}
                 </li>

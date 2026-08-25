@@ -1,3 +1,5 @@
+import { VAULT_CUSTOM_JARS_UNLOCK_FOR_TEST } from "@/lib/dashboard/vault-buckets";
+
 export type DefaultSpendingCategoryId =
   | "food-snacks"
   | "fun-entertainment"
@@ -63,4 +65,9 @@ export function resolveSpendingCategories(
     }));
 
   return [...defaults, ...custom];
+}
+
+/** Same preview flag as custom jars — custom “What for?” options stay unlocked for this test. */
+export function canAddCustomSpendingCategory(isPremium: boolean): boolean {
+  return isPremium || VAULT_CUSTOM_JARS_UNLOCK_FOR_TEST;
 }

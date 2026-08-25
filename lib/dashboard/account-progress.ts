@@ -3,6 +3,7 @@ import type { PersistedDashboardWallet } from "@/lib/dashboard/dashboard-wallet-
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import type { VaultSkillTierOverrides } from "@/lib/dashboard/vault-skill-progress-storage";
 import type { PersistedVaultProfile } from "@/lib/dashboard/vault/vault-profile-storage";
+import { sumJarBalances } from "@/lib/dashboard/destination-jars";
 
 export const ACCOUNT_PROGRESS_SCHEMA_VERSION = 1;
 
@@ -208,11 +209,7 @@ function skillProgressScore(overrides: VaultSkillTierOverrides | null): number {
 function vaultBalanceScore(profile: PersistedVaultProfile | null): number {
   if (!profile) return 0;
   const jars = profile.jarBalances;
-  const jarTotal = jars
-    ? (jars["save-jar"] ?? 0) +
-      (jars["spend-jar"] ?? 0) +
-      (jars["give-jar"] ?? 0)
-    : 0;
+  const jarTotal = jars ? sumJarBalances(jars) : 0;
   return (profile.moneyToAllocate ?? 0) + jarTotal + (profile.ledger?.length ?? 0);
 }
 

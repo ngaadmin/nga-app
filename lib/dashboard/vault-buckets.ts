@@ -6,7 +6,7 @@ import {
   roundAudAmount,
 } from "@/lib/dashboard/destination-jars";
 
-export const FOUNDATION_VAULT_BUCKET_COUNT = 3;
+export const FOUNDATION_VAULT_BUCKET_COUNT = 4;
 export const MAX_FREEMIUM_VAULT_BUCKETS = 15;
 export const MAX_PREMIUM_VAULT_BUCKETS = 20;
 

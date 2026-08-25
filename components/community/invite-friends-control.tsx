@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { ModalShell } from "@/components/ui/modal-shell";
 import { requestOnboardingEmailSend } from "@/lib/email/request-send";
+import { vaultHomeCompactCtaAutoClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
+import { cn } from "@/lib/utils/cn";
+
+const invitePrimaryBtnClass =
+  "inline-flex h-touch min-h-touch flex-1 items-center justify-center rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+
+const inviteNavyOutlineBtnClass =
+  "inline-flex h-touch min-h-touch flex-1 items-center justify-center rounded-nga-lg border-2 border-[#031F82] bg-white px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#FAFDFF] disabled:cursor-not-allowed disabled:opacity-40";
 
 const FALLBACK_LANDING_ORIGIN = "https://nga-app-three.vercel.app";
 
@@ -44,17 +53,10 @@ async function copyText(value: string): Promise<boolean> {
 export function InviteFriendsControl() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [canShare, setCanShare] = useState(false);
   const [email, setEmail] = useState("");
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    setCanShare(
-      typeof navigator !== "undefined" && typeof navigator.share === "function",
-    );
-  }, []);
 
   function closePanel() {
     setOpen(false);
@@ -130,48 +132,58 @@ export function InviteFriendsControl() {
           }
           setOpen(true);
         }}
-        className="rounded-nga-lg border-b-4 border-nga-secondary-shadow bg-nga-secondary px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary shadow-sm transition-all hover:brightness-[1.03] active:translate-y-[2px] active:border-b-2"
+        className={vaultHomeCompactCtaAutoClass}
       >
         + Invite Friends
       </button>
-      {open ? (
-        <div
-          id="invite-friends-panel"
-          className="absolute right-0 z-raised mt-2 w-[17.5rem] space-y-3 rounded-2xl border border-nga-panel bg-nga-surface p-3 pt-8 shadow-nga-card"
-        >
-          <button
-            type="button"
-            onClick={closePanel}
-            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md font-heading text-sm font-extrabold leading-none text-nga-primary hover:bg-nga-mist"
-            aria-label="Close"
-          >
-            X
-          </button>
-          <p className="font-heading text-sm font-extrabold text-nga-primary">
-            Invite a friend
-          </p>
+      <ModalShell
+        isOpen={open}
+        onClose={closePanel}
+        align="center"
+        labelledBy="invite-friends-title"
+        backdropClassName="bg-[#031F82]/50"
+        panelClassName="flex max-h-[min(92vh,36rem)] max-w-lg flex-col rounded-2xl border-0 bg-white p-0 shadow-md"
+      >
+        <div className="shrink-0 border-b border-[#BDE9FB]/40 px-5 pb-4 pt-5">
+          <div className="flex items-start justify-between gap-3">
+            <h2
+              id="invite-friends-title"
+              className="min-w-0 font-heading text-lg font-extrabold text-[#031F82]"
+            >
+              Invite a friend
+            </h2>
+            <button
+              type="button"
+              onClick={closePanel}
+              aria-label="Close"
+              className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div id="invite-friends-panel" className="space-y-3 px-5 py-4">
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => void handleCopy()}
-              className="flex-1 rounded-nga-lg border border-nga-panel bg-nga-mist/70 px-2 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary"
+              className={inviteNavyOutlineBtnClass}
             >
               {copied ? "Copied" : "Copy link"}
             </button>
-            {canShare ? (
-              <button
-                type="button"
-                onClick={() => void handleShare()}
-                className="flex-1 rounded-nga-lg border border-nga-panel bg-nga-mist/70 px-2 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary"
-              >
-                Share
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => void handleShare()}
+              className={invitePrimaryBtnClass}
+            >
+              Share
+            </button>
           </div>
           <form className="space-y-2" onSubmit={handleEmailSubmit}>
             <label
               htmlFor="friend-invite-email"
-              className="block font-heading text-sm font-bold uppercase tracking-wide text-nga-primary"
+              className="block font-heading text-sm font-bold uppercase tracking-wide text-[#031F82]"
             >
               Email (optional)
             </label>
@@ -202,13 +214,13 @@ export function InviteFriendsControl() {
             <button
               type="submit"
               disabled={sending}
-              className="w-full rounded-nga-lg border-b-4 border-nga-cta-shadow bg-nga-cta px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-nga-primary disabled:opacity-60"
+              className={cn(inviteNavyOutlineBtnClass, "w-full")}
             >
               {sending ? "Sending..." : "Send email"}
             </button>
           </form>
         </div>
-      ) : null}
+      </ModalShell>
     </div>
   );
 }

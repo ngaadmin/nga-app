@@ -36,6 +36,14 @@ const MILESTONE_TILE: Record<
   "saved-2500": { icon: "💰", shortLabel: "Saved $2500" },
 };
 
+const carouselScrollerClass =
+  "@container w-full min-w-0 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
+const carouselTrackClass = "flex w-max snap-x snap-mandatory gap-2";
+
+const carouselChipClass =
+  "flex w-[calc((100cqi-1.5rem)/3.3)] min-w-0 shrink-0 snap-start flex-col items-center px-1 py-1.5 text-center";
+
 function MilestoneTile({
   id,
   label,
@@ -48,11 +56,11 @@ function MilestoneTile({
     <li
       title={`${label}. ${achieverCount.toLocaleString()} people achieved this`}
       aria-label={`${label} - ${achieved ? "achieved" : "not achieved"}. ${achieverCount.toLocaleString()} people achieved this`}
-      className="flex flex-col items-center text-center"
+      className={carouselChipClass}
     >
       <span
         className={cn(
-          "flex size-[4.75rem] shrink-0 items-center justify-center rounded-full text-2xl leading-none sm:size-20",
+          "flex size-10 shrink-0 items-center justify-center rounded-full text-lg leading-none",
           achieved
             ? "bg-gradient-to-br from-[#EEF9FF] via-nga-panel to-[#8ED4EF] text-nga-primary shadow-[inset_0_3px_5px_rgba(255,255,255,0.85),inset_0_-2px_4px_rgba(12,193,224,0.22),0_3px_8px_rgba(3,31,130,0.16)]"
             : "border-2 border-[#D1D5DB] bg-transparent text-nga-primary/35 grayscale",
@@ -63,7 +71,7 @@ function MilestoneTile({
       </span>
       <p
         className={cn(
-          "mt-2 font-sans text-[14px] font-medium leading-snug",
+          "mt-1 w-full min-w-0 truncate font-heading text-[13px] font-bold leading-tight",
           achieved ? "text-nga-primary" : "text-nga-primary/45",
         )}
       >
@@ -71,13 +79,38 @@ function MilestoneTile({
       </p>
       <p
         className={cn(
-          "mt-0.5 font-sans text-[14px] font-medium leading-tight",
+          "mt-0.5 font-sans text-[10px] font-medium leading-tight",
           achieved ? "text-nga-slate" : "text-nga-primary/30",
         )}
       >
         {achieverCount.toLocaleString()} people
       </p>
     </li>
+  );
+}
+
+function MilestoneCarousel({
+  label,
+  items,
+}: {
+  label: string;
+  items: CommunityMilestoneRow[];
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="min-w-0">
+      <p className="mb-1 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
+        {label}
+      </p>
+      <div className={carouselScrollerClass} aria-label={label}>
+        <ol className={carouselTrackClass}>
+          {items.map((row) => (
+            <MilestoneTile key={row.id} {...row} />
+          ))}
+        </ol>
+      </div>
+    </div>
   );
 }
 
@@ -96,7 +129,9 @@ export function CommunityMilestonesSection() {
       ...milestone,
       achieved: false,
     }));
-  const achievedCount = displayRows.filter((row) => row.achieved).length;
+  const achievedRows = displayRows.filter((row) => row.achieved);
+  const availableRows = displayRows.filter((row) => !row.achieved);
+  const achievedCount = achievedRows.length;
 
   return (
     <section aria-labelledby="community-milestones-heading" className="w-full shrink-0">
@@ -113,20 +148,16 @@ export function CommunityMilestonesSection() {
         <span>Milestones</span>
         <span className="flex items-center gap-2 font-heading text-[16px] font-bold normal-case tracking-normal text-nga-slate">
           {achievedCount}/{COMMUNITY_MILESTONE_TOTAL} achieved
-          <span aria-hidden className="text-nga-secondary">
+          <span aria-hidden className="text-[#FFA503]">
             {open ? "-" : "+"}
           </span>
         </span>
       </button>
       {open ? (
-        <ol
-          id="community-milestones-list"
-          className="mt-3 grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3"
-        >
-          {displayRows.map((row) => (
-            <MilestoneTile key={row.id} {...row} />
-          ))}
-        </ol>
+        <div id="community-milestones-list" className="mt-2 space-y-2">
+          <MilestoneCarousel label="Achieved" items={achievedRows} />
+          <MilestoneCarousel label="Available" items={availableRows} />
+        </div>
       ) : null}
     </section>
   );

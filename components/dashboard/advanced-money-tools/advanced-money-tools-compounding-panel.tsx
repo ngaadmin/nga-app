@@ -1,52 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ModalShell } from "@/components/ui/modal-shell";
+import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/copy";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { HIGH_ROI_WARNING_THRESHOLD } from "@/lib/dashboard/vault-compounding";
-import { cn } from "@/lib/utils/cn";
-
-const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-xs font-bold uppercase tracking-wide text-[#031F82]";
-
-type PremiumCompoundingLimitsModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-};
-
-function PremiumCompoundingLimitsModal({ isOpen, onClose }: PremiumCompoundingLimitsModalProps) {
-  const copy = copyMatrix.dashboard.vault.budget;
-
-  return (
-    <ModalShell
-      isOpen={isOpen}
-      onClose={onClose}
-      labelledBy="advanced-money-tools-premium-compounding-title"
-      backdropClassName="bg-[#031F82]/45"
-      panelClassName="max-w-sm rounded-nga-xl bg-white p-5"
-    >
-      <h2
-        id="advanced-money-tools-premium-compounding-title"
-        className="font-heading text-lg font-extrabold text-[#031F82]"
-      >
-        {copy.premiumCompoundingTitle}
-      </h2>
-      <p className="mt-2 text-sm text-[#1E3A5F]">{copy.premiumCompoundingBody}</p>
-      <button type="button" className={cn("mt-4 h-touch w-full px-4", orangeCtaClass)}>
-        {copy.premiumUnlock}
-      </button>
-      <button
-        type="button"
-        onClick={onClose}
-        className="mt-2 w-full py-2 text-sm font-bold text-[#0CC1E0]"
-      >
-        {copy.premiumLater}
-      </button>
-    </ModalShell>
-  );
-}
 
 export type AdvancedMoneyToolsCompoundingPanelProps = {
   savingsBalance: number;
@@ -246,9 +205,10 @@ export function AdvancedMoneyToolsCompoundingPanel({
           </div>
         ) : null}
       </div>
-      <PremiumCompoundingLimitsModal
+      <PremiumUpgradeModal
         isOpen={premiumLimitsOpen}
         onClose={() => setPremiumLimitsOpen(false)}
+        titleId="advanced-money-tools-premium-compounding-title"
       />
     </>
   );

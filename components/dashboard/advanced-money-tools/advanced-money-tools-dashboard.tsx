@@ -64,7 +64,7 @@ export function AdvancedMoneyToolsDashboard() {
           className="inline-flex items-center justify-center gap-2 self-center rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-5 py-3 font-heading text-xs font-bold uppercase tracking-wide text-[#031F82]"
         >
           <LockIcon className="size-4" />
-          {copyMatrix.dashboard.vault.budget.premiumUnlock}
+          {copyMatrix.dashboard.vault.budget.premiumComingSoonTitle}
         </button>
       ) : null}
 
@@ -138,8 +138,6 @@ export function AdvancedMoneyToolsDashboard() {
       <PremiumUpgradeModal
         isOpen={upgradeOpen}
         onClose={() => setUpgradeOpen(false)}
-        title={advancedMoneyToolsCopy.lockedTitle}
-        body={advancedMoneyToolsCopy.lockedBody}
         titleId="advanced-money-premium-title"
       />
     </div>

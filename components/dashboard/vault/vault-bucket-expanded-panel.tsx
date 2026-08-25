@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { VaultMoveMoneyForm } from "@/components/dashboard/vault/vault-move-money-form";
 import { VaultSpendMoneyForm } from "@/components/dashboard/vault/vault-spend-money-form";
@@ -28,44 +29,10 @@ import {
 } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
-const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40";
-
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 type BucketActionMode = "spend" | "move";
-
-function PremiumCategoriesModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const copy = copyMatrix.dashboard.vault.budget;
-  return (
-    <ModalShell
-      isOpen={isOpen}
-      onClose={onClose}
-      labelledBy="vault-premium-categories-title"
-      backdropClassName="bg-[#031F82]/45"
-      panelClassName="max-w-sm rounded-nga-xl bg-white p-5"
-    >
-      <h2
-        id="vault-premium-categories-title"
-        className="font-heading text-lg font-extrabold text-[#031F82]"
-      >
-        {copy.premiumCategoriesTitle}
-      </h2>
-      <p className="mt-2 text-sm text-[#1E3A5F]">{copy.premiumCategoriesBody}</p>
-      <button type="button" className={cn("mt-4 h-touch w-full", orangeCtaClass)}>
-        {copy.premiumUnlock}
-      </button>
-      <button
-        type="button"
-        onClick={onClose}
-        className="mt-2 w-full py-2 text-sm font-bold text-[#0CC1E0]"
-      >
-        {copy.premiumLater}
-      </button>
-    </ModalShell>
-  );
-}
 
 export type VaultBucketExpandedPanelProps = {
   bucket: VaultBucket;
@@ -229,9 +196,10 @@ export function VaultBucketExpandedPanel({
         )}
       </div>
 
-      <PremiumCategoriesModal
+      <PremiumUpgradeModal
         isOpen={premiumCategoriesOpen}
         onClose={() => setPremiumCategoriesOpen(false)}
+        titleId="vault-premium-categories-title"
       />
 
       <ModalShell

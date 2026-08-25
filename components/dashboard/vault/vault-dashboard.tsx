@@ -213,9 +213,6 @@ export function VaultDashboard() {
       <PremiumUpgradeModal
         isOpen={advancedMoneyUpgradeOpen}
         onClose={() => setAdvancedMoneyUpgradeOpen(false)}
-        onUnlock={() => router.push(ADVANCED_MONEY_TOOLS_HREF)}
-        title={advancedMoneyToolsCopy.lockedTitle}
-        body={advancedMoneyToolsCopy.lockedBody}
         titleId="vault-advanced-money-premium-title"
       />
     </div>

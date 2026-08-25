@@ -486,6 +486,10 @@ export const copyMatrix = {
           "Renaming Save, Spend, and Give is a Premium perk. Freemium keeps the classic trio - upgrade to name them my way.",
         premiumUnlock: "Unlock Premium Tier",
         premiumLater: "Maybe later",
+        premiumComingSoonTitle: "Coming soon",
+        premiumComingSoonBody:
+          "This is a premium feature still in development. You don’t need to test it in this round.",
+        premiumComingSoonDismiss: "Keep exploring",
         moveTitle: "Move Money",
         markSpentTitle: "Mark as Spent",
         moveAmountLabel: "Amount to move",

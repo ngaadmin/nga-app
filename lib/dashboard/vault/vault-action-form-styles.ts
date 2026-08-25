@@ -41,3 +41,7 @@ export const vaultActionButtonRowClass = "flex min-w-0 items-stretch gap-2";
 /** Compact Vault home CTAs (Allocate + Add) — same box, never full-width. */
 export const vaultHomeCompactCtaClass =
   "inline-flex h-8 w-[5.5rem] shrink-0 items-center justify-center rounded-nga-lg border-b-2 border-[#C88202] bg-[#FFA503] font-heading text-[11px] font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-px active:border-b disabled:cursor-not-allowed disabled:opacity-40";
+
+/** Compact secondary outline CTA — same height as Allocate, never orange. */
+export const vaultHomeCompactOutlineCtaClass =
+  "inline-flex h-8 shrink-0 items-center justify-center rounded-nga-lg border-2 border-[#0CC1E0] bg-white px-3 font-heading text-[11px] font-bold uppercase tracking-wide text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#FAFDFF] disabled:cursor-not-allowed disabled:opacity-40";

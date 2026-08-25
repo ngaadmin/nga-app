@@ -138,7 +138,6 @@ export function VaultDashboard() {
           onUpdateGoalDetails={handleUpdateGoalDetails}
           onResetGoalBalance={handleResetGoalBalance}
           onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
-          onResetBucketBalance={handleResetBucketBalance}
           onManageGoalsClick={() => setManageGoalsModalOpen(true)}
           onClose={() => setExpandedBucketId(null)}
         />
@@ -198,6 +197,7 @@ export function VaultDashboard() {
         onRenameBucket={handleRenameBucket}
         onAddCustomBucket={handleAddCustomBucket}
         onDeleteCustomBucket={handleDeleteCustomBucket}
+        onResetBucketBalance={handleResetBucketBalance}
         onBucketDeleted={(bucketId) => {
           if (expandedBucketId === bucketId) {
             setExpandedBucketId(null);

@@ -8,6 +8,7 @@ import {
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { PencilIcon, TrashIcon } from "@/lib/dashboard/icons";
+import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   canAddVaultBucket,
   isCustomBucketId,
@@ -48,6 +49,9 @@ const destructiveCtaClass =
 
 const manageModalFieldLabelClass =
   "font-heading text-sm font-bold text-[#031F82]";
+
+const resetLinkClass =
+  "font-heading text-sm font-bold text-[#BE123C]/80 underline-offset-2 transition-colors hover:text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
 
 type JarDraft = {
   name: string;
@@ -110,6 +114,7 @@ type VaultManageBudgetJarsModalProps = {
     bucketId: VaultBucketId,
     fallbackBucketId?: VaultBucketId,
   ) => void;
+  onResetBucketBalance: (bucketId: VaultBucketId) => void;
   onBucketDeleted?: (bucketId: VaultBucketId) => void;
 };
 
@@ -121,6 +126,7 @@ export function VaultManageBudgetJarsModal({
   onRenameBucket,
   onAddCustomBucket,
   onDeleteCustomBucket,
+  onResetBucketBalance,
   onBucketDeleted,
 }: VaultManageBudgetJarsModalProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -134,6 +140,7 @@ export function VaultManageBudgetJarsModal({
   const [newJarEmoji, setNewJarEmoji] = useState("💰");
   const [deleteTarget, setDeleteTarget] = useState<VaultBucket | null>(null);
   const [deleteFallbackId, setDeleteFallbackId] = useState<VaultBucketId | "">("");
+  const [confirmReset, setConfirmReset] = useState<VaultBucket | null>(null);
 
   const bucketLimit = maxVaultBuckets(isPremium);
   const pendingDeleteIds = useMemo(
@@ -182,6 +189,7 @@ export function VaultManageBudgetJarsModal({
     setNewJarEmoji("💰");
     setDeleteTarget(null);
     setDeleteFallbackId("");
+    setConfirmReset(null);
   }, []);
 
   useEffect(() => {
@@ -302,6 +310,12 @@ export function VaultManageBudgetJarsModal({
 
   function toggleEdit(rowId: string) {
     setEditingRowId((current) => (current === rowId ? null : rowId));
+  }
+
+  function confirmResetAction() {
+    if (!confirmReset) return;
+    onResetBucketBalance(confirmReset.id);
+    setConfirmReset(null);
   }
 
   const deleteNeedsFallback = (deleteTarget?.balance ?? 0) > 0;
@@ -428,44 +442,56 @@ export function VaultManageBudgetJarsModal({
                   className="rounded-xl border border-[#BDE9FB]/70 bg-[#FAFDFF]/90 p-3 shadow-sm"
                 >
                   {!isEditing ? (
-                    <div className="flex items-center gap-3">
-                      <BucketEmojiIcon size="md" emoji={draft.emoji} theme={theme} />
-                      <p className="min-w-0 flex-1 truncate font-heading text-sm font-extrabold text-[#031F82]">
-                        {displayName}
-                      </p>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => toggleEdit(rowId)}
-                          aria-label={vaultCopy.editJar}
-                          className="flex size-8 items-center justify-center rounded-lg text-[#1E3A5F]/55 transition-colors hover:bg-[#BDE9FB]/30 hover:text-[#031F82]"
-                        >
-                          <PencilIcon className="size-4" />
-                        </button>
-                        {isCustom ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <BucketEmojiIcon size="md" emoji={draft.emoji} theme={theme} />
+                        <p className="min-w-0 flex-1 truncate font-heading text-sm font-extrabold text-[#031F82]">
+                          {displayName}
+                        </p>
+                        <div className="flex shrink-0 items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => {
-                              if (row.kind === "pending") {
-                                setPendingAdds((current) =>
-                                  current.filter((entry) => entry.tempId !== rowId),
-                                );
-                                setDrafts((current) => {
-                                  const next = { ...current };
-                                  delete next[rowId];
-                                  return next;
-                                });
-                                return;
-                              }
-                              setDeleteTarget(row.bucket);
-                            }}
-                            aria-label={vaultCopy.deleteJar}
-                            className="flex size-8 items-center justify-center rounded-lg text-[#BE123C]/70 transition-colors hover:bg-[#FEE2E2]/60 hover:text-[#BE123C]"
+                            onClick={() => toggleEdit(rowId)}
+                            aria-label={vaultCopy.editJar}
+                            className="flex size-8 items-center justify-center rounded-lg text-[#1E3A5F]/55 transition-colors hover:bg-[#BDE9FB]/30 hover:text-[#031F82]"
                           >
-                            <TrashIcon className="size-4" />
+                            <PencilIcon className="size-4" />
                           </button>
-                        ) : null}
+                          {isCustom ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (row.kind === "pending") {
+                                  setPendingAdds((current) =>
+                                    current.filter((entry) => entry.tempId !== rowId),
+                                  );
+                                  setDrafts((current) => {
+                                    const next = { ...current };
+                                    delete next[rowId];
+                                    return next;
+                                  });
+                                  return;
+                                }
+                                setDeleteTarget(row.bucket);
+                              }}
+                              aria-label={vaultCopy.deleteJar}
+                              className="flex size-8 items-center justify-center rounded-lg text-[#BE123C]/70 transition-colors hover:bg-[#FEE2E2]/60 hover:text-[#BE123C]"
+                            >
+                              <TrashIcon className="size-4" />
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
+                      {row.kind === "existing" &&
+                      row.bucket.id !== SAVINGS_JAR_ID ? (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmReset(row.bucket)}
+                          className={resetLinkClass}
+                        >
+                          {vaultCopy.resetBucketBalance}
+                        </button>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -499,6 +525,16 @@ export function VaultManageBudgetJarsModal({
                           />
                         </div>
                       </div>
+                      {row.kind === "existing" &&
+                      row.bucket.id !== SAVINGS_JAR_ID ? (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmReset(row.bucket)}
+                          className={resetLinkClass}
+                        >
+                          {vaultCopy.resetBucketBalance}
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => setEditingRowId(null)}
@@ -593,6 +629,41 @@ export function VaultManageBudgetJarsModal({
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
             {vaultCopy.deleteJarConfirm}
+          </button>
+        </div>
+      </ModalShell>
+
+      <ModalShell
+        isOpen={confirmReset !== null}
+        onClose={() => setConfirmReset(null)}
+        align="center"
+        labelledBy="vault-reset-jar-balance-title"
+        backdropClassName="bg-[#031F82]/55"
+        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
+      >
+        <h2
+          id="vault-reset-jar-balance-title"
+          className="font-heading text-lg font-extrabold text-[#031F82]"
+        >
+          {vaultCopy.resetBucketBalanceConfirmTitle}
+        </h2>
+        <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
+          {vaultCopy.resetBucketBalanceConfirmBody}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirmReset(null)}
+            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
+          >
+            {vaultCopy.resetCancel}
+          </button>
+          <button
+            type="button"
+            onClick={confirmResetAction}
+            className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
+          >
+            {vaultCopy.resetConfirm}
           </button>
         </div>
       </ModalShell>

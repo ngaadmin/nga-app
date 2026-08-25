@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   VaultActionButtonRow,
   VaultActionFieldRow,
   VaultActionPanel,
   VaultAmountField,
-  VaultLabeledSelectField,
   VaultSelectField,
 } from "@/components/dashboard/vault/vault-action-forms";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { parsePositiveVaultAmount } from "@/lib/dashboard/vault-amount-input";
+import {
+  parsePositiveVaultAmount,
+  sanitizeVaultAmountInput,
+} from "@/lib/dashboard/vault-amount-input";
+import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import type {
   VaultTransferLocation,
   VaultTransferLocationId,
@@ -97,6 +100,13 @@ export function VaultMoveMoneyForm({
   );
 }
 
+const manageSheetFieldLabelClass = "font-heading text-sm font-bold text-[#031F82]";
+
+const manageSheetSelectClass =
+  "mt-1 w-full rounded-lg border border-[#BDE9FB] bg-white px-2.5 py-2 font-sans text-sm text-[#031F82] outline-none focus:border-[#0CC1E0]";
+
+export const VAULT_SAVE_JAR_MOVE_FORM_ID = "vault-save-jar-move-form";
+
 type VaultSaveJarMoveMoneyFormProps = {
   sources: VaultTransferLocation[];
   destinations: VaultTransferLocation[];
@@ -126,6 +136,7 @@ export function VaultSaveJarMoveMoneyForm({
 
   const [destinationId, setDestinationId] = useState<string>(destinations[0]?.id ?? "");
   const [amountInput, setAmountInput] = useState("");
+  const [hitCap, setHitCap] = useState(false);
 
   useEffect(() => {
     if (!destinations.some((entry) => entry.id === destinationId)) {
@@ -133,7 +144,14 @@ export function VaultSaveJarMoveMoneyForm({
     }
   }, [destinationId, destinations]);
 
-  function confirmTransfer() {
+  function handleAmountChange(nextRaw: string) {
+    const { value: next, hitCap: capped } = sanitizeVaultAmountInput(nextRaw);
+    setHitCap(capped);
+    setAmountInput(next);
+  }
+
+  function confirmTransfer(event: FormEvent) {
+    event.preventDefault();
     const amount = parsePositiveVaultAmount(amountInput);
     if (amount === null || amount > sourceBalance) return;
 
@@ -146,51 +164,67 @@ export function VaultSaveJarMoveMoneyForm({
   }
 
   return (
-    <VaultActionPanel>
-      <VaultLabeledSelectField
-        label={savingsCopy.moveSourceLabel}
-        value={sourceId}
-        onChange={(value) => onSourceChange(value as VaultTransferLocationId)}
-        ariaLabel={savingsCopy.moveSourceLabel}
-      >
-        {sources.map((entry) => (
-          <option key={entry.id} value={entry.id} disabled={entry.balance <= 0}>
-            {entry.label} {formatMoney(entry.balance)}
-          </option>
-        ))}
-      </VaultLabeledSelectField>
+    <form
+      id={VAULT_SAVE_JAR_MOVE_FORM_ID}
+      className="space-y-3"
+      onSubmit={confirmTransfer}
+    >
+      <label className="block">
+        <span className={manageSheetFieldLabelClass}>{savingsCopy.moveSourceLabel}</span>
+        <select
+          value={sourceId}
+          onChange={(event) =>
+            onSourceChange(event.target.value as VaultTransferLocationId)
+          }
+          aria-label={savingsCopy.moveSourceLabel}
+          className={manageSheetSelectClass}
+        >
+          {sources.map((entry) => (
+            <option key={entry.id} value={entry.id} disabled={entry.balance <= 0}>
+              {entry.label} {formatMoney(entry.balance)}
+            </option>
+          ))}
+        </select>
+      </label>
 
-      <VaultActionFieldRow
-        amountField={
-          <VaultAmountField
-            currencySymbol={currencySymbol}
+      <div>
+        <p className={manageSheetFieldLabelClass}>{budgetCopy.moveAmountLabel}</p>
+        <label className="mt-1 flex items-center gap-1.5 rounded-lg border border-[#BDE9FB] bg-white px-2.5 py-1.5">
+          <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
+            {currencySymbol}
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
             value={amountInput}
-            onChange={setAmountInput}
-            ariaLabel={budgetCopy.moveAmountLabel}
+            onChange={(event) => handleAmountChange(event.target.value)}
+            placeholder="0"
+            aria-label={budgetCopy.moveAmountLabel}
+            className="min-w-0 flex-1 bg-transparent font-sans text-sm tabular-nums text-[#031F82] outline-none"
           />
-        }
-        secondaryField={
-          <VaultSelectField
-            value={destinationId}
-            onChange={setDestinationId}
-            ariaLabel={budgetCopy.moveDestinationLabel}
-          >
-            {destinations.map((entry) => (
-              <option key={entry.id} value={entry.id}>
-                {entry.label}
-              </option>
-            ))}
-          </VaultSelectField>
-        }
-      />
+        </label>
+        {hitCap ? (
+          <p className="mt-1 font-sans text-sm text-[#1E3A5F]/70" role="status">
+            {vaultCopy.maxAmountReachedNotice}
+          </p>
+        ) : null}
+      </div>
 
-      <VaultActionButtonRow
-        primaryLabel={savingsCopy.moveConfirm}
-        secondaryLabel={savingsCopy.spendCancel}
-        onPrimary={confirmTransfer}
-        onSecondary={onClose}
-        primaryDisabled={sourceBalance <= 0}
-      />
-    </VaultActionPanel>
+      <label className="block">
+        <span className={manageSheetFieldLabelClass}>{budgetCopy.moveDestinationLabel}</span>
+        <select
+          value={destinationId}
+          onChange={(event) => setDestinationId(event.target.value)}
+          aria-label={budgetCopy.moveDestinationLabel}
+          className={manageSheetSelectClass}
+        >
+          {destinations.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </form>
   );
 }

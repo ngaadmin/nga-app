@@ -9,7 +9,7 @@ export const vaultCopy = {
   manageBudgetJarsLabel: "Manage Budget Jars",
   manageBudgetJarsTitle: "Manage Budget Jars",
   manageBudgetJarsBody:
-    "Rename jars, pick icons, add custom jars, or remove ones you no longer need.",
+    "Rename jars, pick icons, add custom jars, reset a jar balance, or remove ones you no longer need.",
   customJarsTestNote:
     "Unlocked for this test. Custom jars will be Premium later.",
   addBudgetJar: "Add Budget Jar",
@@ -33,6 +33,8 @@ export const vaultCopy = {
   manageSavingsGoalsTitle: "Manage Savings Goals",
   manageSavingsGoalsBody:
     "Set targets, rename goals, add custom savings goals, or reset a goal balance. Clearing a target never wipes saved progress.",
+  moveSavingsHelper:
+    "Move unallocated savings or a goal balance into another jar.",
   goalSettingsLabel: "Goal Settings",
   addSavingsGoal: "+ Add Goal",
   goalNameLabel: "Goal name",

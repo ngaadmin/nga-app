@@ -21,7 +21,6 @@ type VaultBucketDrilldownProps = {
     amount: number,
   ) => void;
   onMarkSpent: (bucketId: VaultBucketId, amount: number, categoryLabel: string) => void;
-  onResetBucketBalance: (bucketId: VaultBucketId) => void;
   onAddCustomCategory: (label: string) => void;
   onRenameCategory: (categoryId: SpendingCategoryId, label: string) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
@@ -44,7 +43,6 @@ export function VaultBucketDrilldown({
   spendingCategories,
   onVaultTransfer,
   onMarkSpent,
-  onResetBucketBalance,
   onAddCustomCategory,
   onRenameCategory,
   onAssignGoals,
@@ -81,7 +79,6 @@ export function VaultBucketDrilldown({
       spendingCategories={spendingCategories}
       onVaultTransfer={onVaultTransfer}
       onMarkSpent={(amount, categoryLabel) => onMarkSpent(bucket.id, amount, categoryLabel)}
-      onResetBucketBalance={() => onResetBucketBalance(bucket.id)}
       onAddCustomCategory={onAddCustomCategory}
       onRenameCategory={onRenameCategory}
       onClose={onClose}

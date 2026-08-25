@@ -6,7 +6,18 @@ import {
   useMemo,
   useState,
 } from "react";
-import { VaultCoinStackVisual } from "@/components/dashboard/vault/vault-coin-stack-visual";
+import {
+  AllocationSheetCoins,
+  allocationSheetAmountInputClass,
+  allocationSheetFillBarClass,
+  allocationSheetFillTrackClass,
+  allocationSheetOrangeCtaClass,
+  allocationSheetRowClass,
+} from "@/components/dashboard/vault/vault-allocation-sheet-ui";
+import {
+  BucketEmojiIcon,
+  type BucketTheme,
+} from "@/components/dashboard/vault/vault-visuals";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -19,18 +30,23 @@ import {
   sanitizeVaultAmountInput,
   sumAllocationDraftValues,
 } from "@/lib/dashboard/vault-amount-input";
-import { sumAllocations } from "@/lib/dashboard/vault-buckets";
 import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import {
   isAllocationOverPool,
   sumEffectiveAllocationInputs,
+  sumEffectiveAllocationInputsExcept,
   vaultAllocationRemainingDisplay,
 } from "@/lib/dashboard/vault/allocation-remaining";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
-const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+const goalSheetTheme: BucketTheme = {
+  accent: "#22C55E",
+  fill: "from-[#22C55E]/80 to-[#16A34A]",
+  track: "bg-[#22C55E]/20",
+  ring: "#22C55E",
+  label: "text-[#15803D]",
+};
 
 function GoalAllocationInputRow({
   goal,
@@ -49,20 +65,46 @@ function GoalAllocationInputRow({
   onInputBlur: (goalId: string) => void;
   onInputFocus: (goalId: string) => void;
 }) {
-  const { currencySymbol } = useCurrency();
+  const { currencySymbol, formatWholeMoney: formatMoney } = useCurrency();
+  const fillPercent =
+    poolTotal > 0 ? Math.min(100, Math.max(0, (draft / poolTotal) * 100)) : 0;
 
   return (
-    <div className="flex min-w-0 items-end gap-1.5 py-2.5">
-      <div className="flex w-[4.25rem] shrink-0 flex-col items-center">
-        <span className="text-2xl leading-none" aria-hidden>
-          {goal.emoji}
-        </span>
-        <p className="mt-1 line-clamp-2 text-center font-heading text-sm font-bold leading-tight text-[#031F82]">
-          {goal.name}
-        </p>
+    <div className={allocationSheetRowClass}>
+      <div className="flex min-w-0 w-[8.5rem] shrink-0 items-center gap-1">
+        <BucketEmojiIcon size="sm" emoji={goal.emoji} theme={goalSheetTheme} />
+        <div className="min-w-0">
+          <p
+            className={cn(
+              "line-clamp-2 font-heading text-sm font-bold leading-tight",
+              goalSheetTheme.label,
+            )}
+          >
+            {goal.name}
+          </p>
+          <p className="font-heading text-sm font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
+            {formatMoney(goal.balance)}
+          </p>
+        </div>
       </div>
 
-      <label className="flex w-[5.25rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2 py-1.5">
+      <div
+        className={allocationSheetFillTrackClass}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(fillPercent)}
+        aria-label={`${goal.name} share of the pool`}
+      >
+        <span
+          className={allocationSheetFillBarClass}
+          style={{ width: `${fillPercent}%` }}
+        />
+      </div>
+
+      <AllocationSheetCoins allocatedAmount={draft} poolTotal={poolTotal} />
+
+      <label className={allocationSheetAmountInputClass}>
         <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
           {currencySymbol}
         </span>
@@ -74,15 +116,9 @@ function GoalAllocationInputRow({
           onFocus={() => onInputFocus(goal.id)}
           onBlur={() => onInputBlur(goal.id)}
           aria-label={`Amount to allocate to ${goal.name}`}
-          className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+          className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm leading-none tabular-nums text-[#031F82] outline-none"
         />
       </label>
-
-      <VaultCoinStackVisual
-        allocatedAmount={draft}
-        poolTotal={poolTotal}
-        className="ml-auto flex min-w-[3.5rem] flex-1 items-end justify-end pl-1"
-      />
     </div>
   );
 }
@@ -113,7 +149,6 @@ export function VaultSavingsGoalAllocationModal({
   const [inputWasCapped, setInputWasCapped] = useState(false);
 
   const poolTotal = roundAudAmount(Math.max(0, poolBalance));
-  const allocatedTotal = sumAllocations(allocationDrafts);
   const effectiveAllocatedTotal = useMemo(
     () =>
       sumEffectiveAllocationInputs(
@@ -129,7 +164,7 @@ export function VaultSavingsGoalAllocationModal({
     effectiveAllocatedTotal,
   );
   const isOverAllocated = isAllocationOverPool(poolTotal, effectiveAllocatedTotal);
-  const hasAllocationDraft = allocatedTotal > 0;
+  const hasAllocationDraft = effectiveAllocatedTotal > 0;
   const canAssign = hasAllocationDraft && !isOverAllocated && goals.length > 0;
 
   useEffect(() => {
@@ -205,10 +240,12 @@ export function VaultSavingsGoalAllocationModal({
       const parsed = parseVaultAmountInput(sanitized);
       if (parsed === null) return;
 
-      const othersTotal = roundAudAmount(
-        goalIds
-          .filter((id) => id !== goalId)
-          .reduce((sum, id) => sum + (allocationDrafts[id] ?? 0), 0),
+      const othersTotal = sumEffectiveAllocationInputsExcept(
+        goalId,
+        goalIds,
+        allocationDrafts,
+        allocationInputs,
+        focusedGoalId,
       );
       const capped = clampVaultAllocationEntry(poolTotal, othersTotal, parsed);
       const wasCapped = capped !== parsed || digitCap;
@@ -219,7 +256,14 @@ export function VaultSavingsGoalAllocationModal({
       setInputWasCapped(wasCapped);
       handleAllocationChange(goalId, capped);
     },
-    [allocationDrafts, goalIds, handleAllocationChange, poolTotal],
+    [
+      allocationDrafts,
+      allocationInputs,
+      focusedGoalId,
+      goalIds,
+      handleAllocationChange,
+      poolTotal,
+    ],
   );
 
   const handleAllocationInputFocus = useCallback(
@@ -251,18 +295,17 @@ export function VaultSavingsGoalAllocationModal({
   );
 
   const handleAssignSubmit = useCallback(() => {
-    if (!canAssign || isAllocationOverPool(poolTotal, allocatedTotal)) return;
+    if (!canAssign || isAllocationOverPool(poolTotal, effectiveAllocatedTotal)) return;
 
-    onAssignGoals(capAllocationDrafts(allocationDrafts, poolTotal, goalIds));
+    onAssignGoals(allocationDrafts);
     setAllocationDrafts({});
     setAllocationInputs({});
     setFocusedGoalId(null);
     onClose();
   }, [
-    allocatedTotal,
     allocationDrafts,
     canAssign,
-    goalIds,
+    effectiveAllocatedTotal,
     onAssignGoals,
     onClose,
     poolTotal,
@@ -275,7 +318,7 @@ export function VaultSavingsGoalAllocationModal({
       align="center"
       labelledBy="vault-savings-goal-allocation-title"
       backdropClassName="bg-[#031F82]/50"
-      panelClassName="max-w-lg rounded-2xl border-0 bg-white p-5 shadow-md"
+      panelClassName="w-full max-w-sm rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:px-5"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -283,11 +326,8 @@ export function VaultSavingsGoalAllocationModal({
             id="vault-savings-goal-allocation-title"
             className="font-heading text-lg font-extrabold text-[#031F82]"
           >
-            {savingsCopy.goalAllocationHeading}
-          </h2>
-          <p className="mt-0.5 font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/60">
             {budgetCopy.poolLabel}
-          </p>
+          </h2>
           <p
             className={cn(
               "mt-1 font-heading text-3xl font-extrabold leading-none tabular-nums transition-colors",
@@ -301,8 +341,8 @@ export function VaultSavingsGoalAllocationModal({
           {isOverAllocated || inputWasCapped ? (
             <p className="mt-1 font-heading text-sm font-bold text-[#BE123C]" role="status">
               {inputWasCapped
-                ? savingsCopy.goalRemainingLabel + ": capped to available balance"
-                : `${savingsCopy.goalRemainingLabel}: exceeds available pool`}
+                ? budgetCopy.remainingLabel + ": capped to available balance"
+                : `${budgetCopy.remainingLabel}: exceeds available pool`}
             </p>
           ) : null}
         </div>
@@ -316,25 +356,26 @@ export function VaultSavingsGoalAllocationModal({
         </button>
       </div>
 
-      <div className="mt-4 max-h-[min(60vh,24rem)] overflow-y-auto">
+      <div className="mt-4 max-h-[min(70vh,28rem)] overflow-x-visible overflow-y-auto pr-1 [scrollbar-gutter:stable]">
         {goals.length > 0 ? (
-          <div className="min-w-0 divide-y divide-[#BDE9FB]/30">
+          <ul className="min-w-0 divide-y divide-[#BDE9FB]/30 overflow-visible">
             {goals.map((goal) => (
-              <GoalAllocationInputRow
-                key={goal.id}
-                goal={goal}
-                draft={allocationDrafts[goal.id] ?? 0}
-                poolTotal={poolTotal}
-                inputValue={getAllocationInputValue(
-                  goal.id,
-                  allocationDrafts[goal.id] ?? 0,
-                )}
-                onInputChange={handleAllocationInputChange}
-                onInputBlur={handleAllocationInputBlur}
-                onInputFocus={handleAllocationInputFocus}
-              />
+              <li key={goal.id}>
+                <GoalAllocationInputRow
+                  goal={goal}
+                  draft={allocationDrafts[goal.id] ?? 0}
+                  poolTotal={poolTotal}
+                  inputValue={getAllocationInputValue(
+                    goal.id,
+                    allocationDrafts[goal.id] ?? 0,
+                  )}
+                  onInputChange={handleAllocationInputChange}
+                  onInputBlur={handleAllocationInputBlur}
+                  onInputFocus={handleAllocationInputFocus}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         ) : (
           <p className="font-sans text-sm text-[#1E3A5F]/70">{savingsCopy.noGoalsYet}</p>
         )}
@@ -344,7 +385,7 @@ export function VaultSavingsGoalAllocationModal({
         type="button"
         onClick={handleAssignSubmit}
         disabled={!canAssign}
-        className={cn("mt-4 h-touch w-full px-4 py-2.5", orangeCtaClass)}
+        className={cn("mt-4 h-touch w-full px-4 py-2.5", allocationSheetOrangeCtaClass)}
       >
         {savingsCopy.assignToGoals}
       </button>

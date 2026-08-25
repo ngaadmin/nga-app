@@ -262,7 +262,7 @@ export function VaultSaveJarMoveMoneyForm({
         >
           {destinations.map((entry) => (
             <option key={entry.id} value={entry.id}>
-              {entry.label}
+              {entry.label} {formatMoney(entry.balance)}
             </option>
           ))}
         </select>

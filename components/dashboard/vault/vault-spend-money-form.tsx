@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import {
@@ -13,11 +13,15 @@ import {
   manageSheetSelectClass,
   vaultFieldInputClass,
 } from "@/lib/dashboard/vault/vault-action-form-styles";
-import {
-  canAddCustomSpendingCategory,
-  type SpendingCategory,
-  type SpendingCategoryId,
+import type {
+  SpendingCategory,
+  SpendingCategoryId,
 } from "@/lib/dashboard/spending-categories";
+import {
+  moneyOutWhatForOptions,
+  VAULT_WHAT_FOR_CUSTOM_OPTION_ID,
+  type VaultMoneyOutWhatForKind,
+} from "@/lib/dashboard/vault-what-for";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -117,49 +121,43 @@ export function VaultSpendingCategoryAdmin({
 type VaultSpendMoneyFormProps = {
   maxAmount: number;
   categories: SpendingCategory[];
-  isPremium: boolean;
+  whatForKind: VaultMoneyOutWhatForKind;
   onSpend: (amount: number, categoryLabel: string) => void;
-  onAddCustomCategory: (label: string) => void;
+  onPremiumCustomRequest: () => void;
   onClose: () => void;
 };
 
 export function VaultSpendMoneyForm({
   maxAmount,
   categories,
-  isPremium,
+  whatForKind,
   onSpend,
-  onAddCustomCategory,
+  onPremiumCustomRequest,
   onClose,
 }: VaultSpendMoneyFormProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const { currencySymbol } = useCurrency();
+  const whatForOptions = useMemo(
+    () => moneyOutWhatForOptions(whatForKind, categories),
+    [categories, whatForKind],
+  );
 
   const [amountInput, setAmountInput] = useState("");
   const [hitCap, setHitCap] = useState(false);
-  const [categoryId, setCategoryId] = useState<SpendingCategoryId>(
-    categories[0]?.id ?? "other",
+  const [categoryId, setCategoryId] = useState<string>(
+    whatForOptions[0]?.id ?? "other",
   );
   const [customWhatFor, setCustomWhatFor] = useState("");
-  const [pendingCustomLabel, setPendingCustomLabel] = useState<string | null>(null);
 
-  const canAddCustom = canAddCustomSpendingCategory(isPremium);
-  const selectedCategory = categories.find((entry) => entry.id === categoryId) ?? categories[0];
+  const selectedLabel =
+    whatForOptions.find((entry) => entry.id === categoryId)?.label ??
+    whatForOptions[0]?.label;
 
   useEffect(() => {
-    if (pendingCustomLabel) {
-      const created = categories.find(
-        (entry) => entry.label.toLowerCase() === pendingCustomLabel.toLowerCase(),
-      );
-      if (created) {
-        setCategoryId(created.id);
-        setPendingCustomLabel(null);
-        return;
-      }
+    if (!whatForOptions.some((entry) => entry.id === categoryId)) {
+      setCategoryId(whatForOptions[0]?.id ?? "other");
     }
-    if (!categories.some((entry) => entry.id === categoryId)) {
-      setCategoryId(categories[0]?.id ?? "other");
-    }
-  }, [categories, categoryId, pendingCustomLabel]);
+  }, [categoryId, whatForOptions]);
 
   function handleAmountChange(nextRaw: string) {
     const { value: next, hitCap: capped } = sanitizeVaultAmountInput(nextRaw);
@@ -170,25 +168,26 @@ export function VaultSpendMoneyForm({
   function confirmSpend(event: FormEvent) {
     event.preventDefault();
     const amount = parsePositiveVaultAmount(amountInput);
-    if (amount === null || amount > maxAmount || !selectedCategory) return;
-    onSpend(amount, selectedCategory.label);
+    if (amount === null || amount > maxAmount) return;
+    if (!selectedLabel) return;
+    onSpend(amount, selectedLabel);
     onClose();
   }
 
-  function handleAddCustomWhatFor() {
-    const label = customWhatFor.trim();
-    if (!label || !canAddCustom) return;
-    const existing = categories.find(
-      (entry) => entry.label.toLowerCase() === label.toLowerCase(),
-    );
-    if (existing) {
-      setCategoryId(existing.id);
-      setCustomWhatFor("");
+  function openCustomComingSoon() {
+    onPremiumCustomRequest();
+  }
+
+  function handleWhatForChange(nextId: string) {
+    if (nextId === VAULT_WHAT_FOR_CUSTOM_OPTION_ID) {
+      openCustomComingSoon();
       return;
     }
-    setPendingCustomLabel(label);
-    onAddCustomCategory(label);
-    setCustomWhatFor("");
+    setCategoryId(nextId);
+  }
+
+  function handleAddCustomWhatFor() {
+    openCustomComingSoon();
   }
 
   return (
@@ -226,40 +225,41 @@ export function VaultSpendMoneyForm({
             <span className={manageSheetFieldLabelClass}>{vaultCopy.whatForLabel}</span>
             <select
               value={categoryId}
-              onChange={(event) => setCategoryId(event.target.value as SpendingCategoryId)}
+              onChange={(event) => handleWhatForChange(event.target.value)}
               aria-label={vaultCopy.whatForLabel}
               className={manageSheetSelectClass}
             >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
+              {whatForOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
                 </option>
               ))}
+              <option value={VAULT_WHAT_FOR_CUSTOM_OPTION_ID}>
+                {vaultCopy.addCustomWhatForPlaceholder}
+              </option>
             </select>
           </label>
-          {canAddCustom ? (
-            <div className="mt-2 flex min-w-0 gap-1.5">
-              <input
-                value={customWhatFor}
-                onChange={(event) => setCustomWhatFor(event.target.value)}
-                placeholder={vaultCopy.addCustomWhatForPlaceholder}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    handleAddCustomWhatFor();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleAddCustomWhatFor}
-                disabled={!customWhatFor.trim()}
-                className={cn("shrink-0 px-3", orangeCtaClass)}
-              >
-                {vaultCopy.addCustomWhatFor}
-              </button>
-            </div>
-          ) : null}
+          <div className="mt-2 flex min-w-0 gap-1.5">
+            <input
+              value={customWhatFor}
+              onChange={(event) => setCustomWhatFor(event.target.value)}
+              placeholder={vaultCopy.addCustomWhatForPlaceholder}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleAddCustomWhatFor();
+                }
+              }}
+              className={cn("min-w-0 flex-1", vaultFieldInputClass)}
+            />
+            <button
+              type="button"
+              onClick={handleAddCustomWhatFor}
+              className={cn("shrink-0 px-3", orangeCtaClass)}
+            >
+              {vaultCopy.addCustomWhatFor}
+            </button>
+          </div>
         </div>
       </div>
 

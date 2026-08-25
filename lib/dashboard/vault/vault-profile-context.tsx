@@ -16,7 +16,6 @@ import {
   jarsFromBalanceMap,
   roundAudAmount,
   SAVINGS_JAR_ID,
-  sumJarBalances,
   type DestinationJar,
 } from "@/lib/dashboard/destination-jars";
 import type { CustomVaultBucketPersisted } from "@/lib/dashboard/vault-buckets";
@@ -189,21 +188,6 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
       customSpendingCategories,
       ledger,
     };
-    const incomingEmpty =
-      nextState.moneyToAllocate === 0 &&
-      sumJarBalances(nextState.jarBalances) === 0 &&
-      nextState.customBuckets.length === 0 &&
-      nextState.savingsGoals.every((goal) => goal.balance === 0);
-    const existing = readVaultProfileState(sessionRef.current);
-    const existingHasValue =
-      existing.moneyToAllocate > 0 ||
-      sumJarBalances(existing.jarBalances) > 0 ||
-      existing.customBuckets.length > 0 ||
-      existing.savingsGoals.some((goal) => goal.balance > 0);
-    if (incomingEmpty && existingHasValue) {
-      return;
-    }
-
     saveVaultProfileState(nextState, sessionRef.current);
   }, [
     customBuckets,

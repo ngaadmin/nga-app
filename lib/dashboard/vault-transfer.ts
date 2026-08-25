@@ -212,21 +212,66 @@ export function buildSaveJarTransferDestinations(
   );
 }
 
-/** Jar sources for the single Vault-home jar-to-jar move. */
-export function buildJarToJarTransferSources(
-  buckets: readonly VaultBucket[],
-): VaultTransferLocation[] {
-  return buckets.map(bucketLocation);
+function saveGoalMoveLabel(goalName: string, template: string): string {
+  return template.replace("{name}", goalName);
 }
 
-/** Jar destinations for the Vault-home jar-to-jar move (excludes the active source). */
+/** Home Move sheet locations: other jars, unassigned Save, then each Save goal. */
+export function buildHomeMoveLocations(
+  buckets: readonly VaultBucket[],
+  goals: readonly SavingsGoal[],
+  unassignedSaveLabel: string,
+  goalLabelTemplate: string,
+): VaultTransferLocation[] {
+  const jarLocations = buckets
+    .filter((bucket) => bucket.id !== SAVINGS_JAR_ID)
+    .map(bucketLocation);
+
+  const saveBucket = buckets.find((bucket) => bucket.id === SAVINGS_JAR_ID);
+  const unassignedSave: VaultTransferLocation = {
+    id: SAVINGS_JAR_ID,
+    label: unassignedSaveLabel,
+    balance: saveBucket?.balance ?? 0,
+  };
+
+  const goalLocations = goals.map((goal) => ({
+    id: goal.id as VaultTransferLocationId,
+    label: saveGoalMoveLabel(goal.name, goalLabelTemplate),
+    balance: goal.balance,
+  }));
+
+  return [...jarLocations, unassignedSave, ...goalLocations];
+}
+
+/** From list for the Vault-home move sheet (zero-balance sources stay listed for disable/hide). */
+export function buildJarToJarTransferSources(
+  buckets: readonly VaultBucket[],
+  goals: readonly SavingsGoal[],
+  unassignedSaveLabel: string,
+  goalLabelTemplate: string,
+): VaultTransferLocation[] {
+  return buildHomeMoveLocations(
+    buckets,
+    goals,
+    unassignedSaveLabel,
+    goalLabelTemplate,
+  );
+}
+
+/** To list for the Vault-home move sheet (excludes the active From item). */
 export function buildJarToJarTransferDestinations(
   buckets: readonly VaultBucket[],
+  goals: readonly SavingsGoal[],
   sourceId: VaultTransferLocationId,
+  unassignedSaveLabel: string,
+  goalLabelTemplate: string,
 ): VaultTransferLocation[] {
-  return sortBucketDestinations(
-    buckets.filter((bucket) => bucket.id !== sourceId),
-  );
+  return buildHomeMoveLocations(
+    buckets,
+    goals,
+    unassignedSaveLabel,
+    goalLabelTemplate,
+  ).filter((entry) => entry.id !== sourceId);
 }
 
 export function resolveVaultTransferLocationLabel(

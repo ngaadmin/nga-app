@@ -9,6 +9,7 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
+import type { SavingsGoal } from "@/lib/dashboard/savings-goals";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
   buildJarToJarTransferDestinations,
@@ -18,6 +19,7 @@ import {
 
 type VaultHomeJarMoveProps = {
   buckets: VaultBucket[];
+  goals: SavingsGoal[];
   onVaultTransfer: (
     from: VaultTransferLocationId,
     to: VaultTransferLocationId,
@@ -27,6 +29,7 @@ type VaultHomeJarMoveProps = {
 
 export function VaultHomeJarMove({
   buckets,
+  goals,
   onVaultTransfer,
 }: VaultHomeJarMoveProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -34,8 +37,14 @@ export function VaultHomeJarMove({
   const [moveOpen, setMoveOpen] = useState(false);
 
   const sources = useMemo(
-    () => buildJarToJarTransferSources(buckets),
-    [buckets],
+    () =>
+      buildJarToJarTransferSources(
+        buckets,
+        goals,
+        vaultCopy.saveMoveUnassignedLabel,
+        vaultCopy.saveMoveGoalLabelTemplate,
+      ),
+    [buckets, goals],
   );
   const fundedSources = sources.filter((entry) => entry.balance > 0);
 
@@ -46,8 +55,15 @@ export function VaultHomeJarMove({
   const sourceBalance = sources.find((entry) => entry.id === sourceId)?.balance ?? 0;
 
   const destinations = useMemo(
-    () => buildJarToJarTransferDestinations(buckets, sourceId),
-    [buckets, sourceId],
+    () =>
+      buildJarToJarTransferDestinations(
+        buckets,
+        goals,
+        sourceId,
+        vaultCopy.saveMoveUnassignedLabel,
+        vaultCopy.saveMoveGoalLabelTemplate,
+      ),
+    [buckets, goals, sourceId],
   );
 
   const canMove = fundedSources.length > 0 && destinations.length > 0;
@@ -103,7 +119,7 @@ export function VaultHomeJarMove({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-3">
           <VaultSaveJarMoveMoneyForm
-            sources={sources}
+            sources={fundedSources}
             destinations={destinations}
             sourceId={sourceId}
             sourceBalance={sourceBalance}

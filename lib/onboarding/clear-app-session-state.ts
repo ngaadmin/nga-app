@@ -5,6 +5,7 @@ import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { TESTING_PREMIUM_STORAGE_KEY } from "@/lib/dashboard/testing-premium";
 import { TESTING_SETTINGS_VIEW_STORAGE_KEY } from "@/lib/dashboard/testing-settings-view";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
+import { VAULT_ADD_MONEY_INTRO_SEEN_KEY } from "@/lib/dashboard/vault/add-money-intro";
 import { VAULT_PROFILE_STORAGE_KEY, VAULT_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault/vault-profile-storage";
 import { GUEST_SESSION_STORAGE_KEY, readUserSession } from "@/lib/onboarding/guest-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
@@ -31,6 +32,7 @@ export const APP_SESSION_STORAGE_KEYS = [
   CURRENCY_PREFERENCE_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,
   VAULT_SKILL_PROGRESS_STORAGE_KEY,
+  VAULT_ADD_MONEY_INTRO_SEEN_KEY,
   VAULT_SESSION_STORAGE_KEY,
   VAULT_PROFILE_STORAGE_KEY,
   PARENT_PIN_STORAGE_KEY,

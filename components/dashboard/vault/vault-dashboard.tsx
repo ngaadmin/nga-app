@@ -106,6 +106,7 @@ export function VaultDashboard() {
         footer={
           <VaultHomeJarMove
             buckets={displayBuckets}
+            goals={vaultGoals}
             onVaultTransfer={handleVaultTransfer}
           />
         }

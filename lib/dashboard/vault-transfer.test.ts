@@ -181,21 +181,62 @@ describe("buildVaultTransferLocations", () => {
 });
 
 describe("buildJarToJarTransferSources", () => {
-  it("lists jars only, not goals", () => {
-    const buckets = mergeVaultBuckets(jarBalance("spend-jar", 10), []);
-    const sources = buildJarToJarTransferSources(buckets);
-    const destinations = buildJarToJarTransferDestinations(buckets, "spend-jar");
-
-    expect(sources.map((entry) => entry.id)).toEqual([
-      SAVINGS_JAR_ID,
+  it("lists other jars, unassigned Save, and each goal — not a combined Save total", () => {
+    const jars = INITIAL_DESTINATION_JARS.map((jar) => {
+      if (jar.id === SAVINGS_JAR_ID) return { ...jar, balance: 80 };
+      if (jar.id === "spend-jar") return { ...jar, balance: 10 };
+      return { ...jar };
+    });
+    const goals: SavingsGoal[] = [
+      {
+        id: FREEMIUM_BIG_SAVINGS_GOAL_ID,
+        name: "Big Savings Goal",
+        targetAmount: 100,
+        balance: 5,
+        emoji: "🎯",
+      },
+    ];
+    const buckets = mergeVaultBuckets(jars, [
+      {
+        id: "custom-jar-1",
+        name: "Trip",
+        emoji: "✈️",
+        balance: 12,
+        foundationRole: "custom",
+      },
+    ]);
+    const sources = buildJarToJarTransferSources(
+      buckets,
+      goals,
+      "Save · not in a goal",
+      "Save · {name}",
+    );
+    const destinations = buildJarToJarTransferDestinations(
+      buckets,
+      goals,
       "spend-jar",
-      "give-jar",
-      "emergencies-jar",
+      "Save · not in a goal",
+      "Save · {name}",
+    );
+
+    expect(sources.map((entry) => ({ id: entry.id, label: entry.label, balance: entry.balance }))).toEqual([
+      { id: "spend-jar", label: "🛒 Spend Jar", balance: 10 },
+      { id: "give-jar", label: "🎁 Give Jar", balance: 0 },
+      { id: "emergencies-jar", label: "🚨 Emergencies Jar", balance: 0 },
+      { id: "custom-jar-1", label: "✈️ Trip", balance: 12 },
+      { id: SAVINGS_JAR_ID, label: "Save · not in a goal", balance: 80 },
+      {
+        id: FREEMIUM_BIG_SAVINGS_GOAL_ID,
+        label: "Save · Big Savings Goal",
+        balance: 5,
+      },
     ]);
     expect(destinations.map((entry) => entry.id)).toEqual([
       "give-jar",
       "emergencies-jar",
+      "custom-jar-1",
       SAVINGS_JAR_ID,
+      FREEMIUM_BIG_SAVINGS_GOAL_ID,
     ]);
   });
 });

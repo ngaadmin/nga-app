@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BucketEmojiIcon,
   bucketTheme,
@@ -142,6 +142,7 @@ export function VaultManageBudgetJarsModal({
   const [deleteTarget, setDeleteTarget] = useState<VaultBucket | null>(null);
   const [deleteFallbackId, setDeleteFallbackId] = useState<VaultBucketId | "">("");
   const [confirmReset, setConfirmReset] = useState<VaultBucket | null>(null);
+  const draftsSeededWhileOpen = useRef(false);
 
   const bucketLimit = maxVaultBuckets(isPremium);
   const pendingDeleteIds = useMemo(
@@ -191,6 +192,7 @@ export function VaultManageBudgetJarsModal({
     setDeleteTarget(null);
     setDeleteFallbackId("");
     setConfirmReset(null);
+    draftsSeededWhileOpen.current = false;
   }, []);
 
   useEffect(() => {
@@ -198,6 +200,8 @@ export function VaultManageBudgetJarsModal({
       resetLocalState();
       return;
     }
+
+    if (draftsSeededWhileOpen.current) return;
 
     const nextDrafts: Record<string, JarDraft> = {};
     for (const bucket of buckets) {
@@ -207,6 +211,7 @@ export function VaultManageBudgetJarsModal({
       };
     }
     setDrafts(nextDrafts);
+    draftsSeededWhileOpen.current = true;
   }, [buckets, isOpen, resetLocalState]);
 
   useEffect(() => {
@@ -637,6 +642,7 @@ export function VaultManageBudgetJarsModal({
       <ModalShell
         isOpen={confirmReset !== null}
         onClose={() => setConfirmReset(null)}
+        layer="toast"
         align="center"
         labelledBy="vault-reset-jar-balance-title"
         backdropClassName="bg-[#031F82]/55"

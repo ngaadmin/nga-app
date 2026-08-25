@@ -42,6 +42,7 @@ import {
   isCustomBucketId,
   isSavingsGoalMoveTarget,
   sumAllocations,
+  zeroVaultBucketBalance,
   type CustomVaultBucketPersisted,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
@@ -95,6 +96,27 @@ function adjustBucketBalance(
         : jar,
     ),
   );
+}
+
+function setBucketBalanceToZero(
+  bucketId: VaultBucketId,
+  setJars: (
+    updater: DestinationJar[] | ((current: DestinationJar[]) => DestinationJar[]),
+  ) => void,
+  setCustomBuckets: (
+    updater:
+      | CustomVaultBucketPersisted[]
+      | ((current: CustomVaultBucketPersisted[]) => CustomVaultBucketPersisted[]),
+  ) => void,
+) {
+  if (isCustomBucketId(bucketId)) {
+    setCustomBuckets((current) =>
+      zeroVaultBucketBalance(bucketId, [], current).customBuckets,
+    );
+    return;
+  }
+
+  setJars((current) => zeroVaultBucketBalance(bucketId, current, []).jars);
 }
 
 export function useVaultActions() {
@@ -574,11 +596,8 @@ export function useVaultActions() {
   const handleResetBucketBalance = useCallback(
     (bucketId: VaultBucketId) => {
       const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
-      if (!bucket) return;
-      if (bucket.balance > 0) {
-        adjustBucketBalance(bucketId, -bucket.balance, setJars, setCustomBuckets);
-      }
-      appendLedger(`Reset ${bucket.name} balance to $0`, { category: "setup" });
+      setBucketBalanceToZero(bucketId, setJars, setCustomBuckets);
+      appendLedger(`Reset ${bucket?.name ?? "jar"} balance to $0`, { category: "setup" });
     },
     [appendLedger, setCustomBuckets, setJars, vaultBuckets],
   );

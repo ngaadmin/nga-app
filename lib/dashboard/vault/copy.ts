@@ -37,6 +37,17 @@ export const vaultCopy = {
   jarSettingsBody:
     "Edit categories or reset this jar to $0. Category changes save as you go.",
   moveJarHelper: "Move money from one jar to another.",
+  addMoneyIntroTitle: "Keep your money up to date",
+  addMoneyIntroSentence1:
+    "Enter money you already have. When you get more, enter it here too.",
+  addMoneyIntroSentence2:
+    "Then split it into jars, set savings goals, and move it around.",
+  addMoneyIntroSentence3:
+    "This app does not connect to a bank, and it cannot send or take real payments.",
+  addMoneyIntroGotIt: "Got it",
+  addMoneyIntroAriaLabel: "How adding money works",
+  saveMoveUnassignedLabel: "Save · not in a goal",
+  saveMoveGoalLabelTemplate: "Save · {name}",
   moveSome: "Move some",
   moveGoalHelper:
     "Move money in this goal to another goal, or out of this goal.",

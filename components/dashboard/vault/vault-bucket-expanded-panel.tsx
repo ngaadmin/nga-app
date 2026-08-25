@@ -15,6 +15,7 @@ import {
   type VaultBucket,
   type VaultBucketId,
 } from "@/lib/dashboard/vault-buckets";
+import { moneyOutWhatForKind } from "@/lib/dashboard/vault-what-for";
 import type {
   SpendingCategory,
   SpendingCategoryId,
@@ -183,9 +184,9 @@ export function VaultBucketExpandedPanel({
         <VaultSpendMoneyForm
           maxAmount={bucket.balance}
           categories={spendingCategories}
-          isPremium={isPremium}
+          whatForKind={moneyOutWhatForKind(bucket.foundationRole) ?? "spend"}
           onSpend={onMarkSpent}
-          onAddCustomCategory={onAddCustomCategory}
+          onPremiumCustomRequest={() => setPremiumCategoriesOpen(true)}
           onClose={() => setSpendOpen(false)}
         />
       </ModalShell>

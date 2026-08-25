@@ -10,7 +10,7 @@ const PENNY_HOMEPAGE_SRC = "/assets/illustrations/website/Penny.png";
 
 export function OnboardingEntryGate() {
   return (
-    <section className="flex flex-col py-4 sm:py-6 lg:flex-1 lg:justify-center lg:py-8">
+    <section className="flex flex-col pb-4 pt-[calc(env(safe-area-inset-top,0px)+2.5rem)] sm:pb-6 sm:pt-[calc(env(safe-area-inset-top,0px)+3rem)] lg:flex-1 lg:justify-center lg:pb-10 lg:pt-[calc(env(safe-area-inset-top,0px)+2.5rem)]">
       <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-3">
         <div className="order-1 flex items-center justify-center lg:order-none lg:justify-end">
           <div className="flex w-full max-w-[15.6rem] items-center justify-center sm:max-w-[18rem] lg:max-w-[19.5rem]">

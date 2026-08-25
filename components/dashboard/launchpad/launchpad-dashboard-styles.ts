@@ -13,6 +13,10 @@ export const launchpadSectionHeadingClass =
 export const launchpadCardTitleClass =
   "font-heading text-[17px] font-bold leading-snug text-[#031F82]";
 
+/** Single-line idea chip label — compact carousel tiles. */
+export const launchpadChipTitleClass =
+  "truncate font-heading text-[13px] font-bold leading-tight text-[#031F82]";
+
 /** Eyebrow labels (Active Journey, Discovery Brief, premium unlock). */
 export const launchpadEyebrowClass =
   "font-heading text-[14px] font-bold uppercase tracking-wide";

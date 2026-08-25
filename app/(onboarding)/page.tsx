@@ -27,5 +27,9 @@ export default async function HomePage() {
     redirect(DASHBOARD_ACADEMY_PATH);
   }
 
-  return <OnboardingEntryGate />;
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6">
+      <OnboardingEntryGate />
+    </div>
+  );
 }

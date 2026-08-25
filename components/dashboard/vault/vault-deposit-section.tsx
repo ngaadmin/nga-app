@@ -10,14 +10,14 @@ import {
   type VaultIncomeSourceId,
 } from "@/lib/dashboard/vault-income-sources";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
+import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import {
   vaultLightSectionTitleClass,
   vaultSimulatorDisclaimerClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
-const orangeCtaClass =
-  "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+const orangeCtaClass = vaultHomeCompactCtaClass;
 
 type VaultDepositSectionProps = {
   onDeposit: (amount: number, source: VaultIncomeSourceId) => void;
@@ -49,9 +49,9 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
         <h2 className={vaultLightSectionTitleClass}>
           {copy.depositHeading}
         </h2>
-        <div className="grid min-w-0 grid-cols-[minmax(8rem,9.25rem)_minmax(0,1fr)_auto] items-stretch gap-2">
-          <label className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[#BDE9FB] bg-white px-2.5 py-3">
-            <span className="shrink-0 font-heading text-base font-bold text-[#031F82]">
+        <div className="flex min-w-0 items-center gap-2">
+          <label className="flex h-8 w-[5.75rem] shrink-0 items-center gap-1 rounded-xl border border-[#BDE9FB] bg-white px-2">
+            <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
               {currencySymbol}
             </span>
             <input
@@ -65,7 +65,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
               }}
               placeholder="0"
               aria-label={copy.depositHeading}
-              className="min-w-0 flex-1 bg-transparent font-sans text-base text-[#031F82] outline-none"
+              className="min-w-0 flex-1 bg-transparent font-sans text-sm text-[#031F82] outline-none"
             />
           </label>
           <select
@@ -74,7 +74,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
               setIncomeSource(event.target.value as VaultIncomeSourceId)
             }
             aria-label="Income source"
-            className="min-w-0 rounded-xl border border-[#BDE9FB] bg-white px-3 py-3 font-sans text-base text-[#031F82] outline-none focus:border-[#0CC1E0]"
+            className="h-8 min-w-0 flex-1 rounded-xl border border-[#BDE9FB] bg-white px-2 font-sans text-sm text-[#031F82] outline-none focus:border-[#0CC1E0]"
           >
             {VAULT_INCOME_SOURCES.map((source) => (
               <option key={source.id} value={source.id}>
@@ -82,7 +82,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
               </option>
             ))}
           </select>
-          <button type="submit" className={cn("shrink-0 px-5 py-3", orangeCtaClass)}>
+          <button type="submit" className={cn(orangeCtaClass)}>
             Add
           </button>
         </div>

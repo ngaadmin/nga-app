@@ -13,6 +13,7 @@ import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-moda
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/copy";
+import { useCurrency } from "@/lib/dashboard/currency-context";
 import { ADVANCED_MONEY_TOOLS_HREF } from "@/lib/dashboard/advanced-money-tools/nav";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { useVaultActions } from "@/lib/dashboard/vault/use-vault-actions";
@@ -20,11 +21,14 @@ import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
 import type { VaultBucketId } from "@/lib/dashboard/vault-buckets";
 import type { VaultIncomeSourceId } from "@/lib/dashboard/vault-income-sources";
 import { vaultBucketsWithDisplayNames } from "@/lib/dashboard/vault/bucket-display-name";
+import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 
 export function VaultDashboard() {
   const vaultCopy = copyMatrix.dashboard.vault;
+  const budgetCopy = vaultCopy.budget;
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { formatWholeMoney: formatMoney } = useCurrency();
   const {
     isPremium,
     moneyToAllocate,
@@ -98,6 +102,25 @@ export function VaultDashboard() {
         onToggleBucket={toggleBucket}
         onManageJarsClick={() => setManageJarsModalOpen(true)}
       />
+
+      {moneyToAllocate > 0 && !allocationModalOpen ? (
+        <div className="flex items-center gap-2">
+          <p className="min-w-0 flex-1 font-heading text-base font-extrabold tabular-nums text-[#031F82]">
+            {formatMoney(moneyToAllocate)} {budgetCopy.toAllocateActionLabel}
+          </p>
+          <button
+            type="button"
+            onClick={() => setAllocationModalOpen(true)}
+            aria-label={budgetCopy.toAllocateAriaLabel.replace(
+              "{amount}",
+              formatMoney(moneyToAllocate),
+            )}
+            className={vaultHomeCompactCtaClass}
+          >
+            {budgetCopy.allocatePoolCta}
+          </button>
+        </div>
+      ) : null}
 
       {expandedBucket ? (
         <VaultBucketDrilldown

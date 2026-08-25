@@ -5,6 +5,10 @@ export const ALLOCATION_COIN_STACK_GAP_PX = 4;
 /** 100% allocation = 100 coins = 10 columns of 10. */
 export const ALLOCATION_COIN_MAX_STACK_COLUMNS = 10;
 
+/** Allocate-sheet row: at most 10 coins, 1 coin = 10% of the pool. */
+export const ALLOCATION_SHEET_COIN_SIZE_PX = 10;
+export const ALLOCATION_SHEET_MAX_COINS = 10;
+
 export function allocationCoinTrackWidthForStacks(
   stackColumnCount: number,
   coinSizePx: number = ALLOCATION_COIN_SIZE_PX,
@@ -48,4 +52,18 @@ export function allocationCoinStackPercent(
 ): number {
   if (poolTotal <= 0 || allocatedAmount <= 0) return 0;
   return Math.min(100, Math.round((allocatedAmount / poolTotal) * 100));
+}
+
+/** Full 10% coins plus a 1–9% remainder for a faded last coin. Never more than 10 coins. */
+export function allocationSheetCoinRow(
+  allocatedAmount: number,
+  poolTotal: number,
+): { fullCoins: number; remainderPercent: number } {
+  const percent = allocationCoinStackPercent(allocatedAmount, poolTotal);
+  const fullCoins = Math.min(
+    ALLOCATION_SHEET_MAX_COINS,
+    Math.floor(percent / 10),
+  );
+  const remainderPercent = percent >= 100 ? 0 : percent % 10;
+  return { fullCoins, remainderPercent };
 }

@@ -10,7 +10,6 @@ import {
   BucketEmojiIcon,
   bucketTheme,
 } from "@/components/dashboard/vault/vault-visuals";
-import { VaultCoinStackVisual } from "@/components/dashboard/vault/vault-coin-stack-visual";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -35,7 +34,10 @@ import {
   sumEffectiveAllocationInputsExcept,
   vaultAllocationRemainingDisplay,
 } from "@/lib/dashboard/vault/allocation-remaining";
-import { ALLOCATION_COIN_SIZE_PX } from "@/lib/dashboard/vault/allocation-coin-stacks";
+import {
+  ALLOCATION_SHEET_COIN_SIZE_PX,
+  allocationSheetCoinRow,
+} from "@/lib/dashboard/vault/allocation-coin-stacks";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { cn } from "@/lib/utils/cn";
 
@@ -43,16 +45,58 @@ const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const allocationRowClass =
-  "flex w-full min-w-0 items-end gap-x-2 py-2.5";
+  "flex w-full min-w-0 items-center gap-x-1.5 overflow-visible py-1.5";
 
 const allocationJarInfoClass =
-  "flex w-[5.75rem] shrink-0 flex-col items-center justify-end gap-0.5 self-stretch pb-0.5";
+  "flex min-w-0 w-[5.75rem] shrink-0 items-center gap-1";
 
-const allocationCoinSlotClass =
-  "flex min-h-0 min-w-0 flex-1 items-end justify-end overflow-visible [container-type:inline-size]";
+const allocationFillTrackClass =
+  "pointer-events-none relative h-1.5 min-w-[3.5rem] flex-1 overflow-hidden rounded-sm bg-[#BDE9FB]/70";
+
+const allocationFillBarClass =
+  "absolute inset-y-0 left-0 bg-[#FFA503] transition-[width] duration-150";
 
 const allocationAmountInputClass =
-  "flex h-9 w-[5.25rem] shrink-0 items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2";
+  "flex h-8 w-[4.75rem] shrink-0 items-center gap-0.5 rounded-lg border border-[#BDE9FB] bg-white px-1.5";
+
+function AllocationSheetCoins({
+  allocatedAmount,
+  poolTotal,
+}: {
+  allocatedAmount: number;
+  poolTotal: number;
+}) {
+  const { fullCoins, remainderPercent } = allocationSheetCoinRow(
+    allocatedAmount,
+    poolTotal,
+  );
+  if (fullCoins <= 0 && remainderPercent <= 0) return null;
+
+  return (
+    <div className="flex shrink-0 items-center gap-0.5" aria-hidden>
+      {Array.from({ length: fullCoins }, (_, index) => (
+        <span
+          key={index}
+          className="inline-block rounded-full border border-[#B87400] bg-gradient-to-br from-[#FFF1A8] via-[#FFC933] to-[#E08A00]"
+          style={{
+            width: ALLOCATION_SHEET_COIN_SIZE_PX,
+            height: ALLOCATION_SHEET_COIN_SIZE_PX,
+          }}
+        />
+      ))}
+      {remainderPercent > 0 ? (
+        <span
+          className="inline-block rounded-full border border-[#B87400] bg-gradient-to-br from-[#FFF1A8] via-[#FFC933] to-[#E08A00]"
+          style={{
+            width: ALLOCATION_SHEET_COIN_SIZE_PX,
+            height: ALLOCATION_SHEET_COIN_SIZE_PX,
+            opacity: Math.max(0.35, remainderPercent / 10),
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
 
 function AllocationInputRow({
   bucket,
@@ -77,31 +121,43 @@ function AllocationInputRow({
   const theme = bucketTheme(bucket);
   const displayName = vaultBucketDisplayName(bucket);
   const currentBalance = savingsBucketDisplayBalance(bucket, totalSavings);
+  const fillPercent =
+    poolTotal > 0 ? Math.min(100, Math.max(0, (draft / poolTotal) * 100)) : 0;
 
   return (
     <div className={allocationRowClass}>
       <div className={allocationJarInfoClass}>
-        <BucketEmojiIcon size="lg" emoji={bucket.emoji} theme={theme} />
-        <p
-          className={cn(
-            "line-clamp-2 w-full text-center font-heading text-sm font-bold leading-tight",
-            theme.label,
-          )}
-        >
-          {displayName}
-        </p>
-        <p className="w-full truncate text-center font-heading text-sm font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
-          {formatMoney(currentBalance)}
-        </p>
+        <BucketEmojiIcon size="sm" emoji={bucket.emoji} theme={theme} />
+        <div className="min-w-0">
+          <p
+            className={cn(
+              "truncate font-heading text-sm font-bold leading-tight",
+              theme.label,
+            )}
+          >
+            {displayName}
+          </p>
+          <p className="truncate font-heading text-sm font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
+            {formatMoney(currentBalance)}
+          </p>
+        </div>
       </div>
 
-      <div className={allocationCoinSlotClass}>
-        <VaultCoinStackVisual
-          allocatedAmount={draft}
-          poolTotal={poolTotal}
-          coinSizePx={ALLOCATION_COIN_SIZE_PX - 2}
+      <div
+        className={allocationFillTrackClass}
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(fillPercent)}
+        aria-label={`${displayName} share of the pool`}
+      >
+        <span
+          className={allocationFillBarClass}
+          style={{ width: `${fillPercent}%` }}
         />
       </div>
+
+      <AllocationSheetCoins allocatedAmount={draft} poolTotal={poolTotal} />
 
       <label className={allocationAmountInputClass}>
         <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
@@ -343,7 +399,7 @@ export function VaultAllocationModal({
         </button>
       </div>
 
-      <div className="mt-4 max-h-[min(60vh,24rem)] overflow-y-auto overflow-x-hidden pr-1 [scrollbar-gutter:stable]">
+      <div className="mt-4 max-h-[min(70vh,28rem)] overflow-x-visible overflow-y-auto pr-1 [scrollbar-gutter:stable]">
         <ul className="min-w-0 divide-y divide-[#BDE9FB]/30 overflow-visible">
           {buckets.map((bucket) => (
             <li key={bucket.id}>

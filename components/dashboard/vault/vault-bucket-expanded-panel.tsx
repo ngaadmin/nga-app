@@ -118,51 +118,49 @@ export function VaultBucketExpandedPanel({
 
         {hasActions ? (
           <div className="mt-2 space-y-2 border-t border-[#BDE9FB]/40 pt-2">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              {showSpend ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveAction((current) => (current === "spend" ? null : "spend"))
-                  }
-                  disabled={!canUseFunds}
-                  className={cn(vaultActionLinkClass, spendOpen && vaultActionLinkActiveClass)}
-                >
-                  {savingsCopy.spendMoney}
-                </button>
-              ) : null}
-              {showSpend && canMoveOut ? (
-                <span className={vaultActionLinkSeparatorClass} aria-hidden>
-                  |
-                </span>
-              ) : null}
-              {canMoveOut ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveAction((current) => (current === "move" ? null : "move"))
-                  }
-                  disabled={!canMoveOut}
-                  className={cn(vaultActionLinkClass, moveOpen && vaultActionLinkActiveClass)}
-                >
-                  {savingsCopy.moveMoney}
-                </button>
-              ) : null}
-              {(showSpend || canMoveOut) && canReset ? (
-                <span className={vaultActionLinkSeparatorClass} aria-hidden>
-                  |
-                </span>
-              ) : null}
-              {canReset ? (
-                <button
-                  type="button"
-                  onClick={() => setResetConfirmOpen(true)}
-                  className={vaultActionResetLinkClass}
-                >
-                  {vaultCopy.resetBalanceToZero}
-                </button>
-              ) : null}
-            </div>
+            {showSpend || canMoveOut ? (
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                {showSpend ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveAction((current) =>
+                        current === "spend" ? null : "spend",
+                      )
+                    }
+                    disabled={!canUseFunds}
+                    className={cn(
+                      vaultActionLinkClass,
+                      spendOpen && vaultActionLinkActiveClass,
+                    )}
+                  >
+                    {savingsCopy.spendMoney}
+                  </button>
+                ) : null}
+                {showSpend && canMoveOut ? (
+                  <span className={vaultActionLinkSeparatorClass} aria-hidden>
+                    |
+                  </span>
+                ) : null}
+                {canMoveOut ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveAction((current) =>
+                        current === "move" ? null : "move",
+                      )
+                    }
+                    disabled={!canMoveOut}
+                    className={cn(
+                      vaultActionLinkClass,
+                      moveOpen && vaultActionLinkActiveClass,
+                    )}
+                  >
+                    {savingsCopy.moveMoney}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
 
             {spendOpen && canUseFunds ? (
               <VaultSpendMoneyForm
@@ -189,6 +187,18 @@ export function VaultBucketExpandedPanel({
 
             {!canUseFunds && spendOpen ? (
               <p className="font-sans text-sm text-[#1E3A5F]/70">{copy.bucketEmptyHint}</p>
+            ) : null}
+
+            {canReset ? (
+              <div className="pt-5">
+                <button
+                  type="button"
+                  onClick={() => setResetConfirmOpen(true)}
+                  className={vaultActionResetLinkClass}
+                >
+                  {vaultCopy.resetBalanceToZero}
+                </button>
+              </div>
             ) : null}
           </div>
         ) : (

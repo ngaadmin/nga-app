@@ -77,6 +77,7 @@ export function AcademyMomentumHeader({
           username={username}
           size="sm"
           className="min-w-0 max-w-full"
+          showGuestHandle={false}
         />
       }
       right={

@@ -12,6 +12,11 @@ type UserHandleControlProps = {
   username?: string;
   /** When false, guest handle does not open the save-progress modal. */
   interactive?: boolean;
+  /**
+   * When false, guests see only the save-progress control (no "Playing as").
+   * Registered usernames are unchanged. Defaults to true.
+   */
+  showGuestHandle?: boolean;
 };
 
 /**
@@ -24,6 +29,7 @@ export function UserHandleControl({
   size = "sm",
   username: usernameProp,
   interactive = true,
+  showGuestHandle = true,
 }: UserHandleControlProps) {
   const { username, isGuestMode, isLoading } = useDashboardUser();
   const displayName = (usernameProp ?? username).trim() || "Guest";
@@ -49,6 +55,7 @@ export function UserHandleControl({
         size={size}
         label={displayName}
         interactive={interactive}
+        showHandle={showGuestHandle}
       />
     );
   }

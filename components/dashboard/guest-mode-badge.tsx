@@ -15,7 +15,14 @@ type GuestModeBadgeProps = {
   label?: string;
   /** When false, renders a static label (no save-progress modal). */
   interactive?: boolean;
+  /**
+   * When false, hide the "Playing as …" handle and show only the save-progress
+   * control (shared dashboard header).
+   */
+  showHandle?: boolean;
 };
+
+const SAVE_PROGRESS_LABEL = "Save your progress";
 
 function formatPlayingAsLabel(handle?: string): string {
   const trimmed = handle?.trim();
@@ -29,12 +36,19 @@ export function GuestModeBadge({
   size = "md",
   label,
   interactive = true,
+  showHandle = true,
 }: GuestModeBadgeProps) {
   void size;
   const [modalOpen, setModalOpen] = useState(false);
   const displayLabel = formatPlayingAsLabel(label);
   const session = useUserSession();
   const showSaveProgressHint = interactive && session?.accessMode === "guest";
+  const saveProgressText = showHandle
+    ? "click here to save your progress"
+    : SAVE_PROGRESS_LABEL;
+  const accessibleLabel = showHandle
+    ? `${displayLabel} - tap to save your progress`
+    : SAVE_PROGRESS_LABEL;
 
   const itemClass = cn(
     STATUS_BANNER_ITEM_CLASS,
@@ -44,10 +58,12 @@ export function GuestModeBadge({
 
   const inner = (
     <span className="flex min-w-0 flex-col items-center justify-center text-center">
-      <span className="min-w-0 truncate leading-tight">{displayLabel}</span>
+      {showHandle ? (
+        <span className="min-w-0 truncate leading-tight">{displayLabel}</span>
+      ) : null}
       {showSaveProgressHint ? (
         <span className="font-bold leading-tight text-red-600">
-          click here to save your progress
+          {saveProgressText}
         </span>
       ) : null}
     </span>
@@ -66,7 +82,7 @@ export function GuestModeBadge({
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        aria-label={`${displayLabel} - tap to save your progress`}
+        aria-label={accessibleLabel}
         className={itemClass}
       >
         {inner}

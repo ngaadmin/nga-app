@@ -128,13 +128,14 @@ export function VaultDashboard() {
           buckets={displayBuckets}
           goals={vaultGoals}
           totalSavings={totalSavings}
-          isPremium={isPremium}
+          isPremium={isPremium || advancedMoneyUnlocked}
           spendingCategories={spendingCategories}
           onVaultTransfer={handleVaultTransfer}
           onMarkSpent={handleMarkSpent}
           onAddCustomCategory={handleAddCustomSpendingCategory}
           onRenameCategory={handleRenameSpendingCategory}
           onAssignGoals={handleAssignGoals}
+          onUpdateGoalDetails={handleUpdateGoalDetails}
           onResetGoalBalance={handleResetGoalBalance}
           onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
           onResetBucketBalance={handleResetBucketBalance}
@@ -208,7 +209,7 @@ export function VaultDashboard() {
         isOpen={manageGoalsModalOpen}
         onClose={() => setManageGoalsModalOpen(false)}
         goals={vaultGoals}
-        isPremium={isPremium}
+        isPremium={isPremium || advancedMoneyUnlocked}
         onUpdateGoalDetails={handleUpdateGoalDetails}
         onAddGoal={handleAddGoal}
         onDeleteGoal={handleDeleteGoal}

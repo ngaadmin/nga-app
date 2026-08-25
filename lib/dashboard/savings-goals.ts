@@ -87,7 +87,7 @@ export function computeTotalSavings(
   return roundAudAmount(unassignedSaveJarBalance + sumSavingsGoalBalances(goals));
 }
 
-/** When true, custom goals beyond freemium starters are available without Premium. */
+/** When true, custom goals beyond freemium starters are available without Premium (same idea as custom jars). */
 export const VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL = true;
 
 export function isFreemiumSystemGoal(id: SavingsGoalId): boolean {

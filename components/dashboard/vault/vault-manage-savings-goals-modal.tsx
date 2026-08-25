@@ -155,6 +155,7 @@ export type VaultManageSavingsGoalsModalProps = {
   onAddGoal: (name: string, targetAmount: number, emoji: string) => void;
   onDeleteGoal: (goalId: SavingsGoalId) => void;
   onResetGoalBalance: (goalId: SavingsGoalId) => void;
+  startOnAdd?: boolean;
 };
 
 export function VaultManageSavingsGoalsModal({
@@ -166,6 +167,7 @@ export function VaultManageSavingsGoalsModal({
   onAddGoal,
   onDeleteGoal,
   onResetGoalBalance,
+  startOnAdd = false,
 }: VaultManageSavingsGoalsModalProps) {
   const { formatWholeMoney: formatMoney } = useCurrency();
 
@@ -228,7 +230,8 @@ export function VaultManageSavingsGoalsModal({
       };
     }
     setDrafts(nextDrafts);
-  }, [goals, isOpen, resetLocalState]);
+    if (startOnAdd) setAddFormOpen(true);
+  }, [goals, isOpen, resetLocalState, startOnAdd]);
 
   function goalDraftFrom(goal: SavingsGoal): GoalDraft {
     return {

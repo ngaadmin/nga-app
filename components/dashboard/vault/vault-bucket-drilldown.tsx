@@ -25,6 +25,10 @@ type VaultBucketDrilldownProps = {
   onAddCustomCategory: (label: string) => void;
   onRenameCategory: (categoryId: SpendingCategoryId, label: string) => void;
   onAssignGoals: (allocations: Record<string, number>) => void;
+  onUpdateGoalDetails: (
+    goalId: SavingsGoalId,
+    updates: { name?: string; emoji?: string; targetAmount?: number },
+  ) => void;
   onResetGoalBalance: (goalId: SavingsGoalId) => void;
   onResetAllGoalBalances: () => void;
   onManageGoalsClick?: () => void;
@@ -44,6 +48,7 @@ export function VaultBucketDrilldown({
   onAddCustomCategory,
   onRenameCategory,
   onAssignGoals,
+  onUpdateGoalDetails,
   onResetGoalBalance,
   onResetAllGoalBalances,
   onManageGoalsClick,
@@ -56,10 +61,11 @@ export function VaultBucketDrilldown({
         buckets={buckets}
         goals={goals}
         totalSavings={totalSavings}
+        isPremium={isPremium}
         onVaultTransfer={onVaultTransfer}
         onAssignGoals={onAssignGoals}
+        onUpdateGoalDetails={onUpdateGoalDetails}
         onResetGoalBalance={onResetGoalBalance}
-        onResetAllGoalBalances={onResetAllGoalBalances}
         onManageGoalsClick={onManageGoalsClick}
         onClose={onClose}
       />

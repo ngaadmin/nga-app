@@ -446,7 +446,7 @@ export function useVaultActions() {
       }
 
       setCustomBuckets((current) => current.filter((entry) => entry.id !== bucketId));
-      appendLedger(`Removed bucket: ${bucket.name}`, { category: "setup" });
+      appendLedger(`Removed jar: ${bucket.name}`, { category: "setup" });
     },
     [appendLedger, setCustomBuckets, setJars, vaultBuckets],
   );

@@ -332,6 +332,9 @@ export function VaultManageBudgetJarsModal({
               <p className="mt-1 font-sans text-sm leading-snug text-[#1E3A5F]/70">
                 {vaultCopy.manageBudgetJarsBody}
               </p>
+              <p className="mt-1 font-sans text-xs leading-snug text-[#1E3A5F]/60">
+                {vaultCopy.customJarsTestNote}
+              </p>
             </div>
             <button
               type="button"

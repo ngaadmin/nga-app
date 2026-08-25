@@ -9,7 +9,9 @@ export const vaultCopy = {
   manageBudgetJarsLabel: "Manage Budget Jars",
   manageBudgetJarsTitle: "Manage Budget Jars",
   manageBudgetJarsBody:
-    "Rename jars, pick icons, add custom buckets, or remove ones you no longer need.",
+    "Rename jars, pick icons, add custom jars, or remove ones you no longer need.",
+  customJarsTestNote:
+    "Unlocked for this test. Custom jars will be Premium later.",
   addBudgetJar: "Add Budget Jar",
   jarNameLabel: "Jar name",
   jarNamePlaceholder: "My jar",

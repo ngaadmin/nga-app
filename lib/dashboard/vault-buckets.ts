@@ -10,11 +10,16 @@ export const FOUNDATION_VAULT_BUCKET_COUNT = 3;
 export const MAX_FREEMIUM_VAULT_BUCKETS = 15;
 export const MAX_PREMIUM_VAULT_BUCKETS = 20;
 
+/** When true, custom budget jars work without Premium for friend testing. */
+export const VAULT_CUSTOM_JARS_UNLOCK_FOR_TEST = true;
+
 /** @deprecated Use tier-specific limits via maxVaultBuckets(). */
 export const MAX_CUSTOM_VAULT_BUCKETS = MAX_PREMIUM_VAULT_BUCKETS - FOUNDATION_VAULT_BUCKET_COUNT;
 
 export function maxVaultBuckets(isPremium: boolean): number {
-  return isPremium ? MAX_PREMIUM_VAULT_BUCKETS : MAX_FREEMIUM_VAULT_BUCKETS;
+  return isPremium || VAULT_CUSTOM_JARS_UNLOCK_FOR_TEST
+    ? MAX_PREMIUM_VAULT_BUCKETS
+    : MAX_FREEMIUM_VAULT_BUCKETS;
 }
 
 export function canAddVaultBucket(
@@ -93,7 +98,7 @@ export function createCustomBucketId(): CustomVaultBucketId {
 }
 
 export function defaultCustomBucket(
-  name = "My Bucket",
+  name = "My Jar",
   emoji = "💰",
 ): CustomVaultBucketPersisted {
   return {
@@ -117,7 +122,7 @@ export function canRenameFoundationBucket(
   isPremium: boolean,
 ): boolean {
   if (!bucket.isFoundation) return true;
-  return isPremium;
+  return isPremium || VAULT_CUSTOM_JARS_UNLOCK_FOR_TEST;
 }
 
 export function isSavingsBucket(bucket: VaultBucket): boolean {

@@ -23,12 +23,11 @@ import {
   vaultJarTileNameClass,
   vaultJarsGridTrackClass,
   vaultJarsGridViewportClass,
-  vaultJarsGridViewportScrollClass,
   vaultManageJarsButtonClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
-const MAX_JARS_PER_ROW = 4;
+const JARS_PER_ROW = 4;
 
 type VaultMyMoneyCardProps = {
   buckets: VaultBucket[];
@@ -48,91 +47,87 @@ export function VaultMyMoneyCard({
   const copy = copyMatrix.dashboard.vault.budget;
   const { formatWholeMoney: formatMoney } = useCurrency();
   const totalBalance = sumVaultWealthBalance(buckets, totalSavings);
-  const columnCount =
-    buckets.length === 0 ? 1 : Math.min(MAX_JARS_PER_ROW, buckets.length);
-  const wrapsToMultipleRows = buckets.length > MAX_JARS_PER_ROW;
 
   return (
     <section
       aria-label={copy.totalBalanceLabel}
-      className="relative isolate w-full min-w-0 max-w-full overflow-hidden rounded-xl border-b-4 border-b-nga-secondary-shadow bg-nga-secondary p-4 text-white shadow-sm"
+      className="relative isolate w-full min-w-0 max-w-full rounded-xl border border-[#031F82]/15 bg-[#FAFDFF] px-3 py-2 text-[#031F82]"
     >
-      {onManageJarsClick ? (
-        <button
-          type="button"
-          onClick={onManageJarsClick}
-          aria-label={vaultCopy.manageBudgetJarsLabel}
-          className={vaultManageJarsButtonClass}
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className={cn(vaultCardMainTitleClass, "min-w-0 shrink")}>
+          {copy.totalBalanceLabel}
+        </h2>
+        <p
+          className={cn(vaultCardBalanceClass, "ml-auto min-w-0 text-right")}
+          aria-live="polite"
         >
-          <SettingsIcon className="size-5 shrink-0 text-white" />
-        </button>
-      ) : null}
-
-      <div className="space-y-4">
-        <div className="min-w-0 pr-11">
-          <h2 className={vaultCardMainTitleClass}>{copy.totalBalanceLabel}</h2>
-          <p className={vaultCardBalanceClass} aria-live="polite">
-            {formatMoney(totalBalance)}
-          </p>
-        </div>
-
-        <div
-          className={cn(
-            vaultJarsGridViewportClass,
-            wrapsToMultipleRows && vaultJarsGridViewportScrollClass,
-          )}
-          aria-label={vaultCopy.budgetJarsSectionLabel}
-          role="list"
-        >
-          <div
-            className={vaultJarsGridTrackClass}
-            style={{
-              gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
-            }}
+          {formatMoney(totalBalance)}
+        </p>
+        {onManageJarsClick ? (
+          <button
+            type="button"
+            onClick={onManageJarsClick}
+            aria-label={vaultCopy.manageBudgetJarsLabel}
+            className={vaultManageJarsButtonClass}
           >
-            {buckets.map((bucket) => {
-              const theme = bucketTheme(bucket);
-              const isActive = expandedBucketId === bucket.id;
-              const shownBalance = savingsBucketDisplayBalance(
-                bucket,
-                totalSavings,
-              );
+            <SettingsIcon className="size-5 shrink-0 text-[#031F82]" />
+          </button>
+        ) : null}
+      </div>
 
-              return (
-                <button
-                  key={bucket.id}
-                  type="button"
-                  role="listitem"
-                  onClick={() => onToggleBucket(bucket.id)}
-                  aria-expanded={isActive}
-                  aria-label={
-                    isActive
-                      ? `Close ${vaultBucketDisplayName(bucket)} details`
-                      : `Open ${vaultBucketDisplayName(bucket)} details`
-                  }
-                  className={cn(
-                    vaultJarGridTileClass,
-                    isActive
-                      ? "bg-white/10"
-                      : "border-transparent hover:bg-white/5",
-                  )}
-                  style={isActive ? { borderColor: theme.accent } : undefined}
-                >
-                  <BucketEmojiIcon
-                    size="lg"
-                    emoji={bucket.emoji}
-                    theme={theme}
-                  />
-                  <p className={vaultJarTileNameClass}>
-                    {vaultBucketDisplayName(bucket)}
-                  </p>
-                  <p className={vaultJarTileBalanceClass}>
-                    {formatMoney(shownBalance)}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
+      <div
+        className={cn(vaultJarsGridViewportClass, "mt-1.5")}
+        aria-label={vaultCopy.budgetJarsSectionLabel}
+        role="list"
+      >
+        <div
+          className={vaultJarsGridTrackClass}
+          style={{
+            gridTemplateColumns: `repeat(${JARS_PER_ROW}, minmax(0, 1fr))`,
+          }}
+        >
+          {buckets.map((bucket) => {
+            const theme = bucketTheme(bucket);
+            const isActive = expandedBucketId === bucket.id;
+            const shownBalance = savingsBucketDisplayBalance(
+              bucket,
+              totalSavings,
+            );
+
+            return (
+              <button
+                key={bucket.id}
+                type="button"
+                role="listitem"
+                onClick={() => onToggleBucket(bucket.id)}
+                aria-expanded={isActive}
+                aria-label={
+                  isActive
+                    ? `Close ${vaultBucketDisplayName(bucket)} details`
+                    : `Open ${vaultBucketDisplayName(bucket)} details`
+                }
+                className={cn(
+                  vaultJarGridTileClass,
+                  isActive
+                    ? "bg-white"
+                    : "border-transparent hover:bg-white/80",
+                )}
+                style={isActive ? { borderColor: theme.accent } : undefined}
+              >
+                <BucketEmojiIcon
+                  size="sm"
+                  emoji={bucket.emoji}
+                  theme={theme}
+                />
+                <p className={vaultJarTileNameClass}>
+                  {vaultBucketDisplayName(bucket)}
+                </p>
+                <p className={vaultJarTileBalanceClass}>
+                  {formatMoney(shownBalance)}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -1,35 +1,32 @@
 /** Typography and layout tokens for the Vault My Money card. */
 
-/** Primary section title (“My Money”) on the gradient card. */
+/** Header label (“My Money”). */
 export const vaultCardMainTitleClass =
-  "font-heading text-[18px] font-extrabold leading-tight tracking-normal text-white sm:text-[20px]";
+  "font-heading text-[16px] font-bold leading-tight tracking-normal text-[#031F82]";
 
-/** Primary wealth total under the My Money title. */
+/** Net-worth amount — only this may be larger/bolder than the label. */
 export const vaultCardBalanceClass =
-  "mt-2 font-heading text-2xl font-extrabold leading-none tabular-nums text-white sm:text-[1.75rem]";
+  "font-heading text-xl font-extrabold leading-none tabular-nums text-[#031F82]";
 
-/** Manage-jars gear — top-right of card, 20px icon in touch target. */
+/** Manage-jars gear — end of the header row. */
 export const vaultManageJarsButtonClass =
-  "absolute right-3 top-3 z-raised flex size-9 shrink-0 touch-manipulation items-center justify-center rounded-lg bg-white/15 text-white ring-1 ring-white/25 transition-colors hover:bg-white/25 hover:text-white active:bg-white/30";
+  "z-raised flex size-8 shrink-0 touch-manipulation items-center justify-center rounded-lg text-[#031F82] transition-colors hover:bg-[#031F82]/8 active:bg-[#031F82]/12";
 
-/**
- * Budget jars grid viewport.
- * When more than one row (5+ jars), height caps to ~one row and scrolls vertically.
- */
+/** Budget jars grid viewport — grows with wrapped rows. */
 export const vaultJarsGridViewportClass =
   "w-full min-w-0";
 
-/** Applied when jars wrap to a second row — keep the card from growing downward. */
+/** @deprecated Card now grows with extra jar rows instead of scrolling. */
 export const vaultJarsGridViewportScrollClass =
-  "max-h-[9rem] overflow-y-auto overscroll-y-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/35";
+  "";
 
-/** Even grid track — column count set inline (1–4). */
+/** Even 4-column track on phone width. */
 export const vaultJarsGridTrackClass =
-  "grid w-full gap-x-2 gap-y-2";
+  "grid w-full gap-x-1 gap-y-1";
 
-/** Jar tile — fills its grid cell; allows large balance strings. */
+/** Compact jar tile. */
 export const vaultJarGridTileClass =
-  "flex min-w-0 w-full flex-col items-center rounded-xl border-2 px-1 py-2 transition-colors";
+  "flex min-w-0 w-full flex-col items-center rounded-lg border-2 px-0.5 py-0.5 transition-colors";
 
 /** @deprecated Prefer {@link vaultJarGridTileClass}. */
 export const vaultJarCarouselTileClass = vaultJarGridTileClass;
@@ -42,11 +39,11 @@ export const vaultJarsCarouselTrackClass = vaultJarsGridTrackClass;
 
 /** Jar name on grid tile. */
 export const vaultJarTileNameClass =
-  "mt-1.5 line-clamp-2 min-h-[2.25rem] w-full text-center font-heading text-[16px] font-bold leading-tight text-white/90";
+  "mt-0.5 line-clamp-2 w-full text-center font-heading text-[12px] font-bold leading-tight text-[#031F82]";
 
-/** Jar balance — slightly smaller so large amounts keep breathing room. */
+/** Jar balance on grid tile. */
 export const vaultJarTileBalanceClass =
-  "mt-0.5 w-full break-all text-center font-heading text-[16px] font-extrabold leading-tight tabular-nums text-white";
+  "w-full break-all text-center font-heading text-[12px] font-extrabold leading-tight tabular-nums text-[#031F82]";
 
 /** Section title on light Vault surfaces (deposit, expanded panels). */
 export const vaultLightSectionTitleClass =

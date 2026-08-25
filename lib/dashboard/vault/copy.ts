@@ -30,6 +30,7 @@ export const vaultCopy = {
   addJarToList: "Add to list",
   doneEditing: "Done",
   manageSavingsGoalsLabel: "Manage Goals",
+  saveJarTotalCaption: "Total in Save",
   manageSavingsGoalsTitle: "Manage Savings Goals",
   manageSavingsGoalsBody:
     "Set targets, rename goals, add custom savings goals, or reset a goal balance. Clearing a target never wipes saved progress.",

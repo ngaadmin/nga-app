@@ -136,7 +136,6 @@ export function VaultDashboard() {
           onRenameCategory={handleRenameSpendingCategory}
           onAssignGoals={handleAssignGoals}
           onUpdateGoalDetails={handleUpdateGoalDetails}
-          onResetGoalBalance={handleResetGoalBalance}
           onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
           onManageGoalsClick={() => setManageGoalsModalOpen(true)}
           onClose={() => setExpandedBucketId(null)}

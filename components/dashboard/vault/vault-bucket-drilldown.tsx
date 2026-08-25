@@ -28,7 +28,6 @@ type VaultBucketDrilldownProps = {
     goalId: SavingsGoalId,
     updates: { name?: string; emoji?: string; targetAmount?: number },
   ) => void;
-  onResetGoalBalance: (goalId: SavingsGoalId) => void;
   onResetAllGoalBalances: () => void;
   onManageGoalsClick?: () => void;
   onClose: () => void;
@@ -47,7 +46,6 @@ export function VaultBucketDrilldown({
   onRenameCategory,
   onAssignGoals,
   onUpdateGoalDetails,
-  onResetGoalBalance,
   onResetAllGoalBalances,
   onManageGoalsClick,
   onClose,
@@ -63,7 +61,6 @@ export function VaultBucketDrilldown({
         onVaultTransfer={onVaultTransfer}
         onAssignGoals={onAssignGoals}
         onUpdateGoalDetails={onUpdateGoalDetails}
-        onResetGoalBalance={onResetGoalBalance}
         onManageGoalsClick={onManageGoalsClick}
         onClose={onClose}
       />

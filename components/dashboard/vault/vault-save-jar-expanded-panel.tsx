@@ -45,7 +45,6 @@ export type VaultSaveJarExpandedPanelProps = {
     goalId: SavingsGoalId,
     updates: { name?: string; emoji?: string; targetAmount?: number },
   ) => void;
-  onResetGoalBalance: (goalId: SavingsGoalId) => void;
   onManageGoalsClick?: () => void;
   onClose: () => void;
 };
@@ -59,7 +58,6 @@ export function VaultSaveJarExpandedPanel({
   onVaultTransfer,
   onAssignGoals,
   onUpdateGoalDetails,
-  onResetGoalBalance,
   onManageGoalsClick,
   onClose,
 }: VaultSaveJarExpandedPanelProps) {
@@ -130,7 +128,6 @@ export function VaultSaveJarExpandedPanel({
           onAssignToThisGoal={(amount) =>
             onAssignGoals({ [selectedGoal.id]: amount })
           }
-          onResetBalance={() => onResetGoalBalance(selectedGoal.id)}
         />
       ) : (
       <div className="mt-2 space-y-3">
@@ -143,15 +140,18 @@ export function VaultSaveJarExpandedPanel({
           {vaultCopy.backToOverview}
         </button>
 
-        <div className="flex min-w-0 items-center gap-2">
-          <p className={cn(vaultCardMainTitleClass, "min-w-0 shrink")}>
+        <div className="flex min-w-0 items-start gap-2">
+          <p className={cn(vaultCardMainTitleClass, "min-w-0 shrink pt-0.5")}>
             {displayName}
           </p>
-          <p
-            className={cn(vaultCardBalanceClass, "ml-auto min-w-0 text-right")}
-          >
-            {formatMoney(totalSavings)}
-          </p>
+          <div className="ml-auto min-w-0 text-right">
+            <p className={cn(vaultCardBalanceClass, "min-w-0")}>
+              {formatMoney(totalSavings)}
+            </p>
+            <p className="mt-0.5 font-heading text-xs font-bold leading-tight text-[#1E3A5F]/55">
+              {vaultCopy.saveJarTotalCaption}
+            </p>
+          </div>
           {onManageGoalsClick ? (
             <button
               type="button"

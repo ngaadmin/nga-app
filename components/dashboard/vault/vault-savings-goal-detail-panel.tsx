@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { savingsGoalProgress, type SavingsGoal } from "@/lib/dashboard/savings-goals";
@@ -12,15 +11,11 @@ import {
   parseVaultTargetAmount,
   sanitizeVaultAmountInput,
 } from "@/lib/dashboard/vault-amount-input";
-import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
   vaultCardBalanceClass,
   vaultCardMainTitleClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
-import {
-  vaultActionResetLinkClass,
-  vaultHomeCompactCtaClass,
-} from "@/lib/dashboard/vault/vault-action-form-styles";
+import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
 const fillTrackClass =
@@ -29,9 +24,6 @@ const fillTrackClass =
 const fillBarClass =
   "absolute inset-y-0 left-0 bg-[#FFA503] transition-[width] duration-150";
 
-const destructiveCtaClass =
-  "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
-
 type VaultSavingsGoalDetailPanelProps = {
   goal: SavingsGoal;
   unassignedBalance: number;
@@ -39,7 +31,6 @@ type VaultSavingsGoalDetailPanelProps = {
   onBack: () => void;
   onUpdateTarget: (targetAmount: number) => void;
   onAssignToThisGoal: (amount: number) => void;
-  onResetBalance: () => void;
 };
 
 export function VaultSavingsGoalDetailPanel({
@@ -49,7 +40,6 @@ export function VaultSavingsGoalDetailPanel({
   onBack,
   onUpdateTarget,
   onAssignToThisGoal,
-  onResetBalance,
 }: VaultSavingsGoalDetailPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -58,7 +48,6 @@ export function VaultSavingsGoalDetailPanel({
     formatVaultAmountInputValue(goal.targetAmount),
   );
   const [putInput, setPutInput] = useState("");
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   useEffect(() => {
     setTargetInput(formatVaultAmountInputValue(goal.targetAmount));
@@ -82,14 +71,8 @@ export function VaultSavingsGoalDetailPanel({
     setPutInput("");
   }
 
-  function confirmReset() {
-    onResetBalance();
-    setResetConfirmOpen(false);
-  }
-
   return (
-    <>
-      <div className="mt-2 space-y-3">
+    <div className="mt-2 space-y-3">
         <button
           type="button"
           onClick={onBack}
@@ -181,51 +164,6 @@ export function VaultSavingsGoalDetailPanel({
             </button>
           </form>
         ) : null}
-
-        <button
-          type="button"
-          onClick={() => setResetConfirmOpen(true)}
-          disabled={goal.balance <= 0}
-          className={vaultActionResetLinkClass}
-        >
-          {vaultCopy.resetBalanceToZero}
-        </button>
       </div>
-
-      <ModalShell
-        isOpen={resetConfirmOpen}
-        onClose={() => setResetConfirmOpen(false)}
-        align="center"
-        labelledBy="vault-reset-one-goal-balance-title"
-        backdropClassName="bg-[#031F82]/55"
-        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
-      >
-        <h2
-          id="vault-reset-one-goal-balance-title"
-          className="font-heading text-lg font-extrabold text-[#031F82]"
-        >
-          {vaultCopy.resetGoalBalanceConfirmTitle}
-        </h2>
-        <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
-          {vaultCopy.resetGoalBalanceConfirmBody}
-        </p>
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setResetConfirmOpen(false)}
-            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
-          >
-            {vaultCopy.resetCancel}
-          </button>
-          <button
-            type="button"
-            onClick={confirmReset}
-            className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
-          >
-            {vaultCopy.resetConfirm}
-          </button>
-        </div>
-      </ModalShell>
-    </>
-  );
+    );
 }

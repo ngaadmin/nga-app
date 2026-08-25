@@ -6,7 +6,8 @@ import {
   ONBOARDING_START_PATH,
 } from "@/lib/onboarding/guest-session";
 
-const PENNY_HOMEPAGE_SRC = "/assets/illustrations/website/Penny.png";
+const PENNY_HOMEPAGE_SRC =
+  "/assets/illustrations/characters/penny/penny_jump.webp";
 
 export function OnboardingEntryGate() {
   return (

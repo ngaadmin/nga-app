@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { DashboardNavigation } from "@/components/dashboard/dashboard-navigation";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
+import { HubIntro } from "@/components/dashboard/hub-intro/hub-intro";
+import { hubIntroIdFromPathname } from "@/lib/dashboard/hub-intro/resolve-hub";
 import {
   ONBOARDING_ENTRY_PATH,
   readUserSession,
@@ -20,6 +22,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
+  const hubIntroId = isLessonRoute ? null : hubIntroIdFromPathname(pathname);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +63,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               : "px-4 py-6 pb-28 sm:px-6 md:pb-8",
           )}
         >
+          {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
           {children}
         </main>
       </div>

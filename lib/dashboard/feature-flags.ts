@@ -13,8 +13,8 @@ export const SHOW_LAUNCHPAD = true;
 export const TESTING_VISIBLE_NAV_IDS = [
   "academy",
   "launchpad",
-  "community",
   "vault",
+  "community",
   "settings",
 ] as const;
 

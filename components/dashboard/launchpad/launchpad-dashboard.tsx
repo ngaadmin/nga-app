@@ -30,7 +30,6 @@ import {
   pickableCircleClass,
   pickableCircleMutedClass,
   pickableLabelActiveClass,
-  pickableLabelClass,
   pickableLabelMutedClass,
 } from "@/components/ui/pickable-circle";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -169,7 +168,7 @@ function BusinessIdeaTile({ idea, slot, onTap }: BusinessIdeaTileProps) {
       </span>
       <span
         className={cn(
-          pickableLabelClass,
+          "mt-1.5 w-full min-w-0 whitespace-normal break-words text-pretty font-heading text-[13px] font-bold leading-tight",
           isMuted ? pickableLabelMutedClass : pickableLabelActiveClass,
         )}
       >

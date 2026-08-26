@@ -52,18 +52,18 @@ export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
       pathname.startsWith("/dashboard/launchpad/"),
   },
   {
-    id: "community",
-    label: "Community",
-    href: "/dashboard/community",
-    Icon: CommunityIcon,
-  },
-  {
     id: "vault",
     label: "Vault",
     href: "/dashboard/vault",
     Icon: VaultIcon,
     matchesPath: (pathname) =>
       pathname === "/dashboard/vault" || pathname.startsWith("/dashboard/vault/"),
+  },
+  {
+    id: "community",
+    label: "Community",
+    href: "/dashboard/community",
+    Icon: CommunityIcon,
   },
   {
     id: "settings",

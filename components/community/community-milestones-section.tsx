@@ -9,6 +9,20 @@ import {
   type CommunityMilestoneRow,
 } from "@/lib/community/milestones";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
+import {
+  pickableCarouselItemClass,
+  pickableCarouselScrollerClass,
+  pickableCarouselTrackClass,
+  pickableCircleActiveClass,
+  pickableCircleClass,
+  pickableCircleMutedClass,
+  pickableLabelActiveClass,
+  pickableLabelClass,
+  pickableLabelMutedClass,
+  pickableMetaActiveClass,
+  pickableMetaClass,
+  pickableMetaMutedClass,
+} from "@/components/ui/pickable-circle";
 import { cn } from "@/lib/utils/cn";
 
 const MILESTONE_TILE: Record<
@@ -37,14 +51,6 @@ const MILESTONE_TILE: Record<
   "saved-2500": { icon: "💰", shortLabel: "Saved $2500" },
 };
 
-const carouselScrollerClass =
-  "@container w-full min-w-0 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
-
-const carouselTrackClass = "flex w-max snap-x snap-mandatory gap-2";
-
-const carouselChipClass =
-  "flex w-[calc((100cqi-1.5rem)/3.3)] min-w-0 shrink-0 snap-start flex-col items-center px-1 py-1.5 text-center";
-
 function MilestoneTile({
   id,
   label,
@@ -57,14 +63,12 @@ function MilestoneTile({
     <li
       title={`${label}. ${achieverCount.toLocaleString()} people achieved this`}
       aria-label={`${label} - ${achieved ? "achieved" : "not achieved"}. ${achieverCount.toLocaleString()} people achieved this`}
-      className={carouselChipClass}
+      className={pickableCarouselItemClass}
     >
       <span
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-full text-lg leading-none",
-          achieved
-            ? "bg-gradient-to-br from-[#EEF9FF] via-nga-panel to-[#8ED4EF] text-nga-primary shadow-[inset_0_3px_5px_rgba(255,255,255,0.85),inset_0_-2px_4px_rgba(12,193,224,0.22),0_3px_8px_rgba(3,31,130,0.16)]"
-            : "border-2 border-[#D1D5DB] bg-transparent text-nga-primary/35 grayscale",
+          pickableCircleClass,
+          achieved ? pickableCircleActiveClass : pickableCircleMutedClass,
         )}
         aria-hidden
       >
@@ -72,16 +76,16 @@ function MilestoneTile({
       </span>
       <p
         className={cn(
-          "mt-1 w-full min-w-0 truncate font-heading text-[13px] font-bold leading-tight",
-          achieved ? "text-nga-primary" : "text-nga-primary/45",
+          pickableLabelClass,
+          achieved ? pickableLabelActiveClass : pickableLabelMutedClass,
         )}
       >
         {tile.shortLabel}
       </p>
       <p
         className={cn(
-          "mt-0.5 font-sans text-[10px] font-medium leading-tight",
-          achieved ? "text-nga-slate" : "text-nga-primary/30",
+          pickableMetaClass,
+          achieved ? pickableMetaActiveClass : pickableMetaMutedClass,
         )}
       >
         {achieverCount.toLocaleString()} people
@@ -104,8 +108,8 @@ function MilestoneCarousel({
       <p className="mb-1 font-heading text-[10px] font-bold uppercase tracking-wide text-[#0CC1E0]">
         {label}
       </p>
-      <div className={carouselScrollerClass} aria-label={label}>
-        <ol className={carouselTrackClass}>
+      <div className={pickableCarouselScrollerClass} aria-label={label}>
+        <ol className={pickableCarouselTrackClass}>
           {items.map((row) => (
             <MilestoneTile key={row.id} {...row} />
           ))}

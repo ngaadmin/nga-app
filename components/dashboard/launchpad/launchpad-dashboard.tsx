@@ -16,14 +16,23 @@ import { DashboardSectionHeading } from "@/components/dashboard/dashboard-sectio
 import {
   launchpadBodyClass,
   launchpadBodyMutedClass,
-  launchpadChipTitleClass,
   launchpadCtaLabelClass,
   launchpadEmptyHelperClass,
   launchpadModalTitleClass,
   launchpadPanelTitleClass,
-  launchpadProgressMetaClass,
   launchpadSectionHeadingClass,
 } from "@/components/dashboard/launchpad/launchpad-dashboard-styles";
+import {
+  pickableCarouselItemClass,
+  pickableCarouselScrollerClass,
+  pickableCarouselTrackClass,
+  pickableCircleActiveClass,
+  pickableCircleClass,
+  pickableCircleMutedClass,
+  pickableLabelActiveClass,
+  pickableLabelClass,
+  pickableLabelMutedClass,
+} from "@/components/ui/pickable-circle";
 import { ModalShell } from "@/components/ui/modal-shell";
 import {
   CalendarIcon,
@@ -57,8 +66,6 @@ function resolveLaunchpadProfile(): LaunchpadProfile {
     isPremium: false,
   };
 }
-
-const AGE_LOCKED_OPACITY_CLASS = "opacity-55";
 
 /** Short faded snake — mockup only, not a live venture path. */
 const SINE_CENTER_X = 50;
@@ -132,18 +139,22 @@ type BusinessIdeaTileProps = {
 function BusinessIdeaTile({ idea, slot, onTap }: BusinessIdeaTileProps) {
   const isPremiumLocked = slot === "premium_locked";
   const isAgeLocked = slot === "age_locked";
+  const isMuted = isPremiumLocked || isAgeLocked;
 
   return (
     <button
       type="button"
       onClick={onTap}
       aria-label={idea.title}
-      className={cn(
-        "relative flex w-[calc((100cqi-1.5rem)/3.3)] min-w-0 shrink-0 snap-start flex-col items-center bg-transparent px-1 py-1 text-center transition-transform active:scale-[0.98]",
-        isAgeLocked && AGE_LOCKED_OPACITY_CLASS,
-      )}
+      className={cn(pickableCarouselItemClass, "relative transition-transform active:scale-[0.98]")}
     >
-      <span className="relative flex size-[3.8125rem] shrink-0 items-center justify-center rounded-full bg-[#EEF9FF] text-3xl leading-none">
+      <span
+        className={cn(
+          pickableCircleClass,
+          "relative",
+          isMuted ? pickableCircleMutedClass : pickableCircleActiveClass,
+        )}
+      >
         <span aria-hidden>{idea.emoji}</span>
         {isPremiumLocked ? (
           <span className="absolute -right-0.5 -top-0.5">
@@ -156,7 +167,12 @@ function BusinessIdeaTile({ idea, slot, onTap }: BusinessIdeaTileProps) {
           </span>
         ) : null}
       </span>
-      <span className={cn("mt-1.5 w-full min-w-0", launchpadChipTitleClass)}>
+      <span
+        className={cn(
+          pickableLabelClass,
+          isMuted ? pickableLabelMutedClass : pickableLabelActiveClass,
+        )}
+      >
         {idea.title}
       </span>
     </button>
@@ -178,18 +194,15 @@ function BusinessIdeasCarousel({
     <section aria-labelledby="all-business-ideas-heading" className="min-w-0">
       <DashboardSectionHeading
         id="all-business-ideas-heading"
-        className={cn(launchpadSectionHeadingClass, "mb-1")}
+        className={cn(launchpadSectionHeadingClass, "mb-3")}
       >
         Business Ideas
       </DashboardSectionHeading>
-      <p className={cn("mb-3", launchpadProgressMetaClass)}>
-        {ideas.length} ventures · swipe to browse
-      </p>
       <div
-        className="@container w-full min-w-0 overflow-x-auto overscroll-x-contain py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={pickableCarouselScrollerClass}
         aria-label={`${VENTURE_BLUEPRINTS.length} business ideas`}
       >
-        <div className="flex w-max snap-x snap-mandatory gap-2">
+        <div className={pickableCarouselTrackClass}>
           {ideas.map((idea) => (
             <BusinessIdeaTile
               key={idea.id}

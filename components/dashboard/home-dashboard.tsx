@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState, type ComponentType } from "react"
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
-import { SettingsTestingViewToggle } from "@/components/dashboard/settings/settings-testing-view-toggle";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { useCurrency } from "@/lib/dashboard/currency-context";
+import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
   ONBOARDING_ENTRY_PATH,
@@ -18,6 +19,7 @@ import {
 import {
   BillingCardIcon,
   CommunityIcon,
+  GoldCoinIcon,
   KeyIcon,
   LockIcon,
   LogOutIcon,
@@ -90,6 +92,40 @@ function SettingsRow({
         {label}
       </span>
     </button>
+  );
+}
+
+function SettingsCurrencyRow() {
+  const copy = copyMatrix.dashboard.settings.currency;
+  const { currencyCode, supportedCurrencies, setCurrencyCode } = useCurrency();
+
+  return (
+    <div className="flex w-full items-center gap-3 py-3.5">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
+        <GoldCoinIcon className="size-4" />
+      </span>
+      <label
+        htmlFor="display-currency"
+        className="min-w-0 flex-1 font-heading text-[16px] font-bold text-[#031F82]"
+      >
+        {copy.heading}
+      </label>
+      <select
+        id="display-currency"
+        value={currencyCode}
+        onChange={(event) => {
+          setCurrencyCode(event.target.value as SupportedCurrencyCode);
+        }}
+        aria-label={copy.heading}
+        className="min-w-0 max-w-[8.5rem] shrink-0 rounded-xl border-0 bg-[#BDE9FB]/35 px-2 py-1.5 font-heading text-sm font-bold text-[#031F82] outline-none focus:ring-2 focus:ring-[#0CC1E0]"
+      >
+        {supportedCurrencies.map((entry) => (
+          <option key={entry.code} value={entry.code}>
+            {entry.flag} {entry.code}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -532,8 +568,6 @@ export function HomeDashboard() {
           isLoading={isLoading}
         />
 
-        <SettingsTestingViewToggle />
-
         <nav
           aria-label="Account settings"
           className={cn(floatingPanelClass, "divide-y divide-[#BDE9FB]/60 px-3")}
@@ -558,6 +592,7 @@ export function HomeDashboard() {
             label={copy.account.subscription}
             onClick={() => router.push("/dashboard/settings/subscription")}
           />
+          <SettingsCurrencyRow />
           <SettingsRow
             icon={LogOutIcon}
             label={isLoggingOut ? "Signing out…" : copy.account.logOut}

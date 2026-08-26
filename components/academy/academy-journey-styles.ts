@@ -9,13 +9,13 @@
 export const academyJourneyHeadingClass =
   "text-center font-heading text-[20px] font-extrabold text-nga-primary sm:text-[24px]";
 
-/** Module header title on the soft floating journey label. */
+/** Module header title on the coloured map bar. */
 export const academyModuleTitleClass =
-  "text-center font-heading text-[17px] font-extrabold leading-snug text-[#031F82]";
+  "text-center font-heading text-[16px] font-extrabold leading-tight";
 
-/** Module header sub-line on the soft floating journey label. */
+/** Module header sub-line on the coloured map bar. */
 export const academyModuleDescriptionClass =
-  "text-center font-sans text-[14px] font-medium leading-snug text-[#1E3A5F]/80";
+  "text-center font-sans text-[13px] font-medium leading-tight";
 
 /** Supporting metadata (lesson count, stat labels) — eyebrow-adjacent, still mobile-readable. */
 export const academyJourneyMetaClass =

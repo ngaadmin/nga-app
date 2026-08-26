@@ -174,19 +174,13 @@ export function VaultDashboard() {
             setAdvancedMoneyUpgradeOpen(true);
           }}
           aria-label={advancedMoneyToolsCopy.vaultEntryAriaLabel}
-          className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left shadow-md transition-transform active:scale-[0.99]"
+          className="flex w-full items-center gap-2 bg-transparent py-2 text-left"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/40 text-[#031F82]">
-            {advancedMoneyUnlocked ? (
-              <span aria-hidden className="text-lg">
-                📈
-              </span>
-            ) : (
-              <LockIcon className="size-4 text-[#031F82]" />
-            )}
-          </span>
+          {!advancedMoneyUnlocked ? (
+            <LockIcon className="size-4 shrink-0 text-[#031F82]/55" />
+          ) : null}
           <span className="min-w-0 flex-1">
-            <span className="block font-heading text-base font-extrabold text-[#031F82]">
+            <span className="block font-heading text-[16px] font-bold text-[#031F82]">
               {advancedMoneyToolsCopy.vaultEntryLabel}
             </span>
             <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]/75">

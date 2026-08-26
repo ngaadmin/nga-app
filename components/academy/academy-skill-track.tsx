@@ -5,22 +5,12 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
   type ComponentType,
   type RefObject,
 } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  AcademyModuleSignpost,
-  ACADEMY_JOURNEY_ENTRY_MILESTONE_ID,
-  ACADEMY_MODULE_SIGNPOST_GAP_PX,
-  ACADEMY_MODULE_SIGNPOST_HEIGHT_PX,
-} from "@/components/academy/academy-module-signpost";
-import {
-  hasOpenedFirstAcademyLesson,
-} from "@/lib/dashboard/academy-first-lesson-opened";
-import { LEARNING_PROGRESS_RESET_EVENT } from "@/lib/dashboard/learning-progress-reset";
+import { AcademyModuleSignpost, ACADEMY_MODULE_SIGNPOST_GAP_PX } from "@/components/academy/academy-module-signpost";
 import { resolveActiveStepIndex, resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
@@ -37,7 +27,6 @@ import {
 } from "@/lib/dashboard/mastery-cohort";
 import {
   LightbulbIcon,
-  LockIcon,
   SparklesIcon,
   TargetIcon,
   TrendingUpIcon,
@@ -50,24 +39,25 @@ import { cn } from "@/lib/utils/cn";
 
 type AcademySkillTrackProps = {
   milestones?: readonly AcademyLessonMilestoneNode[];
-  scrollContainerRef?: RefObject<HTMLDivElement | null>;
+  scrollContainerRef?: RefObject<HTMLElement | null>;
 };
 
 /** Sine wave layout - centered, gentle swing, never hugs screen edges. */
 const SINE_CENTER_X = 50;
-const SINE_AMPLITUDE = 16;
-const SINE_FREQUENCY = 0.72;
+const SINE_AMPLITUDE = 18;
+const SINE_FREQUENCY = 0.78;
 
-const LESSON_NODE_SIZE_PX = 61;
-const NODE_GAP_PX = 32;
-/** Top inset for Module 1 banner only — keeps later modules tightly spaced. */
-const MODULE_1_TOP_PADDING_PX = 28;
+const LESSON_NODE_SIZE_PX = 84;
+const NODE_GAP_PX = 8;
+/** WebP has transparent padding — box is larger so the coin body matches the node. */
+const PENNY_SIZE_PX = Math.round(LESSON_NODE_SIZE_PX * 1.5);
+const PENNY_NODE_GAP_PX = 0;
 
 /** Smooth horizontal offset (0–100%) from node index. */
 function academySnakeAnchorX(index: number): number {
   if (!Number.isFinite(index) || index < 0) return SINE_CENTER_X;
   const raw = SINE_CENTER_X + SINE_AMPLITUDE * Math.sin(index * SINE_FREQUENCY);
-  return Math.min(72, Math.max(28, raw));
+  return Math.min(70, Math.max(30, raw));
 }
 
 const LESSON_ICON_MAP: Record<
@@ -146,19 +136,17 @@ function AcademyNode({
   const isActive = milestone.status === "active";
   const isCompleted = milestone.status === "completed";
   const isLocked = milestone.status === "locked";
-  const showPhaseFill = isCompleted;
+  const showPhaseFill = isCompleted || isActive;
 
   const circleStyle = showPhaseFill
     ? {
         backgroundColor: phase.fill,
         borderBottomColor: phase.shadow,
-        boxShadow: `0 3px 0 ${phase.shadow}`,
+        boxShadow: `0 4px 0 ${phase.shadow}`,
       }
-    : isActive
+    : isLocked
       ? {
-          backgroundColor: "#ffffff",
-          borderBottomColor: phase.shadow,
-          boxShadow: `0 4px 0 ${phase.shadow}`,
+          backgroundColor: "#D5DAE2",
         }
       : undefined;
 
@@ -173,43 +161,29 @@ function AcademyNode({
       <div
         className={cn(
           "relative flex items-center justify-center rounded-full transition-all duration-75",
-          "h-[3.8125rem] w-[3.8125rem]",
           isLocked
-            ? "border-0 bg-gray-100 text-gray-400 shadow-sm"
+            ? "border-0 text-gray-400"
             : "border-0 border-b-[4px]",
           showPhaseFill && "text-white",
           isActive && !isCompleted && "group-active:translate-y-[2px] group-active:border-b-[2px]",
         )}
-        style={circleStyle}
+        style={{
+          height: LESSON_NODE_SIZE_PX,
+          width: LESSON_NODE_SIZE_PX,
+          ...circleStyle,
+        }}
       >
-        <span
-          className="flex items-center justify-center"
-          style={
-            isActive && !showPhaseFill ? { color: phase.fill } : undefined
-          }
-        >
+        <span className="flex items-center justify-center">
           <MilestoneIcon
             kind={iconKind}
             className={cn(
-              "size-6",
+              "size-8",
               showPhaseFill
                 ? "text-white"
-                : isActive
-                  ? "text-current"
-                  : "text-gray-400",
+                : "text-gray-400",
             )}
           />
         </span>
-        {isLocked ? (
-          <span
-            className={cn(
-              "absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-white text-gray-400 shadow-sm",
-              "size-5",
-            )}
-          >
-            <LockIcon className="size-3" />
-          </span>
-        ) : null}
       </div>
     </div>
   );
@@ -242,7 +216,6 @@ function AcademyNode({
 
   return (
     <div
-      className={cn(isLocked && "opacity-55")}
       aria-label={milestoneAriaLabel(milestone)}
       role="img"
     >
@@ -284,21 +257,6 @@ export function AcademySkillTrack({
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
   const masteryCohort = useLessonMasteryCohort();
-  const [firstLessonOpened, setFirstLessonOpened] = useState(
-    hasOpenedFirstAcademyLesson,
-  );
-
-  useEffect(() => {
-    function refreshOpened() {
-      setFirstLessonOpened(hasOpenedFirstAcademyLesson());
-    }
-
-    refreshOpened();
-    window.addEventListener(LEARNING_PROGRESS_RESET_EVENT, refreshOpened);
-    return () => {
-      window.removeEventListener(LEARNING_PROGRESS_RESET_EVENT, refreshOpened);
-    };
-  }, []);
 
   const safeMilestones = useMemo(
     () => milestones.filter(isRenderableAcademyMilestone),
@@ -327,29 +285,6 @@ export function AcademySkillTrack({
     () => safeMilestones.map((_, index) => academySnakeAnchorX(index)),
     [safeMilestones],
   );
-
-  const trackHeightPx = useMemo(() => {
-    if (safeMilestones.length === 0) return 0;
-
-    const slotHeights = safeMilestones.reduce(
-      (sum, milestone) => sum + nodeSlotHeightPx(milestone),
-      0,
-    );
-    const nodeGaps = (safeMilestones.length - 1) * NODE_GAP_PX;
-    const signpostBlocks = safeMilestones.reduce((sum, milestone) => {
-      if (!isFirstMilestoneInModule(milestone.id)) return sum;
-      const moduleOnePad =
-        milestone.levelGroup === 1 ? MODULE_1_TOP_PADDING_PX : 0;
-      return (
-        sum +
-        moduleOnePad +
-        ACADEMY_MODULE_SIGNPOST_HEIGHT_PX +
-        ACADEMY_MODULE_SIGNPOST_GAP_PX
-      );
-    }, 0);
-
-    return slotHeights + nodeGaps + signpostBlocks;
-  }, [safeMilestones]);
 
   useEffect(() => {
     if (safeMilestones.length === 0) return;
@@ -385,10 +320,6 @@ export function AcademySkillTrack({
     };
   }, [continueStepIndex, safeMilestones.length, scrollContainerRef]);
 
-  const showFirstLessonPenny =
-    continueMilestoneId === ACADEMY_JOURNEY_ENTRY_MILESTONE_ID &&
-    !firstLessonOpened;
-
   const handleLaunchLesson = (milestoneId: number) => {
     const milestone = safeMilestones.find((node) => node.id === milestoneId);
     if (!milestone) return;
@@ -402,32 +333,25 @@ export function AcademySkillTrack({
       aria-label="Academy journey map"
       className="relative z-base w-full max-w-full bg-white pb-4"
     >
-      <div className="relative mx-auto w-full max-w-full px-1">
-        <div
-          className="relative w-full"
-          style={{ height: trackHeightPx }}
-        >
-          <div className="relative flex w-full flex-col">
+      <div className="relative mx-auto w-full max-w-full">
+        <div className="relative flex w-full flex-col">
             {safeMilestones.map((milestone, index) => {
               const anchorX = anchorXs[index] ?? SINE_CENTER_X;
               const isContinueTarget = milestone.id === continueMilestoneId;
               const isActiveNode = isContinueTarget;
               const slotHeight = nodeSlotHeightPx(milestone);
-              const showModuleSignpost = isFirstMilestoneInModule(milestone.id);
-              const showPennyInSecondNodeBay = showFirstLessonPenny && index === 1;
+              const isModuleStart = isFirstMilestoneInModule(milestone.id);
+              const showPennyBesideNode = isActiveNode;
+              const nodeOnRight = anchorX >= SINE_CENTER_X;
+              const pennyOffsetPx = nodeOnRight
+                ? -(LESSON_NODE_SIZE_PX / 2 + PENNY_NODE_GAP_PX + PENNY_SIZE_PX)
+                : LESSON_NODE_SIZE_PX / 2 + PENNY_NODE_GAP_PX;
 
               return (
                 <Fragment key={milestone.id}>
-                  {showModuleSignpost ? (
+                  {isModuleStart ? (
                     <>
-                      <div
-                        className="relative flex w-full justify-center px-2"
-                        style={
-                          milestone.levelGroup === 1
-                            ? { paddingTop: MODULE_1_TOP_PADDING_PX }
-                            : undefined
-                        }
-                      >
+                      <div className="relative z-base -mx-4 w-[calc(100%+2rem)] shrink-0 sm:-mx-6 sm:w-[calc(100%+3rem)]">
                         <AcademyModuleSignpost
                           moduleNumber={milestone.levelGroup}
                           milestones={safeMilestones}
@@ -446,21 +370,26 @@ export function AcademySkillTrack({
                     className="relative z-raised w-full shrink-0"
                     style={{ height: slotHeight }}
                   >
-                    {showPennyInSecondNodeBay ? (
+                    {showPennyBesideNode ? (
                       <div
-                        className="pointer-events-none absolute top-1/2 z-chrome h-[4.75rem] w-[4.75rem]"
+                        className="pointer-events-none absolute top-1/2 z-raised"
                         style={{
-                          left: `${SINE_CENTER_X - SINE_AMPLITUDE}%`,
-                          transform: "translate(-50%, -50%)",
+                          left: `calc(${anchorX}% + ${pennyOffsetPx}px)`,
+                          width: PENNY_SIZE_PX,
+                          height: PENNY_SIZE_PX,
+                          transform: "translateY(-50%)",
                         }}
                         aria-hidden
                       >
                         <Image
                           src={PENNY_POINT_SRC}
                           alt=""
-                          width={160}
-                          height={160}
-                          className="h-full w-full object-contain object-center"
+                          width={126}
+                          height={126}
+                          className={cn(
+                            "h-full w-full object-contain object-center",
+                            !nodeOnRight && "-scale-x-100",
+                          )}
                           unoptimized
                         />
                       </div>
@@ -493,7 +422,6 @@ export function AcademySkillTrack({
                 </Fragment>
               );
             })}
-          </div>
         </div>
       </div>
     </section>

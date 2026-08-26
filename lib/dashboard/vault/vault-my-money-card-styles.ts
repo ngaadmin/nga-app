@@ -22,11 +22,11 @@ export const vaultJarsGridViewportScrollClass =
 
 /** Even 4-column track on phone width. */
 export const vaultJarsGridTrackClass =
-  "grid w-full gap-x-1 gap-y-1";
+  "grid w-full gap-x-2 gap-y-3";
 
-/** Compact jar tile. */
+/** @deprecated Jars use pickable-circle items, not bordered tiles. */
 export const vaultJarGridTileClass =
-  "flex min-w-0 w-full flex-col items-center rounded-lg border-2 px-0.5 py-0.5 transition-colors";
+  "flex min-w-0 w-full flex-col items-center bg-transparent px-1 py-1";
 
 /** @deprecated Prefer {@link vaultJarGridTileClass}. */
 export const vaultJarCarouselTileClass = vaultJarGridTileClass;

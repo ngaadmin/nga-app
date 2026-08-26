@@ -72,7 +72,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
   return (
     <section
       aria-label="Deposit income"
-      className="relative isolate w-full min-w-0 max-w-full rounded-xl border border-[#031F82]/15 bg-[#FAFDFF] px-3 py-2 text-[#031F82]"
+      className="relative isolate w-full min-w-0 max-w-full bg-transparent px-0 py-0 text-[#031F82]"
     >
       <form onSubmit={handleDepositSubmit} className="space-y-3">
         <div className="flex min-w-0 items-center gap-2">

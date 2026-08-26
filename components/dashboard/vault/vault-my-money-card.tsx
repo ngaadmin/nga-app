@@ -14,10 +14,10 @@ import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-nam
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
   vaultCardBalanceClass,
-  vaultCardMainTitleClass,
   vaultJarsGridTrackClass,
   vaultJarsGridViewportClass,
   vaultManageJarsButtonClass,
+  vaultOverviewSectionTitleClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import {
   pickableCircleActiveClass,
@@ -62,7 +62,7 @@ export function VaultMyMoneyCard({
       className="relative isolate w-full min-w-0 max-w-full bg-transparent px-0 py-0 text-[#031F82]"
     >
       <div className="flex min-w-0 items-center gap-2">
-        <h2 className={cn(vaultCardMainTitleClass, "min-w-0 shrink")}>
+        <h2 className={cn(vaultOverviewSectionTitleClass, "min-w-0 shrink")}>
           {copy.totalBalanceLabel}
         </h2>
         <p
@@ -107,11 +107,8 @@ export function VaultMyMoneyCard({
                 type="button"
                 onClick={() => onToggleBucket(bucket.id)}
                 aria-expanded={isActive}
-                aria-label={
-                  isActive
-                    ? `Close ${vaultBucketDisplayName(bucket)} details`
-                    : `Open ${vaultBucketDisplayName(bucket)} details`
-                }
+                aria-haspopup="dialog"
+                aria-label={`Open ${vaultBucketDisplayName(bucket)} details`}
                 className={cn(
                   pickableItemClass,
                   "w-full transition-transform active:scale-[0.98]",

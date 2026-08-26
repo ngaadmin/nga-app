@@ -87,13 +87,16 @@ export const vaultCopy = {
   resetBucketBalanceConfirmTitle: "Reset this jar balance?",
   resetBucketBalanceConfirmBody:
     "Are you sure you want to reset this item to $0? Money in this jar will be cleared.",
+  resetSaveJarBalanceConfirmTitle: "Reset the Save jar?",
+  resetSaveJarBalanceConfirmBody:
+    "This clears the Save jar total and all savings goal balances. To reset one goal only, open that goal's settings instead.",
   resetAllGoalBalancesConfirmTitle: "Set all goal balances to $0?",
   resetAllGoalBalancesConfirmBody:
     "Are you sure you want to reset every savings goal balance to $0? Saved progress in these goals will be cleared.",
-  resetAllBalances: "Reset All Balances",
-  resetAllBalancesConfirmTitle: "Reset everything to $0?",
-  resetAllBalancesConfirmBody:
-    "Are you sure you want to reset ALL jars, goals, and income balances to $0? This cannot be undone.",
+  resetAllBalances: "Reset all balances",
+  resetAllBalancesConfirmTitle: "Clear every jar and unallocated money?",
+  resetAllBalancesConfirmBody: "This can't be undone.",
+  resetAllBalancesConfirm: "Clear everything",
   resetConfirm: "Yes, reset",
   resetCancel: "Cancel",
   maxAmountReachedNotice: "Maximum amount reached",

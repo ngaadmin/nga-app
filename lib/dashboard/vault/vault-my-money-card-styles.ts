@@ -1,5 +1,13 @@
 /** Typography and layout tokens for the Vault My Money card. */
 
+/** Overview section titles (My Money, Add money, Advanced Money). */
+export const vaultOverviewSectionTitleClass =
+  "font-heading text-xl font-extrabold leading-tight tracking-normal text-[#031F82]";
+
+/** Hairline between Vault overview blocks. */
+export const vaultOverviewHairlineClass =
+  "h-px w-full shrink-0 bg-[#031F82]/12";
+
 /** Header label (“My Money”). */
 export const vaultCardMainTitleClass =
   "font-heading text-[16px] font-bold leading-tight tracking-normal text-[#031F82]";

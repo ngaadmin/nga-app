@@ -369,6 +369,7 @@ export function VaultManageSavingsGoalsModal({
       <ModalShell
         isOpen={isOpen}
         onClose={handleCancel}
+        layer="toast"
         align="center"
         labelledBy="vault-manage-goals-title"
         backdropClassName="bg-[#031F82]/50"
@@ -651,6 +652,7 @@ export function VaultManageSavingsGoalsModal({
       <ModalShell
         isOpen={confirmReset !== null}
         onClose={() => setConfirmReset(null)}
+        layer="toast"
         align="center"
         labelledBy="vault-reset-confirm-title"
         backdropClassName="bg-[#031F82]/55"

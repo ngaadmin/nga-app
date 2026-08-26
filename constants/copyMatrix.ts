@@ -435,7 +435,7 @@ export const copyMatrix = {
       cashInTileSubtext: "{points} coins ready to convert",
       budget: {
         sectionTitle: "Budget Allocation",
-        depositHeading: "Got some money? Add it here!",
+        depositHeading: "Add money",
         depositButton: "Deposit Income",
         poolLabel: "Money to Allocate",
         currencySettingsNote:

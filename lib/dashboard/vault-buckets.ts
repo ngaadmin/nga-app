@@ -63,6 +63,20 @@ export function isCustomBucketId(id: string): id is CustomVaultBucketId {
   return id.startsWith("custom-");
 }
 
+/** Set every foundation and custom jar balance to $0. Does not touch the pool. */
+export function zeroAllVaultJarBalances(
+  jars: readonly DestinationJar[],
+  customBuckets: readonly CustomVaultBucketPersisted[],
+): {
+  jars: DestinationJar[];
+  customBuckets: CustomVaultBucketPersisted[];
+} {
+  return {
+    jars: jars.map((jar) => ({ ...jar, balance: 0 })),
+    customBuckets: customBuckets.map((bucket) => ({ ...bucket, balance: 0 })),
+  };
+}
+
 /** Set one jar or custom bucket to $0 without touching other vault fields. */
 export function zeroVaultBucketBalance(
   bucketId: VaultBucketId,

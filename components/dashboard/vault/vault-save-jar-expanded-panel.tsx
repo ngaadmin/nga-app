@@ -15,13 +15,9 @@ import {
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
 import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
-import {
-  vaultCardBalanceClass,
-  vaultCardMainTitleClass,
-  vaultManageJarsButtonClass,
-} from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { vaultManageJarsButtonClass } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
-import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
+import { vaultPrimaryBtnClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
 
 export type VaultSaveJarExpandedPanelProps = {
@@ -56,7 +52,6 @@ export function VaultSaveJarExpandedPanel({
   onUpdateGoalDetails,
   onManageGoalsClick,
   onAddGoalClick,
-  onClose,
 }: VaultSaveJarExpandedPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -99,28 +94,14 @@ export function VaultSaveJarExpandedPanel({
           onVaultTransfer={onVaultTransfer}
         />
       ) : (
-      <div className="mt-2 space-y-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
-        >
-          <span aria-hidden>←</span>
-          {vaultCopy.backToOverview}
-        </button>
-
-        <div className="flex min-w-0 items-start gap-2">
-          <p className={cn(vaultCardMainTitleClass, "min-w-0 shrink pt-0.5")}>
-            {displayName}
+      <div className="space-y-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <p
+            className="min-w-0 flex-1 font-heading text-3xl font-extrabold leading-none tabular-nums text-[#031F82]"
+            aria-label={`${displayName} ${formatMoney(totalSavings)}`}
+          >
+            {formatMoney(totalSavings)}
           </p>
-          <div className="ml-auto min-w-0 text-right">
-            <p className={cn(vaultCardBalanceClass, "min-w-0")}>
-              {formatMoney(totalSavings)}
-            </p>
-            <p className="mt-0.5 font-heading text-xs font-bold leading-tight text-[#1E3A5F]/55">
-              {vaultCopy.saveJarTotalCaption}
-            </p>
-          </div>
           {onManageGoalsClick ? (
             <button
               type="button"
@@ -133,19 +114,15 @@ export function VaultSaveJarExpandedPanel({
           ) : null}
         </div>
 
-        {canAllocate ? (
-          <div className="flex items-center gap-2">
-            <p className="min-w-0 flex-1 font-heading text-base font-extrabold tabular-nums text-[#031F82]">
-              {formatMoney(unassignedBalance)} {savingsCopy.toPutTowardGoalsLabel}
-            </p>
-            <button
-              type="button"
-              onClick={() => setAllocationModalOpen(true)}
-              className={vaultHomeCompactCtaClass}
-            >
-              {budgetCopy.allocatePoolCta}
-            </button>
-          </div>
+        {goals.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => setAllocationModalOpen(true)}
+            disabled={!canAllocate}
+            className={cn(vaultPrimaryBtnClass, "w-full flex-none")}
+          >
+            {budgetCopy.allocatePoolCta}
+          </button>
         ) : null}
 
         {goals.length > 0 || showAddGoal ? (
@@ -155,7 +132,7 @@ export function VaultSaveJarExpandedPanel({
                 <button
                   type="button"
                   onClick={() => setSelectedGoalId(goal.id)}
-                  className="flex w-full min-w-0 items-center justify-between gap-3 py-2 text-left"
+                  className="flex w-full min-w-0 items-center justify-between gap-3 py-1.5 text-left"
                   aria-label={`Open ${goal.name}`}
                 >
                   <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">
@@ -187,7 +164,7 @@ export function VaultSaveJarExpandedPanel({
                 <button
                   type="button"
                   onClick={onAddGoalClick}
-                  className="flex w-full min-w-0 items-center py-2 text-left font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
+                  className="flex w-full min-w-0 items-center py-1.5 text-left font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
                 >
                   + {savingsCopy.addAGoal}
                 </button>

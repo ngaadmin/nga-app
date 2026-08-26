@@ -206,6 +206,7 @@ export function VaultSavingsGoalDetailPanel({
       <ModalShell
         isOpen={moveOpen && canMoveSome}
         onClose={() => setMoveOpen(false)}
+        layer="toast"
         align="center"
         labelledBy="vault-goal-move-title"
         backdropClassName="bg-[#031F82]/50"

@@ -116,6 +116,8 @@ type VaultManageBudgetJarsModalProps = {
     fallbackBucketId?: VaultBucketId,
   ) => void;
   onResetBucketBalance: (bucketId: VaultBucketId) => void;
+  onResetAllBalances: () => void;
+  onResetAllGoalBalances: () => void;
   onBucketDeleted?: (bucketId: VaultBucketId) => void;
 };
 
@@ -128,6 +130,8 @@ export function VaultManageBudgetJarsModal({
   onAddCustomBucket,
   onDeleteCustomBucket,
   onResetBucketBalance,
+  onResetAllBalances,
+  onResetAllGoalBalances,
   onBucketDeleted,
 }: VaultManageBudgetJarsModalProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -142,6 +146,7 @@ export function VaultManageBudgetJarsModal({
   const [deleteTarget, setDeleteTarget] = useState<VaultBucket | null>(null);
   const [deleteFallbackId, setDeleteFallbackId] = useState<VaultBucketId | "">("");
   const [confirmReset, setConfirmReset] = useState<VaultBucket | null>(null);
+  const [confirmResetAll, setConfirmResetAll] = useState(false);
   const draftsSeededWhileOpen = useRef(false);
 
   const bucketLimit = maxVaultBuckets(isPremium);
@@ -192,6 +197,7 @@ export function VaultManageBudgetJarsModal({
     setDeleteTarget(null);
     setDeleteFallbackId("");
     setConfirmReset(null);
+    setConfirmResetAll(false);
     draftsSeededWhileOpen.current = false;
   }, []);
 
@@ -321,7 +327,15 @@ export function VaultManageBudgetJarsModal({
   function confirmResetAction() {
     if (!confirmReset) return;
     onResetBucketBalance(confirmReset.id);
+    if (confirmReset.id === SAVINGS_JAR_ID) {
+      onResetAllGoalBalances();
+    }
     setConfirmReset(null);
+  }
+
+  function confirmResetAllAction() {
+    onResetAllBalances();
+    setConfirmResetAll(false);
   }
 
   const deleteNeedsFallback = (deleteTarget?.balance ?? 0) > 0;
@@ -488,8 +502,7 @@ export function VaultManageBudgetJarsModal({
                           ) : null}
                         </div>
                       </div>
-                      {row.kind === "existing" &&
-                      row.bucket.id !== SAVINGS_JAR_ID ? (
+                      {row.kind === "existing" ? (
                         <button
                           type="button"
                           onClick={() => setConfirmReset(row.bucket)}
@@ -531,8 +544,7 @@ export function VaultManageBudgetJarsModal({
                           />
                         </div>
                       </div>
-                      {row.kind === "existing" &&
-                      row.bucket.id !== SAVINGS_JAR_ID ? (
+                      {row.kind === "existing" ? (
                         <button
                           type="button"
                           onClick={() => setConfirmReset(row.bucket)}
@@ -557,6 +569,13 @@ export function VaultManageBudgetJarsModal({
         </div>
 
         <div className="shrink-0 border-t border-[#BDE9FB]/40 bg-white px-5 py-4">
+          <button
+            type="button"
+            onClick={() => setConfirmResetAll(true)}
+            className={cn("mb-3 w-full text-center", resetLinkClass)}
+          >
+            {vaultCopy.resetAllBalances}
+          </button>
           <div className="flex gap-2">
             <button
               type="button"
@@ -652,10 +671,14 @@ export function VaultManageBudgetJarsModal({
           id="vault-reset-jar-balance-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
         >
-          {vaultCopy.resetBucketBalanceConfirmTitle}
+          {confirmReset?.id === SAVINGS_JAR_ID
+            ? vaultCopy.resetSaveJarBalanceConfirmTitle
+            : vaultCopy.resetBucketBalanceConfirmTitle}
         </h2>
         <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
-          {vaultCopy.resetBucketBalanceConfirmBody}
+          {confirmReset?.id === SAVINGS_JAR_ID
+            ? vaultCopy.resetSaveJarBalanceConfirmBody
+            : vaultCopy.resetBucketBalanceConfirmBody}
         </p>
         <div className="mt-4 flex gap-2">
           <button
@@ -671,6 +694,42 @@ export function VaultManageBudgetJarsModal({
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
             {vaultCopy.resetConfirm}
+          </button>
+        </div>
+      </ModalShell>
+
+      <ModalShell
+        isOpen={confirmResetAll}
+        onClose={() => setConfirmResetAll(false)}
+        layer="toast"
+        align="center"
+        labelledBy="vault-reset-all-jar-balances-title"
+        backdropClassName="bg-[#031F82]/55"
+        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-5 shadow-md"
+      >
+        <h2
+          id="vault-reset-all-jar-balances-title"
+          className="font-heading text-lg font-extrabold text-[#031F82]"
+        >
+          {vaultCopy.resetAllBalancesConfirmTitle}
+        </h2>
+        <p className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]">
+          {vaultCopy.resetAllBalancesConfirmBody}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirmResetAll(false)}
+            className="flex-1 py-2 font-heading text-sm font-bold text-[#0CC1E0]"
+          >
+            {vaultCopy.resetCancel}
+          </button>
+          <button
+            type="button"
+            onClick={confirmResetAllAction}
+            className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
+          >
+            {vaultCopy.resetAllBalancesConfirm}
           </button>
         </div>
       </ModalShell>

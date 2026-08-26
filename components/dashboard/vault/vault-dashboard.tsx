@@ -17,12 +17,19 @@ import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/cop
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { ADVANCED_MONEY_TOOLS_HREF } from "@/lib/dashboard/advanced-money-tools/nav";
 import { LockIcon } from "@/lib/dashboard/icons";
+import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import { useVaultActions } from "@/lib/dashboard/vault/use-vault-actions";
 import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
 import type { VaultBucketId } from "@/lib/dashboard/vault-buckets";
 import type { VaultIncomeSourceId } from "@/lib/dashboard/vault-income-sources";
+import { vaultCopy as vaultUiCopy } from "@/lib/dashboard/vault/copy";
 import { vaultBucketsWithDisplayNames } from "@/lib/dashboard/vault/bucket-display-name";
 import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
+import {
+  vaultOverviewHairlineClass,
+  vaultOverviewSectionTitleClass,
+} from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { cn } from "@/lib/utils/cn";
 
 export function VaultDashboard() {
   const vaultCopy = copyMatrix.dashboard.vault;
@@ -53,6 +60,7 @@ export function VaultDashboard() {
     handleResetGoalBalance,
     handleResetAllSavingsGoalBalances,
     handleResetBucketBalance,
+    handleResetAllBalances,
   } = useVaultActions();
   const advancedMoneyUnlocked = useTestingPremiumUnlocked();
 
@@ -83,11 +91,12 @@ export function VaultDashboard() {
     [displayBuckets, expandedBucketId],
   );
 
-  const hideDepositSection =
-    expandedBucket !== null || manageGoalsModalOpen;
+  function openBucket(bucketId: VaultBucketId) {
+    setExpandedBucketId(bucketId);
+  }
 
-  function toggleBucket(bucketId: VaultBucketId) {
-    setExpandedBucketId((current) => (current === bucketId ? null : bucketId));
+  function closeBucketSheet() {
+    setExpandedBucketId(null);
   }
 
   function handleDepositAndOpenAllocation(amount: number, source: VaultIncomeSourceId) {
@@ -95,13 +104,15 @@ export function VaultDashboard() {
     setAllocationModalOpen(true);
   }
 
+  const saveSheetOpen = expandedBucket?.id === SAVINGS_JAR_ID;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col">
       <VaultMyMoneyCard
         buckets={displayBuckets}
         totalSavings={totalSavings}
         expandedBucketId={expandedBucketId}
-        onToggleBucket={toggleBucket}
+        onToggleBucket={openBucket}
         onManageJarsClick={() => setManageJarsModalOpen(true)}
         footer={
           <VaultHomeJarMove
@@ -113,7 +124,7 @@ export function VaultDashboard() {
       />
 
       {moneyToAllocate > 0 && !allocationModalOpen ? (
-        <div className="flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2">
           <p className="min-w-0 flex-1 font-heading text-base font-extrabold tabular-nums text-[#031F82]">
             {formatMoney(moneyToAllocate)} {budgetCopy.toAllocateActionLabel}
           </p>
@@ -131,64 +142,107 @@ export function VaultDashboard() {
         </div>
       ) : null}
 
-      {expandedBucket ? (
-        <VaultBucketDrilldown
-          bucket={expandedBucket}
-          buckets={displayBuckets}
-          goals={vaultGoals}
-          totalSavings={totalSavings}
-          isPremium={isPremium || advancedMoneyUnlocked}
-          spendingCategories={spendingCategories}
-          onVaultTransfer={handleVaultTransfer}
-          onMarkSpent={handleMarkSpent}
-          onAddCustomCategory={handleAddCustomSpendingCategory}
-          onRenameCategory={handleRenameSpendingCategory}
-          onAssignGoals={handleAssignGoals}
-          onUpdateGoalDetails={handleUpdateGoalDetails}
-          onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
-          onResetBucketBalance={handleResetBucketBalance}
-          onManageGoalsClick={() => {
-            setManageGoalsStartOnAdd(false);
-            setManageGoalsModalOpen(true);
-          }}
-          onAddGoalClick={() => {
-            setManageGoalsStartOnAdd(true);
-            setManageGoalsModalOpen(true);
-          }}
-          onClose={() => setExpandedBucketId(null)}
-        />
-      ) : null}
+      <div className={`mt-8 ${vaultOverviewHairlineClass}`} role="presentation" />
 
-      {!hideDepositSection ? (
+      <div className="mt-8">
         <VaultDepositSection onDeposit={handleDepositAndOpenAllocation} />
-      ) : null}
+      </div>
 
-      {!hideDepositSection ? (
-        <button
-          type="button"
-          onClick={() => {
-            if (advancedMoneyUnlocked) {
-              router.push(ADVANCED_MONEY_TOOLS_HREF);
-              return;
-            }
-            setAdvancedMoneyUpgradeOpen(true);
-          }}
-          aria-label={advancedMoneyToolsCopy.vaultEntryAriaLabel}
-          className="flex w-full items-center gap-2 bg-transparent py-2 text-left"
-        >
-          {!advancedMoneyUnlocked ? (
-            <LockIcon className="size-4 shrink-0 text-[#031F82]/55" />
-          ) : null}
-          <span className="min-w-0 flex-1">
-            <span className="block font-heading text-[16px] font-bold text-[#031F82]">
-              {advancedMoneyToolsCopy.vaultEntryLabel}
-            </span>
-            <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]/75">
-              {advancedMoneyToolsCopy.vaultEntryBody}
-            </span>
+      <div className={`mt-8 ${vaultOverviewHairlineClass}`} role="presentation" />
+
+      <button
+        type="button"
+        onClick={() => {
+          if (advancedMoneyUnlocked) {
+            router.push(ADVANCED_MONEY_TOOLS_HREF);
+            return;
+          }
+          setAdvancedMoneyUpgradeOpen(true);
+        }}
+        aria-label={advancedMoneyToolsCopy.vaultEntryAriaLabel}
+        className="mt-8 flex w-full items-center gap-2 bg-transparent py-1 text-left"
+      >
+        {!advancedMoneyUnlocked ? (
+          <LockIcon className="size-5 shrink-0 text-[#031F82]/55" />
+        ) : null}
+        <span className="min-w-0 flex-1">
+          <span className={`block ${vaultOverviewSectionTitleClass}`}>
+            {advancedMoneyToolsCopy.vaultEntryLabel}
           </span>
-        </button>
-      ) : null}
+          <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]/75">
+            {advancedMoneyToolsCopy.vaultEntryBody}
+          </span>
+        </span>
+      </button>
+
+      <ModalShell
+        isOpen={expandedBucket !== null}
+        onClose={closeBucketSheet}
+        align="bottom"
+        labelledBy="vault-jar-sheet-title"
+        backdropClassName="bg-[#031F82]/50 p-0 sm:items-end"
+        panelClassName={cn(
+          "flex w-full max-w-lg flex-col rounded-t-2xl border-0 bg-white p-0 shadow-md sm:rounded-2xl",
+          saveSheetOpen
+            ? "max-h-[min(92vh,40rem)]"
+            : "h-[92vh] max-h-[92vh] sm:h-[min(92vh,42rem)]",
+        )}
+      >
+        {expandedBucket ? (
+          <>
+            <div
+              className={cn(
+                "flex shrink-0 items-center justify-end px-5",
+                saveSheetOpen ? "pt-3" : "pt-4",
+              )}
+            >
+              <h2 id="vault-jar-sheet-title" className="sr-only">
+                {expandedBucket.name}
+              </h2>
+              <button
+                type="button"
+                onClick={closeBucketSheet}
+                aria-label={vaultUiCopy.closeModalLabel}
+                className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              className={cn(
+                "overflow-y-auto px-5",
+                saveSheetOpen ? "pb-3" : "min-h-0 flex-1 pb-5",
+              )}
+            >
+              <VaultBucketDrilldown
+                bucket={expandedBucket}
+                buckets={displayBuckets}
+                goals={vaultGoals}
+                totalSavings={totalSavings}
+                isPremium={isPremium || advancedMoneyUnlocked}
+                spendingCategories={spendingCategories}
+                onVaultTransfer={handleVaultTransfer}
+                onMarkSpent={handleMarkSpent}
+                onAddCustomCategory={handleAddCustomSpendingCategory}
+                onRenameCategory={handleRenameSpendingCategory}
+                onAssignGoals={handleAssignGoals}
+                onUpdateGoalDetails={handleUpdateGoalDetails}
+                onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
+                onResetBucketBalance={handleResetBucketBalance}
+                onManageGoalsClick={() => {
+                  setManageGoalsStartOnAdd(false);
+                  setManageGoalsModalOpen(true);
+                }}
+                onAddGoalClick={() => {
+                  setManageGoalsStartOnAdd(true);
+                  setManageGoalsModalOpen(true);
+                }}
+                onClose={closeBucketSheet}
+              />
+            </div>
+          </>
+        ) : null}
+      </ModalShell>
 
       <VaultAllocationModal
         isOpen={allocationModalOpen}
@@ -208,6 +262,8 @@ export function VaultDashboard() {
         onAddCustomBucket={handleAddCustomBucket}
         onDeleteCustomBucket={handleDeleteCustomBucket}
         onResetBucketBalance={handleResetBucketBalance}
+        onResetAllBalances={handleResetAllBalances}
+        onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
         onBucketDeleted={(bucketId) => {
           if (expandedBucketId === bucketId) {
             setExpandedBucketId(null);

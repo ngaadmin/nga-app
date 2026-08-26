@@ -11,6 +11,7 @@ type PremiumUpgradeModalProps = {
   isOpen: boolean;
   onClose: () => void;
   titleId?: string;
+  layer?: "modal" | "toast";
 };
 
 /** Shared Premium locked-feature popup (tester copy: dismiss only). */
@@ -18,6 +19,7 @@ export function PremiumUpgradeModal({
   isOpen,
   onClose,
   titleId = "premium-upgrade-title",
+  layer = "modal",
 }: PremiumUpgradeModalProps) {
   const copy = copyMatrix.dashboard.vault.budget;
 
@@ -25,6 +27,7 @@ export function PremiumUpgradeModal({
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
+      layer={layer}
       labelledBy={titleId}
       backdropClassName="bg-[#031F82]/45"
       panelClassName="max-w-sm rounded-nga-xl bg-white p-5"

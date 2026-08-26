@@ -42,6 +42,7 @@ import {
   isCustomBucketId,
   isSavingsGoalMoveTarget,
   sumAllocations,
+  zeroAllVaultJarBalances,
   zeroVaultBucketBalance,
   type CustomVaultBucketPersisted,
   type VaultBucketId,
@@ -604,17 +605,15 @@ export function useVaultActions() {
 
   const handleResetAllBalances = useCallback(() => {
     setMoneyToAllocate(0);
-    setJars((current) =>
-      current.map((jar) => ({ ...jar, balance: 0 })),
-    );
+    setJars((current) => zeroAllVaultJarBalances(current, []).jars);
     setCustomBuckets((current) =>
-      current.map((bucket) => ({ ...bucket, balance: 0 })),
+      zeroAllVaultJarBalances([], current).customBuckets,
     );
-    setSavingsGoals((current) =>
-      current.map((goal) => ({ ...goal, balance: 0 })),
-    );
-    appendLedger("Reset all vault balances to $0", { category: "setup", highlight: true });
-  }, [appendLedger, setCustomBuckets, setJars, setMoneyToAllocate, setSavingsGoals]);
+    appendLedger("Reset all jar and unallocated balances to $0", {
+      category: "setup",
+      highlight: true,
+    });
+  }, [appendLedger, setCustomBuckets, setJars, setMoneyToAllocate]);
 
   return {
     isPremium: VAULT_IS_PREMIUM,

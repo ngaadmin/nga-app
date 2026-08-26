@@ -315,6 +315,7 @@ export function VaultSavingsGoalAllocationModal({
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
+      layer="toast"
       align="center"
       labelledBy="vault-savings-goal-allocation-title"
       backdropClassName="bg-[#031F82]/50"

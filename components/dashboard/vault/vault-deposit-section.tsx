@@ -16,7 +16,7 @@ import {
 } from "@/lib/dashboard/vault/add-money-intro";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
-import { vaultCardMainTitleClass } from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { vaultOverviewSectionTitleClass } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass = vaultHomeCompactCtaClass;
@@ -76,7 +76,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
     >
       <form onSubmit={handleDepositSubmit} className="space-y-3">
         <div className="flex min-w-0 items-center gap-2">
-          <h2 className={cn(vaultCardMainTitleClass, "min-w-0 flex-1")}>
+          <h2 className={cn(vaultOverviewSectionTitleClass, "min-w-0 flex-1")}>
             {copy.depositHeading}
           </h2>
           <button

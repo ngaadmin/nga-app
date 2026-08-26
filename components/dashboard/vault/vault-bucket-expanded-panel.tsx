@@ -83,7 +83,6 @@ export function VaultBucketExpandedPanel({
   onAddCustomCategory,
   onRenameCategory,
   onResetBucketBalance,
-  onClose,
 }: VaultBucketExpandedPanelProps) {
   const copy = copyMatrix.dashboard.vault.budget;
   const { formatWholeMoney: formatMoney } = useCurrency();
@@ -101,20 +100,13 @@ export function VaultBucketExpandedPanel({
 
   return (
     <>
-      <div className="mt-2 space-y-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex items-center gap-1 font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
-        >
-          <span aria-hidden>←</span>
-          {vaultCopy.backToOverview}
-        </button>
-
+      <div className="space-y-3">
         <div className="flex min-w-0 items-start gap-2">
-          <p className={cn(vaultCardMainTitleClass, "min-w-0 shrink pt-0.5")}>
+          <h2
+            className={cn(vaultCardMainTitleClass, "min-w-0 shrink pt-0.5")}
+          >
             {displayName}
-          </p>
+          </h2>
           <div className="ml-auto min-w-0 text-right">
             <p className={cn(vaultCardBalanceClass, "min-w-0")}>
               {formatMoney(bucket.balance)}
@@ -152,6 +144,7 @@ export function VaultBucketExpandedPanel({
       <ModalShell
         isOpen={spendOpen && showSpend && canUseFunds}
         onClose={() => setSpendOpen(false)}
+        layer="toast"
         align="center"
         labelledBy="vault-bucket-spend-title"
         backdropClassName="bg-[#031F82]/50"
@@ -194,6 +187,7 @@ export function VaultBucketExpandedPanel({
       <ModalShell
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        layer="toast"
         align="center"
         labelledBy="vault-jar-settings-title"
         backdropClassName="bg-[#031F82]/50"
@@ -257,6 +251,7 @@ export function VaultBucketExpandedPanel({
       <ModalShell
         isOpen={confirmReset}
         onClose={() => setConfirmReset(false)}
+        layer="toast"
         align="center"
         labelledBy="vault-jar-panel-reset-title"
         backdropClassName="bg-[#031F82]/55"
@@ -296,6 +291,7 @@ export function VaultBucketExpandedPanel({
         isOpen={premiumCategoriesOpen}
         onClose={() => setPremiumCategoriesOpen(false)}
         titleId="vault-premium-categories-title"
+        layer="toast"
       />
     </>
   );

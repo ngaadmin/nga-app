@@ -27,6 +27,6 @@ export const advancedMoneyToolsCopy = {
   lockedBody:
     "Growth Potential, Ledger, and Money Milestones unlock with Premium. Freemium keeps the core Vault.",
   vaultEntryLabel: "Advanced Money",
-  vaultEntryBody: "Growth Potential, Ledger, and Money Milestones.",
+  vaultEntryBody: "Compound Growth, Ledger, and Money Milestones.",
   vaultEntryAriaLabel: "Open Advanced Money",
 } as const;

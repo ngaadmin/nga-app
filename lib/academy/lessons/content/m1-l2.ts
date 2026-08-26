@@ -1,5 +1,9 @@
 import { explorerCompletionScreen } from "@/lib/academy/lessons/completion-screen";
-import type { CohortLessonDefinition, ScreenConfig } from "@/lib/academy/lessons/types";
+import type {
+  CohortLessonDefinition,
+  ScreenConfig,
+  ScreenOverrideMap,
+} from "@/lib/academy/lessons/types";
 
 const M1_L2_META = {
   milestoneId: 2,
@@ -188,11 +192,10 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     sourceLabel: "Gift",
     targetLabel: "Senna",
     itemEmoji: "🎁",
+    itemSize: "lg",
     coinCount: 1,
-    targetImagePlaceholder: {
-      label: "Senna",
-      alt: "Senna receiving a birthday gift",
-    },
+    targetIllustrationId: "senna-celebrating",
+    targetIllustrationAlt: "Senna receiving a birthday gift",
     sourceEmptyMessage: "Gift delivered!",
     illustration: {
       label: "Lars delivering Senna's birthday gift",
@@ -205,6 +208,98 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   explorerCompletionScreen("milestone-splash", "medal-skill2-unlocked"),
 ];
 
+/** Explorer: no success paragraphs; one-line wrong hints only. */
+const M1_L2_EXPLORER_OVERRIDES: ScreenOverrideMap = {
+  "empty-jar-hook": {
+    wrongError: "Nope! That cash is already gone.",
+  },
+  "want-vs-need-sort": {
+    items: [
+      {
+        id: "case",
+        emoji: "📱",
+        label: "Phone Case Birthday Present",
+        bucket: "need",
+        wrongDropError: "You promised Senna. That's a need!",
+      },
+      {
+        id: "cable",
+        emoji: "🔌",
+        label: "Replace broken phone cable",
+        bucket: "need",
+        wrongDropError: "Broken cable, dead phone. Need it!",
+      },
+      {
+        id: "munch",
+        emoji: "🍫",
+        label: "Beast Munch",
+        bucket: "want",
+        wrongDropError: "Tasty, but you can skip it. Want!",
+      },
+      {
+        id: "gamepass",
+        emoji: "💃",
+        label: "New skin for his favourite game",
+        bucket: "want",
+        wrongDropError: "Cool skin, not a must-have. Want!",
+      },
+    ],
+  },
+  "need-spotlight": {
+    rounds: [
+      {
+        iconA: "📱",
+        optionA: "A new phone case, even though his old one is still fine",
+        iconB: "🎁",
+        optionB:
+          "A new phone case he promised to buy his brother for his birthday",
+        correct: "b",
+        error: "The promise is the need, not a spare case.",
+      },
+      {
+        iconA: "💡",
+        optionA: "A light for his bike to be seen in the dark",
+        iconB: "🖱️",
+        optionB: "A new gaming mouse with lights (his old one still works)",
+        correct: "a",
+        error: "If the old one still works, that's a want!",
+      },
+      {
+        iconA: "🥪",
+        optionA: "Buy lunch for himself with his weekly tuckshop money",
+        iconB: "🍱",
+        optionB:
+          "Buy lunch for all his friends on Monday and have nothing left over",
+        correct: "a",
+        error: "Feed you first. Friends' lunch is extra.",
+      },
+    ],
+  },
+  "budget-wallet": {
+    errors: {
+      overBudget: "Uncheck the thing you don't really need.",
+      wrongSelection: "Uncheck the thing you don't really need.",
+      itemHints: {
+        cable: "Skip the drink. Grab the cable.",
+        bus: "Skip the drink. Grab the bus pass.",
+      },
+    },
+  },
+  "reserve-slider": {
+    sliderError: "Slide until $20 is locked for the gift.",
+  },
+  "rank-stack": {
+    errors: {
+      borrow: "Borrowing for a want goes last. Try again!",
+      cheaper: "There's a smarter first move. Try again!",
+    },
+    successMessage: "",
+  },
+  "gift-delivery": {
+    successMessage: "",
+  },
+};
+
 export const M1_L2_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L2_META,
   rewards: M1_L2_REWARDS,
@@ -212,6 +307,7 @@ export const M1_L2_LESSON_DEFINITION: CohortLessonDefinition = {
   byCohort: {
     explorer: {
       characterName: "Lars",
+      screenOverrides: M1_L2_EXPLORER_OVERRIDES,
     },
     pathfinder: {
       characterName: "Lars",

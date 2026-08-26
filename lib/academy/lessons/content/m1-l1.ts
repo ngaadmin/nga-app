@@ -194,7 +194,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
         label: "Gaming controller",
         bucket: "long",
       },
-      { id: "emote", emoji: "💃", label: "Dance Emote", bucket: "long" },
+      { id: "cards", emoji: "🃏", label: "Deck of cards", bucket: "long" },
     ],
   },
   "countdown-trap": {
@@ -211,6 +211,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
   "impulse-pause": {
     illustrationId: "concept-coin-stack",
+    illustration: { scale: 0.6 },
     narrative:
       "Help Lars by giving him a 'buy freeze' so his brain has time to think.",
     holdLabel: "❄️ HOLD TO FREEZE ❄️",

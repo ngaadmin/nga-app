@@ -63,6 +63,7 @@ function resolveRegistryIllustration(
     alt: legacy?.alt ?? humanizeIllustrationId(illustrationId),
     emoji: legacy?.emoji,
     label: legacy?.label,
+    scale: legacy?.scale,
   };
 }
 

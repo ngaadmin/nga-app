@@ -1,4 +1,8 @@
+import type { IllustrationId } from "@/lib/academy/illustrations/illustration-registry";
 import type { WithDeclarative } from "../declarative";
+
+/** Visual size of the draggable item. `lg` is easier to hit on mobile. */
+export type DragToTargetItemSize = "md" | "lg";
 
 /** Drag a draggable item from a source zone into a target drop zone (e.g. coins → piggy bank). */
 export type DragToTargetScreenConfig = WithDeclarative<{
@@ -8,11 +12,17 @@ export type DragToTargetScreenConfig = WithDeclarative<{
   sourceLabel: string;
   targetLabel: string;
   itemEmoji?: string;
+  /** Visual size of the draggable emoji. Default `md`. */
+  itemSize?: DragToTargetItemSize;
   /** Visual stack depth for coin-style drags. Default 5. */
   coinCount?: number;
-  /** Fallback emoji for the target zone when no image placeholder is set. Default 🐷. */
+  /** Fallback emoji for the target zone when no image is set. Default 🐷. */
   targetEmoji?: string;
-  /** Image placeholder for the target drop zone (e.g. a character portrait). */
+  /** Registry key for the target drop-zone character/scene art. */
+  targetIllustrationId?: IllustrationId;
+  /** Alt text for `targetIllustrationId`. Defaults to `targetLabel`. */
+  targetIllustrationAlt?: string;
+  /** Image placeholder for the target drop zone when no registry art is set. */
   targetImagePlaceholder?: {
     label: string;
     alt?: string;

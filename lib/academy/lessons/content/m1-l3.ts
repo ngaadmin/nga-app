@@ -281,6 +281,52 @@ const M1_L3_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
   },
 };
 
+/** Explorer: no success paragraphs; one-line wrong hints only. */
+const M1_L3_EXPLORER_OVERRIDES: ScreenOverrideMap = {
+  "hook-finish-sentence": {
+    successMessage: "",
+    wrongError: "Haha, maybe. Try again!",
+  },
+  "spent-triage": {
+    successMessage: "",
+  },
+  "spare-cash-steps": {
+    successMessage: "",
+    items: [
+      {
+        id: "pocket-money",
+        emoji: "💵",
+        label: "Get your pocket money.",
+        bucket: "step1",
+      },
+      {
+        id: "buffer",
+        emoji: "🫙",
+        label: "Move a small amount to your Emergencies jar.",
+        bucket: "step2",
+      },
+      {
+        id: "fun",
+        emoji: "🎮",
+        label: "Spend what is left on fun.",
+        bucket: "step3",
+      },
+    ],
+  },
+  "mia-priority-choice": {
+    successMessage: "",
+    wrongError: "Trap! Fix the headphones first.",
+  },
+  "reflection-word-drop": {
+    successMessage: "",
+    wrongError: "Not quite. Try another combo!",
+  },
+  "resolution-benefits-choice": {
+    successMessage: "",
+    wrongError: "Good try. One answer covers all of them.",
+  },
+};
+
 export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L3_META,
   rewards: M1_L3_REWARDS,
@@ -288,6 +334,7 @@ export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
   byCohort: {
     explorer: {
       characterName: "Mia",
+      screenOverrides: M1_L3_EXPLORER_OVERRIDES,
     },
     pathfinder: {
       characterName: "Holly",

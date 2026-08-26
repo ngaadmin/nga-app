@@ -92,7 +92,7 @@ export const lessonSortGridCellClass =
 export const lessonSortGridChipClass = lessonSortCircleChipClass;
 
 export const lessonSortGridPlaceholderClass = cn(
-  "shrink-0 rounded-full border-2 border-dashed border-[#BDE9FB]/45 bg-[#F7FBFF]/50",
+  "shrink-0 rounded-full border-2 border-transparent bg-[#F7FBFF]/70",
   lessonCircleSizeClass,
 );
 
@@ -149,13 +149,13 @@ const lessonSortBucketToneSurfaceClass: Record<
   LessonSortBucketTone | "neutral",
   string
 > = {
-  rush: "border-[#FECACA]/90 bg-[#FEF2F2]/95",
-  think: "border-[#BBF7D0]/90 bg-[#F0FDF4]/95",
-  want: "border-[#FDE68A]/90 bg-[#FFFBEB]/95",
-  need: "border-[#BAE6FD]/90 bg-[#F0F9FF]/95",
-  short: "border-[#FED7AA]/90 bg-[#FFF7ED]/95",
-  long: "border-[#A7F3D0]/90 bg-[#ECFDF5]/95",
-  neutral: "border-[#BDE9FB]/80 bg-[#F7FBFF]/90",
+  rush: "bg-[#FEF2F2]/80",
+  think: "bg-[#F0FDF4]/80",
+  want: "bg-[#FFFBEB]/80",
+  need: "bg-[#F0F9FF]/80",
+  short: "bg-[#FFF7ED]/80",
+  long: "bg-[#ECFDF5]/80",
+  neutral: "bg-[#F7FBFF]/70",
 };
 
 const lessonSortBucketToneHeaderClass: Record<
@@ -230,9 +230,9 @@ export function resolveSortBucketIcon(
 export const lessonSequenceBoardClass =
   "flex min-h-0 flex-1 flex-col touch-none select-none";
 
-/** Outer shell for steps-row ordering screens. */
+/** Outer shell for steps-row ordering screens — no extra board box. */
 export const lessonSequenceShellClass =
-  "flex min-h-0 flex-1 flex-col gap-2 rounded-2xl border-2 border-[#BDE9FB]/80 bg-[#F7FBFF]/40 p-2.5 sm:gap-2.5 sm:p-3";
+  "flex min-h-0 flex-1 flex-col gap-2 sm:gap-2.5";
 
 /** Shuffled source pool — top section, collapses when empty. */
 export const lessonSequencePoolSectionClass =
@@ -252,9 +252,9 @@ export const lessonSequenceRowClass = "flex w-full min-w-0";
 export const lessonSequenceStepCardClass =
   "flex w-full min-h-[2.75rem] cursor-grab touch-none select-none items-center rounded-2xl border border-[#BDE9FB] bg-white px-3 py-2.5 text-left font-heading text-base font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.99]";
 
-/** Empty drop slot — matches pool card shape. */
+/** Empty drop slot — soft well, no dashed frame around later chips. */
 export const lessonSequenceSlotClass =
-  "relative flex w-full min-h-[2.75rem] flex-1 items-center rounded-2xl border-2 border-dashed border-[#BDE9FB]/75 bg-[#F7FBFF]/60 px-3 py-2 transition-colors";
+  "relative flex w-full min-h-[2.75rem] flex-1 items-center rounded-2xl border-2 border-transparent bg-[#F7FBFF]/70 px-3 py-2 transition-colors";
 
 export const lessonSequenceSlotActiveClass =
   "border-[#0CC1E0] bg-[#BDE9FB]/35 ring-2 ring-[#0CC1E0]/40";
@@ -263,10 +263,10 @@ export const lessonSequenceSlotErrorClass =
   "border-[#F59E0B] bg-[#FFFBEB]/80 ring-2 ring-[#F59E0B]/30";
 
 export const lessonSequenceSlotLockedClass =
-  "border border-[#86EFAC] bg-[#F0FDF4]/80";
+  "border-2 border-[#86EFAC] bg-[#F0FDF4]/80";
 
 export const lessonSequenceSlotFilledClass =
-  "border border-[#BDE9FB] bg-white";
+  "border-2 border-[#BDE9FB] bg-white";
 
 /** Placed step inside a slot — text only, matches pool card shape. */
 export const lessonSequenceStepPlacedClass =
@@ -357,7 +357,7 @@ export const lessonSortPoolChipClass =
 export const lessonSortChipClass = lessonSortRowClass;
 
 export const lessonSortBucketClass =
-  "min-h-[7rem] rounded-3xl border-2 border-dashed border-[#BDE9FB]/80 bg-[#F7FBFF]/80 p-3 transition-colors sm:min-h-[8rem]";
+  "min-h-[7rem] rounded-3xl border-2 border-transparent bg-[#F7FBFF]/70 p-3 transition-colors sm:min-h-[8rem]";
 
 export const lessonSortBucketActiveClass =
   "border-[#0CC1E0] bg-[#BDE9FB]/35 ring-2 ring-[#0CC1E0]/40";
@@ -453,8 +453,11 @@ export const lessonWrongSelectionChipClass =
   "border-2 border-[#E11D48] bg-[#FFF1F2] shadow-none ring-2 ring-[#E11D48]/35";
 
 /** Neutral bucket surface for statement-sort (no rush/think red/green tints). */
-export const lessonSortBucketNeutralSurfaceClass =
-  "border-[#BDE9FB]/80 bg-[#F7FBFF]/90";
+export const lessonSortBucketNeutralSurfaceClass = "bg-[#F7FBFF]/70";
+
+/** Soft drop column / well — fill + label, no dashed outer box. */
+export const lessonDropWellClass =
+  "rounded-2xl border-2 border-transparent bg-[#F7FBFF]/60 transition-colors";
 
 export const lessonMatchColumnHeaderGridClass =
   "grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-x-2 gap-y-1 px-0.5";
@@ -464,7 +467,7 @@ export const lessonMatchConnectorSpacerClass = "w-4 shrink-0";
 // ─── Reveal buckets & placeholders ───────────────────────────────────────────
 
 export const lessonRevealBucketClass =
-  "rounded-3xl border-2 border-dashed border-[#BDE9FB]/70 bg-[#F7FBFF]/50 p-4 transition-colors";
+  "rounded-3xl border-2 border-transparent bg-[#F7FBFF]/55 p-4 transition-colors";
 
 /** Shared layout for top-of-screen lesson media — no border, background, or shadow. */
 export const lessonIllustrationMediaFrameClass =
@@ -526,7 +529,7 @@ export const lessonSpentTotalLabelCompleteClass =
 // ─── Word-drop blank slots ───────────────────────────────────────────────────
 
 export const lessonBlankSlotClass =
-  "inline-flex min-h-[2.25rem] min-w-[4.5rem] items-center justify-center rounded-xl border-2 border-dashed border-[#BDE9FB] bg-[#F7FBFF]/80 px-2.5 font-heading text-base font-medium text-[#031F82]";
+  "inline-flex min-h-[2.25rem] min-w-[4.5rem] items-center justify-center rounded-xl border-2 border-transparent bg-[#F7FBFF]/80 px-2.5 font-heading text-base font-medium text-[#031F82]";
 
 export const lessonBlankSlotFilledClass =
   "inline-flex min-h-[2.25rem] min-w-[4.5rem] items-center justify-center rounded-xl border-2 border-[#BDE9FB] bg-white px-2.5 font-heading text-base font-medium text-[#031F82] shadow-sm";

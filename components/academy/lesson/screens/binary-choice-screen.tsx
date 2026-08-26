@@ -134,7 +134,7 @@ export function BinaryChoiceScreen({
 
         if (selectedAllOfTheAbove) {
           setError(null);
-          setSuccess(screen.successMessage ?? null);
+          setSuccess(screen.successMessage?.trim() || null);
           flow.markScreenReady(screenIndex);
         } else {
           setSuccess(null);
@@ -151,7 +151,7 @@ export function BinaryChoiceScreen({
         })
       ) {
         setError(null);
-        setSuccess(screen.successMessage ?? null);
+        setSuccess(screen.successMessage?.trim() || null);
         celebrateLessonCorrectAnswer(flow.flashScreen);
         flow.markScreenReady(screenIndex);
       } else {
@@ -180,7 +180,9 @@ export function BinaryChoiceScreen({
     if (which === allOfTheAboveKey) {
       celebrateLessonCorrectAnswer(flow.flashScreen);
       setSuccess(
-        optionByKey.get(which)?.feedback ?? screen.successMessage ?? null,
+        optionByKey.get(which)?.feedback?.trim() ||
+          screen.successMessage?.trim() ||
+          null,
       );
       flow.markScreenReady(screenIndex);
       return;
@@ -199,7 +201,9 @@ export function BinaryChoiceScreen({
     const selected = optionByKey.get(which);
     if (selected && isLessonChoiceOptionCorrect(selected)) {
       setError(null);
-      setSuccess(selected.feedback ?? screen.successMessage ?? null);
+      setSuccess(
+        selected.feedback?.trim() || screen.successMessage?.trim() || null,
+      );
       celebrateLessonCorrectAnswer(flow.flashScreen);
       flow.markScreenReady(screenIndex);
       return;

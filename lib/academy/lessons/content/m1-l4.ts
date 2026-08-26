@@ -1,5 +1,9 @@
 import { explorerCompletionScreen } from "@/lib/academy/lessons/completion-screen";
-import type { CohortLessonDefinition, ScreenConfig } from "@/lib/academy/lessons/types";
+import type {
+  CohortLessonDefinition,
+  ScreenConfig,
+  ScreenOverrideMap,
+} from "@/lib/academy/lessons/types";
 
 const M1_L4_META = {
   milestoneId: 4,
@@ -255,6 +259,38 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
   explorerCompletionScreen("milestone-splash", "medal-skill1-bronze"),
 ];
 
+/** Explorer: no success paragraphs; one-line wrong hints only. */
+const M1_L4_EXPLORER_OVERRIDES: ScreenOverrideMap = {
+  "skill-spotlight": {
+    optionA: { feedback: "Not quite! Senna isn't rushing into a trap." },
+    optionB: { feedback: "Nah, empty pockets isn't a skill. Try again!" },
+    optionC: { feedback: "" },
+    successMessage: "",
+    wrongError: "Look again at what Senna is choosing to do.",
+  },
+  "pause-sequence": {
+    successMessage: "",
+  },
+  "rush-vs-think-sort": {
+    successMessage: "",
+  },
+  "pressure-sign-picks": {
+    successMessage: "",
+    wrongError: "That's just sign info, not a rush trick.",
+  },
+  "lars-check-questions": {
+    optionD: { feedback: "That button wants to think for you. Skip it!" },
+    successMessage: "",
+    wrongError: "That button wants to think for you. Skip it!",
+  },
+  "lars-save-coins": {
+    successMessage: "",
+  },
+  "lars-workshop-goal": {
+    successMessage: "",
+  },
+};
+
 export const M1_L4_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L4_META,
   rewards: M1_L4_REWARDS,
@@ -262,6 +298,7 @@ export const M1_L4_LESSON_DEFINITION: CohortLessonDefinition = {
   byCohort: {
     explorer: {
       characterName: "Senna",
+      screenOverrides: M1_L4_EXPLORER_OVERRIDES,
     },
     pathfinder: {
       characterName: "Holly",

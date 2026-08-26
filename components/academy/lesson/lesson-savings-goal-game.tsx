@@ -11,6 +11,7 @@ import {
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonColumnLabelClass,
+  lessonDropWellClass,
   lessonGoldClaimClass,
   lessonSortBucketActiveClass,
   lessonSortRowClass,
@@ -248,8 +249,10 @@ export function LessonSavingsGoalGame({
   const draggedItem = dragState ? itemById.get(dragState.itemId) : null;
   const progressPercent = Math.min(100, (savedTotal / targetAmount) * 100);
 
-  const columnShellClass =
-    "flex min-h-0 flex-col gap-1.5 rounded-2xl border-2 border-dashed border-[#BDE9FB]/80 bg-[#F7FBFF]/50 p-2.5";
+  const columnShellClass = cn(
+    lessonDropWellClass,
+    "flex min-h-0 flex-col gap-1.5 p-2.5",
+  );
 
   return (
     <div

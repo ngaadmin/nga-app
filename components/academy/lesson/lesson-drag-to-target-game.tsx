@@ -8,11 +8,15 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
-import { lessonTwoColumnGridClass } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonInlineMediaImageClass,
+  lessonTwoColumnGridClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonColumnLabel,
   LessonImagePlaceholder,
 } from "@/components/academy/lesson/lesson-ui";
+import { cn } from "@/lib/utils/cn";
 
 type DragState = {
   offsetX: number;
@@ -23,12 +27,17 @@ type DragState = {
   height: number;
 };
 
+type DragItemSize = "md" | "lg";
+
 type LessonDragToTargetGameProps = {
   sourceLabel: string;
   targetLabel: string;
   itemEmoji?: string;
+  itemSize?: DragItemSize;
   coinCount?: number;
   targetEmoji?: string;
+  targetIllustrationSrc?: string;
+  targetIllustrationAlt?: string;
   targetImagePlaceholder?: {
     label: string;
     alt?: string;
@@ -41,12 +50,25 @@ type LessonDragToTargetGameProps = {
 
 const TARGET_DROP_HIT_PADDING_PX = 24;
 
+const ITEM_BOX_CLASS: Record<DragItemSize, string> = {
+  md: "relative h-20 w-20",
+  lg: "relative h-32 w-32 sm:h-36 sm:w-36",
+};
+
+const ITEM_EMOJI_CLASS: Record<DragItemSize, string> = {
+  md: "absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl",
+  lg: "absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-6xl sm:text-7xl",
+};
+
 export function LessonDragToTargetGame({
   sourceLabel,
   targetLabel,
   itemEmoji = "🪙",
+  itemSize = "md",
   coinCount = 5,
   targetEmoji = "🐷",
+  targetIllustrationSrc,
+  targetIllustrationAlt,
   targetImagePlaceholder,
   sourceEmptyMessage = "Coins saved!",
   onComplete,
@@ -167,11 +189,11 @@ export function LessonDragToTargetGame({
   };
 
   const renderCoinStack = (interactive: boolean) => (
-    <div className="relative h-20 w-20">
+    <div className={ITEM_BOX_CLASS[itemSize]}>
       {Array.from({ length: coinCount }, (_, index) => (
         <span
           key={index}
-          className="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl"
+          className={ITEM_EMOJI_CLASS[itemSize]}
           style={{
             transform: `translate(calc(-50% + ${index * 2}px), calc(-50% - ${index * 4}px))`,
             zIndex: index,
@@ -186,6 +208,58 @@ export function LessonDragToTargetGame({
       ) : null}
     </div>
   );
+
+  const renderDepositedOverlay = () =>
+    deposited ? (
+      <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-2">
+        {renderCoinStack(false)}
+      </div>
+    ) : null;
+
+  const renderTargetVisual = () => {
+    if (targetIllustrationSrc) {
+      return (
+        <div className="relative w-full min-w-0 max-w-[10rem] shrink-0 sm:max-w-[12rem]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={targetIllustrationSrc}
+            alt={targetIllustrationAlt ?? targetLabel}
+            className={cn(
+              lessonInlineMediaImageClass,
+              "max-h-[10rem] sm:max-h-[12rem]",
+            )}
+            decoding="async"
+            draggable={false}
+          />
+          {renderDepositedOverlay()}
+        </div>
+      );
+    }
+
+    if (targetImagePlaceholder) {
+      return (
+        <div className="relative w-full min-w-0 max-w-full shrink-0">
+          <LessonImagePlaceholder
+            label={targetImagePlaceholder.label}
+            alt={targetImagePlaceholder.alt}
+            size="compact"
+          />
+          {renderDepositedOverlay()}
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative flex h-20 w-20 items-center justify-center text-5xl">
+        {targetEmoji}
+        {deposited ? (
+          <div className="absolute inset-0 flex items-center justify-center text-xl">
+            {renderCoinStack(false)}
+          </div>
+        ) : null}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -213,7 +287,7 @@ export function LessonDragToTargetGame({
           ) : deposited ? (
             <p className="font-sans text-sm text-[#1E3A5F]/60">{sourceEmptyMessage}</p>
           ) : (
-            <div className="h-20 w-20" aria-hidden />
+            <div className={ITEM_BOX_CLASS[itemSize]} aria-hidden />
           )}
         </div>
 
@@ -222,29 +296,7 @@ export function LessonDragToTargetGame({
           className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center"
         >
           <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
-          {targetImagePlaceholder ? (
-            <div className="relative w-full min-w-0 max-w-full shrink-0">
-              <LessonImagePlaceholder
-                label={targetImagePlaceholder.label}
-                alt={targetImagePlaceholder.alt}
-                size="compact"
-              />
-              {deposited ? (
-                <div className="pointer-events-none absolute inset-0 flex items-end justify-center pb-2">
-                  {renderCoinStack(false)}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="relative flex h-20 w-20 items-center justify-center text-5xl">
-              {targetEmoji}
-              {deposited ? (
-                <div className="absolute inset-0 flex items-center justify-center text-xl">
-                  {renderCoinStack(false)}
-                </div>
-              ) : null}
-            </div>
-          )}
+          {renderTargetVisual()}
         </div>
       </div>
 

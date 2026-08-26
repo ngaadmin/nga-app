@@ -15,6 +15,8 @@ export type LessonIllustration = {
   alt?: string;
   /** Public URL path from the illustration registry (e.g. `/assets/illustrations/...`). */
   src?: string;
+  /** Multiplier vs the default slot max-height (1 = default). Use 0.6 for ~40% smaller. */
+  scale?: number;
 };
 
 export type DeclarativeScreenFields = {

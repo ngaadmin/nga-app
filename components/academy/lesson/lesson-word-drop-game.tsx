@@ -405,7 +405,7 @@ export function LessonWordDropGame({
         </LessonCard>
       ) : null}
 
-      {isComplete && successMessage ? (
+      {isComplete && successMessage?.trim() ? (
         <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
       ) : null}
 

@@ -33,7 +33,7 @@ export function useLessonScreenFlow({
 
   const handleComplete = useCallback(() => {
     onBeforeComplete?.();
-    if (successMessage) {
+    if (successMessage?.trim()) {
       setCompleteMessage(successMessage);
     }
     flowRef.current.markScreenReady(screenIndex);

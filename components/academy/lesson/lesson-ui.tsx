@@ -186,7 +186,8 @@ export function LessonScreenLayout({
   gameClassName,
   className,
 }: LessonScreenLayoutProps) {
-  const showSuccessSlot = Boolean(successMessage) || reserveSuccessSlot;
+  const hasSuccessCopy = Boolean(successMessage?.trim());
+  const showSuccessSlot = hasSuccessCopy || reserveSuccessSlot;
 
   if (fill) {
     return (
@@ -203,7 +204,7 @@ export function LessonScreenLayout({
         ) : null}
         {showSuccessSlot ? (
           <div className="min-h-[4.75rem] shrink-0">
-            {successMessage ? (
+            {hasSuccessCopy ? (
               <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
             ) : null}
           </div>
@@ -224,7 +225,7 @@ export function LessonScreenLayout({
       {errorMessage ? (
         <LessonErrorBanner variant={errorVariant}>{errorMessage}</LessonErrorBanner>
       ) : null}
-      {successMessage ? (
+      {hasSuccessCopy ? (
         <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
       ) : null}
     </div>
@@ -593,7 +594,7 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       <div
         ref={ref}
         className={cn(
-          "flex flex-col rounded-2xl border-2 border-dashed transition-colors",
+          "flex flex-col rounded-2xl border-2 border-transparent transition-colors",
           prominentNeutralHeader ? "p-2 sm:p-2.5" : "p-2.5 sm:p-3",
           fillHeight
             ? "min-h-0 flex-1"

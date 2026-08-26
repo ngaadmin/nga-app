@@ -23,27 +23,30 @@ export function TrueFalseScreen({
   onPersistentError?: (message: string) => void;
 }) {
   const [choice, setChoice] = useState<"true" | "false" | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
 
   const pick = (option: "true" | "false") => {
     setChoice(option);
     if (option === screen.correctAnswer) {
+      setError(null);
       celebrateLessonCorrectAnswer(flow.flashScreen);
       flow.markScreenReady(screenIndex);
       return;
     }
+    setError(screen.wrongError);
     flow.incrementMistake();
     if (onPersistentError) {
       onPersistentError(screen.wrongError);
-    } else {
-      signalLessonIncorrectAnswer(flow.flashScreen);
     }
+    signalLessonIncorrectAnswer(flow.flashScreen);
   };
 
   return (
     <LessonScreenLayout
       prompt={screen.prompt}
       emphasizeInstruction={screen.emphasizeInstruction === true}
+      errorMessage={error}
     >
       <div className="mt-4 flex gap-3">
         {(["true", "false"] as const).map((option) => (

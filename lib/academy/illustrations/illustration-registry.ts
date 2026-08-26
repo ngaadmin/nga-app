@@ -84,12 +84,22 @@ export type IllustrationId =
 
 const ILLUSTRATIONS_BASE = "/assets/illustrations";
 
+function characterIllustrationFilename(
+  character: IllustrationCharacterId,
+  pose: IllustrationCharacterPose,
+): string {
+  // On-disk Senna files use PascalCase (`Senna-celebrating.webp`).
+  if (character === "senna") {
+    return `Senna-${pose}.webp`;
+  }
+  return `${character}-${pose}.webp`;
+}
+
 function characterIllustrationPath(
   character: IllustrationCharacterId,
   pose: IllustrationCharacterPose,
 ): string {
-  const id: CharacterIllustrationId = `${character}-${pose}`;
-  return `${ILLUSTRATIONS_BASE}/characters/${character}/${id}.webp`;
+  return `${ILLUSTRATIONS_BASE}/characters/${character}/${characterIllustrationFilename(character, pose)}`;
 }
 
 function pairIllustrationPath(id: PairIllustrationId): string {

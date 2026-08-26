@@ -3,8 +3,10 @@
 import {
   Fragment,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ComponentType,
   type RefObject,
 } from "react";
@@ -48,10 +50,12 @@ const SINE_AMPLITUDE = 18;
 const SINE_FREQUENCY = 0.78;
 
 const LESSON_NODE_SIZE_PX = 84;
-const NODE_GAP_PX = 8;
+/** Pulse ring uses -inset-2 (8px). Gap must exceed that so the ring does not touch the previous tile. */
+const NODE_GAP_PX = 20;
 /** WebP has transparent padding — box is larger so the coin body matches the node. */
 const PENNY_SIZE_PX = Math.round(LESSON_NODE_SIZE_PX * 1.5);
-const PENNY_NODE_GAP_PX = 0;
+/** Keep Penny outside the 8px pulse ring. */
+const PENNY_NODE_GAP_PX = 8;
 
 /** Smooth horizontal offset (0–100%) from node index. */
 function academySnakeAnchorX(index: number): number {
@@ -249,12 +253,127 @@ function focusActiveNodeInScrollContainer(
 const PENNY_POINT_SRC =
   "/assets/illustrations/characters/penny/penny_point.webp";
 
+function pennyFallbackOffsetPx(nodeOnRight: boolean): number {
+  return nodeOnRight
+    ? -(LESSON_NODE_SIZE_PX / 2 + PENNY_NODE_GAP_PX + PENNY_SIZE_PX)
+    : LESSON_NODE_SIZE_PX / 2 + PENNY_NODE_GAP_PX;
+}
+
+function PennyBesideActiveNode({
+  slotRef,
+  nodeRef,
+  fallbackAnchorX,
+}: {
+  slotRef: RefObject<HTMLElement | null>;
+  nodeRef: RefObject<HTMLElement | null>;
+  fallbackAnchorX: number;
+}) {
+  const fallbackNodeOnRight = fallbackAnchorX >= SINE_CENTER_X;
+  const [placement, setPlacement] = useState<{
+    leftPx: number;
+    topPx: number;
+    nodeOnRight: boolean;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    let cancelled = false;
+    let observer: ResizeObserver | null = null;
+    let raf = 0;
+    let retries = 0;
+
+    const update = () => {
+      if (cancelled) return;
+      const slot = slotRef.current;
+      const node = nodeRef.current;
+      if (!slot || !node) {
+        if (retries < 30) {
+          retries += 1;
+          raf = requestAnimationFrame(update);
+        }
+        return;
+      }
+
+      const slotRect = slot.getBoundingClientRect();
+      const nodeRect = node.getBoundingClientRect();
+      if (slotRect.width <= 0 || nodeRect.width <= 0) {
+        if (retries < 30) {
+          retries += 1;
+          raf = requestAnimationFrame(update);
+        }
+        return;
+      }
+
+      const nodeLeft = nodeRect.left - slotRect.left;
+      const nodeRight = nodeRect.right - slotRect.left;
+      const leftSidePx = nodeLeft - PENNY_NODE_GAP_PX - PENNY_SIZE_PX;
+      // Prefer the same left-of-tile seat as early nodes; sit on the right only when
+      // that would clip off the map (later sine-swing / narrow viewports).
+      const nodeOnRight = leftSidePx >= 0;
+      const leftPx = nodeOnRight
+        ? leftSidePx
+        : nodeRight + PENNY_NODE_GAP_PX;
+      const topPx = nodeRect.top - slotRect.top + nodeRect.height / 2;
+
+      setPlacement({ leftPx, topPx, nodeOnRight });
+
+      if (!observer) {
+        observer = new ResizeObserver(update);
+        observer.observe(slot);
+        observer.observe(node);
+      }
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [nodeRef, slotRef]);
+
+  const nodeOnRight = placement?.nodeOnRight ?? fallbackNodeOnRight;
+  const left =
+    placement != null
+      ? placement.leftPx
+      : `calc(${fallbackAnchorX}% + ${pennyFallbackOffsetPx(fallbackNodeOnRight)}px)`;
+  const top = placement != null ? placement.topPx : "50%";
+
+  return (
+    <div
+      className="pointer-events-none absolute z-raised"
+      style={{
+        left,
+        top,
+        width: PENNY_SIZE_PX,
+        height: PENNY_SIZE_PX,
+        transform: "translateY(-50%)",
+      }}
+      aria-hidden
+    >
+      <Image
+        src={PENNY_POINT_SRC}
+        alt=""
+        width={126}
+        height={126}
+        className={cn(
+          "h-full w-full object-contain object-center",
+          !nodeOnRight && "-scale-x-100",
+        )}
+        unoptimized
+      />
+    </div>
+  );
+}
+
 export function AcademySkillTrack({
   milestones = [],
   scrollContainerRef,
 }: AcademySkillTrackProps) {
   const router = useRouter();
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
+  const activeNodeBoxRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
   const masteryCohort = useLessonMasteryCohort();
 
@@ -342,10 +461,6 @@ export function AcademySkillTrack({
               const slotHeight = nodeSlotHeightPx(milestone);
               const isModuleStart = isFirstMilestoneInModule(milestone.id);
               const showPennyBesideNode = isActiveNode;
-              const nodeOnRight = anchorX >= SINE_CENTER_X;
-              const pennyOffsetPx = nodeOnRight
-                ? -(LESSON_NODE_SIZE_PX / 2 + PENNY_NODE_GAP_PX + PENNY_SIZE_PX)
-                : LESSON_NODE_SIZE_PX / 2 + PENNY_NODE_GAP_PX;
 
               return (
                 <Fragment key={milestone.id}>
@@ -371,36 +486,21 @@ export function AcademySkillTrack({
                     style={{ height: slotHeight }}
                   >
                     {showPennyBesideNode ? (
-                      <div
-                        className="pointer-events-none absolute top-1/2 z-raised"
-                        style={{
-                          left: `calc(${anchorX}% + ${pennyOffsetPx}px)`,
-                          width: PENNY_SIZE_PX,
-                          height: PENNY_SIZE_PX,
-                          transform: "translateY(-50%)",
-                        }}
-                        aria-hidden
-                      >
-                        <Image
-                          src={PENNY_POINT_SRC}
-                          alt=""
-                          width={126}
-                          height={126}
-                          className={cn(
-                            "h-full w-full object-contain object-center",
-                            !nodeOnRight && "-scale-x-100",
-                          )}
-                          unoptimized
-                        />
-                      </div>
+                      <PennyBesideActiveNode
+                        slotRef={activeNodeRef}
+                        nodeRef={activeNodeBoxRef}
+                        fallbackAnchorX={anchorX}
+                      />
                     ) : null}
                     <div
+                      ref={isActiveNode ? activeNodeBoxRef : undefined}
                       className={cn(
-                        "absolute top-1/2 -translate-y-1/2",
+                        "absolute",
                         isActiveNode && "z-chrome",
                       )}
                       style={{
                         left: `${anchorX}%`,
+                        top: "50%",
                         transform: "translate(-50%, -50%)",
                       }}
                     >

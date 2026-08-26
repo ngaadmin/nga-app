@@ -4,7 +4,10 @@ export type { BudgetSelectItem, BudgetSelectScreenConfig } from "./budget-select
 export type { BucketSortScreenConfig } from "./bucket-sort";
 export type { CompletionScreenConfig } from "./completion";
 export type { CustomScreenConfig } from "./custom";
-export type { DragToTargetScreenConfig } from "./drag-to-target";
+export type {
+  DragToTargetItemSize,
+  DragToTargetScreenConfig,
+} from "./drag-to-target";
 export type { HoldToFillScreenConfig } from "./hold-to-fill";
 export type { LinkMatchPair, LinkMatchScreenConfig } from "./link-match";
 export type { NarrativeBonusScreenConfig } from "./narrative-bonus";

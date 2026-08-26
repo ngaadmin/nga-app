@@ -1,3 +1,4 @@
+import { ACADEMY_FIRST_LESSON_OPENED_KEY } from "@/lib/dashboard/academy-first-lesson-opened";
 import { ACADEMY_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/academy-progress-storage";
 import { DASHBOARD_WALLET_STORAGE_KEY } from "@/lib/dashboard/dashboard-wallet-storage";
 import { CURRENCY_PREFERENCE_STORAGE_KEY } from "@/lib/dashboard/currency/currency-storage";
@@ -31,6 +32,7 @@ export const APP_SESSION_STORAGE_KEYS = [
   DASHBOARD_WALLET_STORAGE_KEY,
   CURRENCY_PREFERENCE_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,
+  ACADEMY_FIRST_LESSON_OPENED_KEY,
   VAULT_SKILL_PROGRESS_STORAGE_KEY,
   VAULT_ADD_MONEY_INTRO_SEEN_KEY,
   VAULT_SESSION_STORAGE_KEY,

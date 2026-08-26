@@ -8,6 +8,7 @@ import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-definition";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { isDesignShellLesson, isLessonShippedForCohort } from "@/lib/academy/lessons/registry";
+import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 
 type AcademyLessonPlayerProps = {
@@ -26,6 +27,12 @@ export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
       router.replace(DASHBOARD_ACADEMY_PATH);
     }
   }, [isAvailable, router]);
+
+  useEffect(() => {
+    if (isAvailable && milestoneId === FIRST_ACADEMY_LESSON_MILESTONE_ID) {
+      markFirstAcademyLessonOpened();
+    }
+  }, [isAvailable, milestoneId]);
 
   if (!isAvailable) {
     return null;

@@ -58,7 +58,7 @@ function resolveLaunchpadProfile(): LaunchpadProfile {
   };
 }
 
-const floatingTileClass = "rounded-2xl border-0 bg-white shadow-md";
+const AGE_LOCKED_OPACITY_CLASS = "opacity-55";
 
 /** Short faded snake — mockup only, not a live venture path. */
 const SINE_CENTER_X = 50;
@@ -139,28 +139,24 @@ function BusinessIdeaTile({ idea, slot, onTap }: BusinessIdeaTileProps) {
       onClick={onTap}
       aria-label={idea.title}
       className={cn(
-        "relative flex w-[calc((100cqi-1.5rem)/3.3)] min-w-0 shrink-0 snap-start flex-col items-center overflow-hidden px-2 pb-4 pt-5 text-center transition-all",
-        floatingTileClass,
-        isAgeLocked && "opacity-55",
-        "active:scale-[0.98]",
+        "relative flex w-[calc((100cqi-1.5rem)/3.3)] min-w-0 shrink-0 snap-start flex-col items-center bg-transparent px-1 py-1 text-center transition-transform active:scale-[0.98]",
+        isAgeLocked && AGE_LOCKED_OPACITY_CLASS,
       )}
     >
-      {isPremiumLocked ? (
-        <span className="absolute right-1 top-1">
-          <PremiumTierLockBadge />
-        </span>
-      ) : null}
-
-      {isAgeLocked ? (
-        <span className="absolute right-1 top-1">
-          <AgeTrackLockBadge />
-        </span>
-      ) : null}
-
-      <span className="text-3xl leading-none" aria-hidden>
-        {idea.emoji}
+      <span className="relative flex size-[3.8125rem] shrink-0 items-center justify-center rounded-full bg-[#EEF9FF] text-3xl leading-none">
+        <span aria-hidden>{idea.emoji}</span>
+        {isPremiumLocked ? (
+          <span className="absolute -right-0.5 -top-0.5">
+            <PremiumTierLockBadge />
+          </span>
+        ) : null}
+        {isAgeLocked ? (
+          <span className="absolute -right-0.5 -top-0.5">
+            <AgeTrackLockBadge />
+          </span>
+        ) : null}
       </span>
-      <span className={cn("mt-3 w-full min-w-0", launchpadChipTitleClass)}>
+      <span className={cn("mt-1.5 w-full min-w-0", launchpadChipTitleClass)}>
         {idea.title}
       </span>
     </button>

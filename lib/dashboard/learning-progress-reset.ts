@@ -1,3 +1,4 @@
+import { clearFirstAcademyLessonOpened } from "@/lib/dashboard/academy-first-lesson-opened";
 import {
   defaultAcademyMilestones,
   saveAcademyMilestones,
@@ -12,5 +13,6 @@ export function resetLearningProgress(): void {
 
   saveAcademyMilestones(defaultAcademyMilestones());
   saveVaultSkillTierOverrides({});
+  clearFirstAcademyLessonOpened();
   window.dispatchEvent(new CustomEvent(LEARNING_PROGRESS_RESET_EVENT));
 }

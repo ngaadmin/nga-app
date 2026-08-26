@@ -5,9 +5,11 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ComponentType,
   type RefObject,
 } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   AcademyModuleSignpost,
@@ -15,7 +17,10 @@ import {
   ACADEMY_MODULE_SIGNPOST_GAP_PX,
   ACADEMY_MODULE_SIGNPOST_HEIGHT_PX,
 } from "@/components/academy/academy-module-signpost";
-import { AcademyJourneyDirectionSign } from "@/components/academy/academy-journey-sign";
+import {
+  hasOpenedFirstAcademyLesson,
+} from "@/lib/dashboard/academy-first-lesson-opened";
+import { LEARNING_PROGRESS_RESET_EVENT } from "@/lib/dashboard/learning-progress-reset";
 import { resolveActiveStepIndex, resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
@@ -268,6 +273,9 @@ function focusActiveNodeInScrollContainer(
   });
 }
 
+const PENNY_POINT_SRC =
+  "/assets/illustrations/characters/penny/penny_point.webp";
+
 export function AcademySkillTrack({
   milestones = [],
   scrollContainerRef,
@@ -276,6 +284,21 @@ export function AcademySkillTrack({
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
   const masteryCohort = useLessonMasteryCohort();
+  const [firstLessonOpened, setFirstLessonOpened] = useState(
+    hasOpenedFirstAcademyLesson,
+  );
+
+  useEffect(() => {
+    function refreshOpened() {
+      setFirstLessonOpened(hasOpenedFirstAcademyLesson());
+    }
+
+    refreshOpened();
+    window.addEventListener(LEARNING_PROGRESS_RESET_EVENT, refreshOpened);
+    return () => {
+      window.removeEventListener(LEARNING_PROGRESS_RESET_EVENT, refreshOpened);
+    };
+  }, []);
 
   const safeMilestones = useMemo(
     () => milestones.filter(isRenderableAcademyMilestone),
@@ -362,8 +385,9 @@ export function AcademySkillTrack({
     };
   }, [continueStepIndex, safeMilestones.length, scrollContainerRef]);
 
-  const showStartHereSign =
-    continueMilestoneId === ACADEMY_JOURNEY_ENTRY_MILESTONE_ID;
+  const showFirstLessonPenny =
+    continueMilestoneId === ACADEMY_JOURNEY_ENTRY_MILESTONE_ID &&
+    !firstLessonOpened;
 
   const handleLaunchLesson = (milestoneId: number) => {
     const milestone = safeMilestones.find((node) => node.id === milestoneId);
@@ -390,9 +414,7 @@ export function AcademySkillTrack({
               const isActiveNode = isContinueTarget;
               const slotHeight = nodeSlotHeightPx(milestone);
               const showModuleSignpost = isFirstMilestoneInModule(milestone.id);
-              const showStartHereOnNode =
-                showStartHereSign &&
-                milestone.id === ACADEMY_JOURNEY_ENTRY_MILESTONE_ID;
+              const showPennyInSecondNodeBay = showFirstLessonPenny && index === 1;
 
               return (
                 <Fragment key={milestone.id}>
@@ -424,6 +446,25 @@ export function AcademySkillTrack({
                     className="relative z-raised w-full shrink-0"
                     style={{ height: slotHeight }}
                   >
+                    {showPennyInSecondNodeBay ? (
+                      <div
+                        className="pointer-events-none absolute top-1/2 z-chrome h-[4.75rem] w-[4.75rem]"
+                        style={{
+                          left: `${SINE_CENTER_X - SINE_AMPLITUDE}%`,
+                          transform: "translate(-50%, -50%)",
+                        }}
+                        aria-hidden
+                      >
+                        <Image
+                          src={PENNY_POINT_SRC}
+                          alt=""
+                          width={160}
+                          height={160}
+                          className="h-full w-full object-contain object-center"
+                          unoptimized
+                        />
+                      </div>
+                    ) : null}
                     <div
                       className={cn(
                         "absolute top-1/2 -translate-y-1/2",
@@ -434,11 +475,6 @@ export function AcademySkillTrack({
                         transform: "translate(-50%, -50%)",
                       }}
                     >
-                      {showStartHereOnNode ? (
-                        <div className="absolute left-full top-1/2 z-chrome ml-2 -translate-y-1/2">
-                          <AcademyJourneyDirectionSign side="right" />
-                        </div>
-                      ) : null}
                       <AcademyNode
                         milestone={milestone}
                         masteryCohort={masteryCohort}

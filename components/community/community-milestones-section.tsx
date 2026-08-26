@@ -8,6 +8,7 @@ import {
   type CommunityMilestoneId,
   type CommunityMilestoneRow,
 } from "@/lib/community/milestones";
+import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import { cn } from "@/lib/utils/cn";
 
 const MILESTONE_TILE: Record<
@@ -135,24 +136,26 @@ export function CommunityMilestonesSection() {
 
   return (
     <section aria-labelledby="community-milestones-heading" className="w-full shrink-0">
-      <h2 id="community-milestones-heading" className="sr-only">
-        Milestones
-      </h2>
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls="community-milestones-list"
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between gap-3 rounded-nga-lg border border-nga-panel bg-nga-surface px-3 py-2 font-heading text-[16px] font-bold uppercase tracking-wide text-nga-primary"
-      >
-        <span>Milestones</span>
-        <span className="flex items-center gap-2 font-heading text-[16px] font-bold normal-case tracking-normal text-nga-slate">
+      <div className="flex items-center justify-between gap-3">
+        <DashboardSectionHeading
+          id="community-milestones-heading"
+          className="flex-1 text-left sm:text-left"
+        >
+          Milestones
+        </DashboardSectionHeading>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="community-milestones-list"
+          onClick={() => setOpen((value) => !value)}
+          className="flex shrink-0 items-center gap-2 bg-transparent py-1 font-heading text-[16px] font-bold text-nga-slate"
+        >
           {achievedCount}/{COMMUNITY_MILESTONE_TOTAL} achieved
           <span aria-hidden className="text-[#FFA503]">
             {open ? "-" : "+"}
           </span>
-        </span>
-      </button>
+        </button>
+      </div>
       {open ? (
         <div id="community-milestones-list" className="mt-2 space-y-2">
           <MilestoneCarousel label="Achieved" items={achievedRows} />

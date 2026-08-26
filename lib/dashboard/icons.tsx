@@ -219,7 +219,7 @@ export function SettingsIcon({ className }: IconProps) {
   );
 }
 
-/** Key icon for password / security settings. */
+/** Horizontal key for password reset. Not a circle-and-diagonal-arrow. */
 export function KeyIcon({ className }: IconProps) {
   return (
     <svg
@@ -231,9 +231,9 @@ export function KeyIcon({ className }: IconProps) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="2" />
+      <circle cx="8" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
       <path
-        d="m11 12 9-9M16 4h4v4"
+        d="M11.5 12H20M17 12v3.5M20 12v2.5"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

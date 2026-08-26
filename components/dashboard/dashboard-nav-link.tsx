@@ -34,11 +34,9 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
         onClick={handleClick}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex flex-1 flex-col items-center justify-center gap-1 border-t-2 border-transparent px-2 py-2",
+          "flex flex-1 flex-col items-center justify-center gap-1 px-2 py-2",
           TACTILE_PRESS,
-          isActive
-            ? "border-t-nga-secondary bg-nga-secondary/10 text-nga-primary"
-            : "text-nga-slate",
+          isActive ? "text-[#FFA503]" : "text-nga-slate",
         )}
       >
         <Icon className="size-6 shrink-0" />

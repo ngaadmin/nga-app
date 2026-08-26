@@ -82,7 +82,7 @@ export function DashboardNavigation() {
     <nav
       style={zLayerStyle("chrome")}
       data-dashboard-nav
-      className="fixed bottom-0 left-0 right-0 flex border-t border-nga-mist bg-white"
+      className="fixed bottom-0 left-0 right-0 flex border-t border-[#FFA503] bg-white"
       aria-label="Main navigation"
     >
       {navItems.map((item) => (

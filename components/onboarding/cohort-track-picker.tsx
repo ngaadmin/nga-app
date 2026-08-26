@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   MASTERY_COHORT_ORDER,
-  masteryCohortAgeRangeLabel,
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -16,11 +15,21 @@ import {
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
 
-const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/website/Avatars/Avatar_Explorer.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Avatar_Pathfinder.webp",
-  maverick: "/assets/illustrations/website/Avatars/Avatar_Maverick.webp",
+/** Supporting age lines for this screen only — cohort bounds stay in mastery-cohort. */
+const TRACK_AGE_SUPPORT: Record<MasteryCohort, string> = {
+  explorer: "For ages 10–12",
+  pathfinder: "For ages 13–15",
+  maverick: "For ages 16+",
 };
+
+const TRACK_PENNY_SRC: Record<MasteryCohort, string> = {
+  explorer: "/assets/illustrations/characters/penny/penny_jump.webp",
+  pathfinder: "/assets/illustrations/characters/penny/penny_think.webp",
+  maverick: "/assets/illustrations/characters/penny/penny_confident.webp",
+};
+
+const PENNY_POINT_SRC =
+  "/assets/illustrations/characters/penny/penny_point.webp";
 
 export function CohortTrackPicker() {
   const router = useRouter();
@@ -40,45 +49,57 @@ export function CohortTrackPicker() {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col justify-start py-3 sm:pt-8 sm:pb-12">
-      <div className="mx-auto w-full max-w-4xl px-3 sm:px-0">
-        <h1 className="mb-4 text-center font-heading text-lg font-semibold text-nga-primary/70 sm:mb-6 sm:text-xl">
-          Choose your path
-        </h1>
-        <div className="grid grid-cols-1 divide-y divide-[#031F82]/10 sm:grid-cols-3 sm:items-start sm:gap-8 sm:divide-y-0">
-          {MASTERY_COHORT_ORDER.map((cohort) => {
-            const label = masteryCohortLabel(cohort);
-            const ageRange = masteryCohortAgeRangeLabel(cohort);
-
-            return (
-              <button
-                key={cohort}
-                type="button"
-                onClick={() => handleSelect(cohort)}
-                className="flex min-w-0 flex-row items-center gap-4 bg-transparent px-1 py-3 text-left transition-transform active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary sm:flex-col sm:items-center sm:gap-0 sm:px-0 sm:py-0 sm:text-center sm:hover:scale-[1.03] sm:active:scale-[0.98]"
-              >
-                <span className="relative size-32 shrink-0 sm:aspect-square sm:h-auto sm:w-full sm:max-w-[16rem] sm:size-auto">
-                  <Image
-                    src={TRACK_AVATAR_SRC[cohort]}
-                    alt={`${label} avatar`}
-                    fill
-                    sizes="(max-width: 639px) 128px, 256px"
-                    className="object-contain"
-                    unoptimized
-                  />
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col justify-center sm:flex-none sm:items-center">
-                  <span className="font-heading text-3xl font-black leading-none text-nga-primary sm:mt-3">
-                    {label}
-                  </span>
-                  <span className="mt-1 font-heading text-sm font-medium leading-tight text-nga-ink/60 sm:mt-1">
-                    {ageRange} years
-                  </span>
-                </span>
-              </button>
-            );
-          })}
+    <section className="flex min-h-0 flex-1 flex-col bg-white pt-[calc(env(safe-area-inset-top,0px)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)]">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-between">
+        <div className="flex flex-col items-center text-center">
+          <Image
+            src={PENNY_POINT_SRC}
+            alt=""
+            width={720}
+            height={720}
+            className="h-[6.5rem] w-[6.5rem] object-contain object-center"
+            priority
+            unoptimized
+          />
+          <h1 className="mt-1 font-heading text-3xl font-black leading-[1.08] tracking-tight text-nga-primary">
+            Pick the path that matches your age.
+          </h1>
         </div>
+
+        {MASTERY_COHORT_ORDER.map((cohort) => {
+          const label = masteryCohortLabel(cohort);
+          const ageSupport = TRACK_AGE_SUPPORT[cohort];
+
+          return (
+            <button
+              key={cohort}
+              type="button"
+              onClick={() => handleSelect(cohort)}
+              className="flex w-full items-center gap-4 bg-transparent text-left transition-transform active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary"
+            >
+              <Image
+                src={TRACK_PENNY_SRC[cohort]}
+                alt=""
+                width={480}
+                height={480}
+                className="h-[6.5rem] w-[6.5rem] shrink-0 object-contain object-center"
+                unoptimized
+              />
+              <span className="flex min-w-0 flex-1 flex-col justify-center">
+                <span className="font-heading text-2xl font-black leading-[1.08] tracking-tight text-nga-primary">
+                  {label}
+                </span>
+                <span className="mt-0.5 font-sans text-base font-normal leading-snug text-nga-slate">
+                  {ageSupport}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+
+        <p className="text-center font-sans text-base font-normal leading-relaxed text-nga-slate">
+          You can switch this later.
+        </p>
       </div>
     </section>
   );

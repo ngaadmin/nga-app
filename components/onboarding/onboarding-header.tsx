@@ -1,9 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LAYER_CLASS } from "@/lib/ui/layers";
+import { ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
 
 export function OnboardingHeader() {
+  const pathname = usePathname();
+
+  if (pathname === ONBOARDING_START_PATH) {
+    return null;
+  }
+
   return (
     <header
       className={cn(

@@ -26,7 +26,7 @@ const M1_L4_META = {
 const M1_L4_REWARDS = {
   skillSlug: "stop-and-think",
   achievementSkillSlug: "stop-and-think",
-  xpReward: 150,
+  xpReward: 100,
   perfectStreakBonus: 50,
 } as const;
 

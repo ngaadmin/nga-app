@@ -22,7 +22,7 @@ const M1_L3_META = {
 const M1_L3_REWARDS = {
   skillSlug: "keep-some-aside",
   achievementSkillSlug: "keep-some-aside",
-  xpReward: 150,
+  xpReward: 100,
   perfectStreakBonus: 50,
 } as const;
 
@@ -338,7 +338,6 @@ export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
     },
     pathfinder: {
       characterName: "Holly",
-      rewards: { xpReward: 50, perfectStreakBonus: 0 },
       screenOverrides: M1_L3_PATHFINDER_OVERRIDES,
     },
   },

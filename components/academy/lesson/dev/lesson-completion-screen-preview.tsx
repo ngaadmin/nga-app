@@ -21,7 +21,7 @@ const M1_L1_SCREEN_8_PREVIEW = {
   rewards: {
     skillSlug: "stop-and-think",
     achievementSkillSlug: "stop-and-think",
-    xpReward: 150,
+    xpReward: 100,
     perfectStreakBonus: 50,
   } satisfies LessonRewards,
   screen: explorerCompletionScreen("milestone-splash", "medal-skill1-unlocked"),

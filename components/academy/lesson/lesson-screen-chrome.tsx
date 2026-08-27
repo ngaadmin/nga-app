@@ -4,6 +4,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import {
   LessonIllustrationSlot,
+  LessonIllustrationSlotReserve,
 } from "@/components/academy/lesson/lesson-ui";
 
 type LessonScreenChromeContextValue = {
@@ -49,5 +50,5 @@ export function LessonScreenIllustration() {
     return <LessonIllustrationSlot {...context.illustration} />;
   }
 
-  return null;
+  return <LessonIllustrationSlotReserve />;
 }

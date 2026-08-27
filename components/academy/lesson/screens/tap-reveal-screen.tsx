@@ -108,7 +108,7 @@ export function TapRevealScreen({
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-2 items-stretch gap-3 [&>*]:min-w-0">
         {screen.buckets.map((bucket) => {
           const revealed = screen.items.filter(
             (item) => item.bucket === bucket.id && tapped.has(item.id),

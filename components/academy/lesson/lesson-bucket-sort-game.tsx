@@ -18,6 +18,7 @@ import {
   lessonSpentTotalItemCardClass,
   lessonSpentTotalItemPlacedClass,
   lessonSortItemEmojiClass,
+  lessonSortPoolSlotPlaceholderClass,
   lessonGameHintClass,
   lessonTwoColumnGridClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -122,6 +123,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     const ids = items.map((item) => item.id);
     return isSpentTotalLayout ? ids : shuffleIds(ids);
   });
+  const [poolSlotIds] = useState<string[]>(() => poolIds);
   const [bucketItems, setBucketItems] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(buckets.map((bucket) => [bucket.id, []])),
   );
@@ -463,12 +465,11 @@ export function LessonBucketSortGame<TBucket extends string>({
           icon={bucket.icon}
           active={activeBucketId === bucket.id}
           error={errorBucketId === bucket.id}
-          prominentNeutralHeader
           fillHeight
         >
           {placedIds.map((itemId) => renderPlacedItem(itemId))}
           {placedIds.length === 0 ? (
-            <p className={cn("py-1 text-center opacity-60", lessonGameHintClass)}>
+            <p className={cn("py-3 text-center text-sm", lessonGameHintClass)}>
               Drop here
             </p>
           ) : null}
@@ -613,20 +614,29 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <div
         ref={boardRef}
-        className={cn(lessonSortBoardClass, "flex min-h-0 flex-1 flex-col gap-2")}
+        className={cn(lessonSortBoardClass, "flex min-h-0 flex-1 flex-col gap-1.5")}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
       >
         <LessonSortPool
-          label="Statements to sort"
           isEmpty={poolIds.length === 0}
           className="shrink-0"
         >
-          {poolIds.map((itemId) => renderPoolChip(itemId))}
+          {poolSlotIds.map((itemId) =>
+            poolIds.includes(itemId) ? (
+              renderPoolChip(itemId)
+            ) : (
+              <div
+                key={itemId}
+                className={lessonSortPoolSlotPlaceholderClass}
+                aria-hidden
+              />
+            ),
+          )}
         </LessonSortPool>
 
-        <LessonSortBucketRow className="min-h-0 flex-1 items-stretch">
+        <LessonSortBucketRow className="min-h-0 flex-1">
           {buckets.map((bucket) => renderBucket(bucket))}
         </LessonSortBucketRow>
 

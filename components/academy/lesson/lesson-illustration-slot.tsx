@@ -42,9 +42,6 @@ function LessonIllustrationFallback({
 
 type ImageLoadStatus = "idle" | "loading" | "loaded" | "failed";
 
-/** Modest centred scene slot — sits below lesson chrome, above prompt copy. */
-const DEFAULT_ILLUSTRATION_MAX_HEIGHT_PX = 220;
-
 export function LessonIllustrationSlot({
   emoji,
   label,
@@ -81,10 +78,7 @@ export function LessonIllustrationSlot({
 
   if (src && imageStatus === "loaded") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";
-    const maxHeightPx =
-      typeof scale === "number" && scale > 0
-        ? Math.round(DEFAULT_ILLUSTRATION_MAX_HEIGHT_PX * scale)
-        : undefined;
+    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1;
 
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
@@ -92,7 +86,9 @@ export function LessonIllustrationSlot({
         src={src}
         alt={ariaLabel}
         className={cn(lessonIllustrationImageClass, className)}
-        style={maxHeightPx ? { maxHeight: maxHeightPx } : undefined}
+        style={{
+          ["--lesson-illustration-scale" as string]: String(scaleValue),
+        }}
         decoding="async"
         loading="eager"
       />
@@ -100,7 +96,11 @@ export function LessonIllustrationSlot({
   }
 
   if (src && imageStatus === "loading") {
-    return null;
+    return <LessonIllustrationSlotReserve className={className} />;
+  }
+
+  if (src && imageStatus === "failed") {
+    return <LessonIllustrationSlotReserve className={className} />;
   }
 
   if (emoji || label) {

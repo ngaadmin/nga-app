@@ -41,13 +41,8 @@ const M1_L3_META = {
 const M1_L3_REWARDS = {
   skillSlug: "REPLACE-kebab-skill-id",
   achievementSkillSlug: "REPLACE-kebab-skill-id",
-  xpReward: 150,
+  xpReward: 100,
   perfectStreakBonus: 50,
-} as const;
-
-const TEEN_REWARDS = {
-  xpReward: 50,
-  perfectStreakBonus: 0,
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -162,7 +157,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   // Explorer swaps via override — see EXPLORER_OVERRIDES below.
   teenCompletionScreen({
     skillTitle: "REPLACE: Skill Name",
-    xpReward: TEEN_REWARDS.xpReward,
+    xpReward: M1_L3_REWARDS.xpReward,
   }),
 ];
 
@@ -291,12 +286,10 @@ export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
     },
     pathfinder: {
       characterName: "Holly",
-      rewards: TEEN_REWARDS,
     },
     maverick: {
       characterName: "Aiden",
       screenOverrides: MAVERICK_OVERRIDES,
-      rewards: TEEN_REWARDS,
     },
   },
 };

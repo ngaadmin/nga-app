@@ -62,6 +62,7 @@ export function BucketSortScreen({
     <LessonScreenLayout
       title={screen.title}
       intro={screen.intro}
+      cta={screen.cta}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       successMessage={completeMessage}
       fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}

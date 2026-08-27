@@ -43,6 +43,8 @@ type LessonDragToTargetGameProps = {
     alt?: string;
   };
   sourceEmptyMessage?: string;
+  /** When false, hide visible zone labels (keep them in aria text). Default true. */
+  showZoneLabels?: boolean;
   onComplete: () => void;
   onSuccess?: () => void;
   onMiss?: () => void;
@@ -52,12 +54,12 @@ const TARGET_DROP_HIT_PADDING_PX = 24;
 
 const ITEM_BOX_CLASS: Record<DragItemSize, string> = {
   md: "relative h-20 w-20",
-  lg: "relative h-32 w-32 sm:h-36 sm:w-36",
+  lg: "relative h-36 w-36 sm:h-40 sm:w-40",
 };
 
 const ITEM_EMOJI_CLASS: Record<DragItemSize, string> = {
   md: "absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-3xl sm:text-4xl",
-  lg: "absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-6xl sm:text-7xl",
+  lg: "absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 text-7xl sm:text-8xl",
 };
 
 export function LessonDragToTargetGame({
@@ -71,6 +73,7 @@ export function LessonDragToTargetGame({
   targetIllustrationAlt,
   targetImagePlaceholder,
   sourceEmptyMessage = "Coins saved!",
+  showZoneLabels = true,
   onComplete,
   onSuccess,
   onMiss,
@@ -216,17 +219,27 @@ export function LessonDragToTargetGame({
       </div>
     ) : null;
 
-  const renderTargetVisual = () => {
+  const renderTargetVisual = (size: "md" | "lg" = "md") => {
+    const isLarge = size === "lg";
     if (targetIllustrationSrc) {
       return (
-        <div className="relative w-full min-w-0 max-w-[10rem] shrink-0 sm:max-w-[12rem]">
+        <div
+          className={cn(
+            "relative w-full min-w-0 shrink-0",
+            isLarge
+              ? "max-w-[18rem] sm:max-w-[20rem]"
+              : "max-w-[10rem] sm:max-w-[12rem]",
+          )}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={targetIllustrationSrc}
             alt={targetIllustrationAlt ?? targetLabel}
             className={cn(
               lessonInlineMediaImageClass,
-              "max-h-[10rem] sm:max-h-[12rem]",
+              isLarge
+                ? "max-h-[18rem] sm:max-h-[20rem]"
+                : "max-h-[10rem] sm:max-h-[12rem]",
             )}
             decoding="async"
             draggable={false}
@@ -261,60 +274,90 @@ export function LessonDragToTargetGame({
     );
   };
 
+  const renderSourceControl = () => {
+    if (!deposited && !dragState) {
+      return (
+        <button
+          ref={stackRef}
+          type="button"
+          onPointerDown={handleStackPointerDown}
+          className="cursor-grab rounded-full p-1 active:cursor-grabbing"
+          aria-label={`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}
+          style={{ touchAction: "none" }}
+        >
+          {renderCoinStack(true)}
+        </button>
+      );
+    }
+
+    if (deposited) {
+      return (
+        <p className="font-sans text-sm text-[#1E3A5F]/60">{sourceEmptyMessage}</p>
+      );
+    }
+
+    return <div className={ITEM_BOX_CLASS[itemSize]} aria-hidden />;
+  };
+
+  const renderDragGhost = () =>
+    dragState && !deposited ? (
+      <OverlayPortal>
+        <div
+          className="pointer-events-none fixed z-overlay cursor-grabbing"
+          style={{
+            left: dragState.x,
+            top: dragState.y,
+            width: dragState.width,
+            height: dragState.height,
+          }}
+        >
+          {renderCoinStack(false)}
+        </div>
+      </OverlayPortal>
+    ) : null;
+
   return (
     <div
       ref={boardRef}
-      className="mt-4 touch-none select-none"
+      className={cn(
+        "touch-none select-none",
+        showZoneLabels ? "mt-4" : "relative mt-4 min-h-[16.5rem] sm:min-h-[18.5rem]",
+      )}
       style={{ touchAction: "none" }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
     >
-      <div className={lessonTwoColumnGridClass}>
-        <div className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center">
-          <LessonColumnLabel>{sourceLabel}</LessonColumnLabel>
-          {!deposited && !dragState ? (
-            <button
-              ref={stackRef}
-              type="button"
-              onPointerDown={handleStackPointerDown}
-              className="cursor-grab rounded-full p-1 active:cursor-grabbing"
-              aria-label={`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}
-              style={{ touchAction: "none" }}
-            >
-              {renderCoinStack(true)}
-            </button>
-          ) : deposited ? (
-            <p className="font-sans text-sm text-[#1E3A5F]/60">{sourceEmptyMessage}</p>
-          ) : (
-            <div className={ITEM_BOX_CLASS[itemSize]} aria-hidden />
-          )}
-        </div>
-
-        <div
-          ref={targetRef}
-          className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center"
-        >
-          <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
-          {renderTargetVisual()}
-        </div>
-      </div>
-
-      {dragState && !deposited ? (
-        <OverlayPortal>
-          <div
-            className="pointer-events-none fixed z-overlay cursor-grabbing"
-            style={{
-              left: dragState.x,
-              top: dragState.y,
-              width: dragState.width,
-              height: dragState.height,
-            }}
-          >
-            {renderCoinStack(false)}
+      {showZoneLabels ? (
+        <div className={lessonTwoColumnGridClass}>
+          <div className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center">
+            <LessonColumnLabel>{sourceLabel}</LessonColumnLabel>
+            {renderSourceControl()}
           </div>
-        </OverlayPortal>
-      ) : null}
+
+          <div
+            ref={targetRef}
+            className="flex min-h-[8rem] flex-col items-center justify-center gap-2 text-center"
+          >
+            <LessonColumnLabel>{targetLabel}</LessonColumnLabel>
+            {renderTargetVisual("md")}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div
+            ref={targetRef}
+            className="absolute bottom-0 right-0 flex w-[72%] max-w-[20rem] items-end justify-end"
+          >
+            {renderTargetVisual("lg")}
+          </div>
+          <div className="absolute bottom-[3%] left-[20%] z-raised flex items-end justify-center sm:left-[22%]">
+            {renderSourceControl()}
+          </div>
+        </>
+      )}
+
+      {renderDragGhost()}
     </div>
   );
 }

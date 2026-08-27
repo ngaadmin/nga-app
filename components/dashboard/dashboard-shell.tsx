@@ -46,21 +46,31 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }, [router]);
 
   return (
-    <div className="min-h-dvh w-full max-w-full overflow-x-hidden bg-white">
+    <div
+      className={cn(
+        "w-full max-w-full overflow-x-hidden bg-white",
+        isLessonRoute
+          ? "flex h-dvh max-h-dvh flex-col overflow-hidden"
+          : "min-h-dvh",
+      )}
+    >
       <DashboardNavigation />
 
       <div
-        className="flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden md:pl-64"
+        className={cn(
+          "flex w-full max-w-full flex-col overflow-x-hidden md:pl-64",
+          isLessonRoute ? "min-h-0 flex-1 overflow-hidden" : "min-h-dvh",
+        )}
         {...(!isLessonRoute ? { "data-dashboard-hub": true } : {})}
       >
         {!isLessonRoute ? <DashboardStatusHeader /> : null}
 
         <main
           className={cn(
-            "flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
+            "flex min-h-0 flex-1 flex-col overflow-x-hidden",
             isLessonRoute
-              ? "px-0 py-0 pb-20"
-              : "px-4 py-6 pb-28 sm:px-6 md:pb-8",
+              ? "overflow-hidden px-0 py-0 pb-20 md:pb-0"
+              : "overflow-y-auto px-4 py-6 pb-28 sm:px-6 md:pb-8",
           )}
         >
           {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}

@@ -169,7 +169,8 @@ function ctaButton(label: string, href: string): string {
   `;
 }
 
-const PENNY_IMAGE_PATH = "/assets/illustrations/website/Penny.png";
+const PENNY_IMAGE_PATH =
+  "/assets/illustrations/characters/penny/penny_wave.webp";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "support@nextgenachievers.com";
 

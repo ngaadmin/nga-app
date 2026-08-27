@@ -19,6 +19,10 @@ export const lessonPromptClass =
 export const lessonInstructionClass =
   "font-heading text-lg font-medium leading-snug text-[#031F82]";
 
+/** Bold call-to-action under intro copy. */
+export const lessonCtaClass =
+  "font-heading text-lg font-bold leading-snug text-[#031F82]";
+
 /** Secondary narrative body copy beneath instructions. */
 export const lessonNarrativeClass =
   "font-sans text-lg font-medium leading-relaxed text-[#1E3A5F]";
@@ -102,22 +106,31 @@ export const lessonSortCompactCircleClass = lessonCircleSizeClass;
 export const lessonSortPoolWrapClass =
   "flex flex-wrap justify-center gap-x-4 gap-y-3 sm:gap-x-5 sm:gap-y-4";
 
-export const lessonSortBoardClass = "mt-2 flex min-h-0 flex-col gap-2";
+export const lessonSortBoardClass = "mt-2 flex min-h-0 flex-1 flex-col gap-2";
 
-export const lessonSortBucketCompactClass = "min-h-[4rem] sm:min-h-[4.25rem]";
+export const lessonSortBucketCompactClass = "min-h-[8.5rem]";
 
-/** Statement-sort pool tray — all cards visible, no internal scroll. */
-export const lessonSortPoolStaticClass = "shrink-0";
+/** Statement-sort pool tray — reserved height, items do not collapse the page. */
+export const lessonSortPoolStaticClass =
+  "shrink-0 rounded-2xl bg-[#F4FAFD] px-2 py-2";
 
 /** @deprecated Statement-sort pools must not scroll — use lessonSortPoolStaticClass. */
 export const lessonSortPoolScrollClass = lessonSortPoolStaticClass;
 
-/** Vertical stack of draggable statement cards (top pool section). */
-export const lessonSortStatementListClass = "flex flex-col gap-1";
+/** Two-column pool — equal cells so chips stay put while dragging/dropping. */
+export const lessonSortStatementListClass =
+  "grid grid-cols-2 gap-2 [&>*]:min-w-0";
 
-/** Lightweight draggable statement card — compact rounded rectangle. */
+/** Empty grid cell that holds pool height after an item is placed. */
+export const lessonSortPoolSlotPlaceholderClass = "min-h-[3rem] w-full";
+
+/** Compact emoji inside statement-sort pool/placed cards. */
+export const lessonSortStatementEmojiClass =
+  "shrink-0 text-[1.25rem] leading-none";
+
+/** Draggable pool chip — full grid cell, large enough for kids to grab. */
 export const lessonSortStatementCardClass =
-  "flex w-full cursor-grab touch-none select-none items-center justify-center gap-2 rounded-2xl border border-[#BDE9FB] bg-white px-2.5 py-2 text-center font-heading text-base font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.99]";
+  "flex min-h-[3rem] w-full cursor-grab touch-none select-none items-center justify-center gap-1.5 rounded-xl border border-[#BDE9FB] bg-white px-2 py-2 text-center font-heading text-sm font-semibold leading-snug text-[#031F82] shadow-sm transition-transform active:cursor-grabbing active:scale-[0.99]";
 
 /** Horizontal row inside priced sort cards — icon left, text column right. */
 export const lessonPricedItemRowClass =
@@ -139,9 +152,9 @@ export const lessonSpentTotalItemCardClass =
 export const lessonSpentTotalItemPlacedClass =
   "flex min-h-[3rem] items-center rounded-xl border border-[#BDE9FB]/80 bg-white px-3 py-2 font-heading text-base font-medium leading-snug text-[#031F82] sm:min-h-[3.25rem] sm:py-2.5";
 
-/** Compact read-only card inside a bucket after drop. */
+/** Compact read-only card inside a bucket after drop — no nested outline. */
 export const lessonSortStatementPlacedClass =
-  "rounded-xl border border-[#BDE9FB]/80 bg-white/90 px-2 py-1.5 text-center font-heading text-base font-medium leading-snug text-[#031F82]";
+  "flex min-h-[2.75rem] w-full items-center justify-center rounded-xl bg-white/85 px-2 py-1.5 text-center font-heading text-sm font-semibold leading-snug text-[#031F82]";
 
 export type LessonSortBucketTone = SortBucketTone;
 
@@ -149,13 +162,13 @@ const lessonSortBucketToneSurfaceClass: Record<
   LessonSortBucketTone | "neutral",
   string
 > = {
-  rush: "bg-[#FEF2F2]/80",
-  think: "bg-[#F0FDF4]/80",
-  want: "bg-[#FFFBEB]/80",
-  need: "bg-[#F0F9FF]/80",
-  short: "bg-[#FFF7ED]/80",
-  long: "bg-[#ECFDF5]/80",
-  neutral: "bg-[#F7FBFF]/70",
+  rush: "bg-[#FEE2E2]",
+  think: "bg-[#DCFCE7]",
+  want: "bg-[#FEF3C7]",
+  need: "bg-[#E0F2FE]",
+  short: "bg-[#FFEDD5]",
+  long: "bg-[#D1FAE5]",
+  neutral: "bg-[#DCEFF9]",
 };
 
 const lessonSortBucketToneHeaderClass: Record<
@@ -398,11 +411,13 @@ export const lessonHoldButtonCompleteClass =
 
 export const LESSON_CASH_IN_LABEL = "[ CASH IN YOUR POINTS ]";
 
-export const lessonSubmitAnswerClass =
-  "mx-auto flex h-12 w-full max-w-xs items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold normal-case tracking-normal text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
-
-export const lessonNextButtonClass =
+const LESSON_PRIMARY_ACTION_CLASS =
   "mx-auto flex h-12 w-full max-w-md items-center justify-center rounded-full border-2 border-[#099FB8] bg-[#0CC1E0] px-6 py-3 text-center font-heading text-lg font-semibold normal-case tracking-normal text-[#031F82] shadow-md transition-all hover:brightness-[1.03] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40";
+
+export const lessonNextButtonClass = LESSON_PRIMARY_ACTION_CLASS;
+
+/** Rank-order submit matches the pinned Next control in the lesson footer. */
+export const lessonSubmitAnswerClass = LESSON_PRIMARY_ACTION_CLASS;
 
 // ─── Layout surfaces ─────────────────────────────────────────────────────────
 
@@ -411,7 +426,7 @@ export const lessonCardClass =
 
 export const lessonGameBoardClass = "mt-2 space-y-2";
 
-export const lessonScreenFillClass = "flex min-h-0 flex-1 flex-col";
+export const lessonScreenFillClass = "flex h-full min-h-full flex-1 flex-col";
 
 export const lessonGameAreaClass = "mt-1 flex min-h-0 flex-1 flex-col";
 
@@ -453,7 +468,15 @@ export const lessonWrongSelectionChipClass =
   "border-2 border-[#E11D48] bg-[#FFF1F2] shadow-none ring-2 ring-[#E11D48]/35";
 
 /** Neutral bucket surface for statement-sort (no rush/think red/green tints). */
-export const lessonSortBucketNeutralSurfaceClass = "bg-[#F7FBFF]/70";
+export const lessonSortBucketNeutralSurfaceClass = "bg-[#EEF6FC]";
+
+/** Destination bucket well — visible tinted drop zone, no dashed nested frame. */
+export const lessonSortBucketWellClass =
+  "min-h-[9.5rem] rounded-2xl px-2 py-2 ring-1 ring-black/[0.06]";
+
+/** Two equal destination columns — long labels wrap inside, never stretch the grid. */
+export const lessonSortBucketRowClass =
+  "grid min-h-0 min-w-0 flex-1 grid-cols-2 items-stretch gap-2 [&>*]:min-h-0 [&>*]:min-w-0";
 
 /** Soft drop column / well — fill + label, no dashed outer box. */
 export const lessonDropWellClass =
@@ -467,23 +490,31 @@ export const lessonMatchConnectorSpacerClass = "w-4 shrink-0";
 // ─── Reveal buckets & placeholders ───────────────────────────────────────────
 
 export const lessonRevealBucketClass =
-  "rounded-3xl border-2 border-transparent bg-[#F7FBFF]/55 p-4 transition-colors";
+  "min-h-[9rem] min-w-0 rounded-2xl bg-[#DCEFF9] px-3 py-3 ring-1 ring-black/[0.06] transition-colors";
+
+/**
+ * Viewport-capped scene height so illustration + options + footer fit on phones.
+ * ~40% of the old 220px cap on a 390×844 screen; shrinks further on short viewports.
+ */
+export const LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS =
+  "max-h-[calc(clamp(4.25rem,14svh,6.75rem)*var(--lesson-illustration-scale,1))]";
 
 /** Shared layout for top-of-screen lesson media — no border, background, or shadow. */
 export const lessonIllustrationMediaFrameClass =
-  "mx-auto mb-3 w-full min-w-0 max-w-full shrink-0 px-2 py-2 sm:max-w-[16rem]";
+  "mx-auto mb-1 w-full min-w-0 max-w-full shrink-0 px-1 py-0 sm:max-w-[14rem]";
 
-/** Modest scene slot below lesson chrome — fixed min-height for layout stability. */
+/** Modest scene slot below lesson chrome — compact fallback when no image is loaded. */
 export const lessonIllustrationSlotClass = cn(
   lessonIllustrationMediaFrameClass,
   "flex flex-col items-center justify-center text-center",
-  "h-[3rem] min-h-[3rem] max-w-[10rem] sm:h-[3.25rem] sm:max-w-[11rem]",
+  "h-[2.75rem] min-h-0 max-w-[9rem] sm:h-[3rem] sm:max-w-[10rem]",
 );
 
 /** Registry image — frameless, sits directly on the lesson background. */
 export const lessonIllustrationImageClass = cn(
   lessonIllustrationMediaFrameClass,
-  "block h-auto max-h-[220px] min-h-[3rem] border-0 bg-transparent shadow-none outline-none",
+  "block h-auto min-h-0 w-auto max-w-[min(100%,11rem)] border-0 bg-transparent shadow-none outline-none",
+  LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS,
   "object-contain object-center",
 );
 

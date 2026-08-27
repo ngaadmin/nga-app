@@ -194,6 +194,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     itemEmoji: "🎁",
     itemSize: "lg",
     coinCount: 1,
+    showZoneLabels: false,
     targetIllustrationId: "senna-celebrating",
     targetIllustrationAlt: "Senna receiving a birthday gift",
     sourceEmptyMessage: "Gift delivered!",
@@ -214,6 +215,9 @@ const M1_L2_EXPLORER_OVERRIDES: ScreenOverrideMap = {
     wrongError: "Nope! That cash is already gone.",
   },
   "want-vs-need-sort": {
+    intro:
+      "Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy.",
+    cta: "Help Lars identify which items are 'Things he wants' or 'Things he needs'",
     items: [
       {
         id: "case",

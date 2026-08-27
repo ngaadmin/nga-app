@@ -46,6 +46,7 @@ export function DragToTargetScreen({
         }
         targetImagePlaceholder={screen.targetImagePlaceholder}
         sourceEmptyMessage={screen.sourceEmptyMessage}
+        showZoneLabels={screen.showZoneLabels}
         onComplete={handleComplete}
         onSuccess={handleSuccess}
         onMiss={handleMismatch}

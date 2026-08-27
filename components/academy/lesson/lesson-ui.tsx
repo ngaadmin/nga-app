@@ -19,12 +19,14 @@ import {
   lessonIconOptionStackClass,
   lessonIconTapSelectedClass,
   lessonSortBucketActiveClass,
-  lessonSortBucketCompactClass,
   lessonSortBucketErrorClass,
   lessonSortBucketHeaderClass,
   lessonSortBucketSurfaceClass,
+  lessonSortBucketRowClass,
+  lessonSortBucketWellClass,
   lessonSortPoolStaticClass,
   lessonSortStatementCardClass,
+  lessonSortStatementEmojiClass,
   lessonSortStatementListClass,
   lessonSortStatementPlacedClass,
   lessonPricedItemRowClass,
@@ -44,6 +46,7 @@ import {
   lessonSequenceStepCardClass,
   lessonSequenceStepPlacedClass,
   lessonCircleSizeClass,
+  lessonCtaClass,
   lessonInstructionClass,
   lessonIntroClass,
   lessonMatchColumnHeaderGridClass,
@@ -54,7 +57,6 @@ import {
   lessonSpentTotalBarCompleteClass,
   lessonSpentTotalAmountClass,
   lessonSpentTotalCaptionClass,
-  lessonSortBucketNeutralSurfaceClass,
   lessonSuccessMessageClass,
   lessonSortItemEmojiClass,
   lessonWrongSelectionChipClass,
@@ -106,6 +108,7 @@ type LessonScreenCopyProps = {
   title?: string;
   intro?: string;
   prompt?: string;
+  cta?: string;
   emphasizeInstruction?: boolean;
 };
 
@@ -114,11 +117,13 @@ export function resolveLessonScreenCopy({
   title,
   intro,
   prompt,
+  cta,
   emphasizeInstruction,
 }: LessonScreenCopyProps) {
   return {
     title,
     body: intro ?? prompt ?? "",
+    cta,
     emphasizeInstruction: emphasizeInstruction === true,
   };
 }
@@ -127,6 +132,7 @@ type LessonScreenIntroProps = {
   title?: string;
   intro?: string;
   prompt?: string;
+  cta?: string;
   emphasizeInstruction?: boolean;
   className?: string;
 };
@@ -136,6 +142,7 @@ export function LessonScreenIntro({
   title,
   intro,
   prompt,
+  cta,
   emphasizeInstruction = false,
   className,
 }: LessonScreenIntroProps) {
@@ -143,6 +150,7 @@ export function LessonScreenIntro({
     title,
     intro,
     prompt,
+    cta,
     emphasizeInstruction,
   });
   const introClass = lessonIntroClass(emphasize);
@@ -152,6 +160,9 @@ export function LessonScreenIntro({
       {title ? <p className={lessonInstructionClass}>{title}</p> : null}
       {body ? (
         <p className={cn(title && "mt-2", introClass)}>{body}</p>
+      ) : null}
+      {cta ? (
+        <p className={cn((title || body) && "mt-2", lessonCtaClass)}>{cta}</p>
       ) : null}
     </div>
   );
@@ -177,6 +188,7 @@ export function LessonScreenLayout({
   intro,
   prompt,
   emphasizeInstruction,
+  cta,
   children,
   successMessage,
   errorMessage,
@@ -196,6 +208,7 @@ export function LessonScreenLayout({
           title={title}
           intro={intro}
           prompt={prompt}
+          cta={cta}
           emphasizeInstruction={emphasizeInstruction}
         />
         <div className={cn(lessonGameAreaClass, gameClassName)}>{children}</div>
@@ -219,6 +232,7 @@ export function LessonScreenLayout({
         title={title}
         intro={intro}
         prompt={prompt}
+        cta={cta}
         emphasizeInstruction={emphasizeInstruction}
       />
       {children}
@@ -404,24 +418,26 @@ type LessonSortPoolProps = LessonUiProps & {
 /** Compact drag pool tray for bucket-sort screens. */
 export function LessonSortPool({
   children,
-  label = "Items to sort",
+  label,
   emptyLabel = "All sorted!",
   isEmpty = false,
   className,
 }: LessonSortPoolProps) {
-  if (isEmpty) {
-    return (
-      <p className={cn("shrink-0 py-1 text-center", lessonColumnLabelSuccessClass)}>
-        {emptyLabel}
-      </p>
-    );
-  }
-
   return (
-    <div className={cn("shrink-0", className)}>
-      <LessonColumnLabel tone="muted">{label}</LessonColumnLabel>
-      <div className={cn(lessonSortPoolStaticClass, "mt-1")}>
+    <div className={cn("relative shrink-0", className)}>
+      {label ? <LessonColumnLabel tone="muted">{label}</LessonColumnLabel> : null}
+      <div className={cn(lessonSortPoolStaticClass, label && "mt-1")}>
         <div className={lessonSortStatementListClass}>{children}</div>
+        {isEmpty ? (
+          <p
+            className={cn(
+              "pointer-events-none absolute inset-0 flex items-center justify-center",
+              lessonColumnLabelSuccessClass,
+            )}
+          >
+            {emptyLabel}
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -452,7 +468,7 @@ export const LessonSortStatementCard = forwardRef<
       className={cn(
         lessonSortStatementCardClass,
         usePricedRow && "justify-start text-left",
-        isDragging && "opacity-40",
+        isDragging && "invisible",
         className,
       )}
       style={{ touchAction: "none", ...props.style }}
@@ -463,11 +479,11 @@ export const LessonSortStatementCard = forwardRef<
       ) : (
         <>
           {emoji ? (
-            <span className={lessonSortItemEmojiClass} aria-hidden>
+            <span className={lessonSortStatementEmojiClass} aria-hidden>
               {emoji}
             </span>
           ) : null}
-          <span className="min-w-0 flex-1 text-center leading-snug">{label}</span>
+          <span className="min-w-0 leading-snug">{label}</span>
           {price !== undefined ? (
             <span className={lessonPricedItemPriceClass}>${price}</span>
           ) : null}
@@ -498,9 +514,9 @@ export function LessonSortStatementPlaced({
       {usePricedRow ? (
         <LessonPricedSortItemContent label={label} emoji={emoji} price={price} />
       ) : (
-        <span className="flex items-center justify-center gap-1.5 text-center">
+        <span className="flex items-center justify-center gap-1 text-center">
           {emoji ? (
-            <span className={lessonSortItemEmojiClass} aria-hidden>
+            <span className={lessonSortStatementEmojiClass} aria-hidden>
               {emoji}
             </span>
           ) : null}
@@ -545,13 +561,13 @@ export function LessonPricedSortItemContent({
   );
 }
 
-/** Two-column bucket drop zone row — pinned below the scrollable pool. */
+/** Two-column destination buckets — pinned below the compact pool. */
 export function LessonSortBucketRow({
   children,
   className,
 }: LessonUiProps) {
   return (
-    <div className={cn("grid min-h-0 shrink-0 grid-cols-2 gap-2.5", className)}>
+    <div className={cn(lessonSortBucketRowClass, className)}>
       {children}
     </div>
   );
@@ -564,8 +580,6 @@ type LessonSortBucketProps = HTMLAttributes<HTMLDivElement> & {
   icon?: string;
   active?: boolean;
   error?: boolean;
-  /** Statement-sort: larger centred neutral header, no tone colours on title/icon. */
-  prominentNeutralHeader?: boolean;
   /** Grow to fill remaining vertical space in statement-sort layouts. */
   fillHeight?: boolean;
 };
@@ -580,7 +594,6 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       icon,
       active = false,
       error = false,
-      prominentNeutralHeader = false,
       fillHeight = false,
       children,
       className,
@@ -594,48 +607,32 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       <div
         ref={ref}
         className={cn(
-          "flex flex-col rounded-2xl border-2 border-transparent transition-colors",
-          prominentNeutralHeader ? "p-2 sm:p-2.5" : "p-2.5 sm:p-3",
-          fillHeight
-            ? "min-h-0 flex-1"
-            : lessonSortBucketCompactClass,
-          prominentNeutralHeader
-            ? lessonSortBucketNeutralSurfaceClass
-            : lessonSortBucketSurfaceClass(bucketId, tone),
-          active && lessonSortBucketActiveClass,
-          error && lessonSortBucketErrorClass,
+          "flex h-full min-h-0 min-w-0 flex-col gap-1.5",
+          fillHeight && "flex-1",
           className,
         )}
         {...props}
       >
         <div
           className={cn(
-            prominentNeutralHeader
-              ? cn(
-                  "flex flex-col items-center justify-center gap-0.5 text-center",
-                  lessonColumnLabelInkClass,
-                )
-              : cn(
-                  "flex items-center justify-center gap-1.5 text-center",
-                  lessonColumnLabelClass,
-                  lessonSortBucketHeaderClass(bucketId, tone),
-                ),
+            "flex h-[4.25rem] shrink-0 items-center justify-center gap-1 px-1 text-center font-heading text-[0.8125rem] font-extrabold uppercase tracking-wide sm:text-sm",
+            lessonSortBucketHeaderClass(bucketId, tone),
           )}
         >
           {headerIcon ? (
-            <span className={lessonSortItemEmojiClass} aria-hidden>
+            <span className={lessonSortStatementEmojiClass} aria-hidden>
               {headerIcon}
             </span>
           ) : null}
-          <span className={cn("leading-tight", prominentNeutralHeader && "w-full")}>
-            {label}
-          </span>
+          <span className="min-w-0 text-balance leading-tight">{label}</span>
         </div>
         <div
           className={cn(
-            "mt-1.5 flex flex-col gap-1",
-            fillHeight && "min-h-0 flex-1",
-            prominentNeutralHeader ? "overflow-visible" : "min-h-0 flex-1 gap-1.5 overflow-y-auto",
+            "flex flex-1 flex-col items-stretch gap-1.5 overflow-y-auto transition-colors",
+            lessonSortBucketWellClass,
+            lessonSortBucketSurfaceClass(bucketId, tone),
+            active && lessonSortBucketActiveClass,
+            error && lessonSortBucketErrorClass,
           )}
         >
           {children}

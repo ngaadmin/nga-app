@@ -223,7 +223,7 @@ export function LessonRankOrderGame({
               ref={(node) => {
                 rowRefs.current[itemId] = node;
               }}
-              className="flex items-center gap-2.5"
+              className="flex w-full min-w-0 items-stretch gap-2.5"
             >
               <span className={lessonRankOrderNumberClass} aria-hidden>
                 {index + 1}
@@ -263,7 +263,7 @@ export function LessonRankOrderGame({
         })}
       </div>
       {!rankSubmitted ? (
-        <div className="mt-3 flex justify-center">
+        <div className="mt-3 flex w-full justify-center">
           <button
             type="button"
             onClick={(event) => {

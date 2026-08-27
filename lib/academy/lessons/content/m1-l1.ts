@@ -22,7 +22,7 @@ const M1_L1_META = {
 const M1_L1_REWARDS = {
   skillSlug: "stop-and-think",
   achievementSkillSlug: "stop-and-think",
-  xpReward: 150,
+  xpReward: 100,
   perfectStreakBonus: 50,
 } as const;
 
@@ -106,6 +106,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "countdown-trap",
+    illustrationId: "holly-working",
     prompt:
       'Holly\'s playing online and a game alert flashes: "Limited time - new skin 70% off! 15 MINUTES LEFT!" Why is the game rushing her?',
     optionA: {
@@ -124,7 +125,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     type: "hold-to-fill",
     id: "impulse-pause",
     narrative:
-      "Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, but silencing the chat alerts.",
+      "Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, by silencing the chat alerts.",
     holdLabel: "🔕 HOLD TO SILENCE 🔕",
     frozenLabel: "🔕 SILENCED 🔕",
     successMessage: "Thank you! Holly's had time to think.",
@@ -141,7 +142,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
   },
   teenCompletionScreen({
     skillTitle: "Catch Impulse Spending",
-    xpReward: 50,
+    xpReward: M1_L1_REWARDS.xpReward,
     medalId: "medal-skill1-unlocked",
   }),
 ];
@@ -298,6 +299,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     ],
   },
   "countdown-trap": {
+    illustrationId: "aiden-working",
     prompt:
       'Later that day Aiden receives a text message: "Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!" Why is the offer rushing him?',
     optionA: {
@@ -328,11 +330,6 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
 };
 
-const TEEN_REWARDS = {
-  xpReward: 50,
-  perfectStreakBonus: 0,
-} as const;
-
 export const M1_L1_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L1_META,
   rewards: M1_L1_REWARDS,
@@ -344,12 +341,18 @@ export const M1_L1_LESSON_DEFINITION: CohortLessonDefinition = {
     },
     pathfinder: {
       characterName: "Holly",
-      rewards: TEEN_REWARDS,
+      screenOverrides: {
+        "short-fun-reality": {
+          illustrationId: "holly-working",
+        },
+        "impulse-pause": {
+          cta: "Tap and hold the button to give Holly time to think.",
+        },
+      },
     },
     maverick: {
       characterName: "Aiden",
       screenOverrides: MAVERICK_OVERRIDES,
-      rewards: TEEN_REWARDS,
     },
   },
 };

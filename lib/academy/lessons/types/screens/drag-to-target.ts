@@ -29,6 +29,8 @@ export type DragToTargetScreenConfig = WithDeclarative<{
   };
   /** Shown in the source column after a successful drop. */
   sourceEmptyMessage?: string;
+  /** Hide GIFT/SENNA-style column labels when the art already names the items. Default true. */
+  showZoneLabels?: boolean;
   successMessage: string;
   emphasizeInstruction?: boolean;
 }>;

@@ -6,7 +6,9 @@ import {
   lessonHoldButtonClass,
   lessonHoldButtonCompleteClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonScreenLayout,
+} from "@/components/academy/lesson/lesson-ui";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import {
   signalLessonIncorrectAnswer,
@@ -90,8 +92,8 @@ export function HoldToFillScreen({
   );
 
   return (
-    <LessonScreenLayout intro={screen.narrative} successMessage={completeMessage} fill>
-      <div className="relative flex flex-1 flex-col items-center justify-center">
+    <LessonScreenLayout intro={screen.narrative} cta={screen.cta}>
+      <div className="mt-5 flex flex-col items-center gap-3">
         <button
           type="button"
           disabled={complete}
@@ -107,19 +109,34 @@ export function HoldToFillScreen({
         >
           {complete ? screen.frozenLabel : screen.holdLabel}
         </button>
-        <div className="mt-3 h-3 w-full max-w-xs overflow-hidden rounded-full border border-[#BDE9FB]/60 bg-[#E8F7FC]">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-[#0CC1E0] to-[#099FB8]"
-            style={{
-              width: `${progress * 100}%`,
-              transition: isHolding ? "none" : "width 150ms ease-out",
-            }}
-          />
-        </div>
+        {complete ? null : (
+          <div className="h-3 w-full max-w-xs overflow-hidden rounded-full border border-[#BDE9FB]/60 bg-[#E8F7FC]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#0CC1E0] to-[#099FB8]"
+              style={{
+                width: `${progress * 100}%`,
+                transition: isHolding ? "none" : "width 150ms ease-out",
+              }}
+            />
+          </div>
+        )}
         {hint ? (
-          <p className="mt-2 font-sans text-sm font-medium text-[#1E3A5F]/80">
+          <p className="font-sans text-sm font-medium text-[#1E3A5F]/80">
             {hint}
           </p>
+        ) : null}
+        {complete && completeMessage?.trim() ? (
+          <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl bg-[#DCFCE7] px-4 py-3">
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#16A34A] text-sm font-extrabold text-white"
+              aria-hidden
+            >
+              ✓
+            </span>
+            <p className="flex-1 font-sans text-base font-medium leading-snug text-[#031F82]">
+              {completeMessage}
+            </p>
+          </div>
         ) : null}
       </div>
     </LessonScreenLayout>

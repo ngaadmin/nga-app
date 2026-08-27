@@ -15,13 +15,15 @@ export type LessonIllustration = {
   alt?: string;
   /** Public URL path from the illustration registry (e.g. `/assets/illustrations/...`). */
   src?: string;
-  /** Multiplier vs the default slot max-height (1 = default). Use 0.6 for ~40% smaller. */
+  /** Multiplier vs the viewport-capped slot max-height (1 = default). Use 0.6 to shrink further. */
   scale?: number;
 };
 
 export type DeclarativeScreenFields = {
   authoring?: ScreenAuthoringMeta;
   advance?: AdvancePolicy;
+  /** Bold call-to-action line under the intro/prompt. */
+  cta?: string;
   /** Optional scene illustration shown below lesson chrome, above prompt copy. */
   illustration?: LessonIllustration;
   /** Registry key for a reusable asset under `public/assets/illustrations/`. */

@@ -126,21 +126,12 @@ const LESSON_SCREEN_RENDERERS: Partial<
       onDismissPersistentError={onDismissPersistentError}
     />
   ),
-  "bucket-sort": ({
-    screen,
-    screenIndex,
-    flow,
-    rewards,
-    onPersistentError,
-    onDismissPersistentError,
-  }) => (
+  "bucket-sort": ({ screen, screenIndex, flow, rewards }) => (
     <BucketSortScreen
       screen={screen as Extract<ScreenConfig, { type: "bucket-sort" }>}
       screenIndex={screenIndex}
       flow={flow}
       rewards={rewards}
-      onPersistentError={onPersistentError}
-      onDismissPersistentError={onDismissPersistentError}
     />
   ),
   "drag-to-target": ({ screen, screenIndex, flow, rewards }) => (

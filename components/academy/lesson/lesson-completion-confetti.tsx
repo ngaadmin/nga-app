@@ -68,7 +68,7 @@ export function LessonCompletionConfetti() {
       canvas.height = window.innerHeight;
     };
     resize();
-    let particles = createParticles(canvas.width, canvas.height);
+    const particles = createParticles(canvas.width, canvas.height);
     window.addEventListener("resize", resize);
 
     const tick = (now: number) => {

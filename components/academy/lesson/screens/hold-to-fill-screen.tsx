@@ -115,7 +115,7 @@ export function HoldToFillScreen({
           style={{ width: `${progress * 100}%` }}
           aria-hidden
         />
-        <span className="relative z-[1]">
+        <span className="relative z-raised">
           {complete ? screen.frozenLabel : screen.holdLabel}
         </span>
       </button>

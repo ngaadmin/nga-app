@@ -8,14 +8,11 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
-  lessonEyebrowClass,
-  lessonInstructionClass,
   lessonIntroClass,
   lessonRankOrderCardClass,
-  lessonRankOrderNumberClass,
-  lessonOptionTextClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { cn } from "@/lib/utils/cn";
 import type { RankOrderItem } from "@/lib/academy/lessons/types/screens/rank-order";
 
@@ -76,6 +73,13 @@ export function LessonRankOrderGame({
   );
   const [rankSubmitted, setRankSubmitted] = useState(false);
   const [dragRankId, setDragRankId] = useState<ItemId | null>(null);
+  const [dragGhost, setDragGhost] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    label: string;
+    index: number;
+  } | null>(null);
 
   const rankOrderRef = useRef(rankOrder);
   rankOrderRef.current = rankOrder;
@@ -98,6 +102,7 @@ export function LessonRankOrderGame({
   const endDrag = useCallback(() => {
     releasePointerCapture();
     setDragRankId(null);
+    setDragGhost(null);
     lastReorderYRef.current = null;
   }, [releasePointerCapture]);
 
@@ -157,10 +162,22 @@ export function LessonRankOrderGame({
     captureTarget.setPointerCapture(event.pointerId);
     lastReorderYRef.current = event.clientY;
     setDragRankId(itemId);
+    setDragGhost({
+      x: event.clientX - 40,
+      y: event.clientY - 24,
+      width: event.currentTarget.getBoundingClientRect().width,
+      label: items.find((entry) => entry.id === itemId)?.label ?? "",
+      index: rankOrderRef.current.indexOf(itemId),
+    });
   };
 
   const handleBoardPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!dragRankId || activePointerIdRef.current !== event.pointerId) return;
+    setDragGhost((current) =>
+      current
+        ? { ...current, x: event.clientX - 40, y: event.clientY - 24 }
+        : null,
+    );
     reorderDraggedRank(event.clientY);
   };
 
@@ -169,16 +186,15 @@ export function LessonRankOrderGame({
     endDrag();
   };
 
-  const getRankSubmitError = (order: ItemId[]): string => {
+  const getRankSubmitError = (order: ItemId[]): string | undefined => {
     for (let i = 0; i < correctOrder.length; i += 1) {
       if (order[i] !== correctOrder[i]) {
         const wrongId = order[i];
-        if (wrongId && errors[wrongId]) return errors[wrongId]!;
+        if (wrongId && errors[wrongId]?.trim()) return errors[wrongId]!.trim();
         break;
       }
     }
-    const firstError = Object.values(errors)[0];
-    return firstError ?? "Not quite! Try again!";
+    return Object.values(errors).find((entry) => entry?.trim())?.trim();
   };
 
   const handleSubmit = () => {
@@ -196,19 +212,15 @@ export function LessonRankOrderGame({
     }
 
     onMistake();
-    onPersistentError?.(getRankSubmitError(rankOrder));
+    onPersistentError?.(getRankSubmitError(rankOrder) ?? "");
   };
 
   return (
     <>
-      <p className={lessonIntroClass()}>{intro}</p>
-      {dragHint && dragHint !== intro ? (
-        <p className={cn("mt-2", lessonInstructionClass)}>{dragHint}</p>
-      ) : null}
-      <p className={lessonEyebrowClass}>{axisLabel}</p>
+      <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
       <div
         ref={boardRef}
-        className="mt-2 space-y-2"
+        className="flex flex-col gap-2"
         onPointerMove={handleBoardPointerMove}
         onPointerUp={handleBoardPointerUp}
         onPointerCancel={handleBoardPointerUp}
@@ -223,45 +235,57 @@ export function LessonRankOrderGame({
               ref={(node) => {
                 rowRefs.current[itemId] = node;
               }}
-              className="flex w-full min-w-0 items-stretch gap-2.5"
+              role="button"
+              tabIndex={rankSubmitted ? -1 : 0}
+              aria-grabbed={isDragging}
+              aria-label={`Reorder: ${item.label}`}
+              onPointerDown={(event) => handleRankPointerDown(event, itemId)}
+              onKeyDown={(event) => {
+                if (rankSubmitted) return;
+                if (event.key === "ArrowUp" && index > 0) {
+                  event.preventDefault();
+                  moveRankItem(index, index - 1);
+                }
+                if (event.key === "ArrowDown" && index < rankOrder.length - 1) {
+                  event.preventDefault();
+                  moveRankItem(index, index + 1);
+                }
+              }}
+              className={cn(
+                lessonRankOrderCardClass,
+                !rankSubmitted && "cursor-grab active:cursor-grabbing",
+                isDragging && "invisible",
+              )}
+              style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <span className={lessonRankOrderNumberClass} aria-hidden>
+              <span className="text-center font-extrabold text-[#031F82]" aria-hidden>
                 {index + 1}
               </span>
-              <div
-                role="button"
-                tabIndex={rankSubmitted ? -1 : 0}
-                aria-grabbed={isDragging}
-                aria-label={`Reorder: ${item.label}`}
-                onPointerDown={(event) => handleRankPointerDown(event, itemId)}
-                onKeyDown={(event) => {
-                  if (rankSubmitted) return;
-                  if (event.key === "ArrowUp" && index > 0) {
-                    event.preventDefault();
-                    moveRankItem(index, index - 1);
-                  }
-                  if (event.key === "ArrowDown" && index < rankOrder.length - 1) {
-                    event.preventDefault();
-                    moveRankItem(index, index + 1);
-                  }
-                }}
-                className={cn(
-                  lessonRankOrderCardClass,
-                  !rankSubmitted && "cursor-grab active:cursor-grabbing",
-                  rankSubmitted && "border-[#22C55E] bg-[#DCFCE7]/50",
-                  isDragging &&
-                    "z-raised border-[#066B7C] bg-[#099FB8]/25 shadow-[inset_0_4px_12px_rgba(3,31,130,0.2)]",
-                )}
-                style={{ touchAction: rankSubmitted ? "auto" : "none" }}
-              >
-                <span className={cn(lessonOptionTextClass, "w-full px-1")}>
-                  {item.label}
-                </span>
-              </div>
+              <span>{item.label}</span>
             </div>
           );
         })}
       </div>
+      {dragGhost ? (
+        <OverlayPortal className="overflow-visible">
+          <div
+            className={cn(
+              lessonRankOrderCardClass,
+              "pointer-events-none fixed z-overlay shadow-[0_10px_24px_rgba(3,31,130,0.18)]",
+            )}
+            style={{
+              left: dragGhost.x,
+              top: dragGhost.y,
+              width: dragGhost.width,
+            }}
+          >
+            <span className="text-center font-extrabold text-[#031F82]" aria-hidden>
+              {rankOrder.indexOf(dragRankId ?? "") + 1}
+            </span>
+            <span>{dragGhost.label}</span>
+          </div>
+        </OverlayPortal>
+      ) : null}
       {!rankSubmitted ? (
         <div className="mt-3 flex w-full justify-center">
           <button

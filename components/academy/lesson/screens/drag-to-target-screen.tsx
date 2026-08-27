@@ -15,18 +15,17 @@ export function DragToTargetScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<DragToTargetScreenConfig>) {
-  const { completeMessage, handleComplete, handleSuccess, handleMismatch } =
+  const { showSuccess, handleComplete, handleSuccess, handleMismatch } =
     useLessonScreenFlow({
       screenIndex,
       flow,
-      successMessage: screen.successMessage,
     });
 
   return (
     <LessonScreenLayout
       intro={screen.intro}
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      successMessage={completeMessage}
+      success={showSuccess}
     >
       <LessonDragToTargetGame
         sourceLabel={screen.sourceLabel}

@@ -12,20 +12,18 @@ export function AllocationSliderScreen({
   flow,
 }: StandardScreenProps<AllocationSliderScreenConfig>) {
   const {
-    completeMessage,
+    showSuccess,
     handleComplete,
     handleIncomplete,
     handleSuccess,
   } = useLessonScreenFlow({
     screenIndex,
     flow,
-    successMessage: screen.successMessage,
   });
 
   return (
     <LessonScreenLayout
-      successMessage={completeMessage}
-      reserveSuccessSlot={Boolean(screen.successMessage)}
+      success={showSuccess}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       fill
     >

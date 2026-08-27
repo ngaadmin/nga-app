@@ -2,26 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  lessonEyebrowClass,
-  lessonIconGridClass,
-  resolveChoiceVariant,
-  usesNeutralTapFeedback,
+  lessonItemChipClass,
+  lessonItemOrbClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  LessonIconOption,
-  LessonIconReveal,
-  LessonRevealBucket,
-  LessonScreenLayout,
-} from "@/components/academy/lesson/lesson-ui";
+import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import type { TapRevealScreenConfig } from "@/lib/academy/lessons/types";
-import {
-  celebrateLessonCorrectAnswer,
-  signalLessonIncorrectAnswer,
-} from "@/lib/academy/lessons/utils";
+import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
-
-/** Locked global rule — tap-reveal always shows emoji with label below (all cohorts). */
-const TAP_REVEAL_ITEM_DISPLAY = "emoji-label" as const;
 
 function shuffleItems<T>(items: readonly T[]): T[] {
   const next = [...items];
@@ -30,6 +17,10 @@ function shuffleItems<T>(items: readonly T[]): T[] {
     [next[i], next[j]] = [next[j]!, next[i]!];
   }
   return next;
+}
+
+function itemGlyph(label: string, emoji?: string) {
+  return emoji?.trim() || label.trim().charAt(0) || "?";
 }
 
 export function TapRevealScreen({
@@ -42,36 +33,27 @@ export function TapRevealScreen({
     () => shuffleItems(screen.items),
     [screen.items],
   );
-  const neutralSelection = usesNeutralTapFeedback(screen.selectionFeedback);
 
   useEffect(() => {
-    if (screen.items.length === 0 && screen.advance?.mode === "auto-ready") {
+    if (screen.items.length === 0) {
       flow.markScreenReady(screenIndex);
       return;
     }
-    if (screen.items.length > 0 && tapped.size === screen.items.length) {
+    if (tapped.size === screen.items.length) {
+      // Reveal-only complete: unlock Next. Do not score, flash, or take a life.
       flow.markScreenReady(screenIndex);
     }
-  }, [flow, screen.advance?.mode, screen.items.length, screenIndex, tapped.size]);
+  }, [flow, screen.items.length, screenIndex, tapped.size]);
 
   const handleTap = (itemId: string) => {
     const item = screen.items.find((entry) => entry.id === itemId);
     if (!item || tapped.has(itemId)) return;
-
-    const bucketTone = screen.buckets.find((bucket) => bucket.id === item.bucket)?.tone;
-    const isShortTermSpend = bucketTone === "short" || bucketTone === "want";
 
     setTapped((current) => {
       const next = new Set(current);
       next.add(itemId);
       return next;
     });
-
-    if (isShortTermSpend) {
-      signalLessonIncorrectAnswer(flow.flashScreen);
-    } else {
-      celebrateLessonCorrectAnswer(flow.flashScreen);
-    }
   };
 
   if (screen.items.length === 0) {
@@ -79,7 +61,6 @@ export function TapRevealScreen({
       <LessonScreenLayout
         intro={screen.intro}
         emphasizeInstruction={screen.emphasizeInstruction === true}
-        successMessage={screen.successMessage}
       >
         {null}
       </LessonScreenLayout>
@@ -90,59 +71,53 @@ export function TapRevealScreen({
     <LessonScreenLayout
       intro={screen.intro}
       emphasizeInstruction={screen.emphasizeInstruction === true}
+      fill
     >
-      <div className={lessonIconGridClass}>
-        {displayItems
-          .filter((item) => !tapped.has(item.id))
-          .map((item) => {
-          return (
-            <LessonIconOption
-              key={item.id}
-              label={item.label}
-              emoji={item.emoji}
-              display={TAP_REVEAL_ITEM_DISPLAY}
-              selectionVariant="neutral"
-              onClick={() => handleTap(item.id)}
-            />
-          );
-        })}
-      </div>
-
-      <div className="mt-6 grid grid-cols-2 items-stretch gap-3 [&>*]:min-w-0">
-        {screen.buckets.map((bucket) => {
-          const revealed = screen.items.filter(
-            (item) => item.bucket === bucket.id && tapped.has(item.id),
-          );
-
-          return (
-            <LessonRevealBucket key={bucket.id}>
-              <p className={lessonEyebrowClass}>{bucket.label}</p>
-              <ul className="mt-2 flex flex-wrap justify-center gap-3">
-                {revealed.map((item) => {
-                  const bucketTone = bucket.tone;
-                  const isShortTermSpend =
-                    bucketTone === "short" || bucketTone === "want";
-
-                  return (
-                    <li key={item.id}>
-                      <LessonIconReveal
-                        label={item.label}
-                        emoji={item.emoji}
-                        display={TAP_REVEAL_ITEM_DISPLAY}
-                        selected
-                        selectionVariant={
-                          neutralSelection
-                            ? "neutral"
-                            : resolveChoiceVariant(true, !isShortTermSpend)
-                        }
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            </LessonRevealBucket>
-          );
-        })}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="grid auto-rows-[4.5rem] grid-cols-2 content-start gap-x-6 gap-y-5 py-2">
+          {displayItems.map((item) => (
+            <div key={item.id} className="flex min-h-[72px] items-center">
+              <button
+                type="button"
+                onClick={() => handleTap(item.id)}
+                className={cn(
+                  lessonItemChipClass,
+                  tapped.has(item.id) && "invisible pointer-events-none",
+                )}
+              >
+                <span className={lessonItemOrbClass} aria-hidden>
+                  {itemGlyph(item.label, item.emoji)}
+                </span>
+                <span>{item.label}</span>
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="mb-2.5 h-px bg-[#C5D8E6]" />
+        <div className="flex min-h-0 flex-1 gap-4">
+          {screen.buckets.map((bucket) => {
+            const revealed = screen.items.filter(
+              (item) => item.bucket === bucket.id && tapped.has(item.id),
+            );
+            return (
+              <div key={bucket.id} className="flex min-h-0 flex-1 flex-col gap-2">
+                <h3 className="m-0 font-heading text-base font-bold text-[#031F82]">
+                  {bucket.label}
+                </h3>
+                <div className="flex flex-1 flex-col gap-3.5 py-2.5">
+                  {revealed.map((item) => (
+                    <div key={item.id} className={lessonItemChipClass}>
+                      <span className={lessonItemOrbClass} aria-hidden>
+                        {itemGlyph(item.label, item.emoji)}
+                      </span>
+                      <span>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </LessonScreenLayout>
   );

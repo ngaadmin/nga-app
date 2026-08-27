@@ -18,10 +18,10 @@
  * }
  * ```
  *
- * @example Binary-choice screen (M1-L1 Screen 5)
+ * @example Multiple-choice screen (M1-L1 Screen 5)
  * ```ts
  * {
- *   type: "binary-choice",
+ *   type: "multiple-choice",
  *   id: "countdown-trap",
  *   prompt: 'Holly\'s playing online and a game alert flashes...',
  *   optionA: { label: "To stop her from pausing...", isCorrect: true },

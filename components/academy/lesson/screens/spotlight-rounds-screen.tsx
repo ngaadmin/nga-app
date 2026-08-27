@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
-  lessonEyebrowClass,
+  lessonPromptClass,
   resolveChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonIconOption,
   LessonScreenLayout,
+  lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
@@ -42,6 +44,9 @@ export function SpotlightRoundsScreen({
 }) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [roundCorrect, setRoundCorrect] = useState(false);
+  const showSuccess = useLessonSuccessFlash(roundCorrect);
   const recoveryTimeoutRef = useRef<number | null>(null);
   const round = screen.rounds[roundIndex];
 
@@ -73,17 +78,22 @@ export function SpotlightRoundsScreen({
     if (!round || choice !== null) return;
     setChoice(which);
     onDismissError?.();
+    setError(null);
+    setRoundCorrect(false);
 
     if (which !== round.correct) {
       flow.incrementMistake();
+      setError(lessonFeedbackCopy(round.error) ?? "");
       if (onPersistentError) {
-        onPersistentError(round.error);
+        const copy = lessonFeedbackCopy(round.error);
+        if (copy) onPersistentError(copy);
       }
       signalLessonIncorrectAnswer(flow.flashScreen);
       scheduleChoiceReset();
       return;
     }
 
+    setRoundCorrect(true);
     celebrateLessonCorrectAnswer(flow.flashScreen);
     if (roundIndex + 1 >= screen.rounds.length) {
       flow.markScreenReady(screenIndex);
@@ -93,6 +103,7 @@ export function SpotlightRoundsScreen({
     recoveryTimeoutRef.current = window.setTimeout(() => {
       setRoundIndex((current) => current + 1);
       setChoice(null);
+      setRoundCorrect(false);
       recoveryTimeoutRef.current = null;
     }, FEEDBACK_RECOVERY_MS);
   };
@@ -130,13 +141,28 @@ export function SpotlightRoundsScreen({
 
   return (
     <LessonScreenLayout
-      prompt={screen.prompt}
       emphasizeInstruction={screen.emphasizeInstruction === true}
+      success={showSuccess}
+      errorMessage={error}
     >
-      <p className={cn("mt-3", lessonEyebrowClass)}>
-        {`Round ${roundIndex + 1} of ${screen.rounds.length}`}
-      </p>
-      <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2">
+      <p className={cn("mb-2.5", lessonPromptClass)}>{screen.prompt}</p>
+      <div className="mb-5 flex justify-center gap-1.5">
+        {screen.rounds.map((_, index) => (
+          <i
+            key={index}
+            className={cn(
+              "block size-2 rounded-full",
+              index === roundIndex
+                ? "bg-[#0CC1E0]"
+                : index < roundIndex
+                  ? "bg-[#031F82]"
+                  : "bg-[#BDE9FB]",
+            )}
+            aria-hidden
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
         {renderSide(sideLayout.left)}
         {renderSide(sideLayout.right)}
       </div>

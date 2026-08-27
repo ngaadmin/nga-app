@@ -39,9 +39,6 @@ type LessonSequenceSortGameProps<TStep extends string> = {
   items: readonly LessonSequenceItem<TStep>[];
   steps: readonly LessonSequenceStep<TStep>[];
   onComplete: () => void;
-  onMistake: () => void;
-  onSuccess?: () => void;
-  onWrongDrop?: (itemId: string, stepId: TStep) => void;
 };
 
 type DragState = {
@@ -54,9 +51,7 @@ type DragState = {
   height: number;
 };
 
-type PendingSideEffect<TStep extends string> =
-  | { kind: "wrong"; itemId: string; stepId: TStep }
-  | { kind: "correct"; willComplete: boolean };
+type PendingSideEffect = { kind: "correct"; willComplete: boolean };
 
 const BUCKET_DROP_HIT_PADDING_PX = 20;
 
@@ -74,9 +69,6 @@ export function LessonSequenceSortGame<TStep extends string>({
   items,
   steps,
   onComplete,
-  onMistake,
-  onSuccess,
-  onWrongDrop,
 }: LessonSequenceSortGameProps<TStep>) {
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -91,7 +83,6 @@ export function LessonSequenceSortGame<TStep extends string>({
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [activeStepId, setActiveStepId] = useState<TStep | null>(null);
-  const [errorStepId, setErrorStepId] = useState<TStep | null>(null);
   const [lockedStepIds, setLockedStepIds] = useState<ReadonlySet<TStep>>(
     () => new Set(),
   );
@@ -104,15 +95,9 @@ export function LessonSequenceSortGame<TStep extends string>({
   lockedStepIdsRef.current = lockedStepIds;
 
   const onCompleteRef = useRef(onComplete);
-  const onMistakeRef = useRef(onMistake);
-  const onSuccessRef = useRef(onSuccess);
-  const onWrongDropRef = useRef(onWrongDrop);
   onCompleteRef.current = onComplete;
-  onMistakeRef.current = onMistake;
-  onSuccessRef.current = onSuccess;
-  onWrongDropRef.current = onWrongDrop;
 
-  const pendingEffectsRef = useRef<PendingSideEffect<TStep>[]>([]);
+  const pendingEffectsRef = useRef<PendingSideEffect[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
 
   const slotRefs = useRef<Partial<Record<TStep, HTMLDivElement | null>>>({});
@@ -146,13 +131,6 @@ export function LessonSequenceSortGame<TStep extends string>({
     const effects = pendingEffectsRef.current.splice(0);
 
     for (const effect of effects) {
-      if (effect.kind === "wrong") {
-        onMistakeRef.current();
-        onWrongDropRef.current?.(effect.itemId, effect.stepId);
-        continue;
-      }
-
-      onSuccessRef.current?.();
       if (effect.willComplete) {
         onCompleteRef.current();
       }
@@ -160,7 +138,7 @@ export function LessonSequenceSortGame<TStep extends string>({
   }, []);
 
   const queueSideEffect = useCallback(
-    (effect: PendingSideEffect<TStep>) => {
+    (effect: PendingSideEffect) => {
       pendingEffectsRef.current.push(effect);
       if (flushTimeoutRef.current !== null) return;
       flushTimeoutRef.current = window.setTimeout(flushPendingEffects, 0);
@@ -203,16 +181,10 @@ export function LessonSequenceSortGame<TStep extends string>({
 
       const occupied = stepItemsRef.current[stepId] ?? [];
       if (occupied.length > 0) {
-        setErrorStepId(stepId);
-        window.setTimeout(() => setErrorStepId(null), 500);
-        queueSideEffect({ kind: "wrong", itemId, stepId });
         return;
       }
 
       if (item.bucket !== stepId) {
-        setErrorStepId(stepId);
-        window.setTimeout(() => setErrorStepId(null), 500);
-        queueSideEffect({ kind: "wrong", itemId, stepId });
         return;
       }
 
@@ -311,7 +283,6 @@ export function LessonSequenceSortGame<TStep extends string>({
           }}
           stepLabel={step.label}
           active={activeStepId === step.id}
-          error={errorStepId === step.id}
           locked={lockedStepIds.has(step.id)}
           isEmpty={!isFilled}
         >

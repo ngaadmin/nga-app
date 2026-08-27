@@ -2,7 +2,6 @@
 
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
 import { LessonSequenceSortGame } from "@/components/academy/lesson/lesson-sequence-sort-game";
-import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import type { BucketSortScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
@@ -11,25 +10,9 @@ export function BucketSortScreen({
   screen,
   screenIndex,
   flow,
-  onPersistentError,
-  onDismissPersistentError,
-}: StandardScreenProps<BucketSortScreenConfig> & {
-  onPersistentError?: (message: string) => void;
-  onDismissPersistentError?: () => void;
-}) {
-  const { completeMessage, handleComplete, handleMistake, handleSuccess } =
-    useLessonScreenFlow({
-      screenIndex,
-      flow,
-      successMessage: screen.successMessage,
-      onBeforeComplete: onDismissPersistentError,
-    });
-
-  const handleWrongDrop = (itemId: string) => {
-    const item = screen.items.find((entry) => entry.id === itemId);
-    if (item?.wrongDropError) {
-      onPersistentError?.(item.wrongDropError);
-    }
+}: StandardScreenProps<BucketSortScreenConfig>) {
+  const handleComplete = () => {
+    flow.markScreenReady(screenIndex);
   };
 
   const sortLayout = screen.layout ?? "statement-sort";
@@ -40,9 +23,6 @@ export function BucketSortScreen({
         items={screen.items}
         steps={screen.buckets}
         onComplete={handleComplete}
-        onMistake={handleMistake}
-        onSuccess={handleSuccess}
-        onWrongDrop={handleWrongDrop}
       />
     ) : (
       <LessonBucketSortGame
@@ -52,9 +32,6 @@ export function BucketSortScreen({
         targetTotal={screen.targetTotal}
         poolColumnLabel={screen.poolColumnLabel}
         onComplete={handleComplete}
-        onMistake={handleMistake}
-        onSuccess={handleSuccess}
-        onWrongDrop={handleWrongDrop}
       />
     );
 
@@ -64,7 +41,6 @@ export function BucketSortScreen({
       intro={screen.intro}
       cta={screen.cta}
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      successMessage={completeMessage}
       fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}
     >
       {game}

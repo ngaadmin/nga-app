@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { LessonBudgetSelectGame } from "@/components/academy/lesson/lesson-budget-select-game";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonScreenLayout,
+  lessonFeedbackCopy,
+} from "@/components/academy/lesson/lesson-ui";
 import type { BudgetSelectScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
 
@@ -16,17 +20,19 @@ export function BudgetSelectScreen({
   onPersistentError?: (message: string) => void;
   onDismissPersistentError?: () => void;
 }) {
-  const { completeMessage, handleComplete, handleIncomplete, handleMistake } =
+  const { showSuccess, handleComplete, handleIncomplete, handleMistake } =
     useLessonScreenFlow({
       screenIndex,
       flow,
-      successMessage: screen.successMessage,
       onBeforeComplete: onDismissPersistentError,
     });
 
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <LessonScreenLayout
-      successMessage={completeMessage}
+      success={showSuccess}
+      errorMessage={error}
       emphasizeInstruction={screen.emphasizeInstruction === true}
     >
       <LessonBudgetSelectGame
@@ -39,8 +45,15 @@ export function BudgetSelectScreen({
         onComplete={handleComplete}
         onIncomplete={handleIncomplete}
         onMistake={handleMistake}
-        onPersistentError={onPersistentError}
-        onDismissError={onDismissPersistentError}
+        onPersistentError={(message) => {
+          const copy = lessonFeedbackCopy(message) ?? "";
+          setError(copy);
+          if (copy) onPersistentError?.(copy);
+        }}
+        onDismissError={() => {
+          setError(null);
+          onDismissPersistentError?.();
+        }}
       />
     </LessonScreenLayout>
   );

@@ -9,7 +9,7 @@ import {
   LessonScreenIllustration,
 } from "@/components/academy/lesson/lesson-screen-chrome";
 import { LessonScreenRenderer } from "@/components/academy/lesson/lesson-screen-renderer";
-import { runBinaryChoiceNextHandler } from "@/components/academy/lesson/screens/binary-choice-screen";
+import { runMultipleChoiceNextHandler } from "@/components/academy/lesson/screens/multiple-choice-screen";
 import { runWordDropNextHandler } from "@/components/academy/lesson/screens/word-drop-screen";
 import { lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -18,7 +18,10 @@ import {
   resolveLessonScreenIllustration,
   supportsLessonScreenIllustration,
 } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
-import type { ResolvedLessonContent } from "@/lib/academy/lessons/types";
+import {
+  isMultipleChoiceScreen,
+  type ResolvedLessonContent,
+} from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import { useEffect, type ReactNode } from "react";
 
@@ -53,7 +56,7 @@ export function LessonRunner({
 
     const scoredUntilCorrect =
       screen.type === "word-drop" ||
-      screen.type === "binary-choice" ||
+      isMultipleChoiceScreen(screen) ||
       screen.type === "true-false";
 
     const autoReady =
@@ -90,7 +93,7 @@ export function LessonRunner({
           onNext ??
           (() => {
             if (!runWordDropNextHandler()) return;
-            if (!runBinaryChoiceNextHandler()) return;
+            if (!runMultipleChoiceNextHandler()) return;
             flow.handleNext();
           })
         }

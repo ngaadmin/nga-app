@@ -3,19 +3,18 @@ import {
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
-import type { ScreenConfig } from "@/lib/academy/lessons/types";
+import {
+  isMultipleChoiceScreen,
+  type ScreenConfig,
+} from "@/lib/academy/lessons/types";
 
 /** Dense interaction screens omit the shared illustration slot (see `docs/academy-screen-types.md`). */
 const DENSE_LESSON_SCREEN_TYPES = new Set<ScreenConfig["type"]>([
   "tap-reveal",
-  "link-match",
-  "rank-order",
-  "spotlight-rounds",
+  "bucket-sort",
   "savings-goal",
-  "allocation-slider",
   "budget-select",
   "completion",
-  "bucket-sort",
 ]);
 
 /** True when the screen type should not render `LessonIllustrationSlot`. */
@@ -84,7 +83,7 @@ export function resolveLessonScreenIllustration(
     return screen.illustration;
   }
 
-  if (screen.type === "binary-choice" && screen.imagePlaceholder) {
+  if (isMultipleChoiceScreen(screen) && screen.imagePlaceholder) {
     return imagePlaceholderToIllustration(screen.imagePlaceholder);
   }
 

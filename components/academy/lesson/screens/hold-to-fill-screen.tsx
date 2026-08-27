@@ -5,9 +5,12 @@ import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesso
 import {
   lessonHoldButtonClass,
   lessonHoldButtonCompleteClass,
+  lessonPromptClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
-  LessonScreenLayout,
+  LessonErrorBanner,
+  LessonSuccessBanner,
+  lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import {
@@ -24,24 +27,21 @@ export function HoldToFillScreen({
   flow,
 }: StandardScreenProps<HoldToFillScreenConfig>) {
   const holdMs = screen.holdDurationMs ?? DEFAULT_HOLD_MS;
-  const { completeMessage, handleComplete, handleSuccess } = useLessonScreenFlow({
+  const { showSuccess, handleComplete, handleSuccess } = useLessonScreenFlow({
     screenIndex,
     flow,
-    successMessage: screen.successMessage,
   });
 
   const [progress, setProgress] = useState(0);
   const [complete, setComplete] = useState(false);
-  const [isHolding, setIsHolding] = useState(false);
-  const [hint, setHint] = useState<string | null>(null);
+  const [releaseError, setReleaseError] = useState<string | null>(null);
   const holdStartRef = useRef<number | null>(null);
   const holdFrameRef = useRef<number | null>(null);
 
   const startHold = () => {
     if (complete) return;
     holdStartRef.current = performance.now();
-    setIsHolding(true);
-    setHint(null);
+    setReleaseError(null);
 
     const tick = (now: number) => {
       const start = holdStartRef.current;
@@ -51,7 +51,6 @@ export function HoldToFillScreen({
       setProgress(nextProgress);
       if (nextProgress >= 1) {
         setComplete(true);
-        setIsHolding(false);
         handleSuccess();
         handleComplete();
         holdStartRef.current = null;
@@ -65,7 +64,6 @@ export function HoldToFillScreen({
 
   const endHold = () => {
     if (complete) return;
-    setIsHolding(false);
     if (holdFrameRef.current !== null) {
       cancelAnimationFrame(holdFrameRef.current);
       holdFrameRef.current = null;
@@ -75,10 +73,7 @@ export function HoldToFillScreen({
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
       signalLessonIncorrectAnswer(flow.flashScreen, { flash: true });
-      setHint(
-        screen.releaseHint ??
-          "Hold down fully for 2 seconds to activate.",
-      );
+      setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? "");
     }
   };
 
@@ -92,53 +87,42 @@ export function HoldToFillScreen({
   );
 
   return (
-    <LessonScreenLayout intro={screen.narrative} cta={screen.cta}>
-      <div className="mt-5 flex flex-col items-center gap-3">
-        <button
-          type="button"
-          disabled={complete}
-          onPointerDown={startHold}
-          onPointerUp={endHold}
-          onPointerLeave={endHold}
-          onPointerCancel={endHold}
-          style={{ touchAction: "none" }}
-          className={cn(
-            lessonHoldButtonClass,
-            complete && lessonHoldButtonCompleteClass,
-          )}
-        >
-          {complete ? screen.frozenLabel : screen.holdLabel}
-        </button>
-        {complete ? null : (
-          <div className="h-3 w-full max-w-xs overflow-hidden rounded-full border border-[#BDE9FB]/60 bg-[#E8F7FC]">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[#0CC1E0] to-[#099FB8]"
-              style={{
-                width: `${progress * 100}%`,
-                transition: isHolding ? "none" : "width 150ms ease-out",
-              }}
-            />
-          </div>
+    <div className="flex flex-col items-center gap-4">
+      <p className={cn(lessonPromptClass, "mb-0 text-center")}>
+        {screen.narrative}
+      </p>
+      {screen.cta ? (
+        <p className={cn(lessonPromptClass, "mb-0 text-center")}>{screen.cta}</p>
+      ) : null}
+      <button
+        type="button"
+        disabled={complete}
+        onPointerDown={(event) => {
+          event.preventDefault();
+          startHold();
+        }}
+        onPointerUp={endHold}
+        onPointerLeave={endHold}
+        onPointerCancel={endHold}
+        style={{ touchAction: "none" }}
+        className={cn(
+          lessonHoldButtonClass,
+          complete && lessonHoldButtonCompleteClass,
         )}
-        {hint ? (
-          <p className="font-sans text-sm font-medium text-[#1E3A5F]/80">
-            {hint}
-          </p>
-        ) : null}
-        {complete && completeMessage?.trim() ? (
-          <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl bg-[#DCFCE7] px-4 py-3">
-            <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#16A34A] text-sm font-extrabold text-white"
-              aria-hidden
-            >
-              ✓
-            </span>
-            <p className="flex-1 font-sans text-base font-medium leading-snug text-[#031F82]">
-              {completeMessage}
-            </p>
-          </div>
-        ) : null}
-      </div>
-    </LessonScreenLayout>
+      >
+        <span
+          className="absolute inset-y-0 left-0 bg-white/35"
+          style={{ width: `${progress * 100}%` }}
+          aria-hidden
+        />
+        <span className="relative z-[1]">
+          {complete ? screen.frozenLabel : screen.holdLabel}
+        </span>
+      </button>
+      {releaseError !== null ? (
+        <LessonErrorBanner>{lessonFeedbackCopy(releaseError)}</LessonErrorBanner>
+      ) : null}
+      {showSuccess ? <LessonSuccessBanner /> : null}
+    </div>
   );
 }

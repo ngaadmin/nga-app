@@ -130,3 +130,31 @@ export function medalIdForLessonNumber(
       return undefined;
   }
 }
+
+/**
+ * Completion medal: authored screen `medalId`, then lesson-number helper,
+ * then skill number + earned tier (bronze / silver / gold / unlocked).
+ */
+export function resolveCompletionMedalId(args: {
+  medalId?: MedalIllustrationId;
+  lessonNumber?: number;
+  skillNumber?: number;
+  tier?: MedalDisplayStatus | null;
+}): MedalIllustrationId | undefined {
+  if (args.medalId) return args.medalId;
+
+  if (typeof args.lessonNumber === "number") {
+    const fromLesson = medalIdForLessonNumber(args.lessonNumber);
+    if (fromLesson) return fromLesson;
+  }
+
+  if (
+    typeof args.skillNumber === "number" &&
+    args.tier &&
+    args.tier !== "locked"
+  ) {
+    return medalIdForSkillNumber(args.skillNumber, args.tier);
+  }
+
+  return undefined;
+}

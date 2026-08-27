@@ -16,6 +16,7 @@ import {
   lessonIconEmojiClass,
   lessonIconLabelClass,
   lessonIconMonogramClass,
+  lessonItemOrbClass,
   lessonIconOptionStackClass,
   lessonIconTapSelectedClass,
   lessonSortBucketActiveClass,
@@ -66,9 +67,20 @@ import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
 import { cn } from "@/lib/utils/cn";
 
 type LessonUiProps = {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
 };
+
+/** First non-empty payload string. Missing/blank → undefined (no invented copy). */
+export function lessonFeedbackCopy(
+  ...candidates: Array<string | null | undefined>
+): string | undefined {
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim();
+    if (trimmed) return trimmed;
+  }
+  return undefined;
+}
 
 /** White elevated panel used by games and reveal areas. */
 export const LessonCard = forwardRef<
@@ -159,7 +171,7 @@ export function LessonScreenIntro({
     <div className={className}>
       {title ? <p className={lessonInstructionClass}>{title}</p> : null}
       {body ? (
-        <p className={cn(title && "mt-2", introClass)}>{body}</p>
+        <p className={cn(title && "mt-2", introClass, "mb-5")}>{body}</p>
       ) : null}
       {cta ? (
         <p className={cn((title || body) && "mt-2", lessonCtaClass)}>{cta}</p>
@@ -170,12 +182,14 @@ export function LessonScreenIntro({
 
 type LessonScreenLayoutProps = LessonScreenIntroProps & {
   children: ReactNode;
+  /** Green bar flash. Never displays successMessage / success copy. */
+  success?: boolean;
+  /** @deprecated Use `success`. Presence still flashes the green bar; text is ignored. */
   successMessage?: string | null;
+  /** Red bar. Empty string = bar only; non-empty = payload error/feedback copy. */
   errorMessage?: string | null;
   errorVariant?: "banner" | "inline";
   fill?: boolean;
-  /** Keeps success banner space in fill layouts to avoid slider layout jumps. */
-  reserveSuccessSlot?: boolean;
   gameClassName?: string;
   className?: string;
 };
@@ -190,16 +204,26 @@ export function LessonScreenLayout({
   emphasizeInstruction,
   cta,
   children,
+  success = false,
   successMessage,
   errorMessage,
   errorVariant = "banner",
   fill = false,
-  reserveSuccessSlot = false,
   gameClassName,
   className,
 }: LessonScreenLayoutProps) {
-  const hasSuccessCopy = Boolean(successMessage?.trim());
-  const showSuccessSlot = hasSuccessCopy || reserveSuccessSlot;
+  const showSuccess = success || successMessage != null;
+  const showError = errorMessage != null;
+  const errorCopy = lessonFeedbackCopy(errorMessage);
+
+  const drawers = (
+    <>
+      {showError ? (
+        <LessonErrorBanner variant={errorVariant}>{errorCopy}</LessonErrorBanner>
+      ) : null}
+      {showSuccess ? <LessonSuccessBanner /> : null}
+    </>
+  );
 
   if (fill) {
     return (
@@ -212,16 +236,7 @@ export function LessonScreenLayout({
           emphasizeInstruction={emphasizeInstruction}
         />
         <div className={cn(lessonGameAreaClass, gameClassName)}>{children}</div>
-        {errorMessage ? (
-          <LessonErrorBanner variant={errorVariant}>{errorMessage}</LessonErrorBanner>
-        ) : null}
-        {showSuccessSlot ? (
-          <div className="min-h-[4.75rem] shrink-0">
-            {hasSuccessCopy ? (
-              <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
-            ) : null}
-          </div>
-        ) : null}
+        {drawers}
       </div>
     );
   }
@@ -236,12 +251,7 @@ export function LessonScreenLayout({
         emphasizeInstruction={emphasizeInstruction}
       />
       {children}
-      {errorMessage ? (
-        <LessonErrorBanner variant={errorVariant}>{errorMessage}</LessonErrorBanner>
-      ) : null}
-      {hasSuccessCopy ? (
-        <LessonSuccessBanner>{successMessage}</LessonSuccessBanner>
-      ) : null}
+      {drawers}
     </div>
   );
 }
@@ -251,14 +261,21 @@ export function LessonGameBoard({ children, className }: LessonUiProps) {
 }
 
 export function LessonSuccessBanner({
-  children,
   className,
   centered = false,
 }: LessonUiProps & { centered?: boolean }) {
   return (
-    <p className={cn(lessonSuccessMessageClass, centered && "text-center", className)}>
-      {children}
-    </p>
+    <div
+      className={cn(lessonSuccessMessageClass, centered && "text-center", className)}
+      role="status"
+    >
+      <span
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-white font-extrabold text-[#16A34A]"
+        aria-hidden
+      >
+        ✓
+      </span>
+    </div>
   );
 }
 
@@ -272,15 +289,25 @@ export function LessonErrorBanner({
   variant = "banner",
 }: LessonErrorBannerProps) {
   return (
-    <p
+    <div
       className={cn(
         variant === "banner" ? lessonErrorBannerClass : lessonInlineErrorClass,
         className,
       )}
-      role={variant === "banner" ? "alert" : undefined}
+      role="alert"
     >
-      {children}
-    </p>
+      <span
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-white font-extrabold text-[#E11D48]"
+        aria-hidden
+      >
+        !
+      </span>
+      {typeof children === "string" && children.trim() ? (
+        <p className="min-w-0 flex-1">{children.trim()}</p>
+      ) : children && typeof children !== "string" ? (
+        <p className="min-w-0 flex-1">{children}</p>
+      ) : null}
+    </div>
   );
 }
 
@@ -419,8 +446,6 @@ type LessonSortPoolProps = LessonUiProps & {
 export function LessonSortPool({
   children,
   label,
-  emptyLabel = "All sorted!",
-  isEmpty = false,
   className,
 }: LessonSortPoolProps) {
   return (
@@ -428,16 +453,6 @@ export function LessonSortPool({
       {label ? <LessonColumnLabel tone="muted">{label}</LessonColumnLabel> : null}
       <div className={cn(lessonSortPoolStaticClass, label && "mt-1")}>
         <div className={lessonSortStatementListClass}>{children}</div>
-        {isEmpty ? (
-          <p
-            className={cn(
-              "pointer-events-none absolute inset-0 flex items-center justify-center",
-              lessonColumnLabelSuccessClass,
-            )}
-          >
-            {emptyLabel}
-          </p>
-        ) : null}
       </div>
     </div>
   );
@@ -458,7 +473,7 @@ export const LessonSortStatementCard = forwardRef<
   { label, emoji, price, isDragging = false, className, type = "button", ...props },
   ref,
 ) {
-  const usePricedRow = Boolean(emoji && price !== undefined);
+  const glyph = emoji?.trim() || label.trim().charAt(0) || "?";
 
   return (
     <button
@@ -467,28 +482,19 @@ export const LessonSortStatementCard = forwardRef<
       aria-label={label}
       className={cn(
         lessonSortStatementCardClass,
-        usePricedRow && "justify-start text-left",
         isDragging && "invisible",
         className,
       )}
       style={{ touchAction: "none", ...props.style }}
       {...props}
     >
-      {usePricedRow ? (
-        <LessonPricedSortItemContent label={label} emoji={emoji} price={price} />
-      ) : (
-        <>
-          {emoji ? (
-            <span className={lessonSortStatementEmojiClass} aria-hidden>
-              {emoji}
-            </span>
-          ) : null}
-          <span className="min-w-0 leading-snug">{label}</span>
-          {price !== undefined ? (
-            <span className={lessonPricedItemPriceClass}>${price}</span>
-          ) : null}
-        </>
-      )}
+      <span className={lessonItemOrbClass} aria-hidden>
+        {glyph}
+      </span>
+      <span className="min-w-0 leading-snug">
+        {label}
+        {price !== undefined ? ` · $${price}` : ""}
+      </span>
     </button>
   );
 });
@@ -507,25 +513,15 @@ export function LessonSortStatementPlaced({
   price,
   className,
 }: LessonSortStatementPlacedProps) {
-  const usePricedRow = Boolean(emoji && price !== undefined);
-
   return (
     <div className={cn(lessonSortStatementPlacedClass, className)}>
-      {usePricedRow ? (
-        <LessonPricedSortItemContent label={label} emoji={emoji} price={price} />
-      ) : (
-        <span className="flex items-center justify-center gap-1 text-center">
-          {emoji ? (
-            <span className={lessonSortStatementEmojiClass} aria-hidden>
-              {emoji}
-            </span>
-          ) : null}
-          <span className="min-w-0">{label}</span>
-          {price !== undefined ? (
-            <span className={lessonPricedItemPriceClass}>${price}</span>
-          ) : null}
-        </span>
-      )}
+      <span className={lessonItemOrbClass} aria-hidden>
+        {emoji?.trim() || label.trim().charAt(0) || "?"}
+      </span>
+      <span className="min-w-0">
+        {label}
+        {price !== undefined ? ` · $${price}` : ""}
+      </span>
     </div>
   );
 }
@@ -601,8 +597,6 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
     },
     ref,
   ) {
-    const headerIcon = resolveSortBucketIcon(bucketId, tone, icon);
-
     return (
       <div
         ref={ref}
@@ -615,24 +609,16 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
       >
         <div
           className={cn(
-            "flex h-[4.25rem] shrink-0 items-center justify-center gap-1 px-1 text-center font-heading text-[0.8125rem] font-extrabold uppercase tracking-wide sm:text-sm",
-            lessonSortBucketHeaderClass(bucketId, tone),
+            "shrink-0 font-heading text-base font-bold text-[#031F82]",
           )}
         >
-          {headerIcon ? (
-            <span className={lessonSortStatementEmojiClass} aria-hidden>
-              {headerIcon}
-            </span>
-          ) : null}
           <span className="min-w-0 text-balance leading-tight">{label}</span>
         </div>
         <div
           className={cn(
-            "flex flex-1 flex-col items-stretch gap-1.5 overflow-y-auto transition-colors",
-            lessonSortBucketWellClass,
-            lessonSortBucketSurfaceClass(bucketId, tone),
-            active && lessonSortBucketActiveClass,
-            error && lessonSortBucketErrorClass,
+            "flex flex-1 flex-col items-stretch gap-3.5 py-2.5 transition-colors",
+            active && "ring-2 ring-[#0CC1E0]/30",
+            error && "ring-2 ring-[#E11D48]/30",
           )}
         >
           {children}
@@ -845,11 +831,14 @@ export const LessonIconOption = forwardRef<
     !hideLabel && display !== "emoji-only" && display !== "label";
   const isWrongSelection = selectionVariant === "wrong";
   const isCorrectSelection = selectionVariant === "correct";
-  const showSuccessBadge = isCorrectSelection;
-  const showWrongBadge = isWrongSelection;
 
   const circleContent = showEmoji ? (
-    <span className={lessonIconEmojiClass} aria-hidden>
+    <span
+      className={cn(
+        isCompact ? lessonIconEmojiClass : "text-[32px] leading-none",
+      )}
+      aria-hidden
+    >
       {emoji}
     </span>
   ) : display === "label" ? (
@@ -870,11 +859,11 @@ export const LessonIconOption = forwardRef<
       aria-pressed={selected}
       disabled={disabled}
       className={cn(
-        "relative flex shrink-0 items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-[#F7FBFF] shadow-sm transition-all hover:bg-[#EEF6FC] active:scale-[0.98]",
-        lessonCircleSizeClass,
-        isWrongSelection && lessonWrongSelectionChipClass,
-        isCorrectSelection &&
-          "border-[#16A34A] bg-[#F0FDF4] shadow-sm",
+        "relative flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)] transition-all active:scale-[0.98]",
+        size === "default" && "size-[88px]",
+        isCompact && lessonCircleSizeClass,
+        isWrongSelection && "bg-[#FFF1F2]",
+        isCorrectSelection && "bg-[#DCFCE7]",
         selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
         disabled && "pointer-events-none opacity-60",
         chipClassName,
@@ -882,53 +871,21 @@ export const LessonIconOption = forwardRef<
       {...buttonProps}
     >
       {circleContent}
-      {showSuccessBadge ? (
-        <span
-          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-[10px] font-extrabold text-white shadow-sm"
-          aria-hidden
-        >
-          ✓
-        </span>
-      ) : null}
-      {showWrongBadge ? (
-        <span
-          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#E11D48] text-[10px] font-extrabold text-white shadow-sm"
-          aria-hidden
-        >
-          ✕
-        </span>
-      ) : null}
     </button>
   ) : (
     <div
       className={cn(
-        "relative pointer-events-none flex shrink-0 items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-[#F7FBFF] shadow-sm",
-        lessonCircleSizeClass,
-        isWrongSelection && lessonWrongSelectionChipClass,
-        isCorrectSelection &&
-          "border-[#16A34A] bg-[#F0FDF4] shadow-sm",
+        "relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)]",
+        size === "default" && "size-[88px]",
+        isCompact && lessonCircleSizeClass,
+        isWrongSelection && "bg-[#FFF1F2]",
+        isCorrectSelection && "bg-[#DCFCE7]",
         selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
         chipClassName,
       )}
       aria-hidden={showLabelBelow}
     >
       {circleContent}
-      {showSuccessBadge ? (
-        <span
-          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-[10px] font-extrabold text-white shadow-sm"
-          aria-hidden
-        >
-          ✓
-        </span>
-      ) : null}
-      {showWrongBadge ? (
-        <span
-          className="absolute -right-0.5 -top-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#E11D48] text-[10px] font-extrabold text-white shadow-sm"
-          aria-hidden
-        >
-          ✕
-        </span>
-      ) : null}
     </div>
   );
 

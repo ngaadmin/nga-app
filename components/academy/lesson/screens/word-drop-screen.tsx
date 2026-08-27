@@ -1,77 +1,31 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import { LessonWordDropGame } from "@/components/academy/lesson/lesson-word-drop-game";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { LESSON_SUCCESS_FLASH_MS } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
-  lessonInstructionClass,
-  lessonNarrativeClass,
-  resolveChoiceVariant,
-  usesNeutralChoiceFeedback,
-} from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonErrorBanner } from "@/components/academy/lesson/lesson-ui";
+  LessonWordDropGame,
+  type LessonWordDropGameHandle,
+} from "@/components/academy/lesson/lesson-word-drop-game";
+import {
+  LessonErrorBanner,
+  LessonSuccessBanner,
+  lessonFeedbackCopy,
+} from "@/components/academy/lesson/lesson-ui";
 import type { WordDropScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
-import { cn } from "@/lib/utils/cn";
 import type { CoreScreenProps } from "./types";
 
-function SingleBlankWordDropScreen({
-  screen,
-  screenIndex,
-  flow,
-}: CoreScreenProps<WordDropScreenConfig>) {
-  const [choice, setChoice] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const neutralSelected = usesNeutralChoiceFeedback(screen.choiceFeedback);
+type WordDropNextHandler = () => boolean;
 
-  const handleChoice = (option: string) => {
-    setChoice(option);
-    if (option === screen.correctOption) {
-      setError(null);
-      celebrateLessonCorrectAnswer(flow.flashScreen);
-      flow.markScreenReady(screenIndex);
-      return;
-    }
-    setError(screen.wrongError);
-    flow.incrementMistake();
-    signalLessonIncorrectAnswer(flow.flashScreen);
-  };
+let activeWordDropNextHandler: WordDropNextHandler | null = null;
 
-  return (
-    <>
-      <p className={lessonNarrativeClass}>
-        {screen.narrativeBefore}{" "}
-        <span className="inline-block min-w-[4.5rem] border-b-2 border-dashed border-[#0CC1E0] px-2 text-center font-heading text-base font-medium text-[#031F82]">
-          {choice ?? "______"}
-        </span>{" "}
-        {screen.narrativeAfter}
-      </p>
-      <p className={cn("mt-2", lessonInstructionClass)}>
-        {screen.promptLabel ?? "Pick the word that fits"}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {screen.options.map((option) => (
-          <LessonChoiceButton
-            key={option}
-            onClick={() => handleChoice(option)}
-            selected={choice === option}
-            variant={resolveChoiceVariant(
-              choice === option,
-              option === screen.correctOption,
-              neutralSelected,
-            )}
-            className="w-auto px-6 py-3"
-          >
-            {option}
-          </LessonChoiceButton>
-        ))}
-      </div>
-      {error ? <LessonErrorBanner>{error}</LessonErrorBanner> : null}
-    </>
-  );
+/** Used by the lesson runner Next control. No-ops unless a word-drop screen is active. */
+export function runWordDropNextHandler(): boolean {
+  if (!activeWordDropNextHandler) return true;
+  return activeWordDropNextHandler();
 }
 
 export function WordDropScreen({
@@ -81,40 +35,77 @@ export function WordDropScreen({
 }: CoreScreenProps<WordDropScreenConfig>) {
   const flowRef = useRef(flow);
   flowRef.current = flow;
+  const gameRef = useRef<LessonWordDropGameHandle>(null);
+  const advancingRef = useRef(false);
+  const [feedback, setFeedback] = useState<"error" | "success" | null>(null);
 
-  const handleComplete = useCallback(() => {
+  const prompt =
+    screen.prompt && screen.blanks?.length
+      ? screen.prompt
+      : `${screen.narrativeBefore} [blank] ${screen.narrativeAfter}`;
+  const blanks =
+    screen.prompt && screen.blanks?.length
+      ? screen.blanks
+      : [
+          {
+            options: screen.options,
+            correctOption: screen.correctOption,
+          },
+        ];
+
+  const errorCopy = lessonFeedbackCopy(screen.wrongError);
+
+  useEffect(() => {
     flowRef.current.markScreenReady(screenIndex);
   }, [screenIndex]);
 
-  const handleSuccess = useCallback(() => {
-    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+  const handleChoicesChange = useCallback(() => {
+    setFeedback(null);
   }, []);
 
-  const handleMistake = useCallback(() => {
-    flowRef.current.incrementMistake();
-    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
-  }, []);
+  useEffect(() => {
+    advancingRef.current = false;
+    let advanceTimer: number | null = null;
 
-  if (screen.prompt && screen.blanks?.length) {
-    return (
-      <LessonWordDropGame
-        prompt={screen.prompt}
-        blanks={screen.blanks}
-        wrongError={screen.wrongError}
-        successMessage={screen.successMessage}
-        promptLabel={screen.promptLabel}
-        onComplete={handleComplete}
-        onMistake={handleMistake}
-        onSuccess={handleSuccess}
-      />
-    );
-  }
+    activeWordDropNextHandler = () => {
+      if (advancingRef.current) return false;
+
+      const passed = gameRef.current?.evaluate() === true;
+      if (!passed) {
+        setFeedback("error");
+        flowRef.current.incrementMistake();
+        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        return false;
+      }
+
+      advancingRef.current = true;
+      setFeedback("success");
+      celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+      advanceTimer = window.setTimeout(() => {
+        flowRef.current.handleNext();
+      }, LESSON_SUCCESS_FLASH_MS);
+      return false;
+    };
+
+    return () => {
+      if (advanceTimer !== null) window.clearTimeout(advanceTimer);
+      activeWordDropNextHandler = null;
+    };
+  }, []);
 
   return (
-    <SingleBlankWordDropScreen
-      screen={screen}
-      screenIndex={screenIndex}
-      flow={flow}
-    />
+    <>
+      <LessonWordDropGame
+        ref={gameRef}
+        prompt={prompt}
+        blanks={blanks}
+        promptLabel={screen.promptLabel}
+        onChoicesChange={handleChoicesChange}
+      />
+      {feedback === "success" ? <LessonSuccessBanner /> : null}
+      {feedback === "error" ? (
+        <LessonErrorBanner>{errorCopy}</LessonErrorBanner>
+      ) : null}
+    </>
   );
 }

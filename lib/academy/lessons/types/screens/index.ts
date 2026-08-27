@@ -1,5 +1,12 @@
 export type { AllocationSliderItem, AllocationSliderScreenConfig } from "./allocation-slider";
-export type { BinaryChoiceOption, BinaryChoiceScreenConfig } from "./binary-choice";
+export type {
+  BinaryChoiceOption,
+  BinaryChoiceScreenConfig,
+  MultipleChoiceOption,
+  MultipleChoiceScreen,
+  MultipleChoiceScreenConfig,
+} from "./multiple-choice";
+export { isMultipleChoiceScreen } from "./multiple-choice";
 export type { BudgetSelectItem, BudgetSelectScreenConfig } from "./budget-select";
 export type { BucketSortScreenConfig } from "./bucket-sort";
 export type { CompletionScreenConfig } from "./completion";
@@ -19,7 +26,10 @@ export type { TrueFalseScreenConfig } from "./true-false";
 export type { WordDropScreenConfig } from "./word-drop";
 
 import type { AllocationSliderScreenConfig } from "./allocation-slider";
-import type { BinaryChoiceScreenConfig } from "./binary-choice";
+import type {
+  BinaryChoiceScreenConfig,
+  MultipleChoiceScreenConfig,
+} from "./multiple-choice";
 import type { BudgetSelectScreenConfig } from "./budget-select";
 import type { BucketSortScreenConfig } from "./bucket-sort";
 import type { CompletionScreenConfig } from "./completion";
@@ -37,6 +47,7 @@ import type { WordDropScreenConfig } from "./word-drop";
 
 export type ScreenConfig =
   | WordDropScreenConfig
+  | MultipleChoiceScreenConfig
   | BinaryChoiceScreenConfig
   | TrueFalseScreenConfig
   | TapRevealScreenConfig

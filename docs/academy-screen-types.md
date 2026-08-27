@@ -58,7 +58,7 @@ Illustrations are **optional** per screen via `illustration?: { emoji?, label?, 
 **Allowed on lighter screens** (use when a scene helps the hook or narrative):
 
 - `word-drop`
-- `binary-choice`
+- `multiple-choice` (legacy alias: `binary-choice`)
 - `true-false`
 - `hold-to-fill`
 - `drag-to-target`
@@ -101,12 +101,12 @@ Applies to pills, radio lists, icon options, and persistent error toasts. Only t
 
 ## Registered type strings
 
-Exact `type` values in `ScreenConfig`. There is **no** `"multiple-choice"`, `"drag-and-sort"`, or `"slider"` type — those map to the types below.
+Exact `type` values in `ScreenConfig`. There is **no** `"drag-and-sort"` or `"slider"` type — those map to the types below. `binary-choice` is a legacy alias of `multiple-choice`.
 
 | # | `type` string | Adapter | Game engine |
 |---|---------------|---------|-------------|
 | 1 | `word-drop` | `WordDropScreen` | `LessonWordDropGame` |
-| 2 | `binary-choice` | `BinaryChoiceScreen` | — |
+| 2 | `multiple-choice` | `MultipleChoiceScreen` | — |
 | 3 | `true-false` | `TrueFalseScreen` | — |
 | 4 | `tap-reveal` | `TapRevealScreen` | — |
 | 5 | `bucket-sort` | `BucketSortScreen` | `LessonBucketSortGame` or `LessonSequenceSortGame` |
@@ -133,10 +133,10 @@ Default lesson scaffold (`lib/academy/lessons/content/_template.ts`):
 | Screen | Stage | Workbook archetype | Default `type` |
 |--------|-------|--------------------|----------------|
 | 1 | Hook | Fill-the-Blank Drop | `word-drop` |
-| 2 | Core | Sentence Finisher | `binary-choice` |
+| 2 | Core | Sentence Finisher | `multiple-choice` |
 | 3 | Core | Flash Tap | `tap-reveal` |
 | 4 | Core | Sorting Game | `bucket-sort` |
-| 5 | Apply | Quick Choice (trap) | `binary-choice` |
+| 5 | Apply | Quick Choice (trap) | `multiple-choice` |
 | 6 | Apply | 24-Hour Freeze | `hold-to-fill` |
 | 7 | Reward | Celebration | `narrative-bonus` |
 | 8 | Close | Lesson Recap | `completion` |
@@ -171,31 +171,33 @@ Lessons may swap types by screen (e.g. L2 uses `true-false`, `budget-select`, `r
 
 ---
 
-### `binary-choice`
+### `multiple-choice`
 
-**Best for:** Core / Apply — sentence finisher, trap question, multi-select checks.
+**Best for:** Core / Apply — sentence finisher, trap question, single- or multi-select checks.
 
 **Illustration:** Allowed (`imagePlaceholder` for inline scene, or top-level `illustration`).
 
-**Props** (`lib/academy/lessons/types/screens/binary-choice.ts`):
+**Props** (`lib/academy/lessons/types/screens/multiple-choice.ts`):
 
 | Prop | Purpose |
 |------|---------|
 | `prompt` | Main question |
-| `optionA`–`optionE` | `{ label, isCorrect, feedback? }` |
+| `options[]` | Canonical list of `{ label, isCorrect, feedback? }` — any length |
+| `optionA`–`optionZ` | Legacy fields used when `options` is omitted |
 | `wrongError`, `successMessage?` | Screen-level messages |
 | `errorStyle?` | `"inline-red"` or `"banner"` (trap toast) |
-| `selectionMode?` | `"single"` (default) or `"multi-correct"` |
 | `optionLayout?` | `"buttons"` or `"radio-list"` |
 | `lockCorrectSelections?` | Lock correct picks once chosen |
 | `wrongInteraction?` | `"persist"` (toggle wrong off) or `"shake"` (transient dud) |
 | `scenePrompt?`, `imagePlaceholder?` | Scene + illustration placeholder |
 | `choiceFeedback?`, `emphasizeInstruction?` | Visual options |
 
+Legacy type string: `binary-choice` (same template).
+
 **Behaviour variants (same type, different props):**
 
-- **Single choice** — default
-- **Multi-correct** — `selectionMode: "multi-correct"`; Next when all correct selected, none wrong
+- **Single choice** — one option has `isCorrect: true`; tap one answer, then Next
+- **Multi-correct** — more than one option has `isCorrect: true`; user can select several before Next; Next when all correct are selected and none wrong
 - **All of the above** — auto-detected when exactly one correct option’s label matches phrases like “All of the above”; other options show neutral selected state until the catch-all is chosen (no red on individual true statements)
 - **Trap / Quick Choice** — `errorStyle: "banner"`
 - **Scene + radio-list** — sign-reading layout
@@ -466,7 +468,7 @@ Screens that become incomplete after success (e.g. `budget-select` uncheck) must
 | `type` | L1 | L2 | L3 | L4 |
 |--------|:--:|:--:|:--:|:--:|
 | `word-drop` | ✓ | | ✓ | |
-| `binary-choice` | ✓ | | ✓ | ✓ |
+| `multiple-choice` | ✓ | | ✓ | ✓ |
 | `true-false` | | ✓ | | |
 | `tap-reveal` | ✓ | | | |
 | `bucket-sort` | ✓ | ✓ | ✓ | ✓ |
@@ -511,14 +513,14 @@ Fix layout once in these components; future lessons need only content updates.
 3. Add a screen object to `lib/academy/lessons/content/m1-l*.ts`, or use spreadsheet import (`templates/lesson-authoring/`).
 4. Set `advance.mode` appropriately (`budget-select` → always `on-complete`).
 5. Omit `illustration` on dense types unless you have a strong reason.
-6. For multi-answer checks, use `binary-choice` + `selectionMode: "multi-correct"` — do not create a new type.
+6. For multi-answer checks, mark more than one option `isCorrect: true` on `multiple-choice` — do not create a new type.
 7. For bucket-sort, set `layout` only when not using default `statement-sort`.
 8. QA against the design shell (`/dashboard/academy/lesson/shell`) before shipping.
 9. If an interaction repeats across lessons, promote a `custom` renderer to a registered type in `lesson-screen-renderer.tsx`.
 
 **Do not add new types for:**
 
-- Multi-select → `binary-choice` + `selectionMode: "multi-correct"`
+- Multi-select → `multiple-choice` with several `isCorrect: true` options
 - Statement / category sort → `bucket-sort` + `statement-sort`
 - Step ordering → `bucket-sort` + `steps-row`
 - Priced triage → `bucket-sort` + `spent-total`
@@ -526,4 +528,4 @@ Fix layout once in these components; future lessons need only content updates.
 - Full-list reorder + Submit → `rank-order`
 - Reserve slider → `allocation-slider`
 - Swipe-to-save → `drag-to-target` or `savings-goal`
-- Single / trap MCQ → `binary-choice` variants
+- Single / trap MCQ → `multiple-choice` variants

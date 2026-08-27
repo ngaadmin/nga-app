@@ -6,12 +6,15 @@ import { DESIGN_SHELL_LESSON_DEFINITION } from "@/lib/academy/lessons/content/de
 import { ACADEMY_DESIGN_SHELL_PATH } from "@/lib/academy/lessons/registry";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
-import type { ScreenConfig } from "@/lib/academy/lessons/types";
+import {
+  isMultipleChoiceScreen,
+  type ScreenConfig,
+} from "@/lib/academy/lessons/types";
 
 /** Living screen types shown as chips — one chip each, first matching screen. */
 const LIVING_SCREEN_TYPES = [
   "word-drop",
-  "binary-choice",
+  "multiple-choice",
   "true-false",
   "tap-reveal",
   "bucket-sort",
@@ -34,10 +37,20 @@ type LivingTypeChip = {
   index: number;
 };
 
+function screenMatchesLivingType(
+  screen: ScreenConfig,
+  type: LivingScreenType,
+): boolean {
+  if (type === "multiple-choice") return isMultipleChoiceScreen(screen);
+  return screen.type === type;
+}
+
 function livingTypeChips(screens: readonly ScreenConfig[]): LivingTypeChip[] {
   const chips: LivingTypeChip[] = [];
   for (const type of LIVING_SCREEN_TYPES) {
-    const index = screens.findIndex((screen) => screen.type === type);
+    const index = screens.findIndex((screen) =>
+      screenMatchesLivingType(screen, type),
+    );
     if (index < 0) continue;
     const screen = screens[index];
     if (!screen) continue;
@@ -70,7 +83,13 @@ export function resolveDesignShellJumperIndex(
 
   const typeKey = typeParam?.trim() ?? "";
   if (typeKey) {
-    const byType = screens.findIndex((entry) => entry.type === typeKey);
+    const resolvedType =
+      typeKey === "binary-choice" ? "multiple-choice" : typeKey;
+    const byType = screens.findIndex((entry) =>
+      resolvedType === "multiple-choice"
+        ? isMultipleChoiceScreen(entry)
+        : entry.type === resolvedType,
+    );
     if (byType >= 0) return byType;
   }
 
@@ -108,7 +127,7 @@ export function DesignShellJumpSync({
 export function DesignShellScreenJumper() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const screens = DESIGN_SHELL_LESSON_DEFINITION.baseScreens;
+  const screens = DESIGN_SHELL_LESSON_DEFINITION.baseScreens ?? [];
   const chips = livingTypeChips(screens);
   const activeType = searchParams.get("type");
 

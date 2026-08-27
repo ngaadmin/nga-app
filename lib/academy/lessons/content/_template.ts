@@ -67,10 +67,10 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   },
 
   // ── Row 2 · The Sentence Finisher ───────────────────────────────────────
-  // Archetype: The Sentence Finisher → type: "binary-choice"
+  // Archetype: The Sentence Finisher → type: "multiple-choice"
   // Excel 🟢 → optionA isCorrect: true ; 🔴 → optionB isCorrect: false
   {
-    type: "binary-choice",
+    type: "multiple-choice",
     id: "short-fun-reality",
     prompt: "REPLACE: setup sentence ending with ...",
     optionA: { label: "REPLACE: correct ending", isCorrect: true },
@@ -117,9 +117,9 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   },
 
   // ── Row 5 · The Quick Choice (Trap) ──────────────────────────────────────
-  // Archetype: The Quick Choice → type: "binary-choice" + errorStyle: "banner"
+  // Archetype: The Quick Choice → type: "multiple-choice" + errorStyle: "banner"
   {
-    type: "binary-choice",
+    type: "multiple-choice",
     id: "countdown-trap",
     prompt: "REPLACE: countdown trap question",
     optionA: { label: "REPLACE: true reason", isCorrect: true },
@@ -298,10 +298,10 @@ export const M1_L3_LESSON_DEFINITION: CohortLessonDefinition = {
 // SCREEN ID CHECKLIST (reuse when archetypes match M1-L1)
 // ═══════════════════════════════════════════════════════════════════════════
 //  1. hook-word-drop      word-drop
-//  2. short-fun-reality   binary-choice (inline-red)
+//  2. short-fun-reality   multiple-choice (inline-red)
 //  3. tap-short-vs-long   tap-reveal
 //  4. sort-short-vs-long  bucket-sort
-//  5. countdown-trap      binary-choice (banner)
+//  5. countdown-trap      multiple-choice (banner)
 //  6. impulse-pause       hold-to-fill
 //  7. resolution          narrative-bonus
 //  8. milestone-splash    completion (helpers)

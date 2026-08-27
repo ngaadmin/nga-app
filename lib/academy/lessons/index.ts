@@ -56,6 +56,7 @@ export {
 } from "@/lib/academy/lessons/registry";
 export type {
   BinaryChoiceScreenConfig,
+  MultipleChoiceScreenConfig,
   BucketSortScreenConfig,
   CohortContentMap,
   CohortBundleInput,

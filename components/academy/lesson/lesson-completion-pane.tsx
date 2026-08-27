@@ -9,7 +9,10 @@ import {
   lessonCompletionHeaderClass,
   lessonGoldClaimClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
+import {
+  resolveCompletionMedalId,
+  type MedalIllustrationId,
+} from "@/lib/academy/illustrations/medal-registry";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 
@@ -18,7 +21,11 @@ type LessonCompletionPaneProps = {
   perfectStreakBonus: number;
   perfectStreak: boolean;
   achievementSkillId: string;
-  skillMedalTier: Extract<SkillTrophyTier, "unlocked" | "bronze"> | null;
+  lessonNumber?: number;
+  skillMedalTier: Extract<
+    SkillTrophyTier,
+    "unlocked" | "bronze" | "silver" | "gold"
+  > | null;
   medalId?: MedalIllustrationId;
   skillLearnedLabel?: string;
   meaningLine?: string;
@@ -44,6 +51,7 @@ export function LessonCompletionPane({
   perfectStreakBonus,
   perfectStreak,
   achievementSkillId,
+  lessonNumber,
   skillMedalTier,
   medalId,
   skillLearnedLabel,
@@ -55,6 +63,12 @@ export function LessonCompletionPane({
   const cashInTimerRef = useRef<number | null>(null);
 
   const skill = getSkillRegistryRecord(achievementSkillId);
+  const resolvedMedalId = resolveCompletionMedalId({
+    medalId,
+    lessonNumber,
+    skillNumber: skill?.skillNumber,
+    tier: skillMedalTier,
+  });
   const skillName = resolveSkillName(achievementSkillId, skillLearnedLabel);
   const heading = skillName
     ? `Skill unlocked: ${skillName}`
@@ -85,23 +99,15 @@ export function LessonCompletionPane({
       {cashingIn ? <LessonCompletionConfetti /> : null}
 
       <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 px-2 pt-1 text-center">
-        {skillMedalTier ? (
+        {resolvedMedalId ? (
           <div className="mb-2 flex w-full justify-center">
             <LessonSkillMedal
               skillSlug={achievementSkillId}
-              tier={skillMedalTier}
-              medalId={medalId}
+              medalId={resolvedMedalId}
               size="hero"
             />
           </div>
-        ) : (
-          <div
-            className="mb-2 grid size-24 place-items-center rounded-full bg-gradient-to-b from-[#F6D365] to-[#C88202] text-4xl"
-            aria-hidden
-          >
-            🥉
-          </div>
-        )}
+        ) : null}
 
         <h2 className={lessonCompletionHeaderClass}>{heading}</h2>
 

@@ -1,11 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  cnLessonChoice,
-  lessonIntroClass,
-} from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonCard, LessonColumnLabel } from "@/components/academy/lesson/lesson-ui";
+import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   hasIncorrectSelection,
   isPartialCorrectSelection,
@@ -130,7 +126,7 @@ export function LessonBudgetSelectGame({
 
     if (nextSpent > total) {
       onMistake();
-      onPersistentError?.(errors.overBudget);
+      onPersistentError?.(errors.overBudget?.trim() ? errors.overBudget : "");
       return;
     }
 
@@ -139,71 +135,56 @@ export function LessonBudgetSelectGame({
     if (tryComplete(next, nextSpent)) return;
 
     const message = resolveError(next, nextSpent);
-    if (message) {
-      onMistake();
-      onPersistentError?.(message);
-    }
+    if (isPartialCorrectSelection(next, correctIds)) return;
+
+    onMistake();
+    onPersistentError?.(message.trim() ? message : "");
   };
 
   return (
     <>
-      <p className={lessonIntroClass()}>{intro}</p>
-      <LessonCard className="mt-4 text-center">
-        <LessonColumnLabel>{walletLabel}</LessonColumnLabel>
-        <p
-          className={cn(
-            "mt-2 font-heading text-3xl font-extrabold",
-            budgetRemaining < 0 ? "text-[#E11D48]" : "text-[#031F82]",
-          )}
-        >
-          ${Math.max(0, budgetRemaining)}
-        </p>
-      </LessonCard>
-      <div className="mt-3 space-y-2" role="group" aria-label="Budget items">
+      <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
+      <div className="space-y-4" role="group" aria-label="Budget items">
         {items.map((item) => {
           const checked = checkedIds.has(item.id);
-          const isCorrectItem = correctIds.includes(item.id);
-          const selectionVariant = checked
-            ? isCorrectItem
-              ? "correct"
-              : "wrong"
-            : "neutral";
-          const label =
-            item.emoji && !item.label.includes(item.emoji)
-              ? `${item.emoji} ${item.label}`
-              : item.label;
           return (
-            <div key={item.id} className="flex items-center gap-2.5">
+            <label
+              key={item.id}
+              className="grid grid-cols-[26px_48px_auto_auto_1fr] items-center gap-x-2.5 text-[#031F82]"
+            >
               <input
                 type="checkbox"
-                id={`budget-${item.id}`}
                 checked={checked}
                 onChange={(event) => {
                   event.stopPropagation();
                   toggle(item.id, event.target.checked);
                 }}
-                className="h-5 w-5 shrink-0 cursor-pointer accent-[#0CC1E0]"
-                aria-label={label}
+                className="m-0 size-[22px] cursor-pointer appearance-none rounded-full border-0 bg-[#E8F6FC] shadow-[inset_0_0_0_2px_#B7D7E8] checked:bg-[#0CC1E0] checked:shadow-[inset_0_0_0_2px_#099FB8]"
+                aria-label={item.label}
               />
-              <label
-                htmlFor={`budget-${item.id}`}
-                className={cn(
-                  cnLessonChoice(checked, selectionVariant),
-                  "min-h-[3rem] flex-1 cursor-pointer items-center px-3 py-2.5",
-                )}
-              >
-                <span className="w-full text-center text-base font-medium">
-                  {label}
-                  {item.price > 0 ? (
-                    <span className="ml-1 font-heading text-[#0CC1E0]">
-                      (${item.price})
-                    </span>
-                  ) : null}
-                </span>
-              </label>
-            </div>
+              <span className="grid size-11 place-items-center rounded-full bg-[#E8F6FC] text-xl">
+                {item.emoji ?? item.label.trim().charAt(0)}
+              </span>
+              <span className="font-sans text-sm font-medium">{item.label}</span>
+              <strong className="justify-self-start pl-1 font-bold">
+                ${item.price}
+              </strong>
+            </label>
           );
         })}
+      </div>
+      <div className="wallet hug pt-[18px] text-center">
+        <div className="text-xs uppercase tracking-wider text-[#1E3A5F]">
+          {walletLabel}
+        </div>
+        <div
+          className={cn(
+            "font-heading text-[22px] font-extrabold",
+            budgetRemaining < 0 ? "text-[#E11D48]" : "text-[#031F82]",
+          )}
+        >
+          ${budgetSpent} / ${total}
+        </div>
       </div>
     </>
   );

@@ -1,20 +1,41 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
 
+/** Green drawer only — short flash, no success copy. */
+export const LESSON_SUCCESS_FLASH_MS = 550;
+
 type UseLessonScreenFlowOptions = {
   screenIndex: number;
   flow: LessonFlow;
-  successMessage?: string;
   onBeforeComplete?: () => void;
   flashOnMistake?: boolean;
   flashOnMismatch?: boolean;
 };
+
+/** Shows the green bar briefly when `active` becomes true. */
+export function useLessonSuccessFlash(active: boolean): boolean {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setVisible(false);
+      return;
+    }
+    setVisible(true);
+    const timeoutId = window.setTimeout(() => {
+      setVisible(false);
+    }, LESSON_SUCCESS_FLASH_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [active]);
+
+  return visible;
+}
 
 /**
  * Standard lesson-screen flow wiring: mark ready, celebrate success, track mistakes.
@@ -22,25 +43,23 @@ type UseLessonScreenFlowOptions = {
 export function useLessonScreenFlow({
   screenIndex,
   flow,
-  successMessage,
   onBeforeComplete,
   flashOnMistake = true,
   flashOnMismatch = true,
 }: UseLessonScreenFlowOptions) {
-  const [completeMessage, setCompleteMessage] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
   const flowRef = useRef(flow);
   flowRef.current = flow;
+  const showSuccess = useLessonSuccessFlash(completed);
 
   const handleComplete = useCallback(() => {
     onBeforeComplete?.();
-    if (successMessage?.trim()) {
-      setCompleteMessage(successMessage);
-    }
+    setCompleted(true);
     flowRef.current.markScreenReady(screenIndex);
-  }, [onBeforeComplete, screenIndex, successMessage]);
+  }, [onBeforeComplete, screenIndex]);
 
   const handleIncomplete = useCallback(() => {
-    setCompleteMessage(null);
+    setCompleted(false);
     flowRef.current.clearScreenReady(screenIndex);
   }, [screenIndex]);
 
@@ -62,7 +81,7 @@ export function useLessonScreenFlow({
   }, [flashOnMismatch]);
 
   return {
-    completeMessage,
+    showSuccess,
     flowRef,
     handleComplete,
     handleIncomplete,

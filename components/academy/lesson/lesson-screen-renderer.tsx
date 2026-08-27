@@ -5,7 +5,7 @@ import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import type { LessonRewards, ScreenConfig } from "@/lib/academy/lessons/types";
 import { LESSON_CASH_IN_LABEL } from "@/components/academy/lesson/lesson-shared-styles";
 import { AllocationSliderScreen } from "./screens/allocation-slider-screen";
-import { BinaryChoiceScreen } from "./screens/binary-choice-screen";
+import { MultipleChoiceScreen } from "./screens/multiple-choice-screen";
 import { BudgetSelectScreen } from "./screens/budget-select-screen";
 import { BucketSortScreen } from "./screens/bucket-sort-screen";
 import { CompletionScreen } from "./screens/completion-screen";
@@ -43,8 +43,16 @@ const LESSON_SCREEN_RENDERERS: Partial<
       flow={flow}
     />
   ),
+  "multiple-choice": ({ screen, screenIndex, flow, rewards }) => (
+    <MultipleChoiceScreen
+      screen={screen as Extract<ScreenConfig, { type: "multiple-choice" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
   "binary-choice": ({ screen, screenIndex, flow, rewards }) => (
-    <BinaryChoiceScreen
+    <MultipleChoiceScreen
       screen={screen as Extract<ScreenConfig, { type: "binary-choice" }>}
       screenIndex={screenIndex}
       flow={flow}

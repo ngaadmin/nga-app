@@ -83,27 +83,37 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
   },
   // Pedagogical role: Core concept
   {
-    type: "binary-choice",
-    id: "shell-binary-choice",
+    type: "multiple-choice",
+    id: "shell-multiple-choice",
     prompt:
-      "A streaming app offers a 7-day free trial, then $12/month. What is the smartest first move?",
-    optionA: {
-      label: "Set a reminder to cancel before day 7 if you don't want it.",
-      isCorrect: true,
-    },
-    optionB: {
-      label: "Sign up now and figure it out later.",
-      isCorrect: false,
-    },
+      "A streaming app offers a 7-day free trial, then $12/month. Which moves keep you in control? Select every answer that applies.",
+    options: [
+      {
+        label: "Set a reminder to cancel before day 7 if you don't want it.",
+        isCorrect: true,
+      },
+      {
+        label: "Sign up now and figure it out later.",
+        isCorrect: false,
+      },
+      {
+        label: "Check the charge date before you enter a card.",
+        isCorrect: true,
+      },
+      {
+        label: "Ignore the price — free trials never start charging.",
+        isCorrect: false,
+      },
+    ],
     wrongError:
-      "Trials are traps when you forget the deadline. Pause before you commit.",
+      "Trials are traps when you forget the deadline. Pick every move that keeps you in control.",
     errorStyle: "inline-red",
-    authoring: { pedagogicalStage: "core", gameArchetype: "binary-choice" },
+    authoring: { pedagogicalStage: "core", gameArchetype: "multiple-choice" },
     ...shellIllustration(1),
     ...AUTO_READY,
   },
   {
-    type: "binary-choice",
+    type: "multiple-choice",
     id: "shell-all-of-the-above",
     prompt: "What helps you stay in control of a free trial? Select the best answer.",
     optionA: { label: "Set a reminder before the trial ends.", isCorrect: false },
@@ -116,13 +126,12 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     advance: { mode: "on-complete" },
     authoring: {
       pedagogicalStage: "core",
-      gameArchetype: "binary-choice/all-of-the-above",
+      gameArchetype: "multiple-choice/all-of-the-above",
     },
   },
   {
-    type: "binary-choice",
+    type: "multiple-choice",
     id: "shell-multi-correct",
-    selectionMode: "multi-correct",
     optionLayout: "radio-list",
     prompt: "Which lines on this sign are pressure tricks?",
     optionA: { label: "DON'T MISS OUT!", isCorrect: true },
@@ -134,7 +143,7 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     advance: { mode: "on-complete" },
     authoring: {
       pedagogicalStage: "core",
-      gameArchetype: "binary-choice/multi-correct",
+      gameArchetype: "multiple-choice/multi-correct",
     },
   },
   {
@@ -456,7 +465,7 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
   },
   // Pedagogical role: Close
   {
-    ...explorerCompletionScreen("shell-completion"),
+    ...explorerCompletionScreen("shell-completion", "medal-skill1-bronze"),
     authoring: { pedagogicalStage: "close", gameArchetype: "completion" },
     returnButtonLabel: "Back to Academy",
     ...AUTO_READY,

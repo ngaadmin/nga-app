@@ -2,11 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  lessonOptionTextClass,
-} from "@/components/academy/lesson/lesson-shared-styles";
-import {
   LessonGameBoard,
-  LessonGameHint,
   LessonMatchColumnHeaders,
 } from "@/components/academy/lesson/lesson-ui";
 import { cn } from "@/lib/utils/cn";
@@ -27,29 +23,17 @@ type LessonLinkMatchGameProps = {
 };
 
 const MATCH_CELL_BASE = cn(
-  "flex min-h-[4.25rem] w-full items-center justify-center rounded-2xl px-2.5 py-2 transition-colors sm:min-h-[4.5rem] sm:px-3 sm:py-2.5",
-  lessonOptionTextClass,
+  "flex h-[72px] w-full items-center justify-center rounded-[14px] border-0 px-2.5 py-2 text-center font-sans text-sm leading-[1.25] text-[#031F82] shadow-[inset_0_0_0_2px_#D7EAF3]",
 );
 
-const MATCH_DEFAULT_CLASS = "bg-white shadow-sm ring-1 ring-inset ring-[#BDE9FB]";
+const MATCH_DEFAULT_CLASS = "bg-[#E8F6FC]";
 
-/** Left item awaiting a right-side pair — solid cyan, no border. */
-const MATCH_SELECTED_CLASS = "bg-[#0CC1E0] text-[#031F82] shadow-md";
-
-/** High-contrast brand palette — each locked pair gets the next colour. */
 const MATCH_PAIR_FILL_CLASSES = [
-  "bg-[#3B82F6] text-white",
-  "bg-[#F59E0B] text-[#031F82]",
-  "bg-[#8B5CF6] text-white",
-  "bg-[#EC4899] text-white",
-  "bg-[#10B981] text-[#031F82]",
-  "bg-[#F97316] text-white",
-  "bg-[#6366F1] text-white",
-  "bg-[#14B8A6] text-[#031F82]",
+  "bg-[#FFE7B8] shadow-[inset_0_0_0_3px_#FFA503]",
+  "bg-[#E8D9F6] shadow-[inset_0_0_0_3px_#7B4FB5]",
+  "bg-[#F8D4DE] shadow-[inset_0_0_0_3px_#E11D48]",
+  "bg-[#DCFCE7] shadow-[inset_0_0_0_3px_#16A34A]",
 ] as const;
-
-const MATCH_LOCKED_BASE =
-  "cursor-default border-0 text-[#031F82] shadow-none active:scale-100";
 
 function shuffleIds(ids: readonly string[]): string[] {
   const next = [...ids];
@@ -91,30 +75,27 @@ export function LessonLinkMatchGame({
     () => new Map(pairs.map((pair) => [pair.id, pair])),
     [pairs],
   );
+  const fillById = useMemo(() => {
+    const next = new Map<string, string>();
+    pairIds.forEach((id, index) => {
+      next.set(id, MATCH_PAIR_FILL_CLASSES[index % MATCH_PAIR_FILL_CLASSES.length]!);
+    });
+    return next;
+  }, [pairIds]);
 
   const eventOrder = pairIds;
-
   const [benefitOrder] = useState(() =>
     shuffleBenefitsAwayFromEvents(pairIds, eventOrder),
   );
   const [lockedIds, setLockedIds] = useState<ReadonlySet<string>>(() => new Set());
-  const [pairFillById, setPairFillById] = useState<ReadonlyMap<string, string>>(
-    () => new Map(),
-  );
-  const [selectedLeftId, setSelectedLeftId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{
+    id: string;
+    side: "left" | "right";
+  } | null>(null);
 
   const isComplete = lockedIds.size === pairIds.length;
 
   const lockPair = (pairId: string) => {
-    setPairFillById((current) => {
-      const next = new Map(current);
-      if (!next.has(pairId)) {
-        const fillClass =
-          MATCH_PAIR_FILL_CLASSES[next.size % MATCH_PAIR_FILL_CLASSES.length]!;
-        next.set(pairId, fillClass);
-      }
-      return next;
-    });
     setLockedIds((current) => {
       const next = new Set(current);
       next.add(pairId);
@@ -123,33 +104,32 @@ export function LessonLinkMatchGame({
       }
       return next;
     });
-    setSelectedLeftId(null);
+    setSelected(null);
     onSuccess?.();
   };
 
-  const handleLeftTap = (leftId: string) => {
-    if (isComplete || lockedIds.has(leftId)) return;
-    setSelectedLeftId(leftId);
-  };
+  const handleTap = (id: string, side: "left" | "right") => {
+    if (isComplete || lockedIds.has(id)) return;
 
-  const handleRightTap = (rightId: string) => {
-    if (isComplete || lockedIds.has(rightId) || !selectedLeftId) return;
-
-    if (selectedLeftId === rightId) {
-      lockPair(rightId);
+    if (!selected) {
+      setSelected({ id, side });
       return;
     }
 
-    setSelectedLeftId(null);
+    if (selected.id === id && selected.side === side) return;
+
+    if (selected.id === id) {
+      lockPair(id);
+      return;
+    }
+
+    setSelected(null);
     onMismatch?.();
   };
 
   const cellAppearance = (id: string, side: "left" | "right") => {
-    if (lockedIds.has(id)) {
-      return cn(MATCH_LOCKED_BASE, pairFillById.get(id));
-    }
-    if (side === "left" && selectedLeftId === id) {
-      return MATCH_SELECTED_CLASS;
+    if (lockedIds.has(id) || (selected?.id === id && selected.side === side)) {
+      return fillById.get(id) ?? MATCH_DEFAULT_CLASS;
     }
     return MATCH_DEFAULT_CLASS;
   };
@@ -161,7 +141,7 @@ export function LessonLinkMatchGame({
         right={benefitColumnLabel}
       />
 
-      <div className="grid grid-cols-2 gap-x-2.5 gap-y-2">
+      <div className="mt-2 grid grid-cols-2 gap-x-3.5 gap-y-2">
         {eventOrder.map((eventId, rowIndex) => {
           const benefitId = benefitOrder[rowIndex];
           if (!benefitId) return null;
@@ -178,14 +158,10 @@ export function LessonLinkMatchGame({
               <button
                 type="button"
                 disabled={isComplete || leftLocked}
-                aria-pressed={selectedLeftId === eventId}
+                aria-pressed={selected?.id === eventId && selected.side === "left"}
                 aria-label={`Event: ${eventPair.event}`}
-                onClick={() => handleLeftTap(eventId)}
-                className={cn(
-                  MATCH_CELL_BASE,
-                  cellAppearance(eventId, "left"),
-                  !leftLocked && !isComplete && "active:scale-[0.98]",
-                )}
+                onClick={() => handleTap(eventId, "left")}
+                className={cn(MATCH_CELL_BASE, cellAppearance(eventId, "left"))}
               >
                 {eventPair.event}
               </button>
@@ -193,13 +169,12 @@ export function LessonLinkMatchGame({
               <button
                 type="button"
                 disabled={isComplete || rightLocked}
+                aria-pressed={
+                  selected?.id === benefitId && selected.side === "right"
+                }
                 aria-label={`Win: ${benefitPair.benefit}`}
-                onClick={() => handleRightTap(benefitId)}
-                className={cn(
-                  MATCH_CELL_BASE,
-                  cellAppearance(benefitId, "right"),
-                  !rightLocked && !isComplete && "active:scale-[0.98]",
-                )}
+                onClick={() => handleTap(benefitId, "right")}
+                className={cn(MATCH_CELL_BASE, cellAppearance(benefitId, "right"))}
               >
                 {benefitPair.benefit}
               </button>
@@ -207,12 +182,6 @@ export function LessonLinkMatchGame({
           );
         })}
       </div>
-
-      {!isComplete ? (
-        <LessonGameHint>
-          Tap an event to select it, then tap the matching possibility.
-        </LessonGameHint>
-      ) : null}
     </LessonGameBoard>
   );
 }

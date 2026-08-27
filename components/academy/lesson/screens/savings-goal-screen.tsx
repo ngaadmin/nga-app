@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { LessonSavingsGoalGame } from "@/components/academy/lesson/lesson-savings-goal-game";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { SavingsGoalScreenConfig } from "@/lib/academy/lessons/types";
-import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -16,17 +15,9 @@ export function SavingsGoalScreen({
   const flowRef = useRef(flow);
   flowRef.current = flow;
 
-  const handleGoalReady = useCallback(() => {
+  useEffect(() => {
     flowRef.current.markScreenReady(screenIndex);
   }, [screenIndex]);
-
-  const handleAdvance = useCallback(() => {
-    flowRef.current.handleNext();
-  }, []);
-
-  const handleItemSaved = useCallback(() => {
-    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
-  }, []);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -45,9 +36,8 @@ export function SavingsGoalScreen({
           lockedLabel={screen.lockedLabel}
           unlockedLabel={screen.unlockedLabel}
           goalAchievedLabel={screen.goalAchievedLabel}
-          onGoalReady={handleGoalReady}
-          onAdvance={handleAdvance}
-          onItemSaved={handleItemSaved}
+          onGoalReady={() => undefined}
+          onAdvance={() => undefined}
         />
       </div>
     </div>

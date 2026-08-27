@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { ExplorerPendingConsentView } from "@/components/onboarding/explorer-pending-consent-view";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/registry";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { shouldBlockExplorerPendingPlay } from "@/lib/onboarding/explorer-pending-consent";
 import { readUserSession } from "@/lib/onboarding/guest-session";
@@ -13,12 +15,15 @@ export function ExplorerPendingConsentGate({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const live = useUserSession();
   const [bootSession] = useState(() =>
     typeof window === "undefined" ? null : readUserSession(),
   );
   const session = live ?? bootSession;
-  const blocking = shouldBlockExplorerPendingPlay(session);
+  const blocking =
+    !isDevAcademyDesignShellPath(pathname) &&
+    shouldBlockExplorerPendingPlay(session);
 
   return (
     <>

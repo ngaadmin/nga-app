@@ -5,10 +5,6 @@ import {
   LessonScreenPane,
 } from "@/components/academy/lesson/academy-lesson-shell";
 import { CompletionScreen } from "@/components/academy/lesson/screens/completion-screen";
-import {
-  lessonGoldClaimClass,
-  LESSON_CASH_IN_LABEL,
-} from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { explorerCompletionScreen } from "@/lib/academy/lessons/completion-screen";
 import type { LessonRewards } from "@/lib/academy/lessons/types";
@@ -71,11 +67,7 @@ export function LessonCompletionScreenPreview() {
         xpReward={rewards.xpReward}
         canAdvance={false}
         onNext={noop}
-        footerSlot={
-          <button type="button" className={lessonGoldClaimClass}>
-            {LESSON_CASH_IN_LABEL}
-          </button>
-        }
+        hideFooter
       >
         {Array.from({ length: totalScreens }, (_, index) => (
           <LessonScreenPane key={index} isActive={index === screenIndex}>

@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils/cn";
-import { lessonCompletionRewardsCardClass } from "@/components/academy/lesson/lesson-shared-styles";
 
 type LessonCompletionRewardsCardProps = {
   xpReward: number;
@@ -8,7 +7,7 @@ type LessonCompletionRewardsCardProps = {
   className?: string;
 };
 
-/** Grouped XP summary card for Screen 8. */
+/** Grouped XP summary for Screen 8. */
 export function LessonCompletionRewardsCard({
   xpReward,
   perfectStreakBonus,
@@ -16,19 +15,14 @@ export function LessonCompletionRewardsCard({
   className,
 }: LessonCompletionRewardsCardProps) {
   return (
-    <div className={cn(lessonCompletionRewardsCardClass, className)}>
-      <p className="font-heading text-[10px] font-bold uppercase tracking-[0.14em] text-[#0CC1E0] sm:text-xs">
-        Points Earned
+    <div className={cn("mt-2", className)}>
+      <p className="font-heading text-[22px] font-bold tabular-nums text-[#031F82]">
+        +{xpReward} points
       </p>
-      <p className="mt-1 font-heading text-2xl font-extrabold tabular-nums leading-none text-[#FFA503] sm:text-3xl">
-        {xpReward} coins
-      </p>
-      {perfectStreak ? (
-        <div className="mt-3 inline-flex items-center justify-center rounded-full bg-[#DCFCE7] px-3 py-1.5">
-          <span className="font-heading text-sm font-extrabold tabular-nums text-[#15803D]">
-            +{perfectStreakBonus} coins Perfect Streak
-          </span>
-        </div>
+      {perfectStreak && perfectStreakBonus > 0 ? (
+        <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
+          Perfect lesson: +{perfectStreakBonus}
+        </p>
       ) : null}
     </div>
   );

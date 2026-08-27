@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { DesignShellJumpSync } from "@/components/academy/lesson/dev/design-shell-screen-jumper";
 import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -10,6 +11,8 @@ import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-c
 import { isDesignShellLesson, isLessonShippedForCohort } from "@/lib/academy/lessons/registry";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
+import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
+import { cn } from "@/lib/utils/cn";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;
@@ -62,13 +65,30 @@ function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
     [awardLessonXp],
   );
 
+  const isDesignShell = content.meta.isDesignShell === true;
+
   return (
-    <div className="layer-island relative flex min-h-0 flex-1 flex-col">
-      <LessonRunner
-        content={content}
-        flow={flow}
-        awardBonusXp={awardBonusXp}
-      />
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      {isDesignShell ? (
+        <SearchParamsBoundary>
+          <DesignShellJumpSync
+            screens={content.screens}
+            onJump={flow.setScreenIndex}
+          />
+        </SearchParamsBoundary>
+      ) : null}
+      <div
+        className={cn(
+          "layer-island relative flex min-h-0 flex-1 flex-col",
+          isDesignShell && "mx-auto w-full max-w-md",
+        )}
+      >
+        <LessonRunner
+          content={content}
+          flow={flow}
+          awardBonusXp={awardBonusXp}
+        />
+      </div>
     </div>
   );
 }

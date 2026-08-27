@@ -8,11 +8,10 @@ import {
   LessonScreenChromeProvider,
   LessonScreenIllustration,
 } from "@/components/academy/lesson/lesson-screen-chrome";
-import {
-  getCompletionFooterLabel,
-  LessonScreenRenderer,
-} from "@/components/academy/lesson/lesson-screen-renderer";
-import { lessonGoldClaimClass, lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonScreenRenderer } from "@/components/academy/lesson/lesson-screen-renderer";
+import { runBinaryChoiceNextHandler } from "@/components/academy/lesson/screens/binary-choice-screen";
+import { runWordDropNextHandler } from "@/components/academy/lesson/screens/word-drop-screen";
+import { lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   isDenseLessonScreen,
@@ -45,18 +44,24 @@ export function LessonRunner({
   onNext,
 }: LessonRunnerProps) {
   const { screenIndex, markScreenReady } = flow;
-  const footerLabel = getCompletionFooterLabel(
-    content.screens,
-    flow.lessonComplete,
-  );
+  const isCompletionScreen =
+    content.screens[screenIndex]?.type === "completion";
 
   useEffect(() => {
     const screen = content.screens[screenIndex];
     if (!screen) return;
 
+    const scoredUntilCorrect =
+      screen.type === "word-drop" ||
+      screen.type === "binary-choice" ||
+      screen.type === "true-false";
+
     const autoReady =
       (screen.advance?.mode === "auto-ready" &&
-        screen.type !== "budget-select") ||
+        screen.type !== "budget-select" &&
+        screen.type !== "tap-reveal" &&
+        screen.type !== "bucket-sort" &&
+        !scoredUntilCorrect) ||
       (screen.type === "narrative-bonus" &&
         screen.bonusXp === 0 &&
         screen.autoReadyWhenNoBonus !== false);
@@ -79,21 +84,18 @@ export function LessonRunner({
         mistakes={flow.screenMistakes}
         xpReward={content.rewards.xpReward}
         canAdvance={
-          canAdvance ?? (flow.canAdvanceDefault && !flow.isLastScreen)
+          canAdvance ?? (flow.canAdvanceDefault && !isCompletionScreen)
         }
-        onNext={onNext ?? (() => flow.handleNext())}
-        footerSlot={
-          flow.isLastScreen ? (
-            <button
-              type="button"
-              onClick={flow.handleCashInPoints}
-              disabled={flow.lessonComplete}
-              className={lessonGoldClaimClass}
-            >
-              {footerLabel}
-            </button>
-          ) : undefined
+        onNext={
+          onNext ??
+          (() => {
+            if (!runWordDropNextHandler()) return;
+            if (!runBinaryChoiceNextHandler()) return;
+            flow.handleNext();
+          })
         }
+        hideFooter={isCompletionScreen}
+        footerSlot={isCompletionScreen ? <></> : undefined}
       >
         {content.screens.map((screen, index) => (
           <LessonScreenPane

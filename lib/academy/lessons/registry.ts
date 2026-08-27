@@ -15,6 +15,10 @@ import {
 import { isDevTestingUnlockedLesson } from "@/lib/dev/academy-dev-tools";
 import { isDevClient } from "@/lib/dev/client-persist";
 
+/** Dev / QA route for Academy template restyle. Not on the Academy map. */
+export const ACADEMY_DESIGN_SHELL_PATH =
+  "/dashboard/academy/lesson/shell" as const;
+
 /** Shipped lesson definitions keyed by academy milestone id. */
 export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {
   1: M1_L1_LESSON_DEFINITION,
@@ -61,6 +65,13 @@ export function getShippedLessonIdsForCohort(
 
 export function isDesignShellLesson(milestoneId: number): boolean {
   return milestoneId === DESIGN_SHELL_MILESTONE_ID;
+}
+
+/** Dev-only: skip onboarding gates for the template lab, never for real lessons. */
+export function isDevAcademyDesignShellPath(
+  pathname: string | null | undefined,
+): boolean {
+  return isDevClient() && pathname === ACADEMY_DESIGN_SHELL_PATH;
 }
 
 export function getLessonDefinition(

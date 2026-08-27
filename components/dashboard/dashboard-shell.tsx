@@ -6,6 +6,7 @@ import { DashboardNavigation } from "@/components/dashboard/dashboard-navigation
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import { HubIntro } from "@/components/dashboard/hub-intro/hub-intro";
 import { hubIntroIdFromPathname } from "@/lib/dashboard/hub-intro/resolve-hub";
+import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/registry";
 import {
   ONBOARDING_ENTRY_PATH,
   readUserSession,
@@ -23,8 +24,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
   const hubIntroId = isLessonRoute ? null : hubIntroIdFromPathname(pathname);
+  const skipOnboardingGate = isDevAcademyDesignShellPath(pathname);
 
   useEffect(() => {
+    if (skipOnboardingGate) return;
+
     let cancelled = false;
 
     async function gateDashboard() {
@@ -43,7 +47,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, skipOnboardingGate]);
 
   return (
     <div

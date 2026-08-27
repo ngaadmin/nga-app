@@ -10,11 +10,10 @@ import {
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
-  lessonColumnLabelClass,
-  lessonDropWellClass,
-  lessonGoldClaimClass,
-  lessonSortBucketActiveClass,
-  lessonSortRowClass,
+  lessonItemChipClass,
+  lessonItemOrbClass,
+  lessonSpentTotalAmountClass,
+  lessonSpentTotalCaptionClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 
@@ -25,8 +24,11 @@ export type SavingsGoalGameItem = {
   emoji?: string;
 };
 
+type DragOrigin = "pool" | "spent";
+
 type DragState = {
   itemId: string;
+  from: DragOrigin;
   offsetX: number;
   offsetY: number;
   x: number;
@@ -54,42 +56,27 @@ function formatDollars(amount: number): string {
   return `$${amount}`;
 }
 
-function shuffleIds(ids: readonly string[]): string[] {
-  const next = [...ids];
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [next[i], next[j]] = [next[j]!, next[i]!];
-  }
-  return next;
+function itemGlyph(item: SavingsGoalGameItem) {
+  return item.emoji?.trim() || item.label.trim().charAt(0) || "?";
 }
 
-function renderItemLabel(item: SavingsGoalGameItem) {
+function renderItemChip(item: SavingsGoalGameItem) {
   return (
-    <span className="flex w-full items-center justify-center gap-2 text-center text-base font-medium leading-snug text-[#031F82]">
-      <span className="min-w-0">
-        {item.emoji ? `${item.emoji} ` : ""}
-        {item.label}
+    <>
+      <span className={lessonItemOrbClass} aria-hidden>
+        {itemGlyph(item)}
       </span>
-      <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
-        {formatDollars(item.price)}
+      <span>
+        {item.label} · {formatDollars(item.price)}
       </span>
-    </span>
+    </>
   );
 }
 
 export function LessonSavingsGoalGame({
   meterLabel,
-  targetAmount,
-  poolColumnLabel,
   dropZoneLabel,
   items,
-  workshopSignTitle,
-  lockedLabel,
-  unlockedLabel,
-  goalAchievedLabel,
-  onGoalReady,
-  onAdvance,
-  onItemSaved,
 }: LessonSavingsGoalGameProps) {
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -97,24 +84,23 @@ export function LessonSavingsGoalGame({
   );
 
   const [poolIds, setPoolIds] = useState<string[]>(() =>
-    shuffleIds(items.map((item) => item.id)),
+    items.map((item) => item.id),
   );
   const [depositedIds, setDepositedIds] = useState<string[]>([]);
-  const [savedTotal, setSavedTotal] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);
-  const [isOverDropZone, setIsOverDropZone] = useState(false);
-  const [dropZoneGlow, setDropZoneGlow] = useState(false);
-  const [goalAchieved, setGoalAchieved] = useState(false);
 
-  const dropZoneRef = useRef<HTMLDivElement | null>(null);
+  const boardRef = useRef<HTMLDivElement | null>(null);
+  const hairlineRef = useRef<HTMLDivElement | null>(null);
   const chipRefs = useRef<Partial<Record<string, HTMLButtonElement | null>>>({});
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
-  const glowTimeoutRef = useRef<number | null>(null);
-  const onGoalReadyRef = useRef(onGoalReady);
-  const onItemSavedRef = useRef(onItemSaved);
-  onGoalReadyRef.current = onGoalReady;
-  onItemSavedRef.current = onItemSaved;
+  const dragStateRef = useRef<DragState | null>(null);
+  dragStateRef.current = dragState;
+
+  const savedTotal = depositedIds.reduce(
+    (sum, itemId) => sum + (itemById.get(itemId)?.price ?? 0),
+    0,
+  );
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -128,99 +114,66 @@ export function LessonSavingsGoalGame({
 
   const endDrag = useCallback(() => {
     releasePointerCapture();
+    dragStateRef.current = null;
     setDragState(null);
-    setIsOverDropZone(false);
   }, [releasePointerCapture]);
 
-  useEffect(
-    () => () => {
-      endDrag();
-      if (glowTimeoutRef.current !== null) {
-        window.clearTimeout(glowTimeoutRef.current);
-      }
-    },
-    [endDrag],
-  );
+  useEffect(() => () => endDrag(), [endDrag]);
 
-  const isPointOverDropZone = useCallback((clientX: number, clientY: number) => {
-    const node = dropZoneRef.current;
-    if (!node) return false;
-    const rect = node.getBoundingClientRect();
-    return (
-      clientX >= rect.left &&
-      clientX <= rect.right &&
-      clientY >= rect.top &&
-      clientY <= rect.bottom
+  const depositItem = useCallback((itemId: string) => {
+    setPoolIds((current) => {
+      if (!current.includes(itemId)) return current;
+      return current.filter((id) => id !== itemId);
+    });
+    setDepositedIds((current) =>
+      current.includes(itemId) ? current : [...current, itemId],
     );
   }, []);
 
-  const triggerDropZoneGlow = useCallback(() => {
-    setDropZoneGlow(true);
-    if (glowTimeoutRef.current !== null) {
-      window.clearTimeout(glowTimeoutRef.current);
-    }
-    glowTimeoutRef.current = window.setTimeout(() => {
-      setDropZoneGlow(false);
-      glowTimeoutRef.current = null;
-    }, 700);
+  const withdrawItem = useCallback((itemId: string) => {
+    setDepositedIds((current) => {
+      if (!current.includes(itemId)) return current;
+      return current.filter((id) => id !== itemId);
+    });
+    setPoolIds((current) =>
+      current.includes(itemId) ? current : [...current, itemId],
+    );
   }, []);
-
-  const depositItem = useCallback(
-    (itemId: string) => {
-      const item = itemById.get(itemId);
-      if (!item || goalAchieved) return;
-
-      setPoolIds((current) => {
-        if (!current.includes(itemId)) return current;
-        return current.filter((id) => id !== itemId);
-      });
-
-      setDepositedIds((current) =>
-        current.includes(itemId) ? current : [...current, itemId],
-      );
-
-      setSavedTotal((current) => {
-        const next = current + item.price;
-        if (next >= targetAmount) {
-          window.setTimeout(() => {
-            setGoalAchieved(true);
-            onGoalReadyRef.current();
-          }, 200);
-        }
-        return next;
-      });
-
-      triggerDropZoneGlow();
-      onItemSavedRef.current?.();
-    },
-    [goalAchieved, itemById, targetAmount, triggerDropZoneGlow],
-  );
 
   const handleChipPointerDown = (
     itemId: string,
+    from: DragOrigin,
     event: ReactPointerEvent<HTMLButtonElement>,
   ) => {
-    if (goalAchieved) return;
     const chip = chipRefs.current[itemId];
     if (!chip) return;
 
+    event.preventDefault();
+    event.stopPropagation();
+
     const rect = chip.getBoundingClientRect();
-    captureTargetRef.current = event.currentTarget;
+    const captureTarget = boardRef.current ?? event.currentTarget;
+    captureTargetRef.current = captureTarget;
     activePointerIdRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragState({
+    captureTarget.setPointerCapture(event.pointerId);
+
+    const nextDrag: DragState = {
       itemId,
+      from,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
       x: rect.left,
       y: rect.top,
       width: rect.width,
       height: rect.height,
-    });
+    };
+    dragStateRef.current = nextDrag;
+    setDragState(nextDrag);
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    if (!dragState || goalAchieved) return;
+    if (activePointerIdRef.current !== event.pointerId) return;
+    if (!dragStateRef.current) return;
     setDragState((current) =>
       current
         ? {
@@ -230,167 +183,91 @@ export function LessonSavingsGoalGame({
           }
         : null,
     );
-    setIsOverDropZone(isPointOverDropZone(event.clientX, event.clientY));
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
-    if (!dragState || goalAchieved) {
+    if (activePointerIdRef.current !== event.pointerId) return;
+
+    const drag = dragStateRef.current;
+    if (!drag) {
       endDrag();
       return;
     }
 
-    if (isPointOverDropZone(event.clientX, event.clientY)) {
-      depositItem(dragState.itemId);
+    const hairlineY = hairlineRef.current?.getBoundingClientRect().top;
+    const belowHairline =
+      hairlineY !== undefined && event.clientY >= hairlineY;
+
+    if (belowHairline) {
+      depositItem(drag.itemId);
+    } else {
+      withdrawItem(drag.itemId);
     }
 
     endDrag();
   };
 
   const draggedItem = dragState ? itemById.get(dragState.itemId) : null;
-  const progressPercent = Math.min(100, (savedTotal / targetAmount) * 100);
 
-  const columnShellClass = cn(
-    lessonDropWellClass,
-    "flex min-h-0 flex-col gap-1.5 p-2.5",
-  );
+  const renderDraggableChip = (itemId: string, from: DragOrigin) => {
+    const item = itemById.get(itemId);
+    if (!item) return null;
+    const isDragging = dragState?.itemId === itemId;
+    return (
+      <button
+        key={itemId}
+        ref={(node) => {
+          chipRefs.current[itemId] = node;
+        }}
+        type="button"
+        onPointerDown={(event) => handleChipPointerDown(itemId, from, event)}
+        className={cn(lessonItemChipClass, isDragging && "opacity-25")}
+        style={{ touchAction: "none" }}
+      >
+        {renderItemChip(item)}
+      </button>
+    );
+  };
 
   return (
     <div
+      ref={boardRef}
       className="flex min-h-0 flex-1 flex-col touch-none select-none"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={endDrag}
     >
-      <div className="mb-2 shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          <p className={lessonColumnLabelClass}>{meterLabel}</p>
-          <p
-            className="font-heading text-sm font-extrabold tabular-nums text-[#031F82]"
-            aria-live="polite"
-          >
-            {formatDollars(savedTotal)} / {formatDollars(targetAmount)}
-          </p>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex flex-col gap-4 pb-12 pt-1">
+          {poolIds.map((itemId) => renderDraggableChip(itemId, "pool"))}
         </div>
         <div
-          className="mt-1 h-2 overflow-hidden rounded-full bg-[#BDE9FB]/50"
-          role="progressbar"
-          aria-valuenow={savedTotal}
-          aria-valuemin={0}
-          aria-valuemax={targetAmount}
-          aria-label={`${meterLabel}: ${formatDollars(savedTotal)} of ${formatDollars(targetAmount)}`}
-        >
-          <div
-            className="h-full rounded-full bg-[#0CC1E0] transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-2">
-        <div className={columnShellClass}>
-          <p className={cn("shrink-0", lessonColumnLabelClass)}>{poolColumnLabel}</p>
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
-            {poolIds.length > 0 ? (
-              poolIds.map((itemId) => {
-                const item = itemById.get(itemId);
-                if (!item) return null;
-                const isDragging = dragState?.itemId === itemId;
-                return (
-                  <button
-                    key={itemId}
-                    ref={(node) => {
-                      chipRefs.current[itemId] = node;
-                    }}
-                    type="button"
-                    onPointerDown={(event) => handleChipPointerDown(itemId, event)}
-                    className={cn(
-                      lessonSortRowClass,
-                      "min-h-[2.75rem] justify-center px-3 py-2",
-                      isDragging && "opacity-30",
-                    )}
-                  >
-                    {renderItemLabel(item)}
-                  </button>
-                );
-              })
-            ) : (
-              <p className="flex flex-1 items-center justify-center text-center font-heading text-sm font-bold text-[#22C55E]">
-                All moved!
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div
-          ref={dropZoneRef}
-          className={cn(
-            columnShellClass,
-            "transition-all duration-300",
-            (isOverDropZone || dropZoneGlow) && lessonSortBucketActiveClass,
-            goalAchieved && "border-[#16A34A] bg-[#DCFCE7]/40 ring-2 ring-[#22C55E]/40",
-          )}
-        >
-          <p className={cn("shrink-0", lessonColumnLabelClass)}>{dropZoneLabel}</p>
-          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
-            {depositedIds.length > 0 ? (
-              depositedIds.map((itemId) => {
-                const item = itemById.get(itemId);
-                if (!item) return null;
-                return (
-                  <div
-                    key={itemId}
-                    className="flex min-h-[2.75rem] items-center justify-center gap-2 rounded-full border border-[#BDE9FB] bg-white px-3 py-2 text-center font-heading text-base font-medium text-[#031F82]"
-                  >
-                    {renderItemLabel(item)}
-                  </div>
-                );
-              })
-            ) : (
-              <p className="flex flex-1 items-center justify-center text-center font-sans text-sm font-medium text-[#1E3A5F]/50">
-                Drop items here
-              </p>
-            )}
+          ref={hairlineRef}
+          className="h-px shrink-0 bg-[#C5D8E6]"
+        />
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pt-4">
+          <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
+            {dropZoneLabel}
+          </h3>
+          <div className="flex min-h-0 flex-1 flex-col gap-3.5">
+            {depositedIds.map((itemId) => renderDraggableChip(itemId, "spent"))}
           </div>
         </div>
       </div>
 
-      <div
-        className={cn(
-          "mt-2 shrink-0 rounded-xl border border-[#BDE9FB] bg-[#F7FBFF] px-3 py-2.5 text-center transition-all duration-300",
-          goalAchieved && "border-[#22C55E] bg-[#DCFCE7]/45",
-        )}
-      >
-        <p className="font-heading text-sm font-extrabold leading-snug text-[#031F82]">
-          {workshopSignTitle}
+      <div className="shrink-0 pb-5 pt-8 text-center">
+        <p className={lessonSpentTotalCaptionClass}>{meterLabel}</p>
+        <p className={lessonSpentTotalAmountClass} aria-live="polite">
+          {formatDollars(savedTotal)}
         </p>
-        <div className="mt-2 flex flex-col items-center gap-1.5">
-          {goalAchieved ? (
-            <p className="font-heading text-sm font-extrabold uppercase tracking-wide text-[#16A34A]">
-              {goalAchievedLabel}
-            </p>
-          ) : null}
-          {goalAchieved ? (
-            <button
-              type="button"
-              onClick={onAdvance}
-              className={cn(lessonGoldClaimClass, "h-auto min-h-0 w-full max-w-none py-2.5 text-sm")}
-            >
-              {unlockedLabel}
-            </button>
-          ) : (
-            <span className="inline-flex items-center justify-center rounded-full border border-[#BDE9FB] bg-[#E8F6FC] px-3 py-1.5 font-heading text-sm font-bold uppercase tracking-wide text-[#1E3A5F]/50">
-              {lockedLabel}
-            </span>
-          )}
-        </div>
       </div>
 
       {draggedItem && dragState ? (
         <OverlayPortal>
           <div
             className={cn(
-              lessonSortRowClass,
-              "pointer-events-none fixed px-3 py-2 text-center shadow-lg",
+              lessonItemChipClass,
+              "pointer-events-none fixed shadow-lg",
             )}
             style={{
               left: dragState.x,
@@ -398,7 +275,7 @@ export function LessonSavingsGoalGame({
               width: dragState.width,
             }}
           >
-            {renderItemLabel(draggedItem)}
+            {renderItemChip(draggedItem)}
           </div>
         </OverlayPortal>
       ) : null}

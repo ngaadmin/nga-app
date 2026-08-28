@@ -72,6 +72,7 @@ export function MultipleChoiceScreen({
   const flowRef = useRef(flow);
   flowRef.current = flow;
   const advancingRef = useRef(false);
+  const advanceTimerRef = useRef<number | null>(null);
   const choiceRef = useRef(choice);
   choiceRef.current = choice;
   const multiSelectedRef = useRef(multiSelected);
@@ -112,6 +113,17 @@ export function MultipleChoiceScreen({
     }
 
     setChoice(key);
+    choiceRef.current = key;
+
+    const selected = optionByKeyRef.current.get(key);
+    if (selected && isLessonChoiceOptionCorrect(selected)) {
+      flowRef.current.markScreenReady(screenIndex);
+      return;
+    }
+
+    setError(resolveErrorCopy());
+    flowRef.current.incrementMistake();
+    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
   };
 
   const isCurrentSelectionCorrect = (): boolean => {
@@ -143,13 +155,12 @@ export function MultipleChoiceScreen({
   };
 
   useEffect(() => {
-    flowRef.current.markScreenReady(screenIndex);
-  }, [screenIndex]);
+    if (isMultiCorrect) {
+      flowRef.current.markScreenReady(screenIndex);
+    }
+  }, [isMultiCorrect, screenIndex]);
 
   useEffect(() => {
-    advancingRef.current = false;
-    let advanceTimer: number | null = null;
-
     activeMultipleChoiceNextHandler = () => {
       if (advancingRef.current || solvedRef.current) return false;
 
@@ -167,14 +178,14 @@ export function MultipleChoiceScreen({
       setError(null);
       setSuccess(true);
       celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
-      advanceTimer = window.setTimeout(() => {
-        flowRef.current.handleNext();
+      advanceTimerRef.current = window.setTimeout(() => {
+        advanceTimerRef.current = null;
+        flowRef.current.handleNext({ canAdvance: true });
       }, LESSON_SUCCESS_FLASH_MS);
       return false;
     };
 
     return () => {
-      if (advanceTimer !== null) window.clearTimeout(advanceTimer);
       activeMultipleChoiceNextHandler = null;
     };
   }, []);

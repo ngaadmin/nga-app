@@ -470,12 +470,12 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <div
         ref={boardRef}
-        className="mt-3 flex min-h-[300px] flex-1 flex-col"
+        className="mt-3 flex h-full min-h-0 flex-1 flex-col"
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
-        <div className="flex flex-1 flex-col gap-4 py-1">
+        <div className="flex shrink-0 flex-col gap-4 py-1">
           {poolIds.map((itemId) => renderPoolChip(itemId, true))}
         </div>
         <div className="mb-2.5 h-px shrink-0 bg-[#C5D8E6]" />
@@ -483,21 +483,21 @@ export function LessonBucketSortGame<TBucket extends string>({
           ref={(node) => {
             bucketRefs.current[primaryBucket.id] = node;
           }}
-          className="flex min-h-0 flex-1 flex-col gap-2"
+          className="flex min-h-0 w-full flex-1 flex-col"
         >
-          <h3 className="m-0 font-heading text-base font-bold text-[#031F82]">
+          <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
             {primaryBucket.label}
           </h3>
-          <div className="flex flex-1 flex-col gap-3.5 py-2.5">
+          <div className="flex min-h-0 flex-1 flex-col gap-3.5 py-2.5">
             {spentIds.map((itemId) => renderPlacedItem(itemId))}
           </div>
+          <LessonSpentTotalBar
+            caption={poolColumnLabel}
+            amount={formatDollars(totalSpent)}
+            complete={isSpentTotalComplete}
+            className="mt-auto shrink-0 pt-[18px]"
+          />
         </div>
-        <LessonSpentTotalBar
-          caption={poolColumnLabel}
-          amount={formatDollars(totalSpent)}
-          complete={isSpentTotalComplete}
-          className="pt-[18px]"
-        />
 
         {draggedItem && dragState ? (
           <OverlayPortal className="overflow-visible">

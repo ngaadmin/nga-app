@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { DesignShellJumpSync } from "@/components/academy/lesson/dev/design-shell-screen-jumper";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  DesignShellJumpSync,
+  resolveDesignShellJumperIndex,
+} from "@/components/academy/lesson/dev/design-shell-screen-jumper";
 import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -41,12 +44,25 @@ export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
     return null;
   }
 
-  return <AcademyLessonPlayerInner milestoneId={milestoneId} />;
+  return (
+    <SearchParamsBoundary>
+      <AcademyLessonPlayerInner milestoneId={milestoneId} />
+    </SearchParamsBoundary>
+  );
 }
 
 function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
   const content = useLessonDefinition(milestoneId);
+  const searchParams = useSearchParams();
   const { awardLessonXp } = useDashboardWallet();
+  const isDesignShell = content.meta.isDesignShell === true;
+  const initialScreenIndex = isDesignShell
+    ? (resolveDesignShellJumperIndex(
+        content.screens,
+        searchParams.get("type"),
+        searchParams.get("screen"),
+      ) ?? 0)
+    : 0;
 
   const flow = useLessonFlow({
     milestoneId,
@@ -54,8 +70,9 @@ function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
     skillSlug: content.rewards.skillSlug,
     xpReward: content.rewards.xpReward,
     perfectStreakBonus: content.rewards.perfectStreakBonus,
-    isDesignShell: content.meta.isDesignShell === true,
-    exitHref: content.meta.isDesignShell ? "/dashboard/academy" : undefined,
+    isDesignShell,
+    exitHref: isDesignShell ? "/dashboard/academy" : undefined,
+    initialScreenIndex,
   });
 
   const awardBonusXp = useCallback(
@@ -65,14 +82,13 @@ function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
     [awardLessonXp],
   );
 
-  const isDesignShell = content.meta.isDesignShell === true;
-
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       {isDesignShell ? (
         <SearchParamsBoundary>
           <DesignShellJumpSync
             screens={content.screens}
+            currentIndex={flow.screenIndex}
             onJump={flow.setScreenIndex}
           />
         </SearchParamsBoundary>

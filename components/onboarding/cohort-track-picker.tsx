@@ -22,10 +22,10 @@ const TRACK_AGE_SUPPORT: Record<MasteryCohort, string> = {
   maverick: "For ages 16+",
 };
 
-const TRACK_PENNY_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/characters/penny/penny_jump.webp",
-  pathfinder: "/assets/illustrations/characters/penny/penny_think.webp",
-  maverick: "/assets/illustrations/characters/penny/penny_confident.webp",
+const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
+  explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
+  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
+  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
 };
 
 const PENNY_POINT_SRC =
@@ -78,7 +78,7 @@ export function CohortTrackPicker() {
               className="flex w-full items-center gap-4 bg-transparent text-left transition-transform active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-nga-secondary"
             >
               <Image
-                src={TRACK_PENNY_SRC[cohort]}
+                src={TRACK_AVATAR_SRC[cohort]}
                 alt=""
                 width={480}
                 height={480}

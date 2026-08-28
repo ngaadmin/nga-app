@@ -30,6 +30,8 @@ export type UseLessonFlowOptions = {
   isDesignShell?: boolean;
   /** Defaults to /dashboard/academy */
   exitHref?: string;
+  /** Design-shell jumper can open on a non-zero screen. */
+  initialScreenIndex?: number;
 };
 
 type PendingFlowAction =
@@ -45,11 +47,12 @@ export function useLessonFlow({
   perfectStreakBonus,
   isDesignShell = false,
   exitHref = "/dashboard/academy",
+  initialScreenIndex = 0,
 }: UseLessonFlowOptions) {
   const router = useRouter();
   const { awardLessonXp } = useDashboardWallet();
 
-  const [screenIndex, setScreenIndex] = useState(0);
+  const [screenIndex, setScreenIndex] = useState(initialScreenIndex);
   const [screenReady, setScreenReady] = useState<boolean[]>(
     () => Array.from({ length: totalScreens }, () => false),
   );

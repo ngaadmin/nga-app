@@ -61,6 +61,7 @@ function livingTypeChips(screens: readonly ScreenConfig[]): LivingTypeChip[] {
 
 type DesignShellJumpSyncProps = {
   screens: readonly ScreenConfig[];
+  currentIndex: number;
   onJump: (index: number) => void;
 };
 
@@ -99,6 +100,7 @@ export function resolveDesignShellJumperIndex(
 /** Invisible URL → screenIndex bridge. Design-shell only; renders nothing. */
 export function DesignShellJumpSync({
   screens,
+  currentIndex,
   onJump,
 }: DesignShellJumpSyncProps) {
   const searchParams = useSearchParams();
@@ -117,8 +119,8 @@ export function DesignShellJumpSync({
     );
     if (nextIndex === null) return;
     appliedQueryRef.current = queryKey;
-    onJump(nextIndex);
-  }, [onJump, queryKey, screenParam, screens, typeParam]);
+    if (nextIndex !== currentIndex) onJump(nextIndex);
+  }, [currentIndex, onJump, queryKey, screenParam, screens, typeParam]);
 
   return null;
 }

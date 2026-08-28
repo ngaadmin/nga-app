@@ -64,6 +64,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "link-match",
     id: "spare-vs-spend-match",
+    illustrationId: "pair-senna-lars-walking",
     intro:
       "Senna explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:",
     eventColumnLabel: "Events",
@@ -228,6 +229,7 @@ const M1_L3_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
     successMessage: "Holly has no money left to pay for new headphones.",
   },
   "spare-vs-spend-match": {
+    illustrationId: "senna-happy",
     intro:
       "Senna explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:",
   },

@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { LESSON_SUCCESS_FLASH_MS } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import {
+  LESSON_SUCCESS_FLASH_MS,
+  useLessonScreenFlow,
+} from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   LessonWordDropGame,
   type LessonWordDropGameHandle,
@@ -33,11 +36,21 @@ export function WordDropScreen({
   screenIndex,
   flow,
 }: CoreScreenProps<WordDropScreenConfig>) {
+  const {
+    showSuccess,
+    handleComplete,
+    handleIncomplete,
+    handleSuccess,
+    handleMistake,
+  } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+  });
   const flowRef = useRef(flow);
   flowRef.current = flow;
   const gameRef = useRef<LessonWordDropGameHandle>(null);
   const advancingRef = useRef(false);
-  const [feedback, setFeedback] = useState<"error" | "success" | null>(null);
+  const [feedback, setFeedback] = useState<"error" | null>(null);
 
   const prompt =
     screen.prompt && screen.blanks?.length
@@ -55,13 +68,24 @@ export function WordDropScreen({
 
   const errorCopy = lessonFeedbackCopy(screen.wrongError);
 
-  useEffect(() => {
-    flowRef.current.markScreenReady(screenIndex);
-  }, [screenIndex]);
-
   const handleChoicesChange = useCallback(() => {
     setFeedback(null);
   }, []);
+
+  const handleSolved = useCallback(() => {
+    setFeedback(null);
+    handleSuccess();
+    handleComplete();
+  }, [handleComplete, handleSuccess]);
+
+  const handleWrongPlacement = useCallback(() => {
+    setFeedback("error");
+    handleMistake();
+  }, [handleMistake]);
+
+  useEffect(() => {
+    flowRef.current.clearScreenReady(screenIndex);
+  }, [screenIndex]);
 
   useEffect(() => {
     advancingRef.current = false;
@@ -79,7 +103,6 @@ export function WordDropScreen({
       }
 
       advancingRef.current = true;
-      setFeedback("success");
       celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
       advanceTimer = window.setTimeout(() => {
         flowRef.current.handleNext();
@@ -101,8 +124,11 @@ export function WordDropScreen({
         blanks={blanks}
         promptLabel={screen.promptLabel}
         onChoicesChange={handleChoicesChange}
+        onComplete={handleSolved}
+        onIncomplete={handleIncomplete}
+        onMismatch={handleWrongPlacement}
       />
-      {feedback === "success" ? <LessonSuccessBanner /> : null}
+      {showSuccess ? <LessonSuccessBanner /> : null}
       {feedback === "error" ? (
         <LessonErrorBanner>{errorCopy}</LessonErrorBanner>
       ) : null}

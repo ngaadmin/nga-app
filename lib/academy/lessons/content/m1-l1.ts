@@ -235,12 +235,14 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
 
 const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
+    illustrationId: "aiden-thinking",
     narrativeBefore:
       "Aiden just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be",
     wrongError:
       "Not quite! Aiden spotted those earbuds - what's his brain pushing him to do with that $40?",
   },
   "short-fun-reality": {
+    illustrationId: "aiden-questioning",
     prompt:
       "Aiden buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",
     optionA: {
@@ -314,6 +316,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
       "Don't fall for the countdown! They're rushing Aiden so he won't stop to think if he really wants to spend his money on it. Try again!",
   },
   "impulse-pause": {
+    illustrationId: "aiden-thinking",
     narrative:
       "If Aiden had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Aiden can think if he really needs the item right now.",
     holdLabel: "⏸️ HOLD TO PAUSE ⏸️",
@@ -342,10 +345,14 @@ export const M1_L1_LESSON_DEFINITION: CohortLessonDefinition = {
     pathfinder: {
       characterName: "Holly",
       screenOverrides: {
+        "hook-word-drop": {
+          illustrationId: "holly-walking",
+        },
         "short-fun-reality": {
           illustrationId: "holly-working",
         },
         "impulse-pause": {
+          illustrationId: "holly-working",
           cta: "Tap and hold the button to give Holly time to think.",
         },
       },

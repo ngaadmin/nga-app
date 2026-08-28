@@ -84,6 +84,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "spotlight-rounds",
     id: "need-spotlight",
+    illustrationId: "lars-thinking",
     prompt:
       "Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?",
     rounds: [
@@ -144,6 +145,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "allocation-slider",
     id: "reserve-slider",
+    illustrationId: "lars-happy",
     intro:
       "Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.",
     total: 25,
@@ -161,6 +163,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "rank-order",
     id: "rank-stack",
+    illustrationId: "lars-working",
     intro:
       "Drag the choices in the correct order, starting with what would be best for Lars to do.",
     dragHint:

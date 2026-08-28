@@ -34,6 +34,24 @@ type LessonWordDropGameProps = {
   blanks: readonly WordDropBlank[];
   promptLabel?: string;
   onChoicesChange?: () => void;
+  onComplete?: () => void;
+  onIncomplete?: () => void;
+  onMismatch?: () => void;
+};
+
+const TAP_MOVE_PX = 10;
+
+type PressSession = {
+  pointerId: number;
+  word: string;
+  fromBlankIndex: number | null;
+  startX: number;
+  startY: number;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+  dragging: boolean;
 };
 
 type DragState = {
@@ -82,7 +100,7 @@ export const LessonWordDropGame = forwardRef<
   LessonWordDropGameHandle,
   LessonWordDropGameProps
 >(function LessonWordDropGame(
-  { prompt, blanks, onChoicesChange },
+  { prompt, blanks, onChoicesChange, onComplete, onIncomplete, onMismatch },
   ref,
 ) {
   const parts = useMemo(() => prompt.split("[blank]"), [prompt]);
@@ -114,6 +132,30 @@ export const LessonWordDropGame = forwardRef<
   blanksRef.current = blanks;
   const onChoicesChangeRef = useRef(onChoicesChange);
   onChoicesChangeRef.current = onChoicesChange;
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const onIncompleteRef = useRef(onIncomplete);
+  onIncompleteRef.current = onIncomplete;
+  const onMismatchRef = useRef(onMismatch);
+  onMismatchRef.current = onMismatch;
+  const pressRef = useRef<PressSession | null>(null);
+
+  const reportSolvedState = useCallback((placedBlankIndex?: number) => {
+    const solved = blanksRef.current.every(
+      (blank, index) => choicesRef.current[index] === blank.correctOption,
+    );
+    if (solved) {
+      onCompleteRef.current?.();
+      return;
+    }
+    onIncompleteRef.current?.();
+    if (placedBlankIndex === undefined) return;
+    const blank = blanksRef.current[placedBlankIndex];
+    const placed = choicesRef.current[placedBlankIndex];
+    if (blank && placed && placed !== blank.correctOption) {
+      onMismatchRef.current?.();
+    }
+  }, []);
 
   const poolRef = useRef<HTMLDivElement>(null);
   const blankRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -129,19 +171,19 @@ export const LessonWordDropGame = forwardRef<
   }));
 
   const removeWordFromBlank = useCallback((blankIndex: number) => {
-    setChoices((current) => {
-      if (!current[blankIndex]) return current;
-      const next = [...current];
-      next[blankIndex] = "";
-      choicesRef.current = next;
-      return next;
-    });
+    const current = choicesRef.current;
+    if (!current[blankIndex]) return;
+    const next = [...current];
+    next[blankIndex] = "";
+    choicesRef.current = next;
+    setChoices(next);
     onChoicesChangeRef.current?.();
-  }, []);
+    reportSolvedState();
+  }, [reportSolvedState]);
 
-  const assignWordToBlank = useCallback((blankIndex: number, word: string) => {
-    setChoices((current) => {
-      const next = [...current];
+  const placeWordInBlank = useCallback(
+    (blankIndex: number, word: string) => {
+      const next = [...choicesRef.current];
       for (let index = 0; index < next.length; index += 1) {
         if (index !== blankIndex && next[index] === word) {
           next[index] = "";
@@ -149,10 +191,12 @@ export const LessonWordDropGame = forwardRef<
       }
       next[blankIndex] = word;
       choicesRef.current = next;
-      return next;
-    });
-    onChoicesChangeRef.current?.();
-  }, []);
+      setChoices(next);
+      onChoicesChangeRef.current?.();
+      reportSolvedState(blankIndex);
+    },
+    [reportSolvedState],
+  );
 
   const endDrag = useCallback(() => {
     setDragState(null);
@@ -160,7 +204,7 @@ export const LessonWordDropGame = forwardRef<
     setHoverPool(false);
   }, []);
 
-  const startDrag = (
+  const beginPress = (
     event: ReactPointerEvent<HTMLElement>,
     word: string,
     fromBlankIndex: number | null,
@@ -170,29 +214,50 @@ export const LessonWordDropGame = forwardRef<
 
     const rect = event.currentTarget.getBoundingClientRect();
     const pointerId = event.pointerId;
-
-    setDragState({
+    pressRef.current = {
+      pointerId,
       word,
       fromBlankIndex,
+      startX: event.clientX,
+      startY: event.clientY,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
-      x: rect.left,
-      y: rect.top,
       width: rect.width,
       height: rect.height,
-    });
+      dragging: false,
+    };
 
     const move = (nativeEvent: PointerEvent) => {
-      if (nativeEvent.pointerId !== pointerId) return;
-      setDragState((current) =>
-        current
-          ? {
-              ...current,
-              x: nativeEvent.clientX - current.offsetX,
-              y: nativeEvent.clientY - current.offsetY,
-            }
-          : null,
+      const press = pressRef.current;
+      if (!press || nativeEvent.pointerId !== pointerId) return;
+      const distance = Math.hypot(
+        nativeEvent.clientX - press.startX,
+        nativeEvent.clientY - press.startY,
       );
+      if (!press.dragging) {
+        if (distance < TAP_MOVE_PX) return;
+        press.dragging = true;
+        setDragState({
+          word: press.word,
+          fromBlankIndex: press.fromBlankIndex,
+          offsetX: press.offsetX,
+          offsetY: press.offsetY,
+          x: nativeEvent.clientX - press.offsetX,
+          y: nativeEvent.clientY - press.offsetY,
+          width: press.width,
+          height: press.height,
+        });
+      } else {
+        setDragState((current) =>
+          current
+            ? {
+                ...current,
+                x: nativeEvent.clientX - current.offsetX,
+                y: nativeEvent.clientY - current.offsetY,
+              }
+            : null,
+        );
+      }
       setHoverBlankIndex(
         resolveBlankIndexFromPointer(
           nativeEvent.clientX,
@@ -211,8 +276,32 @@ export const LessonWordDropGame = forwardRef<
 
     const up = (nativeEvent: PointerEvent) => {
       if (nativeEvent.pointerId !== pointerId) return;
+      const press = pressRef.current;
       dragCleanupRef.current?.();
       dragCleanupRef.current = null;
+      pressRef.current = null;
+
+      if (!press) {
+        endDrag();
+        return;
+      }
+
+      if (!press.dragging) {
+        if (press.fromBlankIndex === null) {
+          const emptyIndex = choicesRef.current.findIndex((choice) => !choice);
+          const target =
+            emptyIndex >= 0
+              ? emptyIndex
+              : blanksRef.current.length === 1
+                ? 0
+                : null;
+          if (target !== null) placeWordInBlank(target, press.word);
+        } else {
+          removeWordFromBlank(press.fromBlankIndex);
+        }
+        endDrag();
+        return;
+      }
 
       const hit = document.elementFromPoint(
         nativeEvent.clientX,
@@ -227,9 +316,9 @@ export const LessonWordDropGame = forwardRef<
         : Number.NaN;
 
       if (Number.isInteger(slotIndex)) {
-        assignWordToBlank(slotIndex, word);
-      } else if (fromBlankIndex !== null && (overBank || !slot)) {
-        removeWordFromBlank(fromBlankIndex);
+        placeWordInBlank(slotIndex, press.word);
+      } else if (press.fromBlankIndex !== null && (overBank || !slot)) {
+        removeWordFromBlank(press.fromBlankIndex);
       }
 
       endDrag();
@@ -289,7 +378,7 @@ export const LessonWordDropGame = forwardRef<
                     onPointerDown={(event) => {
                       const word = choices[index];
                       if (!word) return;
-                      startDrag(event, word, index);
+                      beginPress(event, word, index);
                     }}
                     className={lessonSortPoolChipClass}
                     style={{ touchAction: "none" }}
@@ -326,7 +415,7 @@ export const LessonWordDropGame = forwardRef<
               type="button"
               onPointerDown={(event) => {
                 if (used) return;
-                startDrag(event, option, null);
+                beginPress(event, option, null);
               }}
               className={cn(
                 lessonSortPoolChipClass,

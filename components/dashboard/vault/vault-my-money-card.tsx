@@ -22,7 +22,6 @@ import {
 import {
   pickableCircleActiveClass,
   pickableCircleClass,
-  pickableCircleMutedClass,
   pickableItemClass,
   pickableLabelActiveClass,
   pickableLabelClass,
@@ -115,10 +114,7 @@ export function VaultMyMoneyCard({
                 )}
               >
                 <span
-                  className={cn(
-                    pickableCircleClass,
-                    isMuted ? pickableCircleMutedClass : pickableCircleActiveClass,
-                  )}
+                  className={cn(pickableCircleClass, pickableCircleActiveClass)}
                   aria-hidden
                 >
                   {bucket.emoji}

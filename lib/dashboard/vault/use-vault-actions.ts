@@ -423,6 +423,42 @@ export function useVaultActions() {
     ],
   );
 
+  const handleSpendFromGoal = useCallback(
+    (goalId: SavingsGoalId, amount: number, categoryLabel: string) => {
+      if (amount <= 0) return;
+
+      const note = categoryLabel.trim();
+      if (!note) return;
+
+      const goal = vaultGoals.find((entry) => entry.id === goalId);
+      if (!goal || amount > goal.balance + 0.001) return;
+
+      const applied = roundAudAmount(Math.min(amount, goal.balance));
+      if (applied <= 0) return;
+
+      const nextGoals = vaultGoals.map((entry) =>
+        entry.id === goalId
+          ? { ...entry, balance: roundAudAmount(entry.balance - applied) }
+          : entry,
+      );
+      setSavingsGoals(nextGoals);
+      appendLedger(
+        vaultCopy.savings.spentFromGoalWithNoteTemplate
+          .replace("{amount}", formatMoney(applied))
+          .replace("{goal}", goal.name)
+          .replace("{note}", note),
+        { category: "spend", amount: applied, flow: "out", highlight: true },
+      );
+    },
+    [
+      appendLedger,
+      formatMoney,
+      setSavingsGoals,
+      vaultCopy.savings.spentFromGoalWithNoteTemplate,
+      vaultGoals,
+    ],
+  );
+
   const handleRenameBucket = useCallback(
     (bucketId: VaultBucketId, name: string, emoji?: string) => {
       const trimmed = name.trim();
@@ -676,6 +712,7 @@ export function useVaultActions() {
     handleAddCustomSpendingCategory,
     handleRenameSpendingCategory,
     handleAssignGoals,
+    handleSpendFromGoal,
     handleRenameBucket,
     handleAddCustomBucket,
     handleDeleteCustomBucket,

@@ -21,6 +21,7 @@ import {
   moneyOutWhatForOptions,
   VAULT_WHAT_FOR_CUSTOM_OPTION_ID,
   type VaultMoneyOutWhatForKind,
+  type VaultWhatForOption,
 } from "@/lib/dashboard/vault-what-for";
 import { cn } from "@/lib/utils/cn";
 
@@ -120,8 +121,9 @@ export function VaultSpendingCategoryAdmin({
 
 type VaultSpendMoneyFormProps = {
   maxAmount: number;
-  categories: SpendingCategory[];
-  whatForKind: VaultMoneyOutWhatForKind;
+  categories?: SpendingCategory[];
+  whatForKind?: VaultMoneyOutWhatForKind;
+  whatForOptions?: VaultWhatForOption[];
   onSpend: (amount: number, categoryLabel: string) => void;
   onPremiumCustomRequest: () => void;
   onClose: () => void;
@@ -130,7 +132,8 @@ type VaultSpendMoneyFormProps = {
 export function VaultSpendMoneyForm({
   maxAmount,
   categories,
-  whatForKind,
+  whatForKind = "spend",
+  whatForOptions: whatForOptionsOverride,
   onSpend,
   onPremiumCustomRequest,
   onClose,
@@ -138,25 +141,28 @@ export function VaultSpendMoneyForm({
   const budgetCopy = copyMatrix.dashboard.vault.budget;
   const { currencySymbol } = useCurrency();
   const whatForOptions = useMemo(
-    () => moneyOutWhatForOptions(whatForKind, categories),
-    [categories, whatForKind],
+    () =>
+      whatForOptionsOverride ??
+      moneyOutWhatForOptions(whatForKind, categories ?? []),
+    [categories, whatForKind, whatForOptionsOverride],
   );
 
   const [amountInput, setAmountInput] = useState("");
   const [hitCap, setHitCap] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
-    whatForOptions[0]?.id ?? "other",
+    whatForOptions[0]?.id ?? "",
   );
-  const [customWhatFor, setCustomWhatFor] = useState("");
+  const [whatForSelectKey, setWhatForSelectKey] = useState(0);
 
   const selectedLabel =
     whatForOptions.find((entry) => entry.id === categoryId)?.label ??
     whatForOptions[0]?.label;
 
   useEffect(() => {
-    if (!whatForOptions.some((entry) => entry.id === categoryId)) {
-      setCategoryId(whatForOptions[0]?.id ?? "other");
+    if (categoryId && whatForOptions.some((entry) => entry.id === categoryId)) {
+      return;
     }
+    setCategoryId(whatForOptions[0]?.id ?? "");
   }, [categoryId, whatForOptions]);
 
   function handleAmountChange(nextRaw: string) {
@@ -174,20 +180,17 @@ export function VaultSpendMoneyForm({
     onClose();
   }
 
-  function openCustomComingSoon() {
-    onPremiumCustomRequest();
-  }
-
   function handleWhatForChange(nextId: string) {
     if (nextId === VAULT_WHAT_FOR_CUSTOM_OPTION_ID) {
-      openCustomComingSoon();
+      onPremiumCustomRequest();
+      const fallbackId = whatForOptions.some((entry) => entry.id === categoryId)
+        ? categoryId
+        : (whatForOptions[0]?.id ?? "");
+      setCategoryId(fallbackId);
+      setWhatForSelectKey((key) => key + 1);
       return;
     }
     setCategoryId(nextId);
-  }
-
-  function handleAddCustomWhatFor() {
-    openCustomComingSoon();
   }
 
   return (
@@ -224,6 +227,7 @@ export function VaultSpendMoneyForm({
           <label className="block">
             <span className={manageSheetFieldLabelClass}>{vaultCopy.whatForLabel}</span>
             <select
+              key={whatForSelectKey}
               value={categoryId}
               onChange={(event) => handleWhatForChange(event.target.value)}
               aria-label={vaultCopy.whatForLabel}
@@ -239,27 +243,6 @@ export function VaultSpendMoneyForm({
               </option>
             </select>
           </label>
-          <div className="mt-2 flex min-w-0 gap-1.5">
-            <input
-              value={customWhatFor}
-              onChange={(event) => setCustomWhatFor(event.target.value)}
-              placeholder={vaultCopy.addCustomWhatForPlaceholder}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  handleAddCustomWhatFor();
-                }
-              }}
-              className={cn("min-w-0 flex-1", vaultFieldInputClass)}
-            />
-            <button
-              type="button"
-              onClick={handleAddCustomWhatFor}
-              className={cn("shrink-0 px-3", orangeCtaClass)}
-            >
-              {vaultCopy.addCustomWhatFor}
-            </button>
-          </div>
         </div>
       </div>
 

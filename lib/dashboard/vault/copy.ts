@@ -52,6 +52,8 @@ export const vaultCopy = {
   iUsedThis: "I used some",
   recordSpendingTitle: "Record spending",
   recordSpendingHelper: "How much came out of Spend, and what did you buy?",
+  recordSaveSpendingHelper:
+    "How much came out of Save, and what was it for?",
   recordGiftTitle: "Record a gift",
   recordGiftHelper: "How much came out of Give, and who was it for?",
   recordMoneyOutTitle: "Record money out",

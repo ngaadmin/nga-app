@@ -45,6 +45,14 @@ export function moneyOutWhatForKind(
   return "custom";
 }
 
+export function saveGoalWhatForOptions(goalName: string): VaultWhatForOption[] {
+  const label = goalName.trim() || "Goal";
+  return [
+    { id: "goal", label },
+    { id: VAULT_CUSTOM_JAR_REASON_ID, label: VAULT_CUSTOM_JAR_REASON_LABEL },
+  ];
+}
+
 export function moneyOutWhatForOptions(
   kind: VaultMoneyOutWhatForKind,
   spendCategories: readonly SpendingCategory[],

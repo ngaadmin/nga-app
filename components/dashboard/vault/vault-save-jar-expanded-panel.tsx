@@ -1,33 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import {
   BucketEmojiIcon,
   bucketTheme,
 } from "@/components/dashboard/vault/vault-visuals";
-import { VaultSavingsGoalAllocationModal } from "@/components/dashboard/vault/vault-savings-goal-allocation-modal";
 import { VaultSavingsGoalDetailPanel } from "@/components/dashboard/vault/vault-savings-goal-detail-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { roundAudAmount } from "@/lib/dashboard/destination-jars";
-import {
-  canAddCustomSavingsGoal,
-  type SavingsGoal,
-  type SavingsGoalId,
-} from "@/lib/dashboard/savings-goals";
+import type { SavingsGoal, SavingsGoalId } from "@/lib/dashboard/savings-goals";
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
 import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
-import { vaultPrimaryBtnClass } from "@/lib/dashboard/vault/vault-action-form-styles";
-import { cn } from "@/lib/utils/cn";
+import { vaultHomeCompactCtaAutoClass } from "@/lib/dashboard/vault/vault-action-form-styles";
+import {
+  clampVaultAllocationEntry,
+  parsePositiveVaultAmount,
+  sanitizeVaultAmountInput,
+} from "@/lib/dashboard/vault-amount-input";
 
 export type VaultSaveJarExpandedPanelProps = {
   bucket: VaultBucket;
   buckets: VaultBucket[];
   goals: SavingsGoal[];
   totalSavings: number;
-  isPremium: boolean;
   onVaultTransfer: (
     from: VaultTransferLocationId,
     to: VaultTransferLocationId,
@@ -38,7 +37,11 @@ export type VaultSaveJarExpandedPanelProps = {
     goalId: SavingsGoalId,
     updates: { name?: string; emoji?: string; targetAmount?: number },
   ) => void;
-  onAddGoalClick?: () => void;
+  onSpendFromGoal: (
+    goalId: SavingsGoalId,
+    amount: number,
+    categoryLabel: string,
+  ) => void;
   onClose: () => void;
 };
 
@@ -47,22 +50,22 @@ export function VaultSaveJarExpandedPanel({
   buckets,
   goals,
   totalSavings,
-  isPremium,
   onVaultTransfer,
   onAssignGoals,
   onUpdateGoalDetails,
-  onAddGoalClick,
+  onSpendFromGoal,
 }: VaultSaveJarExpandedPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
-  const { formatMoney } = useCurrency();
-  const [allocationModalOpen, setAllocationModalOpen] = useState(false);
+  const { currencySymbol, formatMoney } = useCurrency();
   const [selectedGoalId, setSelectedGoalId] = useState<SavingsGoalId | null>(null);
+  const [putInput, setPutInput] = useState("");
+  const [premiumGoalsOpen, setPremiumGoalsOpen] = useState(false);
 
   const displayName = vaultBucketDisplayName(bucket);
   const unassignedBalance = roundAudAmount(Math.max(0, bucket.balance));
-  const canAllocate = unassignedBalance > 0 && goals.length > 0;
-  const showAddGoal = Boolean(onAddGoalClick) && canAddCustomSavingsGoal(isPremium);
+  const allocateGoal = goals[0] ?? null;
+  const canPutToward = unassignedBalance > 0 && allocateGoal !== null;
 
   const selectedGoal =
     selectedGoalId === null
@@ -75,6 +78,17 @@ export function VaultSaveJarExpandedPanel({
     }
   }, [selectedGoal, selectedGoalId]);
 
+  function handlePutTowardGoal(event: FormEvent) {
+    event.preventDefault();
+    if (!allocateGoal) return;
+    const parsed = parsePositiveVaultAmount(putInput);
+    if (parsed === null) return;
+    const capped = clampVaultAllocationEntry(unassignedBalance, 0, parsed);
+    if (capped <= 0) return;
+    onAssignGoals({ [allocateGoal.id]: capped });
+    setPutInput("");
+  }
+
   return (
     <>
       {selectedGoal ? (
@@ -85,11 +99,14 @@ export function VaultSaveJarExpandedPanel({
           goals={goals}
           backLabel={displayName}
           onBack={() => setSelectedGoalId(null)}
-          onUpdateTarget={(targetAmount) =>
-            onUpdateGoalDetails(selectedGoal.id, { targetAmount })
+          onUpdateDetails={(updates) =>
+            onUpdateGoalDetails(selectedGoal.id, updates)
           }
           onAssignToThisGoal={(amount) =>
             onAssignGoals({ [selectedGoal.id]: amount })
+          }
+          onSpendFromGoal={(amount, categoryLabel) =>
+            onSpendFromGoal(selectedGoal.id, amount, categoryLabel)
           }
           onVaultTransfer={onVaultTransfer}
         />
@@ -118,18 +135,33 @@ export function VaultSaveJarExpandedPanel({
           </p>
         </div>
 
-        {goals.length > 0 ? (
-          <button
-            type="button"
-            onClick={() => setAllocationModalOpen(true)}
-            disabled={!canAllocate}
-            className={cn(vaultPrimaryBtnClass, "w-full flex-none")}
-          >
-            {budgetCopy.allocatePoolCta}
-          </button>
+        {canPutToward ? (
+          <form onSubmit={handlePutTowardGoal} className="flex items-center gap-2">
+            <p className="min-w-0 flex-1 font-heading text-sm font-extrabold tabular-nums text-[#031F82]">
+              {formatMoney(unassignedBalance)} {savingsCopy.toPutTowardGoalsLabel}
+            </p>
+            <label className="flex h-8 w-[4.75rem] shrink-0 items-center gap-0.5 rounded-lg border border-[#BDE9FB] bg-white px-1.5">
+              <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
+                {currencySymbol}
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={putInput}
+                onChange={(event) =>
+                  setPutInput(sanitizeVaultAmountInput(event.target.value).value)
+                }
+                aria-label={`Amount to put toward ${allocateGoal.name}`}
+                className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+              />
+            </label>
+            <button type="submit" className={vaultHomeCompactCtaAutoClass}>
+              {budgetCopy.allocatePoolCta}
+            </button>
+          </form>
         ) : null}
 
-        {goals.length > 0 || showAddGoal ? (
+        {goals.length > 0 ? (
           <ul className="divide-y divide-[#BDE9FB]/30">
             {goals.map((goal) => (
               <li key={goal.id}>
@@ -163,17 +195,15 @@ export function VaultSaveJarExpandedPanel({
                 </button>
               </li>
             ))}
-            {showAddGoal ? (
-              <li>
-                <button
-                  type="button"
-                  onClick={onAddGoalClick}
-                  className="flex w-full min-w-0 items-center py-1.5 text-left font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
-                >
-                  + {savingsCopy.addAGoal}
-                </button>
-              </li>
-            ) : null}
+            <li>
+              <button
+                type="button"
+                onClick={() => setPremiumGoalsOpen(true)}
+                className="flex w-full min-w-0 items-center py-1.5 text-left font-heading text-sm font-bold text-[#0CC1E0]/90 hover:text-[#031F82] hover:underline"
+              >
+                + {savingsCopy.addAGoal}
+              </button>
+            </li>
           </ul>
         ) : (
           <p className="font-sans text-sm leading-snug text-[#1E3A5F]/70">
@@ -183,12 +213,11 @@ export function VaultSaveJarExpandedPanel({
       </div>
       )}
 
-      <VaultSavingsGoalAllocationModal
-        isOpen={allocationModalOpen}
-        onClose={() => setAllocationModalOpen(false)}
-        goals={goals}
-        poolBalance={unassignedBalance}
-        onAssignGoals={onAssignGoals}
+      <PremiumUpgradeModal
+        isOpen={premiumGoalsOpen}
+        onClose={() => setPremiumGoalsOpen(false)}
+        titleId="vault-premium-goals-title"
+        layer="toast"
       />
     </>
   );

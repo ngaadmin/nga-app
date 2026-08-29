@@ -13,7 +13,6 @@ type VaultBucketDrilldownProps = {
   buckets: VaultBucket[];
   goals: SavingsGoal[];
   totalSavings: number;
-  isPremium: boolean;
   spendingCategories: SpendingCategory[];
   onVaultTransfer: (
     from: VaultTransferLocationId,
@@ -26,7 +25,11 @@ type VaultBucketDrilldownProps = {
     goalId: SavingsGoalId,
     updates: { name?: string; emoji?: string; targetAmount?: number },
   ) => void;
-  onAddGoalClick?: () => void;
+  onSpendFromGoal: (
+    goalId: SavingsGoalId,
+    amount: number,
+    categoryLabel: string,
+  ) => void;
   onClose: () => void;
 };
 
@@ -35,13 +38,12 @@ export function VaultBucketDrilldown({
   buckets,
   goals,
   totalSavings,
-  isPremium,
   spendingCategories,
   onVaultTransfer,
   onMarkSpent,
   onAssignGoals,
   onUpdateGoalDetails,
-  onAddGoalClick,
+  onSpendFromGoal,
   onClose,
 }: VaultBucketDrilldownProps) {
   if (bucket.id === SAVINGS_JAR_ID) {
@@ -51,11 +53,10 @@ export function VaultBucketDrilldown({
         buckets={buckets}
         goals={goals}
         totalSavings={totalSavings}
-        isPremium={isPremium}
         onVaultTransfer={onVaultTransfer}
         onAssignGoals={onAssignGoals}
         onUpdateGoalDetails={onUpdateGoalDetails}
-        onAddGoalClick={onAddGoalClick}
+        onSpendFromGoal={onSpendFromGoal}
         onClose={onClose}
       />
     );

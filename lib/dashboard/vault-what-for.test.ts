@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   moneyOutWhatForKind,
   moneyOutWhatForOptions,
+  saveGoalWhatForOptions,
   VAULT_CUSTOM_JAR_REASON_LABEL,
   VAULT_EMERGENCY_REASON_LABELS,
 } from "@/lib/dashboard/vault-what-for";
@@ -49,6 +50,15 @@ describe("moneyOutWhatForOptions", () => {
 
   it("uses Other only for custom jars", () => {
     expect(moneyOutWhatForOptions("custom", spendCategories)).toEqual([
+      { id: "other", label: VAULT_CUSTOM_JAR_REASON_LABEL },
+    ]);
+  });
+});
+
+describe("saveGoalWhatForOptions", () => {
+  it("returns the goal name and Other", () => {
+    expect(saveGoalWhatForOptions("Bike")).toEqual([
+      { id: "goal", label: "Bike" },
       { id: "other", label: VAULT_CUSTOM_JAR_REASON_LABEL },
     ]);
   });

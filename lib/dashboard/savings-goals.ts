@@ -87,8 +87,8 @@ export function computeTotalSavings(
   return roundAudAmount(unassignedSaveJarBalance + sumSavingsGoalBalances(goals));
 }
 
-/** When true, custom goals beyond freemium starters are available without Premium (same idea as custom jars). */
-export const VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL = true;
+/** Extra custom goals stay Premium. Friend-test profiles get the one starter only. */
+export const VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL = false;
 
 export function isFreemiumSystemGoal(id: SavingsGoalId): boolean {
   return id === FREEMIUM_BIG_SAVINGS_GOAL_ID;
@@ -198,10 +198,5 @@ export function resolveVaultSavingsGoals(
     return custom.length > 0 ? custom : ensureFreemiumStarterGoals(withoutRetired, cohort);
   }
 
-  const starters = ensureFreemiumStarterGoals(withoutRetired, cohort);
-  if (VAULT_SAVINGS_GOALS_UNLOCK_CUSTOM_FOR_ALL) {
-    const custom = withoutRetired.filter((goal) => isCustomSavingsGoal(goal.id));
-    return [...starters, ...custom];
-  }
-  return starters;
+  return ensureFreemiumStarterGoals(withoutRetired, cohort);
 }

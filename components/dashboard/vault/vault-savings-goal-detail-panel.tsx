@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import { VaultMoveMoneyForm } from "@/components/dashboard/vault/vault-move-money-form";
+import { VaultSpendMoneyForm } from "@/components/dashboard/vault/vault-spend-money-form";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -14,20 +16,16 @@ import {
   sanitizeVaultAmountInput,
 } from "@/lib/dashboard/vault-amount-input";
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
-import {
-  vaultCardBalanceClass,
-  vaultCardMainTitleClass,
-} from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import {
-  vaultHomeCompactCtaClass,
+  vaultHomeCompactCtaAutoClass,
   vaultHomeCompactOutlineCtaClass,
 } from "@/lib/dashboard/vault/vault-action-form-styles";
+import { saveGoalWhatForOptions } from "@/lib/dashboard/vault-what-for";
 import {
   buildVaultTransferLocations,
   type VaultTransferLocationId,
 } from "@/lib/dashboard/vault-transfer";
-import { cn } from "@/lib/utils/cn";
 
 const fillTrackClass =
   "pointer-events-none relative h-1.5 w-full overflow-hidden rounded-sm bg-[#BDE9FB]/70";
@@ -42,8 +40,13 @@ type VaultSavingsGoalDetailPanelProps = {
   goals: SavingsGoal[];
   backLabel: string;
   onBack: () => void;
-  onUpdateTarget: (targetAmount: number) => void;
+  onUpdateDetails: (updates: {
+    name?: string;
+    emoji?: string;
+    targetAmount?: number;
+  }) => void;
   onAssignToThisGoal: (amount: number) => void;
+  onSpendFromGoal: (amount: number, categoryLabel: string) => void;
   onVaultTransfer: (
     from: VaultTransferLocationId,
     to: VaultTransferLocationId,
@@ -58,18 +61,25 @@ export function VaultSavingsGoalDetailPanel({
   goals,
   backLabel,
   onBack,
-  onUpdateTarget,
+  onUpdateDetails,
   onAssignToThisGoal,
+  onSpendFromGoal,
   onVaultTransfer,
 }: VaultSavingsGoalDetailPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
-  const budgetCopy = copyMatrix.dashboard.vault.budget;
-  const { currencySymbol, formatWholeMoney: formatMoney } = useCurrency();
+  const { currencySymbol, formatMoney } = useCurrency();
+  const [nameInput, setNameInput] = useState(goal.name);
   const [targetInput, setTargetInput] = useState(
     formatVaultAmountInputValue(goal.targetAmount),
   );
   const [putInput, setPutInput] = useState("");
+  const [spendOpen, setSpendOpen] = useState(false);
+  const [premiumCustomOpen, setPremiumCustomOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+
+  useEffect(() => {
+    setNameInput(goal.name);
+  }, [goal.id, goal.name]);
 
   useEffect(() => {
     setTargetInput(formatVaultAmountInputValue(goal.targetAmount));
@@ -78,14 +88,26 @@ export function VaultSavingsGoalDetailPanel({
   const hasTarget = goal.targetAmount > 0;
   const fillPercent = hasTarget ? savingsGoalProgress(goal) : 0;
   const canPutToward = unassignedBalance > 0;
+  const canSpend = goal.balance > 0;
   const transferLocations = useMemo(
     () => buildVaultTransferLocations(buckets, goals, goal.id),
     [buckets, goal.id, goals],
   );
   const canMoveSome = goal.balance > 0 && transferLocations.length > 0;
 
+  function commitName() {
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      setNameInput(goal.name);
+      return;
+    }
+    if (trimmed !== goal.name) {
+      onUpdateDetails({ name: trimmed });
+    }
+  }
+
   function commitTarget() {
-    onUpdateTarget(parseVaultTargetAmount(targetInput));
+    onUpdateDetails({ targetAmount: parseVaultTargetAmount(targetInput) });
   }
 
   function handlePutToward(event: FormEvent) {
@@ -100,7 +122,7 @@ export function VaultSavingsGoalDetailPanel({
 
   return (
     <>
-      <div className="mt-2 space-y-3">
+      <div className="space-y-3">
         <button
           type="button"
           onClick={onBack}
@@ -110,11 +132,19 @@ export function VaultSavingsGoalDetailPanel({
           {backLabel}
         </button>
 
-        <div className="flex min-w-0 items-center gap-2">
-          <p className={cn(vaultCardMainTitleClass, "min-w-0 shrink")}>
-            {goal.emoji} {goal.name}
-          </p>
-          <p className={cn(vaultCardBalanceClass, "ml-auto min-w-0 text-right")}>
+        <label className="block min-w-0">
+          <span className="sr-only">{savingsCopy.goalNameLabel}</span>
+          <input
+            value={nameInput}
+            onChange={(event) => setNameInput(event.target.value)}
+            onBlur={commitName}
+            aria-label={savingsCopy.goalNameLabel}
+            className="w-full min-w-0 bg-transparent font-heading text-lg font-extrabold text-[#031F82] outline-none"
+          />
+        </label>
+
+        <div>
+          <p className="font-heading text-3xl font-extrabold leading-none tabular-nums text-[#031F82]">
             {formatMoney(goal.balance)}
           </p>
         </div>
@@ -165,10 +195,7 @@ export function VaultSavingsGoalDetailPanel({
         </div>
 
         {canPutToward ? (
-          <form
-            onSubmit={handlePutToward}
-            className="flex items-center gap-2"
-          >
+          <form onSubmit={handlePutToward} className="flex items-center gap-2">
             <p className="min-w-0 flex-1 font-heading text-sm font-extrabold tabular-nums text-[#031F82]">
               {formatMoney(unassignedBalance)} {savingsCopy.toPutTowardGoalsLabel}
             </p>
@@ -187,11 +214,20 @@ export function VaultSavingsGoalDetailPanel({
                 className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
               />
             </label>
-            <button type="submit" className={vaultHomeCompactCtaClass}>
-              {budgetCopy.allocatePoolCta}
+            <button type="submit" className={vaultHomeCompactCtaAutoClass}>
+              {copyMatrix.dashboard.vault.budget.allocatePoolCta}
             </button>
           </form>
         ) : null}
+
+        <button
+          type="button"
+          onClick={() => setSpendOpen(true)}
+          disabled={!canSpend}
+          className={vaultHomeCompactCtaAutoClass}
+        >
+          {vaultCopy.iSpentThis}
+        </button>
 
         <button
           type="button"
@@ -202,6 +238,55 @@ export function VaultSavingsGoalDetailPanel({
           {vaultCopy.moveSome}
         </button>
       </div>
+
+      <ModalShell
+        isOpen={spendOpen && canSpend}
+        onClose={() => setSpendOpen(false)}
+        layer="toast"
+        align="center"
+        labelledBy="vault-goal-spend-title"
+        backdropClassName="bg-[#031F82]/50"
+        panelClassName="flex max-h-[min(92vh,40rem)] max-w-lg flex-col rounded-2xl border-0 bg-white p-0 shadow-md"
+      >
+        <div className="shrink-0 border-b border-[#BDE9FB]/40 px-5 pb-4 pt-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2
+                id="vault-goal-spend-title"
+                className="font-heading text-lg font-extrabold text-[#031F82]"
+              >
+                {vaultCopy.recordSpendingTitle}
+              </h2>
+              <p className="mt-1 font-sans text-sm leading-snug text-[#1E3A5F]/70">
+                {vaultCopy.recordSaveSpendingHelper}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSpendOpen(false)}
+              aria-label={vaultCopy.closeModalLabel}
+              className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <VaultSpendMoneyForm
+          maxAmount={goal.balance}
+          whatForOptions={saveGoalWhatForOptions(goal.name)}
+          onSpend={onSpendFromGoal}
+          onPremiumCustomRequest={() => setPremiumCustomOpen(true)}
+          onClose={() => setSpendOpen(false)}
+        />
+      </ModalShell>
+
+      <PremiumUpgradeModal
+        isOpen={premiumCustomOpen}
+        onClose={() => setPremiumCustomOpen(false)}
+        titleId="vault-goal-premium-custom-title"
+        layer="toast"
+      />
 
       <ModalShell
         isOpen={moveOpen && canMoveSome}
@@ -219,7 +304,7 @@ export function VaultSavingsGoalDetailPanel({
                 id="vault-goal-move-title"
                 className="font-heading text-lg font-extrabold text-[#031F82]"
               >
-                {budgetCopy.moveTitle}
+                {copyMatrix.dashboard.vault.budget.moveTitle}
               </h2>
               <p className="mt-1 font-sans text-sm leading-snug text-[#1E3A5F]/70">
                 {vaultCopy.moveGoalHelper}

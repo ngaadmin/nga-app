@@ -316,7 +316,7 @@ export function VaultAllocationModal({
             {splitTipOpen ? (
               <div
                 role="tooltip"
-                className="absolute right-0 z-10 mt-2 w-[16.5rem] rounded-xl border border-[#BDE9FB] bg-white p-3 shadow-md"
+                className="absolute right-0 z-overlay mt-2 w-[16.5rem] rounded-xl border border-[#BDE9FB] bg-white p-3 shadow-md"
               >
                 <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
                   {copy.allocationSplitTip}

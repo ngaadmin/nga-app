@@ -29,13 +29,8 @@ export const vaultCopy = {
   deleteJar: "Delete jar",
   addJarToList: "Add to list",
   doneEditing: "Done",
-  manageSavingsGoalsLabel: "Manage Goals",
   saveJarTotalCaption: "Total in Save",
   jarTotalCaptionTemplate: "Total in {name}",
-  jarSettingsLabel: "Jar settings",
-  jarSettingsTitleTemplate: "{name} settings",
-  jarSettingsBody:
-    "Edit categories or reset this jar to $0. Category changes save as you go.",
   moveJarHelper: "Move money from one jar to another.",
   addMoneyIntroTitle: "Keep your money up to date",
   addMoneyIntroSentence1:
@@ -94,8 +89,9 @@ export const vaultCopy = {
   resetAllGoalBalancesConfirmBody:
     "Are you sure you want to reset every savings goal balance to $0? Saved progress in these goals will be cleared.",
   resetAllBalances: "Reset all balances",
-  resetAllBalancesConfirmTitle: "Clear every jar and unallocated money?",
-  resetAllBalancesConfirmBody: "This can't be undone.",
+  resetAllBalancesConfirmTitle: "Clear every jar, goal, and unallocated money?",
+  resetAllBalancesConfirmBody:
+    "This can't be undone. Every foundation jar, custom jar, Save goal, and money waiting to allocate goes to $0.",
   resetAllBalancesConfirm: "Clear everything",
   resetConfirm: "Yes, reset",
   resetCancel: "Cancel",

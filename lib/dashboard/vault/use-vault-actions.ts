@@ -608,22 +608,39 @@ export function useVaultActions() {
     [appendLedger, masteryCohort, savingsGoals, setSavingsGoals, vaultGoals],
   );
 
-  const handleResetAllSavingsGoalBalances = useCallback(() => {
+  const zeroEverySavingsGoalBalance = useCallback(() => {
     setSavingsGoals((current) =>
       resolveVaultSavingsGoals(current, masteryCohort, VAULT_IS_PREMIUM).map(
         (goal) => ({ ...goal, balance: 0 }),
       ),
     );
+  }, [masteryCohort, setSavingsGoals]);
+
+  const handleResetAllSavingsGoalBalances = useCallback(() => {
+    zeroEverySavingsGoalBalance();
     appendLedger("Reset all savings goal balances to $0", { category: "setup" });
-  }, [appendLedger, masteryCohort, setSavingsGoals]);
+  }, [appendLedger, zeroEverySavingsGoalBalance]);
 
   const handleResetBucketBalance = useCallback(
     (bucketId: VaultBucketId) => {
       const bucket = vaultBuckets.find((entry) => entry.id === bucketId);
       setBucketBalanceToZero(bucketId, setJars, setCustomBuckets);
+      if (bucketId === SAVINGS_JAR_ID) {
+        zeroEverySavingsGoalBalance();
+        appendLedger("Reset Save jar and all savings goal balances to $0", {
+          category: "setup",
+        });
+        return;
+      }
       appendLedger(`Reset ${bucket?.name ?? "jar"} balance to $0`, { category: "setup" });
     },
-    [appendLedger, setCustomBuckets, setJars, vaultBuckets],
+    [
+      appendLedger,
+      setCustomBuckets,
+      setJars,
+      vaultBuckets,
+      zeroEverySavingsGoalBalance,
+    ],
   );
 
   const handleResetAllBalances = useCallback(() => {
@@ -632,11 +649,18 @@ export function useVaultActions() {
     setCustomBuckets((current) =>
       zeroAllVaultJarBalances([], current).customBuckets,
     );
-    appendLedger("Reset all jar and unallocated balances to $0", {
+    zeroEverySavingsGoalBalance();
+    appendLedger("Reset all jar, goal, and unallocated balances to $0", {
       category: "setup",
       highlight: true,
     });
-  }, [appendLedger, setCustomBuckets, setJars, setMoneyToAllocate]);
+  }, [
+    appendLedger,
+    setCustomBuckets,
+    setJars,
+    setMoneyToAllocate,
+    zeroEverySavingsGoalBalance,
+  ]);
 
   return {
     isPremium: VAULT_IS_PREMIUM,

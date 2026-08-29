@@ -16,7 +16,6 @@ import { copyMatrix } from "@/constants/copyMatrix";
 import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/copy";
 import { ADVANCED_MONEY_TOOLS_HREF } from "@/lib/dashboard/advanced-money-tools/nav";
 import { LockIcon } from "@/lib/dashboard/icons";
-import { SAVINGS_JAR_ID } from "@/lib/dashboard/destination-jars";
 import {
   useVaultActions,
   type PendingVaultDeposit,
@@ -30,7 +29,6 @@ import {
   vaultOverviewHairlineClass,
   vaultOverviewSectionTitleClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
-import { cn } from "@/lib/utils/cn";
 
 export function VaultDashboard() {
   const vaultCopy = copyMatrix.dashboard.vault;
@@ -45,8 +43,6 @@ export function VaultDashboard() {
     handleLockIn,
     handleVaultTransfer,
     handleMarkSpent,
-    handleAddCustomSpendingCategory,
-    handleRenameSpendingCategory,
     handleAssignGoals,
     handleRenameBucket,
     handleAddCustomBucket,
@@ -55,7 +51,6 @@ export function VaultDashboard() {
     handleAddGoal,
     handleDeleteGoal,
     handleResetGoalBalance,
-    handleResetAllSavingsGoalBalances,
     handleResetBucketBalance,
     handleResetAllBalances,
   } = useVaultActions();
@@ -114,8 +109,6 @@ export function VaultDashboard() {
     return true;
   }
 
-  const saveSheetOpen = expandedBucket?.id === SAVINGS_JAR_ID;
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <VaultMyMoneyCard
@@ -168,43 +161,18 @@ export function VaultDashboard() {
 
       <ModalShell
         isOpen={expandedBucket !== null}
-        onClose={closeBucketSheet}
-        align="bottom"
+        dismissOnBackdrop={false}
+        align="center"
         labelledBy="vault-jar-sheet-title"
-        backdropClassName="bg-[#031F82]/50 p-0 sm:items-end"
-        panelClassName={cn(
-          "flex w-full max-w-lg flex-col rounded-t-2xl border-0 bg-white p-0 shadow-md sm:rounded-2xl",
-          saveSheetOpen
-            ? "max-h-[min(92vh,40rem)]"
-            : "h-[92vh] max-h-[92vh] sm:h-[min(92vh,42rem)]",
-        )}
+        backdropClassName="bg-[#031F82]/50"
+        panelClassName="w-full max-w-sm max-h-[min(90vh,40rem)] overflow-y-auto rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:px-5"
       >
         {expandedBucket ? (
-          <>
-            <div
-              className={cn(
-                "flex shrink-0 items-center justify-end px-5",
-                saveSheetOpen ? "pt-3" : "pt-4",
-              )}
-            >
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
               <h2 id="vault-jar-sheet-title" className="sr-only">
                 {expandedBucket.name}
               </h2>
-              <button
-                type="button"
-                onClick={closeBucketSheet}
-                aria-label={vaultUiCopy.closeModalLabel}
-                className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
-              >
-                ✕
-              </button>
-            </div>
-            <div
-              className={cn(
-                "overflow-y-auto px-5",
-                saveSheetOpen ? "pb-3" : "min-h-0 flex-1 pb-5",
-              )}
-            >
               <VaultBucketDrilldown
                 bucket={expandedBucket}
                 buckets={displayBuckets}
@@ -214,16 +182,8 @@ export function VaultDashboard() {
                 spendingCategories={spendingCategories}
                 onVaultTransfer={handleVaultTransfer}
                 onMarkSpent={handleMarkSpent}
-                onAddCustomCategory={handleAddCustomSpendingCategory}
-                onRenameCategory={handleRenameSpendingCategory}
                 onAssignGoals={handleAssignGoals}
                 onUpdateGoalDetails={handleUpdateGoalDetails}
-                onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
-                onResetBucketBalance={handleResetBucketBalance}
-                onManageGoalsClick={() => {
-                  setManageGoalsStartOnAdd(false);
-                  setManageGoalsModalOpen(true);
-                }}
                 onAddGoalClick={() => {
                   setManageGoalsStartOnAdd(true);
                   setManageGoalsModalOpen(true);
@@ -231,7 +191,15 @@ export function VaultDashboard() {
                 onClose={closeBucketSheet}
               />
             </div>
-          </>
+            <button
+              type="button"
+              onClick={closeBucketSheet}
+              aria-label={vaultUiCopy.closeModalLabel}
+              className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
+            >
+              ✕
+            </button>
+          </div>
         ) : null}
       </ModalShell>
 
@@ -254,7 +222,6 @@ export function VaultDashboard() {
         onDeleteCustomBucket={handleDeleteCustomBucket}
         onResetBucketBalance={handleResetBucketBalance}
         onResetAllBalances={handleResetAllBalances}
-        onResetAllGoalBalances={handleResetAllSavingsGoalBalances}
         onBucketDeleted={(bucketId) => {
           if (expandedBucketId === bucketId) {
             setExpandedBucketId(null);

@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  BucketEmojiIcon,
+  bucketTheme,
+} from "@/components/dashboard/vault/vault-visuals";
 import { VaultSavingsGoalAllocationModal } from "@/components/dashboard/vault/vault-savings-goal-allocation-modal";
 import { VaultSavingsGoalDetailPanel } from "@/components/dashboard/vault/vault-savings-goal-detail-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { SettingsIcon } from "@/lib/dashboard/icons";
 import { roundAudAmount } from "@/lib/dashboard/destination-jars";
 import {
   canAddCustomSavingsGoal,
@@ -15,7 +18,6 @@ import {
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
 import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
-import { vaultManageJarsButtonClass } from "@/lib/dashboard/vault/vault-my-money-card-styles";
 import type { VaultTransferLocationId } from "@/lib/dashboard/vault-transfer";
 import { vaultPrimaryBtnClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { cn } from "@/lib/utils/cn";
@@ -36,7 +38,6 @@ export type VaultSaveJarExpandedPanelProps = {
     goalId: SavingsGoalId,
     updates: { name?: string; emoji?: string; targetAmount?: number },
   ) => void;
-  onManageGoalsClick?: () => void;
   onAddGoalClick?: () => void;
   onClose: () => void;
 };
@@ -50,12 +51,11 @@ export function VaultSaveJarExpandedPanel({
   onVaultTransfer,
   onAssignGoals,
   onUpdateGoalDetails,
-  onManageGoalsClick,
   onAddGoalClick,
 }: VaultSaveJarExpandedPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const budgetCopy = copyMatrix.dashboard.vault.budget;
-  const { formatWholeMoney: formatMoney } = useCurrency();
+  const { formatMoney } = useCurrency();
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<SavingsGoalId | null>(null);
 
@@ -96,22 +96,26 @@ export function VaultSaveJarExpandedPanel({
       ) : (
       <div className="space-y-3">
         <div className="flex min-w-0 items-center gap-2">
+          <BucketEmojiIcon
+            size="sm"
+            emoji={bucket.emoji}
+            theme={bucketTheme(bucket)}
+          />
+          <p className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]">
+            {displayName}
+          </p>
+        </div>
+
+        <div>
           <p
-            className="min-w-0 flex-1 font-heading text-3xl font-extrabold leading-none tabular-nums text-[#031F82]"
+            className="font-heading text-3xl font-extrabold leading-none tabular-nums text-[#031F82]"
             aria-label={`${displayName} ${formatMoney(totalSavings)}`}
           >
             {formatMoney(totalSavings)}
           </p>
-          {onManageGoalsClick ? (
-            <button
-              type="button"
-              onClick={onManageGoalsClick}
-              aria-label={vaultCopy.manageSavingsGoalsLabel}
-              className={vaultManageJarsButtonClass}
-            >
-              <SettingsIcon className="size-5 shrink-0 text-[#031F82]" />
-            </button>
-          ) : null}
+          <p className="mt-1 font-heading text-xs font-bold leading-tight text-[#1E3A5F]/55">
+            {vaultCopy.jarTotalCaptionTemplate.replace("{name}", displayName)}
+          </p>
         </div>
 
         {goals.length > 0 ? (

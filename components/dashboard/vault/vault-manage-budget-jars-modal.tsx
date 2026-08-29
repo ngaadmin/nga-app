@@ -117,7 +117,6 @@ type VaultManageBudgetJarsModalProps = {
   ) => void;
   onResetBucketBalance: (bucketId: VaultBucketId) => void;
   onResetAllBalances: () => void;
-  onResetAllGoalBalances: () => void;
   onBucketDeleted?: (bucketId: VaultBucketId) => void;
 };
 
@@ -131,7 +130,6 @@ export function VaultManageBudgetJarsModal({
   onDeleteCustomBucket,
   onResetBucketBalance,
   onResetAllBalances,
-  onResetAllGoalBalances,
   onBucketDeleted,
 }: VaultManageBudgetJarsModalProps) {
   const budgetCopy = copyMatrix.dashboard.vault.budget;
@@ -327,15 +325,13 @@ export function VaultManageBudgetJarsModal({
   function confirmResetAction() {
     if (!confirmReset) return;
     onResetBucketBalance(confirmReset.id);
-    if (confirmReset.id === SAVINGS_JAR_ID) {
-      onResetAllGoalBalances();
-    }
     setConfirmReset(null);
   }
 
   function confirmResetAllAction() {
     onResetAllBalances();
-    setConfirmResetAll(false);
+    resetLocalState();
+    onClose();
   }
 
   const deleteNeedsFallback = (deleteTarget?.balance ?? 0) > 0;
@@ -584,14 +580,15 @@ export function VaultManageBudgetJarsModal({
             >
               {vaultCopy.cancelChanges}
             </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className={manageModalPrimaryBtnClass}
-            >
-              {vaultCopy.saveChanges}
-            </button>
+            {hasChanges ? (
+              <button
+                type="button"
+                onClick={handleSave}
+                className={manageModalPrimaryBtnClass}
+              >
+                {vaultCopy.saveChanges}
+              </button>
+            ) : null}
           </div>
         </div>
       </ModalShell>

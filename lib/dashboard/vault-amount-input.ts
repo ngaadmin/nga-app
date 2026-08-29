@@ -166,3 +166,95 @@ export function parseVaultTargetAmount(rawValue: string): number {
   if (!Number.isFinite(parsed) || parsed <= 0) return 0;
   return Math.min(parsed, VAULT_MAX_AMOUNT);
 }
+
+export function dollarsToCents(amount: number): number {
+  return Math.round(roundAudAmount(amount) * 100);
+}
+
+export function centsToDollars(cents: number): number {
+  return roundAudAmount(cents / 100);
+}
+
+function formatVaultCentsWholeDigits(digits: string): string {
+  if (!digits) return "";
+  const parsed = Number.parseInt(digits, 10);
+  if (!Number.isFinite(parsed)) return "";
+  return new Intl.NumberFormat("en-AU", {
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }).format(parsed);
+}
+
+/**
+ * Restrict keystrokes to dollars and cents (two decimal places) with
+ * thousands separators (e.g. `1,000.50`).
+ */
+export function sanitizeVaultCentsInput(rawValue: string): {
+  value: string;
+  hitCap: boolean;
+} {
+  const trimmed = rawValue.trim();
+  if (!trimmed) return { value: "", hitCap: false };
+
+  const cleaned = trimmed.replace(/[^\d.]/g, "");
+  const periodIndex = cleaned.indexOf(".");
+  const hasPeriod = periodIndex !== -1;
+  const wholeDigits = (hasPeriod ? cleaned.slice(0, periodIndex) : cleaned).replace(
+    /\D/g,
+    "",
+  );
+  let fractionDigits = hasPeriod ? cleaned.slice(periodIndex + 1).replace(/\D/g, "") : "";
+
+  let hitCap = false;
+  if (fractionDigits.length > 2) {
+    fractionDigits = fractionDigits.slice(0, 2);
+  }
+  if (wholeDigits.length > VAULT_MAX_INPUT_DIGITS) {
+    hitCap = true;
+  }
+  const cappedWhole = wholeDigits.slice(0, VAULT_MAX_INPUT_DIGITS);
+
+  const wholeAmount = cappedWhole ? Number.parseInt(cappedWhole, 10) : 0;
+  if (Number.isFinite(wholeAmount) && wholeAmount > VAULT_MAX_AMOUNT) {
+    return {
+      value: `${formatVaultCentsWholeDigits(String(VAULT_MAX_AMOUNT))}.00`,
+      hitCap: true,
+    };
+  }
+
+  const wholeFormatted = formatVaultCentsWholeDigits(cappedWhole);
+  if (!hasPeriod) {
+    return { value: wholeFormatted, hitCap };
+  }
+  return {
+    value: `${wholeFormatted || "0"}.${fractionDigits}`,
+    hitCap,
+  };
+}
+
+/** Parses a non-negative dollar+cents amount (`1,000.50` → `1000.5`). Empty → null. */
+export function parseVaultCentsInput(rawValue: string): number | null {
+  const trimmed = rawValue.trim();
+  if (!trimmed || trimmed === ".") return null;
+  const normalized = trimmed.replace(/,/g, "");
+  if (!/^\d*\.?\d{0,2}$/.test(normalized)) return null;
+  const parsed = Number.parseFloat(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.min(roundAudAmount(parsed), VAULT_MAX_AMOUNT);
+}
+
+/** Parses a positive dollar+cents vault amount (`1,000.50` → `1000.5`). */
+export function parsePositiveVaultCentsAmount(rawValue: string): number | null {
+  const parsed = parseVaultCentsInput(rawValue);
+  if (parsed === null || parsed <= 0) return null;
+  return parsed;
+}
+
+/** Display helper for controlled cents fields (`1000.5` → `1,000.50`). */
+export function formatVaultCentsInputValue(amount: number): string {
+  const cents = dollarsToCents(amount);
+  const whole = Math.trunc(Math.abs(cents) / 100);
+  const fraction = String(Math.abs(cents) % 100).padStart(2, "0");
+  const sign = cents < 0 ? "-" : "";
+  return `${sign}${formatVaultCentsWholeDigits(String(whole)) || "0"}.${fraction}`;
+}

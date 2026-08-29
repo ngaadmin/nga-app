@@ -27,10 +27,12 @@ import {
   type SavingsGoalId,
 } from "@/lib/dashboard/savings-goals";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
+import { dollarsToCents } from "@/lib/dashboard/vault-amount-input";
 import {
   getVaultIncomeSourceLabel,
   type VaultIncomeSourceId,
 } from "@/lib/dashboard/vault-income-sources";
+import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import {
   computeVaultTransferState,
   resolveVaultTransferLocationLabel,
@@ -51,6 +53,11 @@ import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
 
 /** Premium billing is not wired yet — Vault defaults to freemium limits. */
 const VAULT_IS_PREMIUM = false;
+
+export type PendingVaultDeposit = {
+  amount: number;
+  source: VaultIncomeSourceId;
+};
 
 function defaultSpendingCategoryLabels(): Record<DefaultSpendingCategoryId, string> {
   const labels = copyMatrix.dashboard.vault.budget.defaultCategories;
@@ -123,7 +130,7 @@ function setBucketBalanceToZero(
 export function useVaultActions() {
   const vaultCopy = copyMatrix.dashboard.vault;
   const budgetCopy = vaultCopy.budget;
-  const { formatWholeMoney: formatMoney } = useCurrency();
+  const { formatMoney, formatWholeMoney } = useCurrency();
   const masteryCohort = useMasteryCohort();
   const {
     appendLedger,
@@ -187,20 +194,21 @@ export function useVaultActions() {
       setMoneyToAllocate((current) => roundAudAmount(current + amount));
       appendLedger(
         budgetCopy.depositLogTemplate
-          .replace("{amount}", formatMoney(amount))
+          .replace("{amount}", formatWholeMoney(amount))
           .replace("{source}", getVaultIncomeSourceLabel(source)),
         { category: "deposit", amount, flow: "in" },
       );
     },
-    [appendLedger, budgetCopy.depositLogTemplate, formatMoney, setMoneyToAllocate],
+    [appendLedger, budgetCopy.depositLogTemplate, formatWholeMoney, setMoneyToAllocate],
   );
 
   const handleLockIn = useCallback(
-    (allocations: Record<string, number>) => {
+    (allocations: Record<string, number>, pending: PendingVaultDeposit) => {
+      const moneyIn = roundAudAmount(pending.amount);
       const total = sumAllocations(allocations);
-      if (total <= 0 || total > moneyToAllocate + 0.001) return;
-
-      setMoneyToAllocate((current) => roundAudAmount(current - total));
+      if (moneyIn <= 0 || dollarsToCents(total) !== dollarsToCents(moneyIn)) {
+        return false;
+      }
 
       for (const [bucketId, amount] of Object.entries(allocations)) {
         if (amount <= 0) continue;
@@ -212,19 +220,34 @@ export function useVaultActions() {
         );
       }
 
+      const jarParts = vaultBuckets
+        .map((bucket) => {
+          const amount = allocations[bucket.id] ?? 0;
+          if (amount <= 0) return null;
+          return budgetCopy.allocatedJarPartTemplate
+            .replace("{name}", vaultBucketDisplayName(bucket))
+            .replace("{amount}", formatMoney(amount));
+        })
+        .filter((part): part is string => part !== null)
+        .join(", ");
+
       appendLedger(
-        budgetCopy.lockedInTemplate.replace("{amount}", formatMoney(total)),
-        { category: "allocation", amount: total },
+        budgetCopy.allocatedLogTemplate
+          .replace("{amount}", formatMoney(moneyIn))
+          .replace("{source}", getVaultIncomeSourceLabel(pending.source))
+          .replace("{jars}", jarParts),
+        { category: "deposit", amount: moneyIn, flow: "in" },
       );
+      return true;
     },
     [
       appendLedger,
-      budgetCopy.lockedInTemplate,
+      budgetCopy.allocatedJarPartTemplate,
+      budgetCopy.allocatedLogTemplate,
       formatMoney,
-      moneyToAllocate,
       setCustomBuckets,
       setJars,
-      setMoneyToAllocate,
+      vaultBuckets,
     ],
   );
 

@@ -438,6 +438,13 @@ export const copyMatrix = {
         depositHeading: "Add money",
         depositButton: "Deposit Income",
         poolLabel: "Money to Allocate",
+        moneyInLabel: "Money in",
+        notAllocatedLabel: "Not allocated",
+        assignAllMoneyHint: "Make sure all the money is assigned a home.",
+        allocationSplitTip:
+          "We parked your cash in the four jars so you don’t have to do the maths. This is the recommended split, but you can change it if you want the money in different jars.",
+        allocationSplitTipAriaLabel: "About this split",
+        allocationSplitTipClose: "Close",
         currencySettingsNote:
           "Currency can be changed in Settings → Preferences.",
         remainingLabel: "Money to allocate",
@@ -498,6 +505,8 @@ export const copyMatrix = {
         spentLogTemplate: "Spent {amount} on {category} from {bucket}",
         lockedInTemplate: "Locked {amount} into my jars",
         depositLogTemplate: "Deposited {amount} from {source} to allocate",
+        allocatedLogTemplate: "Allocated {amount} from {source}: {jars}",
+        allocatedJarPartTemplate: "{name} {amount}",
         bucketsOverviewTitle: "My Budget Items",
         allocateHeading: "Split It Up",
         totalBalanceLabel: "My Money",

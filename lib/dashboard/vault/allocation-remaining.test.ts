@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   isAllocationOverPool,
+  isVaultAllocationBalanced,
   sumEffectiveAllocationInputs,
   vaultAllocationEntryCap,
   vaultAllocationRemainingDisplay,
+  vaultNotAllocatedAmount,
 } from "@/lib/dashboard/vault/allocation-remaining";
 
 describe("allocation remaining", () => {
@@ -39,6 +41,17 @@ describe("allocation remaining", () => {
   it("detects over-allocation against the pool", () => {
     expect(isAllocationOverPool(100, 110)).toBe(true);
     expect(isAllocationOverPool(100, 100)).toBe(false);
+  });
+
+  it("lets Not allocated go negative when over-assigned", () => {
+    expect(vaultNotAllocatedAmount(100, 110)).toBe(-10);
+    expect(vaultNotAllocatedAmount(100, 40)).toBe(60);
+  });
+
+  it("treats a full split as balanced only when cents match Money in", () => {
+    expect(isVaultAllocationBalanced(100, 100)).toBe(true);
+    expect(isVaultAllocationBalanced(100, 99.99)).toBe(false);
+    expect(isVaultAllocationBalanced(0, 0)).toBe(false);
   });
 
   it("computes per-row entry cap from other drafts", () => {

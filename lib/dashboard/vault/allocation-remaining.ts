@@ -1,5 +1,8 @@
 import { roundAudAmount } from "@/lib/dashboard/destination-jars";
-import { parseVaultAmountInput } from "@/lib/dashboard/vault-amount-input";
+import {
+  dollarsToCents,
+  parseVaultAmountInput,
+} from "@/lib/dashboard/vault-amount-input";
 
 /** Sum allocation amounts using live input text for the focused row. */
 export function sumEffectiveAllocationInputs(
@@ -58,6 +61,23 @@ export function vaultAllocationRemainingDisplay(
   allocatedTotal: number,
 ): number {
   return roundAudAmount(Math.max(0, poolTotal - allocatedTotal));
+}
+
+/** Money in minus assigned total — negative when over-allocated. */
+export function vaultNotAllocatedAmount(
+  moneyIn: number,
+  allocatedTotal: number,
+): number {
+  return (dollarsToCents(moneyIn) - dollarsToCents(allocatedTotal)) / 100;
+}
+
+/** True when every cent of Money in is assigned and the split is not empty. */
+export function isVaultAllocationBalanced(
+  moneyIn: number,
+  allocatedTotal: number,
+): boolean {
+  const moneyInCents = dollarsToCents(moneyIn);
+  return moneyInCents > 0 && moneyInCents === dollarsToCents(allocatedTotal);
 }
 
 export function isAllocationOverPool(

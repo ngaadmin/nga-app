@@ -4,7 +4,11 @@ import { useState, type FormEvent } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { parsePositiveVaultAmount, sanitizeVaultAmountInput } from "@/lib/dashboard/vault-amount-input";
+import {
+  formatVaultCentsInputValue,
+  parsePositiveVaultCentsAmount,
+  sanitizeVaultCentsInput,
+} from "@/lib/dashboard/vault-amount-input";
 import {
   DEFAULT_VAULT_INCOME_SOURCE_ID,
   VAULT_INCOME_SOURCES,
@@ -55,7 +59,7 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
 
   function handleDepositSubmit(event: FormEvent) {
     event.preventDefault();
-    const amount = parsePositiveVaultAmount(depositInput);
+    const amount = parsePositiveVaultCentsAmount(depositInput);
     if (amount === null) return;
 
     if (!hasSeenVaultAddMoneyIntro()) {
@@ -95,14 +99,19 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
             </span>
             <input
               type="text"
-              inputMode="numeric"
+              inputMode="decimal"
               value={depositInput}
               onChange={(event) => {
-                const { value: next, hitCap } = sanitizeVaultAmountInput(event.target.value);
+                const { value: next, hitCap } = sanitizeVaultCentsInput(event.target.value);
                 setAmountCapHit(hitCap);
                 setDepositInput(next);
               }}
-              placeholder="0"
+              onBlur={() => {
+                const parsed = parsePositiveVaultCentsAmount(depositInput);
+                if (parsed === null) return;
+                setDepositInput(formatVaultCentsInputValue(parsed));
+              }}
+              placeholder="0.00"
               aria-label={copy.depositHeading}
               className="min-w-0 flex-1 bg-transparent font-sans text-sm text-[#031F82] outline-none"
             />

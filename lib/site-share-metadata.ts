@@ -4,7 +4,8 @@ const FALLBACK_SITE_URL = "https://nga-app-three.vercel.app";
 
 export const LANDING_SHARE_TITLE = "NextGenAchievers";
 export const LANDING_SHARE_DESCRIPTION = "Finally. A fun way to learn money skills.";
-export const OG_SHARE_IMAGE_PATH = "/og/penny-jump.png";
+export const OG_SHARE_IMAGE_PATH = "/og/penny-jump-square.png";
+export const OG_SHARE_IMAGE_SIZE = 512;
 
 export function getCanonicalSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -36,15 +37,15 @@ export function landingShareMetadata(): Pick<
       images: [
         {
           url: imageUrl,
-          width: 1200,
-          height: 630,
+          width: OG_SHARE_IMAGE_SIZE,
+          height: OG_SHARE_IMAGE_SIZE,
           type: "image/png",
           alt: "Penny, your money-skills guide",
         },
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title: LANDING_SHARE_TITLE,
       description: LANDING_SHARE_DESCRIPTION,
       images: [imageUrl],

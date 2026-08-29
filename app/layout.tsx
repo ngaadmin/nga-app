@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
+import { landingShareMetadata } from "@/lib/site-share-metadata";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -14,7 +15,10 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 });
 
+const share = landingShareMetadata();
+
 export const metadata: Metadata = {
+  metadataBase: share.metadataBase,
   title: {
     default: "NextGenAchievers",
     template: "%s | NextGenAchievers",
@@ -22,6 +26,8 @@ export const metadata: Metadata = {
   description:
     "Join NextGenAchievers - the free, fun way to master real-world money skills.",
   applicationName: "NextGenAchievers",
+  openGraph: share.openGraph,
+  twitter: share.twitter,
 };
 
 export const viewport: Viewport = {

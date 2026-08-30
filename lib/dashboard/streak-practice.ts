@@ -38,17 +38,14 @@ export type PracticeCalendarModel = {
 };
 
 /**
- * Demo days practiced before today. Excludes today / yesterday so it does not
- * contradict a live streak of 0.
+ * Days marked practiced: the live streak (consecutive days ending today),
+ * plus optional extra offsets for persisted history. New / reset profiles pass
+ * streak 0 and no extras — today is outlined, not gold, until they complete a lesson.
  */
-export const DEMO_PRACTICE_DAYS_AGO: readonly number[] = [
-  3, 4, 6, 7, 10, 11, 13, 17, 18, 20, 21,
-];
-
 export function resolvePracticedDateKeys(
   now: Date,
   dayStreak: number,
-  extraDaysAgo: readonly number[] = DEMO_PRACTICE_DAYS_AGO,
+  extraDaysAgo: readonly number[] = [],
 ): Set<string> {
   const today = startOfLocalDay(now);
   const keys = new Set<string>();

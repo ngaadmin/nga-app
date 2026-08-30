@@ -7,6 +7,7 @@ import { VaultSpendMoneyForm } from "@/components/dashboard/vault/vault-spend-mo
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
+import { SettingsIcon } from "@/lib/dashboard/icons";
 import { savingsGoalProgress, type SavingsGoal } from "@/lib/dashboard/savings-goals";
 import {
   clampVaultAllocationEntry,
@@ -68,22 +69,13 @@ export function VaultSavingsGoalDetailPanel({
 }: VaultSavingsGoalDetailPanelProps) {
   const savingsCopy = copyMatrix.dashboard.vault.savings;
   const { currencySymbol, formatMoney } = useCurrency();
-  const [nameInput, setNameInput] = useState(goal.name);
-  const [targetInput, setTargetInput] = useState(
-    formatVaultAmountInputValue(goal.targetAmount),
-  );
+  const [targetInput, setTargetInput] = useState("");
+  const [nameInput, setNameInput] = useState("");
   const [putInput, setPutInput] = useState("");
   const [spendOpen, setSpendOpen] = useState(false);
   const [premiumCustomOpen, setPremiumCustomOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
-
-  useEffect(() => {
-    setNameInput(goal.name);
-  }, [goal.id, goal.name]);
-
-  useEffect(() => {
-    setTargetInput(formatVaultAmountInputValue(goal.targetAmount));
-  }, [goal.id, goal.targetAmount]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const hasTarget = goal.targetAmount > 0;
   const fillPercent = hasTarget ? savingsGoalProgress(goal) : 0;
@@ -95,19 +87,37 @@ export function VaultSavingsGoalDetailPanel({
   );
   const canMoveSome = goal.balance > 0 && transferLocations.length > 0;
 
-  function commitName() {
-    const trimmed = nameInput.trim();
-    if (!trimmed) {
-      setNameInput(goal.name);
-      return;
-    }
-    if (trimmed !== goal.name) {
-      onUpdateDetails({ name: trimmed });
-    }
+  useEffect(() => {
+    if (hasTarget) return;
+    setTargetInput("");
+  }, [goal.id, hasTarget]);
+
+  function openGoalSettings() {
+    setNameInput(goal.name);
+    setTargetInput(formatVaultAmountInputValue(goal.targetAmount));
+    setSettingsOpen(true);
   }
 
-  function commitTarget() {
-    onUpdateDetails({ targetAmount: parseVaultTargetAmount(targetInput) });
+  function closeGoalSettings() {
+    setSettingsOpen(false);
+  }
+
+  function saveFirstTarget(event: FormEvent) {
+    event.preventDefault();
+    const nextTarget = parseVaultTargetAmount(targetInput);
+    if (nextTarget <= 0) return;
+    onUpdateDetails({ targetAmount: nextTarget });
+    setTargetInput("");
+  }
+
+  function saveGoalSettings(event: FormEvent) {
+    event.preventDefault();
+    const nextName = nameInput.trim();
+    const nextTarget = parseVaultTargetAmount(targetInput);
+    if (!nextName || nextTarget <= 0) return;
+    onUpdateDetails({ name: nextName, targetAmount: nextTarget });
+    setTargetInput("");
+    setSettingsOpen(false);
   }
 
   function handlePutToward(event: FormEvent) {
@@ -132,16 +142,9 @@ export function VaultSavingsGoalDetailPanel({
           {backLabel}
         </button>
 
-        <label className="block min-w-0">
-          <span className="sr-only">{savingsCopy.goalNameLabel}</span>
-          <input
-            value={nameInput}
-            onChange={(event) => setNameInput(event.target.value)}
-            onBlur={commitName}
-            aria-label={savingsCopy.goalNameLabel}
-            className="w-full min-w-0 bg-transparent font-heading text-lg font-extrabold text-[#031F82] outline-none"
-          />
-        </label>
+        <h2 className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]">
+          {goal.name}
+        </h2>
 
         <div>
           <p className="font-heading text-3xl font-extrabold leading-none tabular-nums text-[#031F82]">
@@ -149,50 +152,63 @@ export function VaultSavingsGoalDetailPanel({
           </p>
         </div>
 
-        <label className="block">
-          <span className="font-heading text-sm font-bold text-[#031F82]">
-            {savingsCopy.goalTargetLabel}
-          </span>
-          <span className="mt-1 flex h-8 max-w-[9rem] items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2">
-            <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
-              {currencySymbol}
-            </span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={targetInput}
-              onChange={(event) =>
-                setTargetInput(sanitizeVaultAmountInput(event.target.value).value)
-              }
-              onBlur={commitTarget}
-              placeholder={savingsCopy.goalTargetUnset}
-              aria-label={savingsCopy.goalTargetLabel}
-              className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
-            />
-          </span>
-        </label>
-
-        <div>
-          <div
-            className={fillTrackClass}
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuenow={Math.round(fillPercent)}
-            aria-valuemax={100}
-            aria-label={
-              hasTarget
-                ? `${Math.round(fillPercent)} percent of target`
-                : savingsCopy.setATarget
-            }
-          >
-            <span className={fillBarClass} style={{ width: `${fillPercent}%` }} />
-          </div>
-          {!hasTarget ? (
-            <p className="mt-1 font-heading text-sm font-bold text-[#1E3A5F]/60">
-              {savingsCopy.setATarget}
+        {hasTarget ? (
+          <div>
+            <div className="flex items-center gap-1">
+              <p className="font-heading text-xs font-bold leading-tight text-[#031F82]">
+                {savingsCopy.goalTargetLabel}
+              </p>
+              <button
+                type="button"
+                onClick={openGoalSettings}
+                aria-label={vaultCopy.goalSettingsLabel}
+                className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#031F82] transition-colors hover:bg-[#BDE9FB]/40"
+              >
+                <SettingsIcon className="size-3.5" />
+              </button>
+            </div>
+            <p className="mt-1 font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
+              {formatMoney(goal.targetAmount)}
             </p>
-          ) : null}
-        </div>
+            <div
+              className={`${fillTrackClass} mt-2`}
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuenow={Math.round(fillPercent)}
+              aria-valuemax={100}
+              aria-label={`${Math.round(fillPercent)} percent of target`}
+            >
+              <span className={fillBarClass} style={{ width: `${fillPercent}%` }} />
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={saveFirstTarget} className="space-y-2">
+            <label className="block">
+              <span className="font-heading text-xs font-bold leading-tight text-[#031F82]">
+                {savingsCopy.goalTargetLabel}
+              </span>
+              <span className="mt-1 flex h-8 max-w-[9rem] items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2">
+                <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
+                  {currencySymbol}
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={targetInput}
+                  onChange={(event) =>
+                    setTargetInput(sanitizeVaultAmountInput(event.target.value).value)
+                  }
+                  placeholder={savingsCopy.goalTargetUnset}
+                  aria-label={savingsCopy.goalTargetLabel}
+                  className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+                />
+              </span>
+            </label>
+            <button type="submit" className={vaultHomeCompactCtaAutoClass}>
+              {vaultCopy.saveChanges}
+            </button>
+          </form>
+        )}
 
         {canPutToward ? (
           <form onSubmit={handlePutToward} className="flex items-center gap-2">
@@ -220,23 +236,25 @@ export function VaultSavingsGoalDetailPanel({
           </form>
         ) : null}
 
-        <button
-          type="button"
-          onClick={() => setSpendOpen(true)}
-          disabled={!canSpend}
-          className={vaultHomeCompactCtaAutoClass}
-        >
-          {vaultCopy.iSpentThis}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSpendOpen(true)}
+            disabled={!canSpend}
+            className={vaultHomeCompactCtaAutoClass}
+          >
+            {vaultCopy.iSpentThis}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setMoveOpen(true)}
-          disabled={!canMoveSome}
-          className={vaultHomeCompactOutlineCtaClass}
-        >
-          {vaultCopy.moveSome}
-        </button>
+          <button
+            type="button"
+            onClick={() => setMoveOpen(true)}
+            disabled={!canMoveSome}
+            className={vaultHomeCompactOutlineCtaClass}
+          >
+            {vaultCopy.moveSome}
+          </button>
+        </div>
       </div>
 
       <ModalShell
@@ -287,6 +305,81 @@ export function VaultSavingsGoalDetailPanel({
         titleId="vault-goal-premium-custom-title"
         layer="toast"
       />
+
+      <ModalShell
+        isOpen={settingsOpen && hasTarget}
+        onClose={closeGoalSettings}
+        layer="toast"
+        align="center"
+        labelledBy="vault-goal-settings-title"
+        backdropClassName="bg-[#031F82]/50"
+        panelClassName="flex max-h-[min(92vh,40rem)] max-w-lg flex-col rounded-2xl border-0 bg-white p-0 shadow-md"
+      >
+        <div className="shrink-0 border-b border-[#BDE9FB]/40 px-5 pb-4 pt-5">
+          <div className="flex items-start justify-between gap-3">
+            <h2
+              id="vault-goal-settings-title"
+              className="font-heading text-lg font-extrabold text-[#031F82]"
+            >
+              {vaultCopy.goalSettingsLabel}
+            </h2>
+            <button
+              type="button"
+              onClick={closeGoalSettings}
+              aria-label={vaultCopy.closeModalLabel}
+              className="shrink-0 rounded-lg px-2 py-1 font-heading text-lg font-bold leading-none text-[#1E3A5F]/60 transition-colors hover:bg-[#BDE9FB]/40 hover:text-[#031F82]"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        <form onSubmit={saveGoalSettings} className="space-y-4 px-5 py-4">
+          <label className="block">
+            <span className="font-heading text-xs font-bold leading-tight text-[#031F82]">
+              {vaultCopy.goalNameLabel}
+            </span>
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(event) => setNameInput(event.target.value)}
+              aria-label={vaultCopy.goalNameLabel}
+              className="mt-1 w-full rounded-lg border border-[#BDE9FB] bg-white px-2.5 py-1.5 font-sans text-sm text-[#031F82] outline-none focus:border-[#0CC1E0]"
+            />
+          </label>
+          <label className="block">
+            <span className="font-heading text-xs font-bold leading-tight text-[#031F82]">
+              {vaultCopy.goalTargetLabel}
+            </span>
+            <span className="mt-1 flex h-10 max-w-[10rem] items-center gap-1 rounded-lg border border-[#BDE9FB] bg-white px-2.5">
+              <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
+                {currencySymbol}
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={targetInput}
+                onChange={(event) =>
+                  setTargetInput(sanitizeVaultAmountInput(event.target.value).value)
+                }
+                aria-label={vaultCopy.goalTargetLabel}
+                className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm tabular-nums text-[#031F82] outline-none"
+              />
+            </span>
+          </label>
+          <div className="flex items-center gap-2">
+            <button type="submit" className={vaultHomeCompactCtaAutoClass}>
+              {vaultCopy.saveChanges}
+            </button>
+            <button
+              type="button"
+              onClick={closeGoalSettings}
+              className={vaultHomeCompactOutlineCtaClass}
+            >
+              {vaultCopy.cancelChanges}
+            </button>
+          </div>
+        </form>
+      </ModalShell>
 
       <ModalShell
         isOpen={moveOpen && canMoveSome}

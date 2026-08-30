@@ -274,33 +274,29 @@ export function VaultAllocationModal({
       panelClassName="w-full max-w-sm rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:px-5"
     >
       <div className="flex items-start gap-2">
-        <div className="grid min-w-0 flex-1 grid-cols-2 gap-3">
-          <div className="min-w-0">
-            <p
-              id="vault-allocation-title"
-              className="max-w-[4.75rem] font-heading text-xs font-bold leading-tight text-[#031F82]"
-            >
-              {copy.moneyInLabel}
-            </p>
-            <p className="mt-1 font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
-              {formatMoney(moneyInTotal)}
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className="max-w-[4.75rem] font-heading text-xs font-bold leading-tight text-[#031F82]">
-              {copy.notAllocatedLabel}
-            </p>
-            <p
-              className={cn(
-                "mt-1 font-heading text-2xl font-extrabold leading-none tabular-nums transition-colors",
-                isOverAllocated || inputWasCapped ? "text-[#BE123C]" : "text-[#FFA503]",
-              )}
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {notAllocatedDisplay}
-            </p>
-          </div>
+        <div className="grid min-w-0 flex-1 grid-cols-2 items-end gap-x-3 gap-y-1">
+          <p
+            id="vault-allocation-title"
+            className="w-[2.4rem] font-heading text-xs font-bold leading-tight text-[#031F82]"
+          >
+            {copy.moneyInLabel}
+          </p>
+          <p className="max-w-[4.75rem] font-heading text-xs font-bold leading-tight text-[#031F82]">
+            {copy.notAllocatedLabel}
+          </p>
+          <p className="font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
+            {formatMoney(moneyInTotal)}
+          </p>
+          <p
+            className={cn(
+              "font-heading text-2xl font-extrabold leading-none tabular-nums transition-colors",
+              isOverAllocated || inputWasCapped ? "text-[#BE123C]" : "text-[#FFA503]",
+            )}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {notAllocatedDisplay}
+          </p>
         </div>
         <div className="flex shrink-0 items-start gap-1">
           <div className="relative">

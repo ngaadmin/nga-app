@@ -168,12 +168,17 @@ export function VaultSaveJarExpandedPanel({
                 <button
                   type="button"
                   onClick={() => setSelectedGoalId(goal.id)}
-                  className="flex w-full min-w-0 items-center justify-between gap-3 py-1.5 text-left"
+                  className="flex w-full min-w-0 items-center justify-between gap-3 rounded-lg py-1.5 text-left transition-colors hover:bg-[#F0FBFF] active:bg-[#FAFDFF]"
                   aria-label={`Open ${goal.name}`}
                 >
-                  <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">
-                    {goal.emoji} {goal.name}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">
+                      {goal.emoji} {goal.name}
+                    </p>
+                    <p className="font-heading text-xs font-bold leading-tight text-[#1E3A5F]/55">
+                      {vaultCopy.tapToSpendOrMove}
+                    </p>
+                  </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <div className="text-right">
                       <p className="font-heading text-sm font-extrabold tabular-nums text-[#031F82]">
@@ -187,7 +192,7 @@ export function VaultSaveJarExpandedPanel({
                     </div>
                     <span
                       aria-hidden
-                      className="font-heading text-base font-bold leading-none text-[#1E3A5F]/35"
+                      className="font-heading text-2xl font-extrabold leading-none text-[#031F82]"
                     >
                       ›
                     </span>

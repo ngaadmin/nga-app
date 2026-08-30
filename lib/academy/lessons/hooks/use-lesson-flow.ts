@@ -28,7 +28,7 @@ export type UseLessonFlowOptions = {
   perfectStreakBonus: number;
   /** Dev-only design shell — skip XP and milestone writes on Cash In. */
   isDesignShell?: boolean;
-  /** Dev QA preview — play a locked lesson without writing Academy progress. */
+  /** Lesson QA preview — play without writing Academy progress or cash-in. */
   skipProgressWrites?: boolean;
   /** Defaults to /dashboard/academy */
   exitHref?: string;
@@ -206,6 +206,11 @@ export function useLessonFlow({
         const updated = completeAcademyMilestone(milestoneId, milestones);
         saveAcademyMilestones(updated);
       }
+    }
+
+    if (skipProgressWrites) {
+      router.push(exitHref);
+      return;
     }
 
     void persistRegisteredProgressNow().finally(() => {

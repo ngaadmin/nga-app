@@ -19,7 +19,7 @@ import {
 } from "@/lib/academy/lessons/registry";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
-import { isDevAcademyLessonPreview } from "@/lib/dev/academy-dev-tools";
+import { isAcademyLessonPreview } from "@/lib/dev/academy-dev-tools";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 import { cn } from "@/lib/utils/cn";
@@ -41,7 +41,7 @@ function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDesignShell = isDesignShellLesson(milestoneId);
-  const isPreview = isDevAcademyLessonPreview(searchParams);
+  const isPreview = isAcademyLessonPreview(searchParams);
   const [progressChecked, setProgressChecked] = useState(
     isDesignShell || isPreview,
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   DesignShellJumpSync,
@@ -11,7 +11,12 @@ import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-definition";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
-import { isDesignShellLesson, isLessonShippedForCohort } from "@/lib/academy/lessons/registry";
+import {
+  canLaunchAcademyLesson,
+  isDesignShellLesson,
+  isLessonShippedForCohort,
+} from "@/lib/academy/lessons/registry";
+import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
@@ -25,14 +30,34 @@ export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const router = useRouter();
   const isDesignShell = isDesignShellLesson(milestoneId);
+  const [progressChecked, setProgressChecked] = useState(isDesignShell);
+  const [progressLocked, setProgressLocked] = useState(false);
   const isAvailable =
-    isDesignShell || isLessonShippedForCohort(milestoneId, cohort);
+    progressChecked &&
+    !progressLocked &&
+    (isDesignShell || isLessonShippedForCohort(milestoneId, cohort));
 
   useEffect(() => {
+    if (isDesignShell) {
+      setProgressChecked(true);
+      return;
+    }
+    const node = readAcademyMilestones().find(
+      (entry) => entry.id === milestoneId,
+    );
+    const allowed =
+      node != null &&
+      canLaunchAcademyLesson(milestoneId, node.status, cohort);
+    setProgressLocked(!allowed);
+    setProgressChecked(true);
+  }, [cohort, isDesignShell, milestoneId]);
+
+  useEffect(() => {
+    if (!progressChecked) return;
     if (!isAvailable) {
       router.replace(DASHBOARD_ACADEMY_PATH);
     }
-  }, [isAvailable, router]);
+  }, [isAvailable, progressChecked, router]);
 
   useEffect(() => {
     if (isAvailable && milestoneId === FIRST_ACADEMY_LESSON_MILESTONE_ID) {

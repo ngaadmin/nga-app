@@ -12,7 +12,6 @@ import {
   type CohortLessonDefinition,
   type ResolvedLessonContent,
 } from "@/lib/academy/lessons/types";
-import { isDevTestingUnlockedLesson } from "@/lib/dev/academy-dev-tools";
 import { isDevClient } from "@/lib/dev/client-persist";
 
 /** Dev / QA route for Academy template restyle. Not on the Academy map. */
@@ -130,7 +129,7 @@ export function hasShippedLesson(milestoneId: number): boolean {
   return SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId);
 }
 
-/** Shipped lessons stay open for replay after completion (testing + review). */
+/** Active lesson is playable; completed lessons stay open for replay. Locked stays locked. */
 export function canLaunchAcademyLesson(
   milestoneId: number,
   status: "active" | "completed" | "locked",
@@ -138,14 +137,6 @@ export function canLaunchAcademyLesson(
 ): boolean {
   if (!isLessonShippedForCohort(milestoneId, cohort)) {
     return false;
-  }
-
-  if (
-    isDevClient() &&
-    isDevTestingUnlockedLesson(milestoneId) &&
-    isLessonShippedForCohort(milestoneId, cohort)
-  ) {
-    return true;
   }
 
   return status === "active" || status === "completed";

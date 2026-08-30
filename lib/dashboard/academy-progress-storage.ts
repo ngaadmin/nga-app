@@ -3,7 +3,6 @@ import {
   type AcademyLessonMilestoneNode,
 } from "@/lib/dashboard/academy-state";
 import { resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
-import { applyDevShippedLessonUnlocks } from "@/lib/dev/academy-dev-tools";
 import { markAccountProgressDirty } from "@/lib/dashboard/account-progress-dirty";
 import {
   readPersisted,
@@ -40,18 +39,16 @@ export function readAcademyMilestones(): AcademyLessonMilestoneNode[] {
   }
 
   const raw = readPersisted(ACADEMY_PROGRESS_STORAGE_KEY);
-  if (!raw) return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
+  if (!raw) return defaultAcademyMilestones();
 
   try {
     const parsed = JSON.parse(raw) as AcademyLessonMilestoneNode[];
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
+      return defaultAcademyMilestones();
     }
-    return applyDevShippedLessonUnlocks(
-      enforceSequentialAcademyProgress(parsed),
-    );
+    return enforceSequentialAcademyProgress(parsed);
   } catch {
-    return applyDevShippedLessonUnlocks(defaultAcademyMilestones());
+    return defaultAcademyMilestones();
   }
 }
 
@@ -66,11 +63,18 @@ export function saveAcademyMilestones(
   markAccountProgressDirty();
 }
 
-/** Mark a lesson complete and activate the next milestone node. */
+/** Mark a lesson complete and activate the next milestone node. Replay is a no-op. */
 export function completeAcademyMilestone(
   completedMilestoneId: number,
   milestones: readonly AcademyLessonMilestoneNode[],
 ): AcademyLessonMilestoneNode[] {
+  const alreadyCompleted = milestones.some(
+    (node) => node.id === completedMilestoneId && node.status === "completed",
+  );
+  if (alreadyCompleted) {
+    return milestones.map((node) => ({ ...node }));
+  }
+
   const nextId = completedMilestoneId + 1;
 
   return milestones.map((node) => {

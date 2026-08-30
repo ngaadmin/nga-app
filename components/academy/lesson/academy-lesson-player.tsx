@@ -13,11 +13,13 @@ import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-defi
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import {
   canLaunchAcademyLesson,
+  hasShippedLesson,
   isDesignShellLesson,
   isLessonShippedForCohort,
 } from "@/lib/academy/lessons/registry";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
+import { isDevAcademyLessonPreview } from "@/lib/dev/academy-dev-tools";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 import { cn } from "@/lib/utils/cn";
@@ -27,18 +29,33 @@ type AcademyLessonPlayerProps = {
 };
 
 export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
+  return (
+    <SearchParamsBoundary>
+      <AcademyLessonPlayerGate milestoneId={milestoneId} />
+    </SearchParamsBoundary>
+  );
+}
+
+function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isDesignShell = isDesignShellLesson(milestoneId);
-  const [progressChecked, setProgressChecked] = useState(isDesignShell);
+  const isPreview = isDevAcademyLessonPreview(searchParams);
+  const [progressChecked, setProgressChecked] = useState(
+    isDesignShell || isPreview,
+  );
   const [progressLocked, setProgressLocked] = useState(false);
   const isAvailable =
     progressChecked &&
     !progressLocked &&
-    (isDesignShell || isLessonShippedForCohort(milestoneId, cohort));
+    (isDesignShell ||
+      isPreview ||
+      isLessonShippedForCohort(milestoneId, cohort));
 
   useEffect(() => {
-    if (isDesignShell) {
+    if (isDesignShell || isPreview) {
+      setProgressLocked(isPreview ? !hasShippedLesson(milestoneId) : false);
       setProgressChecked(true);
       return;
     }
@@ -50,7 +67,7 @@ export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
       canLaunchAcademyLesson(milestoneId, node.status, cohort);
     setProgressLocked(!allowed);
     setProgressChecked(true);
-  }, [cohort, isDesignShell, milestoneId]);
+  }, [cohort, isDesignShell, isPreview, milestoneId]);
 
   useEffect(() => {
     if (!progressChecked) return;
@@ -60,34 +77,54 @@ export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
   }, [isAvailable, progressChecked, router]);
 
   useEffect(() => {
-    if (isAvailable && milestoneId === FIRST_ACADEMY_LESSON_MILESTONE_ID) {
+    if (
+      isAvailable &&
+      !isPreview &&
+      milestoneId === FIRST_ACADEMY_LESSON_MILESTONE_ID
+    ) {
       markFirstAcademyLessonOpened();
     }
-  }, [isAvailable, milestoneId]);
+  }, [isAvailable, isPreview, milestoneId]);
 
   if (!isAvailable) {
     return null;
   }
 
   return (
-    <SearchParamsBoundary>
-      <AcademyLessonPlayerInner milestoneId={milestoneId} />
-    </SearchParamsBoundary>
+    <AcademyLessonPlayerInner
+      milestoneId={milestoneId}
+      isPreview={isPreview}
+    />
   );
 }
 
-function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
-  const content = useLessonDefinition(milestoneId);
+function AcademyLessonPlayerInner({
+  milestoneId,
+  isPreview = false,
+}: AcademyLessonPlayerProps & { isPreview?: boolean }) {
+  const content = useLessonDefinition(
+    milestoneId,
+    isPreview ? "explorer" : undefined,
+  );
   const searchParams = useSearchParams();
   const { awardLessonXp } = useDashboardWallet();
   const isDesignShell = content.meta.isDesignShell === true;
+  const previewScreenRaw = Number.parseInt(
+    searchParams.get("screen") ?? "",
+    10,
+  );
   const initialScreenIndex = isDesignShell
     ? (resolveDesignShellJumperIndex(
         content.screens,
         searchParams.get("type"),
         searchParams.get("screen"),
       ) ?? 0)
-    : 0;
+    : isPreview && Number.isFinite(previewScreenRaw)
+      ? Math.min(
+          content.meta.totalScreens - 1,
+          Math.max(0, previewScreenRaw),
+        )
+      : 0;
 
   const flow = useLessonFlow({
     milestoneId,
@@ -96,15 +133,17 @@ function AcademyLessonPlayerInner({ milestoneId }: AcademyLessonPlayerProps) {
     xpReward: content.rewards.xpReward,
     perfectStreakBonus: content.rewards.perfectStreakBonus,
     isDesignShell,
+    skipProgressWrites: isPreview,
     exitHref: isDesignShell ? "/dashboard/academy" : undefined,
     initialScreenIndex,
   });
 
   const awardBonusXp = useCallback(
     (amount: number) => {
+      if (isPreview) return;
       awardLessonXp(amount);
     },
-    [awardLessonXp],
+    [awardLessonXp, isPreview],
   );
 
   return (

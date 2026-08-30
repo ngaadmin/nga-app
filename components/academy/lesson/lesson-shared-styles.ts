@@ -116,19 +116,19 @@ export const lessonSortBoardClass = "mt-2 flex min-h-0 flex-1 flex-col gap-2";
 
 export const lessonSortBucketCompactClass = "min-h-[8.5rem]";
 
-/** Statement-sort pool tray — reserved height, items do not collapse the page. */
+/** Statement-sort pool tray — height follows remaining chips so buckets can grow. */
 export const lessonSortPoolStaticClass =
-  "shrink-0 bg-transparent px-0 py-2";
+  "shrink-0 bg-transparent px-0 py-1";
 
 /** @deprecated Statement-sort pools must not scroll — use lessonSortPoolStaticClass. */
 export const lessonSortPoolScrollClass = lessonSortPoolStaticClass;
 
-/** Two-column pool — equal cells so chips stay put while dragging/dropping. */
+/** Two-column pool — compact rows so the divider can sit higher. */
 export const lessonSortStatementListClass =
-  "grid auto-rows-[4.5rem] grid-cols-2 content-start gap-x-6 gap-y-5 [&>*]:min-w-0";
+  "grid auto-rows-min grid-cols-2 content-start gap-x-4 gap-y-2 [&>*]:min-w-0";
 
 /** Empty grid cell that holds pool height after an item is placed. */
-export const lessonSortPoolSlotPlaceholderClass = "min-h-[3rem] w-full";
+export const lessonSortPoolSlotPlaceholderClass = "min-h-0 w-full";
 
 /** Compact emoji inside statement-sort pool/placed cards. */
 export const lessonSortStatementEmojiClass =
@@ -251,7 +251,7 @@ export const lessonSequenceBoardClass =
 
 /** Outer shell for steps-row ordering screens — no extra board box. */
 export const lessonSequenceShellClass =
-  "flex min-h-0 flex-1 flex-col gap-2 sm:gap-2.5";
+  "flex min-h-0 flex-1 flex-col gap-1.5";
 
 /** Shuffled source pool — top section, collapses when empty. */
 export const lessonSequencePoolSectionClass =
@@ -267,13 +267,13 @@ export const lessonSequenceGridClass =
 /** @deprecated */
 export const lessonSequenceRowClass = "flex w-full min-w-0";
 
-/** Draggable step card — text only; full-width rounded rectangle for wrapping. */
+/** Draggable step card — text only; compact so four steps plus Next stay on-screen. */
 export const lessonSequenceStepCardClass =
-  "flex w-full min-h-[2.75rem] cursor-grab touch-none select-none items-center rounded-2xl border border-[#BDE9FB] bg-white px-3 py-2.5 text-left font-heading text-base font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.99]";
+  "flex w-full min-h-[2.25rem] cursor-grab touch-none select-none items-center rounded-xl border border-[#BDE9FB] bg-white px-2.5 py-1.5 text-left font-heading text-sm font-medium leading-tight text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.99]";
 
 /** Empty drop slot — soft well, no dashed frame around later chips. */
 export const lessonSequenceSlotClass =
-  "relative flex w-full min-h-[2.75rem] flex-1 items-center rounded-2xl border-2 border-transparent bg-[#F7FBFF]/70 px-3 py-2 transition-colors";
+  "relative flex w-full min-h-[2.25rem] flex-1 items-center rounded-xl border-2 border-transparent bg-[#F7FBFF]/70 px-2.5 py-1.5 transition-colors";
 
 export const lessonSequenceSlotActiveClass =
   "border-[#0CC1E0] bg-[#BDE9FB]/35 ring-2 ring-[#0CC1E0]/40";
@@ -289,7 +289,7 @@ export const lessonSequenceSlotFilledClass =
 
 /** Placed step inside a slot — text only, matches pool card shape. */
 export const lessonSequenceStepPlacedClass =
-  "flex h-full w-full items-center rounded-2xl px-3 py-2 text-left font-heading text-base font-medium leading-snug text-[#031F82]";
+  "flex h-full w-full items-center rounded-xl px-2.5 py-1.5 text-left font-heading text-sm font-medium leading-tight text-[#031F82]";
 
 /** Rank / step index shown outside cards (left column). */
 export const lessonSequenceNumberClass =

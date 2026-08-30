@@ -64,12 +64,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     type: "bucket-sort",
     id: "pause-sequence",
     intro:
-      'Lars asks Senna why he waited. Senna explains: "Remember the last time we all bought that game skin on day one? Two days later, it was half-price. I felt I wasted half of my money."\n\nDrag each step into the correct order:',
-    illustration: {
-      emoji: "⏸️",
-      label: "Pause before you buy",
-      alt: "Senna pauses before a limited-time offer",
-    },
+      'Senna explains why he waited: "Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed."',
     layout: "steps-row",
     buckets: [
       { id: "step1", label: "Step 1" },
@@ -80,26 +75,22 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     items: [
       {
         id: "see-offer",
-        emoji: "🏷️",
-        label: 'Senna sees the "Limited Time" offer.',
+        label: "Senna sees the one-time offer.",
         bucket: "step1",
       },
       {
         id: "remember",
-        emoji: "🛑",
-        label: "He stops and remembers the price might drop later.",
+        label: "Senna remembers the price could drop later.",
         bucket: "step2",
       },
       {
         id: "wait",
-        emoji: "⏳",
-        label: "He waits two days to check the price again.",
+        label: "Senna waits a day and checks again.",
         bucket: "step3",
       },
       {
         id: "buy-if-cheaper",
-        emoji: "💸",
-        label: "Senna only buys it, if the price is cheaper than before.",
+        label: "Senna is happy he waited - he can buy the same item for even less.",
         bucket: "step4",
       },
     ],
@@ -162,13 +153,8 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "pressure-sign-picks",
-    illustrationId: "pair-lars-mia-walking",
     selectionMode: "multi-correct",
     optionLayout: "radio-list",
-    imagePlaceholder: {
-      label: "Fishing rod sign",
-      alt: "Flashy shop sign advertising a fishing rod",
-    },
     scenePrompt:
       "Mia and Lars are walking home from school. They walk past a big, flashy sign for a fishing rod. It's making Lars want to rush to the shop and buy it immediately.",
     prompt: "Select which parts of the sign are making Lars rush.",
@@ -227,7 +213,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     sourceLabel: "Spend Now",
     targetLabel: "Save for Later",
     itemEmoji: "🪙",
-    coinCount: 5,
+    coinCount: 3,
     successMessage: "Lars's money is safe from mindless spending!",
     advance: { mode: "on-complete" },
   },

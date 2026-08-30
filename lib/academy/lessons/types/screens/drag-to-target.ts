@@ -14,7 +14,7 @@ export type DragToTargetScreenConfig = WithDeclarative<{
   itemEmoji?: string;
   /** Visual size of the draggable emoji. Default `md`. */
   itemSize?: DragToTargetItemSize;
-  /** Visual stack depth for coin-style drags. Default 5. */
+  /** Visual stack depth for coin-style drags. Default 3; this template caps at 3. */
   coinCount?: number;
   /** Fallback emoji for the target zone when no image is set. Default 🐷. */
   targetEmoji?: string;

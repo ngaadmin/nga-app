@@ -17,9 +17,15 @@ const DENSE_LESSON_SCREEN_TYPES = new Set<ScreenConfig["type"]>([
   "completion",
 ]);
 
+function isRadioListChoiceScreen(screen: ScreenConfig): boolean {
+  return isMultipleChoiceScreen(screen) && screen.optionLayout === "radio-list";
+}
+
 /** True when the screen type should not render `LessonIllustrationSlot`. */
 export function isDenseLessonScreen(screen: ScreenConfig): boolean {
-  return DENSE_LESSON_SCREEN_TYPES.has(screen.type);
+  return (
+    DENSE_LESSON_SCREEN_TYPES.has(screen.type) || isRadioListChoiceScreen(screen)
+  );
 }
 
 /** True when the shared top illustration slot is part of this screen template. */
@@ -83,7 +89,11 @@ export function resolveLessonScreenIllustration(
     return screen.illustration;
   }
 
-  if (isMultipleChoiceScreen(screen) && screen.imagePlaceholder) {
+  if (
+    isMultipleChoiceScreen(screen) &&
+    screen.optionLayout !== "radio-list" &&
+    screen.imagePlaceholder
+  ) {
     return imagePlaceholderToIllustration(screen.imagePlaceholder);
   }
 

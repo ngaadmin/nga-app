@@ -15,7 +15,6 @@ import {
   lessonSortStatementCardClass,
   lessonSortStatementPlacedClass,
   lessonSortItemEmojiClass,
-  lessonSortPoolSlotPlaceholderClass,
   lessonGameHintClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
@@ -109,7 +108,6 @@ export function LessonBucketSortGame<TBucket extends string>({
     const ids = items.map((item) => item.id);
     return isSpentTotalLayout ? ids : shuffleIds(ids);
   });
-  const [poolSlotIds] = useState<string[]>(() => poolIds);
   const [bucketItems, setBucketItems] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(buckets.map((bucket) => [bucket.id, []])),
   );
@@ -577,23 +575,10 @@ export function LessonBucketSortGame<TBucket extends string>({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
       >
-        <LessonSortPool
-          isEmpty={poolIds.length === 0}
-          className="shrink-0"
-        >
-          {poolSlotIds.map((itemId) =>
-            poolIds.includes(itemId) ? (
-              renderPoolChip(itemId)
-            ) : (
-              <div
-                key={itemId}
-                className={cn(lessonSortPoolSlotPlaceholderClass, "min-h-[72px]")}
-                aria-hidden
-              />
-            ),
-          )}
+        <LessonSortPool isEmpty={poolIds.length === 0} className="shrink-0">
+          {poolIds.map((itemId) => renderPoolChip(itemId))}
         </LessonSortPool>
-        <div className="mb-2.5 h-px shrink-0 bg-[#C5D8E6]" />
+        <div className="h-px shrink-0 bg-[#C5D8E6]" />
         <LessonSortBucketRow className="min-h-0 flex-1">
           {buckets.map((bucket) => renderBucket(bucket))}
         </LessonSortBucketRow>

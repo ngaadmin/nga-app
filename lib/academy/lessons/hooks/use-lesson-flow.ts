@@ -28,6 +28,8 @@ export type UseLessonFlowOptions = {
   perfectStreakBonus: number;
   /** Dev-only design shell — skip XP and milestone writes on Cash In. */
   isDesignShell?: boolean;
+  /** Dev QA preview — play a locked lesson without writing Academy progress. */
+  skipProgressWrites?: boolean;
   /** Defaults to /dashboard/academy */
   exitHref?: string;
   /** Design-shell jumper can open on a non-zero screen. */
@@ -46,6 +48,7 @@ export function useLessonFlow({
   xpReward,
   perfectStreakBonus,
   isDesignShell = false,
+  skipProgressWrites = false,
   exitHref = "/dashboard/academy",
   initialScreenIndex = 0,
 }: UseLessonFlowOptions) {
@@ -183,7 +186,7 @@ export function useLessonFlow({
     if (lessonComplete) return;
     setLessonComplete(true);
 
-    if (!isDesignShell) {
+    if (!isDesignShell && !skipProgressWrites) {
       awardLessonXp(xpReward);
       if (perfectStreak && perfectStreakBonus > 0) {
         awardLessonXp(perfectStreakBonus);
@@ -212,6 +215,7 @@ export function useLessonFlow({
     awardLessonXp,
     exitHref,
     isDesignShell,
+    skipProgressWrites,
     lessonComplete,
     milestoneId,
     perfectStreak,

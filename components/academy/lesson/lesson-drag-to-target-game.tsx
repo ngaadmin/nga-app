@@ -43,6 +43,7 @@ type LessonDragToTargetGameProps = {
 };
 
 const TARGET_DROP_HIT_PADDING_PX = 24;
+const DRAG_TO_TARGET_MAX_COINS = 3;
 const COIN_CHIP_CLASS =
   "grid size-11 place-items-center rounded-full bg-[#FFA503] text-xl";
 const LANDED_COIN_CLASS =
@@ -52,7 +53,7 @@ export function LessonDragToTargetGame({
   sourceLabel,
   targetLabel,
   itemEmoji = "🪙",
-  coinCount = 5,
+  coinCount = 3,
   targetEmoji = "🐷",
   targetIllustrationSrc,
   targetIllustrationAlt,
@@ -63,7 +64,10 @@ export function LessonDragToTargetGame({
   onSuccess,
   onMiss,
 }: LessonDragToTargetGameProps) {
-  const totalCoins = Math.max(1, coinCount);
+  const totalCoins = Math.min(
+    DRAG_TO_TARGET_MAX_COINS,
+    Math.max(1, coinCount),
+  );
   const [remaining, setRemaining] = useState(totalCoins);
   const [landed, setLanded] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);

@@ -304,7 +304,6 @@ export function LessonSequenceSortGame<TStep extends string>({
     >
       <LessonSequenceSortBoard
         poolComplete={isComplete}
-        poolClassName={poolIds.length > 2 ? "max-h-[26vh]" : undefined}
         pool={poolIds.map((itemId) => {
           const item = itemById.get(itemId);
           if (!item) return null;

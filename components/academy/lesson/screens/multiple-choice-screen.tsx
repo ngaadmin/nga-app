@@ -222,7 +222,7 @@ export function MultipleChoiceScreen({
       errorVariant={screen.errorStyle === "banner" ? "banner" : "inline"}
     >
       {isRadioList && screen.scenePrompt ? (
-        <p className="mt-4 font-sans text-base font-normal leading-relaxed text-[#1E3A5F]">
+        <p className="mt-2 font-sans text-sm font-normal leading-snug text-[#1E3A5F]">
           {screen.scenePrompt}
         </p>
       ) : null}

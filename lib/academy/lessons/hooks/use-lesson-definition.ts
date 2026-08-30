@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { getLessonDefinition } from "@/lib/academy/lessons/registry";
 import {
   resolveLessonDefinition,
@@ -10,8 +11,10 @@ import {
 
 export function useLessonDefinition(
   milestoneId: number,
+  cohortOverride?: MasteryCohort,
 ): ResolvedLessonContent {
-  const cohort = useLessonMasteryCohort();
+  const sessionCohort = useLessonMasteryCohort();
+  const cohort = cohortOverride ?? sessionCohort;
   const definition = getLessonDefinition(milestoneId);
 
   if (!definition) {

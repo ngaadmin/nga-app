@@ -576,13 +576,15 @@ export function useVaultActions() {
 
         const nextGoal: SavingsGoal = {
           ...baseline,
-          ...(trimmedName ? { name: trimmedName } : {}),
-          ...(updates.emoji !== undefined
-            ? { emoji: updates.emoji.trim() || baseline.emoji }
-            : {}),
-          ...(updates.targetAmount !== undefined
-            ? { targetAmount: roundAudAmount(Math.max(0, updates.targetAmount)) }
-            : {}),
+          name: trimmedName || baseline.name,
+          emoji:
+            (updates.emoji !== undefined ? updates.emoji : baseline.emoji)?.trim() ||
+            "🎯",
+          balance: roundAudAmount(Math.max(0, baseline.balance ?? 0)),
+          targetAmount:
+            updates.targetAmount !== undefined
+              ? roundAudAmount(Math.max(0, updates.targetAmount))
+              : roundAudAmount(Math.max(0, baseline.targetAmount ?? 0)),
         };
 
         if (!existing) return [...current, nextGoal];

@@ -177,10 +177,10 @@ export function ensureFreemiumStarterGoals(
     if (!existing) return template;
     return {
       ...template,
-      name: existing.name.trim() || template.name,
-      emoji: existing.emoji.trim() || template.emoji,
-      balance: roundAudAmount(Math.max(0, existing.balance)),
-      targetAmount: roundAudAmount(Math.max(0, existing.targetAmount)),
+      name: (existing.name ?? "").trim() || template.name,
+      emoji: (existing.emoji ?? "").trim() || template.emoji,
+      balance: roundAudAmount(Math.max(0, existing.balance ?? 0)),
+      targetAmount: roundAudAmount(Math.max(0, existing.targetAmount ?? 0)),
     };
   });
 }

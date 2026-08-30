@@ -77,20 +77,23 @@ export function VaultSavingsGoalDetailPanel({
   const [moveOpen, setMoveOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const hasTarget = goal.targetAmount > 0;
-  const fillPercent = hasTarget ? savingsGoalProgress(goal) : 0;
+  const hasTarget = (goal?.targetAmount ?? 0) > 0;
+  const fillPercent = hasTarget && goal ? savingsGoalProgress(goal) : 0;
   const canPutToward = unassignedBalance > 0;
-  const canSpend = goal.balance > 0;
+  const canSpend = (goal?.balance ?? 0) > 0;
   const transferLocations = useMemo(
-    () => buildVaultTransferLocations(buckets, goals, goal.id),
-    [buckets, goal.id, goals],
+    () =>
+      goal ? buildVaultTransferLocations(buckets, goals, goal.id) : [],
+    [buckets, goal, goals],
   );
-  const canMoveSome = goal.balance > 0 && transferLocations.length > 0;
+  const canMoveSome = canSpend && transferLocations.length > 0;
 
   useEffect(() => {
-    if (hasTarget) return;
+    if (!goal || hasTarget) return;
     setTargetInput("");
-  }, [goal.id, hasTarget]);
+  }, [goal, hasTarget]);
+
+  if (!goal) return null;
 
   function openGoalSettings() {
     setNameInput(goal.name);
@@ -142,9 +145,19 @@ export function VaultSavingsGoalDetailPanel({
           {backLabel}
         </button>
 
-        <h2 className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]">
-          {goal.name}
-        </h2>
+        <div className="flex min-w-0 items-center gap-1">
+          <h2 className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]">
+            {goal.name}
+          </h2>
+          <button
+            type="button"
+            onClick={openGoalSettings}
+            aria-label={vaultCopy.goalSettingsLabel}
+            className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#031F82] transition-colors hover:bg-[#BDE9FB]/40"
+          >
+            <SettingsIcon className="size-3.5" />
+          </button>
+        </div>
 
         <div>
           <p className="font-heading text-3xl font-extrabold leading-none tabular-nums text-[#031F82]">
@@ -154,20 +167,10 @@ export function VaultSavingsGoalDetailPanel({
 
         {hasTarget ? (
           <div>
-            <div className="flex items-center gap-1">
-              <p className="font-heading text-xs font-bold leading-tight text-[#031F82]">
-                {savingsCopy.goalTargetLabel}
-              </p>
-              <button
-                type="button"
-                onClick={openGoalSettings}
-                aria-label={vaultCopy.goalSettingsLabel}
-                className="flex size-6 shrink-0 items-center justify-center rounded-md text-[#031F82] transition-colors hover:bg-[#BDE9FB]/40"
-              >
-                <SettingsIcon className="size-3.5" />
-              </button>
-            </div>
-            <p className="mt-1 font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
+            <p className="font-heading text-xs font-bold leading-tight text-[#031F82]">
+              {savingsCopy.goalTargetLabel}
+            </p>
+            <p className="mt-1 font-heading text-xl font-extrabold leading-none tabular-nums text-[#FFA503]">
               {formatMoney(goal.targetAmount)}
             </p>
             <div
@@ -307,7 +310,7 @@ export function VaultSavingsGoalDetailPanel({
       />
 
       <ModalShell
-        isOpen={settingsOpen && hasTarget}
+        isOpen={settingsOpen}
         onClose={closeGoalSettings}
         layer="toast"
         align="center"

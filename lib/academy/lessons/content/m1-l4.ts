@@ -58,13 +58,14 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
       "That's right! Senna is hitting the brakes before his brain makes a quick mistake.",
     wrongError: "Not quite! Take another look at what Senna is choosing to do.",
     errorStyle: "inline-red",
+    choiceFeedback: "neutral-selected",
     advance: { mode: "on-complete" },
   },
   {
     type: "bucket-sort",
     id: "pause-sequence",
     intro:
-      'Senna explains why he waited: "Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed."',
+      'Senna explains why he waited: "Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed."\n\nDrag the steps into order.',
     layout: "steps-row",
     buckets: [
       { id: "step1", label: "Step 1" },

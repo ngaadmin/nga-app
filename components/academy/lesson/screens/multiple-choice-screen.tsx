@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LESSON_SUCCESS_FLASH_MS } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import { lessonChoiceStackClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { lessonChoiceStackClass, usesNeutralChoiceFeedback } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonScreenLayout,
   lessonFeedbackCopy,
@@ -52,6 +52,7 @@ export function MultipleChoiceScreen({
   const choiceOptions: ChoiceOption[] = collectMultipleChoiceOptions(screen);
 
   const isRadioList = screen.optionLayout === "radio-list";
+  const gradeOnNext = usesNeutralChoiceFeedback(screen.choiceFeedback);
   const correctKeys = getCorrectOptionKeys(choiceOptions);
   const isMultiCorrect = correctKeys.length > 1;
   const allOfTheAboveKey = findAllOfTheAboveCorrectKey(choiceOptions);
@@ -114,6 +115,11 @@ export function MultipleChoiceScreen({
 
     setChoice(key);
     choiceRef.current = key;
+
+    if (gradeOnNext) {
+      flowRef.current.markScreenReady(screenIndex);
+      return;
+    }
 
     const selected = optionByKeyRef.current.get(key);
     if (selected && isLessonChoiceOptionCorrect(selected)) {
@@ -206,7 +212,8 @@ export function MultipleChoiceScreen({
             pick(key);
           }}
           selected={selected}
-          locked={solved && selected}
+          pending={gradeOnNext && selected && !solved}
+          locked={!gradeOnNext && solved && selected}
         >
           {option.label}
         </LessonChoiceButton>

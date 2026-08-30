@@ -44,7 +44,7 @@ type MultipleChoiceFields = {
   lockCorrectSelections?: boolean;
   /** persist = keep wrong selected (radio-list); shake = transient dud feedback (button list). */
   wrongInteraction?: "persist" | "shake";
-  /** neutral-selected = sunken tile only; colored = green/red tiles (default). */
+  /** When `neutral-selected`, tap only selects; Next grades (no red/green lock-in on tap). */
   choiceFeedback?: "colored" | "neutral-selected";
   emphasizeInstruction?: boolean;
 };

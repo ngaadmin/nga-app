@@ -79,7 +79,7 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     promptLabel: "Pick the word that fits",
     authoring: { pedagogicalStage: "hook", gameArchetype: "word-drop" },
     ...shellIllustration(0),
-    ...AUTO_READY,
+    advance: { mode: "on-complete" },
   },
   // Pedagogical role: Core concept
   {

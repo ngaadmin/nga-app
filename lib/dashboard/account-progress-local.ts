@@ -1,8 +1,8 @@
 import {
   ACCOUNT_PROGRESS_SCHEMA_VERSION,
   isEmptyAccountProgress,
-  mergeAccountProgress,
   parseAccountProgressPayload,
+  pickRestoredAccountProgress,
   type AccountProgressPayload,
 } from "@/lib/dashboard/account-progress";
 import {
@@ -20,6 +20,7 @@ import {
   saveDashboardWalletState,
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
+  VAULT_SKILL_PROGRESS_STORAGE_KEY,
   readVaultSkillTierOverrides,
   saveVaultSkillTierOverrides,
 } from "@/lib/dashboard/vault-skill-progress-storage";
@@ -108,6 +109,7 @@ export function writeCachedAccountProgress(
 
 export function collectAccountProgress(): AccountProgressPayload {
   const academyRaw = readPersisted(ACADEMY_PROGRESS_STORAGE_KEY);
+  const skillRaw = readPersisted(VAULT_SKILL_PROGRESS_STORAGE_KEY);
   const vaultProfileRaw = readVaultProfileRaw(VAULT_PROFILE_STORAGE_KEY);
   const vaultSessionRaw = readVaultSessionRaw(VAULT_SESSION_STORAGE_KEY);
 
@@ -115,7 +117,7 @@ export function collectAccountProgress(): AccountProgressPayload {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
     academyProgress: academyRaw ? readAcademyMilestones() : null,
     wallet: readDashboardWalletState(),
-    skillProgress: readVaultSkillTierOverrides(),
+    skillProgress: skillRaw ? readVaultSkillTierOverrides() : null,
     vaultProfile: vaultProfileRaw
       ? parseAccountProgressPayload({ vaultProfile: vaultProfileRaw })
           ?.vaultProfile ?? null
@@ -190,10 +192,11 @@ export function restoreAccountProgressForUser(input: {
 
   const live = collectAccountProgress();
   const cached = readCachedAccountProgress(input);
-  const merged = mergeAccountProgress(
-    mergeAccountProgress(input.remote ?? null, cached),
-    isEmptyAccountProgress(live) ? null : live,
-  );
+  const merged = pickRestoredAccountProgress({
+    remote: input.remote ?? null,
+    cached,
+    live,
+  });
 
   if (!merged || isEmptyAccountProgress(merged)) {
     return merged;

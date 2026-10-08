@@ -206,11 +206,22 @@ function skillProgressScore(overrides: VaultSkillTierOverrides | null): number {
   }, 0);
 }
 
+function meaningfulVaultLedgerCount(
+  profile: PersistedVaultProfile | null,
+): number {
+  if (!profile?.ledger?.length) return 0;
+  return profile.ledger.filter((entry) => entry.id !== "ledger-welcome").length;
+}
+
 function vaultBalanceScore(profile: PersistedVaultProfile | null): number {
   if (!profile) return 0;
   const jars = profile.jarBalances;
   const jarTotal = jars ? sumJarBalances(jars) : 0;
-  return (profile.moneyToAllocate ?? 0) + jarTotal + (profile.ledger?.length ?? 0);
+  return (
+    (profile.moneyToAllocate ?? 0) +
+    jarTotal +
+    meaningfulVaultLedgerCount(profile)
+  );
 }
 
 export function isEmptyAccountProgress(
@@ -304,4 +315,37 @@ export function mergeAccountProgress(
     vaultProfile: richerVault(left.vaultProfile, right.vaultProfile),
     vaultSession: richerVault(left.vaultSession, right.vaultSession),
   };
+}
+
+/**
+ * Last-write overlay for signed-in cloud saves. Present local fields win so
+ * spending XP or Vault money is not reverted by a "richer" remote copy.
+ */
+export function overlayAccountProgress(
+  base: AccountProgressPayload | null | undefined,
+  overlay: AccountProgressPayload | null | undefined,
+): AccountProgressPayload | null {
+  if (!overlay) return base ?? null;
+  if (!base) return overlay;
+
+  return {
+    schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
+    academyProgress: overlay.academyProgress ?? base.academyProgress,
+    wallet: overlay.wallet ?? base.wallet,
+    skillProgress: overlay.skillProgress ?? base.skillProgress,
+    vaultProfile: overlay.vaultProfile ?? base.vaultProfile,
+    vaultSession: overlay.vaultSession ?? base.vaultSession,
+  };
+}
+
+/** Sign-in restore: cloud first, then same-device cache, then live session. */
+export function pickRestoredAccountProgress(input: {
+  remote?: AccountProgressPayload | null;
+  cached?: AccountProgressPayload | null;
+  live?: AccountProgressPayload | null;
+}): AccountProgressPayload | null {
+  if (!isEmptyAccountProgress(input.remote)) return input.remote ?? null;
+  if (!isEmptyAccountProgress(input.cached)) return input.cached ?? null;
+  if (!isEmptyAccountProgress(input.live)) return input.live ?? null;
+  return input.remote ?? input.cached ?? input.live ?? null;
 }

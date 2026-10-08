@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -59,9 +60,11 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     () => defaults.xpExchangeRateSet,
   );
   const [walletHydrated, setWalletHydrated] = useState(false);
+  const skipWalletPersistRef = useRef(true);
 
   useEffect(() => {
     function hydrateWallet() {
+      skipWalletPersistRef.current = true;
       const persisted = readDashboardWalletState();
       if (persisted) {
         setTotalPoints(persisted.totalPoints);
@@ -81,6 +84,10 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
 
   useEffect(() => {
     if (!walletHydrated) return;
+    if (skipWalletPersistRef.current) {
+      skipWalletPersistRef.current = false;
+      return;
+    }
 
     const existing = readDashboardWalletState();
     if (

@@ -6,13 +6,13 @@
 * **Core Mission:** A dynamic, AI-powered financial cockpit transitioning youth (ages 10-17+) from passive learning to active entrepreneurship.
 * **Architecture:** High-performance, mobile-responsive Progressive Web App (PWA) scaling seamlessly from desktop to mobile viewports.
 * **Hardware Isolation:** Zero reliance on native mobile device hardware (no camera, no Bluetooth, no native push notifications).
-* **The Drafting Table Rule:** Strictly non-agentic execution. We provide tools and dashboards; the user provides direct intent. No automated financial trading, web scraping, or auto-gig placements.
+* **The Drafting Table Rule:** Academy stays scripted. Assistive help is allowed later on Launchpad, where the user still decides and sends. No automated financial trading, web scraping, or auto-gig placements.
 
 ## 2. Technical Stack Constraints (Non-Negotiable)
 * **Frontend UI:** Next.js (React App Router), TypeScript (Strict Mode), and Tailwind CSS.
 * **Backend & Database:** Supabase (PostgreSQL) for user authentication, session persistence, and progress tracking.
 * **Hosting & Pipeline:** Vercel integrated with GitHub version control for automated testing and continuous deployment.
-* **Cognitive Processing:** Direct integration with the xAI Grok API. 
+* **Cognitive Processing:** Grok is the only model allowed, if and when a feature needs one. It is not a current product feature. Do not add a chatbot unless explicitly requested. 
 * **OpenAI Absolute Exclusion:** Under no circumstances are OpenAI, ChatGPT, or associated SDKs, libraries, or dependencies to be imported or referenced.
 
 ## 3. Brand Voice & UI Style Safeguards
@@ -50,5 +50,5 @@
 - **Shell Independence:** Global app chrome (navigation, layout shell) must remain usable regardless of local feature state (games, modals, drag interactions).
 - **Layer Discipline:** Use the project's centralized stacking conventions; do not introduce ad-hoc z-index values.
 - **Render Safety:** Never trigger parent state updates synchronously during another component's render or inside that component's state updater functions.
-- **Guest-First Delivery:** Ship with local persistence and in-memory registries until remote auth/database integration is explicitly in scope for the task at hand.
+- **Guest-First Delivery:** Auth is in scope. Guest sessionStorage may remain try-before-signup; it is not the rule that blocks Supabase progress.
 - **Dashboard Pillars:** User-facing section titles are **Academy**, **Launchpad**, and **Vault** (no "The " prefix). Routes: `/dashboard/academy`, `/dashboard/launchpad`, `/dashboard/vault`. Legacy URLs `/dashboard/engine` and `/dashboard/vault-v2` redirect permanently.

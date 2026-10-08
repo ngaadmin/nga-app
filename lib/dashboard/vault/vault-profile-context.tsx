@@ -122,8 +122,10 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
   const [hydrated, setHydrated] = useState(false);
   const sessionRef = useRef(readUserSession());
   const ledgerCounter = useRef(0);
+  const skipVaultPersistRef = useRef(true);
 
   const hydrateFromStorage = useCallback(() => {
+    skipVaultPersistRef.current = true;
     const session = readUserSession();
     sessionRef.current = session;
     const persisted = readVaultProfileState(session);
@@ -177,6 +179,10 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
 
   useEffect(() => {
     if (!hydrated) return;
+    if (skipVaultPersistRef.current) {
+      skipVaultPersistRef.current = false;
+      return;
+    }
 
     const nextState = {
       schemaVersion: 1 as const,

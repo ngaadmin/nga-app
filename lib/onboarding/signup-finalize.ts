@@ -1,7 +1,7 @@
 import { requestOnboardingEmailSend } from "@/lib/email/request-send";
 import {
   isEmptyAccountProgress,
-  mergeAccountProgress,
+  overlayAccountProgress,
 } from "@/lib/dashboard/account-progress";
 import {
   collectAccountProgress,
@@ -184,7 +184,7 @@ async function persistRegisteredAccountProgress(
   const remote = await loadLearnerProgressByUserId(childId);
   await saveLearnerProgressForUser(
     childId,
-    mergeAccountProgress(remote, payload) ?? payload,
+    overlayAccountProgress(remote, payload) ?? payload,
   );
 }
 

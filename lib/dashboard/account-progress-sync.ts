@@ -4,9 +4,10 @@ import { useEffect } from "react";
 import {
   accountProgressLogFields,
   isEmptyAccountProgress,
-  mergeAccountProgress,
+  overlayAccountProgress,
   type AccountProgressPayload,
 } from "@/lib/dashboard/account-progress";
+import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { ACCOUNT_PROGRESS_DIRTY_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import {
   collectAccountProgress,
@@ -95,7 +96,7 @@ async function pushAccountProgressNow(): Promise<void> {
       return;
     }
 
-    const payload = mergeAccountProgress(remote, local) ?? local;
+    const payload = overlayAccountProgress(remote, local) ?? local;
     if (isEmptyAccountProgress(payload)) return;
     await saveLearnerProgressForUser(childId, payload);
   } catch {
@@ -140,7 +141,7 @@ export async function persistRegisteredProgressNow(): Promise<void> {
   if (isEmptyAccountProgress(local)) return;
 
   const remote = await loadLearnerProgressByUserId(childId);
-  const payload = mergeAccountProgress(remote, local) ?? local;
+  const payload = overlayAccountProgress(remote, local) ?? local;
   await saveLearnerProgressForUser(childId, payload);
 }
 
@@ -187,7 +188,15 @@ export function useAccountProgressSync(): void {
       scheduleAccountProgressPush();
     }
 
+    function onSessionUpdated() {
+      const owner = registeredOwner();
+      if (owner) {
+        void restoreRegisteredAccountProgress(owner);
+      }
+    }
+
     window.addEventListener(ACCOUNT_PROGRESS_DIRTY_EVENT, onDirty);
+    window.addEventListener(USER_SESSION_UPDATED_EVENT, onSessionUpdated);
 
     const owner = registeredOwner();
     if (owner) {
@@ -196,6 +205,7 @@ export function useAccountProgressSync(): void {
 
     return () => {
       window.removeEventListener(ACCOUNT_PROGRESS_DIRTY_EVENT, onDirty);
+      window.removeEventListener(USER_SESSION_UPDATED_EVENT, onSessionUpdated);
     };
   }, []);
 }

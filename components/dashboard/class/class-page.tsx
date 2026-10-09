@@ -9,10 +9,12 @@ import {
   saveClassCohort,
   type ClassRosterSnapshot,
 } from "@/lib/school/class-roster";
+import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
   masteryCohortLabel,
+  masteryCohortNameAndAgeLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
@@ -22,6 +24,8 @@ const fieldBase =
 
 type ClassPageProps = {
   roster: ClassRosterSnapshot;
+  /** Local QA — empty new-teacher view; no Auth, no email, no seats in Supabase. */
+  preview?: boolean;
 };
 
 function StudentLoginTable({ usernames }: { usernames: string[] }) {
@@ -49,7 +53,7 @@ function StudentLoginTable({ usernames }: { usernames: string[] }) {
   );
 }
 
-export function ClassPage({ roster }: ClassPageProps) {
+export function ClassPage({ roster, preview = false }: ClassPageProps) {
   const [studentsUsed, setStudentsUsed] = useState(roster.seatsUsed);
   const [usernames, setUsernames] = useState(roster.usernames);
   const [classPassword, setClassPassword] = useState(roster.classPassword);
@@ -72,6 +76,10 @@ export function ClassPage({ roster }: ClassPageProps) {
     setNotice(null);
     setSavingCohort(true);
     try {
+      if (preview) {
+        setClassCohort(cohort);
+        return;
+      }
       const result = await saveClassCohort(cohort);
       if (!result.ok) {
         setError(result.error);
@@ -103,6 +111,19 @@ export function ClassPage({ roster }: ClassPageProps) {
     }
     setCreating(true);
     try {
+      if (preview) {
+        const toCreate = Math.min(count, remaining);
+        const created = pickClassSeatUsernames(usernames, toCreate);
+        setUsernames((prev) => [...prev, ...created]);
+        setStudentsUsed((prev) => prev + created.length);
+        setStudentCount("");
+        setNotice(
+          created.length === 1
+            ? "Added 1 student."
+            : `Added ${created.length} students.`,
+        );
+        return;
+      }
       const result = await createClassSeats({
         count,
         classPassword,
@@ -131,6 +152,14 @@ export function ClassPage({ roster }: ClassPageProps) {
     setNotice(null);
     setChangingPassword(true);
     try {
+      if (preview) {
+        if (classPassword.trim().length < 6) {
+          setError("Use at least 6 characters for the class password.");
+          return;
+        }
+        setNotice("Class password updated.");
+        return;
+      }
       const result = await changeClassPassword(classPassword);
       if (!result.ok) {
         setError(result.error);
@@ -200,7 +229,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                       "cursor-not-allowed opacity-40",
                   )}
                 >
-                  {masteryCohortLabel(cohort)}
+                  {masteryCohortNameAndAgeLabel(cohort)}
                 </button>
               );
             })}
@@ -287,7 +316,7 @@ export function ClassPage({ roster }: ClassPageProps) {
       <div className={cn("hidden print:block")}>
         {classCohort ? (
           <p className="mb-3 font-heading text-sm font-bold text-nga-primary">
-            Class track: {masteryCohortLabel(classCohort)}
+            Class track: {masteryCohortNameAndAgeLabel(classCohort)}
           </p>
         ) : null}
         <StudentLoginTable usernames={sortedUsernames} />

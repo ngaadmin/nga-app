@@ -310,12 +310,19 @@ export function masteryCohortLabel(cohort: MasteryCohort): string {
   return MASTERY_COHORT[cohort].label;
 }
 
+/** Age band for UI. Always ASCII hyphen (`10-12`), never an en- or em-dash. */
 export function masteryCohortAgeRangeLabel(cohort: MasteryCohort): string {
   const { minAge, maxAge } = MASTERY_COHORT[cohort];
   if (maxAge == null) return `${minAge}+`;
   return `${minAge}-${maxAge}`;
 }
 
+/** Youngest-first name plus age, e.g. `Explorer 10-12`. */
+export function masteryCohortNameAndAgeLabel(cohort: MasteryCohort): string {
+  return `${masteryCohortLabel(cohort)} ${masteryCohortAgeRangeLabel(cohort)}`;
+}
+
+/** Youngest to oldest. Every three-cohort list in the product must use this order. */
 export const MASTERY_COHORT_ORDER: readonly MasteryCohort[] = [
   "explorer",
   "pathfinder",

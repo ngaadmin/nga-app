@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   MASTERY_COHORT_ORDER,
+  masteryCohortAgeRangeLabel,
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -14,13 +15,6 @@ import {
   DASHBOARD_ACADEMY_PATH,
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
-
-/** Supporting age lines for this screen only — cohort bounds stay in mastery-cohort. */
-const TRACK_AGE_SUPPORT: Record<MasteryCohort, string> = {
-  explorer: "For ages 10–12",
-  pathfinder: "For ages 13–15",
-  maverick: "For ages 16+",
-};
 
 const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
   explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
@@ -68,7 +62,7 @@ export function CohortTrackPicker() {
 
         {MASTERY_COHORT_ORDER.map((cohort) => {
           const label = masteryCohortLabel(cohort);
-          const ageSupport = TRACK_AGE_SUPPORT[cohort];
+          const ageSupport = `For ages ${masteryCohortAgeRangeLabel(cohort)}`;
 
           return (
             <button

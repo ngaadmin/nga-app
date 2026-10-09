@@ -20,7 +20,7 @@ export type SkillRegistryRecord = {
   skillSlug: string;
   skillName: string;
   description: string;
-  /** Skills 13–18 — restricted to Mavericks (ages 16–18). Levels 5–6. */
+  /** Skills 13-18 — restricted to Mavericks (ages 16-18). Levels 5-6. */
   isAdvancedCohortOnly: boolean;
   /** Optional legacy slugs from pre-registry prototypes (lesson + vault keys). */
   legacySlugs?: readonly string[];

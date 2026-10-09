@@ -19,43 +19,29 @@ import {
 } from "@/lib/academy/lessons/registry";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
-import {
-  isAcademyLessonPreview,
-  parseAcademyPreviewCohort,
-} from "@/lib/dev/academy-dev-tools";
+import { isAcademyLessonPreview } from "@/lib/dev/academy-dev-tools";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;
-  /** Local QA route — play without Academy map unlock or cash-in. */
-  forcePreview?: boolean;
 };
 
-export function AcademyLessonPlayer({
-  milestoneId,
-  forcePreview = false,
-}: AcademyLessonPlayerProps) {
+export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
   return (
     <SearchParamsBoundary>
-      <AcademyLessonPlayerGate
-        milestoneId={milestoneId}
-        forcePreview={forcePreview}
-      />
+      <AcademyLessonPlayerGate milestoneId={milestoneId} />
     </SearchParamsBoundary>
   );
 }
 
-function AcademyLessonPlayerGate({
-  milestoneId,
-  forcePreview = false,
-}: AcademyLessonPlayerProps) {
+function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDesignShell = isDesignShellLesson(milestoneId);
-  const isPreview = forcePreview || isAcademyLessonPreview(searchParams);
+  const isPreview = isAcademyLessonPreview(searchParams);
   const [progressChecked, setProgressChecked] = useState(
     isDesignShell || isPreview,
   );
@@ -117,10 +103,7 @@ function AcademyLessonPlayerInner({
   isPreview = false,
 }: AcademyLessonPlayerProps & { isPreview?: boolean }) {
   const searchParams = useSearchParams();
-  const content = useLessonDefinition(
-    milestoneId,
-    isPreview ? parseAcademyPreviewCohort(searchParams) : undefined,
-  );
+  const content = useLessonDefinition(milestoneId);
   const { awardLessonXp } = useDashboardWallet();
   const isDesignShell = content.meta.isDesignShell === true;
   const previewScreenRaw = Number.parseInt(

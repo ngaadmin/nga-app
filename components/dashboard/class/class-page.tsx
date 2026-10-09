@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import {
   changeClassPassword,
   createClassSeats,
+  saveClassCohort,
   type ClassRosterSnapshot,
 } from "@/lib/school/class-roster";
+import {
+  MASTERY_COHORT_ORDER,
+  masteryCohortAgeRangeLabel,
+  masteryCohortLabel,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
 const fieldBase =
@@ -46,6 +53,10 @@ export function ClassPage({ roster }: ClassPageProps) {
   const [studentsUsed, setStudentsUsed] = useState(roster.seatsUsed);
   const [usernames, setUsernames] = useState(roster.usernames);
   const [classPassword, setClassPassword] = useState(roster.classPassword);
+  const [classCohort, setClassCohort] = useState<MasteryCohort | null>(
+    roster.classCohort,
+  );
+  const [savingCohort, setSavingCohort] = useState(false);
   const [studentCount, setStudentCount] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +64,24 @@ export function ClassPage({ roster }: ClassPageProps) {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const remaining = Math.max(0, roster.seatCap - studentsUsed);
+  const cohortLocked = studentsUsed > 0;
+
+  async function handlePickCohort(cohort: MasteryCohort) {
+    if (cohortLocked || cohort === classCohort || savingCohort) return;
+    setError(null);
+    setNotice(null);
+    setSavingCohort(true);
+    try {
+      const result = await saveClassCohort(cohort);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setClassCohort(result.classCohort);
+    } finally {
+      setSavingCohort(false);
+    }
+  }
 
   const sortedUsernames = useMemo(
     () => [...usernames].sort((a, b) => a.localeCompare(b)),
@@ -68,11 +97,16 @@ export function ClassPage({ roster }: ClassPageProps) {
       setError("Enter how many students.");
       return;
     }
+    if (!classCohort) {
+      setError("Pick Explorer, Pathfinder or Maverick first.");
+      return;
+    }
     setCreating(true);
     try {
       const result = await createClassSeats({
         count,
         classPassword,
+        cohort: classCohort,
       });
       if (!result.ok) {
         setError(result.error);
@@ -126,6 +160,53 @@ export function ClassPage({ roster }: ClassPageProps) {
           You have {remaining} student seats left on this account.
         </p>
 
+        <fieldset className="space-y-3">
+          <legend className="font-heading text-sm font-bold text-nga-primary">
+            Class track
+          </legend>
+          {classCohort ? (
+            <p className="font-sans text-sm text-nga-ink">
+              This class is{" "}
+              <span className="font-heading font-bold text-nga-primary">
+                {masteryCohortLabel(classCohort)}
+              </span>
+              {" · "}
+              ages {masteryCohortAgeRangeLabel(classCohort)}.
+              {cohortLocked
+                ? " Every student login uses this track."
+                : " Pick this before you add students."}
+            </p>
+          ) : (
+            <p className="font-sans text-sm text-nga-slate">
+              Pick Explorer, Pathfinder or Maverick before you add students.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {MASTERY_COHORT_ORDER.map((cohort) => {
+              const selected = cohort === classCohort;
+              return (
+                <button
+                  key={cohort}
+                  type="button"
+                  aria-pressed={selected}
+                  disabled={savingCohort || (cohortLocked && !selected)}
+                  onClick={() => handlePickCohort(cohort)}
+                  className={cn(
+                    "rounded-full border-2 px-3 py-1.5 font-heading text-sm font-bold",
+                    selected
+                      ? "border-nga-primary bg-nga-primary text-white"
+                      : "border-nga-primary bg-white text-nga-primary",
+                    (savingCohort || (cohortLocked && !selected)) &&
+                      "cursor-not-allowed opacity-40",
+                  )}
+                >
+                  {masteryCohortLabel(cohort)}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
         <form className="space-y-3" onSubmit={handleAddStudents}>
           <label
             htmlFor="student-count"
@@ -143,7 +224,12 @@ export function ClassPage({ roster }: ClassPageProps) {
             onChange={(event) => setStudentCount(event.target.value)}
             className={fieldBase}
           />
-          <Button type="submit" variant="cta" fullWidth disabled={creating || remaining <= 0}>
+          <Button
+            type="submit"
+            variant="cta"
+            fullWidth
+            disabled={creating || remaining <= 0 || !classCohort}
+          >
             {creating ? "Adding…" : "Add students"}
           </Button>
         </form>
@@ -199,6 +285,11 @@ export function ClassPage({ roster }: ClassPageProps) {
       </div>
 
       <div className={cn("hidden print:block")}>
+        {classCohort ? (
+          <p className="mb-3 font-heading text-sm font-bold text-nga-primary">
+            Class track: {masteryCohortLabel(classCohort)}
+          </p>
+        ) : null}
         <StudentLoginTable usernames={sortedUsernames} />
       </div>
     </div>

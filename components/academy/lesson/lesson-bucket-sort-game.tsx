@@ -15,6 +15,7 @@ import {
   lessonSortStatementCardClass,
   lessonSortStatementPlacedClass,
   lessonSortItemEmojiClass,
+  lessonSortPoolSlotPlaceholderClass,
   lessonGameHintClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
@@ -132,7 +133,15 @@ export function LessonBucketSortGame<TBucket extends string>({
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
 
-  const isComplete = poolIds.length === 0;
+  const placedIdSet = useMemo(() => {
+    const placed = new Set<string>();
+    for (const ids of Object.values(bucketItems)) {
+      for (const id of ids) placed.add(id);
+    }
+    return placed;
+  }, [bucketItems]);
+
+  const isComplete = placedIdSet.size === items.length;
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -204,8 +213,11 @@ export function LessonBucketSortGame<TBucket extends string>({
       const item = itemById.get(itemId);
       if (!item) return;
 
-      const currentPool = poolIdsRef.current;
-      if (!currentPool.includes(itemId)) return;
+      const alreadyPlaced = Object.values(bucketItemsRef.current).some((ids) =>
+        ids.includes(itemId),
+      );
+      if (alreadyPlaced) return;
+      if (!poolIdsRef.current.includes(itemId)) return;
 
       if (item.bucket !== bucketId) {
         setFlyHomeId(itemId);
@@ -215,10 +227,18 @@ export function LessonBucketSortGame<TBucket extends string>({
         return;
       }
 
-      const nextPool = currentPool.filter((id) => id !== itemId);
-      poolIdsRef.current = nextPool;
+      const nextPlacedCount =
+        Object.values(bucketItemsRef.current).reduce(
+          (count, ids) => count + ids.length,
+          0,
+        ) + 1;
 
-      setPoolIds(nextPool);
+      if (isSpentTotalLayout) {
+        const nextPool = poolIdsRef.current.filter((id) => id !== itemId);
+        poolIdsRef.current = nextPool;
+        setPoolIds(nextPool);
+      }
+
       setBucketItems((bucketCurrent) => {
         const placed = bucketCurrent[bucketId] ?? [];
         if (placed.includes(itemId)) return bucketCurrent;
@@ -228,9 +248,12 @@ export function LessonBucketSortGame<TBucket extends string>({
         };
       });
 
-      queueSideEffect({ kind: "correct", willComplete: nextPool.length === 0 });
+      queueSideEffect({
+        kind: "correct",
+        willComplete: nextPlacedCount === items.length,
+      });
     },
-    [itemById, queueSideEffect],
+    [isSpentTotalLayout, itemById, items.length, queueSideEffect],
   );
 
   const handleChipPointerDown = (
@@ -547,19 +570,11 @@ export function LessonBucketSortGame<TBucket extends string>({
               formatPrice={formatDollars}
             />
           ) : (
-            <>
-              {draggedItem.emoji ? (
-                <span className={lessonSortItemEmojiClass} aria-hidden>
-                  {draggedItem.emoji}
-                </span>
-              ) : null}
-              <span className="min-w-0 flex-1 leading-snug">{draggedItem.label}</span>
-              {draggedItem.price !== undefined ? (
-                <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
-                  {formatDollars(draggedItem.price)}
-                </span>
-              ) : null}
-            </>
+            <LessonSortStatementPlaced
+              label={draggedItem.label}
+              emoji={draggedItem.emoji}
+              price={draggedItem.price}
+            />
           )}
         </div>
       </OverlayPortal>
@@ -575,8 +590,18 @@ export function LessonBucketSortGame<TBucket extends string>({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}
       >
-        <LessonSortPool isEmpty={poolIds.length === 0} className="shrink-0">
-          {poolIds.map((itemId) => renderPoolChip(itemId))}
+        <LessonSortPool isEmpty={isComplete} className="shrink-0">
+          {poolIds.map((itemId) =>
+            placedIdSet.has(itemId) ? (
+              <div
+                key={itemId}
+                className={lessonSortPoolSlotPlaceholderClass}
+                aria-hidden
+              />
+            ) : (
+              renderPoolChip(itemId)
+            ),
+          )}
         </LessonSortPool>
         <div className="h-px shrink-0 bg-[#C5D8E6]" />
         <LessonSortBucketRow className="min-h-0 flex-1">

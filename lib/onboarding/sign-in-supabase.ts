@@ -4,6 +4,7 @@ import { EMAIL_PATTERN } from "@/lib/validation/email";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import type { LearnerAccountSnapshot } from "@/lib/onboarding/learner-account";
 import { loadLearnerProgressByUserId } from "@/lib/onboarding/learner-progress";
+import { parseMasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 export const SIGN_IN_MISMATCH_ERROR =
   "Those details don't match. Check your email or username and password.";
@@ -171,7 +172,7 @@ export async function loadLearnerAccountById(
   const withTeacher = await admin
     .from("profiles")
     .select(
-      "id, username, birth_year, account_role, account_status, consent_approved_at, is_teacher",
+      "id, username, birth_year, curriculum_cohort, account_role, account_status, consent_approved_at, is_teacher",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -180,7 +181,7 @@ export async function loadLearnerAccountById(
       ? await admin
           .from("profiles")
           .select(
-            "id, username, birth_year, account_role, account_status, consent_approved_at",
+            "id, username, birth_year, curriculum_cohort, account_role, account_status, consent_approved_at",
           )
           .eq("id", userId)
           .maybeSingle()
@@ -190,6 +191,7 @@ export async function loadLearnerAccountById(
         id: string;
         username: string | null;
         birth_year: number | null;
+        curriculum_cohort?: string | null;
         account_role: string | null;
         account_status: string | null;
         consent_approved_at: string | null;
@@ -263,6 +265,7 @@ export async function loadLearnerAccountById(
     userId: profile.id,
     username,
     birthYear: parseBirthYear(profile.birth_year),
+    curriculumCohort: parseMasteryCohort(profile.curriculum_cohort),
     accountRole: profile.account_role,
     isTeacher: profile.is_teacher === true || profile.account_role === "teacher",
     accountStatus: profile.account_status as "pending_consent" | "active",

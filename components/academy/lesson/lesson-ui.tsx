@@ -458,6 +458,16 @@ export function LessonSortPool({
   );
 }
 
+function SortItemOrbGlyph({
+  emoji,
+  label,
+}: {
+  emoji?: string;
+  label: string;
+}) {
+  return <>{emoji?.trim() || label.trim().charAt(0) || "?"}</>;
+}
+
 type LessonSortStatementCardProps = {
   label: string;
   emoji?: string;
@@ -473,8 +483,6 @@ export const LessonSortStatementCard = forwardRef<
   { label, emoji, price, isDragging = false, className, type = "button", ...props },
   ref,
 ) {
-  const glyph = emoji?.trim() || label.trim().charAt(0) || "?";
-
   return (
     <button
       ref={ref}
@@ -489,7 +497,7 @@ export const LessonSortStatementCard = forwardRef<
       {...props}
     >
       <span className={lessonItemOrbClass} aria-hidden>
-        {glyph}
+        <SortItemOrbGlyph emoji={emoji} label={label} />
       </span>
       <span className="min-w-0 leading-snug">
         {label}
@@ -516,7 +524,7 @@ export function LessonSortStatementPlaced({
   return (
     <div className={cn(lessonSortStatementPlacedClass, className)}>
       <span className={lessonItemOrbClass} aria-hidden>
-        {emoji?.trim() || label.trim().charAt(0) || "?"}
+        <SortItemOrbGlyph emoji={emoji} label={label} />
       </span>
       <span className="min-w-0">
         {label}

@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { AccountProgressPayload } from "@/lib/dashboard/account-progress";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
   loadLearnerAccountById,
   signInSupabaseAccount,
@@ -12,6 +13,7 @@ export type LearnerAccountSnapshot = {
   userId: string;
   username: string;
   birthYear: number | null;
+  curriculumCohort?: MasteryCohort | null;
   accountRole: "child" | "parent_master" | "teacher";
   isTeacher?: boolean;
   accountStatus: "pending_consent" | "active";

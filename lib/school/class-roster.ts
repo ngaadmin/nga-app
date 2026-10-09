@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
 import { generateClassPassword } from "@/lib/school/class-password";
 import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
+import {
+  parseMasteryCohort,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 
 const SEAT_AUTH_EMAIL_DOMAIN = "users.nextgenachievers.invalid";
 const MIN_PASSWORD_LENGTH = 6;
@@ -14,6 +18,7 @@ export type ClassRosterSnapshot = {
   seatCap: number;
   seatsUsed: number;
   classPassword: string;
+  classCohort: MasteryCohort | null;
   usernames: string[];
 };
 
@@ -54,19 +59,35 @@ export async function loadClassRoster(): Promise<
 
   try {
     const admin = createAdminClient();
-    const { data: teacher, error: teacherError } = await admin
+    const withCohort = await admin
       .from("profiles")
-      .select("id, seat_cap, class_password")
+      .select("id, seat_cap, class_password, class_cohort")
       .eq("id", access.teacherId)
       .maybeSingle();
+    const teacherQuery =
+      withCohort.error && /class_cohort|does not exist/i.test(withCohort.error.message)
+        ? await admin
+            .from("profiles")
+            .select("id, seat_cap, class_password")
+            .eq("id", access.teacherId)
+            .maybeSingle()
+        : withCohort;
+    const teacher = teacherQuery.data as
+      | {
+          id: string;
+          seat_cap?: number | null;
+          class_password?: string | null;
+          class_cohort?: string | null;
+        }
+      | null;
 
-    if (teacherError || !teacher?.id) {
+    if (teacherQuery.error || !teacher?.id) {
       return { ok: false, error: "Could not load the class page." };
     }
 
     const { data: seats, error: seatsError } = await admin
       .from("profiles")
-      .select("username")
+      .select("username, curriculum_cohort")
       .eq("teacher_id", access.teacherId)
       .eq("is_teacher", false)
       .order("username", { ascending: true });
@@ -78,6 +99,20 @@ export async function loadClassRoster(): Promise<
     const usernames = (seats ?? [])
       .map((row) => (typeof row.username === "string" ? row.username.trim() : ""))
       .filter(Boolean);
+
+    const storedCohort = parseMasteryCohort(teacher.class_cohort);
+    const inferredFromSeats = (seats ?? [])
+      .map((row) => parseMasteryCohort(row.curriculum_cohort))
+      .find((cohort): cohort is MasteryCohort => cohort != null);
+    const classCohort = storedCohort ?? inferredFromSeats ?? null;
+
+    if (!storedCohort && classCohort) {
+      await admin
+        .from("profiles")
+        .update({ class_cohort: classCohort })
+        .eq("id", access.teacherId)
+        .eq("is_teacher", true);
+    }
 
     let classPassword =
       typeof teacher.class_password === "string" ? teacher.class_password.trim() : "";
@@ -102,6 +137,7 @@ export async function loadClassRoster(): Promise<
         seatCap: teacher.seat_cap ?? 30,
         seatsUsed: usernames.length,
         classPassword,
+        classCohort,
         usernames,
       },
     };
@@ -114,9 +150,49 @@ export async function loadClassRoster(): Promise<
   }
 }
 
+export async function saveClassCohort(
+  cohort: MasteryCohort,
+): Promise<{ ok: true; classCohort: MasteryCohort } | { ok: false; error: string }> {
+  const parsed = parseMasteryCohort(cohort);
+  if (!parsed) {
+    return { ok: false, error: "Pick Explorer, Pathfinder or Maverick." };
+  }
+
+  const access = await requireTeacherId();
+  if (!access.ok) return access;
+
+  const current = await loadClassRoster();
+  if (!current.ok) return current;
+
+  if (
+    current.roster.seatsUsed > 0 &&
+    current.roster.classCohort &&
+    current.roster.classCohort !== parsed
+  ) {
+    return {
+      ok: false,
+      error: "This class already has students on another track.",
+    };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("profiles")
+    .update({ class_cohort: parsed })
+    .eq("id", access.teacherId)
+    .eq("is_teacher", true);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true, classCohort: parsed };
+}
+
 export async function createClassSeats(input: {
   count: number;
   classPassword?: string;
+  cohort?: MasteryCohort | null;
 }): Promise<
   { ok: true; created: string[] } | { ok: false; error: string }
 > {
@@ -135,6 +211,19 @@ export async function createClassSeats(input: {
   const remaining = current.roster.seatCap - current.roster.seatsUsed;
   if (remaining <= 0) {
     return { ok: false, error: "This class has no students left." };
+  }
+  const requestedCohort = parseMasteryCohort(input.cohort);
+  if (requestedCohort && requestedCohort !== current.roster.classCohort) {
+    const saved = await saveClassCohort(requestedCohort);
+    if (!saved.ok) return saved;
+    current.roster.classCohort = saved.classCohort;
+  }
+  const classCohort = current.roster.classCohort;
+  if (!classCohort) {
+    return {
+      ok: false,
+      error: "Pick Explorer, Pathfinder or Maverick before adding students.",
+    };
   }
   const toCreate = Math.min(requested, remaining);
   const typedPassword = input.classPassword?.trim() ?? "";
@@ -166,7 +255,7 @@ export async function createClassSeats(input: {
   }
 
   const created: string[] = [];
-  const birthYear = representativeBirthYearForCohort("pathfinder");
+  const birthYear = representativeBirthYearForCohort(classCohort);
 
   for (const username of names) {
     const authEmail = `seat+${crypto.randomUUID()}@${SEAT_AUTH_EMAIL_DOMAIN}`;
@@ -190,7 +279,7 @@ export async function createClassSeats(input: {
         birth_year: birthYear,
         account_role: "child",
         account_status: "active",
-        curriculum_cohort: "pathfinder",
+        curriculum_cohort: classCohort,
         marketing_opt_in: false,
         is_teacher: false,
         teacher_id: access.teacherId,

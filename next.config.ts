@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/dashboard/academy/lesson/5/preview",
+        destination: "/dashboard/academy/lesson/preview/m1-l5",
+      },
+    ];
+  },
   async redirects() {
     return [
       {

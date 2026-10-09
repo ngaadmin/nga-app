@@ -97,7 +97,10 @@ export function applyLearnerAccountSnapshot(
             remote.accountRole === "teacher"
           ? adultBirthYear()
           : representativeBirthYearForCohort(
-              existing?.curriculumCohort ?? existing?.ageTier ?? "pathfinder",
+              remote.curriculumCohort ??
+                existing?.curriculumCohort ??
+                existing?.ageTier ??
+                "pathfinder",
             );
 
   const sameRegisteredUser =
@@ -115,6 +118,8 @@ export function applyLearnerAccountSnapshot(
       accountStatus,
       consentApprovedAt,
       mustChangePassword: remote.mustChangePassword === true,
+      curriculumCohort:
+        remote.curriculumCohort ?? existing.curriculumCohort,
       parentEmail:
         remote.accountRole === "parent_master" || remote.accountRole === "teacher"
           ? (remote.learnerEmail ?? existing.parentEmail ?? remote.parentEmail ?? undefined)
@@ -151,6 +156,7 @@ export function applyLearnerAccountSnapshot(
     consentApprovedAt,
     accountStatus,
     supabaseUserId: remote.userId,
+    curriculumCohort: remote.curriculumCohort ?? existing?.curriculumCohort,
   });
 
   return {

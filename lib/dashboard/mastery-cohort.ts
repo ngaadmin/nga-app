@@ -9,6 +9,13 @@ import { SKILLS_REGISTRY } from "@/lib/skills/skills-registry";
  */
 export type MasteryCohort = "explorer" | "pathfinder" | "maverick";
 
+export function parseMasteryCohort(value: unknown): MasteryCohort | null {
+  if (value === "explorer" || value === "pathfinder" || value === "maverick") {
+    return value;
+  }
+  return null;
+}
+
 /**
  * Account lifecycle status on the local session/profile.
  * - GUEST: personalization complete, not yet registered

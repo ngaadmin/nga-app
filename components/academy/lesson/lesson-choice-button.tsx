@@ -22,6 +22,8 @@ type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   layout?: "pill" | "radio-row";
   /** Glyph inside the 48px orb. Defaults to a filled dot when selected. */
   orbLabel?: string;
+  /** Replaces `orbLabel` when set (true/false icons, custom glyphs). */
+  orb?: ReactNode;
   children: ReactNode;
 };
 
@@ -38,6 +40,7 @@ export function LessonChoiceButton({
   locked = false,
   layout = "pill",
   orbLabel,
+  orb,
   className,
   children,
   type = "button",
@@ -77,7 +80,7 @@ export function LessonChoiceButton({
         }
         aria-hidden
       >
-        {glyph}
+        {orb ?? glyph}
       </span>
       <span className={lessonChoiceLabelClass} style={{ color: "#031F82", opacity: 1 }}>
         {children}

@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
+  LessonFalseIcon,
+  LessonTrueIcon,
+} from "@/components/academy/lesson/lesson-icons";
+import {
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
@@ -57,7 +61,13 @@ export function TrueFalseScreen({
             key={option}
             onClick={() => pick(option)}
             selected={choice === option}
-            orbLabel={option === "true" ? "T" : "F"}
+            orb={
+              option === "true" ? (
+                <LessonTrueIcon />
+              ) : (
+                <LessonFalseIcon />
+              )
+            }
             className="w-[calc(50%-14px)] flex-col gap-2 [&>span:last-child]:flex-none"
           >
             <span className="whitespace-normal text-center text-sm font-semibold leading-[1.3]">

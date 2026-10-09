@@ -127,8 +127,8 @@ export const lessonSortPoolScrollClass = lessonSortPoolStaticClass;
 export const lessonSortStatementListClass =
   "grid auto-rows-min grid-cols-2 content-start gap-x-4 gap-y-2 [&>*]:min-w-0";
 
-/** Empty grid cell that holds pool height after an item is placed. */
-export const lessonSortPoolSlotPlaceholderClass = "min-h-0 w-full";
+/** Empty grid cell that holds an item's original spot after it is placed. */
+export const lessonSortPoolSlotPlaceholderClass = "min-h-12 w-full";
 
 /** Compact emoji inside statement-sort pool/placed cards. */
 export const lessonSortStatementEmojiClass =

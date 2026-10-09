@@ -22,8 +22,6 @@ const M1_L1_META = {
 const M1_L1_REWARDS = {
   skillSlug: "stop-and-think",
   achievementSkillSlug: "stop-and-think",
-  xpReward: 100,
-  perfectStreakBonus: 50,
 } as const;
 
 /** Pathfinder copy as canonical base — Explorer and Maverick patch via overrides. */
@@ -135,14 +133,13 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     type: "narrative-bonus",
     id: "resolution",
     narrative:
-      "Holly chooses to keep her money instead of giving in to the rush. Tap to collect bonus 50 coins for successfully staying in control of spending.",
-    bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
-    autoReadyWhenNoBonus: false,
+      "Holly chooses to keep her money instead of giving in to the rush. She stays in control of spending.",
+    bonusXp: 0,
+    bonusTapLabel: "",
+    autoReadyWhenNoBonus: true,
   },
   teenCompletionScreen({
     skillTitle: "Catch Impulse Spending",
-    xpReward: M1_L1_REWARDS.xpReward,
     medalId: "medal-skill1-unlocked",
   }),
 ];
@@ -326,10 +323,10 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
   resolution: {
     narrative:
-      "Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.\n\nTap to collect 50 coins for successfully avoiding the spending trap.",
-    bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
-    autoReadyWhenNoBonus: false,
+      "Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.",
+    bonusXp: 0,
+    bonusTapLabel: "",
+    autoReadyWhenNoBonus: true,
   },
 };
 

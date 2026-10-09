@@ -19,12 +19,7 @@ const M1_L1_META = {
 const M1_L1_REWARDS = {
   skillSlug: "stop-and-think",
   achievementSkillSlug: "stop-and-think",
-  xpReward: 150,
-  perfectStreakBonus: 50,
 } as const;
-
-const TEEN_XP = 50;
-const TEEN_REWARDS = { xpReward: TEEN_XP, perfectStreakBonus: 0 } as const;
 
 const M1_L1_BASE_SCREENS: ScreenConfig[] = [
   {
@@ -148,7 +143,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
     autoReadyWhenNoBonus: false,
   },
-  teenCompletionScreen({ skillTitle: SKILL_TITLE, xpReward: TEEN_XP }),
+  teenCompletionScreen({ skillTitle: SKILL_TITLE }),
 ];
 
 const EXPLORER_OVERRIDES: ScreenOverrideMap = {
@@ -366,7 +361,7 @@ export const M1_L1_LESSON_DEFINITION: CohortLessonDefinition = {
   baseScreens: M1_L1_BASE_SCREENS,
   byCohort: {
     explorer: { characterName: "Lars", screenOverrides: EXPLORER_OVERRIDES },
-    pathfinder: { characterName: "Holly", rewards: TEEN_REWARDS },
-    maverick: { characterName: "Dash", screenOverrides: MAVERICK_OVERRIDES, rewards: TEEN_REWARDS },
+    pathfinder: { characterName: "Holly" },
+    maverick: { characterName: "Dash", screenOverrides: MAVERICK_OVERRIDES },
   },
 };

@@ -5,6 +5,7 @@ import type {
   LessonComponentProps,
   LessonMeta,
   LessonRewards,
+  LessonSkillRewards,
 } from "./meta";
 import type { ScreenConfig } from "./screens";
 import type { ScreenOverrideMap } from "../cohort-overrides";
@@ -30,13 +31,13 @@ export type CohortBundleInput = {
   screenOverrides?: ScreenOverrideMap;
   /** Full screen array — escape hatch for bespoke lessons (e.g. M1-L2 custom screens). */
   screens?: readonly ScreenConfig[];
-  rewards?: Partial<LessonRewards>;
+  rewards?: Partial<LessonSkillRewards>;
   custom?: Record<string, unknown>;
 };
 
 export type CohortLessonDefinition = {
   meta: LessonMeta;
-  rewards: LessonRewards;
+  rewards: LessonSkillRewards;
   /** Shared custom renderer configs keyed by screen id or configRef. */
   custom?: Record<string, unknown>;
   /** Shared 8-screen pipeline; cohorts patch copy via `screenOverrides`. */
@@ -52,7 +53,7 @@ export type LessonContentResolver = (
 
 export type LessonConfig = {
   meta: LessonMeta;
-  rewards: LessonRewards;
+  rewards: LessonSkillRewards;
   contentResolver: LessonContentResolver;
   component: ComponentType<LessonComponentProps>;
 };

@@ -22,8 +22,6 @@ const M1_L3_META = {
 const M1_L3_REWARDS = {
   skillSlug: "keep-some-aside",
   achievementSkillSlug: "keep-some-aside",
-  xpReward: 100,
-  perfectStreakBonus: 50,
 } as const;
 
 const M1_L3_BASE_SCREENS: ScreenConfig[] = [

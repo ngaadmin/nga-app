@@ -16,6 +16,10 @@ import {
 import { lessonNumberForMilestoneId } from "@/lib/dashboard/academy-state";
 import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
+import {
+  LESSON_COMPLETION_XP,
+  LESSON_PERFECT_STREAK_BONUS,
+} from "@/lib/academy/lessons/completion-xp";
 import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 
 export type ScreenFlash = "none" | "error" | "success";
@@ -24,8 +28,6 @@ export type UseLessonFlowOptions = {
   milestoneId: number;
   totalScreens: number;
   skillSlug: string;
-  xpReward: number;
-  perfectStreakBonus: number;
   /** Dev-only design shell — skip XP and milestone writes on Cash In. */
   isDesignShell?: boolean;
   /** Lesson QA preview — play without writing Academy progress or cash-in. */
@@ -45,8 +47,6 @@ export function useLessonFlow({
   milestoneId,
   totalScreens,
   skillSlug,
-  xpReward,
-  perfectStreakBonus,
   isDesignShell = false,
   skipProgressWrites = false,
   exitHref = "/dashboard/academy",
@@ -187,9 +187,9 @@ export function useLessonFlow({
     setLessonComplete(true);
 
     if (!isDesignShell && !skipProgressWrites) {
-      awardLessonXp(xpReward);
-      if (perfectStreak && perfectStreakBonus > 0) {
-        awardLessonXp(perfectStreakBonus);
+      awardLessonXp(LESSON_COMPLETION_XP);
+      if (perfectStreak) {
+        awardLessonXp(LESSON_PERFECT_STREAK_BONUS);
       }
 
       const milestones = readAcademyMilestones();
@@ -224,9 +224,7 @@ export function useLessonFlow({
     lessonComplete,
     milestoneId,
     perfectStreak,
-    perfectStreakBonus,
     router,
-    xpReward,
   ]);
 
   const flashBorderClass =

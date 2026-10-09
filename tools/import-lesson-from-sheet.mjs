@@ -143,6 +143,14 @@ function readDetails(folder) {
 }
 
 /** Accept new + legacy field names; fill character defaults. */
+const IGNORED_DETAIL_FIELDS = new Set([
+  "Explorer XP",
+  "Teen XP",
+  "Explorer Perfect Bonus",
+  "Pathfinder XP",
+  "Maverick XP",
+]);
+
 function normalizeDetails(details) {
   const pathfinder =
     details["Pathfinder Character"] ||
@@ -151,8 +159,14 @@ function normalizeDetails(details) {
   const explorer = details["Explorer Character"] || "Lars";
   const maverick = details["Maverick Character"] || "Dash";
 
+  const cleaned = {};
+  for (const [key, value] of Object.entries(details)) {
+    if (IGNORED_DETAIL_FIELDS.has(key)) continue;
+    cleaned[key] = value;
+  }
+
   return {
-    ...details,
+    ...cleaned,
     "Pathfinder Character": pathfinder,
     "Lead Character": pathfinder,
     "Explorer Character": explorer,
@@ -684,7 +698,7 @@ function formatValue(v, indent) {
 
 function serializeScreen(screen, indent) {
   if (screen.__teenCompletion) {
-    return `${indent}teenCompletionScreen({ skillTitle: SKILL_TITLE, xpReward: TEEN_XP }),`;
+    return `${indent}teenCompletionScreen({ skillTitle: SKILL_TITLE }),`;
   }
   const copy = { ...screen };
   delete copy.__customBag;
@@ -712,9 +726,6 @@ function generateFile(details, rows, baseScreens, overrides) {
   const title = details["Lesson Title"] || "Untitled Lesson";
   const skillName = details["Skill Name"] || "Skill";
   const skillId = details["Skill ID"] || slugify(skillName);
-  const explorerXp = Number.parseInt(details["Explorer XP"] || "150", 10);
-  const teenXp = Number.parseInt(details["Teen XP"] || "50", 10);
-  const perfectBonus = Number.parseInt(details["Explorer Perfect Bonus"] || "50", 10);
   const lead = details["Pathfinder Character"] || details["Lead Character"] || "Holly";
   const explorerChar = details["Explorer Character"] || "Lars";
   const maverickChar = details["Maverick Character"] || "Dash";
@@ -746,12 +757,7 @@ const ${prefix}_META = {
 const ${prefix}_REWARDS = {
   skillSlug: ${esc(skillId)},
   achievementSkillSlug: ${esc(skillId)},
-  xpReward: ${explorerXp},
-  perfectStreakBonus: ${perfectBonus},
 } as const;
-
-const TEEN_XP = ${teenXp};
-const TEEN_REWARDS = { xpReward: TEEN_XP, perfectStreakBonus: 0 } as const;
 
 const ${prefix}_BASE_SCREENS: ScreenConfig[] = [
 ${baseScreens.map((s) => serializeScreen(s, "  ")).join("\n")}
@@ -767,8 +773,8 @@ export const ${prefix}_LESSON_DEFINITION: CohortLessonDefinition = {
   baseScreens: ${prefix}_BASE_SCREENS,
   byCohort: {
     explorer: { characterName: ${esc(explorerChar)}, screenOverrides: EXPLORER_OVERRIDES },
-    pathfinder: { characterName: ${esc(lead)}, rewards: TEEN_REWARDS },
-    maverick: { characterName: ${esc(maverickChar)}, screenOverrides: MAVERICK_OVERRIDES, rewards: TEEN_REWARDS },
+    pathfinder: { characterName: ${esc(lead)} },
+    maverick: { characterName: ${esc(maverickChar)}, screenOverrides: MAVERICK_OVERRIDES },
   },
 };
 ${hasCustom ? `\n// ⚠️ This lesson uses custom game types (${customScreens.map((s) => s.renderer).join(", ")}). A developer must wire renderers before it can ship.\n` : ""}`,

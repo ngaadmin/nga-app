@@ -8,6 +8,10 @@ import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
 import { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
 import {
+  LESSON_COMPLETION_XP,
+  LESSON_PERFECT_STREAK_BONUS,
+} from "@/lib/academy/lessons/completion-xp";
+import {
   resolveLessonDefinition,
   type CohortLessonDefinition,
   type ResolvedLessonContent,
@@ -100,30 +104,26 @@ export function resolveLessonForMilestone(
 export const M1_L1_SKILL_ID = LESSON_DEFINITIONS[1]!.rewards.skillSlug;
 export const M1_L1_ACHIEVEMENT_SKILL_ID =
   LESSON_DEFINITIONS[1]!.rewards.achievementSkillSlug;
-export const M1_L1_XP_REWARD = LESSON_DEFINITIONS[1]!.rewards.xpReward;
-export const M1_L1_PERFECT_STREAK_BONUS =
-  LESSON_DEFINITIONS[1]!.rewards.perfectStreakBonus;
+export const M1_L1_XP_REWARD = LESSON_COMPLETION_XP;
+export const M1_L1_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
 export const M1_L2_SKILL_ID = LESSON_DEFINITIONS[2]!.rewards.skillSlug;
 export const M1_L2_ACHIEVEMENT_SKILL_ID =
   LESSON_DEFINITIONS[2]!.rewards.achievementSkillSlug;
-export const M1_L2_XP_REWARD = LESSON_DEFINITIONS[2]!.rewards.xpReward;
-export const M1_L2_PERFECT_STREAK_BONUS =
-  LESSON_DEFINITIONS[2]!.rewards.perfectStreakBonus;
+export const M1_L2_XP_REWARD = LESSON_COMPLETION_XP;
+export const M1_L2_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
 export const M1_L3_SKILL_ID = LESSON_DEFINITIONS[3]!.rewards.skillSlug;
 export const M1_L3_ACHIEVEMENT_SKILL_ID =
   LESSON_DEFINITIONS[3]!.rewards.achievementSkillSlug;
-export const M1_L3_XP_REWARD = LESSON_DEFINITIONS[3]!.rewards.xpReward;
-export const M1_L3_PERFECT_STREAK_BONUS =
-  LESSON_DEFINITIONS[3]!.rewards.perfectStreakBonus;
+export const M1_L3_XP_REWARD = LESSON_COMPLETION_XP;
+export const M1_L3_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
 export const M1_L4_SKILL_ID = LESSON_DEFINITIONS[4]!.rewards.skillSlug;
 export const M1_L4_ACHIEVEMENT_SKILL_ID =
   LESSON_DEFINITIONS[4]!.rewards.achievementSkillSlug;
-export const M1_L4_XP_REWARD = LESSON_DEFINITIONS[4]!.rewards.xpReward;
-export const M1_L4_PERFECT_STREAK_BONUS =
-  LESSON_DEFINITIONS[4]!.rewards.perfectStreakBonus;
+export const M1_L4_XP_REWARD = LESSON_COMPLETION_XP;
+export const M1_L4_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
 export function hasShippedLesson(milestoneId: number): boolean {
   return SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId);

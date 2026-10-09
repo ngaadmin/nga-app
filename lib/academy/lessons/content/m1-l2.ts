@@ -19,8 +19,6 @@ const M1_L2_META = {
 const M1_L2_REWARDS = {
   skillSlug: "put-needs-first",
   achievementSkillSlug: "put-needs-first",
-  xpReward: 100,
-  perfectStreakBonus: 50,
 } as const;
 
 /** Explorer Lars copy as base — Pathfinder teen variant patches via overrides when ready. */

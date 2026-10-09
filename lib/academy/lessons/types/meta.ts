@@ -1,10 +1,15 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
-export type LessonRewards = {
-  xpReward: number;
-  perfectStreakBonus: number;
+/** Skill unlocked by the lesson. XP is not authored here. */
+export type LessonSkillRewards = {
   skillSlug: string;
   achievementSkillSlug: string;
+};
+
+/** Skill plus cash-in XP attached at resolve time from `completion-xp`. */
+export type LessonRewards = LessonSkillRewards & {
+  xpReward: number;
+  perfectStreakBonus: number;
 };
 
 export type PedagogicalStage = "hook" | "core" | "apply" | "reward" | "close";

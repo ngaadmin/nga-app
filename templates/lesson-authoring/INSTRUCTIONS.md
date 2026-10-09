@@ -4,7 +4,7 @@ You only edit **two files** in Google Sheets or Excel. No code.
 
 | File | What it is |
 |------|------------|
-| `Lesson-Details.csv` | Lesson title, characters, XP, skill name |
+| `Lesson-Details.csv` | Lesson title, characters, skill name |
 | `Screens.csv` | 8 screens — game type, story text, game settings |
 
 **Look up (do not edit):** `Characters.csv` · `Game-Types.csv` · `example-m1-l1/` (filled sample)
@@ -36,9 +36,6 @@ You only edit **two files** in Google Sheets or Excel. No code.
 | **Support Character** | Optional — **Eva**, **Tom**, or a peer. Use `{support}` in story text. |
 | Skill Name | Bronze skill on Screen 8, e.g. `Stop & Think` |
 | Skill ID | Ask dev once — e.g. `stop-and-think` |
-| Explorer XP | Usually `150` |
-| Teen XP | Usually `50` |
-| Explorer Perfect Bonus | Usually `50` |
 
 ### Character picker
 
@@ -54,6 +51,8 @@ You only edit **two files** in Google Sheets or Excel. No code.
 | **Immi** | Maverick | Parents pay — cost blindness |
 | **Eva** | Mentor | Parent / household budgeting voice |
 | **Tom** | Mentor | Long-term investing myths |
+
+Lesson XP is not in this sheet. Finishing any lesson awards **100 XP**; no mistakes awards **50** more. Same for Explorer, Pathfinder, and Maverick.
 
 Full notes: open `Characters.csv`.
 
@@ -71,15 +70,15 @@ Full notes: open `Characters.csv`.
 |--------|------------|
 | **Screen** | Always — `1` through `8` |
 | **Game Type** | Always — copy name from `Game-Types.csv` |
-| **Pathfinder Text** | Story / prompt for your Pathfinder character |
 | **Explorer Text** | Only if Explorer story differs — else leave blank |
+| **Pathfinder Text** | Story / prompt for your Pathfinder character |
 | **Maverick Text** | Only if Maverick story differs — else leave blank |
 | **Extra Text** | Screen 1 only — words after the blank (e.g. `right away!`) |
-| **Game Settings** | Interactive screens — copy block from `Game-Types.csv` |
 | **Explorer Settings** | Only if Explorer needs different items/choices/bonus |
+| **Game Settings** | Interactive screens — copy block from `Game-Types.csv` |
 | **Maverick Settings** | Only if Maverick needs different items/choices/bonus |
-| **Error Pathfinder** | Wrong-answer message (if screen has wrong answers) |
 | **Error Explorer** | Explorer wrong-answer — only if different |
+| **Error Pathfinder** | Wrong-answer message (if screen has wrong answers) |
 | **Error Maverick** | Maverick wrong-answer — only if different |
 | **Notes** | Optional reminders for yourself — ignored by import |
 

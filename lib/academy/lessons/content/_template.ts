@@ -34,15 +34,14 @@ const M1_L3_META = {
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// STEP 2 — REWARDS & SKILL
+// STEP 2 — SKILL
 // skillSlug must match an existing Vault skill (or coordinate new skill with dev).
+// Lesson XP is not authored here — every lesson is 100 on finish, +50 if no mistakes.
 // ═══════════════════════════════════════════════════════════════════════════
 
 const M1_L3_REWARDS = {
   skillSlug: "REPLACE-kebab-skill-id",
   achievementSkillSlug: "REPLACE-kebab-skill-id",
-  xpReward: 100,
-  perfectStreakBonus: 50,
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -142,22 +141,20 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
 
   // ── Row 7 · The Celebration ──────────────────────────────────────────────
   // Archetype: The Celebration → type: "narrative-bonus"
-  // Teen: bonusXp 50 + tap label. Explorer override often sets bonusXp: 0.
+  // Lesson XP is awarded on the completion screen (100 + 50 if no mistakes).
   {
     type: "narrative-bonus",
     id: "resolution",
     narrative: "REPLACE: celebration narrative",
-    bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
-    autoReadyWhenNoBonus: false,
+    bonusXp: 0,
+    bonusTapLabel: "",
+    autoReadyWhenNoBonus: true,
   },
 
   // ── Row 8 · Lesson Recap ─────────────────────────────────────────────────
-  // Archetype: Lesson Recap Screen → teenCompletionScreen (Pathfinder base)
-  // Explorer swaps via override — see EXPLORER_OVERRIDES below.
+  // Archetype: Lesson Recap Screen — cash-in XP is the shared lesson rule, not a field here.
   teenCompletionScreen({
     skillTitle: "REPLACE: Skill Name",
-    xpReward: M1_L3_REWARDS.xpReward,
   }),
 ];
 
@@ -264,10 +261,10 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     successMessage: "REPLACE: Aiden success quote",
   },
   resolution: {
-    narrative: "REPLACE: Aiden celebration + bonus XP copy",
-    bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 COINS BONUS ]",
-    autoReadyWhenNoBonus: false,
+    narrative: "REPLACE: Aiden celebration copy",
+    bonusXp: 0,
+    bonusTapLabel: "",
+    autoReadyWhenNoBonus: true,
   },
 };
 

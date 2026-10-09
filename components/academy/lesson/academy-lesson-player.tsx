@@ -130,8 +130,6 @@ function AcademyLessonPlayerInner({
     milestoneId,
     totalScreens: content.meta.totalScreens,
     skillSlug: content.rewards.skillSlug,
-    xpReward: content.rewards.xpReward,
-    perfectStreakBonus: content.rewards.perfectStreakBonus,
     isDesignShell,
     skipProgressWrites: isPreview,
     exitHref: isDesignShell ? "/dashboard/academy" : undefined,

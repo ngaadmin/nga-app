@@ -1,3 +1,4 @@
+import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
 import {
   applyCharacterTokensToScreen,
   applyCohortScreenOverrides,
@@ -33,6 +34,7 @@ export function resolveLessonDefinition(
   const rewards: LessonRewards = {
     ...definition.rewards,
     ...cohortBundle.rewards,
+    ...lessonCashInXp(definition.meta.isDesignShell === true),
   };
 
   const screens =

@@ -422,7 +422,7 @@ Omit `layout` for `statement-sort`. **Locked:** bucket column headers use neutra
 
 **Props:** `skillLearnedLabel?`, `pointsLabel?`, `bodyCopy?`, `returnButtonLabel?`, `useStandardPane?`
 
-**Helpers:** `explorerCompletionScreen()`, `teenCompletionScreen({ skillTitle, xpReward })` in `lib/academy/lessons/completion-screen.ts`.
+**Helpers:** `explorerCompletionScreen()`, `teenCompletionScreen({ skillTitle })` in `lib/academy/lessons/completion-screen.ts`. Cash-in is always 100 XP plus 50 if there were no mistakes.
 
 **Footer:** Cash In / Collect Points — not Next.
 

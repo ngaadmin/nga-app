@@ -70,6 +70,7 @@ export type {
   LessonContentBundle,
   LessonMeta,
   LessonRewards,
+  LessonSkillRewards,
   NarrativeBonusScreenConfig,
   ResolvedLessonContent,
   SavingsGoalItem,

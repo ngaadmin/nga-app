@@ -161,10 +161,10 @@ const CUSTOM_RENDERER_BY_LESSON = {
 };
 
 const SKILL_SLUG = {
-  1: { slug: "stop-and-think", name: "Stop & Think", xp: 150, bonus: 50 },
-  2: { slug: "put-needs-first", name: "Put Needs First", xp: 100, bonus: 50 },
-  3: { slug: "keep-some-aside", name: "Smart Saving", xp: 150, bonus: 50 },
-  4: { slug: "stop-and-think", name: "Stop & Think", xp: 150, bonus: 50 },
+  1: { slug: "stop-and-think", name: "Stop & Think" },
+  2: { slug: "put-needs-first", name: "Put Needs First" },
+  3: { slug: "keep-some-aside", name: "Smart Saving" },
+  4: { slug: "stop-and-think", name: "Stop & Think" },
 };
 
 const LESSON_TITLES = {
@@ -592,7 +592,7 @@ function parseHold(row, id, authoring) {
 }
 
 function parseCelebration(row, id, authoring) {
-  const bonus = /50\s*xp|bonus\s*50|50xp/i.test(row.simpleScreenText) ? 50 : 0;
+  const bonus = 0;
   const text = stripQuotes(row.simpleScreenText.split("\n")[0]);
   return {
     type: "narrative-bonus",
@@ -811,8 +811,8 @@ function parseL3Screen7(row, id, authoring) {
     type: "narrative-bonus",
     id,
     narrative,
-    bonusXp: /50\s*xp|bonus\s*50/i.test(row.simpleScreenText) ? 50 : 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusXp: 0,
+    bonusTapLabel: "",
     autoReadyWhenNoBonus: false,
     authoring,
     advance: { mode: "on-complete" },
@@ -955,8 +955,8 @@ function parseL4Screen7(row, id, authoring) {
     narrative:
       `Senna saved up for the Wheelie Workshop! ${items}`.trim()
       || decodeHtml(row.errorMessage),
-    bonusXp: 50,
-    bonusTapLabel: "[ COLLECT 50 XP BONUS ]",
+    bonusXp: 0,
+    bonusTapLabel: "",
     autoReadyWhenNoBonus: false,
     authoring,
     advance: { mode: "on-complete" },
@@ -1158,15 +1158,13 @@ function buildLessonDefinition(lessonNum, screens, scaffold, draft = false) {
     rewards: {
       skillSlug: skill.slug,
       achievementSkillSlug: skill.slug,
-      xpReward: skill.xp,
-      perfectStreakBonus: skill.bonus,
     },
     custom,
     baseScreens: screens,
     byCohort: {
       explorer: { characterName: lead },
-      pathfinder: { characterName: "Holly", rewards: { xpReward: 50, perfectStreakBonus: 0 } },
-      maverick: { characterName: "Dash", rewards: { xpReward: 50, perfectStreakBonus: 0 } },
+      pathfinder: { characterName: "Holly" },
+      maverick: { characterName: "Dash" },
     },
     _draft: draft,
   };

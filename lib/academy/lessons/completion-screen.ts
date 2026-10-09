@@ -2,11 +2,8 @@ import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-regi
 import type { CompletionScreenConfig } from "@/lib/academy/lessons/types";
 
 /**
- * Screen 8 — Explorer pattern.
- * Uses LessonCompletionPane: dynamic XP, perfect-streak bonus, bronze skill line.
- * Footer button label comes from LESSON_CASH_IN_LABEL via getCompletionFooterLabel().
- *
- * When overriding a teen base screen, use `{ _replace: true, ...explorerCompletionScreen() }`.
+ * Screen 8 — every cohort.
+ * LessonCompletionPane shows 100 XP plus a 50 XP perfect-streak bonus.
  */
 export function explorerCompletionScreen(
   id = "milestone-splash",
@@ -21,25 +18,20 @@ export function explorerCompletionScreen(
 }
 
 /**
- * Screen 8 — Pathfinder / Maverick pattern.
- * Fixed copy with explicit XP line; footer uses returnButtonLabel.
- * Bronze unlock still runs in useLessonFlow.handleCashInPoints().
+ * Same completion pane as Explorer. Pathfinder / Maverick no longer use a
+ * smaller cash-in amount.
  */
 export function teenCompletionScreen(options: {
   skillTitle: string;
-  xpReward: number;
   id?: string;
   returnButtonLabel?: string;
   medalId?: MedalIllustrationId;
 }): CompletionScreenConfig {
   return {
-    type: "completion",
-    id: options.id ?? "milestone-splash",
+    ...explorerCompletionScreen(options.id, options.medalId),
     skillLearnedLabel: `Skill Learned: ${options.skillTitle}`,
-    pointsLabel: `Lesson coins earned: ${options.xpReward}`,
-    returnButtonLabel:
-      options.returnButtonLabel ?? "Return to Learning Journey",
-    useStandardPane: false,
-    ...(options.medalId ? { medalId: options.medalId } : {}),
+    ...(options.returnButtonLabel
+      ? { returnButtonLabel: options.returnButtonLabel }
+      : {}),
   };
 }

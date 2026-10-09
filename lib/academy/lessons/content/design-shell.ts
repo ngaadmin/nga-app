@@ -61,8 +61,6 @@ const DESIGN_SHELL_META = {
 const DESIGN_SHELL_REWARDS = {
   skillSlug: "design-shell",
   achievementSkillSlug: "design-shell",
-  xpReward: 0,
-  perfectStreakBonus: 0,
 } as const;
 
 const DESIGN_SHELL_SCREENS: ScreenConfig[] = [

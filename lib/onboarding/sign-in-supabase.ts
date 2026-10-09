@@ -291,7 +291,11 @@ async function loadLatestParentEmail(
 }
 
 function isPlaceholderAuthEmail(email: string | null): boolean {
-  return Boolean(email?.toLowerCase().endsWith(".invalid"));
+  const lower = email?.trim().toLowerCase() ?? "";
+  return (
+    lower.endsWith(".invalid") ||
+    lower.endsWith("@users.nextgenachievers.internal")
+  );
 }
 
 function parseBirthYear(value: unknown): number | null {

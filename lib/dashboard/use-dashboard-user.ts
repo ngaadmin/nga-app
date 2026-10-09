@@ -23,14 +23,16 @@ const GUEST_USERNAME = "Guest";
 function readDashboardUserState(): DashboardUserState {
   const session = readUserSession();
   if (session) {
+    const isGuestMode = isGuestSession(session);
+    const identity = displayAccountIdentity(session).trim();
     return {
-      username: displayAccountIdentity(session),
+      username: identity || (isGuestMode ? GUEST_USERNAME : session.username.trim()),
       email:
         session.accountRole === "parent_master" || session.accountRole === "teacher"
           ? resolveHouseholdEmail(session)
           : null,
       joinDate: session.createdAt,
-      isGuestMode: isGuestSession(session),
+      isGuestMode,
       isTeacher: session.isTeacher === true || session.accountRole === "teacher",
       isLoading: false,
     };

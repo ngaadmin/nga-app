@@ -382,7 +382,16 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
     } else {
       learnerEmail = learnerEmail ?? legacyEmail;
       const requirements = getSignupRequirementsForCohort(ageTier);
-      if (requirements.requiresLearnerEmail && !learnerEmail) {
+      const alreadyProvisioned = Boolean(
+        typeof parsed.supabaseUserId === "string" &&
+          parsed.supabaseUserId.trim(),
+      );
+      // Class seats (and other server-created Pathfinders) have no learner inbox.
+      if (
+        requirements.requiresLearnerEmail &&
+        !learnerEmail &&
+        !alreadyProvisioned
+      ) {
         return null;
       }
     }

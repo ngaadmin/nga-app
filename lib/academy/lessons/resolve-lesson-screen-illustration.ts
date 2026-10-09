@@ -1,5 +1,6 @@
 import {
   getIllustrationPath,
+  getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
@@ -28,10 +29,16 @@ export function isDenseLessonScreen(screen: ScreenConfig): boolean {
   );
 }
 
+function pairSheetFileName(value: ScreenConfig["pairImage"]): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
 /** True when the shared top illustration slot is part of this screen template. */
 export function supportsLessonScreenIllustration(
   screen: ScreenConfig,
 ): boolean {
+  if (screen.pairImage === false) return false;
+  if (pairSheetFileName(screen.pairImage)) return true;
   return !isDenseLessonScreen(screen);
 }
 
@@ -76,6 +83,21 @@ function resolveRegistryIllustration(
 export function resolveLessonScreenIllustration(
   screen: ScreenConfig,
 ): LessonIllustration | undefined {
+  if (screen.pairImage === false) {
+    return undefined;
+  }
+
+  const pairFile = pairSheetFileName(screen.pairImage);
+  if (pairFile) {
+    const src = getPairSheetImagePath(pairFile);
+    if (!src) return undefined;
+    return {
+      src,
+      alt: screen.illustration?.alt ?? pairFile.replace(/[-_]/g, " ").replace(/\.[a-z0-9]+$/i, ""),
+      scale: screen.illustration?.scale,
+    };
+  }
+
   if (isDenseLessonScreen(screen)) {
     return undefined;
   }

@@ -28,6 +28,13 @@ export type DeclarativeScreenFields = {
   illustration?: LessonIllustration;
   /** Registry key for a reusable asset under `public/assets/illustrations/`. */
   illustrationId?: IllustrationId;
+  /**
+   * Authoring sheet image for this cohort.
+   * A file name loads `public/assets/illustrations/characters/pairs/` and
+   * replaces `illustrationId`. `false` shows no picture. Omit to keep the
+   * lesson's existing illustration.
+   */
+  pairImage?: string | false;
 };
 
 export type WithDeclarative<T> = T & DeclarativeScreenFields;

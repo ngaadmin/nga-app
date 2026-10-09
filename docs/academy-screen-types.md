@@ -66,6 +66,8 @@ Illustrations are **optional** per screen via `illustration?: { emoji?, label?, 
 
 `tap-reveal` and other interaction-heavy types should also omit illustrations unless a scene is essential.
 
+Authoring (`Screens.csv`): **Explorer Image**, **Pathfinder Image**, **Maverick Image** sit after the text columns. Allowed games take a file name in `public/assets/illustrations/characters/pairs/` or blank (keep the lesson's current picture). Omit games use `not allowed` in all three cells (no picture). A file name always shows that pair file — never a fallback character pose.
+
 ### Feedback (global)
 
 Every incorrect user action must produce **clear red feedback**. Wrong answers **never** receive a success tick.

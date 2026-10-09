@@ -73,7 +73,9 @@ Full notes: open `Characters.csv`.
 | **Explorer Text** | Only if Explorer story differs — else leave blank |
 | **Pathfinder Text** | Story / prompt for your Pathfinder character |
 | **Maverick Text** | Only if Maverick story differs — else leave blank |
-| **Extra Text** | Screen 1 only — words after the blank (e.g. `right away!`) |
+| **Explorer Image** | Pair file in `characters/pairs/`, blank, or `not allowed` |
+| **Pathfinder Image** | Same — Pathfinder |
+| **Maverick Image** | Same — Maverick |
 | **Explorer Settings** | Only if Explorer needs different items/choices/bonus |
 | **Game Settings** | Interactive screens — copy block from `Game-Types.csv` |
 | **Maverick Settings** | Only if Maverick needs different items/choices/bonus |
@@ -82,9 +84,13 @@ Full notes: open `Characters.csv`.
 | **Error Maverick** | Maverick wrong-answer — only if different |
 | **Notes** | Optional reminders for yourself — ignored by import |
 
+
+**Pictures:** Use a file name from `public/assets/illustrations/characters/pairs/` (e.g. `lars-mia-walking.webp`) to show that image for that cohort. Leave the cell **blank** to keep whatever picture the lesson already uses. Write **`not allowed`** in all three image cells for games that must not show a picture (`docs/academy-screen-types.md`: Tap to Reveal, Drag Sort, Pick One Rounds, Tap Pairs, Rank Choices, Budget Checkboxes, Budget Slider, Lesson Complete, and other dense games). A file name always shows that pair file — never a random character pose.
+
 ### Rules of thumb
 
 - **Any game on any screen** — you are not locked to Word Drop → Drag Sort → etc. Pick what fits the lesson.
+- **Word Drop** — write the full sentence in Explorer / Pathfinder / Maverick Text, including words after the blank. Put `______` where the missing word goes.
 - **Leave blank = same as Pathfinder** for Explorer/Maverick text columns.
 - **Game Settings** = one cell, multiple lines (Google Sheets: **Alt+Enter** for new line).
 - **Screen 8** — Game Type = `Lesson Complete`, leave everything else blank.

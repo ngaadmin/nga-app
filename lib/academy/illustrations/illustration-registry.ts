@@ -169,6 +169,24 @@ export const ILLUSTRATION_REGISTRY: Record<IllustrationId, string> = {
   ...CONCEPT_ILLUSTRATION_REGISTRY,
 };
 
+export const PAIR_SHEET_IMAGES_BASE = `${ILLUSTRATIONS_BASE}/characters/pairs`;
+
+const PAIR_SHEET_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(webp|png|jpe?g)$/i;
+
+/** Resolve a Screens.csv file name to `/assets/illustrations/characters/pairs/…`. */
+export function getPairSheetImagePath(fileName: string): string | undefined {
+  const trimmed = fileName.trim();
+  if (!trimmed || trimmed.includes("..")) return undefined;
+  const base = trimmed.split(/[/\\]/).pop() ?? "";
+  const withExt = PAIR_SHEET_FILE_RE.test(base)
+    ? base
+    : PAIR_SHEET_FILE_RE.test(`${base}.webp`)
+      ? `${base}.webp`
+      : "";
+  if (!withExt) return undefined;
+  return `${PAIR_SHEET_IMAGES_BASE}/${withExt}`;
+}
+
 export function getIllustrationPath(id: IllustrationId): string {
   return ILLUSTRATION_REGISTRY[id];
 }

@@ -174,6 +174,19 @@ function normalizeDetails(details) {
   };
 }
 
+/** Split Word Drop copy on a blank token (`______` or 3+ underscores). */
+function splitWordDropNarrative(text) {
+  const raw = String(text ?? "");
+  const match = raw.match(/^(.*?)_{3,}(.*)$/s);
+  if (!match) {
+    return { narrativeBefore: raw.trim(), narrativeAfter: "" };
+  }
+  return {
+    narrativeBefore: match[1].trimEnd(),
+    narrativeAfter: match[2].trim(),
+  };
+}
+
 function colIndex(headers, names) {
   for (const name of names) {
     const i = headers.findIndex((h) => h.trim().toLowerCase() === name.toLowerCase());
@@ -194,7 +207,9 @@ function readScreens(folder) {
     ]),
     t2: colIndex(headers, ["Explorer Text", "Tier 2 Main Text", "Lars Main Text"]),
     t3: colIndex(headers, ["Maverick Text", "Tier 3 Main Text", "Dash Main Text"]),
-    extra: colIndex(headers, ["Extra Text"]),
+    image2: colIndex(headers, ["Explorer Image"]),
+    image1: colIndex(headers, ["Pathfinder Image"]),
+    image3: colIndex(headers, ["Maverick Image"]),
     config: colIndex(headers, ["Game Settings", "Config", "Items Holly"]),
     configT2: colIndex(headers, [
       "Explorer Settings",
@@ -228,7 +243,9 @@ function readScreens(folder) {
         t1: get(idx.t1),
         t2: get(idx.t2),
         t3: get(idx.t3),
-        extra: get(idx.extra),
+        image1: get(idx.image1),
+        image2: get(idx.image2),
+        image3: get(idx.image3),
         config: gameSettings.base,
         configT2: explorerSettings,
         configT3: maverickSettings,
@@ -443,7 +460,49 @@ function resolveGameType(raw) {
   return { internal: GAME_TYPE_MAP[key] ?? "custom", label: key };
 }
 
+
+/** Games that must not show a picture — docs/academy-screen-types.md. */
+const TYPES_WITHOUT_PICTURE = new Set([
+  "tap-reveal",
+  "bucket-sort",
+  "link-match",
+  "rank-order",
+  "spotlight-rounds",
+  "savings-goal",
+  "allocation-slider",
+  "budget-select",
+  "completion",
+  "custom",
+]);
+
+function normalizePairFileName(raw) {
+  const trimmed = String(raw ?? "").trim();
+  if (!trimmed || trimmed.includes("..")) return undefined;
+  const base = trimmed.split(/[/\\]/).pop() ?? "";
+  if (!base) return undefined;
+  if (/\.(webp|png|jpe?g)$/i.test(base)) return base;
+  return `${base}.webp`;
+}
+
+function parsePairImageCell(raw, type) {
+  if (TYPES_WITHOUT_PICTURE.has(type)) return false;
+  const value = String(raw ?? "").trim();
+  if (!value) return undefined;
+  if (/^not allowed$/i.test(value)) return false;
+  return normalizePairFileName(value);
+}
+
+function applyPairImage(screen, raw) {
+  const parsed = parsePairImageCell(raw, screen.type);
+  if (parsed === undefined) return screen;
+  return { ...screen, pairImage: parsed };
+}
+
 function buildScreen(row, details) {
+  return applyPairImage(buildScreenContent(row, details), row.image1);
+}
+
+function buildScreenContent(row, details) {
   const lead = details["Pathfinder Character"] || details["Lead Character"] || "";
   const support = details["Support Character"] || "";
   const { internal, label } = resolveGameType(row.gameType);
@@ -465,16 +524,18 @@ function buildScreen(row, details) {
   }
 
   switch (internal) {
-    case "word-drop":
+    case "word-drop": {
+      const { narrativeBefore, narrativeAfter } = splitWordDropNarrative(main);
       return {
         type: "word-drop",
         id,
-        narrativeBefore: main,
-        narrativeAfter: row.extra || "right away!",
+        narrativeBefore,
+        narrativeAfter,
         options: parseOptions(cfg).length ? parseOptions(cfg) : ["Spent", "Saved", "Hidden"],
         correctOption: cfg.map.CORRECT || "Spent",
         wrongError: row.err1 || "Not quite! Try again.",
       };
+    }
     case "true-false":
       return {
         type: "true-false",
@@ -580,7 +641,11 @@ function pickIfDifferent(base, cohort) {
 
 function applyNarrativePatch(patch, base, main, err, t1, err1) {
   if (pickIfDifferent(t1, main)) {
-    if (base.type === "word-drop") patch.narrativeBefore = main;
+    if (base.type === "word-drop") {
+      const { narrativeBefore, narrativeAfter } = splitWordDropNarrative(main);
+      patch.narrativeBefore = narrativeBefore;
+      patch.narrativeAfter = narrativeAfter;
+    }
     if (base.type === "binary-choice") patch.prompt = main;
     if (base.type === "tap-reveal") patch.intro = main;
     if (base.type === "bucket-sort") patch.intro = main;
@@ -640,11 +705,11 @@ function buildOverrides(rows, baseScreens, details) {
     const id = SCREEN_IDS[row.screen];
 
     if (row.screen === 8) {
-      explorer[id] = { _replace: true, type: "completion", id, useStandardPane: true };
+      explorer[id] = { _replace: true, type: "completion", id, useStandardPane: true, pairImage: false };
       return;
     }
 
-    if (row.t2 || row.err2 || row.configT2) {
+    if (row.t2 || row.err2 || row.configT2 || row.image2) {
       const patch = {};
       applyNarrativePatch(
         patch,
@@ -655,10 +720,15 @@ function buildOverrides(rows, baseScreens, details) {
         row.err1,
       );
       applyConfigPatch(patch, base, row.configT2, row.config, "explorer");
+      const explorerImage = parsePairImageCell(row.image2, base.type);
+      const pathfinderImage = parsePairImageCell(row.image1, base.type);
+      if (explorerImage !== undefined && explorerImage !== pathfinderImage) {
+        patch.pairImage = explorerImage;
+      }
       if (Object.keys(patch).length) explorer[id] = patch;
     }
 
-    if (row.t3 || row.err3 || row.configT3) {
+    if (row.t3 || row.err3 || row.configT3 || row.image3) {
       const patch = {};
       applyNarrativePatch(
         patch,
@@ -669,6 +739,11 @@ function buildOverrides(rows, baseScreens, details) {
         row.err1,
       );
       applyConfigPatch(patch, base, row.configT3, row.config, "maverick");
+      const maverickImage = parsePairImageCell(row.image3, base.type);
+      const pathfinderImage = parsePairImageCell(row.image1, base.type);
+      if (maverickImage !== undefined && maverickImage !== pathfinderImage) {
+        patch.pairImage = maverickImage;
+      }
       if (Object.keys(patch).length) maverick[id] = patch;
     }
   });

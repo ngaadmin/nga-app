@@ -10,7 +10,8 @@ export type OnboardingEmailType =
   | "FRIEND_INVITE"
   | "CREDENTIAL_RECOVERY"
   | "ACCOUNT_DELETED_MASTER"
-  | "ACCOUNT_DELETED_CHILD";
+  | "ACCOUNT_DELETED_CHILD"
+  | "TEACHER_CLASS_CONFIRM";
 
 export type ExplorerParentEmailData = {
   username: string;
@@ -70,6 +71,11 @@ export type AccountDeletedChildEmailData = {
   username: string;
 };
 
+/** One-shot class page mail after /school teacher signup. */
+export type TeacherClassConfirmEmailData = {
+  token: string;
+};
+
 /** v1 friend invite: landing URL only, no codes or personalization. */
 export type FriendInviteEmailData = Record<string, never>;
 
@@ -86,6 +92,7 @@ export type OnboardingEmailDataMap = {
   CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
   ACCOUNT_DELETED_MASTER: AccountDeletedMasterEmailData;
   ACCOUNT_DELETED_CHILD: AccountDeletedChildEmailData;
+  TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
 };
 
 export type BuiltEmail = {
@@ -169,17 +176,16 @@ function ctaButton(label: string, href: string): string {
   `;
 }
 
-const PENNY_IMAGE_PATH =
-  "/assets/illustrations/characters/penny/penny_wave.webp";
+const PENNY_EMAIL_SRC =
+  "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny_wave.webp";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "support@nextgenachievers.com";
 
-function pennyIllustration(appUrl?: string): string {
-  const src = `${resolveAppUrl(appUrl)}${PENNY_IMAGE_PATH}`;
+function pennyIllustration(): string {
   return `
     <p style="margin:20px 0;text-align:left;">
       <img
-        src="${escapeHtml(src)}"
+        src="${escapeHtml(PENNY_EMAIL_SRC)}"
         alt="Penny"
         width="160"
         height="160"
@@ -303,7 +309,7 @@ export function buildExplorerParentEmail(
       <p style="margin:0 0 8px;font-size:16px;">
         Here&apos;s to them owning their future,
       </p>
-      ${pennyIllustration(appUrl)}
+      ${pennyIllustration()}
       <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -377,7 +383,7 @@ export function buildPathfinderParentEmail(
       <p style="margin:0 0 8px;font-size:16px;">
         Here&apos;s to them owning their future,
       </p>
-      ${pennyIllustration(appUrl)}
+      ${pennyIllustration()}
       <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -430,6 +436,7 @@ export function buildPathfinderParentLinkedEmail(
         <strong>No action is needed</strong> - their account is already active. Sign in anytime to
         follow their progress.
       </p>
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -493,6 +500,7 @@ export function buildPathfinderWelcomeEmail(
       </p>
       <p style="margin:0 0 16px;font-size:16px;">Let&apos;s go!</p>
       ${ctaButton("Launch Academy", academyUrl)}
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -556,6 +564,7 @@ export function buildMaverickWelcomeEmail(
       </p>
       <p style="margin:0 0 16px;font-size:16px;">Let&apos;s go!</p>
       ${ctaButton("Launch Academy", academyUrl)}
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -611,6 +620,7 @@ export function buildParentWelcomeEmail(
         you&apos;re curious.
       </p>
       ${ctaButton("Open account settings", accountUrl)}
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -658,6 +668,7 @@ export function buildUsernameRecoveryEmail(
           ${linkedHtml}
         </ul>
         ${ctaButton("Log Back In", signInUrl)}
+        ${pennyIllustration()}
         <p style="margin:24px 0 0;font-size:16px;">
           The Team at NextGenAchiever$
         </p>
@@ -725,6 +736,7 @@ export function buildUsernameRecoveryEmail(
           ${linkedHtml}
         </ul>
         ${ctaButton("Log Back In", signInUrl)}
+        ${pennyIllustration()}
         <p style="margin:24px 0 0;font-size:16px;">
           The Team at NextGenAchiever$
         </p>
@@ -755,6 +767,7 @@ export function buildUsernameRecoveryEmail(
         ${escapeHtml(username)}
       </p>
       ${ctaButton("Log Back In", signInUrl)}
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -803,6 +816,7 @@ export function buildCredentialRecoveryEmail(
       <p style="margin:16px 0 0;font-size:14px;color:#5B6B7C;">
         If you don&apos;t need this after all, you can ignore it. The link expires on its own.
       </p>
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -873,6 +887,7 @@ export function buildAccountDeletedMasterEmail(
       <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
         If you did not do this, contact ${escapeHtml(SUPPORT_EMAIL)}.
       </p>
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -917,6 +932,7 @@ export function buildAccountDeletedChildEmail(
       <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
         If you did not do this, contact ${escapeHtml(SUPPORT_EMAIL)}.
       </p>
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
@@ -962,9 +978,37 @@ export function buildFriendInviteEmail(
         business if they&apos;re keen.
       </p>
       ${ctaButton("Try the free app", landingUrl)}
+      ${pennyIllustration()}
       <p style="margin:24px 0 0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
+export function buildTeacherClassConfirmEmail(
+  data: TeacherClassConfirmEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const base = resolveAppUrl(appUrl);
+  const openUrl = `${base}/school/open?token=${encodeURIComponent(data.token.trim())}`;
+  const subject = "Confirm your teacher account";
+  const preheader = "Open your class when you are ready.";
+  const header = "Confirm your teacher account";
+  const paragraph = "Confirm your teacher account to open your class.";
+
+  const text = [paragraph, "", `Open my class: ${openUrl}`].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        ${escapeHtml(paragraph)}
+      </p>
+      ${ctaButton("Open my class", openUrl)}
+      ${pennyIllustration()}
     `,
   });
 
@@ -1031,6 +1075,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "ACCOUNT_DELETED_CHILD":
       return buildAccountDeletedChildEmail(
         data as AccountDeletedChildEmailData,
+        appUrl,
+      );
+    case "TEACHER_CLASS_CONFIRM":
+      return buildTeacherClassConfirmEmail(
+        data as TeacherClassConfirmEmailData,
         appUrl,
       );
     default: {

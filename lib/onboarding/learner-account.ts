@@ -12,7 +12,8 @@ export type LearnerAccountSnapshot = {
   userId: string;
   username: string;
   birthYear: number | null;
-  accountRole: "child" | "parent_master";
+  accountRole: "child" | "parent_master" | "teacher";
+  isTeacher?: boolean;
   accountStatus: "pending_consent" | "active";
   consentApprovedAt: string | null;
   parentEmail: string | null;

@@ -7,17 +7,18 @@ import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-sec
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
-import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
-  ONBOARDING_ENTRY_PATH,
-  readUserSession,
-} from "@/lib/onboarding/guest-session";
+  redirectToHomeAfterSignOut,
+  signOutApp,
+} from "@/lib/onboarding/sign-out";
+import { readUserSession } from "@/lib/onboarding/guest-session";
 import {
   recoverCredentialByEmail,
   resolveHouseholdEmail,
 } from "@/lib/onboarding/registered-accounts";
 import {
   BillingCardIcon,
+  ClassIcon,
   CommunityIcon,
   GoldCoinIcon,
   KeyIcon,
@@ -34,6 +35,7 @@ import {
   verifyParentPin,
 } from "@/lib/dashboard/parent-pin";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
+import { DASHBOARD_CLASS_PATH } from "@/lib/school/paths";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -529,7 +531,7 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
 
 export function HomeDashboard() {
   const router = useRouter();
-  const { username, email, joinDate, isLoading } = useDashboardUser();
+  const { username, email, joinDate, isLoading, isTeacher } = useDashboardUser();
   const copy = copyMatrix.dashboard.settings;
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
@@ -549,11 +551,8 @@ export function HomeDashboard() {
 
     try {
       await signOutApp();
-      router.replace(ONBOARDING_ENTRY_PATH);
-      router.refresh();
-    } catch {
-      loggingOutRef.current = false;
-      setIsLoggingOut(false);
+    } finally {
+      redirectToHomeAfterSignOut();
     }
   }
 
@@ -572,16 +571,25 @@ export function HomeDashboard() {
           aria-label="Account settings"
           className={cn(floatingPanelClass, "divide-y divide-[#BDE9FB]/60 px-3")}
         >
+          {isTeacher ? (
+            <SettingsRow
+              icon={ClassIcon}
+              label={copy.account.class}
+              onClick={() => router.push(DASHBOARD_CLASS_PATH)}
+            />
+          ) : null}
           <SettingsRow
             icon={KeyIcon}
             label={copy.account.passwordReset}
             onClick={() => setPasswordResetOpen(true)}
           />
-          <SettingsRow
-            icon={LockIcon}
-            label={copy.account.changeParentPin}
-            onClick={() => setChangePinModalOpen(true)}
-          />
+          {!isTeacher ? (
+            <SettingsRow
+              icon={LockIcon}
+              label={copy.account.changeParentPin}
+              onClick={() => setChangePinModalOpen(true)}
+            />
+          ) : null}
           <SettingsRow
             icon={CommunityIcon}
             label={copy.account.accounts}

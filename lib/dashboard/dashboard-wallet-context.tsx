@@ -16,6 +16,7 @@ import {
   saveDashboardWalletState,
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
+import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import {
   audPerXpBlockFromSliderIndex,
   convertPointsToAud,
@@ -71,14 +72,22 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
         setLifetimePointsEarned(persisted.lifetimePointsEarned);
         setAudSliderIndexState(persisted.audSliderIndex);
         setXpExchangeRateSet(persisted.xpExchangeRateSet);
+      } else {
+        const fresh = defaultDashboardWalletState();
+        setTotalPoints(fresh.totalPoints);
+        setLifetimePointsEarned(fresh.lifetimePointsEarned);
+        setAudSliderIndexState(fresh.audSliderIndex);
+        setXpExchangeRateSet(fresh.xpExchangeRateSet);
       }
       setWalletHydrated(true);
     }
 
     hydrateWallet();
     window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateWallet);
+    window.addEventListener(USER_SESSION_UPDATED_EVENT, hydrateWallet);
     return () => {
       window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateWallet);
+      window.removeEventListener(USER_SESSION_UPDATED_EVENT, hydrateWallet);
     };
   }, []);
 
@@ -90,13 +99,14 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     }
 
     const existing = readDashboardWalletState();
-    if (
-      totalPoints === 0 &&
-      lifetimePointsEarned === 0 &&
-      existing &&
-      (existing.totalPoints > 0 || existing.lifetimePointsEarned > 0)
-    ) {
-      return;
+    if (totalPoints === 0 && lifetimePointsEarned === 0) {
+      if (
+        !existing ||
+        existing.totalPoints > 0 ||
+        existing.lifetimePointsEarned > 0
+      ) {
+        return;
+      }
     }
 
     saveDashboardWalletState({

@@ -47,7 +47,7 @@ export function DashboardNavigation() {
     return (
       <aside
         style={zLayerStyle("chrome")}
-        className="fixed inset-y-0 left-0 flex w-64 flex-col border-r border-nga-mist bg-white"
+        className="fixed inset-y-0 left-0 flex w-64 flex-col border-r border-nga-mist bg-white print:hidden"
       >
         <div className="flex flex-col items-center border-b border-nga-mist px-4 py-6">
           <Link
@@ -82,7 +82,7 @@ export function DashboardNavigation() {
     <nav
       style={zLayerStyle("chrome")}
       data-dashboard-nav
-      className="fixed bottom-0 left-0 right-0 flex border-t border-[#FFA503] bg-white"
+      className="fixed bottom-0 left-0 right-0 flex border-t border-[#FFA503] bg-white print:hidden"
       aria-label="Main navigation"
     >
       {navItems.map((item) => (

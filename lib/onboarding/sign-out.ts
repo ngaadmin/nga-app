@@ -1,7 +1,11 @@
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
+import { clearDashboardWalletState } from "@/lib/dashboard/dashboard-wallet-storage";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
+import { ONBOARDING_ENTRY_PATH } from "@/lib/onboarding/guest-session";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
 import { createClient } from "@/lib/supabase/client";
+
+const SIGN_OUT_STEP_TIMEOUT_MS = 2500;
 
 function clearSupabaseBrowserStorage() {
   if (typeof window === "undefined") return;
@@ -21,35 +25,55 @@ function clearSupabaseBrowserStorage() {
   }
 }
 
+function withTimeout(work: Promise<unknown>, ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(resolve, ms);
+    void work
+      .catch(() => undefined)
+      .finally(() => {
+        window.clearTimeout(timer);
+        resolve();
+      });
+  });
+}
+
+function wipeLocalSignOutState(): void {
+  clearSupabaseBrowserStorage();
+  clearAllAppSessionState();
+  clearDashboardWalletState();
+  dispatchUserSessionUpdated();
+}
+
 /**
  * Fully leave the app: save progress, drop the Supabase Auth cookies, and
  * wipe in-browser session state so refresh / `/` cannot restore the user.
  */
 export async function signOutApp(): Promise<void> {
-  try {
-    await persistRegisteredProgressNow();
-  } catch {
-    // Still sign out if the last save fails.
-  }
+  await withTimeout(persistRegisteredProgressNow(), SIGN_OUT_STEP_TIMEOUT_MS);
 
-  try {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-  } catch {
-    // Server cookie deletion still needs to run.
-  }
+  await withTimeout(
+    (async () => {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    })(),
+    SIGN_OUT_STEP_TIMEOUT_MS,
+  );
 
-  try {
-    await fetch("/api/auth/sign-out", {
+  await withTimeout(
+    fetch("/api/auth/sign-out", {
       method: "POST",
       credentials: "same-origin",
       cache: "no-store",
-    });
-  } catch {
-    // Local state still needs to be wiped.
-  }
+      signal: AbortSignal.timeout(SIGN_OUT_STEP_TIMEOUT_MS),
+    }),
+    SIGN_OUT_STEP_TIMEOUT_MS,
+  );
 
-  clearSupabaseBrowserStorage();
-  clearAllAppSessionState();
-  dispatchUserSessionUpdated();
+  wipeLocalSignOutState();
+}
+
+/** Always leave Settings / the dashboard after local sign-out state is cleared. */
+export function redirectToHomeAfterSignOut(): void {
+  if (typeof window === "undefined") return;
+  window.location.replace(ONBOARDING_ENTRY_PATH);
 }

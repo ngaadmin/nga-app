@@ -93,7 +93,8 @@ export function applyLearnerAccountSnapshot(
       ? remote.birthYear
       : existing && isEligibleBirthYear(existing.birthYear)
         ? existing.birthYear
-        : remote.accountRole === "parent_master"
+        : remote.accountRole === "parent_master" ||
+            remote.accountRole === "teacher"
           ? adultBirthYear()
           : representativeBirthYearForCohort(
               existing?.curriculumCohort ?? existing?.ageTier ?? "pathfinder",
@@ -110,17 +111,18 @@ export function applyLearnerAccountSnapshot(
       username: remote.username || existing.username,
       supabaseUserId: remote.userId,
       accountRole: remote.accountRole,
+      isTeacher: remote.isTeacher === true || remote.accountRole === "teacher",
       accountStatus,
       consentApprovedAt,
       mustChangePassword: remote.mustChangePassword === true,
       parentEmail:
-        remote.accountRole === "parent_master"
+        remote.accountRole === "parent_master" || remote.accountRole === "teacher"
           ? (remote.learnerEmail ?? existing.parentEmail ?? remote.parentEmail ?? undefined)
           : (existing.parentEmail ?? remote.parentEmail ?? undefined),
       learnerEmail:
         remote.accountRole === "child" && existing.ageTier === "explorer"
           ? undefined
-          : remote.accountRole === "parent_master"
+          : remote.accountRole === "parent_master" || remote.accountRole === "teacher"
             ? (remote.learnerEmail ?? existing.learnerEmail ?? undefined)
             : (existing.learnerEmail ?? remote.learnerEmail ?? undefined),
     });
@@ -134,11 +136,11 @@ export function applyLearnerAccountSnapshot(
     birthYear,
     accountRole: remote.accountRole,
     parentEmail:
-      remote.accountRole === "parent_master"
+      remote.accountRole === "parent_master" || remote.accountRole === "teacher"
         ? (remote.learnerEmail ?? existing?.parentEmail ?? remote.parentEmail)
         : (existing?.parentEmail ?? remote.parentEmail),
     learnerEmail:
-      remote.accountRole === "parent_master"
+      remote.accountRole === "parent_master" || remote.accountRole === "teacher"
         ? (remote.learnerEmail ?? existing?.learnerEmail)
         : remote.accountRole === "child" && existing?.ageTier === "explorer"
           ? undefined
@@ -153,6 +155,7 @@ export function applyLearnerAccountSnapshot(
 
   return {
     ...converted,
+    isTeacher: remote.isTeacher === true || remote.accountRole === "teacher",
     mustChangePassword: remote.mustChangePassword === true,
   };
 }

@@ -7,6 +7,7 @@ import {
   collectAccountProgress,
   persistAccountProgressCacheFromLive,
 } from "@/lib/dashboard/account-progress-local";
+import { resetDashboardWalletForCurrentAccount } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
   ensureGuestProgressSnapshot,
   mergeGuestProgressSnapshot,
@@ -74,6 +75,10 @@ async function dispatchOnboardingEmails(
 
   const username = session.username.trim();
   if (!username) return;
+
+  if (session.accountRole === "teacher" || session.isTeacher) {
+    return;
+  }
 
   if (session.accountRole === "parent_master") {
     const parentEmail = (
@@ -203,10 +208,13 @@ export async function finalizeRegisteredSignup(
   const prior = typeof window !== "undefined" ? readUserSession() : null;
   const hadGuestSnapshot =
     typeof window !== "undefined" && Boolean(readGuestProgressSnapshot());
+  const isTeacher =
+    session.accountRole === "teacher" || session.isTeacher === true;
   // Returning login is already a registered profile (or a logged-out device).
   // Do not snapshot empty live storage and merge it over saved account progress.
+  // Teachers never inherit a guest / previous-user wallet or lesson snapshot.
   const shouldPreserveGuestProgress =
-    hadGuestSnapshot || prior?.accessMode === "guest";
+    !isTeacher && (hadGuestSnapshot || prior?.accessMode === "guest");
 
   if (typeof window !== "undefined" && shouldPreserveGuestProgress) {
     ensureGuestProgressSnapshot();
@@ -246,10 +254,19 @@ export async function finalizeRegisteredSignup(
 
   saveUserSession(withMarketingGate);
   upsertRegisteredAccount(withMarketingGate);
+  const switchedOntoTeacher =
+    isTeacher &&
+    (prior?.accessMode !== "registered" ||
+      prior.supabaseUserId !== withMarketingGate.supabaseUserId);
+  if (switchedOntoTeacher) {
+    resetDashboardWalletForCurrentAccount();
+  }
   if (shouldPreserveGuestProgress) {
     mergeGuestProgressSnapshot();
   }
-  await persistRegisteredAccountProgress(withMarketingGate);
+  if (!switchedOntoTeacher) {
+    await persistRegisteredAccountProgress(withMarketingGate);
+  }
   await dispatchOnboardingEmails(withMarketingGate, options);
   return withMarketingGate;
 }

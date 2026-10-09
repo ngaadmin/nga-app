@@ -192,10 +192,13 @@ export function restoreAccountProgressForUser(input: {
 
   const live = collectAccountProgress();
   const cached = readCachedAccountProgress(input);
+  const session = readUserSession();
+  const isTeacher =
+    session?.isTeacher === true || session?.accountRole === "teacher";
   const merged = pickRestoredAccountProgress({
     remote: input.remote ?? null,
     cached,
-    live,
+    live: isTeacher ? { ...live, wallet: null } : live,
   });
 
   if (!merged || isEmptyAccountProgress(merged)) {

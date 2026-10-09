@@ -14,6 +14,7 @@ export type DashboardUserState = {
   email: string | null;
   joinDate: string | null;
   isGuestMode: boolean;
+  isTeacher: boolean;
   isLoading: boolean;
 };
 
@@ -25,11 +26,12 @@ function readDashboardUserState(): DashboardUserState {
     return {
       username: displayAccountIdentity(session),
       email:
-        session.accountRole === "parent_master"
+        session.accountRole === "parent_master" || session.accountRole === "teacher"
           ? resolveHouseholdEmail(session)
           : null,
       joinDate: session.createdAt,
       isGuestMode: isGuestSession(session),
+      isTeacher: session.isTeacher === true || session.accountRole === "teacher",
       isLoading: false,
     };
   }
@@ -38,6 +40,7 @@ function readDashboardUserState(): DashboardUserState {
     email: null,
     joinDate: null,
     isGuestMode: false,
+    isTeacher: false,
     isLoading: false,
   };
 }
@@ -48,6 +51,7 @@ export function useDashboardUser(): DashboardUserState {
     email: null,
     joinDate: null,
     isGuestMode: false,
+    isTeacher: false,
     isLoading: true,
   });
 

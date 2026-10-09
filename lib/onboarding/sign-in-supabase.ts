@@ -168,13 +168,35 @@ export async function loadLearnerAccountById(
   authEmail: string | null,
 ): Promise<LearnerAccountSnapshot | null> {
   const admin = createAdminClient();
-  const { data: profile, error } = await admin
+  const withTeacher = await admin
     .from("profiles")
     .select(
-      "id, username, birth_year, account_role, account_status, consent_approved_at",
+      "id, username, birth_year, account_role, account_status, consent_approved_at, is_teacher",
     )
     .eq("id", userId)
     .maybeSingle();
+  const profileQuery =
+    withTeacher.error && /is_teacher|does not exist/i.test(withTeacher.error.message)
+      ? await admin
+          .from("profiles")
+          .select(
+            "id, username, birth_year, account_role, account_status, consent_approved_at",
+          )
+          .eq("id", userId)
+          .maybeSingle()
+      : withTeacher;
+  const profile = profileQuery.data as
+    | {
+        id: string;
+        username: string | null;
+        birth_year: number | null;
+        account_role: string | null;
+        account_status: string | null;
+        consent_approved_at: string | null;
+        is_teacher?: boolean | null;
+      }
+    | null;
+  const error = profileQuery.error;
 
   if (error || !profile?.id) {
     console.error("[sign-in] Profile lookup failed", {
@@ -184,7 +206,8 @@ export async function loadLearnerAccountById(
   }
   if (
     profile.account_role !== "child" &&
-    profile.account_role !== "parent_master"
+    profile.account_role !== "parent_master" &&
+    profile.account_role !== "teacher"
   ) {
     console.error("[sign-in] Profile role rejected", {
       role: profile.account_role,
@@ -214,11 +237,11 @@ export async function loadLearnerAccountById(
       ? authEmail.trim().toLowerCase()
       : null;
   const parentEmail =
-    profile.account_role === "parent_master"
+    profile.account_role === "parent_master" || profile.account_role === "teacher"
       ? normalizedAuthEmail
       : await loadLatestParentEmail(admin, userId);
   const learnerEmail =
-    profile.account_role === "parent_master"
+    profile.account_role === "parent_master" || profile.account_role === "teacher"
       ? normalizedAuthEmail
       : isPlaceholderAuthEmail(authEmail)
         ? null
@@ -229,7 +252,9 @@ export async function loadLearnerAccountById(
       ? profile.username.trim()
       : profile.account_role === "parent_master"
         ? `p${userId.replace(/-/g, "").slice(0, 19)}`
-        : "";
+        : profile.account_role === "teacher"
+          ? `t${userId.replace(/-/g, "").slice(0, 19)}`
+          : "";
   if (!username) return null;
 
   const progress = await loadLearnerProgressByUserId(userId);
@@ -239,7 +264,8 @@ export async function loadLearnerAccountById(
     username,
     birthYear: parseBirthYear(profile.birth_year),
     accountRole: profile.account_role,
-    accountStatus: profile.account_status,
+    isTeacher: profile.is_teacher === true || profile.account_role === "teacher",
+    accountStatus: profile.account_status as "pending_consent" | "active",
     consentApprovedAt: profile.consent_approved_at ?? null,
     parentEmail,
     learnerEmail,

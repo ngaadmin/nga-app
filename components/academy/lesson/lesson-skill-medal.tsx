@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   getMedalIllustrationPath,
   type MedalIllustrationId,
@@ -41,6 +44,12 @@ export function LessonSkillMedal({
   const skill = getSkillRegistryRecord(skillSlug);
   const skillName = skill?.skillName ?? "Skill medal";
   const statusLabel = medalStatusLabel(medalId);
+  const medalSrc = getMedalIllustrationPath(medalId);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    setHidden(false);
+  }, [medalSrc]);
 
   return (
     <div
@@ -50,14 +59,17 @@ export function LessonSkillMedal({
         className,
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={getMedalIllustrationPath(medalId)}
-        alt={`${skillName} ${statusLabel} medal`}
-        className={IMAGE_CLASS[size]}
-        decoding="async"
-        loading={size === "hero" ? "eager" : "lazy"}
-      />
+      {hidden ? null : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={medalSrc}
+          alt={`${skillName} ${statusLabel} medal`}
+          className={IMAGE_CLASS[size]}
+          decoding="async"
+          loading={size === "hero" ? "eager" : "lazy"}
+          onError={() => setHidden(true)}
+        />
+      )}
       {label ? (
         <p className="mt-4 max-w-[14rem] font-heading text-base font-semibold text-[#031F82] sm:text-lg">
           {label}

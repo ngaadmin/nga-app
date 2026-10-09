@@ -368,7 +368,10 @@ export async function recoverCredentialByEmail(
 
 /** Household email used to link a parent master account to child profiles. */
 export function resolveHouseholdEmail(session: UserSession): string | null {
-  if (session.accountRole === "parent_master") {
+  if (
+    session.accountRole === "parent_master" ||
+    session.accountRole === "teacher"
+  ) {
     return (
       normalizeRecoveryEmail(
         session.learnerEmail ?? session.email ?? session.parentEmail ?? "",
@@ -382,7 +385,10 @@ const PARENT_IDENTITY_FALLBACK = "Parent";
 
 /** Public identity: parent username (email fallback), or learner username. */
 export function displayAccountIdentity(session: UserSession): string {
-  if (session.accountRole === "parent_master") {
+  if (
+    session.accountRole === "parent_master" ||
+    session.accountRole === "teacher"
+  ) {
     return (
       displayUsernameOrEmpty(session.username) ||
       resolveHouseholdEmail(session) ||

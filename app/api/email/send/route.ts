@@ -18,7 +18,10 @@ export const runtime = "nodejs";
 /** Public browser send types - recovery and deletion notices are server-issued only. */
 const EMAIL_TYPES: readonly Exclude<
   OnboardingEmailType,
-  "CREDENTIAL_RECOVERY" | "ACCOUNT_DELETED_MASTER" | "ACCOUNT_DELETED_CHILD"
+  | "CREDENTIAL_RECOVERY"
+  | "ACCOUNT_DELETED_MASTER"
+  | "ACCOUNT_DELETED_CHILD"
+  | "TEACHER_CLASS_CONFIRM"
 >[] = [
   "EXPLORER_PARENT",
   "EXPLORER_PARENT_RESEND",
@@ -41,7 +44,10 @@ function isPublicEmailType(
   value: unknown,
 ): value is Exclude<
   OnboardingEmailType,
-  "CREDENTIAL_RECOVERY" | "ACCOUNT_DELETED_MASTER" | "ACCOUNT_DELETED_CHILD"
+  | "CREDENTIAL_RECOVERY"
+  | "ACCOUNT_DELETED_MASTER"
+  | "ACCOUNT_DELETED_CHILD"
+  | "TEACHER_CLASS_CONFIRM"
 > {
   return (
     typeof value === "string" &&
@@ -64,7 +70,10 @@ function readString(
 
 type PublicEmailType = Exclude<
   OnboardingEmailType,
-  "CREDENTIAL_RECOVERY" | "ACCOUNT_DELETED_MASTER" | "ACCOUNT_DELETED_CHILD"
+  | "CREDENTIAL_RECOVERY"
+  | "ACCOUNT_DELETED_MASTER"
+  | "ACCOUNT_DELETED_CHILD"
+  | "TEACHER_CLASS_CONFIRM"
 >;
 
 function parseData(
@@ -195,7 +204,8 @@ export async function POST(request: Request) {
     if (
       body.type === "CREDENTIAL_RECOVERY" ||
       body.type === "ACCOUNT_DELETED_MASTER" ||
-      body.type === "ACCOUNT_DELETED_CHILD"
+      body.type === "ACCOUNT_DELETED_CHILD" ||
+      body.type === "TEACHER_CLASS_CONFIRM"
     ) {
       return NextResponse.json(
         {

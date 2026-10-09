@@ -73,7 +73,7 @@ export function DashboardStatusHeader() {
       <header
         data-dashboard-status-header
         style={zLayerStyle("sticky")}
-        className="sticky top-0"
+        className="sticky top-0 print:hidden"
       >
         <AcademyMomentumHeader
           username={username}

@@ -71,6 +71,7 @@ export function LessonDragToTargetGame({
   const [remaining, setRemaining] = useState(totalCoins);
   const [landed, setLanded] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [targetImageFailed, setTargetImageFailed] = useState(false);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const targetRef = useRef<HTMLDivElement | null>(null);
@@ -100,6 +101,10 @@ export function LessonDragToTargetGame({
   }, [releasePointerCapture]);
 
   useEffect(() => () => endDrag(), [endDrag]);
+
+  useEffect(() => {
+    setTargetImageFailed(false);
+  }, [targetIllustrationSrc]);
 
   const isPointOverTarget = useCallback((clientX: number, clientY: number) => {
     const node = targetRef.current;
@@ -187,7 +192,7 @@ export function LessonDragToTargetGame({
   );
 
   const renderTargetVisual = () => {
-    if (targetIllustrationSrc) {
+    if (targetIllustrationSrc && !targetImageFailed) {
       return (
         <div className="relative w-full min-w-0 max-w-[10rem] shrink-0 sm:max-w-[12rem]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -197,6 +202,7 @@ export function LessonDragToTargetGame({
             className={cn(lessonInlineMediaImageClass, "max-h-[10rem] sm:max-h-[12rem]")}
             decoding="async"
             draggable={false}
+            onError={() => setTargetImageFailed(true)}
           />
           {renderJarStack()}
         </div>

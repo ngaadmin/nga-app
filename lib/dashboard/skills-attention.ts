@@ -1,9 +1,12 @@
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import type { VaultSkillTrophy } from "@/lib/dashboard/skill-trophies";
+import {
+  hasAccountSeenSkillsCupIntro,
+  markAccountSkillsCupIntroSeen,
+} from "@/lib/dashboard/page-intro-seen";
 import { readPersisted, writePersisted } from "@/lib/dev/client-persist";
 
 const SKILLS_SEEN_STORAGE_KEY = "nga_skills_panel_seen_v1";
-const SKILLS_CUP_INTRO_STORAGE_KEY = "nga_skills_cup_intro_seen_v1";
 
 const TIER_RANK: Record<SkillTrophyTier, number> = {
   locked: 0,
@@ -59,10 +62,10 @@ export function shouldShowSkillsCupIntro(
   skills: readonly VaultSkillTrophy[],
 ): boolean {
   if (typeof window === "undefined") return false;
-  if (readPersisted(SKILLS_CUP_INTRO_STORAGE_KEY) === "1") return false;
+  if (hasAccountSeenSkillsCupIntro()) return false;
   return hasFirstSkillMilestone(skills);
 }
 
 export function markSkillsCupIntroSeen(): void {
-  writePersisted(SKILLS_CUP_INTRO_STORAGE_KEY, "1");
+  markAccountSkillsCupIntroSeen();
 }

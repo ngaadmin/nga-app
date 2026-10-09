@@ -18,9 +18,9 @@ import type { UserSession } from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
 
 const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/website/Avatars/Avatar_Explorer.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Avatar_Pathfinder.webp",
-  maverick: "/assets/illustrations/website/Avatars/Avatar_Maverick.webp",
+  explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
+  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
+  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
 };
 
 const confirmCtaClass =

@@ -32,9 +32,9 @@ const USERNAME_TAKEN_ERROR =
   "That username is already taken. Try adding a favorite number!";
 
 const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/website/Avatars/Avatar_Explorer.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Avatar_Pathfinder.webp",
-  maverick: "/assets/illustrations/website/Avatars/Avatar_Maverick.webp",
+  explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
+  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
+  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
 };
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";

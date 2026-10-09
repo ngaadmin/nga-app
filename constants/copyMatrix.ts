@@ -79,6 +79,7 @@ export const copyMatrix = {
       description:
         "Your account cockpit - manage settings, parent tools, and point conversion.",
       account: {
+        class: "Class",
         passwordReset: "Password Reset",
         passwordResetTitle: "Reset a password",
         passwordResetParentHint:

@@ -16,6 +16,7 @@ import {
   ACCOUNT_PROGRESS_CACHE_KEY,
   persistAccountProgressCacheFromLive,
 } from "@/lib/dashboard/account-progress-local";
+import { PAGE_INTRO_SEEN_BY_ACCOUNT_KEY } from "@/lib/dashboard/page-intro-seen";
 import { EXPLORER_PENDING_PLAY_OK_KEY } from "@/lib/onboarding/explorer-pending-consent";
 import { PARENT_FIRST_WELCOME_KEY } from "@/lib/onboarding/parent-first-welcome";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
@@ -49,6 +50,7 @@ const PRESERVED_ON_LOGOUT_KEYS = [
   REGISTERED_ACCOUNTS_STORAGE_KEY,
   ACCOUNT_PROGRESS_CACHE_KEY,
   PARENT_FIRST_WELCOME_KEY,
+  PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
 ] as const;
 
 /** Removes active session artifacts while preserving durable registered accounts. */

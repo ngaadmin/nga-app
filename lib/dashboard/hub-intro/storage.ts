@@ -1,10 +1,14 @@
-import { readPersisted, writePersisted } from "@/lib/dev/client-persist";
+import {
+  hasAccountSeenHubIntro,
+  markAccountHubIntroSeen,
+} from "@/lib/dashboard/page-intro-seen";
 import {
   HUB_INTRO_IDS,
   type HubIntroId,
   type HubIntroSeenMap,
 } from "@/lib/dashboard/hub-intro/types";
 
+/** Legacy session key — still wiped on logout so it cannot leak to the next account. */
 export const HUB_INTRO_SEEN_STORAGE_KEY = "nga_hub_intro_seen_v2";
 
 export function parseHubIntroSeenMap(raw: string | null): HubIntroSeenMap {
@@ -29,14 +33,10 @@ export function parseHubIntroSeenMap(raw: string | null): HubIntroSeenMap {
 
 export function hasSeenHubIntro(hubId: HubIntroId): boolean {
   if (typeof window === "undefined") return false;
-  return parseHubIntroSeenMap(readPersisted(HUB_INTRO_SEEN_STORAGE_KEY))[hubId] === true;
+  return hasAccountSeenHubIntro(hubId);
 }
 
 export function markHubIntroSeen(hubId: HubIntroId): void {
   if (typeof window === "undefined") return;
-  const current = parseHubIntroSeenMap(readPersisted(HUB_INTRO_SEEN_STORAGE_KEY));
-  writePersisted(
-    HUB_INTRO_SEEN_STORAGE_KEY,
-    JSON.stringify({ ...current, [hubId]: true }),
-  );
+  markAccountHubIntroSeen(hubId);
 }

@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { getMedalIllustrationPathForSkill } from "@/lib/academy/illustrations/medal-registry";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import { cn } from "@/lib/utils/cn";
@@ -27,6 +30,13 @@ export function SkillMedalVisual({
   const medalSrc = getMedalIllustrationPathForSkill(skillNumber, tier);
   const statusLabel =
     tier === "unlocked" ? "unlocked" : tier === "locked" ? "locked" : tier;
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    setHidden(false);
+  }, [medalSrc]);
+
+  if (hidden) return null;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -36,6 +46,7 @@ export function SkillMedalVisual({
       className={cn(IMAGE_CLASS[size], className)}
       decoding="async"
       loading={size === "hero" ? "eager" : "lazy"}
+      onError={() => setHidden(true)}
     />
   );
 }

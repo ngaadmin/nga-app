@@ -17,7 +17,9 @@ export function isExplorerPendingConsent(
   > | null | undefined,
 ): boolean {
   if (!session || session.accessMode !== "registered") return false;
-  if (session.accountRole === "parent_master") return false;
+  if (session.accountRole === "parent_master" || session.accountRole === "teacher") {
+    return false;
+  }
   if (session.accountStatus !== "PENDING_CONSENT") return false;
   return getComplianceTierFromBirthYear(session.birthYear) === "explorer";
 }

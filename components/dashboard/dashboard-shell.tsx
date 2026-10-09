@@ -62,7 +62,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
       <div
         className={cn(
-          "flex w-full max-w-full flex-col overflow-x-hidden md:pl-64",
+          "flex w-full max-w-full flex-col overflow-x-hidden md:pl-64 print:md:pl-0",
           isLessonRoute ? "min-h-0 flex-1 overflow-hidden" : "min-h-dvh",
         )}
         {...(!isLessonRoute ? { "data-dashboard-hub": true } : {})}

@@ -88,7 +88,15 @@ function characterIllustrationFilename(
   character: IllustrationCharacterId,
   pose: IllustrationCharacterPose,
 ): string {
-  // On-disk Senna files use PascalCase (`Senna-celebrating.webp`).
+  // On-disk names mix case: Aiden/Holly/Senna PascalCase, lars lowercase,
+  // holly-working.webp is the only holly file that is lowercase.
+  if (character === "aiden") {
+    return `Aiden-${pose}.webp`;
+  }
+  if (character === "holly") {
+    if (pose === "working") return "holly-working.webp";
+    return `Holly-${pose}.webp`;
+  }
   if (character === "senna") {
     return `Senna-${pose}.webp`;
   }

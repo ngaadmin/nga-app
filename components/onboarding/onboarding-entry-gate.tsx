@@ -9,7 +9,20 @@ import {
 const PENNY_HOMEPAGE_SRC =
   "/assets/illustrations/characters/penny/penny_jump.webp";
 
-export function OnboardingEntryGate() {
+type OnboardingEntryGateProps = {
+  /** Defaults to the learner try-the-app path. /school passes teacher signup. */
+  signUpHref?: string;
+  subtitle?: string;
+  primaryCtaLabel?: string;
+  secondaryCtaLabel?: string;
+};
+
+export function OnboardingEntryGate({
+  signUpHref = ONBOARDING_START_PATH,
+  subtitle = "Built like a game. Designed for real life.",
+  primaryCtaLabel = "Try the Free App",
+  secondaryCtaLabel = copyMatrix.onboarding.signIn.heroLogIn,
+}: OnboardingEntryGateProps) {
   return (
     <section className="flex flex-col pb-4 pt-[calc(env(safe-area-inset-top,0px)+2.5rem)] sm:pb-6 sm:pt-[calc(env(safe-area-inset-top,0px)+3rem)] lg:flex-1 lg:justify-center lg:pb-10 lg:pt-[calc(env(safe-area-inset-top,0px)+2.5rem)]">
       <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-3">
@@ -32,18 +45,18 @@ export function OnboardingEntryGate() {
             Finally. A fun way to learn money skills.
           </h1>
           <p className="mt-2 max-w-md font-sans text-base font-normal leading-relaxed text-nga-slate sm:mt-3 sm:text-lg lg:mt-4">
-            Built like a game. Designed for real life.
+            {subtitle}
           </p>
           <div className="mt-4 flex w-full max-w-sm flex-col gap-3 sm:mt-6 lg:mt-8">
-            <ButtonLink href={ONBOARDING_START_PATH} variant="cta" fullWidth>
-              Try the Free App
+            <ButtonLink href={signUpHref} variant="cta" fullWidth>
+              {primaryCtaLabel}
             </ButtonLink>
             <ButtonLink
               href={ONBOARDING_SIGN_IN_PATH}
               variant="secondary-outline"
               fullWidth
             >
-              {copyMatrix.onboarding.signIn.heroLogIn}
+              {secondaryCtaLabel}
             </ButtonLink>
           </div>
         </div>

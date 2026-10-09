@@ -89,6 +89,10 @@ function parseWallet(value: unknown): PersistedDashboardWallet | null {
   return {
     schemaVersion:
       typeof value.schemaVersion === "number" ? value.schemaVersion : 1,
+    ownerUserId:
+      typeof value.ownerUserId === "string" && value.ownerUserId.trim()
+        ? value.ownerUserId.trim()
+        : null,
     totalPoints,
     lifetimePointsEarned,
     audSliderIndex: value.audSliderIndex,

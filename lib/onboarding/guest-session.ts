@@ -33,6 +33,9 @@ export const ONBOARDING_SIGN_UP_LEARNER_PATH =
   "/onboarding/sign-up?as=learner" as const;
 export const ONBOARDING_SIGN_UP_PARENT_PATH =
   "/onboarding/sign-up?as=parent" as const;
+export const SCHOOL_PATH = "/school" as const;
+export const SCHOOL_SIGN_UP_PATH = "/school/sign-up" as const;
+export const DASHBOARD_CLASS_PATH = "/dashboard/class" as const;
 
 /** Email CTA + valid consent tokens land here — create parent master and approve. */
 export function parentMasterSignUpHref(token: string): string {
@@ -53,7 +56,7 @@ export const DASHBOARD_ACADEMY_PATH = "/dashboard/academy" as const;
 
 export type AccessMode = "guest" | "registered";
 
-export type AccountRole = "child" | "parent_master";
+export type AccountRole = "child" | "parent_master" | "teacher";
 
 /** Re-export for session consumers. */
 export type { AccountLifecycleStatus, RegisteredAccountStatus };
@@ -146,6 +149,8 @@ export type UserSession = {
   learnerEmail?: string;
   parentEmail?: string;
   accountRole?: AccountRole;
+  /** True for /school teacher accounts. Class seats stay false. */
+  isTeacher?: boolean;
   genericProfileId?: string;
   convertedAt?: string;
   consentApprovedAt?: string;
@@ -399,9 +404,12 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
     email: accessMode === "registered" ? learnerEmail : undefined,
     parentEmail,
     accountRole:
-      parsed.accountRole === "parent_master" || parsed.accountRole === "child"
+      parsed.accountRole === "parent_master" ||
+      parsed.accountRole === "child" ||
+      parsed.accountRole === "teacher"
         ? parsed.accountRole
         : undefined,
+    isTeacher: parsed.isTeacher === true || parsed.accountRole === "teacher",
     genericProfileId:
       typeof parsed.genericProfileId === "string"
         ? parsed.genericProfileId
@@ -570,6 +578,7 @@ export function convertToRegisteredProfile(
     curriculumCohort: input.curriculumCohort ?? existing?.curriculumCohort,
     accountStatus,
     accountRole: input.accountRole,
+    isTeacher: input.accountRole === "teacher",
     parentEmail,
     passcodeHash,
     passwordHash,
@@ -687,6 +696,10 @@ export function hasCompletedPersonalizationGate(
   session: UserSession | null,
 ): boolean {
   if (!session || !session.username.trim()) return false;
+
+  if (session.accountRole === "teacher" || session.isTeacher) {
+    return session.accessMode === "registered";
+  }
 
   if (
     session.accessMode === "guest" &&

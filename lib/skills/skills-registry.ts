@@ -92,7 +92,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     skillName: "Choose Needs Over Wants",
     description: "Put needs ahead of wants",
     isAdvancedCohortOnly: false,
-    legacySlugs: ["needs-vs-wants", "giving-mindset"],
+    legacySlugs: ["needs-vs-wants", "giving-mindset", "choose-needs-over-wants"],
     medalEmoji: "⚖️",
   },
   {

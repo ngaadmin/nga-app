@@ -45,8 +45,8 @@ const GAME_TYPE_MAP = {
   "the pipeline leak monitor": "custom",
   "budget checkboxes": "custom",
   "budget slider": "custom",
-  "rank choices": "custom",
-  "priority ranker": "custom",
+  "rank choices": "rank-order",
+  "priority ranker": "rank-order",
   "gift reveal": "custom",
   "balance scale": "custom",
   "the balance scale": "custom",
@@ -331,10 +331,10 @@ function slugify(text) {
 
 function normalizeBucket(raw) {
   const v = raw.trim().toUpperCase();
-  if (v.startsWith("SHORT") || v === "WANT") return "short";
-  if (v.startsWith("LONG") || v.startsWith("MORE FUN") || v === "NEED") return "long";
   if (v.startsWith("WANT")) return "want";
   if (v.startsWith("NEED")) return "need";
+  if (v.startsWith("SHORT")) return "short";
+  if (v.startsWith("LONG") || v.startsWith("MORE FUN")) return "long";
   return raw.trim().toLowerCase();
 }
 
@@ -498,6 +498,39 @@ function applyPairImage(screen, raw) {
   return { ...screen, pairImage: parsed };
 }
 
+
+function parseRankOrder(cfg, intro, wrongError) {
+  const labels = [];
+  for (const line of cfg.lines) {
+    if (/^ITEMS:/i.test(line.trim())) {
+      labels.push(line.replace(/^ITEMS:\s*/i, "").trim());
+    }
+  }
+  const ids = String(cfg.map.ORDER || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const items = labels.map((label, i) => ({
+    id: ids[i] || slugify(label),
+    label,
+  }));
+  const correctOrder = ids.length === items.length ? ids : items.map((item) => item.id);
+  const errors = {};
+  if (wrongError) {
+    for (const item of items) {
+      if (item.id !== correctOrder[0]) errors[item.id] = wrongError;
+    }
+  }
+  return {
+    type: "rank-order",
+    intro,
+    items,
+    correctOrder,
+    errors,
+    submitLabel: "Submit Answer",
+  };
+}
+
 function buildScreen(row, details) {
   return applyPairImage(buildScreenContent(row, details), row.image1);
 }
@@ -505,12 +538,15 @@ function buildScreen(row, details) {
 function buildScreenContent(row, details) {
   const lead = details["Pathfinder Character"] || details["Lead Character"] || "";
   const support = details["Support Character"] || "";
-  const { internal, label } = resolveGameType(row.gameType);
+  let { internal, label } = resolveGameType(row.gameType);
   const cfg = parseConfig(row.config);
   const main = applyCharacterTokens(row.t1, lead, support);
   const id = SCREEN_IDS[row.screen] ?? `screen-${row.screen}`;
 
-  if (internal === "custom" || cfg.map.RENDERER) {
+  const rendererHint = (cfg.map.RENDERER || "").trim().toLowerCase();
+  const asRankOrder =
+    internal === "rank-order" || rendererHint === "rank-stack";
+  if (!asRankOrder && (internal === "custom" || cfg.map.RENDERER)) {
     const renderer =
       cfg.map.RENDERER?.trim() ||
       CUSTOM_RENDERER[label] ||
@@ -521,6 +557,9 @@ function buildScreenContent(row, details) {
       renderer,
       __customBag: { config: cfg.map, rawConfig: row.config, screen: row.screen },
     };
+  }
+  if (asRankOrder) {
+    internal = "rank-order";
   }
 
   switch (internal) {
@@ -580,17 +619,29 @@ function buildScreenContent(row, details) {
         items: parseItemsFromConfig(cfg),
       };
     }
-    case "bucket-sort":
+    case "bucket-sort": {
+      const items = parseItemsFromConfig(cfg);
+      const usesWantNeed = items.some((item) => item.bucket === "want" || item.bucket === "need");
       return {
         type: "bucket-sort",
         id,
         intro: main || "Your turn! Sort these items into the correct bucket.",
-        buckets: [
-          { id: "short", label: "Short Fun" },
-          { id: "long", label: "More Fun for Longer" },
-        ],
-        items: parseItemsFromConfig(cfg),
+        buckets: usesWantNeed
+          ? [
+              { id: "want", label: "Want", tone: "want" },
+              { id: "need", label: "Need", tone: "need" },
+            ]
+          : [
+              { id: "short", label: "Short Fun" },
+              { id: "long", label: "More Fun for Longer" },
+            ],
+        items,
       };
+    }
+    case "rank-order": {
+      const rank = parseRankOrder(cfg, main, row.err1);
+      return { ...rank, id };
+    }
     case "hold-to-fill":
       return {
         type: "hold-to-fill",
@@ -652,6 +703,7 @@ function applyNarrativePatch(patch, base, main, err, t1, err1) {
     if (base.type === "hold-to-fill") patch.narrative = main;
     if (base.type === "narrative-bonus") patch.narrative = main;
     if (base.type === "true-false") patch.prompt = main;
+    if (base.type === "rank-order") patch.intro = main;
   }
   if (pickIfDifferent(err1, err)) {
     patch.wrongError = err;
@@ -665,6 +717,14 @@ function applyConfigPatch(patch, base, extraConfig, baseConfig, tier) {
   if (base.type === "tap-reveal" || base.type === "bucket-sort") {
     const items = parseItemsFromConfig(extra);
     if (items.length) patch.items = items;
+  }
+
+  if (base.type === "rank-order") {
+    const rank = parseRankOrder(extra, extra.map.INTRO || "", extra.map.ERROR || "");
+    if (rank.items.length) {
+      patch.items = rank.items;
+      patch.correctOrder = rank.correctOrder;
+    }
   }
 
   if (base.type === "binary-choice") {

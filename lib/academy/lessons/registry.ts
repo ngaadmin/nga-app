@@ -7,6 +7,7 @@ import { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
 import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
 import { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
+import { M1_L5_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l5";
 import {
   LESSON_COMPLETION_XP,
   LESSON_PERFECT_STREAK_BONUS,
@@ -28,6 +29,7 @@ export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {
   2: M1_L2_LESSON_DEFINITION,
   3: M1_L3_LESSON_DEFINITION,
   4: M1_L4_LESSON_DEFINITION,
+  5: M1_L5_LESSON_DEFINITION,
 };
 
 export const SHIPPED_ACADEMY_LESSON_IDS = new Set<number>(
@@ -124,6 +126,12 @@ export const M1_L4_ACHIEVEMENT_SKILL_ID =
   LESSON_DEFINITIONS[4]!.rewards.achievementSkillSlug;
 export const M1_L4_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L4_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
+
+export const M1_L5_SKILL_ID = LESSON_DEFINITIONS[5]!.rewards.skillSlug;
+export const M1_L5_ACHIEVEMENT_SKILL_ID =
+  LESSON_DEFINITIONS[5]!.rewards.achievementSkillSlug;
+export const M1_L5_XP_REWARD = LESSON_COMPLETION_XP;
+export const M1_L5_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
 export function hasShippedLesson(milestoneId: number): boolean {
   return SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId);

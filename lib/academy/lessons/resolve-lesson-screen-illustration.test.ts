@@ -23,6 +23,16 @@ describe("resolveLessonScreenIllustration", () => {
     expect(resolved?.src).not.toContain("/characters/pairs/");
   });
 
+  it("maps a character file name to the registry, not a random pose", () => {
+    const resolved = resolveLessonScreenIllustration({
+      ...wordDrop,
+      illustrationId: "lars-thinking",
+      pairImage: "Holly-happy.webp",
+    });
+    expect(resolved?.src).toContain("Holly-happy.webp");
+    expect(resolved?.src).not.toContain("lars-thinking");
+  });
+
   it("shows the pairs-folder file and ignores illustrationId", () => {
     const resolved = resolveLessonScreenIllustration({
       ...wordDrop,

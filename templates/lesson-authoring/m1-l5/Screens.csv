@@ -1,0 +1,50 @@
+Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes
+1,Word Drop,It is Senna's birthday. The local gelato store offers a birthday discount. Senna wants Lars to come with him and get one too. Going along so he is not left out is a ______ for Lars.,It is Immi's birthday. The local gelato store offers a birthday discount. Immi wants Holly to come with her and get one too. Going along so she is not left out is a ______ for Holly.,It is Immi's birthday. The local gelato store offers a birthday discount. She wants Aiden to come with her and get one too. Going along so he is not left out is a ______ for Aiden.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,,"OPTIONS: Want | Need | Bill
+CORRECT: Want",,A limited time offer does not make it a 'need'.,A limited time offer does not make it a 'need'.,A limited time offer does not make it a 'need'.,
+2,Two Choices,"The birthday discount is only on today. Lars is saving for bike parts for his race next week, and can't really afford the gelato. What should he do?",The birthday discount is only on today. Holly is saving for an exchange trip overseas and can't really afford the gelato. What should she do?,The birthday discount is only on today. Aiden is saving for a gap year and doesn't really want to spend the money on gelato. What should he do?,concept-wallet.webp,concept-wallet.webp,concept-wallet.webp,"CHOICE A: Skip buying his own gelato and ask Senna to share his.
+CHOICE B: Buy his own because the deal is only on today
+CORRECT: A","CHOICE A: Skip buying her own gelato and ask Immi to share hers.
+CHOICE B: Buy her own because the deal is only on today
+CORRECT: A","CHOICE A: Skip buying his own gelato and ask Immi to share hers.
+CHOICE B: Buy his own because the deal is only on today
+CORRECT: A",The bike parts are the 'need'. The gelato is the 'want'.,The money for the exchange trip is the 'need'. The gelato is the 'want'.,The money for the gap year is the 'need'. The gelato is the 'want'.,
+3,True False,The gelato is a 'need' because the deal is only available today.,The gelato is a 'need' because the deal is only available today.,The gelato is a 'need' because the deal is only available today.,lars-questioning.webp,Aiden-happy.webp,Aiden-questioning.webp,,"CORRECT: false
+LABEL: Fact Finder",,A limited time offer does not turn a 'want' into a 'need'.,A limited time offer does not turn a 'want' into a 'need'.,A limited time offer does not turn a 'want' into a 'need'.,
+4,Drag Sort,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Lars right now?,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Holly right now?,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Aiden right now?,not allowed,not allowed,not allowed,"ITEMS:
+NEED: New helmet for the race
+WANT: His own gelato
+WANT: Extra gelato toppings
+NEED: Race registration fee","ITEMS:
+NEED: Airline ticket
+WANT: Her own gelato
+WANT: Extra gelato toppings
+NEED: A new passport","ITEMS:
+NEED: Airline ticket
+WANT: His own gelato
+WANT: Extra gelato toppings
+NEED: A new passport",,,,
+5,Speed Choice,"Lars does not want to feel left out, but the birthday deal expires today. What now?","Holly does not want to feel left out, but the birthday deal expires today. What now?","Aiden does not want to feel left out, but the birthday deal expires today. What now?",lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"CHOICE A: Share a gelato and keep at least half of what he would otherwise have spent.
+CHOICE B: Buy one so he isn't the odd one out
+CORRECT: A
+STYLE: banner","CHOICE A: Share a gelato and keep at least half of what she would otherwise have spent.
+CHOICE B: Buy one so she isn't the odd one out
+CORRECT: A
+STYLE: banner","CHOICE A: Share a gelato and keep at least half of what he would otherwise have spent.
+CHOICE B: Buy one so he isn't the odd one out
+CORRECT: A
+STYLE: banner",,,,
+6,Rank Choices,Put these in the order Lars should try. Best first.,Put these in the order Holly should try. Best first.,Put these in the order Aiden should try. Best first.,not allowed,not allowed,not allowed,"RENDERER: rank-stack
+ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Senna
+ITEMS: Buy his own because it is only today
+ORDER: ask,share,buy","RENDERER: rank-stack
+ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Immi
+ITEMS: Buy her own because it is only today
+ORDER: ask,share,buy","RENDERER: rank-stack
+ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Immi
+ITEMS: Buy his own because it is only today
+ORDER: ask,share,buy","Name it a 'want' or 'need', then share, then buy.","Name it a 'want' or 'need', then share, then buy.","Name it a 'want' or 'need', then share, then buy.",
+7,Celebration,Senna was happy to share the gelato without Lars having to pay for it. Lars can buy what he needs for his race.,Immi was happy to share the gelato without Holly having to pay for it. Holly stays on track with saving for her big trip.,Immi was happy to share the gelato without Aiden having to pay for it. Aiden stays on track with saving for his big trip.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,,,,,,,,
+8,Lesson Complete,,,,not allowed,not allowed,not allowed,,,,,,,,

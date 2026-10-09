@@ -7,6 +7,7 @@ import { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
 import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
 import { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
+import { M1_L5_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l5";
 import { DESIGN_SHELL_LESSON_DEFINITION } from "@/lib/academy/lessons/content/design-shell";
 import type { CohortLessonDefinition } from "@/lib/academy/lessons/types";
 import { resolveLessonDefinition } from "@/lib/academy/lessons/types/resolve";
@@ -56,12 +57,13 @@ describe("resolveLessonDefinition rewards", () => {
     expect(resolved.rewards.perfectStreakBonus).toBe(0);
   });
 
-  it("applies the same cash-in amounts to shipped lessons 1–4", () => {
+  it("applies the same cash-in amounts to shipped lessons 1–5", () => {
     const lessons = [
       M1_L1_LESSON_DEFINITION,
       M1_L2_LESSON_DEFINITION,
       M1_L3_LESSON_DEFINITION,
       M1_L4_LESSON_DEFINITION,
+      M1_L5_LESSON_DEFINITION,
     ];
     for (const definition of lessons) {
       expect("xpReward" in definition.rewards).toBe(false);

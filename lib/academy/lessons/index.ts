@@ -2,6 +2,7 @@ export { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
 export { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 export { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
 export { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
+export { M1_L5_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l5";
 export {
   explorerCompletionScreen,
   teenCompletionScreen,
@@ -52,6 +53,10 @@ export {
   M1_L4_PERFECT_STREAK_BONUS,
   M1_L4_SKILL_ID,
   M1_L4_XP_REWARD,
+  M1_L5_ACHIEVEMENT_SKILL_ID,
+  M1_L5_PERFECT_STREAK_BONUS,
+  M1_L5_SKILL_ID,
+  M1_L5_XP_REWARD,
   SHIPPED_ACADEMY_LESSON_IDS,
 } from "@/lib/academy/lessons/registry";
 export type {

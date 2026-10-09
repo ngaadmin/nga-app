@@ -173,7 +173,11 @@ export const PAIR_SHEET_IMAGES_BASE = `${ILLUSTRATIONS_BASE}/characters/pairs`;
 
 const PAIR_SHEET_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(webp|png|jpe?g)$/i;
 
-/** Resolve a Screens.csv file name to `/assets/illustrations/characters/pairs/…`. */
+/**
+ * Resolve a Screens.csv file name.
+ * Known character/concept ids use the illustration registry; anything else
+ * is a file in `public/assets/illustrations/characters/pairs/`.
+ */
 export function getPairSheetImagePath(fileName: string): string | undefined {
   const trimmed = fileName.trim();
   if (!trimmed || trimmed.includes("..")) return undefined;
@@ -184,6 +188,10 @@ export function getPairSheetImagePath(fileName: string): string | undefined {
       ? `${base}.webp`
       : "";
   if (!withExt) return undefined;
+  const stem = withExt.replace(/\.[^.]+$/, "").toLowerCase();
+  if (isIllustrationId(stem)) {
+    return getIllustrationPath(stem);
+  }
   return `${PAIR_SHEET_IMAGES_BASE}/${withExt}`;
 }
 

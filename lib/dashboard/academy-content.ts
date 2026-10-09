@@ -36,7 +36,7 @@ export const ACADEMY_LESSON_TOPICS_BY_MODULE: Record<
     "Needs vs Wants Sort",
     "The 50/30/20 Split",
     "Pocket Money Map",
-    "Track Every Coin",
+    "The birthday discount",
     "Save-First Power",
     "Spending Triggers",
     "Stash Audit",

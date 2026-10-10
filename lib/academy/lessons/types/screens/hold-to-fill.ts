@@ -9,4 +9,5 @@ export type HoldToFillScreenConfig = WithDeclarative<{
   successMessage: string;
   holdDurationMs?: number;
   releaseHint?: string;
+  clearOnSuccess?: boolean;
 }>;

@@ -6,7 +6,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { LESSON_DEFINITIONS } from "@/lib/academy/lessons/registry";
 import { resolveLessonDefinition } from "@/lib/academy/lessons/types/resolve";
-import type { ScreenConfig } from "@/lib/academy/lessons/types";
+import type {
+  CohortLessonDefinition,
+  ScreenConfig,
+} from "@/lib/academy/lessons/types";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 const OUT_DIR = path.join(process.cwd(), "templates/lesson-authoring");
@@ -258,7 +261,7 @@ function cohortPayloadSettings(screen: ScreenConfig, base: ScreenConfig): string
   return lines.join("\n");
 }
 
-function skillName(slug: string, screens: ScreenConfig[]): string {
+function skillName(slug: string, screens: readonly ScreenConfig[]): string {
   const completion = screens.find((s) => s.type === "completion") as
     | { skillLearnedLabel?: string }
     | undefined;
@@ -267,7 +270,7 @@ function skillName(slug: string, screens: ScreenConfig[]): string {
   return SKILL_NAME[slug] ?? slug;
 }
 
-function characterNames(def: (typeof LESSON_DEFINITIONS)[string]) {
+function characterNames(def: CohortLessonDefinition) {
   const chars = def.meta.characters;
   return {
     explorer:
@@ -287,12 +290,14 @@ function main() {
   const detailRows: string[] = [row([...DETAIL_HEADERS])];
   const screenRows: string[] = [row([...SCREEN_HEADERS])];
 
-  const lessonIds = Object.keys(LESSON_DEFINITIONS).sort(
-    (a, b) => Number(a) - Number(b),
-  );
+  const lessonIds = Object.keys(LESSON_DEFINITIONS)
+    .map((key) => Number.parseInt(key, 10))
+    .filter((id) => Number.isFinite(id))
+    .sort((a, b) => a - b);
 
   for (const lessonId of lessonIds) {
     const def = LESSON_DEFINITIONS[lessonId];
+    if (!def) continue;
     const moduleNum = String(def.meta.levelId);
     const lessonNum = String(def.meta.lessonNumber);
     const resolved = {
@@ -322,6 +327,7 @@ function main() {
       const explorer = resolved.explorer.screens[i];
       const pathfinder = resolved.pathfinder.screens[i];
       const maverick = resolved.maverick.screens[i];
+      if (!explorer || !pathfinder || !maverick) continue;
       const explorerText = mainText(explorer);
       const pathfinderText = mainText(pathfinder);
       const maverickText = mainText(maverick);

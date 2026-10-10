@@ -26,6 +26,7 @@ const GAME_TYPE_MAP = {
   "word bank rule": "word-drop",
   "two choices": "binary-choice",
   "standard quiz": "binary-choice",
+  "multiple choice": "multiple-choice",
   "true false": "true-false",
   "true / false": "true-false",
   "tap to reveal": "tap-reveal",
@@ -39,15 +40,15 @@ const GAME_TYPE_MAP = {
   "hold button": "hold-to-fill",
   celebration: "narrative-bonus",
   "lesson complete": "completion",
-  "tap pairs": "custom",
-  "pair matcher": "custom",
+  "tap pairs": "link-match",
+  "pair matcher": "link-match",
   "pipeline leak monitor": "custom",
   "the pipeline leak monitor": "custom",
-  "budget checkboxes": "custom",
-  "budget slider": "custom",
+  "budget checkboxes": "budget-select",
+  "budget slider": "allocation-slider",
   "rank choices": "rank-order",
   "priority ranker": "rank-order",
-  "gift reveal": "custom",
+  "gift reveal": "drag-to-target",
   "balance scale": "custom",
   "the balance scale": "custom",
   "hotspot hunter": "custom",
@@ -63,7 +64,7 @@ const GAME_TYPE_MAP = {
   "flowchart builder": "custom",
   "scalable curve engine": "custom",
   "the scalable curve engine": "custom",
-  "value accumulator": "custom",
+  "value accumulator": "savings-goal",
   "map explorer": "custom",
 };
 
@@ -133,13 +134,53 @@ function readCsvFile(filePath) {
   return { headers, records };
 }
 
-function readDetails(folder) {
-  const { records } = readCsvFile(path.join(folder, "Lesson-Details.csv"));
+function isCopiedCell(value) {
+  return /^copied$/i.test(String(value ?? "").trim());
+}
+
+function resolveCopiedText(own, explorer) {
+  return isCopiedCell(own) ? explorer : own;
+}
+
+function lessonKey(moduleNum, lessonNum) {
+  return `${Number.parseInt(moduleNum, 10)}:${Number.parseInt(lessonNum, 10)}`;
+}
+
+function screenIdFor(row) {
+  const fromMap = parseConfig(row.config).map.ID;
+  return fromMap || SCREEN_IDS[row.screen] || `screen-${row.screen}`;
+}
+
+function readDetailsByLesson(folder) {
+  const { headers, records } = readCsvFile(path.join(folder, "Lesson-Details.csv"));
+  const moduleIdx = colIndex(headers, ["Module Number"]);
+  const lessonIdx = colIndex(headers, ["Lesson Number"]);
+  const fieldIdx = colIndex(headers, ["Field"]);
+  const valueIdx = colIndex(headers, ["Value"]);
+  const grouped = new Map();
+
+  const ensure = (moduleNum, lessonNum) => {
+    const key = lessonKey(moduleNum, lessonNum);
+    if (!grouped.has(key)) grouped.set(key, { "Module Number": String(moduleNum), "Lesson Number": String(lessonNum) });
+    return grouped.get(key);
+  };
+
+  if (moduleIdx >= 0 && fieldIdx >= 0 && fieldIdx !== moduleIdx) {
+    for (const row of records) {
+      const field = (row[fieldIdx] ?? "").trim();
+      if (!field || field === "Module Number" || field === "Lesson Number") continue;
+      const moduleNum = row[moduleIdx] || "1";
+      const lessonNum = row[lessonIdx] || "1";
+      ensure(moduleNum, lessonNum)[field] = row[valueIdx] ?? "";
+    }
+    return [...grouped.values()].map(normalizeDetails);
+  }
+
   const details = {};
   for (const row of records) {
     if (row[0]) details[row[0]] = row[1] ?? "";
   }
-  return normalizeDetails(details);
+  return [normalizeDetails(details)];
 }
 
 /** Accept new + legacy field names; fill character defaults. */
@@ -226,6 +267,8 @@ function readScreens(folder) {
     err1: colIndex(headers, ["Error Pathfinder", "Error T1", "Error Holly"]),
     err2: colIndex(headers, ["Error Explorer", "Error T2", "Error Lars"]),
     err3: colIndex(headers, ["Error Maverick", "Error T3", "Error Dash"]),
+    module: colIndex(headers, ["Module Number"]),
+    lesson: colIndex(headers, ["Lesson Number"]),
   };
 
   return records
@@ -236,13 +279,18 @@ function readScreens(folder) {
       const gameSettings = mergeTieredSettings(get(idx.config));
       const explorerSettings = get(idx.configT2) || gameSettings.explorer;
       const maverickSettings = get(idx.configT3) || gameSettings.maverick;
+      const explorerText = get(idx.t2);
+      const t1 = resolveCopiedText(get(idx.t1), explorerText);
+      const t3 = resolveCopiedText(get(idx.t3), explorerText);
 
       return {
+        module: get(idx.module),
+        lesson: get(idx.lesson),
         screen,
         gameType: get(idx.gameType),
-        t1: get(idx.t1),
-        t2: get(idx.t2),
-        t3: get(idx.t3),
+        t1,
+        t2: explorerText,
+        t3,
         image1: get(idx.image1),
         image2: get(idx.image2),
         image3: get(idx.image3),
@@ -254,7 +302,7 @@ function readScreens(folder) {
         err3: get(idx.err3),
       };
     })
-    .filter((row) => Number.isFinite(row.screen) && row.screen >= 1 && row.screen <= 8);
+    .filter((row) => Number.isFinite(row.screen) && row.screen >= 1);
 }
 
 /** Optional [explorer] / [maverick] blocks inside Game Settings. */
@@ -298,6 +346,8 @@ function parseConfig(raw) {
   for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
+    if (/^PAYLOAD:/i.test(trimmed)) break;
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) continue;
     cfg.lines.push(trimmed);
 
     const colon = trimmed.indexOf(":");
@@ -308,6 +358,57 @@ function parseConfig(raw) {
     }
   }
   return cfg;
+}
+
+
+function collectChoiceEntries(cfg) {
+  const byLetter = new Map();
+  for (const line of cfg.lines || []) {
+    const match = line.match(/^CHOICE\s+([A-Z])\s*:\s*(.*)$/i);
+    if (!match) continue;
+    byLetter.set(match[1].toUpperCase(), match[2].trim());
+  }
+  for (const [key, val] of Object.entries(cfg.map || {})) {
+    const match = String(key).match(/^CHOICE\s+([A-Z])$/i);
+    if (!match || !val) continue;
+    const letter = match[1].toUpperCase();
+    if (!byLetter.has(letter)) byLetter.set(letter, String(val).trim());
+  }
+  return [...byLetter.keys()]
+    .sort()
+    .map((letter) => ({ letter, label: byLetter.get(letter) }));
+}
+
+function parseCorrectLetters(raw) {
+  const letters = [];
+  for (const match of String(raw || "").toUpperCase().matchAll(/[A-Z]/g)) {
+    if (!letters.includes(match[0])) letters.push(match[0]);
+  }
+  return letters;
+}
+
+function choiceFieldsFromConfig(cfg, fallbackLetters = ["A", "B"]) {
+  const entries = collectChoiceEntries(cfg);
+  const listed = entries.length
+    ? entries
+    : fallbackLetters.map((letter) => ({
+        letter,
+        label: `Option ${letter}`,
+      }));
+  if (!listed.length) return { fields: {}, correctCount: 0 };
+  const correct = parseCorrectLetters(cfg.map.CORRECT);
+  const correctSet = new Set(correct.length ? correct : [listed[0].letter]);
+  const fields = {};
+  for (const { letter, label } of listed) {
+    fields[`option${letter}`] = {
+      label: label || `Option ${letter}`,
+      isCorrect: correctSet.has(letter),
+    };
+  }
+  return {
+    fields,
+    correctCount: listed.filter((entry) => correctSet.has(entry.letter)).length,
+  };
 }
 
 function applyCharacterTokens(text, lead, support) {
@@ -359,6 +460,15 @@ function parseSingleItem(body, bucket) {
   return { id: slugify(body), label: body, bucket };
 }
 
+function isItemBucketKey(upper) {
+  return (
+    upper.startsWith("NEED:") ||
+    upper.startsWith("WANT:") ||
+    upper.startsWith("SHORT:") ||
+    upper.startsWith("LONG:")
+  );
+}
+
 function parseItemsFromConfig(cfg) {
   const items = [];
   let inItems = false;
@@ -369,9 +479,22 @@ function parseItemsFromConfig(cfg) {
       inItems = true;
       const rest = line.slice(line.indexOf(":") + 1).trim();
       if (rest) {
-        const bucket = normalizeBucket(rest.split(":")[0] ?? "short");
-        items.push(...parseItemBody(rest, bucket));
+        if (isItemBucketKey(rest.toUpperCase()) || isItemBucketKey(upper.replace(/^ITEMS:\s*/i, ""))) {
+          const bodyLine = rest.includes(":") ? rest : line;
+          const colon = bodyLine.indexOf(":");
+          const bucket = normalizeBucket(bodyLine.slice(0, colon));
+          items.push(...parseItemBody(bodyLine.slice(colon + 1).trim(), bucket));
+        } else {
+          items.push(...parseItemBody(rest, "short"));
+        }
       }
+      continue;
+    }
+    if (isItemBucketKey(upper)) {
+      inItems = true;
+      const colon = line.indexOf(":");
+      const bucket = normalizeBucket(line.slice(0, colon));
+      items.push(...parseItemBody(line.slice(colon + 1).trim(), bucket));
       continue;
     }
     if (
@@ -485,10 +608,10 @@ function normalizePairFileName(raw) {
 }
 
 function parsePairImageCell(raw, type) {
-  if (TYPES_WITHOUT_PICTURE.has(type)) return false;
   const value = String(raw ?? "").trim();
   if (!value) return undefined;
   if (/^not allowed$/i.test(value)) return false;
+  if (TYPES_WITHOUT_PICTURE.has(type)) return false;
   return normalizePairFileName(value);
 }
 
@@ -541,7 +664,7 @@ function buildScreenContent(row, details) {
   let { internal, label } = resolveGameType(row.gameType);
   const cfg = parseConfig(row.config);
   const main = applyCharacterTokens(row.t1, lead, support);
-  const id = SCREEN_IDS[row.screen] ?? `screen-${row.screen}`;
+  const id = screenIdFor(row);
 
   const rendererHint = (cfg.map.RENDERER || "").trim().toLowerCase();
   const asRankOrder =
@@ -602,6 +725,19 @@ function buildScreenContent(row, details) {
         optionB: { label: choiceB, isCorrect: !correctA },
         wrongError: row.err1 || "Try again!",
         errorStyle: banner ? "banner" : "inline-red",
+      };
+    }
+    case "multiple-choice": {
+      const { fields, correctCount } = choiceFieldsFromConfig(cfg, []);
+      return {
+        type: "multiple-choice",
+        id,
+        prompt: main,
+        ...fields,
+        optionLayout: "radio-list",
+        ...(correctCount > 1 ? { selectionMode: "multi-correct" } : {}),
+        wrongError: row.err1 || "Try again!",
+        errorStyle: "inline-red",
       };
     }
     case "tap-reveal": {
@@ -697,7 +833,7 @@ function applyNarrativePatch(patch, base, main, err, t1, err1) {
       patch.narrativeBefore = narrativeBefore;
       patch.narrativeAfter = narrativeAfter;
     }
-    if (base.type === "binary-choice") patch.prompt = main;
+    if (base.type === "binary-choice" || base.type === "multiple-choice") patch.prompt = main;
     if (base.type === "tap-reveal") patch.intro = main;
     if (base.type === "bucket-sort") patch.intro = main;
     if (base.type === "hold-to-fill") patch.narrative = main;
@@ -733,6 +869,26 @@ function applyConfigPatch(patch, base, extraConfig, baseConfig, tier) {
     if (extra.map["CHOICE B"]) patch.optionB = { label: extra.map["CHOICE B"], isCorrect: !correctA };
   }
 
+  if (base.type === "multiple-choice") {
+    const extraChoices = collectChoiceEntries(extra);
+    const correctLetters = parseCorrectLetters(extra.map.CORRECT);
+    const correctSet = new Set(correctLetters);
+    for (const { letter, label } of extraChoices) {
+      const isCorrect = correctLetters.length
+        ? correctSet.has(letter)
+        : Boolean(base[`option${letter}`]?.isCorrect);
+      patch[`option${letter}`] = { label, isCorrect };
+    }
+    if (correctLetters.length && extraChoices.length === 0) {
+      for (let index = 0; index < 26; index += 1) {
+        const letter = String.fromCharCode(65 + index);
+        const current = base[`option${letter}`];
+        if (!current || typeof current !== "object") continue;
+        patch[`option${letter}`] = { ...current, isCorrect: correctSet.has(letter) };
+      }
+    }
+  }
+
   if (base.type === "hold-to-fill") {
     if (extra.map.HOLD) patch.holdLabel = extra.map.HOLD;
     if (extra.map.FROZEN) patch.frozenLabel = extra.map.FROZEN;
@@ -762,12 +918,7 @@ function buildOverrides(rows, baseScreens, details) {
 
   rows.forEach((row, i) => {
     const base = baseScreens[i];
-    const id = SCREEN_IDS[row.screen];
-
-    if (row.screen === 8) {
-      explorer[id] = { _replace: true, type: "completion", id, useStandardPane: true, pairImage: false };
-      return;
-    }
+    const id = screenIdFor(row);
 
     if (row.t2 || row.err2 || row.configT2 || row.image2) {
       const patch = {};
@@ -916,32 +1067,7 @@ ${hasCustom ? `\n// ⚠️ This lesson uses custom game types (${customScreens.m
   };
 }
 
-function main() {
-  const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
-  const install = process.argv.includes("--install");
-  const input = args[0];
-
-  if (!input) {
-    console.error("Usage: npm run lesson:import -- path/to/lesson-folder [--install]");
-    console.error("  Default: writes Generated-mX-lY.ts into the folder (safe preview).");
-    console.error("  --install: writes into lib/academy/lessons/content/ (for developers).");
-    process.exit(1);
-  }
-
-  const folder = path.resolve(process.cwd(), input);
-  if (!fs.existsSync(path.join(folder, "Lesson-Details.csv")) || !fs.existsSync(path.join(folder, "Screens.csv"))) {
-    console.error("Folder must contain Lesson-Details.csv and Screens.csv");
-    process.exit(1);
-  }
-
-  const details = readDetails(folder);
-  const rows = readScreens(folder).filter((r) => r.screen >= 1 && r.screen <= 8);
-
-  if (rows.length < 1) {
-    console.error("No screen rows found in Screens.csv");
-    process.exit(1);
-  }
-
+function importOneLesson(folder, details, rows, install) {
   const baseScreens = rows.map((row) => buildScreen(row, details));
   const overrides = buildOverrides(rows, baseScreens, details);
   const { fileName, content } = generateFile(details, rows, baseScreens, overrides);
@@ -954,7 +1080,7 @@ function main() {
     ),
   ];
   if (unknownTypes.length) {
-    console.log(`⚠ Unknown game type(s) — will import as custom: ${unknownTypes.join(", ")}`);
+    console.log(`⚠ ${fileName}: unknown game type(s) — will import as custom: ${unknownTypes.join(", ")}`);
     console.log("  Check spelling against Game-Types.csv");
   }
 
@@ -963,16 +1089,78 @@ function main() {
     : path.join(folder, `Generated-${fileName}`);
 
   fs.writeFileSync(outPath, content, "utf8");
-
   console.log(`✓ Wrote ${outPath}`);
   const custom = baseScreens.filter((s) => s.type === "custom");
   if (custom.length) {
     console.log(`⚠ Custom game types need developer UI: ${custom.map((s) => s.renderer).join(", ")}`);
   }
+}
+
+function main() {
+  const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+  const install = process.argv.includes("--install");
+  const input = args[0];
+
+  if (!input) {
+    console.error("Usage: npm run lesson:import -- path/to-folder [--install]");
+    console.error("  Default: writes Generated-mX-lY.ts into the folder (safe preview).");
+    console.error("  Course files may contain many lessons; each gets its own Generated file.");
+    console.error("  --install: writes into lib/academy/lessons/content/ (for developers).");
+    process.exit(1);
+  }
+
+  const folder = path.resolve(process.cwd(), input);
+  if (!fs.existsSync(path.join(folder, "Lesson-Details.csv")) || !fs.existsSync(path.join(folder, "Screens.csv"))) {
+    console.error("Folder must contain Lesson-Details.csv and Screens.csv");
+    process.exit(1);
+  }
+
+  const detailsList = readDetailsByLesson(folder);
+  const allRows = readScreens(folder);
+  if (allRows.length < 1) {
+    console.error("No screen rows found in Screens.csv");
+    process.exit(1);
+  }
+
+  const rowsByLesson = new Map();
+  for (const row of allRows) {
+    const moduleNum = row.module || detailsList[0]?.["Module Number"] || "1";
+    const lessonNum = row.lesson || detailsList[0]?.["Lesson Number"] || "1";
+    const key = lessonKey(moduleNum, lessonNum);
+    if (!rowsByLesson.has(key)) rowsByLesson.set(key, []);
+    rowsByLesson.get(key).push(row);
+  }
+
+  const detailsByLesson = new Map(
+    detailsList.map((d) => [lessonKey(d["Module Number"] || "1", d["Lesson Number"] || "1"), d]),
+  );
+
+  const keys = [...new Set([...detailsByLesson.keys(), ...rowsByLesson.keys()])].sort((a, b) => {
+    const [am, al] = a.split(":").map(Number);
+    const [bm, bl] = b.split(":").map(Number);
+    return am - bm || al - bl;
+  });
+
+  for (const key of keys) {
+    const rows = (rowsByLesson.get(key) || []).sort((a, b) => a.screen - b.screen);
+    if (!rows.length) {
+      console.error(`No screen rows for lesson ${key}`);
+      process.exit(1);
+    }
+    const [moduleNum, lessonNum] = key.split(":");
+    const details = normalizeDetails({
+      ...(detailsByLesson.get(key) || {}),
+      "Module Number": moduleNum,
+      "Lesson Number": lessonNum,
+    });
+    importOneLesson(folder, details, rows, install);
+  }
+
   if (!install) {
-    console.log("\nPreview only. To install: npm run lesson:import -- your-folder --install");
+    console.log("\nPreview only. Live lessons were not changed.");
+    console.log("To install later: npm run lesson:import -- your-folder --install");
   } else {
-    console.log("\nNext: register the lesson in registry.ts + add a thin lesson component.");
+    console.log("\nNext: register any new lesson in registry.ts + add a thin lesson component.");
   }
 }
 

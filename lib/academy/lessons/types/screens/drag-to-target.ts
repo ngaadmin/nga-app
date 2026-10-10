@@ -18,6 +18,10 @@ export type DragToTargetScreenConfig = WithDeclarative<{
   coinCount?: number;
   /** Fallback emoji for the target zone when no image is set. Default 🐷. */
   targetEmoji?: string;
+  /** Registry key for the draggable source art. Falls back to `itemEmoji`. */
+  sourceIllustrationId?: IllustrationId;
+  /** Alt text for `sourceIllustrationId`. Defaults to `sourceLabel`. */
+  sourceIllustrationAlt?: string;
   /** Registry key for the target drop-zone character/scene art. */
   targetIllustrationId?: IllustrationId;
   /** Alt text for `targetIllustrationId`. Defaults to `targetLabel`. */

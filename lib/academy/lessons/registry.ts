@@ -137,13 +137,18 @@ export function hasShippedLesson(milestoneId: number): boolean {
   return SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId);
 }
 
-/** Active lesson is playable; completed lessons stay open for replay. Locked stays locked. */
+/**
+ * Active (current) and completed lessons open when the lesson definition exists.
+ * Do not use per-cohort `shippedCohorts` here — that was blocking the continue
+ * node after lesson 2 for Maverick while the map still marked lesson 3 current.
+ * Locked stays locked. Content still falls back Pathfinder → Maverick on resolve.
+ */
 export function canLaunchAcademyLesson(
   milestoneId: number,
   status: "active" | "completed" | "locked",
-  cohort: MasteryCohort,
+  _cohort: MasteryCohort,
 ): boolean {
-  if (!isLessonShippedForCohort(milestoneId, cohort)) {
+  if (!hasShippedLesson(milestoneId)) {
     return false;
   }
 

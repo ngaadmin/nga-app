@@ -34,6 +34,15 @@ export function DragToTargetScreen({
         itemSize={screen.itemSize}
         coinCount={screen.coinCount}
         targetEmoji={screen.targetEmoji}
+        sourceIllustrationSrc={
+          screen.sourceIllustrationId &&
+          isIllustrationId(screen.sourceIllustrationId)
+            ? getIllustrationPath(screen.sourceIllustrationId)
+            : undefined
+        }
+        sourceIllustrationAlt={
+          screen.sourceIllustrationAlt ?? screen.sourceLabel
+        }
         targetIllustrationSrc={
           screen.targetIllustrationId &&
           isIllustrationId(screen.targetIllustrationId)

@@ -9,7 +9,7 @@ const M1_L3_META = {
   lessonTitle: "Keep Some Money Aside",
   shellLabel: "How the Money Game Works · Lesson 3 · Keep Some Money Aside",
   totalScreens: 8,
-  shippedCohorts: ["explorer", "pathfinder"],
+  shippedCohorts: ["explorer", "pathfinder", "maverick"],
   characters: {
     lead: "Mia",
     support: "Senna",
@@ -20,8 +20,8 @@ const M1_L3_META = {
 } as const;
 
 const M1_L3_REWARDS = {
-  skillSlug: "keep-some-aside",
-  achievementSkillSlug: "keep-some-aside",
+  skillSlug: "smart-saving",
+  achievementSkillSlug: "smart-saving",
 } as const;
 
 const M1_L3_BASE_SCREENS: ScreenConfig[] = [
@@ -205,7 +205,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
     skillLearnedLabel: "Skill Learned: Believe Money Can Be Made",
     bodyCopy:
       "Lesson complete! You've unlocked a huge secret: Having some spare cash means you're ready for whatever comes next.",
-    useStandardPane: false,
+    useStandardPane: true,
     advance: { mode: "manual-next" },
   },
 ];

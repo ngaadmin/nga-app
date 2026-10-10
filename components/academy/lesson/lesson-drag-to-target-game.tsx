@@ -8,7 +8,6 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
-import { lessonInlineMediaImageClass } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { cn } from "@/lib/utils/cn";
 
@@ -29,6 +28,8 @@ type LessonDragToTargetGameProps = {
   itemSize?: DragItemSize;
   coinCount?: number;
   targetEmoji?: string;
+  sourceIllustrationSrc?: string;
+  sourceIllustrationAlt?: string;
   targetIllustrationSrc?: string;
   targetIllustrationAlt?: string;
   targetImagePlaceholder?: {
@@ -48,6 +49,10 @@ const COIN_CHIP_CLASS =
   "grid size-11 place-items-center rounded-full bg-[#FFA503] text-xl";
 const LANDED_COIN_CLASS =
   "grid size-[22px] place-items-center rounded-full bg-[#FFA503] text-[12px]";
+const DRAG_ILLUSTRATION_FRAME_CLASS =
+  "relative flex h-[9rem] shrink-0 items-center justify-center sm:h-[11rem]";
+const DRAG_ILLUSTRATION_IMAGE_CLASS =
+  "block h-[9rem] w-auto object-contain object-center sm:h-[11rem]";
 
 export function LessonDragToTargetGame({
   sourceLabel,
@@ -55,6 +60,8 @@ export function LessonDragToTargetGame({
   itemEmoji = "🪙",
   coinCount = 3,
   targetEmoji = "🐷",
+  sourceIllustrationSrc,
+  sourceIllustrationAlt,
   targetIllustrationSrc,
   targetIllustrationAlt,
   targetImagePlaceholder,
@@ -72,6 +79,7 @@ export function LessonDragToTargetGame({
   const [landed, setLanded] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [targetImageFailed, setTargetImageFailed] = useState(false);
+  const [sourceImageFailed, setSourceImageFailed] = useState(false);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const targetRef = useRef<HTMLDivElement | null>(null);
@@ -105,6 +113,14 @@ export function LessonDragToTargetGame({
   useEffect(() => {
     setTargetImageFailed(false);
   }, [targetIllustrationSrc]);
+
+  useEffect(() => {
+    setSourceImageFailed(false);
+  }, [sourceIllustrationSrc]);
+
+  const showSourceIllustration = Boolean(
+    sourceIllustrationSrc && !sourceImageFailed,
+  );
 
   const isPointOverTarget = useCallback((clientX: number, clientY: number) => {
     const node = targetRef.current;
@@ -181,25 +197,48 @@ export function LessonDragToTargetGame({
     endDrag();
   };
 
-  const renderJarStack = () => (
-    <div className="pointer-events-none absolute inset-0 flex flex-wrap content-center justify-center gap-0.5 p-[18px]">
-      {Array.from({ length: landed }, (_, index) => (
-        <span key={index} className={LANDED_COIN_CLASS} aria-hidden>
-          {itemEmoji}
-        </span>
-      ))}
-    </div>
-  );
+  const renderSourceIllustration = (alt: string) =>
+    sourceIllustrationSrc ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={sourceIllustrationSrc}
+        alt={alt}
+        className={DRAG_ILLUSTRATION_IMAGE_CLASS}
+        decoding="async"
+        draggable={false}
+        onError={() => setSourceImageFailed(true)}
+      />
+    ) : null;
+
+  const renderJarStack = () => {
+    if (landed <= 0) return null;
+    if (showSourceIllustration) {
+      return (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center">
+          {renderSourceIllustration("")}
+        </div>
+      );
+    }
+    return (
+      <div className="pointer-events-none absolute inset-0 flex flex-wrap content-center justify-center gap-0.5 p-[18px]">
+        {Array.from({ length: landed }, (_, index) => (
+          <span key={index} className={LANDED_COIN_CLASS} aria-hidden>
+            {itemEmoji}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   const renderTargetVisual = () => {
     if (targetIllustrationSrc && !targetImageFailed) {
       return (
-        <div className="relative w-full min-w-0 max-w-[10rem] shrink-0 sm:max-w-[12rem]">
+        <div className={DRAG_ILLUSTRATION_FRAME_CLASS}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={targetIllustrationSrc}
             alt={targetIllustrationAlt ?? targetLabel}
-            className={cn(lessonInlineMediaImageClass, "max-h-[10rem] sm:max-h-[12rem]")}
+            className={DRAG_ILLUSTRATION_IMAGE_CLASS}
             decoding="async"
             draggable={false}
             onError={() => setTargetImageFailed(true)}
@@ -248,14 +287,18 @@ export function LessonDragToTargetGame({
             type="button"
             onPointerDown={(event) => handleCoinPointerDown(event, index)}
             className={cn(
-              COIN_CHIP_CLASS,
-              "cursor-grab active:cursor-grabbing",
+              "cursor-grab bg-transparent p-0 active:cursor-grabbing",
+              showSourceIllustration
+                ? DRAG_ILLUSTRATION_FRAME_CLASS
+                : COIN_CHIP_CLASS,
               dragState?.coinIndex === index && "opacity-25",
             )}
             aria-label={`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}
             style={{ touchAction: "none" }}
           >
-            {itemEmoji}
+            {showSourceIllustration
+              ? renderSourceIllustration(sourceIllustrationAlt ?? sourceLabel)
+              : itemEmoji}
           </button>
         ))}
       </div>
@@ -284,13 +327,20 @@ export function LessonDragToTargetGame({
       {dragState ? (
         <OverlayPortal>
           <div
-            className={cn(COIN_CHIP_CLASS, "pointer-events-none fixed z-overlay")}
+            className={cn(
+              "pointer-events-none fixed z-overlay",
+              showSourceIllustration
+                ? DRAG_ILLUSTRATION_FRAME_CLASS
+                : COIN_CHIP_CLASS,
+            )}
             style={{
               left: dragState.x,
               top: dragState.y,
             }}
           >
-            {itemEmoji}
+            {showSourceIllustration
+              ? renderSourceIllustration("")
+              : itemEmoji}
           </div>
         </OverlayPortal>
       ) : null}

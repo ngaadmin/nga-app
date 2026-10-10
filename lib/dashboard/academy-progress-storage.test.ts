@@ -4,6 +4,10 @@ import {
   completeAcademyMilestone,
   defaultAcademyMilestones,
 } from "@/lib/dashboard/academy-progress-storage";
+import {
+  createPhase1MilestoneScaffold,
+  isModuleCloserCompleted,
+} from "@/lib/dashboard/academy-state";
 
 function statusById(
   milestones: ReturnType<typeof defaultAcademyMilestones>,
@@ -60,5 +64,29 @@ describe("completeAcademyMilestone", () => {
     expect(statusById(afterReplay, 3)).toBe("active");
     expect(statusById(afterReplay, 4)).toBe("locked");
     expect(afterReplay).toEqual(afterLesson2);
+    expect(
+      canLaunchAcademyLesson(3, "active", "explorer"),
+    ).toBe(true);
+    expect(
+      canLaunchAcademyLesson(3, "active", "pathfinder"),
+    ).toBe(true);
+    expect(
+      canLaunchAcademyLesson(3, "active", "maverick"),
+    ).toBe(true);
+  });
+});
+
+describe("module closer (lesson 9)", () => {
+  it("marks the module gold only after lesson 9 is completed", () => {
+    expect(isModuleCloserCompleted(1, defaultAcademyMilestones())).toBe(false);
+    expect(
+      isModuleCloserCompleted(1, createPhase1MilestoneScaffold(9)),
+    ).toBe(false);
+    expect(
+      isModuleCloserCompleted(1, createPhase1MilestoneScaffold(10)),
+    ).toBe(true);
+    expect(
+      isModuleCloserCompleted(2, createPhase1MilestoneScaffold(10)),
+    ).toBe(false);
   });
 });

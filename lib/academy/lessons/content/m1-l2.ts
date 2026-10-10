@@ -196,6 +196,8 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     itemSize: "lg",
     coinCount: 1,
     showZoneLabels: false,
+    sourceIllustrationId: "concept-gift-box",
+    sourceIllustrationAlt: "Birthday gift",
     targetIllustrationId: "senna-celebrating",
     targetIllustrationAlt: "Senna receiving a birthday gift",
     sourceEmptyMessage: "Gift delivered!",
@@ -207,7 +209,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       "By securing your needs before spending on temporary wants, you ensure your promises are always safe and your goals are reached.",
     advance: { mode: "on-complete" },
   },
-  explorerCompletionScreen("milestone-splash", "medal-skill2-unlocked"),
+  explorerCompletionScreen("milestone-splash"),
 ];
 
 /** Explorer: no success paragraphs; one-line wrong hints only. */

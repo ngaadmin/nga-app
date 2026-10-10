@@ -2,6 +2,11 @@
 
 You only edit **two files** in Google Sheets or Excel. No code.
 
+The course uses **one** `Lesson-Details.csv` and **one** `Screens.csv` for every lesson (Module 1 Lessons 1–5). Every row has **Module Number** and **Lesson Number**. Do not split a file per lesson.
+
+If Pathfinder or Maverick story is the Explorer story, put `copied` in that text cell. Leave unique teen copy as written text.
+
+
 | File | What it is |
 |------|------------|
 | `Lesson-Details.csv` | Lesson title, characters, skill name |
@@ -114,7 +119,7 @@ BONUS: 50
 
 Open **`Game-Types.csv`** — column **"Copy Into Game Settings"** has ready-to-paste blocks for every game.
 
-**Built and ready today:** Word Drop, Two Choices, True False, Tap to Reveal, Drag Sort, Speed Choice, Scenario Fork, Pick One Rounds, Hold Button, Celebration, Budget Checkboxes, Budget Slider, Rank Choices, Gift Reveal.
+**Built and ready today:** Word Drop, Two Choices, Multiple Choice, True False, Tap to Reveal, Drag Sort, Speed Choice, Scenario Fork, Pick One Rounds, Hold Button, Celebration, Budget Checkboxes, Budget Slider, Rank Choices, Gift Reveal.
 
 **Coming soon** (import works; dev wires UI once): Tap Pairs, Pipeline Leak Monitor, Error Eliminator, Market Clock, Balance Scale, and others from Appendix B.
 
@@ -135,6 +140,16 @@ CHOICE A: Correct or first option
 CHOICE B: Other option
 CORRECT: A
 STYLE: banner
+```
+
+**Multiple Choice** (any number of options; letters in CORRECT are all right answers):
+
+```text
+CHOICE A: First option
+CHOICE B: Second option
+CHOICE C: Third option
+CHOICE D: Fourth option
+CORRECT: A, B, C
 ```
 
 ---

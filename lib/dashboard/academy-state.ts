@@ -251,6 +251,23 @@ export function isBossMilestoneId(milestoneId: number): boolean {
   );
 }
 
+export function isModuleCloserLessonNumber(lessonNumber: number): boolean {
+  return lessonNumber === LESSONS_PER_LEVEL;
+}
+
+/** Lesson 9 of a module is complete — that module node should render gold. */
+export function isModuleCloserCompleted(
+  levelGroup: AcademyLevelId,
+  milestones: readonly AcademyLessonMilestoneNode[],
+): boolean {
+  return milestones.some(
+    (node) =>
+      node.levelGroup === levelGroup &&
+      isBossMilestoneId(node.id) &&
+      node.status === "completed",
+  );
+}
+
 /** Build one milestone node with the correct level group and boss flag. */
 export function createMilestoneNode(
   id: number,
@@ -420,6 +437,7 @@ export const ACADEMY_JOURNEY_PLACEHOLDER_STATE = {
 export {
   ACADEMY_LEVEL_PHASE_THEME,
   ACADEMY_LESSON_TOPICS_BY_MODULE,
+  ACADEMY_MODULE_CLOSER_THEME,
   ACADEMY_MODULE_DESCRIPTIONS,
   ACADEMY_MODULE_FOCUS_AREAS,
   ACADEMY_MODULE_TITLES,

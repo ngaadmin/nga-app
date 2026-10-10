@@ -15,7 +15,6 @@ import {
   canLaunchAcademyLesson,
   hasShippedLesson,
   isDesignShellLesson,
-  isLessonShippedForCohort,
 } from "@/lib/academy/lessons/registry";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
@@ -49,9 +48,7 @@ function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
   const isAvailable =
     progressChecked &&
     !progressLocked &&
-    (isDesignShell ||
-      isPreview ||
-      isLessonShippedForCohort(milestoneId, cohort));
+    (isDesignShell || isPreview || hasShippedLesson(milestoneId));
 
   useEffect(() => {
     if (isDesignShell || isPreview) {

@@ -52,9 +52,9 @@ Celebration,,Story beat + optional bonus XP tap,"BONUS: 50
 LABEL: [ COLLECT 50 XP BONUS ]",Yes
 
 Tap Pairs,Pair Matcher,Match left/right concept pairs,"PAIRS:
-Instant fun = Short-lived thrill
-Delayed reward = Lasting value
-Impulse buy = Money gone fast",Coming soon
+Left concept = Right concept
+Left concept = Right concept
+Left concept = Right concept",Yes
 
 Pipeline Leak Monitor,,Tap leaking pipes before cash drains,"LEAKS: Subscription drip
 LEAKS: Card interest

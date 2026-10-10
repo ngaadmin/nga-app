@@ -82,7 +82,7 @@ export function AllocationSliderScreen({
         <div className="relative mb-1.5 min-h-[2.6rem]">
           <div
             className={cn(
-              "absolute left-0 top-0 z-[1] text-left",
+              "absolute left-0 top-0 z-raised text-left",
               saveNarrow && "-translate-x-0.5",
             )}
           >
@@ -95,7 +95,7 @@ export function AllocationSliderScreen({
           </div>
           <div
             className={cn(
-              "absolute right-0 top-0 z-[1] text-right",
+              "absolute right-0 top-0 z-raised text-right",
               spendNarrow && "translate-x-0.5",
             )}
           >

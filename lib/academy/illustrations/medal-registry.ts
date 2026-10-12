@@ -4,6 +4,12 @@
  * Status aliases on disk: unlocked | unlock | white | bronze | silver | gold.
  */
 
+import {
+  skillNumberForModuleLesson,
+  skillTierForLessonNumber,
+} from "@/lib/skills/lesson-skill-award";
+import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
+
 export type MedalDisplayStatus =
   | "locked"
   | "unlocked"
@@ -109,42 +115,47 @@ export function skillHasMedalAssets(skillNumber: number): boolean {
   return skillNumber in MEDAL_ID_BY_SKILL;
 }
 
-/** Screen 8 medal art keyed by module lesson number (lessons 1-3 unlock, 4-6 bronze). */
+/** Screen 8 / lesson overview medal for a module lesson (1–3 unlocked, 4–6 bronze). */
+export function medalIdForModuleLesson(
+  moduleNumber: number,
+  lessonNumber: number,
+): MedalIllustrationId | undefined {
+  const tier = skillTierForLessonNumber(lessonNumber);
+  const skillNumber = skillNumberForModuleLesson(moduleNumber, lessonNumber);
+  if (!tier || !skillNumber) return undefined;
+  return medalIdForSkillNumber(skillNumber, tier);
+}
+
+/** Module 1 convenience — prefer `medalIdForModuleLesson` for later modules. */
 export function medalIdForLessonNumber(
   lessonNumber: number,
 ): MedalIllustrationId | undefined {
-  switch (lessonNumber) {
-    case 1:
-      return medalIdForSkillNumber(1, "unlocked");
-    case 2:
-      return medalIdForSkillNumber(2, "unlocked");
-    case 3:
-      return medalIdForSkillNumber(3, "unlocked");
-    case 4:
-      return medalIdForSkillNumber(1, "bronze");
-    case 5:
-      return medalIdForSkillNumber(2, "bronze");
-    case 6:
-      return medalIdForSkillNumber(3, "bronze");
-    default:
-      return undefined;
-  }
+  return medalIdForModuleLesson(1, lessonNumber);
 }
 
 /**
- * Completion medal: authored screen `medalId`, then lesson-number helper,
- * then skill number + earned tier (bronze / silver / gold / unlocked).
+ * Completion medal follows intro/deepen lesson logic first so authored
+ * filenames cannot put bronze on lessons 1–3.
  */
 export function resolveCompletionMedalId(args: {
   medalId?: MedalIllustrationId;
   lessonNumber?: number;
+  moduleNumber?: number;
   skillNumber?: number;
   tier?: MedalDisplayStatus | null;
 }): MedalIllustrationId | undefined {
-  if (args.medalId) return args.medalId;
+  if (
+    typeof args.lessonNumber === "number" &&
+    isModuleCloserLessonNumber(args.lessonNumber)
+  ) {
+    return undefined;
+  }
 
   if (typeof args.lessonNumber === "number") {
-    const fromLesson = medalIdForLessonNumber(args.lessonNumber);
+    const fromLesson = medalIdForModuleLesson(
+      args.moduleNumber ?? 1,
+      args.lessonNumber,
+    );
     if (fromLesson) return fromLesson;
   }
 
@@ -156,5 +167,5 @@ export function resolveCompletionMedalId(args: {
     return medalIdForSkillNumber(args.skillNumber, args.tier);
   }
 
-  return undefined;
+  return args.medalId;
 }

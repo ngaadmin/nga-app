@@ -13,7 +13,10 @@ import {
   resolveSkillSlugForMilestone,
   skillTierForLessonNumber,
 } from "@/lib/dashboard/skill-trophies";
-import { lessonNumberForMilestoneId } from "@/lib/dashboard/academy-state";
+import {
+  lessonNumberForMilestoneId,
+  levelGroupForMilestoneId,
+} from "@/lib/dashboard/academy-state";
 import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import {
@@ -239,6 +242,7 @@ export function useLessonFlow({
     Boolean(screenReady[screenIndex]) && !isLastScreen;
 
   const lessonNumber = lessonNumberForMilestoneId(milestoneId);
+  const moduleNumber = levelGroupForMilestoneId(milestoneId);
   const skillMedalTier = skillTierForLessonNumber(lessonNumber);
   const progressSkillSlug =
     resolveSkillSlugForMilestone(milestoneId) ?? skillSlug;
@@ -262,6 +266,7 @@ export function useLessonFlow({
     canAdvanceDefault,
     totalScreens,
     lessonNumber,
+    moduleNumber,
     skillMedalTier,
     progressSkillSlug,
   };

@@ -1,13 +1,16 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
+  isModuleCloserLessonNumber,
   lessonNumberForMilestoneId,
-  levelGroupForMilestoneId,
 } from "@/lib/dashboard/academy-state";
+import {
+  skillNumberForMilestoneId,
+  skillTierForLessonNumber,
+} from "@/lib/skills/lesson-skill-award";
 import {
   getSkillRegistryRecord,
   getSkillRegistryRecordByNumber,
   resolveCanonicalSkillSlug,
-  SKILLS_PER_LEVEL,
   SKILLS_REGISTRY,
   type SkillRegistryRecord,
 } from "@/lib/skills/skills-registry";
@@ -112,24 +115,12 @@ export function getVaultSkillTrophyById(
   return resolveVaultSkillTrophies().find((trophy) => trophy.id === canonicalId);
 }
 
-/** Lessons 1–3 unlock the skill; lessons 4–6 award bronze for the module skill trio. */
-export function skillTierForLessonNumber(
-  lessonNumber: number,
-): Extract<SkillTrophyTier, "unlocked" | "bronze"> | null {
-  if (lessonNumber >= 1 && lessonNumber <= 3) return "unlocked";
-  if (lessonNumber >= 4 && lessonNumber <= 6) return "bronze";
-  return null;
-}
+export { skillTierForLessonNumber };
 
-/** Map a milestone to the module skill slot unlocked or bronzed (lessons 1–6 only). */
+/** Map a milestone to the module skill slot revealed or bronzed (lessons 1–6 only). */
 export function resolveSkillSlugForMilestone(milestoneId: number): string | null {
-  const lessonNumber = lessonNumberForMilestoneId(milestoneId);
-  const tier = skillTierForLessonNumber(lessonNumber);
-  if (!tier) return null;
-
-  const levelGroup = levelGroupForMilestoneId(milestoneId);
-  const skillSlot = lessonNumber <= 3 ? lessonNumber : lessonNumber - 3;
-  const skillNumber = (levelGroup - 1) * SKILLS_PER_LEVEL + skillSlot;
+  const skillNumber = skillNumberForMilestoneId(milestoneId);
+  if (!skillNumber) return null;
   return getSkillRegistryRecordByNumber(skillNumber)?.skillSlug ?? null;
 }
 
@@ -149,8 +140,9 @@ export function applyLessonSkillTierProgress(
   masteryCohort: MasteryCohort,
 ): void {
   const lessonNumber = lessonNumberForMilestoneId(milestoneId);
+  if (isModuleCloserLessonNumber(lessonNumber)) return;
   const tier = skillTierForLessonNumber(lessonNumber);
-  if (!tier) return;
+  if (!tier || (tier === "bronze" && lessonNumber <= 3)) return;
 
   const skillSlug = resolveSkillSlugForMilestone(milestoneId);
   if (!skillSlug || !isSkillAccessibleForMasteryCohort(skillSlug, masteryCohort)) {

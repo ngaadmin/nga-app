@@ -31,6 +31,8 @@ const previewFlow = {
   perfectStreak: true,
   progressSkillSlug: M1_L1_SCREEN_8_PREVIEW.rewards.achievementSkillSlug,
   skillMedalTier: "unlocked",
+  lessonNumber: 1,
+  moduleNumber: 1,
   lessonComplete: false,
   handleCashInPoints: noop,
 } as Pick<
@@ -40,6 +42,8 @@ const previewFlow = {
   | "perfectStreak"
   | "progressSkillSlug"
   | "skillMedalTier"
+  | "lessonNumber"
+  | "moduleNumber"
   | "lessonComplete"
   | "handleCashInPoints"
 > as LessonFlow;

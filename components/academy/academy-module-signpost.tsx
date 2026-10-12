@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { AcademyModulePreviewModal } from "@/components/academy/academy-module-preview-modal";
+import { ACADEMY_MODULE_CLOSER_THEME } from "@/lib/dashboard/academy-content";
 import {
   ACADEMY_MODULE_DESCRIPTIONS,
   ACADEMY_MODULE_TITLES,
   getAcademyPhaseTheme,
+  isModuleCloserCompleted,
   isModuleSignpostLocked,
   type AcademyLessonMilestoneNode,
   type AcademyLevelId,
@@ -44,9 +46,11 @@ export function AcademyModuleSignpost({
 }: AcademyModuleSignpostProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const phase = getAcademyPhaseTheme(moduleNumber);
+  const moduleComplete = isModuleCloserCompleted(moduleNumber, milestones);
+  const barTheme = moduleComplete ? ACADEMY_MODULE_CLOSER_THEME : phase;
   const title = ACADEMY_MODULE_TITLES[moduleNumber];
   const subtitle = ACADEMY_MODULE_DESCRIPTIONS[moduleNumber];
-  const ink = moduleBarInk(phase.fill);
+  const ink = moduleBarInk(barTheme.fill);
   const isLocked = isModuleSignpostLocked(
     moduleNumber,
     milestones,
@@ -55,7 +59,7 @@ export function AcademyModuleSignpost({
 
   return (
     <>
-      <div className="w-full shrink-0" style={{ backgroundColor: phase.fill }}>
+      <div className="w-full shrink-0" style={{ backgroundColor: barTheme.fill }}>
         <button
           type="button"
           onClick={() => setPreviewOpen(true)}

@@ -13,7 +13,11 @@ import {
   resolveCompletionMedalId,
   type MedalIllustrationId,
 } from "@/lib/academy/illustrations/medal-registry";
-import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
+import {
+  formatLessonSkillUnlockLine,
+  type SkillTrophyTier,
+} from "@/lib/dashboard/skill-trophies";
+import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 
 type LessonCompletionPaneProps = {
@@ -22,6 +26,7 @@ type LessonCompletionPaneProps = {
   perfectStreak: boolean;
   achievementSkillId: string;
   lessonNumber?: number;
+  moduleNumber?: number;
   skillMedalTier: Extract<
     SkillTrophyTier,
     "unlocked" | "bronze" | "silver" | "gold"
@@ -52,6 +57,7 @@ export function LessonCompletionPane({
   perfectStreak,
   achievementSkillId,
   lessonNumber,
+  moduleNumber,
   skillMedalTier,
   medalId,
   skillLearnedLabel,
@@ -63,16 +69,26 @@ export function LessonCompletionPane({
   const cashInTimerRef = useRef<number | null>(null);
 
   const skill = getSkillRegistryRecord(achievementSkillId);
-  const resolvedMedalId = resolveCompletionMedalId({
-    medalId,
-    lessonNumber,
-    skillNumber: skill?.skillNumber,
-    tier: skillMedalTier,
-  });
+  const isModuleCloser =
+    typeof lessonNumber === "number" &&
+    isModuleCloserLessonNumber(lessonNumber);
+  const resolvedMedalId = isModuleCloser
+    ? undefined
+    : resolveCompletionMedalId({
+        medalId,
+        lessonNumber,
+        moduleNumber,
+        skillNumber: skill?.skillNumber,
+        tier: skillMedalTier,
+      });
   const skillName = resolveSkillName(achievementSkillId, skillLearnedLabel);
-  const heading = skillName
-    ? `Skill unlocked: ${skillName}`
-    : skillLearnedLabel?.trim() || "Skill unlocked";
+  const heading = isModuleCloser
+    ? "Module complete"
+    : skillMedalTier === "unlocked" || skillMedalTier === "bronze"
+      ? formatLessonSkillUnlockLine(achievementSkillId, skillMedalTier)
+      : skillName
+        ? `Skill unlocked: ${skillName}`
+        : skillLearnedLabel?.trim() || "Skill unlocked";
   const shortMeaning =
     meaningLine?.trim() || skill?.description?.trim() || undefined;
   const showPerfectBonus = perfectStreak && perfectStreakBonus > 0;

@@ -140,7 +140,6 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
   },
   teenCompletionScreen({
     skillTitle: "Catch Impulse Spending",
-    medalId: "medal-skill1-unlocked",
   }),
 ];
 
@@ -226,7 +225,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
   "milestone-splash": {
     _replace: true,
-    ...explorerCompletionScreen("milestone-splash", "medal-skill1-unlocked"),
+    ...explorerCompletionScreen("milestone-splash"),
   },
 };
 

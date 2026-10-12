@@ -16,6 +16,7 @@ export function CompletionScreen({
       perfectStreak={flow.perfectStreak}
       achievementSkillId={flow.progressSkillSlug}
       lessonNumber={flow.lessonNumber}
+      moduleNumber={flow.moduleNumber}
       skillMedalTier={flow.skillMedalTier}
       medalId={screen.medalId}
       skillLearnedLabel={screen.skillLearnedLabel}

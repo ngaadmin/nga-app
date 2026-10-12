@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { AcademyModuleSignpost, ACADEMY_MODULE_SIGNPOST_GAP_PX } from "@/components/academy/academy-module-signpost";
 import { resolveActiveStepIndex, resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { ACADEMY_MODULE_CLOSER_THEME } from "@/lib/dashboard/academy-content";
 import {
   getAcademyPhaseTheme,
   isFirstMilestoneInModule,
@@ -112,6 +113,9 @@ function milestoneAriaLabel(milestone: AcademyLessonMilestoneNode): string {
   }
 
   if (isPhaseCloser) {
+    if (milestone.status === "completed") {
+      return `Module ${milestone.levelGroup} complete`;
+    }
     return `Level ${milestone.levelGroup} milestone`;
   }
 
@@ -140,13 +144,18 @@ function AcademyNode({
   const isActive = milestone.status === "active";
   const isCompleted = milestone.status === "completed";
   const isLocked = milestone.status === "locked";
+  const isGoldModuleNode =
+    isPhaseCloserMilestone(milestone) && isCompleted;
   const showPhaseFill = isCompleted || isActive;
+  const nodeFill = isGoldModuleNode
+    ? ACADEMY_MODULE_CLOSER_THEME
+    : phase;
 
   const circleStyle = showPhaseFill
     ? {
-        backgroundColor: phase.fill,
-        borderBottomColor: phase.shadow,
-        boxShadow: `0 4px 0 ${phase.shadow}`,
+        backgroundColor: nodeFill.fill,
+        borderBottomColor: nodeFill.shadow,
+        boxShadow: `0 4px 0 ${nodeFill.shadow}`,
       }
     : isLocked
       ? {
@@ -168,7 +177,7 @@ function AcademyNode({
           isLocked
             ? "border-0 text-gray-400"
             : "border-0 border-b-[4px]",
-          showPhaseFill && "text-white",
+          showPhaseFill && (isGoldModuleNode ? "text-[#031F82]" : "text-white"),
           isActive && !isCompleted && "group-active:translate-y-[2px] group-active:border-b-[2px]",
         )}
         style={{
@@ -183,7 +192,9 @@ function AcademyNode({
             className={cn(
               "size-8",
               showPhaseFill
-                ? "text-white"
+                ? isGoldModuleNode
+                  ? "text-[#031F82]"
+                  : "text-white"
                 : "text-gray-400",
             )}
           />

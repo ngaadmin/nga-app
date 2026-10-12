@@ -112,6 +112,13 @@ export const ACADEMY_LEVEL_PHASE_THEME: Record<
   6: { fill: "#DCB766", shadow: "#B8943F", ring: "rgba(220, 183, 102, 0.4)" },
 };
 
+/** Lesson 9 closer: completed module node (no skill medal). */
+export const ACADEMY_MODULE_CLOSER_THEME = {
+  fill: "#FFA503",
+  shadow: "#C88202",
+  ring: "rgba(255, 165, 3, 0.4)",
+} as const;
+
 /**
  * Maps each Level (1–6) to the copyMatrix journey node id used by the legacy map UI.
  */

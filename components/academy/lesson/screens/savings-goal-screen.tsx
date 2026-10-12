@@ -29,6 +29,7 @@ export function SavingsGoalScreen({
         <LessonSavingsGoalGame
           meterLabel={screen.meterLabel}
           targetAmount={screen.targetAmount}
+          showsRemaining={screen.showsRemaining === true}
           poolColumnLabel={screen.poolColumnLabel}
           dropZoneLabel={screen.dropZoneLabel}
           items={screen.items}

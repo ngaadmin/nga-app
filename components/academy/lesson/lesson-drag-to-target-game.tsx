@@ -47,6 +47,27 @@ const TARGET_DROP_HIT_PADDING_PX = 24;
 const DRAG_TO_TARGET_MAX_COINS = 3;
 const COIN_CHIP_CLASS =
   "grid size-11 place-items-center rounded-full bg-[#FFA503] text-xl";
+const SINGLE_SOURCE_CLASS = "grid size-20 place-items-center text-5xl";
+
+const CHARACTER_EMOJI: Record<string, string> = {
+  mia: "👧",
+  immi: "👧",
+  senna: "👦",
+  dash: "👦",
+  max: "👦",
+};
+
+/** Person emoji for a target written as a name, including “Share with Mia”. */
+export function personEmojiForTargetLabel(label: string): string | undefined {
+  const words = label.match(/[A-Za-z][A-Za-z'-]*/g) ?? [];
+  for (const word of words) {
+    const known = CHARACTER_EMOJI[word.toLowerCase()];
+    if (known) return known;
+  }
+  if (/\b(?:with|to)\s+[A-Z][a-z]+\b/.test(label)) return "🧒";
+  if (/^[A-Z][a-z]+$/.test(label.trim())) return "🧒";
+  return undefined;
+}
 const LANDED_COIN_CLASS =
   "grid size-[22px] place-items-center rounded-full bg-[#FFA503] text-[12px]";
 const DRAG_ILLUSTRATION_FRAME_CLASS =
@@ -58,7 +79,7 @@ export function LessonDragToTargetGame({
   sourceLabel,
   targetLabel,
   itemEmoji = "🪙",
-  coinCount = 3,
+  coinCount = 1,
   targetEmoji = "🐷",
   sourceIllustrationSrc,
   sourceIllustrationAlt,
@@ -75,6 +96,10 @@ export function LessonDragToTargetGame({
     DRAG_TO_TARGET_MAX_COINS,
     Math.max(1, coinCount),
   );
+  const singleSource = totalCoins === 1 && !sourceIllustrationSrc;
+  const sourceChipClass = singleSource ? SINGLE_SOURCE_CLASS : COIN_CHIP_CLASS;
+  const characterEmoji = personEmojiForTargetLabel(targetLabel);
+  const resolvedTargetEmoji = characterEmoji ?? targetEmoji;
   const [remaining, setRemaining] = useState(totalCoins);
   const [landed, setLanded] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -85,6 +110,8 @@ export function LessonDragToTargetGame({
   const targetRef = useRef<HTMLDivElement | null>(null);
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  const remainingRef = useRef(totalCoins);
 
   const onCompleteRef = useRef(onComplete);
   const onSuccessRef = useRef(onSuccess);
@@ -105,6 +132,7 @@ export function LessonDragToTargetGame({
 
   const endDrag = useCallback(() => {
     releasePointerCapture();
+    dragStateRef.current = null;
     setDragState(null);
   }, [releasePointerCapture]);
 
@@ -147,48 +175,53 @@ export function LessonDragToTargetGame({
     const captureTarget = boardRef.current ?? event.currentTarget;
     captureTargetRef.current = captureTarget;
     activePointerIdRef.current = event.pointerId;
-    captureTarget.setPointerCapture(event.pointerId);
+    try {
+      captureTarget.setPointerCapture(event.pointerId);
+    } catch {
+      captureTargetRef.current = null;
+    }
 
-    setDragState({
+    const nextDrag: DragState = {
       coinIndex,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
       x: rect.left,
       y: rect.top,
-    });
+    };
+    dragStateRef.current = nextDrag;
+    setDragState(nextDrag);
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    if (!dragState || activePointerIdRef.current !== event.pointerId) return;
-    setDragState((current) =>
-      current
-        ? {
-            ...current,
-            x: event.clientX - current.offsetX,
-            y: event.clientY - current.offsetY,
-          }
-        : null,
-    );
+    if (activePointerIdRef.current !== event.pointerId) return;
+    const current = dragStateRef.current;
+    if (!current) return;
+    const moved: DragState = {
+      ...current,
+      x: event.clientX - current.offsetX,
+      y: event.clientY - current.offsetY,
+    };
+    dragStateRef.current = moved;
+    setDragState(moved);
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
 
-    if (!dragState) {
+    if (!dragStateRef.current) {
       endDrag();
       return;
     }
 
     if (isPointOverTarget(event.clientX, event.clientY)) {
-      setRemaining((current) => {
-        const next = Math.max(0, current - 1);
-        if (next === 0) {
-          onSuccessRef.current?.();
-          window.setTimeout(() => onCompleteRef.current(), 0);
-        }
-        return next;
-      });
+      const next = Math.max(0, remainingRef.current - 1);
+      remainingRef.current = next;
+      setRemaining(next);
       setLanded((current) => current + 1);
+      if (next === 0) {
+        onSuccessRef.current?.();
+        onCompleteRef.current();
+      }
       endDrag();
       return;
     }
@@ -262,12 +295,19 @@ export function LessonDragToTargetGame({
     }
 
     return (
-      <div
-        className="relative grid size-[104px] place-items-center rounded-full bg-[#E8F6FC] text-4xl"
-        aria-label={targetLabel}
-      >
-        {targetEmoji}
-        {renderJarStack()}
+      <div className="flex flex-col items-center gap-2">
+        <div
+          className="relative grid size-[104px] place-items-center rounded-full bg-[#E8F6FC] text-4xl"
+          aria-label={targetLabel}
+        >
+          {resolvedTargetEmoji}
+          {renderJarStack()}
+        </div>
+        {characterEmoji ? (
+          <p className="max-w-[9rem] text-center font-heading text-sm font-bold text-[#031F82]">
+            {targetLabel}
+          </p>
+        ) : null}
       </div>
     );
   };
@@ -290,7 +330,7 @@ export function LessonDragToTargetGame({
               "cursor-grab bg-transparent p-0 active:cursor-grabbing",
               showSourceIllustration
                 ? DRAG_ILLUSTRATION_FRAME_CLASS
-                : COIN_CHIP_CLASS,
+                : sourceChipClass,
               dragState?.coinIndex === index && "opacity-25",
             )}
             aria-label={`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}
@@ -316,7 +356,7 @@ export function LessonDragToTargetGame({
     >
       <div
         className={cn(
-          "flex min-h-[120px] items-center justify-between gap-3 py-4",
+          "flex min-h-[120px] items-center justify-center gap-6 py-4",
           !showZoneLabels && "min-h-[10.5rem]",
         )}
       >
@@ -331,7 +371,7 @@ export function LessonDragToTargetGame({
               "pointer-events-none fixed z-overlay",
               showSourceIllustration
                 ? DRAG_ILLUSTRATION_FRAME_CLASS
-                : COIN_CHIP_CLASS,
+                : sourceChipClass,
             )}
             style={{
               left: dragState.x,

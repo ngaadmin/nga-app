@@ -10,6 +10,18 @@ export function isAcademyLessonPreview(
   return searchParams?.get(ACADEMY_LESSON_PREVIEW_PARAM) === "1";
 }
 
+/**
+ * Temporary QA bypass. Direct URLs skip the “finish the previous lesson” gate
+ * in `next dev`, and whenever `?preview=1` is present. Production stays sequential.
+ */
+export function allowsDirectLessonOpen(options?: {
+  preview?: boolean;
+  nodeEnv?: string;
+}): boolean {
+  if (options?.preview) return true;
+  return (options?.nodeEnv ?? process.env.NODE_ENV) === "development";
+}
+
 export function academyLessonPreviewPath(milestoneId: number): string {
   return `/dashboard/academy/lesson/${milestoneId}?${ACADEMY_LESSON_PREVIEW_PARAM}=1`;
 }

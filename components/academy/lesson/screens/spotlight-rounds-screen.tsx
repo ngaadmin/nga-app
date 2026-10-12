@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import {
+  LessonFalseIcon,
+  LessonTrueIcon,
+} from "@/components/academy/lesson/lesson-icons";
 import {
   lessonPromptClass,
   resolveChoiceVariant,
@@ -23,6 +27,20 @@ type SideLayout = { left: "a" | "b"; right: "a" | "b" };
 
 /** Matches lesson flow error flash duration (use-lesson-flow.ts). */
 const FEEDBACK_RECOVERY_MS = 450;
+
+/** Scaled to the 88px option circle; default glyph is sized for the 48px true/false orb. */
+const TRUE_FALSE_GLYPH_CLASS = "!size-10 text-[#031F82]";
+
+function spotlightChoiceGlyph(label: string): ReactNode | null {
+  const normalized = label.trim().toLowerCase();
+  if (normalized === "true") {
+    return <LessonTrueIcon className={TRUE_FALSE_GLYPH_CLASS} />;
+  }
+  if (normalized === "false") {
+    return <LessonFalseIcon className={TRUE_FALSE_GLYPH_CLASS} />;
+  }
+  return null;
+}
 
 function buildRoundSideLayouts(roundCount: number): SideLayout[] {
   return Array.from({ length: roundCount }, () =>
@@ -121,10 +139,12 @@ export function SpotlightRoundsScreen({
     const meta = optionMeta[which];
     const isChosen = choice === which;
     const isCorrectChoice = which === round.correct;
+    const glyph = spotlightChoiceGlyph(meta.label);
     return (
       <LessonIconOption
         label={meta.label}
-        emoji={meta.icon}
+        emoji={glyph ? undefined : meta.icon}
+        glyph={glyph ?? undefined}
         display="emoji-label"
         selected={isChosen}
         disabled={choice !== null}

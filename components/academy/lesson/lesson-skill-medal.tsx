@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils/cn";
 type LessonSkillMedalProps = {
   skillSlug: string;
   medalId: MedalIllustrationId;
+  /** Sheet skill name. Wins over the registry label in the image alt text. */
+  skillName?: string;
   label?: string;
   className?: string;
   size?: "default" | "hero";
@@ -37,12 +39,13 @@ function medalStatusLabel(medalId: MedalIllustrationId): string {
 export function LessonSkillMedal({
   skillSlug,
   medalId,
+  skillName: skillNameOverride,
   label,
   className,
   size = "default",
 }: LessonSkillMedalProps) {
   const skill = getSkillRegistryRecord(skillSlug);
-  const skillName = skill?.skillName ?? "Skill medal";
+  const skillName = skillNameOverride?.trim() || skill?.skillName || "Skill medal";
   const statusLabel = medalStatusLabel(medalId);
   const medalSrc = getMedalIllustrationPath(medalId);
   const [hidden, setHidden] = useState(false);

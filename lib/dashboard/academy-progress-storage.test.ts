@@ -74,6 +74,17 @@ describe("completeAcademyMilestone", () => {
       canLaunchAcademyLesson(3, "active", "maverick"),
     ).toBe(true);
   });
+
+  it("opens lesson 6 after lesson 5 is completed", () => {
+    let milestones = defaultAcademyMilestones();
+    for (let id = 1; id <= 5; id += 1) {
+      milestones = completeAcademyMilestone(id, milestones);
+    }
+
+    expect(statusById(milestones, 5)).toBe("completed");
+    expect(statusById(milestones, 6)).toBe("active");
+    expect(canLaunchAcademyLesson(6, "active", "explorer")).toBe(true);
+  });
 });
 
 describe("module closer (lesson 9)", () => {

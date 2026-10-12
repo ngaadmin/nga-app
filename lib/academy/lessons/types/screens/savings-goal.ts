@@ -14,6 +14,8 @@ export type SavingsGoalScreenConfig = WithDeclarative<{
   intro: string;
   meterLabel: string;
   targetAmount: number;
+  /** When true, the total starts at `targetAmount` and falls as items are dragged. */
+  showsRemaining?: boolean;
   poolColumnLabel: string;
   dropZoneLabel: string;
   items: readonly SavingsGoalItem[];

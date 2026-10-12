@@ -152,13 +152,32 @@ export function applyLessonSkillTierProgress(
   setVaultSkillTierOverrideIfHigher(skillSlug, tier);
 }
 
+/**
+ * Write the medal tier from a payload completion row.
+ * Lesson-number rules (lessons 1–3 unlocked, 4–6 bronze) do not apply.
+ */
+export function applyPayloadSkillTierProgress(
+  skillSlug: string,
+  tier: Exclude<SkillTrophyTier, "locked">,
+  masteryCohort: MasteryCohort,
+): void {
+  const canonical = skillSlug.trim();
+  if (!canonical) return;
+  if (!isSkillAccessibleForMasteryCohort(canonical, masteryCohort)) return;
+  setVaultSkillTierOverrideIfHigher(canonical, tier);
+}
+
 /** Format the skill unlock line shown on lesson completion screens. */
 export function formatLessonSkillUnlockLine(
   skillId: string,
   tier: Extract<SkillTrophyTier, "unlocked" | "bronze">,
+  skillNameOverride?: string,
 ): string {
   const registrySkill = getSkillRegistryRecord(skillId);
-  const skillName = registrySkill?.skillName ?? getVaultSkillTrophyById(skillId)?.label;
+  const skillName =
+    skillNameOverride?.trim() ||
+    registrySkill?.skillName ||
+    getVaultSkillTrophyById(skillId)?.label;
 
   if (tier === "bronze") {
     return skillName

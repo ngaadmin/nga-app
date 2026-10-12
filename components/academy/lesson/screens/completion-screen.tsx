@@ -17,8 +17,10 @@ export function CompletionScreen({
       achievementSkillId={flow.progressSkillSlug}
       lessonNumber={flow.lessonNumber}
       moduleNumber={flow.moduleNumber}
-      skillMedalTier={flow.skillMedalTier}
+      skillMedalTier={screen.medalTier ?? flow.skillMedalTier}
       medalId={screen.medalId}
+      authoredMedal={screen.authoredMedal}
+      skillName={screen.skillName}
       skillLearnedLabel={screen.skillLearnedLabel}
       onCashIn={flow.handleCashInPoints}
       cashInDisabled={flow.lessonComplete}

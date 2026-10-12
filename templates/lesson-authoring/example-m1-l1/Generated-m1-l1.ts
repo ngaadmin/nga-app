@@ -94,6 +94,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
         bucket: "long",
       },
     ],
+    pairImage: false,
   },
   {
     type: "bucket-sort",
@@ -110,6 +111,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
       },
     ],
     items: [],
+    pairImage: false,
   },
   {
     type: "binary-choice",
@@ -133,6 +135,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
     holdLabel: "🔕 HOLD TO SILENCE 🔕",
     frozenLabel: "🔕 SILENCED 🔕",
     successMessage: "Thank you! Holly's had time to think.",
+    clearOnSuccess: true,
     holdDurationMs: 2000,
   },
   {
@@ -149,6 +152,7 @@ const M1_L1_BASE_SCREENS: ScreenConfig[] = [
 const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
     narrativeBefore: "Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be",
+    narrativeAfter: "right away!",
     wrongError: "Not quite! Look how fast Lars is running - what is his brain telling him to do?",
   },
   "short-fun-reality": {
@@ -239,6 +243,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "❄️ HOLD TO FREEZE ❄️",
     frozenLabel: "❄️ FROZEN ❄️",
     successMessage: "Success! Lars has to wait 24 hours.",
+    clearOnSuccess: false,
   },
   "resolution": {
     narrative: "The freeze worked! The next morning Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset.",
@@ -246,17 +251,12 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     bonusTapLabel: "",
     autoReadyWhenNoBonus: true,
   },
-  "milestone-splash": {
-    _replace: true,
-    type: "completion",
-    id: "milestone-splash",
-    useStandardPane: true,
-  },
 };
 
 const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
     narrativeBefore: "Dash just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be",
+    narrativeAfter: "right away!",
     wrongError: "Not quite! Dash spotted those earbuds — what's his brain pushing him to do with that $40?",
   },
   "short-fun-reality": {
@@ -346,6 +346,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     holdLabel: "⏸️ HOLD TO PAUSE ⏸️",
     frozenLabel: "⏸️ PAUSED ⏸️",
     successMessage: "Dash pauses and realizes: 'It's just a flash sale. I don't really need this right now and there will always be another deal.'",
+    clearOnSuccess: true,
   },
   "resolution": {
     narrative: "Dash walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.",

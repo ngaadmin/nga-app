@@ -10,8 +10,10 @@ import {
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
   applyLessonSkillTierProgress,
+  applyPayloadSkillTierProgress,
   resolveSkillSlugForMilestone,
   skillTierForLessonNumber,
+  type SkillTrophyTier,
 } from "@/lib/dashboard/skill-trophies";
 import {
   lessonNumberForMilestoneId,
@@ -39,6 +41,11 @@ export type UseLessonFlowOptions = {
   exitHref?: string;
   /** Design-shell jumper can open on a non-zero screen. */
   initialScreenIndex?: number;
+  /**
+   * Medal tier from a payload completion row. When set, Cash In stores this
+   * tier instead of the lesson-number unlock/bronze rule.
+   */
+  skillAwardTier?: Exclude<SkillTrophyTier, "locked">;
 };
 
 type PendingFlowAction =
@@ -54,6 +61,7 @@ export function useLessonFlow({
   skipProgressWrites = false,
   exitHref = "/dashboard/academy",
   initialScreenIndex = 0,
+  skillAwardTier,
 }: UseLessonFlowOptions) {
   const router = useRouter();
   const { awardLessonXp } = useDashboardWallet();
@@ -176,10 +184,16 @@ export function useLessonFlow({
     [],
   );
 
+  const finishLessonRef = useRef<() => void>(() => {});
+
   const handleNext = useCallback(
     (options?: { canAdvance?: boolean }) => {
       const canAdvance = options?.canAdvance ?? Boolean(screenReady[screenIndex]);
       if (!canAdvance) return;
+      if (screenIndex >= totalScreens - 1) {
+        finishLessonRef.current();
+        return;
+      }
       setScreenIndex((current) => Math.min(totalScreens - 1, current + 1));
     },
     [screenIndex, screenReady, totalScreens],
@@ -205,7 +219,11 @@ export function useLessonFlow({
         const cohort = session?.birthYear
           ? getMasteryCohortFromBirthYear(session.birthYear)
           : "explorer";
-        applyLessonSkillTierProgress(milestoneId, cohort);
+        if (skillAwardTier) {
+          applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort);
+        } else {
+          applyLessonSkillTierProgress(milestoneId, cohort);
+        }
         const updated = completeAcademyMilestone(milestoneId, milestones);
         saveAcademyMilestones(updated);
       }
@@ -228,7 +246,10 @@ export function useLessonFlow({
     milestoneId,
     perfectStreak,
     router,
+    skillAwardTier,
+    skillSlug,
   ]);
+  finishLessonRef.current = handleCashInPoints;
 
   const flashBorderClass =
     screenFlash === "error"
@@ -238,14 +259,15 @@ export function useLessonFlow({
         : "";
 
   const isLastScreen = screenIndex === totalScreens - 1;
-  const canAdvanceDefault =
-    Boolean(screenReady[screenIndex]) && !isLastScreen;
+  const canAdvanceDefault = Boolean(screenReady[screenIndex]);
 
   const lessonNumber = lessonNumberForMilestoneId(milestoneId);
   const moduleNumber = levelGroupForMilestoneId(milestoneId);
-  const skillMedalTier = skillTierForLessonNumber(lessonNumber);
+  const skillMedalTier = skillAwardTier ?? skillTierForLessonNumber(lessonNumber);
   const progressSkillSlug =
-    resolveSkillSlugForMilestone(milestoneId) ?? skillSlug;
+    skillAwardTier && skillSlug
+      ? skillSlug
+      : (resolveSkillSlugForMilestone(milestoneId) ?? skillSlug);
 
   return {
     screenIndex,

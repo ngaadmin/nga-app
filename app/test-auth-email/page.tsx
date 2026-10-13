@@ -1,71 +1,23 @@
-"use client";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
-import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
+export const metadata: Metadata = {
+  title: "Test Auth Email",
+  description: "Dev only — Supabase confirmation email check.",
+};
 
-const TEST_PASSWORD = "TestPassword123!";
-
-export default function TestAuthEmailPage() {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
-  const [pending, setPending] = useState(false);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setMessage(null);
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password: TEST_PASSWORD,
-    });
-
-    if (error) {
-      setIsError(true);
-      setMessage(error.message);
-    } else {
-      setIsError(false);
-      setMessage(
-        "Signup request sent. Check that inbox (and spam) for the Supabase confirmation email.",
-      );
-    }
-
-    setPending(false);
+/**
+ * Dev / QA route. Production returns 404.
+ * The form import sits in the development branch so the test password is not
+ * part of the production client bundle.
+ */
+export default async function TestAuthEmailPage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  } else {
+    const { TestAuthEmailForm } = await import(
+      "@/app/test-auth-email/test-auth-email-form"
+    );
+    return <TestAuthEmailForm />;
   }
-
-  return (
-    <main className="mx-auto max-w-md p-6 font-sans">
-      <h1 className="mb-4 text-xl font-semibold">Test Auth Email</h1>
-      <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-        <label className="flex flex-col gap-1 text-sm">
-          Email
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="rounded border border-neutral-400 px-3 py-2"
-            autoComplete="email"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-neutral-900 px-3 py-2 text-white disabled:opacity-60"
-        >
-          {pending ? "Sending…" : "Send test confirmation email"}
-        </button>
-      </form>
-      {message ? (
-        <p
-          className={`mt-4 text-sm ${isError ? "text-red-700" : "text-green-700"}`}
-          role="status"
-        >
-          {message}
-        </p>
-      ) : null}
-    </main>
-  );
 }

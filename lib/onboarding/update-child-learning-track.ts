@@ -1,5 +1,7 @@
 "use server";
 
+import "server-only";
+
 import { createPhase1MilestoneScaffold } from "@/lib/dashboard/academy-state";
 import {
   ACCOUNT_PROGRESS_SCHEMA_VERSION,

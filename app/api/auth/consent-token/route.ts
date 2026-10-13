@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isConsentTokenUnexpired,
-  signConsentToken,
   verifyConsentToken,
   type ConsentTokenClaims,
 } from "@/lib/auth/consent-token";
@@ -11,16 +10,13 @@ import {
   clientIpKey,
 } from "@/lib/auth/request-guard";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import {
-  getMasteryCohortFromBirthYear,
-  requiresParentConsentForBirthYear,
-} from "@/lib/dashboard/mastery-cohort";
+import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { resolveTrustedAppUrl } from "@/lib/email/templates";
 import {
   lookupConsentRequestByToken,
   rotateConsentRequestToken,
 } from "@/lib/onboarding/lookup-consent-request";
-import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export const runtime = "nodejs";
 
@@ -35,118 +31,15 @@ function toPendingPayload(token: string, claims: ConsentTokenClaims) {
   };
 }
 
-type IssueBody = {
-  action?: "issue";
-  parentEmail?: unknown;
-  childUsername?: unknown;
-  birthYear?: unknown;
-  createdAt?: unknown;
-  passcodeHash?: unknown;
-};
-
 type ResendBody = {
   action: "resend";
   token?: unknown;
 };
 
-async function handleIssue(
-  request: Request,
-  body: IssueBody,
-): Promise<NextResponse> {
-  const ip = clientIpKey(request);
-  const ipLimit = consumeRateLimit(`consent-issue:ip:${ip}`, 20, 60_000);
-  if (!ipLimit.allowed) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          "Too many approval-link requests from this device. Wait about a minute, then try again.",
-      },
-      { status: 429 },
-    );
-  }
-
-  const parentEmail =
-    typeof body.parentEmail === "string"
-      ? body.parentEmail.trim().toLowerCase()
-      : "";
-  const childUsername =
-    typeof body.childUsername === "string" ? body.childUsername.trim() : "";
-  const birthYear =
-    typeof body.birthYear === "number" && Number.isInteger(body.birthYear)
-      ? body.birthYear
-      : NaN;
-  const createdAt =
-    typeof body.createdAt === "string" && body.createdAt.trim()
-      ? body.createdAt.trim()
-      : new Date().toISOString();
-  const passcodeHash =
-    typeof body.passcodeHash === "string" && body.passcodeHash.trim()
-      ? body.passcodeHash.trim()
-      : undefined;
-
-  if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
-    return NextResponse.json(
-      { success: false, error: "A valid parentEmail is required." },
-      { status: 400 },
-    );
-  }
-
-  const emailLimit = consumeRateLimit(
-    `consent-issue:email:${parentEmail}`,
-    10,
-    60_000,
-  );
-  if (!emailLimit.allowed) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          "Too many approval-link requests for this email. Wait about a minute, then try again.",
-      },
-      { status: 429 },
-    );
-  }
-
-  if (!childUsername) {
-    return NextResponse.json(
-      { success: false, error: "childUsername is required." },
-      { status: 400 },
-    );
-  }
-
-  // Explorer VPC tokens + Pathfinder parent-dashboard claim tokens.
-  const cohort = Number.isInteger(birthYear)
-    ? getMasteryCohortFromBirthYear(birthYear)
-    : null;
-  const canIssueParentLinkToken =
-    Boolean(cohort) &&
-    (requiresParentConsentForBirthYear(birthYear) || cohort === "pathfinder");
-  if (!canIssueParentLinkToken) {
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          "birthYear must be an Explorer (parental consent) or Pathfinder (parent dashboard claim) profile.",
-      },
-      { status: 400 },
-    );
-  }
-
-  const token = signConsentToken({
-    parentEmail,
-    childUsername,
-    birthYear,
-    createdAt,
-    passcodeHash,
-  });
-
-  return NextResponse.json({ success: true as const, token, createdAt });
-}
-
 /**
- * Re-issue + email a fresh approval link from a previously signed token.
- * Accepts expired tokens; rejects invalid signatures. Does not echo PII claims.
+ * Re-issue + email a fresh approval link from a stored consent request.
+ * Accepts expired rows. Does not accept a free-floating HMAC token, and does
+ * not take a caller-chosen recipient.
  */
 async function handleResend(
   request: Request,
@@ -170,21 +63,17 @@ async function handleResend(
   }
 
   const stored = await lookupConsentRequestByToken(token);
-  const hmacClaims = verifyConsentToken(token);
+  if (
+    (stored.status !== "valid" && stored.status !== "expired") ||
+    !stored.request
+  ) {
+    return NextResponse.json(
+      { success: false, error: "Invalid consent token." },
+      { status: 400 },
+    );
+  }
 
-  const parentEmail =
-    stored.status === "valid" || stored.status === "expired"
-      ? stored.request?.parentEmail
-      : hmacClaims?.parentEmail;
-  const childUsername =
-    stored.status === "valid" || stored.status === "expired"
-      ? stored.request?.childUsername
-      : hmacClaims?.childUsername;
-  const birthYear =
-    stored.status === "valid" || stored.status === "expired"
-      ? stored.request?.birthYear
-      : hmacClaims?.birthYear;
-
+  const { parentEmail, childUsername, birthYear, id } = stored.request;
   if (!parentEmail || !childUsername || birthYear == null) {
     return NextResponse.json(
       { success: false, error: "Invalid consent token." },
@@ -219,31 +108,16 @@ async function handleResend(
   }
 
   const createdAt = new Date().toISOString();
-  const nextToken =
-    stored.status === "valid" || stored.status === "expired"
-      ? generateOpaqueConsentToken()
-      : signConsentToken({
-          parentEmail,
-          childUsername,
-          birthYear,
-          createdAt,
-          passcodeHash: hmacClaims?.passcodeHash,
-        });
-
-  if (
-    (stored.status === "valid" || stored.status === "expired") &&
-    stored.request
-  ) {
-    const rotated = await rotateConsentRequestToken({
-      requestId: stored.request.id,
-      nextToken,
-    });
-    if (!rotated) {
-      return NextResponse.json(
-        { success: false, error: "Could not refresh this approval link." },
-        { status: 502 },
-      );
-    }
+  const nextToken = generateOpaqueConsentToken();
+  const rotated = await rotateConsentRequestToken({
+    requestId: id,
+    nextToken,
+  });
+  if (!rotated) {
+    return NextResponse.json(
+      { success: false, error: "Could not refresh this approval link." },
+      { status: 502 },
+    );
   }
 
   const sendResult = await sendOnboardingEmail({
@@ -253,6 +127,7 @@ async function handleResend(
       username: childUsername,
       token: nextToken,
     },
+    appUrl: resolveTrustedAppUrl(request.headers.get("origin")),
   });
 
   if (!sendResult.success) {
@@ -267,7 +142,6 @@ async function handleResend(
     );
   }
 
-  // Minimum non-sensitive fields for UX / local token rotation.
   return NextResponse.json({
     success: true as const,
     token: nextToken,
@@ -276,7 +150,11 @@ async function handleResend(
   });
 }
 
-/** Issue a signed parental consent token, or resend from an existing signed token. */
+/**
+ * Resend a stored approval link.
+ * Minting a new link from caller-supplied email and username is refused:
+ * signup creates the stored token on the server.
+ */
 export async function POST(request: Request) {
   const auth = authorizeBrowserMutation(request);
   if (!auth.ok) {
@@ -287,9 +165,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    let body: IssueBody | ResendBody;
+    let body: { action?: unknown; token?: unknown };
     try {
-      body = (await request.json()) as IssueBody | ResendBody;
+      body = (await request.json()) as { action?: unknown; token?: unknown };
     } catch {
       return NextResponse.json(
         { success: false, error: "Invalid JSON body." },
@@ -298,10 +176,17 @@ export async function POST(request: Request) {
     }
 
     if (body && typeof body === "object" && body.action === "resend") {
-      return handleResend(request, body);
+      return handleResend(request, body as ResendBody);
     }
 
-    return handleIssue(request, body as IssueBody);
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Approval links are created during signup. This route cannot mint a new one.",
+      },
+      { status: 403 },
+    );
   } catch (error) {
     console.error("[CONSENT_TOKEN_ISSUE_ERROR]", error);
     return NextResponse.json(
@@ -312,9 +197,9 @@ export async function POST(request: Request) {
 }
 
 /**
- * Verify a signed consent token.
- * Full claims are returned only for valid, unexpired signatures.
- * Expired (but correctly signed) tokens return `{ expired: true }` with no PII.
+ * Verify a consent token.
+ * Full claims are returned only for a valid stored request, or a still-valid
+ * legacy HMAC token. Expired tokens return `{ expired: true }` with no PII.
  */
 export async function GET(request: NextRequest) {
   const auth = authorizeBrowserMutation(request);

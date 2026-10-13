@@ -1,7 +1,10 @@
 "use server";
 
+import "server-only";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { lookupConsentRequestByToken } from "@/lib/onboarding/lookup-consent-request";
 import {
   findAuthUserIdByEmail,
@@ -213,6 +216,16 @@ export async function createParentMasterAndApprove(
     });
   } catch {
     // Linking already succeeded; session cookie is optional.
+  }
+
+  try {
+    await sendOnboardingEmail({
+      type: "PARENT_WELCOME",
+      recipientEmail: parentEmail,
+      data: { username },
+    });
+  } catch {
+    // Welcome mail must not undo a completed approval.
   }
 
   return { ...approved, createdNewParent: true };

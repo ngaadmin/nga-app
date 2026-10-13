@@ -1,5 +1,7 @@
 "use server";
 
+import "server-only";
+
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
   generateOpaqueConsentToken,

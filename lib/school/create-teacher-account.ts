@@ -1,5 +1,7 @@
 "use server";
 
+import "server-only";
+
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";

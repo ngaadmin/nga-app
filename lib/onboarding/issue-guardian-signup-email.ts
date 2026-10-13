@@ -1,10 +1,12 @@
+import "server-only";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   consentRequestExpiresAt,
   generateOpaqueConsentToken,
   hashConsentToken,
 } from "@/lib/auth/consent-request-token";
-import { getDefaultAppUrl } from "@/lib/email/templates";
+import { getDefaultAppUrl, resolveTrustedAppUrl } from "@/lib/email/templates";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { findParentMasterByEmail } from "@/lib/onboarding/parent-master-lookup";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
@@ -57,7 +59,7 @@ async function resolveSignupAppUrl(): Promise<string> {
     const headerList = await headers();
     const origin = headerList.get("origin")?.trim();
     if (origin) {
-      return new URL(origin).origin;
+      return resolveTrustedAppUrl(origin);
     }
   } catch {
     // Server action without a request origin — use env / production fallback.

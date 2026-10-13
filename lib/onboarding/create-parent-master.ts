@@ -1,7 +1,10 @@
 "use server";
 
+import "server-only";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
@@ -125,6 +128,16 @@ export async function createParentMasterAccount(
     });
   } catch {
     // Local session still lands; the parent can sign in again later.
+  }
+
+  try {
+    await sendOnboardingEmail({
+      type: "PARENT_WELCOME",
+      recipientEmail: parentEmail,
+      data: { username: parentUsername },
+    });
+  } catch {
+    // Welcome mail must not block the new parent account.
   }
 
   return {

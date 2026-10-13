@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import {
+  LESSON_SUCCESS_FLASH_MS,
+  useLessonSuccessFlash,
+} from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import {
   LessonFalseIcon,
   LessonTrueIcon,
@@ -15,6 +19,10 @@ import {
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
+import {
+  cashMatches,
+  fillCashPlaceholder,
+} from "@/lib/academy/lessons/payload/cash-placeholder";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -50,16 +58,140 @@ function buildRoundSideLayouts(roundCount: number): SideLayout[] {
   );
 }
 
-export function SpotlightRoundsScreen({
+type SpotlightScreenProps = StandardScreenProps<SpotlightRoundsScreenConfig> & {
+  onPersistentError?: (message: string) => void;
+  onDismissError?: () => void;
+};
+
+type SpotlightDecisionNextHandler = () => boolean;
+
+let activeSpotlightDecisionNextHandler: SpotlightDecisionNextHandler | null = null;
+
+/** Used by the lesson runner Next control for decision spotlights. */
+export function runSpotlightDecisionNextHandler(): boolean {
+  if (!activeSpotlightDecisionNextHandler) return true;
+  return activeSpotlightDecisionNextHandler();
+}
+
+function letterForIndex(index: number): string {
+  return String.fromCharCode(65 + index);
+}
+
+/** Side-by-side choices that keep cash updates and GO targets. */
+function SpotlightDecisionChoices({
+  screen,
+  screenIndex,
+  flow,
+}: SpotlightScreenProps) {
+  const { cash, commitCash } = useLessonCash();
+  const options = screen.options ?? [];
+  const visible = options
+    .map((option, index) => ({ option, index }))
+    .filter(({ option }) => cashMatches(option.showWhen, cash));
+  const [choice, setChoice] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const flowRef = useRef(flow);
+  flowRef.current = flow;
+  const choiceRef = useRef(choice);
+  choiceRef.current = choice;
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  const commitCashRef = useRef(commitCash);
+  commitCashRef.current = commitCash;
+  const advancingRef = useRef(false);
+  const advanceTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (advanceTimerRef.current !== null) {
+        window.clearTimeout(advanceTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    activeSpotlightDecisionNextHandler = () => {
+      if (advancingRef.current) return false;
+      const selected = optionsRef.current[choiceRef.current ?? -1];
+      if (!selected) {
+        setSuccess(false);
+        setError(lessonFeedbackCopy(screen.wrongError) ?? "");
+        flowRef.current.incrementMistake();
+        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        return false;
+      }
+
+      advancingRef.current = true;
+      setError(null);
+      setSuccess(true);
+      celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+      advanceTimerRef.current = window.setTimeout(() => {
+        advanceTimerRef.current = null;
+        if (selected.cashUpdate) commitCashRef.current(selected.cashUpdate);
+        if (typeof selected.goToIndex === "number") {
+          flowRef.current.setScreenIndex(selected.goToIndex);
+          return;
+        }
+        flowRef.current.handleNext({ canAdvance: true });
+      }, LESSON_SUCCESS_FLASH_MS);
+      return false;
+    };
+
+    return () => {
+      activeSpotlightDecisionNextHandler = null;
+    };
+  }, [screen.wrongError]);
+
+  const prompt = fillCashPlaceholder(
+    screen.promptWhen?.find((item) => cashMatches(item.showWhen, cash))?.text ?? screen.prompt,
+    cash,
+  );
+
+  return (
+    <LessonScreenLayout
+      emphasizeInstruction={screen.emphasizeInstruction === true}
+      success={success}
+      errorMessage={error}
+    >
+      <p className={cn("mb-2.5", lessonPromptClass)}>{prompt}</p>
+      <div className="grid w-full grid-cols-2 gap-4">
+        {visible.map(({ option, index }, position) => {
+          const selected = choice === index;
+          return (
+            <LessonIconOption
+              key={`${option.label}-${index}`}
+              className="w-full min-w-0"
+              label={fillCashPlaceholder(option.label, cash)}
+              emoji={letterForIndex(position)}
+              display="emoji-label"
+              labelClassName="max-w-full"
+              selected={selected}
+              disabled={success}
+              selectionVariant="neutral"
+              onClick={() => {
+                if (success) return;
+                setChoice(index);
+                setError(null);
+                setSuccess(false);
+                flow.markScreenReady(screenIndex);
+              }}
+            />
+          );
+        })}
+      </div>
+    </LessonScreenLayout>
+  );
+}
+
+function SpotlightGradedRounds({
   screen,
   screenIndex,
   flow,
   onPersistentError,
   onDismissError,
-}: StandardScreenProps<SpotlightRoundsScreenConfig> & {
-  onPersistentError?: (message: string) => void;
-  onDismissError?: () => void;
-}) {
+}: SpotlightScreenProps) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -188,4 +320,11 @@ export function SpotlightRoundsScreen({
       </div>
     </LessonScreenLayout>
   );
+}
+
+export function SpotlightRoundsScreen(props: SpotlightScreenProps) {
+  if (props.screen.decisionPath) {
+    return <SpotlightDecisionChoices {...props} />;
+  }
+  return <SpotlightGradedRounds {...props} />;
 }

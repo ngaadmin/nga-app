@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { LessonCashProvider } from "@/components/academy/lesson/lesson-cash";
 import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -53,11 +54,13 @@ export function PayloadLessonPlayer({
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div className="layer-island relative flex min-h-0 flex-1 flex-col">
-        <LessonRunner
-          content={content}
-          flow={flow}
-          awardBonusXp={isPreview ? undefined : awardLessonXp}
-        />
+        <LessonCashProvider>
+          <LessonRunner
+            content={content}
+            flow={flow}
+            awardBonusXp={isPreview ? undefined : awardLessonXp}
+          />
+        </LessonCashProvider>
       </div>
     </div>
   );

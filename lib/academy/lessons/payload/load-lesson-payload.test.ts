@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadBundledLessonPayload, loadLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { hasShippedLesson } from "@/lib/academy/lessons/registry";
+import { fillCashPlaceholder } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import {
@@ -123,6 +124,9 @@ describe("lesson payload loader", () => {
 
   it("loads lesson 6 so it can open after lesson 5", () => {
     expect(hasShippedLesson(6)).toBe(true);
+    expect(hasShippedLesson(7)).toBe(true);
+    expect(hasShippedLesson(8)).toBe(true);
+    expect(hasShippedLesson(9)).toBe(true);
     const content = resolvePayloadLesson(loadBundledLessonPayload(1, 6), "explorer", 6);
     expect(content.meta.lessonTitle).toBe("Keep Spare Cash");
     expect(content.screens.map((screen) => screen.type)).toEqual([
@@ -153,15 +157,192 @@ describe("lesson payload loader", () => {
     });
 
     const lesson8 = resolvePayloadLesson(loadBundledLessonPayload(1, 8), "explorer", 8);
+    expect(lesson8.screens.map((screen) => screen.type)).toEqual([
+      "spotlight-rounds",
+      "spotlight-rounds",
+      "binary-choice",
+      "spotlight-rounds",
+      "binary-choice",
+      "binary-choice",
+      "spotlight-rounds",
+      "spotlight-rounds",
+      "binary-choice",
+      "binary-choice",
+      "completion",
+    ]);
     const phoneCase = lesson8.screens[0];
-    expect(phoneCase).toMatchObject({ type: "binary-choice" });
-    if (phoneCase?.type !== "binary-choice") return;
+    expect(phoneCase).toMatchObject({ type: "spotlight-rounds" });
+    if (phoneCase?.type !== "spotlight-rounds") return;
     expect(phoneCase.options?.map((option) => option.label)).toEqual([
       "Buy it. He wants it and will have money left over",
       "Don’t buy it. He doesn’t need it",
     ]);
     const labels = phoneCase.options?.map((option) => option.label).join(" ") ?? "";
     expect(labels).not.toMatch(/CHOICE|CORRECT|→|SET cash|GO Screen/);
+    expect(phoneCase.decisionPath).toBe(true);
+    expect(phoneCase.options).toEqual([
+      {
+        label: "Buy it. He wants it and will have money left over",
+        isCorrect: true,
+        cashUpdate: { op: "set", amount: 6 },
+        goToLabel: "2",
+        goToIndex: 1,
+      },
+      {
+        label: "Don’t buy it. He doesn’t need it",
+        isCorrect: false,
+        cashUpdate: { op: "set", amount: 15 },
+        goToLabel: "2",
+        goToIndex: 1,
+      },
+    ]);
+
+    const arcade = lesson8.screens[1];
+    const cinema = lesson8.screens[7];
+    expect(arcade).toMatchObject({ type: "spotlight-rounds" });
+    expect(cinema).toMatchObject({ type: "spotlight-rounds" });
+    if (arcade?.type !== "spotlight-rounds" || cinema?.type !== "spotlight-rounds") return;
+    expect(arcade.options?.[0]?.cashUpdate).toEqual({ op: "adjust", delta: -8 });
+    expect(arcade.prompt).toContain("{cash}");
+    expect(cinema.prompt).toContain("{cash}");
+    expect(fillCashPlaceholder(arcade.prompt, 6)).toBe(arcade.prompt.split("{cash}").join("$6"));
+    expect(fillCashPlaceholder(arcade.prompt, 15)).toBe(arcade.prompt.split("{cash}").join("$15"));
+    expect(fillCashPlaceholder(arcade.prompt, 6)).toContain("Lars has $6 left");
+    expect(fillCashPlaceholder(arcade.prompt, 15)).toContain("Lars has $15 left");
+    expect(fillCashPlaceholder(cinema.prompt, 5)).toContain("Mia has $5 left");
+    expect(fillCashPlaceholder(cinema.prompt, 14)).toContain("Mia has $14 left");
+    expect(fillCashPlaceholder(arcade.prompt, 6)).not.toContain("{cash}");
+    expect(fillCashPlaceholder(cinema.prompt, 14)).not.toContain("{cash}");
+
+    const keptTheCase = lesson8.screens[2];
+    expect(keptTheCase).toMatchObject({
+      type: "binary-choice",
+      id: "screen-2-alt",
+      continueToLabel: "3",
+      continueToIndex: 3,
+      options: [],
+    });
+    if (keptTheCase?.type === "binary-choice") {
+      expect(keptTheCase.optionA).toBeUndefined();
+      expect(keptTheCase.optionB).toBeUndefined();
+      expect(keptTheCase.prompt).toContain("bought the case");
+    }
+    expect(lesson8.screens[4]).toMatchObject({
+      continueToLabel: "5",
+      continueToIndex: 6,
+    });
+    expect(lesson8.screens[5]).toMatchObject({
+      continueToLabel: "5",
+      continueToIndex: 6,
+    });
+    expect(lesson8.screens[8]).toMatchObject({
+      continueToLabel: "8",
+      continueToIndex: 10,
+    });
+    expect(lesson8.screens[9]).toMatchObject({
+      continueToLabel: "8",
+      continueToIndex: 10,
+    });
+
+    const arcadeChoices = lesson8.screens[1];
+    expect(arcadeChoices).toMatchObject({ type: "spotlight-rounds", decisionPath: true });
+    if (arcadeChoices?.type === "spotlight-rounds") {
+      expect(arcadeChoices.prompt).toContain("An arcade game card is $8");
+      expect(arcadeChoices.promptWhen).toEqual([
+        {
+          text: "Lars has {cash} left. The arcade card is $8, so he can’t pay. What do you want Lars to do?",
+          showWhen: { op: "lt", amount: 8 },
+        },
+      ]);
+      expect(arcadeChoices.options).toEqual([
+        {
+          label: "Pay $8",
+          isCorrect: true,
+          cashUpdate: { op: "adjust", delta: -8 },
+          goToLabel: "3",
+          goToIndex: 3,
+          showWhen: { op: "gte", amount: 8 },
+        },
+        {
+          label: "Can’t cover it",
+          isCorrect: false,
+          goToLabel: "3",
+          goToIndex: 3,
+          showWhen: { op: "gte", amount: 8 },
+        },
+        {
+          label: "See what would have happened if he hadn’t bought the case",
+          isCorrect: false,
+          goToLabel: "2-alt",
+          goToIndex: 2,
+          showWhen: { op: "lt", amount: 8 },
+        },
+        {
+          label: "Skip the arcade",
+          isCorrect: false,
+          goToLabel: "3",
+          goToIndex: 3,
+          showWhen: { op: "lt", amount: 8 },
+        },
+      ]);
+    }
+
+    const cinemaChoices = lesson8.screens[7];
+    if (cinemaChoices?.type === "spotlight-rounds") {
+      expect(cinemaChoices.options?.map((option) => option.showWhen)).toEqual([
+        { op: "eq", amount: 5 },
+        { op: "eq", amount: 5 },
+        { op: "eq", amount: 14 },
+        { op: "eq", amount: 14 },
+      ]);
+      expect(cinemaChoices.options?.[2]).toMatchObject({
+        goToLabel: "7-alt",
+        goToIndex: 9,
+      });
+    }
+
+    const lowCashPrompt = (cohort: "pathfinder" | "maverick", name: string) => {
+      const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 8), cohort, 8).screens[1];
+      expect(screen).toMatchObject({ type: "spotlight-rounds" });
+      if (screen?.type !== "spotlight-rounds") return;
+      expect(screen.prompt).toContain("An arcade game card is $8");
+      expect(screen.promptWhen?.[0]?.text).toBe(
+        `${name} has {cash} left. The arcade card is $8, so ${name === "Holly" ? "she" : "he"} can’t pay. What do you want ${name} to do?`,
+      );
+      expect(screen.options?.map((option) => option.label)).toEqual([
+        "Pay $8",
+        "Can’t cover it",
+        `See what would have happened if ${name === "Holly" ? "she" : "he"} hadn’t bought the case`,
+        "Skip the arcade",
+      ]);
+    };
+    lowCashPrompt("pathfinder", "Holly");
+    lowCashPrompt("maverick", "Aiden");
+
+    const senna = lesson8.screens[3];
+    if (senna?.type === "spotlight-rounds") {
+      expect(senna.options?.[1]).toMatchObject({ goToLabel: "4-alt", goToIndex: 5 });
+    }
+
+    const water = lesson8.screens[6];
+    expect(water).toMatchObject({
+      type: "spotlight-rounds",
+      decisionPath: true,
+      options: [
+        {
+          label: "Buy the water bottle ($9)",
+          cashUpdate: { op: "set", amount: 5 },
+          goToLabel: "6",
+          goToIndex: 7,
+        },
+        {
+          label: "Don’t buy the water bottle",
+          cashUpdate: { op: "set", amount: 14 },
+          goToLabel: "6",
+          goToIndex: 7,
+        },
+      ],
+    });
   });
 
   it("maps YES and NO rows into a bucket-sort", () => {
@@ -216,9 +397,65 @@ describe("lesson payload loader", () => {
     }
   });
 
+  it("loads lesson 7 as eight screens with the skill nominations", () => {
+    const lesson7 = resolvePayloadLesson(loadBundledLessonPayload(1, 7), "explorer", 7);
+    expect(lesson7.screens.map((screen) => screen.type)).toEqual([
+      "word-drop",
+      "binary-choice",
+      "binary-choice",
+      "savings-goal",
+      "binary-choice",
+      "binary-choice",
+      "drag-to-target",
+      "completion",
+    ]);
+    expect(lesson7.screens[1]).toMatchObject({
+      prompt: "Lars remembers he still needs to pay for Senna's headphones that he broke. Replacing Senna's headphones is a...",
+      options: [
+        { label: "Want", isCorrect: false },
+        { label: "Need", isCorrect: true },
+      ],
+    });
+    expect(lesson7.screens[2]).toMatchObject({
+      prompt: "Replacing Senna's headphones comes before the gelato. Which skill is that?",
+      options: [
+        { label: "Stop & Think", isCorrect: false },
+        { label: "Put Needs First", isCorrect: true },
+        { label: "Keep Spare Cash", isCorrect: false },
+      ],
+    });
+    expect(lesson7.screens[5]).toMatchObject({
+      prompt:
+        "Sharing the gelato leaves Lars some money. Buying his own leaves $0. Which skill is he using when he shares?",
+      options: [
+        { label: "Stop & Think", isCorrect: false },
+        { label: "Put Needs First", isCorrect: false },
+        { label: "Keep Spare Cash", isCorrect: true },
+      ],
+    });
+
+    const pathfinder = resolvePayloadLesson(loadBundledLessonPayload(1, 7), "pathfinder", 7);
+    expect(pathfinder.screens[2]).toMatchObject({
+      prompt: "Replacing Mia's headphones comes before the gelato. Which skill is that?",
+    });
+    expect(pathfinder.screens[5]).toMatchObject({
+      prompt:
+        "Sharing the gelato leaves Holly some money. Buying her own leaves $0. Which skill is she using when she shares?",
+    });
+
+    const maverick = resolvePayloadLesson(loadBundledLessonPayload(1, 7), "maverick", 7);
+    expect(maverick.screens[2]).toMatchObject({
+      prompt: "Replacing Dash's headphones comes before the energy drink. Which skill is that?",
+    });
+    expect(maverick.screens[5]).toMatchObject({
+      prompt:
+        "Splitting the 2-for-1 energy drink leaves Aiden some money. Buying one at full price leaves $0. Which skill is he using?",
+    });
+  });
+
   it("counts lesson 7 savings down from the available amount", () => {
     const lesson7 = resolvePayloadLesson(loadBundledLessonPayload(1, 7), "explorer", 7);
-    const savings = lesson7.screens[2];
+    const savings = lesson7.screens[3];
     expect(savings).toMatchObject({
       type: "savings-goal",
       meterLabel: "Remaining",

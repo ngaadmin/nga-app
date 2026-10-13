@@ -159,11 +159,11 @@ function columnIndex(ref: string): number {
 
 function parseSheet(xml: string, strings: readonly string[]): string[][] {
   const cells = new Map<number, Map<number, string>>();
-  const pattern = /<c\b([^>]*)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  const pattern = /<c\b([^>/]*)\/>|<c\b([^>]*)>([\s\S]*?)<\/c>/g;
   let match = pattern.exec(xml);
   while (match) {
-    const attrs = match[1] ?? "";
-    const body = match[2] ?? "";
+    const attrs = match[1] || match[2] || "";
+    const body = match[3] ?? "";
     const ref = /r="([A-Z]+)(\d+)"/.exec(attrs);
     if (!ref) {
       match = pattern.exec(xml);

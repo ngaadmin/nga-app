@@ -136,13 +136,15 @@ function parseScreens(
   for (const row of rows.slice(1)) {
     const module = Number.parseInt(cell(row, indexes[SCREEN_COLUMNS.module] ?? 0), 10);
     const lesson = Number.parseInt(cell(row, indexes[SCREEN_COLUMNS.lesson] ?? 0), 10);
-    const screenNumber = Number.parseInt(cell(row, indexes[SCREEN_COLUMNS.screen] ?? 0), 10);
+    const screenLabel = cell(row, indexes[SCREEN_COLUMNS.screen] ?? 0).trim();
+    const screenNumber = Number.parseInt(screenLabel, 10);
     const gameType = cell(row, indexes[SCREEN_COLUMNS.gameType] ?? 0).toLowerCase();
     if (module !== moduleNumber || lesson !== lessonNumber) continue;
     if (!Number.isFinite(screenNumber) || !gameType) continue;
 
     screens.push({
       screenNumber,
+      screenLabel: screenLabel || String(screenNumber),
       gameType,
       text: cohortCopy(
         row,

@@ -137,7 +137,7 @@ export const M1_L5_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
  * Module 1 lessons played from Screens1.xlsx that have no hard-coded file.
  * Milestone id matches the lesson number inside module 1.
  */
-const BUNDLED_PAYLOAD_MILESTONE_IDS = new Set<number>([6]);
+const BUNDLED_PAYLOAD_MILESTONE_IDS = new Set<number>([6, 7, 8, 9]);
 
 export function bundledPayloadMilestone(
   milestoneId: number,

@@ -2,13 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LESSON_SUCCESS_FLASH_MS } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import { lessonChoiceStackClass, usesNeutralChoiceFeedback } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonChoiceStackClass,
+  lessonNextButtonClass,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
 import { findAllOfTheAboveCorrectKey } from "@/lib/academy/lessons/all-of-the-above";
+import {
+  cashMatches,
+  fillCashPlaceholder,
+  type CashComparison,
+  type CashUpdate,
+} from "@/lib/academy/lessons/payload/cash-placeholder";
 import { collectMultipleChoiceOptions } from "@/lib/academy/lessons/multiple-choice-options";
 import {
   getCorrectOptionKeys,
@@ -28,6 +39,9 @@ type ChoiceOption = {
   label: string;
   isCorrect: boolean;
   feedback?: string;
+  cashUpdate?: CashUpdate;
+  goToIndex?: number;
+  showWhen?: CashComparison;
 };
 
 type MultipleChoiceNextHandler = () => boolean;
@@ -49,7 +63,13 @@ export function MultipleChoiceScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<MultipleChoicePayload>) {
-  const choiceOptions: ChoiceOption[] = collectMultipleChoiceOptions(screen);
+  const { cash, commitCash } = useLessonCash();
+  const continueToLabel = screen.continueToLabel;
+  const choiceOptions: ChoiceOption[] = continueToLabel
+    ? []
+    : collectMultipleChoiceOptions(screen).filter((option) =>
+        cashMatches(option.showWhen, cash),
+      );
 
   const isRadioList = screen.optionLayout === "radio-list";
   const gradeOnNext = usesNeutralChoiceFeedback(screen.choiceFeedback);
@@ -92,6 +112,8 @@ export function MultipleChoiceScreen({
   isMultiCorrectRef.current = isMultiCorrect;
   const isAllOfTheAboveQuestionRef = useRef(isAllOfTheAboveQuestion);
   isAllOfTheAboveQuestionRef.current = isAllOfTheAboveQuestion;
+  const commitCashRef = useRef(commitCash);
+  commitCashRef.current = commitCash;
 
   const isSelected = (key: ChoiceKey): boolean => {
     if (isMultiCorrect) return multiSelected.has(key);
@@ -115,6 +137,11 @@ export function MultipleChoiceScreen({
 
     setChoice(key);
     choiceRef.current = key;
+
+    if (screenRef.current.decisionPath) {
+      flowRef.current.markScreenReady(screenIndex);
+      return;
+    }
 
     if (gradeOnNext) {
       flowRef.current.markScreenReady(screenIndex);
@@ -170,7 +197,9 @@ export function MultipleChoiceScreen({
     activeMultipleChoiceNextHandler = () => {
       if (advancingRef.current || solvedRef.current) return false;
 
-      if (!isCurrentSelectionCorrect()) {
+      const decisionPath = screenRef.current.decisionPath === true;
+      const selected = optionByKeyRef.current.get(choiceRef.current ?? "");
+      if (decisionPath ? !selected : !isCurrentSelectionCorrect()) {
         setSuccess(false);
         setError(resolveErrorCopy());
         flowRef.current.incrementMistake();
@@ -186,6 +215,12 @@ export function MultipleChoiceScreen({
       celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
       advanceTimerRef.current = window.setTimeout(() => {
         advanceTimerRef.current = null;
+        const chosen = optionByKeyRef.current.get(choiceRef.current ?? "");
+        if (chosen?.cashUpdate) commitCashRef.current(chosen.cashUpdate);
+        if (typeof chosen?.goToIndex === "number") {
+          flowRef.current.setScreenIndex(chosen.goToIndex);
+          return;
+        }
         flowRef.current.handleNext({ canAdvance: true });
       }, LESSON_SUCCESS_FLASH_MS);
       return false;
@@ -215,14 +250,40 @@ export function MultipleChoiceScreen({
           pending={gradeOnNext && selected && !solved}
           locked={!gradeOnNext && solved && selected}
         >
-          {option.label}
+          {fillCashPlaceholder(option.label, cash)}
         </LessonChoiceButton>
       );
     });
 
+  const prompt = fillCashPlaceholder(
+    screen.promptWhen?.find((item) => cashMatches(item.showWhen, cash))?.text ?? screen.prompt,
+    cash,
+  );
+
+  if (continueToLabel) {
+    return (
+      <LessonScreenLayout prompt={prompt}>
+        <button
+          type="button"
+          className={`${lessonNextButtonClass} mt-6`}
+          onClick={() => {
+            const target = screen.continueToIndex;
+            if (typeof target === "number") {
+              flow.setScreenIndex(target);
+              return;
+            }
+            flow.handleNext({ canAdvance: true });
+          }}
+        >
+          Continue
+        </button>
+      </LessonScreenLayout>
+    );
+  }
+
   return (
     <LessonScreenLayout
-      prompt={screen.prompt}
+      prompt={prompt}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       success={success}
       errorMessage={error}
@@ -230,7 +291,7 @@ export function MultipleChoiceScreen({
     >
       {isRadioList && screen.scenePrompt ? (
         <p className="mt-2 font-sans text-sm font-normal leading-snug text-[#1E3A5F]">
-          {screen.scenePrompt}
+          {fillCashPlaceholder(screen.scenePrompt, cash)}
         </p>
       ) : null}
       <div className={isRadioList ? "mt-3 space-y-1" : lessonChoiceStackClass}>

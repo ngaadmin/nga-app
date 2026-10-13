@@ -1,4 +1,6 @@
 import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
+import { parseCashUpdate, type CashComparison, type CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
+import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
 import {
   isMedalIllustrationId,
   medalIdForSkillNumber,
@@ -45,12 +47,32 @@ function mergedSettings(copy: PayloadCohortCopy, cohort: MasteryCohort): Setting
   ];
 }
 
-/** A later settings key on the same line, e.g. `CHOICE B:` or `CORRECT:`. */
-function settingsKeySplit(): RegExp {
-  return new RegExp(
-    String.raw`\s+(?=(?:CHOICE\s+[A-Z]|ICON\s+[A-Z]|CORRECT|OPTIONS|BUTTON|CONTINUE|SOURCE|TARGET|RESULT|ORDER|ITEMS|ROUNDS|MEDAL|AVAILABLE|LABEL|HOLD|FROZEN|SUCCESS|ID|SHORT|LONG|NEED|WANT|YES|NO|(?<!CHOICE )[A-H])\s*:)`,
-    "gi",
-  );
+const SETTINGS_KEY =
+  /(?:CHOICE\s+[A-Z]|ICON\s+[A-Z]|CORRECT|OPTIONS|BUTTON|CONTINUE|SOURCE|TARGET|RESULT|ORDER|ITEMS|ROUNDS|MEDAL|AVAILABLE|LABEL|HOLD|FROZEN|SUCCESS|ID|SHORT|LONG|NEED|WANT|YES|NO)\s*:|(?:^|\s)([A-H])\s*:/gi;
+
+/** Split one settings line on later keys such as `CHOICE B:` or `CORRECT:`. */
+function settingsParts(line: string): string[] {
+  const starts: number[] = [];
+  SETTINGS_KEY.lastIndex = 0;
+  for (const match of line.matchAll(SETTINGS_KEY)) {
+    const token = match[0] ?? "";
+    const letter = match[1];
+    const index = letter
+      ? (match.index ?? 0) + token.indexOf(letter)
+      : (match.index ?? 0);
+    if (letter && /CHOICE\s+$/i.test(line.slice(0, index))) continue;
+    starts.push(index);
+  }
+  if (starts.length === 0) return [line];
+  const parts: string[] = [];
+  const first = starts[0] ?? 0;
+  if (first > 0) parts.push(line.slice(0, first));
+  for (let index = 0; index < starts.length; index += 1) {
+    const from = starts[index] ?? 0;
+    const to = starts[index + 1] ?? line.length;
+    parts.push(line.slice(from, to));
+  }
+  return parts;
 }
 
 function parseSettings(raw: string): SettingEntry[] {
@@ -58,7 +80,7 @@ function parseSettings(raw: string): SettingEntry[] {
   for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed) continue;
-    for (const part of trimmed.split(settingsKeySplit())) {
+    for (const part of settingsParts(trimmed)) {
       const match = /^([^:]+):\s*(.*)$/.exec(part.trim());
       if (!match) continue;
       entries.push({
@@ -70,6 +92,23 @@ function parseSettings(raw: string): SettingEntry[] {
   return entries;
 }
 
+/**
+ * `CONTINUE → GO Screen 3` on a screen with no CHOICE lines.
+ * Returns the Screen cell to open, such as `3` or `2-alt`.
+ */
+function continueGoLabel(raw: string): string | undefined {
+  if (/CHOICE\s+[A-Z]\s*:/i.test(raw)) return undefined;
+  const match = /CONTINUE\s*(?:→|->)\s*GO\s+Screen\s+([A-Za-z0-9-]+)/i.exec(raw);
+  return match?.[1];
+}
+
+function screenLabelKey(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 /** Button copy only. Routing such as `→ SET cash=6 → GO Screen 2` stays out of the label. */
 function choiceLabel(value: string): string {
   const head = value.split(/\s*→\s*/)[0] ?? "";
@@ -78,21 +117,40 @@ function choiceLabel(value: string): string {
 
 function authoredChoices(
   entries: readonly SettingEntry[],
-): { letter: string; label: string }[] {
+): {
+  letter: string;
+  label: string;
+  cashUpdate?: CashUpdate;
+  goToLabel?: string;
+  showWhen?: CashComparison;
+}[] {
   const fromChoiceKeys = entries.filter((entry) => /^CHOICE [A-Z]$/.test(entry.key));
   const source =
     fromChoiceKeys.length > 0
       ? fromChoiceKeys
       : entries.filter((entry) => /^[A-H]$/.test(entry.key));
   const seen = new Set<string>();
-  const choices: { letter: string; label: string }[] = [];
+  const choices: {
+    letter: string;
+    label: string;
+    cashUpdate?: CashUpdate;
+    goToLabel?: string;
+    showWhen?: CashComparison;
+  }[] = [];
   for (const entry of source) {
     const letter = entry.key.replace(/^CHOICE\s+/, "");
     if (seen.has(letter)) continue;
     const label = choiceLabel(entry.value);
     if (!label) continue;
     seen.add(letter);
-    choices.push({ letter, label });
+    const cashUpdate = parseCashUpdate(entry.value);
+    const goToLabel = goToScreenLabel(entry.value);
+    choices.push({
+      letter,
+      label,
+      ...(cashUpdate ? { cashUpdate } : {}),
+      ...(goToLabel ? { goToLabel } : {}),
+    });
   }
   return choices;
 }
@@ -127,14 +185,46 @@ function pairImage(value: string): string | false | undefined {
   return value;
 }
 
+function readEmojiAt(
+  chars: readonly string[],
+  start: number,
+): { emoji: string; end: number } | undefined {
+  const first = chars[start]?.codePointAt(0) ?? 0;
+  if (first <= 0xffff) return undefined;
+  let end = start + 1;
+  while (end < chars.length) {
+    const codePoint = chars[end]?.codePointAt(0) ?? 0;
+    if (codePoint === 0xfe0f) {
+      end += 1;
+      continue;
+    }
+    if (codePoint === 0x200d) {
+      const joined = chars[end + 1]?.codePointAt(0) ?? 0;
+      if (joined <= 0xffff) break;
+      end += 2;
+      if ((chars[end]?.codePointAt(0) ?? 0) === 0xfe0f) end += 1;
+      continue;
+    }
+    break;
+  }
+  return { emoji: chars.slice(start, end).join(""), end };
+}
+
+function firstEmoji(text: string): string | undefined {
+  const chars = [...text];
+  for (let index = 0; index < chars.length; index += 1) {
+    const found = readEmojiAt(chars, index);
+    if (found) return found.emoji;
+  }
+  return undefined;
+}
+
 function splitEmojiLabel(text: string): { emoji?: string; label: string } {
-  const match = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s*(.*)$/u.exec(
-    text,
-  );
-  if (!match) return { label: text.trim() };
-  const emoji = match[1];
-  const label = (match[2] ?? "").trim();
-  return { emoji, label: label || text.trim() };
+  const chars = [...text.trimStart()];
+  const found = readEmojiAt(chars, 0);
+  if (!found) return { label: text.trim() };
+  const label = chars.slice(found.end).join("").trim();
+  return { emoji: found.emoji, label: label || text.trim() };
 }
 
 function itemSlug(label: string, index: number): string {
@@ -209,7 +299,7 @@ function firstMedalId(
   return undefined;
 }
 
-function screenId(entries: readonly SettingEntry[], screenNumber: number): string {
+function screenId(entries: readonly SettingEntry[], row: PayloadScreenRow): string {
   const authored = settingValue(entries, "ID");
   if (authored) {
     return authored
@@ -217,7 +307,11 @@ function screenId(entries: readonly SettingEntry[], screenNumber: number): strin
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
   }
-  return `screen-${screenNumber}`;
+  const slug = (row.screenLabel || String(row.screenNumber))
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `screen-${slug || row.screenNumber}`;
 }
 
 function correctIsB(entries: readonly SettingEntry[]): boolean {
@@ -233,7 +327,7 @@ function looseBinaryChoice(
   optionA: { label: string; isCorrect: boolean };
   optionB: { label: string; isCorrect: boolean };
 } | undefined {
-  const trueFalse = /true or false:\s*(.+?)\s+(TRUE|FALSE)\s*$/is.exec(raw.trim());
+  const trueFalse = /true or false:\s*([\s\S]+?)\s+(TRUE|FALSE)\s*$/i.exec(raw.trim());
   if (trueFalse) {
     const question = (trueFalse[1] ?? "").trim();
     const isTrue = (trueFalse[2] ?? "").toUpperCase() === "TRUE";
@@ -319,7 +413,7 @@ export function mapPayloadScreen(
   const error = cohortField(row.error, cohort);
   const settings = mergedSettings(row.settings, cohort);
   const image = pairImage(cohortField(row.image, cohort));
-  const id = screenId(settings, row.screenNumber);
+  const id = screenId(settings, row);
   const picture = image === undefined ? {} : { pairImage: image };
 
   switch (row.gameType) {
@@ -363,7 +457,7 @@ export function mapPayloadScreen(
     case "drag-to-target": {
       const source = settingValue(settings, "SOURCE") ?? "";
       const target = settingValue(settings, "TARGET") ?? "";
-      const emoji = source.match(/\p{Extended_Pictographic}\uFE0F?/u)?.[0];
+      const emoji = firstEmoji(source);
       const sourceLabel = (emoji ? source.replace(emoji, "") : source).trim() || "Start";
       return {
         type: "drag-to-target",
@@ -381,14 +475,22 @@ export function mapPayloadScreen(
       const raw = cohortField(row.settings, cohort);
       const available = Number.parseInt(/AVAILABLE:\s*\$(\d+)/i.exec(raw)?.[1] ?? "", 10);
       const itemsLine = /^ITEMS:\s*(.*)$/im.exec(raw)?.[1] ?? "";
-      const items = [...itemsLine.matchAll(/(\p{Extended_Pictographic}\uFE0F?)\s*([^($]+?)\s*\(\$(\d+)\)/gu)].map(
-        (match, index) => ({
-          id: itemSlug((match[2] ?? "").trim(), index),
-          label: (match[2] ?? "").trim(),
-          price: Number(match[3]),
-          emoji: match[1],
-        }),
-      );
+      const itemChars = [...itemsLine];
+      const items: { id: string; label: string; price: number; emoji: string }[] = [];
+      for (let index = 0; index < itemChars.length; index += 1) {
+        const found = readEmojiAt(itemChars, index);
+        if (!found) continue;
+        const priced = /^\s*([^($]+?)\s*\(\$(\d+)\)/.exec(itemChars.slice(found.end).join(""));
+        if (!priced) continue;
+        const label = (priced[1] ?? "").trim();
+        items.push({
+          id: itemSlug(label, items.length),
+          label,
+          price: Number(priced[2]),
+          emoji: found.emoji,
+        });
+        index = found.end + priced[0].length - 1;
+      }
       const prices = items.reduce((sum, item) => sum + item.price, 0);
       const named = items.map((item) => `the ${item.label.toLowerCase()}`);
       const dragThese =
@@ -418,14 +520,47 @@ export function mapPayloadScreen(
     }
     case "binary-choice":
     case "multiple-choice": {
-      const choices = authoredChoices(settings);
+      const decisionScript = parseDecisionScript(cohortField(row.settings, cohort));
+      const decisionChoices = decisionScript?.choices;
+      const choices = decisionChoices
+        ? decisionChoices.map((choice, index) => ({
+            letter: String.fromCharCode(65 + index),
+            ...choice,
+          }))
+        : authoredChoices(settings);
+      const continueToLabel =
+        choices.length === 0 ? continueGoLabel(cohortField(row.settings, cohort)) : undefined;
+      if (continueToLabel) {
+        return {
+          type: row.gameType,
+          id,
+          prompt: text,
+          options: [],
+          continueToLabel,
+          wrongError: error,
+          errorStyle: "inline-red",
+          ...picture,
+        };
+      }
       const correct = correctChoiceLetters(settings);
+      const explicitCorrect = settings.some((entry) => entry.key === "CORRECT" && entry.value);
+      const decisionPath =
+        !explicitCorrect &&
+        choices.some(
+          (choice) =>
+            choice.cashUpdate !== undefined ||
+            choice.goToLabel !== undefined ||
+            choice.showWhen !== undefined,
+        );
       const loose = looseBinaryChoice(cohortField(row.settings, cohort), text);
       const options =
         choices.length > 0
           ? choices.map((choice) => ({
               label: choice.label,
               isCorrect: correct.has(choice.letter),
+              ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+              ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+              ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
             }))
           : [loose?.optionA, loose?.optionB]
               .filter((option): option is { label: string; isCorrect: boolean } =>
@@ -440,6 +575,10 @@ export function mapPayloadScreen(
         optionB: options[1] ?? { label: "", isCorrect: false },
         wrongError: error,
         errorStyle: "inline-red",
+        ...(decisionPath ? { decisionPath: true } : {}),
+        ...(decisionScript && decisionScript.prompts.length > 0
+          ? { promptWhen: decisionScript.prompts }
+          : {}),
         ...picture,
       };
     }
@@ -488,6 +627,45 @@ export function mapPayloadScreen(
       };
     }
     case "spotlight-rounds": {
+      const decisionScript = parseDecisionScript(cohortField(row.settings, cohort));
+      const decisionChoices = decisionScript?.choices;
+      const choices = decisionChoices
+        ? decisionChoices.map((choice, index) => ({
+            letter: String.fromCharCode(65 + index),
+            ...choice,
+          }))
+        : authoredChoices(settings);
+      const explicitCorrect = settings.some((entry) => entry.key === "CORRECT" && entry.value);
+      const decisionPath =
+        !explicitCorrect &&
+        choices.some(
+          (choice) =>
+            choice.cashUpdate !== undefined ||
+            choice.goToLabel !== undefined ||
+            choice.showWhen !== undefined,
+        );
+      if (decisionPath) {
+        const correct = correctChoiceLetters(settings);
+        return {
+          type: "spotlight-rounds",
+          id,
+          prompt: text,
+          rounds: [],
+          decisionPath: true,
+          wrongError: error,
+          options: choices.map((choice) => ({
+            label: choice.label,
+            isCorrect: correct.has(choice.letter),
+            ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+            ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+            ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
+          })),
+          ...(decisionScript && decisionScript.prompts.length > 0
+            ? { promptWhen: decisionScript.prompts }
+            : {}),
+          ...picture,
+        };
+      }
       return {
         type: "spotlight-rounds",
         id,
@@ -599,6 +777,46 @@ export function payloadCompletionMedalTier(
   return undefined;
 }
 
+/** Point each CONTINUE action at the screen named in its GO instruction. */
+function linkContinueTargets(
+  screens: ScreenConfig[],
+  labels: readonly string[],
+): ScreenConfig[] {
+  const indexByLabel = new Map<string, number>();
+  labels.forEach((label, index) => {
+    const key = screenLabelKey(label);
+    if (key && !indexByLabel.has(key)) indexByLabel.set(key, index);
+  });
+  return screens.map((screen) => {
+    if (screen.type === "spotlight-rounds") {
+      if (!screen.options?.some((option) => option.goToLabel)) return screen;
+      return {
+        ...screen,
+        options: screen.options.map((option) => {
+          if (!option.goToLabel) return option;
+          const goToIndex = indexByLabel.get(screenLabelKey(option.goToLabel));
+          return goToIndex === undefined ? option : { ...option, goToIndex };
+        }),
+      };
+    }
+    if (screen.type !== "binary-choice" && screen.type !== "multiple-choice") return screen;
+    let next = screen;
+    if (screen.continueToLabel) {
+      const continueToIndex = indexByLabel.get(screenLabelKey(screen.continueToLabel));
+      if (continueToIndex !== undefined) next = { ...next, continueToIndex };
+    }
+    if (!next.options?.some((option) => option.goToLabel)) return next;
+    return {
+      ...next,
+      options: next.options.map((option) => {
+        if (!option.goToLabel) return option;
+        const goToIndex = indexByLabel.get(screenLabelKey(option.goToLabel));
+        return goToIndex === undefined ? option : { ...option, goToIndex };
+      }),
+    };
+  });
+}
+
 /** Cohort-specific screens plus the standard cash-in rewards. */
 export function resolvePayloadLesson(
   payload: LessonPayload,
@@ -629,11 +847,14 @@ export function resolvePayloadLesson(
       shippedCohorts: ["explorer", "pathfinder", "maverick"],
     },
     characterName: characterName || undefined,
-    screens: payload.screens.map((row) =>
-      mapPayloadScreen(row, cohort, {
-        skillId: skillSlug,
-        skillName: payload.skillName,
-      }),
+    screens: linkContinueTargets(
+      payload.screens.map((row) =>
+        mapPayloadScreen(row, cohort, {
+          skillId: skillSlug,
+          skillName: payload.skillName,
+        }),
+      ),
+      payload.screens.map((row) => row.screenLabel),
     ),
     rewards: {
       skillSlug,

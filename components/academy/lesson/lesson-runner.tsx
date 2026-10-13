@@ -10,6 +10,7 @@ import {
 } from "@/components/academy/lesson/lesson-screen-chrome";
 import { LessonScreenRenderer } from "@/components/academy/lesson/lesson-screen-renderer";
 import { runMultipleChoiceNextHandler } from "@/components/academy/lesson/screens/multiple-choice-screen";
+import { runSpotlightDecisionNextHandler } from "@/components/academy/lesson/screens/spotlight-rounds-screen";
 import { runWordDropNextHandler } from "@/components/academy/lesson/screens/word-drop-screen";
 import { lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -47,8 +48,11 @@ export function LessonRunner({
   onNext,
 }: LessonRunnerProps) {
   const { screenIndex, markScreenReady } = flow;
-  const isCompletionScreen =
-    content.screens[screenIndex]?.type === "completion";
+  const activeScreen = content.screens[screenIndex];
+  const isCompletionScreen = activeScreen?.type === "completion";
+  const isContinueOnly =
+    (activeScreen?.type === "binary-choice" || activeScreen?.type === "multiple-choice") &&
+    Boolean(activeScreen.continueToLabel);
 
   useEffect(() => {
     const screen = content.screens[screenIndex];
@@ -94,10 +98,11 @@ export function LessonRunner({
           (() => {
             if (!runWordDropNextHandler()) return;
             if (!runMultipleChoiceNextHandler()) return;
+            if (!runSpotlightDecisionNextHandler()) return;
             flow.handleNext();
           })
         }
-        hideFooter={isCompletionScreen}
+        hideFooter={isCompletionScreen || isContinueOnly}
         footerSlot={isCompletionScreen ? <></> : undefined}
       >
         {content.screens.map((screen, index) => (

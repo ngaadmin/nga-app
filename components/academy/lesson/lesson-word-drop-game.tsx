@@ -170,17 +170,6 @@ export const LessonWordDropGame = forwardRef<
     },
   }));
 
-  const removeWordFromBlank = useCallback((blankIndex: number) => {
-    const current = choicesRef.current;
-    if (!current[blankIndex]) return;
-    const next = [...current];
-    next[blankIndex] = "";
-    choicesRef.current = next;
-    setChoices(next);
-    onChoicesChangeRef.current?.();
-    reportSolvedState();
-  }, [reportSolvedState]);
-
   const placeWordInBlank = useCallback(
     (blankIndex: number, word: string) => {
       const next = [...choicesRef.current];
@@ -287,38 +276,25 @@ export const LessonWordDropGame = forwardRef<
       }
 
       if (!press.dragging) {
-        if (press.fromBlankIndex === null) {
-          const emptyIndex = choicesRef.current.findIndex((choice) => !choice);
-          const target =
-            emptyIndex >= 0
-              ? emptyIndex
-              : blanksRef.current.length === 1
-                ? 0
-                : null;
-          if (target !== null) placeWordInBlank(target, press.word);
-        } else {
-          removeWordFromBlank(press.fromBlankIndex);
-        }
         endDrag();
         return;
       }
 
-      const hit = document.elementFromPoint(
+      const slotIndex = resolveBlankIndexFromPointer(
         nativeEvent.clientX,
         nativeEvent.clientY,
+        blankRefs.current,
       );
-      const slot =
-        hit instanceof Element ? hit.closest("[data-word-drop-slot]") : null;
-      const overBank =
-        hit instanceof Element && Boolean(hit.closest("#word-drop-bank"));
-      const slotIndex = slot
-        ? Number.parseInt(slot.getAttribute("data-word-drop-slot") ?? "", 10)
-        : Number.NaN;
+      const blank = slotIndex === null ? undefined : blanksRef.current[slotIndex];
+      const locked =
+        slotIndex !== null &&
+        choicesRef.current[slotIndex] === blank?.correctOption &&
+        Boolean(choicesRef.current[slotIndex]);
 
-      if (Number.isInteger(slotIndex)) {
+      if (slotIndex !== null && blank && !locked && press.word === blank.correctOption) {
         placeWordInBlank(slotIndex, press.word);
-      } else if (press.fromBlankIndex !== null && (overBank || !slot)) {
-        removeWordFromBlank(press.fromBlankIndex);
+      } else if (slotIndex !== null && press.word !== blank?.correctOption) {
+        onMismatchRef.current?.();
       }
 
       endDrag();
@@ -372,19 +348,7 @@ export const LessonWordDropGame = forwardRef<
                 className={blankSlotClass(index, Boolean(visibleBlankWord(index)))}
               >
                 {visibleBlankWord(index) ? (
-                  <button
-                    type="button"
-                    aria-label={`Move ${visibleBlankWord(index)}`}
-                    onPointerDown={(event) => {
-                      const word = choices[index];
-                      if (!word) return;
-                      beginPress(event, word, index);
-                    }}
-                    className={lessonSortPoolChipClass}
-                    style={{ touchAction: "none" }}
-                  >
-                    {visibleBlankWord(index)}
-                  </button>
+                  <span className={lessonSortPoolChipClass}>{visibleBlankWord(index)}</span>
                 ) : null}
               </span>
             ) : null}

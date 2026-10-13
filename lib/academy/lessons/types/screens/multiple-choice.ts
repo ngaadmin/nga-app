@@ -1,3 +1,4 @@
+import type { CashComparison, CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
 import type { WithDeclarative } from "../declarative";
 
 export type MultipleChoiceOption = {
@@ -5,6 +6,14 @@ export type MultipleChoiceOption = {
   isCorrect: boolean;
   /** Option-specific success or error copy; falls back to screen-level messages. */
   feedback?: string;
+  /** Applied when this path is chosen. `{cash}` on later screens reads the result. */
+  cashUpdate?: CashUpdate;
+  /** Spreadsheet Screen cell named in `GO Screen`. */
+  goToLabel?: string;
+  /** Index of `goToLabel` in this lesson. */
+  goToIndex?: number;
+  /** Hide this button unless the path cash matches. */
+  showWhen?: CashComparison;
 };
 
 type MultipleChoiceFields = {
@@ -47,6 +56,20 @@ type MultipleChoiceFields = {
   /** When `neutral-selected`, tap only selects; Next grades (no red/green lock-in on tap). */
   choiceFeedback?: "colored" | "neutral-selected";
   emphasizeInstruction?: boolean;
+  /**
+   * Every choice is a valid path (`SET cash=…` with no CORRECT key).
+   * Picking one records that cash value and continues.
+   */
+  decisionPath?: boolean;
+  /**
+   * Result screen whose settings are only `CONTINUE → GO Screen X`.
+   * The label is the spreadsheet Screen cell to open.
+   */
+  continueToLabel?: string;
+  /** Index of `continueToLabel` in this lesson's screen list. */
+  continueToIndex?: number;
+  /** Prompt copy used only when path cash matches. The screen prompt stays the other branch. */
+  promptWhen?: readonly { text: string; showWhen: CashComparison }[];
 };
 
 export type MultipleChoiceScreenConfig = WithDeclarative<

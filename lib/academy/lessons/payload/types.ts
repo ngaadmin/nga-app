@@ -7,6 +7,8 @@ export type PayloadCohortCopy = {
 
 export type PayloadScreenRow = {
   screenNumber: number;
+  /** Spreadsheet Screen cell, including labels such as `2-alt`. */
+  screenLabel: string;
   gameType: string;
   text: PayloadCohortCopy;
   image: PayloadCohortCopy;

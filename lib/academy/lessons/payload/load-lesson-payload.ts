@@ -89,9 +89,9 @@ function parseLessonDetails(
   const fields = new Map<string, string>();
 
   for (const row of rows.slice(1)) {
-    const module = Number.parseInt(cell(row, indexes["Module Number"] ?? 0), 10);
+    const rowModule = Number.parseInt(cell(row, indexes["Module Number"] ?? 0), 10);
     const lesson = Number.parseInt(cell(row, indexes["Lesson Number"] ?? 0), 10);
-    if (module !== moduleNumber || lesson !== lessonNumber) continue;
+    if (rowModule !== moduleNumber || lesson !== lessonNumber) continue;
     const field = cell(row, indexes.Field ?? 0);
     if (!field) continue;
     fields.set(field, cell(row, indexes.Value ?? 0));
@@ -134,12 +134,12 @@ function parseScreens(
   const screens: PayloadScreenRow[] = [];
 
   for (const row of rows.slice(1)) {
-    const module = Number.parseInt(cell(row, indexes[SCREEN_COLUMNS.module] ?? 0), 10);
+    const rowModule = Number.parseInt(cell(row, indexes[SCREEN_COLUMNS.module] ?? 0), 10);
     const lesson = Number.parseInt(cell(row, indexes[SCREEN_COLUMNS.lesson] ?? 0), 10);
     const screenLabel = cell(row, indexes[SCREEN_COLUMNS.screen] ?? 0).trim();
     const screenNumber = Number.parseInt(screenLabel, 10);
     const gameType = cell(row, indexes[SCREEN_COLUMNS.gameType] ?? 0).toLowerCase();
-    if (module !== moduleNumber || lesson !== lessonNumber) continue;
+    if (rowModule !== moduleNumber || lesson !== lessonNumber) continue;
     if (!Number.isFinite(screenNumber) || !gameType) continue;
 
     screens.push({

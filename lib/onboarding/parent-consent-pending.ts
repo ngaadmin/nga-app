@@ -5,7 +5,6 @@ import {
   writePersisted,
 } from "@/lib/dev/client-persist";
 import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
-import { requestOnboardingEmailSend } from "@/lib/email/request-send";
 import {
   captureGuestProgressSnapshot,
   ensureGuestProgressSnapshot,
@@ -351,10 +350,9 @@ export async function readPendingParentConsentByToken(
 }
 
 /**
- * Issue a fresh 24h approval link for the same pending Explorer profile and
- * email it to the parent. Prefers server-side resend from the signed token
- * (works cross-device without leaking claims). Falls back to same-device local
- * claims when the server cannot verify the token.
+ * Issue a fresh 24h approval link for a stored Explorer consent request and
+ * email it to the parent address on that request. Local claims are not used
+ * as a recipient.
  */
 export async function resendParentConsentApproval(
   token: string,
@@ -366,141 +364,48 @@ export async function resendParentConsentApproval(
     );
   }
 
-  // 1) Server resend: verifies signature (expired OK), emails, returns no PII.
-  let serverRejectedAsInvalid = false;
+  let response: Response;
   try {
-    const response = await fetch("/api/auth/consent-token", {
+    response = await fetch("/api/auth/consent-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "resend", token: trimmed }),
     });
-    const json = (await response.json().catch(() => null)) as {
-      success?: boolean;
-      token?: string;
-      childUsername?: string;
-      error?: string;
-    } | null;
+  } catch {
+    throw new Error(
+      "We could not reach the approval-link service. Check your connection and try again.",
+    );
+  }
 
-    if (response.ok && json?.success === true && json.token && json.childUsername) {
-      const local = findLocalPendingByToken(trimmed);
-      if (local) {
-        upsertLocalPendingConsent({
-          ...local,
-          token: json.token,
-          childUsername: json.childUsername,
-          createdAt: new Date().toISOString(),
-        });
-      }
-      return {
+  const json = (await response.json().catch(() => null)) as {
+    success?: boolean;
+    token?: string;
+    childUsername?: string;
+    error?: string;
+  } | null;
+
+  if (response.ok && json?.success === true && json.token && json.childUsername) {
+    const local = findLocalPendingByToken(trimmed);
+    if (local) {
+      upsertLocalPendingConsent({
+        ...local,
         token: json.token,
         childUsername: json.childUsername,
-        parentEmail: local?.parentEmail,
-      };
+        createdAt: new Date().toISOString(),
+      });
     }
-
-    const serverError =
-      typeof json?.error === "string" && json.error.trim()
-        ? json.error.trim()
-        : "We could not resend the approval email. Please try again shortly.";
-
-    // Invalid / unverifiable token → try same-device local claims.
-    if (response.status === 400) {
-      serverRejectedAsInvalid = true;
-    } else {
-      throw new Error(serverError);
-    }
-  } catch (error) {
-    if (!serverRejectedAsInvalid) {
-      // Surface non-network failures (429/502/etc). Network errors fall through.
-      if (
-        error instanceof Error &&
-        !/Failed to fetch|NetworkError|Load failed/i.test(error.message)
-      ) {
-        throw error;
-      }
-    }
+    return {
+      token: json.token,
+      childUsername: json.childUsername,
+      parentEmail: local?.parentEmail,
+    };
   }
 
-  // 2) Same-device fallback using local pending claims only.
-  const local = findLocalPendingByToken(trimmed);
-  if (!local) {
-    throw new Error(
-      "This approval link is no longer valid, so we could not resend it.",
-    );
-  }
-
-  const account = findRegisteredAccountByUsername(local.childUsername);
-  if (account?.accountStatus === "ACTIVE") {
-    throw new Error(
-      "This Explorer profile is already approved. No new approval email is needed.",
-    );
-  }
-
-  const childUsername = (account?.username ?? local.childUsername).trim();
-  const parentEmail = (account?.parentEmail ?? local.parentEmail)
-    .trim()
-    .toLowerCase();
-  const birthYear = account?.birthYear ?? local.birthYear;
-  const passcodeHash =
-    account?.passcodeHash?.trim() || local.passcodeHash?.trim() || undefined;
-
-  if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
-    throw new Error(
-      "We could not find a parent email on this pending profile to resend to.",
-    );
-  }
-  if (!requiresParentConsentForBirthYear(birthYear)) {
-    throw new Error(
-      "Parent approval is only required for Explorer profiles (ages 10-12).",
-    );
-  }
-  if (!passcodeHash) {
-    throw new Error(
-      "We could not resend approval for this profile. Ask your learner to restart signup.",
-    );
-  }
-
-  const createdAt = new Date().toISOString();
-  const nextToken = await encodeConsentToken({
-    parentEmail,
-    childUsername,
-    birthYear,
-    createdAt,
-    passcodeHash,
-  });
-
-  const pending: PendingParentConsent = {
-    token: nextToken,
-    parentEmail,
-    childUsername,
-    birthYear,
-    createdAt,
-    passcodeHash,
-  };
-
-  upsertLocalPendingConsent(pending);
-
-  const sendResult = await requestOnboardingEmailSend({
-    type: "EXPLORER_PARENT",
-    recipientEmail: parentEmail,
-    data: {
-      username: childUsername,
-      token: nextToken,
-    },
-  });
-
-  if (!sendResult.success) {
-    throw new Error(
-      sendResult.error ||
-        "We could not resend the approval email. Please try again shortly.",
-    );
-  }
-
-  return {
-    token: nextToken,
-    childUsername,
-    parentEmail,
-  };
+  const serverError =
+    typeof json?.error === "string" && json.error.trim()
+      ? json.error.trim()
+      : "We could not resend the approval email. Please try again shortly.";
+  throw new Error(serverError);
 }
 
 /**

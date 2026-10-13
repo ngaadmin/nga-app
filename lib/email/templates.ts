@@ -102,8 +102,13 @@ export type BuiltEmail = {
   preheader?: string;
 };
 
+/** Strip control characters so names cannot break subjects or add headers. */
+export function emailPlain(value: string): string {
+  return value.replace(/[\u0000-\u001F\u007F]/g, "");
+}
+
 function escapeHtml(value: string): string {
-  return value
+  return emailPlain(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -136,15 +141,68 @@ export function getDefaultAppUrl(): string {
  */
 export const PRODUCTION_APP_URL = getDefaultAppUrl();
 
+function deploymentHost(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  try {
+    const withProtocol = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+    return new URL(withProtocol).host.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function isLoopbackHost(host: string): boolean {
+  const hostname = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "");
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
 /**
- * Consent/approval links must use the same origin that signed the token.
- * Prefer the send-route appUrl (request host); fall back to env/default.
+ * Hosts that may appear in email links. A caller-supplied origin is ignored
+ * unless it is one of these, so a spoofed Origin cannot rewrite approval URLs.
  */
-function resolveAppUrl(appUrl?: string): string {
-  const trimmed = appUrl?.trim();
+export function allowedEmailLinkHosts(): Set<string> {
+  const hosts = new Set<string>();
+  try {
+    hosts.add(new URL(getDefaultAppUrl()).host.toLowerCase());
+  } catch {
+    // ignore invalid configured URL
+  }
+
+  for (const name of [
+    "VERCEL_URL",
+    "VERCEL_BRANCH_URL",
+    "VERCEL_PROJECT_PRODUCTION_URL",
+  ] as const) {
+    const host = deploymentHost(process.env[name]);
+    if (host) hosts.add(host);
+  }
+
+  if (!process.env.VERCEL) {
+    hosts.add("localhost:3000");
+    hosts.add("127.0.0.1:3000");
+  }
+
+  return hosts;
+}
+
+/**
+ * Origin used for email CTAs. Untrusted or non-http(s) candidates fall back
+ * to the configured app URL.
+ */
+export function resolveTrustedAppUrl(candidate?: string | null): string {
+  const trimmed = candidate?.trim();
   if (trimmed) {
     try {
-      return new URL(trimmed).origin;
+      const url = new URL(trimmed);
+      const protocolOk = url.protocol === "https:" || url.protocol === "http:";
+      const host = url.host.toLowerCase();
+      const loopbackOk = !process.env.VERCEL && isLoopbackHost(host);
+      if (protocolOk && (allowedEmailLinkHosts().has(host) || loopbackOk)) {
+        return url.origin;
+      }
     } catch {
       // fall through
     }
@@ -152,8 +210,26 @@ function resolveAppUrl(appUrl?: string): string {
   return getDefaultAppUrl();
 }
 
+/**
+ * Consent/approval links use a trusted app origin only.
+ * A spoofed request Origin cannot change the link host.
+ */
+function resolveAppUrl(appUrl?: string): string {
+  return resolveTrustedAppUrl(appUrl);
+}
+
+function safeHttpHref(href: string): string {
+  try {
+    const url = new URL(href);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return "#";
+    return escapeHtml(url.toString());
+  } catch {
+    return "#";
+  }
+}
+
 function ctaButton(label: string, href: string): string {
-  const safeHref = escapeHtml(href);
+  const safeHref = safeHttpHref(href);
   const safeLabel = escapeHtml(label);
   return `
     <p style="margin: 28px 0;">
@@ -208,7 +284,7 @@ function wrapHtml(options: {
     : "";
   const footer = options.footer
     ? `<p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
-        ${options.footer}
+        ${escapeHtml(options.footer)}
       </p>`
     : "";
 
@@ -244,7 +320,7 @@ export function buildExplorerParentEmail(
   data: ExplorerParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "your learner";
+  const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
@@ -323,7 +399,7 @@ export function buildPathfinderParentEmail(
   data: PathfinderParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "your learner";
+  const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const claimUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
@@ -397,8 +473,10 @@ export function buildPathfinderParentLinkedEmail(
   data: PathfinderParentLinkedEmailData,
   _appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "your learner";
-  const masterLabel = data.masterUsername?.trim();
+  const username = emailPlain(data.username).trim() || "your learner";
+  const masterLabel = data.masterUsername
+    ? emailPlain(data.masterUsername).trim()
+    : undefined;
 
   const subject = `${username} was added to your NextGenAchiever$ parent dashboard`;
   const preheader = "A new Pathfinder profile is linked to your parent account.";
@@ -450,7 +528,7 @@ export function buildPathfinderWelcomeEmail(
   data: PathfinderWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "Pathfinder";
+  const username = emailPlain(data.username).trim() || "Pathfinder";
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
@@ -514,7 +592,7 @@ export function buildMaverickWelcomeEmail(
   data: MaverickWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "Maverick";
+  const username = emailPlain(data.username).trim() || "Maverick";
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
@@ -578,7 +656,7 @@ export function buildParentWelcomeEmail(
   data: ParentWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim();
+  const username = emailPlain(data.username).trim();
   const greeting = username ? `Hi ${username},` : "Hi there,";
   const base = resolveAppUrl(appUrl);
   const accountUrl = `${base}/dashboard/settings/account`;
@@ -637,7 +715,7 @@ export function buildUsernameRecoveryEmail(
   const base = resolveAppUrl(appUrl);
   const signInUrl = `${base}/onboarding/sign-in`;
   const linked = (data.linkedUsernames ?? [])
-    .map((name) => name.trim())
+    .map((name) => emailPlain(name).trim())
     .filter(Boolean);
   if (linked.length > 0) {
     const subject = "Your NextGenAchiever$ learner usernames";
@@ -677,13 +755,15 @@ export function buildUsernameRecoveryEmail(
     return { subject, html, text: textLines.join("\n"), preheader };
   }
 
-  const username = data.username.trim() || "learner";
+  const username = emailPlain(data.username).trim() || "learner";
   const isExplorer = data.cohort === "explorer";
 
   if (isExplorer) {
-    const masterUsername = data.masterUsername?.trim() || "";
+    const masterUsername = data.masterUsername
+      ? emailPlain(data.masterUsername).trim()
+      : "";
     const linked = (data.linkedUsernames ?? [])
-      .map((name) => name.trim())
+      .map((name) => emailPlain(name).trim())
       .filter(Boolean);
     // Fallback when callers omit household fields: treat `username` as an Explorer.
     const explorerNames =
@@ -782,7 +862,7 @@ export function buildCredentialRecoveryEmail(
   _appUrl?: string,
 ): BuiltEmail {
   const base = getDefaultAppUrl();
-  const label = data.label.trim();
+  const label = emailPlain(data.label).trim();
   const token = data.token.trim();
   const resetUrl = `${base}/onboarding/reset-password?token=${encodeURIComponent(token)}`;
   const subject = "Reset your NextGenAchiever$ password";
@@ -836,7 +916,7 @@ export function buildAccountDeletedMasterEmail(
   _appUrl?: string,
 ): BuiltEmail {
   const children = (data.childUsernames ?? [])
-    .map((name) => name.trim())
+    .map((name) => emailPlain(name).trim())
     .filter(Boolean);
   const subject = "Your NextGenAchiever$ household has been deleted";
   const preheader = "Your parent account and linked profiles have been removed.";
@@ -901,7 +981,7 @@ export function buildAccountDeletedChildEmail(
   data: AccountDeletedChildEmailData,
   _appUrl?: string,
 ): BuiltEmail {
-  const username = data.username.trim() || "this profile";
+  const username = emailPlain(data.username).trim() || "this profile";
   const subject = `${username}'s NextGenAchiever$ account has been deleted`;
   const preheader = "This profile and its progress have been permanently removed.";
   const header = "Profile deleted";

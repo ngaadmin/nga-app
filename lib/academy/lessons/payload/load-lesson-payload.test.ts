@@ -350,6 +350,37 @@ describe("lesson payload loader", () => {
         },
       ],
     });
+
+    const missedAfternoon = (
+      cohort: "explorer" | "pathfinder" | "maverick",
+      name: "Senna" | "Immi" | "Dash",
+      event: string,
+    ) => {
+      const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 8), cohort, 8).screens[5];
+      const possessive = name === "Immi" ? "her" : "his";
+      const pronoun = name === "Immi" ? "she" : "he";
+      expect(screen).toMatchObject({
+        type: "binary-choice",
+        sourceLabel: "4-alt",
+        prompt: `The next day everyone is talking about how good the ${event} was, and they all went to lunch after. ${name} still has ${possessive} $20, but ${pronoun} missed all of it.`,
+      });
+    };
+    missedAfternoon("explorer", "Senna", "skateboard session");
+    missedAfternoon("pathfinder", "Immi", "derby");
+    missedAfternoon("maverick", "Dash", "gym session");
+
+    const wrapUp = (cohort: "explorer" | "pathfinder" | "maverick", name: string) => {
+      const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 8), cohort, 8).screens[12];
+      expect(screen).toMatchObject({
+        type: "binary-choice",
+        sourceLabel: "8",
+        continueToLabel: "9",
+        prompt: `Every choice you made shaped ${name}'s day. Spending on things that matter to you, like time with friends, can be worth it. Keeping some money back is smart too. It's about finding the right balance. That's real money thinking!`,
+      });
+    };
+    wrapUp("explorer", "Senna");
+    wrapUp("pathfinder", "Immi");
+    wrapUp("maverick", "Dash");
   });
 
   it("maps YES and NO rows into a bucket-sort", () => {

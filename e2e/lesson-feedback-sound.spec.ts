@@ -85,7 +85,7 @@ async function vibrations(page: Page): Promise<number[][]> {
   );
 }
 
-test("choice, sentence, and quick-pick sounds play when the answer is judged", async ({
+test("answer sounds play on the tap, and Next stays quiet", async ({
   page,
 }) => {
   await openLesson(page, "/dashboard/academy/lesson/1?preview=1&screen=1");

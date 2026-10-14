@@ -238,7 +238,7 @@ describe("lesson payload loader", () => {
       "binary-choice",
       "binary-choice",
       "binary-choice",
-      "binary-choice",
+      "narrative-bonus",
       "completion",
     ]);
     const phoneCase = lesson8.screens[0];
@@ -453,10 +453,11 @@ describe("lesson payload loader", () => {
         (item) => item.sourceLabel === "8",
       );
       expect(screen).toMatchObject({
-        type: "binary-choice",
+        type: "narrative-bonus",
+        resolution: true,
         sourceLabel: "8",
         continueToLabel: "9",
-        prompt: `Every choice you made shaped ${name}'s day. Spending on things that matter to you, like time with friends, can be worth it. Keeping some money back is smart too. It's about finding the right balance. That's real money thinking!`,
+        narrative: `Every choice you made shaped ${name}'s day. Spending on things that matter to you, like time with friends, can be worth it. Keeping some money back is smart too. It's about finding the right balance. That's real money thinking!`,
       });
     };
     wrapUp("explorer", "Senna");
@@ -747,7 +748,7 @@ describe("lesson payload loader", () => {
       "bucket-sort",
       "spotlight-rounds",
       "rank-order",
-      "binary-choice",
+      "narrative-bonus",
       "completion",
     ]);
     const drop = lesson.screens[0];
@@ -773,11 +774,13 @@ describe("lesson payload loader", () => {
     }
     const celebration = lesson.screens[6];
     expect(celebration).toMatchObject({
-      type: "binary-choice",
+      type: "narrative-bonus",
+      resolution: true,
       continueToLabel: "8",
+      bonusXp: 0,
     });
-    if (celebration && "prompt" in celebration) {
-      expect(celebration.prompt).toMatch(/share the gelato/i);
+    if (celebration && "narrative" in celebration) {
+      expect(celebration.narrative).toMatch(/share the gelato/i);
     }
   });
 

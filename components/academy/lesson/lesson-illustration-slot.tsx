@@ -78,7 +78,7 @@ export function LessonIllustrationSlot({
 
   if (src && imageStatus === "loaded") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";
-    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1.4;
+    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1;
 
     return (
       <div
@@ -92,8 +92,8 @@ export function LessonIllustrationSlot({
         <img
           src={src}
           alt={ariaLabel}
-          className="h-full w-full origin-center bg-transparent object-contain object-center"
-          style={{ transform: `scale(${scaleValue})` }}
+          className="h-full w-full bg-transparent object-contain object-top"
+          style={scaleValue === 1 ? undefined : { transform: `scale(${scaleValue})` }}
           decoding="async"
           loading="eager"
         />

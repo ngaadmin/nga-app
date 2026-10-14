@@ -7,6 +7,8 @@ type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   selected?: boolean;
   /** Selected but not yet checked. */
   pending?: boolean;
+  /** This pick was wrong. The card shakes and turns red. */
+  wrong?: boolean;
   /** Persistent locked-in correct state (multi-select check screens). */
   locked?: boolean;
   /** Kept so older call sites compile. Letter orbs are not rendered. */
@@ -25,6 +27,7 @@ export function LessonChoiceButton({
   selected = false,
   pending = false,
   locked = false,
+  wrong = false,
   layout = "pill",
   emoji,
   orbLabel,
@@ -48,6 +51,7 @@ export function LessonChoiceButton({
         "flex w-full min-h-14 items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left font-sans text-[18px] font-semibold leading-snug text-[#031F82] transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45",
         isPressed && "bg-[#BDE9FB]",
         locked && "bg-[#DCFCE7]",
+        wrong && "lesson-tile-shake bg-[#FFF1F2] text-[#9F1239]",
         className,
       )}
     >

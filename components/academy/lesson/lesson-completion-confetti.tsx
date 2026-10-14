@@ -27,8 +27,8 @@ type Particle = {
   shape: "rect" | "circle";
 };
 
-function createParticles(width: number, height: number): Particle[] {
-  return Array.from({ length: 40 }, () => {
+function createParticles(width: number, height: number, count: number): Particle[] {
+  return Array.from({ length: count }, () => {
     const fromTop = Math.random() > 0.35;
     return {
       x: Math.random() * width,
@@ -44,8 +44,8 @@ function createParticles(width: number, height: number): Particle[] {
   });
 }
 
-/** Full-viewport confetti for lesson Cash in. Portals to document.body. */
-export function LessonCompletionConfetti() {
+/** Full-viewport confetti for lesson Cash in. `light` is the smaller resolution burst. */
+export function LessonCompletionConfetti({ light = false }: { light?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -68,7 +68,7 @@ export function LessonCompletionConfetti() {
       canvas.height = window.innerHeight;
     };
     resize();
-    const particles = createParticles(canvas.width, canvas.height);
+    const particles = createParticles(canvas.width, canvas.height, light ? 18 : 40);
     window.addEventListener("resize", resize);
 
     const tick = (now: number) => {
@@ -113,7 +113,7 @@ export function LessonCompletionConfetti() {
       window.removeEventListener("resize", resize);
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [mounted]);
+  }, [light, mounted]);
 
   if (!mounted) return null;
 

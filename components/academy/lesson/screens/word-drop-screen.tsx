@@ -6,11 +6,8 @@ import {
   LessonWordDropGame,
   type LessonWordDropGameHandle,
 } from "@/components/academy/lesson/lesson-word-drop-game";
-import {
-  LessonErrorBanner,
-  LessonSuccessBanner,
-  lessonFeedbackCopy,
-} from "@/components/academy/lesson/lesson-ui";
+import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
+import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { WordDropScreenConfig } from "@/lib/academy/lessons/types";
 import type { CoreScreenProps } from "./types";
 
@@ -30,7 +27,6 @@ export function WordDropScreen({
   flow,
 }: CoreScreenProps<WordDropScreenConfig>) {
   const {
-    showSuccess,
     handleComplete,
     handleIncomplete,
     handleSuccess,
@@ -59,6 +55,7 @@ export function WordDropScreen({
         ];
 
   const errorCopy = lessonFeedbackCopy(screen.wrongError);
+  usePublishLessonHint(feedback === "error" ? errorCopy : null);
 
   const handleChoicesChange = useCallback(() => {
     setFeedback(null);
@@ -99,10 +96,6 @@ export function WordDropScreen({
         onIncomplete={handleIncomplete}
         onMismatch={handleWrongPlacement}
       />
-      {showSuccess ? <LessonSuccessBanner /> : null}
-      {feedback === "error" ? (
-        <LessonErrorBanner>{errorCopy}</LessonErrorBanner>
-      ) : null}
     </>
   );
 }

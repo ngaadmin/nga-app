@@ -67,7 +67,7 @@ export function AcademyLessonShell({
   return (
     <div
       className="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col bg-white"
-      style={{ touchAction: "pan-y", overscrollBehaviorX: "none" }}
+      style={{ touchAction: "pan-y", overscrollBehavior: "none" }}
     >
       <header className="flex shrink-0 items-center gap-2.5 px-4 pb-1 pt-3.5">
         <div
@@ -136,8 +136,8 @@ export function LessonScreenPane({
 }) {
   return (
     <div
-      className="flex h-full w-full shrink-0 flex-col overflow-hidden px-5 pb-3 pt-8"
-      style={{ overscrollBehaviorX: "none" }}
+      className="flex h-full w-full shrink-0 flex-col overflow-hidden px-5 pb-3 pt-1"
+      style={{ overscrollBehavior: "none", touchAction: "pan-y" }}
       aria-hidden={!isActive}
       inert={isActive ? undefined : true}
     >

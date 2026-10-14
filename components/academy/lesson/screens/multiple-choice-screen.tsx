@@ -255,6 +255,13 @@ export function MultipleChoiceScreen({
           }}
           selected={selected}
           locked={solved && selected}
+          wrong={
+            !solved &&
+            selected &&
+            error !== null &&
+            screen.decisionPath !== true &&
+            !isLessonChoiceOptionCorrect(option)
+          }
         >
           {option.hubSkillKey && completedHubSkills.has(option.hubSkillKey)
             ? `${displayCashText(option.label, cash)} · Done`

@@ -120,6 +120,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "budget-select",
     id: "budget-wallet",
+    pairImage: "lars-thinking-512.webp",
     intro: "You have $30 left. Check the boxes to buy what you actually need.",
     walletLabel: "Digital Wallet",
     total: 30,
@@ -145,7 +146,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     id: "reserve-slider",
     pairImage: "lars-hands-on-hips-512.webp",
     intro:
-      "Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.",
+      "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save $20 👇",
     total: 25,
     targetMin: 20,
     reserveGoals: [

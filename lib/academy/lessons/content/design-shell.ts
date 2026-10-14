@@ -419,7 +419,7 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
     spendItems: [
       { id: "treat", label: "Treat today", amount: 8, emoji: "🧋" },
     ],
-    sliderError: "Lock at least $22 for the gift before spending today.",
+    sliderError: "Save at least $22 for the gift before spending today.",
     successMessage: "Gift money protected — today's treat stays optional.",
     authoring: { pedagogicalStage: "apply", gameArchetype: "allocation-slider" },
     ...AUTO_READY,
@@ -427,6 +427,7 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
   {
     type: "budget-select",
     id: "shell-budget-select",
+    pairImage: "lars-thinking-512.webp",
     intro: "You have $25 left. Check only what you actually need.",
     walletLabel: "Digital Wallet",
     total: 25,

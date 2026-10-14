@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
+import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
   LessonFalseIcon,
   LessonTrueIcon,
@@ -70,8 +71,10 @@ export function runSpotlightDecisionNextHandler(): boolean {
   return activeSpotlightDecisionNextHandler();
 }
 
-function letterForIndex(index: number): string {
-  return String.fromCharCode(65 + index);
+function realEmoji(icon?: string): string | undefined {
+  const trimmed = icon?.trim();
+  if (!trimmed || /^[A-Za-z]$/.test(trimmed)) return undefined;
+  return trimmed;
 }
 
 /** Side-by-side choices that keep cash updates and GO targets. */
@@ -129,25 +132,22 @@ function SpotlightDecisionChoices({
       errorMessage={error}
     >
       <p className={cn("mb-2.5", lessonPromptClass)}>{prompt}</p>
-      <div className="grid w-full grid-cols-2 gap-4">
-        {visible.map(({ option, index }, position) => {
+      <div className="grid w-full gap-3">
+        {visible.map(({ option, index }) => {
           const selected = choice === index;
           return (
-            <LessonIconOption
+            <LessonChoiceButton
               key={`${option.label}-${index}`}
-              className="w-full min-w-0"
-              label={displayCashText(option.label, cash)}
-              emoji={option.emoji ?? letterForIndex(position)}
-              display="emoji-label"
-              labelClassName="max-w-full"
+              emoji={option.emoji}
               selected={selected}
-              selectionVariant="neutral"
               onClick={() => {
                 setChoice(index);
                 setError(null);
                 flow.markScreenReady(screenIndex);
               }}
-            />
+            >
+              {displayCashText(option.label, cash)}
+            </LessonChoiceButton>
           );
         })}
       </div>
@@ -237,6 +237,23 @@ function SpotlightGradedRounds({
     b: { icon: round.iconB, label: round.optionB },
   };
 
+  const renderCard = (which: "a" | "b") => {
+    const meta = optionMeta[which];
+    const isChosen = choice === which;
+    const isCorrectChoice = which === round.correct;
+    return (
+      <LessonChoiceButton
+        emoji={realEmoji(meta.icon)}
+        selected={isChosen && isCorrectChoice}
+        wrong={isChosen && !isCorrectChoice}
+        disabled={choice !== null}
+        onClick={() => pick(which)}
+      >
+        {meta.label}
+      </LessonChoiceButton>
+    );
+  };
+
   const renderSide = (which: "a" | "b") => {
     const meta = optionMeta[which];
     const isChosen = choice === which;
@@ -245,7 +262,7 @@ function SpotlightGradedRounds({
     return (
       <LessonIconOption
         label={meta.label}
-        emoji={glyph ? undefined : meta.icon}
+        emoji={glyph ? undefined : realEmoji(meta.icon)}
         glyph={glyph ?? undefined}
         display="emoji-label"
         selected={isChosen}
@@ -261,6 +278,15 @@ function SpotlightGradedRounds({
     );
   };
 
+  const circleRound =
+    screen.rounds.length > 1 &&
+    Boolean(
+      realEmoji(round.iconA) ||
+        realEmoji(round.iconB) ||
+        spotlightChoiceGlyph(round.optionA) ||
+        spotlightChoiceGlyph(round.optionB),
+    );
+
   return (
     <LessonScreenLayout
       emphasizeInstruction={screen.emphasizeInstruction === true}
@@ -268,26 +294,35 @@ function SpotlightGradedRounds({
       errorMessage={error}
     >
       <p className={cn("mb-2.5", lessonPromptClass)}>{screen.prompt}</p>
-      <div className="mb-5 flex justify-center gap-1.5">
-        {screen.rounds.map((_, index) => (
-          <i
-            key={index}
-            className={cn(
-              "block size-2 rounded-full",
-              index === roundIndex
-                ? "bg-[#0CC1E0]"
-                : index < roundIndex
-                  ? "bg-[#031F82]"
-                  : "bg-[#BDE9FB]",
-            )}
-            aria-hidden
-          />
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        {renderSide(sideLayout.left)}
-        {renderSide(sideLayout.right)}
-      </div>
+      {screen.rounds.length > 1 ? (
+        <div className="mb-5 flex justify-center gap-1.5">
+          {screen.rounds.map((_, index) => (
+            <i
+              key={index}
+              className={cn(
+                "block size-2 rounded-full",
+                index === roundIndex
+                  ? "bg-[#0CC1E0]"
+                  : index < roundIndex
+                    ? "bg-[#031F82]"
+                    : "bg-[#BDE9FB]",
+              )}
+              aria-hidden
+            />
+          ))}
+        </div>
+      ) : null}
+      {!circleRound ? (
+        <div className="grid gap-3">
+          {renderCard(sideLayout.left)}
+          {renderCard(sideLayout.right)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {renderSide(sideLayout.left)}
+          {renderSide(sideLayout.right)}
+        </div>
+      )}
     </LessonScreenLayout>
   );
 }

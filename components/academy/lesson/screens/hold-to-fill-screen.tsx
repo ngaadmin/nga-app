@@ -7,11 +7,8 @@ import {
   lessonHoldButtonCompleteClass,
   lessonPromptClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  LessonErrorBanner,
-  LessonSuccessBanner,
-  lessonFeedbackCopy,
-} from "@/components/academy/lesson/lesson-ui";
+import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
+import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import {
   signalLessonIncorrectAnswer,
@@ -27,7 +24,7 @@ export function HoldToFillScreen({
   flow,
 }: StandardScreenProps<HoldToFillScreenConfig>) {
   const holdMs = screen.holdDurationMs ?? DEFAULT_HOLD_MS;
-  const { showSuccess, handleComplete, handleSuccess } = useLessonScreenFlow({
+  const { handleComplete, handleSuccess } = useLessonScreenFlow({
     screenIndex,
     flow,
   });
@@ -35,6 +32,7 @@ export function HoldToFillScreen({
   const [progress, setProgress] = useState(0);
   const [complete, setComplete] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);
+  usePublishLessonHint(releaseError);
   const holdStartRef = useRef<number | null>(null);
   const holdFrameRef = useRef<number | null>(null);
 
@@ -108,6 +106,7 @@ export function HoldToFillScreen({
         className={cn(
           lessonHoldButtonClass,
           complete && lessonHoldButtonCompleteClass,
+          releaseError && "lesson-tile-shake",
         )}
       >
         <span
@@ -119,10 +118,6 @@ export function HoldToFillScreen({
           {complete ? screen.frozenLabel : screen.holdLabel}
         </span>
       </button>
-      {releaseError !== null ? (
-        <LessonErrorBanner>{lessonFeedbackCopy(releaseError)}</LessonErrorBanner>
-      ) : null}
-      {showSuccess ? <LessonSuccessBanner /> : null}
     </div>
   );
 }

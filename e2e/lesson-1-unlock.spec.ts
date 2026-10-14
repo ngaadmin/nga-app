@@ -73,14 +73,8 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await page.getByRole("button", { name: /candy is gone/i }).click();
   await clickNext(page);
 
-  for (const item of [
-    "Sour Worms",
-    "Cinema Popcorn",
-    "Wireless Headphones",
-    "Skateboard",
-  ]) {
-    await page.getByRole("button", { name: item, exact: true }).click();
-  }
+  await page.getByRole("button", { name: /Show me/i }).click();
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeVisible();
   await clickNext(page);
 
   await sortItem(page, "Pizza slice", "Short Fun");
@@ -103,7 +97,6 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await clickNext(page);
 
   await expect(page.getByText(/freeze worked/i)).toBeVisible();
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await clickNext(page);
 
   await page.getByRole("button", { name: "Cash in your XP" }).click();

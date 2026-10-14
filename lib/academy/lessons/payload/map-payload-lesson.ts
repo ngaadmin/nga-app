@@ -331,6 +331,22 @@ function leadingSettingsQuestion(raw: string): string | undefined {
   return question || undefined;
 }
 
+/** TOTAL/KEEP win. A "$9 ... ($6 remains)" line stays 9 of 15. */
+function allocationAmounts(raw: string): { total: number; targetMin: number } {
+  const totalMatch = /\bTOTAL:\s*\$?(\d+)/i.exec(raw);
+  const keepMatch = /\bKEEP:\s*\$?(\d+)/i.exec(raw);
+  if (totalMatch) {
+    const total = Number(totalMatch[1]) || 1;
+    const targetMin = keepMatch ? Number(keepMatch[1]) : total;
+    return { total, targetMin };
+  }
+  const amounts = [...raw.matchAll(/\$(\d+)/g)].map((match) => Number(match[1]));
+  const setAside = amounts[0] ?? 0;
+  const remains = /remains/i.test(raw) ? (amounts[1] ?? 0) : 0;
+  const total = setAside + remains || setAside || 1;
+  return { total, targetMin: setAside || total };
+}
+
 /** Unkeyed "Slide …" sentence in a slider settings cell. */
 function sliderInstruction(raw: string): string {
   const lines = raw
@@ -960,10 +976,7 @@ export function mapPayloadScreen(
       const settingsRaw = cohortField(row.settings, cohort);
       const instruction = sliderInstruction(settingsRaw);
       const raw = [instruction || settingsRaw, text].filter(Boolean).join("\n");
-      const amounts = [...raw.matchAll(/\$(\d+)/g)].map((match) => Number(match[1]));
-      const setAside = amounts[0] ?? 0;
-      const remains = /remains/i.test(raw) ? (amounts[1] ?? 0) : 0;
-      const total = setAside + remains || setAside || 1;
+      const { total, targetMin } = allocationAmounts(`${settingsRaw}\n${raw}`);
       const story = text.trim();
       return {
         type: "allocation-slider",
@@ -971,12 +984,12 @@ export function mapPayloadScreen(
         intro: story || instruction || raw,
         ...(instruction && instruction !== story ? { instruction } : {}),
         total,
-        targetMin: setAside || total,
+        targetMin,
         reserveGoals: [
           {
             id: "reserve",
             label: "Set aside",
-            amount: setAside || total,
+            amount: targetMin,
           },
         ],
         sliderError: error || "Slide until the amount is set aside.",
@@ -1141,6 +1154,58 @@ function linkContinueTargets(
   });
 }
 
+function continueTargetIndex(screen: ScreenConfig): number | undefined {
+  if (typeof screen.continueToIndex === "number") return screen.continueToIndex;
+  if (!("options" in screen) || !Array.isArray(screen.options)) return undefined;
+  const options = screen.options.filter(
+    (option): option is { label?: string; goToIndex?: number } =>
+      typeof option === "object" && option !== null,
+  );
+  if (options.length !== 1) return undefined;
+  const only = options[0];
+  if (!only || !/^continue$/i.test((only.label ?? "").trim())) return undefined;
+  return typeof only.goToIndex === "number" ? only.goToIndex : undefined;
+}
+
+function isContinueOnlyScreen(screen: ScreenConfig): boolean {
+  const options =
+    "options" in screen && Array.isArray(screen.options)
+      ? screen.options.filter((option) => typeof option === "object" && option !== null)
+      : [];
+  if (options.length === 1 && "label" in options[0] && /^continue$/i.test(String(options[0].label).trim())) {
+    return true;
+  }
+  return Boolean(screen.continueToLabel) && options.length === 0;
+}
+
+/** Continue cards that land on the completion screen become a resolution beat. */
+function presentClosingResolutions(screens: ScreenConfig[]): ScreenConfig[] {
+  return screens.map((screen) => {
+    if (!isContinueOnlyScreen(screen)) return screen;
+    const targetIndex = continueTargetIndex(screen);
+    if (targetIndex === undefined || screens[targetIndex]?.type !== "completion") return screen;
+    const narrative = "prompt" in screen && typeof screen.prompt === "string" ? screen.prompt.trim() : "";
+    if (!narrative) return screen;
+    return {
+      type: "narrative-bonus",
+      id: screen.id,
+      narrative,
+      bonusXp: 0,
+      bonusTapLabel: "",
+      autoReadyWhenNoBonus: true,
+      resolution: true,
+      continueToLabel: screen.continueToLabel,
+      continueToIndex: targetIndex,
+      sourceLabel: screen.sourceLabel,
+      pairImage: screen.pairImage,
+      illustration: screen.illustration,
+      illustrationId: screen.illustrationId,
+      hubSkillKey: screen.hubSkillKey,
+      advance: { mode: "auto-ready" },
+    };
+  });
+}
+
 /** Tag each screen inside a hub skill so returning to the hub can mark it done. */
 function tagHubSkillKeys(screens: ScreenConfig[]): ScreenConfig[] {
   const hubIndex = screens.findIndex((screen) => screen.skillHub);
@@ -1245,7 +1310,7 @@ export function resolvePayloadLesson(
       shippedCohorts: ["explorer", "pathfinder", "maverick"],
     },
     characterName: characterName || undefined,
-    screens: tagHubSkillKeys(linked),
+    screens: tagHubSkillKeys(presentClosingResolutions(linked)),
     rewards: {
       skillSlug,
       achievementSkillSlug: skillSlug,

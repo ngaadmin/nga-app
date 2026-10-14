@@ -45,19 +45,15 @@ export function LessonBudgetSelectGame({
   onPersistentError,
   onDismissError,
 }: LessonBudgetSelectGameProps) {
-  const [checkedIds, setCheckedIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
+  const [checkedIds, setCheckedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [shakingId, setShakingId] = useState<string | null>(null);
 
   const budgetSpent = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) => sum + (checkedIds.has(item.id) ? item.price : 0),
-        0,
-      ),
+    () => items.reduce((sum, item) => sum + (checkedIds.has(item.id) ? item.price : 0), 0),
     [checkedIds, items],
   );
-  const budgetRemaining = total - budgetSpent;
+  const overBudget = budgetSpent > total;
+  const fill = total > 0 ? Math.min(100, (budgetSpent / total) * 100) : 0;
 
   const resolveError = useCallback(
     (nextChecked: ReadonlySet<string>, nextSpent: number): string => {
@@ -104,86 +100,100 @@ export function LessonBudgetSelectGame({
       wasCompleteRef.current = false;
       onIncomplete?.();
     }
-  }, [
-    budgetSpent,
-    checkedIds,
-    onComplete,
-    onDismissError,
-    onIncomplete,
-    tryComplete,
-  ]);
+  }, [budgetSpent, checkedIds, onComplete, onDismissError, onIncomplete, tryComplete]);
 
-  const toggle = (itemId: string, nextChecked: boolean) => {
+  const toggle = (itemId: string) => {
     onDismissError?.();
+    const turningOn = !checkedIds.has(itemId);
     const next = new Set(checkedIds);
-    if (nextChecked) next.add(itemId);
+    if (turningOn) next.add(itemId);
     else next.delete(itemId);
 
-    const nextSpent = items.reduce(
-      (sum, item) => sum + (next.has(item.id) ? item.price : 0),
-      0,
-    );
+    const nextSpent = items.reduce((sum, item) => sum + (next.has(item.id) ? item.price : 0), 0);
+    setCheckedIds(next);
 
-    if (nextSpent > total) {
-      onMistake();
-      onPersistentError?.(errors.overBudget?.trim() ? errors.overBudget : "");
+    if (tryComplete(next, nextSpent)) {
+      setShakingId(null);
       return;
     }
 
-    setCheckedIds(next);
+    const wrongPick = turningOn && (nextSpent > total || !correctIds.includes(itemId));
+    if (!wrongPick) {
+      setShakingId(null);
+      if (isPartialCorrectSelection(next, correctIds) || next.size === 0) return;
+    }
 
-    if (tryComplete(next, nextSpent)) return;
-
-    const message = resolveError(next, nextSpent);
-    if (isPartialCorrectSelection(next, correctIds)) return;
-
-    onMistake();
-    onPersistentError?.(message.trim() ? message : "");
+    if (wrongPick) {
+      setShakingId(itemId);
+      onMistake();
+      const message = resolveError(next, nextSpent);
+      onPersistentError?.(message.trim() ? message : "");
+    }
   };
 
   return (
     <>
-      <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
-      <div className="space-y-4" role="group" aria-label="Budget items">
+      <p className={cn("mb-4", lessonIntroClass())}>{intro}</p>
+      <div className="space-y-3" role="group" aria-label="Budget items">
         {items.map((item) => {
           const checked = checkedIds.has(item.id);
+          const shaking = shakingId === item.id;
           return (
-            <label
+            <button
               key={item.id}
-              className="grid grid-cols-[26px_48px_auto_auto_1fr] items-center gap-x-2.5 text-[#031F82]"
+              type="button"
+              aria-pressed={checked}
+              onClick={() => toggle(item.id)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left text-[#031F82] transition-colors active:scale-[0.99]",
+                checked && "bg-[#BDE9FB]",
+                shaking && "lesson-tile-shake bg-[#FFF1F2] text-[#9F1239]",
+              )}
             >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={(event) => {
-                  event.stopPropagation();
-                  toggle(item.id, event.target.checked);
-                }}
-                className="m-0 size-[22px] cursor-pointer appearance-none rounded-full border-0 bg-[#E8F6FC] shadow-[inset_0_0_0_2px_#B7D7E8] checked:bg-[#0CC1E0] checked:shadow-[inset_0_0_0_2px_#099FB8]"
-                aria-label={item.label}
-              />
-              <span className="grid size-11 place-items-center rounded-full bg-[#E8F6FC] text-xl">
-                {item.emoji ?? item.label.trim().charAt(0)}
+              {item.emoji ? (
+                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white text-[2rem] leading-none" aria-hidden>
+                  {item.emoji}
+                </span>
+              ) : null}
+              <span className="min-w-0 flex-1 font-sans text-[18px] font-semibold leading-snug">
+                {item.label}
               </span>
-              <span className="font-sans text-sm font-medium">{item.label}</span>
-              <strong className="justify-self-start pl-1 font-bold">
-                ${item.price}
-              </strong>
-            </label>
+              <strong className="font-heading text-lg">${item.price}</strong>
+              <span
+                className={cn(
+                  "grid size-7 shrink-0 place-items-center rounded-full text-sm font-extrabold",
+                  checked ? "bg-[#031F82] text-white" : "bg-white text-transparent",
+                )}
+                aria-hidden
+              >
+                ✓
+              </span>
+            </button>
           );
         })}
       </div>
-      <div className="wallet hug pt-[18px] text-center">
-        <div className="text-xs uppercase tracking-wider text-[#1E3A5F]">
-          {walletLabel}
+      <div className="pt-5">
+        <div className="mb-2 flex items-baseline justify-between font-heading text-[#031F82]">
+          <span className="text-sm font-extrabold uppercase tracking-wide">{walletLabel}</span>
+          <span className={cn("text-lg font-extrabold", overBudget && "text-[#E11D48]")}>
+            ${budgetSpent} / ${total}
+          </span>
         </div>
         <div
           className={cn(
-            "font-heading text-[22px] font-extrabold",
-            budgetRemaining < 0 ? "text-[#E11D48]" : "text-[#031F82]",
+            "h-5 overflow-hidden rounded-full bg-[#E8F6FC]",
+            overBudget && "lesson-bar-wobble",
           )}
+          role="meter"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={budgetSpent}
+          aria-label={walletLabel}
         >
-          ${budgetSpent} / ${total}
+          <div
+            className={cn("h-full rounded-full transition-[width] duration-300", overBudget ? "bg-[#E11D48]" : "bg-[#0CC1E0]")}
+            style={{ width: `${overBudget ? 100 : fill}%` }}
+          />
         </div>
       </div>
     </>

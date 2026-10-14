@@ -515,7 +515,7 @@ export const LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS =
 
 /** Shared layout for top-of-screen lesson media. Transparent; the avatar is the picture. */
 export const lessonIllustrationMediaFrameClass =
-  "mx-auto mb-2 h-[clamp(8rem,_26vh,_13rem)] w-[clamp(11rem,_78vw,_17rem)] max-w-full shrink-0 bg-transparent";
+  "relative mx-auto mb-1 h-[clamp(9rem,_30vh,_14.5rem)] w-[clamp(12rem,_86vw,_18rem)] max-w-full shrink-0 bg-transparent";
 
 /** Modest scene slot below lesson chrome. */
 export const lessonIllustrationSlotClass = cn(

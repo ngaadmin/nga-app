@@ -1,13 +1,13 @@
 Module Number,Lesson Number,Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes
 1,1,1,word-drop,"Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be ______ right away!","Holly made $25 from her weekend chores. At the mall, her friends are all showing off their new eyelash extensions and she feels the sudden urge to get hers done too. Her brain tricks her into thinking the cash must be ______ right away!",Aiden just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be ______ right away!,lars-thinking-512.webp,holly-thinking-512.webp,aiden-thinking-512.webp,,"OPTIONS: Spent | Saved | Hidden
 CORRECT: Spent",,Not quite! Look how fast Lars is running - what is his brain telling him to do?,Not quite! Holly's friends are showing off - what's her brain pushing her to do with that $25?,Not quite! Aiden spotted those earbuds - what's his brain pushing him to do with that $40?,
-1,1,2,binary-choice,"Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy, but ten minutes later...",Holly gets her eyelashes done right away with the $25 but ten minutes later...,"Aiden buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",lars-sitting-512.webp,holly-sitting-512.webp,aiden-sitting-512.webp,"CHOICE A: ...the candy is gone and the toy feels boring.
-CHOICE B: ...his $20 cash magically reappears.
+1,1,2,binary-choice,"Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy, but ten minutes later...",Holly gets her eyelashes done right away with the $25 but ten minutes later...,"Aiden buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",lars-sitting-512.webp,holly-sitting-512.webp,aiden-sitting-512.webp,"CHOICE A: 🍬 ...the candy is gone and the toy feels boring.
+CHOICE B: 💵 ...his $20 cash magically reappears.
 CORRECT: A","ID: short-fun-reality
-CHOICE A: ...the initial excitement fades and her $25 is gone.
-CHOICE B: ...her $25 magically reappears in her wallet.
-CORRECT: A","CHOICE A: ...the thrill starts to wear off and his $40 is spent.
-CHOICE B: ...the seller gives him his money back because he bought them so quickly.
+CHOICE A: 🍬 ...the initial excitement fades and her $25 is gone.
+CHOICE B: 💵 ...her $25 magically reappears in her wallet.
+CORRECT: A","CHOICE A: 🍬 ...the thrill starts to wear off and his $40 is spent.
+CHOICE B: 💵 ...the seller gives him his money back because he bought them so quickly.
 CORRECT: A","If only! In the real world, once you trade your cash, it's gone. Try again.","If only! In the real world, once you trade your cash, it's gone. Try again!","If only! On the marketplace, once you pay and take the item, the money is gone. No instant refunds just for buying fast. Try again!",
 1,1,3,tap-reveal,Lars's money is gone and he only had 10 minutes of fun. Tap these items to see the difference!,Holly's $25 is gone and she only had a few minutes of excitement. Tap each item to see whether it's short fun or longer fun!,Aiden's $40 is gone after buying the earbuds and he only had a short burst of satisfaction. Tap these items to see the difference between things that give short fun and things that give more fun for longer!,not allowed,not allowed,not allowed,"ITEMS:
 SHORT: 🍬 Sour Worms
@@ -35,12 +35,12 @@ SHORT: 🍔 Food delivery with priority fee
 SHORT: 👕 Disposable concert merch
 LONG: 🎸 Second-hand quality guitar
 LONG: 🧥 High-quality piece of clothing",,,,
-1,1,5,spotlight-rounds,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Later that day Aiden receives a text message: ""Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",lars-deciding-512.webp,holly-deciding-512.webp,aiden-deciding-512.webp,"CHOICE A: To trick his brain into buying fast.
-CHOICE B: Because the game creators love him.
-CORRECT: A","CHOICE A: To stop her from pausing to decide if she really needs it.
-CHOICE B: Because they want to make sure she gets a good deal.
-CORRECT: A","CHOICE A: To trick his brain into buying fast without thinking.
-CHOICE B: Because the company genuinely cares about Aiden's safety.
+1,1,5,spotlight-rounds,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Later that day Aiden receives a text message: ""Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",lars-deciding-512.webp,holly-deciding-512.webp,aiden-deciding-512.webp,"CHOICE A: 🧠 To trick his brain into buying fast.
+CHOICE B: ❤️ Because the game creators love him.
+CORRECT: A","CHOICE A: 🧠 To stop her from pausing to decide if she really needs it.
+CHOICE B: ❤️ Because they want to make sure she gets a good deal.
+CORRECT: A","CHOICE A: 🧠 To trick his brain into buying fast without thinking.
+CHOICE B: ❤️ Because the company genuinely cares about Aiden's safety.
 CORRECT: A",Don't fall for the flashing countdown!,Don't fall for the flashing countdown!,Don't fall for the flashing countdown!,
 1,1,6,hold-to-fill,Help Lars by giving him a 'buy freeze' so his brain has time to think.,"Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, by silencing the chat alerts.","If Aiden had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Aiden can think if he really needs the item right now.",lars-hands-on-hips-512.webp,holly-hands-on-hips-512.webp,aiden-hands-on-hips-512.webp,HOLD: ❄️ HOLD TO FREEZE ❄️,HOLD: 🔕 HOLD TO SILENCE 🔕,HOLD: ⏸️ HOLD TO PAUSE ⏸️,,,,
 1,1,7,binary-choice,"The freeze worked! The next morning, Lars realized he didn’t even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",Holly chooses to keep her money instead of giving in to the rush. She stays in control of spending.,Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.,lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,,,,

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LessonSavingsGoalGame } from "@/components/academy/lesson/lesson-savings-goal-game";
-import { LessonSuccessBanner } from "@/components/academy/lesson/lesson-ui";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import type { SavingsGoalScreenConfig } from "@/lib/academy/lessons/types";
 import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
@@ -17,7 +16,7 @@ export function SavingsGoalScreen({
   const flowRef = useRef(flow);
   flowRef.current = flow;
   const celebratedGoalRef = useRef(false);
-  const [goalReady, setGoalReady] = useState(false);
+  const [, setGoalReady] = useState(false);
 
   useEffect(() => {
     flowRef.current.clearScreenReady(screenIndex);
@@ -57,7 +56,6 @@ export function SavingsGoalScreen({
           onAdvance={() => undefined}
         />
       </div>
-      {goalReady ? <LessonSuccessBanner /> : null}
     </div>
   );
 }

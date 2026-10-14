@@ -2,16 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import {
-  lessonIntroClass,
-  lessonRangeSliderClass,
-  lessonSubmitAnswerClass,
-} from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  LessonScreenLayout,
-  lessonFeedbackCopy,
-} from "@/components/academy/lesson/lesson-ui";
-import { cn } from "@/lib/utils/cn";
+  allocationNextEnabled,
+  allocationSavedBadge,
+  clampSaveAmount,
+  saveAmountFromClientX,
+} from "@/lib/academy/lessons/allocation-slider";
 import type { AllocationSliderScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
 
@@ -27,112 +24,126 @@ export function AllocationSliderScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<AllocationSliderScreenConfig>) {
-  const { showSuccess, handleComplete, handleIncomplete, handleSuccess, handleMistake } =
-    useLessonScreenFlow({ screenIndex, flow });
+  const { handleComplete, handleIncomplete, handleSuccess } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+  });
 
   const total = Math.max(0, screen.total);
   const targetMin = Math.max(0, screen.targetMin);
+  const reservedRef = useRef(0);
   const [reservedAmount, setReservedAmount] = useState(0);
-  const [locked, setLocked] = useState(false);
-  const [commitError, setCommitError] = useState<string | null>(null);
+  const metRef = useRef(false);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   const spendableToday = Math.max(0, total - reservedAmount);
-  const meetsTarget = reservedAmount >= targetMin;
+  const meetsTarget = allocationNextEnabled(reservedAmount, targetMin);
   const savePct = total > 0 ? (reservedAmount / total) * 100 : 0;
-  const targetPct = total > 0 ? (targetMin / total) * 100 : 0;
-  const showTargetTick = targetMin > 0 && total > 0;
-  const saveNarrow = savePct < 18;
-  const spendNarrow = 100 - savePct < 18;
-  const tickLabelPct = Math.min(88, Math.max(12, targetPct));
-  const underTargetCopy = lessonFeedbackCopy(screen.sliderError) ?? "";
-  const sliderRef = useRef<HTMLDivElement>(null);
+  const targetPct = total > 0 ? Math.min(100, (targetMin / total) * 100) : 0;
+  const showTargetTick = targetMin > 0 && targetMin < total;
+
+  const lines = [
+    ...screen.intro.split("\n").map((line) => line.trim()).filter(Boolean),
+    ...(screen.instruction && !screen.intro.includes(screen.instruction)
+      ? [screen.instruction.trim()]
+      : []),
+  ];
+
+  const applySave = (next: number) => {
+    const clamped = clampSaveAmount(next, total);
+    reservedRef.current = clamped;
+    setReservedAmount(clamped);
+  };
+
+  const applyFromClientX = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    applySave(saveAmountFromClientX(clientX, rect.left, rect.width, total));
+  };
 
   useEffect(() => {
-    const node = sliderRef.current;
-    if (!node) return;
-    const blockHorizontalSwipe = (event: TouchEvent) => {
-      if (event.cancelable) event.preventDefault();
-    };
-    node.addEventListener("touchmove", blockHorizontalSwipe, { passive: false });
-    return () => node.removeEventListener("touchmove", blockHorizontalSwipe);
-  }, []);
-
-  const handleSlide = (next: number) => {
-    const clamped = Math.min(total, Math.max(0, next));
-    setReservedAmount(clamped);
-    if (locked) {
-      setLocked(false);
-      handleIncomplete();
-    }
-    if (clamped < targetMin) {
-      setCommitError(underTargetCopy);
-    } else {
-      setCommitError(null);
-    }
-  };
-
-  const handleLock = () => {
-    if (locked) return;
-    if (reservedAmount < targetMin) {
-      setCommitError(underTargetCopy);
-      handleMistake();
+    if (meetsTarget && !metRef.current) {
+      metRef.current = true;
+      handleSuccess();
+      handleComplete();
       return;
     }
-    setCommitError(null);
-    setLocked(true);
-    handleSuccess();
-    handleComplete();
-  };
+    if (!meetsTarget && metRef.current) {
+      metRef.current = false;
+      handleIncomplete();
+    }
+  }, [handleComplete, handleIncomplete, handleSuccess, meetsTarget]);
 
   return (
-    <LessonScreenLayout success={showSuccess} errorMessage={commitError}>
-      <div className="mt-3">
-        <p className={cn("mb-2", lessonIntroClass(screen.emphasizeInstruction === true))}>
-          {screen.intro}
-        </p>
-        {screen.instruction ? (
-          <p className="mb-5 font-heading text-[18px] font-extrabold leading-snug text-[#031F82]">
-            {screen.instruction}
-          </p>
-        ) : (
-          <div className="mb-3" />
-        )}
-        <div className="relative mb-1.5 min-h-[2.6rem] px-10">
-          <div
-            className={cn(
-              "absolute left-10 top-0 z-raised text-left",
-              saveNarrow && "-translate-x-0.5",
-            )}
-          >
-            <p className="font-heading text-[11px] font-extrabold uppercase tracking-wide text-[#031F82]">
+    <LessonScreenLayout>
+      <div className="mt-1">
+        <div className="mb-4 space-y-1">
+          {lines.map((line) => (
+            <p
+              key={line}
+              className="font-heading text-[20px] font-extrabold leading-snug text-[#031F82]"
+            >
+              {line}
+            </p>
+          ))}
+        </div>
+
+        <div className="mb-2 flex items-start justify-between gap-3 px-1">
+          <div className="text-left">
+            <p className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
               💰 Save
             </p>
-            <p className="font-heading text-sm font-extrabold tabular-nums text-[#031F82]">
+            <p className="font-heading text-xl font-extrabold tabular-nums text-[#031F82]">
               {dollar(reservedAmount)}
             </p>
+            {targetMin > 0 ? (
+              <p className="mt-0.5 font-sans text-[13px] font-bold text-[#C2410C]">
+                needs {dollar(targetMin)}
+              </p>
+            ) : null}
           </div>
-          <div
-            className={cn(
-              "absolute right-10 top-0 z-raised text-right",
-              spendNarrow && "translate-x-0.5",
-            )}
-          >
-            <p className="font-heading text-[11px] font-extrabold uppercase tracking-wide text-[#031F82]">
+          <div className="text-right">
+            <p className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
               🛍️ Spend
             </p>
-            <p className="font-heading text-sm font-extrabold tabular-nums text-[#031F82]">
+            <p className="font-heading text-xl font-extrabold tabular-nums text-[#031F82]">
               {dollar(spendableToday)}
             </p>
           </div>
         </div>
 
         <div
-          ref={sliderRef}
-          className="relative px-10"
+          ref={trackRef}
+          role="slider"
+          tabIndex={0}
+          aria-label="Save amount"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={reservedAmount}
+          aria-valuetext={`${dollar(reservedAmount)} saved`}
+          className="relative h-12 touch-none select-none"
           style={{ touchAction: "none" }}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            applyFromClientX(event.clientX);
+          }}
+          onPointerMove={(event) => {
+            if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+            applyFromClientX(event.clientX);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+              event.preventDefault();
+              applySave(reservedRef.current + 1);
+            }
+            if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+              event.preventDefault();
+              applySave(reservedRef.current - 1);
+            }
+          }}
         >
           <div
-            className="pointer-events-none absolute inset-x-10 top-1/2 z-base h-3 -translate-y-1/2 overflow-hidden rounded-full"
+            className="pointer-events-none absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 overflow-hidden rounded-full"
             style={{ backgroundColor: TRACK_NAVY }}
             aria-hidden
           >
@@ -142,53 +153,27 @@ export function AllocationSliderScreen({
             />
           </div>
           {showTargetTick ? (
-            <div
-              className="pointer-events-none absolute inset-x-10 top-0 z-base h-11"
+            <span
+              className="pointer-events-none absolute top-1/2 z-raised h-7 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_2px_#C2410C]"
+              style={{ left: `${targetPct}%` }}
               aria-hidden
-            >
-              <span
-                className="absolute top-1/2 h-5 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_1px_rgb(3_31_130_/_0.35)]"
-                style={{ left: `${targetPct}%` }}
-              />
-            </div>
+            />
           ) : null}
-          <input
-            type="range"
-            min={0}
-            max={total}
-            step={1}
-            value={reservedAmount}
-            disabled={locked}
-            aria-label="Save and spend divider"
-            aria-valuemin={0}
-            aria-valuemax={total}
-            aria-valuenow={reservedAmount}
-            onChange={(event) => handleSlide(Number(event.target.value))}
-            className={cn(lessonRangeSliderClass, "relative z-raised")}
-            style={{ background: "transparent", touchAction: "none" }}
+          <span
+            className="pointer-events-none absolute top-1/2 z-raised size-11 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-[#FFA503] shadow-[0_2px_8px_rgb(3_31_130_/_0.35)]"
+            style={{ left: `${savePct}%` }}
+            aria-hidden
           />
         </div>
-        {showTargetTick ? (
-          <p className="relative mt-1 h-4 overflow-visible text-center font-sans text-[10px] font-bold text-[#031F82]/70">
-            <span
-              className="absolute top-0 -translate-x-1/2 whitespace-nowrap"
-              style={{ left: `${tickLabelPct}%` }}
-            >
-              needs {dollar(targetMin)}
-            </span>
+
+        {meetsTarget ? (
+          <p
+            className="mt-3 text-center font-heading text-lg font-extrabold text-[#031F82]"
+            role="status"
+          >
+            {allocationSavedBadge(targetMin)}
           </p>
         ) : null}
-
-        {locked ? null : (
-          <button
-            type="button"
-            onClick={handleLock}
-            disabled={!meetsTarget}
-            className={lessonSubmitAnswerClass}
-          >
-            Lock it in
-          </button>
-        )}
       </div>
     </LessonScreenLayout>
   );

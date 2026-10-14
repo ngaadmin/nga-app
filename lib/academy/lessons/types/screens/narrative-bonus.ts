@@ -9,4 +9,6 @@ export type NarrativeBonusScreenConfig = WithDeclarative<{
   successMessage?: string;
   /** When bonusXp is 0, screen auto-advances when visited */
   autoReadyWhenNoBonus?: boolean;
+  /** Closing beat: headline, story, light confetti, and Next with no Continue card. */
+  resolution?: boolean;
 }>;

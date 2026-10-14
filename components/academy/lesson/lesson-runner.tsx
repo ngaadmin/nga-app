@@ -4,6 +4,7 @@ import {
   AcademyLessonShell,
   LessonScreenPane,
 } from "@/components/academy/lesson/academy-lesson-shell";
+import { LessonHintBubble, LessonHintProvider } from "@/components/academy/lesson/lesson-hint";
 import {
   LessonScreenChromeProvider,
   LessonScreenIllustration,
@@ -60,6 +61,7 @@ export function LessonRunner({
     (activeScreen?.type === "binary-choice" || activeScreen?.type === "multiple-choice") &&
     Boolean(activeScreen.continueToLabel);
   const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
+  const isTapReveal = activeScreen?.type === "tap-reveal";
 
   useEffect(() => {
     const screen = content.screens[screenIndex];
@@ -86,6 +88,7 @@ export function LessonRunner({
   }, [content.screens, screenIndex, markScreenReady]);
 
   return (
+    <LessonHintProvider>
     <div
       className={cn(
         "flex min-h-0 flex-1 flex-col transition-shadow duration-200",
@@ -112,7 +115,7 @@ export function LessonRunner({
             flow.handleNext();
           })
         }
-        hideFooter={isCompletionScreen || isContinueOnly || isSkillHub}
+        hideFooter={isCompletionScreen || isContinueOnly || isSkillHub || isTapReveal}
         footerSlot={isCompletionScreen ? <></> : undefined}
       >
         {content.screens.map((screen, index) => (
@@ -126,12 +129,13 @@ export function LessonRunner({
                 illustration={resolveLessonScreenIllustration(screen)}
               >
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                  <div className="w-full min-w-0 shrink-0">
+                  <div className="relative w-full min-w-0 shrink-0">
                     <LessonScreenIllustration />
+                    <LessonHintBubble />
                   </div>
                   <div
                     className={cn(
-                      "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-x-none overscroll-y-contain",
+                      "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none",
                       !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
                     )}
                   >
@@ -156,5 +160,6 @@ export function LessonRunner({
         ))}
       </AcademyLessonShell>
     </div>
+    </LessonHintProvider>
   );
 }

@@ -129,6 +129,7 @@ export const LessonWordDropGame = forwardRef<
     Array.from({ length: blanks.length }, () => ""),
   );
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [shakeWord, setShakeWord] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoverBlankIndex, setHoverBlankIndex] = useState<number | null>(null);
   const [hoverPool, setHoverPool] = useState(false);
@@ -302,6 +303,7 @@ export const LessonWordDropGame = forwardRef<
       if (slotIndex !== null && blank && !locked && press.word === blank.correctOption) {
         placeWordInBlank(slotIndex, press.word);
       } else if (slotIndex !== null && press.word !== blank?.correctOption) {
+        setShakeWord(press.word);
         onMismatchRef.current?.();
       }
 
@@ -340,6 +342,7 @@ export const LessonWordDropGame = forwardRef<
       setSelectedWord(null);
       return;
     }
+    setShakeWord(word);
     onMismatchRef.current?.();
   };
 
@@ -425,6 +428,7 @@ export const LessonWordDropGame = forwardRef<
               onClick={() => {
                 if (used) return;
                 setSelectedWord(option);
+                if (shakeWord !== option) setShakeWord(null);
               }}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
@@ -441,6 +445,7 @@ export const LessonWordDropGame = forwardRef<
                 "text-[20px]",
                 used && "hidden",
                 selectedWord === option && "bg-[#BDE9FB]",
+                shakeWord === option && "lesson-tile-shake bg-[#FFF1F2] text-[#9F1239]",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",

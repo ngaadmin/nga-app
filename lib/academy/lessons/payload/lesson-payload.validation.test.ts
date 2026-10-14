@@ -304,13 +304,13 @@ ELSE show button "Keep it" → GO Screen 8`,
     ]);
     const closer = content.screens[6];
     expect(closer).toMatchObject({
-      type: "binary-choice",
-      decisionPath: true,
-      options: [
-        expect.objectContaining({ label: "Continue", goToLabel: "8", goToIndex: 7 }),
-      ],
+      type: "narrative-bonus",
+      resolution: true,
+      bonusXp: 0,
+      autoReadyWhenNoBonus: true,
+      continueToIndex: 7,
     });
-    expect(closer && "continueToLabel" in closer ? closer.continueToLabel : undefined).toBeUndefined();
+    expect(closer && "narrative" in closer ? closer.narrative : "").toMatch(/freeze worked/i);
   });
 
   it("uses a leading choice emoji as the button orb and leaves the label", () => {

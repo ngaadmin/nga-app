@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import {
   lessonGoldClaimClass,
   lessonNarrativeClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { NarrativeBonusScreenConfig } from "@/lib/academy/lessons/types";
+import { splitResolutionCopy } from "@/lib/academy/lessons/resolution-copy";
 import {
   celebrateLessonCorrectAnswer,
 } from "@/lib/academy/lessons/utils";
@@ -22,6 +24,8 @@ export function NarrativeBonusScreen({
 }) {
   const [claimed, setClaimed] = useState(false);
   const hasBonus = screen.bonusXp > 0;
+  const resolution = screen.resolution === true;
+  const resolutionCopy = resolution ? splitResolutionCopy(screen.narrative) : null;
 
   useEffect(() => {
     if (!hasBonus && screen.autoReadyWhenNoBonus !== false) {
@@ -42,7 +46,19 @@ export function NarrativeBonusScreen({
 
   return (
     <>
-      <p className={lessonNarrativeClass}>{screen.narrative}</p>
+      {resolution ? <LessonCompletionConfetti light /> : null}
+      {resolutionCopy ? (
+        <>
+          <h2 className="font-heading text-[1.75rem] font-extrabold leading-tight text-[#031F82]">
+            {resolutionCopy.headline}
+          </h2>
+          {resolutionCopy.body ? (
+            <p className={cn("mt-3", lessonNarrativeClass)}>{resolutionCopy.body}</p>
+          ) : null}
+        </>
+      ) : (
+        <p className={lessonNarrativeClass}>{screen.narrative}</p>
+      )}
       {screen.successMessage ? (
         <p className={cn("mt-4", lessonNarrativeClass)}>
           {screen.successMessage}

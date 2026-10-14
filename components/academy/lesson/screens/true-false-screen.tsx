@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
+  LessonIconOption,
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
@@ -51,18 +51,22 @@ export function TrueFalseScreen({
       errorMessage={error}
       success={showSuccess}
     >
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        {(["true", "false"] as const).map((option) => (
-          <LessonChoiceButton
-            key={option}
-            onClick={() => pick(option)}
-            selected={choice === option}
-            emoji={option === "true" ? "✅" : "❌"}
-            className="justify-center text-center [&>span:last-child]:flex-none [&>span:last-child]:text-center"
-          >
-            {option === "true" ? "True" : "False"}
-          </LessonChoiceButton>
-        ))}
+      <div className="mt-4 grid grid-cols-2 justify-items-center gap-6">
+        {(["true", "false"] as const).map((option) => {
+          const wrong = choice === option && option !== screen.correctAnswer;
+          return (
+            <LessonIconOption
+              key={option}
+              label={option === "true" ? "True" : "False"}
+              emoji={option === "true" ? "✅" : "❌"}
+              selected={choice === option}
+              selectionVariant={
+                wrong ? "wrong" : choice === option && solved ? "correct" : "neutral"
+              }
+              onClick={() => pick(option)}
+            />
+          );
+        })}
       </div>
     </LessonScreenLayout>
   );

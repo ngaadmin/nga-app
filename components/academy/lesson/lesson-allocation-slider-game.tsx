@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
-  lessonIntroClass,
-  lessonRangeSliderClass,
-  lessonSubmitAnswerClass,
-} from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  LessonErrorBanner,
-  lessonFeedbackCopy,
-} from "@/components/academy/lesson/lesson-ui";
+  allocationNextEnabled,
+  allocationSavedBadge,
+  clampSaveAmount,
+} from "@/lib/academy/lessons/allocation-slider";
 import { cn } from "@/lib/utils/cn";
 import type { AllocationSliderItem } from "@/lib/academy/lessons/types/screens/allocation-slider";
 
@@ -25,51 +22,50 @@ type LessonAllocationSliderGameProps = {
   onSuccess?: () => void;
 };
 
+/** Range fallback used outside the lesson screen. Next unlocks with no lock button. */
 export function LessonAllocationSliderGame({
   intro,
   total,
   targetMin,
   reserveGoals,
-  sliderError,
   onComplete,
   onIncomplete,
   onSuccess,
 }: LessonAllocationSliderGameProps) {
   const [reservedAmount, setReservedAmount] = useState(0);
-  const [locked, setLocked] = useState(false);
-  const [commitError, setCommitError] = useState<string | null>(null);
+  const metRef = useRef(false);
   const spendableToday = total - reservedAmount;
   const primaryGoal = reserveGoals[0];
-  const wasCompleteRef = useRef(false);
+  const meetsTarget = allocationNextEnabled(reservedAmount, targetMin);
 
   useEffect(() => {
-    if (!locked && wasCompleteRef.current) {
-      wasCompleteRef.current = false;
-      onIncomplete?.();
-    }
-  }, [locked, onIncomplete]);
-
-  const handleLock = () => {
-    if (locked) return;
-    if (reservedAmount >= targetMin) {
-      setCommitError(null);
-      setLocked(true);
-      if (!wasCompleteRef.current) {
-        wasCompleteRef.current = true;
-        onSuccess?.();
-        onComplete();
-      }
+    if (meetsTarget && !metRef.current) {
+      metRef.current = true;
+      onSuccess?.();
+      onComplete();
       return;
     }
-    setCommitError(lessonFeedbackCopy(sliderError) ?? "");
-  };
+    if (!meetsTarget && metRef.current) {
+      metRef.current = false;
+      onIncomplete?.();
+    }
+  }, [meetsTarget, onComplete, onIncomplete, onSuccess]);
 
   return (
     <>
-      <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
+      <div className={cn("mb-5 space-y-1", lessonIntroClass())}>
+        {intro.split("\n").map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+      </div>
       <div className="mt-2 mb-4">
         <div className="mb-1.5 flex justify-between text-sm font-semibold text-[#031F82]">
-          <span>Save</span>
+          <span>
+            Save
+            <span className="mt-0.5 block text-xs font-bold text-[#C2410C]">
+              needs ${targetMin}
+            </span>
+          </span>
           <span>${reservedAmount}</span>
         </div>
         <input
@@ -78,20 +74,11 @@ export function LessonAllocationSliderGame({
           max={total}
           step={1}
           value={reservedAmount}
-          disabled={locked}
           onChange={(event) => {
             event.stopPropagation();
-            const next = Number.parseInt(event.target.value, 10);
-            setReservedAmount(next);
-            setCommitError(null);
-            if (locked) {
-              setLocked(false);
-            }
+            setReservedAmount(clampSaveAmount(Number.parseInt(event.target.value, 10), total));
           }}
-          className={lessonRangeSliderClass}
-          style={{
-            background: `linear-gradient(90deg,#FFA503 0%,#FFA503 ${(reservedAmount / Math.max(total, 1)) * 100}%,#031F82 ${(reservedAmount / Math.max(total, 1)) * 100}%,#031F82 100%)`,
-          }}
+          className="h-11 w-full"
           aria-label={
             primaryGoal
               ? `Reserve amount for ${primaryGoal.label}`
@@ -103,20 +90,10 @@ export function LessonAllocationSliderGame({
           <span>${spendableToday}</span>
         </div>
       </div>
-      {!locked ? (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleLock();
-          }}
-          className={lessonSubmitAnswerClass}
-        >
-          Lock it in
-        </button>
-      ) : null}
-      {commitError !== null ? (
-        <LessonErrorBanner>{lessonFeedbackCopy(commitError)}</LessonErrorBanner>
+      {meetsTarget ? (
+        <p className="text-center font-heading text-lg font-extrabold text-[#031F82]" role="status">
+          {allocationSavedBadge(targetMin)}
+        </p>
       ) : null}
     </>
   );

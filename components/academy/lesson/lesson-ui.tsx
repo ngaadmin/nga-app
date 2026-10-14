@@ -1,5 +1,8 @@
+"use client";
+
 import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
+import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import {
   lessonCardClass,
   lessonColumnLabelClass,
@@ -15,7 +18,6 @@ import {
   lessonInlineErrorClass,
   lessonIconEmojiClass,
   lessonIconLabelClass,
-  lessonIconMonogramClass,
   lessonItemOrbClass,
   lessonIconOptionStackClass,
   lessonIconTapSelectedClass,
@@ -212,18 +214,12 @@ export function LessonScreenLayout({
   gameClassName,
   className,
 }: LessonScreenLayoutProps) {
-  const showSuccess = success || successMessage != null;
   const showError = errorMessage != null;
   const errorCopy = lessonFeedbackCopy(errorMessage);
-
-  const drawers = (
-    <>
-      {showError ? (
-        <LessonErrorBanner variant={errorVariant}>{errorCopy}</LessonErrorBanner>
-      ) : null}
-      {showSuccess ? <LessonSuccessBanner /> : null}
-    </>
-  );
+  usePublishLessonHint(showError ? errorCopy : null);
+  void success;
+  void successMessage;
+  void errorVariant;
 
   if (fill) {
     return (
@@ -236,7 +232,6 @@ export function LessonScreenLayout({
           emphasizeInstruction={emphasizeInstruction}
         />
         <div className={cn(lessonGameAreaClass, gameClassName)}>{children}</div>
-        {drawers}
       </div>
     );
   }
@@ -251,7 +246,6 @@ export function LessonScreenLayout({
         emphasizeInstruction={emphasizeInstruction}
       />
       {children}
-      {drawers}
     </div>
   );
 }
@@ -832,7 +826,8 @@ export const LessonIconOption = forwardRef<
   ref,
 ) {
   const isCompact = size === "compact";
-  const showEmoji = display !== "label" && Boolean(emoji);
+  const safeEmoji = emoji && !/^[A-Za-z]$/.test(emoji.trim()) ? emoji : undefined;
+  const showEmoji = display !== "label" && Boolean(safeEmoji);
   const showLabelBelow =
     !hideLabel && display !== "emoji-only" && display !== "label";
   const isWrongSelection = selectionVariant === "wrong";
@@ -849,16 +844,14 @@ export const LessonIconOption = forwardRef<
       )}
       aria-hidden
     >
-      {emoji}
+      {safeEmoji}
     </span>
   ) : display === "label" ? (
     <span className={cn(lessonIconLabelClass, "px-2")}>
       {label}
     </span>
   ) : (
-    <span className={lessonIconMonogramClass} aria-hidden>
-      {label.trim().charAt(0) || "?"}
-    </span>
+    <span className="sr-only">{label}</span>
   );
 
   const chip = interactive ? (
@@ -872,7 +865,7 @@ export const LessonIconOption = forwardRef<
         "relative flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)] transition-all active:scale-[0.98]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
-        isWrongSelection && "bg-[#FFF1F2]",
+        isWrongSelection && "lesson-tile-shake bg-[#FFF1F2]",
         isCorrectSelection && "bg-[#DCFCE7]",
         selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
         disabled && "pointer-events-none opacity-60",
@@ -888,7 +881,7 @@ export const LessonIconOption = forwardRef<
         "relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
-        isWrongSelection && "bg-[#FFF1F2]",
+        isWrongSelection && "lesson-tile-shake bg-[#FFF1F2]",
         isCorrectSelection && "bg-[#DCFCE7]",
         selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
         chipClassName,

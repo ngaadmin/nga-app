@@ -65,7 +65,7 @@ test("mobile drag completes the sentence, lightning round, swipe, and didn't-buy
   await expect(page.getByText("1/3", { exact: true })).toBeVisible();
   await expect(next).toBeDisabled();
   await page.getByRole("button", { name: /limited time offer/i }).click();
-  await expect(page.getByRole("alert")).toContainText(/rushing you/i);
+  await expect(page.getByText(/that thought is rushing you/i)).toBeVisible();
   await expect(page.getByLabel("3 of 4 lives remaining")).toBeVisible();
   await expect(next).toBeDisabled();
   const thinkingCards = [

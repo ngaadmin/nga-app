@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LessonScreenLayout, lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonErrorBanner,
+  LessonScreenLayout,
+  lessonFeedbackCopy,
+} from "@/components/academy/lesson/lesson-ui";
 import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import type { LightningRoundCard, LightningRoundScreenConfig } from "@/lib/academy/lessons/types";
 import {
@@ -82,7 +86,7 @@ export function LightningRoundScreen({
   };
 
   return (
-    <LessonScreenLayout prompt={screen.prompt} errorMessage={error} fill>
+    <LessonScreenLayout prompt={screen.prompt} fill>
       <div className="flex min-h-0 flex-1 flex-col gap-3 pb-1">
         <p
           className="shrink-0 text-center text-sm font-bold tracking-wide text-[#031F82]"
@@ -125,6 +129,7 @@ export function LightningRoundScreen({
             );
           })}
         </div>
+        {error ? <LessonErrorBanner className="mt-0 shrink-0">{error}</LessonErrorBanner> : null}
       </div>
     </LessonScreenLayout>
   );

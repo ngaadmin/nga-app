@@ -78,7 +78,7 @@ export function LessonIllustrationSlot({
 
   if (src && imageStatus === "loaded") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";
-    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1.4;
+    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1;
 
     return (
       <div

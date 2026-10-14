@@ -18,6 +18,8 @@ export type SpotlightRoundsScreenConfig = WithDeclarative<{
   id: string;
   prompt: string;
   rounds: readonly {
+    /** Statement for this round. The screen prompt stays the short header. */
+    prompt?: string;
     iconA: string;
     optionA: string;
     iconB: string;

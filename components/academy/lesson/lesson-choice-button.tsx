@@ -1,44 +1,32 @@
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import {
-  lessonChoiceBaseClass,
-  lessonChoiceLabelClass,
-  lessonChoiceLockedCorrectClass,
-  lessonChoiceOrbClass,
-  lessonChoiceOrbSelectedClass,
-  type LessonChoiceVariant,
-} from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
 
 type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   selected?: boolean;
-  variant?: LessonChoiceVariant;
-  /** Selected but not yet checked — cyan orb, letters stay. */
+  /** Selected but not yet checked. */
   pending?: boolean;
   /** Persistent locked-in correct state (multi-select check screens). */
   locked?: boolean;
-  /** Pill (default) or radio-row for multi-select lists. */
+  /** Kept so older call sites compile. Letter orbs are not rendered. */
   layout?: "pill" | "radio-row";
-  /** Glyph inside the 48px orb. Defaults to a filled dot when selected. */
+  /** Emoji shown in the button, beside the answer text. */
+  emoji?: string;
+  /** @deprecated Letter orbs are not rendered. */
   orbLabel?: string;
-  /** Replaces `orbLabel` when set (true/false icons, custom glyphs). */
+  /** @deprecated Letter orbs are not rendered. */
   orb?: ReactNode;
   children: ReactNode;
 };
 
-function orbGlyph(orbLabel: string | undefined, selected: boolean): string {
-  if (orbLabel) return orbLabel;
-  return selected ? "•" : "";
-}
-
-/** Numbered orb + label — matches the signed-off template lab. */
+/** Answer text is the button. An emoji sits beside the words. No letter circle. */
 export function LessonChoiceButton({
   selected = false,
-  variant: _variant = "neutral",
   pending = false,
   locked = false,
   layout = "pill",
+  emoji,
   orbLabel,
   orb,
   className,
@@ -46,8 +34,10 @@ export function LessonChoiceButton({
   type = "button",
   ...props
 }: LessonChoiceButtonProps) {
+  void layout;
+  void orbLabel;
+  void orb;
   const isPressed = selected || pending || locked;
-  const glyph = orbGlyph(orbLabel, isPressed);
 
   return (
     <button
@@ -55,36 +45,18 @@ export function LessonChoiceButton({
       {...props}
       aria-pressed={isPressed}
       className={cn(
-        lessonChoiceBaseClass,
-        layout === "radio-row" && "py-1",
-        locked && lessonChoiceLockedCorrectClass,
+        "flex w-full min-h-14 items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left font-sans text-[18px] font-semibold leading-snug text-[#031F82] transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45",
+        isPressed && "bg-[#BDE9FB]",
+        locked && "bg-[#DCFCE7]",
         className,
       )}
     >
-      <span
-        className={isPressed ? lessonChoiceOrbSelectedClass : lessonChoiceOrbClass}
-        style={
-          isPressed
-            ? {
-                backgroundColor: "#0CC1E0",
-                color: "#FFFFFF",
-                borderColor: "#031F82",
-                opacity: 1,
-              }
-            : {
-                backgroundColor: "#E8F6FC",
-                color: "#031F82",
-                borderColor: "transparent",
-                opacity: 1,
-              }
-        }
-        aria-hidden
-      >
-        {orb ?? glyph}
-      </span>
-      <span className={lessonChoiceLabelClass} style={{ color: "#031F82", opacity: 1 }}>
-        {children}
-      </span>
+      {emoji ? (
+        <span className="shrink-0 text-[1.65rem] leading-none" aria-hidden>
+          {emoji}
+        </span>
+      ) : null}
+      <span className="min-w-0 flex-1">{children}</span>
     </button>
   );
 }

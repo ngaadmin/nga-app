@@ -187,8 +187,8 @@ function readEmojiAt(
   chars: readonly string[],
   start: number,
 ): { emoji: string; end: number } | undefined {
-  const first = chars[start]?.codePointAt(0) ?? 0;
-  if (first <= 0xffff) return undefined;
+  const firstChar = chars[start] ?? "";
+  if (!/^\p{Extended_Pictographic}$/u.test(firstChar)) return undefined;
   let end = start + 1;
   while (end < chars.length) {
     const codePoint = chars[end]?.codePointAt(0) ?? 0;
@@ -260,9 +260,14 @@ function stepRows(entries: readonly SettingEntry[]): SettingEntry[] {
 const SPOTLIGHT_PAIR_LINE =
   /^A\s*:\s*(.+?)\s*\|\s*B\s*:\s*(.+?)\s*\|\s*CORRECT\s*:\s*([AB])\s*$/i;
 
-/** `ROUNDS:` lines already used by Pick One. One `A | B | CORRECT` line is one round. */
+/** `Round 1 | statement | True | False | CORRECT: A` */
+const SPOTLIGHT_STATEMENT_LINE =
+  /^Round\s+\d+\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*CORRECT\s*:\s*([AB])\s*$/i;
+
+/** `ROUNDS:` lines. A pair line is one round. A statement line keeps its own prompt. */
 function spotlightSheetRounds(raw: string, error: string) {
   const rounds: {
+    prompt?: string;
     iconA: string;
     optionA: string;
     iconB: string;
@@ -271,20 +276,69 @@ function spotlightSheetRounds(raw: string, error: string) {
     error: string;
   }[] = [];
   for (const line of raw.split(/\r?\n/)) {
-    const match = SPOTLIGHT_PAIR_LINE.exec(line.trim());
+    const trimmed = line.trim();
+    const statement = SPOTLIGHT_STATEMENT_LINE.exec(trimmed);
+    if (statement) {
+      const sideA = peelLeadingEmoji(statement[2] ?? "");
+      const sideB = peelLeadingEmoji(statement[3] ?? "");
+      const prompt = (statement[1] ?? "").replace(/\s+/g, " ").trim();
+      rounds.push({
+        ...(prompt ? { prompt } : {}),
+        iconA: sideA.emoji ?? "",
+        optionA: sideA.label,
+        iconB: sideB.emoji ?? "",
+        optionB: sideB.label,
+        correct: (statement[4] ?? "A").toLowerCase() === "b" ? "b" : "a",
+        error,
+      });
+      continue;
+    }
+    const match = SPOTLIGHT_PAIR_LINE.exec(trimmed);
     if (!match) continue;
     const sideA = peelLeadingEmoji(match[1] ?? "");
     const sideB = peelLeadingEmoji(match[2] ?? "");
     rounds.push({
-      iconA: sideA.emoji ?? "A",
+      iconA: sideA.emoji ?? "",
       optionA: sideA.label,
-      iconB: sideB.emoji ?? "B",
+      iconB: sideB.emoji ?? "",
       optionB: sideB.label,
       correct: (match[3] ?? "A").toLowerCase() === "b" ? "b" : "a",
       error,
     });
   }
   return rounds;
+}
+
+/**
+ * Prose that sits above `A:` / `CHOICE A:` in a settings cell.
+ * That line is the question those options belong to.
+ */
+function leadingSettingsQuestion(raw: string): string | undefined {
+  const lines: string[] = [];
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (
+      /^(?:CHOICE\s+[A-Z]|BUTTON|[A-H]|CORRECT|OPTIONS|ITEMS|ROUNDS|ORDER|CONTINUE|IF|ELSE|TEXT|SOURCE|TARGET|YES|NO|NEED|WANT|SHORT|LONG|STEP\d+|ID|HUB|MEDAL|TOTAL|AVAILABLE)\b/i.test(
+        trimmed,
+      )
+    ) {
+      break;
+    }
+    lines.push(trimmed);
+  }
+  const question = lines.join(" ").replace(/\s+/g, " ").trim();
+  return question || undefined;
+}
+
+/** Unkeyed "Slide …" sentence in a slider settings cell. */
+function sliderInstruction(raw: string): string {
+  const lines = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const prose = lines.filter((line) => !/^[A-Z][A-Z0-9 ]{0,24}:/.test(line));
+  return prose.find((line) => /^slide\b/i.test(line)) ?? "";
 }
 
 function moodRows(entries: readonly SettingEntry[]): SettingEntry[] {
@@ -620,6 +674,7 @@ export function mapPayloadScreen(
         };
       }
       const rawSettings = cohortField(row.settings, cohort);
+      const question = leadingSettingsQuestion(rawSettings);
       const skillHub = /^\s*HUB\s*$/im.test(rawSettings);
       const skillKeys = choices
         .filter((choice) => choice.goToLabel && !choice.requiresCompletedHub)
@@ -637,31 +692,55 @@ export function mapPayloadScreen(
             choice.requiresCompletedHub === true,
         );
       const loose = looseBinaryChoice(rawSettings, text);
+      const mappedOptions = choices.map((choice) => {
+        const shown = withChoiceEmoji(choice);
+        return {
+          label: shown.label,
+          isCorrect: correct.has(choice.letter),
+          ...(shown.emoji ? { emoji: shown.emoji } : {}),
+          ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+          ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+          ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
+          ...(skillHub && choice.goToLabel && !choice.requiresCompletedHub
+            ? { hubSkillKey: choice.goToLabel }
+            : {}),
+          ...(choice.requiresCompletedHub ? { requiresHubSkills: skillKeys } : {}),
+        };
+      });
       const options =
-        choices.length > 0
-          ? choices.map((choice) => {
-              const shown = withChoiceEmoji(choice);
-              return {
-                label: shown.label,
-                isCorrect: correct.has(choice.letter),
-                ...(shown.emoji ? { emoji: shown.emoji } : {}),
-                ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
-                ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
-                ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
-                ...(skillHub && choice.goToLabel && !choice.requiresCompletedHub
-                  ? { hubSkillKey: choice.goToLabel }
-                  : {}),
-                ...(choice.requiresCompletedHub ? { requiresHubSkills: skillKeys } : {}),
-              };
-            })
-          : [loose?.optionA, loose?.optionB]
-              .filter((option): option is { label: string; isCorrect: boolean } =>
+        mappedOptions.length > 0
+          ? mappedOptions
+          : [loose?.optionA, loose?.optionB].filter(
+              (option): option is { label: string; isCorrect: boolean } =>
                 Boolean(option?.label),
-              );
+            );
+      const prompt = mappedOptions.length > 0 ? (question ?? text) : (loose?.prompt ?? text);
+      if (skillHub) {
+        const skillOptions = mappedOptions.filter(
+          (option) => option.hubSkillKey && !option.requiresHubSkills,
+        );
+        const finish = mappedOptions.find((option) => option.requiresHubSkills);
+        return {
+          type: "skill-hub",
+          id,
+          prompt: text,
+          skills: skillOptions.map((option) => ({
+            label: option.label,
+            ...(option.emoji ? { emoji: option.emoji } : {}),
+            ...(option.goToLabel ? { goToLabel: option.goToLabel } : {}),
+            hubSkillKey: option.hubSkillKey ?? "",
+          })),
+          finishLabel: finish?.label || "Finish",
+          ...(finish?.goToLabel ? { finishToLabel: finish.goToLabel } : {}),
+          options: mappedOptions,
+          skillHub: true,
+          ...picture,
+        };
+      }
       return {
         type: row.gameType,
         id,
-        prompt: choices.length > 0 ? text : (loose?.prompt ?? text),
+        prompt,
         options,
         optionA: options[0] ?? { label: "", isCorrect: true },
         optionB: options[1] ?? { label: "", isCorrect: false },
@@ -817,6 +896,12 @@ export function mapPayloadScreen(
       }
       const sheetRounds = spotlightSheetRounds(cohortField(row.settings, cohort), error);
       if (sheetRounds.length > 0) {
+        const blank = sheetRounds.find((round) => !round.optionA.trim() || !round.optionB.trim());
+        if (blank) {
+          throw new Error(
+            `Screen ${row.screenLabel} (${row.gameType}) has a round with no options.`,
+          );
+        }
         return {
           type: "spotlight-rounds",
           id,
@@ -835,15 +920,20 @@ export function mapPayloadScreen(
           settingValue(settings, "CHOICE B") ?? settingValue(settings, "B") ?? "",
         ),
       });
+      if (!sideA.label || !sideB.label) {
+        throw new Error(
+          `Screen ${row.screenLabel} (${row.gameType}) has no choices of its own.`,
+        );
+      }
       return {
         type: "spotlight-rounds",
         id,
         prompt: text,
         rounds: [
           {
-            iconA: settingValue(settings, "ICON A") ?? sideA.emoji ?? "A",
+            iconA: settingValue(settings, "ICON A") ?? sideA.emoji ?? "",
             optionA: sideA.label,
-            iconB: settingValue(settings, "ICON B") ?? sideB.emoji ?? "B",
+            iconB: settingValue(settings, "ICON B") ?? sideB.emoji ?? "",
             optionB: sideB.label,
             correct: correctIsB(settings) ? "b" : "a",
             error,
@@ -866,15 +956,19 @@ export function mapPayloadScreen(
       };
     }
     case "allocation-slider": {
-      const raw = [cohortField(row.settings, cohort), text].filter(Boolean).join("\n");
+      const settingsRaw = cohortField(row.settings, cohort);
+      const instruction = sliderInstruction(settingsRaw);
+      const raw = [instruction || settingsRaw, text].filter(Boolean).join("\n");
       const amounts = [...raw.matchAll(/\$(\d+)/g)].map((match) => Number(match[1]));
       const setAside = amounts[0] ?? 0;
       const remains = /remains/i.test(raw) ? (amounts[1] ?? 0) : 0;
       const total = setAside + remains || setAside || 1;
+      const story = text.trim();
       return {
         type: "allocation-slider",
         id,
-        intro: text || raw,
+        intro: story || instruction || raw,
+        ...(instruction && instruction !== story ? { instruction } : {}),
         total,
         targetMin: setAside || total,
         reserveGoals: [
@@ -1001,6 +1095,47 @@ function linkContinueTargets(
         goToIndex: requireScreenIndex(indexByLabel, option.goToLabel, fromLabel, lesson),
       };
     });
+    if (next.type === "skill-hub") {
+      const indexForKey = (key: string | undefined) =>
+        linkedOptions.find(
+          (option) =>
+            typeof option === "object" &&
+            option !== null &&
+            "hubSkillKey" in option &&
+            option.hubSkillKey === key &&
+            "goToIndex" in option &&
+            typeof option.goToIndex === "number",
+        );
+      const finish = linkedOptions.find(
+        (option) =>
+          typeof option === "object" &&
+          option !== null &&
+          "requiresHubSkills" in option &&
+          option.requiresHubSkills &&
+          "goToIndex" in option &&
+          typeof option.goToIndex === "number",
+      );
+      return {
+        ...next,
+        options: linkedOptions,
+        skills: next.skills.map((skill) => {
+          const match = indexForKey(skill.hubSkillKey);
+          const goToIndex =
+            match && "goToIndex" in match && typeof match.goToIndex === "number"
+              ? match.goToIndex
+              : skill.goToLabel
+                ? requireScreenIndex(indexByLabel, skill.goToLabel, fromLabel, lesson)
+                : undefined;
+          return {
+            ...skill,
+            ...(typeof goToIndex === "number" ? { goToIndex } : {}),
+          };
+        }),
+        ...(finish && "goToIndex" in finish && typeof finish.goToIndex === "number"
+          ? { finishToIndex: finish.goToIndex }
+          : {}),
+      } as ScreenConfig;
+    }
     return { ...next, options: linkedOptions } as ScreenConfig;
   });
 }

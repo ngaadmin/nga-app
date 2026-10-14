@@ -65,6 +65,12 @@ type DragState = {
   height: number;
 };
 
+function splitLeadingPunctuation(part: string): { punctuation: string; rest: string } {
+  const match = /^(\s*)([.,!?;:]+)([\s\S]*)$/.exec(part);
+  if (!match) return { punctuation: "", rest: part };
+  return { punctuation: match[2] ?? "", rest: match[3] ?? "" };
+}
+
 function isPointInRect(
   clientX: number,
   clientY: number,
@@ -353,39 +359,54 @@ export const LessonWordDropGame = forwardRef<
 
   return (
     <div className="space-y-4">
-      <p className={cn(lessonNarrativeClass, "mb-5")}>
-        {parts.map((part, index) => (
-          <span key={`${part}-${index}`}>
-            {part}
-            {index < blanks.length ? (
-              <button
-                type="button"
-                ref={(node) => {
-                  blankRefs.current[index] = node;
-                }}
-                data-word-drop-slot={index}
-                aria-label={
-                  visibleBlankWord(index)
-                    ? `Blank, ${visibleBlankWord(index)}`
-                    : "Blank. Place the selected word here."
-                }
-                onClick={() => placeSelectedWord(index)}
-                className={blankSlotClass(index, Boolean(visibleBlankWord(index)))}
-              >
-                {visibleBlankWord(index) ? (
-                  <span className={lessonSortPoolChipClass}>{visibleBlankWord(index)}</span>
-                ) : null}
-              </button>
-            ) : null}
-          </span>
-        ))}
+      <p className={cn(lessonNarrativeClass, "mb-5 text-[22px]")}>
+        {parts.map((part, index) => {
+          const attached = index > 0 ? splitLeadingPunctuation(part) : null;
+          const text = attached ? attached.rest : part;
+          const blankIndex = index - 1;
+          return (
+            <span key={`${part}-${index}`}>
+              {attached ? (
+                <span className="inline-flex items-baseline whitespace-nowrap align-middle">
+                  <button
+                    type="button"
+                    ref={(node) => {
+                      blankRefs.current[blankIndex] = node;
+                    }}
+                    data-word-drop-slot={blankIndex}
+                    aria-label={
+                      visibleBlankWord(blankIndex)
+                        ? `Blank, ${visibleBlankWord(blankIndex)}`
+                        : "Blank. Place the selected word here."
+                    }
+                    onClick={() => placeSelectedWord(blankIndex)}
+                    className={cn(
+                      blankSlotClass(blankIndex, Boolean(visibleBlankWord(blankIndex))),
+                      "text-[22px]",
+                    )}
+                  >
+                    {visibleBlankWord(blankIndex) ? (
+                      <span className={cn(lessonSortPoolChipClass, "text-[20px]")}>
+                        {visibleBlankWord(blankIndex)}
+                      </span>
+                    ) : null}
+                  </button>
+                  {attached.punctuation ? (
+                    <span className="ml-0.5">{attached.punctuation}</span>
+                  ) : null}
+                </span>
+              ) : null}
+              {text}
+            </span>
+          );
+        })}
       </p>
 
       <div
         ref={poolRef}
         id="word-drop-bank"
         className={cn(
-          "flex min-h-10 flex-wrap gap-2",
+          "flex min-h-12 flex-wrap items-center justify-center gap-3",
           hoverPool && dragState?.fromBlankIndex !== null && "bg-[#E8F6FC]/40",
         )}
       >
@@ -417,7 +438,8 @@ export const LessonWordDropGame = forwardRef<
               }}
               className={cn(
                 lessonSortPoolChipClass,
-                used && "invisible pointer-events-none",
+                "text-[20px]",
+                used && "hidden",
                 selectedWord === option && "bg-[#BDE9FB]",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&

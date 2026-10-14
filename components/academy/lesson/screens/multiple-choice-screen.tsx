@@ -59,8 +59,11 @@ export function runMultipleChoiceNextHandler(): boolean {
   return activeMultipleChoiceNextHandler();
 }
 
-function letterForIndex(index: number): string {
-  return String.fromCharCode(65 + index);
+function choiceEmoji(label: string, emoji?: string): string | undefined {
+  if (emoji) return emoji;
+  if (/^true$/i.test(label.trim())) return "✅";
+  if (/^false$/i.test(label.trim())) return "❌";
+  return undefined;
 }
 
 export function MultipleChoiceScreen({
@@ -240,7 +243,7 @@ export function MultipleChoiceScreen({
   }, []);
 
   const renderOptionList = () =>
-    optionOrder.map((key, index) => {
+    optionOrder.map((key) => {
       const option = optionByKey.get(key);
       if (!option) return null;
       const selected = isSelected(key);
@@ -252,7 +255,7 @@ export function MultipleChoiceScreen({
         <LessonChoiceButton
           key={key}
           layout={isRadioList ? "radio-row" : "pill"}
-          orbLabel={option.emoji ?? letterForIndex(index)}
+          emoji={choiceEmoji(option.label, option.emoji)}
           disabled={lockedUntilHubDone}
           onClick={(event) => {
             event.stopPropagation();

@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   LESSON_SUCCESS_FLASH_MS,
   useLessonSuccessFlash,
 } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
+import { lessonPromptClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
-  LessonFalseIcon,
-  LessonTrueIcon,
-} from "@/components/academy/lesson/lesson-icons";
-import {
-  lessonPromptClass,
-  resolveChoiceVariant,
-} from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  LessonIconOption,
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
@@ -36,18 +29,17 @@ type SideLayout = { left: "a" | "b"; right: "a" | "b" };
 /** Matches lesson flow error flash duration (use-lesson-flow.ts). */
 const FEEDBACK_RECOVERY_MS = 450;
 
-/** Scaled to the 88px option circle; default glyph is sized for the 48px true/false orb. */
-const TRUE_FALSE_GLYPH_CLASS = "!size-10 text-[#031F82]";
-
-function spotlightChoiceGlyph(label: string): ReactNode | null {
+function answerEmoji(label: string, icon?: string): string | undefined {
   const normalized = label.trim().toLowerCase();
-  if (normalized === "true") {
-    return <LessonTrueIcon className={TRUE_FALSE_GLYPH_CLASS} />;
-  }
-  if (normalized === "false") {
-    return <LessonFalseIcon className={TRUE_FALSE_GLYPH_CLASS} />;
-  }
-  return null;
+  if (normalized === "true") return "✅";
+  if (normalized === "false") return "❌";
+  if (!icon || /^[A-H]$/i.test(icon.trim())) return undefined;
+  return icon;
+}
+
+function isTrueFalsePair(left: string, right: string): boolean {
+  const labels = [left, right].map((label) => label.trim().toLowerCase());
+  return labels.includes("true") && labels.includes("false");
 }
 
 function buildRoundSideLayouts(roundCount: number): SideLayout[] {
@@ -73,11 +65,7 @@ export function runSpotlightDecisionNextHandler(): boolean {
   return activeSpotlightDecisionNextHandler();
 }
 
-function letterForIndex(index: number): string {
-  return String.fromCharCode(65 + index);
-}
-
-/** Side-by-side choices that keep cash updates and GO targets. */
+/** Choices that keep cash updates and GO targets. The answer text is the button. */
 function SpotlightDecisionChoices({
   screen,
   screenIndex,
@@ -155,20 +143,16 @@ function SpotlightDecisionChoices({
       errorMessage={error}
     >
       <p className={cn("mb-2.5", lessonPromptClass)}>{prompt}</p>
-      <div className="grid w-full grid-cols-2 gap-4">
-        {visible.map(({ option, index }, position) => {
+      <div className="flex w-full flex-col gap-3">
+        {visible.map(({ option, index }) => {
           const selected = choice === index;
+          const label = displayCashText(option.label, cash);
           return (
-            <LessonIconOption
+            <LessonChoiceButton
               key={`${option.label}-${index}`}
-              className="w-full min-w-0"
-              label={displayCashText(option.label, cash)}
-              emoji={option.emoji ?? letterForIndex(position)}
-              display="emoji-label"
-              labelClassName="max-w-full"
+              emoji={answerEmoji(label, option.emoji)}
               selected={selected}
               disabled={success}
-              selectionVariant="neutral"
               onClick={() => {
                 if (success) return;
                 setChoice(index);
@@ -176,7 +160,9 @@ function SpotlightDecisionChoices({
                 setSuccess(false);
                 flow.markScreenReady(screenIndex);
               }}
-            />
+            >
+              {label}
+            </LessonChoiceButton>
           );
         })}
       </div>
@@ -269,26 +255,24 @@ function SpotlightGradedRounds({
   const renderSide = (which: "a" | "b") => {
     const meta = optionMeta[which];
     const isChosen = choice === which;
-    const isCorrectChoice = which === round.correct;
-    const glyph = spotlightChoiceGlyph(meta.label);
     return (
-      <LessonIconOption
-        label={meta.label}
-        emoji={glyph ? undefined : meta.icon}
-        glyph={glyph ?? undefined}
-        display="emoji-label"
+      <LessonChoiceButton
+        emoji={answerEmoji(meta.label, meta.icon)}
         selected={isChosen}
         disabled={choice !== null}
-        selectionVariant={
-          isChosen
-            ? resolveChoiceVariant(true, isCorrectChoice)
-            : "neutral"
-        }
-        labelClassName="max-w-[13rem] sm:max-w-[15rem]"
         onClick={() => pick(which)}
-      />
+      >
+        {meta.label}
+      </LessonChoiceButton>
     );
   };
+
+  const statement = round.prompt?.trim();
+  const header =
+    statement && statement.toLowerCase() !== screen.prompt.trim().toLowerCase()
+      ? screen.prompt
+      : "";
+  const trueFalse = isTrueFalsePair(round.optionA, round.optionB);
 
   return (
     <LessonScreenLayout
@@ -296,24 +280,31 @@ function SpotlightGradedRounds({
       success={showSuccess}
       errorMessage={error}
     >
-      <p className={cn("mb-2.5", lessonPromptClass)}>{screen.prompt}</p>
-      <div className="mb-5 flex justify-center gap-1.5">
-        {screen.rounds.map((_, index) => (
-          <i
-            key={index}
-            className={cn(
-              "block size-2 rounded-full",
-              index === roundIndex
-                ? "bg-[#0CC1E0]"
-                : index < roundIndex
-                  ? "bg-[#031F82]"
-                  : "bg-[#BDE9FB]",
-            )}
-            aria-hidden
-          />
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-4">
+      {header ? (
+        <p className="mb-1 font-heading text-sm font-extrabold uppercase tracking-wide text-[#0CC1E0]">
+          {header}
+        </p>
+      ) : null}
+      <p className={cn("mb-2.5", lessonPromptClass)}>{statement || screen.prompt}</p>
+      {screen.rounds.length > 1 ? (
+        <div className="mb-4 flex justify-center gap-1.5">
+          {screen.rounds.map((_, index) => (
+            <i
+              key={index}
+              className={cn(
+                "block size-2 rounded-full",
+                index === roundIndex
+                  ? "bg-[#0CC1E0]"
+                  : index < roundIndex
+                    ? "bg-[#031F82]"
+                    : "bg-[#BDE9FB]",
+              )}
+              aria-hidden
+            />
+          ))}
+        </div>
+      ) : null}
+      <div className={trueFalse ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
         {renderSide(sideLayout.left)}
         {renderSide(sideLayout.right)}
       </div>

@@ -458,15 +458,14 @@ export function LessonSortPool({
   );
 }
 
-function SortItemOrbGlyph({
-  emoji,
-  label,
-}: {
-  emoji?: string;
-  label: string;
-}) {
-  const glyph = emoji?.trim() || [...label.trim()][0] || "?";
-  return <span className="text-2xl leading-none">{glyph}</span>;
+function SortItemEmoji({ emoji }: { emoji?: string }) {
+  const glyph = emoji?.trim();
+  if (!glyph) return null;
+  return (
+    <span className={lessonItemOrbClass} aria-hidden>
+      <span className="text-2xl leading-none">{glyph}</span>
+    </span>
+  );
 }
 
 type LessonSortStatementCardProps = {
@@ -497,9 +496,7 @@ export const LessonSortStatementCard = forwardRef<
       style={{ touchAction: "none", ...props.style }}
       {...props}
     >
-      <span className={lessonItemOrbClass} aria-hidden>
-        <SortItemOrbGlyph emoji={emoji} label={label} />
-      </span>
+      <SortItemEmoji emoji={emoji} />
       <span className="min-w-0 leading-snug">
         {label}
         {price !== undefined ? ` · $${price}` : ""}
@@ -524,9 +521,7 @@ export function LessonSortStatementPlaced({
 }: LessonSortStatementPlacedProps) {
   return (
     <div className={cn(lessonSortStatementPlacedClass, className)}>
-      <span className={lessonItemOrbClass} aria-hidden>
-        <SortItemOrbGlyph emoji={emoji} label={label} />
-      </span>
+      <SortItemEmoji emoji={emoji} />
       <span className="min-w-0">
         {label}
         {price !== undefined ? ` · $${price}` : ""}

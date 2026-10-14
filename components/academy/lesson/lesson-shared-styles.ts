@@ -511,11 +511,11 @@ export const lessonRevealBucketClass =
  * keeps the choices on screen, and a short Chromebook does not grow a poster.
  */
 export const LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS =
-  "h-[clamp(6.25rem,_20vh,_11rem)]";
+  "h-[clamp(8rem,_26vh,_13rem)]";
 
 /** Shared layout for top-of-screen lesson media. Transparent; the avatar is the picture. */
 export const lessonIllustrationMediaFrameClass =
-  "mx-auto mb-2 h-[clamp(6.25rem,_20vh,_11rem)] w-[clamp(8rem,_26vh,_13rem)] max-w-full shrink-0 bg-transparent";
+  "mx-auto mb-2 h-[clamp(8rem,_26vh,_13rem)] w-[clamp(11rem,_78vw,_17rem)] max-w-full shrink-0 bg-transparent";
 
 /** Modest scene slot below lesson chrome. */
 export const lessonIllustrationSlotClass = cn(

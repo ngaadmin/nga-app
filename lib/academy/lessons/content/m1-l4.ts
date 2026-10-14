@@ -98,56 +98,60 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     advance: { mode: "all-items-sorted" },
   },
   {
-    type: "bucket-sort",
-    id: "rush-vs-think-sort",
-    layout: "statement-sort",
-    intro:
-      "Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?",
-    buckets: [
-      { id: "rushing", label: "I'm Rushing", tone: "rush", icon: "⚡" },
-      { id: "thinking", label: "I'm Thinking", tone: "think", icon: "🧠" },
+    type: "lightning-round",
+    id: "pause-thoughts",
+    prompt: "Which one helps Lars stop and think?",
+    wrongError: "That thought is rushing you. Pick the one that helps you stop.",
+    rounds: [
+      {
+        cards: [
+          {
+            id: "limited-time",
+            emoji: "⏰",
+            label: "It's a limited time offer - I have to buy it now!",
+            correct: false,
+          },
+          {
+            id: "wait-cheaper",
+            emoji: "💰",
+            label: "I can wait and get it cheaper later.",
+            correct: true,
+          },
+        ],
+      },
+      {
+        cards: [
+          {
+            id: "need-now",
+            emoji: "🔥",
+            label: "It looks cool, I need it right now!",
+            correct: false,
+          },
+          {
+            id: "sleep-on-it",
+            emoji: "😴",
+            label: "I'll sleep on it and decide tomorrow.",
+            correct: true,
+          },
+        ],
+      },
+      {
+        cards: [
+          {
+            id: "left-out",
+            emoji: "👥",
+            label: "Everyone has it, I don't want to be left out.",
+            correct: false,
+          },
+          {
+            id: "ask-friends",
+            emoji: "💬",
+            label: "I'll ask my friends if it's actually any good.",
+            correct: true,
+          },
+        ],
+      },
     ],
-    items: [
-      {
-        id: "need-now",
-        emoji: "🔥",
-        label: "It looks cool, I need it right now!",
-        bucket: "rushing",
-      },
-      {
-        id: "left-out",
-        emoji: "👥",
-        label: "Everyone has it, I don't want to be left out.",
-        bucket: "rushing",
-      },
-      {
-        id: "limited-time",
-        emoji: "⏰",
-        label: "It's a 'limited time' offer - I have to buy it now!",
-        bucket: "rushing",
-      },
-      {
-        id: "ask-friends",
-        emoji: "💬",
-        label: "I'll ask my friends if it's actually any good.",
-        bucket: "thinking",
-      },
-      {
-        id: "wait-cheaper",
-        emoji: "💰",
-        label: "I can wait and get it cheaper later.",
-        bucket: "thinking",
-      },
-      {
-        id: "sleep-on-it",
-        emoji: "😴",
-        label: "I'll sleep on it and decide tomorrow.",
-        bucket: "thinking",
-      },
-    ],
-    successMessage:
-      "Perfect! You've sorted the rush from the think. Lars and Mia are in control now!",
-    advance: { mode: "all-items-sorted" },
   },
   {
     type: "binary-choice",
@@ -265,9 +269,6 @@ const M1_L4_EXPLORER_OVERRIDES: ScreenOverrideMap = {
   "pause-sequence": {
     successMessage: "",
   },
-  "rush-vs-think-sort": {
-    successMessage: "",
-  },
   "pressure-sign-picks": {
     successMessage: "",
     wrongError: "That's just sign info, not a rush trick.",
@@ -286,6 +287,9 @@ const M1_L4_EXPLORER_OVERRIDES: ScreenOverrideMap = {
 };
 
 const M1_L4_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
+  "pause-thoughts": {
+    prompt: "Which one helps Holly stop and think?",
+  },
   "pressure-sign-picks": {
     prompt: "Select which parts of the sign are making Holly rush.",
     scenePrompt:
@@ -312,6 +316,9 @@ const M1_L4_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
 };
 
 const M1_L4_MAVERICK_OVERRIDES: ScreenOverrideMap = {
+  "pause-thoughts": {
+    prompt: "Which one helps Aiden stop and think?",
+  },
   "pressure-sign-picks": {
     prompt: "Select which parts of the sign are making Aiden rush.",
     scenePrompt:

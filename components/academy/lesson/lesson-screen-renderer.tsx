@@ -11,6 +11,7 @@ import { BucketSortScreen } from "./screens/bucket-sort-screen";
 import { CompletionScreen } from "./screens/completion-screen";
 import { DragToTargetScreen } from "./screens/drag-to-target-screen";
 import { HoldToFillScreen } from "./screens/hold-to-fill-screen";
+import { LightningRoundScreen } from "./screens/lightning-round-screen";
 import { LinkMatchScreen } from "./screens/link-match-screen";
 import { RankOrderScreen } from "./screens/rank-order-screen";
 import { NarrativeBonusScreen } from "./screens/narrative-bonus-screen";
@@ -145,6 +146,14 @@ const LESSON_SCREEN_RENDERERS: Partial<
   "savings-goal": ({ screen, screenIndex, flow, rewards }) => (
     <SavingsGoalScreen
       screen={screen as Extract<ScreenConfig, { type: "savings-goal" }>}
+      screenIndex={screenIndex}
+      flow={flow}
+      rewards={rewards}
+    />
+  ),
+  "lightning-round": ({ screen, screenIndex, flow, rewards }) => (
+    <LightningRoundScreen
+      screen={screen as Extract<ScreenConfig, { type: "lightning-round" }>}
       screenIndex={screenIndex}
       flow={flow}
       rewards={rewards}

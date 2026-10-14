@@ -17,13 +17,13 @@ import { useAdvancedMoneyToolsCompounding } from "@/lib/dashboard/advanced-money
 import { useAdvancedMoneyToolsData } from "@/lib/dashboard/advanced-money-tools/use-advanced-money-tools-data";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { LockIcon } from "@/lib/dashboard/icons";
-import { buildHighRoiWarningCopy, resolveFinnAddressName } from "@/lib/dashboard/resolve-finn-address-name";
+import { buildHighRoiWarningCopy, resolvePennyAddressName } from "@/lib/dashboard/resolve-penny-address-name";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 
 export function AdvancedMoneyToolsDashboard() {
   const { formatMoney } = useCurrency();
   const { username, isLoading } = useDashboardUser();
-  const displayName = resolveFinnAddressName(username, isLoading);
+  const displayName = resolvePennyAddressName(username, isLoading);
   const ledgerCopy = copyMatrix.dashboard.vault.ledger;
   const { isPremium, ledger, totalSavings } = useAdvancedMoneyToolsData();
 

@@ -16,7 +16,7 @@
 * **OpenAI Absolute Exclusion:** Under no circumstances are OpenAI, ChatGPT, or associated SDKs, libraries, or dependencies to be imported or referenced.
 
 ## 3. Brand Voice & UI Style Safeguards
-* **The Finn Persona:** The sole in-app mentor voice — "Cool, Savvy Mentor": bold, fun, direct, and witty. Never lecture or talk down to the user.
+* **The Penny Persona:** The sole in-app mentor voice — "Cool, Savvy Mentor": bold, fun, direct, and witty. Never lecture or talk down to the user.
 * **Tone Adaptability:** Adapt copy to the user's **mastery cohort** (learning age band). Apply **compliance tier** rules separately for parental oversight and privacy — never merge the two axes in code or copy logic.
 * **Aesthetic Standard:** "Duolingo for Finance"-highly visual, low-text, interactive, gamified interface layouts.
 

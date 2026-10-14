@@ -546,10 +546,31 @@ describe("lesson payload loader", () => {
           "Step 4",
         ]);
       }
-      expect(thoughts).toMatchObject({ type: "bucket-sort", layout: "statement-sort" });
-      if (thoughts?.type === "bucket-sort") {
-        expect(thoughts.items).toHaveLength(6);
-        expect(thoughts.buckets.map((bucket) => bucket.id)).toEqual(["rushing", "thinking"]);
+      const lead =
+        cohort === "explorer" ? "Lars" : cohort === "pathfinder" ? "Holly" : "Aiden";
+      expect(thoughts).toMatchObject({
+        type: "lightning-round",
+        prompt: `Which one helps ${lead} stop and think?`,
+        wrongError: "That thought is rushing you. Pick the one that helps you stop.",
+      });
+      if (thoughts?.type === "lightning-round") {
+        expect(thoughts.rounds).toHaveLength(3);
+        expect(
+          thoughts.rounds.map((round) => round.cards.map((card) => [card.label, card.emoji, card.correct])),
+        ).toEqual([
+          [
+            ["It's a limited time offer - I have to buy it now!", "⏰", false],
+            ["I can wait and get it cheaper later.", "💰", true],
+          ],
+          [
+            ["It looks cool, I need it right now!", "🔥", false],
+            ["I'll sleep on it and decide tomorrow.", "😴", true],
+          ],
+          [
+            ["Everyone has it, I don't want to be left out.", "👥", false],
+            ["I'll ask my friends if it's actually any good.", "💬", true],
+          ],
+        ]);
       }
       expect(sign).toMatchObject({
         type: "binary-choice",

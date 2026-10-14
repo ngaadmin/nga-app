@@ -311,7 +311,7 @@ export const DEMO_ACHIEVEMENT_FRIENDS: readonly AchievementFriend[] = [
   },
   {
     id: "friend-2",
-    username: "FinnFan22",
+    username: "PennyFan22",
     avatarEmoji: "🐯",
     dayStreak: 18,
     lifetimePoints: 3150,

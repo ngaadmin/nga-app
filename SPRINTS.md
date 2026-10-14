@@ -4,7 +4,7 @@
 
 > **Stack compliance:** All work follows `CLAUDE.md` - Next.js (App Router), TypeScript (strict), Tailwind CSS, Supabase, Vercel, xAI Grok only (no OpenAI). Mobile-responsive PWA; no native hardware dependencies.
 
-> **App avatar guide:** All in-app mentor voice, activity logs, and youth-facing copy reference **Finn** as the sole guide persona across Academy, Launchpad, and Vault hubs.
+> **App avatar guide:** All in-app mentor voice, activity logs, and youth-facing copy reference **Penny** as the sole guide persona across Academy, Launchpad, and Vault hubs.
 
 > **Decision log:** Finalized architecture choices live in `DECISIONS_LOG.md`. Invariant agent rules live in `CLAUDE.md`.
 
@@ -68,7 +68,7 @@
 
 - **Semantic UI layering (complete):** Centralized `@theme` z-index tokens, portal roots, shared `ModalShell` / `OverlayPortal`, and ESLint guard against ad-hoc z-index values. Dashboard nav remains usable during lesson interactions.
 
-- **Launchpad** (`/dashboard/launchpad`, formerly Engine) ships dual horizontal carousels (In Progress + All Business Ideas), freemium / premium / age-track locks, discovery-brief launch drawers, close-shop confirmation, and a dynamic bottom venture journey map synced to the selected active venture. Finn voice copy drives mentor prompts. Blueprints in `lib/launchpad/venture-blueprints.ts`.
+- **Launchpad** (`/dashboard/launchpad`, formerly Engine) ships dual horizontal carousels (In Progress + All Business Ideas), freemium / premium / age-track locks, discovery-brief launch drawers, close-shop confirmation, and a dynamic bottom venture journey map synced to the selected active venture. Penny voice copy drives mentor prompts. Blueprints in `lib/launchpad/venture-blueprints.ts`.
 
 - **Vault** (`/dashboard/vault`) is the former Vault 2.0 experience — My Money tile/carousel, modal allocation, jar management, savings goals management, income deposit with virtual-money disclaimer, and independent `nga_vault_*` session/profile storage. Legacy Vault UI removed. Compounding and categorized ledger live under **Advanced Money Tools**.
 
@@ -90,7 +90,7 @@
 
 - [ ] Task 3.4: Gamified Adaptive Placement Quiz - build the interactive, Duolingo-style placement flow that updates skill tiers in the database upon completion.
 
-- [x] Task 3.5: The Vault Allocator (Bidirectional Jars) - Build the sandbox management bank layout supporting manual logging of real-world income, foundational Spend, Save, and Give jars, fluidly adjustable custom jars, and bidirectional Money Allocation mechanics with ADD/RECALL ledger actions. **(COMPLETE - Vault 2.0 My Money / modal allocation / jar management experience is now the sole Vault. Save Jar + savings goals, shared point-conversion credit path, independent vault profile storage, Finn-narrated ledger activity under Advanced Money.)**
+- [x] Task 3.5: The Vault Allocator (Bidirectional Jars) - Build the sandbox management bank layout supporting manual logging of real-world income, foundational Spend, Save, and Give jars, fluidly adjustable custom jars, and bidirectional Money Allocation mechanics with ADD/RECALL ledger actions. **(COMPLETE - Vault 2.0 My Money / modal allocation / jar management experience is now the sole Vault. Save Jar + savings goals, shared point-conversion credit path, independent vault profile storage, Penny-narrated ledger activity under Advanced Money.)**
 
 - [x] Task 3.6: The Savings Time-Machine Widget - Build an interactive sandbox compounding widget that pulls live Save Jar balances by default, features interactive sliders for "Years Saved" and "Weekly Top-Up", and accepts text input for manual principal overrides. **(COMPLETE - Relocated to Advanced Money → Growth Potential. Still plumbing-linked to live savings totals. Includes years / weekly top-up / ROI sliders and ≥12% ROI compliance warning.)**
 

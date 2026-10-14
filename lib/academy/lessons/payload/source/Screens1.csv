@@ -207,13 +207,12 @@ STEP1: Aiden sees the one-time offer.
 STEP2: Aiden remembers the price could drop later.
 STEP3: Aiden waits a day and checks again.
 STEP4: Aiden is happy he waited - he can buy the same item for even less."
-1,4,3,bucket-sort,Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Holly and Immi sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Aiden and Dash sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,,,,,"ITEMS:
-RUSHING: 🔥 It looks cool, I need it right now!
-RUSHING: 👥 Everyone has it, I don't want to be left out.
-RUSHING: ⏰ It's a 'limited time' offer - I have to buy it now!
-THINKING: 💬 I'll ask my friends if it's actually any good.
-THINKING: 💰 I can wait and get it cheaper later.
-THINKING: 😴 I'll sleep on it and decide tomorrow."
+1,4,3,lightning-round,Which one helps Lars stop and think?,Which one helps Holly stop and think?,Which one helps Aiden stop and think?,,,,,"RUSH: ⏰ It's a limited time offer - I have to buy it now!
+THINK: 💰 I can wait and get it cheaper later.
+RUSH: 🔥 It looks cool, I need it right now!
+THINK: 😴 I'll sleep on it and decide tomorrow.
+RUSH: 👥 Everyone has it, I don't want to be left out.
+THINK: 💬 I'll ask my friends if it's actually any good.",,That thought is rushing you. Pick the one that helps you stop.,That thought is rushing you. Pick the one that helps you stop.,That thought is rushing you. Pick the one that helps you stop.
 1,4,4,binary-choice,Select which parts of the sign are making Lars rush.,Select which parts of the sign are making Holly rush.,Select which parts of the sign are making Aiden rush.,fishing-rod-sign.webp,fishing-rod-sign.webp,fishing-rod-sign.webp,,"CHOICE A: DON'T MISS OUT!
 CHOICE B: ONLY 2 LEFT!
 CHOICE C: ENDS TOMORROW!

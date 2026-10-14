@@ -74,6 +74,7 @@ export function LessonRunner({
         screen.type !== "budget-select" &&
         screen.type !== "tap-reveal" &&
         screen.type !== "bucket-sort" &&
+        screen.type !== "lightning-round" &&
         !scoredUntilCorrect) ||
       (screen.type === "narrative-bonus" &&
         screen.bonusXp === 0 &&

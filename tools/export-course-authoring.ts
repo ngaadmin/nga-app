@@ -55,6 +55,7 @@ const GAME_TYPE_LABEL: Record<string, string> = {
   completion: "Lesson Complete",
   "rank-order": "Rank Choices",
   "spotlight-rounds": "Pick One Rounds",
+  "lightning-round": "Lightning Round",
   "budget-select": "Budget Checkboxes",
   "allocation-slider": "Budget Slider",
   "drag-to-target": "Gift Reveal",

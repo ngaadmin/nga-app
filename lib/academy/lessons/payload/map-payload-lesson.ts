@@ -9,7 +9,12 @@ import {
   type MedalIllustrationId,
 } from "@/lib/academy/illustrations/medal-registry";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
-import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
+import { peelLeadingEmoji } from "@/lib/academy/lessons/peel-leading-emoji";
+import type {
+  LightningRoundCard,
+  ResolvedLessonContent,
+  ScreenConfig,
+} from "@/lib/academy/lessons/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { ACADEMY_MODULE_TITLES } from "@/lib/dashboard/academy-content";
 import type { AcademyLevelId } from "@/lib/dashboard/academy-state";
@@ -49,7 +54,7 @@ function mergedSettings(copy: PayloadCohortCopy, cohort: MasteryCohort): Setting
 }
 
 const SETTINGS_KEY =
-  /(?:CHOICE\s+[A-Z]|ICON\s+[A-Z]|CORRECT|OPTIONS|BUTTON|CONTINUE|SOURCE|TARGET|RESULT|ORDER|ITEMS|ROUNDS|MEDAL|AVAILABLE|LABEL|HOLD|FROZEN|SUCCESS|ID|SHORT|LONG|NEED|WANT|YES|NO)\s*:|(?:^|\s)([A-H])\s*:/gi;
+  /(?:CHOICE\s+[A-Z]|ICON\s+[A-Z]|CORRECT|OPTIONS|BUTTON|CONTINUE|SOURCE|TARGET|RESULT|ORDER|ITEMS|ROUNDS|MEDAL|AVAILABLE|LABEL|HOLD|FROZEN|SUCCESS|ID|SHORT|LONG|NEED|WANT|YES|NO|RUSHING|THINKING|RUSH|THINK)\s*:|(?:^|\s)([A-H])\s*:/gi;
 
 /** Split one settings line on later keys such as `CHOICE B:` or `CORRECT:`. */
 function settingsParts(line: string): string[] {
@@ -254,6 +259,44 @@ function stepRows(entries: readonly SettingEntry[]): SettingEntry[] {
       (left, right) =>
         Number(left.key.slice(4)) - Number(right.key.slice(4)),
     );
+}
+
+function lightningRounds(
+  entries: readonly SettingEntry[],
+): { cards: readonly [LightningRoundCard, LightningRoundCard] }[] {
+  const rounds: { cards: readonly [LightningRoundCard, LightningRoundCard] }[] = [];
+  let rush: string | undefined;
+  for (const entry of entries) {
+    const side =
+      entry.key === "RUSH" || entry.key === "RUSHING"
+        ? "rush"
+        : entry.key === "THINK" || entry.key === "THINKING"
+          ? "think"
+          : undefined;
+    if (!side || !entry.value) continue;
+    if (side === "rush") {
+      rush = entry.value;
+      continue;
+    }
+    if (!rush) continue;
+    const rushing = peelLeadingEmoji(rush);
+    const thinking = peelLeadingEmoji(entry.value);
+    const rushCard: LightningRoundCard = {
+      id: itemSlug(rushing.label, rounds.length * 2),
+      label: rushing.label,
+      ...(rushing.emoji ? { emoji: rushing.emoji } : {}),
+      correct: false,
+    };
+    const thinkCard: LightningRoundCard = {
+      id: itemSlug(thinking.label, rounds.length * 2 + 1),
+      label: thinking.label,
+      ...(thinking.emoji ? { emoji: thinking.emoji } : {}),
+      correct: true,
+    };
+    rounds.push({ cards: [rushCard, thinkCard] });
+    rush = undefined;
+  }
+  return rounds;
 }
 
 function moodRows(entries: readonly SettingEntry[]): SettingEntry[] {
@@ -644,6 +687,16 @@ export function mapPayloadScreen(
         ...(decisionScript && decisionScript.prompts.length > 0
           ? { promptWhen: decisionScript.prompts }
           : {}),
+        ...picture,
+      };
+    }
+    case "lightning-round": {
+      return {
+        type: "lightning-round",
+        id,
+        prompt: text,
+        rounds: lightningRounds(settings),
+        wrongError: error,
         ...picture,
       };
     }

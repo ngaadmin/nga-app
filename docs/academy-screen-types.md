@@ -52,6 +52,7 @@ Illustrations are **optional** per screen via `illustration?: { emoji?, label?, 
 - `savings-goal`
 - `budget-select`
 - `spotlight-rounds`
+- `lightning-round`
 - `allocation-slider`
 - `completion`
 
@@ -115,14 +116,15 @@ Exact `type` values in `ScreenConfig`. There is **no** `"drag-and-sort"` or `"sl
 | 6 | `link-match` | `LinkMatchScreen` | `LessonLinkMatchGame` |
 | 7 | `rank-order` | `RankOrderScreen` | `LessonRankOrderGame` |
 | 8 | `spotlight-rounds` | `SpotlightRoundsScreen` | — |
-| 9 | `hold-to-fill` | `HoldToFillScreen` | — |
-| 10 | `drag-to-target` | `DragToTargetScreen` | `LessonDragToTargetGame` |
-| 11 | `savings-goal` | `SavingsGoalScreen` | `LessonSavingsGoalGame` |
-| 12 | `allocation-slider` | `AllocationSliderScreen` | `LessonAllocationSliderGame` |
-| 13 | `budget-select` | `BudgetSelectScreen` | `LessonBudgetSelectGame` |
-| 14 | `narrative-bonus` | `NarrativeBonusScreen` | — |
-| 15 | `completion` | `CompletionScreen` | — |
-| 16 | `custom` | *(null in registry)* | Lesson-specific via `renderer` key |
+| 9 | `lightning-round` | `LightningRoundScreen` | — |
+| 10 | `hold-to-fill` | `HoldToFillScreen` | — |
+| 11 | `drag-to-target` | `DragToTargetScreen` | `LessonDragToTargetGame` |
+| 12 | `savings-goal` | `SavingsGoalScreen` | `LessonSavingsGoalGame` |
+| 13 | `allocation-slider` | `AllocationSliderScreen` | `LessonAllocationSliderGame` |
+| 14 | `budget-select` | `BudgetSelectScreen` | `LessonBudgetSelectGame` |
+| 15 | `narrative-bonus` | `NarrativeBonusScreen` | — |
+| 16 | `completion` | `CompletionScreen` | — |
+| 17 | `custom` | *(null in registry)* | Lesson-specific via `renderer` key |
 
 Audit helper: `REGISTERED_LESSON_SCREEN_TYPES` in `lesson-screen-renderer.tsx`.
 
@@ -402,6 +404,20 @@ Omit `layout` for `statement-sort`. **Locked:** bucket column headers use neutra
 
 ---
 
+### `lightning-round`
+
+**Best for:** A short run of two-card choices. Lesson 4 uses it for rushing thoughts versus thinking thoughts.
+
+**Illustration:** Omit (dense). Two full-width cards need the phone height.
+
+**Sheet:** Game Type `lightning-round`. Prompt is the cohort text column (`Which one helps Lars stop and think?`). Game Settings pairs one `RUSH:` line with the next `THINK:` line. `THINK` is the correct card. A leading emoji, including ⏰, is the card icon and is removed from the words. Error columns are the wrong-tap copy.
+
+**Locked behaviour:** Each round shows the two cards in random order and a `1/3` counter. A correct tap shows a tick, then the next round. A wrong tap uses the hearts and error banner and stays on the round. Next enables after the last correct tap.
+
+**Advance:** `on-complete` via `markScreenReady`. Do not use `auto-ready`.
+
+---
+
 ### `narrative-bonus`
 
 **Best for:** Reward — resolution + optional bonus XP.
@@ -460,6 +476,7 @@ Common `advance.mode` values (`declarative.ts`):
 | `all-taps-revealed` | All tap-reveal items opened |
 | `all-items-sorted` | All bucket-sort / sequence items placed |
 | `spotlight-rounds-complete` | All spotlight rounds answered correctly |
+| *(lightning-round)* | Screen calls `markScreenReady` after the last correct card |
 
 Screens that become incomplete after success (e.g. `budget-select` uncheck) must call `clearScreenReady`.
 
@@ -475,6 +492,7 @@ Screens that become incomplete after success (e.g. `budget-select` uncheck) must
 | `tap-reveal` | ✓ | | | |
 | `bucket-sort` | ✓ | ✓ | ✓ | ✓ |
 | `spotlight-rounds` | | ✓ | | |
+| `lightning-round` | | | | ✓ |
 | `link-match` | | | ✓ | |
 | `rank-order` | | ✓ | | |
 | `budget-select` | | ✓ | | |

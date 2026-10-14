@@ -46,7 +46,7 @@ async function dragOnto(page: Page, source: Locator, target: Locator): Promise<v
   await page.mouse.up();
 }
 
-test("mobile drag completes the sentence, sort, swipe, and didn't-buy screens", async ({
+test("mobile drag completes the sentence, lightning round, swipe, and didn't-buy screens", async ({
   page,
 }) => {
   const next = page.getByRole("button", { name: "Next", exact: true });
@@ -61,21 +61,21 @@ test("mobile drag completes the sentence, sort, swipe, and didn't-buy screens", 
   await expect(next).toBeEnabled();
 
   await openAsExplorer(page, "/dashboard/academy/lesson/4?preview=1&screen=2");
-  await expect(page.getByText(/sort their thoughts/i)).toBeVisible();
-  const sortPairs = [
-    [/need it right now/i, "I'm Rushing"],
-    [/left out/i, "I'm Rushing"],
-    [/limited time/i, "I'm Rushing"],
-    [/ask my friends/i, "I'm Thinking"],
-    [/get it cheaper later/i, "I'm Thinking"],
-    [/sleep on it/i, "I'm Thinking"],
+  await expect(page.getByText("Which one helps Lars stop and think?")).toBeVisible();
+  await expect(page.getByText("1/3", { exact: true })).toBeVisible();
+  await expect(next).toBeDisabled();
+  await page.getByRole("button", { name: /limited time offer/i }).click();
+  await expect(page.getByRole("alert")).toContainText(/rushing you/i);
+  await expect(page.getByLabel("3 of 4 lives remaining")).toBeVisible();
+  await expect(next).toBeDisabled();
+  const thinkingCards = [
+    /get it cheaper later/i,
+    /sleep on it/i,
+    /ask my friends/i,
   ] as const;
-  for (const [item, bucket] of sortPairs) {
-    await dragOnto(
-      page,
-      page.getByRole("button", { name: item }),
-      page.getByRole("button", { name: `Drop selected item in ${bucket}` }),
-    );
+  for (const [index, card] of thinkingCards.entries()) {
+    await expect(page.getByText(`${index + 1}/3`, { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: card }).click();
   }
   await expect(next).toBeEnabled();
 

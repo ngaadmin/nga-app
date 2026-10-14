@@ -15,6 +15,7 @@ import { LinkMatchScreen } from "./screens/link-match-screen";
 import { RankOrderScreen } from "./screens/rank-order-screen";
 import { NarrativeBonusScreen } from "./screens/narrative-bonus-screen";
 import { SavingsGoalScreen } from "./screens/savings-goal-screen";
+import { SkillHubScreen } from "./screens/skill-hub-screen";
 import { SpotlightRoundsScreen } from "./screens/spotlight-rounds-screen";
 import { TapRevealScreen } from "./screens/tap-reveal-screen";
 import { TrueFalseScreen } from "./screens/true-false-screen";
@@ -171,6 +172,13 @@ const LESSON_SCREEN_RENDERERS: Partial<
       flow={flow}
       rewards={rewards}
       awardBonusXp={awardBonusXp}
+    />
+  ),
+  "skill-hub": ({ screen, screenIndex, flow }) => (
+    <SkillHubScreen
+      screen={screen as Extract<ScreenConfig, { type: "skill-hub" }>}
+      screenIndex={screenIndex}
+      flow={flow}
     />
   ),
   "spotlight-rounds": ({

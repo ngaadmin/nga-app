@@ -1,6 +1,7 @@
 import { ACADEMY_FIRST_LESSON_OPENED_KEY } from "@/lib/dashboard/academy-first-lesson-opened";
 import { ACADEMY_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/academy-progress-storage";
 import { DASHBOARD_WALLET_STORAGE_KEY } from "@/lib/dashboard/dashboard-wallet-storage";
+import { LEARNING_STREAK_STORAGE_KEY } from "@/lib/dashboard/streak-practice";
 import { CURRENCY_PREFERENCE_STORAGE_KEY } from "@/lib/dashboard/currency/currency-storage";
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { TESTING_PREMIUM_STORAGE_KEY } from "@/lib/dashboard/testing-premium";
@@ -32,6 +33,7 @@ export const APP_SESSION_STORAGE_KEYS = [
   PENDING_PARENT_CONSENT_KEY,
   EXPLORER_PENDING_PLAY_OK_KEY,
   DASHBOARD_WALLET_STORAGE_KEY,
+  LEARNING_STREAK_STORAGE_KEY,
   CURRENCY_PREFERENCE_STORAGE_KEY,
   ACADEMY_PROGRESS_STORAGE_KEY,
   ACADEMY_FIRST_LESSON_OPENED_KEY,

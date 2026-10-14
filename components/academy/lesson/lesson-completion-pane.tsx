@@ -146,11 +146,11 @@ export function LessonCompletionPane({
         ) : null}
 
         <p className="mt-2 font-heading text-[22px] font-bold tabular-nums text-[#031F82]">
-          +{xpReward} points
+          +{xpReward} XP
         </p>
         {showPerfectBonus ? (
           <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
-            Perfect lesson: +{perfectStreakBonus}
+            Perfect lesson: +{perfectStreakBonus} XP
           </p>
         ) : null}
 

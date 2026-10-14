@@ -11,6 +11,8 @@ export type AllocationSliderScreenConfig = WithDeclarative<{
   type: "allocation-slider";
   id: string;
   intro: string;
+  /** How to use the slider. Shown under the story line. */
+  instruction?: string;
   total: number;
   /** Minimum amount to reserve before the screen completes. */
   targetMin: number;

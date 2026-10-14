@@ -1,3 +1,29 @@
+import {
+  readPersisted,
+  removePersisted,
+  writePersisted,
+} from "@/lib/dev/client-persist";
+
+/** Consecutive practice days for the signed-in learner. */
+export const LEARNING_STREAK_STORAGE_KEY = "nga_learning_streak_v1";
+
+export function readStoredDayStreak(): number {
+  if (typeof window === "undefined") return 0;
+  const parsed = Number(readPersisted(LEARNING_STREAK_STORAGE_KEY));
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return Math.floor(parsed);
+}
+
+export function writeStoredDayStreak(dayStreak: number): void {
+  if (typeof window === "undefined") return;
+  const safe = Math.floor(dayStreak);
+  if (safe > 0) {
+    writePersisted(LEARNING_STREAK_STORAGE_KEY, String(safe));
+    return;
+  }
+  removePersisted(LEARNING_STREAK_STORAGE_KEY);
+}
+
 /** Local YYYY-MM-DD for calendar cells — not UTC, so the day matches what the user sees. */
 export function toLocalDateKey(date: Date): string {
   const year = date.getFullYear();

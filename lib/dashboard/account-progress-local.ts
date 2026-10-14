@@ -20,6 +20,10 @@ import {
   saveDashboardWalletState,
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
+  readStoredDayStreak,
+  writeStoredDayStreak,
+} from "@/lib/dashboard/streak-practice";
+import {
   VAULT_SKILL_PROGRESS_STORAGE_KEY,
   readVaultSkillTierOverrides,
   saveVaultSkillTierOverrides,
@@ -126,6 +130,7 @@ export function collectAccountProgress(): AccountProgressPayload {
       ? parseAccountProgressPayload({ vaultSession: vaultSessionRaw })
           ?.vaultSession ?? null
       : null,
+    ...(readStoredDayStreak() > 0 ? { dayStreak: readStoredDayStreak() } : {}),
   };
 }
 
@@ -159,6 +164,8 @@ export function applyAccountProgress(payload: AccountProgressPayload): void {
         JSON.stringify(payload.vaultSession),
       );
     }
+
+    writeStoredDayStreak(payload.dayStreak ?? 0);
 
     const session = readUserSession();
     if (session?.accessMode === "registered") {

@@ -65,16 +65,15 @@ function meterCountsDown(label: string, showsRemaining: boolean): boolean {
   return /^(remaining|left)$/i.test(label.trim());
 }
 
-function itemGlyph(item: SavingsGoalGameItem) {
-  return item.emoji?.trim() || item.label.trim().charAt(0) || "?";
-}
-
 function renderItemChip(item: SavingsGoalGameItem) {
+  const emoji = item.emoji?.trim();
   return (
     <>
-      <span className={lessonItemOrbClass} aria-hidden>
-        {itemGlyph(item)}
-      </span>
+      {emoji ? (
+        <span className={lessonItemOrbClass} aria-hidden>
+          {emoji}
+        </span>
+      ) : null}
       <span>
         {item.label} · {formatDollars(item.price)}
       </span>

@@ -19,8 +19,9 @@ function shuffleItems<T>(items: readonly T[]): T[] {
   return next;
 }
 
-function itemGlyph(label: string, emoji?: string) {
-  return emoji?.trim() || label.trim().charAt(0) || "?";
+function itemEmoji(emoji?: string) {
+  const glyph = emoji?.trim();
+  return glyph || undefined;
 }
 
 export function TapRevealScreen({
@@ -85,9 +86,11 @@ export function TapRevealScreen({
                   tapped.has(item.id) && "invisible pointer-events-none",
                 )}
               >
-                <span className={lessonItemOrbClass} aria-hidden>
-                  {itemGlyph(item.label, item.emoji)}
-                </span>
+                {itemEmoji(item.emoji) ? (
+                  <span className={lessonItemOrbClass} aria-hidden>
+                    {itemEmoji(item.emoji)}
+                  </span>
+                ) : null}
                 <span>{item.label}</span>
               </button>
             </div>
@@ -107,9 +110,11 @@ export function TapRevealScreen({
                 <div className="flex flex-1 flex-col gap-3.5 py-2.5">
                   {revealed.map((item) => (
                     <div key={item.id} className={lessonItemChipClass}>
-                      <span className={lessonItemOrbClass} aria-hidden>
-                        {itemGlyph(item.label, item.emoji)}
-                      </span>
+                      {itemEmoji(item.emoji) ? (
+                        <span className={lessonItemOrbClass} aria-hidden>
+                          {itemEmoji(item.emoji)}
+                        </span>
+                      ) : null}
                       <span>{item.label}</span>
                     </div>
                   ))}

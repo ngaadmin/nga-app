@@ -20,6 +20,7 @@ export type { LinkMatchPair, LinkMatchScreenConfig } from "./link-match";
 export type { NarrativeBonusScreenConfig } from "./narrative-bonus";
 export type { RankOrderItem, RankOrderScreenConfig } from "./rank-order";
 export type { SavingsGoalItem, SavingsGoalScreenConfig } from "./savings-goal";
+export type { SkillHubOption, SkillHubScreenConfig, SkillHubSkill } from "./skill-hub";
 export type { SpotlightRoundsScreenConfig } from "./spotlight-rounds";
 export type { TapRevealScreenConfig } from "./tap-reveal";
 export type { TrueFalseScreenConfig } from "./true-false";
@@ -40,6 +41,7 @@ import type { LinkMatchScreenConfig } from "./link-match";
 import type { NarrativeBonusScreenConfig } from "./narrative-bonus";
 import type { RankOrderScreenConfig } from "./rank-order";
 import type { SavingsGoalScreenConfig } from "./savings-goal";
+import type { SkillHubScreenConfig } from "./skill-hub";
 import type { SpotlightRoundsScreenConfig } from "./spotlight-rounds";
 import type { TapRevealScreenConfig } from "./tap-reveal";
 import type { TrueFalseScreenConfig } from "./true-false";
@@ -60,6 +62,7 @@ export type ScreenConfig =
   | DragToTargetScreenConfig
   | SavingsGoalScreenConfig
   | NarrativeBonusScreenConfig
+  | SkillHubScreenConfig
   | SpotlightRoundsScreenConfig
   | CompletionScreenConfig
   | CustomScreenConfig;

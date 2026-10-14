@@ -4,10 +4,6 @@ import { useState } from "react";
 import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
-  LessonFalseIcon,
-  LessonTrueIcon,
-} from "@/components/academy/lesson/lesson-icons";
-import {
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
@@ -55,24 +51,16 @@ export function TrueFalseScreen({
       errorMessage={error}
       success={showSuccess}
     >
-      <div className="mt-2.5 flex justify-between gap-7 px-1">
+      <div className="mt-3 grid grid-cols-2 gap-3">
         {(["true", "false"] as const).map((option) => (
           <LessonChoiceButton
             key={option}
             onClick={() => pick(option)}
             selected={choice === option}
-            orb={
-              option === "true" ? (
-                <LessonTrueIcon />
-              ) : (
-                <LessonFalseIcon />
-              )
-            }
-            className="w-[calc(50%-14px)] flex-col gap-2 [&>span:last-child]:flex-none"
+            emoji={option === "true" ? "✅" : "❌"}
+            className="justify-center text-center [&>span:last-child]:flex-none [&>span:last-child]:text-center"
           >
-            <span className="whitespace-normal text-center text-sm font-semibold leading-[1.3]">
-              {option === "true" ? "True" : "False"}
-            </span>
+            {option === "true" ? "True" : "False"}
           </LessonChoiceButton>
         ))}
       </div>

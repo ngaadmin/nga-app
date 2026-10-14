@@ -60,10 +60,12 @@ async function openLesson(page: Page, path: string): Promise<void> {
       }
 
       window.AudioContext = FakeAudioContext as unknown as typeof AudioContext;
-      navigator.vibrate = (pattern: VibratePattern) => {
-        vibrations.push(Array.isArray(pattern) ? [...pattern] : [pattern]);
+      const vibrate = (pattern: VibratePattern | Iterable<number>) => {
+        const values = typeof pattern === "number" ? [pattern] : [...pattern];
+        vibrations.push(values);
         return true;
       };
+      navigator.vibrate = vibrate;
     },
     [GUEST_SESSION_KEY, EXPLORER_GUEST_SESSION] as const,
   );

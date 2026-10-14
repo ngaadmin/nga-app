@@ -59,6 +59,7 @@ export function LessonRunner({
   const isContinueOnly =
     (activeScreen?.type === "binary-choice" || activeScreen?.type === "multiple-choice") &&
     Boolean(activeScreen.continueToLabel);
+  const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
 
   useEffect(() => {
     const screen = content.screens[screenIndex];
@@ -111,7 +112,7 @@ export function LessonRunner({
             flow.handleNext();
           })
         }
-        hideFooter={isCompletionScreen || isContinueOnly}
+        hideFooter={isCompletionScreen || isContinueOnly || isSkillHub}
         footerSlot={isCompletionScreen ? <></> : undefined}
       >
         {content.screens.map((screen, index) => (
@@ -130,7 +131,7 @@ export function LessonRunner({
                   </div>
                   <div
                     className={cn(
-                      "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain",
+                      "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-x-none overscroll-y-contain",
                       !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
                     )}
                   >

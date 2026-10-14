@@ -49,3 +49,26 @@ export function resolveContinueMilestoneId(
 
   return steps[0]?.id ?? null;
 }
+
+/**
+ * Tile Penny stands beside: the next lesson, or the last tile once every
+ * lesson is already done. A finished journey still has a tile to stand on.
+ */
+export function resolvePennyMilestoneId(
+  steps: readonly JourneyStepWithId[],
+): number | null {
+  if (steps.length === 0) return null;
+  if (steps.every((step) => step.status === "completed")) {
+    return steps[steps.length - 1]!.id;
+  }
+
+  const continueId = resolveContinueMilestoneId(steps);
+  const continueStep = steps.find((step) => step.id === continueId);
+  if (continueStep && continueStep.status !== "completed") return continueStep.id;
+
+  const active = steps.find((step) => step.status === "active");
+  if (active) return active.id;
+
+  const open = steps.find((step) => step.status !== "completed");
+  return (open ?? steps[steps.length - 1]!).id;
+}

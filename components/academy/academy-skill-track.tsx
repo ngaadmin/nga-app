@@ -13,7 +13,16 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AcademyModuleSignpost, ACADEMY_MODULE_SIGNPOST_GAP_PX } from "@/components/academy/academy-module-signpost";
-import { resolveActiveStepIndex, resolveContinueMilestoneId } from "@/lib/dashboard/resolve-active-step-index";
+import {
+  PENNY_JOURNEY_SIZE_PX,
+  PENNY_NODE_GAP_PX,
+  placePennyBesideNode,
+} from "@/lib/dashboard/place-penny-beside-node";
+import {
+  resolveActiveStepIndex,
+  resolveContinueMilestoneId,
+  resolvePennyMilestoneId,
+} from "@/lib/dashboard/resolve-active-step-index";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { ACADEMY_MODULE_CLOSER_THEME } from "@/lib/dashboard/academy-content";
 import {
@@ -42,7 +51,6 @@ import { cn } from "@/lib/utils/cn";
 
 type AcademySkillTrackProps = {
   milestones?: readonly AcademyLessonMilestoneNode[];
-  scrollContainerRef?: RefObject<HTMLElement | null>;
 };
 
 /** Sine wave layout - centered, gentle swing, never hugs screen edges. */
@@ -53,10 +61,7 @@ const SINE_FREQUENCY = 0.78;
 const LESSON_NODE_SIZE_PX = 84;
 /** Pulse ring uses -inset-2 (8px). Gap must exceed that so the ring does not touch the previous tile. */
 const NODE_GAP_PX = 20;
-/** WebP has transparent padding — box is larger so the coin body matches the node. */
-const PENNY_SIZE_PX = Math.round(LESSON_NODE_SIZE_PX * 1.5);
-/** Keep Penny outside the 8px pulse ring. */
-const PENNY_NODE_GAP_PX = 8;
+const PENNY_SIZE_PX = PENNY_JOURNEY_SIZE_PX;
 
 /** Smooth horizontal offset (0–100%) from node index. */
 function academySnakeAnchorX(index: number): number {
@@ -239,28 +244,6 @@ function AcademyNode({
   );
 }
 
-function focusActiveNodeInScrollContainer(
-  scrollContainer: HTMLElement,
-  activeNode: HTMLElement,
-): void {
-  const mapViewportCenter = scrollContainer.clientHeight / 2;
-
-  const containerRect = scrollContainer.getBoundingClientRect();
-  const activeRect = activeNode.getBoundingClientRect();
-  const activeCenterFromContainerTop =
-    activeRect.top - containerRect.top + activeRect.height / 2;
-
-  const scrollOffset =
-    scrollContainer.scrollTop +
-    activeCenterFromContainerTop -
-    mapViewportCenter;
-
-  scrollContainer.scrollTo({
-    top: Math.max(0, scrollOffset),
-    behavior: "auto",
-  });
-}
-
 const PENNY_JOURNEY_SRC =
   "/assets/illustrations/characters/penny/penny-journey-512.webp";
 
@@ -314,18 +297,14 @@ function PennyBesideActiveNode({
         return;
       }
 
-      const nodeLeft = nodeRect.left - slotRect.left;
-      const nodeRight = nodeRect.right - slotRect.left;
-      const leftSidePx = nodeLeft - PENNY_NODE_GAP_PX - PENNY_SIZE_PX;
-      // Prefer the same left-of-tile seat as early nodes; sit on the right only when
-      // that would clip off the map (later sine-swing / narrow viewports).
-      const nodeOnRight = leftSidePx >= 0;
-      const leftPx = nodeOnRight
-        ? leftSidePx
-        : nodeRight + PENNY_NODE_GAP_PX;
-      const topPx = nodeRect.top - slotRect.top + nodeRect.height / 2;
-
-      setPlacement({ leftPx, topPx, nodeOnRight });
+      const placed = placePennyBesideNode({
+        slotWidth: slotRect.width,
+        nodeLeft: nodeRect.left - slotRect.left,
+        nodeTop: nodeRect.top - slotRect.top,
+        nodeWidth: nodeRect.width,
+        nodeHeight: nodeRect.height,
+      });
+      setPlacement(placed);
 
       if (!observer) {
         observer = new ResizeObserver(update);
@@ -353,7 +332,7 @@ function PennyBesideActiveNode({
 
   return (
     <div
-      className="pointer-events-none absolute z-raised"
+      className="pointer-events-none absolute z-chrome"
       style={{
         left,
         top,
@@ -366,8 +345,9 @@ function PennyBesideActiveNode({
       <Image
         src={PENNY_JOURNEY_SRC}
         alt=""
-        width={126}
-        height={126}
+        width={PENNY_SIZE_PX}
+        height={PENNY_SIZE_PX}
+        priority
         className={cn(
           "h-full w-full object-contain object-center",
           // Art points to the viewer's left; mirror it when Penny sits left of the tile.
@@ -381,7 +361,6 @@ function PennyBesideActiveNode({
 
 export function AcademySkillTrack({
   milestones = [],
-  scrollContainerRef,
 }: AcademySkillTrackProps) {
   const router = useRouter();
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
@@ -414,13 +393,17 @@ export function AcademySkillTrack({
     router.prefetch(`/dashboard/academy/lesson/${continueMilestoneId}`);
   }, [continueMilestoneId, masteryCohort, router, safeMilestones]);
 
+  const pennyMilestoneId = useMemo(
+    () => resolvePennyMilestoneId(safeMilestones),
+    [safeMilestones],
+  );
+
   const continueStepIndex = useMemo(() => {
-    if (continueMilestoneId == null) return activeStepIndex;
-    const index = safeMilestones.findIndex(
-      (milestone) => milestone.id === continueMilestoneId,
-    );
+    const targetId = pennyMilestoneId ?? continueMilestoneId;
+    if (targetId == null) return activeStepIndex;
+    const index = safeMilestones.findIndex((milestone) => milestone.id === targetId);
     return index >= 0 ? index : activeStepIndex;
-  }, [activeStepIndex, continueMilestoneId, safeMilestones]);
+  }, [activeStepIndex, continueMilestoneId, pennyMilestoneId, safeMilestones]);
 
   const anchorXs = useMemo(
     () => safeMilestones.map((_, index) => academySnakeAnchorX(index)),
@@ -431,9 +414,6 @@ export function AcademySkillTrack({
     if (safeMilestones.length === 0) return;
     if (lastFocusedStepRef.current === continueStepIndex) return;
 
-    const scrollContainer = scrollContainerRef?.current;
-    if (!scrollContainer) return;
-
     let cancelled = false;
     let frame2 = 0;
 
@@ -441,7 +421,9 @@ export function AcademySkillTrack({
       if (cancelled) return;
       const activeEl = activeNodeRef.current;
       if (!activeEl) return;
-      focusActiveNodeInScrollContainer(scrollContainer, activeEl);
+      // The page itself scrolls, not the map's inner box, so scroll the
+      // nearest real scroller (window or main) until this tile is centered.
+      activeEl.scrollIntoView({ block: "center", inline: "nearest" });
       lastFocusedStepRef.current = continueStepIndex;
     };
 
@@ -459,7 +441,7 @@ export function AcademySkillTrack({
       cancelAnimationFrame(frame2);
       window.clearTimeout(settleTimer);
     };
-  }, [continueStepIndex, safeMilestones.length, scrollContainerRef]);
+  }, [continueStepIndex, safeMilestones.length]);
 
   const handleLaunchLesson = (milestoneId: number) => {
     const milestone = safeMilestones.find((node) => node.id === milestoneId);
@@ -472,14 +454,13 @@ export function AcademySkillTrack({
   return (
     <section
       aria-label="Academy journey map"
-      className="relative z-base w-full max-w-full bg-white pb-4"
+      className="relative z-base w-full max-w-full overflow-visible bg-white pb-4"
     >
       <div className="relative mx-auto w-full max-w-full">
         <div className="relative flex w-full flex-col">
             {safeMilestones.map((milestone, index) => {
               const anchorX = anchorXs[index] ?? SINE_CENTER_X;
-              const isContinueTarget = milestone.id === continueMilestoneId;
-              const isActiveNode = isContinueTarget;
+              const isActiveNode = milestone.id === pennyMilestoneId;
               const slotHeight = nodeSlotHeightPx(milestone);
               const isModuleStart = isFirstMilestoneInModule(milestone.id);
               const showPennyBesideNode = isActiveNode;
@@ -504,22 +485,15 @@ export function AcademySkillTrack({
                   ) : null}
                   <div
                     ref={isActiveNode ? activeNodeRef : undefined}
-                    className="relative z-raised w-full shrink-0"
+                    className={cn(
+                      "relative w-full shrink-0 overflow-visible",
+                      isActiveNode ? "z-chrome" : "z-raised",
+                    )}
                     style={{ height: slotHeight }}
                   >
-                    {showPennyBesideNode ? (
-                      <PennyBesideActiveNode
-                        slotRef={activeNodeRef}
-                        nodeRef={activeNodeBoxRef}
-                        fallbackAnchorX={anchorX}
-                      />
-                    ) : null}
                     <div
                       ref={isActiveNode ? activeNodeBoxRef : undefined}
-                      className={cn(
-                        "absolute",
-                        isActiveNode && "z-chrome",
-                      )}
+                      className="absolute"
                       style={{
                         left: `${anchorX}%`,
                         top: "50%",
@@ -533,6 +507,13 @@ export function AcademySkillTrack({
                         onLaunch={handleLaunchLesson}
                       />
                     </div>
+                    {showPennyBesideNode ? (
+                      <PennyBesideActiveNode
+                        slotRef={activeNodeRef}
+                        nodeRef={activeNodeBoxRef}
+                        fallbackAnchorX={anchorX}
+                      />
+                    ) : null}
                   </div>
                   {index < safeMilestones.length - 1 ? (
                     <div

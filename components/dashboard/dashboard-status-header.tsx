@@ -7,7 +7,9 @@ import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
+import { readStoredDayStreak } from "@/lib/dashboard/streak-practice";
 import {
   hasUnseenSkillProgress,
   markSkillsCupIntroSeen,
@@ -26,7 +28,19 @@ import { zLayerStyle } from "@/lib/ui/layers";
 export function DashboardStatusHeader() {
   const { username } = useDashboardUser();
   const { lifetimePointsEarned } = useDashboardWallet();
-  const { dayStreak, streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
+  const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
+  const [dayStreak, setDayStreak] = useState(0);
+
+  useEffect(() => {
+    function refreshStreak() {
+      setDayStreak(readStoredDayStreak());
+    }
+    refreshStreak();
+    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshStreak);
+    return () => {
+      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshStreak);
+    };
+  }, []);
   const masteryCohort = useMasteryCohort();
 
   const [skillsOpen, setSkillsOpen] = useState(false);

@@ -260,7 +260,7 @@ ELSE show button "Keep it" → GO Screen 8`,
       expect(reachableWithout(content.screens, labels, joined, skipped)).toBe(true);
       expect(reachableWithout(content.screens, labels, skipped, joined)).toBe(true);
       expect(labels).not.toContain("4-no");
-      expect(shortestCompletionLength(content.screens, labels)).toBe(9);
+      expect(shortestCompletionLength(content.screens, labels)).toBe(12);
     }
   });
 

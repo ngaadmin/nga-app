@@ -18,6 +18,8 @@ export type AccountProgressPayload = {
   skillProgress: VaultSkillTierOverrides | null;
   vaultProfile: PersistedVaultProfile | null;
   vaultSession: PersistedVaultProfile | null;
+  /** Consecutive practice days ending today. Omitted when the learner has none. */
+  dayStreak?: number;
 };
 
 const SKILL_TIER_RANK: Record<SkillTrophyTier, number> = {
@@ -148,12 +150,15 @@ export function parseAccountProgressPayload(
     value.vaultSession ?? value.vault_session,
   );
 
+  const dayStreak = parseDayStreak(value.dayStreak ?? value.day_streak);
+
   if (
     !academyProgress &&
     !wallet &&
     !skillProgress &&
     !vaultProfile &&
-    !vaultSession
+    !vaultSession &&
+    dayStreak == null
   ) {
     return null;
   }
@@ -168,7 +173,22 @@ export function parseAccountProgressPayload(
     skillProgress,
     vaultProfile,
     vaultSession,
+    ...(dayStreak != null ? { dayStreak } : {}),
   };
+}
+
+function parseDayStreak(value: unknown): number | undefined {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return Math.min(9999, Math.floor(parsed));
+}
+
+export function mergedDayStreak(
+  left: number | undefined,
+  right: number | undefined,
+): number | undefined {
+  const value = Math.max(left ?? 0, right ?? 0);
+  return value > 0 ? value : undefined;
 }
 
 function completedLessonCount(
@@ -216,7 +236,8 @@ export function isEmptyAccountProgress(
   const hasVault =
     vaultBalanceScore(payload.vaultProfile) > 0 ||
     vaultBalanceScore(payload.vaultSession) > 0;
-  return !hasAcademy && !hasWallet && !hasSkills && !hasVault;
+  const hasStreak = (payload.dayStreak ?? 0) > 0;
+  return !hasAcademy && !hasWallet && !hasSkills && !hasVault && !hasStreak;
 }
 
 /** Safe learner_progress log fields — ids, XP, and milestone counts only. */
@@ -424,6 +445,9 @@ export function mergeAccountProgress(
     skillProgress: mergeSkillProgress(left.skillProgress, right.skillProgress),
     vaultProfile: richerVault(left.vaultProfile, right.vaultProfile),
     vaultSession: richerVault(left.vaultSession, right.vaultSession),
+    ...(mergedDayStreak(left.dayStreak, right.dayStreak) != null
+      ? { dayStreak: mergedDayStreak(left.dayStreak, right.dayStreak) }
+      : {}),
   };
 }
 
@@ -448,6 +472,9 @@ export function overlayAccountProgress(
     skillProgress: overlay.skillProgress ?? base.skillProgress,
     vaultProfile: overlay.vaultProfile ?? base.vaultProfile,
     vaultSession: overlay.vaultSession ?? base.vaultSession,
+    ...(mergedDayStreak(base.dayStreak, overlay.dayStreak) != null
+      ? { dayStreak: mergedDayStreak(base.dayStreak, overlay.dayStreak) }
+      : {}),
   };
 }
 

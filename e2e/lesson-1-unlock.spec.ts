@@ -106,7 +106,7 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await clickNext(page);
 
-  await page.getByRole("button", { name: "Cash in your points" }).click();
+  await page.getByRole("button", { name: "Cash in your XP" }).click();
   await expect(page).toHaveURL(/\/dashboard\/academy\/?$/, { timeout: 15_000 });
   try {
     await intro.click({ timeout: 4_000 });

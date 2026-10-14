@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "validate": "npm run lint && npm run typecheck && npm run test",
     "lesson:export": "npx tsx tools/export-course-authoring.ts",
+    "seed:demo": "npx tsx scripts/seed-demo-accounts.ts",
     "lesson:import": "node tools/import-lesson-from-sheet.mjs",
     "lesson:import:explorer": "node tools/import-explorer-workbook.mjs"
   },

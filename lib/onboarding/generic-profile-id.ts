@@ -35,11 +35,11 @@ function writePool(pool: GenericProfilePool): void {
   writePersisted(GENERIC_PROFILE_POOL_STORAGE_KEY, JSON.stringify(pool));
 }
 
+/** Guest handles are Penny plus four digits, for example Penny1842. */
 export function genericProfileIdToUsername(id: string): string {
-  if (id.startsWith("#")) {
-    return `Pennyster${id}`;
-  }
-  return `Pennyster${id.padStart(4, "0")}`;
+  const digits = id.replace(/\D/g, "").padStart(4, "0").slice(-4);
+  // The overflow pool marks ids with a hash. Keep those logins valid and distinct.
+  return id.startsWith("#") ? `PennyX${digits}` : `Penny${digits}`;
 }
 
 function reserveId(inUseSet: Set<string>, id: string, pool: GenericProfilePool): string {
@@ -75,7 +75,7 @@ function findRandomAvailableId(
   return null;
 }
 
-/** Reserves a generic Pennyster profile ID and returns its display nickname. */
+/** Reserves a generic Penny profile ID and returns its display nickname. */
 export function reserveGenericProfileId(): { id: string; username: string } {
   const pool = readPool();
   const inUseSet = new Set(pool.inUse);

@@ -220,12 +220,19 @@ describe("lesson payload loader", () => {
     const lesson8 = resolvePayloadLesson(loadBundledLessonPayload(1, 8), "explorer", 8);
     expect(lesson8.screens.map((screen) => screen.type)).toEqual([
       "spotlight-rounds",
+      "binary-choice",
+      "binary-choice",
       "spotlight-rounds",
+      "binary-choice",
+      "binary-choice",
+      "binary-choice",
       "binary-choice",
       "spotlight-rounds",
       "binary-choice",
       "binary-choice",
       "spotlight-rounds",
+      "binary-choice",
+      "binary-choice",
       "spotlight-rounds",
       "binary-choice",
       "binary-choice",
@@ -250,7 +257,7 @@ describe("lesson payload loader", () => {
         isCorrect: true,
         emoji: "🛍️",
         cashUpdate: { op: "set", amount: 6 },
-        goToLabel: "2",
+        goToLabel: "1-buy",
         goToIndex: 1,
       },
       {
@@ -258,13 +265,13 @@ describe("lesson payload loader", () => {
         isCorrect: false,
         emoji: "✋",
         cashUpdate: { op: "set", amount: 15 },
-        goToLabel: "2",
-        goToIndex: 1,
+        goToLabel: "1-keep",
+        goToIndex: 2,
       },
     ]);
 
-    const arcade = lesson8.screens[1];
-    const cinema = lesson8.screens[7];
+    const arcade = lesson8.screens[3];
+    const cinema = lesson8.screens[14];
     expect(arcade).toMatchObject({ type: "spotlight-rounds" });
     expect(cinema).toMatchObject({ type: "spotlight-rounds" });
     if (arcade?.type !== "spotlight-rounds" || cinema?.type !== "spotlight-rounds") return;
@@ -280,12 +287,12 @@ describe("lesson payload loader", () => {
     expect(fillCashPlaceholder(arcade.prompt, 6)).not.toContain("{cash}");
     expect(fillCashPlaceholder(cinema.prompt, 14)).not.toContain("{cash}");
 
-    const keptTheCase = lesson8.screens[2];
+    const keptTheCase = lesson8.screens[7];
     expect(keptTheCase).toMatchObject({
       type: "binary-choice",
       id: "screen-2-alt",
       continueToLabel: "3",
-      continueToIndex: 3,
+      continueToIndex: 8,
       options: [],
     });
     if (keptTheCase?.type === "binary-choice") {
@@ -293,26 +300,26 @@ describe("lesson payload loader", () => {
       expect(keptTheCase.optionB).toBeUndefined();
       expect(keptTheCase.prompt).toContain("bought the case");
     }
-    expect(lesson8.screens[4]).toMatchObject({
+    expect(lesson8.screens[9]).toMatchObject({
       continueToLabel: "5",
-      continueToIndex: 6,
-    });
-    expect(lesson8.screens[5]).toMatchObject({
-      continueToLabel: "5",
-      continueToIndex: 6,
-    });
-    expect(lesson8.screens[8]).toMatchObject({
-      sourceLabel: "7",
-      continueToLabel: "8",
-      continueToIndex: 12,
+      continueToIndex: 11,
     });
     expect(lesson8.screens[10]).toMatchObject({
+      continueToLabel: "5",
+      continueToIndex: 11,
+    });
+    expect(lesson8.screens[15]).toMatchObject({
+      sourceLabel: "7",
+      continueToLabel: "8",
+      continueToIndex: 19,
+    });
+    expect(lesson8.screens[17]).toMatchObject({
       sourceLabel: "7-alt",
       continueToLabel: "8",
-      continueToIndex: 12,
+      continueToIndex: 19,
     });
 
-    const arcadeChoices = lesson8.screens[1];
+    const arcadeChoices = lesson8.screens[3];
     expect(arcadeChoices).toMatchObject({ type: "spotlight-rounds", decisionPath: true });
     if (arcadeChoices?.type === "spotlight-rounds") {
       expect(arcadeChoices.prompt).toContain("An arcade game card is $8");
@@ -328,16 +335,16 @@ describe("lesson payload loader", () => {
           emoji: "🕹️",
           isCorrect: true,
           cashUpdate: { op: "adjust", delta: -8 },
-          goToLabel: "3",
-          goToIndex: 3,
+          goToLabel: "2-played",
+          goToIndex: 4,
           showWhen: { op: "gte", amount: 8 },
         },
         {
           label: "Skip the arcade and keep the money",
           emoji: "💰",
           isCorrect: false,
-          goToLabel: "3",
-          goToIndex: 3,
+          goToLabel: "2-kept",
+          goToIndex: 5,
           showWhen: { op: "gte", amount: 8 },
         },
         {
@@ -345,21 +352,21 @@ describe("lesson payload loader", () => {
           emoji: "💭",
           isCorrect: false,
           goToLabel: "2-alt",
-          goToIndex: 2,
+          goToIndex: 7,
           showWhen: { op: "lt", amount: 8 },
         },
         {
           label: "Skip the arcade",
           emoji: "🚶",
           isCorrect: false,
-          goToLabel: "3",
-          goToIndex: 3,
+          goToLabel: "2-short",
+          goToIndex: 6,
           showWhen: { op: "lt", amount: 8 },
         },
       ]);
     }
 
-    const cinemaChoices = lesson8.screens[7];
+    const cinemaChoices = lesson8.screens[14];
     if (cinemaChoices?.type === "spotlight-rounds") {
       expect(cinemaChoices.options?.map((option) => option.showWhen)).toEqual([
         { op: "eq", amount: 5 },
@@ -369,7 +376,7 @@ describe("lesson payload loader", () => {
       ]);
       expect(cinemaChoices.options?.[2]).toMatchObject({
         goToLabel: "7-alt",
-        goToIndex: 10,
+        goToIndex: 17,
         cashUpdate: { op: "set", amount: 6 },
       });
     }
@@ -394,12 +401,12 @@ describe("lesson payload loader", () => {
     lowCashPrompt("pathfinder", "Holly");
     lowCashPrompt("maverick", "Aiden");
 
-    const senna = lesson8.screens[3];
+    const senna = lesson8.screens[8];
     if (senna?.type === "spotlight-rounds") {
-      expect(senna.options?.[1]).toMatchObject({ goToLabel: "4-alt", goToIndex: 5 });
+      expect(senna.options?.[1]).toMatchObject({ goToLabel: "4-alt", goToIndex: 10 });
     }
 
-    const water = lesson8.screens[6];
+    const water = lesson8.screens[11];
     expect(water).toMatchObject({
       type: "spotlight-rounds",
       decisionPath: true,
@@ -408,15 +415,15 @@ describe("lesson payload loader", () => {
           label: "Buy the water bottle ($9)",
           emoji: "🧴",
           cashUpdate: { op: "set", amount: 5 },
-          goToLabel: "6",
-          goToIndex: 7,
+          goToLabel: "5-buy",
+          goToIndex: 12,
         },
         {
           label: "Don’t buy the water bottle",
           emoji: "💰",
           cashUpdate: { op: "set", amount: 14 },
-          goToLabel: "6",
-          goToIndex: 7,
+          goToLabel: "5-save",
+          goToIndex: 13,
         },
       ],
     });
@@ -774,12 +781,9 @@ describe("lesson payload loader", () => {
     }
   });
 
-  it("only wraps the branching choices that already have a resolution row", () => {
+  it("shows a wrap-up after every lesson 8 choice before the next scenario", () => {
     const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 8), "explorer", 8);
     const byLabel = new Map(lesson.screens.map((screen) => [screen.sourceLabel, screen]));
-    expect(byLabel.has("1-buy")).toBe(false);
-    expect(byLabel.has("2-played")).toBe(false);
-    expect(byLabel.has("5-buy")).toBe(false);
 
     const phone = byLabel.get("1");
     const arcade = byLabel.get("2");
@@ -792,9 +796,32 @@ describe("lesson payload loader", () => {
     if (phone?.type !== "spotlight-rounds" || arcade?.type !== "spotlight-rounds" || water?.type !== "spotlight-rounds") {
       return;
     }
-    expect(phone.options?.map((option) => option.goToLabel)).toEqual(["2", "2"]);
-    expect(arcade.options?.map((option) => option.goToLabel)).toEqual(["3", "3", "2-alt", "3"]);
-    expect(water.options?.map((option) => option.goToLabel)).toEqual(["6", "6"]);
+    expect(phone.options?.map((option) => option.goToLabel)).toEqual(["1-buy", "1-keep"]);
+    expect(arcade.options?.map((option) => option.goToLabel)).toEqual([
+      "2-played",
+      "2-kept",
+      "2-alt",
+      "2-short",
+    ]);
+    expect(water.options?.map((option) => option.goToLabel)).toEqual(["5-buy", "5-save"]);
+
+    const written = {
+      "1-buy": "Lars buys the phone case for $9. He has $6 left.",
+      "1-keep": "Lars leaves the phone case. He still has $15.",
+      "2-played": "Lars pays $8 and plays the arcade. He has $7 left.",
+      "2-kept": "Lars skips the arcade and keeps his $15.",
+      "2-short": "Lars can’t pay the $8. He skips the arcade and keeps his $6.",
+      "5-buy": "Mia buys the water bottle for $9. She has $5 left.",
+      "5-save": "Mia skips the water bottle. She still has $14.",
+    } as const;
+    for (const [label, prompt] of Object.entries(written)) {
+      const screen = byLabel.get(label);
+      expect(screen?.type).toBe("binary-choice");
+      if (screen?.type === "binary-choice") {
+        expect(screen.prompt).toBe(prompt);
+        expect(screen.continueToLabel).toBeTruthy();
+      }
+    }
 
     for (const label of ["4", "4-alt", "7", "7-skip", "7-alt", "7-home", "2-alt"]) {
       const screen = byLabel.get(label);
@@ -806,6 +833,11 @@ describe("lesson payload loader", () => {
     }
     expect(senna?.type).toBe("spotlight-rounds");
     expect(cinema?.type).toBe("spotlight-rounds");
+    expect(byLabel.get("1-buy") && "continueToLabel" in byLabel.get("1-buy")!).toBeTruthy();
+    expect(byLabel.get("2-played")).toMatchObject({ continueToLabel: "3" });
+    expect(byLabel.get("2-short")).toMatchObject({ continueToLabel: "3" });
+    expect(byLabel.get("5-buy")).toMatchObject({ continueToLabel: "6" });
+    expect(byLabel.get("5-save")).toMatchObject({ continueToLabel: "6" });
   });
 
   it("uses pathfinder settings when the explorer settings cell is empty", () => {

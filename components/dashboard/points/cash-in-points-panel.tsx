@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { PointsConvertedSuccessModal } from "@/components/dashboard/points/points-converted-success-modal";
 import { PointsConversionParentEmailModal } from "@/components/dashboard/points/points-conversion-parent-email-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
+import {
+  cashInClaimAllowed,
+  cashInRateMissingMessage,
+  shouldSendParentCashInEmail,
+} from "@/lib/dashboard/class-account-cash-in";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
@@ -20,6 +25,7 @@ import {
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
+import { loadSignedInClassAccountCashIn } from "@/lib/school/class-account-status";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass =
@@ -62,18 +68,44 @@ export function CashInPointsPanel({
   const [parentEmailDispatch, setParentEmailDispatch] =
     useState<PointsConversionEmailDispatch | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [classAccountWithoutParent, setClassAccountWithoutParent] = useState<
+    boolean | null
+  >(null);
 
   useEffect(() => {
     setPointsInput(totalPoints > 0 ? String(totalPoints) : "");
   }, [totalPoints]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void loadSignedInClassAccountCashIn()
+      .then((state) => {
+        if (!cancelled) {
+          setClassAccountWithoutParent(state.classAccountWithoutParent);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setClassAccountWithoutParent(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
   const rateHint = xpExchangeRateSet
     ? conversionCopy.cashInRateHint.replace("{rate}", conversionRateLabel)
     : conversionCopy.rateNotSetHint;
-  const rateMissingMessage = isParentMaster
-    ? conversionCopy.askParentIfParentBody
-    : conversionCopy.askParentBody;
+  const knownClassAccount = classAccountWithoutParent === true;
+  const rateMissingMessage =
+    classAccountWithoutParent === null
+      ? ""
+      : cashInRateMissingMessage({
+          classAccountWithoutParent: knownClassAccount,
+          isParentMaster,
+          askParentBody: conversionCopy.askParentBody,
+          askParentIfParentBody: conversionCopy.askParentIfParentBody,
+        });
 
   const parsedPoints = parsePointsInput(pointsInput);
   const pointsToClaim = parsedPoints ?? 0;
@@ -98,20 +130,40 @@ export function CashInPointsPanel({
     formatMoney(successAudAmount),
   );
 
-  const canClaim =
-    xpExchangeRateSet &&
-    parsedPoints !== null &&
-    parsedPoints > 0 &&
-    parsedPoints <= totalPoints &&
-    Number.isFinite(audPayout) &&
-    audPayout > 0 &&
-    !isClaiming;
+  const canClaim = cashInClaimAllowed({
+    classAccountWithoutParent: classAccountWithoutParent !== false,
+    xpExchangeRateSet,
+    parsedPoints,
+    totalPoints,
+    audPayout,
+    isClaiming,
+  });
 
   async function handleClaimCashReward() {
     setClaimError(null);
 
+    let classAccount = classAccountWithoutParent === true;
+    try {
+      const state = await loadSignedInClassAccountCashIn();
+      classAccount = state.classAccountWithoutParent;
+      setClassAccountWithoutParent(state.classAccountWithoutParent);
+    } catch {
+      classAccount = classAccountWithoutParent === true;
+    }
+
+    if (classAccount) {
+      return;
+    }
+
     if (!xpExchangeRateSet) {
-      setClaimError(rateMissingMessage);
+      setClaimError(
+        cashInRateMissingMessage({
+          classAccountWithoutParent: false,
+          isParentMaster,
+          askParentBody: conversionCopy.askParentBody,
+          askParentIfParentBody: conversionCopy.askParentIfParentBody,
+        }),
+      );
       return;
     }
 
@@ -141,14 +193,15 @@ export function CashInPointsPanel({
       );
       await persistRegisteredProgressNow();
 
-      const parentEmail = resolveParentEmailForChild(username);
-      const emailDispatch = await dispatchPointsConversionParentEmail({
-        parentEmail,
-        childUsername: username,
-        amountFormatted: formatMoney(result.audAmount),
-        pointsClaimed: result.pointsClaimed,
-        conversionRateLabel,
-      });
+      const emailDispatch = shouldSendParentCashInEmail(classAccount)
+        ? await dispatchPointsConversionParentEmail({
+            parentEmail: resolveParentEmailForChild(username),
+            childUsername: username,
+            amountFormatted: formatMoney(result.audAmount),
+            pointsClaimed: result.pointsClaimed,
+            conversionRateLabel,
+          })
+        : null;
 
       setSuccessAudAmount(result.audAmount);
       setParentEmailDispatch(emailDispatch);
@@ -164,7 +217,9 @@ export function CashInPointsPanel({
 
   function handleSuccessClose() {
     setSuccessModalOpen(false);
-    setParentEmailModalOpen(true);
+    if (parentEmailDispatch && shouldSendParentCashInEmail(classAccountWithoutParent === true)) {
+      setParentEmailModalOpen(true);
+    }
   }
 
   return (
@@ -219,9 +274,9 @@ export function CashInPointsPanel({
         </label>
 
         <p className="mt-2 font-heading text-xs font-bold leading-snug text-[#031F82]">
-          {xpExchangeRateSet
-            ? childPayoutReadout
-            : rateMissingMessage}
+          {knownClassAccount || !xpExchangeRateSet
+            ? rateMissingMessage
+            : childPayoutReadout}
         </p>
 
         {claimError ? (

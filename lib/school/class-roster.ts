@@ -8,9 +8,16 @@ import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
 import { generateClassPassword } from "@/lib/school/class-password";
 import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
+  masteryCohortLabel,
   parseMasteryCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { readLearnerProgressPayloads } from "@/lib/onboarding/learner-progress-store";
+import {
+  aggregateOwnedClassXp,
+  readLearnerXpFields,
+  type ClassXpTotal,
+} from "@/lib/school/class-xp";
 
 const SEAT_AUTH_EMAIL_DOMAIN = "users.nextgenachievers.invalid";
 const MIN_PASSWORD_LENGTH = 6;
@@ -22,6 +29,8 @@ export type ClassRosterSnapshot = {
   classPassword: string;
   classCohort: MasteryCohort | null;
   usernames: string[];
+  /** Lifetime XP for each class this teacher owns. Computed on the server. */
+  classes: ClassXpTotal[];
 };
 
 async function requireTeacherId(): Promise<
@@ -51,6 +60,47 @@ async function requireTeacherId(): Promise<
   }
 
   return { ok: true, teacherId: profile.id };
+}
+
+/**
+ * One class per teacher today: the class id is that teacher's profile id.
+ * Seats are already limited to teacher_id = the signed-in teacher.
+ * No class id or teacher id from the browser is read here.
+ */
+async function loadOwnedClassXp(input: {
+  teacherId: string;
+  label: string;
+  seats: readonly { userId: string; username: string }[];
+}): Promise<ClassXpTotal[]> {
+  const teacherId = input.teacherId.trim();
+  if (!teacherId) return [];
+
+  let payloads = new Map<string, unknown>();
+  try {
+    payloads = await readLearnerProgressPayloads(
+      input.seats.map((seat) => seat.userId),
+    );
+  } catch (error) {
+    console.info("[class-xp]", {
+      error: error instanceof Error ? error.message : "unknown",
+    });
+  }
+
+  return aggregateOwnedClassXp({
+    sessionTeacherId: teacherId,
+    classes: [{ classId: teacherId, teacherId, label: input.label }],
+    students: input.seats.map((seat) => {
+      const xp = readLearnerXpFields(payloads.get(seat.userId));
+      return {
+        classId: teacherId,
+        teacherId,
+        userId: seat.userId,
+        username: seat.username,
+        lifetimeXp: xp.lifetimeXp,
+        liveBalance: xp.liveBalance,
+      };
+    }),
+  });
 }
 
 export async function loadClassRoster(): Promise<
@@ -89,7 +139,7 @@ export async function loadClassRoster(): Promise<
 
     const { data: seats, error: seatsError } = await admin
       .from("profiles")
-      .select("username, curriculum_cohort")
+      .select("id, username, curriculum_cohort")
       .eq("teacher_id", access.teacherId)
       .eq("is_teacher", false)
       .order("username", { ascending: true });
@@ -98,13 +148,23 @@ export async function loadClassRoster(): Promise<
       return { ok: false, error: seatsError.message };
     }
 
-    const usernames = (seats ?? [])
-      .map((row) => (typeof row.username === "string" ? row.username.trim() : ""))
-      .filter(Boolean);
+    const seatRecords = (seats ?? []).flatMap((row) => {
+      const userId = typeof row.id === "string" ? row.id.trim() : "";
+      const username = typeof row.username === "string" ? row.username.trim() : "";
+      if (!userId || !username) return [];
+      return [
+        {
+          userId,
+          username,
+          curriculumCohort: row.curriculum_cohort,
+        },
+      ];
+    });
+    const usernames = seatRecords.map((seat) => seat.username);
 
     const storedCohort = parseMasteryCohort(teacher.class_cohort);
-    const inferredFromSeats = (seats ?? [])
-      .map((row) => parseMasteryCohort(row.curriculum_cohort))
+    const inferredFromSeats = seatRecords
+      .map((row) => parseMasteryCohort(row.curriculumCohort))
       .find((cohort): cohort is MasteryCohort => cohort != null);
     const classCohort = storedCohort ?? inferredFromSeats ?? null;
 
@@ -132,6 +192,12 @@ export async function loadClassRoster(): Promise<
         .eq("is_teacher", true);
     }
 
+    const classes = await loadOwnedClassXp({
+      teacherId: access.teacherId,
+      label: classCohort ? `${masteryCohortLabel(classCohort)} class` : "Your class",
+      seats: seatRecords,
+    });
+
     return {
       ok: true,
       roster: {
@@ -141,6 +207,7 @@ export async function loadClassRoster(): Promise<
         classPassword,
         classCohort,
         usernames,
+        classes,
       },
     };
   } catch (error) {

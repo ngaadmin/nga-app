@@ -9,6 +9,7 @@ import {
   saveClassCohort,
   type ClassRosterSnapshot,
 } from "@/lib/school/class-roster";
+import type { ClassXpTotal } from "@/lib/school/class-xp";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
@@ -24,6 +25,67 @@ const fieldBase =
 type ClassPageProps = {
   roster: ClassRosterSnapshot;
 };
+
+function withNewStudents(
+  classes: ClassXpTotal[],
+  created: readonly string[],
+): ClassXpTotal[] {
+  const first = classes[0];
+  if (!first) return classes;
+  const seen = new Set(first.students.map((student) => student.username));
+  const added = created
+    .map((username) => username.trim())
+    .filter((username) => username.length > 0 && !seen.has(username))
+    .map((username) => ({ username, lifetimeXp: 0 }));
+  if (added.length === 0) return classes;
+  const students = [...first.students, ...added].sort((left, right) =>
+    left.username.localeCompare(right.username),
+  );
+  return [{ ...first, students }, ...classes.slice(1)];
+}
+
+function ClassXpTotals({ classes }: { classes: ClassXpTotal[] }) {
+  if (classes.length === 0) return null;
+
+  return (
+    <section aria-labelledby="class-xp-heading" className="space-y-4">
+      <h2 id="class-xp-heading" className="font-heading text-sm font-bold text-nga-primary">
+        Class XP
+      </h2>
+      {classes.map((cls) => (
+        <article
+          key={cls.classId}
+          className="rounded-nga-lg border-2 border-[#BDE9FB] bg-[#F7FBFF] p-4"
+        >
+          <p className="font-heading text-base font-extrabold text-nga-primary">{cls.label}</p>
+          <p className="mt-2 font-sans text-xs font-semibold uppercase tracking-wide text-nga-slate">
+            Class total
+          </p>
+          <p className="font-heading text-3xl font-extrabold tabular-nums text-[#031F82]">
+            {cls.totalLifetimeXp.toLocaleString()} XP
+          </p>
+          {cls.students.length > 0 ? (
+            <ul className="mt-3 divide-y divide-[#BDE9FB]">
+              {cls.students.map((student) => (
+                <li
+                  key={student.username}
+                  className="flex items-center justify-between gap-3 py-2 font-sans text-sm text-nga-ink"
+                >
+                  <span className="min-w-0 truncate">{student.username}</span>
+                  <span className="shrink-0 font-heading font-bold tabular-nums text-[#031F82]">
+                    {student.lifetimeXp.toLocaleString()} XP
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 font-sans text-sm text-nga-slate">No students yet.</p>
+          )}
+        </article>
+      ))}
+    </section>
+  );
+}
 
 function StudentLoginTable({ usernames }: { usernames: string[] }) {
   return (
@@ -53,6 +115,7 @@ function StudentLoginTable({ usernames }: { usernames: string[] }) {
 export function ClassPage({ roster }: ClassPageProps) {
   const [studentsUsed, setStudentsUsed] = useState(roster.seatsUsed);
   const [usernames, setUsernames] = useState(roster.usernames);
+  const [classes, setClasses] = useState(roster.classes);
   const [classPassword, setClassPassword] = useState(roster.classPassword);
   const [classCohort, setClassCohort] = useState<MasteryCohort | null>(
     roster.classCohort,
@@ -114,6 +177,7 @@ export function ClassPage({ roster }: ClassPageProps) {
         return;
       }
       setUsernames((prev) => [...prev, ...result.created]);
+      setClasses((prev) => withNewStudents(prev, result.created));
       setStudentsUsed((prev) => prev + result.created.length);
       setStudentCount("");
       setNotice(
@@ -157,6 +221,8 @@ export function ClassPage({ roster }: ClassPageProps) {
       </div>
 
       <div className="print:hidden space-y-6">
+        <ClassXpTotals classes={classes} />
+
         <p className="font-heading text-base font-bold text-nga-primary">
           You have {remaining} student seats left on this account.
         </p>

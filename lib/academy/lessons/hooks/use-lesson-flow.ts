@@ -234,9 +234,15 @@ export function useLessonFlow({
     setLessonComplete(true);
 
     if (!isDesignShell && !skipProgressWrites) {
-      awardLessonXp(LESSON_COMPLETION_XP);
+      awardLessonXp(
+        LESSON_COMPLETION_XP,
+        `lesson:${milestoneId}:completion`,
+      );
       if (perfectStreak) {
-        awardLessonXp(LESSON_PERFECT_STREAK_BONUS);
+        awardLessonXp(
+          LESSON_PERFECT_STREAK_BONUS,
+          `lesson:${milestoneId}:perfect`,
+        );
       }
 
       const milestones = readAcademyMilestones();

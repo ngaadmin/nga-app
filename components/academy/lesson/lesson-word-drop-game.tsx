@@ -82,7 +82,7 @@ function isPointInRect(
 function resolveBlankIndexFromPointer(
   clientX: number,
   clientY: number,
-  blankElements: readonly (HTMLSpanElement | null)[],
+  blankElements: readonly (HTMLElement | null)[],
 ): number | null {
   for (let index = 0; index < blankElements.length; index += 1) {
     const blank = blankElements[index];
@@ -122,6 +122,7 @@ export const LessonWordDropGame = forwardRef<
   const [choices, setChoices] = useState<string[]>(() =>
     Array.from({ length: blanks.length }, () => ""),
   );
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoverBlankIndex, setHoverBlankIndex] = useState<number | null>(null);
   const [hoverPool, setHoverPool] = useState(false);
@@ -158,7 +159,7 @@ export const LessonWordDropGame = forwardRef<
   }, []);
 
   const poolRef = useRef<HTMLDivElement>(null);
-  const blankRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const blankRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const dragCleanupRef = useRef<(() => void) | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -276,6 +277,7 @@ export const LessonWordDropGame = forwardRef<
       }
 
       if (!press.dragging) {
+        setSelectedWord(press.word);
         endDrag();
         return;
       }
@@ -318,6 +320,23 @@ export const LessonWordDropGame = forwardRef<
     [],
   );
 
+  const placeSelectedWord = (blankIndex: number) => {
+    const word = selectedWord;
+    if (!word) return;
+    const blank = blanksRef.current[blankIndex];
+    if (!blank) return;
+    const locked =
+      choicesRef.current[blankIndex] === blank.correctOption &&
+      Boolean(choicesRef.current[blankIndex]);
+    if (locked) return;
+    if (word === blank.correctOption) {
+      placeWordInBlank(blankIndex, word);
+      setSelectedWord(null);
+      return;
+    }
+    onMismatchRef.current?.();
+  };
+
   const blankSlotClass = (index: number, filled: boolean) =>
     cn(
       filled ? lessonBlankSlotFilledClass : lessonBlankSlotClass,
@@ -340,17 +359,24 @@ export const LessonWordDropGame = forwardRef<
           <span key={`${part}-${index}`}>
             {part}
             {index < blanks.length ? (
-              <span
+              <button
+                type="button"
                 ref={(node) => {
                   blankRefs.current[index] = node;
                 }}
                 data-word-drop-slot={index}
+                aria-label={
+                  visibleBlankWord(index)
+                    ? `Blank, ${visibleBlankWord(index)}`
+                    : "Blank. Place the selected word here."
+                }
+                onClick={() => placeSelectedWord(index)}
                 className={blankSlotClass(index, Boolean(visibleBlankWord(index)))}
               >
                 {visibleBlankWord(index) ? (
                   <span className={lessonSortPoolChipClass}>{visibleBlankWord(index)}</span>
                 ) : null}
-              </span>
+              </button>
             ) : null}
           </span>
         ))}
@@ -377,6 +403,17 @@ export const LessonWordDropGame = forwardRef<
             <button
               key={option}
               type="button"
+              aria-pressed={selectedWord === option}
+              onClick={() => {
+                if (used) return;
+                setSelectedWord(option);
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                if (used) return;
+                setSelectedWord(option);
+              }}
               onPointerDown={(event) => {
                 if (used) return;
                 beginPress(event, option, null);
@@ -384,6 +421,7 @@ export const LessonWordDropGame = forwardRef<
               className={cn(
                 lessonSortPoolChipClass,
                 used && "invisible pointer-events-none",
+                selectedWord === option && "ring-2 ring-[#031F82]",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",

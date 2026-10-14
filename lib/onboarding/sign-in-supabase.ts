@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import type { LearnerAccountSnapshot } from "@/lib/onboarding/learner-account";
-import { loadLearnerProgressByUserId } from "@/lib/onboarding/learner-progress";
+import { readLearnerProgressRow } from "@/lib/onboarding/learner-progress-store";
 import { parseMasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 export const SIGN_IN_MISMATCH_ERROR =
@@ -261,7 +261,7 @@ export async function loadLearnerAccountById(
           : "";
   if (!username) return null;
 
-  const progress = await loadLearnerProgressByUserId(userId);
+  const progress = await readLearnerProgressRow(userId);
 
   return {
     userId: profile.id,

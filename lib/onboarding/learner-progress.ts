@@ -2,13 +2,56 @@
 
 import "server-only";
 
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import {
   accountProgressLogFields,
-  parseAccountProgressPayload,
   type AccountProgressPayload,
 } from "@/lib/dashboard/account-progress";
+import { learnerProgressAccessAllowed } from "@/lib/onboarding/learner-progress-access";
+import {
+  readLearnerProgressRow,
+  writeLearnerProgressRow,
+} from "@/lib/onboarding/learner-progress-store";
+import { createClient } from "@/lib/supabase/server";
+
+/**
+ * The signed-in user, or a parent_child child of that user.
+ * The user id argument is a request. It is not trusted on its own.
+ */
+async function authorizeLearnerProgressTarget(
+  requestedUserId: string,
+): Promise<string | null> {
+  const target = requestedUserId.trim();
+  if (!target) return null;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const actorId = user?.id?.trim();
+  if (!actorId) return null;
+  if (learnerProgressAccessAllowed({ actorId, targetUserId: target })) {
+    return target;
+  }
+
+  const { data: links, error } = await supabase
+    .from("parent_child")
+    .select("child_id")
+    .eq("parent_id", actorId)
+    .eq("child_id", target);
+
+  if (error || !links?.length) return null;
+  const linkedChildIds = links
+    .map((row) => row.child_id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+  return learnerProgressAccessAllowed({
+    actorId,
+    targetUserId: target,
+    linkedChildIds,
+  })
+    ? target
+    : null;
+}
 
 export async function loadLearnerProgressByUserId(
   userId: string,
@@ -25,27 +68,19 @@ export async function loadLearnerProgressByUserId(
   }
 
   try {
-    const admin = createAdminClient();
-    const { data, error } = await admin
-      .from("learner_progress")
-      .select("payload")
-      .eq("user_id", trimmed)
-      .maybeSingle();
-
-    const parsed = error ? null : parseAccountProgressPayload(data?.payload);
-    const fields = accountProgressLogFields(parsed);
-    console.info("[learner-progress:read]", {
-      userId: trimmed,
-      found: parsed ? "yes" : "no",
-      xp: fields.xp,
-      milestoneCount: fields.milestoneCount,
-      ...(error?.message ? { error: error.message } : {}),
-    });
-    if (error || !parsed) return null;
-    return parsed;
+    const target = await authorizeLearnerProgressTarget(trimmed);
+    if (!target) {
+      console.info("[learner-progress:read]", {
+        found: "no",
+        denied: true,
+        xp: 0,
+        milestoneCount: 0,
+      });
+      return null;
+    }
+    return readLearnerProgressRow(target);
   } catch (error) {
     console.info("[learner-progress:read]", {
-      userId: trimmed,
       found: "no",
       xp: 0,
       milestoneCount: 0,
@@ -63,9 +98,10 @@ export async function loadCurrentLearnerProgress(): Promise<AccountProgressPaylo
 }
 
 /**
- * Persist Academy / XP for a specific child profile id.
- * Uses service role so Explorer writes do not depend on the Auth cookie
- * (parent sessions and missing cookies were dropping the only copy).
+ * Persist Academy / XP for the signed-in learner, or for a child linked to
+ * the signed-in parent in parent_child.
+ * Service role runs only after that check, because a parent session cannot
+ * write the child's row under learner_progress RLS.
  */
 export async function saveLearnerProgressForUser(
   userId: string,
@@ -84,26 +120,18 @@ export async function saveLearnerProgressForUser(
   }
 
   try {
-    const admin = createAdminClient();
-    const { error } = await admin.from("learner_progress").upsert(
-      {
-        user_id: trimmed,
-        payload,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    );
-
-    console.info("[learner-progress:write]", {
-      userId: trimmed,
-      xp: fields.xp,
-      milestoneCount: fields.milestoneCount,
-      ...(error?.message ? { error: error.message } : {}),
-    });
-    return { ok: !error };
+    const target = await authorizeLearnerProgressTarget(trimmed);
+    if (!target) {
+      console.info("[learner-progress:write]", {
+        xp: fields.xp,
+        milestoneCount: fields.milestoneCount,
+        denied: true,
+      });
+      return { ok: false };
+    }
+    return writeLearnerProgressRow(target, payload);
   } catch (error) {
     console.info("[learner-progress:write]", {
-      userId: trimmed,
       xp: fields.xp,
       milestoneCount: fields.milestoneCount,
       error: error instanceof Error ? error.message : "unknown",

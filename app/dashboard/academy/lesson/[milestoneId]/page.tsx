@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AcademyLessonPlayer } from "@/components/academy/lesson/academy-lesson-player";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
+import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import {
   bundledPayloadMilestone,
   hasShippedLesson,
@@ -45,6 +46,10 @@ export default async function AcademyLessonPage({
     : directOpen
       ? loadUnshippedLessonPayload(parsedId)
       : undefined;
+
+  if (payload) {
+    assertLessonPayloadAssets(payload, parsedId);
+  }
 
   if (!hasShippedLesson(parsedId) && !payload) {
     notFound();

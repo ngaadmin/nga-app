@@ -23,10 +23,7 @@ import {
   loadLearnerProgressByUserId,
   saveLearnerProgressForUser,
 } from "@/lib/onboarding/learner-progress";
-import {
-  findActiveParentMasterByEmail,
-  upsertRegisteredAccount,
-} from "@/lib/onboarding/registered-accounts";
+import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { createClient } from "@/lib/supabase/client";
 
 export type FinalizeSignupOptions = {
@@ -38,34 +35,6 @@ export type FinalizeSignupOptions = {
   /** Skip outbound onboarding email (e.g. consent-approval activation). */
   skipEmail?: boolean;
 };
-
-/** Portable parent-dashboard claim token for Pathfinder FYI emails. */
-async function issuePathfinderParentClaimToken(input: {
-  parentEmail: string;
-  childUsername: string;
-  birthYear: number;
-}): Promise<string | null> {
-  try {
-    const response = await fetch("/api/auth/consent-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        parentEmail: input.parentEmail,
-        childUsername: input.childUsername,
-        birthYear: input.birthYear,
-        createdAt: new Date().toISOString(),
-      }),
-    });
-    const json = (await response.json().catch(() => null)) as {
-      success?: boolean;
-      token?: string;
-    } | null;
-    if (!response.ok || !json?.token) return null;
-    return json.token;
-  } catch {
-    return null;
-  }
-}
 
 async function dispatchOnboardingEmails(
   session: UserSession,
@@ -80,22 +49,11 @@ async function dispatchOnboardingEmails(
     return;
   }
 
-  if (session.accountRole === "parent_master") {
-    const parentEmail = (
-      session.learnerEmail ??
-      session.email ??
-      session.parentEmail
-    )
-      ?.trim()
-      .toLowerCase();
-    if (!parentEmail) return;
-    void requestOnboardingEmailSend({
-      type: "PARENT_WELCOME",
-      recipientEmail: parentEmail,
-      data: { username },
-    });
-    return;
-  }
+  // Parent welcome, Pathfinder notices, and learner welcome mail are sent by
+  // the server action that created the account. The browser does not choose
+  // the recipient. Explorer approval still posts a server-issued token; the
+  // send route reads the parent address from that stored request.
+  if (session.accountRole === "parent_master") return;
 
   const cohort = session.ageTier;
 
@@ -123,42 +81,6 @@ async function dispatchOnboardingEmails(
           "We could not send the parent approval email. Check the parent or guardian email address and try again.",
       );
     }
-    return;
-  }
-
-  if (cohort === "pathfinder" && session.accountStatus === "ACTIVE") {
-    const parentEmail = session.parentEmail?.trim().toLowerCase();
-    if (!parentEmail) return;
-
-    // Parent FYI / linked notice must not block signup navigation.
-    void (async () => {
-      const existingMaster = findActiveParentMasterByEmail(parentEmail);
-      if (existingMaster) {
-        await requestOnboardingEmailSend({
-          type: "PATHFINDER_PARENT_LINKED",
-          recipientEmail: parentEmail,
-          data: {
-            username,
-            masterUsername: parentEmail,
-          },
-        });
-        return;
-      }
-
-      const token = await issuePathfinderParentClaimToken({
-        parentEmail,
-        childUsername: username,
-        birthYear: session.birthYear,
-      });
-      if (!token) return;
-
-      await requestOnboardingEmailSend({
-        type: "PATHFINDER_PARENT",
-        recipientEmail: parentEmail,
-        data: { username, token },
-      });
-    })();
-    return;
   }
 }
 

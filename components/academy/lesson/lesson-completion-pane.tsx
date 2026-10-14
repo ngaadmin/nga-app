@@ -95,7 +95,10 @@ export function LessonCompletionPane({
     resolveSkillName(achievementSkillId, skillLearnedLabel);
   const heading = isModuleCloser
     ? "Module complete"
-    : skillMedalTier === "unlocked" || skillMedalTier === "bronze"
+    : skillMedalTier === "unlocked" ||
+        skillMedalTier === "bronze" ||
+        skillMedalTier === "silver" ||
+        skillMedalTier === "gold"
       ? formatLessonSkillUnlockLine(
           achievementSkillId,
           skillMedalTier,

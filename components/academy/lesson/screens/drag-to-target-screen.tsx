@@ -1,8 +1,9 @@
 "use client";
 
 import { LessonDragToTargetGame } from "@/components/academy/lesson/lesson-drag-to-target-game";
+import { useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import { LessonScreenLayout, lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import {
   getIllustrationPath,
   isIllustrationId,
@@ -20,12 +21,14 @@ export function DragToTargetScreen({
       screenIndex,
       flow,
     });
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <LessonScreenLayout
       intro={screen.intro}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       success={showSuccess}
+      errorMessage={error}
     >
       <LessonDragToTargetGame
         sourceLabel={screen.sourceLabel}
@@ -56,8 +59,14 @@ export function DragToTargetScreen({
         sourceEmptyMessage={screen.sourceEmptyMessage}
         showZoneLabels={screen.showZoneLabels}
         onComplete={handleComplete}
-        onSuccess={handleSuccess}
-        onMiss={handleMismatch}
+        onSuccess={() => {
+          setError(null);
+          handleSuccess();
+        }}
+        onMiss={() => {
+          setError(lessonFeedbackCopy(screen.wrongError) ?? null);
+          handleMismatch();
+        }}
       />
     </LessonScreenLayout>
   );

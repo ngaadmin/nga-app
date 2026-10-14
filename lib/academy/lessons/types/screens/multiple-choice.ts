@@ -4,6 +4,8 @@ import type { WithDeclarative } from "../declarative";
 export type MultipleChoiceOption = {
   label: string;
   isCorrect: boolean;
+  /** Orb glyph from a leading emoji on the sheet choice. Letters fill in when this is absent. */
+  emoji?: string;
   /** Option-specific success or error copy; falls back to screen-level messages. */
   feedback?: string;
   /** Applied when this path is chosen. `{cash}` on later screens reads the result. */
@@ -14,6 +16,10 @@ export type MultipleChoiceOption = {
   goToIndex?: number;
   /** Hide this button unless the path cash matches. */
   showWhen?: CashComparison;
+  /** Skill this hub button opens. The key is the Screen label it goes to. */
+  hubSkillKey?: string;
+  /** Keep this button locked until each of these hub skills has been finished. */
+  requiresHubSkills?: readonly string[];
 };
 
 type MultipleChoiceFields = {

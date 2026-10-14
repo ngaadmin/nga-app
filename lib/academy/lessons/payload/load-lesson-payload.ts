@@ -209,19 +209,19 @@ export function loadLessonPayload(input: {
   return { ...details, screens };
 }
 
-/** Attached Screens1.xlsx + Lesson-Details.csv shipped with the app. */
+/** Checked-in Screens1.csv + Lesson-Details.csv. The CSV is the source of truth. */
 export function loadBundledLessonPayload(
   moduleNumber: number,
   lessonNumber: number,
 ): LessonPayload {
-  const screensPath = path.join(SOURCE_DIR, "Screens1.xlsx");
+  const screensPath = path.join(SOURCE_DIR, "Screens1.csv");
   const detailsPath = path.join(SOURCE_DIR, "Lesson-Details.csv");
   return loadLessonPayload({
     moduleNumber,
     lessonNumber,
     screens: {
-      filename: "Screens1.xlsx",
-      bytes: readFileSync(screensPath),
+      filename: "Screens1.csv",
+      text: readFileSync(screensPath, "utf8"),
     },
     lessonDetails: {
       filename: "Lesson-Details.csv",

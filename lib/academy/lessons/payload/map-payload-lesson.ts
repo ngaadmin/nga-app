@@ -1,6 +1,7 @@
 import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
 import { parseCashUpdate, type CashComparison, type CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
+import { screenLabelKey } from "@/lib/academy/lessons/payload/lesson-graph";
 import {
   isMedalIllustrationId,
   medalIdForSkillNumber,
@@ -93,20 +94,14 @@ function parseSettings(raw: string): SettingEntry[] {
 }
 
 /**
- * `CONTINUE → GO Screen 3` on a screen with no CHOICE lines.
+ * `CONTINUE → GO Screen 3` on its own, including after CHOICE lines.
+ * A choice whose label is the word Continue (`CHOICE A: Continue → GO`) is not this.
  * Returns the Screen cell to open, such as `3` or `2-alt`.
  */
 function continueGoLabel(raw: string): string | undefined {
-  if (/CHOICE\s+[A-Z]\s*:/i.test(raw)) return undefined;
-  const match = /CONTINUE\s*(?:→|->)\s*GO\s+Screen\s+([A-Za-z0-9-]+)/i.exec(raw);
+  const withoutChoices = raw.replace(/CHOICE\s+[A-Z]\s*:[^\n\r]*/gi, "");
+  const match = /CONTINUE\s*(?:→|->)\s*GO\s+Screen\s+([A-Za-z0-9-]+)/i.exec(withoutChoices);
   return match?.[1];
-}
-
-function screenLabelKey(label: string): string {
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 /** Button copy only. Routing such as `→ SET cash=6 → GO Screen 2` stays out of the label. */
@@ -123,6 +118,7 @@ function authoredChoices(
   cashUpdate?: CashUpdate;
   goToLabel?: string;
   showWhen?: CashComparison;
+  requiresCompletedHub?: boolean;
 }[] {
   const fromChoiceKeys = entries.filter((entry) => /^CHOICE [A-Z]$/.test(entry.key));
   const source =
@@ -136,6 +132,7 @@ function authoredChoices(
     cashUpdate?: CashUpdate;
     goToLabel?: string;
     showWhen?: CashComparison;
+    requiresCompletedHub?: boolean;
   }[] = [];
   for (const entry of source) {
     const letter = entry.key.replace(/^CHOICE\s+/, "");
@@ -227,6 +224,15 @@ function splitEmojiLabel(text: string): { emoji?: string; label: string } {
   return { emoji: found.emoji, label: label || text.trim() };
 }
 
+/** A leading emoji on a choice is the button orb. The rest stays the label. */
+function withChoiceEmoji<T extends { label: string }>(
+  choice: T,
+): T & { emoji?: string } {
+  const split = splitEmojiLabel(choice.label);
+  if (!split.emoji) return choice;
+  return { ...choice, label: split.label, emoji: split.emoji };
+}
+
 function itemSlug(label: string, index: number): string {
   const base = label
     .toLowerCase()
@@ -269,7 +275,7 @@ function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
 }
 
 function medalTierFromSettings(value: string | undefined): PayloadMedalTier | undefined {
-  const tier = value?.trim().toLowerCase();
+  const tier = value?.trim().toLowerCase().split(/\s+/)[0];
   if (tier === "bronze" || tier === "silver" || tier === "gold") return tier;
   if (tier === "unlocked" || tier === "unlock" || tier === "white") return "unlocked";
   return undefined;
@@ -468,6 +474,7 @@ export function mapPayloadScreen(
         ...(emoji ? { itemEmoji: emoji } : {}),
         coinCount: 1,
         successMessage: "",
+        ...(error ? { wrongError: error } : {}),
         ...picture,
       };
     }
@@ -542,6 +549,12 @@ export function mapPayloadScreen(
           ...picture,
         };
       }
+      const rawSettings = cohortField(row.settings, cohort);
+      const skillHub = /^\s*HUB\s*$/im.test(rawSettings);
+      const skillKeys = choices
+        .filter((choice) => choice.goToLabel && !choice.requiresCompletedHub)
+        .map((choice) => choice.goToLabel ?? "")
+        .filter(Boolean);
       const correct = correctChoiceLetters(settings);
       const explicitCorrect = settings.some((entry) => entry.key === "CORRECT" && entry.value);
       const decisionPath =
@@ -550,18 +563,27 @@ export function mapPayloadScreen(
           (choice) =>
             choice.cashUpdate !== undefined ||
             choice.goToLabel !== undefined ||
-            choice.showWhen !== undefined,
+            choice.showWhen !== undefined ||
+            choice.requiresCompletedHub === true,
         );
-      const loose = looseBinaryChoice(cohortField(row.settings, cohort), text);
+      const loose = looseBinaryChoice(rawSettings, text);
       const options =
         choices.length > 0
-          ? choices.map((choice) => ({
-              label: choice.label,
-              isCorrect: correct.has(choice.letter),
-              ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
-              ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
-              ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
-            }))
+          ? choices.map((choice) => {
+              const shown = withChoiceEmoji(choice);
+              return {
+                label: shown.label,
+                isCorrect: correct.has(choice.letter),
+                ...(shown.emoji ? { emoji: shown.emoji } : {}),
+                ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+                ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+                ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
+                ...(skillHub && choice.goToLabel && !choice.requiresCompletedHub
+                  ? { hubSkillKey: choice.goToLabel }
+                  : {}),
+                ...(choice.requiresCompletedHub ? { requiresHubSkills: skillKeys } : {}),
+              };
+            })
           : [loose?.optionA, loose?.optionB]
               .filter((option): option is { label: string; isCorrect: boolean } =>
                 Boolean(option?.label),
@@ -576,6 +598,7 @@ export function mapPayloadScreen(
         wrongError: error,
         errorStyle: "inline-red",
         ...(decisionPath ? { decisionPath: true } : {}),
+        ...(skillHub ? { skillHub: true } : {}),
         ...(decisionScript && decisionScript.prompts.length > 0
           ? { promptWhen: decisionScript.prompts }
           : {}),
@@ -653,29 +676,43 @@ export function mapPayloadScreen(
           rounds: [],
           decisionPath: true,
           wrongError: error,
-          options: choices.map((choice) => ({
-            label: choice.label,
-            isCorrect: correct.has(choice.letter),
-            ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
-            ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
-            ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
-          })),
+          options: choices.map((choice) => {
+            const shown = withChoiceEmoji(choice);
+            return {
+              label: shown.label,
+              isCorrect: correct.has(choice.letter),
+              ...(shown.emoji ? { emoji: shown.emoji } : {}),
+              ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+              ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+              ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
+            };
+          }),
           ...(decisionScript && decisionScript.prompts.length > 0
             ? { promptWhen: decisionScript.prompts }
             : {}),
           ...picture,
         };
       }
+      const sideA = withChoiceEmoji({
+        label: choiceLabel(
+          settingValue(settings, "CHOICE A") ?? settingValue(settings, "A") ?? "",
+        ),
+      });
+      const sideB = withChoiceEmoji({
+        label: choiceLabel(
+          settingValue(settings, "CHOICE B") ?? settingValue(settings, "B") ?? "",
+        ),
+      });
       return {
         type: "spotlight-rounds",
         id,
         prompt: text,
         rounds: [
           {
-            iconA: settingValue(settings, "ICON A") ?? "A",
-            optionA: choiceLabel(settingValue(settings, "CHOICE A") ?? settingValue(settings, "A") ?? ""),
-            iconB: settingValue(settings, "ICON B") ?? "B",
-            optionB: choiceLabel(settingValue(settings, "CHOICE B") ?? settingValue(settings, "B") ?? ""),
+            iconA: settingValue(settings, "ICON A") ?? sideA.emoji ?? "A",
+            optionA: sideA.label,
+            iconB: settingValue(settings, "ICON B") ?? sideB.emoji ?? "B",
+            optionB: sideB.label,
             correct: correctIsB(settings) ? "b" : "a",
             error,
           },
@@ -777,44 +814,111 @@ export function payloadCompletionMedalTier(
   return undefined;
 }
 
-/** Point each CONTINUE action at the screen named in its GO instruction. */
+function requireScreenIndex(
+  indexByLabel: ReadonlyMap<string, number>,
+  label: string,
+  fromLabel: string,
+  lesson: { moduleNumber: number; lessonNumber: number; cohort: string },
+): number {
+  const index = indexByLabel.get(screenLabelKey(label));
+  if (index === undefined) {
+    throw new Error(
+      `Module ${lesson.moduleNumber} lesson ${lesson.lessonNumber} (${lesson.cohort}) screen "${fromLabel}" points at missing screen "${label}".`,
+    );
+  }
+  return index;
+}
+
+/** Point each GO / CONTINUE action at a real screen. A missing label is an error. */
 function linkContinueTargets(
   screens: ScreenConfig[],
   labels: readonly string[],
+  lesson: { moduleNumber: number; lessonNumber: number; cohort: string },
 ): ScreenConfig[] {
   const indexByLabel = new Map<string, number>();
   labels.forEach((label, index) => {
     const key = screenLabelKey(label);
     if (key && !indexByLabel.has(key)) indexByLabel.set(key, index);
   });
-  return screens.map((screen) => {
-    if (screen.type === "spotlight-rounds") {
-      if (!screen.options?.some((option) => option.goToLabel)) return screen;
-      return {
-        ...screen,
-        options: screen.options.map((option) => {
-          if (!option.goToLabel) return option;
-          const goToIndex = indexByLabel.get(screenLabelKey(option.goToLabel));
-          return goToIndex === undefined ? option : { ...option, goToIndex };
-        }),
+  return screens.map((screen, screenIndex) => {
+    const fromLabel = labels[screenIndex] ?? String(screenIndex + 1);
+    let next = screen;
+    if (next.continueToLabel) {
+      next = {
+        ...next,
+        continueToIndex: requireScreenIndex(
+          indexByLabel,
+          next.continueToLabel,
+          fromLabel,
+          lesson,
+        ),
       };
     }
-    if (screen.type !== "binary-choice" && screen.type !== "multiple-choice") return screen;
-    let next = screen;
-    if (screen.continueToLabel) {
-      const continueToIndex = indexByLabel.get(screenLabelKey(screen.continueToLabel));
-      if (continueToIndex !== undefined) next = { ...next, continueToIndex };
-    }
-    if (!next.options?.some((option) => option.goToLabel)) return next;
-    return {
-      ...next,
-      options: next.options.map((option) => {
-        if (!option.goToLabel) return option;
-        const goToIndex = indexByLabel.get(screenLabelKey(option.goToLabel));
-        return goToIndex === undefined ? option : { ...option, goToIndex };
-      }),
-    };
+    if (!("options" in next) || !Array.isArray(next.options)) return next;
+    const choices = next.options.filter(
+      (option): option is Exclude<(typeof next.options)[number], string> =>
+        typeof option === "object" && option !== null && "goToLabel" in option && Boolean(option.goToLabel),
+    );
+    if (choices.length === 0) return next;
+    const linkedOptions = next.options.map((option) => {
+      if (typeof option !== "object" || option === null || !("goToLabel" in option) || !option.goToLabel) {
+        return option;
+      }
+      return {
+        ...option,
+        goToIndex: requireScreenIndex(indexByLabel, option.goToLabel, fromLabel, lesson),
+      };
+    });
+    return { ...next, options: linkedOptions } as ScreenConfig;
   });
+}
+
+/** Tag each screen inside a hub skill so returning to the hub can mark it done. */
+function tagHubSkillKeys(screens: ScreenConfig[]): ScreenConfig[] {
+  const hubIndex = screens.findIndex((screen) => screen.skillHub);
+  if (hubIndex < 0) return screens;
+  const hub = screens[hubIndex];
+  if (!hub || !("options" in hub) || !hub.options) return screens;
+  const tagged = screens.slice();
+  const seen = new Set<number>();
+
+  for (const option of hub.options) {
+    if (typeof option !== "object" || option === null) continue;
+    if (!("hubSkillKey" in option) || !option.hubSkillKey || !("goToIndex" in option) || typeof option.goToIndex !== "number") {
+      continue;
+    }
+    const skillKey = option.hubSkillKey;
+    const queue = [option.goToIndex];
+    while (queue.length > 0) {
+      const index = queue.shift();
+      if (index === undefined || seen.has(index) || index === hubIndex) continue;
+      seen.add(index);
+      const screen = tagged[index];
+      if (!screen) continue;
+      tagged[index] = { ...screen, hubSkillKey: skillKey };
+      const exits =
+        "options" in screen && Array.isArray(screen.options)
+          ? screen.options
+              .map((choice) =>
+                typeof choice === "object" && choice !== null && "goToIndex" in choice
+                  ? choice.goToIndex
+                  : undefined,
+              )
+              .filter((target): target is number => typeof target === "number")
+          : [];
+      const fallback =
+        exits.length > 0
+          ? exits
+          : typeof screen.continueToIndex === "number"
+            ? [screen.continueToIndex]
+            : [];
+      for (const target of fallback) {
+        if (target !== hubIndex) queue.push(target);
+      }
+    }
+  }
+
+  return tagged;
 }
 
 /** Cohort-specific screens plus the standard cash-in rewards. */
@@ -826,6 +930,29 @@ export function resolvePayloadLesson(
   const skillSlug = payload.skillId.trim();
   const characterName = payload.characters[cohort].trim();
   const title = moduleTitle(payload.moduleNumber);
+  const labels = payload.screens.map((row) => row.screenLabel);
+  const linked = linkContinueTargets(
+    payload.screens.map((row) => {
+      const screen = mapPayloadScreen(row, cohort, {
+        skillId: skillSlug,
+        skillName: payload.skillName,
+      });
+      const raw = cohortField(row.settings, cohort);
+      const continueLabel = screen.continueToLabel ?? continueGoLabel(raw);
+      return {
+        ...screen,
+        sourceLabel: row.screenLabel,
+        ...(continueLabel ? { continueToLabel: continueLabel } : {}),
+        ...( /^\s*HUB\s*$/im.test(raw) ? { skillHub: true as const } : {}),
+      };
+    }),
+    labels,
+    {
+      moduleNumber: payload.moduleNumber,
+      lessonNumber: payload.lessonNumber,
+      cohort,
+    },
+  );
 
   return {
     meta: {
@@ -847,15 +974,7 @@ export function resolvePayloadLesson(
       shippedCohorts: ["explorer", "pathfinder", "maverick"],
     },
     characterName: characterName || undefined,
-    screens: linkContinueTargets(
-      payload.screens.map((row) =>
-        mapPayloadScreen(row, cohort, {
-          skillId: skillSlug,
-          skillName: payload.skillName,
-        }),
-      ),
-      payload.screens.map((row) => row.screenLabel),
-    ),
+    screens: tagHubSkillKeys(linked),
     rewards: {
       skillSlug,
       achievementSkillSlug: skillSlug,

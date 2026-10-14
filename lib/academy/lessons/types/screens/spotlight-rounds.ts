@@ -4,6 +4,8 @@ import type { WithDeclarative } from "../declarative";
 /** One path on a decision spotlight. Either visible choice can advance. */
 export type SpotlightDecisionOption = {
   label: string;
+  /** Orb glyph from a leading emoji on the sheet choice. */
+  emoji?: string;
   isCorrect?: boolean;
   cashUpdate?: CashUpdate;
   goToLabel?: string;

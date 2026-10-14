@@ -42,6 +42,13 @@ export type UseLessonFlowOptions = {
   /** Design-shell jumper can open on a non-zero screen. */
   initialScreenIndex?: number;
   /**
+   * Next from this screen index jumps here instead of index + 1.
+   * Used for CONTINUE targets and for skipping a sibling branch row.
+   */
+  continueIndexByScreen?: readonly (number | undefined)[];
+  /** Count advances along the path the student takes, instead of the row index. */
+  trackPathProgress?: boolean;
+  /**
    * Medal tier from a payload completion row. When set, Cash In stores this
    * tier instead of the lesson-number unlock/bronze rule.
    */
@@ -62,11 +69,15 @@ export function useLessonFlow({
   exitHref = "/dashboard/academy",
   initialScreenIndex = 0,
   skillAwardTier,
+  continueIndexByScreen,
+  trackPathProgress = false,
 }: UseLessonFlowOptions) {
   const router = useRouter();
   const { awardLessonXp } = useDashboardWallet();
 
-  const [screenIndex, setScreenIndex] = useState(initialScreenIndex);
+  const [screenIndex, setScreenIndexState] = useState(initialScreenIndex);
+  const [pathStep, setPathStep] = useState(0);
+  const screenIndexRef = useRef(initialScreenIndex);
   const [screenReady, setScreenReady] = useState<boolean[]>(
     () => Array.from({ length: totalScreens }, () => false),
   );
@@ -85,7 +96,9 @@ export function useLessonFlow({
   useEffect(() => {
     if (activeMilestoneRef.current === milestoneId) return;
     activeMilestoneRef.current = milestoneId;
-    setScreenIndex(0);
+    screenIndexRef.current = 0;
+    setScreenIndexState(0);
+    setPathStep(0);
     setScreenReady(Array.from({ length: totalScreens }, () => false));
     setScreenFlash("none");
     setScreenMistakes(0);
@@ -186,17 +199,34 @@ export function useLessonFlow({
 
   const finishLessonRef = useRef<() => void>(() => {});
 
+  const setScreenIndex = useCallback(
+    (value: number | ((current: number) => number)) => {
+      const current = screenIndexRef.current;
+      const next = typeof value === "function" ? value(current) : value;
+      if (next === current) return;
+      screenIndexRef.current = next;
+      if (trackPathProgress) setPathStep((step) => step + 1);
+      setScreenIndexState(next);
+    },
+    [trackPathProgress],
+  );
+
   const handleNext = useCallback(
     (options?: { canAdvance?: boolean }) => {
       const canAdvance = options?.canAdvance ?? Boolean(screenReady[screenIndex]);
       if (!canAdvance) return;
+      const jumped = continueIndexByScreen?.[screenIndex];
+      if (typeof jumped === "number") {
+        setScreenIndex(jumped);
+        return;
+      }
       if (screenIndex >= totalScreens - 1) {
         finishLessonRef.current();
         return;
       }
       setScreenIndex((current) => Math.min(totalScreens - 1, current + 1));
     },
-    [screenIndex, screenReady, totalScreens],
+    [continueIndexByScreen, screenIndex, screenReady, setScreenIndex, totalScreens],
   );
 
   const handleCashInPoints = useCallback(() => {
@@ -219,7 +249,7 @@ export function useLessonFlow({
         const cohort = session?.birthYear
           ? getMasteryCohortFromBirthYear(session.birthYear)
           : "explorer";
-        if (skillAwardTier) {
+        if (skillAwardTier && skillSlug) {
           applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort);
         } else {
           applyLessonSkillTierProgress(milestoneId, cohort);
@@ -272,6 +302,7 @@ export function useLessonFlow({
   return {
     screenIndex,
     setScreenIndex,
+    pathStep,
     screenReady,
     screenFlash,
     screenMistakes,

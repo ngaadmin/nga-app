@@ -115,7 +115,7 @@ export function skillHasMedalAssets(skillNumber: number): boolean {
   return skillNumber in MEDAL_ID_BY_SKILL;
 }
 
-/** Screen 8 / lesson overview medal for a module lesson (1–3 unlocked, 4–6 bronze). */
+/** Screen 8 / lesson overview medal for a module lesson (1–3 bronze, 4–6 silver). */
 export function medalIdForModuleLesson(
   moduleNumber: number,
   lessonNumber: number,
@@ -134,8 +134,8 @@ export function medalIdForLessonNumber(
 }
 
 /**
- * Completion medal follows intro/deepen lesson logic first so authored
- * filenames cannot put bronze on lessons 1–3.
+ * Completion medal follows the module ladder first: bronze on lessons 1–3,
+ * silver on 4–6. Lesson 9 has no single medal file; it golds all three skills.
  */
 export function resolveCompletionMedalId(args: {
   medalId?: MedalIllustrationId;

@@ -7,7 +7,9 @@ const buckets = new Map<string, Bucket>();
 
 /**
  * Simple in-memory fixed-window rate limiter (per server instance).
- * Suitable as a guest-first abuse brake - not a distributed limiter.
+ * Suitable as a guest-first abuse brake — not a distributed limiter.
+ * A durable limit needs shared storage (for example Supabase or Redis) and
+ * is intentionally not added here.
  */
 export function consumeRateLimit(
   key: string,

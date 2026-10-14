@@ -113,6 +113,7 @@ describe("lesson payload loader", () => {
     expect(completion).toEqual({
       type: "completion",
       id: "screen-8",
+      sourceLabel: "8",
       useStandardPane: true,
       medalId: "medal-skill1-bronze",
       authoredMedal: true,
@@ -166,6 +167,9 @@ describe("lesson payload loader", () => {
       "binary-choice",
       "spotlight-rounds",
       "spotlight-rounds",
+      "binary-choice",
+      "binary-choice",
+      "binary-choice",
       "binary-choice",
       "binary-choice",
       "completion",
@@ -236,12 +240,14 @@ describe("lesson payload loader", () => {
       continueToIndex: 6,
     });
     expect(lesson8.screens[8]).toMatchObject({
+      sourceLabel: "7",
       continueToLabel: "8",
-      continueToIndex: 10,
+      continueToIndex: 12,
     });
-    expect(lesson8.screens[9]).toMatchObject({
+    expect(lesson8.screens[10]).toMatchObject({
+      sourceLabel: "7-alt",
       continueToLabel: "8",
-      continueToIndex: 10,
+      continueToIndex: 12,
     });
 
     const arcadeChoices = lesson8.screens[1];
@@ -264,7 +270,7 @@ describe("lesson payload loader", () => {
           showWhen: { op: "gte", amount: 8 },
         },
         {
-          label: "Can’t cover it",
+          label: "Skip the arcade and keep the money",
           isCorrect: false,
           goToLabel: "3",
           goToIndex: 3,
@@ -297,7 +303,8 @@ describe("lesson payload loader", () => {
       ]);
       expect(cinemaChoices.options?.[2]).toMatchObject({
         goToLabel: "7-alt",
-        goToIndex: 9,
+        goToIndex: 10,
+        cashUpdate: { op: "set", amount: 6 },
       });
     }
 
@@ -311,7 +318,7 @@ describe("lesson payload loader", () => {
       );
       expect(screen.options?.map((option) => option.label)).toEqual([
         "Pay $8",
-        "Can’t cover it",
+        "Skip the arcade and keep the money",
         `See what would have happened if ${name === "Holly" ? "she" : "he"} hadn’t bought the case`,
         "Skip the arcade",
       ]);
@@ -343,6 +350,37 @@ describe("lesson payload loader", () => {
         },
       ],
     });
+
+    const missedAfternoon = (
+      cohort: "explorer" | "pathfinder" | "maverick",
+      name: "Senna" | "Immi" | "Dash",
+      event: string,
+    ) => {
+      const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 8), cohort, 8).screens[5];
+      const possessive = name === "Immi" ? "her" : "his";
+      const pronoun = name === "Immi" ? "she" : "he";
+      expect(screen).toMatchObject({
+        type: "binary-choice",
+        sourceLabel: "4-alt",
+        prompt: `The next day everyone is talking about how good the ${event} was, and they all went to lunch after. ${name} still has ${possessive} $20, but ${pronoun} missed all of it.`,
+      });
+    };
+    missedAfternoon("explorer", "Senna", "skateboard session");
+    missedAfternoon("pathfinder", "Immi", "derby");
+    missedAfternoon("maverick", "Dash", "gym session");
+
+    const wrapUp = (cohort: "explorer" | "pathfinder" | "maverick", name: string) => {
+      const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 8), cohort, 8).screens[12];
+      expect(screen).toMatchObject({
+        type: "binary-choice",
+        sourceLabel: "8",
+        continueToLabel: "9",
+        prompt: `Every choice you made shaped ${name}'s day. Spending on things that matter to you, like time with friends, can be worth it. Keeping some money back is smart too. It's about finding the right balance. That's real money thinking!`,
+      });
+    };
+    wrapUp("explorer", "Senna");
+    wrapUp("pathfinder", "Immi");
+    wrapUp("maverick", "Dash");
   });
 
   it("maps YES and NO rows into a bucket-sort", () => {

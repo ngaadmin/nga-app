@@ -10,11 +10,7 @@ import {
 } from "@/lib/academy/illustrations/medal-registry";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { peelLeadingEmoji } from "@/lib/academy/lessons/peel-leading-emoji";
-import type {
-  LightningRoundCard,
-  ResolvedLessonContent,
-  ScreenConfig,
-} from "@/lib/academy/lessons/types";
+import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { ACADEMY_MODULE_TITLES } from "@/lib/dashboard/academy-content";
 import type { AcademyLevelId } from "@/lib/dashboard/academy-state";
@@ -54,7 +50,7 @@ function mergedSettings(copy: PayloadCohortCopy, cohort: MasteryCohort): Setting
 }
 
 const SETTINGS_KEY =
-  /(?:CHOICE\s+[A-Z]|ICON\s+[A-Z]|CORRECT|OPTIONS|BUTTON|CONTINUE|SOURCE|TARGET|RESULT|ORDER|ITEMS|ROUNDS|MEDAL|AVAILABLE|LABEL|HOLD|FROZEN|SUCCESS|ID|SHORT|LONG|NEED|WANT|YES|NO|RUSHING|THINKING|RUSH|THINK)\s*:|(?:^|\s)([A-H])\s*:/gi;
+  /(?:CHOICE\s+[A-Z]|ICON\s+[A-Z]|CORRECT|OPTIONS|BUTTON|CONTINUE|SOURCE|TARGET|RESULT|ORDER|ITEMS|ROUNDS|MEDAL|AVAILABLE|LABEL|HOLD|FROZEN|SUCCESS|ID|SHORT|LONG|NEED|WANT|YES|NO)\s*:|(?:^|\s)([A-H])\s*:/gi;
 
 /** Split one settings line on later keys such as `CHOICE B:` or `CORRECT:`. */
 function settingsParts(line: string): string[] {
@@ -261,40 +257,32 @@ function stepRows(entries: readonly SettingEntry[]): SettingEntry[] {
     );
 }
 
-function lightningRounds(
-  entries: readonly SettingEntry[],
-): { cards: readonly [LightningRoundCard, LightningRoundCard] }[] {
-  const rounds: { cards: readonly [LightningRoundCard, LightningRoundCard] }[] = [];
-  let rush: string | undefined;
-  for (const entry of entries) {
-    const side =
-      entry.key === "RUSH" || entry.key === "RUSHING"
-        ? "rush"
-        : entry.key === "THINK" || entry.key === "THINKING"
-          ? "think"
-          : undefined;
-    if (!side || !entry.value) continue;
-    if (side === "rush") {
-      rush = entry.value;
-      continue;
-    }
-    if (!rush) continue;
-    const rushing = peelLeadingEmoji(rush);
-    const thinking = peelLeadingEmoji(entry.value);
-    const rushCard: LightningRoundCard = {
-      id: itemSlug(rushing.label, rounds.length * 2),
-      label: rushing.label,
-      ...(rushing.emoji ? { emoji: rushing.emoji } : {}),
-      correct: false,
-    };
-    const thinkCard: LightningRoundCard = {
-      id: itemSlug(thinking.label, rounds.length * 2 + 1),
-      label: thinking.label,
-      ...(thinking.emoji ? { emoji: thinking.emoji } : {}),
-      correct: true,
-    };
-    rounds.push({ cards: [rushCard, thinkCard] });
-    rush = undefined;
+const SPOTLIGHT_PAIR_LINE =
+  /^A\s*:\s*(.+?)\s*\|\s*B\s*:\s*(.+?)\s*\|\s*CORRECT\s*:\s*([AB])\s*$/i;
+
+/** `ROUNDS:` lines already used by Pick One. One `A | B | CORRECT` line is one round. */
+function spotlightSheetRounds(raw: string, error: string) {
+  const rounds: {
+    iconA: string;
+    optionA: string;
+    iconB: string;
+    optionB: string;
+    correct: "a" | "b";
+    error: string;
+  }[] = [];
+  for (const line of raw.split(/\r?\n/)) {
+    const match = SPOTLIGHT_PAIR_LINE.exec(line.trim());
+    if (!match) continue;
+    const sideA = peelLeadingEmoji(match[1] ?? "");
+    const sideB = peelLeadingEmoji(match[2] ?? "");
+    rounds.push({
+      iconA: sideA.emoji ?? "A",
+      optionA: sideA.label,
+      iconB: sideB.emoji ?? "B",
+      optionB: sideB.label,
+      correct: (match[3] ?? "A").toLowerCase() === "b" ? "b" : "a",
+      error,
+    });
   }
   return rounds;
 }
@@ -690,16 +678,6 @@ export function mapPayloadScreen(
         ...picture,
       };
     }
-    case "lightning-round": {
-      return {
-        type: "lightning-round",
-        id,
-        prompt: text,
-        rounds: lightningRounds(settings),
-        wrongError: error,
-        ...picture,
-      };
-    }
     case "tap-reveal":
     case "bucket-sort": {
       const steps = stepRows(settings);
@@ -834,6 +812,16 @@ export function mapPayloadScreen(
           ...(decisionScript && decisionScript.prompts.length > 0
             ? { promptWhen: decisionScript.prompts }
             : {}),
+          ...picture,
+        };
+      }
+      const sheetRounds = spotlightSheetRounds(cohortField(row.settings, cohort), error);
+      if (sheetRounds.length > 0) {
+        return {
+          type: "spotlight-rounds",
+          id,
+          prompt: text,
+          rounds: sheetRounds,
           ...picture,
         };
       }

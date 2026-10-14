@@ -98,58 +98,34 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     advance: { mode: "all-items-sorted" },
   },
   {
-    type: "lightning-round",
+    type: "spotlight-rounds",
     id: "pause-thoughts",
+    pairImage: false,
     prompt: "Which one helps Lars stop and think?",
-    wrongError: "That thought is rushing you. Pick the one that helps you stop.",
     rounds: [
       {
-        cards: [
-          {
-            id: "limited-time",
-            emoji: "⏰",
-            label: "It's a limited time offer - I have to buy it now!",
-            correct: false,
-          },
-          {
-            id: "wait-cheaper",
-            emoji: "💰",
-            label: "I can wait and get it cheaper later.",
-            correct: true,
-          },
-        ],
+        iconA: "⏰",
+        optionA: "It's a limited time offer - I have to buy it now!",
+        iconB: "💰",
+        optionB: "I can wait and get it cheaper later.",
+        correct: "b",
+        error: "That thought is rushing you. Pick the one that helps you stop.",
       },
       {
-        cards: [
-          {
-            id: "need-now",
-            emoji: "🔥",
-            label: "It looks cool, I need it right now!",
-            correct: false,
-          },
-          {
-            id: "sleep-on-it",
-            emoji: "😴",
-            label: "I'll sleep on it and decide tomorrow.",
-            correct: true,
-          },
-        ],
+        iconA: "🔥",
+        optionA: "It looks cool, I need it right now!",
+        iconB: "😴",
+        optionB: "I'll sleep on it and decide tomorrow.",
+        correct: "b",
+        error: "That thought is rushing you. Pick the one that helps you stop.",
       },
       {
-        cards: [
-          {
-            id: "left-out",
-            emoji: "👥",
-            label: "Everyone has it, I don't want to be left out.",
-            correct: false,
-          },
-          {
-            id: "ask-friends",
-            emoji: "💬",
-            label: "I'll ask my friends if it's actually any good.",
-            correct: true,
-          },
-        ],
+        iconA: "👥",
+        optionA: "Everyone has it, I don't want to be left out.",
+        iconB: "💬",
+        optionB: "I'll ask my friends if it's actually any good.",
+        correct: "b",
+        error: "That thought is rushing you. Pick the one that helps you stop.",
       },
     ],
   },

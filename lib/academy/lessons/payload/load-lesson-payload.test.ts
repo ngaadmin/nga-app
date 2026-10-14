@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadBundledLessonPayload, loadLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { hasShippedLesson } from "@/lib/academy/lessons/registry";
 import { fillCashPlaceholder } from "@/lib/academy/lessons/payload/cash-placeholder";
-import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
+import { mapPayloadScreen, resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import {
   LESSON_COMPLETION_XP,
@@ -549,28 +549,43 @@ describe("lesson payload loader", () => {
       const lead =
         cohort === "explorer" ? "Lars" : cohort === "pathfinder" ? "Holly" : "Aiden";
       expect(thoughts).toMatchObject({
-        type: "lightning-round",
+        type: "spotlight-rounds",
         prompt: `Which one helps ${lead} stop and think?`,
-        wrongError: "That thought is rushing you. Pick the one that helps you stop.",
+        pairImage: false,
       });
-      if (thoughts?.type === "lightning-round") {
-        expect(thoughts.rounds).toHaveLength(3);
+      if (thoughts?.type === "spotlight-rounds") {
         expect(
-          thoughts.rounds.map((round) => round.cards.map((card) => [card.label, card.emoji, card.correct])),
+          thoughts.rounds.map((round) => [
+            round.optionA,
+            round.iconA,
+            round.optionB,
+            round.iconB,
+            round.correct,
+          ]),
         ).toEqual([
           [
-            ["It's a limited time offer - I have to buy it now!", "⏰", false],
-            ["I can wait and get it cheaper later.", "💰", true],
+            "It's a limited time offer - I have to buy it now!",
+            "⏰",
+            "I can wait and get it cheaper later.",
+            "💰",
+            "b",
           ],
           [
-            ["It looks cool, I need it right now!", "🔥", false],
-            ["I'll sleep on it and decide tomorrow.", "😴", true],
+            "It looks cool, I need it right now!",
+            "🔥",
+            "I'll sleep on it and decide tomorrow.",
+            "😴",
+            "b",
           ],
           [
-            ["Everyone has it, I don't want to be left out.", "👥", false],
-            ["I'll ask my friends if it's actually any good.", "💬", true],
+            "Everyone has it, I don't want to be left out.",
+            "👥",
+            "I'll ask my friends if it's actually any good.",
+            "💬",
+            "b",
           ],
         ]);
+        expect(thoughts.rounds.every((round) => round.error.includes("rushing you"))).toBe(true);
       }
       expect(sign).toMatchObject({
         type: "binary-choice",
@@ -612,6 +627,20 @@ describe("lesson payload loader", () => {
       expect(savings.items.reduce((sum, item) => sum + item.price, 0)).toBe(20);
       expect(savings.dropZoneLabel).toMatch(/didn't buy/i);
     }
+  });
+
+  it("maps a Pick One ROUNDS block into three spotlight rounds", () => {
+    const row = loadBundledLessonPayload(1, 2).screens[2];
+    expect(row).toBeDefined();
+    if (!row) return;
+    const screen = mapPayloadScreen(row, "explorer");
+    expect(screen).toMatchObject({ type: "spotlight-rounds" });
+    if (screen.type !== "spotlight-rounds") return;
+    expect(screen.rounds.map((round) => round.correct)).toEqual(["b", "a", "b"]);
+    expect(screen.rounds[0]?.optionA).toBe(
+      "A new phone case, even though his old one is still fine",
+    );
+    expect(screen.rounds[0]?.optionB).not.toMatch(/\|/);
   });
 
   it("uses pathfinder settings when the explorer settings cell is empty", () => {

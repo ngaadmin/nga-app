@@ -15,7 +15,6 @@ const DENSE_LESSON_SCREEN_TYPES = new Set<ScreenConfig["type"]>([
   "bucket-sort",
   "savings-goal",
   "budget-select",
-  "lightning-round",
   "completion",
 ]);
 

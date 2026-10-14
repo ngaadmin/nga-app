@@ -16,10 +16,6 @@ export type {
   DragToTargetScreenConfig,
 } from "./drag-to-target";
 export type { HoldToFillScreenConfig } from "./hold-to-fill";
-export type {
-  LightningRoundCard,
-  LightningRoundScreenConfig,
-} from "./lightning-round";
 export type { LinkMatchPair, LinkMatchScreenConfig } from "./link-match";
 export type { NarrativeBonusScreenConfig } from "./narrative-bonus";
 export type { RankOrderItem, RankOrderScreenConfig } from "./rank-order";
@@ -40,7 +36,6 @@ import type { CompletionScreenConfig } from "./completion";
 import type { CustomScreenConfig } from "./custom";
 import type { DragToTargetScreenConfig } from "./drag-to-target";
 import type { HoldToFillScreenConfig } from "./hold-to-fill";
-import type { LightningRoundScreenConfig } from "./lightning-round";
 import type { LinkMatchScreenConfig } from "./link-match";
 import type { NarrativeBonusScreenConfig } from "./narrative-bonus";
 import type { RankOrderScreenConfig } from "./rank-order";
@@ -62,7 +57,6 @@ export type ScreenConfig =
   | AllocationSliderScreenConfig
   | RankOrderScreenConfig
   | HoldToFillScreenConfig
-  | LightningRoundScreenConfig
   | DragToTargetScreenConfig
   | SavingsGoalScreenConfig
   | NarrativeBonusScreenConfig

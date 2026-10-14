@@ -78,8 +78,6 @@ export const GAME_ARCHETYPE_TO_TYPE: Record<string, string> = {
   "lesson recap screen": "completion",
   "the fact finder": "true-false",
   "fact finder": "true-false",
-  "the lightning round": "lightning-round",
-  "lightning round": "lightning-round",
   "the pick one / spotlight (3-round challenge)": "spotlight-rounds",
   "pick one / spotlight (3-round challenge)": "spotlight-rounds",
   "the budget balance": "budget-select",

@@ -22,8 +22,8 @@ const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
   maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
 };
 
-const PENNY_POINT_SRC =
-  "/assets/illustrations/characters/penny/penny_point.webp";
+const PENNY_AVATAR_SRC =
+  "/assets/illustrations/characters/penny/penny-master-512.webp";
 
 export function CohortTrackPicker() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export function CohortTrackPicker() {
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-between">
         <div className="flex flex-col items-center text-center">
           <Image
-            src={PENNY_POINT_SRC}
+            src={PENNY_AVATAR_SRC}
             alt=""
             width={720}
             height={720}

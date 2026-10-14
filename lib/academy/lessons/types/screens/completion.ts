@@ -12,4 +12,13 @@ export type CompletionScreenConfig = WithDeclarative<{
   useStandardPane?: boolean;
   /** Skill medal asset from `public/assets/illustrations/medal/`. */
   medalId?: MedalIllustrationId;
+  /**
+   * Payload completion row. Show `medalId` as written on the sheet.
+   * Lesson-number medal rules do not replace it.
+   */
+  authoredMedal?: boolean;
+  /** Tier from the completion row (`MEDAL:`), or inferred from the medal file. */
+  medalTier?: "unlocked" | "bronze" | "silver" | "gold";
+  /** Sheet skill name. Wins over the registry label on this screen. */
+  skillName?: string;
 }>;

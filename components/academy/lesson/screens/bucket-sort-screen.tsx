@@ -1,8 +1,10 @@
 "use client";
 
+import { LessonIllustrationSlot } from "@/components/academy/lesson/lesson-illustration-slot";
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
 import { LessonSequenceSortGame } from "@/components/academy/lesson/lesson-sequence-sort-game";
 import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import type { BucketSortScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
 
@@ -16,6 +18,7 @@ export function BucketSortScreen({
   };
 
   const sortLayout = screen.layout ?? "statement-sort";
+  const illustration = resolveLessonScreenIllustration(screen);
 
   const game =
     sortLayout === "steps-row" ? (
@@ -43,6 +46,7 @@ export function BucketSortScreen({
       emphasizeInstruction={screen.emphasizeInstruction === true}
       fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}
     >
+      {illustration?.src ? <LessonIllustrationSlot {...illustration} /> : null}
       {game}
     </LessonScreenLayout>
   );

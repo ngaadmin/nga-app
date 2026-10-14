@@ -72,10 +72,19 @@ function formatDollars(amount: number): string {
   return `$${amount}`;
 }
 
+/** Same order on the server and the client, so orb glyphs match during hydration. */
 function shuffleIds(ids: readonly string[]): string[] {
   const next = [...ids];
+  let seed = 2166136261;
+  for (const id of ids) {
+    for (let index = 0; index < id.length; index += 1) {
+      seed ^= id.charCodeAt(index);
+      seed = Math.imul(seed, 16777619);
+    }
+  }
   for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const j = seed % (i + 1);
     [next[i], next[j]] = [next[j]!, next[i]!];
   }
   return next;
@@ -132,6 +141,9 @@ export function LessonBucketSortGame<TBucket extends string>({
   const boardRef = useRef<HTMLDivElement | null>(null);
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
+  /** Written in pointerdown so pointerup can drop before React re-renders. */
+  const dragStateRef = useRef<DragState | null>(null);
+  const dragListenersRef = useRef<(() => void) | null>(null);
 
   const placedIdSet = useMemo(() => {
     const placed = new Set<string>();
@@ -154,7 +166,10 @@ export function LessonBucketSortGame<TBucket extends string>({
   }, []);
 
   const endDrag = useCallback(() => {
+    dragListenersRef.current?.();
+    dragListenersRef.current = null;
     releasePointerCapture();
+    dragStateRef.current = null;
     setDragState(null);
     setActiveBucketId(null);
   }, [releasePointerCapture]);
@@ -208,6 +223,9 @@ export function LessonBucketSortGame<TBucket extends string>({
     [buckets],
   );
 
+  const resolveBucketAtPointRef = useRef(resolveBucketAtPoint);
+  resolveBucketAtPointRef.current = resolveBucketAtPoint;
+
   const assignToBucket = useCallback(
     (itemId: string, bucketId: TBucket) => {
       const item = itemById.get(itemId);
@@ -256,6 +274,18 @@ export function LessonBucketSortGame<TBucket extends string>({
     [isSpentTotalLayout, itemById, items.length, queueSideEffect],
   );
 
+  const assignToBucketRef = useRef(assignToBucket);
+  assignToBucketRef.current = assignToBucket;
+
+  const placeDragAtPoint = (clientX: number, clientY: number) => {
+    const current = dragStateRef.current;
+    if (!current) return;
+    const bucketId = resolveBucketAtPointRef.current(clientX, clientY);
+    if (bucketId) {
+      assignToBucketRef.current(current.itemId, bucketId);
+    }
+  };
+
   const handleChipPointerDown = (
     itemId: string,
     event: ReactPointerEvent<HTMLButtonElement>,
@@ -268,11 +298,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     event.stopPropagation();
 
     const rect = chip.getBoundingClientRect();
-    const captureTarget = boardRef.current ?? event.currentTarget;
-    captureTargetRef.current = captureTarget;
-    activePointerIdRef.current = event.pointerId;
-    captureTarget.setPointerCapture(event.pointerId);
-    setDragState({
+    const nextDrag: DragState = {
       itemId,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
@@ -280,40 +306,80 @@ export function LessonBucketSortGame<TBucket extends string>({
       y: rect.top,
       width: rect.width,
       height: rect.height,
-    });
+    };
+    dragStateRef.current = nextDrag;
+    activePointerIdRef.current = event.pointerId;
+    setDragState(nextDrag);
+
+    const pointerId = event.pointerId;
+    const onMove = (native: PointerEvent) => {
+      if (native.pointerId !== pointerId) return;
+      const current = dragStateRef.current;
+      if (!current) return;
+      native.preventDefault();
+      const moved: DragState = {
+        ...current,
+        x: native.clientX - current.offsetX,
+        y: native.clientY - current.offsetY,
+      };
+      dragStateRef.current = moved;
+      setDragState(moved);
+      setActiveBucketId(
+        resolveBucketAtPointRef.current(native.clientX, native.clientY),
+      );
+    };
+    const onUp = (native: PointerEvent) => {
+      if (native.pointerId !== pointerId) return;
+      native.preventDefault();
+      placeDragAtPoint(native.clientX, native.clientY);
+      endDrag();
+    };
+    dragListenersRef.current?.();
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    dragListenersRef.current = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+
+    const captureTarget = boardRef.current ?? event.currentTarget;
+    captureTargetRef.current = captureTarget;
+    try {
+      captureTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Window listeners still receive the gesture when capture is unavailable.
+    }
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    if (!dragState || activePointerIdRef.current !== event.pointerId) return;
-    setDragState((current) =>
-      current
-        ? {
-            ...current,
-            x: event.clientX - current.offsetX,
-            y: event.clientY - current.offsetY,
-          }
-        : null,
-    );
+    if (activePointerIdRef.current !== event.pointerId) return;
+    const current = dragStateRef.current;
+    if (!current) return;
+    const moved: DragState = {
+      ...current,
+      x: event.clientX - current.offsetX,
+      y: event.clientY - current.offsetY,
+    };
+    dragStateRef.current = moved;
+    setDragState(moved);
     setActiveBucketId(resolveBucketAtPoint(event.clientX, event.clientY));
   };
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
-
-    if (!dragState) {
-      endDrag();
-      return;
-    }
-
-    const bucketId = resolveBucketAtPoint(event.clientX, event.clientY);
-    if (bucketId) {
-      assignToBucket(dragState.itemId, bucketId);
-    }
-
+    placeDragAtPoint(event.clientX, event.clientY);
     endDrag();
   };
 
-  const handlePointerCancel = () => {
+  const handlePointerCancel = (event: ReactPointerEvent<HTMLElement>) => {
+    if (
+      activePointerIdRef.current === null ||
+      activePointerIdRef.current === event.pointerId
+    ) {
+      placeDragAtPoint(event.clientX, event.clientY);
+    }
     endDrag();
   };
 
@@ -491,7 +557,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <div
         ref={boardRef}
-        className="mt-3 flex h-full min-h-0 flex-1 flex-col"
+        className="mt-3 flex h-full min-h-0 flex-1 touch-none flex-col"
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
@@ -585,7 +651,10 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <div
         ref={boardRef}
-        className={cn(lessonSortBoardClass, "flex min-h-0 flex-1 flex-col gap-1.5")}
+        className={cn(
+          lessonSortBoardClass,
+          "flex min-h-0 flex-1 touch-none flex-col gap-1.5",
+        )}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerCancel}

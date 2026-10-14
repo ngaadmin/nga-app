@@ -465,7 +465,8 @@ function SortItemOrbGlyph({
   emoji?: string;
   label: string;
 }) {
-  return <>{emoji?.trim() || label.trim().charAt(0) || "?"}</>;
+  const glyph = emoji?.trim() || [...label.trim()][0] || "?";
+  return <span className="text-2xl leading-none">{glyph}</span>;
 }
 
 type LessonSortStatementCardProps = {
@@ -793,6 +794,8 @@ type LessonIconDisplayMode = "emoji-label" | "emoji-only" | "label";
 type LessonIconOptionProps = {
   label: string;
   emoji?: string;
+  /** Replaces the emoji (or monogram) inside the circle. Label below is unchanged. */
+  glyph?: ReactNode;
   selected?: boolean;
   disabled?: boolean;
   hideLabel?: boolean;
@@ -818,6 +821,7 @@ export const LessonIconOption = forwardRef<
   {
     label,
     emoji,
+    glyph,
     selected = false,
     disabled = false,
     hideLabel = false,
@@ -840,7 +844,11 @@ export const LessonIconOption = forwardRef<
   const isWrongSelection = selectionVariant === "wrong";
   const isCorrectSelection = selectionVariant === "correct";
 
-  const circleContent = showEmoji ? (
+  const circleContent = glyph ? (
+    <span className="flex items-center justify-center" aria-hidden>
+      {glyph}
+    </span>
+  ) : showEmoji ? (
     <span
       className={cn(
         isCompact ? lessonIconEmojiClass : "text-[32px] leading-none",

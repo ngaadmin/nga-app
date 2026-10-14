@@ -1,21 +1,41 @@
-Field,Value,Notes
-
-Module Number,1,Which module (usually matches Level)
-
-Lesson Number,,e.g. 3 for Lesson 3
-
-Lesson Title,,Shown in the app header
-
-Level,1,Academy level 1–6
-
-Pathfinder Character,,Main teen story voice — Holly Senna or Lucas (see Characters.csv)
-
-Explorer Character,Lars,Younger story — Lars or Mia
-
-Maverick Character,Dash,Older teen story — Dash Saskia or Immi
-
-Support Character,,Optional — Eva Tom or a peer. Use {support} in text.
-
-Skill Name,,Bronze skill on Screen 8 e.g. Stop & Think
-
-Skill ID,,kebab-case — ask dev once if new e.g. stop-and-think
+Module Number,Lesson Number,Field,Value,Notes
+1,1,Lesson Title,"Money In, Money Out",Shown in the app header
+1,1,Level,1,Academy level 1–6
+1,1,Pathfinder Character,Holly,Teen story voice
+1,1,Explorer Character,Lars,Younger story
+1,1,Maverick Character,Aiden,Older teen story
+1,1,Support Character,,Optional peer / mentor
+1,1,Skill Name,Catch Impulse Spending,Bronze skill on Screen 8
+1,1,Skill ID,stop-and-think,kebab-case skill slug
+1,2,Lesson Title,Needs vs Wants Sort,Shown in the app header
+1,2,Level,1,Academy level 1–6
+1,2,Pathfinder Character,Lars,Teen story voice
+1,2,Explorer Character,Lars,Younger story
+1,2,Maverick Character,Lars,Older teen story
+1,2,Support Character,,Optional peer / mentor
+1,2,Skill Name,Put Needs First,Bronze skill on Screen 8
+1,2,Skill ID,put-needs-first,kebab-case skill slug
+1,3,Lesson Title,Keep Some Money Aside,Shown in the app header
+1,3,Level,1,Academy level 1–6
+1,3,Pathfinder Character,Holly,Teen story voice
+1,3,Explorer Character,Mia,Younger story
+1,3,Maverick Character,Holly,Older teen story
+1,3,Support Character,Senna,Optional peer / mentor
+1,3,Skill Name,Believe Money Can Be Made,Bronze skill on Screen 8
+1,3,Skill ID,smart-saving,kebab-case skill slug
+1,4,Lesson Title,Pause Under Pressure,Shown in the app header
+1,4,Level,1,Academy level 1–6
+1,4,Pathfinder Character,Holly,Teen story voice
+1,4,Explorer Character,Senna,Younger story
+1,4,Maverick Character,Holly,Older teen story
+1,4,Support Character,Senna,Optional peer / mentor
+1,4,Skill Name,Stop & Think,Bronze skill on Screen 8
+1,4,Skill ID,stop-and-think,kebab-case skill slug
+1,5,Lesson Title,The birthday discount,Shown in the app header
+1,5,Level,1,Academy level 1–6
+1,5,Pathfinder Character,Holly,Teen story voice
+1,5,Explorer Character,Lars,Younger story
+1,5,Maverick Character,Aiden,Older teen story
+1,5,Support Character,,Optional peer / mentor
+1,5,Skill Name,Choose needs over wants,Bronze skill on Screen 8
+1,5,Skill ID,put-needs-first,kebab-case skill slug

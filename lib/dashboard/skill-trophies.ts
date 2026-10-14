@@ -1,9 +1,10 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
-  isModuleCloserLessonNumber,
   lessonNumberForMilestoneId,
+  levelGroupForMilestoneId,
 } from "@/lib/dashboard/academy-state";
 import {
+  lessonSkillAwards,
   skillNumberForMilestoneId,
   skillTierForLessonNumber,
 } from "@/lib/skills/lesson-skill-award";
@@ -139,27 +140,49 @@ export function applyLessonSkillTierProgress(
   milestoneId: number,
   masteryCohort: MasteryCohort,
 ): void {
-  const lessonNumber = lessonNumberForMilestoneId(milestoneId);
-  if (isModuleCloserLessonNumber(lessonNumber)) return;
-  const tier = skillTierForLessonNumber(lessonNumber);
-  if (!tier || (tier === "bronze" && lessonNumber <= 3)) return;
-
-  const skillSlug = resolveSkillSlugForMilestone(milestoneId);
-  if (!skillSlug || !isSkillAccessibleForMasteryCohort(skillSlug, masteryCohort)) {
-    return;
+  const awards = lessonSkillAwards(
+    levelGroupForMilestoneId(milestoneId),
+    lessonNumberForMilestoneId(milestoneId),
+  );
+  for (const award of awards) {
+    if (!isSkillAccessibleForMasteryCohort(award.slug, masteryCohort)) continue;
+    setVaultSkillTierOverrideIfHigher(award.slug, award.tier);
   }
+}
 
-  setVaultSkillTierOverrideIfHigher(skillSlug, tier);
+/**
+ * Write the medal tier from a payload completion row.
+ * Lesson-number rules (lessons 1–3 unlocked, 4–6 bronze) do not apply.
+ */
+export function applyPayloadSkillTierProgress(
+  skillSlug: string,
+  tier: Exclude<SkillTrophyTier, "locked">,
+  masteryCohort: MasteryCohort,
+): void {
+  const canonical = skillSlug.trim();
+  if (!canonical) return;
+  if (!isSkillAccessibleForMasteryCohort(canonical, masteryCohort)) return;
+  setVaultSkillTierOverrideIfHigher(canonical, tier);
 }
 
 /** Format the skill unlock line shown on lesson completion screens. */
 export function formatLessonSkillUnlockLine(
   skillId: string,
-  tier: Extract<SkillTrophyTier, "unlocked" | "bronze">,
+  tier: Extract<SkillTrophyTier, "unlocked" | "bronze" | "silver" | "gold">,
+  skillNameOverride?: string,
 ): string {
   const registrySkill = getSkillRegistryRecord(skillId);
-  const skillName = registrySkill?.skillName ?? getVaultSkillTrophyById(skillId)?.label;
+  const skillName =
+    skillNameOverride?.trim() ||
+    registrySkill?.skillName ||
+    getVaultSkillTrophyById(skillId)?.label;
 
+  if (tier === "gold") {
+    return skillName ? `Gold medal - ${skillName}` : "Gold medal";
+  }
+  if (tier === "silver") {
+    return skillName ? `Silver medal - ${skillName}` : "Silver medal";
+  }
   if (tier === "bronze") {
     return skillName
       ? `Skill Unlocked: Bronze Medal - ${skillName}`

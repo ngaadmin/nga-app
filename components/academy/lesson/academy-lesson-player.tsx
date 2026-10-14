@@ -7,7 +7,9 @@ import {
   resolveDesignShellJumperIndex,
 } from "@/components/academy/lesson/dev/design-shell-screen-jumper";
 import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
+import { PayloadLessonPlayer } from "@/components/academy/lesson/payload-lesson-player";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-definition";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
@@ -18,41 +20,47 @@ import {
 } from "@/lib/academy/lessons/registry";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
-import { isAcademyLessonPreview } from "@/lib/dev/academy-dev-tools";
+import {
+  allowsDirectLessonOpen,
+  isAcademyLessonPreview,
+} from "@/lib/dev/academy-dev-tools";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;
+  /** When set, this lesson renders from the payload instead of a hard-coded file. */
+  payload?: LessonPayload;
 };
 
-export function AcademyLessonPlayer({ milestoneId }: AcademyLessonPlayerProps) {
+export function AcademyLessonPlayer({ milestoneId, payload }: AcademyLessonPlayerProps) {
   return (
     <SearchParamsBoundary>
-      <AcademyLessonPlayerGate milestoneId={milestoneId} />
+      <AcademyLessonPlayerGate milestoneId={milestoneId} payload={payload} />
     </SearchParamsBoundary>
   );
 }
 
-function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
+function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDesignShell = isDesignShellLesson(milestoneId);
   const isPreview = isAcademyLessonPreview(searchParams);
+  const directOpen = allowsDirectLessonOpen({ preview: isPreview });
   const [progressChecked, setProgressChecked] = useState(
-    isDesignShell || isPreview,
+    isDesignShell || directOpen,
   );
   const [progressLocked, setProgressLocked] = useState(false);
   const isAvailable =
     progressChecked &&
     !progressLocked &&
-    (isDesignShell || isPreview || hasShippedLesson(milestoneId));
+    (isDesignShell || directOpen || hasShippedLesson(milestoneId));
 
   useEffect(() => {
-    if (isDesignShell || isPreview) {
-      setProgressLocked(isPreview ? !hasShippedLesson(milestoneId) : false);
+    if (isDesignShell || directOpen) {
+      setProgressLocked(false);
       setProgressChecked(true);
       return;
     }
@@ -64,7 +72,7 @@ function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
       canLaunchAcademyLesson(milestoneId, node.status, cohort);
     setProgressLocked(!allowed);
     setProgressChecked(true);
-  }, [cohort, isDesignShell, isPreview, milestoneId]);
+  }, [cohort, directOpen, isDesignShell, milestoneId]);
 
   useEffect(() => {
     if (!progressChecked) return;
@@ -91,6 +99,7 @@ function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
     <AcademyLessonPlayerInner
       milestoneId={milestoneId}
       isPreview={isPreview}
+      payload={payload}
     />
   );
 }
@@ -98,7 +107,30 @@ function AcademyLessonPlayerGate({ milestoneId }: AcademyLessonPlayerProps) {
 function AcademyLessonPlayerInner({
   milestoneId,
   isPreview = false,
+  payload,
 }: AcademyLessonPlayerProps & { isPreview?: boolean }) {
+  if (payload) {
+    return (
+      <PayloadLessonPlayer
+        payload={payload}
+        milestoneId={milestoneId}
+        isPreview={isPreview}
+      />
+    );
+  }
+
+  return (
+    <RegistryLessonPlayer milestoneId={milestoneId} isPreview={isPreview} />
+  );
+}
+
+function RegistryLessonPlayer({
+  milestoneId,
+  isPreview = false,
+}: {
+  milestoneId: number;
+  isPreview?: boolean;
+}) {
   const searchParams = useSearchParams();
   const content = useLessonDefinition(milestoneId);
   const { awardLessonXp } = useDashboardWallet();

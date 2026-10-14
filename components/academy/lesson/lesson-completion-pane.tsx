@@ -32,6 +32,10 @@ type LessonCompletionPaneProps = {
     "unlocked" | "bronze" | "silver" | "gold"
   > | null;
   medalId?: MedalIllustrationId;
+  /** Show `medalId` as authored. Lesson-number medal rules do not replace it. */
+  authoredMedal?: boolean;
+  /** Sheet skill name. Wins over the registry label. */
+  skillName?: string;
   skillLearnedLabel?: string;
   meaningLine?: string;
   onCashIn: () => void;
@@ -60,6 +64,8 @@ export function LessonCompletionPane({
   moduleNumber,
   skillMedalTier,
   medalId,
+  authoredMedal = false,
+  skillName: skillNameOverride,
   skillLearnedLabel,
   meaningLine,
   onCashIn,
@@ -72,20 +78,32 @@ export function LessonCompletionPane({
   const isModuleCloser =
     typeof lessonNumber === "number" &&
     isModuleCloserLessonNumber(lessonNumber);
-  const resolvedMedalId = isModuleCloser
-    ? undefined
-    : resolveCompletionMedalId({
-        medalId,
-        lessonNumber,
-        moduleNumber,
-        skillNumber: skill?.skillNumber,
-        tier: skillMedalTier,
-      });
-  const skillName = resolveSkillName(achievementSkillId, skillLearnedLabel);
+  const resolvedMedalId =
+    authoredMedal && medalId
+      ? medalId
+      : isModuleCloser
+        ? undefined
+        : resolveCompletionMedalId({
+            medalId,
+            lessonNumber,
+            moduleNumber,
+            skillNumber: skill?.skillNumber,
+            tier: skillMedalTier,
+          });
+  const skillName =
+    skillNameOverride?.trim() ||
+    resolveSkillName(achievementSkillId, skillLearnedLabel);
   const heading = isModuleCloser
     ? "Module complete"
-    : skillMedalTier === "unlocked" || skillMedalTier === "bronze"
-      ? formatLessonSkillUnlockLine(achievementSkillId, skillMedalTier)
+    : skillMedalTier === "unlocked" ||
+        skillMedalTier === "bronze" ||
+        skillMedalTier === "silver" ||
+        skillMedalTier === "gold"
+      ? formatLessonSkillUnlockLine(
+          achievementSkillId,
+          skillMedalTier,
+          skillNameOverride,
+        )
       : skillName
         ? `Skill unlocked: ${skillName}`
         : skillLearnedLabel?.trim() || "Skill unlocked";
@@ -119,6 +137,7 @@ export function LessonCompletionPane({
           <div className="mb-2 flex w-full justify-center">
             <LessonSkillMedal
               skillSlug={achievementSkillId}
+              skillName={skillName}
               medalId={resolvedMedalId}
               size="hero"
             />

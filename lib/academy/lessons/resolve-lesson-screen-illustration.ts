@@ -37,6 +37,8 @@ function pairSheetFileName(value: ScreenConfig["pairImage"]): string | undefined
 export function supportsLessonScreenIllustration(
   screen: ScreenConfig,
 ): boolean {
+  // Bucket-sort owns its own optional slot, above the buckets.
+  if (screen.type === "bucket-sort") return false;
   if (screen.pairImage === false) return false;
   if (pairSheetFileName(screen.pairImage)) return true;
   return !isDenseLessonScreen(screen);

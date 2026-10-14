@@ -40,6 +40,7 @@ type DragState = {
 type LessonSavingsGoalGameProps = {
   meterLabel: string;
   targetAmount: number;
+  showsRemaining?: boolean;
   poolColumnLabel: string;
   dropZoneLabel: string;
   items: readonly SavingsGoalGameItem[];
@@ -54,6 +55,12 @@ type LessonSavingsGoalGameProps = {
 
 function formatDollars(amount: number): string {
   return `$${amount}`;
+}
+
+/** Remaining / Left totals start at the available amount and fall as items are chosen. */
+function meterCountsDown(label: string, showsRemaining: boolean): boolean {
+  if (showsRemaining) return true;
+  return /^(remaining|left)$/i.test(label.trim());
 }
 
 function itemGlyph(item: SavingsGoalGameItem) {
@@ -75,6 +82,8 @@ function renderItemChip(item: SavingsGoalGameItem) {
 
 export function LessonSavingsGoalGame({
   meterLabel,
+  targetAmount,
+  showsRemaining = false,
   dropZoneLabel,
   items,
 }: LessonSavingsGoalGameProps) {
@@ -90,17 +99,20 @@ export function LessonSavingsGoalGame({
   const [dragState, setDragState] = useState<DragState | null>(null);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
-  const hairlineRef = useRef<HTMLDivElement | null>(null);
+  const dropZoneRef = useRef<HTMLDivElement | null>(null);
   const chipRefs = useRef<Partial<Record<string, HTMLButtonElement | null>>>({});
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
-  dragStateRef.current = dragState;
+  const dragListenersRef = useRef<(() => void) | null>(null);
 
   const savedTotal = depositedIds.reduce(
     (sum, itemId) => sum + (itemById.get(itemId)?.price ?? 0),
     0,
   );
+  const shownTotal = meterCountsDown(meterLabel, showsRemaining)
+    ? Math.max(0, targetAmount - savedTotal)
+    : savedTotal;
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -113,6 +125,8 @@ export function LessonSavingsGoalGame({
   }, []);
 
   const endDrag = useCallback(() => {
+    dragListenersRef.current?.();
+    dragListenersRef.current = null;
     releasePointerCapture();
     dragStateRef.current = null;
     setDragState(null);
@@ -140,6 +154,24 @@ export function LessonSavingsGoalGame({
     );
   }, []);
 
+  const depositItemRef = useRef(depositItem);
+  depositItemRef.current = depositItem;
+  const withdrawItemRef = useRef(withdrawItem);
+  withdrawItemRef.current = withdrawItem;
+
+  const pointerInDropZone = (clientX: number, clientY: number) => {
+    const zone = dropZoneRef.current;
+    if (!zone) return false;
+    const rect = zone.getBoundingClientRect();
+    const pad = 28;
+    return (
+      clientX >= rect.left - pad &&
+      clientX <= rect.right + pad &&
+      clientY >= rect.top - pad &&
+      clientY <= rect.bottom + pad
+    );
+  };
+
   const handleChipPointerDown = (
     itemId: string,
     from: DragOrigin,
@@ -155,7 +187,11 @@ export function LessonSavingsGoalGame({
     const captureTarget = boardRef.current ?? event.currentTarget;
     captureTargetRef.current = captureTarget;
     activePointerIdRef.current = event.pointerId;
-    captureTarget.setPointerCapture(event.pointerId);
+    try {
+      captureTarget.setPointerCapture(event.pointerId);
+    } catch {
+      captureTargetRef.current = null;
+    }
 
     const nextDrag: DragState = {
       itemId,
@@ -169,42 +205,41 @@ export function LessonSavingsGoalGame({
     };
     dragStateRef.current = nextDrag;
     setDragState(nextDrag);
-  };
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-    if (activePointerIdRef.current !== event.pointerId) return;
-    if (!dragStateRef.current) return;
-    setDragState((current) =>
-      current
-        ? {
-            ...current,
-            x: event.clientX - current.offsetX,
-            y: event.clientY - current.offsetY,
-          }
-        : null,
-    );
-  };
-
-  const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
-    if (activePointerIdRef.current !== event.pointerId) return;
-
-    const drag = dragStateRef.current;
-    if (!drag) {
+    const pointerId = event.pointerId;
+    const onMove = (native: PointerEvent) => {
+      if (native.pointerId !== pointerId) return;
+      const current = dragStateRef.current;
+      if (!current) return;
+      native.preventDefault();
+      const moved: DragState = {
+        ...current,
+        x: native.clientX - current.offsetX,
+        y: native.clientY - current.offsetY,
+      };
+      dragStateRef.current = moved;
+      setDragState(moved);
+    };
+    const onUp = (native: PointerEvent) => {
+      if (native.pointerId !== pointerId) return;
+      native.preventDefault();
+      const current = dragStateRef.current;
+      if (current && pointerInDropZone(native.clientX, native.clientY)) {
+        depositItemRef.current(current.itemId);
+      } else if (current?.from === "spent") {
+        withdrawItemRef.current(current.itemId);
+      }
       endDrag();
-      return;
-    }
-
-    const hairlineY = hairlineRef.current?.getBoundingClientRect().top;
-    const belowHairline =
-      hairlineY !== undefined && event.clientY >= hairlineY;
-
-    if (belowHairline) {
-      depositItem(drag.itemId);
-    } else {
-      withdrawItem(drag.itemId);
-    }
-
-    endDrag();
+    };
+    dragListenersRef.current?.();
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    dragListenersRef.current = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
   };
 
   const draggedItem = dragState ? itemById.get(dragState.itemId) : null;
@@ -233,33 +268,28 @@ export function LessonSavingsGoalGame({
     <div
       ref={boardRef}
       className="flex min-h-0 flex-1 flex-col touch-none select-none"
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={endDrag}
     >
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex flex-col gap-4 pb-12 pt-1">
-          {poolIds.map((itemId) => renderDraggableChip(itemId, "pool"))}
-        </div>
-        <div
-          ref={hairlineRef}
-          className="h-px shrink-0 bg-[#C5D8E6]"
-        />
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pt-4">
-          <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
-            {dropZoneLabel}
-          </h3>
-          <div className="flex min-h-0 flex-1 flex-col gap-3.5">
-            {depositedIds.map((itemId) => renderDraggableChip(itemId, "spent"))}
-          </div>
-        </div>
-      </div>
-
-      <div className="shrink-0 pb-5 pt-8 text-center">
+      <div className="shrink-0 pb-4 text-center">
         <p className={lessonSpentTotalCaptionClass}>{meterLabel}</p>
         <p className={lessonSpentTotalAmountClass} aria-live="polite">
-          {formatDollars(savedTotal)}
+          {formatDollars(shownTotal)}
         </p>
+      </div>
+
+      <div className="flex shrink-0 flex-col gap-4">
+        {poolIds.map((itemId) => renderDraggableChip(itemId, "pool"))}
+      </div>
+
+      <div
+        ref={dropZoneRef}
+        className="mt-4 flex min-h-40 flex-1 flex-col gap-2 border-t border-[#C5D8E6] pt-4"
+      >
+        <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
+          {dropZoneLabel}
+        </h3>
+        <div className="flex min-h-0 flex-1 flex-col gap-3.5">
+          {depositedIds.map((itemId) => renderDraggableChip(itemId, "spent"))}
+        </div>
       </div>
 
       {draggedItem && dragState ? (

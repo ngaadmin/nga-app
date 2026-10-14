@@ -1,23 +1,187 @@
-Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes
-1,Word Drop,,,,,,,,"OPTIONS: Spent | Saved | Hidden
-CORRECT: Spent",,,Not quite! Try again.,,Screen 1 = story hook. Write the full sentence in the text columns (use ______ for the blank).
-2,Two Choices,,,,,,,,"CHOICE A: 
-CHOICE B: 
-CORRECT: A",,,,,Screen 2 = core lesson idea.
-3,Tap to Reveal,,,,not allowed,not allowed,not allowed,,"ITEMS:
-SHORT: 
-LONG:
-TAP: emoji-only",,,,,Pick any game type from Game-Types.csv — not locked to Tap to Reveal.
-4,Drag Sort,,Your turn! Sort these into the correct bucket.,,not allowed,not allowed,not allowed,,"ITEMS:
-SHORT:
-LONG:",,,,,
-5,Speed Choice,,,,,,,,"CHOICE A:
-CHOICE B:
-CORRECT: A
-STYLE: banner",,,,,
-6,Hold Button,,,,,,,,"HOLD:
-FROZEN:
-SUCCESS:
-CLEAR: yes",,,,,
-7,Celebration,,,,,,,,BONUS: 0,,,,,Use Explorer Settings for BONUS: 0 on Explorer if teens get 50 XP.
-8,Lesson Complete,,,,not allowed,not allowed,not allowed,,,,,,,Always last row. Leave text + settings blank.
+Module Number,Lesson Number,Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes
+1,1,1,Word Drop,"Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be ______ right away!","Holly made $25 from her weekend chores. At the mall, her friends are all showing off their new eyelash extensions and she feels the sudden urge to get hers done too. Her brain tricks her into thinking the cash must be ______ right away!",Aiden just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be ______ right away!,,,,,"ID: hook-word-drop
+OPTIONS: Spent | Saved | Hidden
+CORRECT: Spent",,Not quite! Look how fast Lars is running - what is his brain telling him to do?,Not quite! Holly's friends are showing off - what's her brain pushing her to do with that $25?,Not quite! Aiden spotted those earbuds - what's his brain pushing him to do with that $40?,
+1,1,2,Two Choices,"Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy, but ten minutes later...",Holly gets her eyelashes done right away with the $25 but ten minutes later...,"Aiden buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",,,,"CHOICE A: ...the candy is gone and the toy feels boring.
+CHOICE B: ...his $20 cash magically reappears.
+CORRECT: A","ID: short-fun-reality
+CHOICE A: ...the initial excitement fades and her $25 is gone.
+CHOICE B: ...her $25 magically reappears in her wallet.
+CORRECT: A","CHOICE A: ...the thrill starts to wear off and his $40 is spent.
+CHOICE B: ...the seller gives him his money back because he bought them so quickly.
+CORRECT: A","If only! In the real world, once you trade your cash, it's gone. Try again.","If only! In the real world, once you trade your cash, it's gone. Try again!","If only! On the marketplace, once you pay and take the item, the money is gone. No instant refunds just for buying fast. Try again!",
+1,1,3,Tap to Reveal,Lars's money is gone and he only had 10 minutes of fun. Tap these items to see the difference!,Holly's $25 is gone and she only had a few minutes of excitement. Tap each item to see whether it's short fun or longer fun!,Aiden's $40 is gone after buying the earbuds and he only had a short burst of satisfaction. Tap these items to see the difference between things that give short fun and things that give more fun for longer!,,,,"ITEMS:
+SHORT: 🍬 Sour Worms
+SHORT: 🍿 Cinema Popcorn
+LONG: 🎧 Wireless Headphones
+LONG: 🛹 Skateboard","ID: tap-short-vs-long
+ITEMS:
+SHORT: 🧪 Glow-in-the-dark slime kit
+SHORT: 🍬 Candy salad
+LONG: 🧥 Viral hoodie
+LONG: 🥤 Water bottle","ITEMS:
+SHORT: ⚡ Energy drink + snack
+SHORT: 🎫 Scratch-it lottery ticket
+LONG: 🔊 Wireless speaker
+LONG: 🔧 Multi-tool / pocket knife",,,,
+1,1,4,Drag Sort,Your turn! Drag each item into the correct bucket.,copied,Your turn!,,,,"ITEMS:
+SHORT: 🍕 Pizza slice
+SHORT: 🥤 Bubble tea with all the toppings
+LONG: 🎮 Gaming controller
+LONG: 🃏 Deck of cards","ID: sort-short-vs-long
+ITEMS:
+SHORT: 🧋 Giant bubble tea
+SHORT: 🪄 Cheap glow sticks / LED toys
+LONG: 🔊 Wireless speaker for hangouts
+LONG: 📓 Journal + good pen set","ITEMS:
+SHORT: 🍔 Food delivery with priority fee
+SHORT: 👕 Disposable concert merch
+LONG: 🎸 Second-hand quality guitar
+LONG: 🧥 High-quality piece of clothing",,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,1,5,Speed Choice,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Later that day Aiden receives a text message: ""Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",,,,"CHOICE A: To trick his brain into buying fast.
+CHOICE B: Because the game creators love him.
+CORRECT: A","ID: countdown-trap
+CHOICE A: To stop her from pausing to decide if she really needs it.
+CHOICE B: Because they want to make sure she gets a good deal.
+CORRECT: A","CHOICE A: To trick his brain into buying fast without thinking.
+CHOICE B: Because the company genuinely cares about Aiden's safety.
+CORRECT: A",Don't fall for the flashing countdown! They're giving Lars only 1 minute so he won't stop to think if he really wants to spend his money on it.,Don't fall for the countdown! They're rushing Holly so she won't stop to think if she really wants to spend her money on it. Try again!,Don't fall for the countdown! They're rushing Aiden so he won't stop to think if he really wants to spend his money on it. Try again!,
+1,1,6,Hold Button,Help Lars by giving him a 'buy freeze' so his brain has time to think.,"Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, by silencing the chat alerts.","If Aiden had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Aiden can think if he really needs the item right now.",,,,HOLD: ❄️ HOLD TO FREEZE ❄️,"ID: impulse-pause
+HOLD: 🔕 HOLD TO SILENCE 🔕",HOLD: ⏸️ HOLD TO PAUSE ⏸️,,,,
+1,1,7,Celebration,"The freeze worked! The next morning, Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",Holly chooses to keep her money instead of giving in to the rush. She stays in control of spending.,Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.,,,,,ID: resolution,,,,,
+1,1,8,Lesson Complete,,copied,copied,,,,,ID: milestone-splash,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,1,True False,Tomorrow is Senna's birthday. Lars opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Lars can still buy the present.,copied,copied,,,,,"ID: empty-jar-hook
+CORRECT: false",,Nope! That cash is already gone.,"Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!","Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!",copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,2,Drag Sort,"Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy.","Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'","Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'",,,,"ITEMS:
+NEED: 📱 Phone Case Birthday Present
+NEED: 🔌 Replace broken phone cable
+WANT: 🍫 Beast Munch
+WANT: 💃 New skin for his favourite game","ID: want-vs-need-sort
+ITEMS:
+NEED: 📱 Phone Case Birthday Present
+NEED: 🔌 Replace broken phone cable
+WANT: 🍫 Beast Munch
+WANT: 💃 New skin for his favourite game",,,,,
+1,2,3,Pick One Rounds,Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?,copied,copied,,,,,ID: need-spotlight,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,4,Budget Checkboxes,You have $30 left. Check the boxes to buy what you actually need.,copied,copied,,,,,ID: budget-wallet,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,5,Budget Slider,Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.,copied,copied,,,,,ID: reserve-slider,,Slide until $20 is locked for the gift.,"Not quite! If you leave less than $20 in the reserve, you won't have enough to buy your brother's gift next week. Slide the line to protect the full $20!","Not quite! If you leave less than $20 in the reserve, you won't have enough to buy your brother's gift next week. Slide the line to protect the full $20!",copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,6,Rank Choices,"Drag the choices in the correct order, starting with what would be best for Lars to do.",copied,copied,,,,,"ID: rank-stack
+ITEMS: Don't buy anything - keep the $5.
+ITEMS: Choose something cheaper for $5 to enjoy now.
+ITEMS: Borrow $5 from dad to buy the $10 bottle.
+ORDER: keep,cheaper,borrow",,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,7,Gift Reveal,Fast forward to next week! Drag the gift to Senna to help Lars deliver his promise.,copied,copied,,,,,ID: gift-delivery,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,2,8,Lesson Complete,,copied,copied,,,,,ID: milestone-splash,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,3,1,Two Choices,Mia spent all her pocket money. She accidentally steps on her sister's headphones and breaks them. Mia's sister crashes out because:,Holly spent all her pocket money. She accidentally steps on her sister's headphones and breaks them. Holly's sister crashes out because:,Holly spent all her pocket money. She accidentally steps on her sister's headphones and breaks them. Holly's sister crashes out because:,,,,"CHOICE A: Mia has no money to buy a new pair
+CHOICE B: Mia tries to fix them with sticky tape and now they're even worse
+CORRECT: A","ID: hook-finish-sentence
+CHOICE A: Holly has no money to buy a new pair
+CHOICE B: Holly tries to fix them with sticky tape and now they're even worse
+CORRECT: A",,"Haha, maybe. Try again!","Haha, maybe. But let's try again.","Haha, maybe. But let's try again.",
+1,3,2,Drag Sort,"Where did the money go? Mia needs $40 for new headphones, but her wallet is empty. Drag the items Mia bought into the 'Spent' bucket.","Where did the money go? Holly needs $40 for new headphones, but her wallet is empty. Drag the items Holly bought into the 'Spent' bucket.","Where did the money go? Holly needs $40 for new headphones, but her wallet is empty. Drag the items Holly bought into the 'Spent' bucket.",,,,,"ID: spent-triage
+ITEMS:
+SPENT: 🧸 Squishy toy
+SPENT: 🫧 Slime
+SPENT: 🍫 Snacks",,,,,
+1,3,3,Tap Pairs,Senna explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:,Senna explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:,Senna explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:,,,,,ID: spare-vs-spend-match,,,,,
+1,3,4,Drag Sort,Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,,,,"ITEMS:
+STEP1: 💵 Get your pocket money.
+STEP2: 🫙 Move a small amount to your Emergencies jar.
+STEP3: 🎮 Spend what is left on fun.","ID: spare-cash-steps
+ITEMS:
+STEP1: Get your pocket money.
+STEP2: Move some of that money to your jar for 'Emergencies'.
+STEP3: Spend what is left on fun.",,,,,
+1,3,5,Two Choices,"Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Mia do?","Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Holly do?","Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Holly do?",,,,,"ID: mia-priority-choice
+CHOICE A: Buy the toy and save $10 more next week.
+CHOICE B: Buy the headphones to fix what she broke first.
+CORRECT: B",,Trap! Fix the headphones first.,That's a trap! Stick to the plan to avoid stress later.,That's a trap! Stick to the plan to avoid stress later.,
+1,3,6,Word Drop,______,copied,copied,,,,,ID: reflection-word-drop,,Not quite. Try another combo!,Not quite. Let's try again.,Not quite. Let's try again.,copied = Pathfinder/Maverick cell uses the Explorer story
+1,3,7,Two Choices,Mia could fix the problem because she had spare cash. What are the other benefits of not spending all of your money? Select the best answer:,Holly could fix the problem because she had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Holly could fix the problem because she had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:,,,,,"ID: resolution-benefits-choice
+CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CORRECT: B",,Good try. One answer covers all of them.,"Yes, but take a look at the other options and see if there's a better answer.","Yes, but take a look at the other options and see if there's a better answer.",
+1,3,8,Lesson Complete,,copied,copied,,,,,ID: milestone-splash,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,1,Two Choices,"All of Senna's friends are buying a limited-time game skin, but Lars notices that Senna decides to wait with getting one.
+
+What skill is Senna practicing?",copied,copied,,,,"CHOICE A: Senna is just slow at clicking.
+CHOICE B: Senna has run out of money.
+CORRECT: B","ID: skill-spotlight
+CHOICE A: Senna is just slow at clicking.
+CHOICE B: Senna has run out of money.
+CORRECT: B",,Look again at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,2,Drag Sort,"Senna explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
+
+Drag the steps into order.",copied,copied,,,,,"ID: pause-sequence
+ITEMS:
+STEP1: Senna sees the one-time offer.
+STEP2: Senna remembers the price could drop later.
+STEP3: Senna waits a day and checks again.
+STEP4: Senna is happy he waited - he can buy the same item for even less.",,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,3,Drag Sort,Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,copied,copied,,,,,"ID: rush-vs-think-sort
+ITEMS:
+RUSHING: 🔥 It looks cool, I need it right now!
+RUSHING: 👥 Everyone has it, I don't want to be left out.
+RUSHING: ⏰ It's a 'limited time' offer - I have to buy it now!
+THINKING: 💬 I'll ask my friends if it's actually any good.
+THINKING: 💰 I can wait and get it cheaper later.
+THINKING: 😴 I'll sleep on it and decide tomorrow.",,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,4,Two Choices,Select which parts of the sign are making Lars rush.,copied,copied,,,,,"ID: pressure-sign-picks
+CHOICE A: DON'T MISS OUT!
+CHOICE B: ONLY 2 LEFT!
+CORRECT: A",,"That's just sign info, not a rush trick.","Not quite - that's just info on the sign, not a pressure trick.","Not quite - that's just info on the sign, not a pressure trick.",copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,5,Two Choices,"Lars is playing a game and he gets a limited-time offer to buy extra lives for a discount. Lars remembers Senna's advice. Before he decides whether to spend his money, he stops.
+
+Which questions should Lars ask himself?",copied,copied,,,,,"ID: lars-check-questions
+CHOICE A: Do I really need this, instead of saving the money for something else?
+CHOICE B: Do I really want this right now, or is something trying to make me rush?
+CORRECT: A",,That button wants to think for you. Skip it!,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,6,Gift Reveal,Lars chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,copied,copied,,,,,ID: lars-save-coins,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,7,Value Accumulator,"Lars is at a local bike event, and he sees the sign he's been waiting for: 'Learn to Wheelie - 30 Minute Workshop: $20.' To afford the Wheelie Workshop, Lars had to say 'no' to a few things over the last two weeks. Drag the three items Lars didn't buy into the 'Things Lars didn't buy' box to reach his $20 goal.",copied,copied,,,,,ID: lars-workshop-goal,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,4,8,Lesson Complete,,copied,copied,,,,,ID: milestone-splash,,,,,copied = Pathfinder/Maverick cell uses the Explorer story
+1,5,1,Word Drop,It is Senna's birthday. The local gelato store offers a birthday discount. Senna wants Lars to come with him and get one too. Going along so he is not left out is a ______ for Lars.,It is Immi's birthday. The local gelato store offers a birthday discount. Immi wants Holly to come with her and get one too. Going along so she is not left out is a ______ for Holly.,It is Immi's birthday. The local gelato store offers a birthday discount. She wants Aiden to come with her and get one too. Going along so he is not left out is a ______ for Aiden.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,,"ID: hook-word-drop
+OPTIONS: Want | Need | Bill
+CORRECT: Want",,A limited time offer does not make it a 'need'.,A limited time offer does not make it a 'need'.,A limited time offer does not make it a 'need'.,
+1,5,2,Two Choices,"The birthday discount is only on today. Lars is saving for bike parts for his race next week, and can't really afford the gelato. What should he do?",The birthday discount is only on today. Holly is saving for an exchange trip overseas and can't really afford the gelato. What should she do?,The birthday discount is only on today. Aiden is saving for a gap year and doesn't really want to spend the money on gelato. What should he do?,concept-wallet.webp,concept-wallet.webp,concept-wallet.webp,"CHOICE A: Skip buying his own gelato and ask Senna to share his.
+CHOICE B: Buy his own because the deal is only on today
+CORRECT: A","ID: short-fun-reality
+CHOICE A: Skip buying her own gelato and ask Immi to share hers.
+CHOICE B: Buy her own because the deal is only on today
+CORRECT: A","CHOICE A: Skip buying his own gelato and ask Immi to share hers.
+CHOICE B: Buy his own because the deal is only on today
+CORRECT: A",The bike parts are the 'need'. The gelato is the 'want'.,The money for the exchange trip is the 'need'. The gelato is the 'want'.,The money for the gap year is the 'need'. The gelato is the 'want'.,
+1,5,3,True False,The gelato is a 'need' because the deal is only available today.,copied,copied,lars-questioning.webp,Aiden-happy.webp,Aiden-questioning.webp,,"ID: tap-short-vs-long
+CORRECT: false",,A limited time offer does not turn a 'want' into a 'need'.,A limited time offer does not turn a 'want' into a 'need'.,A limited time offer does not turn a 'want' into a 'need'.,copied = Pathfinder/Maverick cell uses the Explorer story
+1,5,4,Drag Sort,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Lars right now?,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Holly right now?,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Aiden right now?,not allowed,not allowed,not allowed,"ITEMS:
+NEED: ⛑️ New helmet for the race
+WANT: 🍦 His own gelato
+WANT: 🍨 Extra gelato toppings
+NEED: 🎫 Race registration fee","ID: sort-short-vs-long
+ITEMS:
+NEED: 🎫 Airline ticket
+WANT: 🍦 Her own gelato
+WANT: 🍨 Extra gelato toppings
+NEED: 🪪 A new passport","ITEMS:
+NEED: 🎫 Airline ticket
+WANT: 🍦 His own gelato
+WANT: 🍨 Extra gelato toppings
+NEED: 🪪 A new passport",,,,
+1,5,5,Speed Choice,"Lars does not want to feel left out, but the birthday deal expires today. What now?","Holly does not want to feel left out, but the birthday deal expires today. What now?","Aiden does not want to feel left out, but the birthday deal expires today. What now?",lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"CHOICE A: Share a gelato and keep at least half of what he would otherwise have spent.
+CHOICE B: Buy one so he isn't the odd one out
+CORRECT: A","ID: countdown-trap
+CHOICE A: Share a gelato and keep at least half of what she would otherwise have spent.
+CHOICE B: Buy one so she isn't the odd one out
+CORRECT: A","CHOICE A: Share a gelato and keep at least half of what he would otherwise have spent.
+CHOICE B: Buy one so he isn't the odd one out
+CORRECT: A",Try again!,Try again!,Try again!,
+1,5,6,Rank Choices,Put these in the order Lars should try. Best first.,Put these in the order Holly should try. Best first.,Put these in the order Aiden should try. Best first.,not allowed,not allowed,not allowed,"ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Senna
+ITEMS: Buy his own because it is only today","ID: impulse-pause
+ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Immi
+ITEMS: Buy her own because it is only today
+ORDER: ask,share,buy","ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Immi
+ITEMS: Buy his own because it is only today",,,,
+1,5,7,Celebration,Senna was happy to share the gelato without Lars having to pay for it. Lars can buy what he needs for his race.,Immi was happy to share the gelato without Holly having to pay for it. Holly stays on track with saving for her big trip.,Immi was happy to share the gelato without Aiden having to pay for it. Aiden stays on track with saving for his big trip.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,,ID: resolution,,,,,
+1,5,8,Lesson Complete,,copied,copied,not allowed,,,,ID: milestone-splash,,,,,copied = Pathfinder/Maverick cell uses the Explorer story

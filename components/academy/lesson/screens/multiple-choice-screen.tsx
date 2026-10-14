@@ -2,13 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LESSON_SUCCESS_FLASH_MS } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
+import { useCompletedHubSkills } from "@/components/academy/lesson/lesson-hub-progress";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
-import { lessonChoiceStackClass, usesNeutralChoiceFeedback } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonChoiceStackClass,
+  lessonNextButtonClass,
+  usesNeutralChoiceFeedback,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
 import { findAllOfTheAboveCorrectKey } from "@/lib/academy/lessons/all-of-the-above";
+import {
+  cashMatches,
+  displayCashText,
+  unselectedNextIsMistake,
+  type CashComparison,
+  type CashUpdate,
+} from "@/lib/academy/lessons/payload/cash-placeholder";
 import { collectMultipleChoiceOptions } from "@/lib/academy/lessons/multiple-choice-options";
 import {
   getCorrectOptionKeys,
@@ -27,7 +40,13 @@ type ChoiceOption = {
   key: ChoiceKey;
   label: string;
   isCorrect: boolean;
+  emoji?: string;
   feedback?: string;
+  cashUpdate?: CashUpdate;
+  goToIndex?: number;
+  showWhen?: CashComparison;
+  hubSkillKey?: string;
+  requiresHubSkills?: readonly string[];
 };
 
 type MultipleChoiceNextHandler = () => boolean;
@@ -49,7 +68,14 @@ export function MultipleChoiceScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<MultipleChoicePayload>) {
-  const choiceOptions: ChoiceOption[] = collectMultipleChoiceOptions(screen);
+  const { cash, commitCash } = useLessonCash();
+  const completedHubSkills = useCompletedHubSkills();
+  const continueToLabel = screen.continueToLabel;
+  const choiceOptions: ChoiceOption[] = continueToLabel
+    ? []
+    : collectMultipleChoiceOptions(screen).filter((option) =>
+        cashMatches(option.showWhen, cash),
+      );
 
   const isRadioList = screen.optionLayout === "radio-list";
   const gradeOnNext = usesNeutralChoiceFeedback(screen.choiceFeedback);
@@ -92,6 +118,8 @@ export function MultipleChoiceScreen({
   isMultiCorrectRef.current = isMultiCorrect;
   const isAllOfTheAboveQuestionRef = useRef(isAllOfTheAboveQuestion);
   isAllOfTheAboveQuestionRef.current = isAllOfTheAboveQuestion;
+  const commitCashRef = useRef(commitCash);
+  commitCashRef.current = commitCash;
 
   const isSelected = (key: ChoiceKey): boolean => {
     if (isMultiCorrect) return multiSelected.has(key);
@@ -115,6 +143,11 @@ export function MultipleChoiceScreen({
 
     setChoice(key);
     choiceRef.current = key;
+
+    if (screenRef.current.decisionPath) {
+      flowRef.current.markScreenReady(screenIndex);
+      return;
+    }
 
     if (gradeOnNext) {
       flowRef.current.markScreenReady(screenIndex);
@@ -170,11 +203,15 @@ export function MultipleChoiceScreen({
     activeMultipleChoiceNextHandler = () => {
       if (advancingRef.current || solvedRef.current) return false;
 
-      if (!isCurrentSelectionCorrect()) {
+      const decisionPath = screenRef.current.decisionPath === true;
+      const selected = optionByKeyRef.current.get(choiceRef.current ?? "");
+      if (decisionPath ? !selected : !isCurrentSelectionCorrect()) {
         setSuccess(false);
         setError(resolveErrorCopy());
-        flowRef.current.incrementMistake();
-        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        if (unselectedNextIsMistake(decisionPath) || selected) {
+          flowRef.current.incrementMistake();
+          signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        }
         return false;
       }
 
@@ -186,6 +223,12 @@ export function MultipleChoiceScreen({
       celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
       advanceTimerRef.current = window.setTimeout(() => {
         advanceTimerRef.current = null;
+        const chosen = optionByKeyRef.current.get(choiceRef.current ?? "");
+        if (chosen?.cashUpdate) commitCashRef.current(chosen.cashUpdate);
+        if (typeof chosen?.goToIndex === "number") {
+          flowRef.current.setScreenIndex(chosen.goToIndex);
+          return;
+        }
         flowRef.current.handleNext({ canAdvance: true });
       }, LESSON_SUCCESS_FLASH_MS);
       return false;
@@ -201,28 +244,66 @@ export function MultipleChoiceScreen({
       const option = optionByKey.get(key);
       if (!option) return null;
       const selected = isSelected(key);
+      const lockedUntilHubDone = option.requiresHubSkills?.some(
+        (skill) => !completedHubSkills.has(skill),
+      );
 
       return (
         <LessonChoiceButton
           key={key}
           layout={isRadioList ? "radio-row" : "pill"}
-          orbLabel={letterForIndex(index)}
+          orbLabel={option.emoji ?? letterForIndex(index)}
+          disabled={lockedUntilHubDone}
           onClick={(event) => {
             event.stopPropagation();
+            if (lockedUntilHubDone) return;
             pick(key);
           }}
           selected={selected}
           pending={gradeOnNext && selected && !solved}
           locked={!gradeOnNext && solved && selected}
         >
-          {option.label}
+          {option.hubSkillKey && completedHubSkills.has(option.hubSkillKey)
+            ? `${displayCashText(option.label, cash)} · Done`
+            : displayCashText(option.label, cash)}
         </LessonChoiceButton>
       );
     });
 
+  const gatedPrompt =
+    cash === null
+      ? undefined
+      : screen.promptWhen?.find((item) => cashMatches(item.showWhen, cash))?.text;
+  const prompt = displayCashText(gatedPrompt ?? screen.prompt, cash);
+  const hubSkills = choiceOptions.filter((option) => option.hubSkillKey);
+  const hubDone = hubSkills.filter(
+    (option) => option.hubSkillKey && completedHubSkills.has(option.hubSkillKey),
+  ).length;
+
+  if (continueToLabel) {
+    return (
+      <LessonScreenLayout prompt={prompt}>
+        <button
+          type="button"
+          className={`${lessonNextButtonClass} mt-6`}
+          onClick={() => {
+            const target = screen.continueToIndex;
+            if (typeof target === "number") {
+              flow.setScreenIndex(target);
+              return;
+            }
+            flow.handleNext({ canAdvance: true });
+          }}
+        >
+          Continue
+        </button>
+      </LessonScreenLayout>
+    );
+  }
+
   return (
     <LessonScreenLayout
-      prompt={screen.prompt}
+      prompt={prompt}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       success={success}
       errorMessage={error}
@@ -230,7 +311,12 @@ export function MultipleChoiceScreen({
     >
       {isRadioList && screen.scenePrompt ? (
         <p className="mt-2 font-sans text-sm font-normal leading-snug text-[#1E3A5F]">
-          {screen.scenePrompt}
+          {displayCashText(screen.scenePrompt, cash)}
+        </p>
+      ) : null}
+      {screen.skillHub && hubSkills.length > 0 ? (
+        <p className="mt-2 font-sans text-sm font-semibold text-[#1E3A5F]">
+          {hubDone} of {hubSkills.length} skills done
         </p>
       ) : null}
       <div className={isRadioList ? "mt-3 space-y-1" : lessonChoiceStackClass}>

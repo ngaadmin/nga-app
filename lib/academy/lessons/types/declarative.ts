@@ -35,6 +35,16 @@ export type DeclarativeScreenFields = {
    * lesson's existing illustration.
    */
   pairImage?: string | false;
+  /** Spreadsheet Screen cell for this row, such as `4-alt`. */
+  sourceLabel?: string;
+  /** `CONTINUE → GO Screen` target, including screens that also have choices. */
+  continueToLabel?: string;
+  /** Index of `continueToLabel` in this lesson's screen list. */
+  continueToIndex?: number;
+  /** Skill-hub section. Marked done when play returns to the hub. */
+  hubSkillKey?: string;
+  /** This screen is the skill menu. */
+  skillHub?: boolean;
 };
 
 export type WithDeclarative<T> = T & DeclarativeScreenFields;

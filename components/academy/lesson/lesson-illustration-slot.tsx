@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   lessonIllustrationEmojiClass,
-  lessonIllustrationImageClass,
   lessonIllustrationLabelClass,
+  lessonIllustrationMediaFrameClass,
   lessonIllustrationSlotClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
@@ -78,20 +78,26 @@ export function LessonIllustrationSlot({
 
   if (src && imageStatus === "loaded") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";
-    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1;
+    const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1.4;
 
     return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img
-        src={src}
-        alt={ariaLabel}
-        className={cn(lessonIllustrationImageClass, className)}
-        style={{
-          ["--lesson-illustration-scale" as string]: String(scaleValue),
-        }}
-        decoding="async"
-        loading="eager"
-      />
+      <div
+        className={cn(
+          lessonIllustrationMediaFrameClass,
+          "overflow-hidden bg-transparent",
+          className,
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={ariaLabel}
+          className="h-full w-full origin-center bg-transparent object-contain object-center"
+          style={{ transform: `scale(${scaleValue})` }}
+          decoding="async"
+          loading="eager"
+        />
+      </div>
     );
   }
 

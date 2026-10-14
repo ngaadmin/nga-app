@@ -626,8 +626,7 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
         <div
           className={cn(
             "flex flex-1 flex-col items-stretch gap-2 py-1.5 transition-colors",
-            active && "ring-2 ring-[#0CC1E0]/30",
-            error && "ring-2 ring-[#E11D48]/30",
+            active && "bg-[#E8F6FC]/50",
           )}
         >
           {children}

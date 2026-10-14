@@ -16,7 +16,7 @@ export function SavingsGoalScreen({
   flowRef.current = flow;
 
   useEffect(() => {
-    flowRef.current.markScreenReady(screenIndex);
+    flowRef.current.clearScreenReady(screenIndex);
   }, [screenIndex]);
 
   return (
@@ -37,7 +37,8 @@ export function SavingsGoalScreen({
           lockedLabel={screen.lockedLabel}
           unlockedLabel={screen.unlockedLabel}
           goalAchievedLabel={screen.goalAchievedLabel}
-          onGoalReady={() => undefined}
+          onGoalReady={() => flowRef.current.markScreenReady(screenIndex)}
+          onGoalLost={() => flowRef.current.clearScreenReady(screenIndex)}
           onAdvance={() => undefined}
         />
       </div>

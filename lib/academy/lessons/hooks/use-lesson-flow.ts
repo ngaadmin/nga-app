@@ -270,9 +270,8 @@ export function useLessonFlow({
       return;
     }
 
-    void persistRegisteredProgressNow().finally(() => {
-      router.push(exitHref);
-    });
+    router.push(exitHref);
+    void persistRegisteredProgressNow();
   }, [
     awardLessonXp,
     exitHref,

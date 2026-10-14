@@ -21,6 +21,11 @@ import {
   LessonSequenceStepPlaced,
 } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import {
+  bestDropZone,
+  domRectToDropRect,
+  type DragBounds,
+} from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 export type LessonSequenceItem<TStep extends string = string> = {
@@ -53,8 +58,6 @@ type DragState = {
 
 type PendingSideEffect = { kind: "correct"; willComplete: boolean };
 
-const BUCKET_DROP_HIT_PADDING_PX = 20;
-
 function shuffleIds(ids: readonly string[]): string[] {
   const next = [...ids];
   for (let i = next.length - 1; i > 0; i -= 1) {
@@ -82,6 +85,7 @@ export function LessonSequenceSortGame<TStep extends string>({
     Object.fromEntries(steps.map((step) => [step.id, []])),
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
   const [activeStepId, setActiveStepId] = useState<TStep | null>(null);
   const [lockedStepIds, setLockedStepIds] = useState<ReadonlySet<TStep>>(
     () => new Set(),
@@ -120,6 +124,7 @@ export function LessonSequenceSortGame<TStep extends string>({
 
   const endDrag = useCallback(() => {
     releasePointerCapture();
+    dragStateRef.current = null;
     setDragState(null);
     setActiveStepId(null);
   }, [releasePointerCapture]);
@@ -148,21 +153,16 @@ export function LessonSequenceSortGame<TStep extends string>({
 
   const resolveStepAtPoint = useCallback(
     (clientX: number, clientY: number): TStep | null => {
-      for (const step of steps) {
+      const drag = dragStateRef.current;
+      const bounds: DragBounds | null = drag
+        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
+        : null;
+      const zones = steps.flatMap((step) => {
         const node = slotRefs.current[step.id];
-        if (!node) continue;
-        const rect = node.getBoundingClientRect();
-        const pad = BUCKET_DROP_HIT_PADDING_PX;
-        if (
-          clientX >= rect.left - pad &&
-          clientX <= rect.right + pad &&
-          clientY >= rect.top - pad &&
-          clientY <= rect.bottom + pad
-        ) {
-          return step.id;
-        }
-      }
-      return null;
+        if (!node) return [];
+        return [{ id: step.id, rect: domRectToDropRect(node.getBoundingClientRect()) }];
+      });
+      return bestDropZone(zones, bounds, clientX, clientY);
     },
     [steps],
   );
@@ -223,7 +223,7 @@ export function LessonSequenceSortGame<TStep extends string>({
     captureTargetRef.current = captureTarget;
     activePointerIdRef.current = event.pointerId;
     captureTarget.setPointerCapture(event.pointerId);
-    setDragState({
+    const nextDrag: DragState = {
       itemId,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
@@ -231,20 +231,22 @@ export function LessonSequenceSortGame<TStep extends string>({
       y: rect.top,
       width: rect.width,
       height: rect.height,
-    });
+    };
+    dragStateRef.current = nextDrag;
+    setDragState(nextDrag);
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     if (!dragState || activePointerIdRef.current !== event.pointerId) return;
-    setDragState((current) =>
-      current
-        ? {
-            ...current,
-            x: event.clientX - current.offsetX,
-            y: event.clientY - current.offsetY,
-          }
-        : null,
-    );
+    const current = dragStateRef.current;
+    if (!current) return;
+    const moved: DragState = {
+      ...current,
+      x: event.clientX - current.offsetX,
+      y: event.clientY - current.offsetY,
+    };
+    dragStateRef.current = moved;
+    setDragState(moved);
     setActiveStepId(resolveStepAtPoint(event.clientX, event.clientY));
   };
 
@@ -328,7 +330,7 @@ export function LessonSequenceSortGame<TStep extends string>({
           <div
             className={cn(
               lessonSequenceStepCardClass,
-              "pointer-events-none fixed shadow-lg ring-2 ring-[#0CC1E0]/40",
+              "pointer-events-none fixed",
             )}
             style={{
               left: dragState.x,

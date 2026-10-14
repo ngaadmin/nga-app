@@ -15,6 +15,7 @@ import {
   lessonSpentTotalAmountClass,
   lessonSpentTotalCaptionClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 export type SavingsGoalGameItem = {
@@ -49,6 +50,7 @@ type LessonSavingsGoalGameProps = {
   unlockedLabel: string;
   goalAchievedLabel: string;
   onGoalReady: () => void;
+  onGoalLost?: () => void;
   onAdvance: () => void;
   onItemSaved?: () => void;
 };
@@ -86,6 +88,8 @@ export function LessonSavingsGoalGame({
   showsRemaining = false,
   dropZoneLabel,
   items,
+  onGoalReady,
+  onGoalLost,
 }: LessonSavingsGoalGameProps) {
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -113,6 +117,16 @@ export function LessonSavingsGoalGame({
   const shownTotal = meterCountsDown(meterLabel, showsRemaining)
     ? Math.max(0, targetAmount - savedTotal)
     : savedTotal;
+  const goalReached = targetAmount > 0 && savedTotal >= targetAmount;
+  const onGoalReadyRef = useRef(onGoalReady);
+  onGoalReadyRef.current = onGoalReady;
+  const onGoalLostRef = useRef(onGoalLost);
+  onGoalLostRef.current = onGoalLost;
+
+  useEffect(() => {
+    if (goalReached) onGoalReadyRef.current();
+    else onGoalLostRef.current?.();
+  }, [goalReached]);
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -161,14 +175,24 @@ export function LessonSavingsGoalGame({
 
   const pointerInDropZone = (clientX: number, clientY: number) => {
     const zone = dropZoneRef.current;
+    const board = boardRef.current;
     if (!zone) return false;
     const rect = zone.getBoundingClientRect();
-    const pad = 28;
-    return (
-      clientX >= rect.left - pad &&
-      clientX <= rect.right + pad &&
-      clientY >= rect.top - pad &&
-      clientY <= rect.bottom + pad
+    const boardRect = board?.getBoundingClientRect();
+    const destination = domRectToDropRect(rect);
+    if (boardRect) {
+      destination.bottom = Math.max(destination.bottom, boardRect.bottom);
+      destination.left = Math.min(destination.left, boardRect.left);
+      destination.right = Math.max(destination.right, boardRect.right);
+    }
+    const drag = dragStateRef.current;
+    return dragHitsZone(
+      drag
+        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
+        : null,
+      clientX,
+      clientY,
+      destination,
     );
   };
 
@@ -282,7 +306,7 @@ export function LessonSavingsGoalGame({
 
       <div
         ref={dropZoneRef}
-        className="mt-4 flex min-h-40 flex-1 flex-col gap-2 border-t border-[#C5D8E6] pt-4"
+        className="mt-10 flex min-h-48 flex-1 flex-col gap-2 border-0 bg-transparent pt-2"
       >
         <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
           {dropZoneLabel}
@@ -297,7 +321,7 @@ export function LessonSavingsGoalGame({
           <div
             className={cn(
               lessonItemChipClass,
-              "pointer-events-none fixed shadow-lg",
+              "pointer-events-none fixed",
             )}
             style={{
               left: dragState.x,

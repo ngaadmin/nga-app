@@ -33,6 +33,13 @@ function pairSheetFileName(value: ScreenConfig["pairImage"]): string | undefined
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function radioListHasPicture(screen: ScreenConfig): boolean {
+  if (pairSheetFileName(screen.pairImage)) return true;
+  if (screen.illustration?.src) return true;
+  if (screen.illustrationId) return true;
+  return false;
+}
+
 /** True when the shared top illustration slot is part of this screen template. */
 export function supportsLessonScreenIllustration(
   screen: ScreenConfig,
@@ -41,6 +48,7 @@ export function supportsLessonScreenIllustration(
   if (screen.type === "bucket-sort") return false;
   if (screen.pairImage === false) return false;
   if (pairSheetFileName(screen.pairImage)) return true;
+  if (isRadioListChoiceScreen(screen)) return radioListHasPicture(screen);
   return !isDenseLessonScreen(screen);
 }
 
@@ -100,7 +108,7 @@ export function resolveLessonScreenIllustration(
     };
   }
 
-  if (isDenseLessonScreen(screen)) {
+  if (isDenseLessonScreen(screen) && !isRadioListChoiceScreen(screen)) {
     return undefined;
   }
 

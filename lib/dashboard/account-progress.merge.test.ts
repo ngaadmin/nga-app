@@ -5,6 +5,7 @@ import {
   mergeWalletProgress,
   overlayAccountProgress,
   parseAccountProgressPayload,
+  pickRestoredAccountProgress,
   type AccountProgressPayload,
 } from "@/lib/dashboard/account-progress";
 import {
@@ -204,6 +205,32 @@ describe("overlayAccountProgress", () => {
     );
     expect(merged?.wallet?.lifetimePointsEarned).toBe(100);
     expect(merged?.wallet?.totalPoints).toBe(60);
+  });
+});
+
+describe("pickRestoredAccountProgress", () => {
+  it("keeps a lesson just saved on this device when the cloud copy is older", () => {
+    const restored = pickRestoredAccountProgress({
+      remote: payload({
+        academyProgress: createPhase1MilestoneScaffold(1),
+        wallet: wallet({ totalPoints: 20, lifetimePointsEarned: 20 }),
+      }),
+      live: payload({
+        academyProgress: createPhase1MilestoneScaffold(3),
+        wallet: wallet({ totalPoints: 40, lifetimePointsEarned: 40 }),
+      }),
+    });
+
+    expect(restored?.academyProgress?.find((node) => node.id === 1)?.status).toBe(
+      "completed",
+    );
+    expect(restored?.academyProgress?.find((node) => node.id === 2)?.status).toBe(
+      "completed",
+    );
+    expect(restored?.academyProgress?.find((node) => node.id === 3)?.status).toBe(
+      "active",
+    );
+    expect(restored?.wallet?.lifetimePointsEarned).toBe(40);
   });
 });
 

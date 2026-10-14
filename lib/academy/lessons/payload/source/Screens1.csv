@@ -198,30 +198,47 @@ Drag the steps into order.",,,,"ITEMS:
 STEP1: Senna sees the one-time offer.
 STEP2: Senna remembers the price could drop later.
 STEP3: Senna waits a day and checks again.
-STEP4: Senna is happy he waited - he can buy the same item for even less.",,"ITEMS:
+STEP4: Senna is happy he waited - he can buy the same item for even less.","ITEMS:
+STEP1: Holly sees the one-time offer.
+STEP2: Holly remembers the price could drop later.
+STEP3: Holly waits a day and checks again.
+STEP4: Holly is happy she waited - she can buy the same item for even less.","ITEMS:
 STEP1: Aiden sees the one-time offer.
 STEP2: Aiden remembers the price could drop later.
 STEP3: Aiden waits a day and checks again.
 STEP4: Aiden is happy he waited - he can buy the same item for even less."
-1,4,3,bucket-sort,Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Holly and Immi sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Aiden and Dash sort their thoughts. Which ones are making them rush? And which ones help them pause and think?
-1,4,4,binary-choice,Select which parts of the sign are making Lars rush.,Select which parts of the sign are making Holly rush.,Select which parts of the sign are making Aiden rush.,not allowed,not allowed,not allowed,,,,"That's just sign info, not a rush trick.","That's just sign info, not a rush trick.","That's just sign info, not a rush trick."
-1,4,5,binary-choice,"Lars is playing a game and he gets a limited-time offer to buy extra lives for a discount. Lars remembers Senna's advice. Before he decides whether to spend his money, he stops.
-
-Which questions should Lars ask himself?","Holly is playing a game and she gets a limited-time offer to buy extra lives for a discount. Holly remembers Mia's advice. Before she decides whether to spend her money, she stops.
-
-Which questions should Holly ask herself?","Aiden is playing a game and he gets a limited-time offer to buy extra lives for a discount. Aiden remembers Dash's advice. Before he decides whether to spend his money, he stops.
-
-Which questions should Aiden ask himself?",lars-thinking-512.webp,holly-thinking-512.webp,aiden-thinking-512.webp,,,,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!
-1,4,6,drag-to-target,Lars chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,Holly chooses to keep her money. Swipe her money from 'Spend Now' to 'Save for Later'.,Aiden chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp
-1,4,7,savings-goal,"Lars is at a local bike event, and he sees the sign he's been waiting for: 'Learn to Wheelie - 30 Minute Workshop: $40.' To afford the Wheelie Workshop, Lars had to say 'no' to a few things over the last two weeks. Drag the three items Lars didn't buy into the 'Things Lars didn't buy' box to reach his $40 goal.","Holly is at the mall, and she sees the sign she's been waiting for: 'Nail Art. 30-minute workshop for $20.' To afford it, Holly had to say 'no' to a few things over the last two weeks. Drag the three items Holly didn't buy into the 'Things Holly didn't buy' box to reach her $20 goal.","Aiden is at a local bike event, and he sees the sign he's been waiting for: 'Learn to Wheelie - 30 Minute Workshop: $40.' To afford the Wheelie Workshop, Aiden had to say 'no' to a few things over the last two weeks. Drag the three items Aiden didn't buy into the 'Things Aiden didn't buy' box to reach his $40 goal.",not allowed,not allowed,not allowed,"TARGET: 40
-ITEMS:
-Snacks at school ($15)
-Extra lives bundle ($10)
-Flashlight ($15)",,"TARGET: 40
-ITEMS:
-Snacks at work ($15)
-Extra lives bundle ($10)
-Flashlight ($15)"
+1,4,3,bucket-sort,Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Holly and Immi sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Aiden and Dash sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,,,,,"ITEMS:
+RUSHING: 🔥 It looks cool, I need it right now!
+RUSHING: 👥 Everyone has it, I don't want to be left out.
+RUSHING: ⏰ It's a 'limited time' offer - I have to buy it now!
+THINKING: 💬 I'll ask my friends if it's actually any good.
+THINKING: 💰 I can wait and get it cheaper later.
+THINKING: 😴 I'll sleep on it and decide tomorrow."
+1,4,4,binary-choice,Select which parts of the sign are making Lars rush.,Select which parts of the sign are making Holly rush.,Select which parts of the sign are making Aiden rush.,fishing-rod-sign.webp,fishing-rod-sign.webp,fishing-rod-sign.webp,,"CHOICE A: DON'T MISS OUT!
+CHOICE B: ONLY 2 LEFT!
+CHOICE C: ENDS TOMORROW!
+CHOICE D: Made in France
+CHOICE E: Quality Guaranteed
+CORRECT: A+B+C",,"That's just sign info, not a rush trick.","That's just sign info, not a rush trick.","That's just sign info, not a rush trick."
+1,4,5,binary-choice,Lars gets a limited-time offer for extra lives in his game. He remembers Senna's advice and stops. What should he ask himself?,Holly gets a limited-time offer for extra lives in her game. She remembers Mia's advice and stops. What should she ask herself?,Aiden gets a limited-time offer for extra lives in his game. He remembers Dash's advice and stops. What should he ask himself?,lars-thinking-512.webp,holly-thinking-512.webp,aiden-thinking-512.webp,,"CHOICE A: Do I really need this?
+CHOICE B: Do I want it now, or is something rushing me?
+CHOICE C: Will I have enough left for my goals?
+CHOICE D: CLICK HERE TO BUY NOW!
+CORRECT: A+B+C",,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!
+1,4,6,drag-to-target,Lars chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,Holly chooses to keep her money. Swipe her money from 'Spend Now' to 'Save for Later'.,Aiden chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp,,"SOURCE: Spend Now
+TARGET: Save for Later
+ITEM: money-coin.webp
+IMAGE: piggy-bank.webp"
+1,4,7,savings-goal,"Lars wants to do a $20 wheelie workshop. To afford it, he said no to three things. Drag them into the box to reach his goal.","Holly wants to do a $20 nail-art workshop. To afford it, she said no to three things. Drag them into the box to reach her goal.","Aiden wants to do a $20 wheelie workshop. To afford it, he said no to three things. Drag them into the box to reach his goal.",not allowed,not allowed,not allowed,"TARGET: 20
+LABEL: Savings
+DROP: Things Lars didn't buy
+ITEMS: 🍫 Snacks at school ($5) 🎮 Extra lives bundle ($5) 🔦 Flashlight ($10)","TARGET: 20
+LABEL: Savings
+DROP: Things Holly didn't buy
+ITEMS: 🍫 Snacks at school ($5) 🎮 Extra lives bundle ($5) 🔦 Flashlight ($10)","TARGET: 20
+LABEL: Savings
+DROP: Things Aiden didn't buy
+ITEMS: 🍫 Snacks at work ($5) 🎮 Extra lives bundle ($5) 🔦 Flashlight ($10)"
 1,4,8,completion,,,,medal-skill1-silver.webp,medal-skill1-silver.webp,medal-skill1-silver.webp,,MEDAL: silver
 1,5,1,word-drop,It is Senna's birthday. The local gelato store offers a birthday discount. Senna wants Lars to come with him and get one too. Going along so he is not left out is a ______ for Lars.,It is Immi's birthday. The local gelato store offers a birthday discount. Immi wants Holly to come with her and get one too. Going along so she is not left out is a ______ for Holly.,It is Immi's birthday. The local gelato store offers a birthday discount. She wants Aiden to come with her and get one too. Going along so he is not left out is a ______ for Aiden.,lars-senna-sidebyside.webp,holly-immi-sidebyside.webp,aiden-waving-512.webp,,"CHOICE A: Holly is just slow at clicking.
 CHOICE B: Holly has run out of money.

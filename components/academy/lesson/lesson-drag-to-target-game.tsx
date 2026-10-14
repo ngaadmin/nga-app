@@ -10,6 +10,7 @@ import {
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
+import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 type DragState = {
@@ -18,6 +19,8 @@ type DragState = {
   offsetY: number;
   x: number;
   y: number;
+  width: number;
+  height: number;
   originX: number;
   originY: number;
 };
@@ -46,7 +49,6 @@ type LessonDragToTargetGameProps = {
   onMiss?: () => void;
 };
 
-const TARGET_DROP_HIT_PADDING_PX = 24;
 const TAP_SELECT_PX = 10;
 const DRAG_TO_TARGET_MAX_COINS = 3;
 const COIN_CHIP_CLASS =
@@ -160,13 +162,14 @@ export function LessonDragToTargetGame({
   const isPointOverTarget = useCallback((clientX: number, clientY: number) => {
     const node = targetRef.current;
     if (!node) return false;
-    const rect = node.getBoundingClientRect();
-    const pad = TARGET_DROP_HIT_PADDING_PX;
-    return (
-      clientX >= rect.left - pad &&
-      clientX <= rect.right + pad &&
-      clientY >= rect.top - pad &&
-      clientY <= rect.bottom + pad
+    const drag = dragStateRef.current;
+    return dragHitsZone(
+      drag
+        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
+        : null,
+      clientX,
+      clientY,
+      domRectToDropRect(node.getBoundingClientRect()),
     );
   }, []);
 
@@ -194,6 +197,8 @@ export function LessonDragToTargetGame({
       offsetY: event.clientY - rect.top,
       x: rect.left,
       y: rect.top,
+      width: rect.width,
+      height: rect.height,
       originX: event.clientX,
       originY: event.clientY,
     };
@@ -380,8 +385,7 @@ export function LessonDragToTargetGame({
                 ? DRAG_ILLUSTRATION_FRAME_CLASS
                 : sourceChipClass,
               dragState?.coinIndex === index && "opacity-25",
-              selectedCoinIndex === index &&
-                "rounded-full ring-2 ring-[#0CC1E0] ring-offset-2",
+              selectedCoinIndex === index && "opacity-80",
             )}
             aria-label={`Select ${sourceLabel} ${index + 1} to drop on ${targetLabel}`}
             style={{ touchAction: "none" }}

@@ -40,6 +40,7 @@ type ChoiceOption = {
   key: ChoiceKey;
   label: string;
   isCorrect: boolean;
+  emoji?: string;
   feedback?: string;
   cashUpdate?: CashUpdate;
   goToIndex?: number;
@@ -251,7 +252,7 @@ export function MultipleChoiceScreen({
         <LessonChoiceButton
           key={key}
           layout={isRadioList ? "radio-row" : "pill"}
-          orbLabel={letterForIndex(index)}
+          orbLabel={option.emoji ?? letterForIndex(index)}
           disabled={lockedUntilHubDone}
           onClick={(event) => {
             event.stopPropagation();

@@ -249,7 +249,7 @@ export function useLessonFlow({
         const cohort = session?.birthYear
           ? getMasteryCohortFromBirthYear(session.birthYear)
           : "explorer";
-        if (skillAwardTier) {
+        if (skillAwardTier && skillSlug) {
           applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort);
         } else {
           applyLessonSkillTierProgress(milestoneId, cohort);

@@ -163,7 +163,7 @@ function SpotlightDecisionChoices({
               key={`${option.label}-${index}`}
               className="w-full min-w-0"
               label={displayCashText(option.label, cash)}
-              emoji={letterForIndex(position)}
+              emoji={option.emoji ?? letterForIndex(position)}
               display="emoji-label"
               labelClassName="max-w-full"
               selected={selected}

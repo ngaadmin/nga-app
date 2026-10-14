@@ -48,6 +48,7 @@ function screenByLabel(screens: readonly ScreenConfig[], label: string): ScreenC
 
 function choiceOptions(screen: ScreenConfig | undefined): {
   label: string;
+  emoji?: string;
   goToLabel?: string;
   goToIndex?: number;
   requiresHubSkills?: readonly string[];
@@ -310,5 +311,57 @@ ELSE show button "Keep it" → GO Screen 8`,
       ],
     });
     expect(closer && "continueToLabel" in closer ? closer.continueToLabel : undefined).toBeUndefined();
+  });
+
+  it("uses a leading choice emoji as the button orb and leaves the label", () => {
+    const details = [
+      "Module Number,Lesson Number,Field,Value",
+      "1,1,Lesson Title,Emoji",
+      "1,1,Level,1",
+      "1,1,Skill Name,",
+      "1,1,Skill ID,",
+    ].join("\n");
+    const choice =
+      "CHOICE A: 🍬 Buy the sweets → GO Screen 2\nCHOICE B: Skip it → GO Screen 2";
+    const screens = [
+      "Module Number,Lesson Number,Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes",
+      `1,1,1,spotlight-rounds,Pick,Pick,Pick,,,,"${choice}","${choice}","${choice}",,,,`,
+      "1,1,2,completion,,,,,,,,,,MEDAL: none,,,",
+    ].join("\n");
+    const content = resolvePayloadLesson(
+      loadLessonPayload({
+        moduleNumber: 1,
+        lessonNumber: 1,
+        screens: { filename: "screens.csv", text: screens },
+        lessonDetails: { filename: "details.csv", text: details },
+      }),
+      "pathfinder",
+      1,
+    );
+    const decision = content.screens[0];
+    expect(choiceOptions(decision)).toEqual([
+      expect.objectContaining({ emoji: "🍬", label: "Buy the sweets", goToLabel: "2" }),
+      expect.objectContaining({ label: "Skip it", goToLabel: "2" }),
+    ]);
+    expect(choiceOptions(decision)[1]?.emoji).toBeUndefined();
+  });
+
+  it("keeps blank skill ids on lessons 7–9 and golds lesson 9 from the sheet", () => {
+    for (const lesson of [7, 8, 9] as const) {
+      const payload = loadBundledLessonPayload(1, lesson);
+      expect(payload.skillId).toBe("");
+      expect(payload.skillName).toBe("");
+      for (const cohort of COHORTS) {
+        const content = resolvePayloadLesson(payload, cohort, lesson);
+        expect(content.rewards.skillSlug).toBe("");
+        expect(content.screens.at(-1)?.type).toBe("completion");
+      }
+    }
+    const lesson9 = resolvePayloadLesson(loadBundledLessonPayload(1, 9), "pathfinder", 9);
+    const lesson7 = resolvePayloadLesson(loadBundledLessonPayload(1, 7), "pathfinder", 7);
+    const lesson8 = resolvePayloadLesson(loadBundledLessonPayload(1, 8), "maverick", 8);
+    expect(lesson9.screens.at(-1)).toMatchObject({ type: "completion", medalTier: "gold" });
+    expect(lesson7.screens.at(-1)).not.toHaveProperty("medalTier");
+    expect(lesson8.screens.at(-1)).not.toHaveProperty("medalTier");
   });
 });

@@ -224,6 +224,15 @@ function splitEmojiLabel(text: string): { emoji?: string; label: string } {
   return { emoji: found.emoji, label: label || text.trim() };
 }
 
+/** A leading emoji on a choice is the button orb. The rest stays the label. */
+function withChoiceEmoji<T extends { label: string }>(
+  choice: T,
+): T & { emoji?: string } {
+  const split = splitEmojiLabel(choice.label);
+  if (!split.emoji) return choice;
+  return { ...choice, label: split.label, emoji: split.emoji };
+}
+
 function itemSlug(label: string, index: number): string {
   const base = label
     .toLowerCase()
@@ -266,7 +275,7 @@ function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
 }
 
 function medalTierFromSettings(value: string | undefined): PayloadMedalTier | undefined {
-  const tier = value?.trim().toLowerCase();
+  const tier = value?.trim().toLowerCase().split(/\s+/)[0];
   if (tier === "bronze" || tier === "silver" || tier === "gold") return tier;
   if (tier === "unlocked" || tier === "unlock" || tier === "white") return "unlocked";
   return undefined;
@@ -560,17 +569,21 @@ export function mapPayloadScreen(
       const loose = looseBinaryChoice(rawSettings, text);
       const options =
         choices.length > 0
-          ? choices.map((choice) => ({
-              label: choice.label,
-              isCorrect: correct.has(choice.letter),
-              ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
-              ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
-              ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
-              ...(skillHub && choice.goToLabel && !choice.requiresCompletedHub
-                ? { hubSkillKey: choice.goToLabel }
-                : {}),
-              ...(choice.requiresCompletedHub ? { requiresHubSkills: skillKeys } : {}),
-            }))
+          ? choices.map((choice) => {
+              const shown = withChoiceEmoji(choice);
+              return {
+                label: shown.label,
+                isCorrect: correct.has(choice.letter),
+                ...(shown.emoji ? { emoji: shown.emoji } : {}),
+                ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+                ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+                ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
+                ...(skillHub && choice.goToLabel && !choice.requiresCompletedHub
+                  ? { hubSkillKey: choice.goToLabel }
+                  : {}),
+                ...(choice.requiresCompletedHub ? { requiresHubSkills: skillKeys } : {}),
+              };
+            })
           : [loose?.optionA, loose?.optionB]
               .filter((option): option is { label: string; isCorrect: boolean } =>
                 Boolean(option?.label),
@@ -663,29 +676,43 @@ export function mapPayloadScreen(
           rounds: [],
           decisionPath: true,
           wrongError: error,
-          options: choices.map((choice) => ({
-            label: choice.label,
-            isCorrect: correct.has(choice.letter),
-            ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
-            ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
-            ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
-          })),
+          options: choices.map((choice) => {
+            const shown = withChoiceEmoji(choice);
+            return {
+              label: shown.label,
+              isCorrect: correct.has(choice.letter),
+              ...(shown.emoji ? { emoji: shown.emoji } : {}),
+              ...(choice.cashUpdate ? { cashUpdate: choice.cashUpdate } : {}),
+              ...(choice.goToLabel ? { goToLabel: choice.goToLabel } : {}),
+              ...(choice.showWhen ? { showWhen: choice.showWhen } : {}),
+            };
+          }),
           ...(decisionScript && decisionScript.prompts.length > 0
             ? { promptWhen: decisionScript.prompts }
             : {}),
           ...picture,
         };
       }
+      const sideA = withChoiceEmoji({
+        label: choiceLabel(
+          settingValue(settings, "CHOICE A") ?? settingValue(settings, "A") ?? "",
+        ),
+      });
+      const sideB = withChoiceEmoji({
+        label: choiceLabel(
+          settingValue(settings, "CHOICE B") ?? settingValue(settings, "B") ?? "",
+        ),
+      });
       return {
         type: "spotlight-rounds",
         id,
         prompt: text,
         rounds: [
           {
-            iconA: settingValue(settings, "ICON A") ?? "A",
-            optionA: choiceLabel(settingValue(settings, "CHOICE A") ?? settingValue(settings, "A") ?? ""),
-            iconB: settingValue(settings, "ICON B") ?? "B",
-            optionB: choiceLabel(settingValue(settings, "CHOICE B") ?? settingValue(settings, "B") ?? ""),
+            iconA: settingValue(settings, "ICON A") ?? sideA.emoji ?? "A",
+            optionA: sideA.label,
+            iconB: settingValue(settings, "ICON B") ?? sideB.emoji ?? "B",
+            optionB: sideB.label,
             correct: correctIsB(settings) ? "b" : "a",
             error,
           },

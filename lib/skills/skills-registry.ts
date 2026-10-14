@@ -103,7 +103,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     skillName: "Believe Money Can Be Made",
     description: "See that money can be earned",
     isAdvancedCohortOnly: false,
-    legacySlugs: ["savings-streak", "keep-some-aside"],
+    legacySlugs: ["savings-streak", "keep-some-aside", "keep-spare-cash"],
     medalEmoji: "💰",
   },
   {

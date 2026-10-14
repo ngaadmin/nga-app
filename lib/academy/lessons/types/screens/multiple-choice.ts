@@ -4,6 +4,8 @@ import type { WithDeclarative } from "../declarative";
 export type MultipleChoiceOption = {
   label: string;
   isCorrect: boolean;
+  /** Orb glyph from a leading emoji on the sheet choice. Letters fill in when this is absent. */
+  emoji?: string;
   /** Option-specific success or error copy; falls back to screen-level messages. */
   feedback?: string;
   /** Applied when this path is chosen. `{cash}` on later screens reads the result. */

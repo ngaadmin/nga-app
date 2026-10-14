@@ -59,7 +59,10 @@ type MultipleChoiceFields = {
   lockCorrectSelections?: boolean;
   /** persist = keep wrong selected (radio-list); shake = transient dud feedback (button list). */
   wrongInteraction?: "persist" | "shake";
-  /** When `neutral-selected`, tap only selects; Next grades (no red/green lock-in on tap). */
+  /**
+   * Older sheets used `neutral-selected` to delay grading until Next.
+   * Every choice is judged on the tap. Next only moves to the next screen.
+   */
   choiceFeedback?: "colored" | "neutral-selected";
   emphasizeInstruction?: boolean;
   /**

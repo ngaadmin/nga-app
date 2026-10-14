@@ -35,6 +35,9 @@ type LessonRunnerProps = {
   renderCustomScreen?: (screenIndex: number, renderer: string) => ReactNode;
   canAdvance?: boolean;
   onNext?: () => void;
+  progressIndex?: number;
+  progressTotal?: number;
+  progressComplete?: boolean;
 };
 
 export function LessonRunner({
@@ -46,6 +49,9 @@ export function LessonRunner({
   renderCustomScreen,
   canAdvance,
   onNext,
+  progressIndex,
+  progressTotal,
+  progressComplete,
 }: LessonRunnerProps) {
   const { screenIndex, markScreenReady } = flow;
   const activeScreen = content.screens[screenIndex];
@@ -88,6 +94,9 @@ export function LessonRunner({
       <AcademyLessonShell
         currentScreenIndex={flow.screenIndex}
         totalScreens={content.meta.totalScreens}
+        progressIndex={progressIndex}
+        progressTotal={progressTotal}
+        progressComplete={progressComplete}
         mistakes={flow.screenMistakes}
         xpReward={content.rewards.xpReward}
         canAdvance={

@@ -14,6 +14,10 @@ export type MultipleChoiceOption = {
   goToIndex?: number;
   /** Hide this button unless the path cash matches. */
   showWhen?: CashComparison;
+  /** Skill this hub button opens. The key is the Screen label it goes to. */
+  hubSkillKey?: string;
+  /** Keep this button locked until each of these hub skills has been finished. */
+  requiresHubSkills?: readonly string[];
 };
 
 type MultipleChoiceFields = {

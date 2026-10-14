@@ -25,17 +25,20 @@ export function applyCashUpdate(current: number | null, update: CashUpdate): num
 
 /** `IF cash >= 8` / `IF cash = 5` on a decision choice. */
 export type CashComparison = {
-  op: "gte" | "gt" | "lte" | "lt" | "eq";
+  op: "gte" | "gt" | "lte" | "lt" | "eq" | "neq";
   amount: number;
 };
 
-/** Conditional choices stay hidden until cash is known and matches. */
+/**
+ * Conditional choices stay hidden until cash is known and does not match.
+ * Unset cash (a mid-lesson preview) shows every choice so the screen is not empty.
+ */
 export function cashMatches(
   comparison: CashComparison | undefined,
   cash: number | null,
 ): boolean {
   if (!comparison) return true;
-  if (cash === null) return false;
+  if (cash === null) return true;
   switch (comparison.op) {
     case "gte":
       return cash >= comparison.amount;
@@ -47,7 +50,20 @@ export function cashMatches(
       return cash < comparison.amount;
     case "eq":
       return cash === comparison.amount;
+    case "neq":
+      return cash !== comparison.amount;
   }
+}
+
+/** `{cash}` reads as "some money" until a choice has set a number. */
+export function displayCashText(text: string, cash: number | null): string {
+  if (cash === null) return text.split("{cash}").join("some money");
+  return fillCashPlaceholder(text, cash);
+}
+
+/** Next with nothing selected is a mistake only on a graded question. */
+export function unselectedNextIsMistake(decisionPath: boolean | undefined): boolean {
+  return decisionPath !== true;
 }
 
 /** `Lars has {cash} left` → `Lars has $6 left`. Leaves the token when cash is still unknown. */

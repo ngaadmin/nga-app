@@ -1,0 +1,434 @@
+Module Number,Lesson Number,Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes
+1,1,1,word-drop,"Lars just got $20 for his birthday! He runs to the shop, but his brain tricks him into thinking cash must be ______ right away!","Holly made $25 from her weekend chores. At the mall, her friends are all showing off their new eyelash extensions and she feels the sudden urge to get hers done too. Her brain tricks her into thinking the cash must be ______ right away!",Aiden just got $40 cash from a quick delivery gig. He opens the marketplace app and sees the exact wireless earbuds he's been tracking. His brain tricks him into thinking the cash must be ______ right away!,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,,"OPTIONS: Spent | Saved | Hidden
+CORRECT: Spent",,Not quite! Look how fast Lars is running - what is his brain telling him to do?,Not quite! Holly's friends are showing off - what's her brain pushing her to do with that $25?,Not quite! Aiden spotted those earbuds - what's his brain pushing him to do with that $40?
+1,1,2,binary-choice,"Lars buys a giant bag of sour worms and a plastic fidget spinner. He's super happy, but ten minutes later...",Holly gets her eyelashes done right away with the $25 but ten minutes later...,"Aiden buys the wireless earbuds for $40 on the marketplace and picks them up straight away. He's super happy with how they sound at first, but a few hours later...",lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,"CHOICE A: ...the candy is gone and the toy feels boring.
+CHOICE B: ...his $20 cash magically reappears.
+CORRECT: A","ID: short-fun-reality
+CHOICE A: ...the initial excitement fades and her $25 is gone.
+CHOICE B: ...her $25 magically reappears in her wallet.
+CORRECT: A","CHOICE A: ...the thrill starts to wear off and his $40 is spent.
+CHOICE B: ...the seller gives him his money back because he bought them so quickly.
+CORRECT: A","If only! In the real world, once you trade your cash, it's gone. Try again.","If only! In the real world, once you trade your cash, it's gone. Try again!","If only! On the marketplace, once you pay and take the item, the money is gone. No instant refunds just for buying fast. Try again!"
+1,1,3,tap-reveal,Lars's money is gone and he only had 10 minutes of fun. Tap these items to see the difference!,Holly's $25 is gone and she only had a few minutes of excitement. Tap each item to see whether it's short fun or longer fun!,Aiden's $40 is gone after buying the earbuds and he only had a short burst of satisfaction. Tap these items to see the difference between things that give short fun and things that give more fun for longer!,not allowed,not allowed,not allowed,"ITEMS:
+SHORT: 🍬 Sour Worms
+SHORT: 🍿 Cinema Popcorn
+LONG: 🎧 Wireless Headphones
+LONG: 🛹 Skateboard","ITEMS:
+SHORT: 🧪 Glow-in-the-dark slime kit
+SHORT: 🍬 Candy salad
+LONG: 🧥 Viral hoodie
+LONG: 🥤 Water bottle","ITEMS:
+SHORT: ⚡ Energy drink + snack
+SHORT: 🎫 Scratch-it lottery ticket
+LONG: 🔊 Wireless speaker
+LONG: 🔧 Multi-tool / pocket knife"
+1,1,4,bucket-sort,Your turn! Drag each item into the correct bucket.,Your turn! Drag each item into the correct bucket.,Your turn! Drag each item into the correct bucket.,,,,"ITEMS:
+SHORT: 🍕 Pizza slice
+SHORT: 🥤 Bubble tea with all the toppings
+LONG: 🎮 Gaming controller
+LONG: 🃏 Deck of cards","ITEMS:
+SHORT: 🧋 Giant bubble tea
+SHORT: 🪄 Cheap glow sticks / LED toys
+LONG: 🔊 Wireless speaker for hangouts
+LONG: 📓 Journal + good pen set","ITEMS:
+SHORT: 🍔 Food delivery with priority fee
+SHORT: 👕 Disposable concert merch
+LONG: 🎸 Second-hand quality guitar
+LONG: 🧥 High-quality piece of clothing"
+1,1,5,spotlight-rounds,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Later that day Aiden receives a text message: ""Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",lars-working.webp,holly-working.webp,Aiden-working.webp,"CHOICE A: To trick his brain into buying fast.
+CHOICE B: Because the game creators love him.
+CORRECT: A","CHOICE A: To stop her from pausing to decide if she really needs it.
+CHOICE B: Because they want to make sure she gets a good deal.
+CORRECT: A","CHOICE A: To trick his brain into buying fast without thinking.
+CHOICE B: Because the company genuinely cares about Aiden's safety.
+CORRECT: A",Don't fall for the flashing countdown!,Don't fall for the flashing countdown!,Don't fall for the flashing countdown!
+1,1,6,hold-to-fill,Help Lars by giving him a 'buy freeze' so his brain has time to think.,"Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, by silencing the chat alerts.","If Aiden had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Aiden can think if he really needs the item right now.",lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,HOLD: ❄️ HOLD TO FREEZE ❄️,HOLD: 🔕 HOLD TO SILENCE 🔕,HOLD: ⏸️ HOLD TO PAUSE ⏸️
+1,1,7,binary-choice,"The freeze worked! The next morning, Lars realized he didn’t even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",Holly chooses to keep her money instead of giving in to the rush. She stays in control of spending.,Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.,lars-celebrating.webp,lars-celebrating.webp,lars-celebrating.webp,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8
+1,1,8,completion,,,,medal-skill1-bronze.webp,medal-skill1-bronze.webp,medal-skill1-bronze.webp,,MEDAL: bronze
+1,2,1,binary-choice,Tomorrow is Senna's birthday. Lars opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Lars can still buy the present.,Tomorrow is Mia's birthday. Holly opens her savings jar to buy the phone case she promised her sister... but the jar is completely empty. True or False: Mia can still buy the present.,Tomorrow is Dash's birthday. Aiden opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Aiden can still buy the present.,concept-piggy-bank.webp,concept-piggy-bank.webp,concept-piggy-bank.webp,"OPTION: True
+OPTION: False
+CORRECT: False","OPTION: True
+OPTION: False
+CORRECT: False","OPTION: True
+OPTION: False
+CORRECT: False",Nope! That cash is already gone.,"Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!","Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!"
+1,2,2,bucket-sort,"Lars spent all his money on things he wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'","Holly spent all her money on things she wanted, but didn't save anything for things she needs to buy. Help Holly identify which items are 'Things she wants' or 'Things she needs'","Aiden spent all his money on things he wanted, but didn't save anything for things he needs to buy. Help Aiden identify which items are 'Things he wants' or 'Things he needs'",,,,"ITEMS:
+NEED: 📱 Phone Case Birthday Present
+NEED: 🔌 Replace broken phone cable
+WANT: 🍫 Beast Munch
+WANT: 💃 New skin for his favourite game","ITEMS:
+NEED: 📱 Phone Case Birthday Present
+NEED: 🔌 Replace broken phone cable
+WANT: 🍫 Beast Munch
+WANT: 💃 Cosmetics","ITEMS:
+NEED: 📱 Phone Case Birthday Present
+NEED: 🔌 Replace broken phone cable
+WANT: 🍫 Beast Munch
+WANT: 💃 New skin for his favourite game"
+1,2,3,spotlight-rounds,Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?,Which item is the one Holly 'Needs' to buy before she spends money on what she 'Wants' to buy?,Which item is the one Aiden 'Needs' to buy before he spends money on what he 'Wants' to buy?,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"ROUNDS:
+A: A new phone case, even though his old one is still fine | B: A new phone case he promised his brother | CORRECT: B
+ A: A light for his bike to be seen in the dark | B: A new gaming mouse with lights (his old one still works) | CORRECT: A
+A: Buy lunch for all his friends and have nothing left | B: A bus pass to get him to uni | CORRECT: B","ROUNDS:
+A: A new phone case, even though her old one is still fine | B: A new phone case she promised her sister | CORRECT: B
+A: A new lead for her dog as the old one broke | B: A new hoodie that everyone at school has | CORRECT: A
+A: Buy lunch for all her friends and have nothing left | B: Buy lunch at school with her tuckshop money | CORRECT: B","ROUNDS:
+A: A new phone case, even though his old one is still fine | B: A new phone case he promised his brother | CORRECT: B
+ A: A light for his bike to be seen in the dark | B: A new gaming mouse with lights (his old one still works) | CORRECT: A
+A: Buy lunch for all his friends and have nothing left | B: A bus pass to get him to uni | CORRECT: B"
+1,2,4,budget-select,You have $30 left. Check the boxes to buy what you actually need.,You have $30 left. Check the boxes to buy what you actually need.,You have $30 left. Check the boxes to buy what you actually need.,not allowed,not allowed,not allowed,"TOTAL: 30
+ITEMS:
+NEED: 🚍 Bus Pass ($15)
+WANT: ⚡Energy Drink ($10)
+NEED: 🔌 Phone Cable ($15)
+CORRECT: bus,cable","TOTAL: 30
+ITEMS:
+NEED: 🚍 Bus Pass ($15)
+WANT: ⚡ Energy Drink ($10)
+NEED: 🐕 Dog lead ($15)
+CORRECT: bus,dog lead","TOTAL: 30
+ITEMS:
+NEED: 🚍 Bus Pass ($15)
+WANT: ⚡ Energy Drink ($10)
+NEED: 🔌 Phone Cable ($15)
+CORRECT: bus,cable"
+1,2,5,allocation-slider,Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.,Holly has $25 total. She needs $20 next week for her sister's phone case. Help her put the money aside so she doesn't spend it. Slide the divider to secure that money now.,Aiden has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.,lars-working.webp,holly-working.webp,Aiden-working.webp,"TOTAL: 25
+KEEP: 20
+ITEM: Phone case","TOTAL: 25
+KEEP: 20
+ITEM: Phone case","TOTAL: 25
+KEEP: 20
+ITEM: Phone case",Slide until $20 is locked for the gift.,Slide until $20 is locked for the gift.,Slide until $20 is locked for the gift.
+1,2,6,rank-order,"Lars has only $10 left in his savings and sees a $5 bundle-deal for his favourite lemonade. Drag the choices in the correct order, starting with what would be best for Lars to do.","Holly has only $5 left in her savings and sees a $5 bundle-deal for her favourite lemonade. Drag the choices in the correct order, starting with what would be best for Holly to do.","Aiden has only $5 left in his savings and sees a $5 bundle-deal for his favourite energy drink. Drag the choices in the correct order, starting with what would be best for Aiden to do.",concept-wallet.webp,concept-wallet.webp,concept-wallet.webp,"ITEMS: Don't buy anything - keep the $10 for 'needs'.
+ITEMS: Choose something cheaper, so he has some money left.
+ITEMS: Borrow money from dad to buy the lemonade.
+ORDER: keep,cheaper,borrow","ITEMS: Don't buy anything - keep the $10 for 'needs'
+ITEMS: Choose something cheaper, so she has some money left.
+ITEMS: Borrow money from dad to buy the lemonade.
+ORDER: keep,cheaper,borrow","ITEMS: Don't buy anything - keep the $10 for 'needs'.
+ITEMS: Choose something cheaper, so he has some money left.
+ITEMS: Borrow money from Dash to buy the energy drink.
+ORDER: keep,cheaper,borrow"
+1,2,7,drag-to-target,Fast forward to the next week. Drag the gift to Senna to help Lars deliver his promise.,Fast forward to the next week. Drag the gift to Mia to help Holly deliver her promise.,Fast forward to the next week. Drag the gift to Dash to help Aiden deliver his promise.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,SOURCE: concept-gift-box / TARGET: senna-celebrating,SOURCE: concept-gift-box / TARGET: mia-celebrating,SOURCE: concept-gift-box / TARGET: aiden-celebrating
+1,2,8,completion,,,,medal-skill2-bronze.webp,medal-skill2-bronze.webp,medal-skill2-bronze.webp,,MEDAL: bronze
+1,3,1,binary-choice,Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:,Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:,Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:,lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,"CHOICE A: Mia has no money to buy a new pair
+CHOICE B: Mia tries to fix them with sticky tape and now they're even worse
+CORRECT: A","CHOICE A: Holly has no money to buy a new pair
+CHOICE B: Holly tries to fix them with sticky tape and now they're even worse
+CORRECT: A","CHOICE A: Dash has no money to buy a new pair
+CHOICE B: Dash tries to fix them with sticky tape and now they're even worse
+CORRECT: A","Haha, maybe. Try again!","Haha, maybe. But let's try again.","Haha, maybe. But let's try again."
+1,3,2,bucket-sort,"Where did the money go? Mia needs $40 for new headphones, but her wallet is empty. Drag the items Mia bought into the 'Spent' bucket.","Where did the money go? Holly needs $40 for new headphones, but her wallet is empty. Drag the items Holly bought into the 'Spent' bucket.","Where did the money go? Dash needs $40 for new headphones, but his wallet is empty. Drag the items Dash bought into the 'Spent' bucket.",,,,"TOTAL: $40
+ITEMS:
+SPENT: 🧸 Squishy toy - $25
+SPENT: 🫧 Slime - $8
+SPENT: 🍫 Snacks - $7","TOTAL: $40
+ITEMS:
+SPENT: 🧸 Squishy toy - $25
+SPENT: 🫧 Slime - $8
+SPENT: 🍫 Snacks - $7","TOTAL: $40
+ITEMS:
+SPENT: 🚲 bike light - $7
+SPENT: 🎣 fishing rod - $25
+SPENT: 🍫 Snacks. - $8"
+1,3,3,link-match,Holly explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:,Mia explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:,Aiden explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:,concept-piggy-bank.webp,concept-piggy-bank.webp,concept-piggy-bank.webp,"PAIRS:
+I broke my brother's headphones = I can replace them
+It's my friend's birthday = I can buy a gift
+There's a sale at the game store = I can buy my favourite game now","PAIRS:
+I broke my sister's headphones = I can replace them
+It's my friend's birthday = I can buy a gift
+There's a sale at the game store = I can buy my favourite game now","PAIRS:
+I broke my brother's headphones = I can replace them
+It's my friend's birthday = I can buy a gift
+There's a sale at the game store = I can buy my favourite game now"
+1,3,4,bucket-sort,Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,concept-wallet.webp,concept-wallet.webp,concept-wallet.webp,"ITEMS:
+STEP1: 💵 Get your pocket money.
+STEP2: 🫙 Move a small amount to your Emergencies jar.
+STEP3: 🎮 Spend what is left on fun.","ITEMS:
+STEP1: 💵 Earn money.
+STEP2: 🫙 Move a small amount to your Emergencies jar.
+STEP3: 🎮 Spend what is left on fun.","ITEMS:
+STEP1: 💵 Earn money.
+STEP2: 🫙 Move a small amount to your Emergencies jar.
+STEP3: 🎮 Spend what is left on fun."
+1,3,5,binary-choice,"Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Mia do?","Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Holly do?","Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: ""I'll spend this $20 now, and I'll just save more next week to buy the headphones."" What should Aiden do?",lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"CHOICE A: Buy the toy and save $10 more next week.
+CHOICE B: Buy the headphones to fix what she broke first.
+CHOICE C: Buy the toy and hope the headphones don't cost $40.
+CORRECT: B","CHOICE A: Buy the craft bundle and save $10 more next week.
+CHOICE B: Buy the headphones to fix what she broke first.
+CHOICE C: Buy the craft bundle and hope the headphones don't cost $40.
+CORRECT: B","CHOICE A: Buy the game and save $20 more next week.
+CHOICE B: Buy the headphones to fix what he broke first.
+CHOICE C: Buy the game and hope the headphones don't cost $40.
+CORRECT: B",That's a trap! Stick to the plan to avoid stress later.,That's a trap! Stick to the plan to avoid stress later.,That's a trap! Stick to the plan to avoid stress later.
+1,3,6,word-drop,"Because I didn't ______ everything, I had ______ to ______ the headphones immediately.","Because I didn't ______ everything, I had ______ to ______ the headphones immediately.","Because I didn't ______ everything, I had ______ to ______ the headphones immediately.",lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,"OPTIONS: save | spend | cash for emergencies | borrowed money | replace | throw away
+CORRECT: spend, cash for emergencies, replace","OPTIONS: save | spend | cash for emergencies | borrowed money | replace | throw away
+CORRECT: spend, cash for emergencies, replace","OPTIONS: save | spend | cash for emergencies | borrowed money | replace | throw away
+CORRECT: spend, cash for emergencies, replace",Not quite. Try another combo!,Not quite. Let's try again.,Not quite. Let's try again.
+1,3,7,binary-choice,Mia could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Holly could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:,not allowed,not allowed,not allowed,"CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CHOICE C: I can save for a big goal instead of wasting it on small stuff that doesn't last.
+CHOICE D: I worry less if I can afford things that I want, or have to buy.
+CHOICE E: All of the above.
+CORRECT: E","CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CHOICE C: I can save for a big goal instead of wasting it on small stuff that doesn't last.
+CHOICE D: I worry less if I can afoord things that I want, or have to buy.
+CHOICE E: All of the above.
+CORRECT: E","CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CHOICE C: I can save for a big goal instead of wasting it on small stuff that doesn't last.
+CHOICE D: I worry less if I can afoord things that I want, or have to buy.
+CHOICE E: All of the above.
+CORRECT: E","Yes, but take a look at the other options and see if there's a better answer.","Yes, but take a look at the other options and see if there's a better answer.","Yes, but take a look at the other options and see if there's a better answer."
+1,3,8,completion,,,,medal-skill3-bronze.webp,medal-skill3-bronze.webp,medal-skill3-bronze.webp,,MEDAL: bronze
+1,4,1,binary-choice,Senna’s whole group is buying a game skin before it leaves the shop. Everyone’s saying it’ll be gone soon. Lars sees Senna hold off anyway. What skill is Senna practicing?,Holly’s whole group is buying a game skin before it leaves the shop. Everyone’s saying it’ll be gone soon. Immi sees Holly hold off anyway. What skill is Holly practicing?,Aiden's whole group is buying a game skin before it leaves the shop. Everyone’s saying it’ll be gone soon. Dash sees Aiden hold off anyway. What skill is Aiden practicing?,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"CHOICE A: Senna is just slow at clicking.
+CHOICE B: Senna has run out of money.
+CHOICE C: Senna stops to think.
+CORRECT: C",,"CHOICE A: Aiden is just slow at clicking.
+CHOICE B: Aiden has run out of money.
+CHOICE C: Aiden stops to think.
+CORRECT: C",Look again at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.
+1,4,2,bucket-sort,"Senna explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
+
+Drag the steps into order.","Holly explains why she waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
+
+Drag the steps into order.","Aiden explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
+
+Drag the steps into order.",,,,"ITEMS:
+STEP1: Senna sees the one-time offer.
+STEP2: Senna remembers the price could drop later.
+STEP3: Senna waits a day and checks again.
+STEP4: Senna is happy he waited - he can buy the same item for even less.",,"ITEMS:
+STEP1: Aiden sees the one-time offer.
+STEP2: Aiden remembers the price could drop later.
+STEP3: Aiden waits a day and checks again.
+STEP4: Aiden is happy he waited - he can buy the same item for even less."
+1,4,3,bucket-sort,Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Holly and Immi sort their thoughts. Which ones are making them rush? And which ones help them pause and think?,Help Aiden and Dash sort their thoughts. Which ones are making them rush? And which ones help them pause and think?
+1,4,4,binary-choice,Select which parts of the sign are making Lars rush.,Select which parts of the sign are making Holly rush.,Select which parts of the sign are making Aiden rush.,not allowed,not allowed,not allowed,,,,"That's just sign info, not a rush trick.","That's just sign info, not a rush trick.","That's just sign info, not a rush trick."
+1,4,5,binary-choice,"Lars is playing a game and he gets a limited-time offer to buy extra lives for a discount. Lars remembers Senna's advice. Before he decides whether to spend his money, he stops.
+
+Which questions should Lars ask himself?","Holly is playing a game and she gets a limited-time offer to buy extra lives for a discount. Holly remembers Mia's advice. Before she decides whether to spend her money, she stops.
+
+Which questions should Holly ask herself?","Aiden is playing a game and he gets a limited-time offer to buy extra lives for a discount. Aiden remembers Dash's advice. Before he decides whether to spend his money, he stops.
+
+Which questions should Aiden ask himself?",lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,,,,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!,Not quite! That button is trying to do the thinking for you. Don't let it!
+1,4,6,drag-to-target,Lars chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,Holly chooses to keep her money. Swipe her money from 'Spend Now' to 'Save for Later'.,Aiden chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp
+1,4,7,savings-goal,"Lars is at a local bike event, and he sees the sign he's been waiting for: 'Learn to Wheelie - 30 Minute Workshop: $40.' To afford the Wheelie Workshop, Lars had to say 'no' to a few things over the last two weeks. Drag the three items Lars didn't buy into the 'Things Lars didn't buy' box to reach his $40 goal.","Holly is at the mall, and she sees the sign she's been waiting for: 'Nail Art. 30-minute workshop for $20.' To afford it, Holly had to say 'no' to a few things over the last two weeks. Drag the three items Holly didn't buy into the 'Things Holly didn't buy' box to reach her $20 goal.","Aiden is at a local bike event, and he sees the sign he's been waiting for: 'Learn to Wheelie - 30 Minute Workshop: $40.' To afford the Wheelie Workshop, Aiden had to say 'no' to a few things over the last two weeks. Drag the three items Aiden didn't buy into the 'Things Aiden didn't buy' box to reach his $40 goal.",not allowed,not allowed,not allowed,"TARGET: 40
+ITEMS:
+Snacks at school ($15)
+Extra lives bundle ($10)
+Flashlight ($15)",,"TARGET: 40
+ITEMS:
+Snacks at work ($15)
+Extra lives bundle ($10)
+Flashlight ($15)"
+1,4,8,completion,,,,medal-skill1-silver.webp,medal-skill1-silver.webp,medal-skill1-silver.webp,,MEDAL: silver
+1,5,1,word-drop,It is Senna's birthday. The local gelato store offers a birthday discount. Senna wants Lars to come with him and get one too. Going along so he is not left out is a ______ for Lars.,It is Immi's birthday. The local gelato store offers a birthday discount. Immi wants Holly to come with her and get one too. Going along so she is not left out is a ______ for Holly.,It is Immi's birthday. The local gelato store offers a birthday discount. She wants Aiden to come with her and get one too. Going along so he is not left out is a ______ for Aiden.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,,"CHOICE A: Holly is just slow at clicking.
+CHOICE B: Holly has run out of money.
+CHOICE C: Holly stops to think.
+CORRECT: C",,A limited time offer does not make it a 'need'.,A limited time offer does not make it a 'need'.,A limited time offer does not make it a 'need'.
+1,5,2,binary-choice,"The birthday discount is only on today. Lars is saving for bike parts for his race next week, and can't really afford the gelato. What should he do?",The birthday discount is only on today. Holly is saving for an exchange trip overseas and can't really afford the gelato. What should she do?,The birthday discount is only on today. Aiden is saving for a gap year and doesn't really want to spend the money on gelato. What should he do?,concept-wallet.webp,concept-wallet.webp,concept-wallet.webp,"CHOICE A: Skip buying his own gelato and ask Senna to share his.
+CHOICE B: Buy his own because the deal is only on today
+CORRECT: A","ITEMS:
+STEP1: Holly sees the one-time offer.
+STEP2: Holly remembers the price could drop later.
+STEP3: Holly waits a day and checks again.
+STEP4: Holly is happy she waited - she can buy the same item for even less.","CHOICE A: Skip buying his own gelato and ask Immi to share hers.
+CHOICE B: Buy his own because the deal is only on today
+CORRECT: A",The bike parts are the 'need'. The gelato is the 'want'.,The money for the exchange trip is the 'need'. The gelato is the 'want'.,The money for the gap year is the 'need'. The gelato is the 'want'.
+1,5,3,binary-choice,The gelato is a 'need' because the deal is only available today.,The gelato is a 'need' because the deal is only available today.,The gelato is a 'need' because the deal is only available today.,lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,,"ITEMS:
+RUSHING: 🔥 It looks cool, I need it right now!
+RUSHING: 👥 Everyone has it, I don't want to be left out.
+RUSHING: ⏰ It's a 'limited time' offer - I have to buy it now!
+THINKING: 💬 I'll ask my friends if it's actually any good.
+THINKING: 💰 I can wait and get it cheaper later.
+THINKING: 😴 I'll sleep on it and decide tomorrow.",,A limited time offer does not turn a 'want' into a 'need'.,A limited time offer does not turn a 'want' into a 'need'.,A limited time offer does not turn a 'want' into a 'need'.
+1,5,4,bucket-sort,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Lars right now?,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Holly right now?,Sort the items in the correct bucket. Is it a 'want' or a 'need' for Aiden right now?,,,,"ITEMS:
+NEED: ⛑️ New helmet for the race
+WANT: 🍦 His own gelato
+WANT: 🍨 Extra gelato toppings
+NEED: 🎫 Race registration fee","CHOICE A: DON'T MISS OUT!
+CHOICE B: Made in France
+CHOICE C: ENDS TOMORROW!
+CHOICE D: ONLY 2 LEFT!
+CHOICE E: Quality Guaranteed
+CORRECT: A, C, D","ITEMS:
+NEED: 🎫 Airline ticket
+WANT: 🍦 His own gelato
+WANT: 🍨 Extra gelato toppings
+NEED: 🪪 A new passport"
+1,5,5,spotlight-rounds,"Lars does not want to feel left out, but the birthday deal expires today. What now?","Holly does not want to feel left out, but the birthday deal expires today. What now?","Aiden does not want to feel left out, but the birthday deal expires today. What now?",lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"CHOICE A: Share a gelato and keep at least half of what he would otherwise have spent.
+CHOICE B: Buy one so he isn't the odd one out
+CORRECT: A","CHOICE A: Do I really need this, instead of saving the money for something else?
+CHOICE B: Do I really want this right now, or is something trying to make me rush?
+CHOICE C: If I buy this, do I have enough money left for my other goals?
+CHOICE D: CLICK HERE TO BUY NOW!
+CORRECT: A+B+C","CHOICE A: Share a gelato and keep at least half of what he would otherwise have spent.
+CHOICE B: Buy one so he isn't the odd one out
+CORRECT: A",Try again!,Try again!,Try again!
+1,5,6,rank-order,Put these in the order Lars should do them. Best first.,Put these in the order Holly should do them. Best first.,Put these in the order Aiden should do them'. Best first.,not allowed,not allowed,not allowed,"ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Senna
+ITEMS: Buy his own because it is only today
+ORDER: ask,share,buy","FROM: Spend Now
+TO: Save for Later
+ACTION: Swipe the money","ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Immi
+ITEMS: Buy his own because it is only today
+ORDER: ask,share,buy"
+1,5,7,completion,Senna was happy to share the gelato without Lars having to pay for it. Lars can buy what he needs for his race.,Immi was happy to share the gelato without Holly having to pay for it. Holly stays on track with saving for her big trip.,Immi was happy to share the gelato without Aiden having to pay for it. Aiden stays on track with saving for his big trip.,medal-skill2-silver.webp,medal-skill2-silver.webp,medal-skill2-silver.webp,,MEDAL: silver
+1,6,1,binary-choice,Lars’s friend Mason asks him to the cinema this weekend. Ticket and popcorn are $18. Lars's mum says: “I’ll pay half if you can pay the other half.”,Immi asks Holly to the cinema this weekend. Ticket and popcorn are $18. Holly's mum says: “I’ll pay half if you can pay the other half.”,Aiden's friend Max asks him to the cinema this weekend. Ticket and popcorn are $18.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,"True or False: If Lars kept some money earlier, he might be able to pay his half. TRUE","True or False: If Holly kept some money earlier, she might be able to go. TRUE","True or False: If Aiden kept some money earlier, he might be able to go. TRUE",Keeping some money earlier is what makes paying his half possible.,Keeping some money earlier is what makes paying her half possible.,Keeping some money earlier is what makes paying his half possible.
+1,6,2,binary-choice,Last week Lars almost bought a Dart Blaster 🎯. He had $15 in his money jar. What would have happened if he had bought it?,Last week Holly almost bought a craft pack. She had $15 in her money jar. What would have happened if she had bought it?,Last week Aiden almost spent money on game tokens. He had $30 cash available. What would have happened if he had bought the tokens?,lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,"A: He might not have had enough left to pay his half.
+B: The cinema ticket would have been free.
+C: Mason would've paid for everything.
+Correct: A","ID: hook-word-drop
+OPTIONS: Want | Need | Bill
+CORRECT: Want","A: He might not have had enough left to pay for the cinema.
+B: The cinema ticket would have been free.
+C: Max would've paid for everything.
+Correct: A",Buying the Dart Blaster would have left him with less than $15.,Buying the craft pack would have left her with less than $15.,Buying the game tokens would have left him with less than $30.
+1,6,3,bucket-sort,Sort what Lars can do with the money he kept.,Sort what Holly can do with the money she kept.,Sort what Aiden can do with the money he kept.,,,,"ITEMS:
+YES: 🎟️ Pay his half for the cinema
+YES: 💰 Use the money for something else this weekend
+NO: 🎯 Buy the dart blaster and go to the cinema
+NO: 🚫 Never spend any money","ID: short-fun-reality
+CHOICE A: Skip buying her own gelato and ask Immi to share hers.
+CHOICE B: Buy her own because the deal is only on today
+CORRECT: A","ITEMS:
+YES: Pay for the cinema
+YES: Use the money for something else this weekend
+NO: Buy the game tokens and go to the cinema
+NO: Never spend any money"
+1,6,4,spotlight-rounds,True or False?,True or False?,True or False?,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"ROUNDS:
+Round 1 | Lars saved his money last week so now he can pay his half of the cinema outing. | True | False | CORRECT: A
+Round 2 | Mason will pay for everything because Lars spent all his money. | True | False | CORRECT: B
+Round 3 | Lars bought the Dart Blaster and now he has less than $15 left. | True | False | CORRECT: A","ROUNDS:
+Round 1 | Lars saved his money last week so now he can pay his half of the cinema outing. | True | False | CORRECT: A
+Round 2 | Mason will pay for everything because Lars spent all his money. | True | False | CORRECT: B
+Round 3 | Lars bought the Dart Blaster and now he has less than $15 left. | True | False | CORRECT: A","ROUNDS:
+Round 1 | Aiden saved his money last week so now he can pay for the cinema outing. | True | False | CORRECT: A
+Round 2 | Max will pay for everything because Aiden spent all his money. | True | False | CORRECT: B
+Round 3 | Aiden bought the game tokens and now he has less than $30 left. | True | False | CORRECT: A"
+1,6,5,binary-choice,Lars has enough to pay his half of the $18 outing.,Holly has enough to pay her half of the $18 outing.,Aiden has enough to pay for the $18 outing.,lars-working.webp,holly-working.webp,Aiden-working.webp,"How much does Lars have left after he pays his half?
+A: $6
+B: $9
+C: $0
+Correct: A","How much does Holly have left after she pays her half?
+A: $6
+B: $9
+C: $0
+Correct: A","How much does Aiden have left after he pays for the cinema?
+A: $12
+B: $18
+C: $0
+Correct: A",$15 minus $9 leaves $6.,$15 minus $9 leaves $6.,$30 minus $18 leaves $12.
+1,6,6,rank-order,"Drag the items in order, to show what just happened.","Drag the items in order, to show what just happened.","Drag the items in order, to show what just happened.",not allowed,not allowed,not allowed,"ITEMS:
+Lars didn't buy the Dart Blaster last week.
+Lars has enough money and spends $9 on his half.
+Lars still has $6 left.
+ORDER: didn't buy, spends, left","CHOICE A: Share a gelato and keep at least half of what she would otherwise have spent.
+CHOICE B: Buy one so she isn't the odd one out
+CORRECT: A","ITEMS:
+Aiden didn't buy the game tokens last week. 
+Aiden has enough money and spends $18 on the cinema outing.
+Aiden still has $12 left.
+ORDER: didn't buy, spends, left"
+1,6,7,allocation-slider,Lars grins and tells Mason “I’m in!”.,Holly grins and tells Immi “I’m in!”.,Aiden grins and tells Max “I’m in!”.,lars-celebrating.webp,Holly-celebrating.webp,Aiden-celebrating.webp,Slide to move $9 from Lars's money jar to pay his half. ($6 remains.),"ITEMS: Ask if this is a 'want' or a 'need'
+ITEMS: Share a gelato with Immi
+ITEMS: Buy her own because it is only today
+ORDER: ask,share,buy",Slide to move $18 of Aiden's money to pay for the cinema. ($12 remains.),Slide until $9 is set aside for the cinema. $6 stays in the jar.,Slide until $9 is set aside for the cinema. $6 stays in the jar.,Slide until $18 is set aside for the cinema. $12 stays in the jar.
+1,6,8,completion,,,,medal-skill3-silver.webp,medal-skill3-silver.webp,medal-skill3-silver.webp,,MEDAL: silver
+1,7,1,word-drop,Lars and Mia see a gelato deal. Lars ______.,Holly and Immi see a gelato deal. Holly ______.,Aiden and Max see a new energy drink. Aiden ______.,lars-walking.webp,Holly-walking.webp,Aiden-walking.webp,OPTIONS: stops and thinks | buys it straight away | asks Mia to pay for it CORRECT: stops and thinks,OPTIONS: stops and thinks | buys it straight away | asks Immi to pay for it CORRECT: stops and thinks,OPTIONS: stops and thinks | buys it straight away | asks Max to pay for it CORRECT: stops and thinks,Not quite. He needs to stop and think first.,Not quite. She needs to stop and think first.,Not quite. He needs to stop and think first.
+1,7,2,binary-choice,Lars remembers he still needs to pay for Senna's headphones that he broke. Replacing Senna's headphones is a...,Holly remembers she still needs to pay for Mia's headphones that she broke. Replacing Mia's headphones is a...,Aiden remembers he still needs to pay for Dash's headphones that he broke. Replacing Dash's headphones is a...,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,CHOICE A: Want CHOICE B: Need CORRECT: B,CHOICE A: Want CHOICE B: Need CORRECT: B,CHOICE A: Want CHOICE B: Need CORRECT: B,Replacing the headphones is a need.,Replacing the headphones is a need.,Replacing the headphones is a need.
+1,7,4,savings-goal,Lars has $45. Drag the items to see what is left.,Holly has $45. Drag the items to see what is left.,Aiden has $45. Drag the items to see what is left.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,"AVAILABLE: $45 
+ITEMS: 🎧 Headphones ($40) 🍦 Gelato ($5) RESULT: 0","AVAILABLE: $45 
+ITEMS: 🎧 Headphones ($40) 🍦 Gelato ($5) RESULT: 0","AVAILABLE: $45 
+ITEMS: 🎧 Headphones ($40) ⚡ Energy drink ($5) RESULT: 0",Check the total against the $45.,Check the total against the $45.,Check the total against the $45.,
+1,7,5,binary-choice,Lars has $45. Headphones are $40. One gelato is $5. He can pay for the headphones and buy his own gelato - but would have $0 left. What should he do?,Holly has $45. Headphones are $40. One gelato is $5. She can pay for the headphones and buy her own gelato - but would have $0 left. What should she do?,Aiden has $45. Headphones are $40. One energy drink is $5. He can pay for the headphones and buy his own drink - but would have $0 left. What should he do?,lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,"CHOICE A: Buy his own gelato ($5) CHOICE B: Find another way so he has some money left 
+CORRECT: B","CHOICE A: Buy her own gelato ($5) CHOICE B: Find another way so she has some money left 
+CORRECT: B","CHOICE A: Buy his own energy drink ($5) CHOICE B: Find another way so he has some money left
+CORRECT: B",Buying his own uses the last $5. There will be nothing left.,Buying her own uses the last $5. There will be nothing left.,Buying his own energy drink uses the last $5. There will be nothing left.
+1,7,7,drag-to-target,"Mia and Lars decide to share one gelato, so they can still enjoy the treat and Lars also has some money left over.","Holly and Immi decide to share one gelato, so they can still enjoy the treat and Holly also has some money left over.",Aiden and Max see the same energy drink at the supermarket in a 'two for one' deal. They buy them there instead and Aiden has some money left over.,lars-celebrating.webp,Holly-celebrating.webp,Aiden-celebrating.webp,SOURCE: 🍦 Gelato TARGET: Share with Mia,SOURCE: 🍦 Gelato TARGET: Share with Immi,SOURCE: ⚡ Energy drinks TARGET: 🤝 Split,Drag the gelato to share it with Mia.,Drag the gelato to share it with Immi.,Drag the energy drinks onto Split.,
+1,7,8,completion,,,,penny-fistpump.webp,penny-fistpump.webp,penny-fistpump.webp,,MEDAL: none
+1,9,1,binary-choice,"Tap a skill. Finish all three, then tap Finish.","Tap a skill. Finish all three, then tap Finish.","Tap a skill. Finish all three, then tap Finish.",concept-gift-box.webp,concept-gift-box.webp,concept-gift-box.webp,"HUB
+BUTTON: Stop & Think → GO Screen 2
+BUTTON: Put Needs First → GO Screen 4
+BUTTON: Keep Spare Cash → GO Screen 6
+BUTTON: Finish → GO Screen 8 WHEN complete","HUB
+BUTTON: Stop & Think → GO Screen 2
+BUTTON: Put Needs First → GO Screen 4
+BUTTON: Keep Spare Cash → GO Screen 6
+BUTTON: Finish → GO Screen 8 WHEN complete","HUB
+BUTTON: Stop & Think → GO Screen 2
+BUTTON: Put Needs First → GO Screen 4
+BUTTON: Keep Spare Cash → GO Screen 6
+BUTTON: Finish → GO Screen 8 WHEN complete"
+1,9,2,binary-choice,Stop & Think means pausing before you spend so you don’t buy on impulse.,Stop & Think means pausing before you spend so you don’t buy on impulse.,Stop & Think means pausing before you spend so you don’t buy on impulse.,,,,CONTINUE → GO Screen 3,CONTINUE → GO Screen 3,CONTINUE → GO Screen 3
+1,9,3,true-false,A flashing “only 1 minute left” deal is a good reason to buy straight away.,A flashing “only 1 minute left” deal is a good reason to buy straight away.,A flashing “only 1 minute left” deal is a good reason to buy straight away.,concept-wallet.webp,concept-wallet.webp,concept-wallet.webp,"CORRECT: False 
+CONTINUE → GO Screen 1","CORRECT: False 
+CONTINUE → GO Screen 1",CORRECT: False CONTINUE → GO Screen 1,A countdown is trying to rush you.,A countdown is trying to rush you.,A countdown is trying to rush you.
+1,9,4,binary-choice,Put Needs First means covering what you actually need before spending on wants.,Put Needs First means covering what you actually need before spending on wants.,Put Needs First means covering what you actually need before spending on wants.,,,,CONTINUE → GO Screen 5,CONTINUE → GO Screen 5,CONTINUE → GO Screen 5
+1,9,5,binary-choice,Lars needs to replace broken headphones. He also wants a new game skin. What should he buy first?,Holly needs to replace broken headphones. She also wants a new game skin. What should she buy first?,Aiden needs to replace broken headphones. He also wants a new game skin. What should he buy first?,lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,"CHOICE A: Headphones
+CHOICE B: Game skin
+CORRECT: A
+CONTINUE → GO Screen 1","CHOICE A: Headphones CHOICE B: Game skin CORRECT: A 
+CONTINUE → GO Screen 1","CHOICE A: Headphones CHOICE B: Game skin CORRECT: A 
+CONTINUE → GO Screen 1",Headphones first - that’s the need.,Headphones first - that’s the need.,Headphones first - that’s the need.
+1,9,6,binary-choice,Keep Spare Cash means not spending everything so you still have money for later.,Keep Spare Cash means not spending everything so you still have money for later.,Keep Spare Cash means not spending everything so you still have money for later.,concept-piggy-bank.webp,concept-piggy-bank.webp,concept-piggy-bank.webp,CONTINUE → GO Screen 7,CONTINUE → GO Screen 7,CONTINUE → GO Screen 7
+1,9,7,word-drop,"If you spend all your money now, you might not ______ something important later.","If you spend all your money now, you might not ______ something important later.","If you spend all your money now, you might not ______ something important later.",,,,"OPTIONS: afford | want | see CORRECT: afford
+CONTINUE → GO Screen 1","OPTIONS: afford | want | see CORRECT: afford
+CONTINUE → GO Screen 1","OPTIONS: afford | want | see CORRECT: afford
+CONTINUE → GO Screen 1",
+1,9,8,completion,,,,,,,,XP: standard + perfect bonus if all three correct MEDAL: gold NODE: gold,
+1,7,3,binary-choice,Replacing Senna's headphones comes before the gelato. Which skill is that?,Replacing Mia's headphones comes before the gelato. Which skill is that?,Replacing Dash's headphones comes before the energy drink. Which skill is that?,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,CHOICE A: Stop & Think CHOICE B: Put Needs First CHOICE C: Keep Spare Cash CORRECT: B,CHOICE A: Stop & Think CHOICE B: Put Needs First CHOICE C: Keep Spare Cash CORRECT: B,CHOICE A: Stop & Think CHOICE B: Put Needs First CHOICE C: Keep Spare Cash CORRECT: B,That skill is Put Needs First.,That skill is Put Needs First.,That skill is Put Needs First.
+1,7,6,binary-choice,Sharing the gelato leaves Lars some money. Buying his own leaves $0. Which skill is he using when he shares?,Sharing the gelato leaves Holly some money. Buying her own leaves $0. Which skill is she using when she shares?,Splitting the 2-for-1 energy drink leaves Aiden some money. Buying one at full price leaves $0. Which skill is he using?,lars-questioning.webp,Holly-questioning.webp,Aiden-questioning.webp,CHOICE A: Stop & Think CHOICE B: Put Needs First CHOICE C: Keep Spare Cash CORRECT: C,CHOICE A: Stop & Think CHOICE B: Put Needs First CHOICE C: Keep Spare Cash CORRECT: C,CHOICE A: Stop & Think CHOICE B: Put Needs First CHOICE C: Keep Spare Cash CORRECT: C,That skill is Keep Spare Cash.,That skill is Keep Spare Cash.,That skill is Keep Spare Cash.
+1,8,1,spotlight-rounds,Lars has $15. He sees a phone case for $9. What do you want Lars to do?,Holly has $15. She sees a phone case for $9. What do you want Holly to do?,Aiden has $15. He sees a phone case for $9. What do you want Aiden to do?,lars-walking.webp,Holly-questioning.webp,Aiden-questioning.webp,"CHOICE A: Buy it. He wants it and will have money left over → SET cash=6 → GO Screen 2
+CHOICE B: Don’t buy it. He doesn’t need it → SET cash=15 → GO Screen 2","CHOICE A: Buy it. She wants it and will have money left over → SET cash=6 → GO Screen 2 
+CHOICE B: Don’t buy it. She doesn’t need it → SET cash=15 → GO Screen 2",CHOICE A: Buy it. He wants it and will have money left over → SET cash=6 → GO Screen 2 CHOICE B: Don’t buy it. He doesn’t need it → SET cash=15 → GO Screen 2,Pick one,Pick one,Pick one
+1,8,2,spotlight-rounds,Lars has {cash} left. An arcade game card is $8. What do you want Lars to do?,Holly has {cash} left. An arcade game card is $8. What do you want Holly to do?,Aiden has {cash} left. An arcade game card is $8. What do you want Aiden to do?,lars-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,"IF cash >= 8 THEN
+CHOICE A: Pay $8 → SET cash=cash-8 → GO Screen 3
+CHOICE B: Skip the arcade and keep the money → GO Screen 3
+IF cash < 8 THEN
+TEXT: Lars has {cash} left. The arcade card is $8, so he can’t pay. What do you want Lars to do?
+CHOICE A: See what would have happened if he hadn’t bought the case → GO Screen 2-alt
+CHOICE B: Skip the arcade → GO Screen 3","IF cash >= 8 THEN
+CHOICE A: Pay $8 → SET cash=cash-8 → GO Screen 3
+CHOICE B: Skip the arcade and keep the money → GO Screen 3
+IF cash < 8 THEN
+TEXT: Holly has {cash} left. The arcade card is $8, so she can’t pay. What do you want Holly to do?
+CHOICE A: See what would have happened if she hadn’t bought the case → GO Screen 2-alt
+CHOICE B: Skip the arcade → GO Screen 3","IF cash >= 8 THEN
+CHOICE A: Pay $8 → SET cash=cash-8 → GO Screen 3
+CHOICE B: Skip the arcade and keep the money → GO Screen 3
+IF cash < 8 THEN
+TEXT: Aiden has {cash} left. The arcade card is $8, so he can’t pay. What do you want Aiden to do?
+CHOICE A: See what would have happened if he hadn’t bought the case → GO Screen 2-alt
+CHOICE B: Skip the arcade → GO Screen 3"
+1,8,2-alt,binary-choice,If Lars hadn’t bought the case he would have $15 and could pay for the arcade card.,If Holly hadn’t bought the case she would have $15 and could pay for the card.,If Aiden hadn’t bought the case he would have $15 and could pay for the game card.,lars-happy.webp,Holly-happy.webp,Aiden-happy.webp,CONTINUE → GO Screen 3,CONTINUE → GO Screen 3,CONTINUE → GO Screen 3
+1,8,3,spotlight-rounds,Senna has $20. Friends are asking him along to a skateboard session that costs $8. What do you want Senna to do?,Immi has $20. Friends are asking her along to a roller-skate derby that costs $8. What do you want Immi to do?,Dash has $20. Friends are asking him along to a gym session that costs $8. What do you want Dash to do?,Senna-thinking.webp,concept-wallet.webp,pair-dash-saskia-walking.webp,"CHOICE A: Yes, Senna will join ($8) → SET cash=12 → GO Screen 4
+CHOICE B: No, he doesn't want to spend the money → SET cash=20 → GO Screen 4-alt","CHOICE A: Yes, join ($8) → SET cash=12 → GO Screen 4 CHOICE B: No, skip → SET cash=20 → GO Screen 4-alt","CHOICE A: Yes, join ($8) → SET cash=12 → GO Screen 4 CHOICE B: No, skip → SET cash=20 → GO Screen 4-alt"
+1,8,4,binary-choice,"Senna has $12 left. After the session, the friend group want to go for lunch. Senna is happy he said yes to the skateboarding, because now he can join the lunch too.","Immi has $12 left. After the derby, the friend group want to go for lunch. Immi is happy she said yes to the derby, because now she can join the lunch too.","Dash has $12 left. After the gym session, the friend group want to go for lunch. Dash is happy he said yes to the gym, because now he can join the lunch too.",Senna-celebrating.webp,concept-coin-stack.webp,pair-dash-saskia-walking.webp,CONTINUE → GO Screen 5,CONTINUE → GO Screen 5,CONTINUE → GO Screen 5
+1,8,4-alt,binary-choice,The next day everyone is talking about how good the skateboard session was and they all went to lunch after. Senna missed all of it.,The next day everyone is talking about how good the derby was and they all went to lunch after. Immi missed all of it.,The next day everyone is talking about how good the session was and they all went to lunch after. Dash missed all of it.,Senna-questioning.webp,concept-piggy-bank.webp,pair-dash-saskia-walking.webp,CONTINUE → GO Screen 5,CONTINUE → GO Screen 5,CONTINUE → GO Screen 5
+1,8,5,spotlight-rounds,"Later, Mia has $14. She wants a new water bottle for $9. What do you want Mia to do?","Later, Holly has $14. She wants a new water bottle for $9. What do you want Holly to do?","Later, Aiden has $14. He wants a new water bottle for $9. What do you want Aiden to do?",Mia-thinking.webp,Holly-questioning.webp,Aiden-questioning.webp,"CHOICE A: Buy the water bottle ($9) → SET cash=5 → GO Screen 6
+CHOICE B: Don’t buy the water bottle → SET cash=14 → GO Screen 6",CHOICE A: Buy the water bottle ($9) → SET cash=5 → GO Screen 6 CHOICE B: Don’t buy the water bottle → SET cash=14 → GO Screen 6,CHOICE A: Buy the water bottle ($9) → SET cash=5 → GO Screen 6 CHOICE B: Don’t buy the water bottle → SET cash=14 → GO Screen 6
+1,8,6,spotlight-rounds,Mia has {cash} left. Lars asks if she wants to come to the cinema with a group of friends. What do you want Mia to do?,Holly has {cash} left. Immi asks if she wants to come to the cinema with a group of friends. What do you want Holly to do?,Aiden has {cash} left. Dash asks if he wants to come to the cinema with a group of friends. What do you want Aiden to do?,Mia-happy.webp,Holly-happy.webp,Aiden-happy.webp,"IF cash = 5 THEN
+CHOICE A: Ask if the group will switch to a cheaper session she can afford ($5) → SET cash=0 → GO Screen 7
+CHOICE B: Skip the cinema → SET cash=5 → GO Screen 7-skip
+IF cash = 14 THEN
+CHOICE A: Go to the cinema ($8) → SET cash=6 → GO Screen 7-alt
+CHOICE B: Don’t go to the cinema and save all her money → SET cash=14 → GO Screen 7-home","IF cash = 5 THEN
+CHOICE A: Ask if the group will switch to a cheaper session ($5) → SET cash=0 → GO Screen 7
+CHOICE B: Skip the cinema → SET cash=5 → GO Screen 7-skip
+IF cash = 14 THEN
+CHOICE A: Go to the cinema ($8) → SET cash=6 → GO Screen 7-alt
+CHOICE B: Don’t go → SET cash=14 → GO Screen 7-home","IF cash = 5 THEN
+CHOICE A: Ask if the group will switch to a cheaper session ($5) → SET cash=0 → GO Screen 7
+CHOICE B: Skip the cinema → SET cash=5 → GO Screen 7-skip
+IF cash = 14 THEN
+CHOICE A: Go to the cinema ($8) → SET cash=6 → GO Screen 7-alt
+CHOICE B: Don’t go → SET cash=14 → GO Screen 7-home"
+1,8,7,binary-choice,You picked “Ask if the group will switch to a cheaper session she can afford ($5)”. The group said yes. Mia got her water bottle and still went to the cinema with everyone. She has $0 left.,You picked “Ask if the group will switch to a cheaper session ($5)”. The group said yes. Holly got her water bottle and still went to the cinema with everyone. She has $0 left.,You picked “Ask if the group will switch to a cheaper session ($5)”. The group said yes. Aiden got his water bottle and still went to the cinema with everyone. He has $0 left.,Mia-happy.webp,Holly-happy.webp,Aiden-happy.webp,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8
+1,8,7-skip,binary-choice,"You picked “Skip the cinema”. Mia has the new water bottle and $5 left, and she missed the cinema.","You picked “Skip the cinema”. Holly has the new water bottle and $5 left, and she missed the cinema.","You picked “Skip the cinema”. Aiden has the new water bottle and $5 left, and he missed the cinema.",Mia-thinking.webp,Holly-thinking.webp,Aiden-thinking.webp,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8,,,,
+1,8,7-alt,binary-choice,"You picked “Go to the cinema ($8)”. Mia did not buy the bottle, but she joined the group. She has $6 left.","You picked “Go to the cinema ($8)”. Holly did not buy the bottle, but she joined the group. She has $6 left.","You picked “Go to the cinema ($8)”. Aiden did not buy the bottle, but he joined the group. He has $6 left.",Mia-celebrating.webp,Holly-celebrating.webp,Aiden-celebrating.webp,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8
+1,8,7-home,binary-choice,"You picked “Don’t go to the cinema and save all her money”. Mia still has $14, and she missed the bottle and the cinema.","You picked “Don’t go”. Holly still has $14, and she missed the bottle and the cinema.","You picked “Don’t go”. Aiden still has $14, and he missed the bottle and the cinema.",Mia-thinking.webp,Holly-questioning.webp,Aiden-questioning.webp,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8,CONTINUE → GO Screen 8,,,,
+1,8,8,binary-choice,"You picked the path. Lars, Senna, and Mia each lived with that call.",You picked the path. Holly and Immi each lived with that call.,You picked the path. Aiden and Dash each lived with that call.,lars-celebrating.webp,Holly-celebrating.webp,Aiden-celebrating.webp,CONTINUE → GO Screen 9,CONTINUE → GO Screen 9,CONTINUE → GO Screen 9,,,,
+1,8,9,completion,,,,penny-fistpump.webp,penny-fistpump.webp,penny-fistpump.webp,,MEDAL: none

@@ -36,5 +36,7 @@ export type DragToTargetScreenConfig = WithDeclarative<{
   /** Hide GIFT/SENNA-style column labels when the art already names the items. Default true. */
   showZoneLabels?: boolean;
   successMessage: string;
+  /** Shown when the drop misses the target. */
+  wrongError?: string;
   emphasizeInstruction?: boolean;
 }>;

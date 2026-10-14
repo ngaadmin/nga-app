@@ -9,6 +9,8 @@ export type DecisionChoice = {
   cashUpdate?: CashUpdate;
   goToLabel?: string;
   showWhen?: CashComparison;
+  /** Hub button that stays locked until every other skill on the screen is done. */
+  requiresCompletedHub?: boolean;
 };
 
 export type DecisionPrompt = {
@@ -63,6 +65,8 @@ function negate(comparison: CashComparison): CashComparison {
     case "lt":
       return { op: "gte", amount: comparison.amount };
     case "eq":
+      return { op: "neq", amount: comparison.amount };
+    case "neq":
       return { op: "eq", amount: comparison.amount };
   }
 }
@@ -82,11 +86,13 @@ function readChoice(body: string, showWhen?: CashComparison): DecisionChoice | u
   if (!label) return undefined;
   const cashUpdate = parseCashUpdate(body);
   const goToLabel = goScreenLabel(body);
+  const requiresCompletedHub = /\bWHEN\s+complete\b/i.test(body);
   return {
     label,
     ...(cashUpdate ? { cashUpdate } : {}),
     ...(goToLabel ? { goToLabel } : {}),
     ...(showWhen ? { showWhen } : {}),
+    ...(requiresCompletedHub ? { requiresCompletedHub: true } : {}),
   };
 }
 

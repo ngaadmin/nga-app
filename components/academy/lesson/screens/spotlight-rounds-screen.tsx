@@ -21,7 +21,7 @@ import {
 } from "@/components/academy/lesson/lesson-ui";
 import {
   cashMatches,
-  fillCashPlaceholder,
+  displayCashText,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
@@ -117,9 +117,7 @@ function SpotlightDecisionChoices({
       const selected = optionsRef.current[choiceRef.current ?? -1];
       if (!selected) {
         setSuccess(false);
-        setError(lessonFeedbackCopy(screen.wrongError) ?? "");
-        flowRef.current.incrementMistake();
-        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        setError(lessonFeedbackCopy(screen.wrongError) ?? "Pick one to keep going.");
         return false;
       }
 
@@ -144,10 +142,11 @@ function SpotlightDecisionChoices({
     };
   }, [screen.wrongError]);
 
-  const prompt = fillCashPlaceholder(
-    screen.promptWhen?.find((item) => cashMatches(item.showWhen, cash))?.text ?? screen.prompt,
-    cash,
-  );
+  const gatedPrompt =
+    cash === null
+      ? undefined
+      : screen.promptWhen?.find((item) => cashMatches(item.showWhen, cash))?.text;
+  const prompt = displayCashText(gatedPrompt ?? screen.prompt, cash);
 
   return (
     <LessonScreenLayout
@@ -163,7 +162,7 @@ function SpotlightDecisionChoices({
             <LessonIconOption
               key={`${option.label}-${index}`}
               className="w-full min-w-0"
-              label={fillCashPlaceholder(option.label, cash)}
+              label={displayCashText(option.label, cash)}
               emoji={letterForIndex(position)}
               display="emoji-label"
               labelClassName="max-w-full"

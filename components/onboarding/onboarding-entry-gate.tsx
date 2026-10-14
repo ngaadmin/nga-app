@@ -7,7 +7,7 @@ import {
 } from "@/lib/onboarding/guest-session";
 
 const PENNY_HOMEPAGE_SRC =
-  "/assets/illustrations/characters/penny/penny_jump.webp";
+  "/assets/illustrations/characters/penny/penny-master-512.webp";
 
 type OnboardingEntryGateProps = {
   /** Defaults to the learner try-the-app path. /school passes teacher signup. */

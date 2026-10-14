@@ -253,7 +253,7 @@ function ctaButton(label: string, href: string): string {
 }
 
 const PENNY_EMAIL_SRC =
-  "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny_wave.webp";
+  "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny-master-email.png";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "support@nextgenachievers.com";
 

@@ -261,8 +261,8 @@ function focusActiveNodeInScrollContainer(
   });
 }
 
-const PENNY_POINT_SRC =
-  "/assets/illustrations/characters/penny/penny_point.webp";
+const PENNY_JOURNEY_SRC =
+  "/assets/illustrations/characters/penny/penny-journey-512.webp";
 
 function pennyFallbackOffsetPx(nodeOnRight: boolean): number {
   return nodeOnRight
@@ -364,13 +364,14 @@ function PennyBesideActiveNode({
       aria-hidden
     >
       <Image
-        src={PENNY_POINT_SRC}
+        src={PENNY_JOURNEY_SRC}
         alt=""
         width={126}
         height={126}
         className={cn(
           "h-full w-full object-contain object-center",
-          !nodeOnRight && "-scale-x-100",
+          // Art points to the viewer's left; mirror it when Penny sits left of the tile.
+          nodeOnRight && "-scale-x-100",
         )}
         unoptimized
       />

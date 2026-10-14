@@ -73,13 +73,13 @@ describe("lesson payload loader", () => {
       narrativeAfter: "right away!",
       options: ["Spent", "Saved", "Hidden"],
       correctOption: "Spent",
-      pairImage: "lars-thinking.webp",
+      pairImage: "lars-thinking-512.webp",
     });
     expect(binary).toMatchObject({
       type: "binary-choice",
       id: "short-fun-reality",
       optionA: { isCorrect: true },
-      pairImage: "lars-questioning.webp",
+      pairImage: "lars-sitting-512.webp",
     });
     expect(tap).toMatchObject({
       type: "tap-reveal",

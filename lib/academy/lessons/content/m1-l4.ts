@@ -32,7 +32,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "skill-spotlight",
-    illustrationId: "senna-thinking",
+    pairImage: "lars-senna-sidebyside.webp",
     prompt:
       "All of Senna's friends are buying a limited-time game skin, but Lars notices that Senna decides to wait with getting one.\n\nWhat skill is Senna practicing?",
     optionA: {
@@ -171,7 +171,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "binary-choice",
     id: "lars-check-questions",
-    illustrationId: "lars-thinking",
+    pairImage: "lars-thinking-512.webp",
     selectionMode: "multi-correct",
     lockCorrectSelections: true,
     wrongInteraction: "shake",
@@ -206,7 +206,7 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "drag-to-target",
     id: "lars-save-coins",
-    illustrationId: "lars-happy",
+    pairImage: "lars-celebrating-512.webp",
     intro:
       "Lars chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.",
     sourceLabel: "Spend Now",

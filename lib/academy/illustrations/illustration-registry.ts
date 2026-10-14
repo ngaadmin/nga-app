@@ -84,26 +84,25 @@ export type IllustrationId =
 
 const ILLUSTRATIONS_BASE = "/assets/illustrations";
 
+/** Older pose ids point at the closest new 512px pose. */
+const CHARACTER_POSE_FILE: Record<IllustrationCharacterPose, string> = {
+  happy: "celebrating",
+  questioning: "deciding",
+  working: "hands-on-hips",
+  thinking: "thinking",
+  celebrating: "celebrating",
+  walking: "walking",
+};
+
 function characterIllustrationFilename(
   character: IllustrationCharacterId,
   pose: IllustrationCharacterPose,
 ): string {
-  // On-disk names mix case: Aiden/Holly/Mia/Senna PascalCase, lars lowercase,
-  // holly-working.webp is the only holly file that is lowercase.
-  if (character === "aiden") {
-    return `Aiden-${pose}.webp`;
-  }
-  if (character === "holly") {
-    if (pose === "working") return "holly-working.webp";
-    return `Holly-${pose}.webp`;
-  }
+  // Mia has no new solo poses. Existing screens use a pairing image instead.
   if (character === "mia") {
     return `Mia-${pose}.webp`;
   }
-  if (character === "senna") {
-    return `Senna-${pose}.webp`;
-  }
-  return `${character}-${pose}.webp`;
+  return `${character}-${CHARACTER_POSE_FILE[pose]}-512.webp`;
 }
 
 function characterIllustrationPath(
@@ -113,8 +112,16 @@ function characterIllustrationPath(
   return `${ILLUSTRATIONS_BASE}/characters/${character}/${characterIllustrationFilename(character, pose)}`;
 }
 
+/** Legacy pair ids, now the new chatting/side-by-side art. */
+const PAIR_ILLUSTRATION_FILES: Record<PairIllustrationId, string> = {
+  "pair-lars-mia-walking": "lars-mia-sidebyside.webp",
+  "pair-senna-lars-walking": "lars-senna-sidebyside.webp",
+  "pair-dash-saskia-walking": "aiden-dash-sidebyside.webp",
+  "pair-holly-saskia-walking": "holly-immi-sidebyside.webp",
+};
+
 function pairIllustrationPath(id: PairIllustrationId): string {
-  return `${ILLUSTRATIONS_BASE}/pairs/${id}.webp`;
+  return `${ILLUSTRATIONS_BASE}/pairs/${PAIR_ILLUSTRATION_FILES[id]}`;
 }
 
 function conceptIllustrationPath(id: ConceptIllustrationId): string {
@@ -194,6 +201,17 @@ export function getPairSheetImagePath(fileName: string): string | undefined {
   const stem = withExt.replace(/\.[^.]+$/, "").toLowerCase();
   if (isIllustrationId(stem)) {
     return getIllustrationPath(stem);
+  }
+  const pose = /^(lars|holly|aiden|senna|immi|dash)-[a-z0-9-]+-512$/.exec(stem);
+  if (pose) {
+    return `${ILLUSTRATIONS_BASE}/characters/${pose[1]}/${stem}.webp`;
+  }
+  if (
+    /^(aiden-dash|aiden-max|holly-immi|holly-mia|lars-mason|lars-mia|lars-senna)-(chatting|sidebyside)$/.test(
+      stem,
+    )
+  ) {
+    return `${ILLUSTRATIONS_BASE}/pairs/${stem}.webp`;
   }
   return `${PAIR_SHEET_IMAGES_BASE}/${withExt}`;
 }

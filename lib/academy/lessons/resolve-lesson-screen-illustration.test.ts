@@ -29,7 +29,7 @@ describe("resolveLessonScreenIllustration", () => {
       illustrationId: "lars-thinking",
       pairImage: "Holly-happy.webp",
     });
-    expect(resolved?.src).toContain("Holly-happy.webp");
+    expect(resolved?.src).toContain("holly-celebrating-512.webp");
     expect(resolved?.src).not.toContain("lars-thinking");
   });
 

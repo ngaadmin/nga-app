@@ -56,6 +56,7 @@ type LessonBucketSortGameProps<TBucket extends string> = {
   items: readonly LessonSortItem<TBucket>[];
   buckets: readonly LessonSortBucket<TBucket>[];
   onComplete: () => void;
+  onMismatch?: () => void;
   layout?: "default" | "spent-total" | "stable-grid" | "statement-sort";
   targetTotal?: number;
   poolColumnLabel?: string;
@@ -103,6 +104,7 @@ export function LessonBucketSortGame<TBucket extends string>({
   items,
   buckets,
   onComplete,
+  onMismatch,
   layout = "stable-grid",
   targetTotal,
   poolColumnLabel = "Purchases",
@@ -139,6 +141,8 @@ export function LessonBucketSortGame<TBucket extends string>({
 
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  const onMismatchRef = useRef(onMismatch);
+  onMismatchRef.current = onMismatch;
 
   const pendingEffectsRef = useRef<PendingSideEffect[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
@@ -240,6 +244,7 @@ export function LessonBucketSortGame<TBucket extends string>({
       if (!poolIdsRef.current.includes(itemId)) return;
 
       if (item.bucket !== bucketId) {
+        onMismatchRef.current?.();
         setFlyHomeId(itemId);
         window.setTimeout(() => {
           setFlyHomeId(null);

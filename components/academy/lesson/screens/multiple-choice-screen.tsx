@@ -1,24 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LESSON_SUCCESS_FLASH_MS } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { useCompletedHubSkills } from "@/components/academy/lesson/lesson-hub-progress";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
   lessonChoiceStackClass,
   lessonNextButtonClass,
-  usesNeutralChoiceFeedback,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
-import { findAllOfTheAboveCorrectKey } from "@/lib/academy/lessons/all-of-the-above";
 import {
   cashMatches,
   displayCashText,
-  unselectedNextIsMistake,
   type CashComparison,
   type CashUpdate,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
@@ -81,11 +77,8 @@ export function MultipleChoiceScreen({
       );
 
   const isRadioList = screen.optionLayout === "radio-list";
-  const gradeOnNext = usesNeutralChoiceFeedback(screen.choiceFeedback);
   const correctKeys = getCorrectOptionKeys(choiceOptions);
   const isMultiCorrect = correctKeys.length > 1;
-  const allOfTheAboveKey = findAllOfTheAboveCorrectKey(choiceOptions);
-  const isAllOfTheAboveQuestion = allOfTheAboveKey !== null;
   const optionByKey = new Map(choiceOptions.map((option) => [option.key, option]));
 
   const [optionOrder] = useState<ChoiceKey[]>(() =>
@@ -101,8 +94,6 @@ export function MultipleChoiceScreen({
 
   const flowRef = useRef(flow);
   flowRef.current = flow;
-  const advancingRef = useRef(false);
-  const advanceTimerRef = useRef<number | null>(null);
   const choiceRef = useRef(choice);
   choiceRef.current = choice;
   const multiSelectedRef = useRef(multiSelected);
@@ -115,12 +106,8 @@ export function MultipleChoiceScreen({
   optionByKeyRef.current = optionByKey;
   const correctKeysRef = useRef(correctKeys);
   correctKeysRef.current = correctKeys;
-  const allOfTheAboveKeyRef = useRef(allOfTheAboveKey);
-  allOfTheAboveKeyRef.current = allOfTheAboveKey;
   const isMultiCorrectRef = useRef(isMultiCorrect);
   isMultiCorrectRef.current = isMultiCorrect;
-  const isAllOfTheAboveQuestionRef = useRef(isAllOfTheAboveQuestion);
-  isAllOfTheAboveQuestionRef.current = isAllOfTheAboveQuestion;
   const commitCashRef = useRef(commitCash);
   commitCashRef.current = commitCash;
 
@@ -129,18 +116,55 @@ export function MultipleChoiceScreen({
     return choice === key;
   };
 
+  const lockCorrect = () => {
+    setError(null);
+    setSuccess(true);
+    setSolved(true);
+    solvedRef.current = true;
+    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+    flowRef.current.markScreenReady(screenIndex);
+  };
+
   const pick = (key: ChoiceKey) => {
     if (solved) return;
     setError(null);
     setSuccess(false);
 
     if (isMultiCorrect) {
-      setMultiSelected((current) => {
-        const next = new Set(current);
-        if (next.has(key)) next.delete(key);
-        else next.add(key);
-        return next;
-      });
+      const next = new Set(multiSelectedRef.current);
+      const turningOn = !next.has(key);
+      if (turningOn) next.add(key);
+      else next.delete(key);
+      multiSelectedRef.current = next;
+      setMultiSelected(next);
+
+      if (screenRef.current.decisionPath) {
+        flowRef.current.markScreenReady(screenIndex);
+        return;
+      }
+
+      const keys = correctKeysRef.current;
+      if (turningOn && !keys.includes(key)) {
+        setSolved(false);
+        solvedRef.current = false;
+        setError(resolveErrorCopy());
+        flowRef.current.clearScreenReady(screenIndex);
+        flowRef.current.incrementMistake();
+        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        return;
+      }
+
+      const exact =
+        !hasIncorrectSelection(next, keys) &&
+        keys.every((correctKey) => next.has(correctKey));
+      if (exact) {
+        lockCorrect();
+        return;
+      }
+
+      setSolved(false);
+      solvedRef.current = false;
+      flowRef.current.clearScreenReady(screenIndex);
       return;
     }
 
@@ -152,39 +176,15 @@ export function MultipleChoiceScreen({
       return;
     }
 
-    if (gradeOnNext) {
-      flowRef.current.markScreenReady(screenIndex);
-      return;
-    }
-
     const selected = optionByKeyRef.current.get(key);
     if (selected && isLessonChoiceOptionCorrect(selected)) {
-      flowRef.current.markScreenReady(screenIndex);
+      lockCorrect();
       return;
     }
 
     setError(resolveErrorCopy());
     flowRef.current.incrementMistake();
     signalLessonIncorrectAnswer(flowRef.current.flashScreen);
-  };
-
-  const isCurrentSelectionCorrect = (): boolean => {
-    const allOfTheAboveKey = allOfTheAboveKeyRef.current;
-    const correctKeys = correctKeysRef.current;
-    const optionByKey = optionByKeyRef.current;
-
-    if (isAllOfTheAboveQuestionRef.current && allOfTheAboveKey) {
-      return choiceRef.current === allOfTheAboveKey;
-    }
-
-    if (isMultiCorrectRef.current) {
-      const selected = multiSelectedRef.current;
-      if (hasIncorrectSelection(selected, correctKeys)) return false;
-      return correctKeys.every((key) => selected.has(key));
-    }
-
-    const selected = optionByKey.get(choiceRef.current ?? "");
-    return selected ? isLessonChoiceOptionCorrect(selected) : false;
   };
 
   const resolveErrorCopy = (): string => {
@@ -197,44 +197,35 @@ export function MultipleChoiceScreen({
   };
 
   useEffect(() => {
-    if (isMultiCorrect) {
-      flowRef.current.markScreenReady(screenIndex);
-    }
-  }, [isMultiCorrect, screenIndex]);
-
-  useEffect(() => {
     activeMultipleChoiceNextHandler = () => {
-      if (advancingRef.current || solvedRef.current) return false;
-
       const decisionPath = screenRef.current.decisionPath === true;
       const selected = optionByKeyRef.current.get(choiceRef.current ?? "");
-      if (decisionPath ? !selected : !isCurrentSelectionCorrect()) {
-        setSuccess(false);
-        setError(resolveErrorCopy());
-        if (unselectedNextIsMistake(decisionPath) || selected) {
-          flowRef.current.incrementMistake();
-          signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+
+      if (decisionPath) {
+        if (!selected) {
+          setSuccess(false);
+          setError(
+            lessonFeedbackCopy(screenRef.current.wrongError) ??
+              "Pick one to keep going.",
+          );
+          return false;
         }
-        return false;
+        if (selected.cashUpdate) commitCashRef.current(selected.cashUpdate);
+        if (typeof selected.goToIndex === "number") {
+          flowRef.current.setScreenIndex(selected.goToIndex);
+          return false;
+        }
+        return true;
       }
 
-      advancingRef.current = true;
-      solvedRef.current = true;
-      setSolved(true);
-      setError(null);
-      setSuccess(true);
-      celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
-      advanceTimerRef.current = window.setTimeout(() => {
-        advanceTimerRef.current = null;
-        const chosen = optionByKeyRef.current.get(choiceRef.current ?? "");
-        if (chosen?.cashUpdate) commitCashRef.current(chosen.cashUpdate);
-        if (typeof chosen?.goToIndex === "number") {
-          flowRef.current.setScreenIndex(chosen.goToIndex);
-          return;
-        }
-        flowRef.current.handleNext({ canAdvance: true });
-      }, LESSON_SUCCESS_FLASH_MS);
-      return false;
+      if (!solvedRef.current) return false;
+
+      if (selected?.cashUpdate) commitCashRef.current(selected.cashUpdate);
+      if (typeof selected?.goToIndex === "number") {
+        flowRef.current.setScreenIndex(selected.goToIndex);
+        return false;
+      }
+      return true;
     };
 
     return () => {
@@ -263,8 +254,7 @@ export function MultipleChoiceScreen({
             pick(key);
           }}
           selected={selected}
-          pending={gradeOnNext && selected && !solved}
-          locked={!gradeOnNext && solved && selected}
+          locked={solved && selected}
         >
           {option.hubSkillKey && completedHubSkills.has(option.hubSkillKey)
             ? `${displayCashText(option.label, cash)} · Done`

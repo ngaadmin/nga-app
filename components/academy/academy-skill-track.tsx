@@ -404,6 +404,16 @@ export function AcademySkillTrack({
     [safeMilestones],
   );
 
+  useEffect(() => {
+    if (continueMilestoneId == null) return;
+    const milestone = safeMilestones.find((node) => node.id === continueMilestoneId);
+    if (!milestone) return;
+    if (!canLaunchAcademyLesson(continueMilestoneId, milestone.status, masteryCohort)) {
+      return;
+    }
+    router.prefetch(`/dashboard/academy/lesson/${continueMilestoneId}`);
+  }, [continueMilestoneId, masteryCohort, router, safeMilestones]);
+
   const continueStepIndex = useMemo(() => {
     if (continueMilestoneId == null) return activeStepIndex;
     const index = safeMilestones.findIndex(

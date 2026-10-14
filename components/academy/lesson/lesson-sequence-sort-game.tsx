@@ -44,6 +44,7 @@ type LessonSequenceSortGameProps<TStep extends string> = {
   items: readonly LessonSequenceItem<TStep>[];
   steps: readonly LessonSequenceStep<TStep>[];
   onComplete: () => void;
+  onMismatch?: () => void;
 };
 
 type DragState = {
@@ -72,6 +73,7 @@ export function LessonSequenceSortGame<TStep extends string>({
   items,
   steps,
   onComplete,
+  onMismatch,
 }: LessonSequenceSortGameProps<TStep>) {
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -100,6 +102,8 @@ export function LessonSequenceSortGame<TStep extends string>({
 
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  const onMismatchRef = useRef(onMismatch);
+  onMismatchRef.current = onMismatch;
 
   const pendingEffectsRef = useRef<PendingSideEffect[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
@@ -185,6 +189,7 @@ export function LessonSequenceSortGame<TStep extends string>({
       }
 
       if (item.bucket !== stepId) {
+        onMismatchRef.current?.();
         return;
       }
 

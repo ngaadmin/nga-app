@@ -209,23 +209,46 @@ export function loadLessonPayload(input: {
   return { ...details, screens };
 }
 
+type BundledTables = {
+  screens: ReturnType<typeof parseAuthoringTable>;
+  details: ReturnType<typeof parseAuthoringTable>;
+};
+
+let bundledTables: BundledTables | null = null;
+const bundledPayloads = new Map<string, LessonPayload>();
+
+/** Read and parse the checked-in sheets once per server process. */
+function readBundledTables(): BundledTables {
+  if (bundledTables) return bundledTables;
+  const screensPath = path.join(SOURCE_DIR, "Screens1.csv");
+  const detailsPath = path.join(SOURCE_DIR, "Lesson-Details.csv");
+  bundledTables = {
+    screens: parseAuthoringTable({
+      filename: "Screens1.csv",
+      text: readFileSync(screensPath, "utf8"),
+    }),
+    details: parseAuthoringTable({
+      filename: "Lesson-Details.csv",
+      text: readFileSync(detailsPath, "utf8"),
+    }),
+  };
+  return bundledTables;
+}
+
 /** Checked-in Screens1.csv + Lesson-Details.csv. The CSV is the source of truth. */
 export function loadBundledLessonPayload(
   moduleNumber: number,
   lessonNumber: number,
 ): LessonPayload {
-  const screensPath = path.join(SOURCE_DIR, "Screens1.csv");
-  const detailsPath = path.join(SOURCE_DIR, "Lesson-Details.csv");
-  return loadLessonPayload({
-    moduleNumber,
-    lessonNumber,
-    screens: {
-      filename: "Screens1.csv",
-      text: readFileSync(screensPath, "utf8"),
-    },
-    lessonDetails: {
-      filename: "Lesson-Details.csv",
-      text: readFileSync(detailsPath, "utf8"),
-    },
-  });
+  const key = `${moduleNumber}:${lessonNumber}`;
+  const cached = bundledPayloads.get(key);
+  if (cached) return cached;
+
+  const tables = readBundledTables();
+  const payload: LessonPayload = {
+    ...parseLessonDetails(tables.details, moduleNumber, lessonNumber),
+    screens: parseScreens(tables.screens, moduleNumber, lessonNumber),
+  };
+  bundledPayloads.set(key, payload);
+  return payload;
 }

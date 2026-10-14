@@ -1,5 +1,6 @@
 "use client";
 
+import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonIllustrationSlot } from "@/components/academy/lesson/lesson-illustration-slot";
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
 import { LessonSequenceSortGame } from "@/components/academy/lesson/lesson-sequence-sort-game";
@@ -13,8 +14,15 @@ export function BucketSortScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<BucketSortScreenConfig>) {
-  const handleComplete = () => {
-    flow.markScreenReady(screenIndex);
+  const { showSuccess, handleComplete, handleSuccess, handleMismatch } =
+    useLessonScreenFlow({
+      screenIndex,
+      flow,
+    });
+
+  const handleSolved = () => {
+    handleSuccess();
+    handleComplete();
   };
 
   const sortLayout = screen.layout ?? "statement-sort";
@@ -25,7 +33,8 @@ export function BucketSortScreen({
       <LessonSequenceSortGame
         items={screen.items}
         steps={screen.buckets}
-        onComplete={handleComplete}
+        onComplete={handleSolved}
+        onMismatch={handleMismatch}
       />
     ) : (
       <LessonBucketSortGame
@@ -34,7 +43,8 @@ export function BucketSortScreen({
         layout={sortLayout}
         targetTotal={screen.targetTotal}
         poolColumnLabel={screen.poolColumnLabel}
-        onComplete={handleComplete}
+        onComplete={handleSolved}
+        onMismatch={handleMismatch}
       />
     );
 
@@ -44,6 +54,7 @@ export function BucketSortScreen({
       intro={screen.intro}
       cta={screen.cta}
       emphasizeInstruction={screen.emphasizeInstruction === true}
+      success={showSuccess}
       fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}
     >
       {illustration?.src ? <LessonIllustrationSlot {...illustration} /> : null}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
 import {
@@ -18,6 +19,7 @@ import {
   type SkillTrophyTier,
 } from "@/lib/dashboard/skill-trophies";
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
+import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 
 type LessonCompletionPaneProps = {
@@ -71,7 +73,12 @@ export function LessonCompletionPane({
   onCashIn,
   cashInDisabled = false,
 }: LessonCompletionPaneProps) {
+  const router = useRouter();
   const [cashingIn, setCashingIn] = useState(false);
+
+  useEffect(() => {
+    router.prefetch(DASHBOARD_ACADEMY_PATH);
+  }, [router]);
 
   const skill = getSkillRegistryRecord(achievementSkillId);
   const isModuleCloser =
@@ -112,8 +119,8 @@ export function LessonCompletionPane({
 
   const handleCashIn = () => {
     if (cashingIn || cashInDisabled) return;
-    setCashingIn(true);
     onCashIn();
+    setCashingIn(true);
   };
 
   return (

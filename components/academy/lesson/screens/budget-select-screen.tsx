@@ -20,12 +20,17 @@ export function BudgetSelectScreen({
   onPersistentError?: (message: string) => void;
   onDismissPersistentError?: () => void;
 }) {
-  const { showSuccess, handleComplete, handleIncomplete, handleMistake } =
-    useLessonScreenFlow({
-      screenIndex,
-      flow,
-      onBeforeComplete: onDismissPersistentError,
-    });
+  const {
+    showSuccess,
+    handleComplete,
+    handleIncomplete,
+    handleSuccess,
+    handleMistake,
+  } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+    onBeforeComplete: onDismissPersistentError,
+  });
 
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +47,10 @@ export function BudgetSelectScreen({
         items={screen.items}
         correctIds={screen.correctIds}
         errors={screen.errors}
-        onComplete={handleComplete}
+        onComplete={() => {
+          handleSuccess();
+          handleComplete();
+        }}
         onIncomplete={handleIncomplete}
         onMistake={handleMistake}
         onPersistentError={(message) => {

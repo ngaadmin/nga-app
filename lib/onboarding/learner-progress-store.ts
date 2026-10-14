@@ -49,6 +49,42 @@ export async function readLearnerProgressRow(
   }
 }
 
+/**
+ * Service-role read of learner_progress payloads.
+ * Caller must already have limited userIds to people the session may see.
+ */
+export async function readLearnerProgressPayloads(
+  userIds: readonly string[],
+): Promise<Map<string, unknown>> {
+  const ids = [...new Set(userIds.map((id) => id.trim()).filter(Boolean))];
+  const map = new Map<string, unknown>();
+  if (ids.length === 0) return map;
+
+  const admin = createAdminClient();
+  for (let index = 0; index < ids.length; index += 100) {
+    const slice = ids.slice(index, index + 100);
+    const { data, error } = await admin
+      .from("learner_progress")
+      .select("user_id, payload")
+      .in("user_id", slice);
+
+    if (error) {
+      console.info("[learner-progress:read]", {
+        found: "no",
+        error: error.message,
+      });
+      continue;
+    }
+
+    for (const row of data ?? []) {
+      if (!row || typeof row.user_id !== "string") continue;
+      map.set(row.user_id, row.payload);
+    }
+  }
+
+  return map;
+}
+
 export async function writeLearnerProgressRow(
   userId: string,
   payload: AccountProgressPayload,

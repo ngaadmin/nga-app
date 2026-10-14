@@ -1,3 +1,5 @@
+import { CLASS_ACCOUNT_XP_MESSAGE } from "@/lib/dashboard/class-account-cash-in";
+
 export const COPY_USERNAME_TOKEN = "[Username]" as const;
 
 export const copyMatrix = {
@@ -349,6 +351,7 @@ export const copyMatrix = {
           "Once a parent sets an exchange rate, you can turn coins into in-app money for your Save Jar.",
         askParentBody:
           "Ask your parent to set that rate in Settings. Then you can cash in right here.",
+        classAccountBody: CLASS_ACCOUNT_XP_MESSAGE,
         askParentIfParentBody:
           "Set the coins exchange rate in Settings. Then coins can be cashed in here.",
         parentEmail: {

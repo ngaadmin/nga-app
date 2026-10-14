@@ -35,7 +35,7 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
     ],
     correctOption: "Want",
     wrongError: "A limited time offer does not make it a 'need'.",
-    pairImage: "Holly-happy.webp",
+    pairImage: "holly-immi-sidebyside.webp",
   },
   {
     type: "binary-choice",
@@ -51,7 +51,7 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
     },
     wrongError: "The money for the exchange trip is the 'need'. The gelato is the 'want'.",
     errorStyle: "inline-red",
-    pairImage: "concept-wallet.webp",
+    pairImage: "holly-deciding-512.webp",
   },
   {
     type: "true-false",
@@ -60,7 +60,7 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
     correctAnswer: "false",
     wrongError: "A limited time offer does not turn a 'want' into a 'need'.",
     promptLabel: "Fact Finder",
-    pairImage: "Aiden-happy.webp",
+    pairImage: "holly-thinking-512.webp",
   },
   {
     type: "bucket-sort",
@@ -120,7 +120,7 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
     },
     wrongError: "Try again!",
     errorStyle: "banner",
-    pairImage: "Holly-thinking.webp",
+    pairImage: "holly-hands-on-hips-512.webp",
   },
   {
     type: "rank-order",
@@ -159,7 +159,7 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
     bonusXp: 0,
     bonusTapLabel: "",
     autoReadyWhenNoBonus: true,
-    pairImage: "Holly-happy.webp",
+    pairImage: "holly-celebrating-512.webp",
   },
   teenCompletionScreen({ skillTitle: SKILL_TITLE }),
 ];
@@ -168,7 +168,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
     narrativeBefore: "It is Senna's birthday. The local gelato store offers a birthday discount. Senna wants Lars to come with him and get one too. Going along so he is not left out is a",
     narrativeAfter: "for Lars.",
-    pairImage: "lars-happy.webp",
+    pairImage: "lars-senna-sidebyside.webp",
   },
   "short-fun-reality": {
     prompt: "The birthday discount is only on today. Lars is saving for bike parts for his race next week, and can't really afford the gelato. What should he do?",
@@ -181,9 +181,10 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
       label: "Buy his own because the deal is only on today",
       isCorrect: false,
     },
+    pairImage: "lars-deciding-512.webp",
   },
   "tap-short-vs-long": {
-    pairImage: "lars-questioning.webp",
+    pairImage: "lars-thinking-512.webp",
   },
   "sort-short-vs-long": {
     intro: "Sort the items in the correct bucket. Is it a 'want' or a 'need' for Lars right now?",
@@ -224,7 +225,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
       label: "Buy one so he isn't the odd one out",
       isCorrect: false,
     },
-    pairImage: "lars-thinking.webp",
+    pairImage: "lars-hands-on-hips-512.webp",
   },
   "impulse-pause": {
     intro: "Put these in the order Lars should try. Best first.",
@@ -250,7 +251,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
   "resolution": {
     narrative: "Senna was happy to share the gelato without Lars having to pay for it. Lars can buy what he needs for his race.",
-    pairImage: "lars-happy.webp",
+    pairImage: "lars-celebrating-512.webp",
   },
   "milestone-splash": {
     _replace: true,
@@ -265,7 +266,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   "hook-word-drop": {
     narrativeBefore: "It is Immi's birthday. The local gelato store offers a birthday discount. She wants Aiden to come with her and get one too. Going along so he is not left out is a",
     narrativeAfter: "for Aiden.",
-    pairImage: "Aiden-happy.webp",
+    pairImage: "aiden-waving-512.webp",
   },
   "short-fun-reality": {
     prompt: "The birthday discount is only on today. Aiden is saving for a gap year and doesn't really want to spend the money on gelato. What should he do?",
@@ -278,9 +279,10 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
       label: "Buy his own because the deal is only on today",
       isCorrect: false,
     },
+    pairImage: "aiden-deciding-512.webp",
   },
   "tap-short-vs-long": {
-    pairImage: "Aiden-questioning.webp",
+    pairImage: "aiden-thinking-512.webp",
   },
   "sort-short-vs-long": {
     intro: "Sort the items in the correct bucket. Is it a 'want' or a 'need' for Aiden right now?",
@@ -321,7 +323,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
       label: "Buy one so he isn't the odd one out",
       isCorrect: false,
     },
-    pairImage: "Aiden-thinking.webp",
+    pairImage: "aiden-hands-on-hips-512.webp",
   },
   "impulse-pause": {
     intro: "Put these in the order Aiden should try. Best first.",
@@ -347,7 +349,7 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
   },
   "resolution": {
     narrative: "Immi was happy to share the gelato without Aiden having to pay for it. Aiden stays on track with saving for his big trip.",
-    pairImage: "Aiden-happy.webp",
+    pairImage: "aiden-celebrating-512.webp",
   },
 };
 

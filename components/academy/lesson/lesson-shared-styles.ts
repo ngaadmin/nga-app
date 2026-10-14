@@ -514,15 +514,15 @@ export const lessonRevealBucketClass =
   "min-h-[9rem] min-w-0 rounded-2xl bg-[#DCEFF9] px-3 py-3 ring-1 ring-black/[0.06] transition-colors";
 
 /**
- * Viewport-capped scene height so illustration + options + footer fit on phones.
- * ~40% of the old 220px cap on a 390×844 screen; shrinks further on short viewports.
+ * Same box on every screen. Height tracks the viewport so a 375×667 phone
+ * keeps the choices on screen, and a short Chromebook does not grow a poster.
  */
 export const LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS =
-  "max-h-24";
+  "h-[clamp(6.25rem,_20vh,_11rem)]";
 
-/** Shared layout for top-of-screen lesson media. */
+/** Shared layout for top-of-screen lesson media. Transparent; the avatar is the picture. */
 export const lessonIllustrationMediaFrameClass =
-  "mb-5 h-24 w-full min-w-0 shrink-0 overflow-hidden rounded-[18px] bg-gradient-to-b from-[#BDE9FB] to-[#E8F6FC]";
+  "mx-auto mb-2 h-[clamp(6.25rem,_20vh,_11rem)] w-[clamp(8rem,_26vh,_13rem)] max-w-full shrink-0 bg-transparent";
 
 /** Modest scene slot below lesson chrome. */
 export const lessonIllustrationSlotClass = cn(

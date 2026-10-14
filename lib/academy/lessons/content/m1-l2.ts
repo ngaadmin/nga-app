@@ -26,7 +26,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "true-false",
     id: "empty-jar-hook",
-    illustrationId: "pair-senna-lars-walking",
+    pairImage: "lars-senna-chatting.webp",
     prompt:
       "Tomorrow is Senna's birthday. Lars opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Lars can still buy the present.",
     correctAnswer: "false",
@@ -82,7 +82,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "spotlight-rounds",
     id: "need-spotlight",
-    illustrationId: "lars-thinking",
+    pairImage: "lars-thinking-512.webp",
     prompt:
       "Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?",
     rounds: [
@@ -143,7 +143,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "allocation-slider",
     id: "reserve-slider",
-    illustrationId: "lars-happy",
+    pairImage: "lars-hands-on-hips-512.webp",
     intro:
       "Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.",
     total: 25,
@@ -161,7 +161,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "rank-order",
     id: "rank-stack",
-    illustrationId: "lars-working",
+    pairImage: "lars-deciding-512.webp",
     intro:
       "Drag the choices in the correct order, starting with what would be best for Lars to do.",
     dragHint:
@@ -187,7 +187,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "drag-to-target",
     id: "gift-delivery",
-    illustrationId: "pair-senna-lars-walking",
+    pairImage: "lars-senna-sidebyside.webp",
     intro:
       "Fast forward to next week! Drag the gift to Senna to help Lars deliver his promise.",
     sourceLabel: "Gift",

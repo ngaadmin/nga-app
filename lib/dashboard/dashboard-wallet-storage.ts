@@ -10,18 +10,132 @@ import { readUserSession } from "@/lib/onboarding/guest-session";
 export const DASHBOARD_WALLET_STORAGE_KEY = "nga_dashboard_wallet_v2";
 
 /** Bump when persisted wallet shape or defaults change. */
-export const WALLET_SCHEMA_VERSION = 8;
+export const WALLET_SCHEMA_VERSION = 9;
+
+/** One XP award or cash-in. Merge unions these by id across devices. */
+export type WalletLedgerEvent = {
+  id: string;
+  kind: "earn" | "spend";
+  points: number;
+  at: string;
+};
 
 export type PersistedDashboardWallet = {
   schemaVersion?: number;
   /** Auth uid, registered username key, or guest key that owns this balance. */
   ownerUserId?: string | null;
+  /** Spendable balance. Goes up with lessons and down on cash-in. */
   totalPoints: number;
+  /** Monotonic XP total for leaderboards. Never decreases. */
   lifetimePointsEarned: number;
   audSliderIndex: number;
   /** True after a parent saves an XP exchange rate. */
   xpExchangeRateSet: boolean;
+  /** Awards and cash-ins since this device started recording a ledger. */
+  ledger?: WalletLedgerEvent[];
+  /** When this device last changed the balance or the exchange rate. */
+  updatedAt?: string | null;
 };
+
+function isWalletRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+export function parseWalletLedger(value: unknown): WalletLedgerEvent[] {
+  if (!Array.isArray(value)) return [];
+  const events: WalletLedgerEvent[] = [];
+  for (const raw of value) {
+    if (!isWalletRecord(raw)) continue;
+    if (raw.kind !== "earn" && raw.kind !== "spend") continue;
+    if (typeof raw.id !== "string" || !raw.id.trim()) continue;
+    if (typeof raw.points !== "number" || !Number.isFinite(raw.points)) continue;
+    const points = Math.floor(raw.points);
+    if (points <= 0) continue;
+    events.push({
+      id: raw.id.trim(),
+      kind: raw.kind,
+      points,
+      at: typeof raw.at === "string" ? raw.at : "",
+    });
+  }
+  return events;
+}
+
+export function createWalletEventId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `xp-${Date.now().toString(36)}-${Math.random().toString(16).slice(2)}`;
+}
+
+/**
+ * Append one award or cash-in. Returns null when that event id is already
+ * recorded so the same lesson cannot pay out twice.
+ */
+export function appendWalletLedgerEvent(
+  wallet: PersistedDashboardWallet,
+  event: WalletLedgerEvent,
+): PersistedDashboardWallet | null {
+  const ledger = wallet.ledger ?? [];
+  if (ledger.some((entry) => entry.id === event.id)) return null;
+  const lifetimePointsEarned =
+    wallet.lifetimePointsEarned + (event.kind === "earn" ? event.points : 0);
+  const spent =
+    Math.max(0, wallet.lifetimePointsEarned - wallet.totalPoints) +
+    (event.kind === "spend" ? event.points : 0);
+  return {
+    ...wallet,
+    totalPoints: Math.max(0, lifetimePointsEarned - spent),
+    lifetimePointsEarned,
+    ledger: [...ledger, event],
+    updatedAt: event.at || new Date().toISOString(),
+  };
+}
+
+/** Accept a stored wallet object and fill in lifetime XP when older rows omitted it. */
+export function walletFieldsFromUnknown(
+  value: unknown,
+): PersistedDashboardWallet | null {
+  if (!isWalletRecord(value)) return null;
+  if (
+    typeof value.totalPoints !== "number" ||
+    !Number.isFinite(value.totalPoints) ||
+    typeof value.audSliderIndex !== "number" ||
+    !Number.isFinite(value.audSliderIndex)
+  ) {
+    return null;
+  }
+
+  const totalPoints = Math.max(0, Math.floor(value.totalPoints));
+  const recordedLifetime =
+    typeof value.lifetimePointsEarned === "number" &&
+    Number.isFinite(value.lifetimePointsEarned)
+      ? Math.max(0, Math.floor(value.lifetimePointsEarned))
+      : totalPoints;
+  const lifetimePointsEarned = Math.max(totalPoints, recordedLifetime);
+  const ledger = parseWalletLedger(value.ledger);
+  const updatedAt =
+    typeof value.updatedAt === "string" && value.updatedAt.trim()
+      ? value.updatedAt.trim()
+      : null;
+
+  return {
+    schemaVersion:
+      typeof value.schemaVersion === "number"
+        ? value.schemaVersion
+        : WALLET_SCHEMA_VERSION,
+    ownerUserId:
+      typeof value.ownerUserId === "string" && value.ownerUserId.trim()
+        ? value.ownerUserId.trim()
+        : null,
+    totalPoints,
+    lifetimePointsEarned,
+    audSliderIndex: value.audSliderIndex,
+    xpExchangeRateSet: value.xpExchangeRateSet === true,
+    ...(ledger.length > 0 ? { ledger } : {}),
+    ...(updatedAt ? { updatedAt } : {}),
+  };
+}
 
 export function currentWalletOwnerId(): string | null {
   const session = readUserSession();
@@ -71,41 +185,14 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as Partial<PersistedDashboardWallet> & {
-      moneyToAllocate?: number;
-      jarBalances?: unknown;
-    };
-    if (
-      typeof parsed.totalPoints !== "number" ||
-      !Number.isFinite(parsed.totalPoints) ||
-      typeof parsed.audSliderIndex !== "number" ||
-      !Number.isFinite(parsed.audSliderIndex)
-    ) {
-      return null;
-    }
-
-    const totalPoints = Math.max(0, Math.floor(parsed.totalPoints));
-    const lifetimePointsEarned =
-      typeof parsed.lifetimePointsEarned === "number" &&
-      Number.isFinite(parsed.lifetimePointsEarned)
-        ? Math.max(0, Math.floor(parsed.lifetimePointsEarned))
-        : totalPoints;
-    const ownerUserId =
-      typeof parsed.ownerUserId === "string" && parsed.ownerUserId.trim()
-        ? parsed.ownerUserId.trim()
-        : null;
-
-    if (!walletBelongsToCurrentAccount(ownerUserId)) {
+    const wallet = walletFieldsFromUnknown(JSON.parse(raw));
+    if (!wallet || !walletBelongsToCurrentAccount(wallet.ownerUserId)) {
       return null;
     }
 
     return {
+      ...wallet,
       schemaVersion: WALLET_SCHEMA_VERSION,
-      ownerUserId,
-      totalPoints,
-      lifetimePointsEarned,
-      audSliderIndex: parsed.audSliderIndex,
-      xpExchangeRateSet: parsed.xpExchangeRateSet === true,
     };
   } catch {
     return null;

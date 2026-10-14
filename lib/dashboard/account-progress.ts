@@ -1,5 +1,9 @@
 import type { AcademyLessonMilestoneNode } from "@/lib/dashboard/academy-state";
-import type { PersistedDashboardWallet } from "@/lib/dashboard/dashboard-wallet-storage";
+import {
+  walletFieldsFromUnknown,
+  type PersistedDashboardWallet,
+  type WalletLedgerEvent,
+} from "@/lib/dashboard/dashboard-wallet-storage";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import type { VaultSkillTierOverrides } from "@/lib/dashboard/vault-skill-progress-storage";
 import type { PersistedVaultProfile } from "@/lib/dashboard/vault/vault-profile-storage";
@@ -69,35 +73,7 @@ function parseWallet(value: unknown): PersistedDashboardWallet | null {
       return null;
     }
   }
-  if (!isRecord(value)) return null;
-  if (
-    typeof value.totalPoints !== "number" ||
-    !Number.isFinite(value.totalPoints) ||
-    typeof value.audSliderIndex !== "number" ||
-    !Number.isFinite(value.audSliderIndex)
-  ) {
-    return null;
-  }
-
-  const totalPoints = Math.max(0, Math.floor(value.totalPoints));
-  const lifetimePointsEarned =
-    typeof value.lifetimePointsEarned === "number" &&
-    Number.isFinite(value.lifetimePointsEarned)
-      ? Math.max(0, Math.floor(value.lifetimePointsEarned))
-      : totalPoints;
-
-  return {
-    schemaVersion:
-      typeof value.schemaVersion === "number" ? value.schemaVersion : 1,
-    ownerUserId:
-      typeof value.ownerUserId === "string" && value.ownerUserId.trim()
-        ? value.ownerUserId.trim()
-        : null,
-    totalPoints,
-    lifetimePointsEarned,
-    audSliderIndex: value.audSliderIndex,
-    xpExchangeRateSet: value.xpExchangeRateSet === true,
-  };
+  return walletFieldsFromUnknown(value);
 }
 
 function isSkillTier(value: unknown): value is SkillTrophyTier {
@@ -259,23 +235,153 @@ export function accountProgressLogFields(
   };
 }
 
-function richerAcademy(
-  left: AcademyLessonMilestoneNode[] | null,
-  right: AcademyLessonMilestoneNode[] | null,
+const ACADEMY_STATUS_RANK: Record<AcademyLessonMilestoneNode["status"], number> = {
+  locked: 0,
+  active: 1,
+  completed: 2,
+};
+
+function normalizeAcademyProgress(
+  nodes: readonly AcademyLessonMilestoneNode[],
 ): AcademyLessonMilestoneNode[] | null {
-  return completedLessonCount(left) >= completedLessonCount(right) ? left : right;
+  if (nodes.length === 0) return null;
+  const sorted = [...nodes].sort((left, right) => left.id - right.id);
+  let highestCompleted = 0;
+  for (const node of sorted) {
+    if (node.status === "completed" && node.id > highestCompleted) {
+      highestCompleted = node.id;
+    }
+  }
+
+  return sorted.map((node) => {
+    if (highestCompleted > 0 && node.id <= highestCompleted) {
+      return { ...node, status: "completed" };
+    }
+    if (node.id === highestCompleted + 1) {
+      return { ...node, status: "active" };
+    }
+    if (node.id > highestCompleted + 1) {
+      return { ...node, status: "locked" };
+    }
+    return node;
+  });
 }
 
-function richerWallet(
-  left: PersistedDashboardWallet | null,
-  right: PersistedDashboardWallet | null,
-): PersistedDashboardWallet | null {
-  if (!left) return right;
-  if (!right) return left;
-  if (left.lifetimePointsEarned !== right.lifetimePointsEarned) {
-    return left.lifetimePointsEarned >= right.lifetimePointsEarned ? left : right;
+/** Union of lesson nodes. A completed lesson never returns to active or locked. */
+export function mergeAcademyProgress(
+  left: AcademyLessonMilestoneNode[] | null | undefined,
+  right: AcademyLessonMilestoneNode[] | null | undefined,
+): AcademyLessonMilestoneNode[] | null {
+  if (!left?.length && !right?.length) return left ?? right ?? null;
+  if (!left?.length) return normalizeAcademyProgress(right ?? []);
+  if (!right?.length) return normalizeAcademyProgress(left);
+
+  const byId = new Map<number, AcademyLessonMilestoneNode>();
+  for (const node of [...left, ...right]) {
+    if (!Number.isFinite(node.id)) continue;
+    const existing = byId.get(node.id);
+    if (
+      !existing ||
+      ACADEMY_STATUS_RANK[node.status] > ACADEMY_STATUS_RANK[existing.status]
+    ) {
+      byId.set(node.id, node);
+    }
   }
-  return left.totalPoints >= right.totalPoints ? left : right;
+  return normalizeAcademyProgress([...byId.values()]);
+}
+
+function walletSpent(wallet: PersistedDashboardWallet): number {
+  return Math.max(0, wallet.lifetimePointsEarned - wallet.totalPoints);
+}
+
+function unionWalletLedger(
+  left: readonly WalletLedgerEvent[] | undefined,
+  right: readonly WalletLedgerEvent[] | undefined,
+): WalletLedgerEvent[] {
+  const byId = new Map<string, WalletLedgerEvent>();
+  for (const event of [...(left ?? []), ...(right ?? [])]) {
+    const existing = byId.get(event.id);
+    if (!existing || event.points > existing.points) {
+      byId.set(event.id, event);
+    }
+  }
+  return [...byId.values()].sort(
+    (a, b) => (a.at || "").localeCompare(b.at || "") || a.id.localeCompare(b.id),
+  );
+}
+
+function replayWalletLedger(events: readonly WalletLedgerEvent[]): {
+  lifetime: number;
+  spent: number;
+} {
+  let lifetime = 0;
+  let spent = 0;
+  for (const event of events) {
+    if (event.kind === "earn") lifetime += event.points;
+    else spent += event.points;
+  }
+  return { lifetime, spent };
+}
+
+function laterWalletTimestamp(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): string | null {
+  const leftMs = left ? Date.parse(left) : Number.NaN;
+  const rightMs = right ? Date.parse(right) : Number.NaN;
+  if (!Number.isFinite(leftMs) && !Number.isFinite(rightMs)) {
+    return left ?? right ?? null;
+  }
+  if (!Number.isFinite(leftMs)) return right ?? null;
+  if (!Number.isFinite(rightMs)) return left ?? null;
+  return leftMs >= rightMs ? (left ?? null) : (right ?? null);
+}
+
+function walletSettingsSource(
+  left: PersistedDashboardWallet,
+  right: PersistedDashboardWallet,
+): PersistedDashboardWallet {
+  const newer = laterWalletTimestamp(left.updatedAt, right.updatedAt);
+  if (newer && newer === left.updatedAt && newer !== right.updatedAt) return left;
+  if (newer && newer === right.updatedAt && newer !== left.updatedAt) return right;
+  if (right.xpExchangeRateSet !== left.xpExchangeRateSet) {
+    return right.xpExchangeRateSet ? right : left;
+  }
+  return right;
+}
+
+/**
+ * Lifetime XP is the max. Spendable balance replays the union of cash-in and
+ * award events, and never falls below what either snapshot already recorded.
+ * A stale device cannot undo a cash-in or drop earned XP.
+ */
+export function mergeWalletProgress(
+  left: PersistedDashboardWallet | null | undefined,
+  right: PersistedDashboardWallet | null | undefined,
+): PersistedDashboardWallet | null {
+  if (!left) return right ?? null;
+  if (!right) return left;
+
+  const ledger = unionWalletLedger(left.ledger, right.ledger);
+  const replayed = replayWalletLedger(ledger);
+  const lifetimePointsEarned = Math.max(
+    left.lifetimePointsEarned,
+    right.lifetimePointsEarned,
+    replayed.lifetime,
+  );
+  const spent = Math.max(walletSpent(left), walletSpent(right), replayed.spent);
+  const settings = walletSettingsSource(left, right);
+
+  return {
+    schemaVersion: settings.schemaVersion,
+    ownerUserId: right.ownerUserId ?? left.ownerUserId ?? null,
+    totalPoints: Math.max(0, lifetimePointsEarned - spent),
+    lifetimePointsEarned,
+    audSliderIndex: settings.audSliderIndex,
+    xpExchangeRateSet: settings.xpExchangeRateSet,
+    ...(ledger.length > 0 ? { ledger } : {}),
+    updatedAt: laterWalletTimestamp(left.updatedAt, right.updatedAt),
+  };
 }
 
 function mergeSkillProgress(
@@ -303,7 +409,7 @@ function richerVault(
   return vaultBalanceScore(left) >= vaultBalanceScore(right) ? left : right;
 }
 
-/** Prefer the more advanced of two payloads without summing XP twice. */
+/** Combine two payloads. Lessons and XP merge forward; skills and Vault keep the richer copy. */
 export function mergeAccountProgress(
   left: AccountProgressPayload | null | undefined,
   right: AccountProgressPayload | null | undefined,
@@ -313,8 +419,8 @@ export function mergeAccountProgress(
 
   return {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
-    academyProgress: richerAcademy(left.academyProgress, right.academyProgress),
-    wallet: richerWallet(left.wallet, right.wallet),
+    academyProgress: mergeAcademyProgress(left.academyProgress, right.academyProgress),
+    wallet: mergeWalletProgress(left.wallet, right.wallet),
     skillProgress: mergeSkillProgress(left.skillProgress, right.skillProgress),
     vaultProfile: richerVault(left.vaultProfile, right.vaultProfile),
     vaultSession: richerVault(left.vaultSession, right.vaultSession),
@@ -322,8 +428,8 @@ export function mergeAccountProgress(
 }
 
 /**
- * Last-write overlay for signed-in cloud saves. Present local fields win so
- * spending XP or Vault money is not reverted by a "richer" remote copy.
+ * Cloud save merge. Lessons union to the furthest completion. Lifetime XP
+ * stays monotonic. The live balance keeps every award and cash-in.
  */
 export function overlayAccountProgress(
   base: AccountProgressPayload | null | undefined,
@@ -334,8 +440,11 @@ export function overlayAccountProgress(
 
   return {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
-    academyProgress: overlay.academyProgress ?? base.academyProgress,
-    wallet: overlay.wallet ?? base.wallet,
+    academyProgress: mergeAcademyProgress(
+      base.academyProgress,
+      overlay.academyProgress,
+    ),
+    wallet: mergeWalletProgress(base.wallet, overlay.wallet),
     skillProgress: overlay.skillProgress ?? base.skillProgress,
     vaultProfile: overlay.vaultProfile ?? base.vaultProfile,
     vaultSession: overlay.vaultSession ?? base.vaultSession,

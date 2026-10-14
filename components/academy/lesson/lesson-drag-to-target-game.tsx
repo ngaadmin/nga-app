@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
@@ -17,6 +18,8 @@ type DragState = {
   offsetY: number;
   x: number;
   y: number;
+  originX: number;
+  originY: number;
 };
 
 type DragItemSize = "md" | "lg";
@@ -44,6 +47,7 @@ type LessonDragToTargetGameProps = {
 };
 
 const TARGET_DROP_HIT_PADDING_PX = 24;
+const TAP_SELECT_PX = 10;
 const DRAG_TO_TARGET_MAX_COINS = 3;
 const COIN_CHIP_CLASS =
   "grid size-11 place-items-center rounded-full bg-[#FFA503] text-xl";
@@ -103,11 +107,14 @@ export function LessonDragToTargetGame({
   const [remaining, setRemaining] = useState(totalCoins);
   const [landed, setLanded] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [selectedCoinIndex, setSelectedCoinIndex] = useState<number | null>(
+    null,
+  );
   const [targetImageFailed, setTargetImageFailed] = useState(false);
   const [sourceImageFailed, setSourceImageFailed] = useState(false);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
-  const targetRef = useRef<HTMLDivElement | null>(null);
+  const targetRef = useRef<HTMLButtonElement | null>(null);
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
@@ -187,10 +194,28 @@ export function LessonDragToTargetGame({
       offsetY: event.clientY - rect.top,
       x: rect.left,
       y: rect.top,
+      originX: event.clientX,
+      originY: event.clientY,
     };
     dragStateRef.current = nextDrag;
-    setDragState(nextDrag);
   };
+
+  const placeOneCoin = useCallback(() => {
+    const next = Math.max(0, remainingRef.current - 1);
+    remainingRef.current = next;
+    setRemaining(next);
+    setLanded((current) => current + 1);
+    setSelectedCoinIndex(null);
+    if (next === 0) {
+      onSuccessRef.current?.();
+      onCompleteRef.current();
+    }
+  }, []);
+
+  const dropSelectedCoin = useCallback(() => {
+    if (selectedCoinIndex === null || remainingRef.current <= 0) return;
+    placeOneCoin();
+  }, [placeOneCoin, selectedCoinIndex]);
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
@@ -208,26 +233,47 @@ export function LessonDragToTargetGame({
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
 
-    if (!dragStateRef.current) {
+    const current = dragStateRef.current;
+    if (!current) {
+      endDrag();
+      return;
+    }
+
+    const moved = Math.hypot(
+      event.clientX - current.originX,
+      event.clientY - current.originY,
+    );
+    if (moved < TAP_SELECT_PX) {
+      setSelectedCoinIndex(current.coinIndex);
       endDrag();
       return;
     }
 
     if (isPointOverTarget(event.clientX, event.clientY)) {
-      const next = Math.max(0, remainingRef.current - 1);
-      remainingRef.current = next;
-      setRemaining(next);
-      setLanded((current) => current + 1);
-      if (next === 0) {
-        onSuccessRef.current?.();
-        onCompleteRef.current();
-      }
+      placeOneCoin();
       endDrag();
       return;
     }
 
     onMissRef.current?.();
     endDrag();
+  };
+
+  const selectCoinFromKeyboard = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    coinIndex: number,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    setSelectedCoinIndex(coinIndex);
+  };
+
+  const dropSelectedFromKeyboard = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    dropSelectedCoin();
   };
 
   const renderSourceIllustration = (alt: string) =>
@@ -326,14 +372,18 @@ export function LessonDragToTargetGame({
             key={index}
             type="button"
             onPointerDown={(event) => handleCoinPointerDown(event, index)}
+            onKeyDown={(event) => selectCoinFromKeyboard(event, index)}
+            aria-pressed={selectedCoinIndex === index}
             className={cn(
               "cursor-grab bg-transparent p-0 active:cursor-grabbing",
               showSourceIllustration
                 ? DRAG_ILLUSTRATION_FRAME_CLASS
                 : sourceChipClass,
               dragState?.coinIndex === index && "opacity-25",
+              selectedCoinIndex === index &&
+                "rounded-full ring-2 ring-[#0CC1E0] ring-offset-2",
             )}
-            aria-label={`Drag ${sourceLabel.toLowerCase()} to ${targetLabel}`}
+            aria-label={`Select ${sourceLabel} ${index + 1} to drop on ${targetLabel}`}
             style={{ touchAction: "none" }}
           >
             {showSourceIllustration
@@ -361,7 +411,16 @@ export function LessonDragToTargetGame({
         )}
       >
         <div className="flex items-center">{renderSourceCoins()}</div>
-        <div ref={targetRef}>{renderTargetVisual()}</div>
+        <button
+          ref={targetRef}
+          type="button"
+          aria-label={`Drop selected ${sourceLabel} on ${targetLabel}`}
+          onClick={dropSelectedCoin}
+          onKeyDown={dropSelectedFromKeyboard}
+          className="cursor-pointer border-0 bg-transparent p-0"
+        >
+          {renderTargetVisual()}
+        </button>
       </div>
 
       {dragState ? (

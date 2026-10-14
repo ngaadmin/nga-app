@@ -64,6 +64,8 @@ type DragState = {
   y: number;
   width: number;
   height: number;
+  originX: number;
+  originY: number;
 };
 
 type PendingSideEffect = { kind: "correct"; willComplete: boolean };
@@ -92,6 +94,7 @@ function shuffleIds(ids: readonly string[]): string[] {
 
 /** Extra pixels around bucket bounds so drops register more easily on touch devices. */
 const BUCKET_DROP_HIT_PADDING_PX = 20;
+const TAP_SELECT_PX = 10;
 
 export function LessonBucketSortGame<TBucket extends string>({
   items,
@@ -122,6 +125,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     Object.fromEntries(buckets.map((bucket) => [bucket.id, []])),
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [activeBucketId, setActiveBucketId] = useState<TBucket | null>(null);
   const [flyHomeId, setFlyHomeId] = useState<string | null>(null);
 
@@ -286,6 +290,51 @@ export function LessonBucketSortGame<TBucket extends string>({
     }
   };
 
+  const finishPointer = (clientX: number, clientY: number) => {
+    const current = dragStateRef.current;
+    if (!current) return;
+    const moved = Math.hypot(
+      clientX - current.originX,
+      clientY - current.originY,
+    );
+    if (moved < TAP_SELECT_PX) {
+      setSelectedItemId(current.itemId);
+      endDrag();
+      return;
+    }
+    placeDragAtPoint(clientX, clientY);
+    endDrag();
+  };
+
+  const activateBucket = (bucketId: TBucket) => {
+    if (!selectedItemId) return;
+    const item = itemById.get(selectedItemId);
+    if (!item) return;
+    assignToBucket(selectedItemId, bucketId);
+    if (item.bucket === bucketId) setSelectedItemId(null);
+  };
+
+  const selectItemFromKeyboard = (
+    event: { key: string; preventDefault: () => void },
+    itemId: string,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    setSelectedItemId(itemId);
+  };
+
+  const bucketActivationProps = (bucket: LessonSortBucket<TBucket>) => ({
+    role: "button" as const,
+    tabIndex: 0,
+    "aria-label": `Drop selected item in ${bucket.label}`,
+    onClick: () => activateBucket(bucket.id),
+    onKeyDown: (event: { key: string; preventDefault: () => void }) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      activateBucket(bucket.id);
+    },
+  });
+
   const handleChipPointerDown = (
     itemId: string,
     event: ReactPointerEvent<HTMLButtonElement>,
@@ -306,10 +355,11 @@ export function LessonBucketSortGame<TBucket extends string>({
       y: rect.top,
       width: rect.width,
       height: rect.height,
+      originX: event.clientX,
+      originY: event.clientY,
     };
     dragStateRef.current = nextDrag;
     activePointerIdRef.current = event.pointerId;
-    setDragState(nextDrag);
 
     const pointerId = event.pointerId;
     const onMove = (native: PointerEvent) => {
@@ -331,8 +381,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     const onUp = (native: PointerEvent) => {
       if (native.pointerId !== pointerId) return;
       native.preventDefault();
-      placeDragAtPoint(native.clientX, native.clientY);
-      endDrag();
+      finishPointer(native.clientX, native.clientY);
     };
     dragListenersRef.current?.();
     window.addEventListener("pointermove", onMove);
@@ -369,8 +418,7 @@ export function LessonBucketSortGame<TBucket extends string>({
 
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
-    placeDragAtPoint(event.clientX, event.clientY);
-    endDrag();
+    finishPointer(event.clientX, event.clientY);
   };
 
   const handlePointerCancel = (event: ReactPointerEvent<HTMLElement>) => {
@@ -378,7 +426,7 @@ export function LessonBucketSortGame<TBucket extends string>({
       activePointerIdRef.current === null ||
       activePointerIdRef.current === event.pointerId
     ) {
-      placeDragAtPoint(event.clientX, event.clientY);
+      finishPointer(event.clientX, event.clientY);
     }
     endDrag();
   };
@@ -401,8 +449,11 @@ export function LessonBucketSortGame<TBucket extends string>({
           emoji={item.emoji}
           price={item.price}
           isDragging={isDragging}
+          aria-pressed={selectedItemId === itemId}
+          onKeyDown={(event) => selectItemFromKeyboard(event, itemId)}
           onPointerDown={(event) => handleChipPointerDown(itemId, event)}
           className={cn(
+            selectedItemId === itemId && "ring-2 ring-[#0CC1E0]",
             flyHomeId === itemId &&
               "transition-transform duration-300 ease-out -translate-y-2.5",
           )}
@@ -417,11 +468,15 @@ export function LessonBucketSortGame<TBucket extends string>({
           chipRefs.current[itemId] = node;
         }}
         type="button"
+        aria-label={item.label}
+        aria-pressed={selectedItemId === itemId}
+        onKeyDown={(event) => selectItemFromKeyboard(event, itemId)}
         onPointerDown={(event) => handleChipPointerDown(itemId, event)}
         className={cn(
           stacked ? "w-full" : "w-full min-w-[8rem] max-w-full",
           lessonSortStatementCardClass,
           isDragging && "opacity-40",
+          selectedItemId === itemId && "ring-2 ring-[#0CC1E0]",
           flyHomeId === itemId &&
             "transition-transform duration-300 ease-out -translate-y-2.5",
         )}
@@ -514,6 +569,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           icon={bucket.icon}
           active={activeBucketId === bucket.id}
           fillHeight
+          {...bucketActivationProps(bucket)}
         >
           {placedIds.map((itemId) => renderPlacedItem(itemId))}
         </LessonSortBucket>
@@ -526,6 +582,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         ref={(node) => {
           bucketRefs.current[bucket.id] = node;
         }}
+        {...bucketActivationProps(bucket)}
         className={cn(
           lessonSortBucketClass,
           isSpentTotalLayout && "min-h-[12rem] flex-1 p-3",
@@ -571,6 +628,7 @@ export function LessonBucketSortGame<TBucket extends string>({
             bucketRefs.current[primaryBucket.id] = node;
           }}
           className="flex min-h-0 w-full flex-1 flex-col"
+          {...bucketActivationProps(primaryBucket)}
         >
           <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
             {primaryBucket.label}

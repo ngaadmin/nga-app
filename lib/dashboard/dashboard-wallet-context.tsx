@@ -11,9 +11,12 @@ import {
   type ReactNode,
 } from "react";
 import {
+  appendWalletLedgerEvent,
+  createWalletEventId,
   defaultDashboardWalletState,
   readDashboardWalletState,
   saveDashboardWalletState,
+  type WalletLedgerEvent,
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
@@ -36,7 +39,7 @@ type DashboardWalletContextValue = {
   xpExchangeRateSet: boolean;
   setAudSliderIndex: (index: number) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
-  awardLessonXp: (points: number) => void;
+  awardLessonXp: (points: number, eventId?: string) => void;
 };
 
 const DashboardWalletContext = createContext<DashboardWalletContextValue | null>(
@@ -109,11 +112,20 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       }
     }
 
+    const settingsChanged =
+      !existing ||
+      existing.audSliderIndex !== audSliderIndex ||
+      existing.xpExchangeRateSet !== xpExchangeRateSet;
+
     saveDashboardWalletState({
+      ...existing,
       totalPoints,
       lifetimePointsEarned,
       audSliderIndex,
       xpExchangeRateSet,
+      updatedAt: settingsChanged
+        ? new Date().toISOString()
+        : existing?.updatedAt,
     });
   }, [
     audSliderIndex,
@@ -148,36 +160,49 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       }
 
       const audAmount = convertPointsToAud(safePoints, audPer100Xp);
-      setTotalPoints((current) => current - safePoints);
-
       const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
-      saveDashboardWalletState({
-        ...persisted,
-        totalPoints: Math.max(0, persisted.totalPoints - safePoints),
-        audSliderIndex,
-        xpExchangeRateSet,
-      });
+      const event: WalletLedgerEvent = {
+        id: createWalletEventId(),
+        kind: "spend",
+        points: safePoints,
+        at: new Date().toISOString(),
+      };
+      const next = appendWalletLedgerEvent(
+        { ...persisted, audSliderIndex, xpExchangeRateSet },
+        event,
+      );
+      if (!next) {
+        return { success: false, error: "That cash-in was already saved." };
+      }
+
+      setTotalPoints(next.totalPoints);
+      saveDashboardWalletState(next);
 
       return { success: true, audAmount, pointsClaimed: safePoints };
     },
     [audPer100Xp, audSliderIndex, totalPoints, xpExchangeRateSet],
   );
 
-  const awardLessonXp = useCallback((points: number) => {
+  const awardLessonXp = useCallback((points: number, eventId?: string) => {
     const safePoints = Math.floor(points);
     if (!Number.isFinite(safePoints) || safePoints <= 0) return;
 
-    setTotalPoints((current) => current + safePoints);
-    setLifetimePointsEarned((current) => current + safePoints);
-
     const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
-    saveDashboardWalletState({
-      ...persisted,
-      totalPoints: persisted.totalPoints + safePoints,
-      lifetimePointsEarned: persisted.lifetimePointsEarned + safePoints,
-      audSliderIndex,
-      xpExchangeRateSet,
-    });
+    const event: WalletLedgerEvent = {
+      id: eventId?.trim() || createWalletEventId(),
+      kind: "earn",
+      points: safePoints,
+      at: new Date().toISOString(),
+    };
+    const next = appendWalletLedgerEvent(
+      { ...persisted, audSliderIndex, xpExchangeRateSet },
+      event,
+    );
+    if (!next) return;
+
+    setTotalPoints(next.totalPoints);
+    setLifetimePointsEarned(next.lifetimePointsEarned);
+    saveDashboardWalletState(next);
   }, [audSliderIndex, xpExchangeRateSet]);
 
   const value = useMemo(

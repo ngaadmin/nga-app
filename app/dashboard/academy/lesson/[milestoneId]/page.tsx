@@ -5,6 +5,7 @@ import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validat
 import {
   bundledPayloadMilestone,
   hasShippedLesson,
+  listPlayableLessonMilestoneIds,
 } from "@/lib/academy/lessons/registry";
 import {
   lessonNumberForMilestoneId,
@@ -15,22 +16,24 @@ import { notFound } from "next/navigation";
 
 type AcademyLessonPageProps = {
   params: Promise<{ milestoneId: string }>;
-  searchParams: Promise<{ preview?: string | string[] }>;
 };
 
 export const metadata: Metadata = {
   title: "Academy Lesson",
 };
 
+export function generateStaticParams() {
+  return listPlayableLessonMilestoneIds().map((milestoneId) => ({
+    milestoneId: String(milestoneId),
+  }));
+}
+
 export default async function AcademyLessonPage({
   params,
-  searchParams,
 }: AcademyLessonPageProps) {
   const { milestoneId } = await params;
-  const query = await searchParams;
-  const previewValue = Array.isArray(query.preview) ? query.preview[0] : query.preview;
   const parsedId = Number.parseInt(milestoneId, 10);
-  const directOpen = allowsDirectLessonOpen({ preview: previewValue === "1" });
+  const directOpen = allowsDirectLessonOpen();
 
   if (!Number.isFinite(parsedId) || parsedId < 1) {
     notFound();

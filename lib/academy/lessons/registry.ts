@@ -155,6 +155,15 @@ export function hasShippedLesson(milestoneId: number): boolean {
   );
 }
 
+/** Milestone ids the Academy map can open. Used to prebuild those lesson routes. */
+export function listPlayableLessonMilestoneIds(): number[] {
+  const ids = new Set<number>([
+    ...SHIPPED_ACADEMY_LESSON_IDS,
+    ...BUNDLED_PAYLOAD_MILESTONE_IDS,
+  ]);
+  return [...ids].sort((left, right) => left - right);
+}
+
 /**
  * Active (current) and completed lessons open when the lesson definition exists.
  * Do not use per-cohort `shippedCohorts` here — that was blocking the continue

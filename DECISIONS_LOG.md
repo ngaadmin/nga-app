@@ -26,7 +26,7 @@ These principles govern how we build and extend the codebase:
 
 9. **Duolingo-for-Finance UX** ? Borderless white canvas, floating `shadow-md` tiles, zigzag journey maps, curved dotted SVG path connectors, high visual density, low prose. Shared primitives (`DashboardSectionHeading`, `JourneyPathBridge`, lesson slide shell) enforce consistency. Hub titles use **Academy / Launchpad / Vault** with no "The " prefix.
 
-10. **Finn as Sole Mentor Persona** ? All youth-facing mentor voice, Vault activity logs, and hub copy reference **Finn** only. No competing AI personas in product UI.
+10. **Penny as Sole Mentor Persona** ? All youth-facing mentor voice, Vault activity logs, and hub copy reference **Penny** only. No competing AI personas in product UI.
 
 11. **Hardware Isolation** ? PWA-only interaction model. No camera, Bluetooth, or native push notification dependencies in the current build.
 

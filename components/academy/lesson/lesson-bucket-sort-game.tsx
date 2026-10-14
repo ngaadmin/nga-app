@@ -30,6 +30,11 @@ import {
 } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { cn } from "@/lib/utils/cn";
+import {
+  bestDropZone,
+  domRectToDropRect,
+  type DragBounds,
+} from "@/lib/academy/lessons/drop-hit";
 import type { SortBucketTone } from "@/lib/academy/lessons/types/shared-blocks";
 
 export type LessonSortItem<TBucket extends string> = {
@@ -51,6 +56,7 @@ type LessonBucketSortGameProps<TBucket extends string> = {
   items: readonly LessonSortItem<TBucket>[];
   buckets: readonly LessonSortBucket<TBucket>[];
   onComplete: () => void;
+  onMismatch?: () => void;
   layout?: "default" | "spent-total" | "stable-grid" | "statement-sort";
   targetTotal?: number;
   poolColumnLabel?: string;
@@ -92,14 +98,13 @@ function shuffleIds(ids: readonly string[]): string[] {
   return next;
 }
 
-/** Extra pixels around bucket bounds so drops register more easily on touch devices. */
-const BUCKET_DROP_HIT_PADDING_PX = 20;
 const TAP_SELECT_PX = 10;
 
 export function LessonBucketSortGame<TBucket extends string>({
   items,
   buckets,
   onComplete,
+  onMismatch,
   layout = "stable-grid",
   targetTotal,
   poolColumnLabel = "Purchases",
@@ -136,6 +141,8 @@ export function LessonBucketSortGame<TBucket extends string>({
 
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  const onMismatchRef = useRef(onMismatch);
+  onMismatchRef.current = onMismatch;
 
   const pendingEffectsRef = useRef<PendingSideEffect[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
@@ -208,21 +215,16 @@ export function LessonBucketSortGame<TBucket extends string>({
 
   const resolveBucketAtPoint = useCallback(
     (clientX: number, clientY: number): TBucket | null => {
-      for (const bucket of buckets) {
+      const drag = dragStateRef.current;
+      const bounds: DragBounds | null = drag
+        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
+        : null;
+      const zones = buckets.flatMap((bucket) => {
         const node = bucketRefs.current[bucket.id];
-        if (!node) continue;
-        const rect = node.getBoundingClientRect();
-        const pad = BUCKET_DROP_HIT_PADDING_PX;
-        if (
-          clientX >= rect.left - pad &&
-          clientX <= rect.right + pad &&
-          clientY >= rect.top - pad &&
-          clientY <= rect.bottom + pad
-        ) {
-          return bucket.id;
-        }
-      }
-      return null;
+        if (!node) return [];
+        return [{ id: bucket.id, rect: domRectToDropRect(node.getBoundingClientRect()) }];
+      });
+      return bestDropZone(zones, bounds, clientX, clientY);
     },
     [buckets],
   );
@@ -242,6 +244,7 @@ export function LessonBucketSortGame<TBucket extends string>({
       if (!poolIdsRef.current.includes(itemId)) return;
 
       if (item.bucket !== bucketId) {
+        onMismatchRef.current?.();
         setFlyHomeId(itemId);
         window.setTimeout(() => {
           setFlyHomeId(null);
@@ -453,7 +456,6 @@ export function LessonBucketSortGame<TBucket extends string>({
           onKeyDown={(event) => selectItemFromKeyboard(event, itemId)}
           onPointerDown={(event) => handleChipPointerDown(itemId, event)}
           className={cn(
-            selectedItemId === itemId && "ring-2 ring-[#0CC1E0]",
             flyHomeId === itemId &&
               "transition-transform duration-300 ease-out -translate-y-2.5",
           )}
@@ -476,7 +478,6 @@ export function LessonBucketSortGame<TBucket extends string>({
           stacked ? "w-full" : "w-full min-w-[8rem] max-w-full",
           lessonSortStatementCardClass,
           isDragging && "opacity-40",
-          selectedItemId === itemId && "ring-2 ring-[#0CC1E0]",
           flyHomeId === itemId &&
             "transition-transform duration-300 ease-out -translate-y-2.5",
         )}
@@ -677,7 +678,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         <div
           className={cn(
             lessonSortStatementCardClass,
-            "pointer-events-none fixed shadow-lg ring-2 ring-[#0CC1E0]/40",
+            "pointer-events-none fixed",
           )}
           style={{
             left: dragState.x,

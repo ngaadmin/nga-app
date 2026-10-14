@@ -9,6 +9,7 @@ import {
   type MedalIllustrationId,
 } from "@/lib/academy/illustrations/medal-registry";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
+import { peelLeadingEmoji } from "@/lib/academy/lessons/peel-leading-emoji";
 import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { ACADEMY_MODULE_TITLES } from "@/lib/dashboard/academy-content";
@@ -247,6 +248,52 @@ function itemRows(entries: readonly SettingEntry[]): { bucket: string; text: str
     .map((entry) => ({ bucket: entry.key, text: entry.value }));
 }
 
+function stepRows(entries: readonly SettingEntry[]): SettingEntry[] {
+  return entries
+    .filter((entry) => /^STEP\d+$/.test(entry.key) && entry.value)
+    .sort(
+      (left, right) =>
+        Number(left.key.slice(4)) - Number(right.key.slice(4)),
+    );
+}
+
+const SPOTLIGHT_PAIR_LINE =
+  /^A\s*:\s*(.+?)\s*\|\s*B\s*:\s*(.+?)\s*\|\s*CORRECT\s*:\s*([AB])\s*$/i;
+
+/** `ROUNDS:` lines already used by Pick One. One `A | B | CORRECT` line is one round. */
+function spotlightSheetRounds(raw: string, error: string) {
+  const rounds: {
+    iconA: string;
+    optionA: string;
+    iconB: string;
+    optionB: string;
+    correct: "a" | "b";
+    error: string;
+  }[] = [];
+  for (const line of raw.split(/\r?\n/)) {
+    const match = SPOTLIGHT_PAIR_LINE.exec(line.trim());
+    if (!match) continue;
+    const sideA = peelLeadingEmoji(match[1] ?? "");
+    const sideB = peelLeadingEmoji(match[2] ?? "");
+    rounds.push({
+      iconA: sideA.emoji ?? "A",
+      optionA: sideA.label,
+      iconB: sideB.emoji ?? "B",
+      optionB: sideB.label,
+      correct: (match[3] ?? "A").toLowerCase() === "b" ? "b" : "a",
+      error,
+    });
+  }
+  return rounds;
+}
+
+function moodRows(entries: readonly SettingEntry[]): SettingEntry[] {
+  return entries.filter(
+    (entry) =>
+      (entry.key === "RUSHING" || entry.key === "THINKING") && entry.value,
+  );
+}
+
 function frozenLabelFromHold(holdLabel: string): string {
   const match = /HOLD TO\s+([A-Z]+)/i.exec(holdLabel);
   const word = match?.[1]?.toUpperCase();
@@ -465,6 +512,8 @@ export function mapPayloadScreen(
       const target = settingValue(settings, "TARGET") ?? "";
       const emoji = firstEmoji(source);
       const sourceLabel = (emoji ? source.replace(emoji, "") : source).trim() || "Start";
+      const sourceImageFile = settingValue(settings, "ITEM");
+      const targetImageFile = settingValue(settings, "IMAGE");
       return {
         type: "drag-to-target",
         id,
@@ -472,6 +521,8 @@ export function mapPayloadScreen(
         sourceLabel,
         targetLabel: target.trim() || "Target",
         ...(emoji ? { itemEmoji: emoji } : {}),
+        ...(sourceImageFile ? { sourceImageFile, itemSize: "lg" as const, showZoneLabels: false } : {}),
+        ...(targetImageFile ? { targetImageFile } : {}),
         coinCount: 1,
         successMessage: "",
         ...(error ? { wrongError: error } : {}),
@@ -481,8 +532,22 @@ export function mapPayloadScreen(
     case "savings-goal": {
       const raw = cohortField(row.settings, cohort);
       const available = Number.parseInt(/AVAILABLE:\s*\$(\d+)/i.exec(raw)?.[1] ?? "", 10);
-      const itemsLine = /^ITEMS:\s*(.*)$/im.exec(raw)?.[1] ?? "";
-      const itemChars = [...itemsLine];
+      const target = Number.parseInt(/TARGET:\s*\$?(\d+)/i.exec(raw)?.[1] ?? "", 10);
+      const itemChunks: string[] = [];
+      let collectingItems = false;
+      for (const line of raw.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (/^ITEMS:\s*/i.test(trimmed)) {
+          collectingItems = true;
+          itemChunks.push(trimmed.replace(/^ITEMS:\s*/i, ""));
+          continue;
+        }
+        if (collectingItems && /^(TARGET|AVAILABLE|LABEL|DROP|RESULT)\s*:/i.test(trimmed)) {
+          collectingItems = false;
+        }
+        if (collectingItems) itemChunks.push(trimmed);
+      }
+      const itemChars = [...itemChunks.join(" ")];
       const items: { id: string; label: string; price: number; emoji: string }[] = [];
       for (let index = 0; index < itemChars.length; index += 1) {
         const found = readEmojiAt(itemChars, index);
@@ -508,15 +573,20 @@ export function mapPayloadScreen(
             : named.length === 2
               ? `${named[0]} and ${named[1]}`
               : `${named.slice(0, -1).join(", ")}, and ${named[named.length - 1]}`;
+      const countsDown = Number.isFinite(available) && available > 0;
       return {
         type: "savings-goal",
         id,
         intro: text.replace(/\bthe items\b/i, dragThese ?? "the items"),
-        meterLabel: settingValue(settings, "LABEL") || "Remaining",
-        showsRemaining: true,
-        targetAmount: Number.isFinite(available) && available > 0 ? available : prices || 1,
+        meterLabel: settingValue(settings, "LABEL") || (countsDown ? "Remaining" : "Savings"),
+        showsRemaining: countsDown,
+        targetAmount: countsDown
+          ? available
+          : Number.isFinite(target) && target > 0
+            ? target
+            : prices || 1,
         poolColumnLabel: "Items",
-        dropZoneLabel: "Chosen",
+        dropZoneLabel: settingValue(settings, "DROP") || "Chosen",
         items,
         workshopSignTitle: text,
         lockedLabel: "Locked",
@@ -597,6 +667,9 @@ export function mapPayloadScreen(
         optionB: options[1] ?? { label: "", isCorrect: false },
         wrongError: error,
         errorStyle: "inline-red",
+        ...(options.length >= 5 && correctChoiceLetters(settings).size > 1
+          ? { optionLayout: "radio-list" as const }
+          : {}),
         ...(decisionPath ? { decisionPath: true } : {}),
         ...(skillHub ? { skillHub: true } : {}),
         ...(decisionScript && decisionScript.prompts.length > 0
@@ -607,6 +680,55 @@ export function mapPayloadScreen(
     }
     case "tap-reveal":
     case "bucket-sort": {
+      const steps = stepRows(settings);
+      const moods = moodRows(settings);
+      if (row.gameType === "bucket-sort" && steps.length > 0) {
+        const buckets = steps.map((_, index) => ({
+          id: `step${index + 1}`,
+          label: `Step ${index + 1}`,
+        }));
+        const items = steps.map((entry, index) => {
+          const parsed = splitEmojiLabel(entry.value);
+          return {
+            id: itemSlug(parsed.label, index),
+            ...(parsed.emoji ? { emoji: parsed.emoji } : {}),
+            label: parsed.label,
+            bucket: `step${index + 1}`,
+          };
+        });
+        return {
+          type: "bucket-sort",
+          id,
+          intro: text,
+          layout: "steps-row",
+          buckets,
+          items,
+          ...picture,
+        };
+      }
+      if (row.gameType === "bucket-sort" && moods.length > 0) {
+        const items = moods.map((entry, index) => {
+          const parsed = splitEmojiLabel(entry.value);
+          return {
+            id: itemSlug(parsed.label, index),
+            ...(parsed.emoji ? { emoji: parsed.emoji } : {}),
+            label: parsed.label,
+            bucket: entry.key === "RUSHING" ? "rushing" : "thinking",
+          };
+        });
+        return {
+          type: "bucket-sort",
+          id,
+          intro: text,
+          layout: "statement-sort",
+          buckets: [
+            { id: "rushing", label: "I'm Rushing", tone: "rush", icon: "⚡" },
+            { id: "thinking", label: "I'm Thinking", tone: "think", icon: "🧠" },
+          ],
+          items,
+          ...picture,
+        };
+      }
       const rows = itemRows(settings);
       const bucketKeys = [...new Set(rows.map((item) => item.bucket))];
       const buckets = bucketKeys.map((key) => {
@@ -690,6 +812,16 @@ export function mapPayloadScreen(
           ...(decisionScript && decisionScript.prompts.length > 0
             ? { promptWhen: decisionScript.prompts }
             : {}),
+          ...picture,
+        };
+      }
+      const sheetRounds = spotlightSheetRounds(cohortField(row.settings, cohort), error);
+      if (sheetRounds.length > 0) {
+        return {
+          type: "spotlight-rounds",
+          id,
+          prompt: text,
+          rounds: sheetRounds,
           ...picture,
         };
       }
@@ -941,7 +1073,10 @@ export function resolvePayloadLesson(
       const continueLabel = screen.continueToLabel ?? continueGoLabel(raw);
       return {
         ...screen,
-        sourceLabel: row.screenLabel,
+        // Drag screens use sourceLabel as the item name. Other screens use it
+        // as the spreadsheet Screen cell for continue/hub links.
+        sourceLabel:
+          screen.type === "drag-to-target" ? screen.sourceLabel : row.screenLabel,
         ...(continueLabel ? { continueToLabel: continueLabel } : {}),
         ...( /^\s*HUB\s*$/im.test(raw) ? { skillHub: true as const } : {}),
       };

@@ -15,10 +15,11 @@ export function LinkMatchScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<LinkMatchScreenConfig>) {
-  const { showSuccess, handleComplete, handleMistake } = useLessonScreenFlow({
-    screenIndex,
-    flow,
-  });
+  const { showSuccess, handleComplete, handleSuccess, handleMistake } =
+    useLessonScreenFlow({
+      screenIndex,
+      flow,
+    });
 
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +36,7 @@ export function LinkMatchScreen({
         benefitColumnLabel={screen.benefitColumnLabel}
         onComplete={() => {
           setError(null);
+          handleSuccess();
           handleComplete();
         }}
         onSuccess={() => setError(null)}

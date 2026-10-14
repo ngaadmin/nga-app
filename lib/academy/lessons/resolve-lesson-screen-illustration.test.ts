@@ -44,6 +44,20 @@ describe("resolveLessonScreenIllustration", () => {
     );
   });
 
+  it("shows a picture on a multi-select list when the payload names one", () => {
+    const resolved = resolveLessonScreenIllustration({
+      type: "binary-choice",
+      id: "pressure-sign",
+      prompt: "Select which parts of the sign are making Lars rush.",
+      optionLayout: "radio-list",
+      optionA: { label: "DON'T MISS OUT!", isCorrect: true },
+      optionB: { label: "Made in France", isCorrect: false },
+      wrongError: "That's just sign info, not a rush trick.",
+      pairImage: "fishing-rod-sign.webp",
+    });
+    expect(resolved?.src).toContain("fishing-rod-sign.webp");
+  });
+
   it("shows no picture when the sheet says not allowed", () => {
     const resolved = resolveLessonScreenIllustration({
       ...wordDrop,

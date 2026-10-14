@@ -2,7 +2,7 @@ import { GUEST_USERNAME } from "@/lib/dashboard/use-dashboard-user";
 
 export const DEMO_PROFILE_FALLBACK_USERNAME = "Kuikie";
 
-export function resolveFinnAddressName(
+export function resolvePennyAddressName(
   username: string,
   isLoading: boolean,
 ): string {

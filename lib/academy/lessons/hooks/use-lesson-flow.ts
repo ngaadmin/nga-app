@@ -92,6 +92,10 @@ export function useLessonFlow({
   const flushTimeoutRef = useRef<number | null>(null);
   const activeMilestoneRef = useRef(milestoneId);
 
+  useEffect(() => {
+    router.prefetch(exitHref);
+  }, [exitHref, router]);
+
   /** New lesson session — restore full lives (max 4 via LESSON_MAX_LIVES). */
   useEffect(() => {
     if (activeMilestoneRef.current === milestoneId) return;
@@ -233,46 +237,44 @@ export function useLessonFlow({
     if (lessonComplete) return;
     setLessonComplete(true);
 
-    if (!isDesignShell && !skipProgressWrites) {
-      awardLessonXp(
-        LESSON_COMPLETION_XP,
-        `lesson:${milestoneId}:completion`,
-      );
-      if (perfectStreak) {
+    try {
+      if (!isDesignShell && !skipProgressWrites) {
         awardLessonXp(
-          LESSON_PERFECT_STREAK_BONUS,
-          `lesson:${milestoneId}:perfect`,
+          LESSON_COMPLETION_XP,
+          `lesson:${milestoneId}:completion`,
         );
-      }
-
-      const milestones = readAcademyMilestones();
-      const alreadyCompleted = milestones.some(
-        (node) => node.id === milestoneId && node.status === "completed",
-      );
-
-      if (!alreadyCompleted) {
-        const session = readGuestAccessSession();
-        const cohort = session?.birthYear
-          ? getMasteryCohortFromBirthYear(session.birthYear)
-          : "explorer";
-        if (skillAwardTier && skillSlug) {
-          applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort);
-        } else {
-          applyLessonSkillTierProgress(milestoneId, cohort);
+        if (perfectStreak) {
+          awardLessonXp(
+            LESSON_PERFECT_STREAK_BONUS,
+            `lesson:${milestoneId}:perfect`,
+          );
         }
-        const updated = completeAcademyMilestone(milestoneId, milestones);
-        saveAcademyMilestones(updated);
+
+        const milestones = readAcademyMilestones();
+        const alreadyCompleted = milestones.some(
+          (node) => node.id === milestoneId && node.status === "completed",
+        );
+
+        if (!alreadyCompleted) {
+          const session = readGuestAccessSession();
+          const cohort = session?.birthYear
+            ? getMasteryCohortFromBirthYear(session.birthYear)
+            : "explorer";
+          if (skillAwardTier && skillSlug) {
+            applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort);
+          } else {
+            applyLessonSkillTierProgress(milestoneId, cohort);
+          }
+          const updated = completeAcademyMilestone(milestoneId, milestones);
+          saveAcademyMilestones(updated);
+        }
+      }
+    } finally {
+      router.push(exitHref);
+      if (!skipProgressWrites) {
+        void persistRegisteredProgressNow();
       }
     }
-
-    if (skipProgressWrites) {
-      router.push(exitHref);
-      return;
-    }
-
-    void persistRegisteredProgressNow().finally(() => {
-      router.push(exitHref);
-    });
   }, [
     awardLessonXp,
     exitHref,

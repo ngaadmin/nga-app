@@ -558,7 +558,7 @@ export function convertToRegisteredProfile(
   }
 
   const existing = readUserSession();
-  // Free the temporary guest Finnster handle back into the reusable pool.
+  // Free the temporary guest Pennyster handle back into the reusable pool.
   if (existing?.genericProfileId) {
     releaseGenericProfileId(existing.genericProfileId);
   }

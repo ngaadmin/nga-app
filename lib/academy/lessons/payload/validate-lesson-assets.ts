@@ -50,16 +50,34 @@ export function missingLessonImages(payload: LessonPayload): MissingLessonImage[
   return missing;
 }
 
+const checkedAssetSignatures = new Set<string>();
+
+function assetSignature(payload: LessonPayload, milestoneId: number): string {
+  const images = payload.screens
+    .map(
+      (screen) =>
+        `${screen.screenLabel}:${screen.gameType}:${screen.image.explorer}:${screen.image.pathfinder}:${screen.image.maverick}:${screen.settings.pathfinder}`,
+    )
+    .join("|");
+  return `${milestoneId}:${images}`;
+}
+
 /** Throw when a GO target is unknown or a rendered image file is missing. */
 export function assertLessonPayloadAssets(
   payload: LessonPayload,
   milestoneId: number,
 ): void {
+  const signature = assetSignature(payload, milestoneId);
+  if (checkedAssetSignatures.has(signature)) return;
+
   for (const cohort of COHORTS) {
     resolvePayloadLesson(payload, cohort, milestoneId);
   }
   const missing = missingLessonImages(payload);
-  if (missing.length === 0) return;
+  if (missing.length === 0) {
+    checkedAssetSignatures.add(signature);
+    return;
+  }
   const lines = missing.map(
     (item) =>
       `${item.cohort} screen ${item.screenLabel}: ${item.fileName} → ${item.requestedPath}`,

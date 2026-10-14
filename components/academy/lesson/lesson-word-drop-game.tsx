@@ -340,9 +340,8 @@ export const LessonWordDropGame = forwardRef<
   const blankSlotClass = (index: number, filled: boolean) =>
     cn(
       filled ? lessonBlankSlotFilledClass : lessonBlankSlotClass,
-      "align-middle text-base font-medium transition-colors",
-      hoverBlankIndex === index &&
-        "border-[#0CC1E0] bg-[#BDE9FB]/45 ring-2 ring-[#0CC1E0]/35",
+      "align-middle transition-colors",
+      hoverBlankIndex === index && "bg-[#E8F6FC]/60",
     );
 
   const visibleBlankWord = (index: number) => {
@@ -387,9 +386,7 @@ export const LessonWordDropGame = forwardRef<
         id="word-drop-bank"
         className={cn(
           "flex min-h-10 flex-wrap gap-2",
-          hoverPool &&
-            dragState?.fromBlankIndex !== null &&
-            "ring-2 ring-[#0CC1E0]/35",
+          hoverPool && dragState?.fromBlankIndex !== null && "bg-[#E8F6FC]/40",
         )}
       >
         {allOptions.map((option) => {
@@ -421,7 +418,7 @@ export const LessonWordDropGame = forwardRef<
               className={cn(
                 lessonSortPoolChipClass,
                 used && "invisible pointer-events-none",
-                selectedWord === option && "ring-2 ring-[#031F82]",
+                selectedWord === option && "bg-[#BDE9FB]",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",
@@ -439,7 +436,7 @@ export const LessonWordDropGame = forwardRef<
           <div
             className={cn(
               lessonSortPoolChipClass,
-              "pointer-events-none fixed shadow-lg",
+              "pointer-events-none fixed",
             )}
             style={{
               left: dragState.x,

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
+import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 type DragState = {
@@ -18,6 +19,8 @@ type DragState = {
   offsetY: number;
   x: number;
   y: number;
+  width: number;
+  height: number;
   originX: number;
   originY: number;
 };
@@ -41,12 +44,16 @@ type LessonDragToTargetGameProps = {
   };
   sourceEmptyMessage?: string;
   showZoneLabels?: boolean;
+  /**
+   * Draw the dragged picture at a quarter of the target picture's width.
+   * Used when a small item (a coin) sits beside a much larger target.
+   */
+  quarterSource?: boolean;
   onComplete: () => void;
   onSuccess?: () => void;
   onMiss?: () => void;
 };
 
-const TARGET_DROP_HIT_PADDING_PX = 24;
 const TAP_SELECT_PX = 10;
 const DRAG_TO_TARGET_MAX_COINS = 3;
 const COIN_CHIP_CLASS =
@@ -78,6 +85,14 @@ const DRAG_ILLUSTRATION_FRAME_CLASS =
   "relative flex h-[9rem] shrink-0 items-center justify-center sm:h-[11rem]";
 const DRAG_ILLUSTRATION_IMAGE_CLASS =
   "block h-[9rem] w-auto object-contain object-center sm:h-[11rem]";
+/** Target width on the swipe screen. The coin is one quarter of this. */
+const BANK_SIZE_CLASS = "[--bank-size:9rem] sm:[--bank-size:11rem]";
+const BANK_FRAME_CLASS =
+  "relative flex h-[var(--bank-size)] w-[var(--bank-size)] shrink-0 items-center justify-center";
+const BANK_IMAGE_CLASS = "block h-full w-full object-contain object-center";
+const COIN_FRAME_CLASS =
+  "relative flex h-[calc(var(--bank-size)/4)] w-[calc(var(--bank-size)/4)] shrink-0 items-center justify-center";
+const COIN_IMAGE_CLASS = "block h-full w-full object-contain object-center";
 
 export function LessonDragToTargetGame({
   sourceLabel,
@@ -92,6 +107,7 @@ export function LessonDragToTargetGame({
   targetImagePlaceholder,
   sourceEmptyMessage = "Coins saved!",
   showZoneLabels = true,
+  quarterSource = false,
   onComplete,
   onSuccess,
   onMiss,
@@ -160,13 +176,14 @@ export function LessonDragToTargetGame({
   const isPointOverTarget = useCallback((clientX: number, clientY: number) => {
     const node = targetRef.current;
     if (!node) return false;
-    const rect = node.getBoundingClientRect();
-    const pad = TARGET_DROP_HIT_PADDING_PX;
-    return (
-      clientX >= rect.left - pad &&
-      clientX <= rect.right + pad &&
-      clientY >= rect.top - pad &&
-      clientY <= rect.bottom + pad
+    const drag = dragStateRef.current;
+    return dragHitsZone(
+      drag
+        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
+        : null,
+      clientX,
+      clientY,
+      domRectToDropRect(node.getBoundingClientRect()),
     );
   }, []);
 
@@ -194,6 +211,8 @@ export function LessonDragToTargetGame({
       offsetY: event.clientY - rect.top,
       x: rect.left,
       y: rect.top,
+      width: rect.width,
+      height: rect.height,
       originX: event.clientX,
       originY: event.clientY,
     };
@@ -282,7 +301,7 @@ export function LessonDragToTargetGame({
       <img
         src={sourceIllustrationSrc}
         alt={alt}
-        className={DRAG_ILLUSTRATION_IMAGE_CLASS}
+        className={quarterSource ? COIN_IMAGE_CLASS : DRAG_ILLUSTRATION_IMAGE_CLASS}
         decoding="async"
         draggable={false}
         onError={() => setSourceImageFailed(true)}
@@ -294,7 +313,11 @@ export function LessonDragToTargetGame({
     if (showSourceIllustration) {
       return (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          {renderSourceIllustration("")}
+          {quarterSource ? (
+            <div className="h-1/4 w-1/4">{renderSourceIllustration("")}</div>
+          ) : (
+            renderSourceIllustration("")
+          )}
         </div>
       );
     }
@@ -312,12 +335,12 @@ export function LessonDragToTargetGame({
   const renderTargetVisual = () => {
     if (targetIllustrationSrc && !targetImageFailed) {
       return (
-        <div className={DRAG_ILLUSTRATION_FRAME_CLASS}>
+        <div className={quarterSource ? BANK_FRAME_CLASS : DRAG_ILLUSTRATION_FRAME_CLASS}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={targetIllustrationSrc}
             alt={targetIllustrationAlt ?? targetLabel}
-            className={DRAG_ILLUSTRATION_IMAGE_CLASS}
+            className={quarterSource ? BANK_IMAGE_CLASS : DRAG_ILLUSTRATION_IMAGE_CLASS}
             decoding="async"
             draggable={false}
             onError={() => setTargetImageFailed(true)}
@@ -377,11 +400,12 @@ export function LessonDragToTargetGame({
             className={cn(
               "cursor-grab bg-transparent p-0 active:cursor-grabbing",
               showSourceIllustration
-                ? DRAG_ILLUSTRATION_FRAME_CLASS
+                ? quarterSource
+                  ? COIN_FRAME_CLASS
+                  : DRAG_ILLUSTRATION_FRAME_CLASS
                 : sourceChipClass,
               dragState?.coinIndex === index && "opacity-25",
-              selectedCoinIndex === index &&
-                "rounded-full ring-2 ring-[#0CC1E0] ring-offset-2",
+              selectedCoinIndex === index && "opacity-80",
             )}
             aria-label={`Select ${sourceLabel} ${index + 1} to drop on ${targetLabel}`}
             style={{ touchAction: "none" }}
@@ -408,6 +432,7 @@ export function LessonDragToTargetGame({
         className={cn(
           "flex min-h-[120px] items-center justify-center gap-6 py-4",
           !showZoneLabels && "min-h-[10.5rem]",
+          quarterSource && BANK_SIZE_CLASS,
         )}
       >
         <div className="flex items-center">{renderSourceCoins()}</div>
@@ -429,7 +454,9 @@ export function LessonDragToTargetGame({
             className={cn(
               "pointer-events-none fixed z-overlay",
               showSourceIllustration
-                ? DRAG_ILLUSTRATION_FRAME_CLASS
+                ? quarterSource
+                  ? cn(BANK_SIZE_CLASS, COIN_FRAME_CLASS)
+                  : DRAG_ILLUSTRATION_FRAME_CLASS
                 : sourceChipClass,
             )}
             style={{

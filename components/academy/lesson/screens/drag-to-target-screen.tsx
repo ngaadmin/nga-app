@@ -6,6 +6,7 @@ import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesso
 import { LessonScreenLayout, lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import {
   getIllustrationPath,
+  getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
 import type { DragToTargetScreenConfig } from "@/lib/academy/lessons/types";
@@ -38,19 +39,23 @@ export function DragToTargetScreen({
         coinCount={screen.coinCount}
         targetEmoji={screen.targetEmoji}
         sourceIllustrationSrc={
-          screen.sourceIllustrationId &&
-          isIllustrationId(screen.sourceIllustrationId)
-            ? getIllustrationPath(screen.sourceIllustrationId)
-            : undefined
+          screen.sourceImageFile
+            ? getPairSheetImagePath(screen.sourceImageFile)
+            : screen.sourceIllustrationId &&
+                isIllustrationId(screen.sourceIllustrationId)
+              ? getIllustrationPath(screen.sourceIllustrationId)
+              : undefined
         }
         sourceIllustrationAlt={
           screen.sourceIllustrationAlt ?? screen.sourceLabel
         }
         targetIllustrationSrc={
-          screen.targetIllustrationId &&
-          isIllustrationId(screen.targetIllustrationId)
-            ? getIllustrationPath(screen.targetIllustrationId)
-            : undefined
+          screen.targetImageFile
+            ? getPairSheetImagePath(screen.targetImageFile)
+            : screen.targetIllustrationId &&
+                isIllustrationId(screen.targetIllustrationId)
+              ? getIllustrationPath(screen.targetIllustrationId)
+              : undefined
         }
         targetIllustrationAlt={
           screen.targetIllustrationAlt ?? screen.targetLabel
@@ -58,6 +63,7 @@ export function DragToTargetScreen({
         targetImagePlaceholder={screen.targetImagePlaceholder}
         sourceEmptyMessage={screen.sourceEmptyMessage}
         showZoneLabels={screen.showZoneLabels}
+        quarterSource={Boolean(screen.sourceImageFile && screen.targetImageFile)}
         onComplete={handleComplete}
         onSuccess={() => {
           setError(null);

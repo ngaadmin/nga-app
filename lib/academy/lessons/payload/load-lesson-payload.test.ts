@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadBundledLessonPayload, loadLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { hasShippedLesson } from "@/lib/academy/lessons/registry";
 import { fillCashPlaceholder } from "@/lib/academy/lessons/payload/cash-placeholder";
-import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
+import { mapPayloadScreen, resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import {
   LESSON_COMPLETION_XP,
@@ -525,6 +525,122 @@ describe("lesson payload loader", () => {
       options: ["afford", "want", "see"],
       correctOption: "afford",
     });
+  });
+
+  it("updates the lesson 4 phone screens for every cohort", () => {
+    for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 4), cohort, 4);
+      const sign = lesson.screens[3];
+      const advice = lesson.screens[4];
+      const swipe = lesson.screens[5];
+      const savings = lesson.screens[6];
+      const sequence = lesson.screens[1];
+      const thoughts = lesson.screens[2];
+      expect(sequence).toMatchObject({ type: "bucket-sort", layout: "steps-row" });
+      if (sequence?.type === "bucket-sort") {
+        expect(sequence.items).toHaveLength(4);
+        expect(sequence.buckets.map((bucket) => bucket.label)).toEqual([
+          "Step 1",
+          "Step 2",
+          "Step 3",
+          "Step 4",
+        ]);
+      }
+      const lead =
+        cohort === "explorer" ? "Lars" : cohort === "pathfinder" ? "Holly" : "Aiden";
+      expect(thoughts).toMatchObject({
+        type: "spotlight-rounds",
+        prompt: `Which one helps ${lead} stop and think?`,
+        pairImage: false,
+      });
+      if (thoughts?.type === "spotlight-rounds") {
+        expect(
+          thoughts.rounds.map((round) => [
+            round.optionA,
+            round.iconA,
+            round.optionB,
+            round.iconB,
+            round.correct,
+          ]),
+        ).toEqual([
+          [
+            "It's a limited time offer - I have to buy it now!",
+            "⏰",
+            "I can wait and get it cheaper later.",
+            "💰",
+            "b",
+          ],
+          [
+            "It looks cool, I need it right now!",
+            "🔥",
+            "I'll sleep on it and decide tomorrow.",
+            "😴",
+            "b",
+          ],
+          [
+            "Everyone has it, I don't want to be left out.",
+            "👥",
+            "I'll ask my friends if it's actually any good.",
+            "💬",
+            "b",
+          ],
+        ]);
+        expect(thoughts.rounds.every((round) => round.error.includes("rushing you"))).toBe(true);
+      }
+      expect(sign).toMatchObject({
+        type: "binary-choice",
+        pairImage: "fishing-rod-sign.webp",
+        optionLayout: "radio-list",
+      });
+      if (sign?.type === "binary-choice") {
+        expect(sign.options?.filter((option) => option.isCorrect)).toHaveLength(3);
+        expect(sign.options?.some((option) => option.label === "DON'T MISS OUT!")).toBe(true);
+      }
+      expect(advice).toMatchObject({ type: "binary-choice" });
+      if (advice?.type === "binary-choice") {
+        expect(advice.prompt).toMatch(/limited-time offer for extra lives/i);
+        expect(advice.options?.map((option) => option.label)).toEqual([
+          "Do I really need this?",
+          "Do I want it now, or is something rushing me?",
+          "Will I have enough left for my goals?",
+          "CLICK HERE TO BUY NOW!",
+        ]);
+        expect(advice.options?.filter((option) => option.isCorrect)).toHaveLength(3);
+        expect(advice.options?.[3]?.isCorrect).toBe(false);
+      }
+      expect(swipe).toMatchObject({
+        type: "drag-to-target",
+        sourceLabel: "Spend Now",
+        targetLabel: "Save for Later",
+        sourceImageFile: "money-coin.webp",
+        targetImageFile: "piggy-bank.webp",
+        coinCount: 1,
+      });
+      expect(savings).toMatchObject({
+        type: "savings-goal",
+        targetAmount: 20,
+        showsRemaining: false,
+        meterLabel: "Savings",
+      });
+      if (savings?.type !== "savings-goal") continue;
+      expect(savings.intro).toMatch(/\$20/);
+      expect(savings.items.reduce((sum, item) => sum + item.price, 0)).toBe(20);
+      expect(savings.dropZoneLabel).toMatch(/didn't buy/i);
+    }
+  });
+
+  it("maps a Pick One ROUNDS block into three spotlight rounds", () => {
+    const row = loadBundledLessonPayload(1, 2).screens[2];
+    expect(row).toBeDefined();
+    if (!row) return;
+    const screen = mapPayloadScreen(row, "explorer");
+    expect(screen).toMatchObject({ type: "spotlight-rounds" });
+    if (screen.type !== "spotlight-rounds") return;
+    expect(screen.rounds.map((round) => round.correct)).toEqual(["b", "a", "b"]);
+    expect(screen.rounds[0]?.optionA).toBe(
+      "A new phone case, even though his old one is still fine",
+    );
+    expect(screen.rounds[0]?.optionB).not.toMatch(/\|/);
   });
 
   it("uses pathfinder settings when the explorer settings cell is empty", () => {

@@ -474,7 +474,7 @@ Screens that become incomplete after success (e.g. `budget-select` uncheck) must
 | `true-false` | | ✓ | | |
 | `tap-reveal` | ✓ | | | |
 | `bucket-sort` | ✓ | ✓ | ✓ | ✓ |
-| `spotlight-rounds` | | ✓ | | |
+| `spotlight-rounds` | | ✓ | | ✓ |
 | `link-match` | | | ✓ | |
 | `rank-order` | | ✓ | | |
 | `budget-select` | | ✓ | | |

@@ -98,60 +98,45 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     advance: { mode: "all-items-sorted" },
   },
   {
-    type: "bucket-sort",
-    id: "rush-vs-think-sort",
-    layout: "statement-sort",
-    intro:
-      "Help Lars and Mia sort their thoughts. Which ones are making them rush? And which ones help them pause and think?",
-    buckets: [
-      { id: "rushing", label: "I'm Rushing", tone: "rush", icon: "⚡" },
-      { id: "thinking", label: "I'm Thinking", tone: "think", icon: "🧠" },
-    ],
-    items: [
+    type: "spotlight-rounds",
+    id: "pause-thoughts",
+    pairImage: false,
+    prompt: "Which one helps Lars stop and think?",
+    rounds: [
       {
-        id: "need-now",
-        emoji: "🔥",
-        label: "It looks cool, I need it right now!",
-        bucket: "rushing",
+        iconA: "⏰",
+        optionA: "It's a limited time offer - I have to buy it now!",
+        iconB: "💰",
+        optionB: "I can wait and get it cheaper later.",
+        correct: "b",
+        error: "That thought is rushing you. Pick the one that helps you stop.",
       },
       {
-        id: "left-out",
-        emoji: "👥",
-        label: "Everyone has it, I don't want to be left out.",
-        bucket: "rushing",
+        iconA: "🔥",
+        optionA: "It looks cool, I need it right now!",
+        iconB: "😴",
+        optionB: "I'll sleep on it and decide tomorrow.",
+        correct: "b",
+        error: "That thought is rushing you. Pick the one that helps you stop.",
       },
       {
-        id: "limited-time",
-        emoji: "⏰",
-        label: "It's a 'limited time' offer - I have to buy it now!",
-        bucket: "rushing",
-      },
-      {
-        id: "ask-friends",
-        emoji: "💬",
-        label: "I'll ask my friends if it's actually any good.",
-        bucket: "thinking",
-      },
-      {
-        id: "wait-cheaper",
-        emoji: "💰",
-        label: "I can wait and get it cheaper later.",
-        bucket: "thinking",
-      },
-      {
-        id: "sleep-on-it",
-        emoji: "😴",
-        label: "I'll sleep on it and decide tomorrow.",
-        bucket: "thinking",
+        iconA: "👥",
+        optionA: "Everyone has it, I don't want to be left out.",
+        iconB: "💬",
+        optionB: "I'll ask my friends if it's actually any good.",
+        correct: "b",
+        error: "That thought is rushing you. Pick the one that helps you stop.",
       },
     ],
-    successMessage:
-      "Perfect! You've sorted the rush from the think. Lars and Mia are in control now!",
-    advance: { mode: "all-items-sorted" },
   },
   {
     type: "binary-choice",
     id: "pressure-sign-picks",
+    pairImage: "fishing-rod-sign.webp",
+    illustration: {
+      alt: "Sale sign for a fishing rod",
+      scale: 1,
+    },
     selectionMode: "multi-correct",
     optionLayout: "radio-list",
     scenePrompt:
@@ -176,18 +161,17 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     lockCorrectSelections: true,
     wrongInteraction: "shake",
     prompt:
-      "Lars is playing a game and he gets a limited-time offer to buy extra lives for a discount. Lars remembers Senna's advice. Before he decides whether to spend his money, he stops.\n\nWhich questions should Lars ask himself?",
+      "Lars gets a limited-time offer for extra lives in his game. He remembers Senna's advice and stops. What should he ask himself?",
     optionA: {
-      label: "Do I really need this, instead of saving the money for something else?",
+      label: "Do I really need this?",
       isCorrect: true,
     },
     optionB: {
-      label:
-        "Do I really want this right now, or is something trying to make me rush?",
+      label: "Do I want it now, or is something rushing me?",
       isCorrect: true,
     },
     optionC: {
-      label: "If I buy this, do I have enough money left for my other goals?",
+      label: "Will I have enough left for my goals?",
       isCorrect: true,
     },
     optionD: {
@@ -211,8 +195,13 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
       "Lars chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.",
     sourceLabel: "Spend Now",
     targetLabel: "Save for Later",
-    itemEmoji: "🪙",
-    coinCount: 3,
+    sourceImageFile: "money-coin.webp",
+    sourceIllustrationAlt: "Coin",
+    targetImageFile: "piggy-bank.webp",
+    targetIllustrationAlt: "Piggy bank",
+    coinCount: 1,
+    itemSize: "lg",
+    showZoneLabels: false,
     successMessage: "Lars's money is safe from mindless spending!",
     advance: { mode: "on-complete" },
   },
@@ -220,8 +209,8 @@ const M1_L4_BASE_SCREENS: ScreenConfig[] = [
     type: "savings-goal",
     id: "lars-workshop-goal",
     intro:
-      "Lars is at a local bike event, and he sees the sign he's been waiting for: 'Learn to Wheelie - 30 Minute Workshop: $20.' To afford the Wheelie Workshop, Lars had to say 'no' to a few things over the last two weeks. Drag the three items Lars didn't buy into the 'Things Lars didn't buy' box to reach his $20 goal.",
-    meterLabel: "Savings for Workshop",
+      "Lars wants to do a $20 wheelie workshop. To afford it, he said no to three things. Drag them into the box to reach his goal.",
+    meterLabel: "Savings",
     targetAmount: 20,
     poolColumnLabel: "Things Lars wants to buy",
     dropZoneLabel: "Things Lars didn't buy",
@@ -256,9 +245,6 @@ const M1_L4_EXPLORER_OVERRIDES: ScreenOverrideMap = {
   "pause-sequence": {
     successMessage: "",
   },
-  "rush-vs-think-sort": {
-    successMessage: "",
-  },
   "pressure-sign-picks": {
     successMessage: "",
     wrongError: "That's just sign info, not a rush trick.",
@@ -276,6 +262,64 @@ const M1_L4_EXPLORER_OVERRIDES: ScreenOverrideMap = {
   },
 };
 
+const M1_L4_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
+  "pause-thoughts": {
+    prompt: "Which one helps Holly stop and think?",
+  },
+  "pressure-sign-picks": {
+    prompt: "Select which parts of the sign are making Holly rush.",
+    scenePrompt:
+      "Immi and Holly are walking through the shops. They walk past a big, flashy sign for a fishing rod. It's making Holly want to rush in and buy it immediately.",
+  },
+  "lars-check-questions": {
+    prompt:
+      "Holly gets a limited-time offer for extra lives in her game. She remembers Mia's advice and stops. What should she ask herself?",
+  },
+  "lars-save-coins": {
+    intro:
+      "Holly chooses to keep her money. Swipe her money from 'Spend Now' to 'Save for Later'.",
+  },
+  "lars-workshop-goal": {
+    intro:
+      "Holly wants to do a $20 nail-art workshop. To afford it, she said no to three things. Drag them into the box to reach her goal.",
+    dropZoneLabel: "Things Holly didn't buy",
+    items: [
+      { id: "snacks", label: "Snacks at school", price: 5, emoji: "🍫" },
+      { id: "lives", label: "Extra Lives Bundle", price: 5, emoji: "🎮" },
+      { id: "flashlight", label: "Flashlight", price: 10, emoji: "🔦" },
+    ],
+  },
+};
+
+const M1_L4_MAVERICK_OVERRIDES: ScreenOverrideMap = {
+  "pause-thoughts": {
+    prompt: "Which one helps Aiden stop and think?",
+  },
+  "pressure-sign-picks": {
+    prompt: "Select which parts of the sign are making Aiden rush.",
+    scenePrompt:
+      "Dash and Aiden are at a local market. They walk past a big, flashy sign for a fishing rod. It's making Aiden want to rush in and buy it immediately.",
+  },
+  "lars-check-questions": {
+    prompt:
+      "Aiden gets a limited-time offer for extra lives in his game. He remembers Dash's advice and stops. What should he ask himself?",
+  },
+  "lars-save-coins": {
+    intro:
+      "Aiden chooses to keep his money. Swipe his money from 'Spend Now' to 'Save for Later'.",
+  },
+  "lars-workshop-goal": {
+    intro:
+      "Aiden wants to do a $20 wheelie workshop. To afford it, he said no to three things. Drag them into the box to reach his goal.",
+    dropZoneLabel: "Things Aiden didn't buy",
+    items: [
+      { id: "snacks", label: "Snacks at work", price: 5, emoji: "🍫" },
+      { id: "lives", label: "Extra Lives Bundle", price: 5, emoji: "🎮" },
+      { id: "flashlight", label: "Flashlight", price: 10, emoji: "🔦" },
+    ],
+  },
+};
+
 export const M1_L4_LESSON_DEFINITION: CohortLessonDefinition = {
   meta: M1_L4_META,
   rewards: M1_L4_REWARDS,
@@ -287,6 +331,11 @@ export const M1_L4_LESSON_DEFINITION: CohortLessonDefinition = {
     },
     pathfinder: {
       characterName: "Holly",
+      screenOverrides: M1_L4_PATHFINDER_OVERRIDES,
+    },
+    maverick: {
+      characterName: "Aiden",
+      screenOverrides: M1_L4_MAVERICK_OVERRIDES,
     },
   },
 };

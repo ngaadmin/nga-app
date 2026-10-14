@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Z } from "@/lib/ui/layers";
 
-const CONFETTI_DURATION_MS = 2000;
+const CONFETTI_DURATION_MS = 800;
 const CONFETTI_COLORS = [
   "#031F82",
   "#0CC1E0",
@@ -28,7 +28,7 @@ type Particle = {
 };
 
 function createParticles(width: number, height: number): Particle[] {
-  return Array.from({ length: 160 }, () => {
+  return Array.from({ length: 40 }, () => {
     const fromTop = Math.random() > 0.35;
     return {
       x: Math.random() * width,

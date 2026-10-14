@@ -37,9 +37,9 @@ function writePool(pool: GenericProfilePool): void {
 
 export function genericProfileIdToUsername(id: string): string {
   if (id.startsWith("#")) {
-    return `Finnster${id}`;
+    return `Pennyster${id}`;
   }
-  return `Finnster${id.padStart(4, "0")}`;
+  return `Pennyster${id.padStart(4, "0")}`;
 }
 
 function reserveId(inUseSet: Set<string>, id: string, pool: GenericProfilePool): string {
@@ -75,7 +75,7 @@ function findRandomAvailableId(
   return null;
 }
 
-/** Reserves a generic Finnster profile ID and returns its display nickname. */
+/** Reserves a generic Pennyster profile ID and returns its display nickname. */
 export function reserveGenericProfileId(): { id: string; username: string } {
   const pool = readPool();
   const inUseSet = new Set(pool.inUse);

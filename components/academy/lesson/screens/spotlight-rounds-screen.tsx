@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import {
-  LESSON_SUCCESS_FLASH_MS,
-  useLessonSuccessFlash,
-} from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import {
   LessonFalseIcon,
@@ -90,7 +87,6 @@ function SpotlightDecisionChoices({
     .filter(({ option }) => cashMatches(option.showWhen, cash));
   const [choice, setChoice] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const flowRef = useRef(flow);
   flowRef.current = flow;
   const choiceRef = useRef(choice);
@@ -99,42 +95,21 @@ function SpotlightDecisionChoices({
   optionsRef.current = options;
   const commitCashRef = useRef(commitCash);
   commitCashRef.current = commitCash;
-  const advancingRef = useRef(false);
-  const advanceTimerRef = useRef<number | null>(null);
-
-  useEffect(
-    () => () => {
-      if (advanceTimerRef.current !== null) {
-        window.clearTimeout(advanceTimerRef.current);
-      }
-    },
-    [],
-  );
 
   useEffect(() => {
     activeSpotlightDecisionNextHandler = () => {
-      if (advancingRef.current) return false;
       const selected = optionsRef.current[choiceRef.current ?? -1];
       if (!selected) {
-        setSuccess(false);
         setError(lessonFeedbackCopy(screen.wrongError) ?? "Pick one to keep going.");
         return false;
       }
 
-      advancingRef.current = true;
-      setError(null);
-      setSuccess(true);
-      celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
-      advanceTimerRef.current = window.setTimeout(() => {
-        advanceTimerRef.current = null;
-        if (selected.cashUpdate) commitCashRef.current(selected.cashUpdate);
-        if (typeof selected.goToIndex === "number") {
-          flowRef.current.setScreenIndex(selected.goToIndex);
-          return;
-        }
-        flowRef.current.handleNext({ canAdvance: true });
-      }, LESSON_SUCCESS_FLASH_MS);
-      return false;
+      if (selected.cashUpdate) commitCashRef.current(selected.cashUpdate);
+      if (typeof selected.goToIndex === "number") {
+        flowRef.current.setScreenIndex(selected.goToIndex);
+        return false;
+      }
+      return true;
     };
 
     return () => {
@@ -151,7 +126,6 @@ function SpotlightDecisionChoices({
   return (
     <LessonScreenLayout
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      success={success}
       errorMessage={error}
     >
       <p className={cn("mb-2.5", lessonPromptClass)}>{prompt}</p>
@@ -167,13 +141,10 @@ function SpotlightDecisionChoices({
               display="emoji-label"
               labelClassName="max-w-full"
               selected={selected}
-              disabled={success}
               selectionVariant="neutral"
               onClick={() => {
-                if (success) return;
                 setChoice(index);
                 setError(null);
-                setSuccess(false);
                 flow.markScreenReady(screenIndex);
               }}
             />

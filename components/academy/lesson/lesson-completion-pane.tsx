@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { LessonCompletionConfetti, CONFETTI_DURATION_MS } from "@/components/academy/lesson/lesson-completion-confetti";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
 import {
   LESSON_CASH_IN_LABEL,
@@ -18,6 +19,7 @@ import {
   type SkillTrophyTier,
 } from "@/lib/dashboard/skill-trophies";
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
+import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 
 type LessonCompletionPaneProps = {
@@ -71,8 +73,12 @@ export function LessonCompletionPane({
   onCashIn,
   cashInDisabled = false,
 }: LessonCompletionPaneProps) {
+  const router = useRouter();
   const [cashingIn, setCashingIn] = useState(false);
-  const cashInTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    router.prefetch(DASHBOARD_ACADEMY_PATH);
+  }, [router]);
 
   const skill = getSkillRegistryRecord(achievementSkillId);
   const isModuleCloser =
@@ -111,21 +117,10 @@ export function LessonCompletionPane({
     meaningLine?.trim() || skill?.description?.trim() || undefined;
   const showPerfectBonus = perfectStreak && perfectStreakBonus > 0;
 
-  useEffect(
-    () => () => {
-      if (cashInTimerRef.current !== null) {
-        window.clearTimeout(cashInTimerRef.current);
-      }
-    },
-    [],
-  );
-
   const handleCashIn = () => {
     if (cashingIn || cashInDisabled) return;
+    onCashIn();
     setCashingIn(true);
-    cashInTimerRef.current = window.setTimeout(() => {
-      onCashIn();
-    }, CONFETTI_DURATION_MS);
   };
 
   return (

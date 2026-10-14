@@ -451,14 +451,18 @@ export function overlayAccountProgress(
   };
 }
 
-/** Sign-in restore: cloud first, then same-device cache, then live session. */
+/**
+ * Sign-in and lesson return. Cloud, this device's cache, and the live
+ * session merge forward so a lesson just cashed in is not replaced by a
+ * slower refetch of the previous cloud copy.
+ */
 export function pickRestoredAccountProgress(input: {
   remote?: AccountProgressPayload | null;
   cached?: AccountProgressPayload | null;
   live?: AccountProgressPayload | null;
 }): AccountProgressPayload | null {
-  if (!isEmptyAccountProgress(input.remote)) return input.remote ?? null;
-  if (!isEmptyAccountProgress(input.cached)) return input.cached ?? null;
-  if (!isEmptyAccountProgress(input.live)) return input.live ?? null;
-  return input.remote ?? input.cached ?? input.live ?? null;
+  return mergeAccountProgress(
+    mergeAccountProgress(input.remote, input.cached),
+    input.live,
+  );
 }

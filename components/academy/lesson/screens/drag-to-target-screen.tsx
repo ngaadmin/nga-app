@@ -63,6 +63,7 @@ export function DragToTargetScreen({
         targetImagePlaceholder={screen.targetImagePlaceholder}
         sourceEmptyMessage={screen.sourceEmptyMessage}
         showZoneLabels={screen.showZoneLabels}
+        quarterSource={Boolean(screen.sourceImageFile && screen.targetImageFile)}
         onComplete={handleComplete}
         onSuccess={() => {
           setError(null);

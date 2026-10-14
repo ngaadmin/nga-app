@@ -341,6 +341,7 @@ function sliderInstruction(raw: string): string {
   return prose.find((line) => /^slide\b/i.test(line)) ?? "";
 }
 
+
 function moodRows(entries: readonly SettingEntry[]): SettingEntry[] {
   return entries.filter(
     (entry) =>

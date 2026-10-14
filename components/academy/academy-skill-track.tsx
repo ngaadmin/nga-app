@@ -398,6 +398,7 @@ export function AcademySkillTrack({
     [safeMilestones],
   );
 
+
   const continueStepIndex = useMemo(() => {
     const targetId = pennyMilestoneId ?? continueMilestoneId;
     if (targetId == null) return activeStepIndex;

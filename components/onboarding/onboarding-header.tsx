@@ -27,7 +27,7 @@ export function OnboardingHeader() {
           className="inline-flex items-center justify-center focus-visible:outline-offset-4"
           aria-label="NextGenAchievers home"
         >
-          <NextGenAchieversWordmark />
+          <NextGenAchieversWordmark header />
         </Link>
       </div>
     </header>

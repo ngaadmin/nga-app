@@ -3,7 +3,7 @@ import { SignUpPendingPanel } from "@/components/onboarding/sign-up-pending-pane
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
-  title: "Approval saves your XP",
+  title: "Waiting for approval",
   description:
     "Your account needs approval to save your XP. You can keep playing while you wait.",
 };

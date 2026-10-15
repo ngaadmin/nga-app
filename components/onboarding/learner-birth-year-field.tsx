@@ -31,7 +31,7 @@ export function LearnerBirthYearField({
   fitMessage,
 }: LearnerBirthYearFieldProps) {
   return (
-    <div className="space-y-2">
+    <div id="signup-birth-year-field" className="space-y-2">
       <label
         htmlFor="signup-birth-year"
         className="block font-heading text-sm font-bold text-nga-primary"

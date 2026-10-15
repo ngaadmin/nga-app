@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LearnerBirthYearField, learnerFieldClass } from "@/components/onboarding/learner-birth-year-field";
+import { LEARNER_SIGNUP_BAR_CLASS } from "@/components/onboarding/learner-signup-bar";
 import { LearnerTrackCards } from "@/components/onboarding/learner-track-cards";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -1109,14 +1110,15 @@ export function SignUpForm() {
     : ageTier
       ? cohortHeader(ageTier)
       : "Save Your Progress";
-  const nextDisabled = learnerStep === "track" && !cohort;
+  const nextDisabled =
+    learnerStep === "track" && (cohort == null || birthYear == null);
 
   return (
     <section
       data-signup-step={learnerStep}
       className="flex flex-1 flex-col py-6 sm:py-10"
     >
-      <div className="mx-auto w-full max-w-md space-y-6 pb-[calc(104px+env(safe-area-inset-bottom))]">
+      <div className="mx-auto w-full max-w-md space-y-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -1360,10 +1362,8 @@ export function SignUpForm() {
           ) : null}
 
           <div
-            className={cn(
-              "fixed inset-x-0 bottom-0 bg-white px-6 pt-3 pb-[max(20px,env(safe-area-inset-bottom))]",
-              LAYER_CLASS.chrome,
-            )}
+            data-signup-bar
+            className={cn(LEARNER_SIGNUP_BAR_CLASS, LAYER_CLASS.chrome)}
           >
             <div className="mx-auto w-full max-w-md">
               {learnerStep === "emails" ? (

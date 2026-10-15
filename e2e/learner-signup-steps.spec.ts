@@ -54,14 +54,14 @@ test("learner sign-up steps keep the guest track and guest progress", async ({ p
   const pathfinder = page.getByRole("radio", { name: /Pathfinder/ });
   await expect(pathfinder).toBeVisible({ timeout: 15_000 });
   await expect(pathfinder).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeEnabled();
+  const next = page.getByRole("button", { name: "Next", exact: true });
+  await expect(next).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveCount(1);
   await expect(page.getByText("You can switch this later.")).toHaveCount(0);
   await expect(page.getByText("This track is already chosen")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByText("Choose the year you were born.")).toBeVisible();
-
   await page.locator("#signup-birth-year").selectOption("2013");
+  await expect(next).toBeEnabled();
   await expect(page.getByRole("status")).toHaveText(
     "Based on your age, Explorer is the right fit",
   );
@@ -90,18 +90,19 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     timeout: 15_000,
   });
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveCount(1);
 
   for (const viewport of WIDTHS) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await assertNoHorizontalOverflow(page, `step A empty ${viewport.name}`);
     await page.screenshot({
       path: `/opt/cursor/artifacts/signup-${viewport.name}-A-empty.png`,
-      fullPage: true,
     });
   }
 
   await page.setViewportSize({ width: 375, height: 800 });
   await page.getByRole("radio", { name: /Pathfinder/ }).click();
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
   await expect(page.getByRole("radio", { name: /Pathfinder/ })).toHaveAttribute(
     "aria-checked",
     "true",
@@ -112,14 +113,16 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     "true",
   );
   await page.locator("#signup-birth-year").selectOption("2011");
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeEnabled();
   await expect(page.getByRole("status")).toHaveCount(0);
+  await expectPinnedSignupBar(page);
 
   for (const viewport of WIDTHS) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.evaluate(() => window.scrollTo(0, 0));
     await assertNoHorizontalOverflow(page, `step A selected ${viewport.name}`);
     await page.screenshot({
       path: `/opt/cursor/artifacts/signup-${viewport.name}-A-selected.png`,
-      fullPage: true,
     });
   }
 
@@ -147,7 +150,6 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     await assertNoHorizontalOverflow(page, `step B ${viewport.name}`);
     await page.screenshot({
       path: `/opt/cursor/artifacts/signup-${viewport.name}-B.png`,
-      fullPage: true,
     });
   }
 
@@ -169,7 +171,6 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     await assertNoHorizontalOverflow(page, `step C pathfinder ${viewport.name}`);
     await page.screenshot({
       path: `/opt/cursor/artifacts/signup-${viewport.name}-C-pathfinder.png`,
-      fullPage: true,
     });
   }
 
@@ -195,7 +196,6 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   ).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/signup-375-C-maverick.png",
-    fullPage: true,
   });
 
   await page.getByRole("button", { name: "Back", exact: true }).click();
@@ -218,9 +218,27 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await page.setViewportSize({ width: 375, height: 667 });
   await page.screenshot({
     path: "/opt/cursor/artifacts/signup-375-C-explorer.png",
-    fullPage: true,
   });
 });
+
+async function expectPinnedSignupBar(page: Page) {
+  const bar = page.locator("[data-signup-bar]");
+  await expect(bar).toHaveCSS("position", "fixed");
+  const box = await bar.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).toBeTruthy();
+  expect(viewport).toBeTruthy();
+  expect(Math.abs(box!.y + box!.height - viewport!.height)).toBeLessThanOrEqual(1);
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const gap = await page.evaluate(() => {
+    const field = document.getElementById("signup-birth-year-field");
+    const pinned = document.querySelector("[data-signup-bar]");
+    if (!field || !pinned) return -1;
+    return pinned.getBoundingClientRect().top - field.getBoundingClientRect().bottom;
+  });
+  expect(gap).toBeGreaterThanOrEqual(24);
+}
 
 test("bottom tab uses the amber active pill", async ({ page }) => {
   await page.addInitScript(

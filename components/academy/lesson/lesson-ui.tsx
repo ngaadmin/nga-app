@@ -267,7 +267,7 @@ export function LessonSuccessBanner({
       role="status"
     >
       <span
-        className="grid size-7 shrink-0 place-items-center rounded-full bg-white font-extrabold text-[#16A34A]"
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FFB822] font-extrabold text-[#031F82]"
         aria-hidden
       >
         ✓
@@ -294,7 +294,7 @@ export function LessonErrorBanner({
       role="alert"
     >
       <span
-        className="grid size-7 shrink-0 place-items-center rounded-full bg-white font-extrabold text-[#E11D48]"
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FFB822] font-extrabold text-[#031F82]"
         aria-hidden
       >
         !
@@ -801,14 +801,24 @@ type LessonIconOptionProps = {
   selectionVariant?: LessonChoiceVariant;
 } & Omit<HTMLAttributes<HTMLButtonElement>, "children">;
 
-function LessonTileTick() {
+/** 28px gold tick. Correct feedback is this badge, never a green or red box. */
+export function LessonAnswerTick({ className }: { className?: string }) {
   return (
     <span
-      className="absolute -right-1 -top-1 grid size-7 place-items-center rounded-full bg-white text-[15px] font-extrabold text-[#16A34A] shadow-[0_2px_6px_rgba(3,31,130,0.25)]"
+      className={cn(
+        "lesson-tick-pop grid size-7 shrink-0 place-items-center rounded-full bg-[#FFB822] text-[15px] font-extrabold leading-none text-[#031F82]",
+        className,
+      )}
       aria-hidden
     >
       ✓
     </span>
+  );
+}
+
+function LessonTileTick() {
+  return (
+    <LessonAnswerTick className="absolute -right-1 -top-1 shadow-[0_2px_6px_rgba(3,31,130,0.25)]" />
   );
 }
 

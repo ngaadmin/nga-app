@@ -37,7 +37,7 @@ export function NarrativeBonusScreen({
     if (claimed || !hasBonus) return;
     setClaimed(true);
     awardBonusXp?.(screen.bonusXp);
-    celebrateLessonCorrectAnswer(flow.flashScreen);
+    celebrateLessonCorrectAnswer();
     flow.markScreenReady(screenIndex);
     window.requestAnimationFrame(() => {
       flow.handleNext({ canAdvance: true });

@@ -12,8 +12,8 @@ type LessonChoiceIndicatorProps = {
 };
 
 const indicatorSurfaceClass: Record<LessonChoiceVariant, string> = {
-  correct: "border-[#16A34A] bg-[#DCFCE7]",
-  wrong: "border-[#E11D48] bg-[#FFE4E6]",
+  correct: "border-transparent bg-[#FFB822]",
+  wrong: "border-transparent bg-transparent",
   neutral: "border-[#066B7C] bg-[#EEF6FC]",
 };
 
@@ -41,12 +41,7 @@ export function LessonChoiceIndicator({
 
   const glyph =
     variant === "wrong" ? "✕" : variant === "correct" ? "✓" : "•";
-  const glyphColor =
-    variant === "wrong"
-      ? "text-[#E11D48]"
-      : variant === "correct"
-        ? "text-[#16A34A]"
-        : "text-[#066B7C]";
+  const glyphColor = "text-[#031F82]";
 
   if (mode === "radio") {
     return (

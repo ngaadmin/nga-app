@@ -20,7 +20,7 @@ export function RankOrderScreen({
   onPersistentError?: (message: string) => void;
   onDismissPersistentError?: () => void;
 }) {
-  const { showSuccess, handleComplete, handleIncomplete, handleMistake, handleSuccess } =
+  const { handleComplete, handleIncomplete, handleMistake, handleSuccess } =
     useLessonScreenFlow({
       screenIndex,
       flow,
@@ -30,7 +30,7 @@ export function RankOrderScreen({
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <LessonScreenLayout success={showSuccess} errorMessage={error}>
+    <LessonScreenLayout errorMessage={error}>
       <LessonRankOrderGame
         intro={screen.intro}
         dragHint={screen.dragHint}

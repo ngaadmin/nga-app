@@ -8,6 +8,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonItemChipClass,
@@ -297,6 +298,11 @@ export function LessonSavingsGoalGame({
         <p className={lessonSpentTotalAmountClass} aria-live="polite">
           {formatDollars(shownTotal)}
         </p>
+        {goalReached ? (
+          <div className="mt-2 flex justify-center">
+            <LessonAnswerTick />
+          </div>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 flex-col gap-4">

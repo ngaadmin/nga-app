@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
@@ -165,8 +164,6 @@ function SpotlightGradedRounds({
   const [roundIndex, setRoundIndex] = useState(0);
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [roundCorrect, setRoundCorrect] = useState(false);
-  const showSuccess = useLessonSuccessFlash(roundCorrect);
   const recoveryTimeoutRef = useRef<number | null>(null);
   const round = screen.rounds[roundIndex];
 
@@ -199,7 +196,6 @@ function SpotlightGradedRounds({
     setChoice(which);
     onDismissError?.();
     setError(null);
-    setRoundCorrect(false);
 
     if (which !== round.correct) {
       flow.incrementMistake();
@@ -208,13 +204,12 @@ function SpotlightGradedRounds({
         const copy = lessonFeedbackCopy(round.error);
         if (copy) onPersistentError(copy);
       }
-      signalLessonIncorrectAnswer(flow.flashScreen);
+      signalLessonIncorrectAnswer();
       scheduleChoiceReset();
       return;
     }
 
-    setRoundCorrect(true);
-    celebrateLessonCorrectAnswer(flow.flashScreen);
+    celebrateLessonCorrectAnswer();
     if (roundIndex + 1 >= screen.rounds.length) {
       flow.markScreenReady(screenIndex);
       return;
@@ -223,7 +218,6 @@ function SpotlightGradedRounds({
     recoveryTimeoutRef.current = window.setTimeout(() => {
       setRoundIndex((current) => current + 1);
       setChoice(null);
-      setRoundCorrect(false);
       recoveryTimeoutRef.current = null;
     }, FEEDBACK_RECOVERY_MS);
   };
@@ -289,7 +283,6 @@ function SpotlightGradedRounds({
   return (
     <LessonScreenLayout
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      success={showSuccess}
       errorMessage={error}
     >
       <p className={cn("mb-2.5", lessonPromptClass)}>{screen.prompt}</p>

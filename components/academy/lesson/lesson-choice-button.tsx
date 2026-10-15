@@ -1,6 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import {
   lessonTileSelection,
   lessonTileShowsTick,
@@ -11,7 +12,7 @@ type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   selected?: boolean;
   /** Selected but not yet checked. */
   pending?: boolean;
-  /** This pick was wrong. The card shakes and turns red. */
+  /** This pick was wrong. The card shakes. */
   wrong?: boolean;
   /** Persistent locked-in correct state (multi-select check screens). */
   locked?: boolean;
@@ -68,14 +69,7 @@ export function LessonChoiceButton({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">{children}</span>
-      {lessonTileShowsTick(selection) ? (
-        <span
-          className="grid size-7 shrink-0 place-items-center rounded-full bg-white text-[15px] font-extrabold text-[#16A34A]"
-          aria-hidden
-        >
-          ✓
-        </span>
-      ) : null}
+      {lessonTileShowsTick(selection) ? <LessonAnswerTick /> : null}
     </button>
   );
 }

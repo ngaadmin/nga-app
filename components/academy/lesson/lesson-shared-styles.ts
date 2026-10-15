@@ -283,7 +283,7 @@ export const lessonSequenceSlotClass =
 
 export const lessonSequenceSlotActiveClass = "bg-[#E8F6FC]/70";
 
-export const lessonSequenceSlotErrorClass = "bg-[#FFF1F2]/80";
+export const lessonSequenceSlotErrorClass = "lesson-tile-shake";
 
 export const lessonSequenceSlotLockedClass = "bg-[#F0FDF4]/80";
 
@@ -308,11 +308,9 @@ export const lessonChoiceOrbClass =
 export const lessonChoiceOrbSelectedClass =
   "grid size-12 shrink-0 place-items-center rounded-full border-[3px] border-solid border-[#031F82] bg-[#0CC1E0] font-heading text-lg font-bold text-white";
 
-export const lessonChoiceOrbCorrectClass =
-  "bg-[#16A34A] text-white";
+export const lessonChoiceOrbCorrectClass = "";
 
-export const lessonChoiceOrbWrongClass =
-  "bg-[#E11D48] text-white";
+export const lessonChoiceOrbWrongClass = "lesson-tile-shake";
 
 export const lessonChoiceLayoutClass =
   "flex w-full items-center gap-3 border-0 bg-transparent p-0 text-left font-sans text-[18px] font-medium leading-[1.35] text-[#031F82]";
@@ -395,7 +393,7 @@ export const lessonSortBucketClass =
 
 export const lessonSortBucketActiveClass = "bg-[#E8F6FC]/70";
 
-export const lessonSortBucketErrorClass = "bg-[#FFF1F2]/70";
+export const lessonSortBucketErrorClass = "lesson-tile-shake";
 
 export const lessonSortBucketSuccessClass = "bg-[#F0FDF4]/70";
 
@@ -462,7 +460,7 @@ export const lessonColumnLabelInkClass =
   "font-heading text-base font-bold text-[#031F82]";
 
 export const lessonColumnLabelSuccessClass =
-  "font-heading text-base font-semibold uppercase tracking-wide text-[#16A34A]";
+  "font-heading text-base font-semibold uppercase tracking-wide text-[#031F82]";
 
 export const lessonColumnLabelMutedClass =
   "font-heading text-base font-semibold uppercase tracking-wide text-[#1E3A5F]/50";
@@ -470,22 +468,21 @@ export const lessonColumnLabelMutedClass =
 // ─── Feedback banners ────────────────────────────────────────────────────────
 
 export const lessonSuccessMessageClass =
-  "mt-2 flex shrink-0 items-start gap-2.5 rounded-2xl bg-[#DCFCE7] px-3 py-3 font-sans text-[15px] font-medium leading-relaxed text-[#166534]";
+  "mt-2 flex shrink-0 items-start gap-2.5 px-0 py-1 font-sans text-[15px] font-medium leading-relaxed text-[#031F82]";
 
 export const lessonErrorBannerClass =
-  "mt-2 flex shrink-0 items-start gap-2.5 rounded-2xl bg-[#FFF1F2] px-3 py-3 font-sans text-[15px] font-medium text-[#9F1239]";
+  "mt-2 flex shrink-0 items-start gap-2.5 px-0 py-1 font-sans text-[15px] font-medium text-[#031F82]";
 
 export const lessonInlineErrorClass =
-  "mt-2 flex items-start gap-2.5 font-sans text-[15px] font-medium text-[#9F1239]";
+  "mt-2 flex items-start gap-2.5 font-sans text-[15px] font-medium text-[#031F82]";
 
 export const lessonGameHintClass =
   "text-center font-sans text-base font-medium text-[#1E3A5F]/80";
 
 // ─── Match / link rows ───────────────────────────────────────────────────────
 
-/** Incorrect icon-chip selection — global red treatment, no success tick. */
-export const lessonWrongSelectionChipClass =
-  "border-2 border-[#E11D48] bg-[#FFF1F2] shadow-none ring-2 ring-[#E11D48]/35";
+/** Incorrect icon-chip selection shakes. No red border or fill. */
+export const lessonWrongSelectionChipClass = "lesson-tile-shake";
 
 /** Neutral bucket surface for statement-sort (no rush/think red/green tints). */
 export const lessonSortBucketNeutralSurfaceClass = "bg-[#EEF6FC]";

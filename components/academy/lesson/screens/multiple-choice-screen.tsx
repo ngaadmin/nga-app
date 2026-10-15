@@ -121,7 +121,7 @@ export function MultipleChoiceScreen({
     setSuccess(true);
     setSolved(true);
     solvedRef.current = true;
-    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+    celebrateLessonCorrectAnswer();
     flowRef.current.markScreenReady(screenIndex);
   };
 
@@ -150,7 +150,7 @@ export function MultipleChoiceScreen({
         setError(resolveErrorCopy());
         flowRef.current.clearScreenReady(screenIndex);
         flowRef.current.incrementMistake();
-        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        signalLessonIncorrectAnswer();
         return;
       }
 
@@ -184,7 +184,7 @@ export function MultipleChoiceScreen({
 
     setError(resolveErrorCopy());
     flowRef.current.incrementMistake();
-    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+    signalLessonIncorrectAnswer();
   };
 
   const resolveErrorCopy = (): string => {

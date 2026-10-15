@@ -21,7 +21,6 @@ export function BudgetSelectScreen({
   onDismissPersistentError?: () => void;
 }) {
   const {
-    showSuccess,
     handleComplete,
     handleIncomplete,
     handleSuccess,
@@ -36,7 +35,6 @@ export function BudgetSelectScreen({
 
   return (
     <LessonScreenLayout
-      success={showSuccess}
       errorMessage={error}
       emphasizeInstruction={screen.emphasizeInstruction === true}
     >

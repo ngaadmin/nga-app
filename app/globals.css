@@ -176,6 +176,29 @@
     animation: lesson-tile-shake 0.42s ease-in-out;
   }
 
+  @keyframes lesson-tick-pop {
+    0% {
+      transform: scale(0);
+    }
+    70% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .lesson-tick-pop {
+    animation: lesson-tick-pop 250ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lesson-tile-shake,
+    .lesson-tick-pop {
+      animation: none;
+    }
+  }
+
   @keyframes lesson-match-shake {
     0% {
       transform: translateX(0);

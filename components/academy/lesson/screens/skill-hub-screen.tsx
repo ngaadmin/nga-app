@@ -34,7 +34,7 @@ export function SkillHubScreen({
               }}
               className={cn(
                 "flex min-h-[5.5rem] w-full items-center gap-4 rounded-3xl bg-[#E8F6FC] px-4 py-4 text-left transition-colors active:scale-[0.99]",
-                done && "bg-[#DCFCE7]",
+                done && "bg-[#EAF0FF]",
               )}
             >
               <span className="text-[2.4rem] leading-none" aria-hidden>
@@ -44,7 +44,7 @@ export function SkillHubScreen({
                 {skill.label}
               </span>
               {done ? (
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2.5 py-1 font-heading text-sm font-extrabold text-[#15803D]">
+                <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#FFB822] px-2.5 py-1 font-heading text-sm font-extrabold text-[#031F82]">
                   <span aria-hidden>✓</span>
                   Done
                 </span>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import { LessonAnswerTick, LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import {
   ALLOCATION_KNOB_PX,
   allocationNextEnabled,
@@ -191,9 +191,10 @@ export function AllocationSliderScreen({
 
         {meetsTarget ? (
           <p
-            className="mt-3 text-center font-heading text-lg font-extrabold text-[#031F82]"
+            className="mt-3 flex items-center justify-center gap-2 text-center font-heading text-lg font-extrabold text-[#031F82]"
             role="status"
           >
+            <LessonAnswerTick />
             {allocationSavedBadge(targetMin)}
           </p>
         ) : null}

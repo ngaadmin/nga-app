@@ -18,7 +18,9 @@ import {
   lessonSortPoolSlotPlaceholderClass,
   lessonGameHintClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
+  LessonAnswerTick,
   LessonColumnLabel,
   LessonSortBucket,
   LessonSortBucketRow,
@@ -133,6 +135,7 @@ export function LessonBucketSortGame<TBucket extends string>({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [activeBucketId, setActiveBucketId] = useState<TBucket | null>(null);
   const [flyHomeId, setFlyHomeId] = useState<string | null>(null);
+  const { shakingKey, shake } = useLessonShake();
 
   const poolIdsRef = useRef(poolIds);
   poolIdsRef.current = poolIds;
@@ -244,6 +247,7 @@ export function LessonBucketSortGame<TBucket extends string>({
       if (!poolIdsRef.current.includes(itemId)) return;
 
       if (item.bucket !== bucketId) {
+        shake(itemId);
         onMismatchRef.current?.();
         setFlyHomeId(itemId);
         window.setTimeout(() => {
@@ -278,7 +282,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         willComplete: nextPlacedCount === items.length,
       });
     },
-    [isSpentTotalLayout, itemById, items.length, queueSideEffect],
+    [isSpentTotalLayout, itemById, items.length, queueSideEffect, shake],
   );
 
   const assignToBucketRef = useRef(assignToBucket);
@@ -458,6 +462,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           className={cn(
             flyHomeId === itemId &&
               "transition-transform duration-300 ease-out -translate-y-2.5",
+            shakingKey === itemId && "lesson-tile-shake",
           )}
         />
       );
@@ -480,6 +485,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           isDragging && "opacity-40",
           flyHomeId === itemId &&
             "transition-transform duration-300 ease-out -translate-y-2.5",
+          shakingKey === itemId && "lesson-tile-shake",
         )}
         style={{ touchAction: "none" }}
       >
@@ -643,6 +649,11 @@ export function LessonBucketSortGame<TBucket extends string>({
             complete={isSpentTotalComplete}
             className="mt-auto shrink-0 pt-[18px]"
           />
+          {isSpentTotalComplete ? (
+            <div className="mt-3 flex justify-center">
+              <LessonAnswerTick />
+            </div>
+          ) : null}
         </div>
 
         {draggedItem && dragState ? (
@@ -735,6 +746,11 @@ export function LessonBucketSortGame<TBucket extends string>({
         <LessonSortBucketRow className="min-h-0 flex-1">
           {buckets.map((bucket) => renderBucket(bucket))}
         </LessonSortBucketRow>
+        {isComplete ? (
+          <div className="mt-3 flex justify-center">
+            <LessonAnswerTick />
+          </div>
+        ) : null}
 
         {renderDragGhost()}
       </div>

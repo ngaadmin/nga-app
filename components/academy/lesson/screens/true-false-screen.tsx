@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   LessonIconOption,
   LessonScreenLayout,
@@ -24,7 +23,6 @@ export function TrueFalseScreen({
   const [choice, setChoice] = useState<"true" | "false" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [solved, setSolved] = useState(false);
-  const showSuccess = useLessonSuccessFlash(solved);
 
   const pick = (option: "true" | "false") => {
     if (solved) return;
@@ -33,7 +31,7 @@ export function TrueFalseScreen({
     if (option === screen.correctAnswer) {
       setError(null);
       setSolved(true);
-      celebrateLessonCorrectAnswer(flow.flashScreen);
+      celebrateLessonCorrectAnswer();
       flow.markScreenReady(screenIndex);
       return;
     }
@@ -41,7 +39,7 @@ export function TrueFalseScreen({
     setError(lessonFeedbackCopy(screen.wrongError) ?? "");
     flow.clearScreenReady(screenIndex);
     flow.incrementMistake();
-    signalLessonIncorrectAnswer(flow.flashScreen);
+    signalLessonIncorrectAnswer();
   };
 
   return (
@@ -49,7 +47,6 @@ export function TrueFalseScreen({
       prompt={screen.prompt}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       errorMessage={error}
-      success={showSuccess}
     >
       <div className="mt-4 grid grid-cols-2 justify-items-center gap-6">
         {(["true", "false"] as const).map((option) => {

@@ -27,8 +27,6 @@ import {
 } from "@/lib/academy/lessons/completion-xp";
 import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 
-export type ScreenFlash = "none" | "error" | "success";
-
 export type UseLessonFlowOptions = {
   milestoneId: number;
   totalScreens: number;
@@ -57,8 +55,7 @@ export type UseLessonFlowOptions = {
 
 type PendingFlowAction =
   | { type: "mark-ready"; index: number }
-  | { type: "increment-mistake" }
-  | { type: "flash"; kind: ScreenFlash };
+  | { type: "increment-mistake" };
 
 export function useLessonFlow({
   milestoneId,
@@ -81,13 +78,11 @@ export function useLessonFlow({
   const [screenReady, setScreenReady] = useState<boolean[]>(
     () => Array.from({ length: totalScreens }, () => false),
   );
-  const [screenFlash, setScreenFlash] = useState<ScreenFlash>("none");
   const [screenMistakes, setScreenMistakes] = useState(0);
   const [lessonComplete, setLessonComplete] = useState(false);
 
   const perfectStreak = screenMistakes === 0;
 
-  const flashTimeoutRef = useRef<number | null>(null);
   const pendingActionsRef = useRef<PendingFlowAction[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
   const activeMilestoneRef = useRef(milestoneId);
@@ -104,26 +99,10 @@ export function useLessonFlow({
     setScreenIndexState(0);
     setPathStep(0);
     setScreenReady(Array.from({ length: totalScreens }, () => false));
-    setScreenFlash("none");
     setScreenMistakes(0);
     setLessonComplete(false);
     pendingActionsRef.current = [];
   }, [milestoneId, totalScreens]);
-
-  const applyFlash = useCallback((kind: ScreenFlash) => {
-    if (flashTimeoutRef.current !== null) {
-      window.clearTimeout(flashTimeoutRef.current);
-      flashTimeoutRef.current = null;
-    }
-
-    setScreenFlash(kind);
-    if (kind !== "none") {
-      flashTimeoutRef.current = window.setTimeout(() => {
-        setScreenFlash("none");
-        flashTimeoutRef.current = null;
-      }, 450);
-    }
-  }, []);
 
   const flushPendingActions = useCallback(() => {
     flushTimeoutRef.current = null;
@@ -142,12 +121,9 @@ export function useLessonFlow({
         case "increment-mistake":
           setScreenMistakes((count) => count + 1);
           break;
-        case "flash":
-          applyFlash(action.kind);
-          break;
       }
     }
-  }, [applyFlash]);
+  }, []);
 
   const scheduleFlowFlush = useCallback(() => {
     if (flushTimeoutRef.current !== null) return;
@@ -182,18 +158,8 @@ export function useLessonFlow({
     enqueueFlowAction({ type: "increment-mistake" });
   }, [enqueueFlowAction]);
 
-  const flashScreen = useCallback(
-    (kind: ScreenFlash) => {
-      enqueueFlowAction({ type: "flash", kind });
-    },
-    [enqueueFlowAction],
-  );
-
   useEffect(
     () => () => {
-      if (flashTimeoutRef.current !== null) {
-        window.clearTimeout(flashTimeoutRef.current);
-      }
       if (flushTimeoutRef.current !== null) {
         window.clearTimeout(flushTimeoutRef.current);
       }
@@ -289,13 +255,6 @@ export function useLessonFlow({
   ]);
   finishLessonRef.current = handleCashInPoints;
 
-  const flashBorderClass =
-    screenFlash === "error"
-      ? "ring-4 ring-[#E11D48]/70"
-      : screenFlash === "success"
-        ? "ring-4 ring-[#22C55E]/70"
-        : "";
-
   const isLastScreen = screenIndex === totalScreens - 1;
   const canAdvanceDefault = Boolean(screenReady[screenIndex]);
 
@@ -312,17 +271,14 @@ export function useLessonFlow({
     setScreenIndex,
     pathStep,
     screenReady,
-    screenFlash,
     screenMistakes,
     perfectStreak,
     lessonComplete,
     markScreenReady,
     clearScreenReady,
     incrementMistake,
-    flashScreen,
     handleNext,
     handleCashInPoints,
-    flashBorderClass,
     isLastScreen,
     canAdvanceDefault,
     totalScreens,

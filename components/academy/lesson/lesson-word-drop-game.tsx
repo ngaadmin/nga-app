@@ -16,6 +16,7 @@ import {
   lessonNarrativeClass,
   lessonSortPoolChipClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { cn } from "@/lib/utils/cn";
 
@@ -389,8 +390,12 @@ export const LessonWordDropGame = forwardRef<
                     )}
                   >
                     {visibleBlankWord(blankIndex) ? (
-                      <span className={cn(lessonSortPoolChipClass, "text-[20px]")}>
+                      <span className={cn(lessonSortPoolChipClass, "relative text-[20px]")}>
                         {visibleBlankWord(blankIndex)}
+                        {visibleBlankWord(blankIndex) ===
+                        blanks[blankIndex]?.correctOption ? (
+                          <LessonAnswerTick className="absolute -right-3 -top-3" />
+                        ) : null}
                       </span>
                     ) : null}
                   </button>
@@ -445,7 +450,7 @@ export const LessonWordDropGame = forwardRef<
                 "text-[20px]",
                 used && "hidden",
                 selectedWord === option && "bg-[#BDE9FB]",
-                shakeWord === option && "lesson-tile-shake bg-[#FFF1F2] text-[#9F1239]",
+                shakeWord === option && "lesson-tile-shake",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",

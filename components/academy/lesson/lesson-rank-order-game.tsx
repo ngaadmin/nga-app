@@ -11,6 +11,7 @@ import {
   lessonIntroClass,
   lessonRankOrderCardClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { rankOrderMatches } from "@/lib/academy/lessons/rank-order";
 import { cn } from "@/lib/utils/cn";
@@ -256,6 +257,11 @@ export function LessonRankOrderGame({
           );
         })}
       </div>
+      {rankSubmitted ? (
+        <div className="mt-3 flex justify-center">
+          <LessonAnswerTick />
+        </div>
+      ) : null}
       {dragGhost ? (
         <OverlayPortal className="overflow-visible">
           <div

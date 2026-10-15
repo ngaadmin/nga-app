@@ -33,11 +33,21 @@ const TEACHER_SESSION = {
   learnerEmail: "teachertest@example.com",
 };
 
+const EMAIL_TEACHER_SESSION = {
+  ...TEACHER_SESSION,
+  username: "uaaaaaaaaaaaaaaaaaaa",
+  learnerEmail: "cath+recteacher1@example.com",
+  email: "cath+recteacher1@example.com",
+};
+
 test.use({ viewport: { width: 390, height: 844 } });
 
 async function installSession(
   page: Page,
-  session: typeof LEARNER_SESSION | typeof TEACHER_SESSION,
+  session:
+    | typeof LEARNER_SESSION
+    | typeof TEACHER_SESSION
+    | typeof EMAIL_TEACHER_SESSION,
 ) {
   await page.addInitScript(
     ([key, value]) => {
@@ -395,4 +405,146 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     path: "/opt/cursor/artifacts/class-final-390-password-saved.png",
     fullPage: false,
   });
+});
+
+test("print usernames stays clear of the user count", async ({ page }) => {
+  await installSession(page, TEACHER_SESSION);
+  await page.goto("/dashboard/class/preview");
+  const showUsers = page.getByRole("button", { name: "Show users (8)" });
+  await expect(showUsers).toBeVisible({ timeout: 15_000 });
+
+  for (const width of [320, 375, 414, 1280]) {
+    await page.setViewportSize({ width, height: width >= 1024 ? 900 : 844 });
+    const printUsernames = page.getByRole("link", { name: "Print usernames" });
+    const showBox = await showUsers.boundingBox();
+    const printBox = await printUsernames.boundingBox();
+    expect(showBox, `show users at ${width}`).toBeTruthy();
+    expect(printBox, `print usernames at ${width}`).toBeTruthy();
+    const separated =
+      printBox!.x + printBox!.width <= showBox!.x + 1 ||
+      showBox!.x + showBox!.width <= printBox!.x + 1 ||
+      printBox!.y + printBox!.height <= showBox!.y + 1 ||
+      showBox!.y + showBox!.height <= printBox!.y + 1;
+    expect(separated, `overlap at ${width}`).toBe(true);
+    if (width < 390) {
+      expect(printBox!.y).toBeGreaterThan(showBox!.y + showBox!.height - 1);
+    }
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth, `overflow at ${width}`).toBeLessThanOrEqual(
+      overflow.clientWidth + 1,
+    );
+    await page.screenshot({
+      path: `/opt/cursor/artifacts/class-users-row-${width}.png`,
+      fullPage: false,
+    });
+  }
+});
+
+const FOUR_USERS = [
+  { username: "amber2", xp: "120 XP" },
+  { username: "amber3", xp: "80 XP" },
+  { username: "cedar2", xp: "45 XP" },
+  { username: "forest6", xp: "10 XP" },
+] as const;
+
+async function scrollRowIntoSafeArea(page: Page, username: string) {
+  await page.locator(`[data-class-user="${username}"]`).evaluate((el) => {
+    const main = el.closest("main");
+    if (!(main instanceof HTMLElement)) return;
+    const nav = document.querySelector("[data-dashboard-nav]");
+    const navTop = nav?.getBoundingClientRect().top ?? window.innerHeight;
+    const mainRect = main.getBoundingClientRect();
+    const safeBottom = Math.min(navTop, mainRect.bottom) - 12;
+    const safeTop = mainRect.top + 8;
+    const place = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom > safeBottom) main.scrollTop += rect.bottom - safeBottom;
+      else if (rect.top < safeTop) main.scrollTop -= safeTop - rect.top;
+    };
+    place();
+    place();
+  });
+}
+
+test("header hides the teacher email and expanded users scroll to XP", async ({
+  page,
+}) => {
+  await installSession(page, EMAIL_TEACHER_SESSION);
+  await page.goto("/dashboard/class/preview?users=4");
+  await expect(page.getByText("4 of 30 users allocated")).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const header = page.locator("[data-dashboard-status-header]");
+  await expect(header.getByText("Teacher", { exact: true })).toBeVisible();
+  await expect(header).not.toContainText("@");
+  await expect(header).not.toContainText("cath+recteacher1");
+
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-header-name-375.png",
+    fullPage: false,
+  });
+
+  await page.getByRole("button", { name: "Show users (4)" }).click();
+  await expect(page.locator("[data-class-user='amber2']")).toBeVisible();
+
+  const viewports = [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 414, height: 736 },
+    { width: 1280, height: 900 },
+  ];
+
+  for (const { width, height } of viewports) {
+    await page.setViewportSize({ width, height });
+    const main = page.locator("main");
+    const nav = page.locator("[data-dashboard-nav]");
+    const room = await main.evaluate((el) => {
+      el.scrollTop = 0;
+      const overflows = el.scrollHeight > el.clientHeight + 1;
+      if (overflows) el.scrollTop = el.scrollHeight;
+      return {
+        overflows,
+        scrollTop: el.scrollTop,
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight,
+      };
+    });
+    if (width < 768) {
+      expect(room.overflows, `page scrolls at ${width}`).toBe(true);
+      expect(room.scrollTop, `scroll moves at ${width}`).toBeGreaterThan(0);
+    }
+
+    for (const user of FOUR_USERS) {
+      const row = page.locator(`[data-class-user="${user.username}"]`);
+      await scrollRowIntoSafeArea(page, user.username);
+      await expect(row.getByText(user.xp, { exact: true })).toBeVisible();
+      const box = await row.boundingBox();
+      expect(box, `${user.username} at ${width}`).toBeTruthy();
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height + 1);
+      if (width < 768) {
+        const navBox = await nav.boundingBox();
+        expect(navBox, "bottom nav").toBeTruthy();
+        expect(box!.y + box!.height).toBeLessThanOrEqual(navBox!.y + 1);
+      }
+    }
+
+    const last = page.locator("[data-class-user='forest6']");
+    await scrollRowIntoSafeArea(page, "forest6");
+    await expect(last.getByText("10 XP", { exact: true })).toBeVisible();
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
+    await page.screenshot({
+      path: `/opt/cursor/artifacts/class-users-scroll-${width}.png`,
+      fullPage: false,
+    });
+  }
 });

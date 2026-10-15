@@ -479,6 +479,17 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
     () => [...usernames].sort((a, b) => a.localeCompare(b)),
     [usernames],
   );
+  const xpByUsername = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const cls of classes) {
+      for (const student of cls.students) {
+        const key = student.username.trim().toLowerCase();
+        const current = map.get(key) ?? 0;
+        if (student.lifetimeXp > current) map.set(key, student.lifetimeXp);
+      }
+    }
+    return map;
+  }, [classes]);
 
   async function handleAddStudents(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -570,7 +581,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
   return (
     <div
       className={cn(
-        "flex-1 bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)] px-5 pb-4 font-sans text-[#14213D]",
+        "min-h-min flex-1 bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)] px-5 pb-4 font-sans text-[#14213D]",
         "-mx-4 -mt-6 sm:-mx-6",
         "print:m-0 print:max-w-none print:bg-white print:p-0",
       )}
@@ -606,13 +617,13 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
             initiallySaved={passwordSaved}
           />
 
-          <div className="flex min-h-[60px] items-center gap-3.5 border-b border-[#E1E8F6] py-2">
+          <div className="flex min-h-[60px] flex-wrap items-center gap-x-3.5 border-b border-[#E1E8F6] py-2 min-[390px]:flex-nowrap">
             <button
               type="button"
               aria-expanded={studentsOpen}
               aria-controls="class-student-list"
               onClick={() => setStudentsOpen((open) => !open)}
-              className="flex min-w-0 flex-1 items-center gap-3.5 text-left"
+              className="order-1 flex min-w-0 flex-1 items-center gap-3.5 text-left"
             >
               <TintCircle>👥</TintCircle>
               <span className="whitespace-nowrap font-heading text-[17px] font-semibold text-[#14213D]">
@@ -623,7 +634,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
               <Link
                 href={`/class/${roster.teacherId}/print`}
                 prefetch
-                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-heading text-sm font-semibold text-[#031F82]"
+                className="order-3 inline-flex basis-full items-center gap-1.5 whitespace-nowrap py-2 pl-[54px] font-heading text-sm font-semibold text-[#031F82] min-[390px]:order-2 min-[390px]:basis-auto min-[390px]:py-0 min-[390px]:pl-0"
               >
                 <PrintIcon />
                 Print usernames
@@ -633,6 +644,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
               type="button"
               aria-label={studentsOpen ? "Hide users" : "Show users"}
               onClick={() => setStudentsOpen((open) => !open)}
+              className="order-2 shrink-0 min-[390px]:order-3"
             >
               <DisclosureChevron open={studentsOpen} />
             </button>
@@ -640,26 +652,34 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
 
           {studentsOpen ? (
             <div id="class-student-list">
-              {sortedUsernames.map((username) => (
-                <div
-                  key={username}
-                  className="flex min-h-[60px] items-center gap-3.5 border-b border-[#E1E8F6] py-2"
-                >
-                  <TintCircle className="bg-[#F3F6FC] text-[20px]">🙂</TintCircle>
-                  <span className="min-w-0 flex-1 truncate font-heading text-[17px] font-semibold text-[#14213D]">
-                    {username}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={removing}
-                    aria-label={`Remove ${username}`}
-                    onClick={() => setPendingRemove({ scope: "one", username })}
-                    className="text-xl leading-none text-[#9AA8CC] disabled:opacity-40"
+              {sortedUsernames.map((username) => {
+                const lifetimeXp =
+                  xpByUsername.get(username.trim().toLowerCase()) ?? 0;
+                return (
+                  <div
+                    key={username}
+                    data-class-user={username}
+                    className="flex min-h-[60px] items-center gap-3.5 border-b border-[#E1E8F6] py-2"
                   >
-                    ›
-                  </button>
-                </div>
-              ))}
+                    <TintCircle className="bg-[#F3F6FC] text-[20px]">🙂</TintCircle>
+                    <span className="min-w-0 flex-1 truncate font-heading text-[17px] font-semibold text-[#14213D]">
+                      {username}
+                    </span>
+                    <span className="shrink-0 font-heading text-[15px] font-bold text-[#031F82]">
+                      {`${lifetimeXp.toLocaleString()} XP`}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={removing}
+                      aria-label={`Remove ${username}`}
+                      onClick={() => setPendingRemove({ scope: "one", username })}
+                      className="text-xl leading-none text-[#9AA8CC] disabled:opacity-40"
+                    >
+                      ›
+                    </button>
+                  </div>
+                );
+              })}
 
               {allocating ? (
                 <form

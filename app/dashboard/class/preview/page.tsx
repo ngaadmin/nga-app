@@ -36,6 +36,25 @@ const PREVIEW_ROSTER = {
   ],
 };
 
+const FOUR_USER_ROSTER: typeof PREVIEW_ROSTER = {
+  ...PREVIEW_ROSTER,
+  seatsUsed: 4,
+  usernames: ["amber2", "amber3", "cedar2", "forest6"],
+  classes: [
+    {
+      classId: "preview-class",
+      label: "Pathfinder class",
+      totalLifetimeXp: 255,
+      students: [
+        { username: "amber2", lifetimeXp: 120 },
+        { username: "amber3", lifetimeXp: 80 },
+        { username: "cedar2", lifetimeXp: 45 },
+        { username: "forest6", lifetimeXp: 10 },
+      ],
+    },
+  ],
+};
+
 const EMPTY_ROSTER: typeof PREVIEW_ROSTER = {
   ...PREVIEW_ROSTER,
   seatsUsed: 0,
@@ -54,16 +73,22 @@ const EMPTY_ROSTER: typeof PREVIEW_ROSTER = {
 export default async function ClassRosterPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ empty?: string; saved?: string }>;
+  searchParams: Promise<{ empty?: string; saved?: string; users?: string }>;
 }) {
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
 
   const params = await searchParams;
+  const roster =
+    params.empty === "1"
+      ? EMPTY_ROSTER
+      : params.users === "4"
+        ? FOUR_USER_ROSTER
+        : PREVIEW_ROSTER;
   return (
     <ClassPage
-      roster={params.empty === "1" ? EMPTY_ROSTER : PREVIEW_ROSTER}
+      roster={roster}
       passwordSaved={params.saved === "1"}
     />
   );

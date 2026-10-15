@@ -1,8 +1,9 @@
 /**
- * Internal unique keys only — never a public parent handle.
+ * Internal unique keys only — never a public account name.
  * Trigger stub: `u` + 19 hex. Settings fallback: `p` + 19 hex.
+ * Teacher signup fallback: `t` + 19 hex.
  */
-const INTERNAL_PLACEHOLDER_USERNAME = /^[up][0-9a-f]{19}$/i;
+const INTERNAL_PLACEHOLDER_USERNAME = /^[upt][0-9a-f]{19}$/i;
 
 export function isInternalPlaceholderUsername(
   username: string | null | undefined,
@@ -10,7 +11,7 @@ export function isInternalPlaceholderUsername(
   return INTERNAL_PLACEHOLDER_USERNAME.test(username?.trim() ?? "");
 }
 
-/** Public learner username — never an internal `u…` / `p…` stub. */
+/** Public username — never an internal `u…` / `p…` / `t…` stub. */
 export function displayUsernameOrEmpty(
   username: string | null | undefined,
 ): string {

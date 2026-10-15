@@ -5,6 +5,7 @@ import { readUserSession, isGuestSession } from "@/lib/onboarding/guest-session"
 import {
   displayAccountIdentity,
   resolveHouseholdEmail,
+  TEACHER_IDENTITY_FALLBACK,
 } from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
@@ -25,8 +26,17 @@ function readDashboardUserState(): DashboardUserState {
   if (session) {
     const isGuestMode = isGuestSession(session);
     const identity = displayAccountIdentity(session).trim();
+    const safeIdentity = identity.includes("@") ? "" : identity;
     return {
-      username: identity || (isGuestMode ? GUEST_USERNAME : session.username.trim()),
+      username:
+        safeIdentity ||
+        (isGuestMode
+          ? GUEST_USERNAME
+          : session.accountRole === "teacher" || session.isTeacher
+            ? TEACHER_IDENTITY_FALLBACK
+            : session.accountRole === "parent_master"
+              ? "Parent"
+              : GUEST_USERNAME),
       email:
         session.accountRole === "parent_master" || session.accountRole === "teacher"
           ? resolveHouseholdEmail(session)

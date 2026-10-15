@@ -1,6 +1,6 @@
 /**
  * Youth tracks for curriculum and consent.
- * Explorers (10-12) · Pathfinders (13-15) · Mavericks (16+)
+ * Explorers (10-13) · Pathfinders (14-16) · Mavericks (17+)
  *
  * The chosen track is the compliance cohort. Explorer requires parent approval.
  * Do not store a birth year.

@@ -339,7 +339,7 @@ export function buildExplorerParentEmail(
     "",
     "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
-    "Your child has chosen the Explorer track, for kids aged 10-12. And to make their profile official, we need a parent/guardian's approval.",
+    "Your child has chosen the Explorer track, for kids aged 10-13. And to make their profile official, we need a parent/guardian's approval.",
     "",
     `Approve & create account: ${approveUrl}`,
     "",
@@ -369,7 +369,7 @@ export function buildExplorerParentEmail(
         end up $100,000s ahead of peers who start later, by middle age.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your child has chosen the Explorer track, for kids aged 10-12. And to make
+        Your child has chosen the Explorer track, for kids aged 10-13. And to make
         their profile official, we need a parent/guardian&apos;s approval.
       </p>
       ${ctaButton("Approve & create account", approveUrl)}
@@ -418,7 +418,7 @@ export function buildPathfinderParentEmail(
     "",
     "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
-    "They've chosen the Pathfinder track, for ages 13-15. Their account is active, so they can keep learning right away.",
+    "They've chosen the Pathfinder track, for ages 14-16. Their account is active, so they can keep learning right away.",
     "",
     "Create a free parent account to follow what they learn and achieve. You can even set an exchange rate so the points they earn can turn into real pocket money at home.",
     "",
@@ -447,7 +447,7 @@ export function buildPathfinderParentEmail(
         end up $100,000s ahead of peers who start later, by middle age.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        They&apos;ve chosen the Pathfinder track, for ages 13-15. Their account is
+        They&apos;ve chosen the Pathfinder track, for ages 14-16. Their account is
         active, so they can keep learning right away.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">

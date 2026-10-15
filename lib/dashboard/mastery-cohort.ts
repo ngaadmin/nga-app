@@ -4,7 +4,7 @@ import { SKILLS_REGISTRY } from "@/lib/skills/skills-registry";
  * Learning tracks. The chosen track is also the compliance cohort:
  * Explorer requires parent approval. Do not store a birth year.
  *
- * Explorers 10-12 · Pathfinders 13-15 · Mavericks 16+
+ * Explorers 10-13 · Pathfinders 14-16 · Mavericks 17+
  */
 export type MasteryCohort = "explorer" | "pathfinder" | "maverick";
 
@@ -30,7 +30,7 @@ export type CohortAgeBounds = {
   id: MasteryCohort;
   label: string;
   minAge: number;
-  /** Inclusive max age; `null` means open-ended (16+). */
+  /** Inclusive max age; `null` means open-ended (17+). */
   maxAge: number | null;
 };
 
@@ -66,7 +66,7 @@ export const MASTERY_COHORT = {
     id: "explorer",
     label: "Explorer",
     minAge: 10,
-    maxAge: 12,
+    maxAge: 13,
     requiresLearnerEmail: false,
     requiresPassword: true,
     requiresPasscode: false,
@@ -78,8 +78,8 @@ export const MASTERY_COHORT = {
   pathfinder: {
     id: "pathfinder",
     label: "Pathfinder",
-    minAge: 13,
-    maxAge: 15,
+    minAge: 14,
+    maxAge: 16,
     requiresLearnerEmail: true,
     requiresPassword: true,
     requiresPasscode: false,
@@ -91,7 +91,7 @@ export const MASTERY_COHORT = {
   maverick: {
     id: "maverick",
     label: "Maverick",
-    minAge: 16,
+    minAge: 17,
     maxAge: null,
     requiresLearnerEmail: true,
     requiresPassword: true,
@@ -130,8 +130,8 @@ export function getCohortPropertyMatrix(
 }
 
 export function getMasteryCohortFromAge(age: number): MasteryCohort {
-  if (age <= 12) return "explorer";
-  if (age <= 15) return "pathfinder";
+  if (age <= 13) return "explorer";
+  if (age <= 16) return "pathfinder";
   return "maverick";
 }
 
@@ -164,7 +164,7 @@ export function getSignupRequirementsForCohort(
 }
 
 /**
- * Verifiable parental approval required (Explorers 10-12).
+ * Verifiable parental approval required (Explorers 10-13).
  */
 export function requiresParentConsent(cohort: MasteryCohort): boolean {
   return MASTERY_COHORT[cohort].requiresParentApproval;
@@ -220,7 +220,7 @@ export function maxAcademyModuleForMasteryCohort(
   }
 }
 
-/** Skills 13-18 unlock for Mavericks (16+) only. */
+/** Skills 13-18 unlock for Mavericks (17+) only. */
 export function canAccessAdvancedSkills(cohort: MasteryCohort): boolean {
   return cohort === "maverick";
 }
@@ -240,14 +240,14 @@ export function masteryCohortLabel(cohort: MasteryCohort): string {
   return MASTERY_COHORT[cohort].label;
 }
 
-/** Age band for UI. Always ASCII hyphen (`10-12`), never an en- or em-dash. */
+/** Age band for UI. Always ASCII hyphen (`10-13`), never an en- or em-dash. */
 export function masteryCohortAgeRangeLabel(cohort: MasteryCohort): string {
   const { minAge, maxAge } = MASTERY_COHORT[cohort];
   if (maxAge == null) return `${minAge}+`;
   return `${minAge}-${maxAge}`;
 }
 
-/** Youngest-first name plus age, e.g. `Explorer 10-12`. */
+/** Youngest-first name plus age, e.g. `Explorer 10-13`. */
 export function masteryCohortNameAndAgeLabel(cohort: MasteryCohort): string {
   return `${masteryCohortLabel(cohort)} ${masteryCohortAgeRangeLabel(cohort)}`;
 }

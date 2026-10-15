@@ -16,12 +16,15 @@ type DeleteLearnerConfirmSheetProps = {
   onConfirm: () => void;
 };
 
+const SANS_FALLBACK =
+  'ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif';
+
 const headingFont = {
-  fontFamily: "var(--font-poppins), ui-sans-serif, system-ui, sans-serif",
+  fontFamily: `var(--font-poppins), ${SANS_FALLBACK}`,
 } as const;
 
 const bodyFont = {
-  fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+  fontFamily: `var(--font-inter), ${SANS_FALLBACK}`,
 } as const;
 
 function BodyPortal({ children }: { children: ReactNode }) {

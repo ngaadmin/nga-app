@@ -13,7 +13,10 @@ import { LessonScreenRenderer } from "@/components/academy/lesson/lesson-screen-
 import { runMultipleChoiceNextHandler } from "@/components/academy/lesson/screens/multiple-choice-screen";
 import { runSpotlightDecisionNextHandler } from "@/components/academy/lesson/screens/spotlight-rounds-screen";
 import { runWordDropNextHandler } from "@/components/academy/lesson/screens/word-drop-screen";
-import { lessonScreenContentOffsetClass } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  lessonScreenContentOffsetClass,
+  lessonScreenInlinePaddingClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   isDenseLessonScreen,
@@ -129,13 +132,19 @@ export function LessonRunner({
                 illustration={resolveLessonScreenIllustration(screen)}
               >
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                  <div className="relative w-full min-w-0 shrink-0">
+                  <div
+                    className={cn(
+                      "relative w-full min-w-0 shrink-0",
+                      lessonScreenInlinePaddingClass,
+                    )}
+                  >
                     <LessonScreenIllustration />
                     <LessonHintBubble />
                   </div>
                   <div
                     className={cn(
                       "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none",
+                      lessonScreenInlinePaddingClass,
                       !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
                     )}
                   >

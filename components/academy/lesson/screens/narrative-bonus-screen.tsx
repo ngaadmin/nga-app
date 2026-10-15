@@ -52,8 +52,14 @@ export function NarrativeBonusScreen({
           <h2 className="font-heading text-[1.75rem] font-extrabold leading-tight text-[#031F82]">
             {resolutionCopy.headline}
           </h2>
-          {resolutionCopy.body ? (
-            <p className={cn("mt-3", lessonNarrativeClass)}>{resolutionCopy.body}</p>
+          {resolutionCopy.paragraphs.length > 0 ? (
+            <div className="mt-3 space-y-4">
+              {resolutionCopy.paragraphs.map((paragraph) => (
+                <p key={paragraph} className={lessonNarrativeClass}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           ) : null}
         </>
       ) : (

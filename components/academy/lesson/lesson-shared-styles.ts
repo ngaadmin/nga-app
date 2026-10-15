@@ -11,6 +11,13 @@ export const lessonInteractiveTextClass = "text-lg font-medium";
 /** Gentle top offset so short screens don't hug the chrome. */
 export const lessonScreenContentOffsetClass = "pt-0";
 
+/**
+ * Side inset for every lesson screen. The clear 20px is
+ * `--lesson-screen-edge-inset`; the choice-tile ring is added on top so a
+ * selected card's shadow stays on screen and is not clipped.
+ */
+export const lessonScreenInlinePaddingClass = "lesson-screen-inline";
+
 /** Top instructional / prompt copy. Sized for a phone held at arm's length. */
 export const lessonPromptClass =
   "font-heading text-[20px] font-semibold leading-[1.35] text-[#031F82]";

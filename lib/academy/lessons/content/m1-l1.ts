@@ -218,7 +218,7 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
   resolution: {
     illustrationId: "lars-celebrating",
     narrative:
-      "The freeze worked! The next morning, Lars realized he didn't even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",
+      "The freeze worked!\n\nThe next morning, Lars realized he didn't even want that skin anymore.\n\nHe kept his money safe for a new gaming headset. 🎧\n\nCongratulations for helping him avoid wasting his money! 🎉",
     bonusXp: 0,
     bonusTapLabel: "",
     autoReadyWhenNoBonus: true,

@@ -323,19 +323,29 @@
  * Unlayered so these beat Tailwind background utilities.
  * A tapped tile highlights on the left or the right. Correct turns green.
  */
+:root {
+  --lesson-screen-edge-inset: 20px;
+  --lesson-choice-ring: 4px;
+}
+
+/* One side inset for every lesson screen. The ring fits inside it. */
+.lesson-screen-inline {
+  padding-inline: calc(var(--lesson-screen-edge-inset) + var(--lesson-choice-ring));
+}
+
 .lesson-choice-tile[data-selection="selected"] {
   background-color: #0cc1e0;
-  box-shadow: 0 0 0 4px #031f82;
+  box-shadow: 0 0 0 var(--lesson-choice-ring) #031f82;
 }
 
 .lesson-choice-tile[data-selection="correct"] {
   background-color: #16a34a;
-  box-shadow: 0 0 0 4px #15803d;
+  box-shadow: 0 0 0 var(--lesson-choice-ring) #15803d;
 }
 
 .lesson-choice-tile[data-selection="wrong"] {
   background-color: #e11d48;
-  box-shadow: 0 0 0 4px #9f1239;
+  box-shadow: 0 0 0 var(--lesson-choice-ring) #9f1239;
 }
 
 @layer base {

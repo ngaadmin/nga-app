@@ -5,6 +5,8 @@ import {
   LessonScreenPane,
 } from "@/components/academy/lesson/academy-lesson-shell";
 import { CompletionScreen } from "@/components/academy/lesson/screens/completion-screen";
+import { lessonScreenInlinePaddingClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { cn } from "@/lib/utils/cn";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { explorerCompletionScreen } from "@/lib/academy/lessons/completion-screen";
 import type { LessonRewards } from "@/lib/academy/lessons/types";
@@ -77,7 +79,12 @@ export function LessonCompletionScreenPreview() {
           <LessonScreenPane key={index} isActive={index === screenIndex}>
             {index === screenIndex ? (
               <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-                <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+                <div
+                  className={cn(
+                    "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain",
+                    lessonScreenInlinePaddingClass,
+                  )}
+                >
                   <CompletionScreen
                     screen={screen}
                     screenIndex={screenIndex}

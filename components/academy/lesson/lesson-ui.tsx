@@ -953,14 +953,18 @@ export function LessonIconReveal({
   display = "emoji-label",
   selected = false,
   selectionVariant = "neutral",
+  size = "default",
   className,
+  labelClassName,
 }: {
   label: string;
   emoji?: string;
   display?: LessonIconDisplayMode;
   selected?: boolean;
   selectionVariant?: LessonChoiceVariant;
+  size?: "default" | "compact";
   className?: string;
+  labelClassName?: string;
 }) {
   if (display === "label") {
     return (
@@ -976,7 +980,9 @@ export function LessonIconReveal({
       interactive={false}
       selected={selected}
       selectionVariant={selectionVariant}
+      size={size}
       className={className}
+      labelClassName={labelClassName}
     />
   );
 }

@@ -102,6 +102,9 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await clickNext(page);
 
   await page.getByRole("button", { name: "Cash in your XP" }).click();
+  await expect(page.locator('[data-cash-in-celebration="open"]')).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard\/academy\/lesson\/1$/);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard\/academy\/?$/, { timeout: 15_000 });
   try {
     await intro.click({ timeout: 4_000 });

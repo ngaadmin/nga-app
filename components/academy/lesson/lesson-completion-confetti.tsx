@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LESSON_CASH_IN_CELEBRATION_MS } from "@/lib/academy/lessons/completion-xp";
 import { Z } from "@/lib/ui/layers";
 
-const CONFETTI_DURATION_MS = LESSON_CASH_IN_CELEBRATION_MS;
+const CONFETTI_LIGHT_MS = 800;
+const CONFETTI_BURST_MS = 3200;
 const CONFETTI_COLORS = [
   "#FFB822",
   "#031F82",
@@ -25,15 +25,22 @@ type Particle = {
   shape: "rect" | "circle";
 };
 
-function createParticles(width: number, height: number, count: number): Particle[] {
+function createParticles(
+  width: number,
+  height: number,
+  count: number,
+  burst: boolean,
+): Particle[] {
   return Array.from({ length: count }, () => {
-    const fromTop = Math.random() > 0.35;
+    const fromCenter = burst && Math.random() > 0.45;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 6 + Math.random() * 12;
     return {
-      x: Math.random() * width,
-      y: fromTop ? -20 - Math.random() * 80 : height * 0.28 + (Math.random() - 0.5) * 80,
-      vx: (Math.random() - 0.5) * 11,
-      vy: fromTop ? Math.random() * 4 + 2 : -(Math.random() * 8 + 4),
-      size: Math.random() * 10 + 6,
+      x: fromCenter ? width * (0.2 + Math.random() * 0.6) : Math.random() * width,
+      y: fromCenter ? height * (0.2 + Math.random() * 0.35) : -20 - Math.random() * height * 0.15,
+      vx: fromCenter ? Math.cos(angle) * speed : (Math.random() - 0.5) * (burst ? 16 : 11),
+      vy: fromCenter ? Math.sin(angle) * speed : Math.random() * (burst ? 8 : 4) + 2,
+      size: Math.random() * (burst ? 14 : 10) + 6,
       rotation: Math.random() * Math.PI,
       spin: (Math.random() - 0.5) * 0.35,
       color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]!,
@@ -66,12 +73,18 @@ export function LessonCompletionConfetti({ light = false }: { light?: boolean })
       canvas.height = window.innerHeight;
     };
     resize();
-    const particles = createParticles(canvas.width, canvas.height, light ? 18 : 40);
+    const durationMs = light ? CONFETTI_LIGHT_MS : CONFETTI_BURST_MS;
+    const particles = createParticles(
+      canvas.width,
+      canvas.height,
+      light ? 18 : 110,
+      !light,
+    );
     window.addEventListener("resize", resize);
 
     const tick = (now: number) => {
       const elapsed = now - startedAt;
-      const progress = elapsed / CONFETTI_DURATION_MS;
+      const progress = elapsed / durationMs;
       context.clearRect(0, 0, canvas.width, canvas.height);
 
       for (const particle of particles) {
@@ -101,7 +114,7 @@ export function LessonCompletionConfetti({ light = false }: { light?: boolean })
         context.restore();
       }
 
-      if (elapsed < CONFETTI_DURATION_MS) {
+      if (elapsed < durationMs) {
         animationFrame = window.requestAnimationFrame(tick);
       }
     };
@@ -127,4 +140,4 @@ export function LessonCompletionConfetti({ light = false }: { light?: boolean })
   );
 }
 
-export { CONFETTI_DURATION_MS };
+export { CONFETTI_BURST_MS as CONFETTI_DURATION_MS };

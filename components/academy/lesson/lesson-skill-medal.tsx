@@ -18,12 +18,13 @@ type LessonSkillMedalProps = {
   skillName?: string;
   label?: string;
   className?: string;
-  size?: "default" | "hero";
+  size?: "default" | "hero" | "row";
 };
 
 const IMAGE_CLASS = {
   default: "block size-14 object-contain object-center sm:size-16",
   hero: "block h-auto w-full max-h-[8rem] max-w-[8rem] object-contain object-center sm:max-h-[11rem] sm:max-w-[11rem]",
+  row: "block h-auto w-full max-h-[6.25rem] max-w-[6.25rem] object-contain object-center",
 } as const;
 
 function medalStatusLabel(medalId: MedalIllustrationId): string {
@@ -59,6 +60,7 @@ export function LessonSkillMedal({
       className={cn(
         "flex flex-col items-center",
         size === "hero" && lessonCompletionHeroMedalClass,
+        size === "row" && "w-full max-w-[6.25rem]",
         className,
       )}
     >

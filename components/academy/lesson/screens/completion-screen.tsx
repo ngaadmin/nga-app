@@ -23,6 +23,7 @@ export function CompletionScreen({
       skillName={screen.skillName}
       skillLearnedLabel={screen.skillLearnedLabel}
       onCashIn={flow.handleCashInPoints}
+      onContinue={flow.handleContinueAfterCashIn}
       cashInDisabled={flow.lessonComplete}
     />
   );

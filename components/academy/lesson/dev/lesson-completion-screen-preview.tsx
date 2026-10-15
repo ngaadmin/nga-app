@@ -37,6 +37,7 @@ const previewFlow = {
   moduleNumber: 1,
   lessonComplete: false,
   handleCashInPoints: noop,
+  handleContinueAfterCashIn: noop,
 } as Pick<
   LessonFlow,
   | "screenIndex"
@@ -48,6 +49,7 @@ const previewFlow = {
   | "moduleNumber"
   | "lessonComplete"
   | "handleCashInPoints"
+  | "handleContinueAfterCashIn"
 > as LessonFlow;
 
 /**

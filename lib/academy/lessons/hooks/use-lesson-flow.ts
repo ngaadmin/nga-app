@@ -23,7 +23,6 @@ import {
 } from "@/lib/dashboard/academy-state";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import {
-  LESSON_CASH_IN_CELEBRATION_MS,
   LESSON_COMPLETION_XP,
   LESSON_PERFECT_STREAK_BONUS,
 } from "@/lib/academy/lessons/completion-xp";
@@ -90,8 +89,8 @@ export function useLessonFlow({
 
   const pendingActionsRef = useRef<PendingFlowAction[]>([]);
   const flushTimeoutRef = useRef<number | null>(null);
-  const cashInTimerRef = useRef<number | null>(null);
   const cashInStartedRef = useRef(false);
+  const leavingAfterCashInRef = useRef(false);
   const activeMilestoneRef = useRef(milestoneId);
 
   useEffect(() => {
@@ -109,10 +108,7 @@ export function useLessonFlow({
     setScreenMistakes(0);
     setLessonComplete(false);
     cashInStartedRef.current = false;
-    if (cashInTimerRef.current !== null) {
-      window.clearTimeout(cashInTimerRef.current);
-      cashInTimerRef.current = null;
-    }
+    leavingAfterCashInRef.current = false;
     pendingActionsRef.current = [];
   }, [milestoneId, totalScreens]);
 
@@ -174,9 +170,6 @@ export function useLessonFlow({
     () => () => {
       if (flushTimeoutRef.current !== null) {
         window.clearTimeout(flushTimeoutRef.current);
-      }
-      if (cashInTimerRef.current !== null) {
-        window.clearTimeout(cashInTimerRef.current);
       }
     },
     [],
@@ -259,37 +252,33 @@ export function useLessonFlow({
         }
       }
     } catch {
-      // A failed local save must not skip the celebration or the route change.
+      // A failed local save must not skip the celebration.
     }
-
-    if (cashInTimerRef.current !== null) {
-      window.clearTimeout(cashInTimerRef.current);
-    }
-    cashInTimerRef.current = window.setTimeout(() => {
-      cashInTimerRef.current = null;
-      try {
-        router.push(exitHref);
-      } catch {
-        // Academy can still open from the map if this transition fails.
-      }
-      if (!skipProgressWrites) {
-        window.setTimeout(() => {
-          void persistRegisteredProgressNow();
-        }, 0);
-      }
-    }, LESSON_CASH_IN_CELEBRATION_MS);
   }, [
     awardLessonXp,
-    exitHref,
     isDesignShell,
     skipProgressWrites,
     lessonComplete,
     milestoneId,
     perfectStreak,
-    router,
     skillAwardTier,
     skillSlug,
   ]);
+
+  const handleContinueAfterCashIn = useCallback(() => {
+    if (!cashInStartedRef.current || leavingAfterCashInRef.current) return;
+    leavingAfterCashInRef.current = true;
+    try {
+      router.push(exitHref);
+    } catch {
+      leavingAfterCashInRef.current = false;
+    }
+    if (!skipProgressWrites) {
+      window.setTimeout(() => {
+        void persistRegisteredProgressNow();
+      }, 0);
+    }
+  }, [exitHref, router, skipProgressWrites]);
   finishLessonRef.current = handleCashInPoints;
 
   const isLastScreen = screenIndex === totalScreens - 1;
@@ -316,6 +305,7 @@ export function useLessonFlow({
     incrementMistake,
     handleNext,
     handleCashInPoints,
+    handleContinueAfterCashIn,
     isLastScreen,
     canAdvanceDefault,
     totalScreens,

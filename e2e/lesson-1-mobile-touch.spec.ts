@@ -121,14 +121,36 @@ test("long-pressing hold to freeze works on touch", async ({ page }) => {
   });
 });
 
-test("show-me card labels stay inside the card", async ({ page }) => {
+test("tap-reveal opens one item per tap and labels stay inside the card", async ({
+  page,
+}) => {
   await openLesson(page, "/dashboard/academy/lesson/1?preview=1&screen=2");
-  await page.getByRole("button", { name: /Show me/i }).tap();
+  await expect(page.getByText(/Tap these items/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Show me/i })).toHaveCount(0);
+
+  const next = page.getByRole("button", { name: "Next", exact: true });
+  await expect(next).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Sour Worms", exact: true }).tap();
+  await page.waitForTimeout(1200);
+  await expect(
+    page.getByRole("button", { name: "Cinema Popcorn", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Wireless Headphones", exact: true }),
+  ).toBeVisible();
+  await expect(next).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Cinema Popcorn", exact: true }).tap();
+  await page.getByRole("button", { name: "Wireless Headphones", exact: true }).tap();
+  await page.getByRole("button", { name: "Skateboard", exact: true }).tap();
+
   const label = page
     .getByRole("heading", { name: "More Fun for Longer" })
     .locator("..")
     .getByText("Wireless Headphones", { exact: true });
   await expect(label).toBeVisible({ timeout: 5_000 });
+  await expect(next).toBeVisible();
 
   for (const width of [320, 375, 414]) {
     await page.setViewportSize({ width, height: 667 });

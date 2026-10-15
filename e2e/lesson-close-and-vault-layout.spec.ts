@@ -76,6 +76,63 @@ test("close lesson returns to Academy", async ({ page }) => {
   });
 });
 
+test("vault intro leaves the bottom nav tappable and can close", async ({
+  page,
+}) => {
+  await openAsExplorer(page, "/dashboard/vault");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("button", { name: "Let's go" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeVisible();
+
+  const navClear = await page.evaluate(() => {
+    const backdrop = document.querySelector("[data-hub-intro-backdrop]");
+    const nav = document.querySelector("[data-dashboard-nav]");
+    const academy = nav?.querySelector("a");
+    if (!backdrop || !nav || !academy) return { ok: false, reason: "missing" };
+    const backdropBox = backdrop.getBoundingClientRect();
+    const navBox = nav.getBoundingClientRect();
+    const linkBox = academy.getBoundingClientRect();
+    const stack = document.elementsFromPoint(
+      linkBox.left + linkBox.width / 2,
+      linkBox.top + linkBox.height / 2,
+    );
+    const hit = stack.find(
+      (element) => element.tagName !== "NEXTJS-PORTAL",
+    );
+    return {
+      ok:
+        backdropBox.bottom <= navBox.top + 1 &&
+        hit instanceof Node &&
+        (academy === hit || academy.contains(hit)),
+      backdropBottom: backdropBox.bottom,
+      navTop: navBox.top,
+      hit: hit?.tagName ?? null,
+    };
+  });
+  expect(navClear.ok, JSON.stringify(navClear)).toBe(true);
+
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/vault-intro-nav.png",
+  });
+
+  await page.addStyleTag({
+    content: "nextjs-portal { pointer-events: none !important; }",
+  });
+  await page
+    .locator("[data-dashboard-nav]")
+    .getByRole("link", { name: "Academy" })
+    .tap();
+  await expect(page).toHaveURL(/\/dashboard\/academy\/?$/);
+
+  await page.goto("/dashboard/vault");
+  await expect(dialog.getByRole("button", { name: "Close", exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Close", exact: true }).tap();
+  await expect(dialog).toHaveCount(0);
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/vault-intro-dismissed.png",
+  });
+});
+
 test("vault advanced money does not overlap the privacy policy", async ({
   page,
 }) => {

@@ -21,8 +21,9 @@ export function HubIntroPanel({ hubId, mode, onDismiss }: HubIntroPanelProps) {
       body={isFirst ? copy.firstVisitBody : copy.infoPanelBody}
       cta={isFirst ? copy.firstVisitCta : copy.infoPanelCta}
       disclaimer={isFirst ? copy.firstVisitDisclaimer : undefined}
-      dismissOnBackdrop={!isFirst}
-      closeOnEscape={!isFirst}
+      dismissOnBackdrop
+      closeOnEscape
+      clearBottomNav
       onDismiss={onDismiss}
     />
   );

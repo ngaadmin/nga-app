@@ -35,6 +35,12 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
+  ageTrackFitMessage,
+  BIRTH_YEAR_HELPER,
+  BIRTH_YEAR_PROMPT,
+  decideLearnerAge,
+} from "@/lib/onboarding/signup-age-check";
+import {
   lookupConsentToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
@@ -107,8 +113,17 @@ type FormErrors = {
   parentEmail?: string;
   parentalConsent?: string;
   track?: string;
+  birthYear?: string;
   form?: string;
 };
+
+function birthYearOptions(referenceYear = new Date().getFullYear()): number[] {
+  const newest = referenceYear - 9;
+  const oldest = referenceYear - 31;
+  const years: number[] = [];
+  for (let year = newest; year >= oldest; year -= 1) years.push(year);
+  return years;
+}
 
 function cohortHeader(cohort: MasteryCohort): string {
   switch (cohort) {
@@ -152,6 +167,8 @@ export function SignUpForm() {
   const isPathfinder = !isParentMaster && ageTier === "pathfinder";
   const isMaverick = !isParentMaster && ageTier === "maverick";
 
+  const [birthYear, setBirthYear] = useState<number | null>(null);
+  const [ageFitMessage, setAgeFitMessage] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -325,6 +342,9 @@ export function SignUpForm() {
       if (!cohort) {
         next.track = "Pick the learning track for this profile.";
       }
+      if (birthYear == null) {
+        next.birthYear = "Choose the year you were born.";
+      }
     }
 
     if (isExplorer) {
@@ -477,6 +497,14 @@ export function SignUpForm() {
         nextErrors.track ?? "Pick the learning track for this profile.";
     }
 
+    const ageDecision =
+      birthYear == null ? null : decideLearnerAge(birthYear);
+    if (ageDecision && cohort && ageDecision.cohort !== cohort) {
+      setCohort(ageDecision.cohort);
+      setAgeFitMessage(ageTrackFitMessage(ageDecision.cohort));
+      return;
+    }
+
     if (!cohort || Object.keys(nextErrors).length > 0) {
       setErrors({
         ...nextErrors,
@@ -496,6 +524,7 @@ export function SignUpForm() {
       const result = await createSupabaseAccount({
         username: username.trim(),
         cohort,
+        birthYear: birthYear ?? undefined,
         password: password.trim(),
         learnerEmail: isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
         parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
@@ -518,19 +547,20 @@ export function SignUpForm() {
         return;
       }
 
-      const isPendingConsent =
-        result.accountStatus === "pending_consent" || result.cohort === "explorer";
+      const savedCohort = result.cohort;
+      const isPendingConsent = result.accountStatus === "pending_consent";
       const childSession = convertToRegisteredProfile({
         username: result.username,
         accountRole: "child",
-        parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
+        parentEmail:
+          savedCohort === "maverick" ? undefined : parentEmail.trim(),
         learnerEmail:
-          isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
+          savedCohort === "explorer" ? undefined : learnerEmail.trim(),
         password: password.trim(),
         accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
-        marketingOptIn: isExplorer ? false : marketingOptIn,
+        marketingOptIn: savedCohort === "explorer" ? false : marketingOptIn,
         supabaseUserId: result.userId,
-        curriculumCohort: cohort,
+        curriculumCohort: savedCohort,
       });
       await finalizeRegisteredSignup(childSession, { skipEmail: true });
       succeeded = true;
@@ -957,11 +987,76 @@ export function SignUpForm() {
           <CohortTrackField
             value={cohort}
             onChange={(track) => {
-              setCohort(track);
+              const decision = birthYear == null ? null : decideLearnerAge(birthYear);
+              if (decision && decision.cohort !== track) {
+                setCohort(decision.cohort);
+                setAgeFitMessage(ageTrackFitMessage(decision.cohort));
+              } else {
+                setCohort(track);
+                if (decision) setAgeFitMessage(null);
+              }
               clearError("track");
             }}
             error={errors.track}
           />
+
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-birth-year"
+              className="block font-heading text-sm font-bold text-nga-primary"
+            >
+              {BIRTH_YEAR_PROMPT}
+            </label>
+            <p
+              id="signup-birth-year-help"
+              className="font-sans text-sm text-nga-slate"
+            >
+              {BIRTH_YEAR_HELPER}
+            </p>
+            <select
+              id="signup-birth-year"
+              value={birthYear ?? ""}
+              required
+              autoComplete="off"
+              onChange={(event) => {
+                const nextYear = Number(event.target.value);
+                if (!Number.isInteger(nextYear)) {
+                  setBirthYear(null);
+                  setAgeFitMessage(null);
+                  return;
+                }
+                setBirthYear(nextYear);
+                clearError("birthYear");
+                const decision = decideLearnerAge(nextYear);
+                if (decision && cohort && decision.cohort !== cohort) {
+                  setCohort(decision.cohort);
+                  setAgeFitMessage(ageTrackFitMessage(decision.cohort));
+                } else {
+                  setAgeFitMessage(null);
+                }
+              }}
+              aria-invalid={Boolean(errors.birthYear)}
+              aria-describedby="signup-birth-year-help"
+              className={cn(fieldBase, "appearance-none")}
+            >
+              <option value="">Select a year</option>
+              {birthYearOptions().map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+            {ageFitMessage ? (
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="status">
+                {ageFitMessage}
+              </p>
+            ) : null}
+            {errors.birthYear ? (
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
+                {errors.birthYear}
+              </p>
+            ) : null}
+          </div>
 
           <div className="space-y-2">
             <label
@@ -1132,7 +1227,7 @@ export function SignUpForm() {
                   id="signup-parent-email-hint"
                   className="font-sans text-sm font-bold text-purple-700"
                 >
-                  A parent/guardian needs to approve this.
+                  Approval saves your XP. You can keep playing while you wait.
                 </p>
               ) : null}
               <input

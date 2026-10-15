@@ -101,6 +101,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-sans antialiased overflow-x-hidden max-w-full">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('popstate',function(event){var handler=window.__ngaGuestBack;if(typeof handler==='function')handler(event);},true);",
+          }}
+        />
         {/* TODO: remove after recordings — run before client redirects drop the query. */}
         <Script id="recording-suppress-intro" strategy="beforeInteractive">
           {`try{var q=new URLSearchParams(location.search);if(q.get("recording")==="1")sessionStorage.setItem(${JSON.stringify(RECORDING_SUPPRESS_INTRO_FLAG_KEY)},"1")}catch(e){}`}

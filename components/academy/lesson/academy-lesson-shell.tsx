@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, type ReactNode } from "react";
 import {
   LESSON_MAX_LIVES,
@@ -85,6 +86,23 @@ export function AcademyLessonShell({
           !matchChrome && lessonScreenInlinePaddingClass,
         )}
       >
+        <Link
+          href="/dashboard/academy"
+          aria-label="Close lesson"
+          className="grid size-8 shrink-0 place-items-center rounded-full text-[#031F82] transition-colors hover:bg-[#E8F6FC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0CC1E0]"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            className="size-4"
+            aria-hidden
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </Link>
         <div
           className="flex shrink-0 items-center gap-0.5"
           aria-label={`${livesRemaining} of ${maxLives} lives remaining`}

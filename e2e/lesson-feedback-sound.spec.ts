@@ -103,7 +103,7 @@ test("answer sounds play on the tap, and Next stays quiet", async ({
   await expect(next).toBeDisabled();
 
   await page.getByRole("button", { name: /candy is gone/i }).click();
-  await expect(page.locator('[role="status"] span')).toBeVisible();
+  await expect(page.locator(".lesson-tick-pop")).toBeVisible();
   expect(await playedNotes(page)).toEqual([
     { frequency: 180, type: "square" },
     { frequency: 110, type: "square" },
@@ -129,7 +129,7 @@ test("answer sounds play on the tap, and Next stays quiet", async ({
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
 
   await page.getByRole("button", { name: "Spent", exact: true }).click();
-  await expect(page.locator('[role="status"] span')).toBeVisible();
+  await expect(page.locator(".lesson-tick-pop")).toBeVisible();
   expect(await playedNotes(page)).toEqual([
     { frequency: 180, type: "square" },
     { frequency: 110, type: "square" },
@@ -152,8 +152,11 @@ test("answer sounds play on the tap, and Next stays quiet", async ({
     { frequency: 110, type: "square" },
   ]);
   expect(await vibrations(page)).toEqual([[60, 40, 60]]);
+  await expect(
+    page.getByRole("button", { name: /limited time offer/i }),
+  ).not.toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: /cheaper later/i }).click();
-  await expect(page.locator('[role="status"] span')).toBeVisible();
+  await expect(page.locator(".lesson-tick-pop")).toBeVisible();
   expect(await playedNotes(page)).toEqual([
     { frequency: 180, type: "square" },
     { frequency: 110, type: "square" },

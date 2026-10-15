@@ -68,7 +68,14 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await page.getByRole("button", { name: /candy is gone/i }).click();
   await clickNext(page);
 
-  await page.getByRole("button", { name: /Show me/i }).click();
+  for (const item of [
+    "Sour Worms",
+    "Cinema Popcorn",
+    "Wireless Headphones",
+    "Skateboard",
+  ]) {
+    await page.getByRole("button", { name: item, exact: true }).click();
+  }
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeVisible();
   await clickNext(page);
 

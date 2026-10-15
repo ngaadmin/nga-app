@@ -18,7 +18,7 @@ These principles govern how we build and extend the codebase:
 
 5. **The Drafting Table Rule** ? Non-agentic by design. The app provides tools and dashboards; the user supplies intent. No automated trading, scraping, gig placement, or AI-driven financial actions.
 
-6. **Dual Cohort Model** ? **Compliance tiers** (Explorer / Titan, COPPA-driven, age 10?13 vs 14?17+) are separate from **Mastery cohorts** (Explorer / Pathfinder / Maverick, ages 10?12 / 13?15 / 16?18). Skill gating and UI counts use mastery cohorts; parental consent and privacy rules use compliance tiers.
+6. **Dual Cohort Model** ? **Compliance tiers** (Explorer / Titan, COPPA-driven, age 10?13 vs 14?17+) are separate from **Mastery cohorts** (Explorer / Pathfinder / Maverick, ages 10-13 / 14-16 / 17+). Skill gating and UI counts use mastery cohorts; parental consent and privacy rules use compliance tiers.
 
 7. **TypeScript Source of Truth, Database Mirror** ? Canonical skill definitions live in `lib/skills/skills-registry.ts` and are mirrored to Supabase via migrations. Runtime reads use the in-memory registry until live PostgREST queries are wired; cohort filters are defined once in `skills-registry-query.ts`.
 
@@ -80,7 +80,7 @@ These principles govern how we build and extend the codebase:
 | 2026-06-22 | Skills registry shape | **18 skills** in **6 Levels � 3 Skills** hierarchy; fields: `level_id`, `skill_number`, `skill_slug`, `is_advanced_cohort_only` | Replaced incorrect module-phase and 24-skill drafts; level_id = CEIL(skill_number / 3) enforced in DB CHECK constraints |
 | 2026-06-22 | Skills source of truth | TypeScript registry in `lib/skills/skills-registry.ts`; Supabase `skills_registry` table seeded via migrations `20250611000000`?`000003` | App works offline/ghost without Supabase client; migrations keep DB aligned with TS mirror |
 | 2026-06-22 | Advanced skill gating | Skills **1?12** universal (`is_advanced_cohort_only = false`); Skills **13?18** Maverick-only (`true`); DB boundary CHECK constraint | Explicit cohort boundary; indexed filter for payload optimisation on Explorer/Pathfinder queries |
-| 2026-06-22 | Mastery cohorts | **Explorer** (10?12), **Pathfinder** (13?15), **Maverick** (16?18) in `mastery-cohort.ts`; separate from compliance Explorer/Titan split | Three-band gamification track; only Mavericks see Levels 5?6 skills and Academy signposts |
+| 2026-06-22 | Mastery cohorts | **Explorer** (10-13), **Pathfinder** (14-16), **Maverick** (17+) in `mastery-cohort.ts`; separate from compliance Explorer/Titan split | Three-band gamification track; only Mavericks see Levels 5?6 skills and Academy signposts |
 | 2026-06-22 | Cohort fetch pattern | `skillsRegistryForMasteryCohort()` + `skillsRegistryPostgrestFilter()` filter advanced skills at slice/query layer | Avoids loading 18 skills for 12-skill profiles; single pattern for in-memory and future Supabase reads |
 | 2026-06-22 | Trophy scaffold | `VAULT_SKILL_TROPHIES` generated from registry; tiers Bronze/Silver/Gold/Locked; cohort resolver in `skill-trophies.ts` | UI derives from registry ? no duplicate skill metadata; Achievements carousel uses stable `skillNumber` keys |
 | 2026-06-22 | Legacy slug compatibility | Registry entries include optional `legacySlugs` + `resolveCanonicalSkillSlug()` for sessionStorage migration | Pre-registry lesson/vault keys normalise without breaking existing ghost sessions |

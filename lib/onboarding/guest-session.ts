@@ -62,7 +62,7 @@ export type { AccountLifecycleStatus, RegisteredAccountStatus };
 export type GuestProfileInput = {
   username: string;
   genericProfileId?: string;
-  /** Learning track. Explorer is the under-13 consent path. */
+  /** Learning track. Explorer is the 13 or under consent path. */
   curriculumCohort: MasteryCohort;
 };
 

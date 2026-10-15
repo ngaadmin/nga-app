@@ -382,20 +382,32 @@ export function resolveHouseholdEmail(session: UserSession): string | null {
 }
 
 const PARENT_IDENTITY_FALLBACK = "Parent";
+/** Shown in the status header when a teacher has no public display name. */
+export const TEACHER_IDENTITY_FALLBACK = "Teacher";
 
-/** Public identity: parent username (email fallback), or learner username. */
+function publicDisplayName(username: string | null | undefined): string {
+  const shown = displayUsernameOrEmpty(username);
+  if (!shown || shown.includes("@")) return "";
+  return shown;
+}
+
+/**
+ * Public header name. Household email is never a display name.
+ * Teachers with no public username use {@link TEACHER_IDENTITY_FALLBACK}.
+ */
 export function displayAccountIdentity(session: UserSession): string {
   if (
     session.accountRole === "parent_master" ||
     session.accountRole === "teacher"
   ) {
     return (
-      displayUsernameOrEmpty(session.username) ||
-      resolveHouseholdEmail(session) ||
-      PARENT_IDENTITY_FALLBACK
+      publicDisplayName(session.username) ||
+      (session.accountRole === "teacher"
+        ? TEACHER_IDENTITY_FALLBACK
+        : PARENT_IDENTITY_FALLBACK)
     );
   }
-  return session.username.trim();
+  return publicDisplayName(session.username);
 }
 
 /**

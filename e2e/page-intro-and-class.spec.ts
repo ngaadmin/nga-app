@@ -33,11 +33,21 @@ const TEACHER_SESSION = {
   learnerEmail: "teachertest@example.com",
 };
 
+const EMAIL_TEACHER_SESSION = {
+  ...TEACHER_SESSION,
+  username: "uaaaaaaaaaaaaaaaaaaa",
+  learnerEmail: "cath+recteacher1@example.com",
+  email: "cath+recteacher1@example.com",
+};
+
 test.use({ viewport: { width: 390, height: 844 } });
 
 async function installSession(
   page: Page,
-  session: typeof LEARNER_SESSION | typeof TEACHER_SESSION,
+  session:
+    | typeof LEARNER_SESSION
+    | typeof TEACHER_SESSION
+    | typeof EMAIL_TEACHER_SESSION,
 ) {
   await page.addInitScript(
     ([key, value]) => {
@@ -428,6 +438,81 @@ test("print usernames stays clear of the user count", async ({ page }) => {
     );
     await page.screenshot({
       path: `/opt/cursor/artifacts/class-users-row-${width}.png`,
+      fullPage: false,
+    });
+  }
+});
+
+const FOUR_USERS = [
+  { username: "amber2", xp: "120 XP" },
+  { username: "amber3", xp: "80 XP" },
+  { username: "cedar2", xp: "45 XP" },
+  { username: "forest6", xp: "10 XP" },
+] as const;
+
+test("header hides the teacher email and expanded users scroll to XP", async ({
+  page,
+}) => {
+  await installSession(page, EMAIL_TEACHER_SESSION);
+  await page.goto("/dashboard/class/preview?users=4");
+  await expect(page.getByText("4 of 30 users allocated")).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const header = page.locator("[data-dashboard-status-header]");
+  await expect(header.getByText("Teacher", { exact: true })).toBeVisible();
+  await expect(header).not.toContainText("@");
+  await expect(header).not.toContainText("cath+recteacher1");
+
+  await page.setViewportSize({ width: 375, height: 844 });
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-header-name-375.png",
+    fullPage: false,
+  });
+
+  await page.getByRole("button", { name: "Show users (4)" }).click();
+  await expect(page.locator("[data-class-user='amber2']")).toBeVisible();
+
+  for (const width of [320, 375, 414, 1280]) {
+    const height = width >= 1024 ? 900 : 844;
+    await page.setViewportSize({ width, height });
+    const main = page.locator("main");
+    const nav = page.locator("[data-dashboard-nav]");
+
+    for (const user of FOUR_USERS) {
+      const row = page.locator(`[data-class-user="${user.username}"]`);
+      await row.scrollIntoViewIfNeeded();
+      await expect(row.getByText(user.xp, { exact: true })).toBeVisible();
+      const box = await row.boundingBox();
+      expect(box, user.username).toBeTruthy();
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height + 1);
+      if (width < 768) {
+        const navBox = await nav.boundingBox();
+        expect(navBox, "bottom nav").toBeTruthy();
+        expect(box!.y + box!.height).toBeLessThanOrEqual(navBox!.y + 1);
+      }
+    }
+
+    const last = page.locator("[data-class-user='forest6']");
+    await last.scrollIntoViewIfNeeded();
+    await expect(last.getByText("10 XP", { exact: true })).toBeVisible();
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
+    const mainScroll = await main.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+      scrollTop: el.scrollTop,
+    }));
+    if (width < 768) {
+      expect(mainScroll.scrollHeight).toBeGreaterThan(mainScroll.clientHeight);
+      expect(mainScroll.scrollTop).toBeGreaterThan(0);
+    }
+    await page.screenshot({
+      path: `/opt/cursor/artifacts/class-users-scroll-${width}.png`,
       fullPage: false,
     });
   }

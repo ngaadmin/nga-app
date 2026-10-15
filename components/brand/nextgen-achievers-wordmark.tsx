@@ -16,6 +16,7 @@ export function NextGenAchieversWordmark() {
       width={WORDMARK_WIDTH}
       height={WORDMARK_HEIGHT}
       style={{ height: "2.5rem", width: "auto" }}
+      priority
       unoptimized
     />
   );

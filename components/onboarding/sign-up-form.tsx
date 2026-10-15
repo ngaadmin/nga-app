@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { CohortTrackField } from "@/components/onboarding/cohort-track-field";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
@@ -32,9 +33,6 @@ import { markParentFirstWelcomePending } from "@/lib/onboarding/parent-first-wel
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
   getMasteryCohortFromBirthYear,
-  MASTERY_COHORT_ORDER,
-  masteryCohortAgeRangeLabel,
-  masteryCohortLabel,
   requiresParentConsentForBirthYear,
   resolveCurriculumCohort,
   type MasteryCohort,
@@ -971,50 +969,14 @@ export function SignUpForm() {
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          <fieldset className="space-y-2">
-            <legend className="block font-heading text-sm font-bold text-nga-primary">
-              Your learning track
-            </legend>
-            <p className="font-sans text-sm text-nga-slate">
-              {cohort
-                ? "This track is already chosen. You can change it."
-                : "Pick a track. You can change it later."}
-            </p>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {MASTERY_COHORT_ORDER.map((track) => {
-                const selected = cohort === track;
-                return (
-                  <button
-                    key={track}
-                    type="button"
-                    onClick={() => {
-                      setCohort(track);
-                      clearError("track");
-                    }}
-                    aria-pressed={selected}
-                    className={cn(
-                      "rounded-nga-lg border-2 px-3 py-3 text-center transition-colors",
-                      selected
-                        ? "border-nga-secondary bg-nga-mist/60"
-                        : "border-[#E5E5E5] bg-[#F7F7F7] hover:border-nga-secondary/50",
-                    )}
-                  >
-                    <span className="block font-heading text-sm font-extrabold text-nga-primary">
-                      {masteryCohortLabel(track)}
-                    </span>
-                    <span className="mt-0.5 block font-sans text-xs font-semibold text-nga-slate">
-                      Ages {masteryCohortAgeRangeLabel(track)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {errors.track ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
-                {errors.track}
-              </p>
-            ) : null}
-          </fieldset>
+          <CohortTrackField
+            value={cohort}
+            onChange={(track) => {
+              setCohort(track);
+              clearError("track");
+            }}
+            error={errors.track}
+          />
 
           <div className="space-y-2">
             <label

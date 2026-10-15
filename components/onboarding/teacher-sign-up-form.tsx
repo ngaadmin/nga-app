@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CohortTrackField } from "@/components/onboarding/cohort-track-field";
 import { OnboardingHeader } from "@/components/onboarding/onboarding-header";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { createTeacherAccount } from "@/lib/school/create-teacher-account";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
@@ -11,12 +13,16 @@ const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
 
 type FormErrors = {
+  track?: string;
   email?: string;
   password?: string;
   form?: string;
 };
 
+const TRACK_REQUIRED = "Pick the learning track for this profile.";
+
 export function TeacherSignUpForm() {
+  const [classCohort, setClassCohort] = useState<MasteryCohort | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -27,13 +33,16 @@ export function TeacherSignUpForm() {
     event.preventDefault();
     const next: FormErrors = {};
     const trimmedEmail = email.trim().toLowerCase();
+    if (!classCohort) {
+      next.track = TRACK_REQUIRED;
+    }
     if (!trimmedEmail || !EMAIL_PATTERN.test(trimmedEmail)) {
       next.email = "Please enter a valid email address.";
     }
     if (password.length < 6) {
       next.password = "Use at least 6 characters for your password.";
     }
-    if (Object.keys(next).length > 0) {
+    if (Object.keys(next).length > 0 || !classCohort) {
       setErrors(next);
       return;
     }
@@ -44,6 +53,7 @@ export function TeacherSignUpForm() {
       const result = await createTeacherAccount({
         email: trimmedEmail,
         password,
+        classCohort,
       });
       if (!result.success) {
         setErrors({ form: result.error });
@@ -76,6 +86,14 @@ export function TeacherSignUpForm() {
             </p>
           ) : (
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+            <CohortTrackField
+              value={classCohort}
+              onChange={(track) => {
+                setClassCohort(track);
+                setErrors((prev) => ({ ...prev, track: undefined, form: undefined }));
+              }}
+              error={errors.track}
+            />
             <div className="space-y-2">
               <label
                 htmlFor="teacher-email"

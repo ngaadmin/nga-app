@@ -169,6 +169,7 @@ export const copyMatrix = {
         deleteChildTitle: "Delete learner account?",
         deleteChildConfirm:
           "Delete this learner account? This will permanently remove all data associated with the account - including progress, achievements, and activity - and cannot be undone.",
+        deleteChildError: "We could not delete this learner. Try again.",
         deleteMasterTitle: "Delete master account?",
         deleteMasterConfirm:
           "This cannot be undone. Deleting your master account will permanently remove:",

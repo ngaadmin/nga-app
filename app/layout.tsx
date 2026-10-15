@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { Suspense } from "react";
+import { RecordingIntroQueryFlag } from "@/components/recording/recording-intro-query-flag";
 import { landingShareMetadata } from "@/lib/site-share-metadata";
 import "./globals.css";
 
@@ -98,6 +100,10 @@ export default function RootLayout({
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-sans antialiased overflow-x-hidden max-w-full">
         {children}
+        {/* TODO: remove after recordings */}
+        <Suspense fallback={null}>
+          <RecordingIntroQueryFlag />
+        </Suspense>
         <div id="overlay-root" aria-hidden="true" />
         <div id="modal-root" />
         <div id="toast-root" aria-hidden="true" />

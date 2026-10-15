@@ -21,6 +21,8 @@ import {
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
 import { vaultHomeCompactCtaClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 import { vaultOverviewSectionTitleClass } from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { resolveRecordingSuppressIntro } from "@/lib/recording/resolve-recording-suppress-intro";
+import { useRecordingSuppressIntro } from "@/lib/recording/use-recording-suppress-intro";
 import { cn } from "@/lib/utils/cn";
 
 const orangeCtaClass = vaultHomeCompactCtaClass;
@@ -42,6 +44,8 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
   const [incomeSource, setIncomeSource] = useState<VaultIncomeSourceId>(
     DEFAULT_VAULT_INCOME_SOURCE_ID,
   );
+  // TODO: remove after recordings
+  const recording = useRecordingSuppressIntro();
   const [introOpen, setIntroOpen] = useState(false);
   const [pendingDeposit, setPendingDeposit] = useState<PendingDeposit | null>(null);
 
@@ -57,12 +61,17 @@ export function VaultDepositSection({ onDeposit }: VaultDepositSectionProps) {
     setIntroOpen(false);
   }
 
-  function handleDepositSubmit(event: FormEvent) {
+  async function handleDepositSubmit(event: FormEvent) {
     event.preventDefault();
     const amount = parsePositiveVaultCentsAmount(depositInput);
     if (amount === null) return;
 
-    if (!hasSeenVaultAddMoneyIntro()) {
+    // TODO: remove after recordings — deposit immediately and leave the intro unseen.
+    const suppress = recording.ready
+      ? recording.suppress
+      : await resolveRecordingSuppressIntro();
+
+    if (!hasSeenVaultAddMoneyIntro() && !suppress) {
       setPendingDeposit({ amount, source: incomeSource });
       setDepositInput("");
       setIntroOpen(true);

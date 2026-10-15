@@ -8,9 +8,12 @@ import {
 } from "@/lib/dashboard/hub-intro/storage";
 import type { HubIntroId } from "@/lib/dashboard/hub-intro/types";
 import { currentAccountLocalKey } from "@/lib/onboarding/account-local-key";
+import { useRecordingSuppressIntro } from "@/lib/recording/use-recording-suppress-intro";
 
 export function useHubIntro(hubId: HubIntroId) {
   const { ready, sessionTick } = useIntroRestoreGate();
+  // TODO: remove after recordings
+  const recording = useRecordingSuppressIntro();
   const [hydrated, setHydrated] = useState(false);
   const [seen, setSeen] = useState(false);
   const [open, setOpen] = useState(false);
@@ -29,7 +32,8 @@ export function useHubIntro(hubId: HubIntroId) {
       return;
     }
 
-    if (!ready) {
+    // TODO: remove after recordings — wait for the check, and do not mark seen.
+    if (!ready || !recording.ready || recording.suppress) {
       setOpen(false);
       return;
     }
@@ -45,7 +49,7 @@ export function useHubIntro(hubId: HubIntroId) {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [hubId, ready, sessionTick]);
+  }, [hubId, ready, sessionTick, recording.ready, recording.suppress]);
 
   const dismiss = useCallback(() => {
     dismissedRef.current = true;

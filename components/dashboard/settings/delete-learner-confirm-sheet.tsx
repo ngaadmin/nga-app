@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { zLayerStyle } from "@/lib/ui/layers";
 
 type DeleteLearnerConfirmSheetProps = {
   isOpen: boolean;
@@ -50,7 +51,7 @@ function TrashIcon() {
 }
 
 /**
- * Mobile confirm sheet for deleting one learner.
+ * Floating confirm card for deleting one learner.
  * Copy is passed in. The confirm label stays sentence case.
  */
 export function DeleteLearnerConfirmSheet({
@@ -68,7 +69,10 @@ export function DeleteLearnerConfirmSheet({
 
   return (
     <BodyPortal>
-      <div className="pointer-events-auto fixed inset-0 z-modal">
+      <div
+        className="pointer-events-auto fixed inset-0"
+        style={zLayerStyle("toast")}
+      >
         <div
           className="absolute inset-0 animate-nga-scrim-fade bg-[#031F82]/45"
           onClick={isDeleting ? undefined : onClose}
@@ -77,7 +81,8 @@ export function DeleteLearnerConfirmSheet({
           role="alertdialog"
           aria-labelledby="account-delete-title"
           aria-describedby="account-delete-body"
-          className="animate-nga-sheet-up absolute inset-x-4 bottom-0 rounded-t-[24px] bg-white p-6 text-center shadow-nga-delete-sheet"
+          className="animate-nga-sheet-up absolute inset-x-4 rounded-[24px] bg-white p-6 text-center shadow-nga-delete-sheet"
+          style={{ bottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
         >
           <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-[#FFE8E8]">
             <TrashIcon />

@@ -7,6 +7,7 @@ import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import type { LearnerAccountSnapshot } from "@/lib/onboarding/learner-account";
 import { readLearnerProgressRow } from "@/lib/onboarding/learner-progress-store";
 import { parseMasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { storedClassPasswordCanSignIn } from "@/lib/school/class-password";
 
 export const SIGN_IN_MISMATCH_ERROR =
   "Those details don't match. Check your email or username and password.";
@@ -27,7 +28,7 @@ export async function signInSupabaseAccount(input: {
 > {
   const identifier = input.identifier.trim();
   const password = input.password;
-  if (!identifier || password.length < 6) {
+  if (!identifier || !storedClassPasswordCanSignIn(password)) {
     return { success: false, error: SIGN_IN_MISMATCH_ERROR };
   }
 

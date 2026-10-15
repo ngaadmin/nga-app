@@ -3,7 +3,7 @@ import { ClassPage } from "@/components/dashboard/class/class-page";
 
 const PREVIEW_ROSTER = {
   teacherId: "preview-teacher",
-  seatCap: 11,
+  seatCap: 30,
   seatsUsed: 8,
   classPassword: "Yellow",
   classCohort: "pathfinder" as const,
@@ -36,11 +36,35 @@ const PREVIEW_ROSTER = {
   ],
 };
 
+const EMPTY_ROSTER: typeof PREVIEW_ROSTER = {
+  ...PREVIEW_ROSTER,
+  seatsUsed: 0,
+  usernames: [],
+  classes: [
+    {
+      classId: "preview-class",
+      label: "Pathfinder class",
+      totalLifetimeXp: 0,
+      students: [],
+    },
+  ],
+};
+
 /** Dev / QA only. Production class page still loads the signed-in teacher's roster. */
-export default function ClassRosterPreviewPage() {
+export default async function ClassRosterPreviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ empty?: string; saved?: string }>;
+}) {
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
 
-  return <ClassPage roster={PREVIEW_ROSTER} />;
+  const params = await searchParams;
+  return (
+    <ClassPage
+      roster={params.empty === "1" ? EMPTY_ROSTER : PREVIEW_ROSTER}
+      passwordSaved={params.saved === "1"}
+    />
+  );
 }

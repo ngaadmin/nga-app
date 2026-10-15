@@ -2,11 +2,13 @@
 
 import "server-only";
 
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
-import { generateClassPassword } from "@/lib/school/class-password";
+import { generateClassPassword, isKidClassPassword } from "@/lib/school/class-password";
 import {
+  CLASS_PASSWORD_COLUMN_DENIED,
   CLASS_PASSWORD_COLUMN_MISSING,
   classPasswordCipherUpdate,
   explainClassPasswordWriteError,
@@ -20,10 +22,15 @@ import {
 } from "@/lib/dashboard/mastery-cohort";
 import { readLearnerProgressPayloads } from "@/lib/onboarding/learner-progress-store";
 import {
+  isMissingClassPageRpc,
+  parseTeacherClassPage,
+} from "@/lib/school/class-page-payload";
+import {
   aggregateOwnedClassXp,
   readLearnerXpFields,
   type ClassXpTotal,
 } from "@/lib/school/class-xp";
+import { CLASS_PAGE_TOKYO_HOP_MS } from "@/lib/school/class-page-timing";
 
 const SEAT_AUTH_EMAIL_DOMAIN = "users.nextgenachievers.invalid";
 const MIN_PASSWORD_LENGTH = 6;
@@ -39,12 +46,17 @@ export type ClassRosterSnapshot = {
   classes: ClassXpTotal[];
 };
 
+const readSignedInUserId = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id?.trim() ?? "";
+  return userId || null;
+});
+
 async function requireTeacherId(): Promise<
   { ok: true; teacherId: string } | { ok: false; error: string }
 > {
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  const userId = auth.user?.id;
+  const userId = await readSignedInUserId();
   if (!userId) {
     return { ok: false, error: "Sign in as a teacher to open the class page." };
   }
@@ -78,6 +90,96 @@ function isMissingColumn(
   return /does not exist|schema cache|could not find/i.test(message);
 }
 
+function isPasswordColumnDenied(
+  error: { message?: string } | null | undefined,
+): boolean {
+  const message = error?.message?.toLowerCase() ?? "";
+  return message.includes("permission denied") && message.includes("class_password");
+}
+
+type TeacherClassRow = {
+  id: string;
+  is_teacher?: boolean | null;
+  account_status?: string | null;
+  seat_cap?: number | null;
+  class_password?: string | null;
+  class_password_enc?: string | null;
+  class_cohort?: string | null;
+};
+
+function passwordColumnError(
+  error: { message?: string } | null | undefined,
+): string | null {
+  if (isPasswordColumnDenied(error)) return CLASS_PASSWORD_COLUMN_DENIED;
+  if (isMissingColumn(error, "class_password_enc")) return CLASS_PASSWORD_COLUMN_MISSING;
+  return null;
+}
+
+async function readTeacherClassRow(
+  admin: ReturnType<typeof createAdminClient>,
+  teacherId: string,
+): Promise<{ ok: true; teacher: TeacherClassRow } | { ok: false; error: string }> {
+  const withCohort = await admin
+    .from("profiles")
+    .select(
+      "id, is_teacher, account_status, seat_cap, class_password, class_password_enc, class_cohort",
+    )
+    .eq("id", teacherId)
+    .maybeSingle();
+
+  const denied = passwordColumnError(withCohort.error);
+  if (denied) {
+    console.error("[class-password]", denied);
+    return { ok: false, error: denied };
+  }
+
+  const teacherQuery =
+    withCohort.error && isMissingColumn(withCohort.error, "class_cohort")
+      ? await admin
+          .from("profiles")
+          .select(
+            "id, is_teacher, account_status, seat_cap, class_password, class_password_enc",
+          )
+          .eq("id", teacherId)
+          .maybeSingle()
+      : withCohort;
+
+  const retryDenied = passwordColumnError(teacherQuery.error);
+  if (retryDenied) {
+    console.error("[class-password]", retryDenied);
+    return { ok: false, error: retryDenied };
+  }
+
+  const teacher = teacherQuery.data as TeacherClassRow | null;
+  if (teacherQuery.error || !teacher?.id) {
+    return { ok: false, error: "Could not load the class page." };
+  }
+  if (teacher.is_teacher !== true || teacher.account_status !== "active") {
+    return { ok: false, error: "Only a confirmed teacher can open the class page." };
+  }
+  return { ok: true, teacher };
+}
+
+function logClassPageTiming(timing: {
+  rounds: number;
+  totalMs: number;
+  seats: number;
+  writes: number;
+  password: "set" | "missing";
+  path: "rpc" | "rounds";
+}) {
+  console.info("[class-page:timing]", {
+    rounds: timing.rounds,
+    hopMs: CLASS_PAGE_TOKYO_HOP_MS,
+    waitMs: timing.rounds * CLASS_PAGE_TOKYO_HOP_MS,
+    totalMs: Math.round(timing.totalMs),
+    seats: timing.seats,
+    writes: timing.writes,
+    password: timing.password,
+    path: timing.path,
+  });
+}
+
 /**
  * Service-role write. `class_password` is always null in `write`.
  * The plaintext return value of loadClassRoster is the only copy sent to a
@@ -96,7 +198,10 @@ async function writeOwnedClassPassword(
 
   if (error) {
     const message = explainClassPasswordWriteError(error.message);
-    console.error("[class-password]", message);
+    console.error(
+      "[class-password]",
+      message === CLASS_PASSWORD_COLUMN_MISSING ? message : "write failed",
+    );
     return { ok: false, error: message };
   }
 
@@ -153,64 +258,190 @@ async function loadOwnedClassXp(input: {
 export async function loadClassRoster(): Promise<
   { ok: true; roster: ClassRosterSnapshot } | { ok: false; error: string }
 > {
-  const access = await requireTeacherId();
-  if (!access.ok) return access;
-
+  const started = performance.now();
   try {
-    const admin = createAdminClient();
-    const withCohort = await admin
-      .from("profiles")
-      .select("id, seat_cap, class_password, class_password_enc, class_cohort")
-      .eq("id", access.teacherId)
-      .maybeSingle();
-    if (isMissingColumn(withCohort.error, "class_password_enc")) {
-      console.error("[class-password]", withCohort.error?.message);
-      return { ok: false, error: CLASS_PASSWORD_COLUMN_MISSING };
-    }
-    const teacherQuery =
-      withCohort.error && isMissingColumn(withCohort.error, "class_cohort")
-        ? await admin
-            .from("profiles")
-            .select("id, seat_cap, class_password, class_password_enc")
-            .eq("id", access.teacherId)
-            .maybeSingle()
-        : withCohort;
-    if (isMissingColumn(teacherQuery.error, "class_password_enc")) {
-      console.error("[class-password]", teacherQuery.error?.message);
-      return { ok: false, error: CLASS_PASSWORD_COLUMN_MISSING };
-    }
-    const teacher = teacherQuery.data as
-      | {
-          id: string;
-          seat_cap?: number | null;
-          class_password?: string | null;
-          class_password_enc?: string | null;
-          class_cohort?: string | null;
-        }
-      | null;
-
-    if (teacherQuery.error || !teacher?.id) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("load_teacher_class_page");
+    if (error) {
+      if (isMissingClassPageRpc(error)) {
+        return loadClassRosterInRounds(started);
+      }
+      const message = error.message?.toLowerCase() ?? "";
+      if (
+        error.code === "42501" ||
+        message.includes("permission denied") ||
+        message.includes("jwt")
+      ) {
+        return { ok: false, error: "Sign in as a teacher to open the class page." };
+      }
+      console.error("[class-roster]", "rpc failed", error.code ?? "");
       return { ok: false, error: "Could not load the class page." };
     }
 
-    const { data: seats, error: seatsError } = await admin
+    const page = parseTeacherClassPage(data);
+    if (!page) {
+      return { ok: false, error: "Could not load the class page." };
+    }
+    if (page.error) {
+      return {
+        ok: false,
+        error:
+          page.error === "signed_out"
+            ? "Sign in as a teacher to open the class page."
+            : "Only a confirmed teacher can open the class page.",
+      };
+    }
+
+    const seatRecords = page.seats.map((seat) => ({
+      userId: seat.id,
+      username: seat.username,
+      curriculumCohort: seat.curriculumCohort,
+    }));
+    const usernames = seatRecords.map((seat) => seat.username);
+    const storedCohort = parseMasteryCohort(page.classCohort);
+    const inferredFromSeats = seatRecords
+      .map((row) => parseMasteryCohort(row.curriculumCohort))
+      .find((cohort): cohort is MasteryCohort => cohort != null);
+    const classCohort = storedCohort ?? inferredFromSeats ?? null;
+
+    let classPassword = "";
+    let passwordWrite: ClassPasswordBackfillWrite | null = null;
+    try {
+      const stored = planClassPasswordBackfill(
+        {
+          class_password: page.classPassword,
+          class_password_enc: page.classPasswordEnc,
+        },
+        page.id,
+      );
+      classPassword = stored.password.trim();
+      passwordWrite = stored.write;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not read the class password.";
+      console.error("[class-password]", "read failed");
+      return { ok: false, error: message };
+    }
+
+    const looksRandom =
+      /^[A-Za-z0-9]{8,12}$/.test(classPassword) &&
+      /[0-9]/.test(classPassword) &&
+      /[a-z]/.test(classPassword) &&
+      /[A-Z]/.test(classPassword);
+    const replacePassword = !classPassword || (looksRandom && usernames.length === 0);
+    if (replacePassword) {
+      classPassword = generateClassPassword();
+      passwordWrite = classPasswordCipherUpdate(classPassword, page.id);
+    }
+
+    const writes = (passwordWrite ? 1 : 0) + (!storedCohort && classCohort ? 1 : 0);
+    if (writes > 0) {
+      const admin = createAdminClient();
+      const [saved] = await Promise.all([
+        passwordWrite
+          ? writeOwnedClassPassword(admin, page.id, passwordWrite)
+          : Promise.resolve({ ok: true as const }),
+        !storedCohort && classCohort
+          ? admin
+              .from("profiles")
+              .update({ class_cohort: classCohort })
+              .eq("id", page.id)
+              .eq("is_teacher", true)
+              .then(({ error: cohortError }) => {
+                if (cohortError) console.info("[class-page]", { cohortWrite: "failed" });
+              })
+          : Promise.resolve(),
+      ]);
+      if (!saved.ok) return saved;
+    }
+
+    const classes = aggregateOwnedClassXp({
+      sessionTeacherId: page.id,
+      classes: [
+        {
+          classId: page.id,
+          teacherId: page.id,
+          label: classCohort ? `${masteryCohortLabel(classCohort)} class` : "Your class",
+        },
+      ],
+      students: page.seats.map((seat) => {
+        const xp = readLearnerXpFields(seat.payload);
+        return {
+          classId: page.id,
+          teacherId: page.id,
+          userId: seat.id,
+          username: seat.username,
+          lifetimeXp: xp.lifetimeXp,
+          liveBalance: xp.liveBalance,
+        };
+      }),
+    });
+
+    logClassPageTiming({
+      rounds: writes > 0 ? 2 : 1,
+      totalMs: performance.now() - started,
+      seats: usernames.length,
+      writes,
+      password: classPassword ? "set" : "missing",
+      path: "rpc",
+    });
+
+    return {
+      ok: true,
+      roster: {
+        teacherId: page.id,
+        seatCap: page.seatCap ?? 30,
+        seatsUsed: usernames.length,
+        classPassword,
+        classCohort,
+        usernames,
+        classes,
+      },
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not load the class page.";
+    console.error("[class-roster]", "load failed");
+    return { ok: false, error: message };
+  }
+}
+
+async function loadClassRosterInRounds(started: number): Promise<
+  { ok: true; roster: ClassRosterSnapshot } | { ok: false; error: string }
+> {
+  const userId = await readSignedInUserId();
+  if (!userId) {
+    return { ok: false, error: "Sign in as a teacher to open the class page." };
+  }
+
+  try {
+    const admin = createAdminClient();
+    const teacherPromise = readTeacherClassRow(admin, userId);
+    const seatsPromise = admin
       .from("profiles")
       .select("id, username, curriculum_cohort")
-      .eq("teacher_id", access.teacherId)
+      .eq("teacher_id", userId)
       .eq("is_teacher", false)
       .order("username", { ascending: true });
+    const [teacherResult, seatsResult] = await Promise.all([
+      teacherPromise,
+      seatsPromise,
+    ]);
+    if (!teacherResult.ok) return teacherResult;
 
+    const { error: seatsError, data: seats } = seatsResult;
     if (seatsError) {
       return { ok: false, error: seatsError.message };
     }
 
+    const teacher = teacherResult.teacher;
     const seatRecords = (seats ?? []).flatMap((row) => {
-      const userId = typeof row.id === "string" ? row.id.trim() : "";
+      const seatUserId = typeof row.id === "string" ? row.id.trim() : "";
       const username = typeof row.username === "string" ? row.username.trim() : "";
-      if (!userId || !username) return [];
+      if (!seatUserId || !username) return [];
       return [
         {
-          userId,
+          userId: seatUserId,
           username,
           curriculumCohort: row.curriculum_cohort,
         },
@@ -224,36 +455,22 @@ export async function loadClassRoster(): Promise<
       .find((cohort): cohort is MasteryCohort => cohort != null);
     const classCohort = storedCohort ?? inferredFromSeats ?? null;
 
-    if (!storedCohort && classCohort) {
-      await admin
-        .from("profiles")
-        .update({ class_cohort: classCohort })
-        .eq("id", access.teacherId)
-        .eq("is_teacher", true);
-    }
-
     let classPassword = "";
+    let passwordWrite: ClassPasswordBackfillWrite | null = null;
     try {
       const stored = planClassPasswordBackfill(
         {
           class_password: teacher.class_password,
           class_password_enc: teacher.class_password_enc,
         },
-        access.teacherId,
+        userId,
       );
       classPassword = stored.password.trim();
-      if (stored.write) {
-        const migrated = await writeOwnedClassPassword(
-          admin,
-          access.teacherId,
-          stored.write,
-        );
-        if (!migrated.ok) return migrated;
-      }
+      passwordWrite = stored.write;
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not read the class password.";
-      console.error("[class-password]", message);
+      console.error("[class-password]", "read failed");
       return { ok: false, error: message };
     }
 
@@ -262,26 +479,54 @@ export async function loadClassRoster(): Promise<
       /[0-9]/.test(classPassword) &&
       /[a-z]/.test(classPassword) &&
       /[A-Z]/.test(classPassword);
-    if (!classPassword || (looksRandom && usernames.length === 0)) {
+    const replacePassword = !classPassword || (looksRandom && usernames.length === 0);
+    if (replacePassword) {
       classPassword = generateClassPassword();
-      const generated = await writeOwnedClassPassword(
-        admin,
-        access.teacherId,
-        classPasswordCipherUpdate(classPassword, access.teacherId),
-      );
-      if (!generated.ok) return generated;
+      passwordWrite = classPasswordCipherUpdate(classPassword, userId);
     }
 
-    const classes = await loadOwnedClassXp({
-      teacherId: access.teacherId,
-      label: classCohort ? `${masteryCohortLabel(classCohort)} class` : "Your class",
-      seats: seatRecords,
+    const followups: Promise<void>[] = [];
+    if (!storedCohort && classCohort) {
+      followups.push(
+        Promise.resolve(
+          admin
+            .from("profiles")
+            .update({ class_cohort: classCohort })
+            .eq("id", userId)
+            .eq("is_teacher", true)
+            .then(({ error }) => {
+              if (error) console.info("[class-page]", { cohortWrite: "failed" });
+            }),
+        ),
+      );
+    }
+
+    const [classes, saved] = await Promise.all([
+      loadOwnedClassXp({
+        teacherId: userId,
+        label: classCohort ? `${masteryCohortLabel(classCohort)} class` : "Your class",
+        seats: seatRecords,
+      }),
+      passwordWrite
+        ? writeOwnedClassPassword(admin, userId, passwordWrite)
+        : Promise.resolve({ ok: true as const }),
+      Promise.all(followups),
+    ]);
+    if (!saved.ok) return saved;
+
+    logClassPageTiming({
+      rounds: 3,
+      totalMs: performance.now() - started,
+      seats: usernames.length,
+      writes: (passwordWrite ? 1 : 0) + followups.length,
+      password: classPassword ? "set" : "missing",
+      path: "rounds",
     });
 
     return {
       ok: true,
       roster: {
-        teacherId: access.teacherId,
+        teacherId: userId,
         seatCap: teacher.seat_cap ?? 30,
         seatsUsed: usernames.length,
         classPassword,
@@ -293,7 +538,7 @@ export async function loadClassRoster(): Promise<
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Could not load the class page.";
-    console.error("[class-roster]", message);
+    console.error("[class-roster]", "load failed");
     return { ok: false, error: message };
   }
 }
@@ -349,7 +594,7 @@ export async function createClassSeats(input: {
 
   const requested = Math.floor(input.count);
   if (!Number.isFinite(requested) || requested < 1) {
-    return { ok: false, error: "Enter how many students." };
+    return { ok: false, error: "Enter how many users." };
   }
 
   const admin = createAdminClient();
@@ -358,7 +603,7 @@ export async function createClassSeats(input: {
 
   const remaining = current.roster.seatCap - current.roster.seatsUsed;
   if (remaining <= 0) {
-    return { ok: false, error: "This class has no students left." };
+    return { ok: false, error: "No users left to allocate." };
   }
   const requestedCohort = parseMasteryCohort(input.cohort);
   if (requestedCohort && requestedCohort !== current.roster.classCohort) {
@@ -370,7 +615,7 @@ export async function createClassSeats(input: {
   if (!classCohort) {
     return {
       ok: false,
-      error: "Pick Explorer, Pathfinder or Maverick before adding students.",
+      error: "Pick Explorer, Pathfinder or Maverick first.",
     };
   }
   const toCreate = Math.min(requested, remaining);
@@ -389,7 +634,7 @@ export async function createClassSeats(input: {
   if (!classPassword || classPassword.length < MIN_PASSWORD_LENGTH) {
     return {
       ok: false,
-      error: "Type a class password so students can log in.",
+      error: "Type a class password so users can log in.",
     };
   }
 
@@ -399,7 +644,7 @@ export async function createClassSeats(input: {
     .filter(Boolean);
   const names = pickClassSeatUsernames(taken, toCreate);
   if (names.length < toCreate) {
-    return { ok: false, error: "Not enough unique logins left. Try fewer students." };
+    return { ok: false, error: "Not enough unique logins left. Try fewer users." };
   }
 
   const created: string[] = [];
@@ -454,8 +699,8 @@ export async function changeClassPassword(nextPassword: string): Promise<
   if (!access.ok) return access;
 
   const password = nextPassword.trim();
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return { ok: false, error: "Use at least 6 characters for the class password." };
+  if (!isKidClassPassword(password)) {
+    return { ok: false, error: "Use two easy words with a dash, like blue-tiger." };
   }
 
   let columns;
@@ -490,7 +735,7 @@ export async function changeClassPassword(nextPassword: string): Promise<
     if (error) {
       return {
         ok: false,
-        error: "Saved the class password, but could not update every seat login. Try again.",
+        error: "Saved the class password, but could not update every user login. Try again.",
       };
     }
   }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { ClientPortal } from "@/components/ui/client-portal";
 import {
   changeClassPassword,
   createClassSeats,
@@ -25,6 +26,28 @@ const fieldBase =
 type ClassPageProps = {
   roster: ClassRosterSnapshot;
 };
+
+type PendingRemove =
+  | { scope: "one"; username: string }
+  | { scope: "all" };
+
+function withoutStudents(
+  classes: ClassXpTotal[],
+  removed: readonly string[],
+): ClassXpTotal[] {
+  const gone = new Set(removed.map((username) => username.trim().toLowerCase()));
+  if (gone.size === 0) return classes;
+  return classes.map((cls) => {
+    const students = cls.students.filter(
+      (student) => !gone.has(student.username.trim().toLowerCase()),
+    );
+    const totalLifetimeXp = students.reduce(
+      (sum, student) => sum + student.lifetimeXp,
+      0,
+    );
+    return { ...cls, students, totalLifetimeXp };
+  });
+}
 
 function withNewStudents(
   classes: ClassXpTotal[],
@@ -87,7 +110,15 @@ function ClassXpTotals({ classes }: { classes: ClassXpTotal[] }) {
   );
 }
 
-function StudentLoginTable({ usernames }: { usernames: string[] }) {
+function StudentLoginTable({
+  usernames,
+  onRemove,
+  removing,
+}: {
+  usernames: string[];
+  onRemove?: (username: string) => void;
+  removing?: boolean;
+}) {
   return (
     <table className="w-full border-collapse text-left font-sans text-sm text-nga-ink">
       <thead>
@@ -98,6 +129,11 @@ function StudentLoginTable({ usernames }: { usernames: string[] }) {
           <th className="border-b border-nga-ink py-2 font-heading font-bold">
             Student name
           </th>
+          {onRemove ? (
+            <th className="border-b border-nga-ink py-2 pl-4 text-right font-heading font-bold">
+              <span className="sr-only">Remove</span>
+            </th>
+          ) : null}
         </tr>
       </thead>
       <tbody>
@@ -105,6 +141,18 @@ function StudentLoginTable({ usernames }: { usernames: string[] }) {
           <tr key={name}>
             <td className="border-b border-nga-mist py-2 pr-4">{name}</td>
             <td className="border-b border-nga-mist py-2">&nbsp;</td>
+            {onRemove ? (
+              <td className="border-b border-nga-mist py-2 pl-4 text-right">
+                <button
+                  type="button"
+                  disabled={removing}
+                  onClick={() => onRemove(name)}
+                  className="font-heading text-xs font-bold text-red-700 underline-offset-2 hover:underline disabled:opacity-40"
+                >
+                  Remove student
+                </button>
+              </td>
+            ) : null}
           </tr>
         ))}
       </tbody>
@@ -126,6 +174,8 @@ export function ClassPage({ roster }: ClassPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const remaining = Math.max(0, roster.seatCap - studentsUsed);
   const cohortLocked = studentsUsed > 0;
@@ -187,6 +237,50 @@ export function ClassPage({ roster }: ClassPageProps) {
       );
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function confirmRemove() {
+    if (!pendingRemove || removing) return;
+    setError(null);
+    setNotice(null);
+    setRemoving(true);
+    try {
+      const response = await fetch("/api/school/class-seats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pendingRemove),
+      });
+      const payload = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+        removed?: string[];
+      };
+      const removed = Array.isArray(payload.removed)
+        ? payload.removed.filter((name) => typeof name === "string")
+        : [];
+      if (removed.length > 0) {
+        const gone = new Set(removed.map((name) => name.trim().toLowerCase()));
+        setUsernames((prev) =>
+          prev.filter((name) => !gone.has(name.trim().toLowerCase())),
+        );
+        setClasses((prev) => withoutStudents(prev, removed));
+        setStudentsUsed((prev) => Math.max(0, prev - removed.length));
+      }
+      if (!response.ok || payload.success !== true) {
+        setError(payload.error || "Could not remove that student. Try again.");
+        return;
+      }
+      setPendingRemove(null);
+      setNotice(
+        removed.length === 1
+          ? "Removed 1 student."
+          : `Removed ${removed.length} students.`,
+      );
+    } catch {
+      setError("Could not remove that student. Try again.");
+    } finally {
+      setRemoving(false);
     }
   }
 
@@ -330,10 +424,26 @@ export function ClassPage({ roster }: ClassPageProps) {
 
         <div className="space-y-2">
           <p className="font-heading text-sm font-bold text-nga-primary">Student logins</p>
-          <StudentLoginTable usernames={sortedUsernames} />
+          <StudentLoginTable
+            usernames={sortedUsernames}
+            onRemove={(username) =>
+              setPendingRemove({ scope: "one", username })
+            }
+            removing={removing}
+          />
           <p className="font-sans text-xs text-nga-slate">
             Add student names after printing. Names are not stored in the app.
           </p>
+          {sortedUsernames.length > 0 ? (
+            <button
+              type="button"
+              disabled={removing}
+              onClick={() => setPendingRemove({ scope: "all" })}
+              className="font-heading text-sm font-bold text-red-700 underline-offset-2 hover:underline disabled:opacity-40"
+            >
+              Remove all students in class
+            </button>
+          ) : null}
           <Button type="button" variant="outline" fullWidth onClick={() => window.print()}>
             Print this table
           </Button>
@@ -350,6 +460,58 @@ export function ClassPage({ roster }: ClassPageProps) {
           </p>
         ) : null}
       </div>
+
+      {pendingRemove ? (
+        <ClientPortal rootId="modal-root">
+          <div
+            className="fixed inset-0 z-modal flex items-end justify-center bg-nga-ink/40 p-4 sm:items-center"
+            role="presentation"
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="remove-student-title"
+              className="w-full max-w-md rounded-nga-lg bg-white p-5 shadow-lg"
+            >
+              <h2
+                id="remove-student-title"
+                className="font-heading text-lg font-extrabold text-nga-primary"
+              >
+                {pendingRemove.scope === "all"
+                  ? "Remove all students in this class?"
+                  : "Remove this student?"}
+              </h2>
+              <p className="mt-2 font-sans text-sm leading-relaxed text-nga-ink">
+                {pendingRemove.scope === "all"
+                  ? "This deletes every student login in this class and their saved progress. It cannot be undone."
+                  : `This deletes ${pendingRemove.username}'s login and saved progress. It cannot be undone.`}
+              </p>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={removing}
+                  onClick={() => setPendingRemove(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={removing}
+                  onClick={() => void confirmRemove()}
+                >
+                  {removing
+                    ? "Removing…"
+                    : pendingRemove.scope === "all"
+                      ? "Remove all students"
+                      : "Remove student"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </ClientPortal>
+      ) : null}
 
       <div className={cn("hidden print:block")}>
         {classCohort ? (

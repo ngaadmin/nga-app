@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
@@ -49,6 +49,15 @@ function spotlightChoiceGlyph(label: string): ReactNode | null {
   return null;
 }
 
+/** Stable order for the server render and the matching hydration pass. */
+function fixedRoundSideLayouts(roundCount: number): SideLayout[] {
+  return Array.from({ length: roundCount }, () => ({
+    left: "a" as const,
+    right: "b" as const,
+  }));
+}
+
+/** Shuffle which choice sits on which side. Must not run during render. */
 function buildRoundSideLayouts(roundCount: number): SideLayout[] {
   return Array.from({ length: roundCount }, () =>
     Math.random() < 0.5
@@ -169,10 +178,13 @@ function SpotlightGradedRounds({
   const recoveryTimeoutRef = useRef<number | null>(null);
   const round = screen.rounds[roundIndex];
 
-  const roundSideLayouts = useMemo(
-    () => buildRoundSideLayouts(screen.rounds.length),
-    [screen.rounds.length],
+  const [roundSideLayouts, setRoundSideLayouts] = useState<SideLayout[]>(() =>
+    fixedRoundSideLayouts(screen.rounds.length),
   );
+
+  useLayoutEffect(() => {
+    setRoundSideLayouts(buildRoundSideLayouts(screen.rounds.length));
+  }, [screen.rounds.length]);
 
   useEffect(
     () => () => {

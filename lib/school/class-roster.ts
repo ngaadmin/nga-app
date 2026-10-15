@@ -6,6 +6,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
 import { generateClassPassword } from "@/lib/school/class-password";
+import {
+  CLASS_PASSWORD_COLUMN_MISSING,
+  classPasswordCipherUpdate,
+  explainClassPasswordWriteError,
+  planClassPasswordBackfill,
+  type ClassPasswordBackfillWrite,
+} from "@/lib/school/class-password-crypto";
 import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
   masteryCohortLabel,
@@ -62,6 +69,47 @@ async function requireTeacherId(): Promise<
   return { ok: true, teacherId: profile.id };
 }
 
+function isMissingColumn(
+  error: { message?: string } | null | undefined,
+  column: string,
+): boolean {
+  const message = error?.message ?? "";
+  if (!message) return false;
+  if (!new RegExp(`\\b${column}\\b`, "i").test(message)) return false;
+  return /does not exist|schema cache|could not find/i.test(message);
+}
+
+/**
+ * Service-role write. `class_password` is always null in `write`.
+ * The plaintext return value of loadClassRoster is the only copy sent to a
+ * browser, and only for this signed-in teacher's class page.
+ */
+async function writeOwnedClassPassword(
+  admin: ReturnType<typeof createAdminClient>,
+  teacherId: string,
+  write: ClassPasswordBackfillWrite,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { error } = await admin
+    .from("profiles")
+    .update(write)
+    .eq("id", teacherId)
+    .eq("is_teacher", true);
+
+  if (error) {
+    const message = explainClassPasswordWriteError(error.message);
+    console.error("[class-password]", message);
+    return { ok: false, error: message };
+  }
+
+  console.info(
+    "class_password_enc" in write
+      ? "[class-password] stored ciphertext and cleared plaintext"
+      : "[class-password] cleared plaintext class_password",
+    { teacherId },
+  );
+  return { ok: true };
+}
+
 /**
  * One class per teacher today: the class id is that teacher's profile id.
  * Seats are already limited to teacher_id = the signed-in teacher.
@@ -113,22 +161,31 @@ export async function loadClassRoster(): Promise<
     const admin = createAdminClient();
     const withCohort = await admin
       .from("profiles")
-      .select("id, seat_cap, class_password, class_cohort")
+      .select("id, seat_cap, class_password, class_password_enc, class_cohort")
       .eq("id", access.teacherId)
       .maybeSingle();
+    if (isMissingColumn(withCohort.error, "class_password_enc")) {
+      console.error("[class-password]", withCohort.error?.message);
+      return { ok: false, error: CLASS_PASSWORD_COLUMN_MISSING };
+    }
     const teacherQuery =
-      withCohort.error && /class_cohort|does not exist/i.test(withCohort.error.message)
+      withCohort.error && isMissingColumn(withCohort.error, "class_cohort")
         ? await admin
             .from("profiles")
-            .select("id, seat_cap, class_password")
+            .select("id, seat_cap, class_password, class_password_enc")
             .eq("id", access.teacherId)
             .maybeSingle()
         : withCohort;
+    if (isMissingColumn(teacherQuery.error, "class_password_enc")) {
+      console.error("[class-password]", teacherQuery.error?.message);
+      return { ok: false, error: CLASS_PASSWORD_COLUMN_MISSING };
+    }
     const teacher = teacherQuery.data as
       | {
           id: string;
           seat_cap?: number | null;
           class_password?: string | null;
+          class_password_enc?: string | null;
           class_cohort?: string | null;
         }
       | null;
@@ -176,8 +233,31 @@ export async function loadClassRoster(): Promise<
         .eq("is_teacher", true);
     }
 
-    let classPassword =
-      typeof teacher.class_password === "string" ? teacher.class_password.trim() : "";
+    let classPassword = "";
+    try {
+      const stored = planClassPasswordBackfill(
+        {
+          class_password: teacher.class_password,
+          class_password_enc: teacher.class_password_enc,
+        },
+        access.teacherId,
+      );
+      classPassword = stored.password.trim();
+      if (stored.write) {
+        const migrated = await writeOwnedClassPassword(
+          admin,
+          access.teacherId,
+          stored.write,
+        );
+        if (!migrated.ok) return migrated;
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not read the class password.";
+      console.error("[class-password]", message);
+      return { ok: false, error: message };
+    }
+
     const looksRandom =
       /^[A-Za-z0-9]{8,12}$/.test(classPassword) &&
       /[0-9]/.test(classPassword) &&
@@ -185,11 +265,12 @@ export async function loadClassRoster(): Promise<
       /[A-Z]/.test(classPassword);
     if (!classPassword || (looksRandom && usernames.length === 0)) {
       classPassword = generateClassPassword();
-      await admin
-        .from("profiles")
-        .update({ class_password: classPassword })
-        .eq("id", access.teacherId)
-        .eq("is_teacher", true);
+      const generated = await writeOwnedClassPassword(
+        admin,
+        access.teacherId,
+        classPasswordCipherUpdate(classPassword, access.teacherId),
+      );
+      if (!generated.ok) return generated;
     }
 
     const classes = await loadOwnedClassXp({
@@ -211,11 +292,10 @@ export async function loadClassRoster(): Promise<
       },
     };
   } catch (error) {
-    return {
-      ok: false,
-      error:
-        error instanceof Error ? error.message : "Could not load the class page.",
-    };
+    const message =
+      error instanceof Error ? error.message : "Could not load the class page.";
+    console.error("[class-roster]", message);
+    return { ok: false, error: message };
   }
 }
 
@@ -381,16 +461,19 @@ export async function changeClassPassword(nextPassword: string): Promise<
     return { ok: false, error: "Use at least 6 characters for the class password." };
   }
 
-  const admin = createAdminClient();
-  const { error: teacherError } = await admin
-    .from("profiles")
-    .update({ class_password: password })
-    .eq("id", access.teacherId)
-    .eq("is_teacher", true);
-
-  if (teacherError) {
-    return { ok: false, error: teacherError.message };
+  let columns;
+  try {
+    columns = classPasswordCipherUpdate(password, access.teacherId);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not save the class password.";
+    console.error("[class-password]", message);
+    return { ok: false, error: message };
   }
+
+  const admin = createAdminClient();
+  const saved = await writeOwnedClassPassword(admin, access.teacherId, columns);
+  if (!saved.ok) return saved;
 
   const { data: seats, error: seatsError } = await admin
     .from("profiles")
@@ -403,6 +486,7 @@ export async function changeClassPassword(nextPassword: string): Promise<
   }
 
   for (const seat of seats ?? []) {
+    // Auth keeps its own secret for username + class password sign-in.
     const { error } = await admin.auth.admin.updateUserById(seat.id, {
       password,
     });

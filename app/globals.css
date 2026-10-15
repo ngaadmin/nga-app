@@ -38,6 +38,7 @@
   --radius-nga-xl: 1.25rem;
   --shadow-nga-card: 0 4px 24px -4px rgb(3 31 130 / 0.14);
   --shadow-nga-pop: 0 8px 32px -8px rgb(3 31 130 / 0.28);
+  --shadow-nga-delete-sheet: 0 12px 32px rgb(3 31 130 / 0.18);
 
   /* Spacing scale for touch-friendly targets */
   --spacing-touch: 2.75rem;
@@ -58,6 +59,8 @@
   --animate-lesson-shake: lesson-choice-shake 0.45s ease-in-out;
   --animate-academy-active-pulse: academy-active-pulse 2s ease-in-out infinite;
   --animate-skills-cup-pulse: skills-cup-pulse 1.15s ease-out 1;
+  --animate-nga-scrim-fade: nga-scrim-fade 200ms ease-out both;
+  --animate-nga-sheet-up: nga-sheet-up 200ms ease-out both;
 }
 
 @layer components {
@@ -382,6 +385,24 @@
     }
   }
 
+  @keyframes nga-scrim-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes nga-sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
   @keyframes skills-cup-pulse {
     0%,
     100% {
@@ -391,6 +412,13 @@
     35% {
       transform: scale(1.14);
       box-shadow: 0 0 0 10px rgb(255 165 3 / 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-nga-scrim-fade,
+    .animate-nga-sheet-up {
+      animation: none;
     }
   }
 

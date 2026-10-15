@@ -48,6 +48,7 @@ import {
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { useSettingsParentView } from "@/lib/dashboard/testing-settings-view";
 import { AccountRowTrack } from "@/components/dashboard/settings/account-row-track";
+import { DeleteLearnerConfirmSheet } from "@/components/dashboard/settings/delete-learner-confirm-sheet";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -540,15 +541,6 @@ export function AccountSubscriptionStatusPanel() {
     }
   }
 
-  const deleteDialogTitle =
-    pendingDelete?.kind === "master"
-      ? copy.deleteMasterTitle
-      : copy.deleteChildTitle;
-  const deleteDialogBody =
-    pendingDelete?.kind === "master"
-      ? copy.deleteMasterConfirm
-      : copy.deleteChildConfirm;
-
   return (
     <>
       <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
@@ -857,8 +849,24 @@ export function AccountSubscriptionStatusPanel() {
         </section>
       </div>
 
+      <DeleteLearnerConfirmSheet
+        isOpen={pendingDelete?.kind === "child"}
+        title={copy.deleteChildTitle}
+        body={copy.deleteChildConfirm}
+        confirmLabel={
+          isDeletingHousehold
+            ? copy.deleteMasterDeleting
+            : copy.deleteConfirmAction
+        }
+        cancelLabel={copy.deleteCancelAction}
+        error={deleteError}
+        isDeleting={isDeletingHousehold}
+        onClose={closeDeleteDialog}
+        onConfirm={() => void confirmPendingDelete()}
+      />
+
       <ModalShell
-        isOpen={pendingDelete !== null}
+        isOpen={pendingDelete?.kind === "master"}
         onClose={closeDeleteDialog}
         role="alertdialog"
         align="center"
@@ -872,39 +880,30 @@ export function AccountSubscriptionStatusPanel() {
           id="account-delete-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
         >
-          {deleteDialogTitle}
+          {copy.deleteMasterTitle}
         </h2>
-        {pendingDelete?.kind === "master" ? (
-          <div id="account-delete-body" className="mt-2 space-y-3">
-            <p className="font-sans text-sm leading-snug text-[#1E3A5F]">
-              {copy.deleteMasterConfirm}
-            </p>
-            <ul className="list-disc space-y-1 pl-5 font-sans text-sm leading-snug text-[#1E3A5F]">
-              <li>{copy.deleteMasterConfirmParent}</li>
-              <li>{copy.deleteMasterConfirmChildren}</li>
-              <li>{copy.deleteMasterConfirmData}</li>
-            </ul>
-            <label className="flex items-start gap-2 font-sans text-sm leading-snug text-[#031F82]">
-              <input
-                type="checkbox"
-                className="mt-0.5 size-4 shrink-0 accent-[#031F82]"
-                checked={masterDeleteAcknowledged}
-                disabled={isDeletingHousehold}
-                onChange={(event) =>
-                  setMasterDeleteAcknowledged(event.target.checked)
-                }
-              />
-              <span>{copy.deleteMasterAcknowledge}</span>
-            </label>
-          </div>
-        ) : (
-          <p
-            id="account-delete-body"
-            className="mt-2 font-sans text-sm leading-snug text-[#1E3A5F]"
-          >
-            {deleteDialogBody}
+        <div id="account-delete-body" className="mt-2 space-y-3">
+          <p className="font-sans text-sm leading-snug text-[#1E3A5F]">
+            {copy.deleteMasterConfirm}
           </p>
-        )}
+          <ul className="list-disc space-y-1 pl-5 font-sans text-sm leading-snug text-[#1E3A5F]">
+            <li>{copy.deleteMasterConfirmParent}</li>
+            <li>{copy.deleteMasterConfirmChildren}</li>
+            <li>{copy.deleteMasterConfirmData}</li>
+          </ul>
+          <label className="flex items-start gap-2 font-sans text-sm leading-snug text-[#031F82]">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-[#031F82]"
+              checked={masterDeleteAcknowledged}
+              disabled={isDeletingHousehold}
+              onChange={(event) =>
+                setMasterDeleteAcknowledged(event.target.checked)
+              }
+            />
+            <span>{copy.deleteMasterAcknowledge}</span>
+          </label>
+        </div>
         {deleteError ? (
           <p className="mt-3 font-sans text-sm font-medium text-red-600" role="alert">
             {deleteError}
@@ -922,10 +921,7 @@ export function AccountSubscriptionStatusPanel() {
           <button
             type="button"
             onClick={() => void confirmPendingDelete()}
-            disabled={
-              isDeletingHousehold ||
-              (pendingDelete?.kind === "master" && !masterDeleteAcknowledged)
-            }
+            disabled={isDeletingHousehold || !masterDeleteAcknowledged}
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
             {isDeletingHousehold

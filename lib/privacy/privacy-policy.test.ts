@@ -7,11 +7,8 @@ import {
 } from "@/lib/privacy/parse-privacy-markdown";
 import { splitTrailingQualifier } from "@/lib/privacy/split-trailing-qualifier";
 
-const BACKUP_SENTENCE =
-  "Deleted data is removed from our live database; we don't keep restorable backups.";
-
 describe("privacy policy source", () => {
-  it("keeps the publication placeholders and confirmed retention wording", () => {
+  it("publishes the approved policy with the 15 October 2026 date", () => {
     const markdown = loadPrivacyPolicyMarkdown();
     const blocks = parsePrivacyMarkdown(markdown);
     const text = blocks
@@ -27,22 +24,20 @@ describe("privacy policy source", () => {
       })
       .join("\n");
 
-    expect(markdown).toContain("[DATE]");
+    expect(markdown).toContain("**Last updated: 15 October 2026**");
+    expect(markdown).not.toContain("[DATE]");
     expect(markdown).not.toContain("[CATH_EMAIL]");
     expect(markdown).not.toContain("## TO CONFIRM");
-    expect(markdown).not.toContain("remove before publishing");
-    expect(text).toContain("[DATE]");
-    expect(text).toContain("[Region: TO CONFIRM]");
+    expect(markdown).not.toMatch(/\bNGA\b/);
+    expect(text).toContain("15 October 2026");
     expect(text).toContain(
-      "Inactive accounts are deleted after 12 months of inactivity.",
+      "Accounts inactive for 12 months are reviewed and deleted.",
     );
-    expect(text).toContain(BACKUP_SENTENCE);
-    expect(collectLinks(blocks)).toEqual([
-      {
-        href: "mailto:cath.drdw@nextgenachievers.com",
-        text: "cath.drdw@nextgenachievers.com",
-      },
-    ]);
+    expect(text).toContain(
+      "Our database has no restorable backups, so deleted data cannot be recovered.",
+    );
+    expect(text).toContain("cath.drdw@nextgenachievers.com");
+    expect(collectLinks(blocks)).toEqual([]);
   });
 });
 

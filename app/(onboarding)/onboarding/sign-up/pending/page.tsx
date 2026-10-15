@@ -3,9 +3,9 @@ import { SignUpPendingPanel } from "@/components/onboarding/sign-up-pending-pane
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
-  title: "Waiting for Parent Approval",
+  title: "Waiting for approval",
   description:
-    "Your parent or guardian needs to approve your Explorer account.",
+    "Your account needs approval to save your XP. You can keep playing while you wait.",
 };
 
 export default function SignUpPendingPage() {

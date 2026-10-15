@@ -10,6 +10,9 @@ export const GUEST_DEVICE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const GUEST_SESSION_STORAGE_KEY = "nga_guest_session";
 
+/** Set once the first guest save banner has been shown. Wiped with guest progress. */
+export const GUEST_SAVE_PROMPT_FIRST_SEEN_KEY = "nga_guest_save_prompt_first_seen_v1";
+
 const GUEST_DEVICE_KEYS = [
   GUEST_SESSION_STORAGE_KEY,
   "nga_ghost_session",
@@ -19,6 +22,7 @@ const GUEST_DEVICE_KEYS = [
   "nga_vault_skill_progress_v1",
   "nga_vault_session_v1",
   "nga_vault_v2_session_v1",
+  GUEST_SAVE_PROMPT_FIRST_SEEN_KEY,
 ] as const;
 
 type SessionHint = {

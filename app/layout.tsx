@@ -97,6 +97,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-sans antialiased overflow-x-hidden max-w-full">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('popstate',function(event){var handler=window.__ngaGuestBack;if(typeof handler==='function')handler(event);},true);",
+          }}
+        />
         {children}
         <div id="overlay-root" aria-hidden="true" />
         <div id="modal-root" />

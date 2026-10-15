@@ -44,8 +44,8 @@ export const copyMatrix = {
       parent: "I'm a parent",
     },
     pendingConsent: {
-      heading: "Hang tight. A parent/guardian needs to approve",
-      body: "A parent or guardian has to approve your account before you can keep playing. Your lessons and Points are saved and waiting for you.",
+      heading: "Hang tight. Approval saves your XP",
+      body: "Your account needs approval to save your XP. You can keep playing while you wait.",
       headingApproved: "You're cleared to play!",
       bodyApproved:
         "Your parent or guardian said yes. Pick up right where you left off.",

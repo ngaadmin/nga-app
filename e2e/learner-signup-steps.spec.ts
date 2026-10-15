@@ -94,6 +94,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
 
   for (const viewport of WIDTHS) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await scrollBirthYearAboveBar(page);
     await assertNoHorizontalOverflow(page, `step A empty ${viewport.name}`);
     await page.screenshot({
       path: `/opt/cursor/artifacts/signup-${viewport.name}-A-empty.png`,
@@ -119,7 +120,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
 
   for (const viewport of WIDTHS) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await scrollBirthYearAboveBar(page);
     await assertNoHorizontalOverflow(page, `step A selected ${viewport.name}`);
     await page.screenshot({
       path: `/opt/cursor/artifacts/signup-${viewport.name}-A-selected.png`,
@@ -221,6 +222,22 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   });
 });
 
+async function scrollBirthYearAboveBar(page: Page) {
+  await page.evaluate(() => {
+    const field = document.getElementById("signup-birth-year-field");
+    const bar = document.querySelector("[data-signup-bar]");
+    if (!field || !bar) return;
+    const gap = 24;
+    const delta =
+      field.getBoundingClientRect().bottom - (bar.getBoundingClientRect().top - gap);
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(0, window.scrollY + delta);
+    root.style.scrollBehavior = previous;
+  });
+}
+
 async function expectPinnedSignupBar(page: Page) {
   const bar = page.locator("[data-signup-bar]");
   await expect(bar).toHaveCSS("position", "fixed");
@@ -230,7 +247,13 @@ async function expectPinnedSignupBar(page: Page) {
   expect(viewport).toBeTruthy();
   expect(Math.abs(box!.y + box!.height - viewport!.height)).toBeLessThanOrEqual(1);
 
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.evaluate(() => {
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo(0, root.scrollHeight);
+    root.style.scrollBehavior = previous;
+  });
   const gap = await page.evaluate(() => {
     const field = document.getElementById("signup-birth-year-field");
     const pinned = document.querySelector("[data-signup-bar]");

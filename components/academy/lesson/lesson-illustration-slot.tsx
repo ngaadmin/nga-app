@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils/cn";
 
 type LessonIllustrationSlotProps = LessonIllustration & {
   className?: string;
+  /** Match screens use a 160px frame with the feet on the bottom edge. */
+  frame?: "default" | "match";
 };
 
 function LessonIllustrationFallback({
@@ -49,6 +51,7 @@ export function LessonIllustrationSlot({
   src,
   scale,
   className,
+  frame = "default",
 }: LessonIllustrationSlotProps) {
   const [imageStatus, setImageStatus] = useState<ImageLoadStatus>("idle");
 
@@ -75,6 +78,24 @@ export function LessonIllustrationSlot({
       cancelled = true;
     };
   }, [src]);
+
+  if (frame === "match") {
+    const ariaLabel = alt ?? label ?? "Lesson illustration";
+    if (!src || imageStatus !== "loaded") {
+      if (src) return <div className="mb-4 h-40 w-full" aria-hidden />;
+      return null;
+    }
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={ariaLabel}
+        className="mx-auto mb-4 block h-40 w-auto max-w-full object-contain object-bottom"
+        decoding="async"
+        loading="eager"
+      />
+    );
+  }
 
   if (src && imageStatus === "loaded") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";

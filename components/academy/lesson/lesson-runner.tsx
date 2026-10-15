@@ -65,6 +65,7 @@ export function LessonRunner({
     Boolean(activeScreen.continueToLabel);
   const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
   const isTapReveal = activeScreen?.type === "tap-reveal";
+  const isLinkMatch = activeScreen?.type === "link-match";
 
   useEffect(() => {
     const screen = content.screens[screenIndex];
@@ -125,6 +126,7 @@ export function LessonRunner({
         }
         hideFooter={isCompletionScreen || isContinueOnly || isSkillHub || isTapReveal}
         footerSlot={isCompletionScreen ? <></> : undefined}
+        matchChrome={isLinkMatch}
       >
         {content.screens.map((screen, index) => (
           <LessonScreenPane
@@ -135,21 +137,26 @@ export function LessonRunner({
               <LessonScreenChromeProvider
                 showIllustrationSlot={supportsLessonScreenIllustration(screen)}
                 illustration={resolveLessonScreenIllustration(screen)}
+                illustrationFrame={screen.type === "link-match" ? "match" : "default"}
               >
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                   <div
                     className={cn(
-                      "relative w-full min-w-0 shrink-0",
-                      lessonScreenInlinePaddingClass,
+                      "relative w-full min-w-0 shrink-0 overflow-x-hidden",
+                      screen.type === "link-match"
+                        ? "px-5"
+                        : lessonScreenInlinePaddingClass,
                     )}
                   >
                     <LessonScreenIllustration />
-                    <LessonHintBubble />
+                    {screen.type === "link-match" ? null : <LessonHintBubble />}
                   </div>
                   <div
                     className={cn(
                       "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none",
-                      lessonScreenInlinePaddingClass,
+                      screen.type === "link-match"
+                        ? "px-5"
+                        : lessonScreenInlinePaddingClass,
                       !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
                     )}
                   >

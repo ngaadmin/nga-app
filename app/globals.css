@@ -173,6 +173,37 @@
     animation: lesson-tile-shake 0.42s ease-in-out;
   }
 
+  @keyframes lesson-match-shake {
+    0% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-8px);
+    }
+    40% {
+      transform: translateX(8px);
+    }
+    60% {
+      transform: translateX(-6px);
+    }
+    80% {
+      transform: translateX(6px);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  .lesson-match-shake {
+    animation: lesson-match-shake 360ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lesson-match-shake {
+      animation: none;
+    }
+  }
+
   @keyframes lesson-bar-wobble {
     0%,
     100% {

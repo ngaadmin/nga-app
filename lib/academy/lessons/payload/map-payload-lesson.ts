@@ -499,6 +499,44 @@ function rankEmojiForLabel(label: string): string {
   return "📌";
 }
 
+/** `PAIRS:` rows are `event = possibility`. Later lines have no key, so the settings splitter drops them. */
+function linkMatchPairsFromSettings(raw: string): { event: string; benefit: string }[] {
+  const pairs: { event: string; benefit: string }[] = [];
+  let inPairs = false;
+
+  for (const line of raw.split(/\r?\n/).map((entry) => entry.trim()).filter(Boolean)) {
+    if (/^PAIRS:\s*$/i.test(line)) {
+      inPairs = true;
+      continue;
+    }
+    const inline = /^PAIRS:\s*(.+)$/i.exec(line);
+    if (inline?.[1]) {
+      inPairs = true;
+      const parsed = splitLinkMatchPair(inline[1]);
+      if (parsed) pairs.push(parsed);
+      continue;
+    }
+    if (/^[A-Z][A-Z0-9 _]*:\s*/.test(line) && !line.includes("=")) {
+      inPairs = false;
+      continue;
+    }
+    if (!inPairs && !line.includes("=")) continue;
+    const parsed = splitLinkMatchPair(line);
+    if (parsed) pairs.push(parsed);
+  }
+
+  return pairs;
+}
+
+function splitLinkMatchPair(line: string): { event: string; benefit: string } | undefined {
+  const splitAt = line.indexOf("=");
+  if (splitAt < 0) return undefined;
+  const event = line.slice(0, splitAt).trim();
+  const benefit = line.slice(splitAt + 1).trim();
+  if (!event || !benefit) return undefined;
+  return { event, benefit };
+}
+
 function rankOrderFromSettings(raw: string, error: string): {
   items: { id: string; label: string; emoji: string }[];
   correctOrder: string[];
@@ -994,6 +1032,28 @@ export function mapPayloadScreen(
         items: ranked.items,
         correctOrder: ranked.correctOrder,
         errors: ranked.errors,
+        ...picture,
+      };
+    }
+    case "link-match": {
+      const pairs = linkMatchPairsFromSettings(cohortField(row.settings, cohort)).map(
+        (pair, index) => ({
+          id: itemSlug(pair.event, index),
+          event: pair.event,
+          benefit: pair.benefit,
+        }),
+      );
+      if (pairs.length === 0) {
+        throw new Error(`Screen ${row.screenLabel} (link-match) has no pairs.`);
+      }
+      return {
+        type: "link-match",
+        id,
+        intro: text,
+        eventColumnLabel: "Events",
+        benefitColumnLabel: "Possibilities",
+        pairs,
+        ...(error.trim() ? { wrongError: error.trim() } : {}),
         ...picture,
       };
     }

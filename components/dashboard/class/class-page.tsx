@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Outfit } from "next/font/google";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ClientPortal } from "@/components/ui/client-portal";
 import {
@@ -20,21 +20,11 @@ import {
 } from "@/lib/dashboard/mastery-cohort";
 import { cn } from "@/lib/utils/cn";
 
-const classFont = Outfit({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  display: "swap",
-});
-
 const COHORT_EMOJI: Record<MasteryCohort, string> = {
   explorer: "🔭",
   pathfinder: "🧭",
   maverick: "🚀",
 };
-
-function classTrackLine(cohort: MasteryCohort): string {
-  return `Class track: ${masteryCohortLabel(cohort)} (ages ${masteryCohortAgeRangeLabel(cohort)})`;
-}
 
 /** Shown only while students exist. Exact wording from the class-track lock. */
 const TRACK_LOCK_HELP_LEAD = "To change the track, remove all students first.";
@@ -193,10 +183,10 @@ function ClassPasswordRow({
       <div className="flex min-h-[60px] items-center gap-3.5 py-2">
         <TintCircle className="text-[20px]">🔑</TintCircle>
         <div className="min-w-0 flex-1">
-          <p className="text-[17px] font-semibold leading-tight text-[#14213D]">
+          <p className="font-heading text-[17px] font-semibold leading-tight text-[#14213D]">
             Class password
           </p>
-          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-[15px] font-bold leading-tight text-[#14213D]">
+          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 font-heading text-[15px] font-bold leading-tight text-[#14213D]">
             {visible ? (
               <span className="tracking-normal">{classPassword}</span>
             ) : (
@@ -209,19 +199,19 @@ function ClassPasswordRow({
               role="switch"
               aria-checked={visible}
               onClick={() => setVisible((open) => !open)}
-              className="border-b-2 border-[#FFB822] text-[13px] font-semibold tracking-normal text-[#031F82]"
+              className="border-b-2 border-[#FFB822] font-heading text-[13px] font-semibold tracking-normal text-[#031F82]"
             >
               {visible ? "Hide" : "Show class password"}
             </button>
-            {editing ? null : (
+            {visible && !editing ? (
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="border-b-2 border-[#FFB822] text-[13px] font-semibold tracking-normal text-[#031F82]"
+                className="border-b-2 border-[#FFB822] font-heading text-[13px] font-semibold tracking-normal text-[#031F82]"
               >
-                Change
+                Change class password
               </button>
-            )}
+            ) : null}
           </p>
         </div>
         <button
@@ -245,12 +235,12 @@ function ClassPasswordRow({
             spellCheck={false}
             value={classPassword}
             onChange={(event) => onChange(event.target.value)}
-            className="h-10 w-full max-w-[220px] rounded-full border-0 bg-[#EAF0FF] px-4 text-center text-[15px] font-bold text-[#031F82] outline-none"
+            className="h-10 w-full max-w-[220px] rounded-full border-0 bg-[#EAF0FF] px-4 text-center font-heading text-[15px] font-bold text-[#031F82] outline-none"
           />
           <button
             type="submit"
             disabled={changing}
-            className="h-10 shrink-0 rounded-full bg-[#031F82] px-4 text-[15px] font-bold text-white shadow-[0_3px_0_#FFB822] disabled:opacity-40"
+            className="h-10 shrink-0 rounded-full bg-[#031F82] px-4 font-heading text-[15px] font-bold text-white shadow-[0_3px_0_#FFB822] disabled:opacity-40"
           >
             {changing ? "Saving…" : "Save"}
           </button>
@@ -263,30 +253,70 @@ function ClassPasswordRow({
   );
 }
 
-function StudentLoginTable({ usernames }: { usernames: string[] }) {
+function ClassPrintSheet({
+  title,
+  cohort,
+  classPassword,
+  usernames,
+}: {
+  title: string;
+  cohort: MasteryCohort | null;
+  classPassword: string;
+  usernames: string[];
+}) {
   return (
-    <table className="w-full border-collapse text-left text-sm text-[#14213D]">
-      <thead>
-        <tr>
-          <th className="border-b border-[#14213D] py-2 pr-4 text-left font-bold">
-            Username
-          </th>
-          <th className="border-b border-[#14213D] py-2 text-left font-bold">
-            Student name
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {usernames.map((name) => (
-          <tr key={name}>
-            <td className="border-b border-[#E1E8F6] py-2 pr-4 font-semibold text-[#031F82]">
-              {name}
-            </td>
-            <td className="border-b border-[#E1E8F6] py-2">&nbsp;</td>
+    <div className="hidden bg-white print:block">
+      <div className="flex items-center border-b-2 border-[#031F82] pb-[22px]">
+        <Image
+          src="/nga-logo-tm.svg"
+          alt="NextGenAchievers"
+          width={190}
+          height={54}
+          unoptimized
+          className="h-[54px] w-auto"
+        />
+      </div>
+      <h1 className="mt-7 font-heading text-[30px] font-bold leading-[1.2] text-[#031F82]">
+        {title}
+        {cohort ? <span aria-hidden> {COHORT_EMOJI[cohort]}</span> : null}
+      </h1>
+      <p className="mt-3.5 font-sans text-base font-medium text-[#4A5675]">
+        Class password
+        <span className="ml-2 font-heading text-xl font-bold tracking-[1px] text-[#031F82]">
+          {classPassword}
+        </span>
+      </p>
+      <table className="mt-7 w-full border-collapse text-left font-sans text-base text-[#14213D]">
+        <thead>
+          <tr>
+            {["#", "Student", "Username"].map((label) => (
+              <th
+                key={label}
+                className={cn(
+                  "border-b-2 border-[#031F82] px-2 py-2.5 text-left font-heading text-[13px] font-bold uppercase tracking-[0.5px] text-[#4A5675]",
+                  label === "#" && "w-12",
+                )}
+              >
+                {label}
+              </th>
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {usernames.map((name, index) => (
+            <tr key={name}>
+              <td className="w-12 border-b border-[#E1E8F6] px-2 py-[13px] font-medium text-[#4A5675]">
+                {index + 1}
+              </td>
+              <td className="border-b border-[#E1E8F6] px-2 py-[13px]">&nbsp;</td>
+              <td className="border-b border-[#E1E8F6] px-2 py-[13px] font-heading font-bold text-[#031F82]">
+                {name}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -451,32 +481,32 @@ export function ClassPage({ roster }: ClassPageProps) {
   return (
     <div
       className={cn(
-        classFont.className,
-        "flex-1 bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)] px-5 pb-4 text-[#14213D]",
+        "flex-1 bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)] px-5 pb-4 font-sans text-[#14213D]",
         "-mx-4 -mt-6 sm:-mx-6",
-        "print:m-0 print:bg-white print:p-0",
+        "print:m-0 print:max-w-none print:bg-white print:p-0",
       )}
     >
-      <div className="mx-auto w-full max-w-[720px]">
+      <style>{`@media print { @page { size: A4 portrait; margin: 0; } }`}</style>
+      <div className="mx-auto w-full max-w-[720px] print:max-w-none print:px-16 print:py-14">
         <div className="print:hidden">
-          <h1 className="mt-2 text-[26px] font-bold leading-[1.2] text-[#031F82]">
+          <h1 className="mt-2 font-heading text-[26px] font-bold leading-[1.2] text-[#031F82]">
             {title}
             {classCohort ? (
               <span aria-hidden> {COHORT_EMOJI[classCohort]}</span>
             ) : null}
           </h1>
-          <p className="mt-1.5 text-base font-medium leading-[1.4] text-[#4A5675]">
-            <span className="font-bold text-[#031F82]">{studentsUsed}</span>
+          <p className="mt-1.5 font-sans text-base font-medium leading-[1.4] text-[#4A5675]">
+            <span className="font-heading font-bold text-[#031F82]">{studentsUsed}</span>
             {` of ${roster.seatCap} seats allocated`}
           </p>
 
           <div className="mt-5 flex h-20 items-center gap-3.5 border-y border-[#E1E8F6] px-1">
             <TintCircle size={48}>🏆</TintCircle>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold tracking-[0.5px] text-[#4A5675]">
+              <p className="font-heading text-[13px] font-bold tracking-[0.5px] text-[#4A5675]">
                 CLASS TOTAL
               </p>
-              <p className="text-2xl font-extrabold leading-none text-[#031F82]">
+              <p className="font-heading text-2xl font-extrabold leading-none text-[#031F82]">
                 {totalXp.toLocaleString()} XP
               </p>
             </div>
@@ -498,7 +528,7 @@ export function ClassPage({ roster }: ClassPageProps) {
               className="flex min-w-0 flex-1 items-center gap-3.5 text-left"
             >
               <TintCircle>👥</TintCircle>
-              <span className="whitespace-nowrap text-[17px] font-semibold text-[#14213D]">
+              <span className="whitespace-nowrap font-heading text-[17px] font-semibold text-[#14213D]">
                 {`Show students (${sortedUsernames.length})`}
               </span>
             </button>
@@ -506,7 +536,7 @@ export function ClassPage({ roster }: ClassPageProps) {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[#031F82]"
+                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-heading text-sm font-semibold text-[#031F82]"
               >
                 <PrintIcon />
                 Print usernames
@@ -529,7 +559,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                   className="flex min-h-[60px] items-center gap-3.5 border-b border-[#E1E8F6] py-2"
                 >
                   <TintCircle className="bg-[#F3F6FC] text-[20px]">🙂</TintCircle>
-                  <span className="min-w-0 flex-1 truncate text-[17px] font-semibold text-[#14213D]">
+                  <span className="min-w-0 flex-1 truncate font-heading text-[17px] font-semibold text-[#14213D]">
                     {username}
                   </span>
                   <button
@@ -550,7 +580,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                   className="flex min-h-[60px] items-center gap-2.5 border-b border-[#E1E8F6] py-2"
                 >
                   <TintCircle className="text-2xl font-medium text-[#031F82]">+</TintCircle>
-                  <span className="min-w-0 flex-1 whitespace-nowrap text-[17px] font-semibold text-[#031F82]">
+                  <span className="min-w-0 flex-1 whitespace-nowrap font-heading text-[17px] font-semibold text-[#031F82]">
                     Allocate seats
                   </span>
                   <input
@@ -568,12 +598,12 @@ export function ClassPage({ roster }: ClassPageProps) {
                     onChange={(event) =>
                       setStudentCount(event.target.value.replace(/\D/g, ""))
                     }
-                    className="h-10 w-[72px] shrink-0 rounded-[20px] border-0 bg-[#EAF0FF] text-center text-[17px] font-bold text-[#031F82] outline-none placeholder:text-[#031F82]/40"
+                    className="h-10 w-[72px] shrink-0 rounded-[20px] border-0 bg-[#EAF0FF] text-center font-heading text-[17px] font-bold text-[#031F82] outline-none placeholder:text-[#031F82]/40"
                   />
                   <button
                     type="submit"
                     disabled={creating || seatCount == null}
-                    className="-ml-0.5 h-10 w-24 shrink-0 rounded-[20px] bg-[#031F82] text-[15px] font-bold text-white shadow-[0_3px_0_#FFB822] disabled:opacity-40"
+                    className="-ml-0.5 h-10 w-24 shrink-0 rounded-[20px] bg-[#031F82] font-heading text-[15px] font-bold text-white shadow-[0_3px_0_#FFB822] disabled:opacity-40"
                   >
                     Allocate
                   </button>
@@ -585,7 +615,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                   className="flex min-h-[60px] w-full items-center gap-3.5 border-b border-[#E1E8F6] py-2 text-left"
                 >
                   <TintCircle className="text-2xl font-medium text-[#031F82]">+</TintCircle>
-                  <span className="text-[17px] font-bold text-[#031F82]">Allocate seats</span>
+                  <span className="font-heading text-[17px] font-bold text-[#031F82]">Allocate seats</span>
                 </button>
               )}
             </div>
@@ -598,10 +628,10 @@ export function ClassPage({ roster }: ClassPageProps) {
               {classCohort ? COHORT_EMOJI[classCohort] : "🧭"}
             </TintCircle>
             <div className="min-w-0 flex-1">
-              <p className="text-[17px] font-semibold leading-tight text-[#14213D]">
+              <p className="font-heading text-[17px] font-semibold leading-tight text-[#14213D]">
                 Class track
               </p>
-              <p className="mt-0.5 text-[13px] font-medium text-[#4A5675]">
+              <p className="mt-0.5 font-sans text-[13px] font-medium text-[#4A5675]">
                 {classCohort
                   ? `${masteryCohortLabel(classCohort)} · ages ${masteryCohortAgeRangeLabel(classCohort)}`
                   : "Pick a track"}
@@ -615,7 +645,7 @@ export function ClassPage({ roster }: ClassPageProps) {
               <button
                 type="button"
                 onClick={() => setTrackOpen((open) => !open)}
-                className="border-b-2 border-[#FFB822] text-[15px] font-semibold text-[#031F82]"
+                className="border-b-2 border-[#FFB822] font-heading text-[15px] font-semibold text-[#031F82]"
               >
                 Change
               </button>
@@ -623,7 +653,7 @@ export function ClassPage({ roster }: ClassPageProps) {
           </div>
 
           {trackLocked ? (
-            <p className="ml-[54px] text-[13px] font-medium leading-[1.4] text-[#4A5675]">
+            <p className="ml-[54px] font-sans text-[13px] font-medium leading-[1.4] text-[#4A5675]">
               {TRACK_LOCK_HELP_LEAD}
               <br />
               {TRACK_LOCK_HELP_REST}
@@ -662,7 +692,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                     disabled={savingCohort}
                     onClick={() => void handlePickCohort(cohort)}
                     className={cn(
-                      "-mx-3.5 flex min-h-[60px] w-[calc(100%+28px)] items-center gap-3.5 rounded-[30px] px-3.5 py-2 text-left text-[18px] font-semibold",
+                      "-mx-3.5 flex min-h-[60px] w-[calc(100%+28px)] items-center gap-3.5 rounded-[30px] px-3.5 py-2 text-left font-heading text-[18px] font-semibold",
                       selected
                         ? "bg-[#EAF0FF] text-[#031F82] shadow-[inset_0_0_0_2px_#031F82]"
                         : "text-[#14213D]",
@@ -687,7 +717,7 @@ export function ClassPage({ roster }: ClassPageProps) {
               type="button"
               disabled={removing}
               onClick={() => setPendingRemove({ scope: "all" })}
-              className="ml-[54px] mt-3 text-[13px] font-semibold text-[#031F82] underline-offset-2 hover:underline disabled:opacity-40"
+              className="ml-[54px] mt-3 font-heading text-[13px] font-semibold text-[#031F82] underline-offset-2 hover:underline disabled:opacity-40"
             >
               Remove all students in class
             </button>
@@ -705,21 +735,12 @@ export function ClassPage({ roster }: ClassPageProps) {
           ) : null}
         </div>
 
-        <div className="hidden print:block">
-          <h1 className="mb-4 text-[26px] font-bold leading-[1.2] text-[#031F82]">
-            {title}
-          </h1>
-          {classCohort ? (
-            <p className="mb-3 text-sm font-semibold text-[#031F82]">
-              {classTrackLine(classCohort)}
-            </p>
-          ) : null}
-          <p className="mb-3 text-sm text-[#4A5675]">
-            Class password:{" "}
-            <span className="text-xl font-bold text-[#031F82]">{classPassword}</span>
-          </p>
-          <StudentLoginTable usernames={sortedUsernames} />
-        </div>
+        <ClassPrintSheet
+          title={title}
+          cohort={classCohort}
+          classPassword={classPassword}
+          usernames={sortedUsernames}
+        />
       </div>
 
       {pendingRemove ? (

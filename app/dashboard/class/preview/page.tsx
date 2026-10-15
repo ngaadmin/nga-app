@@ -36,11 +36,30 @@ const PREVIEW_ROSTER = {
   ],
 };
 
+const EMPTY_ROSTER: typeof PREVIEW_ROSTER = {
+  ...PREVIEW_ROSTER,
+  seatsUsed: 0,
+  usernames: [],
+  classes: [
+    {
+      classId: "preview-class",
+      label: "Pathfinder class",
+      totalLifetimeXp: 0,
+      students: [],
+    },
+  ],
+};
+
 /** Dev / QA only. Production class page still loads the signed-in teacher's roster. */
-export default function ClassRosterPreviewPage() {
+export default async function ClassRosterPreviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ empty?: string }>;
+}) {
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
 
-  return <ClassPage roster={PREVIEW_ROSTER} />;
+  const params = await searchParams;
+  return <ClassPage roster={params.empty === "1" ? EMPTY_ROSTER : PREVIEW_ROSTER} />;
 }

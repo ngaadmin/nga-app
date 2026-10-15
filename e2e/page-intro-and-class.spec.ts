@@ -231,8 +231,9 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   await expect(
     page.getByText("amber2", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Change", exact: true })).toHaveCount(0);
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-390-collapsed.png",
+    path: "/opt/cursor/artifacts/class-v3-390-locked.png",
     fullPage: false,
   });
 
@@ -241,7 +242,7 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     page.getByText("Yellow", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-390-password-shown.png",
+    path: "/opt/cursor/artifacts/class-v3-390-password-shown.png",
     fullPage: false,
   });
   await page.getByRole("switch", { name: "Hide" }).click();
@@ -260,7 +261,7 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   await expect(page.getByRole("button", { name: "Allocate seats" })).toBeVisible();
   await page.getByText("amber2", { exact: true }).first().scrollIntoViewIfNeeded();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-390-students.png",
+    path: "/opt/cursor/artifacts/class-v3-390-students.png",
     fullPage: true,
   });
 
@@ -280,7 +281,7 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     overflow.clientWidth + 1,
   );
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-390-allocate.png",
+    path: "/opt/cursor/artifacts/class-v3-390-allocate.png",
     fullPage: false,
   });
 
@@ -293,7 +294,13 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   expect(printBox!.y + printBox!.height).toBeLessThanOrEqual(navBox!.y + 1);
 
   await page.emulateMedia({ media: "print" });
-  await expect(page.getByText("Class password: Yellow")).toBeVisible();
+  await page.setViewportSize({ width: 794, height: 1123 });
+  await expect(page.getByText("Class password").filter({ visible: true })).toBeVisible();
+  await expect(
+    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Username" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Student" })).toBeVisible();
   await expect(
     page.getByRole("cell", { name: "amber2" }).filter({ visible: true }),
   ).toHaveCount(1);
@@ -301,7 +308,7 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     page.getByRole("cell", { name: "forest6" }).filter({ visible: true }),
   ).toHaveCount(1);
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-390-print.png",
+    path: "/opt/cursor/artifacts/class-v3-print.png",
     fullPage: true,
   });
 
@@ -312,18 +319,34 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     timeout: 15_000,
   });
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-desktop.png",
+    path: "/opt/cursor/artifacts/class-v3-desktop.png",
     fullPage: false,
   });
   await page.getByRole("button", { name: "Show students (8)" }).click();
   await expect(page.getByText("amber2", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Allocate seats" }).scrollIntoViewIfNeeded();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v2-desktop-students.png",
+    path: "/opt/cursor/artifacts/class-v3-desktop-students.png",
     fullPage: false,
   });
-  await page.getByRole("button", { name: "Change", exact: true }).click();
+  await page.getByRole("switch", { name: "Show class password" }).click();
+  await page.getByRole("button", { name: "Change class password" }).click();
   const classPassword = page.getByRole("textbox", { name: "Class password" });
   await expect(classPassword).toHaveAttribute("type", "password");
   await expect(classPassword).toHaveValue("Yellow");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/dashboard/class/preview?empty=1");
+  await expect(page.getByText("0 of 30 seats allocated")).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByRole("button", { name: "Show students (0)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Print usernames" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Change", exact: true })).toBeVisible();
+  await expect(page.getByText("To change the track, remove all students first.")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Allocate seats" })).toBeVisible();
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-v3-390-editable.png",
+    fullPage: false,
+  });
 });

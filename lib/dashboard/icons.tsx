@@ -272,7 +272,7 @@ export function KeyIcon({ className }: IconProps) {
   );
 }
 
-/** Calendar icon for birth year / age track settings. */
+/** Calendar icon for an age-track lock. */
 export function CalendarIcon({ className }: IconProps) {
   return (
     <svg

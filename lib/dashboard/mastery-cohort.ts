@@ -1,9 +1,8 @@
 import { SKILLS_REGISTRY } from "@/lib/skills/skills-registry";
 
 /**
- * Learning / mastery age bands (curriculum tracks).
- * Parental oversight and signup gates are evaluated from legal birth-year age
- * via the conservative Dec 31 rule - never from a curriculum override alone.
+ * Learning tracks. The chosen track is also the compliance cohort:
+ * Explorer requires parent approval. Do not store a birth year.
  *
  * Explorers 10-12 · Pathfinders 13-15 · Mavericks 16+
  */
@@ -44,8 +43,7 @@ export type CohortSignupRequirements = {
    */
   requiresPassword: boolean;
   /**
-   * @deprecated Explorers use passwords now. Always false for current cohorts;
-   * kept so older callers of {@link requiresPasscodeForBirthYear} keep compiling.
+   * @deprecated Explorers use passwords now. Always false for current cohorts.
    */
   requiresPasscode: boolean;
   /** Parent/guardian email must be collected and linked. */
@@ -55,7 +53,7 @@ export type CohortSignupRequirements = {
   defaultAccountStatus: RegisteredAccountStatus;
   /**
    * Parent Portal, parent email linkage, and parent PIN remain required.
-   * Driven by legal birth-year age - curriculum overrides must not clear this.
+   * Driven by the learning track.
    */
   requiresParentPortal: boolean;
 };
@@ -138,8 +136,8 @@ export function getMasteryCohortFromAge(age: number): MasteryCohort {
 }
 
 /**
- * Legal / compliance cohort from birth year (conservative age).
- * Curriculum track overrides must never replace this for parental gates.
+ * Map a leftover birth year from an old local session or consent token.
+ * New accounts do not store a year.
  */
 export function getMasteryCohortFromBirthYear(
   birthYear: number,
@@ -149,9 +147,6 @@ export function getMasteryCohortFromBirthYear(
     getConservativeAgeFromBirthYear(birthYear, referenceYear),
   );
 }
-
-/** Alias - legal compliance tier is always derived from birth year. */
-export const getComplianceTierFromBirthYear = getMasteryCohortFromBirthYear;
 
 export function getSignupRequirementsForCohort(
   cohort: MasteryCohort,
@@ -168,88 +163,20 @@ export function getSignupRequirementsForCohort(
   };
 }
 
-export function getSignupRequirementsForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): CohortSignupRequirements {
-  return getSignupRequirementsForCohort(
-    getComplianceTierFromBirthYear(birthYear, referenceYear),
-  );
-}
-
 /**
  * Verifiable parental approval required (Explorers 10-12).
- * Accepts a cohort id for call-site compatibility; parental gates that can see
- * a curriculum override should prefer {@link requiresParentConsentForBirthYear}.
  */
 export function requiresParentConsent(cohort: MasteryCohort): boolean {
   return MASTERY_COHORT[cohort].requiresParentApproval;
 }
 
-/** Legal age-gate: parental approval from birth year, ignoring curriculum overrides. */
-export function requiresParentConsentForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): boolean {
-  return getSignupRequirementsForBirthYear(birthYear, referenceYear)
-    .requiresParentApproval;
-}
-
-export function requiresParentEmailForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): boolean {
-  return getSignupRequirementsForBirthYear(birthYear, referenceYear)
-    .requiresParentEmail;
-}
-
 /**
- * Parent Portal / parent PIN / parent email linkage - legal birth-year only.
- * A parent moving curriculum from Explorer → Pathfinder must not clear this.
- */
-export function requiresParentPortalForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): boolean {
-  return getSignupRequirementsForBirthYear(birthYear, referenceYear)
-    .requiresParentPortal;
-}
-
-export function defaultAccountStatusForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): RegisteredAccountStatus {
-  return getSignupRequirementsForBirthYear(birthYear, referenceYear)
-    .defaultAccountStatus;
-}
-
-/**
- * @deprecated Explorers use passwords. Always false for current cohort matrix.
- */
-export function requiresPasscodeForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): boolean {
-  return getSignupRequirementsForBirthYear(birthYear, referenceYear)
-    .requiresPasscode;
-}
-
-/** True when cohort signup requires a login password (min 6 characters). */
-export function requiresPasswordForBirthYear(
-  birthYear: number,
-  referenceYear = new Date().getFullYear(),
-): boolean {
-  return getSignupRequirementsForBirthYear(birthYear, referenceYear)
-    .requiresPassword;
-}
-
-/**
- * Resolve learning-content cohort: optional curriculum override, else legal tier.
- * Never use the override for parental consent / Parent Portal decisions.
+ * Learning track. A saved track wins. `birthYear` is only for old local
+ * sessions and legacy consent tokens, and is not stored on new accounts.
  */
 export function resolveCurriculumCohort(input: {
-  birthYear: number;
   curriculumCohort?: MasteryCohort | null;
+  birthYear?: number | null;
   referenceYear?: number;
 }): MasteryCohort {
   if (
@@ -259,10 +186,13 @@ export function resolveCurriculumCohort(input: {
   ) {
     return input.curriculumCohort;
   }
-  return getComplianceTierFromBirthYear(
-    input.birthYear,
-    input.referenceYear ?? new Date().getFullYear(),
-  );
+  if (typeof input.birthYear === "number" && Number.isInteger(input.birthYear)) {
+    return getMasteryCohortFromBirthYear(
+      input.birthYear,
+      input.referenceYear ?? new Date().getFullYear(),
+    );
+  }
+  return "explorer";
 }
 
 export function maxSkillNumberForMasteryCohort(cohort: MasteryCohort): number {

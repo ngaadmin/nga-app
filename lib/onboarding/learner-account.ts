@@ -14,7 +14,6 @@ import {
 export type LearnerAccountSnapshot = {
   userId: string;
   username: string;
-  birthYear: number | null;
   curriculumCohort?: MasteryCohort | null;
   accountRole: "child" | "parent_master" | "teacher";
   isTeacher?: boolean;

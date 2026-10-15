@@ -135,7 +135,6 @@ export async function createTeacherAccount(input: {
     const { data: saved, error: profileError } = await admin
       .from("profiles")
       .update({
-        birth_year: null,
         account_role: "teacher",
         account_status: "pending_consent",
         marketing_opt_in: false,

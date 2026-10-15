@@ -4,16 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
-import {
-  getComplianceTierFromBirthYear,
-  getMasteryCohortFromBirthYear,
-  type MasteryCohort,
-} from "@/lib/dashboard/mastery-cohort";
+import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { signOutApp } from "@/lib/onboarding/sign-out";
-import {
-  isEligibleBirthYear,
-  representativeBirthYearForCohort,
-} from "@/lib/onboarding/birth-years";
 import {
   approveConsentRequestInApp,
   listPendingConsentRequestsForParent,
@@ -75,7 +67,7 @@ type PendingDelete =
 type PendingLinkItem = {
   username: string;
   requestId?: string;
-  childBirthYear?: number | null;
+  childCohort?: MasteryCohort | null;
   kind?: "vpc" | "parent_claim";
 };
 
@@ -98,7 +90,7 @@ function extraPendingFromRemote(input: {
     extra.set(key, {
       username: remote.childUsername,
       requestId: remote.requestId,
-      childBirthYear: remote.childBirthYear,
+      childCohort: remote.childCohort,
       kind: remote.kind,
     });
   }
@@ -110,20 +102,12 @@ function linkedChildToSession(
   row: LinkedHouseholdChild,
   parentEmail: string | null,
 ): UserSession {
-  const curriculumCohort: MasteryCohort =
-    row.curriculumCohort ??
-    (row.birthYear ? getMasteryCohortFromBirthYear(row.birthYear) : "explorer");
-  const birthYear =
-    row.birthYear && isEligibleBirthYear(row.birthYear)
-      ? row.birthYear
-      : representativeBirthYearForCohort(curriculumCohort);
+  const curriculumCohort: MasteryCohort = row.curriculumCohort ?? "explorer";
   const pending = row.accountStatus === "pending_consent";
   return {
     accessMode: "registered",
     username: row.username,
-    birthYear,
-    birthYearLocked: true,
-    ageTier: getComplianceTierFromBirthYear(birthYear),
+    ageTier: curriculumCohort,
     curriculumCohort,
     accountStatus: pending ? "PENDING_CONSENT" : "ACTIVE",
     accountRole: "child",
@@ -346,7 +330,7 @@ export function AccountSubscriptionStatusPanel() {
     return {
       username,
       requestId: remote?.requestId,
-      childBirthYear: child?.birthYear ?? remote?.childBirthYear,
+      childCohort: child?.curriculumCohort ?? remote?.childCohort,
       kind: remote?.kind,
     };
   }
@@ -411,16 +395,14 @@ export function AccountSubscriptionStatusPanel() {
           return;
         }
         linkedRemotely = true;
-        const birthYear =
-          remote.childBirthYear ??
-          item.childBirthYear ??
-          representativeBirthYearForCohort(
-            remote.kind === "vpc" ? "explorer" : "pathfinder",
-          );
+        const curriculumCohort =
+          remote.childCohort ??
+          item.childCohort ??
+          (remote.kind === "vpc" ? "explorer" : "pathfinder");
         const now = new Date().toISOString();
         const childSession = convertToRegisteredProfile({
           username: remote.childUsername,
-          birthYear,
+          curriculumCohort,
           accountRole: "child",
           parentEmail: remote.parentEmail || masterEmail,
           accountStatus: "ACTIVE",

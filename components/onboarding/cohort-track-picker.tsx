@@ -8,7 +8,6 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   createGuestAccessSession,
@@ -34,10 +33,8 @@ export function CohortTrackPicker() {
     const reserved = reserveGenericProfileId();
     const session = createGuestAccessSession({
       username: reserved.username,
-      birthYear: representativeBirthYearForCohort(cohort),
       genericProfileId: reserved.id,
       curriculumCohort: cohort,
-      birthYearLocked: false,
     });
     saveGuestAccessSession(session);
     recordUsageEvent("login");

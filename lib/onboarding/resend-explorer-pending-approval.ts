@@ -6,7 +6,6 @@ import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
   generateOpaqueConsentToken,
 } from "@/lib/auth/consent-request-token";
-import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { rotateConsentRequestToken } from "@/lib/onboarding/lookup-consent-request";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -46,7 +45,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
   const admin = createAdminClient();
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("id, username, birth_year, account_status, account_role")
+    .select("id, username, account_status, account_role")
     .eq("id", childId)
     .maybeSingle();
 
@@ -62,16 +61,6 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
       error: "This profile is already approved. No new email is needed.",
     };
   }
-  if (
-    typeof profile.birth_year !== "number" ||
-    !requiresParentConsentForBirthYear(profile.birth_year)
-  ) {
-    return {
-      ok: false,
-      error: "Parent approval is only required for Explorer profiles.",
-    };
-  }
-
   const { data: request } = await admin
     .from("consent_requests")
     .select("id, parent_email")

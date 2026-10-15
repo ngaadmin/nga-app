@@ -11,7 +11,6 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
 import {
   convertToRegisteredProfile,
@@ -164,7 +163,6 @@ export function AddLinkedProfilePanel() {
       const now = new Date().toISOString();
       const childSession = convertToRegisteredProfile({
         username: result.username,
-        birthYear: representativeBirthYearForCohort(cohort),
         accountRole: "child",
         parentEmail: householdEmail,
         password: password.trim(),

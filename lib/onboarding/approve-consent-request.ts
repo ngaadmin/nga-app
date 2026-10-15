@@ -5,6 +5,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { lookupConsentRequestByToken } from "@/lib/onboarding/lookup-consent-request";
 import {
   findAuthUserIdByEmail,
@@ -23,7 +24,7 @@ export type ApproveConsentResult =
       parentUsername: string;
       parentEmail: string;
       childUsername: string;
-      childBirthYear: number | null;
+      childCohort: MasteryCohort | null;
       /** True only when this call created a new parent master Auth user. */
       createdNewParent?: boolean;
     }
@@ -170,7 +171,6 @@ export async function createParentMasterAndApprove(
     .from("profiles")
     .update({
       username,
-      birth_year: null,
       account_role: "parent_master",
       account_status: "active",
       marketing_opt_in: Boolean(input.marketingOptIn),
@@ -245,7 +245,7 @@ export type PendingConsentRequestView = {
   kind: "vpc" | "parent_claim";
   childId: string;
   childUsername: string;
-  childBirthYear: number | null;
+  childCohort: MasteryCohort | null;
   parentEmail: string;
   expiresAt: string;
 };
@@ -325,9 +325,9 @@ export async function listPendingConsentRequestsForParent(): Promise<
   const { data: childRows } = childIds.length
     ? await admin
         .from("profiles")
-        .select("id, username, birth_year")
+        .select("id, username, curriculum_cohort")
         .in("id", childIds)
-    : { data: [] as { id: string; username: string | null; birth_year: number | null }[] };
+    : { data: [] as { id: string; username: string | null; curriculum_cohort: string | null }[] };
 
   const childrenById = new Map(
     (childRows ?? []).map((child) => [child.id, child] as const),
@@ -342,8 +342,7 @@ export async function listPendingConsentRequestsForParent(): Promise<
       kind: row.kind === "parent_claim" ? "parent_claim" : "vpc",
       childId: row.child_id,
       childUsername: child.username,
-      childBirthYear:
-        typeof child.birth_year === "number" ? child.birth_year : null,
+      childCohort: parseMasteryCohort(child.curriculum_cohort),
       parentEmail: String(row.parent_email ?? parentEmail),
       expiresAt: row.expires_at,
     });
@@ -463,7 +462,7 @@ async function completeConsentApproval(input: {
 
   const { data: childProfile, error: childLookupError } = await admin
     .from("profiles")
-    .select("id, account_role, account_status, consent_approved_at, birth_year")
+    .select("id, account_role, account_status, consent_approved_at, curriculum_cohort")
     .eq("id", input.childId)
     .maybeSingle();
 
@@ -555,8 +554,7 @@ async function completeConsentApproval(input: {
     parentUsername: input.parentUsername,
     parentEmail: input.parentEmail,
     childUsername: input.childUsername,
-    childBirthYear:
-      typeof childProfile.birth_year === "number" ? childProfile.birth_year : null,
+    childCohort: parseMasteryCohort(childProfile.curriculum_cohort),
   };
 }
 

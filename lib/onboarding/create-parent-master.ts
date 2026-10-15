@@ -86,7 +86,6 @@ export async function createParentMasterAccount(
   const { data: parentSaved, error: profileError } = await admin
     .from("profiles")
     .update({
-      birth_year: null,
       account_role: "parent_master",
       account_status: "active",
       marketing_opt_in: Boolean(input.marketingOptIn),

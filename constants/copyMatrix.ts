@@ -44,7 +44,7 @@ export const copyMatrix = {
       parent: "I'm a parent",
     },
     pendingConsent: {
-      heading: "Hang tight. A grown-up needs to approve",
+      heading: "Hang tight. A parent/guardian needs to approve",
       body: "A parent or guardian has to approve your account before you can keep playing. Your lessons and Points are saved and waiting for you.",
       headingApproved: "You're cleared to play!",
       bodyApproved:
@@ -99,7 +99,6 @@ export const copyMatrix = {
         accounts: "Accounts",
         subscription: "Subscription",
         logOut: "Log Out",
-        birthYearTrack: "Birth Year / Age Track",
       },
       accountSubscription: {
         title: "Family accounts",
@@ -256,14 +255,10 @@ export const copyMatrix = {
         currentBadge: "Current",
         agesTemplate: "Ages {range}",
         skillsTemplate: "{count} skills",
-        birthYearLabel: "Birth year",
         save: "Save Track",
         savedTitle: "Track Updated",
-        savedBodyTemplate:
-          "Birth year saved. You are now on the {track} track (ages {range}).",
         savedAcknowledge: "Got it",
-        invalidYear: "Pick a valid birth year.",
-        unchanged: "That birth year is already saved.",
+        unchanged: "That track is already saved.",
         lockedHint: "Unlock Preferences to change the learning track.",
       },
       currency: {
@@ -272,24 +267,6 @@ export const copyMatrix = {
           "Shown in Vault and coins cash-in. Amounts stay the same, only the symbol changes.",
         lockedHint: "Currency can be changed anytime in Settings.",
         savedNote: "Currency updated across Vault.",
-      },
-      birthYear: {
-        pinBody:
-          "Enter the parent PIN to update birth year and learning track.",
-        modalTitle: "Update Birth Year",
-        modalBody:
-          "Pick the correct birth year. Academy modules, skills, and lessons will match the new age track.",
-        currentTrackLabel: "Current track",
-        newTrackLabel: "New track",
-        birthYearLabel: "Birth year",
-        save: "Save Birth Year",
-        cancel: "Cancel",
-        savedTitle: "Track Updated",
-        savedBodyTemplate:
-          "Birth year saved. You are now on the {track} track (ages {range}).",
-        savedAcknowledge: "Got it",
-        invalidYear: "Pick a valid birth year.",
-        unchanged: "That birth year is already saved.",
       },
       changePin: {
         title: "Change Parent PIN",

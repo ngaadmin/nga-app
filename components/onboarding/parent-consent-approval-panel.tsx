@@ -88,7 +88,8 @@ export function ParentConsentApprovalPanel() {
               token: result.token,
               parentEmail: result.parentEmail ?? "",
               childUsername: result.childUsername,
-              birthYear: 0,
+              kind: "vpc",
+              cohort: "explorer",
               createdAt: new Date().toISOString(),
             },
       );

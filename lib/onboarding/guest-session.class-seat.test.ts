@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
 import {
   GUEST_SESSION_STORAGE_KEY,
   readUserSession,
@@ -36,9 +37,8 @@ function memoryStorage(): Storage {
 const seatSession = {
   accessMode: "registered",
   username: "amber4",
-  birthYear: 2012,
-  birthYearLocked: true,
   ageTier: "pathfinder",
+  curriculumCohort: "pathfinder",
   accountStatus: "ACTIVE",
   accountRole: "child",
   createdAt: "2026-10-09T00:00:00.000Z",
@@ -88,5 +88,47 @@ describe("class seat session", () => {
     ) as Record<string, { hubs?: { academy?: boolean } }>;
     expect(store[`user:${seatSession.supabaseUserId}`]?.hubs?.academy).toBe(true);
     expect(window.sessionStorage.getItem("nga_hub_intro_seen_v2")).toBeNull();
+  });
+
+  it("maps an old birth-year session onto a track and does not keep the year", () => {
+    const legacyYear = 2014;
+    window.sessionStorage.setItem(
+      GUEST_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        accessMode: "registered",
+        username: "oldkid",
+        birthYear: legacyYear,
+        birthYearLocked: true,
+        accountStatus: "PENDING_CONSENT",
+        accountRole: "child",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        supabaseUserId: "44444444-4444-4444-4444-444444444444",
+      }),
+    );
+
+    const session = readUserSession();
+    expect(session?.curriculumCohort).toBe(
+      getMasteryCohortFromBirthYear(legacyYear),
+    );
+    expect(session).not.toHaveProperty("birthYear");
+  });
+
+  it("keeps a saved track when an old birth year is also stored", () => {
+    window.sessionStorage.setItem(
+      GUEST_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        accessMode: "guest",
+        username: "lars",
+        birthYear: 2014,
+        ageTier: "explorer",
+        curriculumCohort: "maverick",
+        accountStatus: "GUEST",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    );
+
+    const session = readUserSession();
+    expect(session?.curriculumCohort).toBe("maverick");
+    expect(session?.ageTier).toBe("maverick");
   });
 });

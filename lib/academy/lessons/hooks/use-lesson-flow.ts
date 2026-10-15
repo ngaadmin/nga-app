@@ -21,13 +21,15 @@ import {
   lessonNumberForMilestoneId,
   levelGroupForMilestoneId,
 } from "@/lib/dashboard/academy-state";
-import { getMasteryCohortFromBirthYear } from "@/lib/dashboard/mastery-cohort";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import {
   LESSON_COMPLETION_XP,
   LESSON_PERFECT_STREAK_BONUS,
 } from "@/lib/academy/lessons/completion-xp";
-import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
+import {
+  getSessionCurriculumCohort,
+  readGuestAccessSession,
+} from "@/lib/onboarding/guest-session";
 
 export type UseLessonFlowOptions = {
   milestoneId: number;
@@ -227,9 +229,7 @@ export function useLessonFlow({
 
         if (!alreadyCompleted) {
           const session = readGuestAccessSession();
-          const cohort = session?.birthYear
-            ? getMasteryCohortFromBirthYear(session.birthYear)
-            : "explorer";
+          const cohort = session ? getSessionCurriculumCohort(session) : "explorer";
           earnedMedals =
             skillAwardTier && skillSlug
               ? applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort)

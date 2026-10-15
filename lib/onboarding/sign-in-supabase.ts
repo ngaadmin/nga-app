@@ -174,7 +174,7 @@ export async function loadLearnerAccountById(
   const withTeacher = await admin
     .from("profiles")
     .select(
-      "id, username, birth_year, curriculum_cohort, account_role, account_status, consent_approved_at, is_teacher",
+      "id, username, curriculum_cohort, account_role, account_status, consent_approved_at, is_teacher",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -183,7 +183,7 @@ export async function loadLearnerAccountById(
       ? await admin
           .from("profiles")
           .select(
-            "id, username, birth_year, curriculum_cohort, account_role, account_status, consent_approved_at",
+            "id, username, curriculum_cohort, account_role, account_status, consent_approved_at",
           )
           .eq("id", userId)
           .maybeSingle()
@@ -192,7 +192,6 @@ export async function loadLearnerAccountById(
     | {
         id: string;
         username: string | null;
-        birth_year: number | null;
         curriculum_cohort?: string | null;
         account_role: string | null;
         account_status: string | null;
@@ -266,7 +265,6 @@ export async function loadLearnerAccountById(
   return {
     userId: profile.id,
     username,
-    birthYear: parseBirthYear(profile.birth_year),
     curriculumCohort: parseMasteryCohort(profile.curriculum_cohort),
     accountRole: profile.account_role,
     isTeacher: profile.is_teacher === true || profile.account_role === "teacher",
@@ -303,12 +301,3 @@ function isPlaceholderAuthEmail(email: string | null): boolean {
   );
 }
 
-function parseBirthYear(value: unknown): number | null {
-  const year =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim()
-        ? Number(value)
-        : NaN;
-  return Number.isInteger(year) ? year : null;
-}

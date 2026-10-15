@@ -58,7 +58,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           : "min-h-dvh",
       )}
     >
-      <DashboardNavigation />
+      {isLessonRoute ? null : <DashboardNavigation />}
 
       <div
         className={cn(
@@ -73,7 +73,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           className={cn(
             "flex min-h-0 flex-1 flex-col overflow-x-hidden",
             isLessonRoute
-              ? "overflow-hidden px-0 py-0 pb-20 md:pb-0"
+              ? "overflow-hidden px-0 py-0"
               : "overflow-y-auto px-4 py-6 pb-28 sm:px-6 md:pb-8",
           )}
         >

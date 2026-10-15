@@ -28,6 +28,8 @@ type AcademyLessonShellProps = {
   progressTotal?: number;
   /** The open screen is the lesson completion screen. */
   progressComplete?: boolean;
+  /** Match screen: 20px margins, gold progress, and the brand Next pill. */
+  matchChrome?: boolean;
 };
 
 function LessonLifeHeart({ filled }: { filled: boolean }) {
@@ -51,6 +53,7 @@ export function AcademyLessonShell({
   progressIndex,
   progressTotal,
   progressComplete = false,
+  matchChrome = false,
 }: AcademyLessonShellProps) {
   const livesRemaining = Math.max(0, maxLives - mistakes);
   const barIndex = progressIndex ?? currentScreenIndex;
@@ -67,13 +70,19 @@ export function AcademyLessonShell({
 
   return (
     <div
-      className="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col bg-white"
+      className={cn(
+        "mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden",
+        matchChrome
+          ? "bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)]"
+          : "bg-white",
+      )}
       style={{ touchAction: "pan-y", overscrollBehavior: "none" }}
     >
       <header
         className={cn(
-          "flex shrink-0 items-center gap-2.5 pb-1 pt-3.5",
-          lessonScreenInlinePaddingClass,
+          "flex shrink-0 items-center gap-2.5",
+          matchChrome ? "h-12 px-5" : "pb-1 pt-3.5",
+          !matchChrome && lessonScreenInlinePaddingClass,
         )}
       >
         <div
@@ -85,7 +94,10 @@ export function AcademyLessonShell({
           ))}
         </div>
         <div
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#E8F6FC]"
+          className={cn(
+            "flex-1 overflow-hidden",
+            matchChrome ? "h-2 rounded-[4px] bg-[#DCE6FA]" : "h-1.5 rounded-full bg-[#E8F6FC]",
+          )}
           role="progressbar"
           aria-valuenow={barIndex + 1}
           aria-valuemin={1}
@@ -93,7 +105,10 @@ export function AcademyLessonShell({
           aria-label={`Screen ${barIndex + 1} of ${barTotal}`}
         >
           <div
-            className="h-full rounded-full bg-[#0CC1E0] transition-[width] duration-300 ease-out"
+            className={cn(
+              "h-full transition-[width] duration-300 ease-out",
+              matchChrome ? "rounded-[4px] bg-[#FFB822]" : "rounded-full bg-[#0CC1E0]",
+            )}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -116,12 +131,29 @@ export function AcademyLessonShell({
       {hideFooter ? null : (
         <footer
           className={cn(
-            "flex shrink-0 justify-center bg-white pb-4 pt-2",
-            lessonScreenInlinePaddingClass,
+            "flex shrink-0 justify-center",
+            matchChrome
+              ? "bg-transparent px-5 pb-7 pt-2"
+              : "bg-white pb-4 pt-2",
+            !matchChrome && lessonScreenInlinePaddingClass,
           )}
         >
           {footerSlot !== undefined ? (
             footerSlot
+          ) : matchChrome ? (
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!canAdvance}
+              className={cn(
+                "flex h-14 w-full items-center justify-center rounded-full font-heading text-[19px] font-bold",
+                canAdvance
+                  ? "bg-[#031F82] text-white shadow-[0_4px_0_#FFB822]"
+                  : "cursor-default bg-[#DCE3F5] text-[#8C98B8]",
+              )}
+            >
+              Next
+            </button>
           ) : (
             <button
               type="button"

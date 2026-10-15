@@ -725,6 +725,52 @@ describe("lesson payload loader", () => {
     expect(screen.rounds[0]?.optionB).not.toMatch(/\|/);
   });
 
+  it("maps lesson 3 link-match pairs without inventing hint copy", () => {
+    const payload = loadBundledLessonPayload(1, 3);
+    const row = payload.screens.find((screen) => screen.gameType === "link-match");
+    expect(row).toBeDefined();
+    if (!row) return;
+
+    const explorer = mapPayloadScreen(row, "explorer");
+    expect(explorer).toMatchObject({
+      type: "link-match",
+      intro:
+        "Holly explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:",
+      eventColumnLabel: "Events",
+      benefitColumnLabel: "Possibilities",
+      pairImage: "holly-hands-on-hips-512.webp",
+      pairs: [
+        {
+          event: "I broke my brother's headphones",
+          benefit: "I can replace them",
+        },
+        {
+          event: "It's my friend's birthday",
+          benefit: "I can buy a gift",
+        },
+        {
+          event: "There's a sale at the game store",
+          benefit: "I can buy my favourite game now",
+        },
+      ],
+    });
+    if (explorer.type === "link-match") {
+      expect(explorer.wrongError).toBeUndefined();
+    }
+
+    const pathfinder = mapPayloadScreen(row, "pathfinder");
+    if (pathfinder.type === "link-match") {
+      expect(pathfinder.intro).toBe(
+        "Mia explains that keeping Cash for Emergencies gives you options. Match the event to what's possible if you have cash:",
+      );
+      expect(pathfinder.pairs[0]?.event).toBe("I broke my sister's headphones");
+      expect(pathfinder.wrongError).toBeUndefined();
+    }
+
+    const lesson = resolvePayloadLesson(payload, "explorer", 3);
+    expect(lesson.screens.map((screen) => screen.type)).toContain("link-match");
+  });
+
   it("keeps lesson 2's true or false statement on its own screen", () => {
     const row = loadBundledLessonPayload(1, 2).screens.find((screen) => screen.screenLabel === "1");
     expect(row).toBeDefined();

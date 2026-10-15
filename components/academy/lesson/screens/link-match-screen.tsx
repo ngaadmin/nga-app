@@ -1,12 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { LessonLinkMatchGame } from "@/components/academy/lesson/lesson-link-match-game";
-import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import {
-  LessonScreenLayout,
-  lessonFeedbackCopy,
-} from "@/components/academy/lesson/lesson-ui";
+import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { LinkMatchScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
 
@@ -15,36 +10,24 @@ export function LinkMatchScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<LinkMatchScreenConfig>) {
-  const { showSuccess, handleComplete, handleSuccess, handleMistake } =
-    useLessonScreenFlow({
-      screenIndex,
-      flow,
-    });
-
-  const [error, setError] = useState<string | null>(null);
+  const hint = lessonFeedbackCopy(screen.wrongError) ?? null;
 
   return (
-    <LessonScreenLayout
-      intro={screen.intro}
-      emphasizeInstruction={screen.emphasizeInstruction === true}
-      success={showSuccess}
-      errorMessage={error}
-    >
+    <div className="overflow-x-hidden">
+      {screen.intro ? (
+        <p className="font-heading text-[20px] font-semibold leading-[1.35] text-[#14213D]">
+          {screen.intro}
+        </p>
+      ) : null}
       <LessonLinkMatchGame
+        className={screen.intro ? "mt-9" : undefined}
         pairs={screen.pairs}
         eventColumnLabel={screen.eventColumnLabel}
         benefitColumnLabel={screen.benefitColumnLabel}
-        onComplete={() => {
-          setError(null);
-          handleSuccess();
-          handleComplete();
-        }}
-        onSuccess={() => setError(null)}
-        onMismatch={() => {
-          setError(lessonFeedbackCopy(screen.wrongError) ?? "");
-          handleMistake();
-        }}
+        hint={hint}
+        onComplete={() => flow.markScreenReady(screenIndex)}
+        onMismatch={() => flow.incrementMistake()}
       />
-    </LessonScreenLayout>
+    </div>
   );
 }

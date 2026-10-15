@@ -46,6 +46,13 @@ export function playLessonSuccessPing(): void {
   ]);
 }
 
+/** Soft click when a learner selects a tile. About 40ms. */
+export function playLessonSelectTap(): void {
+  playOscillators([
+    { frequency: 640, type: "sine", start: 0, duration: 0.04, gain: 0.05 },
+  ]);
+}
+
 /** Short two-blip buzz, distinct from the correct-answer ping. */
 export function playLessonWrongBuzzer(): void {
   playOscillators([

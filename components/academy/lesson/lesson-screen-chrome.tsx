@@ -10,6 +10,8 @@ import {
 type LessonScreenChromeContextValue = {
   showIllustrationSlot: boolean;
   illustration?: LessonIllustration;
+  /** Match uses the small 160px character frame. */
+  illustrationFrame?: "default" | "match";
 };
 
 const LessonScreenChromeContext =
@@ -18,15 +20,17 @@ const LessonScreenChromeContext =
 export function LessonScreenChromeProvider({
   showIllustrationSlot,
   illustration,
+  illustrationFrame = "default",
   children,
 }: {
   showIllustrationSlot: boolean;
   illustration?: LessonIllustration;
+  illustrationFrame?: "default" | "match";
   children: ReactNode;
 }) {
   return (
     <LessonScreenChromeContext.Provider
-      value={{ showIllustrationSlot, illustration }}
+      value={{ showIllustrationSlot, illustration, illustrationFrame }}
     >
       {children}
     </LessonScreenChromeContext.Provider>
@@ -47,8 +51,15 @@ export function LessonScreenIllustration() {
   if (!context?.showIllustrationSlot) return null;
 
   if (context.illustration) {
-    return <LessonIllustrationSlot {...context.illustration} />;
+    return (
+      <LessonIllustrationSlot
+        {...context.illustration}
+        frame={context.illustrationFrame}
+      />
+    );
   }
+
+  if (context.illustrationFrame === "match") return null;
 
   return <LessonIllustrationSlotReserve />;
 }

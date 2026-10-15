@@ -3,6 +3,13 @@ import localFont from "next/font/local";
 import { landingShareMetadata } from "@/lib/site-share-metadata";
 import "./globals.css";
 
+/**
+ * System faces that include U+2013 EN DASH. Quoted multi-word names are
+ * inserted into the font-family list as-is by next/font.
+ * `local("Arial")` is not used: that face fails where Arial is not installed,
+ * and a latin-1-only face would draw the en dash as a missing-glyph box.
+ * The list is repeated because next/font only reads a literal.
+ */
 const poppins = localFont({
   src: [
     { path: "./fonts/poppins-latin-600.woff2", weight: "600", style: "normal" },
@@ -11,6 +18,19 @@ const poppins = localFont({
   ],
   variable: "--font-poppins",
   display: "swap",
+  adjustFontFallback: false,
+  fallback: [
+    "ui-sans-serif",
+    "system-ui",
+    '"Segoe UI"',
+    "Roboto",
+    '"Helvetica Neue"',
+    "Arial",
+    '"Noto Sans"',
+    '"Liberation Sans"',
+    "sans-serif",
+  ],
+  declarations: [{ prop: "font-family", value: "NgaPoppins" }],
 });
 
 const inter = localFont({
@@ -21,6 +41,19 @@ const inter = localFont({
   ],
   variable: "--font-inter",
   display: "swap",
+  adjustFontFallback: false,
+  fallback: [
+    "ui-sans-serif",
+    "system-ui",
+    '"Segoe UI"',
+    "Roboto",
+    '"Helvetica Neue"',
+    "Arial",
+    '"Noto Sans"',
+    '"Liberation Sans"',
+    "sans-serif",
+  ],
+  declarations: [{ prop: "font-family", value: "NgaInter" }],
 });
 
 const share = landingShareMetadata();

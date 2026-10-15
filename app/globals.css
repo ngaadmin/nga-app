@@ -27,9 +27,9 @@
   --color-nga-explorer: #8b5cf6;
   --color-nga-pathfinder: #0cc1e0;
 
-  /* Typography */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  /* Typography. System faces cover U+2013 when a webfont face does not. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --font-heading: var(--font-poppins), ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
 
   /* Radii & elevation */
   --radius-nga-sm: 0.5rem;

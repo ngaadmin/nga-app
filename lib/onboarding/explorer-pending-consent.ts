@@ -1,4 +1,3 @@
-import { getComplianceTierFromBirthYear } from "@/lib/dashboard/mastery-cohort";
 import { removePersisted, writePersisted } from "@/lib/dev/client-persist";
 import {
   DASHBOARD_ACADEMY_PATH,
@@ -9,19 +8,21 @@ import {
 /** This browser session may keep playing after Explorer Save Progress. */
 export const EXPLORER_PENDING_PLAY_OK_KEY = "nga_explorer_pending_play_ok";
 
-/** Explorer VPC hold — legal birth-year tier, not a curriculum override. */
+/**
+ * Child still waiting on a parent approval. A pending vpc row stays blocked
+ * until it is approved, even if the learning track later changes.
+ */
 export function isExplorerPendingConsent(
   session: Pick<
     UserSession,
-    "accessMode" | "accountRole" | "accountStatus" | "birthYear"
+    "accessMode" | "accountRole" | "accountStatus"
   > | null | undefined,
 ): boolean {
   if (!session || session.accessMode !== "registered") return false;
   if (session.accountRole === "parent_master" || session.accountRole === "teacher") {
     return false;
   }
-  if (session.accountStatus !== "PENDING_CONSENT") return false;
-  return getComplianceTierFromBirthYear(session.birthYear) === "explorer";
+  return session.accountStatus === "PENDING_CONSENT";
 }
 
 /** After login: pending Explorers hit the grown-up gate. Signup uses ?from=signup. */

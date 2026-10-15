@@ -9,7 +9,6 @@ import { CreateParentProfilePanel } from "@/components/dashboard/settings/create
 import { copyMatrix } from "@/constants/copyMatrix";
 import { createParentMasterAndApprove, approveConsentRequest } from "@/lib/onboarding/approve-consent-request";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
-import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
   displayUsernameOrEmpty,
   isInternalPlaceholderUsername,
@@ -31,12 +30,10 @@ import { markExplorerPendingPlayAllowed } from "@/lib/onboarding/explorer-pendin
 import { markParentFirstWelcomePending } from "@/lib/onboarding/parent-first-welcome";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import {
-  getMasteryCohortFromBirthYear,
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
   masteryCohortLabel,
-  requiresParentConsentForBirthYear,
-  resolveCurriculumCohort,
+  parseMasteryCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -82,9 +79,6 @@ function resolveSignupFailureMessage(error: unknown, isExplorer: boolean): strin
     if (/password must be at least 6|password \(at least 6\)/i.test(message)) {
       return "Use at least 6 characters for your password.";
     }
-    if (/birth year|eligible range|ages 10-12|Explorer profiles/i.test(message)) {
-      return message;
-    }
     if (/learner email/i.test(message)) {
       return message;
     }
@@ -129,19 +123,11 @@ function cohortHeader(cohort: MasteryCohort): string {
   }
 }
 
-function adultBirthYear(): number {
-  return new Date().getFullYear() - 35;
-}
-
 function guestSelectedTrack(
   session: ReturnType<typeof readUserSession>,
 ): MasteryCohort | null {
   if (!isGuestSession(session) || !session) return null;
-  if (!Number.isInteger(session.birthYear)) return null;
-  return resolveCurriculumCohort({
-    birthYear: session.birthYear,
-    curriculumCohort: session.curriculumCohort,
-  });
+  return parseMasteryCohort(session.curriculumCohort ?? session.ageTier);
 }
 
 export function SignUpForm() {
@@ -235,11 +221,12 @@ export function SignUpForm() {
 
       const pending = lookup.pending;
 
-      const flow = requiresParentConsentForBirthYear(pending.birthYear)
-        ? "explorer_consent"
-        : getMasteryCohortFromBirthYear(pending.birthYear) === "pathfinder"
-          ? "pathfinder_claim"
-          : null;
+      const flow =
+        pending.kind === "vpc"
+          ? "explorer_consent"
+          : pending.kind === "parent_claim"
+            ? "pathfinder_claim"
+            : null;
 
       if (!flow) {
         setPendingConsent(null);
@@ -438,7 +425,6 @@ export function SignUpForm() {
       // Local session so the dashboard gate still recognizes this parent.
       const parentSession = convertToRegisteredProfile({
         username: result.parentUsername,
-        birthYear: adultBirthYear(),
         accountRole: "parent_master",
         curriculumCohort: "maverick",
         learnerEmail: result.parentEmail,
@@ -538,7 +524,6 @@ export function SignUpForm() {
         result.accountStatus === "pending_consent" || result.cohort === "explorer";
       const childSession = convertToRegisteredProfile({
         username: result.username,
-        birthYear: representativeBirthYearForCohort(cohort),
         accountRole: "child",
         parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
         learnerEmail:

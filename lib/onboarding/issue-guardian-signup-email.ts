@@ -15,7 +15,6 @@ import { headers } from "next/headers";
 export type GuardianSignupEmailInput = {
   childId: string;
   username: string;
-  birthYear: number;
   parentEmail: string;
   cohort: MasteryCohort;
   appUrl?: string;

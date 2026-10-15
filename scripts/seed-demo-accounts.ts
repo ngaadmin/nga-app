@@ -25,7 +25,6 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { pathToFileURL } from "node:url";
-import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
 import {
   classPasswordCipherUpdate,
@@ -197,7 +196,6 @@ async function main(): Promise<void> {
   const admin = createClient(config.supabaseUrl, config.serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const birthYear = representativeBirthYearForCohort("explorer");
   const consentedAt = new Date().toISOString();
 
   const teacherId = await ensureAuthUser(admin, config, {
@@ -209,7 +207,6 @@ async function main(): Promise<void> {
     .from("profiles")
     .update({
       username: config.teacherUsername,
-      birth_year: null,
       account_role: "teacher",
       account_status: "active",
       curriculum_cohort: null,
@@ -233,7 +230,6 @@ async function main(): Promise<void> {
     .from("profiles")
     .update({
       username: config.studentUsername,
-      birth_year: birthYear,
       account_role: "child",
       account_status: "active",
       curriculum_cohort: "explorer",
@@ -288,7 +284,6 @@ async function main(): Promise<void> {
       .from("profiles")
       .update({
         username,
-        birth_year: birthYear,
         account_role: "child",
         account_status: "active",
         curriculum_cohort: "explorer",

@@ -1,9 +1,9 @@
 /**
- * Youth age bands for legal compliance (birth-year age gate) and curriculum tracks.
+ * Youth tracks for curriculum and consent.
  * Explorers (10-12) · Pathfinders (13-15) · Mavericks (16+)
  *
- * Parental oversight must always use birth-year helpers (conservative Dec 31 age).
- * Curriculum cohort overrides must not weaken Parent Portal / consent rules.
+ * The chosen track is the compliance cohort. Explorer requires parent approval.
+ * Do not store a birth year.
  */
 export {
   MASTERY_COHORT as AGE_TIER,
@@ -14,15 +14,9 @@ export {
   getConservativeAgeFromBirthYear,
   getMasteryCohortFromAge,
   getMasteryCohortFromBirthYear,
-  getComplianceTierFromBirthYear,
-  getSignupRequirementsForBirthYear,
   getSignupRequirementsForCohort,
   masteryCohortLabel,
   requiresParentConsent,
-  requiresParentConsentForBirthYear,
-  requiresParentEmailForBirthYear,
-  requiresParentPortalForBirthYear,
-  defaultAccountStatusForBirthYear,
   resolveCurriculumCohort,
 } from "@/lib/dashboard/mastery-cohort";
 

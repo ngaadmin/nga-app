@@ -6,8 +6,6 @@ const GUEST_SESSION_KEY = "nga_guest_session";
 const EXPLORER_GUEST_SESSION = {
   accessMode: "guest",
   username: "lars",
-  birthYear: 2014,
-  birthYearLocked: true,
   ageTier: "explorer",
   curriculumCohort: "explorer",
   accountStatus: "GUEST",

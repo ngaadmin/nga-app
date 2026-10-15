@@ -5,15 +5,11 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
-  getMasteryCohortFromBirthYear,
-  getSignupRequirementsForBirthYear,
+  getSignupRequirementsForCohort,
+  parseMasteryCohort,
   type MasteryCohort,
   type RegisteredAccountStatus,
 } from "@/lib/dashboard/mastery-cohort";
-import {
-  isEligibleBirthYear,
-  representativeBirthYearForCohort,
-} from "@/lib/onboarding/birth-years";
 import { issueGuardianSignupEmail } from "@/lib/onboarding/issue-guardian-signup-email";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { normalizeEmailAddress } from "@/lib/validation/email";
@@ -35,14 +31,11 @@ function toSupabaseAccountStatus(
 
 export type CreateSupabaseAccountInput = {
   username: string;
-  /** Required for independent child signup. Ignored when parent-add sends `cohort`. */
-  birthYear?: number;
   /**
-   * Learning track. Independent Save Your Progress and parent-add both send
-   * this; birth year is derived as a content stand-in. Do not send
+   * Learning track. Written to profiles.curriculum_cohort. Do not send
    * `parentInitiatedById` from the public signup form.
    */
-  cohort?: MasteryCohort;
+  cohort: MasteryCohort;
   password: string;
   /** Required for Pathfinder / Maverick. Ignored for Explorers. */
   learnerEmail?: string | null;
@@ -93,14 +86,13 @@ export async function createSupabaseAccount(
 
   const {
     username,
-    birthYear,
+    cohort,
     password,
     learnerEmail,
     parentEmail,
     marketingOptIn,
   } = parsed.value;
-  const cohort = getMasteryCohortFromBirthYear(birthYear);
-  const requirements = getSignupRequirementsForBirthYear(birthYear);
+  const requirements = getSignupRequirementsForCohort(cohort);
   const accountStatus = toSupabaseAccountStatus(
     parentInitiated ? "ACTIVE" : requirements.defaultAccountStatus,
   );
@@ -172,7 +164,7 @@ export async function createSupabaseAccount(
   const profileSaved = await saveLearnerProfile(admin, {
     userId: created.userId,
     username,
-    birthYear,
+    cohort,
     accountRole,
     accountStatus,
     marketingOptIn,
@@ -202,7 +194,6 @@ export async function createSupabaseAccount(
       const emailResult = await issueGuardianSignupEmail({
         childId: created.userId,
         username,
-        birthYear,
         parentEmail,
         cohort,
       });
@@ -269,30 +260,12 @@ export async function createSupabaseAccount(
 
 type ParsedSignup = {
   username: string;
-  birthYear: number;
+  cohort: MasteryCohort;
   password: string;
   learnerEmail: string | null;
   parentEmail: string | null;
   marketingOptIn: boolean;
 };
-
-function isMasteryCohort(value: unknown): value is MasteryCohort {
-  return value === "explorer" || value === "pathfinder" || value === "maverick";
-}
-
-function resolveSignupBirthYear(
-  input: CreateSupabaseAccountInput,
-  parentInitiated: boolean,
-): number | null {
-  if (isMasteryCohort(input.cohort)) {
-    return representativeBirthYearForCohort(input.cohort);
-  }
-  if (parentInitiated) return null;
-  if (typeof input.birthYear === "number" && isEligibleBirthYear(input.birthYear)) {
-    return input.birthYear;
-  }
-  return null;
-}
 
 function parseSignupInput(
   input: CreateSupabaseAccountInput,
@@ -309,8 +282,8 @@ function parseSignupInput(
     };
   }
 
-  const birthYear = resolveSignupBirthYear(input, parentInitiated);
-  if (birthYear == null) {
+  const cohort = parseMasteryCohort(input.cohort);
+  if (!cohort) {
     return {
       ok: false,
       error: "Pick a learning track for this learner.",
@@ -322,7 +295,7 @@ function parseSignupInput(
     return { ok: false, error: "Use at least 6 characters for your password." };
   }
 
-  const requirements = getSignupRequirementsForBirthYear(birthYear);
+  const requirements = getSignupRequirementsForCohort(cohort);
   const learnerEmail =
     !parentInitiated && requirements.requiresLearnerEmail
       ? (normalizeEmailAddress(input.learnerEmail) ?? null)
@@ -355,7 +328,7 @@ function parseSignupInput(
     ok: true,
     value: {
       username,
-      birthYear,
+      cohort,
       password,
       learnerEmail,
       parentEmail,
@@ -386,7 +359,7 @@ async function saveLearnerProfile(
   input: {
     userId: string;
     username: string;
-    birthYear: number;
+    cohort: MasteryCohort;
     accountRole: "child";
     accountStatus: SupabaseAccountStatus;
     marketingOptIn: boolean;
@@ -395,7 +368,7 @@ async function saveLearnerProfile(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const payload = {
     username: input.username,
-    birth_year: input.birthYear,
+    curriculum_cohort: input.cohort,
     account_role: input.accountRole,
     account_status: input.accountStatus,
     marketing_opt_in: input.marketingOptIn,

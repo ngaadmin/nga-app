@@ -40,9 +40,8 @@ function memoryStorage(): Storage {
 const seatSession = {
   accessMode: "registered",
   username: "amber4",
-  birthYear: 2012,
-  birthYearLocked: true,
   ageTier: "pathfinder",
+  curriculumCohort: "pathfinder",
   accountStatus: "ACTIVE",
   accountRole: "child",
   createdAt: "2026-10-09T00:00:00.000Z",

@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 export type LinkedHouseholdChild = {
   userId: string;
   username: string;
-  birthYear: number | null;
   curriculumCohort: "explorer" | "pathfinder" | "maverick" | null;
   accountStatus: "pending_consent" | "active";
   consentApprovedAt: string | null;
@@ -17,7 +16,6 @@ export type LinkedHouseholdChild = {
 type ProfileRow = {
   id: string;
   username: string | null;
-  birth_year: number | null;
   account_role: string | null;
   account_status: string | null;
   curriculum_cohort: string | null;
@@ -40,7 +38,6 @@ function toLinkedChild(row: ProfileRow): LinkedHouseholdChild | null {
   return {
     userId: row.id,
     username: row.username.trim(),
-    birthYear: row.birth_year,
     curriculumCohort:
       cohort === "explorer" || cohort === "pathfinder" || cohort === "maverick"
         ? cohort
@@ -83,7 +80,7 @@ export async function listLinkedChildrenForCurrentParent(): Promise<
   const { data: rows, error } = await admin
     .from("parent_child")
     .select(
-      "child_id, profiles!child_id (id, username, birth_year, account_role, account_status, curriculum_cohort, consent_approved_at)",
+      "child_id, profiles!child_id (id, username, account_role, account_status, curriculum_cohort, consent_approved_at)",
     )
     .eq("parent_id", user.id);
 
@@ -116,7 +113,7 @@ export async function listLinkedChildrenForCurrentParent(): Promise<
   const { data: profileRows, error: profileError } = await admin
     .from("profiles")
     .select(
-      "id, username, birth_year, account_role, account_status, curriculum_cohort, consent_approved_at",
+      "id, username, account_role, account_status, curriculum_cohort, consent_approved_at",
     )
     .in("id", childIds);
 

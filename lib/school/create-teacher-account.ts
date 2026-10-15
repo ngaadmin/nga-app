@@ -8,6 +8,11 @@ import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { getDefaultAppUrl } from "@/lib/email/templates";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import { generateClassPassword } from "@/lib/school/class-password";
+import {
+  classPasswordCipherUpdate,
+  explainClassPasswordWriteError,
+  readClassPasswordKey,
+} from "@/lib/school/class-password-crypto";
 import { signClassOpenToken } from "@/lib/school/class-open-token";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
@@ -67,6 +72,17 @@ export async function createTeacherAccount(input: {
     };
   }
 
+  try {
+    readClassPasswordKey();
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "CLASS_PASSWORD_KEY is not set.";
+    console.error("[teacher-signup]", message);
+    return { success: false, error: message };
+  }
+
   const existingAuthId = await findAuthUserIdByEmail(email);
   if (existingAuthId) {
     return {
@@ -114,7 +130,7 @@ export async function createTeacherAccount(input: {
         consent_approved_at: null,
         is_teacher: true,
         seat_cap: DEFAULT_SEAT_CAP,
-        class_password: generateClassPassword(),
+        ...classPasswordCipherUpdate(generateClassPassword(), userId),
         teacher_id: null,
       })
       .eq("id", userId)
@@ -128,6 +144,13 @@ export async function createTeacherAccount(input: {
       saved.account_role !== "teacher"
     ) {
       await admin.auth.admin.deleteUser(userId);
+      if (profileError) {
+        console.error("[teacher-signup]", profileError.message);
+        const explained = explainClassPasswordWriteError(profileError.message);
+        if (explained !== profileError.message) {
+          return { success: false, error: explained };
+        }
+      }
       return {
         success: false,
         error: TEACHER_SIGNUP_ERROR,
@@ -167,8 +190,13 @@ export async function createTeacherAccount(input: {
     }
 
     return { success: true, userId, username, email };
-  } catch {
+  } catch (error) {
     await admin.auth.admin.deleteUser(userId);
+    const message = error instanceof Error ? error.message : TEACHER_SIGNUP_ERROR;
+    if (/CLASS_PASSWORD_KEY|class_password_enc/.test(message)) {
+      console.error("[teacher-signup]", message);
+      return { success: false, error: message };
+    }
     return { success: false, error: TEACHER_SIGNUP_ERROR };
   }
 }

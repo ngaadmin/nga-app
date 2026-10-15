@@ -11,6 +11,8 @@
  *   DEMO_TEACHER_PASSWORD
  *   DEMO_TEACHER_USERNAME
  *   DEMO_CLASS_PASSWORD
+ *   CLASS_PASSWORD_KEY   32-byte AES-256-GCM key (base64url). Stored on the
+ *                         teacher profile as ciphertext, not plaintext.
  *   DEMO_STUDENT_EMAIL
  *   DEMO_STUDENT_PASSWORD
  *   DEMO_STUDENT_USERNAME
@@ -19,12 +21,16 @@
  *   DEMO_CLASS_SIZE   default 5 (includes the progressed student)
  *   DEMO_STUDENT_STREAK   default 3
  *
- *   npx tsx scripts/seed-demo-accounts.ts
+ *   npx tsx --conditions=react-server scripts/seed-demo-accounts.ts
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { pathToFileURL } from "node:url";
 import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
+import {
+  classPasswordCipherUpdate,
+  readClassPasswordKey,
+} from "@/lib/school/class-password-crypto";
 import { buildDemoLearnerProgress } from "@/scripts/demo-learner-progress";
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_-]{2,20}$/;
@@ -187,6 +193,7 @@ async function ensureAuthUser(
 
 async function main(): Promise<void> {
   const config = readDemoSeedConfig(process.env as Record<string, string | undefined>);
+  readClassPasswordKey();
   const admin = createClient(config.supabaseUrl, config.serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -210,7 +217,7 @@ async function main(): Promise<void> {
       consent_approved_at: consentedAt,
       is_teacher: true,
       seat_cap: 30,
-      class_password: config.classPassword,
+      ...classPasswordCipherUpdate(config.classPassword, teacherId),
       class_cohort: "explorer",
       teacher_id: null,
     })

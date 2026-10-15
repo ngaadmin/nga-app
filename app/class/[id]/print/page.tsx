@@ -1,14 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { ClassUsernamesPrintScreen } from "@/components/dashboard/class/class-usernames-print";
-import { masteryCohortLabel, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
+import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { loadClassRoster } from "@/lib/school/class-roster";
-
-const COHORT_EMOJI: Record<MasteryCohort, string> = {
-  explorer: "🔭",
-  pathfinder: "🧭",
-  maverick: "🚀",
-};
 
 const PREVIEW_USERNAMES = [
   "amber2",

@@ -75,11 +75,16 @@ export function DashboardNavigation() {
     <nav
       style={zLayerStyle("chrome")}
       data-dashboard-nav
-      className="fixed inset-x-0 bottom-0 flex w-full max-w-full border-t border-[#FFA503] bg-white print:hidden"
+      className="fixed inset-x-0 bottom-0 grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] bg-white pb-[max(6px,env(safe-area-inset-bottom))] shadow-[0_-6px_16px_rgba(3,31,130,0.06)] print:hidden"
       aria-label="Main navigation"
     >
       {navItems.map((item) => (
-        <DashboardNavLink key={item.id} item={item} variant="bottom" />
+        <DashboardNavLink
+          key={item.id}
+          item={item}
+          variant="bottom"
+          denseLabel={navItems.length > 5}
+        />
       ))}
     </nav>
   );

@@ -10,9 +10,15 @@ import { cn } from "@/lib/utils/cn";
 type DashboardNavLinkProps = {
   item: DashboardNavLinkItem;
   variant: "sidebar" | "bottom";
+  /** Six bottom tabs need a smaller label so "Community" still fits. */
+  denseLabel?: boolean;
 };
 
-export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
+export function DashboardNavLink({
+  item,
+  variant,
+  denseLabel = false,
+}: DashboardNavLinkProps) {
   const pathname = usePathname();
   const isActive = item.matchesPath
     ? item.matchesPath(pathname)
@@ -34,13 +40,25 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
         onClick={handleClick}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex flex-auto flex-col items-center justify-center gap-1 px-0.5 py-2",
+          "flex min-w-0 flex-col items-center gap-[3px] px-0.5 pt-2 pb-1",
           TACTILE_PRESS,
-          isActive ? "text-[#FFA503]" : "text-nga-slate",
         )}
       >
-        <Icon className="size-5 shrink-0 sm:size-6" />
-        <span className="text-center font-heading text-[11px] font-bold leading-tight min-[400px]:text-xs">
+        <span
+          className={cn(
+            "flex h-[30px] w-[52px] items-center justify-center rounded-full",
+            isActive ? "bg-nga-cta text-nga-primary" : "text-nga-slate",
+          )}
+        >
+          <Icon className="size-6 shrink-0" />
+        </span>
+        <span
+          className={cn(
+            "whitespace-nowrap font-sans leading-[14px] tracking-[-0.01em]",
+            denseLabel ? "text-[10px]" : "text-[11px]",
+            isActive ? "font-bold text-nga-primary" : "font-semibold text-nga-slate",
+          )}
+        >
           {item.shortLabel ??
             (item.label.startsWith("The ")
               ? item.label.replace("The ", "")

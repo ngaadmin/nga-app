@@ -5,6 +5,10 @@ import {
   CONSENT_TOKEN_TTL_MS,
   hashConsentToken,
 } from "@/lib/auth/consent-request-token";
+import {
+  parseMasteryCohort,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 
 export type StoredConsentRequest = {
   id: string;
@@ -16,7 +20,7 @@ export type StoredConsentRequest = {
   createdAt: string;
   expiresAt: string;
   childUsername: string;
-  birthYear: number;
+  cohort: MasteryCohort | null;
 };
 
 export type ConsentRequestLookup =
@@ -45,11 +49,11 @@ export async function lookupConsentRequestByToken(
 
   const { data: child } = await admin
     .from("profiles")
-    .select("username, birth_year")
+    .select("username, curriculum_cohort")
     .eq("id", data.child_id)
     .maybeSingle();
 
-  if (!child?.username || typeof child.birth_year !== "number") {
+  if (!child?.username) {
     return { status: "invalid" };
   }
 
@@ -63,7 +67,7 @@ export async function lookupConsentRequestByToken(
     createdAt: data.created_at,
     expiresAt: data.expires_at,
     childUsername: child.username,
-    birthYear: child.birth_year,
+    cohort: parseMasteryCohort(child.curriculum_cohort),
   };
 
   if (new Date(data.expires_at).getTime() <= Date.now()) {

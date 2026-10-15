@@ -25,10 +25,6 @@ type FormErrors = {
   form?: string;
 };
 
-function adultBirthYear(): number {
-  return new Date().getFullYear() - 35;
-}
-
 function prefillEmail(): string {
   const session = readUserSession();
   if (!session) return "";
@@ -115,7 +111,6 @@ export function CreateParentProfilePanel({
 
       const parentSession = convertToRegisteredProfile({
         username: result.parentUsername,
-        birthYear: adultBirthYear(),
         accountRole: "parent_master",
         curriculumCohort: "maverick",
         learnerEmail: result.parentEmail,

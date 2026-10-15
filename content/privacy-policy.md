@@ -9,8 +9,8 @@ The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achiev
 
 | Who | What we collect |
 |---|---|
-| **Students (school class seats)** | A username created by the teacher; a placeholder email (not a real address); the shared class password; a placeholder birth year (not a real date of birth); role, learning track and link to their teacher; progress (lessons completed, XP/points, skills, Vault jars and goals, streak); usage activity events linked to the username (for example, lessons opened or completed). |
-| **Students (parent accounts)** | A username; a placeholder email (not a real address); a stand-in birth year (not a real date of birth); the link to the parent's account; role and learning track; progress and usage activity events, as above. |
+| **Students (school class seats)** | A username created by the teacher; a placeholder email (not a real address); the shared class password; role, learning track and link to their teacher; progress (lessons completed, XP/points, skills, Vault jars and goals, streak); usage activity events linked to the username (for example, lessons opened or completed). |
+| **Students (parent accounts)** | A username; a placeholder email (not a real address); the link to the parent's account; role and learning track; progress and usage activity events, as above. |
 | **Parents and guardians** | Email address; the link between the parent and child accounts; guardian email addresses on consent requests. |
 | **Teachers** | Email address; password (stored as a hash); a generated username (not a name); seat limit, learning track and the shared class password; the classes and student seats the teacher creates. We do not collect teachers' names or school names. |
 
@@ -25,7 +25,7 @@ We do **not** collect students' real names, full dates of birth or home addresse
 ## 4. Why we use it
 We use personal information only to run NextGenAchievers:
 
-- **To create and secure accounts.** We use a username, birth year and password to let you sign in, keep each account safe and give you the right learning track for your age.
+- **To create and secure accounts.** We use a username, the learning track you choose and a password to let you sign in, keep each account safe and give you the right learning track for your age.
 - **To save your learning.** We store lesson progress, XP, medals and Vault activity so you can pick up where you left off.
 - **To run school classes.** Teachers can see the usernames and XP in their own class only.
 - **To link parents and children.** We record which parent is linked to which child so parents can give consent, manage their household, change a child's learning track, recover usernames and delete accounts.

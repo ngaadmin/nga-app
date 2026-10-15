@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
-  getComplianceTierFromBirthYear,
-  resolveCurriculumCohort,
-  type MasteryCohort,
-} from "@/lib/dashboard/mastery-cohort";
-import {
+  getSessionCurriculumCohort,
   readUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
@@ -25,23 +22,11 @@ export function useUserSession(): UserSession | null {
   return session;
 }
 
-/** Learning-content cohort (curriculum override or legal default). */
+/** Learning track for the signed-in session. */
 export function useMasteryCohort(): MasteryCohort {
   const session = useUserSession();
   return useMemo(() => {
     if (!session) return "explorer";
-    return resolveCurriculumCohort({
-      birthYear: session.birthYear,
-      curriculumCohort: session.curriculumCohort,
-    });
-  }, [session]);
-}
-
-/** Legal compliance cohort from birth year - ignores curriculum overrides. */
-export function useComplianceCohort(): MasteryCohort {
-  const session = useUserSession();
-  return useMemo(() => {
-    if (!session) return "explorer";
-    return getComplianceTierFromBirthYear(session.birthYear);
+    return getSessionCurriculumCohort(session);
   }, [session]);
 }

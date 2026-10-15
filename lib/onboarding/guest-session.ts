@@ -1,9 +1,7 @@
 import { hashCredential as hashCredentialV2 } from "@/lib/auth/credential-hash";
-import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
 import {
-  defaultAccountStatusForBirthYear,
-  getComplianceTierFromBirthYear,
   getSignupRequirementsForCohort,
+  parseMasteryCohort,
   resolveCurriculumCohort,
   type AccountLifecycleStatus,
   type MasteryCohort,
@@ -63,21 +61,19 @@ export type { AccountLifecycleStatus, RegisteredAccountStatus };
 
 export type GuestProfileInput = {
   username: string;
-  birthYear: number;
   genericProfileId?: string;
-  /** Content track for guest play. Not a legal age verification. */
-  curriculumCohort?: MasteryCohort;
-  /**
-   * True once the learner confirmed a real birth year (account creation).
-   * Guest track-picker sessions stay unlocked.
-   */
-  birthYearLocked?: boolean;
+  /** Learning track. Explorer is the under-13 consent path. */
+  curriculumCohort: MasteryCohort;
 };
 
 export type RegisteredProfileInput = {
   username: string;
-  birthYear: number;
   accountRole: AccountRole;
+  /**
+   * Learning track. Required for learners. Parents and teachers default to
+   * Maverick when omitted.
+   */
+  curriculumCohort?: MasteryCohort;
   /**
    * Learner email - required for Pathfinders/Mavericks.
    * Strictly omitted for Explorers (COPPA).
@@ -109,25 +105,17 @@ export type RegisteredProfileInput = {
   marketingOptIn?: boolean;
   /** Supabase Auth / profiles.id when this session is backed by a remote account. */
   supabaseUserId?: string;
-  /** Content track chosen at parent-add (or guest conversion). */
-  curriculumCohort?: MasteryCohort;
 };
 
 export type UserSession = {
   accessMode: AccessMode;
   username: string;
-  /** Legal birth year - source of truth for parental / COPPA age gates. */
-  birthYear: number;
-  birthYearLocked: boolean;
   /**
-   * Legal compliance cohort derived from birth year (conservative age).
-   * Never treat a curriculum override as a substitute for this field.
+   * Learning track. Also the compliance cohort: Explorer requires parent
+   * approval. Same value as `curriculumCohort`.
    */
   ageTier: MasteryCohort;
-  /**
-   * Optional learning-content track override (Parent Settings).
-   * Changes Academy difficulty only - must not clear Parent Portal / consent rules.
-   */
+  /** Learning track chosen by the learner, parent, or class. */
   curriculumCohort?: MasteryCohort;
   /** Lifecycle: GUEST | PENDING_CONSENT | ACTIVE. */
   accountStatus?: AccountLifecycleStatus;
@@ -209,25 +197,19 @@ function resolveParentPinHash(input: RegisteredProfileInput): string | undefined
 }
 
 /**
- * Legal compliance cohort is always recomputed from birth year.
- * Stored `ageTier` / legacy `complianceTier` are ignored so curriculum
- * overrides or stale values cannot weaken parental protections.
+ * Track from an old local session. Prefer the saved track. A leftover birth
+ * year is mapped once and not written back.
  */
-function resolveAgeTier(birthYear: number): MasteryCohort {
-  return getComplianceTierFromBirthYear(birthYear);
-}
-
-function resolveStoredCurriculumCohort(
-  parsed?: Partial<UserSession>,
+function resolveStoredTrack(
+  parsed: Partial<UserSession> & { birthYear?: unknown },
 ): MasteryCohort | undefined {
-  if (
-    parsed?.curriculumCohort === "explorer" ||
-    parsed?.curriculumCohort === "pathfinder" ||
-    parsed?.curriculumCohort === "maverick"
-  ) {
-    return parsed.curriculumCohort;
+  const saved = parseMasteryCohort(parsed.curriculumCohort);
+  if (saved) return saved;
+  const legacyYear = Number(parsed.birthYear);
+  if (Number.isInteger(legacyYear) && legacyYear >= 1900 && legacyYear <= 2100) {
+    return resolveCurriculumCohort({ birthYear: legacyYear });
   }
-  return undefined;
+  return parseMasteryCohort(parsed.ageTier) ?? undefined;
 }
 
 function isLifecycleStatus(value: unknown): value is AccountLifecycleStatus {
@@ -237,7 +219,7 @@ function isLifecycleStatus(value: unknown): value is AccountLifecycleStatus {
 }
 
 function resolveAccountStatus(
-  birthYear: number,
+  track: MasteryCohort,
   parsed?: Partial<UserSession> & { accessMode?: AccessMode },
 ): AccountLifecycleStatus | undefined {
   const fromAlias =
@@ -250,7 +232,7 @@ function resolveAccountStatus(
       return "GUEST";
     }
     if (parsed?.accessMode === "registered" && fromAlias === "GUEST") {
-      return defaultAccountStatusForBirthYear(birthYear);
+      return getSignupRequirementsForCohort(track).defaultAccountStatus;
     }
     return fromAlias;
   }
@@ -259,7 +241,7 @@ function resolveAccountStatus(
     return "GUEST";
   }
   if (parsed?.accessMode === "registered") {
-    return defaultAccountStatusForBirthYear(birthYear);
+    return getSignupRequirementsForCohort(track).defaultAccountStatus;
   }
   return undefined;
 }
@@ -280,7 +262,7 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     };
   }
 
-  const ageTier = resolveAgeTier(session.birthYear);
+  const ageTier = session.curriculumCohort ?? session.ageTier;
   const requirements = getSignupRequirementsForCohort(ageTier);
 
   let learnerEmail = normalizeEmail(session.learnerEmail ?? session.email);
@@ -321,7 +303,7 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
       : (isLifecycleStatus(session.accountStatus) &&
           session.accountStatus !== "GUEST"
           ? session.accountStatus
-          : defaultAccountStatusForBirthYear(session.birthYear));
+          : getSignupRequirementsForCohort(ageTier).defaultAccountStatus);
 
   if (requirements.requiresParentApproval && !session.consentApprovedAt) {
     accountStatus = "PENDING_CONSENT";
@@ -333,6 +315,7 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
   return {
     ...session,
     ageTier,
+    curriculumCohort: ageTier,
     learnerEmail,
     email: learnerEmail,
     parentEmail,
@@ -346,13 +329,11 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
 function normalizeStoredSession(raw: unknown): UserSession | null {
   if (!raw || typeof raw !== "object") return null;
 
-  const parsed = raw as Partial<
-    UserSession & { complianceTier?: string }
-  >;
+  const parsed = raw as Partial<UserSession> & {
+    birthYear?: unknown;
+    complianceTier?: string;
+  };
   if (typeof parsed.username !== "string" || !parsed.username.trim()) {
-    return null;
-  }
-  if (!isEligibleBirthYear(Number(parsed.birthYear))) {
     return null;
   }
 
@@ -362,10 +343,24 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
       : parsed.accessMode === "guest" || parsed.accessMode === "ghost"
         ? "guest"
         : "guest";
-  const birthYear = Number(parsed.birthYear);
-  const ageTier = resolveAgeTier(birthYear);
-  const curriculumCohort = resolveStoredCurriculumCohort(parsed);
-  const accountStatus = resolveAccountStatus(birthYear, {
+  const accountRole =
+    parsed.accountRole === "parent_master" ||
+    parsed.accountRole === "child" ||
+    parsed.accountRole === "teacher"
+      ? parsed.accountRole
+      : undefined;
+  let ageTier = resolveStoredTrack(parsed);
+  if (
+    !ageTier &&
+    (accountRole === "parent_master" ||
+      accountRole === "teacher" ||
+      parsed.isTeacher === true)
+  ) {
+    ageTier = "maverick";
+  }
+  if (!ageTier) return null;
+  const curriculumCohort = ageTier;
+  const accountStatus = resolveAccountStatus(ageTier, {
     ...parsed,
     accessMode,
   });
@@ -400,8 +395,6 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
   const session: UserSession = {
     accessMode,
     username: parsed.username.trim(),
-    birthYear,
-    birthYearLocked: parsed.birthYearLocked !== false,
     ageTier,
     curriculumCohort,
     accountStatus,
@@ -412,12 +405,7 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
     learnerEmail: accessMode === "registered" ? learnerEmail : undefined,
     email: accessMode === "registered" ? learnerEmail : undefined,
     parentEmail,
-    accountRole:
-      parsed.accountRole === "parent_master" ||
-      parsed.accountRole === "child" ||
-      parsed.accountRole === "teacher"
-        ? parsed.accountRole
-        : undefined,
+    accountRole,
     isTeacher: parsed.isTeacher === true || parsed.accountRole === "teacher",
     genericProfileId:
       typeof parsed.genericProfileId === "string"
@@ -456,22 +444,20 @@ export function createGuestAccessSession(
   input: GuestProfileInput,
 ): UserSession {
   const username = input.username.trim();
-  const birthYear = input.birthYear;
+  const track = parseMasteryCohort(input.curriculumCohort);
 
   if (!username) {
     throw new Error("Username is required for guest access.");
   }
-  if (!isEligibleBirthYear(birthYear)) {
-    throw new Error("Birth year is outside the eligible range.");
+  if (!track) {
+    throw new Error("Pick a learning track for this learner.");
   }
 
   return {
     accessMode: "guest",
     username,
-    birthYear,
-    birthYearLocked: input.birthYearLocked !== false,
-    ageTier: getComplianceTierFromBirthYear(birthYear),
-    curriculumCohort: input.curriculumCohort,
+    ageTier: track,
+    curriculumCohort: track,
     accountStatus: "GUEST",
     createdAt: new Date().toISOString(),
     genericProfileId: input.genericProfileId,
@@ -482,15 +468,18 @@ export function convertToRegisteredProfile(
   input: RegisteredProfileInput,
 ): UserSession {
   const username = input.username.trim();
-  const birthYear = input.birthYear;
-  const ageTier = getComplianceTierFromBirthYear(birthYear);
+  const ageTier =
+    parseMasteryCohort(input.curriculumCohort) ??
+    (input.accountRole === "parent_master" || input.accountRole === "teacher"
+      ? "maverick"
+      : null);
+  if (!ageTier) {
+    throw new Error("Pick a learning track for this learner.");
+  }
   const requirements = getSignupRequirementsForCohort(ageTier);
 
   if (!username) {
     throw new Error("Username is required.");
-  }
-  if (!isEligibleBirthYear(birthYear)) {
-    throw new Error("Birth year is outside the eligible range.");
   }
 
   const legacyEmail = normalizeEmail(input.email);
@@ -567,7 +556,7 @@ export function convertToRegisteredProfile(
     input.accountStatus ??
     (input.consentApprovedAt
       ? "ACTIVE"
-      : defaultAccountStatusForBirthYear(birthYear));
+      : requirements.defaultAccountStatus);
 
   if (requirements.requiresParentApproval && !input.consentApprovedAt) {
     accountStatus = "PENDING_CONSENT";
@@ -581,10 +570,8 @@ export function convertToRegisteredProfile(
     username,
     learnerEmail,
     email: learnerEmail,
-    birthYear,
-    birthYearLocked: true,
     ageTier,
-    curriculumCohort: input.curriculumCohort ?? existing?.curriculumCohort,
+    curriculumCohort: ageTier,
     accountStatus,
     accountRole: input.accountRole,
     isTeacher: input.accountRole === "teacher",
@@ -607,27 +594,7 @@ export function saveUserSession(session: UserSession): void {
 }
 
 /**
- * Correct the legal birth year and recompute compliance cohort.
- * Does not clear parent email / portal linkage fields on the session.
- */
-export function updateUserBirthYear(birthYear: number): UserSession | null {
-  const session = readUserSession();
-  if (!session || !isEligibleBirthYear(birthYear)) return null;
-
-  const updated = enforceCohortAccountState({
-    ...session,
-    birthYear,
-    ageTier: getComplianceTierFromBirthYear(birthYear),
-    birthYearLocked: true,
-  });
-  saveUserSession(updated);
-  dispatchUserSessionUpdated();
-  return updated;
-}
-
-/**
- * Parent Settings curriculum override - learning content / difficulty only.
- * Legal birth year, ageTier, parent email, and portal requirements are unchanged.
+ * Set the learning track. Does not clear a pending parent-approval hold.
  */
 export function updateUserCurriculumCohort(
   curriculumCohort: MasteryCohort,
@@ -638,21 +605,23 @@ export function updateUserCurriculumCohort(
   const updated: UserSession = {
     ...session,
     curriculumCohort,
-    // Re-assert legal tier from birth year so overrides never rewrite compliance.
-    ageTier: getComplianceTierFromBirthYear(session.birthYear),
+    ageTier: curriculumCohort,
     parentEmail: session.parentEmail,
+    accountStatus: session.accountStatus,
+    consentApprovedAt: session.consentApprovedAt,
   };
   saveUserSession(updated);
   dispatchUserSessionUpdated();
   return updated;
 }
 
-/** Learning-content cohort (override or legal default). */
+/** Learning track for content and consent. */
 export function getSessionCurriculumCohort(session: UserSession): MasteryCohort {
-  return resolveCurriculumCohort({
-    birthYear: session.birthYear,
-    curriculumCohort: session.curriculumCohort,
-  });
+  return (
+    parseMasteryCohort(session.curriculumCohort) ??
+    parseMasteryCohort(session.ageTier) ??
+    "explorer"
+  );
 }
 
 /** @deprecated Use saveUserSession - kept for existing imports. */
@@ -699,26 +668,31 @@ export function isGuestSession(session: UserSession | null): boolean {
 
 /**
  * True when the learner can use the app shell.
- * Guest track selection is enough; legal birth year is confirmed at signup.
+ * A chosen learning track is enough. Parents and teachers need a role only.
  */
 export function hasCompletedPersonalizationGate(
   session: UserSession | null,
 ): boolean {
   if (!session || !session.username.trim()) return false;
 
-  if (session.accountRole === "teacher" || session.isTeacher) {
-    return session.accessMode === "registered";
-  }
-
   if (
-    session.accessMode === "guest" &&
-    (session.curriculumCohort === "explorer" ||
-      session.curriculumCohort === "pathfinder" ||
-      session.curriculumCohort === "maverick")
+    (session.accountRole === "teacher" || session.isTeacher) &&
+    session.accessMode === "registered"
   ) {
     return true;
   }
 
-  return session.birthYearLocked && isEligibleBirthYear(session.birthYear);
+  if (
+    session.accountRole === "parent_master" &&
+    session.accessMode === "registered"
+  ) {
+    return true;
+  }
+
+  return (
+    session.curriculumCohort === "explorer" ||
+    session.curriculumCohort === "pathfinder" ||
+    session.curriculumCohort === "maverick"
+  );
 }
 

@@ -10,7 +10,11 @@ import {
   clientIpKey,
 } from "@/lib/auth/request-guard";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
+import {
+  getMasteryCohortFromBirthYear,
+  requiresParentConsent,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { resolveTrustedAppUrl } from "@/lib/email/templates";
 import {
@@ -20,12 +24,23 @@ import {
 
 export const runtime = "nodejs";
 
+function kindForLegacyYear(birthYear: number): "vpc" | "parent_claim" | null {
+  const cohort = getMasteryCohortFromBirthYear(birthYear);
+  if (requiresParentConsent(cohort)) return "vpc";
+  if (cohort === "pathfinder") return "parent_claim";
+  return null;
+}
+
 function toPendingPayload(token: string, claims: ConsentTokenClaims) {
+  const cohort = getMasteryCohortFromBirthYear(claims.birthYear);
+  const kind = kindForLegacyYear(claims.birthYear);
+  if (!kind) return null;
   return {
     token,
     parentEmail: claims.parentEmail,
     childUsername: claims.childUsername,
-    birthYear: claims.birthYear,
+    kind,
+    cohort: cohort satisfies MasteryCohort,
     createdAt: claims.createdAt,
     passcodeHash: claims.passcodeHash,
   };
@@ -73,15 +88,15 @@ async function handleResend(
     );
   }
 
-  const { parentEmail, childUsername, birthYear, id } = stored.request;
-  if (!parentEmail || !childUsername || birthYear == null) {
+  const { parentEmail, childUsername, id, kind } = stored.request;
+  if (!parentEmail || !childUsername) {
     return NextResponse.json(
       { success: false, error: "Invalid consent token." },
       { status: 400 },
     );
   }
 
-  if (!requiresParentConsentForBirthYear(birthYear)) {
+  if (kind !== "vpc") {
     return NextResponse.json(
       {
         success: false,
@@ -238,7 +253,8 @@ export async function GET(request: NextRequest) {
         token,
         parentEmail: stored.request.parentEmail,
         childUsername: stored.request.childUsername,
-        birthYear: stored.request.birthYear,
+        kind: stored.request.kind,
+        cohort: stored.request.cohort,
         createdAt: stored.request.createdAt,
       },
     });
@@ -273,8 +289,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const pending = toPendingPayload(token, claims);
+  if (!pending) {
+    return NextResponse.json(
+      { success: false, error: "Invalid consent token." },
+      { status: 400 },
+    );
+  }
+
   return NextResponse.json({
     success: true as const,
-    pending: toPendingPayload(token, claims),
+    pending,
   });
 }

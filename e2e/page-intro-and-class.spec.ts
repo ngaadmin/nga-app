@@ -9,8 +9,6 @@ const LEARNER_ID = "22222222-2222-2222-2222-222222222222";
 const LEARNER_SESSION = {
   accessMode: "registered",
   username: "pennytest",
-  birthYear: 2012,
-  birthYearLocked: true,
   ageTier: "pathfinder",
   curriculumCohort: "pathfinder",
   accountStatus: "ACTIVE",
@@ -24,9 +22,7 @@ const LEARNER_SESSION = {
 const TEACHER_SESSION = {
   accessMode: "registered",
   username: "teachertest",
-  birthYear: 1980,
-  birthYearLocked: true,
-  ageTier: "maverick",
+  ageTier: "pathfinder",
   curriculumCohort: "pathfinder",
   accountStatus: "ACTIVE",
   accountRole: "teacher",

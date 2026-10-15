@@ -9,8 +9,11 @@ import {
   type VentureBlueprintId,
   type VentureCarouselSlot,
 } from "@/lib/launchpad/venture-blueprints";
-import { getMasteryCohortFromBirthYear, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
-import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
+import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import {
+  getSessionCurriculumCohort,
+  readGuestAccessSession,
+} from "@/lib/onboarding/guest-session";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
@@ -45,8 +48,6 @@ import {
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
-const REFERENCE_YEAR = 2026;
-
 type LaunchpadProfile = {
   ageTier: MasteryCohort;
   isPremium: boolean;
@@ -62,7 +63,7 @@ function resolveLaunchpadProfile(): LaunchpadProfile {
   if (!session) return DEFAULT_LAUNCHPAD_PROFILE;
 
   return {
-    ageTier: getMasteryCohortFromBirthYear(session.birthYear, REFERENCE_YEAR),
+    ageTier: getSessionCurriculumCohort(session),
     isPremium: false,
   };
 }

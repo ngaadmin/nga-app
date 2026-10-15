@@ -1,7 +1,4 @@
-import {
-  isEligibleBirthYear,
-  representativeBirthYearForCohort,
-} from "@/lib/onboarding/birth-years";
+import { parseMasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
   convertToRegisteredProfile,
   enforceCohortAccountState,
@@ -21,16 +18,10 @@ import {
 } from "@/lib/onboarding/registered-accounts";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 
-const ADULT_OFFSET_YEARS = 35;
-
 export type ApplyLearnerAccountOptions = {
   existing?: UserSession | null;
   password?: string;
 };
-
-function adultBirthYear(): number {
-  return new Date().getFullYear() - ADULT_OFFSET_YEARS;
-}
 
 function remoteIsActive(
   remote: Pick<LearnerConsentStatus, "accountStatus" | "consentApprovedAt">,
@@ -65,7 +56,7 @@ function snapshotFromConsentStatus(
   return {
     userId: status.userId,
     username: status.username,
-    birthYear: existing?.birthYear ?? null,
+    curriculumCohort: existing?.curriculumCohort ?? existing?.ageTier ?? null,
     accountRole: existing?.accountRole === "parent_master" ? "parent_master" : "child",
     accountStatus: status.accountStatus,
     consentApprovedAt: status.consentApprovedAt,
@@ -88,20 +79,13 @@ export function applyLearnerAccountSnapshot(
     remote,
     existing?.consentApprovedAt,
   );
-  const birthYear =
-    remote.birthYear && isEligibleBirthYear(remote.birthYear)
-      ? remote.birthYear
-      : existing && isEligibleBirthYear(existing.birthYear)
-        ? existing.birthYear
-        : remote.accountRole === "parent_master" ||
-            remote.accountRole === "teacher"
-          ? adultBirthYear()
-          : representativeBirthYearForCohort(
-              remote.curriculumCohort ??
-                existing?.curriculumCohort ??
-                existing?.ageTier ??
-                "pathfinder",
-            );
+  const curriculumCohort =
+    parseMasteryCohort(remote.curriculumCohort) ??
+    parseMasteryCohort(existing?.curriculumCohort) ??
+    parseMasteryCohort(existing?.ageTier) ??
+    (remote.accountRole === "parent_master" || remote.accountRole === "teacher"
+      ? "maverick"
+      : "explorer");
 
   const sameRegisteredUser =
     existing?.accessMode === "registered" &&
@@ -118,14 +102,14 @@ export function applyLearnerAccountSnapshot(
       accountStatus,
       consentApprovedAt,
       mustChangePassword: remote.mustChangePassword === true,
-      curriculumCohort:
-        remote.curriculumCohort ?? existing.curriculumCohort,
+      ageTier: curriculumCohort,
+      curriculumCohort,
       parentEmail:
         remote.accountRole === "parent_master" || remote.accountRole === "teacher"
           ? (remote.learnerEmail ?? existing.parentEmail ?? remote.parentEmail ?? undefined)
           : (existing.parentEmail ?? remote.parentEmail ?? undefined),
       learnerEmail:
-        remote.accountRole === "child" && existing.ageTier === "explorer"
+        remote.accountRole === "child" && curriculumCohort === "explorer"
           ? undefined
           : remote.accountRole === "parent_master" || remote.accountRole === "teacher"
             ? (remote.learnerEmail ?? existing.learnerEmail ?? undefined)
@@ -138,8 +122,8 @@ export function applyLearnerAccountSnapshot(
 
   const converted = convertToRegisteredProfile({
     username: remote.username,
-    birthYear,
     accountRole: remote.accountRole,
+    curriculumCohort,
     parentEmail:
       remote.accountRole === "parent_master" || remote.accountRole === "teacher"
         ? (remote.learnerEmail ?? existing?.parentEmail ?? remote.parentEmail)
@@ -147,7 +131,7 @@ export function applyLearnerAccountSnapshot(
     learnerEmail:
       remote.accountRole === "parent_master" || remote.accountRole === "teacher"
         ? (remote.learnerEmail ?? existing?.learnerEmail)
-        : remote.accountRole === "child" && existing?.ageTier === "explorer"
+        : remote.accountRole === "child" && curriculumCohort === "explorer"
           ? undefined
           : remote.learnerEmail,
     password: options.password,
@@ -156,7 +140,6 @@ export function applyLearnerAccountSnapshot(
     consentApprovedAt,
     accountStatus,
     supabaseUserId: remote.userId,
-    curriculumCohort: remote.curriculumCohort ?? existing?.curriculumCohort,
   });
 
   return {

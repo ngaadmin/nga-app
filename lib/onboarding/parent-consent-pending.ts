@@ -4,26 +4,21 @@ import {
   removePersisted,
   writePersisted,
 } from "@/lib/dev/client-persist";
-import { requiresParentConsentForBirthYear } from "@/lib/dashboard/mastery-cohort";
 import {
-  captureGuestProgressSnapshot,
-  ensureGuestProgressSnapshot,
-} from "@/lib/onboarding/guest-progress-snapshot";
+  getMasteryCohortFromBirthYear,
+  parseMasteryCohort,
+  requiresParentConsent,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import {
-  convertToRegisteredProfile,
   enforceCohortAccountState,
-  hashCredential,
-  readUserSession,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
-import { resolvePasscodeHash } from "@/lib/onboarding/resolve-passcode-hash";
 import {
   findRegisteredAccountByUsername,
   upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
-import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
-import { isFourDigitPin } from "@/lib/validation/pin";
 
 export const PENDING_PARENT_CONSENT_KEY = "nga_pending_parent_consent_v1";
 
@@ -31,7 +26,8 @@ export type PendingParentConsent = {
   token: string;
   parentEmail: string;
   childUsername: string;
-  birthYear: number;
+  kind: "vpc" | "parent_claim";
+  cohort: MasteryCohort | null;
   createdAt: string;
   /** Explorer login password digest collected at signup (field name historical). */
   passcodeHash?: string;
@@ -54,75 +50,51 @@ type PendingConsentStore = {
   entries: PendingParentConsent[];
 };
 
-function isConsentStillValid(createdAtIso: string, birthYear: number): boolean {
-  if (!isConsentTokenUnexpired(createdAtIso)) return false;
-  return requiresParentConsentForBirthYear(birthYear);
+function isConsentStillValid(entry: PendingParentConsent): boolean {
+  if (!isConsentTokenUnexpired(entry.createdAt)) return false;
+  return entry.kind === "vpc";
 }
 
-function isPendingShape(value: unknown): value is PendingParentConsent {
-  if (!value || typeof value !== "object") return false;
-  const parsed = value as PendingParentConsent;
-  return (
-    typeof parsed.token === "string" &&
-    typeof parsed.parentEmail === "string" &&
-    typeof parsed.childUsername === "string" &&
-    Number.isInteger(parsed.birthYear) &&
-    typeof parsed.createdAt === "string"
-  );
-}
-
-/**
- * Ask the server to HMAC-sign a portable consent token.
- * Unsigned local tokens are no longer issued.
- */
-export async function encodeConsentToken(input: {
-  parentEmail: string;
-  childUsername: string;
-  birthYear: number;
-  createdAt: string;
-  passcodeHash?: string;
-}): Promise<string> {
-  let response: Response;
-  try {
-    response = await fetch("/api/auth/consent-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
-    });
-  } catch {
-    throw new Error(
-      "We could not reach the approval-link service. Check your connection and try again.",
-    );
+/** Accept the current shape and older rows that stored a birth year. */
+function normalizePending(value: unknown): PendingParentConsent | null {
+  if (!value || typeof value !== "object") return null;
+  const parsed = value as Partial<PendingParentConsent> & { birthYear?: unknown };
+  if (
+    typeof parsed.token !== "string" ||
+    typeof parsed.parentEmail !== "string" ||
+    typeof parsed.childUsername !== "string" ||
+    typeof parsed.createdAt !== "string"
+  ) {
+    return null;
   }
 
-  const json = (await response.json().catch(() => null)) as {
-    success?: boolean;
-    token?: string;
-    error?: string;
-  } | null;
+  const cohortFromYear =
+    typeof parsed.birthYear === "number" && Number.isInteger(parsed.birthYear)
+      ? getMasteryCohortFromBirthYear(parsed.birthYear)
+      : null;
+  const cohort = parseMasteryCohort(parsed.cohort) ?? cohortFromYear;
+  const kind =
+    parsed.kind === "vpc" || parsed.kind === "parent_claim"
+      ? parsed.kind
+      : cohort && requiresParentConsent(cohort)
+        ? "vpc"
+        : cohort === "pathfinder"
+          ? "parent_claim"
+          : null;
+  if (!kind) return null;
 
-  if (!response.ok || !json?.token) {
-    if (typeof json?.error === "string" && json.error.trim()) {
-      throw new Error(json.error.trim());
-    }
-    if (response.status === 429) {
-      throw new Error(
-        "Too many approval-link requests from this device. Wait about a minute, then try again.",
-      );
-    }
-    throw new Error(
-      "We could not create the parent approval link for this Explorer. Please try again.",
-    );
-  }
-  return json.token;
-}
-
-/**
- * Legacy unsigned tokens are rejected. Prefer
- * {@link readPendingParentConsentByToken} which verifies via the server.
- */
-export function decodeConsentToken(_token: string): PendingParentConsent | null {
-  return null;
+  return {
+    token: parsed.token,
+    parentEmail: parsed.parentEmail,
+    childUsername: parsed.childUsername,
+    kind,
+    cohort,
+    createdAt: parsed.createdAt,
+    passcodeHash:
+      typeof parsed.passcodeHash === "string" && parsed.passcodeHash.trim()
+        ? parsed.passcodeHash.trim()
+        : undefined,
+  };
 }
 
 /**
@@ -172,15 +144,16 @@ function readAllPendingConsents(): PendingParentConsent[] {
     let entries: PendingParentConsent[] = [];
 
     if (Array.isArray((parsed as PendingConsentStore)?.entries)) {
-      entries = (parsed as PendingConsentStore).entries.filter(isPendingShape);
-    } else if (isPendingShape(parsed)) {
-      // Legacy single-object shape.
-      entries = [parsed];
+      entries = (parsed as PendingConsentStore).entries.flatMap((entry) => {
+        const normalized = normalizePending(entry);
+        return normalized ? [normalized] : [];
+      });
+    } else {
+      const normalized = normalizePending(parsed);
+      if (normalized) entries = [normalized];
     }
 
-    const valid = entries.filter((entry) =>
-      isConsentStillValid(entry.createdAt, entry.birthYear),
-    );
+    const valid = entries.filter((entry) => isConsentStillValid(entry));
 
     if (valid.length !== entries.length) {
       writeAllPendingConsents(valid);
@@ -263,7 +236,7 @@ function localPendingMatchesSignedClaims(
   if (local.childUsername.trim() !== signed.childUsername.trim()) {
     return false;
   }
-  if (local.birthYear !== signed.birthYear) {
+  if (local.kind !== signed.kind) {
     return false;
   }
   const localHash = local.passcodeHash?.trim() ?? "";
@@ -408,102 +381,6 @@ export async function resendParentConsentApproval(
   throw new Error(serverError);
 }
 
-/**
- * Starts Explorer VPC: backs up guest progress, creates a PENDING_CONSENT
- * registered profile (no learner email), and stores a portable consent token.
- *
- * The same parent/guardian email may approve many child profiles — email is
- * never treated as a unique account key.
- */
-export async function createPendingParentConsent(input: {
-  parentEmail: string;
-  childUsername: string;
-  birthYear: number;
-  /** Explorer login password (min 6 characters). */
-  passcode?: string;
-  passcodeHash?: string;
-}): Promise<PendingParentConsent> {
-  const parentEmail = input.parentEmail.trim().toLowerCase();
-  const childUsername = input.childUsername.trim();
-
-  if (!parentEmail || !EMAIL_PATTERN.test(parentEmail)) {
-    throw new Error(
-      "Enter a valid parent or guardian email so they can approve this profile.",
-    );
-  }
-  if (!childUsername) {
-    throw new Error("Pick a username for your Explorer profile.");
-  }
-  if (!requiresParentConsentForBirthYear(input.birthYear)) {
-    throw new Error(
-      "Parent approval is only required for Explorer profiles (ages 10-12).",
-    );
-  }
-
-  const existingAccount = findRegisteredAccountByUsername(childUsername);
-  if (
-    existingAccount &&
-    existingAccount.accountStatus === "ACTIVE" &&
-    existingAccount.accessMode === "registered"
-  ) {
-    throw new Error(
-      "That username is already taken. Try a different username for this Explorer.",
-    );
-  }
-  // PENDING_CONSENT profiles may be recreated (retry). A shared parent/guardian
-  // email across different usernames is always allowed.
-
-  const passcodeHash = resolvePasscodeHash(input);
-  if (!passcodeHash) {
-    throw new Error("Create a password (at least 6 characters) for this profile.");
-  }
-
-  const createdAt = new Date().toISOString();
-  const token = await encodeConsentToken({
-    parentEmail,
-    childUsername,
-    birthYear: input.birthYear,
-    createdAt,
-    passcodeHash,
-  });
-
-  captureGuestProgressSnapshot();
-
-  // Explorers: PENDING_CONSENT, parentEmail + username (+ password hash), no learner email.
-  // marketingOptIn is always false for minors — parent opts in on master signup.
-  const pendingSession = convertToRegisteredProfile({
-    username: childUsername,
-    birthYear: input.birthYear,
-    accountRole: "child",
-    parentEmail,
-    passcodeHash,
-    accountStatus: "PENDING_CONSENT",
-    marketingOptIn: false,
-  });
-
-  await finalizeRegisteredSignup(pendingSession, {
-    explorerConsentToken: token,
-  });
-
-  const pending: PendingParentConsent = {
-    token,
-    parentEmail,
-    childUsername,
-    birthYear: input.birthYear,
-    createdAt,
-    passcodeHash,
-  };
-
-  upsertLocalPendingConsent(pending);
-
-  return pending;
-}
-
-export type ApproveParentConsentOptions = {
-  /** 4-digit Parent PIN set during consent approval. */
-  parentPin?: string;
-  parentPinHash?: string;
-};
 
 /**
  * Master-dashboard approval: activate a PENDING_CONSENT learner linked to this
@@ -544,66 +421,6 @@ export function approvePendingLearnerAccount(input: {
   return activated;
 }
 
-/** Simulated magic-link approval - activates parent-linked account and merges guest progress. */
-export async function approveParentConsent(
-  token: string,
-  options: ApproveParentConsentOptions = {},
-): Promise<UserSession | null> {
-  const pending = await readPendingParentConsentByToken(token);
-  if (!pending) return null;
-
-  ensureGuestProgressSnapshot();
-
-  let parentPinHash: string | undefined;
-  if (typeof options.parentPinHash === "string" && options.parentPinHash.trim()) {
-    parentPinHash = options.parentPinHash.trim();
-  } else if (typeof options.parentPin === "string" && options.parentPin.length > 0) {
-    if (!isFourDigitPin(options.parentPin)) {
-      throw new Error("Parent PIN must be exactly 4 digits.");
-    }
-    parentPinHash = hashCredential(options.parentPin);
-  }
-
-  const existing = readUserSession();
-  const consentApprovedAt = new Date().toISOString();
-
-  let session: UserSession;
-  if (
-    existing?.accessMode === "registered" &&
-    existing.username === pending.childUsername &&
-    existing.birthYear === pending.birthYear
-  ) {
-    session = enforceCohortAccountState({
-      ...existing,
-      accessMode: "registered",
-      learnerEmail: undefined,
-      email: undefined,
-      parentEmail: pending.parentEmail,
-      passcodeHash: existing.passcodeHash ?? pending.passcodeHash,
-      parentPinHash: parentPinHash ?? existing.parentPinHash,
-      consentApprovedAt,
-      accountStatus: "ACTIVE",
-      marketingOptIn: false,
-    });
-    await finalizeRegisteredSignup(session, { skipEmail: true });
-  } else {
-    session = convertToRegisteredProfile({
-      username: pending.childUsername,
-      birthYear: pending.birthYear,
-      accountRole: "child",
-      parentEmail: pending.parentEmail,
-      passcodeHash: pending.passcodeHash,
-      parentPinHash,
-      consentApprovedAt,
-      accountStatus: "ACTIVE",
-      marketingOptIn: false,
-    });
-    await finalizeRegisteredSignup(session, { skipEmail: true });
-  }
-
-  clearPendingParentConsent(token);
-  return readUserSession() ?? session;
-}
 
 /** Clear one pending consent by token, or all when token omitted. */
 export function clearPendingParentConsent(token?: string): void {

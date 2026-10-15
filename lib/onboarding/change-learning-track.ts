@@ -1,6 +1,4 @@
 import {
-  getComplianceTierFromBirthYear,
-  getMasteryCohortFromBirthYear,
   masteryCohortAgeRangeLabel,
   masteryCohortLabel,
   type MasteryCohort,
@@ -12,12 +10,10 @@ import {
 } from "@/lib/dashboard/account-progress-local";
 import { ACCOUNT_PROGRESS_SCHEMA_VERSION } from "@/lib/dashboard/account-progress";
 import { defaultAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
-import { isEligibleBirthYear } from "@/lib/onboarding/birth-years";
 import {
   getSessionCurriculumCohort,
   readUserSession,
   saveUserSession,
-  updateUserCurriculumCohort,
   type UserSession,
 } from "@/lib/onboarding/guest-session";
 import {
@@ -30,40 +26,6 @@ import { updateLinkedChildLearningTrack } from "@/lib/onboarding/update-child-le
 export type ChangeLearningTrackResult =
   | { ok: true; cohortChanged: boolean; trackLabel: string; ageRange: string }
   | { ok: false; reason: "invalid" | "unchanged" | "no_session" };
-
-/**
- * Parent Settings curriculum override.
- *
- * `birthYear` is interpreted as a picker value that maps to a target learning
- * track (via the conservative age → cohort matrix). Legal `session.birthYear`,
- * compliance `ageTier`, parent email, and Parent Portal requirements are
- * left untouched - only `curriculumCohort` (content/difficulty) changes.
- */
-export function changeUserLearningTrack(
-  birthYear: number,
-): ChangeLearningTrackResult {
-  const session = readUserSession();
-  if (!session) return { ok: false, reason: "no_session" };
-  if (!isEligibleBirthYear(birthYear)) return { ok: false, reason: "invalid" };
-
-  const nextCohort: MasteryCohort = getMasteryCohortFromBirthYear(birthYear);
-  const previousCohort = getSessionCurriculumCohort(session);
-  if (previousCohort === nextCohort) {
-    return { ok: false, reason: "unchanged" };
-  }
-
-  const updated = updateUserCurriculumCohort(nextCohort);
-  if (!updated) return { ok: false, reason: "invalid" };
-
-  resetLearningProgress();
-
-  return {
-    ok: true,
-    cohortChanged: true,
-    trackLabel: masteryCohortLabel(nextCohort),
-    ageRange: masteryCohortAgeRangeLabel(nextCohort),
-  };
-}
 
 /** Parent master accounts always display as Maverick. */
 export function displayAccountLearningTrack(account: UserSession): MasteryCohort {
@@ -101,7 +63,7 @@ export function changeAccountLearningTrack(
   const updated: UserSession = {
     ...account,
     curriculumCohort: nextCohort,
-    ageTier: getComplianceTierFromBirthYear(account.birthYear),
+    ageTier: nextCohort,
   };
 
   if (updated.accessMode === "registered") {
@@ -112,7 +74,7 @@ export function changeAccountLearningTrack(
     saveUserSession({
       ...session,
       curriculumCohort: nextCohort,
-      ageTier: getComplianceTierFromBirthYear(session.birthYear),
+      ageTier: nextCohort,
     });
     resetLearningProgress();
   } else {
@@ -140,7 +102,7 @@ function applyLocalTrackAndProgressReset(
   const updated: UserSession = {
     ...account,
     curriculumCohort: nextCohort,
-    ageTier: getComplianceTierFromBirthYear(account.birthYear),
+    ageTier: nextCohort,
   };
 
   if (updated.accessMode === "registered") {
@@ -170,7 +132,7 @@ function applyLocalTrackAndProgressReset(
     saveUserSession({
       ...session,
       curriculumCohort: nextCohort,
-      ageTier: getComplianceTierFromBirthYear(session.birthYear),
+      ageTier: nextCohort,
     });
     resetLearningProgress();
   } else {

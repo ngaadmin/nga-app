@@ -15,7 +15,6 @@ import {
   planClassPasswordBackfill,
   type ClassPasswordBackfillWrite,
 } from "@/lib/school/class-password-crypto";
-import { representativeBirthYearForCohort } from "@/lib/onboarding/birth-years";
 import {
   masteryCohortLabel,
   parseMasteryCohort,
@@ -501,7 +500,6 @@ export async function createClassSeats(input: {
   }
 
   const created: string[] = [];
-  const birthYear = representativeBirthYearForCohort(classCohort);
 
   for (const username of names) {
     const authEmail = `seat+${crypto.randomUUID()}@${SEAT_AUTH_EMAIL_DOMAIN}`;
@@ -522,7 +520,6 @@ export async function createClassSeats(input: {
       .from("profiles")
       .update({
         username,
-        birth_year: birthYear,
         account_role: "child",
         account_status: "active",
         curriculum_cohort: classCohort,

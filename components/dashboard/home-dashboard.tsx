@@ -13,6 +13,7 @@ import {
   signOutApp,
 } from "@/lib/onboarding/sign-out";
 import { readUserSession } from "@/lib/onboarding/guest-session";
+import { requestGuestLeave } from "@/lib/onboarding/guest-save-prompt";
 import {
   recoverCredentialByEmail,
   resolveHouseholdEmail,
@@ -581,7 +582,7 @@ export function HomeDashboard() {
     [email, username],
   );
 
-  async function handleLogOut() {
+  async function performLogOut() {
     if (loggingOutRef.current) return;
     loggingOutRef.current = true;
     setIsLoggingOut(true);
@@ -591,6 +592,12 @@ export function HomeDashboard() {
     } finally {
       redirectToHomeAfterSignOut();
     }
+  }
+
+  function handleLogOut() {
+    requestGuestLeave(() => {
+      void performLogOut();
+    });
   }
 
   return (

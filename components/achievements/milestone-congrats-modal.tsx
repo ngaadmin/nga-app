@@ -1,6 +1,7 @@
 "use client";
 
 import type { MoneyMilestone } from "@/lib/dashboard/achievements-state";
+import { GuestSavePromptBanner } from "@/components/onboarding/guest-save-prompt-banner";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { cn } from "@/lib/utils/cn";
 
@@ -51,6 +52,13 @@ export function MilestoneCongratsModal({
       >
         Keep stacking wins
       </button>
+      <GuestSavePromptBanner
+        claimId={`milestone:${milestone.id}`}
+        isNewBadge
+        isModuleOrLevelFinish={false}
+        active={isOpen}
+        className="mt-4 text-left"
+      />
     </ModalShell>
   );
 }

@@ -59,10 +59,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${poppins.variable} ${inter.variable} font-sans antialiased overflow-x-hidden max-w-full`}
-      >
+    <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
+      <body className="font-sans antialiased overflow-x-hidden max-w-full">
         {children}
         <div id="overlay-root" aria-hidden="true" />
         <div id="modal-root" aria-hidden="true" />

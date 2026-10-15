@@ -1,7 +1,7 @@
 "use client";
 
-import { ClientPortal } from "@/components/ui/client-portal";
-import { LAYER_ROOT_IDS } from "@/lib/ui/layers";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 type DeleteLearnerConfirmSheetProps = {
   isOpen: boolean;
@@ -14,6 +14,25 @@ type DeleteLearnerConfirmSheetProps = {
   onClose: () => void;
   onConfirm: () => void;
 };
+
+const headingFont = {
+  fontFamily: "var(--font-poppins), ui-sans-serif, system-ui, sans-serif",
+} as const;
+
+const bodyFont = {
+  fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+} as const;
+
+function BodyPortal({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+  return createPortal(children, document.body);
+}
 
 function TrashIcon() {
   return (
@@ -48,8 +67,8 @@ export function DeleteLearnerConfirmSheet({
   if (!isOpen) return null;
 
   return (
-    <ClientPortal rootId={LAYER_ROOT_IDS.modal}>
-      <div className="pointer-events-auto fixed inset-0">
+    <BodyPortal>
+      <div className="pointer-events-auto fixed inset-0 z-modal">
         <div
           className="absolute inset-0 animate-nga-scrim-fade bg-[#031F82]/45"
           onClick={isDeleting ? undefined : onClose}
@@ -65,18 +84,24 @@ export function DeleteLearnerConfirmSheet({
           </div>
           <h2
             id="account-delete-title"
-            className="mt-4 font-heading text-[22px] font-bold leading-tight text-[#031F82]"
+            style={headingFont}
+            className="mt-4 text-[22px] font-bold leading-tight text-[#031F82]"
           >
             {title}
           </h2>
           <p
             id="account-delete-body"
-            className="mt-2 font-sans text-[16px] leading-[1.5] text-[#4A5578]"
+            style={bodyFont}
+            className="mt-2 text-[16px] leading-[1.5] text-[#4A5578]"
           >
             {body}
           </p>
           {error ? (
-            <p className="mt-3 font-sans text-sm font-medium text-[#E5484D]" role="alert">
+            <p
+              style={bodyFont}
+              className="mt-3 text-sm font-medium text-[#E5484D]"
+              role="alert"
+            >
               {error}
             </p>
           ) : null}
@@ -85,7 +110,8 @@ export function DeleteLearnerConfirmSheet({
               type="button"
               onClick={onConfirm}
               disabled={isDeleting}
-              className="inline-flex h-[52px] w-full items-center justify-center rounded-[16px] border-b-4 border-[#B8303A] bg-[#E5484D] font-heading text-[16px] font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0 disabled:active:border-b-4"
+              style={headingFont}
+              className="inline-flex h-[52px] w-full items-center justify-center rounded-[16px] border-b-4 border-[#B8303A] bg-[#E5484D] text-[16px] font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0 disabled:active:border-b-4"
             >
               {confirmLabel}
             </button>
@@ -93,13 +119,14 @@ export function DeleteLearnerConfirmSheet({
               type="button"
               onClick={onClose}
               disabled={isDeleting}
-              className="inline-flex h-12 w-full items-center justify-center bg-transparent font-heading text-[16px] font-semibold text-[#031F82] disabled:cursor-not-allowed disabled:opacity-40"
+              style={headingFont}
+              className="inline-flex h-12 w-full items-center justify-center bg-transparent text-[16px] font-semibold text-[#031F82] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {cancelLabel}
             </button>
           </div>
         </div>
       </div>
-    </ClientPortal>
+    </BodyPortal>
   );
 }

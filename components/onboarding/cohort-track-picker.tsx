@@ -15,6 +15,7 @@ import {
   DASHBOARD_ACADEMY_PATH,
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 
 const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
   explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
@@ -39,6 +40,7 @@ export function CohortTrackPicker() {
       birthYearLocked: false,
     });
     saveGuestAccessSession(session);
+    recordUsageEvent("login");
     router.push(DASHBOARD_ACADEMY_PATH);
   }
 

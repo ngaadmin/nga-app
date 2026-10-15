@@ -125,29 +125,38 @@ export function resolveSkillSlugForMilestone(milestoneId: number): string | null
   return getSkillRegistryRecordByNumber(skillNumber)?.skillSlug ?? null;
 }
 
+export type EarnedSkillMedal = {
+  slug: string;
+  tier: Exclude<SkillTrophyTier, "locked">;
+};
+
 export function setVaultSkillTierOverrideIfHigher(
   skillId: string,
   tier: SkillTrophyTier,
-): void {
+): boolean {
   const canonicalId = resolveCanonicalSkillSlug(skillId);
   const current = readVaultSkillTierOverrides()[canonicalId] ?? "locked";
-  if (TIER_RANK[tier] >= TIER_RANK[current]) return;
+  if (TIER_RANK[tier] >= TIER_RANK[current]) return false;
   setVaultSkillTierOverride(skillId, tier);
+  return true;
 }
 
 /** Apply lesson completion tier progress when cashing in Academy XP. */
 export function applyLessonSkillTierProgress(
   milestoneId: number,
   masteryCohort: MasteryCohort,
-): void {
+): EarnedSkillMedal[] {
+  const earned: EarnedSkillMedal[] = [];
   const awards = lessonSkillAwards(
     levelGroupForMilestoneId(milestoneId),
     lessonNumberForMilestoneId(milestoneId),
   );
   for (const award of awards) {
     if (!isSkillAccessibleForMasteryCohort(award.slug, masteryCohort)) continue;
-    setVaultSkillTierOverrideIfHigher(award.slug, award.tier);
+    if (!setVaultSkillTierOverrideIfHigher(award.slug, award.tier)) continue;
+    earned.push({ slug: award.slug, tier: award.tier });
   }
+  return earned;
 }
 
 /**
@@ -158,11 +167,12 @@ export function applyPayloadSkillTierProgress(
   skillSlug: string,
   tier: Exclude<SkillTrophyTier, "locked">,
   masteryCohort: MasteryCohort,
-): void {
+): EarnedSkillMedal[] {
   const canonical = skillSlug.trim();
-  if (!canonical) return;
-  if (!isSkillAccessibleForMasteryCohort(canonical, masteryCohort)) return;
-  setVaultSkillTierOverrideIfHigher(canonical, tier);
+  if (!canonical) return [];
+  if (!isSkillAccessibleForMasteryCohort(canonical, masteryCohort)) return [];
+  if (!setVaultSkillTierOverrideIfHigher(canonical, tier)) return [];
+  return [{ slug: canonical, tier }];
 }
 
 /** Format the skill unlock line shown on lesson completion screens. */

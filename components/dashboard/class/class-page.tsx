@@ -606,13 +606,13 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
             initiallySaved={passwordSaved}
           />
 
-          <div className="flex min-h-[60px] items-center gap-3.5 border-b border-[#E1E8F6] py-2">
+          <div className="flex min-h-[60px] flex-wrap items-center gap-x-3.5 border-b border-[#E1E8F6] py-2 min-[390px]:flex-nowrap">
             <button
               type="button"
               aria-expanded={studentsOpen}
               aria-controls="class-student-list"
               onClick={() => setStudentsOpen((open) => !open)}
-              className="flex min-w-0 flex-1 items-center gap-3.5 text-left"
+              className="order-1 flex min-w-0 flex-1 items-center gap-3.5 text-left"
             >
               <TintCircle>👥</TintCircle>
               <span className="whitespace-nowrap font-heading text-[17px] font-semibold text-[#14213D]">
@@ -623,7 +623,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
               <Link
                 href={`/class/${roster.teacherId}/print`}
                 prefetch
-                className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-heading text-sm font-semibold text-[#031F82]"
+                className="order-3 inline-flex basis-full items-center gap-1.5 whitespace-nowrap py-2 pl-[54px] font-heading text-sm font-semibold text-[#031F82] min-[390px]:order-2 min-[390px]:basis-auto min-[390px]:py-0 min-[390px]:pl-0"
               >
                 <PrintIcon />
                 Print usernames
@@ -633,6 +633,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
               type="button"
               aria-label={studentsOpen ? "Hide users" : "Show users"}
               onClick={() => setStudentsOpen((open) => !open)}
+              className="order-2 shrink-0 min-[390px]:order-3"
             >
               <DisclosureChevron open={studentsOpen} />
             </button>

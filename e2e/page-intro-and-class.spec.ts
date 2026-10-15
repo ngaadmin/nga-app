@@ -396,3 +396,39 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     fullPage: false,
   });
 });
+
+test("print usernames stays clear of the user count", async ({ page }) => {
+  await installSession(page, TEACHER_SESSION);
+  await page.goto("/dashboard/class/preview");
+  const showUsers = page.getByRole("button", { name: "Show users (8)" });
+  await expect(showUsers).toBeVisible({ timeout: 15_000 });
+
+  for (const width of [320, 375, 414, 1280]) {
+    await page.setViewportSize({ width, height: width >= 1024 ? 900 : 844 });
+    const printUsernames = page.getByRole("link", { name: "Print usernames" });
+    const showBox = await showUsers.boundingBox();
+    const printBox = await printUsernames.boundingBox();
+    expect(showBox, `show users at ${width}`).toBeTruthy();
+    expect(printBox, `print usernames at ${width}`).toBeTruthy();
+    const separated =
+      printBox!.x + printBox!.width <= showBox!.x + 1 ||
+      showBox!.x + showBox!.width <= printBox!.x + 1 ||
+      printBox!.y + printBox!.height <= showBox!.y + 1 ||
+      showBox!.y + showBox!.height <= printBox!.y + 1;
+    expect(separated, `overlap at ${width}`).toBe(true);
+    if (width < 390) {
+      expect(printBox!.y).toBeGreaterThan(showBox!.y + showBox!.height - 1);
+    }
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(overflow.scrollWidth, `overflow at ${width}`).toBeLessThanOrEqual(
+      overflow.clientWidth + 1,
+    );
+    await page.screenshot({
+      path: `/opt/cursor/artifacts/class-users-row-${width}.png`,
+      fullPage: false,
+    });
+  }
+});

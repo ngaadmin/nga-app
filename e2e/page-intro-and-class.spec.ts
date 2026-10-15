@@ -208,19 +208,48 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   });
 
   await page.getByRole("button", { name: "Show students (8)" }).click();
-  await expect(page.getByRole("button", { name: "Hide students" })).toBeVisible();
+  const hideStudents = page.getByRole("button", { name: "Hide students" });
+  await expect(hideStudents).toBeVisible();
   await expect(page.getByText("amber2", { exact: true }).first()).toBeVisible();
+  const xpChevron = await hideStudents.locator("svg").boundingBox();
+  expect(xpChevron?.width ?? 0).toBeGreaterThan(12);
+  expect(xpChevron?.height ?? 0).toBeGreaterThan(12);
+  await hideStudents.scrollIntoViewIfNeeded();
   await page.screenshot({
     path: "/opt/cursor/artifacts/class-xp-expanded.png",
-    fullPage: true,
+    fullPage: false,
   });
 
   await page.getByRole("button", { name: "Show student logins (8)" }).click();
-  await expect(page.getByRole("button", { name: "Hide student logins" })).toBeVisible();
+  const hideLogins = page.getByRole("button", { name: "Hide student logins" });
+  await expect(hideLogins).toBeVisible();
+  const loginsChevron = await hideLogins.locator("svg").boundingBox();
+  expect(loginsChevron?.width ?? 0).toBeGreaterThan(12);
+  expect(loginsChevron?.height ?? 0).toBeGreaterThan(12);
   await expect(page.getByRole("button", { name: "Remove student" }).first()).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/class-logins-expanded.png",
     fullPage: true,
+  });
+
+  const printTable = page.getByRole("button", { name: "Print this table" });
+  await printTable.evaluate((el) => {
+    const root = (document.scrollingElement ?? document.documentElement) as HTMLElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    root.scrollTop = root.scrollHeight;
+    root.style.scrollBehavior = previous;
+    el.getBoundingClientRect();
+  });
+  const navBox = await page.locator("[data-dashboard-nav]").boundingBox();
+  const printBox = await printTable.boundingBox();
+  expect(navBox).toBeTruthy();
+  expect(printBox).toBeTruthy();
+  expect(navBox!.y + navBox!.height).toBeGreaterThan(820);
+  expect(printBox!.y + printBox!.height).toBeLessThanOrEqual(navBox!.y + 1);
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-page-bottom.png",
+    fullPage: false,
   });
 
   await page.getByRole("button", { name: "Hide student logins" }).click();

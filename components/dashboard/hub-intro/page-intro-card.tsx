@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { cn } from "@/lib/utils/cn";
+import { STATUS_BANNER_INSET_CLASS } from "@/components/dashboard/status-banner-layout";
 import { ModalShell } from "@/components/ui/modal-shell";
 
 type PageIntroCardProps = {
@@ -57,9 +59,10 @@ export function PageIntroCard({
       onClose={dismissOnBackdrop ? onDismiss : undefined}
       dismissOnBackdrop={dismissOnBackdrop}
       align="center"
+      stretch
       labelledBy={titleId}
       describedBy={disclaimerId ? `${bodyId} ${disclaimerId}` : bodyId}
-      backdropClassName="bg-[#031F82]/15"
+      backdropClassName={cn("bg-[#031F82]/45", STATUS_BANNER_INSET_CLASS)}
       panelClassName="rounded-nga-xl bg-white p-5 shadow-nga-card"
     >
       <h2

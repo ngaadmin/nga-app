@@ -71,10 +71,7 @@ function RosterChevron({ expanded }: { expanded: boolean }) {
   return (
     <svg
       viewBox="0 0 20 20"
-      className={cn(
-        "size-4 shrink-0 text-nga-primary transition-transform",
-        expanded && "rotate-180",
-      )}
+      className="block size-4 shrink-0 text-nga-primary"
       aria-hidden
       fill="none"
       stroke="currentColor"
@@ -82,7 +79,10 @@ function RosterChevron({ expanded }: { expanded: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M5 7.5 10 12.5 15 7.5" />
+      <path
+        d="M5 7.5 10 12.5 15 7.5"
+        transform={expanded ? "rotate(180 10 10)" : undefined}
+      />
     </svg>
   );
 }

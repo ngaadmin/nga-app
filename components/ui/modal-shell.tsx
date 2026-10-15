@@ -18,6 +18,8 @@ type ModalShellProps = {
   align?: "bottom" | "center";
   backdropClassName?: string;
   panelClassName?: string;
+  /** Card spans the backdrop inset instead of the default max-w-sm column. */
+  stretch?: boolean;
   children: ReactNode;
 };
 
@@ -37,6 +39,7 @@ export function ModalShell({
   align = "bottom",
   backdropClassName,
   panelClassName,
+  stretch = false,
   children,
 }: ModalShellProps) {
   if (!isOpen) return null;
@@ -49,12 +52,12 @@ export function ModalShell({
     <ClientPortal rootId={LAYER_TO_ROOT[layer]}>
       <div
         className={cn(
-          "pointer-events-auto fixed inset-0 flex bg-[#031F82]/50 p-4",
+          "pointer-events-auto fixed inset-0 flex p-4",
           LAYER_CLASS.modal,
           align === "bottom"
             ? "items-end justify-center sm:items-center"
             : "items-center justify-center",
-          backdropClassName,
+          backdropClassName ?? "bg-[#031F82]/50",
         )}
         role={role}
         aria-modal={role === "dialog" ? true : undefined}
@@ -63,7 +66,7 @@ export function ModalShell({
         onClick={handleBackdropClick}
       >
         <div
-          className={cn("w-full max-w-sm", panelClassName)}
+          className={cn(stretch ? "w-full" : "w-full max-w-sm", panelClassName)}
           onClick={(event) => event.stopPropagation()}
         >
           {children}

@@ -11,6 +11,12 @@ export const lessonInteractiveTextClass = "text-lg font-medium";
 /** Gentle top offset so short screens don't hug the chrome. */
 export const lessonScreenContentOffsetClass = "pt-0";
 
+/**
+ * Side inset for every lesson screen. `--lesson-screen-edge-inset` (20px)
+ * stays clear, and `--lesson-screen-ink-outset` holds rings and shadows.
+ */
+export const lessonScreenInlinePaddingClass = "lesson-screen-inline";
+
 /** Top instructional / prompt copy. Sized for a phone held at arm's length. */
 export const lessonPromptClass =
   "font-heading text-[20px] font-semibold leading-[1.35] text-[#031F82]";

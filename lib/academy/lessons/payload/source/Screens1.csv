@@ -43,7 +43,13 @@ CORRECT: A","CHOICE A: 🧠 To trick his brain into buying fast without thinking
 CHOICE B: ❤️ Because the company genuinely cares about Aiden's safety.
 CORRECT: A",Don't fall for the flashing countdown!,Don't fall for the flashing countdown!,Don't fall for the flashing countdown!,
 1,1,6,hold-to-fill,Help Lars by giving him a 'buy freeze' so his brain has time to think.,"Holly isn't sure but her friends are blowing up the in-game chat. They're all bragging that they just bought it. Let's give Holly some time to think, by silencing the chat alerts.","If Aiden had time to think, he'd remember how a similar item he bought last month dropped in price the very next day. Hit the 'pause' button so Aiden can think if he really needs the item right now.",lars-hands-on-hips-512.webp,holly-hands-on-hips-512.webp,aiden-hands-on-hips-512.webp,HOLD: ❄️ HOLD TO FREEZE ❄️,HOLD: 🔕 HOLD TO SILENCE 🔕,HOLD: ⏸️ HOLD TO PAUSE ⏸️,,,,
-1,1,7,binary-choice,"The freeze worked! The next morning, Lars realized he didn’t even want that skin anymore. He kept his money safe to save for a new gaming headset. Congratulations for helping him avoid wasting his money.",Holly chooses to keep her money instead of giving in to the rush. She stays in control of spending.,Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.,lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,,,,
+1,1,7,binary-choice,"The freeze worked!
+
+The next morning, Lars realized he didn't even want that skin anymore.
+
+He kept his money safe for a new gaming headset. 🎧
+
+Congratulations for helping him avoid wasting his money! 🎉",Holly chooses to keep her money instead of giving in to the rush. She stays in control of spending.,Aiden walked away from the impulsive offer and kept his money exactly where it belongs: in his pocket.,lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,CHOICE A: Continue → GO Screen 8,,,,
 1,1,8,completion,,,,medal-skill1-bronze.webp,medal-skill1-bronze.webp,medal-skill1-bronze.webp,,MEDAL: bronze,,,,,
 1,2,1,true-false,Tomorrow is Senna's birthday. Lars opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Lars can still buy the present.,Tomorrow is Mia's birthday. Holly opens her savings jar to buy the phone case she promised her sister... but the jar is completely empty. True or False: Mia can still buy the present.,Tomorrow is Dash's birthday. Aiden opens his savings jar to buy the phone case he promised his brother... but the jar is completely empty. True or False: Aiden can still buy the present.,lars-senna-chatting.webp,holly-mia-chatting.webp,aiden-dash-chatting.webp,"OPTION: True
 OPTION: False

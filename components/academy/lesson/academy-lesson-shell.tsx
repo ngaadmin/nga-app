@@ -4,6 +4,7 @@ import { useRef, type ReactNode } from "react";
 import {
   LESSON_MAX_LIVES,
   lessonNextButtonClass,
+  lessonScreenInlinePaddingClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { pathProgressPercent } from "@/lib/academy/lessons/payload/lesson-graph";
 import { cn } from "@/lib/utils/cn";
@@ -69,7 +70,12 @@ export function AcademyLessonShell({
       className="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col bg-white"
       style={{ touchAction: "pan-y", overscrollBehavior: "none" }}
     >
-      <header className="flex shrink-0 items-center gap-2.5 px-4 pb-1 pt-3.5">
+      <header
+        className={cn(
+          "flex shrink-0 items-center gap-2.5 pb-1 pt-3.5",
+          lessonScreenInlinePaddingClass,
+        )}
+      >
         <div
           className="flex shrink-0 items-center gap-0.5"
           aria-label={`${livesRemaining} of ${maxLives} lives remaining`}
@@ -108,7 +114,12 @@ export function AcademyLessonShell({
       </div>
 
       {hideFooter ? null : (
-        <footer className="flex shrink-0 justify-center bg-white px-4 pb-4 pt-2">
+        <footer
+          className={cn(
+            "flex shrink-0 justify-center bg-white pb-4 pt-2",
+            lessonScreenInlinePaddingClass,
+          )}
+        >
           {footerSlot !== undefined ? (
             footerSlot
           ) : (
@@ -136,7 +147,7 @@ export function LessonScreenPane({
 }) {
   return (
     <div
-      className="flex h-full w-full shrink-0 flex-col overflow-hidden px-5 pb-3 pt-1"
+      className="flex h-full w-full shrink-0 flex-col overflow-hidden pb-3 pt-1"
       style={{ overscrollBehavior: "none", touchAction: "pan-y" }}
       aria-hidden={!isActive}
       inert={isActive ? undefined : true}

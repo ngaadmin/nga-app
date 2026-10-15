@@ -1,10 +1,18 @@
+import { lessonScreenInlinePaddingClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { cn } from "@/lib/utils/cn";
+
 const LESSON_LOADING_LIVES = 4;
 
 /** Shown the moment a lesson tile is tapped, before the lesson payload arrives. */
 export default function AcademyLessonLoading() {
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-white">
-      <header className="flex shrink-0 items-center gap-2.5 px-4 pb-1 pt-3.5">
+      <header
+        className={cn(
+          "flex shrink-0 items-center gap-2.5 pb-1 pt-3.5",
+          lessonScreenInlinePaddingClass,
+        )}
+      >
         <div className="flex shrink-0 items-center gap-0.5" aria-hidden>
           {Array.from({ length: LESSON_LOADING_LIVES }, (_, index) => (
             <span key={index} className="text-[14px] leading-none">

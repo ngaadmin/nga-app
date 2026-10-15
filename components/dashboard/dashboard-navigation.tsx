@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
+import { NextGenAchieversWordmark } from "@/components/brand/nextgen-achievers-wordmark";
 import { DashboardNavLink } from "@/components/dashboard/dashboard-nav-link";
 import {
   DASHBOARD_DEFAULT_HREF,
@@ -55,14 +55,7 @@ export function DashboardNavigation() {
             className="inline-flex items-center justify-center focus-visible:outline-offset-4"
             aria-label="NextGenAchievers Academy map"
           >
-            <Image
-              src="/nga-logo.png"
-              alt="NextGenAchievers Logo"
-              height={40}
-              width={160}
-              className="object-contain"
-              unoptimized
-            />
+            <NextGenAchieversWordmark />
           </Link>
         </div>
 

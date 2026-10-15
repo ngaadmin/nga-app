@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { NextGenAchieversWordmark } from "@/components/brand/nextgen-achievers-wordmark";
 import { Button } from "@/components/ui/button";
 import { ClientPortal } from "@/components/ui/client-portal";
 import {
@@ -344,14 +344,7 @@ export function ClassPage({ roster }: ClassPageProps) {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
       <div className="flex justify-center print:hidden">
-        <Image
-          src="/nga-logo.png"
-          alt="NextGenAchievers Logo"
-          height={40}
-          width={160}
-          className="object-contain"
-          unoptimized
-        />
+        <NextGenAchieversWordmark />
       </div>
 
       <div className="print:hidden space-y-6">

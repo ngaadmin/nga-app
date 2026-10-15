@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { NextGenAchieversWordmark } from "@/components/brand/nextgen-achievers-wordmark";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
@@ -27,14 +27,7 @@ export function OnboardingHeader() {
           className="inline-flex items-center justify-center focus-visible:outline-offset-4"
           aria-label="NextGenAchievers home"
         >
-          <Image
-            src="/nga-logo.png"
-            alt="NextGenAchievers Logo"
-            height={40}
-            width={160}
-            className="object-contain"
-            unoptimized
-          />
+          <NextGenAchieversWordmark />
         </Link>
       </div>
     </header>

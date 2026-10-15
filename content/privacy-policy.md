@@ -14,7 +14,7 @@ The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achiev
 | **Parents and guardians** | Email address; the link between the parent and child accounts; guardian email addresses on consent requests. |
 | **Teachers** | Email address; password (stored as a hash); a generated username (not a name); seat limit, learning track and the shared class password; the classes and student seats the teacher creates. We do not collect teachers' names or school names. |
 
-We do **not** collect students' real names, full dates of birth or home addresses. We do **not** store IP addresses. IP addresses are used briefly, in memory only, to limit misuse (rate-limiting).
+We do **not** collect students' real names, dates of birth, birth years or home addresses. We do **not** store IP addresses. IP addresses are used briefly, in memory only, to limit misuse (rate-limiting).
 
 ## 3. How we collect it
 
@@ -25,7 +25,7 @@ We do **not** collect students' real names, full dates of birth or home addresse
 ## 4. Why we use it
 We use personal information only to run NextGenAchievers:
 
-- **To create and secure accounts.** We use a username, the learning track you choose and a password to let you sign in, keep each account safe and give you the right learning track for your age.
+- **To create and secure accounts.** We use a username and password to let you sign in and keep each account safe. The learning track (Explorer, Pathfinder or Maverick) sets the right lessons for each child.
 - **To save your learning.** We store lesson progress, XP, medals and Vault activity so you can pick up where you left off.
 - **To run school classes.** Teachers can see the usernames and XP in their own class only.
 - **To link parents and children.** We record which parent is linked to which child so parents can give consent, manage their household, change a child's learning track, recover usernames and delete accounts.

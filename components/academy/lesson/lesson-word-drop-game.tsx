@@ -149,6 +149,8 @@ export const LessonWordDropGame = forwardRef<
   onMismatchRef.current = onMismatch;
   const pressRef = useRef<PressSession | null>(null);
   const shakeTimerRef = useRef<number | null>(null);
+  const suppressClickRef = useRef(false);
+  const placeTappedWordRef = useRef<(word: string) => void>(() => {});
 
   const rejectWord = (word: string) => {
     setSelectedWord(word);
@@ -222,6 +224,7 @@ export const LessonWordDropGame = forwardRef<
   ) => {
     event.preventDefault();
     event.stopPropagation();
+    suppressClickRef.current = true;
 
     const rect = event.currentTarget.getBoundingClientRect();
     const pointerId = event.pointerId;
@@ -298,7 +301,9 @@ export const LessonWordDropGame = forwardRef<
       }
 
       if (!press.dragging) {
-        setSelectedWord(press.word);
+        if (nativeEvent.type !== "pointercancel") {
+          placeTappedWordRef.current(press.word);
+        }
         endDrag();
         return;
       }
@@ -341,6 +346,42 @@ export const LessonWordDropGame = forwardRef<
     },
     [],
   );
+
+  const placeTappedWord = (word: string) => {
+    const blanksNow = blanksRef.current;
+    const choicesNow = choicesRef.current;
+    const open = blanksNow
+      .map((blank, index) => ({ blank, index }))
+      .filter(({ blank, index }) => {
+        const filled = choicesNow[index];
+        return !(filled && filled === blank.correctOption);
+      });
+
+    if (open.length === 0) return;
+
+    let target = open.length === 1 ? open[0] : undefined;
+    if (!target) {
+      const matches = open.filter(
+        ({ blank, index }) => !choicesNow[index] && word === blank.correctOption,
+      );
+      if (matches.length === 1) target = matches[0];
+    }
+
+    if (!target) {
+      setSelectedWord(word);
+      setShakeWord((current) => (current === word ? current : null));
+      return;
+    }
+
+    if (word === target.blank.correctOption) {
+      placeWordInBlank(target.index, word);
+      setSelectedWord(null);
+      return;
+    }
+
+    rejectWord(word);
+  };
+  placeTappedWordRef.current = placeTappedWord;
 
   const placeSelectedWord = (blankIndex: number) => {
     const word = selectedWord;
@@ -443,15 +484,18 @@ export const LessonWordDropGame = forwardRef<
               type="button"
               aria-pressed={selectedWord === option}
               onClick={() => {
+                if (suppressClickRef.current) {
+                  suppressClickRef.current = false;
+                  return;
+                }
                 if (used) return;
-                setSelectedWord(option);
-                if (shakeWord !== option) setShakeWord(null);
+                placeTappedWord(option);
               }}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
                 event.preventDefault();
                 if (used) return;
-                setSelectedWord(option);
+                placeTappedWord(option);
               }}
               onPointerDown={(event) => {
                 if (used) return;

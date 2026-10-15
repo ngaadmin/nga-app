@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import {
@@ -36,6 +36,21 @@ export function HoldToFillScreen({
   usePublishLessonHint(releaseError);
   const holdStartRef = useRef<number | null>(null);
   const holdFrameRef = useRef<number | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useLayoutEffect(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+    button.style.setProperty("touch-action", "none");
+    button.style.setProperty("user-select", "none");
+    button.style.setProperty("-webkit-user-select", "none");
+    button.style.setProperty("-webkit-touch-callout", "none");
+    const blockMenu = (event: Event) => {
+      event.preventDefault();
+    };
+    button.addEventListener("contextmenu", blockMenu);
+    return () => button.removeEventListener("contextmenu", blockMenu);
+  }, []);
 
   const startHold = () => {
     if (complete) return;
@@ -94,28 +109,52 @@ export function HoldToFillScreen({
         <p className={cn(lessonPromptClass, "mb-0 text-center")}>{screen.cta}</p>
       ) : null}
       <button
+        ref={buttonRef}
         type="button"
         disabled={complete}
         onPointerDown={(event) => {
+          if (event.pointerType === "mouse" && event.button !== 0) return;
           event.preventDefault();
+          try {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } catch {
+            // The pointer can end before the browser accepts capture.
+          }
           startHold();
         }}
-        onPointerUp={endHold}
-        onPointerLeave={endHold}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+          endHold();
+        }}
+        onPointerLeave={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) return;
+          endHold();
+        }}
         onPointerCancel={endHold}
-        style={{ touchAction: "none" }}
+        onContextMenu={(event) => {
+          event.preventDefault();
+        }}
+        style={{
+          touchAction: "none",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          WebkitTouchCallout: "none",
+        }}
         className={cn(
           lessonHoldButtonClass,
+          "lesson-hold-button",
           complete && lessonHoldButtonCompleteClass,
           releaseError && "lesson-tile-shake",
         )}
       >
         <span
-          className="absolute inset-y-0 left-0 bg-white/35"
+          className="pointer-events-none absolute inset-y-0 left-0 bg-white/35"
           style={{ width: `${progress * 100}%` }}
           aria-hidden
         />
-        <span className="relative z-raised inline-flex items-center gap-2">
+        <span className="pointer-events-none relative z-raised inline-flex items-center gap-2">
           {complete ? screen.frozenLabel : screen.holdLabel}
           {complete ? <LessonAnswerTick /> : null}
         </span>

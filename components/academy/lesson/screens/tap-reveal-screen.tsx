@@ -57,19 +57,21 @@ export function TapRevealScreen({
           {waiting.map((item) => (
             <div
               key={item.id}
-              className="grid min-w-[7.5rem] place-items-center gap-1 bg-transparent px-3 py-3 text-center text-[#14213D]"
+              className="grid w-[calc(50%-0.375rem)] min-w-0 max-w-[11rem] place-items-center gap-1 bg-transparent px-2 py-3 text-center text-[#14213D]"
             >
               {item.emoji ? (
                 <span className="text-[2.4rem] leading-none" aria-hidden>
                   {item.emoji}
                 </span>
               ) : null}
-              <span className="font-sans text-sm font-semibold">{item.label}</span>
+              <span className="w-full min-w-0 break-words font-sans text-sm font-semibold leading-snug">
+                {item.label}
+              </span>
             </div>
           ))}
         </div>
       ) : null}
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-2 gap-3">
         {screen.buckets.map((bucket) => {
           const revealed = screen.items.filter(
             (item) => item.bucket === bucket.id && placed.has(item.id),
@@ -77,21 +79,23 @@ export function TapRevealScreen({
           return (
             <div
               key={bucket.id}
-              className="flex min-h-40 flex-col gap-2 rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F8FCFF] p-3"
+              className="flex min-h-40 min-w-0 flex-col gap-2 rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F8FCFF] p-3"
             >
-              <h3 className="m-0 font-heading text-base font-bold text-[#031F82]">{bucket.label}</h3>
-              <div className="flex flex-1 flex-col gap-2">
+              <h3 className="m-0 break-words font-heading text-base font-bold leading-snug text-[#031F82]">
+                {bucket.label}
+              </h3>
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
                 {revealed.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-2 rounded-xl bg-white px-2 py-2 font-sans text-sm font-semibold text-[#031F82] shadow-[0_4px_10px_rgba(3,31,130,0.08)]"
+                    className="flex min-w-0 flex-col items-center gap-1 rounded-xl bg-white px-2 py-2 text-center font-sans text-sm font-semibold leading-snug text-[#031F82] shadow-[0_4px_10px_rgba(3,31,130,0.08)]"
                   >
                     {item.emoji ? (
-                      <span className="text-[1.8rem] leading-none" aria-hidden>
+                      <span className="shrink-0 text-[1.8rem] leading-none" aria-hidden>
                         {item.emoji}
                       </span>
                     ) : null}
-                    <span>{item.label}</span>
+                    <span className="w-full min-w-0 break-words">{item.label}</span>
                   </div>
                 ))}
               </div>

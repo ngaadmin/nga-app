@@ -23,6 +23,14 @@ import { cn } from "@/lib/utils/cn";
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
 
+function classTrackLine(cohort: MasteryCohort): string {
+  return `Class track: ${masteryCohortLabel(cohort)} (ages ${masteryCohortAgeRangeLabel(cohort)})`;
+}
+
+/** Shown only while students exist. Owner should approve this wording. */
+const TRACK_LOCK_HELP =
+  "To change the track, remove all students first. Then you can change it and add students again.";
+
 type ClassPageProps = {
   roster: ClassRosterSnapshot;
 };
@@ -218,10 +226,10 @@ export function ClassPage({ roster }: ClassPageProps) {
   const [loginsExpanded, setLoginsExpanded] = useState(false);
 
   const remaining = Math.max(0, roster.seatCap - studentsUsed);
-  const cohortLocked = studentsUsed > 0;
 
   async function handlePickCohort(cohort: MasteryCohort) {
-    if (cohortLocked || cohort === classCohort || savingCohort) return;
+    if (savingCohort || cohort === classCohort) return;
+    if (studentsUsed > 0 && classCohort) return;
     setError(null);
     setNotice(null);
     setSavingCohort(true);
@@ -354,52 +362,43 @@ export function ClassPage({ roster }: ClassPageProps) {
           You have {remaining} student seats left on this account.
         </p>
 
-        <fieldset className="space-y-3">
-          <legend className="font-heading text-sm font-bold text-nga-primary">
-            Class track
-          </legend>
-          {classCohort ? (
-            <p className="font-sans text-sm text-nga-ink">
-              This class is{" "}
-              <span className="font-heading font-bold text-nga-primary">
-                {masteryCohortLabel(classCohort)}
-              </span>
-              {" · "}
-              ages {masteryCohortAgeRangeLabel(classCohort)}.
-              {cohortLocked
-                ? " Every student login uses this track."
-                : " Pick this before you add students."}
-            </p>
-          ) : (
-            <p className="font-sans text-sm text-nga-slate">
-              Pick Explorer, Pathfinder or Maverick before you add students.
-            </p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {MASTERY_COHORT_ORDER.map((cohort) => {
-              const selected = cohort === classCohort;
-              return (
-                <button
-                  key={cohort}
-                  type="button"
-                  aria-pressed={selected}
-                  disabled={savingCohort || (cohortLocked && !selected)}
-                  onClick={() => handlePickCohort(cohort)}
-                  className={cn(
-                    "rounded-full border-2 px-3 py-1.5 font-heading text-sm font-bold",
-                    selected
-                      ? "border-nga-primary bg-nga-primary text-white"
-                      : "border-nga-primary bg-white text-nga-primary",
-                    (savingCohort || (cohortLocked && !selected)) &&
-                      "cursor-not-allowed opacity-40",
-                  )}
-                >
-                  {masteryCohortNameAndAgeLabel(cohort)}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
+        {classCohort && studentsUsed > 0 ? (
+          <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="font-heading text-sm font-bold text-nga-primary">
+              {classTrackLine(classCohort)}
+            </span>
+            <span className="font-sans text-sm text-nga-slate">{TRACK_LOCK_HELP}</span>
+          </p>
+        ) : (
+          <fieldset className="space-y-3">
+            <legend className="font-heading text-sm font-bold text-nga-primary">
+              Class track
+            </legend>
+            <div className="flex flex-wrap gap-2">
+              {MASTERY_COHORT_ORDER.map((cohort) => {
+                const selected = cohort === classCohort;
+                return (
+                  <button
+                    key={cohort}
+                    type="button"
+                    aria-pressed={selected}
+                    disabled={savingCohort}
+                    onClick={() => handlePickCohort(cohort)}
+                    className={cn(
+                      "rounded-full border-2 px-3 py-1.5 font-heading text-sm font-bold",
+                      selected
+                        ? "border-nga-primary bg-nga-primary text-white"
+                        : "border-nga-primary bg-white text-nga-primary",
+                      savingCohort && "cursor-not-allowed opacity-40",
+                    )}
+                  >
+                    {masteryCohortNameAndAgeLabel(cohort)}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
 
         <form className="space-y-3" onSubmit={handleAddStudents}>
           <label
@@ -571,7 +570,7 @@ export function ClassPage({ roster }: ClassPageProps) {
       <div className={cn("hidden print:block")}>
         {classCohort ? (
           <p className="mb-3 font-heading text-sm font-bold text-nga-primary">
-            Class track: {masteryCohortNameAndAgeLabel(classCohort)}
+            {classTrackLine(classCohort)}
           </p>
         ) : null}
         <StudentLoginTable usernames={sortedUsernames} />

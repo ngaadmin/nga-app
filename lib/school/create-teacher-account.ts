@@ -14,6 +14,7 @@ import {
   readClassPasswordKey,
 } from "@/lib/school/class-password-crypto";
 import { signClassOpenToken } from "@/lib/school/class-open-token";
+import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -53,14 +54,25 @@ async function resolveSignupAppUrl(): Promise<string> {
 }
 
 /**
- * /school signup: email + password → teacher Auth user, is_teacher, seat_cap,
- * and one confirm-account email. Stays inactive until the mail button.
+ * /school signup: class track, then email + password → teacher Auth user,
+ * is_teacher, seat_cap, class_cohort, and one confirm-account email.
+ * Stays inactive until the mail button.
  * No parent-consent mail. No consent_approved_at.
+ * class_cohort is written with the service role because protect_profile_columns
+ * blocks client updates.
  */
 export async function createTeacherAccount(input: {
   email: string;
   password: string;
+  classCohort: MasteryCohort;
 }): Promise<CreateTeacherAccountResult> {
+  const classCohort = parseMasteryCohort(input.classCohort);
+  if (!classCohort) {
+    return {
+      success: false,
+      error: "Pick the learning track for this profile.",
+    };
+  }
   const email = normalizeEmailAddress(input.email);
   if (!email) {
     return { success: false, error: "Please enter a valid email address." };
@@ -129,18 +141,20 @@ export async function createTeacherAccount(input: {
         consent_approved_at: null,
         is_teacher: true,
         seat_cap: DEFAULT_SEAT_CAP,
+        class_cohort: classCohort,
         ...classPasswordCipherUpdate(generateClassPassword(), userId),
         teacher_id: null,
       })
       .eq("id", userId)
-      .select("id, username, is_teacher, account_role, account_status")
+      .select("id, username, is_teacher, account_role, account_status, class_cohort")
       .maybeSingle();
 
     if (
       profileError ||
       !saved?.id ||
       saved.is_teacher !== true ||
-      saved.account_role !== "teacher"
+      saved.account_role !== "teacher" ||
+      saved.class_cohort !== classCohort
     ) {
       await admin.auth.admin.deleteUser(userId);
       if (profileError) {

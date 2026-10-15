@@ -17,7 +17,7 @@ export default function PrivacyPage() {
   return (
     <>
       <OnboardingHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-8">
         <PrivacyPolicyView blocks={blocks} />
       </main>
     </>

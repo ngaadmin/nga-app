@@ -5,6 +5,7 @@ import {
   inlineText,
   parsePrivacyMarkdown,
 } from "@/lib/privacy/parse-privacy-markdown";
+import { splitTrailingQualifier } from "@/lib/privacy/split-trailing-qualifier";
 
 const BACKUP_SENTENCE =
   "Deleted data is removed from our live database; we don't keep restorable backups.";
@@ -42,5 +43,29 @@ describe("privacy policy source", () => {
         text: "cath.drdw@nextgenachievers.com",
       },
     ]);
+  });
+});
+
+describe("splitTrailingQualifier", () => {
+  it("puts a trailing parenthetical on its own qualifier and keeps the brackets", () => {
+    expect(splitTrailingQualifier("Students (school class seats)")).toEqual({
+      label: "Students",
+      qualifier: "(school class seats)",
+    });
+    expect(splitTrailingQualifier("Students (parent accounts)")).toEqual({
+      label: "Students",
+      qualifier: "(parent accounts)",
+    });
+  });
+
+  it("leaves labels without a trailing parenthetical unchanged", () => {
+    expect(splitTrailingQualifier("Parents and guardians")).toEqual({
+      label: "Parents and guardians",
+      qualifier: null,
+    });
+    expect(splitTrailingQualifier("Teachers")).toEqual({
+      label: "Teachers",
+      qualifier: null,
+    });
   });
 });

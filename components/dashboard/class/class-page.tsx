@@ -19,13 +19,8 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { isKidClassPassword, suggestClassPassword } from "@/lib/school/class-password";
+import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
 import { cn } from "@/lib/utils/cn";
-
-const COHORT_EMOJI: Record<MasteryCohort, string> = {
-  explorer: "🔭",
-  pathfinder: "🧭",
-  maverick: "🚀",
-};
 
 /** Shown only while students exist. Exact wording from the class-track lock. */
 const TRACK_LOCK_HELP_LEAD = "To change the track, remove all users first.";

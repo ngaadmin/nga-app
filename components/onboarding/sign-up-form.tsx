@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CohortTrackField } from "@/components/onboarding/cohort-track-field";
+import { LearnerBirthYearField, learnerFieldClass } from "@/components/onboarding/learner-birth-year-field";
+import { LearnerTrackCards } from "@/components/onboarding/learner-track-cards";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
@@ -42,6 +43,11 @@ import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
 } from "@/lib/onboarding/registered-accounts";
+import {
+  ageTrackFitMessage,
+  decideLearnerAge,
+} from "@/lib/onboarding/signup-age-check";
+import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
@@ -107,8 +113,12 @@ type FormErrors = {
   parentEmail?: string;
   parentalConsent?: string;
   track?: string;
+  birthYear?: string;
   form?: string;
 };
+
+type LearnerSignupStep = "track" | "credentials" | "emails";
+type ValidationScope = "all" | "track" | "credentials" | "emails";
 
 function cohortHeader(cohort: MasteryCohort): string {
   switch (cohort) {
@@ -142,10 +152,15 @@ export function SignUpForm() {
   const isGuestParentCreate = !isParentMaster && accountAs === "parent";
   const showRoleChoice = !isParentMaster && accountAs !== "learner" && accountAs !== "parent";
 
+  const trackFromQuery = parseMasteryCohort(searchParams.get("track"));
   const [cohort, setCohort] = useState<MasteryCohort | null>(() => {
     if (isParentMaster) return null;
-    return guestSelectedTrack(existingSession);
+    return trackFromQuery ?? guestSelectedTrack(existingSession);
   });
+  const [learnerStep, setLearnerStep] = useState<LearnerSignupStep>("track");
+  const [birthYear, setBirthYear] = useState<number | null>(null);
+  const [ageFitMessage, setAgeFitMessage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const ageTier = isParentMaster ? null : cohort;
   const isExplorer = !isParentMaster && ageTier === "explorer";
@@ -174,6 +189,7 @@ export function SignUpForm() {
   );
   const approvalEmailInFlightRef = useRef(false);
   const parentMasterInFlightRef = useRef(false);
+  const skipSubmitRef = useRef(false);
   const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
   const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
 
@@ -186,11 +202,11 @@ export function SignUpForm() {
   // SSR cannot read localStorage, so cohort starts null. Re-seed from the
   // guest session after mount or Explorer submit silently no-ops.
   useEffect(() => {
-    if (isParentMaster) return;
+    if (isParentMaster || trackFromQuery) return;
     const track = guestSelectedTrack(readUserSession());
     if (!track) return;
     setCohort((current) => current ?? track);
-  }, [isParentMaster]);
+  }, [isParentMaster, trackFromQuery]);
 
   useEffect(() => {
     if (!isParentMaster || !consentToken) return;
@@ -294,40 +310,62 @@ export function SignUpForm() {
     }
   }
 
-  function collectValidationErrors(): FormErrors {
+  function collectValidationErrors(scope: ValidationScope = "all"): FormErrors {
     const next: FormErrors = {};
+    const checkTrack = scope === "all" || scope === "track";
+    const checkCredentials = scope === "all" || scope === "credentials";
+    const checkEmails = scope === "all" || scope === "emails";
     const trimmedUsername = username.trim();
 
-    if (!trimmedUsername) {
-      next.username = isParentMaster
-        ? "Pick a username for your parent master profile."
-        : isExplorer
-          ? "Pick a username for your Explorer profile."
-          : "Pick a username for your account.";
-    } else if (isInternalPlaceholderUsername(trimmedUsername)) {
-      next.username = "Pick a username you choose yourself.";
-    } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
-      next.username =
-        "Use 2-20 letters, numbers, underscores, or hyphens only.";
-    } else if (!isParentMaster && trimmedUsername) {
-      // Username must be unique; the same parent email may link many children.
-      const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
-      if (
-        existingAccount &&
-        existingAccount.accountStatus === "ACTIVE" &&
-        existingAccount.accessMode === "registered"
-      ) {
-        next.username = USERNAME_TAKEN_ERROR;
+    if (checkCredentials) {
+      if (!trimmedUsername) {
+        next.username = isParentMaster
+          ? "Pick a username for your parent master profile."
+          : isExplorer
+            ? "Pick a username for your Explorer profile."
+            : "Pick a username for your account.";
+      } else if (isInternalPlaceholderUsername(trimmedUsername)) {
+        next.username = "Pick a username you choose yourself.";
+      } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
+        next.username =
+          "Use 2-20 letters, numbers, underscores, or hyphens only.";
+      } else if (!isParentMaster && trimmedUsername) {
+        // Username must be unique; the same parent email may link many children.
+        const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
+        if (
+          existingAccount &&
+          existingAccount.accountStatus === "ACTIVE" &&
+          existingAccount.accessMode === "registered"
+        ) {
+          next.username = USERNAME_TAKEN_ERROR;
+        }
+      }
+
+      if (!password) {
+        next.password = "Create a password to secure your account.";
+      } else if (password.trim().length < 6) {
+        next.password = "Use at least 6 characters for your password.";
+      }
+
+      if (isParentMaster) {
+        if (!confirmPassword) {
+          next.confirmPassword = "Confirm your password.";
+        } else if (password && confirmPassword !== password) {
+          next.confirmPassword = "Passwords don't match.";
+        }
       }
     }
 
-    if (!isParentMaster) {
+    if (!isParentMaster && checkTrack) {
       if (!cohort) {
         next.track = "Pick the learning track for this profile.";
       }
+      if (birthYear == null) {
+        next.birthYear = "Choose the year you were born.";
+      }
     }
 
-    if (isExplorer) {
+    if (checkEmails && isExplorer) {
       const trimmedParent = parentEmail.trim().toLowerCase();
       if (!trimmedParent) {
         next.parentEmail =
@@ -338,19 +376,7 @@ export function SignUpForm() {
       // Pre-existing parent emails are allowed — multiple Explorers may share one.
     }
 
-    if (!password) {
-      next.password = "Create a password to secure your account.";
-    } else if (password.trim().length < 6) {
-      next.password = "Use at least 6 characters for your password.";
-    }
-
-    if (!confirmPassword) {
-      next.confirmPassword = "Confirm your password.";
-    } else if (password && confirmPassword !== password) {
-      next.confirmPassword = "Passwords don't match.";
-    }
-
-    if (isPathfinder || isMaverick) {
+    if (checkEmails && (isPathfinder || isMaverick)) {
       const trimmedLearner = learnerEmail.trim().toLowerCase();
       if (!trimmedLearner) {
         next.learnerEmail = "Enter your email so we can save your account.";
@@ -359,7 +385,7 @@ export function SignUpForm() {
       }
     }
 
-    if (isPathfinder) {
+    if (checkEmails && isPathfinder) {
       const trimmedParent = parentEmail.trim().toLowerCase();
       const trimmedLearner = learnerEmail.trim().toLowerCase();
       if (!trimmedParent) {
@@ -376,7 +402,7 @@ export function SignUpForm() {
       }
     }
 
-    if (isParentMaster) {
+    if (isParentMaster && checkEmails) {
       const trimmedParent = parentEmail.trim().toLowerCase();
       if (!trimmedParent || !EMAIL_PATTERN.test(trimmedParent)) {
         next.parentEmail = INVALID_EMAIL_ERROR;
@@ -389,6 +415,130 @@ export function SignUpForm() {
     }
 
     return next;
+  }
+
+  function focusLearnerStepForErrors(nextErrors: FormErrors) {
+    if (nextErrors.track || nextErrors.birthYear) {
+      setLearnerStep("track");
+      return;
+    }
+    if (nextErrors.username || nextErrors.password) {
+      setLearnerStep("credentials");
+    }
+  }
+
+  /** Switches the track when the year does not fit. Returns false to stay put. */
+  function applyAgeFit(): boolean {
+    if (birthYear == null || !cohort) return false;
+    const decision = decideLearnerAge(birthYear);
+    if (!decision) {
+      setErrors((prev) => ({
+        ...prev,
+        birthYear: "Choose the year you were born.",
+      }));
+      setLearnerStep("track");
+      return false;
+    }
+    if (decision.cohort !== cohort) {
+      setCohort(decision.cohort);
+      setAgeFitMessage(ageTrackFitMessage(decision.cohort));
+      setLearnerStep("track");
+      return false;
+    }
+    setAgeFitMessage(null);
+    return true;
+  }
+
+  function handleTrackPick(track: MasteryCohort) {
+    if (track === cohort) return;
+    const decision = birthYear == null ? null : decideLearnerAge(birthYear);
+    if (decision && decision.cohort !== track) {
+      setCohort(decision.cohort);
+      setAgeFitMessage(ageTrackFitMessage(decision.cohort));
+    } else {
+      setCohort(track);
+      if (decision) setAgeFitMessage(null);
+    }
+    clearError("track");
+  }
+
+  function handleBirthYearChange(year: number | null) {
+    setBirthYear(year);
+    clearError("birthYear");
+    if (year == null) {
+      setAgeFitMessage(null);
+      return;
+    }
+    const decision = decideLearnerAge(year);
+    if (decision && cohort && decision.cohort !== cohort) {
+      setCohort(decision.cohort);
+      setAgeFitMessage(ageTrackFitMessage(decision.cohort));
+      return;
+    }
+    setAgeFitMessage(null);
+  }
+
+  function handleLearnerBack() {
+    if (learnerStep === "emails") {
+      setLearnerStep("credentials");
+      setErrors({});
+      return;
+    }
+    if (learnerStep === "credentials") {
+      setLearnerStep("track");
+      setErrors({});
+      return;
+    }
+    if (fromAccount) {
+      router.push(DASHBOARD_SETTINGS_ACCOUNT_PATH);
+      return;
+    }
+    if (fromLoginCreate) {
+      router.push(`${ONBOARDING_SIGN_UP_PATH}?from=login`);
+      return;
+    }
+    if (accountAs === "learner") {
+      router.push(ONBOARDING_SIGN_UP_PATH);
+      return;
+    }
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/");
+  }
+
+  function handleLearnerNext() {
+    if (learnerStep === "track") {
+      const nextErrors = collectValidationErrors("track");
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
+        return;
+      }
+      if (!applyAgeFit()) return;
+      // Replacing Next with the finish button can submit the form in the
+      // same click. Ignore only that follow-up event.
+      skipSubmitRef.current = true;
+      queueMicrotask(() => {
+        skipSubmitRef.current = false;
+      });
+      setErrors({});
+      setLearnerStep("credentials");
+      return;
+    }
+    if (learnerStep === "credentials") {
+      const nextErrors = collectValidationErrors("credentials");
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
+        return;
+      }
+      skipSubmitRef.current = true;
+      queueMicrotask(() => {
+        skipSubmitRef.current = false;
+      });
+      setErrors({});
+      setLearnerStep("emails");
+    }
   }
 
   function validate(): boolean {
@@ -454,9 +604,18 @@ export function SignUpForm() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (skipSubmitRef.current) {
+      skipSubmitRef.current = false;
+      return;
+    }
 
     if (isParentMaster) {
       await handleParentMasterSubmit();
+      return;
+    }
+
+    if (learnerStep !== "emails") {
+      handleLearnerNext();
       return;
     }
 
@@ -478,6 +637,7 @@ export function SignUpForm() {
     }
 
     if (!cohort || Object.keys(nextErrors).length > 0) {
+      focusLearnerStepForErrors(nextErrors);
       setErrors({
         ...nextErrors,
         form:
@@ -486,6 +646,8 @@ export function SignUpForm() {
       });
       return;
     }
+
+    if (!applyAgeFit()) return;
 
     approvalEmailInFlightRef.current = true;
     setIsSendingApprovalEmail(true);
@@ -496,6 +658,7 @@ export function SignUpForm() {
       const result = await createSupabaseAccount({
         username: username.trim(),
         cohort,
+        birthYear: birthYear ?? undefined,
         password: password.trim(),
         learnerEmail: isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
         parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
@@ -504,9 +667,19 @@ export function SignUpForm() {
 
       if (!result.success) {
         if (/username is already taken/i.test(result.error)) {
+          setLearnerStep("credentials");
           setErrors((prev) => ({
             ...prev,
             username: USERNAME_TAKEN_ERROR,
+            form: undefined,
+          }));
+          return;
+        }
+        if (/year you were born/i.test(result.error)) {
+          setLearnerStep("track");
+          setErrors((prev) => ({
+            ...prev,
+            birthYear: "Choose the year you were born.",
             form: undefined,
           }));
           return;
@@ -518,19 +691,21 @@ export function SignUpForm() {
         return;
       }
 
+      const savedCohort = result.cohort;
       const isPendingConsent =
-        result.accountStatus === "pending_consent" || result.cohort === "explorer";
+        result.accountStatus === "pending_consent" || savedCohort === "explorer";
       const childSession = convertToRegisteredProfile({
         username: result.username,
         accountRole: "child",
-        parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
+        parentEmail:
+          savedCohort === "maverick" ? undefined : parentEmail.trim(),
         learnerEmail:
-          isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
+          savedCohort === "explorer" ? undefined : learnerEmail.trim(),
         password: password.trim(),
         accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
-        marketingOptIn: isExplorer ? false : marketingOptIn,
+        marketingOptIn: savedCohort === "explorer" ? false : marketingOptIn,
         supabaseUserId: result.userId,
-        curriculumCohort: cohort,
+        curriculumCohort: savedCohort,
       });
       await finalizeRegisteredSignup(childSession, { skipEmail: true });
       succeeded = true;
@@ -880,7 +1055,7 @@ export function SignUpForm() {
     return (
       <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
         <div className="mx-auto w-full max-w-md space-y-8 px-1">
-          <OnboardingProgress value={40} />
+          <OnboardingProgress value={25} />
           <div className="space-y-2 text-center">
             <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
               {choice.title}
@@ -920,301 +1095,302 @@ export function SignUpForm() {
     );
   }
 
-  return (
-    <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
-      <div className="mx-auto w-full max-w-md space-y-8 px-1">
-        <OnboardingProgress value={50} />
+  const learnerProgress =
+    learnerStep === "track" ? 50 : learnerStep === "credentials" ? 75 : 100;
+  const accountTitle = fromLoginCreate
+    ? "Create your account"
+    : ageTier
+      ? cohortHeader(ageTier)
+      : "Save Your Progress";
+  const nextDisabled = learnerStep === "track" && !cohort;
 
-        {fromAccount || accountAs === "learner" ? (
+  return (
+    <section
+      data-signup-step={learnerStep}
+      className="flex flex-1 flex-col py-6 sm:py-10"
+    >
+      <div className="mx-auto w-full max-w-md space-y-6 pb-[calc(104px+env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() =>
-              router.push(
-                fromAccount
-                  ? DASHBOARD_SETTINGS_ACCOUNT_PATH
-                  : fromLoginCreate
-                    ? `${ONBOARDING_SIGN_UP_PATH}?from=login`
-                    : ONBOARDING_SIGN_UP_PATH,
-              )
-            }
+            onClick={handleLearnerBack}
+            aria-label="Back"
             className="font-heading text-sm font-bold text-nga-secondary transition-colors hover:text-nga-primary"
           >
-            ← Back
+            ←
           </button>
-        ) : null}
+          <OnboardingProgress value={learnerProgress} className="min-w-0 flex-1" />
+        </div>
 
         <div className="space-y-2 text-center">
           <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
-            {fromLoginCreate
-              ? "Create your account"
-              : ageTier
-                ? cohortHeader(ageTier)
-                : "Save Your Progress"}
+            {learnerStep === "track"
+              ? "Pick the path that matches your age."
+              : accountTitle}
           </h1>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-          <CohortTrackField
-            value={cohort}
-            onChange={(track) => {
-              setCohort(track);
-              clearError("track");
-            }}
-            error={errors.track}
-          />
-
-          <div className="space-y-2">
-            <label
-              htmlFor="signup-username"
-              className="block font-heading text-sm font-bold text-nga-primary"
-            >
-              Username
-            </label>
-            <p
-              id="signup-username-tip"
-              className="font-sans text-sm font-bold text-purple-700"
-            >
-              Tip: don&apos;t use your real full name.
-            </p>
-            <input
-              id="signup-username"
-              name="chosen-username"
-              type="text"
-              autoComplete="off"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              placeholder={isExplorer ? "e.g. CashDragon88" : "Choose a username"}
-              value={username}
-              onChange={(e) => {
-                const nextValue = e.target.value;
-                setUsername(
-                  isInternalPlaceholderUsername(nextValue) ? "" : nextValue,
-                );
-                clearError("username");
-              }}
-              aria-invalid={Boolean(errors.username)}
-              aria-describedby="signup-username-tip"
-              className={cn(
-                fieldBase,
-                errors.username && "border-[#031F82] focus:border-[#031F82]",
-              )}
-            />
-            {errors.username ? (
-              <p
-                className="font-sans text-sm font-medium text-[#031F82]"
-                role="alert"
-              >
-                {errors.username}
-              </p>
-            ) : null}
-          </div>
-
-          {isPathfinder || isMaverick ? (
-            <div className="space-y-2">
-              <label
-                htmlFor="signup-learner-email"
-                className="block font-heading text-sm font-bold text-nga-primary"
-              >
-                Your Email Address
-              </label>
-              <input
-                id="signup-learner-email"
-                name="learnerEmail"
-                type="email"
-                autoComplete="email"
-                placeholder="name@example.com"
-                value={learnerEmail}
-                onChange={(e) => {
-                  setLearnerEmail(e.target.value);
-                  clearError("learnerEmail");
-                }}
-                aria-invalid={Boolean(errors.learnerEmail)}
-                className={cn(
-                  fieldBase,
-                  errors.learnerEmail &&
-                    "border-[#031F82] focus:border-[#031F82]",
-                )}
+          {learnerStep === "track" ? (
+            <>
+              <LearnerTrackCards
+                value={cohort}
+                onChange={handleTrackPick}
+                error={errors.track}
               />
-              {errors.learnerEmail ? (
-                <p
-                  className="font-sans text-sm font-medium text-[#031F82]"
-                  role="alert"
-                >
-                  {errors.learnerEmail}
-                </p>
-              ) : (
-                <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
-                  For account updates only. You log in with your username.
-                </p>
-              )}
-            </div>
+              <LearnerBirthYearField
+                value={birthYear}
+                onChange={handleBirthYearChange}
+                error={errors.birthYear}
+                fitMessage={ageFitMessage}
+              />
+            </>
           ) : null}
 
-          <div className="space-y-2">
-            <label
-              htmlFor="signup-password"
-              className="block font-heading text-sm font-bold text-nga-primary"
-            >
-              Create your password
-            </label>
-            <input
-              id="signup-password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Create a password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                clearError("password");
-              }}
-              aria-invalid={Boolean(errors.password)}
-              className={cn(
-                fieldBase,
-                errors.password && "border-[#031F82] focus:border-[#031F82]",
-              )}
-            />
-            {errors.password ? (
-              <p
-                className="font-sans text-sm font-medium text-[#031F82]"
-                role="alert"
-              >
-                {errors.password}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="signup-confirm-password"
-              className="block font-heading text-sm font-bold text-nga-primary"
-            >
-              Confirm password
-            </label>
-            <input
-              id="signup-confirm-password"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Re-enter your password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                clearError("confirmPassword");
-              }}
-              aria-invalid={Boolean(errors.confirmPassword)}
-              className={cn(
-                fieldBase,
-                errors.confirmPassword && "border-[#031F82] focus:border-[#031F82]",
-              )}
-            />
-            {errors.confirmPassword ? (
-              <p
-                className="font-sans text-sm font-medium text-[#031F82]"
-                role="alert"
-              >
-                {errors.confirmPassword}
-              </p>
-            ) : null}
-          </div>
-
-          {isExplorer || isPathfinder ? (
-            <div className="space-y-2">
-              <label
-                htmlFor="signup-parent-email"
-                className="block font-heading text-sm font-bold text-nga-primary"
-              >
-                Parent/guardian email address
-              </label>
-              {isExplorer ? (
+          {learnerStep === "credentials" ? (
+            <>
+              <div className="space-y-2">
+                <label
+                  htmlFor="signup-username"
+                  className="block font-heading text-sm font-bold text-nga-primary"
+                >
+                  Username
+                </label>
                 <p
-                  id="signup-parent-email-hint"
+                  id="signup-username-tip"
                   className="font-sans text-sm font-bold text-purple-700"
                 >
-                  A parent/guardian needs to approve this.
+                  Tip: don&apos;t use your real full name.
                 </p>
+                <input
+                  id="signup-username"
+                  name="chosen-username"
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder={isExplorer ? "e.g. CashDragon88" : "Choose a username"}
+                  value={username}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    setUsername(
+                      isInternalPlaceholderUsername(nextValue) ? "" : nextValue,
+                    );
+                    clearError("username");
+                  }}
+                  aria-invalid={Boolean(errors.username)}
+                  aria-describedby="signup-username-tip"
+                  className={learnerFieldClass}
+                />
+                {errors.username ? (
+                  <p
+                    className="font-sans text-sm font-medium text-[#031F82]"
+                    role="alert"
+                  >
+                    {errors.username}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="signup-password"
+                  className="block font-heading text-sm font-bold text-nga-primary"
+                >
+                  Create your password
+                </label>
+                <div className="relative">
+                  <input
+                    id="signup-password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      clearError("password");
+                    }}
+                    aria-invalid={Boolean(errors.password)}
+                    className={cn(learnerFieldClass, "pr-16")}
+                  />
+                  <button
+                    type="button"
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute inset-y-0 right-3 font-heading text-sm font-bold text-nga-primary"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {errors.password ? (
+                  <p
+                    className="font-sans text-sm font-medium text-[#031F82]"
+                    role="alert"
+                  >
+                    {errors.password}
+                  </p>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+
+          {learnerStep === "emails" ? (
+            <>
+              {isPathfinder || isMaverick ? (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="signup-learner-email"
+                    className="block font-heading text-sm font-bold text-nga-primary"
+                  >
+                    Your Email Address
+                  </label>
+                  <input
+                    id="signup-learner-email"
+                    name="learnerEmail"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="name@example.com"
+                    value={learnerEmail}
+                    onChange={(e) => {
+                      setLearnerEmail(e.target.value);
+                      clearError("learnerEmail");
+                    }}
+                    aria-invalid={Boolean(errors.learnerEmail)}
+                    className={learnerFieldClass}
+                  />
+                  {errors.learnerEmail ? (
+                    <p
+                      className="font-sans text-sm font-medium text-[#031F82]"
+                      role="alert"
+                    >
+                      {errors.learnerEmail}
+                    </p>
+                  ) : (
+                    <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
+                      For account updates only. You log in with your username.
+                    </p>
+                  )}
+                </div>
               ) : null}
-              <input
-                id="signup-parent-email"
-                name="parentEmail"
-                type="email"
-                autoComplete="email"
-                placeholder="parent@example.com"
-                value={parentEmail}
-                onChange={(e) => {
-                  setParentEmail(e.target.value);
-                  clearError("parentEmail");
-                }}
-                aria-invalid={Boolean(errors.parentEmail)}
-                aria-describedby={
-                  isExplorer
-                    ? "signup-parent-email-hint"
-                    : errors.parentEmail
-                      ? undefined
-                      : "signup-parent-email-hint"
-                }
-                className={cn(
-                  fieldBase,
-                  errors.parentEmail && "border-[#031F82] focus:border-[#031F82]",
-                )}
-              />
-              {errors.parentEmail ? (
-                <p
-                  className="font-sans text-sm font-medium text-[#031F82]"
-                  role="alert"
-                >
-                  {errors.parentEmail}
-                </p>
-              ) : isExplorer ? null : (
-                <p
-                  id="signup-parent-email-hint"
-                  className="font-sans text-sm italic leading-relaxed text-nga-slate"
-                >
-                  We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions.
-                </p>
+
+              {isExplorer || isPathfinder ? (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="signup-parent-email"
+                    className="block font-heading text-sm font-bold text-nga-primary"
+                  >
+                    Parent/guardian email address
+                  </label>
+                  {isExplorer ? (
+                    <p
+                      id="signup-parent-email-hint"
+                      className="font-sans text-sm font-bold text-purple-700"
+                    >
+                      A parent/guardian needs to approve this.
+                    </p>
+                  ) : null}
+                  <input
+                    id="signup-parent-email"
+                    name="parentEmail"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="parent@example.com"
+                    value={parentEmail}
+                    onChange={(e) => {
+                      setParentEmail(e.target.value);
+                      clearError("parentEmail");
+                    }}
+                    aria-invalid={Boolean(errors.parentEmail)}
+                    aria-describedby={
+                      isExplorer
+                        ? "signup-parent-email-hint"
+                        : errors.parentEmail
+                          ? undefined
+                          : "signup-parent-email-hint"
+                    }
+                    className={learnerFieldClass}
+                  />
+                  {errors.parentEmail ? (
+                    <p
+                      className="font-sans text-sm font-medium text-[#031F82]"
+                      role="alert"
+                    >
+                      {errors.parentEmail}
+                    </p>
+                  ) : isExplorer ? null : (
+                    <p
+                      id="signup-parent-email-hint"
+                      className="font-sans text-sm italic leading-relaxed text-nga-slate"
+                    >
+                      We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+              {isExplorer ? null : (
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={marketingOptIn}
+                    onChange={(e) => setMarketingOptIn(e.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] accent-[#031F82]"
+                  />
+                  <span className="font-sans text-sm leading-relaxed text-nga-slate">
+                    Send me occasional updates about NextGenAchiever$
+                  </span>
+                </label>
               )}
-            </div>
+            </>
           ) : null}
 
           {errors.form ? (
-            <p
-              className="font-sans text-sm font-medium text-[#031F82]"
-              role="alert"
-            >
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.form}
             </p>
           ) : null}
 
-          {isExplorer ? null : (
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={marketingOptIn}
-                onChange={(e) => setMarketingOptIn(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] text-nga-primary focus:ring-nga-secondary"
-              />
-              <span className="font-sans text-sm leading-relaxed text-nga-slate">
-                Send me occasional updates about NextGenAchiever$
-              </span>
-            </label>
-          )}
-
-          <Button
-            type="submit"
-            variant="cta"
-            fullWidth
-            disabled={isSendingApprovalEmail}
-            aria-busy={isSendingApprovalEmail || undefined}
+          <div
+            className={cn(
+              "fixed inset-x-0 bottom-0 bg-white px-6 pt-3 pb-[max(20px,env(safe-area-inset-bottom))]",
+              LAYER_CLASS.chrome,
+            )}
           >
-            {isExplorer
-              ? isSendingApprovalEmail
-                ? "Sending…"
-                : "Request Parent Approval"
-              : isSendingApprovalEmail
-                ? "Creating…"
-                : "Create My Free Account"}
-          </Button>
+            <div className="mx-auto w-full max-w-md">
+              {learnerStep === "emails" ? (
+                <Button
+                  key="signup-finish"
+                  type="submit"
+                  variant="cta"
+                  fullWidth
+                  disabled={isSendingApprovalEmail}
+                  aria-busy={isSendingApprovalEmail || undefined}
+                >
+                  {isExplorer
+                    ? isSendingApprovalEmail
+                      ? "Sending…"
+                      : "Request Parent Approval"
+                    : isSendingApprovalEmail
+                      ? "Creating…"
+                      : "Create My Free Account"}
+                </Button>
+              ) : (
+                <Button
+                  key="signup-next"
+                  type="button"
+                  variant="cta"
+                  fullWidth
+                  disabled={nextDisabled}
+                  onClick={handleLearnerNext}
+                  className="disabled:!border-b-0 disabled:!opacity-45 disabled:!shadow-none"
+                >
+                  Next
+                </Button>
+              )}
+            </div>
+          </div>
         </form>
       </div>
     </section>

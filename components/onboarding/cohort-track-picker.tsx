@@ -90,9 +90,6 @@ export function CohortTrackPicker() {
           );
         })}
 
-        <p className="text-center font-sans text-base font-normal leading-relaxed text-nga-slate">
-          You can switch this later.
-        </p>
       </div>
     </section>
   );

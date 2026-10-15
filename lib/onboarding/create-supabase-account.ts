@@ -11,6 +11,7 @@ import {
   type RegisteredAccountStatus,
 } from "@/lib/dashboard/mastery-cohort";
 import { issueGuardianSignupEmail } from "@/lib/onboarding/issue-guardian-signup-email";
+import { decideLearnerAge } from "@/lib/onboarding/signup-age-check";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
@@ -46,6 +47,13 @@ export type CreateSupabaseAccountInput = {
   parentEmail?: string | null;
   /** Forced false for Explorers. */
   marketingOptIn?: boolean;
+  /**
+   * Learner sign-up only. Checked once to choose the track, then dropped.
+   * Never written to the profile, Auth metadata, or logs. Omit when a
+   * parent adds the child. Age-check profile columns stay off this write
+   * until that migration is applied.
+   */
+  birthYear?: number;
   /**
    * Signed-in parent master is adding this child. Skip guardian emails,
    * create the child as already approved, and link `parent_child`.
@@ -282,12 +290,21 @@ function parseSignupInput(
     };
   }
 
-  const cohort = parseMasteryCohort(input.cohort);
-  if (!cohort) {
+  const pickedCohort = parseMasteryCohort(input.cohort);
+  if (!pickedCohort) {
     return {
       ok: false,
       error: "Pick a learning track for this learner.",
     };
+  }
+
+  let cohort = pickedCohort;
+  if (!parentInitiated) {
+    const decision = decideLearnerAge(input.birthYear ?? Number.NaN);
+    if (!decision) {
+      return { ok: false, error: "Choose the year you were born." };
+    }
+    cohort = decision.cohort;
   }
 
   const password = input.password;
@@ -332,7 +349,10 @@ function parseSignupInput(
       password,
       learnerEmail,
       parentEmail,
-      marketingOptIn: parentInitiated ? false : Boolean(input.marketingOptIn),
+      marketingOptIn:
+        parentInitiated || cohort === "explorer"
+          ? false
+          : Boolean(input.marketingOptIn),
     },
   };
 }

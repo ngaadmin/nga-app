@@ -72,7 +72,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             "flex min-h-0 flex-1 flex-col overflow-x-hidden",
             isLessonRoute
               ? "overflow-hidden px-0 py-0"
-              : "overflow-y-auto overscroll-y-contain px-4 py-6 pb-28 sm:px-6 md:pb-8 print:overflow-visible print:p-0",
+              : "overflow-y-auto overscroll-y-contain px-4 py-6 pb-[calc(112px+env(safe-area-inset-bottom))] sm:px-6 md:pb-8 print:overflow-visible print:p-0",
           )}
         >
           {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}

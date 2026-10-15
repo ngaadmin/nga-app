@@ -5,8 +5,10 @@ import { usePathname } from "next/navigation";
 import { GuestLeaveDialog } from "@/components/onboarding/guest-leave-dialog";
 import {
   guestHasUnsavedProgress,
+  installGuestBackListener,
   readGuestUnsavedXp,
   registerGuestLeaveOpener,
+  trackGuestDashboardPath,
 } from "@/lib/onboarding/guest-save-prompt";
 
 /**
@@ -15,17 +17,17 @@ import {
  */
 export function GuestUnsavedProgressGuard() {
   const pathname = usePathname();
-  const pathRef = useRef(pathname);
   const bypassRef = useRef(false);
   const [xp, setXp] = useState(0);
   const [open, setOpen] = useState(false);
   const proceedRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    pathRef.current = pathname;
+    trackGuestDashboardPath(pathname);
   }, [pathname]);
 
   useEffect(() => {
+    installGuestBackListener();
     return registerGuestLeaveOpener((proceed) => {
       proceedRef.current = proceed;
       setXp(readGuestUnsavedXp());
@@ -42,32 +44,6 @@ export function GuestUnsavedProgressGuard() {
 
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, []);
-
-  useEffect(() => {
-    function onPopState() {
-      if (bypassRef.current) {
-        bypassRef.current = false;
-        return;
-      }
-      const left = pathRef.current;
-      const now = window.location.pathname;
-      if (!left.startsWith("/dashboard")) return;
-      if (now.startsWith("/dashboard")) return;
-      if (now.startsWith("/onboarding/sign-up")) return;
-      if (!guestHasUnsavedProgress()) return;
-
-      window.history.pushState(null, "", left);
-      proceedRef.current = () => {
-        bypassRef.current = true;
-        window.history.back();
-      };
-      setXp(readGuestUnsavedXp());
-      setOpen(true);
-    }
-
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   return (

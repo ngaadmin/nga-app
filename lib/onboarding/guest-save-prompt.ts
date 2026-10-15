@@ -227,6 +227,57 @@ export function guestHasUnsavedProgress(): boolean {
 type LeaveOpener = (proceed: () => void) => void;
 
 let leaveOpener: LeaveOpener | null = null;
+let trackedPath = "";
+let trackedHistoryState: unknown = null;
+let bypassGuestBack = false;
+let guestBackListenerInstalled = false;
+
+/** Remember the dashboard URL so browser Back can be confirmed first. */
+export function trackGuestDashboardPath(path: string): void {
+  trackedPath = path;
+  if (typeof window !== "undefined") {
+    trackedHistoryState = window.history.state;
+  }
+}
+
+function onGuestBackPopState(event: PopStateEvent): void {
+  if (bypassGuestBack) {
+    bypassGuestBack = false;
+    return;
+  }
+  const now = window.location.pathname;
+  if (!leaveOpener) return;
+  if (!trackedPath.startsWith("/dashboard")) return;
+  if (now.startsWith("/dashboard")) return;
+  if (now.startsWith("/onboarding/sign-up")) return;
+  if (!guestHasUnsavedProgress()) return;
+
+  // Capture runs before the App Router applies the back navigation.
+  event.stopImmediatePropagation();
+  const state =
+    trackedHistoryState && typeof trackedHistoryState === "object"
+      ? trackedHistoryState
+      : null;
+  window.history.pushState(state, "", trackedPath);
+  leaveOpener(() => {
+    bypassGuestBack = true;
+    window.history.back();
+  });
+}
+
+export function installGuestBackListener(): void {
+  if (guestBackListenerInstalled || typeof window === "undefined") return;
+  guestBackListenerInstalled = true;
+  (
+    window as Window & {
+      __ngaGuestBack?: (event: PopStateEvent) => void;
+    }
+  ).__ngaGuestBack = onGuestBackPopState;
+}
+
+if (typeof window !== "undefined") {
+  installGuestBackListener();
+}
 
 export function registerGuestLeaveOpener(opener: LeaveOpener): () => void {
   leaveOpener = opener;

@@ -16,6 +16,9 @@ export const CLASS_PASSWORD_KEY_INVALID =
 export const CLASS_PASSWORD_COLUMN_MISSING =
   "class_password_enc is missing. Run the class password encryption migration in the Supabase SQL editor before reading or writing a class password.";
 
+export const CLASS_PASSWORD_COLUMN_DENIED =
+  "The server cannot read class_password_enc. Grant service_role select, insert, and update on class_password and class_password_enc.";
+
 export const CLASS_PASSWORD_DECRYPT_FAILED =
   "Could not read the stored class password. CLASS_PASSWORD_KEY does not match the key that encrypted it, or the ciphertext is damaged.";
 

@@ -185,6 +185,29 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await expect(aboutMedals).toBeVisible();
 });
 
+test("settings class link gives immediate feedback", async ({ page }) => {
+  await installSession(page, TEACHER_SESSION);
+  await page.goto("/dashboard/settings");
+  const classLink = page.getByRole("link", { name: "Class" });
+  await expect(classLink).toBeVisible({ timeout: 15_000 });
+  await expect(classLink).toHaveAttribute("href", "/dashboard/class");
+
+  let releaseNavigation = () => {};
+  const holdNavigation = new Promise<void>((resolve) => {
+    releaseNavigation = resolve;
+  });
+  await page.route("**/dashboard/class**", async (route) => {
+    await holdNavigation;
+    await route.continue();
+  });
+
+  await classLink.click();
+  await expect(page.getByText(/Opening…|Opening class/)).toBeVisible({
+    timeout: 5_000,
+  });
+  releaseNavigation();
+});
+
 test("teacher class lists stay collapsed until opened and still print", async ({
   page,
 }) => {
@@ -192,6 +215,20 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   await page.goto("/dashboard/class/preview");
 
   await expect(page.getByText("Pathfinder class")).toBeVisible({ timeout: 15_000 });
+  const classPassword = page.getByLabel("Class password");
+  await expect(classPassword).toHaveAttribute("type", "password");
+  await expect(classPassword).toHaveValue("Yellow");
+  await expect(
+    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Show class password" }).click();
+  await expect(
+    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Hide" }).click();
+  await expect(
+    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByText("0 XP", { exact: true }).filter({ visible: true }),
   ).toHaveCount(1);
@@ -257,6 +294,7 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     page.getByRole("button", { name: "Remove student" }).filter({ visible: true }),
   ).toHaveCount(0);
   await page.emulateMedia({ media: "print" });
+  await expect(page.getByText("Class password: Yellow")).toBeVisible();
   await expect(
     page.getByRole("cell", { name: "amber2" }).filter({ visible: true }),
   ).toHaveCount(1);

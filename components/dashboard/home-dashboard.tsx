@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
@@ -55,6 +56,42 @@ function formatJoinDate(isoDate: string | null): string {
     month: "short",
     year: "numeric",
   });
+}
+
+function ClassSettingsLink() {
+  const label = copyMatrix.dashboard.settings.account.class;
+
+  return (
+    <Link href={DASHBOARD_CLASS_PATH} prefetch className="block w-full text-left">
+      <ClassSettingsLinkRow label={label} />
+    </Link>
+  );
+}
+
+function ClassSettingsLinkRow({ label }: { label: string }) {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span
+      aria-busy={pending || undefined}
+      className={cn(
+        "flex w-full items-center gap-3 py-3.5",
+        pending
+          ? "bg-[#BDE9FB]/25"
+          : "hover:bg-[#BDE9FB]/15 active:bg-[#BDE9FB]/25",
+      )}
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
+        <ClassIcon className="size-4" />
+      </span>
+      <span
+        className="font-heading text-[16px] font-bold text-[#031F82]"
+        aria-live="polite"
+      >
+        {pending ? "Opening…" : label}
+      </span>
+    </span>
+  );
 }
 
 type SettingsRowProps = {
@@ -571,13 +608,7 @@ export function HomeDashboard() {
           aria-label="Account settings"
           className={cn(floatingPanelClass, "divide-y divide-[#BDE9FB]/60 px-3")}
         >
-          {isTeacher ? (
-            <SettingsRow
-              icon={ClassIcon}
-              label={copy.account.class}
-              onClick={() => router.push(DASHBOARD_CLASS_PATH)}
-            />
-          ) : null}
+          {isTeacher ? <ClassSettingsLink /> : null}
           <SettingsRow
             icon={KeyIcon}
             label={copy.account.passwordReset}

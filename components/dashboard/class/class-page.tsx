@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NextGenAchieversWordmark } from "@/components/brand/nextgen-achievers-wordmark";
 import { Button } from "@/components/ui/button";
 import { ClientPortal } from "@/components/ui/client-portal";
@@ -154,6 +154,89 @@ function ClassXpTotals({ classes }: { classes: ClassXpTotal[] }) {
         <ClassXpCard key={cls.classId} cls={cls} />
       ))}
     </section>
+  );
+}
+
+function ClassPasswordForm({
+  classPassword,
+  onChange,
+  changing,
+  onSubmit,
+}: {
+  classPassword: string;
+  onChange: (value: string) => void;
+  changing: boolean;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
+    };
+  }, []);
+
+  async function copyPassword() {
+    if (!classPassword) return;
+    try {
+      await navigator.clipboard.writeText(classPassword);
+    } catch {
+      return;
+    }
+    setCopied(true);
+    if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <form className="space-y-2" onSubmit={onSubmit}>
+      <label
+        htmlFor="class-password"
+        className="block font-heading text-sm font-bold text-nga-primary"
+      >
+        Class password
+      </label>
+      <p className="font-sans text-base tracking-wide text-[#031F82]" aria-live="polite">
+        {visible ? classPassword : <span aria-hidden="true">••••••••</span>}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <button
+          type="button"
+          onClick={() => setVisible((open) => !open)}
+          className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
+        >
+          {visible ? "Hide" : "Show class password"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void copyPassword()}
+          className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <input
+        id="class-password"
+        type="password"
+        autoComplete="off"
+        spellCheck={false}
+        value={classPassword}
+        onChange={(event) => onChange(event.target.value)}
+        className={fieldBase}
+      />
+      <p className="font-sans text-sm text-nga-slate">
+        Students use this with their username.
+      </p>
+      <button
+        type="submit"
+        disabled={changing}
+        className="font-sans text-xs text-nga-slate underline-offset-2 hover:text-nga-primary hover:underline disabled:opacity-40"
+      >
+        {changing ? "Saving…" : "Change"}
+      </button>
+    </form>
   );
 }
 
@@ -427,32 +510,12 @@ export function ClassPage({ roster }: ClassPageProps) {
           </Button>
         </form>
 
-        <form className="space-y-2" onSubmit={handleChangePassword}>
-          <label
-            htmlFor="class-password"
-            className="block font-heading text-sm font-bold text-nga-primary"
-          >
-            Class password
-          </label>
-          <input
-            id="class-password"
-            type="text"
-            autoComplete="off"
-            value={classPassword}
-            onChange={(event) => setClassPassword(event.target.value)}
-            className={fieldBase}
-          />
-          <p className="font-sans text-sm text-nga-slate">
-            Students use this with their username.
-          </p>
-          <button
-            type="submit"
-            disabled={changingPassword}
-            className="font-sans text-xs text-nga-slate underline-offset-2 hover:text-nga-primary hover:underline disabled:opacity-40"
-          >
-            {changingPassword ? "Saving…" : "Change"}
-          </button>
-        </form>
+        <ClassPasswordForm
+          classPassword={classPassword}
+          onChange={setClassPassword}
+          changing={changingPassword}
+          onSubmit={handleChangePassword}
+        />
 
         <div className="space-y-2">
           {sortedUsernames.length > 0 ? (
@@ -573,6 +636,9 @@ export function ClassPage({ roster }: ClassPageProps) {
             {classTrackLine(classCohort)}
           </p>
         ) : null}
+        <p className="mb-3 font-sans text-sm text-[#031F82]">
+          {`Class password: ${classPassword}`}
+        </p>
         <StudentLoginTable usernames={sortedUsernames} />
       </div>
     </div>

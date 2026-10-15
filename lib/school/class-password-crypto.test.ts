@@ -178,6 +178,27 @@ describe("class password migration sql", () => {
     );
     expect(sql).toContain("FROM PUBLIC, anon, authenticated");
   });
+
+  it("keeps service_role able to read and write the password columns", () => {
+    const grant = readFileSync(
+      path.join(
+        process.cwd(),
+        "supabase/migrations/20261015130000_grant_class_password_service_role.sql",
+      ),
+      "utf8",
+    );
+    expect(grant).toContain(
+      "GRANT SELECT (class_password, class_password_enc)",
+    );
+    expect(grant).toContain("TO service_role");
+    expect(grant).toContain(
+      "GRANT UPDATE (class_password, class_password_enc)",
+    );
+    expect(grant).toContain(
+      "GRANT INSERT (class_password, class_password_enc)",
+    );
+    expect(grant).not.toMatch(/anon|authenticated/i);
+  });
 });
 
 function readKeyViaEncrypt(): string {

@@ -47,24 +47,27 @@ export function LessonChoiceButton({
   void orb;
   const isPressed = selected || pending || locked;
   const selection = lessonTileSelection({
-    selected: isPressed || wrong,
-    variant: wrong ? "wrong" : locked ? "correct" : "neutral",
+    selected: locked || ((selected || pending) && !wrong),
+    variant: locked ? "correct" : "neutral",
   });
 
   return (
     <button
       type={type}
       {...props}
-      aria-pressed={isPressed || wrong}
+      aria-pressed={isPressed}
       data-selection={selection === "idle" ? undefined : selection}
       className={cn(
-        "lesson-choice-tile relative flex w-full min-h-14 items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left font-sans text-[18px] font-semibold leading-snug text-[#031F82] transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45",
+        "lesson-choice-tile relative flex w-full min-h-[60px] items-center gap-3.5 rounded-full bg-transparent px-3.5 py-2 text-left font-sans text-[18px] font-semibold leading-[1.25] text-[#14213D] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45",
         wrong && "lesson-tile-shake",
         className,
       )}
     >
       {emoji ? (
-        <span className="shrink-0 text-[1.65rem] leading-none" aria-hidden>
+        <span
+          className="grid w-9 shrink-0 place-items-center text-[30px] leading-none"
+          aria-hidden
+        >
           {emoji}
         </span>
       ) : null}

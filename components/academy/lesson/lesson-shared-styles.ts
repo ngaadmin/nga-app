@@ -93,9 +93,9 @@ export const lessonIconTapClass = cn(
   lessonCircleSizeClass,
 );
 
-/** Persistent darker sunken state after tap/select. */
+/** Persistent selected state after tap. Tint plus brand ink, never a green fill. */
 export const lessonIconTapSelectedClass =
-  "bg-[#16A34A] text-white";
+  "bg-[#EAF0FF] text-[#14213D]";
 
 export const lessonSortCircleChipClass = cn(
   "flex shrink-0 cursor-grab items-center justify-center rounded-full border-2 border-[#BDE9FB] bg-white font-heading font-semibold text-[#031F82] shadow-sm transition-all touch-none select-none active:cursor-grabbing active:scale-[0.98]",
@@ -174,25 +174,25 @@ const lessonSortBucketToneSurfaceClass: Record<
   LessonSortBucketTone | "neutral",
   string
 > = {
-  rush: "bg-[#FEE2E2]",
-  think: "bg-[#DCFCE7]",
-  want: "bg-[#FEF3C7]",
+  rush: "bg-[#FFEAF0]",
+  think: "bg-[#E3F6F8]",
+  want: "bg-[#FFF4DA]",
   need: "bg-[#E0F2FE]",
-  short: "bg-[#FFEDD5]",
-  long: "bg-[#D1FAE5]",
-  neutral: "bg-[#DCEFF9]",
+  short: "bg-[#FFF4DA]",
+  long: "bg-[#EAF0FF]",
+  neutral: "bg-[#EAF0FF]",
 };
 
 const lessonSortBucketToneHeaderClass: Record<
   LessonSortBucketTone | "neutral",
   string
 > = {
-  rush: "text-[#BE123C]",
-  think: "text-[#15803D]",
-  want: "text-[#B45309]",
-  need: "text-[#0369A1]",
-  short: "text-[#C2410C]",
-  long: "text-[#047857]",
+  rush: "text-[#031F82]",
+  think: "text-[#031F82]",
+  want: "text-[#031F82]",
+  need: "text-[#031F82]",
+  short: "text-[#031F82]",
+  long: "text-[#031F82]",
   neutral: "text-[#031F82]",
 };
 
@@ -285,7 +285,7 @@ export const lessonSequenceSlotActiveClass = "bg-[#E8F6FC]/70";
 
 export const lessonSequenceSlotErrorClass = "lesson-tile-shake";
 
-export const lessonSequenceSlotLockedClass = "bg-[#F0FDF4]/80";
+export const lessonSequenceSlotLockedClass = "bg-transparent";
 
 export const lessonSequenceSlotFilledClass = "bg-transparent";
 
@@ -377,13 +377,13 @@ export const lessonSortRowClass =
 
 /** Rank-order card: drag handle, emoji, then the choice. */
 export const lessonRankOrderCardClass =
-  "grid w-full min-w-0 grid-cols-[1.5rem_2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-2xl bg-[#E8F6FC] px-3 py-3.5 font-sans text-[15px] font-medium text-[#031F82] active:cursor-grabbing";
+  "grid w-full min-w-0 grid-cols-[1.5rem_2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
 
 export const lessonRankOrderNumberClass = lessonSequenceNumberClass;
 
 /** Compact pill pool chip (word-drop, drag pools). */
 export const lessonSortPoolChipClass =
-  "inline-flex min-h-11 cursor-grab touch-none select-none items-center justify-center rounded-full border-0 bg-[#E8F6FC] px-4 py-2 font-sans text-[18px] font-semibold text-[#031F82] active:cursor-grabbing focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0CC1E0]";
+  "inline-flex min-h-11 cursor-grab touch-none select-none items-center justify-center rounded-full border-0 px-3.5 py-2 font-sans text-[18px] font-semibold text-[#14213D] active:cursor-grabbing focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#031F82]";
 
 /** @deprecated Prefer lessonSortRowClass for full-width sort lists. */
 export const lessonSortChipClass = lessonSortRowClass;
@@ -395,7 +395,7 @@ export const lessonSortBucketActiveClass = "bg-[#E8F6FC]/70";
 
 export const lessonSortBucketErrorClass = "lesson-tile-shake";
 
-export const lessonSortBucketSuccessClass = "bg-[#F0FDF4]/70";
+export const lessonSortBucketSuccessClass = "bg-transparent";
 
 export const lessonGoldClaimClass =
   "mx-auto flex w-1/2 items-center justify-center rounded-2xl border-0 bg-[#FFA503] px-2 py-3 text-center font-heading text-[15px] font-extrabold text-white shadow-[0_5px_0_#C88202] transition-all active:translate-y-0.5 active:shadow-none disabled:opacity-60";
@@ -428,7 +428,7 @@ export const lessonHoldButtonCompleteClass =
 export const LESSON_CASH_IN_LABEL = "Cash in your XP";
 
 const LESSON_PRIMARY_ACTION_CLASS =
-  "mx-auto flex w-1/2 items-center justify-center rounded-2xl border-0 bg-[#0CC1E0] px-3 py-3 text-center font-heading text-lg font-extrabold text-white shadow-[0_5px_0_#099FB8] transition-all active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none";
+  "flex h-14 w-full items-center justify-center rounded-full border-0 bg-[#031F82] text-center font-heading text-[19px] font-bold text-white shadow-[0_4px_0_#FFB822] disabled:cursor-default disabled:bg-[#DCE3F5] disabled:text-[#8C98B8] disabled:shadow-none";
 
 export const lessonNextButtonClass = LESSON_PRIMARY_ACTION_CLASS;
 
@@ -447,7 +447,7 @@ export const lessonScreenFillClass = "flex h-full min-h-full flex-1 flex-col";
 
 export const lessonGameAreaClass = "mt-1 flex min-h-0 flex-1 flex-col";
 
-export const lessonChoiceStackClass = "mt-1 flex flex-col gap-4";
+export const lessonChoiceStackClass = "mt-1 flex flex-col gap-2";
 
 export const lessonTwoColumnGridClass = "grid grid-cols-2 gap-2.5";
 

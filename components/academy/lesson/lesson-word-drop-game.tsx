@@ -148,6 +148,19 @@ export const LessonWordDropGame = forwardRef<
   const onMismatchRef = useRef(onMismatch);
   onMismatchRef.current = onMismatch;
   const pressRef = useRef<PressSession | null>(null);
+  const shakeTimerRef = useRef<number | null>(null);
+
+  const rejectWord = (word: string) => {
+    setSelectedWord(word);
+    setShakeWord(word);
+    onMismatchRef.current?.();
+    if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+    shakeTimerRef.current = window.setTimeout(() => {
+      setShakeWord((current) => (current === word ? null : current));
+      setSelectedWord((current) => (current === word ? null : current));
+      shakeTimerRef.current = null;
+    }, 360);
+  };
 
   const reportSolvedState = useCallback((placedBlankIndex?: number) => {
     const solved = blanksRef.current.every(
@@ -304,8 +317,7 @@ export const LessonWordDropGame = forwardRef<
       if (slotIndex !== null && blank && !locked && press.word === blank.correctOption) {
         placeWordInBlank(slotIndex, press.word);
       } else if (slotIndex !== null && press.word !== blank?.correctOption) {
-        setShakeWord(press.word);
-        onMismatchRef.current?.();
+        rejectWord(press.word);
       }
 
       endDrag();
@@ -325,6 +337,7 @@ export const LessonWordDropGame = forwardRef<
   useEffect(
     () => () => {
       dragCleanupRef.current?.();
+      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
     },
     [],
   );
@@ -343,8 +356,7 @@ export const LessonWordDropGame = forwardRef<
       setSelectedWord(null);
       return;
     }
-    setShakeWord(word);
-    onMismatchRef.current?.();
+    rejectWord(word);
   };
 
   const blankSlotClass = (index: number, filled: boolean) =>
@@ -449,7 +461,8 @@ export const LessonWordDropGame = forwardRef<
                 lessonSortPoolChipClass,
                 "text-[20px]",
                 used && "hidden",
-                selectedWord === option && "bg-[#BDE9FB]",
+                selectedWord === option &&
+                  "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
                 shakeWord === option && "lesson-tile-shake",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&

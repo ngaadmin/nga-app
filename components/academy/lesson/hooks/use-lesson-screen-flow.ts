@@ -77,7 +77,7 @@ export function useLessonShake() {
       timer.current = window.setTimeout(() => {
         setShakingKey(null);
         timer.current = null;
-      }, 420);
+      }, 360);
     });
   }, []);
 

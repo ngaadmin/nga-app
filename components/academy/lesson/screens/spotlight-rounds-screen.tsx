@@ -30,8 +30,10 @@ import type { StandardScreenProps } from "./types";
 
 type SideLayout = { left: "a" | "b"; right: "a" | "b" };
 
-/** Matches lesson flow error flash duration (use-lesson-flow.ts). */
-const FEEDBACK_RECOVERY_MS = 450;
+/** Wrong row shakes, then returns to rest. */
+const WRONG_DESELECT_MS = 360;
+/** Next round replaces the current one after a correct tick. */
+const ROUND_ADVANCE_MS = 450;
 
 /** Scaled to the 88px option circle; default glyph is sized for the 48px true/false orb. */
 const TRUE_FALSE_GLYPH_CLASS = "!size-10 text-[#031F82]";
@@ -188,7 +190,7 @@ function SpotlightGradedRounds({
     recoveryTimeoutRef.current = window.setTimeout(() => {
       setChoice(null);
       recoveryTimeoutRef.current = null;
-    }, FEEDBACK_RECOVERY_MS);
+    }, WRONG_DESELECT_MS);
   };
 
   const pick = (which: "a" | "b") => {
@@ -219,7 +221,7 @@ function SpotlightGradedRounds({
       setRoundIndex((current) => current + 1);
       setChoice(null);
       recoveryTimeoutRef.current = null;
-    }, FEEDBACK_RECOVERY_MS);
+    }, ROUND_ADVANCE_MS);
   };
 
   if (!round) return null;

@@ -57,7 +57,7 @@ export function TapRevealScreen({
           {waiting.map((item) => (
             <div
               key={item.id}
-              className="grid min-w-[7.5rem] place-items-center gap-1 rounded-2xl bg-[#E8F6FC] px-3 py-3 text-center text-[#031F82]"
+              className="grid min-w-[7.5rem] place-items-center gap-1 bg-transparent px-3 py-3 text-center text-[#14213D]"
             >
               {item.emoji ? (
                 <span className="text-[2.4rem] leading-none" aria-hidden>

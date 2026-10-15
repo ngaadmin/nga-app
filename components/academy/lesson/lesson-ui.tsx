@@ -187,11 +187,11 @@ export function LessonScreenIntro({
 
 type LessonScreenLayoutProps = LessonScreenIntroProps & {
   children: ReactNode;
-  /** Green bar flash. Never displays successMessage / success copy. */
+  /** Kept for call sites. Correct feedback is the tick and ping, not a banner. */
   success?: boolean;
-  /** @deprecated Use `success`. Presence still flashes the green bar; text is ignored. */
+  /** @deprecated Ignored. Correct feedback is the tick and ping. */
   successMessage?: string | null;
-  /** Red bar. Empty string = bar only; non-empty = payload error/feedback copy. */
+  /** Hint copy. Empty string still publishes a hint slot; the text is the payload. */
   errorMessage?: string | null;
   errorVariant?: "banner" | "inline";
   fill?: boolean;
@@ -857,8 +857,8 @@ export const LessonIconOption = forwardRef<
   const isWrongSelection = selectionVariant === "wrong";
   const isCorrectSelection = selectionVariant === "correct";
   const tileSelection = lessonTileSelection({
-    selected: selected || isWrongSelection || isCorrectSelection,
-    variant: isWrongSelection ? "wrong" : isCorrectSelection ? "correct" : "neutral",
+    selected: (selected && !isWrongSelection) || isCorrectSelection,
+    variant: isCorrectSelection ? "correct" : "neutral",
   });
   const showTick = lessonTileShowsTick(tileSelection);
 
@@ -893,7 +893,7 @@ export const LessonIconOption = forwardRef<
       disabled={disabled}
       data-selection={tileSelection === "idle" ? undefined : tileSelection}
       className={cn(
-        "lesson-choice-tile relative flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)] transition-all active:scale-[0.98]",
+        "lesson-choice-tile relative flex shrink-0 items-center justify-center rounded-full bg-[#EAF0FF] active:scale-[0.98]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
         isWrongSelection && "lesson-tile-shake",
@@ -908,7 +908,7 @@ export const LessonIconOption = forwardRef<
     <div
       data-selection={tileSelection === "idle" ? undefined : tileSelection}
       className={cn(
-        "lesson-choice-tile relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)]",
+        "lesson-choice-tile relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#EAF0FF]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
         isWrongSelection && "lesson-tile-shake",

@@ -32,10 +32,8 @@ export function SkillHubScreen({
                   flow.setScreenIndex(skill.goToIndex);
                 }
               }}
-              className={cn(
-                "flex min-h-[5.5rem] w-full items-center gap-4 rounded-3xl bg-[#E8F6FC] px-4 py-4 text-left transition-colors active:scale-[0.99]",
-                done && "bg-[#EAF0FF]",
-              )}
+              data-selection={done ? "selected" : undefined}
+              className="lesson-choice-tile flex min-h-[60px] w-full items-center gap-3.5 rounded-full bg-transparent px-3.5 py-2 text-left active:scale-[0.99]"
             >
               <span className="text-[2.4rem] leading-none" aria-hidden>
                 {skill.emoji ?? "⭐"}

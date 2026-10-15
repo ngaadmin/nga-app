@@ -154,26 +154,28 @@
   }
 
   @keyframes lesson-tile-shake {
-    0%,
-    100% {
+    0% {
       transform: translateX(0);
     }
     20% {
-      transform: translateX(-7px);
+      transform: translateX(-8px);
     }
     40% {
-      transform: translateX(6px);
+      transform: translateX(8px);
     }
     60% {
-      transform: translateX(-4px);
+      transform: translateX(-6px);
     }
     80% {
-      transform: translateX(3px);
+      transform: translateX(6px);
+    }
+    100% {
+      transform: translateX(0);
     }
   }
 
   .lesson-tile-shake {
-    animation: lesson-tile-shake 0.42s ease-in-out;
+    animation: lesson-tile-shake 360ms ease-out;
   }
 
   @keyframes lesson-tick-pop {
@@ -378,12 +380,13 @@
 
 /*
  * Unlayered so these beat Tailwind background utilities.
- * A tapped tile highlights on the left or the right. Correct turns green.
+ * Selected and correct share one style: tint plus a 2px inset brand ring.
+ * Wrong never paints a fill or a ring.
  */
 :root {
   --lesson-screen-edge-inset: 20px;
-  --lesson-choice-ring: 4px;
-  /* Slider knob shadow blurs 8px. The choice ring is 4px. Keep the larger one inside the inset. */
+  --lesson-choice-ring: 2px;
+  /* Slider knob shadow blurs 8px. Keep it inside the screen inset. */
   --lesson-screen-ink-outset: 8px;
 }
 
@@ -392,19 +395,16 @@
   padding-inline: calc(var(--lesson-screen-edge-inset) + var(--lesson-screen-ink-outset));
 }
 
-.lesson-choice-tile[data-selection="selected"] {
-  background-color: #0cc1e0;
-  box-shadow: 0 0 0 var(--lesson-choice-ring) #031f82;
-}
-
+.lesson-choice-tile[data-selection="selected"],
 .lesson-choice-tile[data-selection="correct"] {
-  background-color: #16a34a;
-  box-shadow: 0 0 0 var(--lesson-choice-ring) #15803d;
+  background-color: #eaf0ff;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 var(--lesson-choice-ring) #031f82;
 }
 
 .lesson-choice-tile[data-selection="wrong"] {
-  background-color: #e11d48;
-  box-shadow: 0 0 0 var(--lesson-choice-ring) #9f1239;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 @layer base {

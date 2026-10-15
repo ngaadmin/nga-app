@@ -121,13 +121,15 @@ export function LessonCompletionPane({
 
   const handleCashIn = () => {
     if (cashingIn || cashInDisabled) return;
-    onCashIn();
     setCashingIn(true);
+    onCashIn();
   };
 
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-      {cashingIn ? <LessonCompletionConfetti /> : null}
+      {cashingIn ? (
+        <LessonCompletionConfetti />
+      ) : null}
 
       <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 px-2 pt-1 text-center">
         {resolvedMedalId ? (
@@ -169,7 +171,9 @@ export function LessonCompletionPane({
           <button
             type="button"
             onClick={handleCashIn}
-            disabled={cashingIn || cashInDisabled}
+            disabled={cashInDisabled && !cashingIn}
+            aria-busy={cashingIn || undefined}
+            data-cash-in-celebration={cashingIn ? "open" : undefined}
             className={lessonGoldClaimClass}
           >
             {LESSON_CASH_IN_LABEL}

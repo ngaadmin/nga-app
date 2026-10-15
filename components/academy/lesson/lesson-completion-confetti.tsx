@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { LESSON_CASH_IN_CELEBRATION_MS } from "@/lib/academy/lessons/completion-xp";
 import { Z } from "@/lib/ui/layers";
 
-const CONFETTI_DURATION_MS = 800;
+const CONFETTI_DURATION_MS = LESSON_CASH_IN_CELEBRATION_MS;
 const CONFETTI_COLORS = [
   "#FFB822",
   "#031F82",

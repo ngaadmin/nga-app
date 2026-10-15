@@ -135,29 +135,33 @@ export function scheduleAccountProgressPush(): void {
 
 /** Immediate cloud + cache write so logout cannot drop the only copy. */
 export async function persistRegisteredProgressNow(): Promise<void> {
-  if (typeof window === "undefined") return;
-  if (pendingConsentBlocksProgressWrite()) return;
-  const owner = registeredOwner();
-  if (!owner) return;
+  try {
+    if (typeof window === "undefined") return;
+    if (pendingConsentBlocksProgressWrite()) return;
+    const owner = registeredOwner();
+    if (!owner) return;
 
-  window.clearTimeout(pushTimer);
-  const childId = await resolveChildAuthUserId();
-  const local = collectAccountProgress();
-  persistAccountProgressCacheFromLive({
-    userId: childId ?? owner.userId,
-    username: owner.username,
-  });
+    window.clearTimeout(pushTimer);
+    const childId = await resolveChildAuthUserId();
+    const local = collectAccountProgress();
+    persistAccountProgressCacheFromLive({
+      userId: childId ?? owner.userId,
+      username: owner.username,
+    });
 
-  if (!childId) {
-    logProgressWrite(null, local);
-    return;
+    if (!childId) {
+      logProgressWrite(null, local);
+      return;
+    }
+
+    if (!shouldSaveProgress(local)) return;
+
+    const remote = await loadLearnerProgressByUserId(childId);
+    const payload = overlayAccountProgress(remote, local) ?? local;
+    await saveLearnerProgressForUser(childId, payload);
+  } catch {
+    // A cloud save must not reject into the lesson click handler.
   }
-
-  if (!shouldSaveProgress(local)) return;
-
-  const remote = await loadLearnerProgressByUserId(childId);
-  const payload = overlayAccountProgress(remote, local) ?? local;
-  await saveLearnerProgressForUser(childId, payload);
 }
 
 export async function restoreRegisteredAccountProgress(input?: {

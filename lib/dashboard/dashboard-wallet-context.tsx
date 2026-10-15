@@ -13,6 +13,7 @@ import {
 import {
   appendWalletLedgerEvent,
   createWalletEventId,
+  currentWalletPersonKey,
   defaultDashboardWalletState,
   readDashboardWalletState,
   saveDashboardWalletState,
@@ -40,6 +41,8 @@ type DashboardWalletContextValue = {
   setAudSliderIndex: (index: number) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
   awardLessonXp: (points: number, eventId?: string) => void;
+  /** Pull the saved balance into the header after a lesson cash-in. */
+  reloadWalletFromStorage: () => void;
 };
 
 const DashboardWalletContext = createContext<DashboardWalletContextValue | null>(
@@ -65,34 +68,65 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   );
   const [walletHydrated, setWalletHydrated] = useState(false);
   const skipWalletPersistRef = useRef(true);
+  const walletPersonRef = useRef<string | null>(null);
+  const hydratedRef = useRef(false);
+  const balanceRef = useRef({ totalPoints: 0, lifetimePointsEarned: 0 });
+  balanceRef.current = { totalPoints, lifetimePointsEarned };
+
+  const reloadWalletFromStorage = useCallback(() => {
+    const person = currentWalletPersonKey();
+    const previousPerson = walletPersonRef.current;
+    // A missing session keeps the last learner so the next username is a switch.
+    const personChanged =
+      person !== null &&
+      previousPerson !== null &&
+      previousPerson !== person;
+    if (person !== null) {
+      walletPersonRef.current = person;
+    }
+    const persisted = readDashboardWalletState();
+    const current = balanceRef.current;
+    const nextLifetime = persisted
+      ? personChanged
+        ? persisted.lifetimePointsEarned
+        : Math.max(current.lifetimePointsEarned, persisted.lifetimePointsEarned)
+      : 0;
+    const willClear =
+      !persisted &&
+      personChanged &&
+      person !== null &&
+      (current.totalPoints > 0 || current.lifetimePointsEarned > 0);
+    if (!hydratedRef.current || willClear) {
+      skipWalletPersistRef.current = true;
+    }
+    if (persisted) {
+      setTotalPoints(persisted.totalPoints);
+      setLifetimePointsEarned(nextLifetime);
+      setAudSliderIndexState(persisted.audSliderIndex);
+      setXpExchangeRateSet(persisted.xpExchangeRateSet);
+    } else if (willClear) {
+      const fresh = defaultDashboardWalletState();
+      setTotalPoints(fresh.totalPoints);
+      setLifetimePointsEarned(fresh.lifetimePointsEarned);
+      setAudSliderIndexState(fresh.audSliderIndex);
+      setXpExchangeRateSet(fresh.xpExchangeRateSet);
+    }
+    hydratedRef.current = true;
+    setWalletHydrated(true);
+  }, []);
 
   useEffect(() => {
-    function hydrateWallet() {
-      skipWalletPersistRef.current = true;
-      const persisted = readDashboardWalletState();
-      if (persisted) {
-        setTotalPoints(persisted.totalPoints);
-        setLifetimePointsEarned(persisted.lifetimePointsEarned);
-        setAudSliderIndexState(persisted.audSliderIndex);
-        setXpExchangeRateSet(persisted.xpExchangeRateSet);
-      } else {
-        const fresh = defaultDashboardWalletState();
-        setTotalPoints(fresh.totalPoints);
-        setLifetimePointsEarned(fresh.lifetimePointsEarned);
-        setAudSliderIndexState(fresh.audSliderIndex);
-        setXpExchangeRateSet(fresh.xpExchangeRateSet);
-      }
-      setWalletHydrated(true);
-    }
-
-    hydrateWallet();
-    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateWallet);
-    window.addEventListener(USER_SESSION_UPDATED_EVENT, hydrateWallet);
+    reloadWalletFromStorage();
+    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, reloadWalletFromStorage);
+    window.addEventListener(USER_SESSION_UPDATED_EVENT, reloadWalletFromStorage);
     return () => {
-      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, hydrateWallet);
-      window.removeEventListener(USER_SESSION_UPDATED_EVENT, hydrateWallet);
+      window.removeEventListener(
+        ACCOUNT_PROGRESS_RESTORED_EVENT,
+        reloadWalletFromStorage,
+      );
+      window.removeEventListener(USER_SESSION_UPDATED_EVENT, reloadWalletFromStorage);
     };
-  }, []);
+  }, [reloadWalletFromStorage]);
 
   useEffect(() => {
     if (!walletHydrated) return;
@@ -120,7 +154,10 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     saveDashboardWalletState({
       ...existing,
       totalPoints,
-      lifetimePointsEarned,
+      lifetimePointsEarned: Math.max(
+        lifetimePointsEarned,
+        existing?.lifetimePointsEarned ?? 0,
+      ),
       audSliderIndex,
       xpExchangeRateSet,
       updatedAt: settingsChanged
@@ -215,6 +252,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       setAudSliderIndex,
       claimPointsForVault,
       awardLessonXp,
+      reloadWalletFromStorage,
     }),
     [
       audPer100Xp,
@@ -222,6 +260,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       awardLessonXp,
       claimPointsForVault,
       lifetimePointsEarned,
+      reloadWalletFromStorage,
       setAudSliderIndex,
       totalPoints,
       xpExchangeRateSet,

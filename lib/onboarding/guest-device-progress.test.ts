@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const saveLearnerProgressForUser = vi.hoisted(() =>
-  vi.fn(async (..._args: unknown[]) => ({ ok: true })),
+  vi.fn(async (...args: unknown[]) => {
+    void args;
+    return { ok: true };
+  }),
 );
 const loadLearnerProgressByUserId = vi.hoisted(() =>
-  vi.fn(async (..._args: unknown[]) => null),
+  vi.fn(async (...args: unknown[]) => {
+    void args;
+    return null;
+  }),
 );
 
 vi.mock("@/lib/onboarding/learner-progress", () => ({

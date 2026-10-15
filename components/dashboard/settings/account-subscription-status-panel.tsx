@@ -68,7 +68,7 @@ type HouseholdView = {
 };
 
 type PendingDelete =
-  | { kind: "child"; username: string }
+  | { kind: "child"; username: string; childId: string }
   | { kind: "master"; username: string };
 
 type PendingLinkItem = {
@@ -459,6 +459,41 @@ export function AccountSubscriptionStatusPanel() {
         return;
       }
 
+      if (isMasterViewer) {
+        const childId = pendingDelete.childId.trim();
+        if (!childId) {
+          setDeleteError(copy.deleteChildError);
+          return;
+        }
+
+        setIsDeletingHousehold(true);
+        setDeleteError(null);
+        try {
+          const response = await fetch("/api/account/delete-child", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ childId }),
+          });
+          const payload = (await response.json().catch(() => null)) as {
+            success?: boolean;
+            error?: string;
+          } | null;
+          if (!response.ok || payload?.success !== true) {
+            setDeleteError(payload?.error || copy.deleteChildError);
+            return;
+          }
+
+          removeRegisteredAccountByUsername(pendingDelete.username);
+          setPendingDelete(null);
+          refresh();
+        } catch {
+          setDeleteError(copy.deleteChildError);
+        } finally {
+          setIsDeletingHousehold(false);
+        }
+        return;
+      }
+
       const account = findRegisteredAccountByUsername(pendingDelete.username);
       const noticeEmail =
         household.householdEmail ??
@@ -477,12 +512,7 @@ export function AccountSubscriptionStatusPanel() {
       setPendingDelete(null);
       if (!removed) return;
 
-      if (targetKey === selfKey) {
-        await leaveAfterDestructiveDelete();
-        return;
-      }
-
-      refresh();
+      await leaveAfterDestructiveDelete();
       return;
     }
 
@@ -673,9 +703,11 @@ export function AccountSubscriptionStatusPanel() {
                                   className={quietDeleteClass}
                                   onClick={() => {
                                     setOpenChildMenu(null);
+                                    setDeleteError(null);
                                     setPendingDelete({
                                       kind: "child",
                                       username: child.username,
+                                      childId: child.supabaseUserId?.trim() ?? "",
                                     });
                                   }}
                                 >
@@ -896,7 +928,7 @@ export function AccountSubscriptionStatusPanel() {
             }
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
-            {pendingDelete?.kind === "master" && isDeletingHousehold
+            {isDeletingHousehold
               ? copy.deleteMasterDeleting
               : copy.deleteConfirmAction}
           </button>

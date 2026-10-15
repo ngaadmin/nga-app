@@ -55,11 +55,10 @@ export function runMultipleChoiceNextHandler(): boolean {
   return activeMultipleChoiceNextHandler();
 }
 
-function choiceEmoji(label: string, emoji?: string): string | undefined {
-  if (emoji) return emoji;
-  if (/^true$/i.test(label.trim())) return "✅";
-  if (/^false$/i.test(label.trim())) return "❌";
-  return undefined;
+const WRONG_SHAKE_MS = 360;
+
+function choiceEmoji(_label: string, emoji?: string): string | undefined {
+  return emoji;
 }
 
 export function MultipleChoiceScreen({
@@ -110,6 +109,41 @@ export function MultipleChoiceScreen({
   isMultiCorrectRef.current = isMultiCorrect;
   const commitCashRef = useRef(commitCash);
   commitCashRef.current = commitCash;
+  const wrongTimersRef = useRef<Map<ChoiceKey, number>>(new Map());
+
+  useEffect(
+    () => () => {
+      for (const timer of wrongTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+    },
+    [],
+  );
+
+  const scheduleWrongReset = (key: ChoiceKey) => {
+    const existing = wrongTimersRef.current.get(key);
+    if (existing !== undefined) window.clearTimeout(existing);
+    const timer = window.setTimeout(() => {
+      wrongTimersRef.current.delete(key);
+      if (solvedRef.current) return;
+      if (isMultiCorrectRef.current) {
+        setMultiSelected((current) => {
+          if (!current.has(key)) return current;
+          const next = new Set(current);
+          next.delete(key);
+          multiSelectedRef.current = next;
+          return next;
+        });
+        return;
+      }
+      setChoice((current) => {
+        if (current !== key) return current;
+        choiceRef.current = null;
+        return null;
+      });
+    }, WRONG_SHAKE_MS);
+    wrongTimersRef.current.set(key, timer);
+  };
 
   const isSelected = (key: ChoiceKey): boolean => {
     if (isMultiCorrect) return multiSelected.has(key);
@@ -121,7 +155,7 @@ export function MultipleChoiceScreen({
     setSuccess(true);
     setSolved(true);
     solvedRef.current = true;
-    celebrateLessonCorrectAnswer(flowRef.current.flashScreen);
+    celebrateLessonCorrectAnswer();
     flowRef.current.markScreenReady(screenIndex);
   };
 
@@ -150,7 +184,8 @@ export function MultipleChoiceScreen({
         setError(resolveErrorCopy());
         flowRef.current.clearScreenReady(screenIndex);
         flowRef.current.incrementMistake();
-        signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+        signalLessonIncorrectAnswer();
+        scheduleWrongReset(key);
         return;
       }
 
@@ -184,7 +219,8 @@ export function MultipleChoiceScreen({
 
     setError(resolveErrorCopy());
     flowRef.current.incrementMistake();
-    signalLessonIncorrectAnswer(flowRef.current.flashScreen);
+    signalLessonIncorrectAnswer();
+    scheduleWrongReset(key);
   };
 
   const resolveErrorCopy = (): string => {

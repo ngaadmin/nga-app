@@ -62,7 +62,7 @@ export function GuestModeBadge({
         <span className="min-w-0 truncate leading-tight">{displayLabel}</span>
       ) : null}
       {showSaveProgressHint ? (
-        <span className="font-bold leading-tight text-red-600">
+        <span className="font-bold leading-tight text-[#031F82]">
           {saveProgressText}
         </span>
       ) : null}

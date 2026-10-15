@@ -21,13 +21,13 @@ function LessonSvg({ className, children, ...props }: LessonIconProps) {
 }
 
 /** Reusable True glyph for the true/false template orb. */
-export function LessonTrueIcon(props: LessonIconProps) {
+export function LessonTrueIcon({ strokeWidth = 3.2, ...props }: LessonIconProps) {
   return (
     <LessonSvg {...props}>
       <path
         d="M5 12.5 10 17.5 19 6.5"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -36,13 +36,13 @@ export function LessonTrueIcon(props: LessonIconProps) {
 }
 
 /** Reusable False glyph for the true/false template orb. */
-export function LessonFalseIcon(props: LessonIconProps) {
+export function LessonFalseIcon({ strokeWidth = 3.2, ...props }: LessonIconProps) {
   return (
     <LessonSvg {...props}>
       <path
         d="M7 7l10 10M17 7 7 17"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth={strokeWidth}
         strokeLinecap="round"
       />
     </LessonSvg>

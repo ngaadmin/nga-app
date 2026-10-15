@@ -187,11 +187,11 @@ export function LessonScreenIntro({
 
 type LessonScreenLayoutProps = LessonScreenIntroProps & {
   children: ReactNode;
-  /** Green bar flash. Never displays successMessage / success copy. */
+  /** Kept for call sites. Correct feedback is the tick and ping, not a banner. */
   success?: boolean;
-  /** @deprecated Use `success`. Presence still flashes the green bar; text is ignored. */
+  /** @deprecated Ignored. Correct feedback is the tick and ping. */
   successMessage?: string | null;
-  /** Red bar. Empty string = bar only; non-empty = payload error/feedback copy. */
+  /** Hint copy. Empty string still publishes a hint slot; the text is the payload. */
   errorMessage?: string | null;
   errorVariant?: "banner" | "inline";
   fill?: boolean;
@@ -267,7 +267,7 @@ export function LessonSuccessBanner({
       role="status"
     >
       <span
-        className="grid size-7 shrink-0 place-items-center rounded-full bg-white font-extrabold text-[#16A34A]"
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FFB822] font-extrabold text-[#031F82]"
         aria-hidden
       >
         ✓
@@ -294,7 +294,7 @@ export function LessonErrorBanner({
       role="alert"
     >
       <span
-        className="grid size-7 shrink-0 place-items-center rounded-full bg-white font-extrabold text-[#E11D48]"
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-[#FFB822] font-extrabold text-[#031F82]"
         aria-hidden
       >
         !
@@ -801,14 +801,24 @@ type LessonIconOptionProps = {
   selectionVariant?: LessonChoiceVariant;
 } & Omit<HTMLAttributes<HTMLButtonElement>, "children">;
 
-function LessonTileTick() {
+/** 28px gold tick. Correct feedback is this badge, never a green or red box. */
+export function LessonAnswerTick({ className }: { className?: string }) {
   return (
     <span
-      className="absolute -right-1 -top-1 grid size-7 place-items-center rounded-full bg-white text-[15px] font-extrabold text-[#16A34A] shadow-[0_2px_6px_rgba(3,31,130,0.25)]"
+      className={cn(
+        "lesson-tick-pop grid size-7 shrink-0 place-items-center rounded-full bg-[#FFB822] text-[15px] font-extrabold leading-none text-[#031F82]",
+        className,
+      )}
       aria-hidden
     >
       ✓
     </span>
+  );
+}
+
+function LessonTileTick() {
+  return (
+    <LessonAnswerTick className="absolute -right-1 -top-1 shadow-[0_2px_6px_rgba(3,31,130,0.25)]" />
   );
 }
 
@@ -847,8 +857,8 @@ export const LessonIconOption = forwardRef<
   const isWrongSelection = selectionVariant === "wrong";
   const isCorrectSelection = selectionVariant === "correct";
   const tileSelection = lessonTileSelection({
-    selected: selected || isWrongSelection || isCorrectSelection,
-    variant: isWrongSelection ? "wrong" : isCorrectSelection ? "correct" : "neutral",
+    selected: (selected && !isWrongSelection) || isCorrectSelection,
+    variant: isCorrectSelection ? "correct" : "neutral",
   });
   const showTick = lessonTileShowsTick(tileSelection);
 
@@ -883,7 +893,7 @@ export const LessonIconOption = forwardRef<
       disabled={disabled}
       data-selection={tileSelection === "idle" ? undefined : tileSelection}
       className={cn(
-        "lesson-choice-tile relative flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)] transition-all active:scale-[0.98]",
+        "lesson-choice-tile relative flex shrink-0 items-center justify-center rounded-full bg-[#EAF0FF] active:scale-[0.98]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
         isWrongSelection && "lesson-tile-shake",
@@ -898,7 +908,7 @@ export const LessonIconOption = forwardRef<
     <div
       data-selection={tileSelection === "idle" ? undefined : tileSelection}
       className={cn(
-        "lesson-choice-tile relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)]",
+        "lesson-choice-tile relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#EAF0FF]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
         isWrongSelection && "lesson-tile-shake",

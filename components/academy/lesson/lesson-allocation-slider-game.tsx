@@ -62,7 +62,7 @@ export function LessonAllocationSliderGame({
         <div className="mb-1.5 flex justify-between text-sm font-semibold text-[#031F82]">
           <span>
             Save
-            <span className="mt-0.5 block text-xs font-bold text-[#C2410C]">
+            <span className="mt-0.5 block text-xs font-bold text-[#031F82]">
               needs ${targetMin}
             </span>
           </span>

@@ -15,11 +15,11 @@ export type BucketTheme = {
 export function bucketTheme(bucket: VaultBucket): BucketTheme {
   if (isSavingsBucket(bucket) || bucket.foundationRole === "save") {
     return {
-      accent: "#22C55E",
-      fill: "from-[#22C55E]/80 to-[#16A34A]",
-      track: "bg-[#22C55E]/20",
-      ring: "#22C55E",
-      label: "text-[#15803D]",
+      accent: "#2BB3C0",
+      fill: "from-[#2BB3C0]/80 to-[#1E8E99]",
+      track: "bg-[#2BB3C0]/20",
+      ring: "#2BB3C0",
+      label: "text-[#1E8E99]",
     };
   }
   if (bucket.foundationRole === "spend") {
@@ -42,11 +42,11 @@ export function bucketTheme(bucket: VaultBucket): BucketTheme {
   }
   if (bucket.foundationRole === "emergencies") {
     return {
-      accent: "#F43F5E",
-      fill: "from-[#FB7185]/90 to-[#F43F5E]",
-      track: "bg-[#F43F5E]/20",
-      ring: "#F43F5E",
-      label: "text-[#BE123C]",
+      accent: "#031F82",
+      fill: "from-[#031F82]/90 to-[#021558]",
+      track: "bg-[#031F82]/15",
+      ring: "#031F82",
+      label: "text-[#031F82]",
     };
   }
   return {

@@ -65,7 +65,7 @@ function TrackCard({
       <div className="flex items-start justify-between gap-2">
         <p className="font-heading text-sm font-extrabold text-[#031F82]">{meta.label}</p>
         {isCurrent ? (
-          <span className="shrink-0 rounded-full bg-[#22C55E]/15 px-2 py-0.5 font-heading text-xs font-bold uppercase tracking-wide text-[#15803D]">
+          <span className="shrink-0 rounded-full bg-[#FFB822] px-2 py-0.5 font-heading text-xs font-bold uppercase tracking-wide text-[#031F82]">
             {copy.currentBadge}
           </span>
         ) : null}
@@ -227,7 +227,7 @@ export function ParentLearningTrackPanel({ isEditable }: ParentLearningTrackPane
             </span>
           </div>
           {error ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {error}
             </p>
           ) : null}

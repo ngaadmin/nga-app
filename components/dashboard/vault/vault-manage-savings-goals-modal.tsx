@@ -44,13 +44,13 @@ const manageModalSecondaryBtnClass =
   "inline-flex h-touch min-h-touch flex-1 items-center justify-center rounded-nga-lg border border-[#BDE9FB] bg-white px-4 font-heading text-sm font-bold text-[#031F82] transition-colors hover:bg-[#F0FBFF] active:bg-[#FAFDFF] disabled:cursor-not-allowed disabled:opacity-40";
 
 const destructiveCtaClass =
-  "rounded-nga-lg border-b-4 border-[#9F1239] bg-[#BE123C] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded-nga-lg border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const manageModalFieldLabelClass =
   "font-heading text-sm font-bold text-[#031F82]";
 
 const resetLinkClass =
-  "font-heading text-sm font-bold text-[#BE123C]/80 underline-offset-2 transition-colors hover:text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
+  "font-heading text-sm font-bold text-[#031F82]/80 underline-offset-2 transition-colors hover:text-[#031F82] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
 
 type GoalDraft = {
   name: string;
@@ -498,7 +498,7 @@ export function VaultManageSavingsGoalsModal({
                           <p className="truncate font-heading text-sm font-extrabold text-[#031F82]">
                             {displayName}
                           </p>
-                          <p className="mt-0.5 font-heading text-sm font-bold text-[#15803D]">
+                          <p className="mt-0.5 font-heading text-sm font-bold text-[#031F82]">
                             Saved: {formatMoney(balance)}
                           </p>
                           <p className="font-heading text-sm font-bold text-[#1E3A5F]/70">
@@ -537,7 +537,7 @@ export function VaultManageSavingsGoalsModal({
                                 );
                               }}
                               aria-label={vaultCopy.deleteGoal}
-                              className="flex size-8 items-center justify-center rounded-lg text-[#BE123C]/70 transition-colors hover:bg-[#FEE2E2]/60 hover:text-[#BE123C]"
+                              className="flex size-8 items-center justify-center rounded-lg text-[#031F82]/70 transition-colors hover:bg-[#EAF0FF] hover:text-[#031F82]"
                             >
                               <TrashIcon className="size-4" />
                             </button>

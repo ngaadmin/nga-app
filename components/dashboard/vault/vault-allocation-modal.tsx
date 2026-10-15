@@ -290,7 +290,7 @@ export function VaultAllocationModal({
           <p
             className={cn(
               "font-heading text-2xl font-extrabold leading-none tabular-nums transition-colors",
-              isOverAllocated || inputWasCapped ? "text-[#BE123C]" : "text-[#FFA503]",
+              isOverAllocated || inputWasCapped ? "text-[#031F82]" : "text-[#FFA503]",
             )}
             aria-live="polite"
             aria-atomic="true"
@@ -363,7 +363,7 @@ export function VaultAllocationModal({
       </div>
 
       {!canLockIn ? (
-        <p className="mt-3 font-heading text-sm font-bold text-[#BE123C]" role="status">
+        <p className="mt-3 font-heading text-sm font-bold text-[#031F82]" role="status">
           {copy.assignAllMoneyHint}
         </p>
       ) : null}

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLessonSuccessFlash } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
@@ -31,8 +30,10 @@ import type { StandardScreenProps } from "./types";
 
 type SideLayout = { left: "a" | "b"; right: "a" | "b" };
 
-/** Matches lesson flow error flash duration (use-lesson-flow.ts). */
-const FEEDBACK_RECOVERY_MS = 450;
+/** Wrong row shakes, then returns to rest. */
+const WRONG_DESELECT_MS = 360;
+/** Next round replaces the current one after a correct tick. */
+const ROUND_ADVANCE_MS = 450;
 
 /** Scaled to the 88px option circle; default glyph is sized for the 48px true/false orb. */
 const TRUE_FALSE_GLYPH_CLASS = "!size-10 text-[#031F82]";
@@ -48,6 +49,15 @@ function spotlightChoiceGlyph(label: string): ReactNode | null {
   return null;
 }
 
+/** Stable order for the server render and the matching hydration pass. */
+function fixedRoundSideLayouts(roundCount: number): SideLayout[] {
+  return Array.from({ length: roundCount }, () => ({
+    left: "a" as const,
+    right: "b" as const,
+  }));
+}
+
+/** Shuffle which choice sits on which side. Must not run during render. */
 function buildRoundSideLayouts(roundCount: number): SideLayout[] {
   return Array.from({ length: roundCount }, () =>
     Math.random() < 0.5
@@ -165,15 +175,16 @@ function SpotlightGradedRounds({
   const [roundIndex, setRoundIndex] = useState(0);
   const [choice, setChoice] = useState<"a" | "b" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [roundCorrect, setRoundCorrect] = useState(false);
-  const showSuccess = useLessonSuccessFlash(roundCorrect);
   const recoveryTimeoutRef = useRef<number | null>(null);
   const round = screen.rounds[roundIndex];
 
-  const roundSideLayouts = useMemo(
-    () => buildRoundSideLayouts(screen.rounds.length),
-    [screen.rounds.length],
+  const [roundSideLayouts, setRoundSideLayouts] = useState<SideLayout[]>(() =>
+    fixedRoundSideLayouts(screen.rounds.length),
   );
+
+  useLayoutEffect(() => {
+    setRoundSideLayouts(buildRoundSideLayouts(screen.rounds.length));
+  }, [screen.rounds.length]);
 
   useEffect(
     () => () => {
@@ -191,7 +202,7 @@ function SpotlightGradedRounds({
     recoveryTimeoutRef.current = window.setTimeout(() => {
       setChoice(null);
       recoveryTimeoutRef.current = null;
-    }, FEEDBACK_RECOVERY_MS);
+    }, WRONG_DESELECT_MS);
   };
 
   const pick = (which: "a" | "b") => {
@@ -199,7 +210,6 @@ function SpotlightGradedRounds({
     setChoice(which);
     onDismissError?.();
     setError(null);
-    setRoundCorrect(false);
 
     if (which !== round.correct) {
       flow.incrementMistake();
@@ -208,13 +218,12 @@ function SpotlightGradedRounds({
         const copy = lessonFeedbackCopy(round.error);
         if (copy) onPersistentError(copy);
       }
-      signalLessonIncorrectAnswer(flow.flashScreen);
+      signalLessonIncorrectAnswer();
       scheduleChoiceReset();
       return;
     }
 
-    setRoundCorrect(true);
-    celebrateLessonCorrectAnswer(flow.flashScreen);
+    celebrateLessonCorrectAnswer();
     if (roundIndex + 1 >= screen.rounds.length) {
       flow.markScreenReady(screenIndex);
       return;
@@ -223,9 +232,8 @@ function SpotlightGradedRounds({
     recoveryTimeoutRef.current = window.setTimeout(() => {
       setRoundIndex((current) => current + 1);
       setChoice(null);
-      setRoundCorrect(false);
       recoveryTimeoutRef.current = null;
-    }, FEEDBACK_RECOVERY_MS);
+    }, ROUND_ADVANCE_MS);
   };
 
   if (!round) return null;
@@ -289,7 +297,6 @@ function SpotlightGradedRounds({
   return (
     <LessonScreenLayout
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      success={showSuccess}
       errorMessage={error}
     >
       <p className={cn("mb-2.5", lessonPromptClass)}>{screen.prompt}</p>

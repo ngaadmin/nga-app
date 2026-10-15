@@ -17,7 +17,7 @@ export function DragToTargetScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<DragToTargetScreenConfig>) {
-  const { showSuccess, handleComplete, handleSuccess, handleMismatch } =
+  const { handleComplete, handleSuccess, handleMismatch } =
     useLessonScreenFlow({
       screenIndex,
       flow,
@@ -28,7 +28,6 @@ export function DragToTargetScreen({
     <LessonScreenLayout
       intro={screen.intro}
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      success={showSuccess}
       errorMessage={error}
     >
       <LessonDragToTargetGame

@@ -192,14 +192,14 @@ export function CreateParentProfilePanel({
             className={cn(
               fieldBase,
               existingEmail && "bg-nga-mist/40",
-              errors.email && "border-red-400 focus:border-red-500",
+              errors.email && "border-[#031F82] focus:border-[#031F82]",
             )}
           />
           <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
             {copy.createParentEmailHint}
           </p>
           {errors.email ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.email}
             </p>
           ) : null}
@@ -226,11 +226,11 @@ export function CreateParentProfilePanel({
             aria-invalid={Boolean(errors.password)}
             className={cn(
               fieldBase,
-              errors.password && "border-red-400 focus:border-red-500",
+              errors.password && "border-[#031F82] focus:border-[#031F82]",
             )}
           />
           {errors.password ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.password}
             </p>
           ) : null}
@@ -257,18 +257,18 @@ export function CreateParentProfilePanel({
             aria-invalid={Boolean(errors.confirmPassword)}
             className={cn(
               fieldBase,
-              errors.confirmPassword && "border-red-400 focus:border-red-500",
+              errors.confirmPassword && "border-[#031F82] focus:border-[#031F82]",
             )}
           />
           {errors.confirmPassword ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.confirmPassword}
             </p>
           ) : null}
         </div>
 
         {errors.form ? (
-          <p className="font-sans text-sm font-medium text-red-600" role="alert">
+          <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
             {errors.form}
           </p>
         ) : null}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import {
   lessonHoldButtonClass,
   lessonHoldButtonCompleteClass,
@@ -70,7 +71,7 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
-      signalLessonIncorrectAnswer(flow.flashScreen, { flash: true });
+      signalLessonIncorrectAnswer();
       setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? "");
     }
   };
@@ -114,8 +115,9 @@ export function HoldToFillScreen({
           style={{ width: `${progress * 100}%` }}
           aria-hidden
         />
-        <span className="relative z-raised">
+        <span className="relative z-raised inline-flex items-center gap-2">
           {complete ? screen.frozenLabel : screen.holdLabel}
+          {complete ? <LessonAnswerTick /> : null}
         </span>
       </button>
     </div>

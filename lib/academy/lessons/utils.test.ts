@@ -52,28 +52,23 @@ afterEach(() => {
 describe("lesson answer feedback", () => {
   it("plays a high ping when the answer is correct", () => {
     const started = installAudio();
-    const flash = vi.fn();
 
-    celebrateLessonCorrectAnswer(flash);
+    celebrateLessonCorrectAnswer();
 
     expect(started).toEqual([{ frequency: 880, type: "sine" }]);
-    expect(flash).toHaveBeenCalledWith("success");
   });
 
   it("plays a short buzzer and vibrates when the answer is wrong", () => {
     const started = installAudio();
     const vibrate = vi.fn();
     vi.stubGlobal("navigator", { vibrate });
-    const flash = vi.fn();
-
-    signalLessonIncorrectAnswer(flash);
+    signalLessonIncorrectAnswer();
 
     expect(started).toEqual([
       { frequency: 180, type: "square" },
       { frequency: 110, type: "square" },
     ]);
     expect(vibrate).toHaveBeenCalledWith([60, 40, 60]);
-    expect(flash).toHaveBeenCalledWith("error");
   });
 
   it("skips sound when the caller turns it off", () => {
@@ -81,11 +76,10 @@ describe("lesson answer feedback", () => {
     const vibrate = vi.fn();
     vi.stubGlobal("navigator", { vibrate });
 
-    celebrateLessonCorrectAnswer(undefined, { sound: false, flash: false });
-    signalLessonIncorrectAnswer(undefined, {
+    celebrateLessonCorrectAnswer({ sound: false });
+    signalLessonIncorrectAnswer({
       sound: false,
       vibrate: false,
-      flash: false,
     });
 
     expect(started).toEqual([]);

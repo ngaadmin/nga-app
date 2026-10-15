@@ -185,7 +185,7 @@ export function BirthYearSettingsModal({
             </span>
           </div>
           {error ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {error}
             </p>
           ) : null}

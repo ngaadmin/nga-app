@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   hasIncorrectSelection,
@@ -47,6 +48,16 @@ export function LessonBudgetSelectGame({
 }: LessonBudgetSelectGameProps) {
   const [checkedIds, setCheckedIds] = useState<ReadonlySet<string>>(() => new Set());
   const [shakingId, setShakingId] = useState<string | null>(null);
+  const shakeTimersRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(
+    () => () => {
+      for (const timer of shakeTimersRef.current.values()) {
+        window.clearTimeout(timer);
+      }
+    },
+    [],
+  );
 
   const budgetSpent = useMemo(
     () => items.reduce((sum, item) => sum + (checkedIds.has(item.id) ? item.price : 0), 0),
@@ -128,6 +139,19 @@ export function LessonBudgetSelectGame({
       onMistake();
       const message = resolveError(next, nextSpent);
       onPersistentError?.(message.trim() ? message : "");
+      const existing = shakeTimersRef.current.get(itemId);
+      if (existing !== undefined) window.clearTimeout(existing);
+      const timer = window.setTimeout(() => {
+        shakeTimersRef.current.delete(itemId);
+        setShakingId((current) => (current === itemId ? null : current));
+        setCheckedIds((current) => {
+          if (!current.has(itemId)) return current;
+          const cleared = new Set(current);
+          cleared.delete(itemId);
+          return cleared;
+        });
+      }, 360);
+      shakeTimersRef.current.set(itemId, timer);
     }
   };
 
@@ -144,14 +168,16 @@ export function LessonBudgetSelectGame({
               type="button"
               aria-pressed={checked}
               onClick={() => toggle(item.id)}
+              data-selection={
+                checked && correctIds.includes(item.id) && !shaking ? "correct" : undefined
+              }
               className={cn(
-                "flex w-full items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left text-[#031F82] transition-colors active:scale-[0.99]",
-                checked && "bg-[#BDE9FB]",
-                shaking && "lesson-tile-shake bg-[#FFF1F2] text-[#9F1239]",
+                "lesson-choice-tile relative flex w-full min-h-[60px] items-center gap-3.5 rounded-full bg-transparent px-3.5 py-2 text-left font-sans text-[18px] font-semibold leading-[1.25] text-[#14213D] active:scale-[0.99]",
+                shaking && "lesson-tile-shake",
               )}
             >
               {item.emoji ? (
-                <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white text-[2rem] leading-none" aria-hidden>
+                <span className="grid w-9 shrink-0 place-items-center text-[30px] leading-none" aria-hidden>
                   {item.emoji}
                 </span>
               ) : null}
@@ -159,15 +185,11 @@ export function LessonBudgetSelectGame({
                 {item.label}
               </span>
               <strong className="font-heading text-lg">${item.price}</strong>
-              <span
-                className={cn(
-                  "grid size-7 shrink-0 place-items-center rounded-full text-sm font-extrabold",
-                  checked ? "bg-[#031F82] text-white" : "bg-white text-transparent",
-                )}
-                aria-hidden
-              >
-                ✓
-              </span>
+              {checked && correctIds.includes(item.id) && !shaking ? (
+                <LessonAnswerTick />
+              ) : (
+                <span className="size-7 shrink-0" aria-hidden />
+              )}
             </button>
           );
         })}
@@ -175,7 +197,7 @@ export function LessonBudgetSelectGame({
       <div className="pt-5">
         <div className="mb-2 flex items-baseline justify-between font-heading text-[#031F82]">
           <span className="text-sm font-extrabold uppercase tracking-wide">{walletLabel}</span>
-          <span className={cn("text-lg font-extrabold", overBudget && "text-[#E11D48]")}>
+          <span className="text-lg font-extrabold">
             ${budgetSpent} / ${total}
           </span>
         </div>
@@ -191,7 +213,7 @@ export function LessonBudgetSelectGame({
           aria-label={walletLabel}
         >
           <div
-            className={cn("h-full rounded-full transition-[width] duration-300", overBudget ? "bg-[#E11D48]" : "bg-[#0CC1E0]")}
+            className="h-full rounded-full bg-[#0CC1E0] transition-[width] duration-300"
             style={{ width: `${overBudget ? 100 : fill}%` }}
           />
         </div>

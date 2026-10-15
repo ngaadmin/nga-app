@@ -224,6 +224,14 @@ describe("resolveRecordingSuppressIntro", () => {
     await expect(resolveRecordingSuppressIntro()).resolves.toBe(true);
     expect(spy).not.toHaveBeenCalled();
     expect(readRecordingSuppressIntroFlag()).toBe(true);
+    expect(readUserSession()).toBeNull();
+  });
+
+  it("stamps an open session when the tab flag is already set", async () => {
+    saveUserSession(guest("pennytest"));
+    window.sessionStorage.setItem(RECORDING_SUPPRESS_INTRO_FLAG_KEY, "1");
+    await expect(resolveRecordingSuppressIntro()).resolves.toBe(true);
+    expect(readUserSession()?.recordingSuppressIntro).toBe(true);
   });
 
   it("stays visible when the lookup fails and retries on the next check", async () => {

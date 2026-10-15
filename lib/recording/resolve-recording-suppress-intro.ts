@@ -6,6 +6,7 @@ import {
 import { recordingIdentitySuppressesIntros } from "@/lib/recording/suppress-intro-action";
 import {
   captureRecordingSuppressIntroQuery,
+  enableRecordingSuppressIntroFlag,
   readRecordingSuppressIntroFlag,
   RECORDING_SUPPRESS_INTRO_FLAG_KEY,
 } from "@/lib/recording/suppress-intro-flag";
@@ -100,7 +101,13 @@ export async function resolveRecordingSuppressIntro(): Promise<boolean> {
   if (typeof window === "undefined") return false;
 
   captureRecordingSuppressIntroQuery(window.location.search);
-  if (readRecordingSuppressIntroFlag()) return true;
+  if (readRecordingSuppressIntroFlag()) {
+    const session = readUserSession();
+    if (session && session.recordingSuppressIntro !== true) {
+      enableRecordingSuppressIntroFlag();
+    }
+    return true;
+  }
 
   const session = readUserSession();
   if (session?.recordingSuppressIntro === true) {

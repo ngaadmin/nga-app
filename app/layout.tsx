@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import { Suspense } from "react";
 import { RecordingIntroQueryFlag } from "@/components/recording/recording-intro-query-flag";
+import { RECORDING_SUPPRESS_INTRO_FLAG_KEY } from "@/lib/recording/suppress-intro-flag";
 import { landingShareMetadata } from "@/lib/site-share-metadata";
 import "./globals.css";
 
@@ -99,6 +101,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-sans antialiased overflow-x-hidden max-w-full">
+        {/* TODO: remove after recordings — run before client redirects drop the query. */}
+        <Script id="recording-suppress-intro" strategy="beforeInteractive">
+          {`try{var q=new URLSearchParams(location.search);if(q.get("recording")==="1")sessionStorage.setItem(${JSON.stringify(RECORDING_SUPPRESS_INTRO_FLAG_KEY)},"1")}catch(e){}`}
+        </Script>
         {children}
         {/* TODO: remove after recordings */}
         <Suspense fallback={null}>

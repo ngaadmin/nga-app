@@ -4,6 +4,11 @@ import {
   type PersistedDashboardWallet,
   type WalletLedgerEvent,
 } from "@/lib/dashboard/dashboard-wallet-storage";
+import {
+  hasPageIntroFlags,
+  mergePageIntroFlags,
+  type AccountPageIntroFlags,
+} from "@/lib/dashboard/page-intro-flags";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import type { VaultSkillTierOverrides } from "@/lib/dashboard/vault-skill-progress-storage";
 import type { PersistedVaultProfile } from "@/lib/dashboard/vault/vault-profile-storage";
@@ -20,6 +25,11 @@ export type AccountProgressPayload = {
   vaultSession: PersistedVaultProfile | null;
   /** Consecutive practice days ending today. Omitted when the learner has none. */
   dayStreak?: number;
+  /**
+   * Page intros this account has dismissed. Synced with the rest of the
+   * payload so a new device does not show them again.
+   */
+  pageIntros?: AccountPageIntroFlags;
 };
 
 const SKILL_TIER_RANK: Record<SkillTrophyTier, number> = {
@@ -151,6 +161,7 @@ export function parseAccountProgressPayload(
   );
 
   const dayStreak = parseDayStreak(value.dayStreak ?? value.day_streak);
+  const pageIntros = parsePageIntros(value.pageIntros ?? value.page_intros);
 
   if (
     !academyProgress &&
@@ -158,7 +169,8 @@ export function parseAccountProgressPayload(
     !skillProgress &&
     !vaultProfile &&
     !vaultSession &&
-    dayStreak == null
+    dayStreak == null &&
+    !pageIntros
   ) {
     return null;
   }
@@ -174,7 +186,20 @@ export function parseAccountProgressPayload(
     vaultProfile,
     vaultSession,
     ...(dayStreak != null ? { dayStreak } : {}),
+    ...(pageIntros ? { pageIntros } : {}),
   };
+}
+
+function parsePageIntros(value: unknown): AccountPageIntroFlags | undefined {
+  if (typeof value === "string") {
+    try {
+      return parsePageIntros(JSON.parse(value));
+    } catch {
+      return undefined;
+    }
+  }
+  if (!isRecord(value)) return undefined;
+  return mergePageIntroFlags(value as AccountPageIntroFlags, null);
 }
 
 function parseDayStreak(value: unknown): number | undefined {
@@ -238,6 +263,13 @@ export function isEmptyAccountProgress(
     vaultBalanceScore(payload.vaultSession) > 0;
   const hasStreak = (payload.dayStreak ?? 0) > 0;
   return !hasAcademy && !hasWallet && !hasSkills && !hasVault && !hasStreak;
+}
+
+/** True when the payload records at least one dismissed page intro. */
+export function hasPersistedPageIntros(
+  payload: AccountProgressPayload | null | undefined,
+): boolean {
+  return hasPageIntroFlags(payload?.pageIntros);
 }
 
 /** Safe learner_progress log fields — ids, XP, and milestone counts only. */
@@ -438,6 +470,9 @@ export function mergeAccountProgress(
   if (!left) return right ?? null;
   if (!right) return left;
 
+  const dayStreak = mergedDayStreak(left.dayStreak, right.dayStreak);
+  const pageIntros = mergePageIntroFlags(left.pageIntros, right.pageIntros);
+
   return {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
     academyProgress: mergeAcademyProgress(left.academyProgress, right.academyProgress),
@@ -445,9 +480,8 @@ export function mergeAccountProgress(
     skillProgress: mergeSkillProgress(left.skillProgress, right.skillProgress),
     vaultProfile: richerVault(left.vaultProfile, right.vaultProfile),
     vaultSession: richerVault(left.vaultSession, right.vaultSession),
-    ...(mergedDayStreak(left.dayStreak, right.dayStreak) != null
-      ? { dayStreak: mergedDayStreak(left.dayStreak, right.dayStreak) }
-      : {}),
+    ...(dayStreak != null ? { dayStreak } : {}),
+    ...(pageIntros ? { pageIntros } : {}),
   };
 }
 
@@ -462,6 +496,9 @@ export function overlayAccountProgress(
   if (!overlay) return base ?? null;
   if (!base) return overlay;
 
+  const dayStreak = mergedDayStreak(base.dayStreak, overlay.dayStreak);
+  const pageIntros = mergePageIntroFlags(base.pageIntros, overlay.pageIntros);
+
   return {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
     academyProgress: mergeAcademyProgress(
@@ -472,9 +509,8 @@ export function overlayAccountProgress(
     skillProgress: overlay.skillProgress ?? base.skillProgress,
     vaultProfile: overlay.vaultProfile ?? base.vaultProfile,
     vaultSession: overlay.vaultSession ?? base.vaultSession,
-    ...(mergedDayStreak(base.dayStreak, overlay.dayStreak) != null
-      ? { dayStreak: mergedDayStreak(base.dayStreak, overlay.dayStreak) }
-      : {}),
+    ...(dayStreak != null ? { dayStreak } : {}),
+    ...(pageIntros ? { pageIntros } : {}),
   };
 }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
+import { MedalsIntro } from "@/components/achievements/medals-intro";
 import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
 import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
@@ -12,9 +13,7 @@ import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { readStoredDayStreak } from "@/lib/dashboard/streak-practice";
 import {
   hasUnseenSkillProgress,
-  markSkillsCupIntroSeen,
   markSkillsPanelSeen,
-  shouldShowSkillsCupIntro,
 } from "@/lib/dashboard/skills-attention";
 import { resolveVaultSkillTrophiesForCohort } from "@/lib/dashboard/skill-trophies";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
@@ -54,23 +53,14 @@ export function DashboardStatusHeader() {
   );
 
   const [skillsHasAttention, setSkillsHasAttention] = useState(false);
-  const [showSkillsCupIntro, setShowSkillsCupIntro] = useState(false);
 
   useEffect(() => {
     setSkillsHasAttention(hasUnseenSkillProgress(cohortSkills));
-    setShowSkillsCupIntro(shouldShowSkillsCupIntro(cohortSkills));
   }, [cohortSkills, skillsAttentionTick]);
-
-  const dismissSkillsCupIntro = useCallback(() => {
-    markSkillsCupIntroSeen();
-    setShowSkillsCupIntro(false);
-  }, []);
 
   const openSkills = useCallback(() => {
     setSkillsOpen(true);
     markSkillsPanelSeen(cohortSkills);
-    markSkillsCupIntroSeen();
-    setShowSkillsCupIntro(false);
     setSkillsAttentionTick((tick) => tick + 1);
   }, [cohortSkills]);
 
@@ -94,9 +84,7 @@ export function DashboardStatusHeader() {
           xp={lifetimePointsEarned}
           dayStreak={dayStreak}
           skillsHasAttention={skillsHasAttention}
-          showSkillsCupIntro={showSkillsCupIntro}
           onSkillsClick={openSkills}
-          onSkillsIntroSeen={dismissSkillsCupIntro}
           onStreakClick={openStreaks}
           onXpClick={openXpExchange}
         />
@@ -104,8 +92,9 @@ export function DashboardStatusHeader() {
 
       <FullHeightPanel
         isOpen={skillsOpen}
-        title="Skills"
-        titleId="skills-collection-title"
+        title="Medals"
+        titleId="medals-collection-title"
+        titleAccessory={<MedalsIntro />}
         onClose={() => setSkillsOpen(false)}
       >
         <SkillsCollectionPanel />

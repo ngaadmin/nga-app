@@ -1,5 +1,6 @@
 import {
   ACCOUNT_PROGRESS_SCHEMA_VERSION,
+  hasPersistedPageIntros,
   isEmptyAccountProgress,
   parseAccountProgressPayload,
   pickRestoredAccountProgress,
@@ -40,6 +41,10 @@ import {
   writeVaultSessionRaw,
 } from "@/lib/dashboard/vault/profile-persist";
 import { readPersisted } from "@/lib/dev/client-persist";
+import {
+  mergeRemotePageIntroFlags,
+  readCurrentPageIntroFlags,
+} from "@/lib/dashboard/page-intro-seen";
 import { readUserSession } from "@/lib/onboarding/guest-session";
 
 /** Durable per-account cache — survives logout so the same device can restore. */
@@ -103,7 +108,10 @@ export function writeCachedAccountProgress(
   if (!key || typeof window === "undefined") return;
 
   const cache = readCache();
-  if (!payload || isEmptyAccountProgress(payload)) {
+  const keep =
+    Boolean(payload) &&
+    (!isEmptyAccountProgress(payload) || hasPersistedPageIntros(payload));
+  if (!payload || !keep) {
     delete cache[key];
   } else {
     cache[key] = payload;
@@ -116,6 +124,8 @@ export function collectAccountProgress(): AccountProgressPayload {
   const skillRaw = readPersisted(VAULT_SKILL_PROGRESS_STORAGE_KEY);
   const vaultProfileRaw = readVaultProfileRaw(VAULT_PROFILE_STORAGE_KEY);
   const vaultSessionRaw = readVaultSessionRaw(VAULT_SESSION_STORAGE_KEY);
+
+  const pageIntros = readCurrentPageIntroFlags();
 
   return {
     schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
@@ -131,6 +141,7 @@ export function collectAccountProgress(): AccountProgressPayload {
           ?.vaultSession ?? null
       : null,
     ...(readStoredDayStreak() > 0 ? { dayStreak: readStoredDayStreak() } : {}),
+    ...(pageIntros ? { pageIntros } : {}),
   };
 }
 
@@ -166,6 +177,7 @@ export function applyAccountProgress(payload: AccountProgressPayload): void {
     }
 
     writeStoredDayStreak(payload.dayStreak ?? 0);
+    mergeRemotePageIntroFlags(payload.pageIntros);
 
     const session = readUserSession();
     if (session?.accessMode === "registered") {
@@ -209,6 +221,15 @@ export function restoreAccountProgressForUser(input: {
   });
 
   if (!merged || isEmptyAccountProgress(merged)) {
+    if (merged?.pageIntros) {
+      beginAccountProgressApply();
+      try {
+        mergeRemotePageIntroFlags(merged.pageIntros);
+      } finally {
+        endAccountProgressApply();
+      }
+    }
+    dispatchAccountProgressRestored();
     return merged;
   }
 
@@ -223,6 +244,6 @@ export function persistAccountProgressCacheFromLive(input: {
 }): void {
   if (typeof window === "undefined") return;
   const live = collectAccountProgress();
-  if (isEmptyAccountProgress(live)) return;
+  if (isEmptyAccountProgress(live) && !hasPersistedPageIntros(live)) return;
   writeCachedAccountProgress(input, live);
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   StatusBannerLayout,
   TOP_BAR_ROUND_ICON_CLASS,
@@ -17,9 +16,7 @@ type AcademyMomentumHeaderProps = {
   xp: number;
   dayStreak: number;
   skillsHasAttention?: boolean;
-  showSkillsCupIntro?: boolean;
   onSkillsClick: () => void;
-  onSkillsIntroSeen?: () => void;
   onStreakClick: () => void;
   onXpClick: () => void;
 };
@@ -29,28 +26,12 @@ export function AcademyMomentumHeader({
   xp,
   dayStreak,
   skillsHasAttention = false,
-  showSkillsCupIntro = false,
   onSkillsClick,
-  onSkillsIntroSeen,
   onStreakClick,
   onXpClick,
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
-  const [tipVisible, setTipVisible] = useState(false);
-
-  useEffect(() => {
-    if (!showSkillsCupIntro) {
-      setTipVisible(false);
-      return;
-    }
-    setTipVisible(true);
-    const hide = window.setTimeout(() => {
-      setTipVisible(false);
-      onSkillsIntroSeen?.();
-    }, 7000);
-    return () => window.clearTimeout(hide);
-  }, [showSkillsCupIntro, onSkillsIntroSeen]);
 
   return (
     <StatusBannerLayout
@@ -100,14 +81,13 @@ export function AcademyMomentumHeader({
               onClick={onSkillsClick}
               aria-label={
                 skillsHasAttention
-                  ? "Open skills cabinet. New medal earned."
-                  : "Open skills cabinet"
+                  ? "Open medals. New medal earned."
+                  : "Open medals"
               }
               title={journeyCopy.skillsCupLabel}
               className={cn(
                 TOP_BAR_ROUND_ICON_CLASS,
                 "relative transition-[filter,transform] hover:brightness-[1.05] active:scale-95",
-                showSkillsCupIntro && "animate-skills-cup-pulse",
               )}
             >
               <AchievementsIcon className="size-5" />
@@ -118,16 +98,6 @@ export function AcademyMomentumHeader({
                 />
               ) : null}
             </button>
-            {tipVisible ? (
-              <div
-                role="status"
-                className="absolute right-0 top-[calc(100%+0.4rem)] w-44 rounded-xl bg-[#031F82] px-3 py-2 text-left shadow-md"
-              >
-                <p className="font-heading text-sm font-bold leading-snug text-white">
-                  {journeyCopy.skillsCupTip}
-                </p>
-              </div>
-            ) : null}
           </div>
         </>
       }

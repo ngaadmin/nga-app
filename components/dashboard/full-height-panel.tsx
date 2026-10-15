@@ -10,6 +10,7 @@ type FullHeightPanelProps = {
   title: string;
   titleId: string;
   onClose: () => void;
+  titleAccessory?: ReactNode;
   children: ReactNode;
 };
 
@@ -19,6 +20,7 @@ export function FullHeightPanel({
   title,
   titleId,
   onClose,
+  titleAccessory,
   children,
 }: FullHeightPanelProps) {
   useEffect(() => {
@@ -52,12 +54,15 @@ export function FullHeightPanel({
         aria-labelledby={titleId}
       >
         <header className="flex shrink-0 items-center gap-3 border-b border-nga-mist px-4 py-3">
-          <h2
-            id={titleId}
-            className="min-w-0 flex-1 font-heading text-lg font-extrabold text-[#031F82]"
-          >
-            {title}
-          </h2>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <h2
+              id={titleId}
+              className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]"
+            >
+              {title}
+            </h2>
+            {titleAccessory}
+          </div>
           <button
             type="button"
             onClick={onClose}

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ClientPortal } from "@/components/ui/client-portal";
-import { LAYER_ROOT_IDS, type LayerRootId } from "@/lib/ui/layers";
+import { LAYER_CLASS, LAYER_ROOT_IDS, type LayerRootId } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
 type ModalLayer = "modal" | "toast";
@@ -50,6 +50,7 @@ export function ModalShell({
       <div
         className={cn(
           "pointer-events-auto fixed inset-0 flex bg-[#031F82]/50 p-4",
+          LAYER_CLASS.modal,
           align === "bottom"
             ? "items-end justify-center sm:items-center"
             : "items-center justify-center",

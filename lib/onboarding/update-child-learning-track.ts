@@ -36,6 +36,7 @@ function resetLearningPayload(
     skillProgress: {},
     vaultProfile: existing?.vaultProfile ?? null,
     vaultSession: existing?.vaultSession ?? null,
+    ...(existing?.pageIntros ? { pageIntros: existing.pageIntros } : {}),
   };
 }
 

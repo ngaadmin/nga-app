@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ClientPortal } from "@/components/ui/client-portal";
 import {
@@ -18,6 +18,7 @@ import {
   masteryCohortNameAndAgeLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { isKidClassPassword, suggestClassPassword } from "@/lib/school/class-password";
 import { cn } from "@/lib/utils/cn";
 
 const COHORT_EMOJI: Record<MasteryCohort, string> = {
@@ -27,11 +28,13 @@ const COHORT_EMOJI: Record<MasteryCohort, string> = {
 };
 
 /** Shown only while students exist. Exact wording from the class-track lock. */
-const TRACK_LOCK_HELP_LEAD = "To change the track, remove all students first.";
-const TRACK_LOCK_HELP_REST = "Then you can change it and add students again.";
+const TRACK_LOCK_HELP_LEAD = "To change the track, remove all users first.";
+const TRACK_LOCK_HELP_REST = "Then you can change it and add users again.";
 
 type ClassPageProps = {
   roster: ClassRosterSnapshot;
+  /** True only for the visit that just saved a new class password. */
+  passwordSaved?: boolean;
 };
 
 type PendingRemove =
@@ -144,21 +147,56 @@ function DisclosureChevron({ open }: { open: boolean }) {
   );
 }
 
+function EyeIcon({ off }: { off: boolean }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden fill="none" stroke="#031F82" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {off ? (
+        <>
+          <path d="M3 3l18 18" />
+          <path d="M10.6 10.6a3 3 0 0 0 4.2 4.2" />
+          <path d="M9.9 5.1A10.8 10.8 0 0 1 12 5c7 0 10 7 10 7a18 18 0 0 1-3.2 4.2" />
+          <path d="M6.1 6.1C3.5 7.8 2 12 2 12s3 7 10 7a10 10 0 0 0 4.1-.9" />
+        </>
+      ) : (
+        <>
+          <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function ClassPasswordRow({
   classPassword,
-  onChange,
-  changing,
-  onSubmit,
+  onPasswordSaved,
+  initiallySaved = false,
 }: {
   classPassword: string;
-  onChange: (value: string) => void;
-  changing: boolean;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onPasswordSaved: (next: string) => void;
+  initiallySaved?: boolean;
 }) {
+  const titleId = useId();
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [changing, setChanging] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(initiallySaved);
+  const [currentVisible, setCurrentVisible] = useState(false);
+  const [nextPassword, setNextPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const copiedTimer = useRef<number | null>(null);
+  const nextValid = isKidClassPassword(nextPassword);
+  const matches = nextPassword.length > 0 && nextPassword === confirmPassword;
+  const canSave = nextValid && matches && !saving;
+  const hint =
+    nextPassword.length > 0 && !nextValid
+      ? "Use two easy words with a dash, like blue-tiger."
+      : confirmPassword.length > 0 && nextValid && !matches
+        ? "These don't match yet."
+        : "Two easy words with a dash, like blue-tiger.";
+  const hintTone = hint.startsWith("Two easy") ? "muted" : "brand";
 
   useEffect(() => {
     return () => {
@@ -178,15 +216,52 @@ function ClassPasswordRow({
     copiedTimer.current = window.setTimeout(() => setCopied(false), 1600);
   }
 
+  function closeChange() {
+    setChanging(false);
+    setCurrentVisible(false);
+    setNextPassword("");
+    setConfirmPassword("");
+    setSaveError(null);
+  }
+
+  useEffect(() => {
+    if (!changing) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") closeChange();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [changing]);
+
+  async function savePassword(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canSave) return;
+    setSaveError(null);
+    setSaving(true);
+    try {
+      const result = await changeClassPassword(nextPassword);
+      if (!result.ok) {
+        setSaveError(result.error);
+        return;
+      }
+      onPasswordSaved(nextPassword);
+      setSaved(true);
+      setVisible(false);
+      closeChange();
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <form onSubmit={onSubmit} className="border-b border-[#E1E8F6] print:hidden">
+    <div className={cn("print:hidden", saved ? "" : "border-b border-[#E1E8F6]")}>
       <div className="flex min-h-[60px] items-center gap-3.5 py-2">
         <TintCircle className="text-[20px]">🔑</TintCircle>
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-[17px] font-semibold leading-tight text-[#14213D]">
+          <p className="whitespace-nowrap font-heading text-[17px] font-semibold leading-tight text-[#14213D]">
             Class password
           </p>
-          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 font-heading text-[15px] font-bold leading-tight text-[#14213D]">
+          <p className="mt-0.5 font-heading text-[15px] font-bold leading-tight text-[#14213D]">
             {visible ? (
               <span className="tracking-normal">{classPassword}</span>
             ) : (
@@ -194,133 +269,165 @@ function ClassPasswordRow({
                 ••••••••
               </span>
             )}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={visible}
-              onClick={() => setVisible((open) => !open)}
-              className="border-b-2 border-[#FFB822] font-heading text-[13px] font-semibold tracking-normal text-[#031F82]"
-            >
-              {visible ? "Hide" : "Show class password"}
-            </button>
-            {visible && !editing ? (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="border-b-2 border-[#FFB822] font-heading text-[13px] font-semibold tracking-normal text-[#031F82]"
-              >
-                Change class password
-              </button>
-            ) : null}
           </p>
         </div>
-        <button
-          type="button"
-          aria-label={copied ? "Copied" : "Copy class password"}
-          onClick={() => void copyPassword()}
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-full"
-        >
-          <CopyIcon />
-        </button>
-      </div>
-      {editing ? (
-        <div className="flex items-center gap-2 pb-3 pl-[54px]">
-          <label htmlFor="class-password" className="sr-only">
-            Class password
-          </label>
-          <input
-            id="class-password"
-            type="password"
-            autoComplete="off"
-            spellCheck={false}
-            value={classPassword}
-            onChange={(event) => onChange(event.target.value)}
-            className="h-10 w-full max-w-[220px] rounded-full border-0 bg-[#EAF0FF] px-4 text-center font-heading text-[15px] font-bold text-[#031F82] outline-none"
-          />
+        <div className="flex shrink-0 items-center gap-1">
           <button
-            type="submit"
-            disabled={changing}
-            className="h-10 shrink-0 rounded-full bg-[#031F82] px-4 font-heading text-[15px] font-bold text-white shadow-[0_3px_0_#FFB822] disabled:opacity-40"
+            type="button"
+            role="switch"
+            aria-checked={visible}
+            aria-label="Show class password"
+            onClick={() => setVisible((open) => !open)}
+            className="inline-flex size-9 items-center justify-center rounded-full"
           >
-            {changing ? "Saving…" : "Save"}
+            <EyeIcon off={visible} />
+          </button>
+          <button
+            type="button"
+            aria-label={copied ? "Copied" : "Copy class password"}
+            onClick={() => void copyPassword()}
+            className="inline-flex size-9 items-center justify-center rounded-full"
+          >
+            <CopyIcon />
+          </button>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setChanging(true)}
+            className="ml-2 border-b-2 border-[#FFB822] font-heading text-[15px] font-semibold text-[#031F82]"
+          >
+            Change
           </button>
         </div>
+      </div>
+      {saved ? (
+        <p
+          role="status"
+          className="ml-[54px] flex items-center gap-1.5 border-b border-[#E1E8F6] pb-3 font-heading text-[13px] font-bold text-[#031F82]"
+        >
+          <span
+            aria-hidden
+            className="inline-flex size-[18px] items-center justify-center rounded-full bg-[#FFB822] text-[12px] font-extrabold leading-none text-[#031F82]"
+          >
+            ✓
+          </span>
+          Class password changed
+        </p>
       ) : null}
       <p className="sr-only" aria-live="polite">
         {copied ? "Copied" : ""}
       </p>
-    </form>
-  );
-}
-
-function ClassPrintSheet({
-  title,
-  cohort,
-  classPassword,
-  usernames,
-}: {
-  title: string;
-  cohort: MasteryCohort | null;
-  classPassword: string;
-  usernames: string[];
-}) {
-  return (
-    <div className="hidden bg-white print:block">
-      <div className="flex items-center border-b-2 border-[#031F82] pb-[22px]">
-        <Image
-          src="/nga-logo-tm.svg"
-          alt="NextGenAchievers"
-          width={190}
-          height={54}
-          unoptimized
-          className="h-[54px] w-auto"
-        />
-      </div>
-      <h1 className="mt-7 font-heading text-[30px] font-bold leading-[1.2] text-[#031F82]">
-        {title}
-        {cohort ? <span aria-hidden> {COHORT_EMOJI[cohort]}</span> : null}
-      </h1>
-      <p className="mt-3.5 font-sans text-base font-medium text-[#4A5675]">
-        Class password
-        <span className="ml-2 font-heading text-xl font-bold tracking-[1px] text-[#031F82]">
-          {classPassword}
-        </span>
-      </p>
-      <table className="mt-7 w-full border-collapse text-left font-sans text-base text-[#14213D]">
-        <thead>
-          <tr>
-            {["#", "Student", "Username"].map((label) => (
-              <th
-                key={label}
+      {changing ? (
+        <ClientPortal rootId="modal-root">
+          <div
+            className="pointer-events-auto fixed inset-0 z-modal flex items-center justify-center bg-[#14213D]/45 px-5"
+            role="presentation"
+            onClick={closeChange}
+          >
+            <form
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              onClick={(event) => event.stopPropagation()}
+              onSubmit={(event) => void savePassword(event)}
+              className="w-full max-w-[720px] rounded-3xl bg-white px-5 py-6"
+            >
+              <h2 id={titleId} className="font-heading text-[22px] font-bold text-[#031F82]">
+                Change class password
+              </h2>
+              <p className="mt-[18px] font-heading text-[13px] font-bold tracking-[0.5px] text-[#4A5675]">
+                CURRENT CLASS PASSWORD
+              </p>
+              <div className="flex h-10 items-center">
+                <p className="min-w-0 flex-1 font-heading text-[15px] font-bold text-[#14213D]">
+                  {currentVisible ? (
+                    <span className="tracking-normal">{classPassword}</span>
+                  ) : (
+                    <span aria-hidden className="tracking-[3px]">
+                      ••••••••
+                    </span>
+                  )}
+                </p>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={currentVisible}
+                  aria-label="Show class password"
+                  onClick={() => setCurrentVisible((open) => !open)}
+                  className="inline-flex items-center gap-1.5 font-heading text-[13px] font-semibold text-[#031F82]"
+                >
+                  <EyeIcon off={currentVisible} />
+                  Show class password
+                </button>
+              </div>
+              <div className="mt-3.5 flex items-center">
+                <p className="font-heading text-[13px] font-bold tracking-[0.5px] text-[#4A5675]">
+                  NEW CLASS PASSWORD
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setNextPassword(suggestClassPassword())}
+                  className="ml-auto border-b-2 border-[#FFB822] font-heading text-[13px] font-semibold text-[#031F82]"
+                >
+                  <span aria-hidden>🎲 </span>
+                  Suggest one
+                </button>
+              </div>
+              <input
+                value={nextPassword}
+                onChange={(event) => setNextPassword(event.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="e.g. blue-tiger"
+                aria-describedby="class-password-hint"
+                className="mt-2 h-14 w-full rounded-full border-0 bg-[#EAF0FF] px-5 text-center font-heading text-[18px] font-semibold text-[#031F82] outline-none placeholder:text-[#8C98B8]"
+              />
+              <p
+                id="class-password-hint"
                 className={cn(
-                  "border-b-2 border-[#031F82] px-2 py-2.5 text-left font-heading text-[13px] font-bold uppercase tracking-[0.5px] text-[#4A5675]",
-                  label === "#" && "w-12",
+                  "mt-2 font-sans text-[13px]",
+                  hintTone === "brand"
+                    ? "font-semibold text-[#031F82]"
+                    : "font-medium text-[#4A5675]",
                 )}
               >
-                {label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {usernames.map((name, index) => (
-            <tr key={name}>
-              <td className="w-12 border-b border-[#E1E8F6] px-2 py-[13px] font-medium text-[#4A5675]">
-                {index + 1}
-              </td>
-              <td className="border-b border-[#E1E8F6] px-2 py-[13px]">&nbsp;</td>
-              <td className="border-b border-[#E1E8F6] px-2 py-[13px] font-heading font-bold text-[#031F82]">
-                {name}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                {hint}
+              </p>
+              <p className="mt-4 font-heading text-[13px] font-bold tracking-[0.5px] text-[#4A5675]">
+                CONFIRM NEW PASSWORD
+              </p>
+              <input
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Enter it again"
+                className="mt-2 h-14 w-full rounded-full border-0 bg-[#EAF0FF] px-5 text-center font-heading text-[18px] font-semibold text-[#031F82] outline-none placeholder:text-[#8C98B8]"
+              />
+              <p className="mt-2.5 font-sans text-[13px] font-medium leading-[1.4] text-[#4A5675]">
+                Users will need the new password next time they log in.
+              </p>
+              {saveError ? (
+                <p className="mt-2 font-sans text-[13px] font-semibold text-[#031F82]" role="alert">
+                  {saveError}
+                </p>
+              ) : null}
+              <button
+                type="submit"
+                disabled={!canSave}
+                className="mt-6 flex h-14 w-full items-center justify-center rounded-full bg-[#031F82] font-heading text-[19px] font-bold text-white shadow-[0_4px_0_#FFB822] disabled:opacity-40"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </form>
+          </div>
+        </ClientPortal>
+      ) : null}
     </div>
   );
 }
 
-export function ClassPage({ roster }: ClassPageProps) {
+export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
   const [studentsUsed, setStudentsUsed] = useState(roster.seatsUsed);
   const [usernames, setUsernames] = useState(roster.usernames);
   const [classes, setClasses] = useState(roster.classes);
@@ -333,7 +440,6 @@ export function ClassPage({ roster }: ClassPageProps) {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
   const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null);
   const [removing, setRemoving] = useState(false);
   const [studentsOpen, setStudentsOpen] = useState(roster.seatsUsed === 0);
@@ -379,7 +485,7 @@ export function ClassPage({ roster }: ClassPageProps) {
     setError(null);
     setNotice(null);
     if (seatCount == null) {
-      setError("Enter how many seats.");
+      setError("Enter how many users.");
       return;
     }
     if (!classCohort) {
@@ -405,8 +511,8 @@ export function ClassPage({ roster }: ClassPageProps) {
       setStudentsOpen(true);
       setNotice(
         result.created.length === 1
-          ? "Allocated 1 seat."
-          : `Allocated ${result.created.length} seats.`,
+          ? "Allocated 1 user."
+          : `Allocated ${result.created.length} users.`,
       );
     } finally {
       setCreating(false);
@@ -441,36 +547,19 @@ export function ClassPage({ roster }: ClassPageProps) {
         setStudentsUsed((prev) => Math.max(0, prev - removed.length));
       }
       if (!response.ok || payload.success !== true) {
-        setError(payload.error || "Could not remove that student. Try again.");
+        setError(payload.error || "Could not remove that user. Try again.");
         return;
       }
       setPendingRemove(null);
       setNotice(
         removed.length === 1
-          ? "Removed 1 student."
-          : `Removed ${removed.length} students.`,
+          ? "Removed 1 user."
+          : `Removed ${removed.length} users.`,
       );
     } catch {
-      setError("Could not remove that student. Try again.");
+      setError("Could not remove that user. Try again.");
     } finally {
       setRemoving(false);
-    }
-  }
-
-  async function handleChangePassword(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setNotice(null);
-    setChangingPassword(true);
-    try {
-      const result = await changeClassPassword(classPassword);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      setNotice("Class password updated.");
-    } finally {
-      setChangingPassword(false);
     }
   }
 
@@ -486,8 +575,7 @@ export function ClassPage({ roster }: ClassPageProps) {
         "print:m-0 print:max-w-none print:bg-white print:p-0",
       )}
     >
-      <style>{`@media print { @page { size: A4 portrait; margin: 0; } }`}</style>
-      <div className="mx-auto w-full max-w-[720px] print:max-w-none print:px-16 print:py-14">
+      <div className="mx-auto w-full max-w-[720px]">
         <div className="print:hidden">
           <h1 className="mt-2 font-heading text-[26px] font-bold leading-[1.2] text-[#031F82]">
             {title}
@@ -497,7 +585,7 @@ export function ClassPage({ roster }: ClassPageProps) {
           </h1>
           <p className="mt-1.5 font-sans text-base font-medium leading-[1.4] text-[#4A5675]">
             <span className="font-heading font-bold text-[#031F82]">{studentsUsed}</span>
-            {` of ${roster.seatCap} seats allocated`}
+            {` of ${roster.seatCap} users allocated`}
           </p>
 
           <div className="mt-5 flex h-20 items-center gap-3.5 border-y border-[#E1E8F6] px-1">
@@ -514,9 +602,8 @@ export function ClassPage({ roster }: ClassPageProps) {
 
           <ClassPasswordRow
             classPassword={classPassword}
-            onChange={setClassPassword}
-            changing={changingPassword}
-            onSubmit={handleChangePassword}
+            onPasswordSaved={setClassPassword}
+            initiallySaved={passwordSaved}
           />
 
           <div className="flex min-h-[60px] items-center gap-3.5 border-b border-[#E1E8F6] py-2">
@@ -529,22 +616,22 @@ export function ClassPage({ roster }: ClassPageProps) {
             >
               <TintCircle>👥</TintCircle>
               <span className="whitespace-nowrap font-heading text-[17px] font-semibold text-[#14213D]">
-                {`Show students (${sortedUsernames.length})`}
+                {`Show users (${sortedUsernames.length})`}
               </span>
             </button>
             {sortedUsernames.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => window.print()}
+              <Link
+                href={`/class/${roster.teacherId}/print`}
+                prefetch
                 className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-heading text-sm font-semibold text-[#031F82]"
               >
                 <PrintIcon />
                 Print usernames
-              </button>
+              </Link>
             ) : null}
             <button
               type="button"
-              aria-label={studentsOpen ? "Hide students" : "Show students"}
+              aria-label={studentsOpen ? "Hide users" : "Show users"}
               onClick={() => setStudentsOpen((open) => !open)}
             >
               <DisclosureChevron open={studentsOpen} />
@@ -581,7 +668,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                 >
                   <TintCircle className="text-2xl font-medium text-[#031F82]">+</TintCircle>
                   <span className="min-w-0 flex-1 whitespace-nowrap font-heading text-[17px] font-semibold text-[#031F82]">
-                    Allocate seats
+                    Allocate users
                   </span>
                   <input
                     ref={allocateInputRef}
@@ -593,7 +680,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                     min={1}
                     max={remaining}
                     placeholder={remaining > 0 ? String(remaining) : undefined}
-                    aria-label="Seats to allocate"
+                    aria-label="Users to allocate"
                     value={studentCount}
                     onChange={(event) =>
                       setStudentCount(event.target.value.replace(/\D/g, ""))
@@ -615,7 +702,7 @@ export function ClassPage({ roster }: ClassPageProps) {
                   className="flex min-h-[60px] w-full items-center gap-3.5 border-b border-[#E1E8F6] py-2 text-left"
                 >
                   <TintCircle className="text-2xl font-medium text-[#031F82]">+</TintCircle>
-                  <span className="font-heading text-[17px] font-bold text-[#031F82]">Allocate seats</span>
+                  <span className="font-heading text-[17px] font-bold text-[#031F82]">Allocate users</span>
                 </button>
               )}
             </div>
@@ -719,7 +806,7 @@ export function ClassPage({ roster }: ClassPageProps) {
               onClick={() => setPendingRemove({ scope: "all" })}
               className="ml-[54px] mt-3 font-heading text-[13px] font-semibold text-[#031F82] underline-offset-2 hover:underline disabled:opacity-40"
             >
-              Remove all students in class
+              Remove all users in class
             </button>
           ) : null}
 
@@ -735,18 +822,12 @@ export function ClassPage({ roster }: ClassPageProps) {
           ) : null}
         </div>
 
-        <ClassPrintSheet
-          title={title}
-          cohort={classCohort}
-          classPassword={classPassword}
-          usernames={sortedUsernames}
-        />
       </div>
 
       {pendingRemove ? (
         <ClientPortal rootId="modal-root">
           <div
-            className="fixed inset-0 z-modal flex items-end justify-center bg-[#14213D]/45 p-4 sm:items-center"
+            className="pointer-events-auto fixed inset-0 z-modal flex items-end justify-center bg-[#14213D]/45 p-4 sm:items-center"
             role="presentation"
           >
             <div
@@ -760,12 +841,12 @@ export function ClassPage({ roster }: ClassPageProps) {
                 className="text-lg font-bold text-[#031F82]"
               >
                 {pendingRemove.scope === "all"
-                  ? "Remove all students in this class?"
-                  : "Remove this student?"}
+                  ? "Remove all users in this class?"
+                  : "Remove this user?"}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[#14213D]">
                 {pendingRemove.scope === "all"
-                  ? "This deletes every student login in this class and their saved progress. It cannot be undone."
+                  ? "This deletes every user login in this class and their saved progress. It cannot be undone."
                   : `This deletes ${pendingRemove.username}'s login and saved progress. It cannot be undone.`}
               </p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -786,8 +867,8 @@ export function ClassPage({ roster }: ClassPageProps) {
                   {removing
                     ? "Removing…"
                     : pendingRemove.scope === "all"
-                      ? "Remove all students"
-                      : "Remove student"}
+                      ? "Remove all users"
+                      : "Remove user"}
                 </Button>
               </div>
             </div>

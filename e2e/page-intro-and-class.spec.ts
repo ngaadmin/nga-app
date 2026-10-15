@@ -213,23 +213,26 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   await expect(
     page.getByRole("heading", { name: "Pathfinder class", exact: true }),
   ).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("8 of 30 seats allocated")).toBeVisible();
+  await expect(page.getByText("8 of 30 users allocated")).toBeVisible();
   await expect(
     page.getByText("Yellow", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
   await expect(
     page.getByText("0 XP", { exact: true }).filter({ visible: true }),
   ).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Show students (8)" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Print usernames" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Remove all students in class" })).toBeVisible();
-  await expect(page.getByText("To change the track, remove all students first.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show users (8)" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Print usernames" })).toHaveAttribute(
+    "href",
+    "/class/preview-teacher/print",
+  );
+  await expect(page.getByRole("button", { name: "Remove all users in class" })).toBeVisible();
+  await expect(page.getByText("To change the track, remove all users first.")).toBeVisible();
   await expect(
     page.getByText("amber2", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Change", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Change", exact: true })).toHaveCount(1);
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-390-locked.png",
+    path: "/opt/cursor/artifacts/class-final-390-locked.png",
     fullPage: false,
   });
 
@@ -238,37 +241,59 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     page.getByText("Yellow", { exact: true }).filter({ visible: true }),
   ).toBeVisible();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-390-password-shown.png",
+    path: "/opt/cursor/artifacts/class-final-390-password-shown.png",
     fullPage: false,
   });
-  await page.getByRole("switch", { name: "Hide" }).click();
+  await page.getByRole("switch", { name: "Show class password" }).click();
   await expect(
     page.getByText("Yellow", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Show students (8)" }).click();
-  const hideStudents = page.getByRole("button", { name: "Hide students" });
-  await expect(hideStudents).toBeVisible();
+  await page.getByRole("button", { name: "Change", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Change class password" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("Users will need the new password next time they log in.")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Save" })).toBeDisabled();
+  await dialog.getByRole("button", { name: "Suggest one" }).click();
+  const fields = dialog.getByRole("textbox");
+  const suggested = await fields.first().inputValue();
+  expect(suggested).toMatch(/^[a-z]{3,8}-[a-z]{3,8}$/);
+  await fields.nth(1).fill("not-the-same");
+  await expect(dialog.getByText("These don't match yet.")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Save" })).toBeDisabled();
+  await fields.first().fill("Blue-Tiger");
+  await expect(dialog.getByText("Use two easy words with a dash, like blue-tiger.")).toBeVisible();
+  await fields.first().fill("blue-tiger");
+  await fields.nth(1).fill("blue-tiger");
+  await expect(dialog.getByRole("button", { name: "Save" })).toBeEnabled();
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-final-390-modal.png",
+    fullPage: false,
+  });
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Show users (8)" }).click();
+  const hideUsers = page.getByRole("button", { name: "Hide users" });
+  await expect(hideUsers).toBeVisible();
   await expect(page.getByText("amber2", { exact: true }).first()).toBeVisible();
-  const xpChevron = await hideStudents.locator("svg").boundingBox();
+  const xpChevron = await hideUsers.locator("svg").boundingBox();
   expect(xpChevron?.width ?? 0).toBeGreaterThan(12);
   expect(xpChevron?.height ?? 0).toBeGreaterThan(12);
   await expect(page.getByRole("button", { name: "Remove amber2" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Allocate seats" })).toBeVisible();
-  await page.getByText("amber2", { exact: true }).first().scrollIntoViewIfNeeded();
+  await expect(page.getByRole("button", { name: "Allocate users" })).toBeVisible();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-390-students.png",
+    path: "/opt/cursor/artifacts/class-final-390-users.png",
     fullPage: true,
   });
 
-  await page.getByRole("button", { name: "Allocate seats" }).click();
-  const seatInput = page.getByLabel("Seats to allocate");
+  await page.getByRole("button", { name: "Allocate users" }).click();
+  const seatInput = page.getByLabel("Users to allocate");
   await expect(seatInput).toBeVisible();
   await expect(seatInput).toHaveAttribute("max", "22");
   await expect(page.getByRole("button", { name: "Allocate", exact: true })).toBeDisabled();
   await seatInput.fill("12");
   await expect(page.getByRole("button", { name: "Allocate", exact: true })).toBeEnabled();
-  await seatInput.scrollIntoViewIfNeeded();
   const overflow = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
@@ -277,72 +302,97 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     overflow.clientWidth + 1,
   );
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-390-allocate.png",
+    path: "/opt/cursor/artifacts/class-final-390-allocate.png",
     fullPage: false,
   });
 
-  const printUsernames = page.getByRole("button", { name: "Print usernames" });
+  const printUsernames = page.getByRole("link", { name: "Print usernames" });
   const navBox = await page.locator("[data-dashboard-nav]").boundingBox();
   const printBox = await printUsernames.boundingBox();
   expect(navBox).toBeTruthy();
   expect(printBox).toBeTruthy();
   expect(navBox!.y + navBox!.height).toBeGreaterThan(820);
   expect(printBox!.y + printBox!.height).toBeLessThanOrEqual(navBox!.y + 1);
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-final-390-print-tap.png",
+    fullPage: false,
+  });
+
+  await page.evaluate(() => {
+    window.print = () => {
+      const win = window as Window & { __printed?: number };
+      win.__printed = (win.__printed ?? 0) + 1;
+    };
+  });
+  await printUsernames.click();
+  await expect(page).toHaveURL(/\/class\/preview-teacher\/print$/);
+  await expect(page.getByRole("heading", { name: "Usernames" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Print", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Download PDF" })).toBeVisible();
+  await expect(page.getByText(/password/i)).toHaveCount(0);
+  await expect(page.getByText("Yellow", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "User", exact: true })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Username", exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as Window & { __printed?: number }).__printed ?? 0)).toBe(1);
+  await page.getByRole("button", { name: "Print", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as Window & { __printed?: number }).__printed ?? 0)).toBe(2);
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-final-390-print-screen.png",
+    fullPage: false,
+  });
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PDF" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("pathfinder-class-usernames.pdf");
 
   await page.emulateMedia({ media: "print" });
   await page.setViewportSize({ width: 794, height: 1123 });
-  await expect(page.getByText("Class password").filter({ visible: true })).toBeVisible();
-  await expect(
-    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "Username" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "Student" })).toBeVisible();
-  await expect(
-    page.getByRole("cell", { name: "amber2" }).filter({ visible: true }),
-  ).toHaveCount(1);
-  await expect(
-    page.getByRole("cell", { name: "forest6" }).filter({ visible: true }),
-  ).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: "Usernames" })).toBeHidden();
+  await expect(page.getByText(/password/i)).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "User", exact: true })).toBeVisible();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-print.png",
+    path: "/opt/cursor/artifacts/class-final-print-a4.png",
     fullPage: true,
   });
 
   await page.emulateMedia({ media: "screen" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/dashboard/class/preview");
-  await expect(page.getByText("8 of 30 seats allocated")).toBeVisible({
+  await expect(page.getByText("8 of 30 users allocated")).toBeVisible({
     timeout: 15_000,
   });
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-desktop.png",
+    path: "/opt/cursor/artifacts/class-final-desktop.png",
     fullPage: false,
   });
-  await page.getByRole("button", { name: "Show students (8)" }).click();
+  await page.getByRole("button", { name: "Show users (8)" }).click();
   await expect(page.getByText("amber2", { exact: true }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Allocate seats" }).scrollIntoViewIfNeeded();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-desktop-students.png",
+    path: "/opt/cursor/artifacts/class-final-desktop-users.png",
     fullPage: false,
   });
-  await page.getByRole("switch", { name: "Show class password" }).click();
-  await page.getByRole("button", { name: "Change class password" }).click();
-  const classPassword = page.getByRole("textbox", { name: "Class password" });
-  await expect(classPassword).toHaveAttribute("type", "password");
-  await expect(classPassword).toHaveValue("Yellow");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/dashboard/class/preview?empty=1");
-  await expect(page.getByText("0 of 30 seats allocated")).toBeVisible({
+  await expect(page.getByText("0 of 30 users allocated")).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByRole("button", { name: "Show students (0)" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Print usernames" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Change", exact: true })).toBeVisible();
-  await expect(page.getByText("To change the track, remove all students first.")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Allocate seats" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show users (0)" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Print usernames" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Change", exact: true })).toHaveCount(2);
+  await expect(page.getByText("To change the track, remove all users first.")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Allocate users" })).toBeVisible();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-v3-390-editable.png",
+    path: "/opt/cursor/artifacts/class-final-390-editable.png",
+    fullPage: false,
+  });
+
+  await page.goto("/dashboard/class/preview?saved=1");
+  await expect(page.getByRole("status").filter({ hasText: "Class password changed" })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-final-390-password-saved.png",
     fullPage: false,
   });
 });

@@ -66,7 +66,7 @@ export default function RootLayout({
       <body className="font-sans antialiased overflow-x-hidden max-w-full">
         {children}
         <div id="overlay-root" aria-hidden="true" />
-        <div id="modal-root" aria-hidden="true" />
+        <div id="modal-root" />
         <div id="toast-root" aria-hidden="true" />
       </body>
     </html>

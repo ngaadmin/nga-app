@@ -6,7 +6,7 @@ import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
-import { generateClassPassword } from "@/lib/school/class-password";
+import { generateClassPassword, isKidClassPassword } from "@/lib/school/class-password";
 import {
   CLASS_PASSWORD_COLUMN_DENIED,
   CLASS_PASSWORD_COLUMN_MISSING,
@@ -446,7 +446,7 @@ export async function createClassSeats(input: {
 
   const requested = Math.floor(input.count);
   if (!Number.isFinite(requested) || requested < 1) {
-    return { ok: false, error: "Enter how many seats." };
+    return { ok: false, error: "Enter how many users." };
   }
 
   const admin = createAdminClient();
@@ -455,7 +455,7 @@ export async function createClassSeats(input: {
 
   const remaining = current.roster.seatCap - current.roster.seatsUsed;
   if (remaining <= 0) {
-    return { ok: false, error: "This class has no seats left." };
+    return { ok: false, error: "No users left to allocate." };
   }
   const requestedCohort = parseMasteryCohort(input.cohort);
   if (requestedCohort && requestedCohort !== current.roster.classCohort) {
@@ -486,7 +486,7 @@ export async function createClassSeats(input: {
   if (!classPassword || classPassword.length < MIN_PASSWORD_LENGTH) {
     return {
       ok: false,
-      error: "Type a class password so students can log in.",
+      error: "Type a class password so users can log in.",
     };
   }
 
@@ -496,7 +496,7 @@ export async function createClassSeats(input: {
     .filter(Boolean);
   const names = pickClassSeatUsernames(taken, toCreate);
   if (names.length < toCreate) {
-    return { ok: false, error: "Not enough unique logins left. Try fewer students." };
+    return { ok: false, error: "Not enough unique logins left. Try fewer users." };
   }
 
   const created: string[] = [];
@@ -551,8 +551,8 @@ export async function changeClassPassword(nextPassword: string): Promise<
   if (!access.ok) return access;
 
   const password = nextPassword.trim();
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    return { ok: false, error: "Use at least 6 characters for the class password." };
+  if (!isKidClassPassword(password)) {
+    return { ok: false, error: "Use two easy words with a dash, like blue-tiger." };
   }
 
   let columns;
@@ -587,7 +587,7 @@ export async function changeClassPassword(nextPassword: string): Promise<
     if (error) {
       return {
         ok: false,
-        error: "Saved the class password, but could not update every seat login. Try again.",
+        error: "Saved the class password, but could not update every user login. Try again.",
       };
     }
   }

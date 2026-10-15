@@ -54,12 +54,17 @@ const EMPTY_ROSTER: typeof PREVIEW_ROSTER = {
 export default async function ClassRosterPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ empty?: string }>;
+  searchParams: Promise<{ empty?: string; saved?: string }>;
 }) {
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
 
   const params = await searchParams;
-  return <ClassPage roster={params.empty === "1" ? EMPTY_ROSTER : PREVIEW_ROSTER} />;
+  return (
+    <ClassPage
+      roster={params.empty === "1" ? EMPTY_ROSTER : PREVIEW_ROSTER}
+      passwordSaved={params.saved === "1"}
+    />
+  );
 }

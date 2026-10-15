@@ -395,6 +395,14 @@
   padding-inline: calc(var(--lesson-screen-edge-inset) + var(--lesson-screen-ink-outset));
 }
 
+/* Hold buttons must not open the touch callout or select their label. */
+.lesson-hold-button {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .lesson-choice-tile[data-selection="selected"],
 .lesson-choice-tile[data-selection="correct"] {
   background-color: #eaf0ff;

@@ -121,7 +121,6 @@ test("answer sounds play on the tap, and Next stays quiet", async ({
   await openLesson(page, "/dashboard/academy/lesson/1?preview=1&screen=0");
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Saved", exact: true }).click();
-  await page.getByRole("button", { name: /Place the selected word here/i }).click();
   expect(await playedNotes(page)).toEqual([
     { frequency: 180, type: "square" },
     { frequency: 110, type: "square" },
@@ -130,7 +129,6 @@ test("answer sounds play on the tap, and Next stays quiet", async ({
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
 
   await page.getByRole("button", { name: "Spent", exact: true }).click();
-  await page.getByRole("button", { name: /Place the selected word here/i }).click();
   await expect(page.locator('[role="status"] span')).toBeVisible();
   expect(await playedNotes(page)).toEqual([
     { frequency: 180, type: "square" },

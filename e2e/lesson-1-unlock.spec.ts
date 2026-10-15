@@ -27,9 +27,6 @@ async function clickNext(page: Page): Promise<void> {
 
 async function placeWord(page: Page, word: string): Promise<void> {
   await page.getByRole("button", { name: word, exact: true }).click();
-  await page
-    .getByRole("button", { name: /Place the selected word here/i })
-    .click();
 }
 
 async function sortItem(page: Page, item: string, bucket: string): Promise<void> {

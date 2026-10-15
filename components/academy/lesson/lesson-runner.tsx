@@ -94,7 +94,7 @@ export function LessonRunner({
   return (
     <LessonHintProvider>
     <div className="relative flex min-h-0 flex-1 flex-col">
-      {flow.screenFlash ? (
+      {flow.screenFlash === "success" || flow.screenFlash === "error" ? (
         <div
           aria-hidden
           className={cn(

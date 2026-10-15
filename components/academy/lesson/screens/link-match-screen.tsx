@@ -15,7 +15,7 @@ export function LinkMatchScreen({
   return (
     <div className="overflow-x-hidden">
       {screen.intro ? (
-        <p className="font-sans text-[20px] font-semibold leading-[1.35] text-[#14213D]">
+        <p className="font-heading text-[20px] font-semibold leading-[1.35] text-[#14213D]">
           {screen.intro}
         </p>
       ) : null}

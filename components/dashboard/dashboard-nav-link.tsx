@@ -34,13 +34,13 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
         onClick={handleClick}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex flex-1 flex-col items-center justify-center gap-1 px-2 py-2",
+          "flex flex-auto flex-col items-center justify-center gap-1 px-0.5 py-2",
           TACTILE_PRESS,
           isActive ? "text-[#FFA503]" : "text-nga-slate",
         )}
       >
-        <Icon className="size-6 shrink-0" />
-        <span className="text-center font-heading text-[13px] font-bold leading-tight">
+        <Icon className="size-5 shrink-0 sm:size-6" />
+        <span className="text-center font-heading text-[11px] font-bold leading-tight min-[400px]:text-xs">
           {item.shortLabel ??
             (item.label.startsWith("The ")
               ? item.label.replace("The ", "")
@@ -56,7 +56,7 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
       onClick={handleClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-nga-lg border-2 border-b-4 px-4 py-3 font-heading text-sm font-bold",
+        "flex min-w-0 items-center gap-3 rounded-nga-lg border-2 border-b-4 px-4 py-3 font-heading text-sm font-bold",
         TACTILE_PRESS,
         isActive
           ? "border-nga-secondary border-b-nga-secondary bg-nga-secondary/15 text-nga-primary"
@@ -64,7 +64,7 @@ export function DashboardNavLink({ item, variant }: DashboardNavLinkProps) {
       )}
     >
       <Icon className="size-6 shrink-0" />
-      <span>{item.label}</span>
+      <span className="min-w-0 leading-tight">{item.label}</span>
     </Link>
   );
 }

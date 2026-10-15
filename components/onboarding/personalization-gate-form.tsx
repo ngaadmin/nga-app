@@ -18,6 +18,7 @@ import {
   readUserSession,
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import { cn } from "@/lib/utils/cn";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_#-]{2,20}$/;
@@ -100,6 +101,7 @@ export function PersonalizationGateForm() {
       genericProfileId: reservedId,
     });
     saveGuestAccessSession(session);
+    recordUsageEvent("login");
     return true;
   }
 

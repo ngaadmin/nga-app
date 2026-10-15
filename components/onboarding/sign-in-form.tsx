@@ -23,6 +23,7 @@ import {
 import { applyLearnerAccountSnapshot } from "@/lib/onboarding/sync-registered-session";
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import { restoreRegisteredAccountProgress } from "@/lib/dashboard/account-progress-sync";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import { dispatchUserSessionUpdated } from "@/lib/onboarding/user-session-events";
 import { cn } from "@/lib/utils/cn";
 
@@ -251,6 +252,7 @@ export function SignInForm() {
           remotePayload: remote.account.progress ?? null,
         });
         dispatchUserSessionUpdated();
+        recordUsageEvent("login");
 
         if (session.mustChangePassword) {
           setPendingUsername(session.username);

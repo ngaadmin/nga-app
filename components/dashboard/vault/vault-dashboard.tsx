@@ -28,6 +28,7 @@ import {
   vaultOverviewHairlineClass,
   vaultOverviewSectionTitleClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 
 export function VaultDashboard() {
   const vaultCopy = copyMatrix.dashboard.vault;
@@ -69,6 +70,10 @@ export function VaultDashboard() {
       setCashInOpen(true);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    recordUsageEvent("vault_visit");
+  }, []);
 
   const displayBuckets = useMemo(
     () => vaultBucketsWithDisplayNames(vaultBuckets),

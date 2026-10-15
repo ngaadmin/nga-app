@@ -11,6 +11,7 @@ import {
 } from "@/lib/launchpad/venture-blueprints";
 import { getMasteryCohortFromBirthYear, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import {
@@ -354,6 +355,10 @@ export function LaunchpadDashboard() {
     sync();
     window.addEventListener(USER_SESSION_UPDATED_EVENT, sync);
     return () => window.removeEventListener(USER_SESSION_UPDATED_EVENT, sync);
+  }, []);
+
+  useEffect(() => {
+    recordUsageEvent("launchpad_visit");
   }, []);
 
   const sortedVentureIdeas = useMemo(

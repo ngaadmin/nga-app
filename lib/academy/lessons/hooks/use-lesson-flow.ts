@@ -13,8 +13,10 @@ import {
   applyPayloadSkillTierProgress,
   resolveSkillSlugForMilestone,
   skillTierForLessonNumber,
+  type EarnedSkillMedal,
   type SkillTrophyTier,
 } from "@/lib/dashboard/skill-trophies";
+import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import {
   lessonNumberForMilestoneId,
   levelGroupForMilestoneId,
@@ -254,19 +256,28 @@ export function useLessonFlow({
         const alreadyCompleted = milestones.some(
           (node) => node.id === milestoneId && node.status === "completed",
         );
+        const lessonNumber = lessonNumberForMilestoneId(milestoneId);
+        let earnedMedals: EarnedSkillMedal[] = [];
 
         if (!alreadyCompleted) {
           const session = readGuestAccessSession();
           const cohort = session?.birthYear
             ? getMasteryCohortFromBirthYear(session.birthYear)
             : "explorer";
-          if (skillAwardTier && skillSlug) {
-            applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort);
-          } else {
-            applyLessonSkillTierProgress(milestoneId, cohort);
-          }
+          earnedMedals =
+            skillAwardTier && skillSlug
+              ? applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort)
+              : applyLessonSkillTierProgress(milestoneId, cohort);
           const updated = completeAcademyMilestone(milestoneId, milestones);
           saveAcademyMilestones(updated);
+        }
+
+        recordUsageEvent("lesson_completed", { lessonNumber });
+        for (const medal of earnedMedals) {
+          recordUsageEvent("medal_earned", {
+            lessonNumber,
+            metadata: { skill: medal.slug, tier: medal.tier },
+          });
         }
       }
     } finally {

@@ -80,7 +80,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         >
           {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
           {children}
-          {isLessonRoute ? null : <AppFooter className="mt-8" />}
+          {isLessonRoute ? null : <AppFooter className="mt-8 print:hidden" />}
         </main>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { ClassPage } from "@/components/dashboard/class/class-page";
 
 const PREVIEW_ROSTER = {
   teacherId: "preview-teacher",
-  seatCap: 11,
+  seatCap: 30,
   seatsUsed: 8,
   classPassword: "Yellow",
   classCohort: "pathfinder" as const,

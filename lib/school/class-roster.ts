@@ -447,7 +447,7 @@ export async function createClassSeats(input: {
 
   const requested = Math.floor(input.count);
   if (!Number.isFinite(requested) || requested < 1) {
-    return { ok: false, error: "Enter how many students." };
+    return { ok: false, error: "Enter how many seats." };
   }
 
   const admin = createAdminClient();
@@ -456,7 +456,7 @@ export async function createClassSeats(input: {
 
   const remaining = current.roster.seatCap - current.roster.seatsUsed;
   if (remaining <= 0) {
-    return { ok: false, error: "This class has no students left." };
+    return { ok: false, error: "This class has no seats left." };
   }
   const requestedCohort = parseMasteryCohort(input.cohort);
   if (requestedCohort && requestedCohort !== current.roster.classCohort) {
@@ -468,7 +468,7 @@ export async function createClassSeats(input: {
   if (!classCohort) {
     return {
       ok: false,
-      error: "Pick Explorer, Pathfinder or Maverick before adding students.",
+      error: "Pick Explorer, Pathfinder or Maverick first.",
     };
   }
   const toCreate = Math.min(requested, remaining);

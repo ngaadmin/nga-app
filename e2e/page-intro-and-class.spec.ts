@@ -214,18 +214,10 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   await installSession(page, TEACHER_SESSION);
   await page.goto("/dashboard/class/preview");
 
-  await expect(page.getByText("Pathfinder class")).toBeVisible({ timeout: 15_000 });
-  const classPassword = page.getByLabel("Class password");
-  await expect(classPassword).toHaveAttribute("type", "password");
-  await expect(classPassword).toHaveValue("Yellow");
   await expect(
-    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
-  ).toHaveCount(0);
-  await page.getByRole("button", { name: "Show class password" }).click();
-  await expect(
-    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Hide" }).click();
+    page.getByRole("heading", { name: "Pathfinder class", exact: true }),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("8 of 30 seats allocated")).toBeVisible();
   await expect(
     page.getByText("Yellow", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
@@ -233,16 +225,29 @@ test("teacher class lists stay collapsed until opened and still print", async ({
     page.getByText("0 XP", { exact: true }).filter({ visible: true }),
   ).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Show students (8)" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Show student logins (8)" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Print usernames" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove all students in class" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Print this table" })).toBeVisible();
+  await expect(page.getByText("To change the track, remove all students first.")).toBeVisible();
   await expect(
     page.getByText("amber2", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-collapsed.png",
-    fullPage: true,
+    path: "/opt/cursor/artifacts/class-v2-390-collapsed.png",
+    fullPage: false,
   });
+
+  await page.getByRole("switch", { name: "Show class password" }).click();
+  await expect(
+    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-v2-390-password-shown.png",
+    fullPage: false,
+  });
+  await page.getByRole("switch", { name: "Hide" }).click();
+  await expect(
+    page.getByText("Yellow", { exact: true }).filter({ visible: true }),
+  ).toHaveCount(0);
 
   await page.getByRole("button", { name: "Show students (8)" }).click();
   const hideStudents = page.getByRole("button", { name: "Hide students" });
@@ -251,48 +256,42 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   const xpChevron = await hideStudents.locator("svg").boundingBox();
   expect(xpChevron?.width ?? 0).toBeGreaterThan(12);
   expect(xpChevron?.height ?? 0).toBeGreaterThan(12);
-  await hideStudents.scrollIntoViewIfNeeded();
+  await expect(page.getByRole("button", { name: "Remove amber2" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Allocate seats" })).toBeVisible();
+  await page.getByText("amber2", { exact: true }).first().scrollIntoViewIfNeeded();
   await page.screenshot({
-    path: "/opt/cursor/artifacts/class-xp-expanded.png",
-    fullPage: false,
-  });
-
-  await page.getByRole("button", { name: "Show student logins (8)" }).click();
-  const hideLogins = page.getByRole("button", { name: "Hide student logins" });
-  await expect(hideLogins).toBeVisible();
-  const loginsChevron = await hideLogins.locator("svg").boundingBox();
-  expect(loginsChevron?.width ?? 0).toBeGreaterThan(12);
-  expect(loginsChevron?.height ?? 0).toBeGreaterThan(12);
-  await expect(page.getByRole("button", { name: "Remove student" }).first()).toBeVisible();
-  await page.screenshot({
-    path: "/opt/cursor/artifacts/class-logins-expanded.png",
+    path: "/opt/cursor/artifacts/class-v2-390-students.png",
     fullPage: true,
   });
 
-  const printTable = page.getByRole("button", { name: "Print this table" });
-  await printTable.evaluate((el) => {
-    const root = (document.scrollingElement ?? document.documentElement) as HTMLElement;
-    const previous = root.style.scrollBehavior;
-    root.style.scrollBehavior = "auto";
-    root.scrollTop = root.scrollHeight;
-    root.style.scrollBehavior = previous;
-    el.getBoundingClientRect();
+  await page.getByRole("button", { name: "Allocate seats" }).click();
+  const seatInput = page.getByLabel("Seats to allocate");
+  await expect(seatInput).toBeVisible();
+  await expect(seatInput).toHaveAttribute("max", "22");
+  await expect(page.getByRole("button", { name: "Allocate", exact: true })).toBeDisabled();
+  await seatInput.fill("12");
+  await expect(page.getByRole("button", { name: "Allocate", exact: true })).toBeEnabled();
+  await seatInput.scrollIntoViewIfNeeded();
+  const overflow = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(overflow.scrollWidth, JSON.stringify(overflow)).toBeLessThanOrEqual(
+    overflow.clientWidth + 1,
+  );
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-v2-390-allocate.png",
+    fullPage: false,
   });
+
+  const printUsernames = page.getByRole("button", { name: "Print usernames" });
   const navBox = await page.locator("[data-dashboard-nav]").boundingBox();
-  const printBox = await printTable.boundingBox();
+  const printBox = await printUsernames.boundingBox();
   expect(navBox).toBeTruthy();
   expect(printBox).toBeTruthy();
   expect(navBox!.y + navBox!.height).toBeGreaterThan(820);
   expect(printBox!.y + printBox!.height).toBeLessThanOrEqual(navBox!.y + 1);
-  await page.screenshot({
-    path: "/opt/cursor/artifacts/class-page-bottom.png",
-    fullPage: false,
-  });
 
-  await page.getByRole("button", { name: "Hide student logins" }).click();
-  await expect(
-    page.getByRole("button", { name: "Remove student" }).filter({ visible: true }),
-  ).toHaveCount(0);
   await page.emulateMedia({ media: "print" });
   await expect(page.getByText("Class password: Yellow")).toBeVisible();
   await expect(
@@ -301,4 +300,30 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   await expect(
     page.getByRole("cell", { name: "forest6" }).filter({ visible: true }),
   ).toHaveCount(1);
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-v2-390-print.png",
+    fullPage: true,
+  });
+
+  await page.emulateMedia({ media: "screen" });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/dashboard/class/preview");
+  await expect(page.getByText("8 of 30 seats allocated")).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-v2-desktop.png",
+    fullPage: false,
+  });
+  await page.getByRole("button", { name: "Show students (8)" }).click();
+  await expect(page.getByText("amber2", { exact: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Allocate seats" }).scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: "/opt/cursor/artifacts/class-v2-desktop-students.png",
+    fullPage: false,
+  });
+  await page.getByRole("button", { name: "Change", exact: true }).click();
+  const classPassword = page.getByRole("textbox", { name: "Class password" });
+  await expect(classPassword).toHaveAttribute("type", "password");
+  await expect(classPassword).toHaveValue("Yellow");
 });

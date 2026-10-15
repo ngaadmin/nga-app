@@ -12,27 +12,35 @@ type CohortTrackFieldProps = {
   value: MasteryCohort | null;
   onChange: (cohort: MasteryCohort) => void;
   error?: string;
+  /** Defaults to the learner sign-up label. */
+  legend?: string;
+  /** When set, replaces the learner helper for both empty and chosen states. */
+  hint?: string;
 };
 
 /**
- * First question on learner sign-up. Teacher sign-up uses the same field
- * so both flows ask which cohort the same way.
+ * Shared cohort choices. Learner sign-up keeps the default label and helper.
+ * Teacher sign-up passes its own class copy.
  */
 export function CohortTrackField({
   value,
   onChange,
   error,
+  legend = "Your learning track",
+  hint,
 }: CohortTrackFieldProps) {
+  const helper =
+    hint ??
+    (value
+      ? "This track is already chosen. You can change it."
+      : "Pick a track. You can change it later.");
+
   return (
     <fieldset className="space-y-2">
       <legend className="block font-heading text-sm font-bold text-nga-primary">
-        Your learning track
+        {legend}
       </legend>
-      <p className="font-sans text-sm text-nga-slate">
-        {value
-          ? "This track is already chosen. You can change it."
-          : "Pick a track. You can change it later."}
-      </p>
+      <p className="font-sans text-sm text-nga-slate">{helper}</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {MASTERY_COHORT_ORDER.map((track) => {
           const selected = value === track;

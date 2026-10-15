@@ -87,6 +87,8 @@ export function TeacherSignUpForm() {
           ) : (
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <CohortTrackField
+              legend="Your class's learning track"
+              hint="Pick the track for your class. You can change it until you add students."
               value={classCohort}
               onChange={(track) => {
                 setClassCohort(track);

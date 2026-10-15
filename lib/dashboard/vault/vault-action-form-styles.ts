@@ -7,7 +7,7 @@ export const vaultActionLinkActiveClass =
   "text-[#031F82] underline decoration-[#0CC1E0]";
 
 export const vaultActionResetLinkClass =
-  "font-heading text-[16px] font-bold text-[#BE123C] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
+  "font-heading text-[16px] font-bold text-[#031F82] hover:underline disabled:cursor-not-allowed disabled:opacity-40";
 
 export const vaultActionLinkSeparatorClass =
   "select-none font-heading text-[16px] font-bold text-[#1E3A5F]/35";

@@ -61,25 +61,17 @@ export function playLessonWrongBuzzer(): void {
   ]);
 }
 
-export type LessonFlashTone = "success" | "error";
-
 type LessonCorrectFeedbackOptions = {
-  /** Screen-wide green flash (default true). */
-  flash?: boolean;
   /** Success ping (default true). */
   sound?: boolean;
 };
 
-/** Shared sound + screen flash when a learner answers correctly. */
+/** Ping when a learner answers correctly. */
 export function celebrateLessonCorrectAnswer(
-  flashScreen?: (tone: LessonFlashTone) => void,
   options?: LessonCorrectFeedbackOptions,
 ): void {
   if (options?.sound !== false) {
     playLessonSuccessPing();
-  }
-  if (options?.flash !== false) {
-    flashScreen?.("success");
   }
 }
 
@@ -95,17 +87,14 @@ export function triggerLessonErrorVibration(): void {
 }
 
 type LessonIncorrectFeedbackOptions = {
-  /** Screen-wide red flash (default true). */
-  flash?: boolean;
   /** Haptic buzz (default true). */
   vibrate?: boolean;
   /** Wrong-answer buzzer (default true). */
   sound?: boolean;
 };
 
-/** Shared buzzer, vibration, and screen flash when a learner is wrong. */
+/** Soft buzzer and vibration when a learner is wrong. */
 export function signalLessonIncorrectAnswer(
-  flashScreen?: (tone: LessonFlashTone) => void,
   options?: LessonIncorrectFeedbackOptions,
 ): void {
   if (options?.sound !== false) {
@@ -113,8 +102,5 @@ export function signalLessonIncorrectAnswer(
   }
   if (options?.vibrate !== false) {
     triggerLessonErrorVibration();
-  }
-  if (options?.flash !== false) {
-    flashScreen?.("error");
   }
 }

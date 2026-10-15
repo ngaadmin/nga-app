@@ -94,16 +94,6 @@ export function LessonRunner({
   return (
     <LessonHintProvider>
     <div className="relative flex min-h-0 flex-1 flex-col">
-      {flow.screenFlash === "success" || flow.screenFlash === "error" ? (
-        <div
-          aria-hidden
-          className={cn(
-            "pointer-events-none absolute z-overlay border-4 transition-colors duration-200",
-            flow.screenFlash === "error" ? "border-[#E11D48]/70" : "border-[#22C55E]/70",
-          )}
-          style={{ inset: "var(--lesson-screen-edge-inset)" }}
-        />
-      ) : null}
       <AcademyLessonShell
         currentScreenIndex={flow.screenIndex}
         totalScreens={content.meta.totalScreens}

@@ -60,7 +60,7 @@ export function TestAuthEmailForm() {
       </form>
       {message ? (
         <p
-          className={`mt-4 text-sm ${isError ? "text-red-700" : "text-green-700"}`}
+          className={`mt-4 text-sm ${isError ? "text-[#031F82]" : "text-[#031F82]"}`}
           role="status"
         >
           {message}

@@ -13,7 +13,9 @@ import {
   lessonSequenceBoardClass,
   lessonSequenceStepCardClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
+  LessonAnswerTick,
   LessonSequenceNumberedRow,
   LessonSequenceSortBoard,
   LessonSequenceSlot,
@@ -92,6 +94,7 @@ export function LessonSequenceSortGame<TStep extends string>({
   const [lockedStepIds, setLockedStepIds] = useState<ReadonlySet<TStep>>(
     () => new Set(),
   );
+  const { shakingKey, shake } = useLessonShake();
 
   const poolIdsRef = useRef(poolIds);
   poolIdsRef.current = poolIds;
@@ -189,6 +192,7 @@ export function LessonSequenceSortGame<TStep extends string>({
       }
 
       if (item.bucket !== stepId) {
+        shake(itemId);
         onMismatchRef.current?.();
         return;
       }
@@ -209,7 +213,7 @@ export function LessonSequenceSortGame<TStep extends string>({
       setLockedStepIds((current) => new Set(current).add(stepId));
       queueSideEffect({ kind: "correct", willComplete: nextPool.length === 0 });
     },
-    [itemById, queueSideEffect],
+    [itemById, queueSideEffect, shake],
   );
 
   const handleChipPointerDown = (
@@ -323,12 +327,18 @@ export function LessonSequenceSortGame<TStep extends string>({
               }}
               label={item.label}
               isDragging={dragState?.itemId === itemId}
+              className={shakingKey === itemId ? "lesson-tile-shake" : undefined}
               onPointerDown={(event) => handleChipPointerDown(itemId, event)}
             />
           );
         })}
         destination={destinationRows}
       />
+      {isComplete ? (
+        <div className="mt-3 flex justify-center">
+          <LessonAnswerTick />
+        </div>
+      ) : null}
 
       {draggedItem && dragState ? (
         <OverlayPortal className="overflow-visible">

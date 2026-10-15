@@ -346,7 +346,7 @@ function ChangeParentPinModal({
         </div>
 
         {error ? (
-          <p className="mt-3 font-sans text-sm font-semibold text-red-600" role="alert">
+          <p className="mt-3 font-sans text-sm font-semibold text-[#031F82]" role="alert">
             {error}
           </p>
         ) : null}
@@ -497,7 +497,7 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
           </label>
 
           {error ? (
-            <p className="font-sans text-sm font-semibold text-red-600" role="alert">
+            <p className="font-sans text-sm font-semibold text-[#031F82]" role="alert">
               {error}
             </p>
           ) : null}

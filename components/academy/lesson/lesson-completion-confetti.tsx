@@ -6,13 +6,10 @@ import { Z } from "@/lib/ui/layers";
 
 const CONFETTI_DURATION_MS = 800;
 const CONFETTI_COLORS = [
+  "#FFB822",
   "#031F82",
-  "#0CC1E0",
-  "#FFA503",
-  "#22C55E",
-  "#BDE9FB",
-  "#E11D48",
-  "#FFF1A8",
+  "#2BB3C0",
+  "#FF7A9A",
 ];
 
 type Particle = {

@@ -14,7 +14,7 @@ export function BucketSortScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<BucketSortScreenConfig>) {
-  const { showSuccess, handleComplete, handleSuccess, handleMismatch } =
+  const { handleComplete, handleSuccess, handleMismatch } =
     useLessonScreenFlow({
       screenIndex,
       flow,
@@ -54,7 +54,6 @@ export function BucketSortScreen({
       intro={screen.intro}
       cta={screen.cta}
       emphasizeInstruction={screen.emphasizeInstruction === true}
-      success={showSuccess}
       fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}
     >
       {illustration?.src ? <LessonIllustrationSlot {...illustration} /> : null}

@@ -98,7 +98,7 @@ export function ResetPasswordForm() {
 
         {lookupError ? (
           <div className="space-y-4 text-center">
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {lookupError}
             </p>
             <Link
@@ -132,11 +132,11 @@ export function ResetPasswordForm() {
                 aria-invalid={Boolean(fieldError.newPassword)}
                 className={cn(
                   fieldBase,
-                  fieldError.newPassword && "border-red-400 focus:border-red-500",
+                  fieldError.newPassword && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {fieldError.newPassword ? (
-                <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                   {fieldError.newPassword}
                 </p>
               ) : null}
@@ -168,18 +168,18 @@ export function ResetPasswordForm() {
                 className={cn(
                   fieldBase,
                   fieldError.confirmPassword &&
-                    "border-red-400 focus:border-red-500",
+                    "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {fieldError.confirmPassword ? (
-                <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                   {fieldError.confirmPassword}
                 </p>
               ) : null}
             </div>
 
             {formError ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {formError}
               </p>
             ) : null}

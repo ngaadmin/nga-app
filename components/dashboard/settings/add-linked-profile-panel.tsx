@@ -325,11 +325,11 @@ export function AddLinkedProfilePanel() {
               aria-invalid={Boolean(errors.username)}
               className={cn(
                 fieldBase,
-                errors.username && "border-red-400 focus:border-red-500",
+                errors.username && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.username ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.username}
               </p>
             ) : null}
@@ -356,11 +356,11 @@ export function AddLinkedProfilePanel() {
               aria-invalid={Boolean(errors.password)}
               className={cn(
                 fieldBase,
-                errors.password && "border-red-400 focus:border-red-500",
+                errors.password && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.password ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.password}
               </p>
             ) : null}
@@ -387,11 +387,11 @@ export function AddLinkedProfilePanel() {
               aria-invalid={Boolean(errors.confirmPassword)}
               className={cn(
                 fieldBase,
-                errors.confirmPassword && "border-red-400 focus:border-red-500",
+                errors.confirmPassword && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.confirmPassword ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.confirmPassword}
               </p>
             ) : null}
@@ -418,7 +418,7 @@ export function AddLinkedProfilePanel() {
           </div>
 
           {errors.form ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.form}
             </p>
           ) : null}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import { LessonAnswerTick, LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import {
   ALLOCATION_KNOB_PX,
   allocationNextEnabled,
@@ -150,10 +150,10 @@ export function AllocationSliderScreen({
               className="pointer-events-none absolute top-0 z-raised flex flex-col items-center"
               style={{ left: markerCenter, transform: markerAlign }}
             >
-              <span className="whitespace-nowrap rounded-full bg-[#C2410C] px-2.5 py-1 font-sans text-[13px] font-extrabold text-white shadow-[0_2px_6px_rgba(194,65,12,0.35)]">
+              <span className="whitespace-nowrap rounded-full bg-[#FFB822] px-2.5 py-1 font-sans text-[13px] font-extrabold text-[#031F82] shadow-[0_2px_6px_rgba(3,31,130,0.15)]">
                 {allocationTargetMarker(targetMin)}
               </span>
-              <span className="h-3 w-1 rounded-full bg-[#C2410C]" aria-hidden />
+              <span className="h-3 w-1 rounded-full bg-[#FFB822]" aria-hidden />
             </span>
           ) : null}
           <div
@@ -173,7 +173,7 @@ export function AllocationSliderScreen({
           </div>
           {showTargetTick ? (
             <span
-              className="pointer-events-none absolute bottom-1.5 h-7 w-1.5 -translate-x-1/2 rounded-full bg-[#C2410C]"
+              className="pointer-events-none absolute bottom-1.5 h-7 w-1.5 -translate-x-1/2 rounded-full bg-[#FFB822]"
               style={{ left: markerCenter }}
               aria-hidden
             />
@@ -191,9 +191,10 @@ export function AllocationSliderScreen({
 
         {meetsTarget ? (
           <p
-            className="mt-3 text-center font-heading text-lg font-extrabold text-[#031F82]"
+            className="mt-3 flex items-center justify-center gap-2 text-center font-heading text-lg font-extrabold text-[#031F82]"
             role="status"
           >
+            <LessonAnswerTick />
             {allocationSavedBadge(targetMin)}
           </p>
         ) : null}

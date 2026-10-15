@@ -129,31 +129,9 @@ export function AcademyLessonShell({
       </div>
 
       {hideFooter ? null : (
-        <footer
-          className={cn(
-            "flex shrink-0 justify-center",
-            matchChrome
-              ? "bg-transparent px-5 pb-7 pt-2"
-              : "bg-white pb-4 pt-2",
-            !matchChrome && lessonScreenInlinePaddingClass,
-          )}
-        >
+        <footer className="flex shrink-0 justify-center bg-transparent px-5 pb-7 pt-2">
           {footerSlot !== undefined ? (
             footerSlot
-          ) : matchChrome ? (
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={!canAdvance}
-              className={cn(
-                "flex h-14 w-full items-center justify-center rounded-full font-heading text-[19px] font-bold",
-                canAdvance
-                  ? "bg-[#031F82] text-white shadow-[0_4px_0_#FFB822]"
-                  : "cursor-default bg-[#DCE3F5] text-[#8C98B8]",
-              )}
-            >
-              Next
-            </button>
           ) : (
             <button
               type="button"

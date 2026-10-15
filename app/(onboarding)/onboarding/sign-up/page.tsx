@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
 import { OnboardingSignUpRedirect } from "@/components/onboarding/onboarding-sign-up-redirect";
 import { SignUpForm } from "@/components/onboarding/sign-up-form";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
@@ -16,6 +17,9 @@ export default function OnboardingSignUpPage() {
         <OnboardingSignUpRedirect />
         <SignUpForm />
       </SearchParamsBoundary>
+      <p className="mx-auto w-full max-w-md px-1 pb-8 text-center">
+        <PrivacyPolicyLink />
+      </p>
     </>
   );
 }

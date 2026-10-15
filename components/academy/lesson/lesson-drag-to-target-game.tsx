@@ -8,8 +8,9 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { LessonAnswerTick, LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
-import { LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
@@ -127,6 +128,7 @@ export function LessonDragToTargetGame({
     null,
   );
   const [targetImageFailed, setTargetImageFailed] = useState(false);
+  const { shakingKey, shake } = useLessonShake();
   const [sourceImageFailed, setSourceImageFailed] = useState(false);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -274,6 +276,7 @@ export function LessonDragToTargetGame({
       return;
     }
 
+    shake("target");
     onMissRef.current?.();
     endDrag();
   };
@@ -442,9 +445,15 @@ export function LessonDragToTargetGame({
           aria-label={`Drop selected ${sourceLabel} on ${targetLabel}`}
           onClick={dropSelectedCoin}
           onKeyDown={dropSelectedFromKeyboard}
-          className="cursor-pointer border-0 bg-transparent p-0"
+          className={cn(
+            "relative cursor-pointer border-0 bg-transparent p-0",
+            shakingKey === "target" && "lesson-tile-shake",
+          )}
         >
           {renderTargetVisual()}
+          {remaining <= 0 ? (
+            <LessonAnswerTick className="absolute -right-1 -top-1" />
+          ) : null}
         </button>
       </div>
 

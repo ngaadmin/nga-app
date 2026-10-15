@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
 import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { registeredPlayPath } from "@/lib/onboarding/explorer-pending-consent";
@@ -377,12 +378,12 @@ export function SignInForm() {
                 aria-invalid={Boolean(errors.newPassword)}
                 className={cn(
                   fieldBase,
-                  errors.newPassword && "border-red-400 focus:border-red-500",
+                  errors.newPassword && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.newPassword ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.newPassword}
@@ -413,12 +414,12 @@ export function SignInForm() {
                 className={cn(
                   fieldBase,
                   errors.confirmPassword &&
-                    "border-red-400 focus:border-red-500",
+                    "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.confirmPassword ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.confirmPassword}
@@ -428,7 +429,7 @@ export function SignInForm() {
 
             {errors.form ? (
               <p
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.form}
@@ -481,12 +482,12 @@ export function SignInForm() {
                 aria-invalid={Boolean(errors.recoveryEmail)}
                 className={cn(
                   fieldBase,
-                  errors.recoveryEmail && "border-red-400 focus:border-red-500",
+                  errors.recoveryEmail && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.recoveryEmail ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.recoveryEmail}
@@ -519,7 +520,7 @@ export function SignInForm() {
                   className={cn(
                     fieldBase,
                     errors.recoveryUsername &&
-                      "border-red-400 focus:border-red-500",
+                      "border-[#031F82] focus:border-[#031F82]",
                   )}
                 />
               </div>
@@ -565,7 +566,7 @@ export function SignInForm() {
             ) : null}
             {errors.form ? (
               <p
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.form}
@@ -605,13 +606,13 @@ export function SignInForm() {
                 }
                 className={cn(
                   fieldBase,
-                  errors.identifier && "border-red-400 focus:border-red-500",
+                  errors.identifier && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.identifier ? (
                 <p
                   id="sign-in-identifier-error"
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.identifier}
@@ -653,13 +654,13 @@ export function SignInForm() {
                 }
                 className={cn(
                   fieldBase,
-                  errors.credential && "border-red-400 focus:border-red-500",
+                  errors.credential && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.credential ? (
                 <p
                   id="sign-in-credential-error"
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.credential}
@@ -669,7 +670,7 @@ export function SignInForm() {
 
             {errors.form ? (
               <p
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.form}
@@ -698,6 +699,9 @@ export function SignInForm() {
             </Link>
           </p>
         ) : null}
+        <p className="text-center">
+          <PrivacyPolicyLink />
+        </p>
       </div>
     </section>
   );

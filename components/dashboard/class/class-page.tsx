@@ -194,7 +194,7 @@ function StudentLoginTable({
                   type="button"
                   disabled={removing}
                   onClick={() => onRemove(name)}
-                  className="font-heading text-xs font-bold text-red-700 underline-offset-2 hover:underline disabled:opacity-40"
+                  className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline disabled:opacity-40"
                 >
                   Remove student
                 </button>
@@ -493,7 +493,7 @@ export function ClassPage({ roster }: ClassPageProps) {
               type="button"
               disabled={removing}
               onClick={() => setPendingRemove({ scope: "all" })}
-              className="font-heading text-sm font-bold text-red-700 underline-offset-2 hover:underline disabled:opacity-40"
+              className="font-heading text-sm font-bold text-[#031F82] underline-offset-2 hover:underline disabled:opacity-40"
             >
               Remove all students in class
             </button>
@@ -504,7 +504,7 @@ export function ClassPage({ roster }: ClassPageProps) {
         </div>
 
         {error ? (
-          <p className="font-sans text-sm font-medium text-red-600" role="alert">
+          <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
             {error}
           </p>
         ) : null}

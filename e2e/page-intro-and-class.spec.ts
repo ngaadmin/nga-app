@@ -450,6 +450,25 @@ const FOUR_USERS = [
   { username: "forest6", xp: "10 XP" },
 ] as const;
 
+async function scrollRowIntoSafeArea(page: Page, username: string) {
+  await page.locator(`[data-class-user="${username}"]`).evaluate((el) => {
+    const main = el.closest("main");
+    if (!(main instanceof HTMLElement)) return;
+    const nav = document.querySelector("[data-dashboard-nav]");
+    const navTop = nav?.getBoundingClientRect().top ?? window.innerHeight;
+    const mainRect = main.getBoundingClientRect();
+    const safeBottom = Math.min(navTop, mainRect.bottom) - 12;
+    const safeTop = mainRect.top + 8;
+    const place = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom > safeBottom) main.scrollTop += rect.bottom - safeBottom;
+      else if (rect.top < safeTop) main.scrollTop -= safeTop - rect.top;
+    };
+    place();
+    place();
+  });
+}
+
 test("header hides the teacher email and expanded users scroll to XP", async ({
   page,
 }) => {
@@ -464,7 +483,7 @@ test("header hides the teacher email and expanded users scroll to XP", async ({
   await expect(header).not.toContainText("@");
   await expect(header).not.toContainText("cath+recteacher1");
 
-  await page.setViewportSize({ width: 375, height: 844 });
+  await page.setViewportSize({ width: 375, height: 667 });
   await page.screenshot({
     path: "/opt/cursor/artifacts/class-header-name-375.png",
     fullPage: false,
@@ -473,18 +492,39 @@ test("header hides the teacher email and expanded users scroll to XP", async ({
   await page.getByRole("button", { name: "Show users (4)" }).click();
   await expect(page.locator("[data-class-user='amber2']")).toBeVisible();
 
-  for (const width of [320, 375, 414, 1280]) {
-    const height = width >= 1024 ? 900 : 844;
+  const viewports = [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 414, height: 736 },
+    { width: 1280, height: 900 },
+  ];
+
+  for (const { width, height } of viewports) {
     await page.setViewportSize({ width, height });
     const main = page.locator("main");
     const nav = page.locator("[data-dashboard-nav]");
+    const room = await main.evaluate((el) => {
+      el.scrollTop = 0;
+      const overflows = el.scrollHeight > el.clientHeight + 1;
+      if (overflows) el.scrollTop = el.scrollHeight;
+      return {
+        overflows,
+        scrollTop: el.scrollTop,
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight,
+      };
+    });
+    if (width < 768) {
+      expect(room.overflows, `page scrolls at ${width}`).toBe(true);
+      expect(room.scrollTop, `scroll moves at ${width}`).toBeGreaterThan(0);
+    }
 
     for (const user of FOUR_USERS) {
       const row = page.locator(`[data-class-user="${user.username}"]`);
-      await row.scrollIntoViewIfNeeded();
+      await scrollRowIntoSafeArea(page, user.username);
       await expect(row.getByText(user.xp, { exact: true })).toBeVisible();
       const box = await row.boundingBox();
-      expect(box, user.username).toBeTruthy();
+      expect(box, `${user.username} at ${width}`).toBeTruthy();
       expect(box!.y).toBeGreaterThanOrEqual(0);
       expect(box!.y + box!.height).toBeLessThanOrEqual(height + 1);
       if (width < 768) {
@@ -495,22 +535,13 @@ test("header hides the teacher email and expanded users scroll to XP", async ({
     }
 
     const last = page.locator("[data-class-user='forest6']");
-    await last.scrollIntoViewIfNeeded();
+    await scrollRowIntoSafeArea(page, "forest6");
     await expect(last.getByText("10 XP", { exact: true })).toBeVisible();
     const overflow = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
     }));
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth + 1);
-    const mainScroll = await main.evaluate((el) => ({
-      scrollHeight: el.scrollHeight,
-      clientHeight: el.clientHeight,
-      scrollTop: el.scrollTop,
-    }));
-    if (width < 768) {
-      expect(mainScroll.scrollHeight).toBeGreaterThan(mainScroll.clientHeight);
-      expect(mainScroll.scrollTop).toBeGreaterThan(0);
-    }
     await page.screenshot({
       path: `/opt/cursor/artifacts/class-users-scroll-${width}.png`,
       fullPage: false,

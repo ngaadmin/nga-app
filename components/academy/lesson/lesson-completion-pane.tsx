@@ -10,8 +10,10 @@ import {
   lessonCompletionEyebrowClass,
   lessonCompletionHeaderClass,
   lessonGoldClaimClass,
+  lessonNextButtonClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
+  moduleCloserGoldMedals,
   resolveCompletionMedalId,
   type MedalIllustrationId,
 } from "@/lib/academy/illustrations/medal-registry";
@@ -43,6 +45,7 @@ type LessonCompletionPaneProps = {
   skillLearnedLabel?: string;
   meaningLine?: string;
   onCashIn: () => void;
+  onContinue: () => void;
   cashInDisabled?: boolean;
 };
 
@@ -73,6 +76,7 @@ export function LessonCompletionPane({
   skillLearnedLabel,
   meaningLine,
   onCashIn,
+  onContinue,
   cashInDisabled = false,
 }: LessonCompletionPaneProps) {
   const router = useRouter();
@@ -86,11 +90,14 @@ export function LessonCompletionPane({
   const isModuleCloser =
     typeof lessonNumber === "number" &&
     isModuleCloserLessonNumber(lessonNumber);
+  const goldMedals = isModuleCloser
+    ? moduleCloserGoldMedals(moduleNumber ?? 1)
+    : [];
   const resolvedMedalId =
-    authoredMedal && medalId
-      ? medalId
-      : isModuleCloser
-        ? undefined
+    goldMedals.length > 0
+      ? undefined
+      : authoredMedal && medalId
+        ? medalId
         : resolveCompletionMedalId({
             medalId,
             lessonNumber,
@@ -126,13 +133,27 @@ export function LessonCompletionPane({
   };
 
   return (
-    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+    <div
+      className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden"
+      data-cash-in-celebration={cashingIn ? "open" : undefined}
+    >
       {cashingIn ? (
         <LessonCompletionConfetti />
       ) : null}
 
       <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 px-2 pt-1 text-center">
-        {resolvedMedalId ? (
+        {goldMedals.length > 0 ? (
+          <div className="mb-2 flex w-full items-end justify-center gap-1">
+            {goldMedals.map((medal) => (
+              <LessonSkillMedal
+                key={medal.medalId}
+                skillSlug={medal.skillSlug}
+                medalId={medal.medalId}
+                size="row"
+              />
+            ))}
+          </div>
+        ) : resolvedMedalId ? (
           <div className="mb-2 flex w-full justify-center">
             <LessonSkillMedal
               skillSlug={achievementSkillId}
@@ -170,13 +191,11 @@ export function LessonCompletionPane({
         <div className="mt-auto flex w-full justify-center pb-4 pt-8">
           <button
             type="button"
-            onClick={handleCashIn}
-            disabled={cashInDisabled && !cashingIn}
-            aria-busy={cashingIn || undefined}
-            data-cash-in-celebration={cashingIn ? "open" : undefined}
-            className={lessonGoldClaimClass}
+            onClick={cashingIn ? onContinue : handleCashIn}
+            disabled={!cashingIn && cashInDisabled}
+            className={cashingIn ? lessonNextButtonClass : lessonGoldClaimClass}
           >
-            {LESSON_CASH_IN_LABEL}
+            {cashingIn ? "Continue" : LESSON_CASH_IN_LABEL}
           </button>
         </div>
       </div>

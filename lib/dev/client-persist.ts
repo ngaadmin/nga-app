@@ -1,4 +1,14 @@
-/** Dev-only: mirror guest-phase keys in localStorage so progress survives HMR and tab restarts. */
+/**
+ * Session store for registered play.
+ * Guest progress and a pending Explorer's held copy also mirror to localStorage
+ * for 30 days (`guest-device-store`). Development still mirrors every key.
+ */
+
+import {
+  isGuestDeviceStorageKey,
+  mirrorGuestDeviceWrite,
+  readGuestDevicePersisted,
+} from "@/lib/dev/guest-device-store";
 
 export function isDevClient(): boolean {
   return process.env.NODE_ENV === "development";
@@ -6,6 +16,9 @@ export function isDevClient(): boolean {
 
 export function readPersisted(key: string): string | null {
   if (typeof window === "undefined") return null;
+
+  const guest = readGuestDevicePersisted(key);
+  if (guest !== undefined) return guest;
 
   if (isDevClient()) {
     const local = window.localStorage.getItem(key);
@@ -25,17 +38,18 @@ export function readPersisted(key: string): string | null {
 export function writePersisted(key: string, value: string): void {
   if (typeof window === "undefined") return;
 
+  window.sessionStorage.setItem(key, value);
   if (isDevClient()) {
     window.localStorage.setItem(key, value);
   }
-  window.sessionStorage.setItem(key, value);
+  mirrorGuestDeviceWrite(key, value);
 }
 
 export function removePersisted(key: string): void {
   if (typeof window === "undefined") return;
 
   window.sessionStorage.removeItem(key);
-  if (isDevClient()) {
+  if (isDevClient() || isGuestDeviceStorageKey(key)) {
     window.localStorage.removeItem(key);
   }
 }

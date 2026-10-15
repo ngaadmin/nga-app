@@ -26,7 +26,7 @@ import { zLayerStyle } from "@/lib/ui/layers";
  */
 export function DashboardStatusHeader() {
   const { username } = useDashboardUser();
-  const { lifetimePointsEarned } = useDashboardWallet();
+  const { lifetimePointsEarned, reloadWalletFromStorage } = useDashboardWallet();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
   const [dayStreak, setDayStreak] = useState(0);
 
@@ -34,12 +34,16 @@ export function DashboardStatusHeader() {
     function refreshStreak() {
       setDayStreak(readStoredDayStreak());
     }
-    refreshStreak();
-    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshStreak);
+    function refreshCoins() {
+      reloadWalletFromStorage();
+      refreshStreak();
+    }
+    refreshCoins();
+    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshCoins);
     return () => {
-      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshStreak);
+      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshCoins);
     };
-  }, []);
+  }, [reloadWalletFromStorage]);
   const masteryCohort = useMasteryCohort();
 
   const [skillsOpen, setSkillsOpen] = useState(false);

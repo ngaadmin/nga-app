@@ -137,6 +137,17 @@ export function walletFieldsFromUnknown(
   };
 }
 
+/** Same learner across a `name:` owner and a later Auth id. */
+export function currentWalletPersonKey(): string | null {
+  const session = readUserSession();
+  if (!session) return null;
+  const username = session.username.trim().toLowerCase();
+  if (!username) return currentWalletOwnerId();
+  return session.accessMode === "registered"
+    ? `user:${username}`
+    : `guest:${username}`;
+}
+
 export function currentWalletOwnerId(): string | null {
   const session = readUserSession();
   if (!session) return null;
@@ -153,13 +164,17 @@ export function currentWalletOwnerId(): string | null {
 function walletBelongsToCurrentAccount(
   storedOwner: string | null | undefined,
 ): boolean {
+  const session = readUserSession();
   const owner = currentWalletOwnerId();
   if (!owner) return false;
   const isGuestOwner = owner === "guest" || owner.startsWith("guest:");
   if (isGuestOwner) {
     return !storedOwner || storedOwner === owner;
   }
-  return storedOwner === owner;
+  if (storedOwner === owner) return true;
+  // Coins saved before the Auth id arrived use `name:<username>`.
+  const username = session?.username.trim().toLowerCase();
+  return Boolean(username) && storedOwner === `name:${username}`;
 }
 
 /** Fresh profiles start with zero XP until earned in-app. */

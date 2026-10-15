@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
+import { Suspense } from "react";
+import { RecordingIntroQueryFlag } from "@/components/recording/recording-intro-query-flag";
+import { RECORDING_SUPPRESS_INTRO_FLAG_KEY } from "@/lib/recording/suppress-intro-flag";
 import { landingShareMetadata } from "@/lib/site-share-metadata";
 import "./globals.css";
 
@@ -103,7 +107,15 @@ export default function RootLayout({
               "window.addEventListener('popstate',function(event){var handler=window.__ngaGuestBack;if(typeof handler==='function')handler(event);},true);",
           }}
         />
+        {/* TODO: remove after recordings — run before client redirects drop the query. */}
+        <Script id="recording-suppress-intro" strategy="beforeInteractive">
+          {`try{var q=new URLSearchParams(location.search);if(q.get("recording")==="1")sessionStorage.setItem(${JSON.stringify(RECORDING_SUPPRESS_INTRO_FLAG_KEY)},"1")}catch(e){}`}
+        </Script>
         {children}
+        {/* TODO: remove after recordings */}
+        <Suspense fallback={null}>
+          <RecordingIntroQueryFlag />
+        </Suspense>
         <div id="overlay-root" aria-hidden="true" />
         <div id="modal-root" />
         <div id="toast-root" aria-hidden="true" />

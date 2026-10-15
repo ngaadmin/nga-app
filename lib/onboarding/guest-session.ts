@@ -159,6 +159,11 @@ export type UserSession = {
   marketingOptIn?: boolean;
   /** Supabase Auth / profiles.id when this session is backed by a remote account. */
   supabaseUserId?: string;
+  /**
+   * TODO: remove after recordings
+   * Set when this tab was opened with ?recording=1 so first-visit intros stay closed.
+   */
+  recordingSuppressIntro?: boolean;
 };
 
 /** @deprecated Use UserSession - kept for existing imports. */
@@ -435,6 +440,8 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
       typeof parsed.supabaseUserId === "string" && parsed.supabaseUserId.trim()
         ? parsed.supabaseUserId.trim()
         : undefined,
+    // TODO: remove after recordings
+    recordingSuppressIntro: parsed.recordingSuppressIntro === true ? true : undefined,
   };
 
   return session;

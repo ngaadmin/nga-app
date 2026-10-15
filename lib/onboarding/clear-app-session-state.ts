@@ -24,6 +24,7 @@ import {
   isExplorerPendingConsent,
 } from "@/lib/onboarding/explorer-pending-consent";
 import { PARENT_FIRST_WELCOME_KEY } from "@/lib/onboarding/parent-first-welcome";
+import { RECORDING_SUPPRESS_INTRO_FLAG_KEY } from "@/lib/recording/suppress-intro-flag";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
 import { REGISTERED_ACCOUNTS_STORAGE_KEY } from "@/lib/onboarding/registered-accounts";
 import { clearAllPersistedNgaKeys, removePersisted } from "@/lib/dev/client-persist";
@@ -58,6 +59,8 @@ const PRESERVED_ON_LOGOUT_KEYS = [
   ACCOUNT_PROGRESS_CACHE_KEY,
   PARENT_FIRST_WELCOME_KEY,
   PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+  // TODO: remove after recordings — keep ?recording=1 for the rest of this tab.
+  RECORDING_SUPPRESS_INTRO_FLAG_KEY,
 ] as const;
 
 /** Removes active session artifacts while preserving durable registered accounts. */

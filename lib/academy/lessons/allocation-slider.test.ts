@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   allocationNextEnabled,
   allocationSavedBadge,
+  allocationTargetMarker,
+  allocationTrackInsetPx,
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
 import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
@@ -20,6 +22,11 @@ describe("allocation slider", () => {
     expect(saveAmountFromClientX(80, 0, 100, 25)).toBe(20);
     expect(saveAmountFromClientX(100, 0, 100, 25)).toBe(25);
     expect(saveAmountFromClientX(-10, 0, 100, 25)).toBe(0);
+  });
+
+  it("insets the track by half the knob and labels the save target on the bar", () => {
+    expect(allocationTrackInsetPx(44)).toBe(22);
+    expect(allocationTargetMarker(20)).toBe("Save $20 🎯");
   });
 
   it("badges the amount that was saved, not the amount spent", () => {

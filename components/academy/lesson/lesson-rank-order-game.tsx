@@ -10,9 +10,9 @@ import {
 import {
   lessonIntroClass,
   lessonRankOrderCardClass,
-  lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { rankOrderMatches } from "@/lib/academy/lessons/rank-order";
 import { cn } from "@/lib/utils/cn";
 import type { RankOrderItem } from "@/lib/academy/lessons/types/screens/rank-order";
 
@@ -25,6 +25,7 @@ type LessonRankOrderGameProps = {
   correctOrder: readonly string[];
   errors: Record<string, string>;
   onComplete: () => void;
+  onIncomplete?: () => void;
   onMistake: () => void;
   onSuccess?: () => void;
   onPersistentError?: (message: string) => void;
@@ -54,16 +55,11 @@ function resolveRankRowIndexFromPointer(
 
 export function LessonRankOrderGame({
   intro,
-  dragHint = "Drag the choices into the best order, starting with the strongest option at the top.",
-  axisLabel = "Best → Avoid",
-  submitLabel = "Submit Answer",
   items,
   correctOrder,
-  errors,
   onComplete,
-  onMistake,
+  onIncomplete,
   onSuccess,
-  onPersistentError,
   onDismissError,
 }: LessonRankOrderGameProps) {
   type ItemId = string;
@@ -78,7 +74,7 @@ export function LessonRankOrderGame({
     y: number;
     width: number;
     label: string;
-    index: number;
+    emoji: string;
   } | null>(null);
 
   const rankOrderRef = useRef(rankOrder);
@@ -88,6 +84,25 @@ export function LessonRankOrderGame({
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const lastReorderYRef = useRef<number | null>(null);
+  const solvedRef = useRef(false);
+
+  const orderIsCorrect = rankOrderMatches(rankOrder, correctOrder);
+
+  useEffect(() => {
+    if (orderIsCorrect && !solvedRef.current) {
+      solvedRef.current = true;
+      setRankSubmitted(true);
+      onDismissError?.();
+      onSuccess?.();
+      onComplete();
+      return;
+    }
+    if (!orderIsCorrect && solvedRef.current) {
+      solvedRef.current = false;
+      setRankSubmitted(false);
+      onIncomplete?.();
+    }
+  }, [onComplete, onDismissError, onIncomplete, onSuccess, orderIsCorrect]);
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -161,13 +176,14 @@ export function LessonRankOrderGame({
     activePointerIdRef.current = event.pointerId;
     captureTarget.setPointerCapture(event.pointerId);
     lastReorderYRef.current = event.clientY;
+    const item = items.find((entry) => entry.id === itemId);
     setDragRankId(itemId);
     setDragGhost({
       x: event.clientX - 40,
       y: event.clientY - 24,
       width: event.currentTarget.getBoundingClientRect().width,
-      label: items.find((entry) => entry.id === itemId)?.label ?? "",
-      index: rankOrderRef.current.indexOf(itemId),
+      label: item?.label ?? "",
+      emoji: item?.emoji ?? "📌",
     });
   };
 
@@ -184,35 +200,6 @@ export function LessonRankOrderGame({
   const handleBoardPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
     endDrag();
-  };
-
-  const getRankSubmitError = (order: ItemId[]): string | undefined => {
-    for (let i = 0; i < correctOrder.length; i += 1) {
-      if (order[i] !== correctOrder[i]) {
-        const wrongId = order[i];
-        if (wrongId && errors[wrongId]?.trim()) return errors[wrongId]!.trim();
-        break;
-      }
-    }
-    return Object.values(errors).find((entry) => entry?.trim())?.trim();
-  };
-
-  const handleSubmit = () => {
-    if (rankSubmitted) return;
-    const valid =
-      rankOrder.length === correctOrder.length &&
-      rankOrder.every((id, index) => id === correctOrder[index]);
-
-    if (valid) {
-      onDismissError?.();
-      setRankSubmitted(true);
-      onSuccess?.();
-      onComplete();
-      return;
-    }
-
-    onMistake();
-    onPersistentError?.(getRankSubmitError(rankOrder) ?? "");
   };
 
   return (
@@ -258,8 +245,11 @@ export function LessonRankOrderGame({
               )}
               style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <span className="text-center font-extrabold text-[#031F82]" aria-hidden>
-                {index + 1}
+              <span className="text-center text-lg leading-none tracking-tighter text-[#031F82]" aria-hidden>
+                ⋮⋮
+              </span>
+              <span className="text-center text-[1.35rem] leading-none" aria-hidden>
+                {item.emoji ?? "📌"}
               </span>
               <span>{item.label}</span>
             </div>
@@ -279,26 +269,15 @@ export function LessonRankOrderGame({
               width: dragGhost.width,
             }}
           >
-            <span className="text-center font-extrabold text-[#031F82]" aria-hidden>
-              {rankOrder.indexOf(dragRankId ?? "") + 1}
+            <span className="text-center text-lg leading-none tracking-tighter text-[#031F82]" aria-hidden>
+              ⋮⋮
+            </span>
+            <span className="text-center text-[1.35rem] leading-none" aria-hidden>
+              {dragGhost.emoji}
             </span>
             <span>{dragGhost.label}</span>
           </div>
         </OverlayPortal>
-      ) : null}
-      {!rankSubmitted ? (
-        <div className="mt-3 flex w-full justify-center">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleSubmit();
-            }}
-            className={lessonSubmitAnswerClass}
-          >
-            {submitLabel}
-          </button>
-        </div>
       ) : null}
     </>
   );

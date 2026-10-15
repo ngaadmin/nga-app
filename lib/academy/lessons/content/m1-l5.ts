@@ -129,14 +129,17 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
     items: [
       {
         id: "ask",
+        emoji: "🤔",
         label: "Ask if this is a 'want' or a 'need'",
       },
       {
         id: "share",
+        emoji: "🍦",
         label: "Share a gelato with Immi",
       },
       {
         id: "buy",
+        emoji: "💸",
         label: "Buy her own because it is only today",
       },
     ],
@@ -149,7 +152,6 @@ const M1_L5_BASE_SCREENS: ScreenConfig[] = [
       share: "Name it a 'want' or 'need', then share, then buy.",
       buy: "Name it a 'want' or 'need', then share, then buy.",
     },
-    submitLabel: "Submit Answer",
     pairImage: false,
   },
   {
@@ -232,14 +234,17 @@ const EXPLORER_OVERRIDES: ScreenOverrideMap = {
     items: [
       {
         id: "ask",
+        emoji: "🤔",
         label: "Ask if this is a 'want' or a 'need'",
       },
       {
         id: "share",
+        emoji: "🍦",
         label: "Share a gelato with Senna",
       },
       {
         id: "buy",
+        emoji: "💸",
         label: "Buy his own because it is only today",
       },
     ],
@@ -330,14 +335,17 @@ const MAVERICK_OVERRIDES: ScreenOverrideMap = {
     items: [
       {
         id: "ask",
+        emoji: "🤔",
         label: "Ask if this is a 'want' or a 'need'",
       },
       {
         id: "share",
+        emoji: "🍦",
         label: "Share a gelato with Immi",
       },
       {
         id: "buy",
+        emoji: "💸",
         label: "Buy his own because it is only today",
       },
     ],

@@ -1,6 +1,10 @@
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import {
+  lessonTileSelection,
+  lessonTileShowsTick,
+} from "@/lib/academy/lessons/lesson-tile-feedback";
 import { cn } from "@/lib/utils/cn";
 
 type LessonChoiceButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -41,17 +45,20 @@ export function LessonChoiceButton({
   void orbLabel;
   void orb;
   const isPressed = selected || pending || locked;
+  const selection = lessonTileSelection({
+    selected: isPressed || wrong,
+    variant: wrong ? "wrong" : locked ? "correct" : "neutral",
+  });
 
   return (
     <button
       type={type}
       {...props}
-      aria-pressed={isPressed}
+      aria-pressed={isPressed || wrong}
+      data-selection={selection === "idle" ? undefined : selection}
       className={cn(
-        "flex w-full min-h-14 items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left font-sans text-[18px] font-semibold leading-snug text-[#031F82] transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45",
-        isPressed && "bg-[#BDE9FB]",
-        locked && "bg-[#DCFCE7]",
-        wrong && "lesson-tile-shake bg-[#FFF1F2] text-[#9F1239]",
+        "lesson-choice-tile relative flex w-full min-h-14 items-center gap-3 rounded-2xl bg-[#E8F6FC] px-4 py-3 text-left font-sans text-[18px] font-semibold leading-snug text-[#031F82] transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45",
+        wrong && "lesson-tile-shake",
         className,
       )}
     >
@@ -61,6 +68,14 @@ export function LessonChoiceButton({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">{children}</span>
+      {lessonTileShowsTick(selection) ? (
+        <span
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-white text-[15px] font-extrabold text-[#16A34A]"
+          aria-hidden
+        >
+          ✓
+        </span>
+      ) : null}
     </button>
   );
 }

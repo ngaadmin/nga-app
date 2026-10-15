@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import {
+  ALLOCATION_KNOB_PX,
   allocationNextEnabled,
   allocationSavedBadge,
+  allocationTargetMarker,
+  allocationTrackInsetPx,
   clampSaveAmount,
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
@@ -34,7 +37,8 @@ export function AllocationSliderScreen({
   const reservedRef = useRef(0);
   const [reservedAmount, setReservedAmount] = useState(0);
   const metRef = useRef(false);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const inset = allocationTrackInsetPx();
 
   const spendableToday = Math.max(0, total - reservedAmount);
   const meetsTarget = allocationNextEnabled(reservedAmount, targetMin);
@@ -56,10 +60,15 @@ export function AllocationSliderScreen({
   };
 
   const applyFromClientX = (clientX: number) => {
-    const rect = trackRef.current?.getBoundingClientRect();
+    const rect = barRef.current?.getBoundingClientRect();
     if (!rect) return;
     applySave(saveAmountFromClientX(clientX, rect.left, rect.width, total));
   };
+
+  const knobCenter = `calc(${inset}px + (100% - ${ALLOCATION_KNOB_PX}px) * ${savePct / 100})`;
+  const markerCenter = `calc(${inset}px + (100% - ${ALLOCATION_KNOB_PX}px) * ${targetPct / 100})`;
+  const markerAlign =
+    targetPct >= 70 ? "translateX(-85%)" : targetPct <= 30 ? "translateX(-15%)" : "translateX(-50%)";
 
   useEffect(() => {
     if (meetsTarget && !metRef.current) {
@@ -96,11 +105,6 @@ export function AllocationSliderScreen({
             <p className="font-heading text-xl font-extrabold tabular-nums text-[#031F82]">
               {dollar(reservedAmount)}
             </p>
-            {targetMin > 0 ? (
-              <p className="mt-0.5 font-sans text-[13px] font-bold text-[#C2410C]">
-                needs {dollar(targetMin)}
-              </p>
-            ) : null}
           </div>
           <div className="text-right">
             <p className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
@@ -113,7 +117,6 @@ export function AllocationSliderScreen({
         </div>
 
         <div
-          ref={trackRef}
           role="slider"
           tabIndex={0}
           aria-label="Save amount"
@@ -121,7 +124,7 @@ export function AllocationSliderScreen({
           aria-valuemax={total}
           aria-valuenow={reservedAmount}
           aria-valuetext={`${dollar(reservedAmount)} saved`}
-          className="relative h-12 touch-none select-none"
+          className="relative mt-2 h-24 touch-none select-none"
           style={{ touchAction: "none" }}
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -142,9 +145,25 @@ export function AllocationSliderScreen({
             }
           }}
         >
+          {showTargetTick ? (
+            <span
+              className="pointer-events-none absolute top-0 z-raised flex flex-col items-center"
+              style={{ left: markerCenter, transform: markerAlign }}
+            >
+              <span className="whitespace-nowrap rounded-full bg-[#C2410C] px-2.5 py-1 font-sans text-[13px] font-extrabold text-white shadow-[0_2px_6px_rgba(194,65,12,0.35)]">
+                {allocationTargetMarker(targetMin)}
+              </span>
+              <span className="h-3 w-1 rounded-full bg-[#C2410C]" aria-hidden />
+            </span>
+          ) : null}
           <div
-            className="pointer-events-none absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 overflow-hidden rounded-full"
-            style={{ backgroundColor: TRACK_NAVY }}
+            ref={barRef}
+            className="pointer-events-none absolute bottom-3 h-3 overflow-hidden rounded-full"
+            style={{
+              left: inset,
+              right: inset,
+              backgroundColor: TRACK_NAVY,
+            }}
             aria-hidden
           >
             <div
@@ -154,14 +173,18 @@ export function AllocationSliderScreen({
           </div>
           {showTargetTick ? (
             <span
-              className="pointer-events-none absolute top-1/2 z-raised h-7 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_0_2px_#C2410C]"
-              style={{ left: `${targetPct}%` }}
+              className="pointer-events-none absolute bottom-1.5 h-7 w-1.5 -translate-x-1/2 rounded-full bg-[#C2410C]"
+              style={{ left: markerCenter }}
               aria-hidden
             />
           ) : null}
           <span
-            className="pointer-events-none absolute top-1/2 z-raised size-11 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-[#FFA503] shadow-[0_2px_8px_rgb(3_31_130_/_0.35)]"
-            style={{ left: `${savePct}%` }}
+            className="pointer-events-none absolute bottom-0 z-raised -translate-x-1/2 rounded-full border-[3px] border-white bg-[#FFA503] shadow-[0_2px_8px_rgb(3_31_130_/_0.35)]"
+            style={{
+              left: knobCenter,
+              width: ALLOCATION_KNOB_PX,
+              height: ALLOCATION_KNOB_PX,
+            }}
             aria-hidden
           />
         </div>

@@ -3,6 +3,8 @@ import type { WithDeclarative } from "../declarative";
 export type RankOrderItem = {
   id: string;
   label: string;
+  /** Shown on the card next to the drag handle. */
+  emoji?: string;
 };
 
 export type RankOrderScreenConfig = WithDeclarative<{

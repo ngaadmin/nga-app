@@ -307,11 +307,10 @@ const DESIGN_SHELL_SCREENS: ScreenConfig[] = [
       "You want a $10 item but only have $5. Rank these choices from best to avoid.",
     dragHint: "Drag into order — strongest money move at the top.",
     axisLabel: "Best → Avoid",
-    submitLabel: "Submit Answer",
     items: [
-      { id: "wait", label: "Wait and save the extra $5." },
-      { id: "cheaper", label: "Pick a cheaper $5 alternative." },
-      { id: "borrow", label: "Borrow $5 to buy it today." },
+      { id: "wait", emoji: "💰", label: "Wait and save the extra $5." },
+      { id: "cheaper", emoji: "🛍️", label: "Pick a cheaper $5 alternative." },
+      { id: "borrow", emoji: "🙅", label: "Borrow $5 to buy it today." },
     ],
     correctOrder: ["wait", "cheaper", "borrow"],
     errors: {

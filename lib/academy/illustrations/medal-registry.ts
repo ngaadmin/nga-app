@@ -6,8 +6,10 @@
 
 import {
   skillNumberForModuleLesson,
+  skillNumbersForModuleLesson,
   skillTierForLessonNumber,
 } from "@/lib/skills/lesson-skill-award";
+import { getSkillRegistryRecordByNumber } from "@/lib/skills/skills-registry";
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
 
 export type MedalDisplayStatus =
@@ -124,6 +126,23 @@ export function medalIdForModuleLesson(
   const skillNumber = skillNumberForModuleLesson(moduleNumber, lessonNumber);
   if (!tier || !skillNumber) return undefined;
   return medalIdForSkillNumber(skillNumber, tier);
+}
+
+export type ModuleCloserGoldMedal = {
+  skillSlug: string;
+  medalId: MedalIllustrationId;
+};
+
+/** Lesson 9 golds every skill in the module. Each one keeps its own medal file. */
+export function moduleCloserGoldMedals(
+  moduleNumber: number,
+): ModuleCloserGoldMedal[] {
+  return skillNumbersForModuleLesson(moduleNumber, 9).flatMap((skillNumber) => {
+    const skill = getSkillRegistryRecordByNumber(skillNumber);
+    const medalId = medalIdForSkillNumber(skillNumber, "gold");
+    if (!skill?.skillSlug || !medalId) return [];
+    return [{ skillSlug: skill.skillSlug, medalId }];
+  });
 }
 
 /** Module 1 convenience — prefer `medalIdForModuleLesson` for later modules. */

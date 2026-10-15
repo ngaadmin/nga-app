@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   medalIdForModuleLesson,
+  moduleCloserGoldMedals,
   resolveCompletionMedalId,
 } from "@/lib/academy/illustrations/medal-registry";
 
@@ -44,6 +45,11 @@ describe("lesson overview and screen 8 medals", () => {
         lessonNumber: 9,
       }),
     ).toBeUndefined();
+    expect(moduleCloserGoldMedals(1)).toEqual([
+      { skillSlug: "stop-and-think", medalId: "medal-skill1-gold" },
+      { skillSlug: "put-needs-first", medalId: "medal-skill2-gold" },
+      { skillSlug: "smart-saving", medalId: "medal-skill3-gold" },
+    ]);
   });
 
   it("keeps silver on lessons 4–6 even if the sheet used a bronze file", () => {

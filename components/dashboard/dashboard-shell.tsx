@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { DashboardNavigation } from "@/components/dashboard/dashboard-navigation";
+import { AppFooter } from "@/components/legal/app-footer";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import { HubIntro } from "@/components/dashboard/hub-intro/hub-intro";
 import { hubIntroIdFromPathname } from "@/lib/dashboard/hub-intro/resolve-hub";
@@ -79,6 +80,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         >
           {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
           {children}
+          {isLessonRoute ? null : <AppFooter className="mt-8" />}
         </main>
       </div>
     </div>

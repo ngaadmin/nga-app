@@ -1,10 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isPublicAppPath } from "@/lib/auth/public-routes";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
 
 export async function updateSession(request: NextRequest) {
   // Do not refresh Auth cookies on sign-out; that would undo cookie deletion.
-  if (request.nextUrl.pathname === "/api/auth/sign-out") {
+  // Public pages such as /privacy must render for guests and signed-in users.
+  if (
+    request.nextUrl.pathname === "/api/auth/sign-out" ||
+    isPublicAppPath(request.nextUrl.pathname)
+  ) {
     return NextResponse.next({ request });
   }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
 import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { registeredPlayPath } from "@/lib/onboarding/explorer-pending-consent";
@@ -696,6 +697,9 @@ export function SignInForm() {
             </Link>
           </p>
         ) : null}
+        <p className="text-center">
+          <PrivacyPolicyLink />
+        </p>
       </div>
     </section>
   );

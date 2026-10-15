@@ -168,11 +168,10 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     dragHint:
       "Drag the choices in the correct order, starting with what would be best for Lars to do.",
     axisLabel: "Best → Avoid",
-    submitLabel: "Submit Answer",
     items: [
-      { id: "keep", label: "Don't buy anything - keep the $5." },
-      { id: "cheaper", label: "Choose something cheaper for $5 to enjoy now." },
-      { id: "borrow", label: "Borrow $5 from dad to buy the $10 bottle." },
+      { id: "keep", emoji: "💰", label: "Don't buy anything - keep the $5." },
+      { id: "cheaper", emoji: "🛍️", label: "Choose something cheaper for $5 to enjoy now." },
+      { id: "borrow", emoji: "🙅", label: "Borrow $5 from dad to buy the $10 bottle." },
     ],
     correctOrder: ["keep", "cheaper", "borrow"],
     errors: {

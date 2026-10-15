@@ -244,9 +244,9 @@ function SpotlightGradedRounds({
     return (
       <LessonChoiceButton
         emoji={realEmoji(meta.icon)}
-        selected={isChosen && isCorrectChoice}
+        selected={isChosen}
+        locked={isChosen && isCorrectChoice}
         wrong={isChosen && !isCorrectChoice}
-        disabled={choice !== null}
         onClick={() => pick(which)}
       >
         {meta.label}
@@ -266,7 +266,6 @@ function SpotlightGradedRounds({
         glyph={glyph ?? undefined}
         display="emoji-label"
         selected={isChosen}
-        disabled={choice !== null}
         selectionVariant={
           isChosen
             ? resolveChoiceVariant(true, isCorrectChoice)

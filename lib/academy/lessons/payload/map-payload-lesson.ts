@@ -477,8 +477,30 @@ function looseBinaryChoice(
   };
 }
 
+function rankEmojiForLabel(label: string): string {
+  const text = label.toLowerCase();
+  if (text.includes("borrow")) return "🙅";
+  if (text.includes("cheaper")) return "🛍️";
+  if (text.includes("gelato") || text.includes("share")) return "🍦";
+  if (
+    text.includes("didn't buy") ||
+    text.includes("didn’t buy") ||
+    text.includes("don't buy") ||
+    text.includes("don’t buy") ||
+    text.includes("keep") ||
+    text.includes("wait")
+  ) {
+    return "💰";
+  }
+  if (text.includes("want") || text.includes("need") || /\bask\b/.test(text)) return "🤔";
+  if (text.includes("left")) return "💵";
+  if (text.includes("spend")) return "🛍️";
+  if (/\bbuy\b/.test(text)) return "💸";
+  return "📌";
+}
+
 function rankOrderFromSettings(raw: string, error: string): {
-  items: { id: string; label: string }[];
+  items: { id: string; label: string; emoji: string }[];
   correctOrder: string[];
   errors: Record<string, string>;
 } {
@@ -504,10 +526,14 @@ function rankOrderFromSettings(raw: string, error: string): {
     if (inItems) labels.push(line);
   }
 
-  const items = labels.map((label, index) => ({
-    id: itemSlug(label, index),
-    label,
-  }));
+  const items = labels.map((rawLabel, index) => {
+    const split = splitEmojiLabel(rawLabel);
+    return {
+      id: itemSlug(split.label, index),
+      label: split.label,
+      emoji: split.emoji ?? rankEmojiForLabel(split.label),
+    };
+  });
   const tokens = orderHint.split(",").map((token) => token.trim()).filter(Boolean);
   const ordered = tokens
     .map((token) =>
@@ -968,7 +994,6 @@ export function mapPayloadScreen(
         items: ranked.items,
         correctOrder: ranked.correctOrder,
         errors: ranked.errors,
-        submitLabel: "Submit Answer",
         ...picture,
       };
     }

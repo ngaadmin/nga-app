@@ -29,3 +29,15 @@ export function allocationNextEnabled(save: number, targetMin: number): boolean 
 export function allocationSavedBadge(targetMin: number): string {
   return `🔒 $${Math.max(0, Math.round(targetMin))} saved!`;
 }
+
+/** Knob diameter. The track is inset by half of this so the knob stays on the bar. */
+export const ALLOCATION_KNOB_PX = 44;
+
+export function allocationTrackInsetPx(knobPx = ALLOCATION_KNOB_PX): number {
+  return knobPx / 2;
+}
+
+/** One marker, sitting on the bar where the knob has to land. */
+export function allocationTargetMarker(targetMin: number): string {
+  return `Save $${Math.max(0, Math.round(targetMin))} 🎯`;
+}

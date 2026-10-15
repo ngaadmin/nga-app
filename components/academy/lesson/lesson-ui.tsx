@@ -4,6 +4,10 @@ import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } f
 import { forwardRef, useEffect } from "react";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import {
+  lessonTileSelection,
+  lessonTileShowsTick,
+} from "@/lib/academy/lessons/lesson-tile-feedback";
+import {
   lessonCardClass,
   lessonColumnLabelClass,
   lessonColumnLabelInkClass,
@@ -20,7 +24,6 @@ import {
   lessonIconLabelClass,
   lessonItemOrbClass,
   lessonIconOptionStackClass,
-  lessonIconTapSelectedClass,
   lessonSortBucketActiveClass,
   lessonSortBucketErrorClass,
   lessonSortBucketHeaderClass,
@@ -798,6 +801,17 @@ type LessonIconOptionProps = {
   selectionVariant?: LessonChoiceVariant;
 } & Omit<HTMLAttributes<HTMLButtonElement>, "children">;
 
+function LessonTileTick() {
+  return (
+    <span
+      className="absolute -right-1 -top-1 grid size-7 place-items-center rounded-full bg-white text-[15px] font-extrabold text-[#16A34A] shadow-[0_2px_6px_rgba(3,31,130,0.25)]"
+      aria-hidden
+    >
+      ✓
+    </span>
+  );
+}
+
 /**
  * Standard circular lesson option — emoji (or monogram) in circle, label below once.
  * Use for drag-sort pools, tap-reveal grids, and spotlight rounds.
@@ -832,6 +846,11 @@ export const LessonIconOption = forwardRef<
     !hideLabel && display !== "emoji-only" && display !== "label";
   const isWrongSelection = selectionVariant === "wrong";
   const isCorrectSelection = selectionVariant === "correct";
+  const tileSelection = lessonTileSelection({
+    selected: selected || isWrongSelection || isCorrectSelection,
+    variant: isWrongSelection ? "wrong" : isCorrectSelection ? "correct" : "neutral",
+  });
+  const showTick = lessonTileShowsTick(tileSelection);
 
   const circleContent = glyph ? (
     <span className="flex items-center justify-center" aria-hidden>
@@ -858,37 +877,37 @@ export const LessonIconOption = forwardRef<
     <button
       ref={ref}
       type="button"
+      {...buttonProps}
       aria-label={label}
       aria-pressed={selected}
       disabled={disabled}
+      data-selection={tileSelection === "idle" ? undefined : tileSelection}
       className={cn(
-        "relative flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)] transition-all active:scale-[0.98]",
+        "lesson-choice-tile relative flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)] transition-all active:scale-[0.98]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
-        isWrongSelection && "lesson-tile-shake bg-[#FFF1F2]",
-        isCorrectSelection && "bg-[#DCFCE7]",
-        selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
+        isWrongSelection && "lesson-tile-shake",
         disabled && "pointer-events-none opacity-60",
         chipClassName,
       )}
-      {...buttonProps}
     >
       {circleContent}
+      {showTick ? <LessonTileTick /> : null}
     </button>
   ) : (
     <div
+      data-selection={tileSelection === "idle" ? undefined : tileSelection}
       className={cn(
-        "relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)]",
+        "lesson-choice-tile relative pointer-events-none flex shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] shadow-[0_4px_10px_rgba(3,31,130,0.08)]",
         size === "default" && "size-[88px]",
         isCompact && lessonCircleSizeClass,
-        isWrongSelection && "lesson-tile-shake bg-[#FFF1F2]",
-        isCorrectSelection && "bg-[#DCFCE7]",
-        selected && !isWrongSelection && !isCorrectSelection && lessonIconTapSelectedClass,
+        isWrongSelection && "lesson-tile-shake",
         chipClassName,
       )}
       aria-hidden={showLabelBelow}
     >
       {circleContent}
+      {showTick ? <LessonTileTick /> : null}
     </div>
   );
 

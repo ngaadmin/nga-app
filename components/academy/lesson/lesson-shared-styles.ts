@@ -371,9 +371,9 @@ export function cnLessonChoice(
 export const lessonSortRowClass =
   "flex min-h-[3rem] w-full cursor-grab touch-none select-none items-center justify-center rounded-full border-0 bg-transparent px-4 py-2.5 text-center font-heading text-[18px] font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
 
-/** Rank-order card only (number sits outside in its own column). */
+/** Rank-order card: drag handle, emoji, then the choice. */
 export const lessonRankOrderCardClass =
-  "grid w-full min-w-0 grid-cols-[28px_1fr] cursor-grab touch-none select-none items-center gap-2.5 rounded-2xl bg-[#E8F6FC] px-3 py-3.5 font-sans text-[15px] font-medium text-[#031F82] active:cursor-grabbing";
+  "grid w-full min-w-0 grid-cols-[1.5rem_2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-2xl bg-[#E8F6FC] px-3 py-3.5 font-sans text-[15px] font-medium text-[#031F82] active:cursor-grabbing";
 
 export const lessonRankOrderNumberClass = lessonSequenceNumberClass;
 

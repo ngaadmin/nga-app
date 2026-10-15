@@ -8,6 +8,7 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   createGuestAccessSession,
@@ -36,6 +37,7 @@ export function CohortTrackPicker() {
       genericProfileId: reserved.id,
       curriculumCohort: cohort,
     });
+    wipeGuestDeviceProgress();
     saveGuestAccessSession(session);
     recordUsageEvent("login");
     router.push(DASHBOARD_ACADEMY_PATH);

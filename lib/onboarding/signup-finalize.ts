@@ -8,10 +8,16 @@ import {
   persistAccountProgressCacheFromLive,
 } from "@/lib/dashboard/account-progress-local";
 import { resetDashboardWalletForCurrentAccount } from "@/lib/dashboard/dashboard-wallet-storage";
+import { releaseGuestDeviceLocalCopy } from "@/lib/dev/guest-device-store";
+import { isExplorerPendingConsent } from "@/lib/onboarding/explorer-pending-consent";
 import {
+  absorbLiveProgressIntoHeldSnapshot,
   ensureGuestProgressSnapshot,
+  hasForeignHeldConsentSnapshot,
+  markGuestProgressHeldForConsent,
   mergeGuestProgressSnapshot,
   readGuestProgressSnapshot,
+  stageHeldConsentSnapshotForAccount,
 } from "@/lib/onboarding/guest-progress-snapshot";
 import {
   enforceCohortAccountState,
@@ -127,9 +133,14 @@ export async function finalizeRegisteredSignup(
   session: UserSession,
   options?: FinalizeSignupOptions,
 ): Promise<UserSession> {
+  if (typeof window !== "undefined") {
+    stageHeldConsentSnapshotForAccount(session);
+  }
   const prior = typeof window !== "undefined" ? readUserSession() : null;
   const hadGuestSnapshot =
     typeof window !== "undefined" && Boolean(readGuestProgressSnapshot());
+  const keepForeignDeviceProgress =
+    typeof window !== "undefined" && hasForeignHeldConsentSnapshot(session);
   const isTeacher =
     session.accountRole === "teacher" || session.isTeacher === true;
   // Returning login is already a registered profile (or a logged-out device).
@@ -164,13 +175,13 @@ export async function finalizeRegisteredSignup(
 
   if (isExplorerPendingConsentEmail) {
     // Email first — only persist after the approval message is handed off.
+    // Progress stays on the device until the parent approves.
     await dispatchOnboardingEmails(withMarketingGate, options);
     saveUserSession(withMarketingGate);
     upsertRegisteredAccount(withMarketingGate);
     if (shouldPreserveGuestProgress) {
-      mergeGuestProgressSnapshot();
+      markGuestProgressHeldForConsent();
     }
-    await persistRegisteredAccountProgress(withMarketingGate);
     return withMarketingGate;
   }
 
@@ -183,12 +194,23 @@ export async function finalizeRegisteredSignup(
   if (switchedOntoTeacher) {
     resetDashboardWalletForCurrentAccount();
   }
+  if (isExplorerPendingConsent(withMarketingGate)) {
+    if (shouldPreserveGuestProgress) {
+      markGuestProgressHeldForConsent();
+    }
+    await dispatchOnboardingEmails(withMarketingGate, options);
+    return withMarketingGate;
+  }
   if (shouldPreserveGuestProgress) {
+    absorbLiveProgressIntoHeldSnapshot();
     mergeGuestProgressSnapshot();
   }
   if (!switchedOntoTeacher) {
     await persistRegisteredAccountProgress(withMarketingGate);
   }
   await dispatchOnboardingEmails(withMarketingGate, options);
+  if (!keepForeignDeviceProgress) {
+    releaseGuestDeviceLocalCopy();
+  }
   return withMarketingGate;
 }

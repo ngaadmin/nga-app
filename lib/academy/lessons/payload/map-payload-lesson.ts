@@ -23,9 +23,9 @@ const ITEM_BUCKETS = new Set(["SHORT", "LONG", "NEED", "WANT", "YES", "NO"]);
 const BUCKET_LABEL: Record<string, { id: string; label: string; tone: "short" | "long" | "need" | "want"; icon: string }> = {
   SHORT: { id: "short", label: "Short Fun", tone: "short", icon: "⏱️" },
   LONG: { id: "long", label: "More Fun for Longer", tone: "long", icon: "🌱" },
-  NEED: { id: "need", label: "Needs", tone: "need", icon: "✅" },
+  NEED: { id: "need", label: "Needs", tone: "need", icon: "🛡️" },
   WANT: { id: "want", label: "Wants", tone: "want", icon: "✨" },
-  YES: { id: "yes", label: "Yes", tone: "need", icon: "✅" },
+  YES: { id: "yes", label: "Yes", tone: "need", icon: "🛡️" },
   NO: { id: "no", label: "No", tone: "want", icon: "🚫" },
 };
 

@@ -108,7 +108,7 @@ export const ACADEMY_LEVEL_PHASE_THEME: Record<
   2: { fill: "#8B5CF6", shadow: "#6D28D9", ring: "rgba(139, 92, 246, 0.4)" },
   3: { fill: "#FFA503", shadow: "#C88202", ring: "rgba(255, 165, 3, 0.4)" },
   4: { fill: "#6366F1", shadow: "#4338CA", ring: "rgba(99, 102, 241, 0.4)" },
-  5: { fill: "#22C55E", shadow: "#15803D", ring: "rgba(34, 197, 94, 0.4)" },
+  5: { fill: "#031F82", shadow: "#021558", ring: "rgba(3, 31, 130, 0.4)" },
   6: { fill: "#DCB766", shadow: "#B8943F", ring: "rgba(220, 183, 102, 0.4)" },
 };
 

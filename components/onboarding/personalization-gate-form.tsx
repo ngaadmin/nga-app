@@ -167,13 +167,13 @@ export function PersonalizationGateForm() {
               aria-describedby={errors.username ? "username-error" : undefined}
               className={cn(
                 fieldBase,
-                errors.username && "border-red-400 focus:border-red-500",
+                errors.username && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.username ? (
               <p
                 id="username-error"
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.username}
@@ -207,7 +207,7 @@ export function PersonalizationGateForm() {
                   fieldBase,
                   "appearance-none pr-10",
                   !birthYear && "text-nga-slate/60",
-                  errors.birthYear && "border-red-400 focus:border-red-500",
+                  errors.birthYear && "border-[#031F82] focus:border-[#031F82]",
                 )}
               >
                 <option value="" disabled>
@@ -252,7 +252,7 @@ export function PersonalizationGateForm() {
             {errors.birthYear ? (
               <p
                 id="birth-year-error"
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.birthYear}

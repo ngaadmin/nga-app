@@ -689,12 +689,12 @@ export function SignUpForm() {
                 aria-invalid={Boolean(errors.username)}
                 className={cn(
                   fieldBase,
-                  errors.username && "border-red-400 focus:border-red-500",
+                  errors.username && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.username ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.username}
@@ -741,12 +741,12 @@ export function SignUpForm() {
                 aria-invalid={Boolean(errors.password)}
                 className={cn(
                   fieldBase,
-                  errors.password && "border-red-400 focus:border-red-500",
+                  errors.password && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.password ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.password}
@@ -775,12 +775,12 @@ export function SignUpForm() {
                 aria-invalid={Boolean(errors.confirmPassword)}
                 className={cn(
                   fieldBase,
-                  errors.confirmPassword && "border-red-400 focus:border-red-500",
+                  errors.confirmPassword && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.confirmPassword ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.confirmPassword}
@@ -791,7 +791,7 @@ export function SignUpForm() {
             {errors.form ? (
               <div className="space-y-3">
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.form}
@@ -839,7 +839,7 @@ export function SignUpForm() {
                 {errors.parentalConsent ? (
                   <p
                     id="parental-consent-error"
-                    className="font-sans text-sm font-medium text-red-600"
+                    className="font-sans text-sm font-medium text-[#031F82]"
                     role="alert"
                   >
                     {errors.parentalConsent}
@@ -1010,7 +1010,7 @@ export function SignUpForm() {
               })}
             </div>
             {errors.track ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.track}
               </p>
             ) : null}
@@ -1050,12 +1050,12 @@ export function SignUpForm() {
               aria-describedby="signup-username-tip"
               className={cn(
                 fieldBase,
-                errors.username && "border-red-400 focus:border-red-500",
+                errors.username && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.username ? (
               <p
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.username}
@@ -1086,12 +1086,12 @@ export function SignUpForm() {
                 className={cn(
                   fieldBase,
                   errors.learnerEmail &&
-                    "border-red-400 focus:border-red-500",
+                    "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.learnerEmail ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.learnerEmail}
@@ -1125,12 +1125,12 @@ export function SignUpForm() {
               aria-invalid={Boolean(errors.password)}
               className={cn(
                 fieldBase,
-                errors.password && "border-red-400 focus:border-red-500",
+                errors.password && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.password ? (
               <p
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.password}
@@ -1159,12 +1159,12 @@ export function SignUpForm() {
               aria-invalid={Boolean(errors.confirmPassword)}
               className={cn(
                 fieldBase,
-                errors.confirmPassword && "border-red-400 focus:border-red-500",
+                errors.confirmPassword && "border-[#031F82] focus:border-[#031F82]",
               )}
             />
             {errors.confirmPassword ? (
               <p
-                className="font-sans text-sm font-medium text-red-600"
+                className="font-sans text-sm font-medium text-[#031F82]"
                 role="alert"
               >
                 {errors.confirmPassword}
@@ -1209,12 +1209,12 @@ export function SignUpForm() {
                 }
                 className={cn(
                   fieldBase,
-                  errors.parentEmail && "border-red-400 focus:border-red-500",
+                  errors.parentEmail && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.parentEmail ? (
                 <p
-                  className="font-sans text-sm font-medium text-red-600"
+                  className="font-sans text-sm font-medium text-[#031F82]"
                   role="alert"
                 >
                   {errors.parentEmail}
@@ -1232,7 +1232,7 @@ export function SignUpForm() {
 
           {errors.form ? (
             <p
-              className="font-sans text-sm font-medium text-red-600"
+              className="font-sans text-sm font-medium text-[#031F82]"
               role="alert"
             >
               {errors.form}

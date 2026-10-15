@@ -89,8 +89,8 @@ function LedgerSection({ heading, entries, copy, variant }: LedgerSectionProps) 
               <span
                 className={cn(
                   "shrink-0 font-heading text-xs font-extrabold tabular-nums",
-                  variant === "in" && "text-[#15803D]",
-                  variant === "out" && "text-[#BE123C]",
+                  variant === "in" && "text-[#031F82]",
+                  variant === "out" && "text-[#C88202]",
                   variant === "neutral" && "text-[#031F82]",
                 )}
               >
@@ -155,18 +155,18 @@ export function AdvancedMoneyToolsLedgerPanel({
       <div className="rounded-xl border border-[#BDE9FB]/80 bg-gradient-to-br from-[#F0FBFF] to-white p-3">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#15803D]">
+            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
               {copy.moneyInLabel}
             </p>
-            <p className="font-heading text-lg font-extrabold tabular-nums text-[#15803D]">
+            <p className="font-heading text-lg font-extrabold tabular-nums text-[#031F82]">
               +{formatMoney(summary.totalIn)}
             </p>
           </div>
           <div className="text-right">
-            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#BE123C]">
+            <p className="font-heading text-[10px] font-bold uppercase tracking-wide text-[#C88202]">
               {copy.moneyOutLabel}
             </p>
-            <p className="font-heading text-lg font-extrabold tabular-nums text-[#BE123C]">
+            <p className="font-heading text-lg font-extrabold tabular-nums text-[#C88202]">
               -{formatMoney(summary.totalOut)}
             </p>
           </div>
@@ -176,11 +176,11 @@ export function AdvancedMoneyToolsLedgerPanel({
           aria-hidden
         >
           <span
-            className="h-full bg-[#22C55E] transition-[width] duration-300"
+            className="h-full bg-[#031F82] transition-[width] duration-300"
             style={{ width: `${barWidths.inPercent}%` }}
           />
           <span
-            className="h-full bg-[#FB7185] transition-[width] duration-300"
+            className="h-full bg-[#FFB822] transition-[width] duration-300"
             style={{ width: `${barWidths.outPercent}%` }}
           />
         </div>

@@ -94,10 +94,10 @@ export function TeacherSignUpForm() {
                   setErrors((prev) => ({ ...prev, email: undefined, form: undefined }));
                 }}
                 aria-invalid={Boolean(errors.email)}
-                className={cn(fieldBase, errors.email && "border-red-400 focus:border-red-500")}
+                className={cn(fieldBase, errors.email && "border-[#031F82] focus:border-[#031F82]")}
               />
               {errors.email ? (
-                <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                   {errors.email}
                 </p>
               ) : null}
@@ -126,17 +126,17 @@ export function TeacherSignUpForm() {
                 aria-invalid={Boolean(errors.password)}
                 className={cn(
                   fieldBase,
-                  errors.password && "border-red-400 focus:border-red-500",
+                  errors.password && "border-[#031F82] focus:border-[#031F82]",
                 )}
               />
               {errors.password ? (
-                <p className="font-sans text-sm font-medium text-red-600" role="alert">
+                <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                   {errors.password}
                 </p>
               ) : null}
             </div>
             {errors.form ? (
-              <p className="font-sans text-sm font-medium text-red-600" role="alert">
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.form}
               </p>
             ) : null}

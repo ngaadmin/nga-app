@@ -281,7 +281,7 @@ export function CashInPointsPanel({
 
         {claimError ? (
           <p
-            className="mt-2 font-sans text-xs font-semibold text-red-600"
+            className="mt-2 font-sans text-xs font-semibold text-[#031F82]"
             role="alert"
           >
             {claimError}

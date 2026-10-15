@@ -144,7 +144,7 @@ export function ParentConsentApprovalPanel() {
           </p>
           {errorMessage ? (
             <p
-              className="font-sans text-sm font-medium text-red-600"
+              className="font-sans text-sm font-medium text-[#031F82]"
               role="alert"
             >
               {errorMessage}

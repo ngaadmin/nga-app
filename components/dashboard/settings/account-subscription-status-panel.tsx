@@ -54,13 +54,13 @@ import { cn } from "@/lib/utils/cn";
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 const quietDeleteClass =
-  "font-sans text-sm font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
+  "font-sans text-sm font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-[#031F82] disabled:cursor-not-allowed disabled:opacity-40";
 
 const approveButtonClass =
   "shrink-0 rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
 
 const destructiveCtaClass =
-  "rounded-nga-lg border-b-4 border-red-700 bg-red-600 font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
+  "rounded-nga-lg border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
 
 type HouseholdView = {
   master: UserSession | null;
@@ -753,13 +753,13 @@ export function AccountSubscriptionStatusPanel() {
           </ul>
 
           {householdLoadError ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {householdLoadError}
             </p>
           ) : null}
 
           {approveError ? (
-            <p className="font-sans text-sm font-medium text-red-600" role="alert">
+            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {approveError}
             </p>
           ) : null}
@@ -905,7 +905,7 @@ export function AccountSubscriptionStatusPanel() {
           </label>
         </div>
         {deleteError ? (
-          <p className="mt-3 font-sans text-sm font-medium text-red-600" role="alert">
+          <p className="mt-3 font-sans text-sm font-medium text-[#031F82]" role="alert">
             {deleteError}
           </p>
         ) : null}

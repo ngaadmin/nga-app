@@ -35,8 +35,8 @@ If Pathfinder or Maverick story is the Explorer story, put `copied` in that text
 | Lesson Number | e.g. `3` |
 | Lesson Title | e.g. `Plugging Leaks` |
 | Level | Academy level `1`–`6` |
-| **Pathfinder Character** | Main teen story (ages 13–15): **Holly**, **Senna**, or **Lucas** |
-| **Explorer Character** | Younger story (ages 10–12): **Lars** or **Mia** — default `Lars` |
+| **Pathfinder Character** | Main teen story (ages 14–16): **Holly**, **Senna**, or **Lucas** |
+| **Explorer Character** | Younger story (ages 10–13): **Lars** or **Mia** — default `Lars` |
 | **Maverick Character** | Older teen (ages 17+): **Dash**, **Saskia**, or **Immi** — default `Dash` |
 | **Support Character** | Optional — **Eva**, **Tom**, or a peer. Use `{support}` in story text. |
 | Skill Name | Bronze skill on Screen 8, e.g. `Stop & Think` |

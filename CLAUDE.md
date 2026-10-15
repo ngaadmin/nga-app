@@ -26,11 +26,11 @@
 * **Token Stewardship:** Maximize unit economics. Use lightweight local math and charting libraries for dashboard calculations; do not call the Grok API for static processing.
 
 ## 5. Global Minor Compliance & Parental Oversight (Strictest Global Standards)
-* **Age-Gated Verification:** Implement a strict, neutral age-gate during the initial onboarding flow to accurately segregate users into legal compliance tiers (Explorers: 10–13, Titans: 14–17+).
-* **Verifiable Parental Consent (VPC):** For any user under 13 (COPPA/GDPR-K threshold), the application must block account creation until a parent or legal guardian creates a verified master account, grants explicit consent, and completes verification.
+* **Age-Gated Verification:** Implement a strict, neutral age-gate during the initial onboarding flow to accurately segregate users into legal compliance tiers (Explorer: 10-13, Pathfinder: 14-16, Maverick: 17+).
+* **Verifiable Parental Consent (VPC):** For any user 13 or under (COPPA/GDPR-K threshold), the application must block account creation until a parent or legal guardian creates a verified master account, grants explicit consent, and completes verification.
 * **Scaled Parental Oversight:** 
-  - *Explorers (10–13):* The parent account maintains full read-access to progress tracking, milestone updates, and app activity via a secure parent dashboard link.
-  - *Titans (14–17+):* Shift toward privacy-by-design that respects young adult autonomy, providing scaled parental visibility while maintaining peer-to-peer user boundaries.
+  - *Explorers (10-13):* The parent account maintains full read-access to progress tracking, milestone updates, and app activity via a secure parent dashboard link.
+  - *Pathfinder (14-16) and Maverick (17+):* Shift toward privacy-by-design that respects young adult autonomy, providing scaled parental visibility while maintaining peer-to-peer user boundaries.
 * **Data Minimization & Privacy by Design:** Turn off all non-essential telemetry, tracking pixels, or behavioral profiling for minor accounts by default. Absolutely no PII leakage or unauthorized collection of identifier data.
 
 ## 6. Standard DevOps & System Commands

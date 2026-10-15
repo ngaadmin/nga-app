@@ -26,9 +26,9 @@ describe("mastery cohort list labels", () => {
       "pathfinder",
       "maverick",
     ]);
-    expect(masteryCohortNameAndAgeLabel("explorer")).toBe("Explorer 10-12");
-    expect(masteryCohortNameAndAgeLabel("pathfinder")).toBe("Pathfinder 13-15");
-    expect(masteryCohortNameAndAgeLabel("maverick")).toBe("Maverick 16+");
+    expect(masteryCohortNameAndAgeLabel("explorer")).toBe("Explorer 10-13");
+    expect(masteryCohortNameAndAgeLabel("pathfinder")).toBe("Pathfinder 14-16");
+    expect(masteryCohortNameAndAgeLabel("maverick")).toBe("Maverick 17+");
     for (const cohort of MASTERY_COHORT_ORDER) {
       const range = masteryCohortAgeRangeLabel(cohort);
       expect(range).not.toMatch(/[\u2013\u2014]/);

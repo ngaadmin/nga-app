@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
 import { Button } from "@/components/ui/button";
 import { OnboardingHeader } from "@/components/onboarding/onboarding-header";
 import { createTeacherAccount } from "@/lib/school/create-teacher-account";
@@ -145,6 +146,9 @@ export function TeacherSignUpForm() {
             </Button>
           </form>
           )}
+          <p className="mt-6 text-center">
+            <PrivacyPolicyLink />
+          </p>
         </div>
       </section>
     </>

@@ -27,9 +27,6 @@ async function clickNext(page: Page): Promise<void> {
 
 async function placeWord(page: Page, word: string): Promise<void> {
   await page.getByRole("button", { name: word, exact: true }).click();
-  await page
-    .getByRole("button", { name: /Place the selected word here/i })
-    .click();
 }
 
 async function sortItem(page: Page, item: string, bucket: string): Promise<void> {
@@ -71,7 +68,14 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await page.getByRole("button", { name: /candy is gone/i }).click();
   await clickNext(page);
 
-  await page.getByRole("button", { name: /Show me/i }).click();
+  for (const item of [
+    "Sour Worms",
+    "Cinema Popcorn",
+    "Wireless Headphones",
+    "Skateboard",
+  ]) {
+    await page.getByRole("button", { name: item, exact: true }).click();
+  }
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeVisible();
   await clickNext(page);
 

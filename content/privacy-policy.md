@@ -11,10 +11,11 @@ The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achiev
 |---|---|
 | **Students (school class seats)** | A username created by the teacher; a placeholder email (not a real address); the shared class password; role, learning track and link to their teacher; progress (lessons completed, XP/points, skills, Vault jars and goals, streak); usage activity events linked to the username (for example, lessons opened or completed). |
 | **Students (parent accounts)** | A username; a placeholder email (not a real address); the link to the parent's account; role and learning track; progress and usage activity events, as above. |
+| **Students (self sign-up)** | A username; role and learning track; progress and usage activity events, as above. We ask for the year of birth once at sign-up to confirm the right age group and whether a parent needs to approve. We don't store it: we keep only whether parent approval was required and when the check happened. |
 | **Parents and guardians** | Email address; the link between the parent and child accounts; guardian email addresses on consent requests. |
 | **Teachers** | Email address; password (stored as a hash); a generated username (not a name); seat limit, learning track and the shared class password; the classes and student seats the teacher creates. We do not collect teachers' names or school names. |
 
-We do **not** collect students' real names, dates of birth, birth years or home addresses. We do **not** store IP addresses. IP addresses are used briefly, in memory only, to limit misuse (rate-limiting).
+We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. We do **not** store IP addresses. IP addresses are used briefly, in memory only, to limit misuse (rate-limiting).
 
 ## 3. How we collect it
 

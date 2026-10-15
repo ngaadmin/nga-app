@@ -15,6 +15,7 @@ import {
   persistAccountProgressCacheFromLive,
   restoreAccountProgressForUser,
 } from "@/lib/dashboard/account-progress-local";
+import { isExplorerPendingConsent } from "@/lib/onboarding/explorer-pending-consent";
 import { readUserSession } from "@/lib/onboarding/guest-session";
 import {
   loadLearnerProgressByUserId,
@@ -75,8 +76,13 @@ function logProgressWrite(
   });
 }
 
+function pendingConsentBlocksProgressWrite(): boolean {
+  return isExplorerPendingConsent(readUserSession());
+}
+
 async function pushAccountProgressNow(): Promise<void> {
   if (typeof window === "undefined" || pushInFlight) return;
+  if (pendingConsentBlocksProgressWrite()) return;
   const owner = registeredOwner();
   if (!owner) return;
 
@@ -115,6 +121,7 @@ async function pushAccountProgressNow(): Promise<void> {
 
 export function scheduleAccountProgressPush(): void {
   if (typeof window === "undefined") return;
+  if (pendingConsentBlocksProgressWrite()) return;
   const owner = registeredOwner();
   if (!owner) return;
 
@@ -129,6 +136,7 @@ export function scheduleAccountProgressPush(): void {
 /** Immediate cloud + cache write so logout cannot drop the only copy. */
 export async function persistRegisteredProgressNow(): Promise<void> {
   if (typeof window === "undefined") return;
+  if (pendingConsentBlocksProgressWrite()) return;
   const owner = registeredOwner();
   if (!owner) return;
 
@@ -158,6 +166,7 @@ export async function restoreRegisteredAccountProgress(input?: {
   remotePayload?: AccountProgressPayload | null;
 }): Promise<void> {
   if (typeof window === "undefined" || restoreInFlight) return;
+  if (pendingConsentBlocksProgressWrite()) return;
 
   const owner = input?.userId || input?.username ? input : registeredOwner();
   if (!owner) return;

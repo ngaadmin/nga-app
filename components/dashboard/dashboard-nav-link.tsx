@@ -74,7 +74,7 @@ export function DashboardNavLink({
       onClick={handleClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-nga-lg border-2 border-b-4 px-4 py-3 font-heading text-sm font-bold",
+        "flex min-w-0 items-center gap-3 rounded-nga-lg border-2 border-b-4 px-4 py-3 font-heading text-sm font-bold",
         TACTILE_PRESS,
         isActive
           ? "border-nga-secondary border-b-nga-secondary bg-nga-secondary/15 text-nga-primary"
@@ -82,7 +82,7 @@ export function DashboardNavLink({
       )}
     >
       <Icon className="size-6 shrink-0" />
-      <span>{item.label}</span>
+      <span className="min-w-0 leading-tight">{item.label}</span>
     </Link>
   );
 }

@@ -36,6 +36,10 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import {
+  ageTrackFitMessage,
+  decideLearnerAge,
+} from "@/lib/onboarding/signup-age-check";
+import {
   lookupConsentToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
@@ -43,10 +47,6 @@ import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
 } from "@/lib/onboarding/registered-accounts";
-import {
-  ageTrackFitMessage,
-  decideLearnerAge,
-} from "@/lib/onboarding/signup-age-check";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
@@ -636,6 +636,14 @@ export function SignUpForm() {
         nextErrors.track ?? "Pick the learning track for this profile.";
     }
 
+    const ageDecision =
+      birthYear == null ? null : decideLearnerAge(birthYear);
+    if (ageDecision && cohort && ageDecision.cohort !== cohort) {
+      setCohort(ageDecision.cohort);
+      setAgeFitMessage(ageTrackFitMessage(ageDecision.cohort));
+      return;
+    }
+
     if (!cohort || Object.keys(nextErrors).length > 0) {
       focusLearnerStepForErrors(nextErrors);
       setErrors({
@@ -692,8 +700,7 @@ export function SignUpForm() {
       }
 
       const savedCohort = result.cohort;
-      const isPendingConsent =
-        result.accountStatus === "pending_consent" || savedCohort === "explorer";
+      const isPendingConsent = result.accountStatus === "pending_consent";
       const childSession = convertToRegisteredProfile({
         username: result.username,
         accountRole: "child",
@@ -1288,7 +1295,7 @@ export function SignUpForm() {
                       id="signup-parent-email-hint"
                       className="font-sans text-sm font-bold text-purple-700"
                     >
-                      A parent/guardian needs to approve this.
+                      Approval saves your XP. You can keep playing while you wait.
                     </p>
                   ) : null}
                   <input

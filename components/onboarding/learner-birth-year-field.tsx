@@ -3,9 +3,16 @@
 import {
   BIRTH_YEAR_HELPER,
   BIRTH_YEAR_PROMPT,
-  birthYearOptions,
 } from "@/lib/onboarding/signup-age-check";
 import { cn } from "@/lib/utils/cn";
+
+function birthYearOptions(referenceYear = new Date().getFullYear()): number[] {
+  const newest = referenceYear - 9;
+  const oldest = referenceYear - 31;
+  const years: number[] = [];
+  for (let year = newest; year >= oldest; year -= 1) years.push(year);
+  return years;
+}
 
 export const learnerFieldClass =
   "h-[52px] w-full rounded-2xl border-0 bg-[#EDF5FF] px-4 font-sans text-base text-nga-ink outline-none placeholder:text-nga-slate/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary";

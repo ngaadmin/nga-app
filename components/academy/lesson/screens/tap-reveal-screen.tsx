@@ -2,103 +2,102 @@
 
 import { useEffect, useState } from "react";
 import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonIconOption,
+  LessonIconReveal,
+  LessonScreenLayout,
+} from "@/components/academy/lesson/lesson-ui";
 import type { TapRevealScreenConfig } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
-const STEP_MS = 520;
-
+/**
+ * Flash Tap: each item opens when the learner taps it.
+ * Advance is `all-taps-revealed` — Next stays hidden until every item is open.
+ */
 export function TapRevealScreen({
   screen,
   screenIndex,
   flow,
 }: StandardScreenProps<TapRevealScreenConfig>) {
-  const [placedCount, setPlacedCount] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const done = screen.items.length === 0 || placedCount >= screen.items.length;
+  const [revealedIds, setRevealedIds] = useState<readonly string[]>([]);
+  const revealed = new Set(revealedIds);
+  const done =
+    screen.items.length === 0 ||
+    screen.items.every((item) => revealed.has(item.id));
 
   useEffect(() => {
-    if (!playing || done) return;
-    const timer = window.setTimeout(() => {
-      setPlacedCount((current) => current + 1);
-    }, STEP_MS);
-    return () => window.clearTimeout(timer);
-  }, [done, playing, placedCount]);
+    if (done) flow.markScreenReady(screenIndex);
+  }, [done, flow, screenIndex]);
 
-  useEffect(() => {
-    if (done && (playing || screen.items.length === 0)) {
-      flow.markScreenReady(screenIndex);
-    }
-  }, [done, flow, playing, screen.items.length, screenIndex]);
-
-  const placed = new Set(screen.items.slice(0, placedCount).map((item) => item.id));
-  const waiting = screen.items.filter((item) => !placed.has(item.id));
-
-  const show = () => {
-    if (done) {
-      flow.handleNext({ canAdvance: true });
-      return;
-    }
-    setPlaying(true);
+  const revealItem = (id: string) => {
+    setRevealedIds((current) =>
+      current.includes(id) ? current : [...current, id],
+    );
   };
+
+  const waiting = screen.items.filter((item) => !revealed.has(item.id));
 
   return (
     <LessonScreenLayout
       intro={screen.intro}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       fill
+      gameClassName="min-h-0 overflow-y-auto"
     >
-      <button type="button" onClick={show} className={cn(lessonNextButtonClass, "mb-4 w-full")}>
-        {done && (playing || screen.items.length === 0) ? "Next" : "Show me 👀"}
-      </button>
       {waiting.length > 0 ? (
         <div className="mb-4 flex flex-wrap justify-center gap-3">
           {waiting.map((item) => (
-            <div
+            <LessonIconOption
               key={item.id}
-              className="grid min-w-[7.5rem] place-items-center gap-1 bg-transparent px-3 py-3 text-center text-[#14213D]"
-            >
-              {item.emoji ? (
-                <span className="text-[2.4rem] leading-none" aria-hidden>
-                  {item.emoji}
-                </span>
-              ) : null}
-              <span className="font-sans text-sm font-semibold">{item.label}</span>
-            </div>
+              label={item.label}
+              emoji={item.emoji}
+              size="compact"
+              className="w-[calc(50%-0.375rem)] min-w-0 max-w-[11rem]"
+              labelClassName="w-full min-w-0 break-words"
+              onClick={() => revealItem(item.id)}
+            />
           ))}
         </div>
       ) : null}
-      <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-2 gap-3">
         {screen.buckets.map((bucket) => {
-          const revealed = screen.items.filter(
-            (item) => item.bucket === bucket.id && placed.has(item.id),
+          const placed = screen.items.filter(
+            (item) => item.bucket === bucket.id && revealed.has(item.id),
           );
           return (
             <div
               key={bucket.id}
-              className="flex min-h-40 flex-col gap-2 rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F8FCFF] p-3"
+              className="flex min-h-40 min-w-0 flex-col gap-2 rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F8FCFF] p-3"
             >
-              <h3 className="m-0 font-heading text-base font-bold text-[#031F82]">{bucket.label}</h3>
-              <div className="flex flex-1 flex-col gap-2">
-                {revealed.map((item) => (
-                  <div
+              <h3 className="m-0 break-words font-heading text-base font-bold leading-snug text-[#031F82]">
+                {bucket.label}
+              </h3>
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                {placed.map((item) => (
+                  <LessonIconReveal
                     key={item.id}
-                    className="flex items-center gap-2 rounded-xl bg-white px-2 py-2 font-sans text-sm font-semibold text-[#031F82] shadow-[0_4px_10px_rgba(3,31,130,0.08)]"
-                  >
-                    {item.emoji ? (
-                      <span className="text-[1.8rem] leading-none" aria-hidden>
-                        {item.emoji}
-                      </span>
-                    ) : null}
-                    <span>{item.label}</span>
-                  </div>
+                    label={item.label}
+                    emoji={item.emoji}
+                    size="compact"
+                    className="w-full min-w-0"
+                    labelClassName="w-full min-w-0 break-words"
+                  />
                 ))}
               </div>
             </div>
           );
         })}
       </div>
+      {done ? (
+        <button
+          type="button"
+          onClick={() => flow.handleNext({ canAdvance: true })}
+          className={cn(lessonNextButtonClass, "mt-4 w-full")}
+        >
+          Next
+        </button>
+      ) : null}
     </LessonScreenLayout>
   );
 }

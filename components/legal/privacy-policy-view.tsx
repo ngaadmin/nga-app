@@ -23,14 +23,14 @@ function InlineNodeView({ node }: { node: InlineNode }) {
   if (node.kind === "text") return node.value;
   if (node.kind === "strong") {
     return (
-      <strong className="font-bold text-[#031F82]">
+      <strong className="font-sans font-semibold text-[#031F82]">
         <InlineView nodes={node.children} />
       </strong>
     );
   }
   if (node.kind === "em") {
     return (
-      <em>
+      <em className="font-sans font-semibold not-italic">
         <InlineView nodes={node.children} />
       </em>
     );
@@ -49,18 +49,18 @@ function InlineNodeView({ node }: { node: InlineNode }) {
   );
 }
 
-const bodyClass = "font-sans text-base leading-relaxed text-[#1E3A5F]";
+const bodyClass = "font-sans text-base font-normal leading-normal text-[#1E3A5F]";
 
 function FirstColumnLabel({ nodes }: { nodes: InlineNode[] }) {
   const { label, qualifier } = splitTrailingQualifier(inlineText(nodes));
 
   return (
     <span className="block">
-      <span className="block text-balance font-heading font-semibold text-[#031F82]">
+      <span className="block font-heading text-base font-semibold leading-snug text-[#031F82]">
         {label}
       </span>
       {qualifier ? (
-        <span className="mt-0.5 block whitespace-nowrap font-sans text-sm font-semibold text-[#5B6B8C]">
+        <span className="mt-0.5 block font-sans text-sm font-semibold leading-normal text-[#5B6B8C]">
           {qualifier}
         </span>
       ) : null}
@@ -93,7 +93,7 @@ function TableView({
       </div>
 
       <div className="hidden overflow-hidden rounded-[20px] border border-[#DCE6F5] md:block">
-        <table className="w-full border-collapse text-left font-sans text-[15px] leading-relaxed text-[#1E3A5F]">
+        <table className="w-full table-fixed border-collapse text-left font-sans text-[15px] font-normal leading-normal text-[#1E3A5F]">
           <thead>
             <tr className="border-b border-[#E6EDF8] bg-[#EDF5FF]">
               {headers.map((header, index) => (
@@ -101,8 +101,8 @@ function TableView({
                   key={index}
                   className={
                     index === 0
-                      ? "w-[30%] min-w-[180px] whitespace-normal text-balance px-5 py-4 text-left font-heading text-sm font-semibold uppercase tracking-wide text-[#031F82]"
-                      : "px-5 py-4 text-left font-heading text-sm font-semibold uppercase tracking-wide text-[#031F82]"
+                      ? "w-[30%] whitespace-normal px-5 py-4 text-left font-heading text-sm font-semibold leading-snug text-[#031F82]"
+                      : "px-5 py-4 text-left font-heading text-sm font-semibold leading-snug text-[#031F82]"
                   }
                 >
                   <InlineView nodes={header} />
@@ -124,14 +124,14 @@ function TableView({
                   cellIndex === 0 ? (
                     <td
                       key={cellIndex}
-                      className="w-[30%] min-w-[180px] whitespace-normal px-5 py-4 text-balance align-top"
+                      className="w-[30%] whitespace-normal px-5 py-4 align-top font-sans leading-normal"
                     >
                       <FirstColumnLabel nodes={cell} />
                     </td>
                   ) : (
                     <td
                       key={cellIndex}
-                      className="px-5 py-4 align-top font-sans text-[15px] leading-relaxed text-[#1E3A5F]"
+                      className="px-5 py-4 align-top font-sans text-[15px] font-normal leading-normal text-[#1E3A5F]"
                     >
                       <InlineView nodes={cell} />
                     </td>
@@ -165,7 +165,7 @@ function BlockView({
 
   if (block.kind === "h2") {
     return (
-      <h2 className="mt-10 font-heading text-xl font-extrabold leading-snug text-[#031F82]">
+      <h2 className="mt-8 font-heading text-xl font-extrabold leading-snug text-[#031F82]">
         <InlineView nodes={block.children} />
       </h2>
     );
@@ -206,7 +206,7 @@ export function PrivacyPolicyView({
   blocks: PrivacyBlock[];
 }): ReactNode {
   return (
-    <article>
+    <article className="font-sans text-base font-normal leading-normal text-[#1E3A5F]">
       {blocks.map((block, index) => (
         <BlockView
           key={index}

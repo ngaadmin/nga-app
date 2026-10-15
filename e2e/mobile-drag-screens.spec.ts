@@ -65,8 +65,16 @@ test("mobile drag completes the sentence, quick-pick rounds, swipe, and didn't-b
   await expect(page.getByText(/that thought is rushing you/i)).toBeVisible();
   await expect(page.getByLabel("3 of 4 lives remaining")).toBeVisible();
   await expect(next).toBeDisabled();
-  for (const card of [/get it cheaper later/i, /sleep on it/i, /ask my friends/i]) {
-    await page.getByRole("button", { name: card }).click();
+  await expect(
+    page.getByRole("button", { name: /limited time offer/i }),
+  ).not.toHaveAttribute("aria-pressed", "true");
+  const rounds = [/get it cheaper later/i, /sleep on it/i, /ask my friends/i];
+  for (const [index, card] of rounds.entries()) {
+    const choice = page.getByRole("button", { name: card });
+    await choice.click();
+    if (index < rounds.length - 1) {
+      await expect(choice).toBeHidden();
+    }
   }
   await expect(next).toBeEnabled();
 

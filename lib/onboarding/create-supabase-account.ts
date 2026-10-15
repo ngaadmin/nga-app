@@ -48,10 +48,8 @@ export type CreateSupabaseAccountInput = {
   /** Forced false for Explorers. */
   marketingOptIn?: boolean;
   /**
-   * Learner sign-up only. Checked once to choose the track, then dropped.
-   * Never written to the profile, Auth metadata, or logs. Omit when a
-   * parent adds the child. Age-check profile columns stay off this write
-   * until that migration is applied.
+   * Learner sign-up only. Checked once, then dropped. Never written to the
+   * profile, Auth metadata, or logs. Omit for a parent-added child.
    */
   birthYear?: number;
   /**
@@ -99,6 +97,7 @@ export async function createSupabaseAccount(
     learnerEmail,
     parentEmail,
     marketingOptIn,
+    ageCheck,
   } = parsed.value;
   const requirements = getSignupRequirementsForCohort(cohort);
   const accountStatus = toSupabaseAccountStatus(
@@ -177,6 +176,7 @@ export async function createSupabaseAccount(
     accountStatus,
     marketingOptIn,
     consentApprovedAt: approvedAt,
+    ageCheck,
   });
   if (!profileSaved.ok) {
     await admin.auth.admin.deleteUser(created.userId);
@@ -273,6 +273,8 @@ type ParsedSignup = {
   learnerEmail: string | null;
   parentEmail: string | null;
   marketingOptIn: boolean;
+  /** Present only after a learner age check. The birth year is not kept. */
+  ageCheck: { parentApprovalRequired: boolean; checkedAt: string } | null;
 };
 
 function parseSignupInput(
@@ -299,12 +301,17 @@ function parseSignupInput(
   }
 
   let cohort = pickedCohort;
+  let ageCheck: ParsedSignup["ageCheck"] = null;
   if (!parentInitiated) {
     const decision = decideLearnerAge(input.birthYear ?? Number.NaN);
     if (!decision) {
       return { ok: false, error: "Choose the year you were born." };
     }
     cohort = decision.cohort;
+    ageCheck = {
+      parentApprovalRequired: decision.parentApprovalRequired,
+      checkedAt: new Date().toISOString(),
+    };
   }
 
   const password = input.password;
@@ -349,10 +356,8 @@ function parseSignupInput(
       password,
       learnerEmail,
       parentEmail,
-      marketingOptIn:
-        parentInitiated || cohort === "explorer"
-          ? false
-          : Boolean(input.marketingOptIn),
+      marketingOptIn: parentInitiated ? false : Boolean(input.marketingOptIn),
+      ageCheck,
     },
   };
 }
@@ -384,6 +389,7 @@ async function saveLearnerProfile(
     accountStatus: SupabaseAccountStatus;
     marketingOptIn: boolean;
     consentApprovedAt?: string | null;
+    ageCheck?: { parentApprovalRequired: boolean; checkedAt: string } | null;
   },
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const payload = {
@@ -394,6 +400,12 @@ async function saveLearnerProfile(
     marketing_opt_in: input.marketingOptIn,
     ...(input.consentApprovedAt
       ? { consent_approved_at: input.consentApprovedAt }
+      : {}),
+    ...(input.ageCheck
+      ? {
+          parent_approval_required: input.ageCheck.parentApprovalRequired,
+          age_checked_at: input.ageCheck.checkedAt,
+        }
       : {}),
   };
 

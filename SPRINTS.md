@@ -104,7 +104,7 @@
 
 - [x] Task 3.11: Child-Initiated Point Conversion Interface - ship Settings Child Mode **Cash In Your Points** panel with flipped conversion rate slider ($0.50–$5.00 AUD per 100 XP), virtual-money disclaimer, full-balance input auto-population, live AUD readout, Claim Cash Reward success modal, and direct routing of converted funds into the Vault **Save Jar** balance.
 
-- [x] Task 3.12: Mastery Cohort Skill Gating - map birth year to Explorer (10–12), Pathfinder (13–15), and Maverick (16–18) cohorts; enforce Skills 1–12 as universal and Skills 13–18 as Maverick-only across registry queries, trophy UI, and Academy Level 5–6 signpost locks (`lib/dashboard/mastery-cohort.ts`, `lib/skills/skills-registry-query.ts`). **Parent Hub learning-track change + progress reset shipped.**
+- [x] Task 3.12: Mastery Cohort Skill Gating - map birth year to Explorer (10–13), Pathfinder (14–16), and Maverick (17+) cohorts; enforce Skills 1–12 as universal and Skills 13–18 as Maverick-only across registry queries, trophy UI, and Academy Level 5–6 signpost locks (`lib/dashboard/mastery-cohort.ts`, `lib/skills/skills-registry-query.ts`). **Parent Hub learning-track change + progress reset shipped.**
 
 - [x] Task 3.13: Academy Phase 1 Milestone Scaffold - build the 54-node lesson journey (6 Levels × 9 Lessons) with module signposts + preview modals, boss-node checkpoints, sessionStorage progress persistence, and cohort-gated advanced levels (`academy-state.ts`, `academy-progress-storage.ts`, `academy-skill-track.tsx`).
 

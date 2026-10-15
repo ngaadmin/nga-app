@@ -18,8 +18,12 @@ import {
   removePersisted,
   writePersisted,
 } from "@/lib/dev/client-persist";
-import type { UserSession } from "@/lib/onboarding/guest-session";
-import { readUserSession } from "@/lib/onboarding/guest-session";
+import { isExplorerPendingConsent } from "@/lib/onboarding/explorer-pending-consent";
+import {
+  GUEST_SESSION_STORAGE_KEY,
+  readUserSession,
+  type UserSession,
+} from "@/lib/onboarding/guest-session";
 
 export const GUEST_PROGRESS_SNAPSHOT_KEY = "nga_guest_progress_snapshot_v1";
 
@@ -39,6 +43,11 @@ export type GuestProgressSnapshot = {
   /** Skill trophy / badge tier overrides. */
   skillProgress: string | null;
   parentPin: string | null;
+  /**
+   * Explorer progress captured at sign-up and held on the device until
+   * the parent approves. Live play while pending is folded in at approval.
+   */
+  heldForConsent?: boolean;
 };
 
 function readLiveParentPin(): string | null {
@@ -99,18 +108,14 @@ export function ensureGuestProgressSnapshot(): GuestProgressSnapshot {
     academyProgress: existing.academyProgress ?? live.academyProgress,
     skillProgress: existing.skillProgress ?? live.skillProgress,
     parentPin: existing.parentPin ?? live.parentPin,
+    heldForConsent: existing.heldForConsent === true,
   };
 
   writePersisted(GUEST_PROGRESS_SNAPSHOT_KEY, JSON.stringify(merged));
   return merged;
 }
 
-export function readGuestProgressSnapshot(): GuestProgressSnapshot | null {
-  if (typeof window === "undefined") return null;
-
-  const raw = readPersisted(GUEST_PROGRESS_SNAPSHOT_KEY);
-  if (!raw) return null;
-
+function parseSnapshot(raw: string): GuestProgressSnapshot | null {
   try {
     const parsed = JSON.parse(raw) as GuestProgressSnapshot & {
       ghostSession?: UserSession | null;
@@ -120,10 +125,115 @@ export function readGuestProgressSnapshot(): GuestProgressSnapshot | null {
       guestSession: parsed.guestSession ?? parsed.ghostSession ?? null,
       vaultSession: parsed.vaultSession ?? parsed.vaultV2Session ?? null,
       vaultProfile: parsed.vaultProfile ?? null,
+      heldForConsent: parsed.heldForConsent === true,
     };
   } catch {
     return null;
   }
+}
+
+export function readGuestProgressSnapshot(): GuestProgressSnapshot | null {
+  if (typeof window === "undefined") return null;
+
+  const raw = readPersisted(GUEST_PROGRESS_SNAPSHOT_KEY);
+  if (!raw) return null;
+  return parseSnapshot(raw);
+}
+
+function readLocalFirst(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  const local = window.localStorage.getItem(key);
+  if (local !== null) return local;
+  return window.sessionStorage.getItem(key);
+}
+
+function deviceSessionMatchesAccount(session: UserSession): boolean {
+  if (typeof window === "undefined") return false;
+  const raw = window.localStorage.getItem(GUEST_SESSION_STORAGE_KEY);
+  if (!raw) return true;
+  try {
+    const stored = JSON.parse(raw) as {
+      username?: string;
+      supabaseUserId?: string;
+    };
+    if (session.supabaseUserId && stored.supabaseUserId) {
+      return stored.supabaseUserId === session.supabaseUserId;
+    }
+    const left = stored.username?.trim().toLowerCase();
+    const right = session.username.trim().toLowerCase();
+    return Boolean(left && right && left === right);
+  } catch {
+    return false;
+  }
+}
+
+/** Keep the on-device snapshot until parent approval. Does not clear it. */
+export function markGuestProgressHeldForConsent(): GuestProgressSnapshot {
+  const existing = ensureGuestProgressSnapshot();
+  if (existing.heldForConsent) return existing;
+  const held: GuestProgressSnapshot = { ...existing, heldForConsent: true };
+  writePersisted(GUEST_PROGRESS_SNAPSHOT_KEY, JSON.stringify(held));
+  return held;
+}
+
+/**
+ * Play while pending updates the live keys. Fold those into the held snapshot
+ * so approval keeps the newer progress. No-op unless the snapshot is held.
+ */
+export function absorbLiveProgressIntoHeldSnapshot(): boolean {
+  if (typeof window === "undefined") return false;
+  const raw =
+    window.localStorage.getItem(GUEST_PROGRESS_SNAPSHOT_KEY) ??
+    window.sessionStorage.getItem(GUEST_PROGRESS_SNAPSHOT_KEY);
+  if (!raw) return false;
+  const existing = parseSnapshot(raw);
+  if (!existing?.heldForConsent) return false;
+
+  const next: GuestProgressSnapshot = {
+    ...existing,
+    wallet: readLocalFirst(DASHBOARD_WALLET_STORAGE_KEY) ?? existing.wallet,
+    vaultSession:
+      readLocalFirst(VAULT_SESSION_STORAGE_KEY) ?? existing.vaultSession,
+    vaultProfile:
+      readLocalFirst(VAULT_PROFILE_STORAGE_KEY) ?? existing.vaultProfile,
+    academyProgress:
+      readLocalFirst(ACADEMY_PROGRESS_STORAGE_KEY) ?? existing.academyProgress,
+    skillProgress:
+      readLocalFirst(VAULT_SKILL_PROGRESS_STORAGE_KEY) ?? existing.skillProgress,
+    parentPin: readLiveParentPin() ?? existing.parentPin,
+    heldForConsent: true,
+  };
+  writePersisted(GUEST_PROGRESS_SNAPSHOT_KEY, JSON.stringify(next));
+  return true;
+}
+
+/**
+ * The approval sync can save an active session before finalize runs.
+ * Copy a matching held snapshot into the session store so the merge can see it.
+ */
+export function stageHeldConsentSnapshotForAccount(session: UserSession): boolean {
+  if (typeof window === "undefined") return false;
+  if (isExplorerPendingConsent(session)) return false;
+  const raw = window.localStorage.getItem(GUEST_PROGRESS_SNAPSHOT_KEY);
+  if (!raw) return false;
+  const snapshot = parseSnapshot(raw);
+  if (!snapshot?.heldForConsent) return false;
+  if (!deviceSessionMatchesAccount(session)) return false;
+  window.sessionStorage.setItem(
+    GUEST_PROGRESS_SNAPSHOT_KEY,
+    JSON.stringify(snapshot),
+  );
+  return true;
+}
+
+/** Held progress for a different account must stay on the device. */
+export function hasForeignHeldConsentSnapshot(session: UserSession): boolean {
+  if (typeof window === "undefined") return false;
+  const raw = window.localStorage.getItem(GUEST_PROGRESS_SNAPSHOT_KEY);
+  if (!raw) return false;
+  const snapshot = parseSnapshot(raw);
+  if (!snapshot?.heldForConsent) return false;
+  return !deviceSessionMatchesAccount(session);
 }
 
 /**

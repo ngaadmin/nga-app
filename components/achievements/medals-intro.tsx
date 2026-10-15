@@ -8,9 +8,12 @@ import {
   hasAccountSeenMedalsIntro,
   markAccountMedalsIntroSeen,
 } from "@/lib/dashboard/page-intro-seen";
+import { useRecordingSuppressIntro } from "@/lib/recording/use-recording-suppress-intro";
 
 export function MedalsIntro() {
   const { ready, sessionTick } = useIntroRestoreGate();
+  // TODO: remove after recordings
+  const recording = useRecordingSuppressIntro();
   const [seen, setSeen] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"first" | "info">("info");
@@ -26,7 +29,8 @@ export function MedalsIntro() {
       return;
     }
 
-    if (!ready) {
+    // TODO: remove after recordings — wait for the check, and do not mark seen.
+    if (!ready || !recording.ready || recording.suppress) {
       setOpen(false);
       return;
     }
@@ -37,7 +41,7 @@ export function MedalsIntro() {
       setOpen(true);
     }, 80);
     return () => window.clearTimeout(timeoutId);
-  }, [ready, sessionTick]);
+  }, [ready, sessionTick, recording.ready, recording.suppress]);
 
   const dismiss = useCallback(() => {
     dismissedRef.current = true;

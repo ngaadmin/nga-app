@@ -29,8 +29,6 @@ export type LearnerAgeDecision = {
 
 /**
  * Age = current year − birth year − 1. The year itself is not returned for storage.
- * Track bands above 13 follow `getMasteryCohortFromAge` so this stays aligned
- * with the ranges on main until the age-band update lands.
  */
 export function decideLearnerAge(
   birthYear: number,
@@ -85,13 +83,4 @@ export function profileColumnsForAudience(input: {
 export function payloadStoresBirthYear(payload: unknown): boolean {
   const serialized = JSON.stringify(payload);
   return /birth[_ ]?year/i.test(serialized);
-}
-
-/** Years offered on the learner sign-up select. The value is not stored. */
-export function birthYearOptions(referenceYear = new Date().getFullYear()): number[] {
-  const newest = referenceYear - 9;
-  const oldest = referenceYear - 31;
-  const years: number[] = [];
-  for (let year = newest; year >= oldest; year -= 1) years.push(year);
-  return years;
 }

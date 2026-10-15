@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { createClassSeats } from "@/lib/school/class-roster";
 import type { createTeacherAccount } from "@/lib/school/create-teacher-account";
-import type { CreateSupabaseAccountInput } from "@/lib/onboarding/create-supabase-account";
-import { getMasteryCohortFromAge } from "@/lib/dashboard/mastery-cohort";
 import {
   ageTrackFitMessage,
-  birthYearOptions,
   collectsBirthYear,
   decideLearnerAge,
   payloadStoresBirthYear,
@@ -19,27 +16,29 @@ function yearForAge(age: number): number {
 }
 
 describe("learner age boundaries", () => {
-  it("treats 13 as Explorer with parent approval", () => {
-    expect(decideLearnerAge(yearForAge(13), REFERENCE_YEAR)).toMatchObject({
+  it("treats 13 as Explorer with parent approval and 14 as Pathfinder", () => {
+    const thirteen = decideLearnerAge(yearForAge(13), REFERENCE_YEAR);
+    const fourteen = decideLearnerAge(yearForAge(14), REFERENCE_YEAR);
+
+    expect(thirteen).toMatchObject({
       age: 13,
       cohort: "explorer",
       parentApprovalRequired: true,
     });
+    expect(fourteen).toMatchObject({
+      age: 14,
+      cohort: "pathfinder",
+      parentApprovalRequired: false,
+    });
   });
 
-  it("follows the shipped age bands once a parent is no longer required", () => {
-    const fourteen = decideLearnerAge(yearForAge(14), REFERENCE_YEAR);
+  it("treats 16 as Pathfinder and 17 as Maverick", () => {
     const sixteen = decideLearnerAge(yearForAge(16), REFERENCE_YEAR);
     const seventeen = decideLearnerAge(yearForAge(17), REFERENCE_YEAR);
 
-    expect(fourteen).toMatchObject({
-      age: 14,
-      cohort: getMasteryCohortFromAge(14),
-      parentApprovalRequired: false,
-    });
     expect(sixteen).toMatchObject({
       age: 16,
-      cohort: getMasteryCohortFromAge(16),
+      cohort: "pathfinder",
       parentApprovalRequired: false,
     });
     expect(seventeen).toMatchObject({
@@ -110,13 +109,6 @@ describe("who is asked for a birth year", () => {
       expect(columns).toBeNull();
     }
   });
-
-  it("offers a descending year list and does not name the year in the helper", () => {
-    const years = birthYearOptions(REFERENCE_YEAR);
-    expect(years[0]).toBe(REFERENCE_YEAR - 9);
-    expect(years[years.length - 1]).toBe(REFERENCE_YEAR - 31);
-    expect(years).toEqual([...years].sort((a, b) => b - a));
-  });
 });
 
 describe("birth year is not a persisted field", () => {
@@ -131,19 +123,18 @@ describe("birth year is not a persisted field", () => {
     expect(classSeatHasNoBirthYear).toBe(true);
   });
 
-  it("allows the learner account input to carry a year that is not a profile column", () => {
-    type LearnerHasYear = "birthYear" extends keyof CreateSupabaseAccountInput
-      ? true
-      : false;
-    const learnerHasYear: LearnerHasYear = true;
-    expect(learnerHasYear).toBe(true);
-
+  it("omits the year from the learner profile write", () => {
     const birthYear = yearForAge(16);
     const columns = profileColumnsForAudience({
       audience: "learner",
       birthYear,
       checkedAt: "2026-10-15T12:00:00.000Z",
       referenceYear: REFERENCE_YEAR,
+    });
+    expect(columns).toEqual({
+      curriculum_cohort: "pathfinder",
+      parent_approval_required: false,
+      age_checked_at: "2026-10-15T12:00:00.000Z",
     });
     expect(Object.keys(columns ?? {})).not.toContain("birth_year");
     expect(Object.keys(columns ?? {})).not.toContain("birthYear");

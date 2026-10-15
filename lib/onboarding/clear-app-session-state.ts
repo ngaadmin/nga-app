@@ -10,6 +10,7 @@ import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-pr
 import { VAULT_ADD_MONEY_INTRO_SEEN_KEY } from "@/lib/dashboard/vault/add-money-intro";
 import { HUB_INTRO_SEEN_STORAGE_KEY } from "@/lib/dashboard/hub-intro/storage";
 import { VAULT_PROFILE_STORAGE_KEY, VAULT_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault/vault-profile-storage";
+import { GUEST_DEVICE_META_KEY, wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
 import { GUEST_SESSION_STORAGE_KEY, readUserSession } from "@/lib/onboarding/guest-session";
 import { GENERIC_PROFILE_POOL_STORAGE_KEY } from "@/lib/onboarding/generic-profile-id";
 import { GUEST_PROGRESS_SNAPSHOT_KEY } from "@/lib/onboarding/guest-progress-snapshot";
@@ -18,8 +19,12 @@ import {
   persistAccountProgressCacheFromLive,
 } from "@/lib/dashboard/account-progress-local";
 import { PAGE_INTRO_SEEN_BY_ACCOUNT_KEY } from "@/lib/dashboard/page-intro-seen";
-import { EXPLORER_PENDING_PLAY_OK_KEY } from "@/lib/onboarding/explorer-pending-consent";
+import {
+  EXPLORER_PENDING_PLAY_OK_KEY,
+  isExplorerPendingConsent,
+} from "@/lib/onboarding/explorer-pending-consent";
 import { PARENT_FIRST_WELCOME_KEY } from "@/lib/onboarding/parent-first-welcome";
+import { RECORDING_SUPPRESS_INTRO_FLAG_KEY } from "@/lib/recording/suppress-intro-flag";
 import { PENDING_PARENT_CONSENT_KEY } from "@/lib/onboarding/parent-consent-pending";
 import { REGISTERED_ACCOUNTS_STORAGE_KEY } from "@/lib/onboarding/registered-accounts";
 import { clearAllPersistedNgaKeys, removePersisted } from "@/lib/dev/client-persist";
@@ -45,6 +50,7 @@ export const APP_SESSION_STORAGE_KEYS = [
   PARENT_PIN_STORAGE_KEY,
   TESTING_PREMIUM_STORAGE_KEY,
   TESTING_SETTINGS_VIEW_STORAGE_KEY,
+  GUEST_DEVICE_META_KEY,
 ] as const;
 
 /** Keys that must survive logout so returning users can log back in. */
@@ -53,6 +59,8 @@ const PRESERVED_ON_LOGOUT_KEYS = [
   ACCOUNT_PROGRESS_CACHE_KEY,
   PARENT_FIRST_WELCOME_KEY,
   PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+  // TODO: remove after recordings — keep ?recording=1 for the rest of this tab.
+  RECORDING_SUPPRESS_INTRO_FLAG_KEY,
 ] as const;
 
 /** Removes active session artifacts while preserving durable registered accounts. */
@@ -60,12 +68,14 @@ export function clearAllAppSessionState(): void {
   if (typeof window === "undefined") return;
 
   const session = readUserSession();
-  if (session?.accessMode === "registered") {
+  if (session?.accessMode === "registered" && !isExplorerPendingConsent(session)) {
     persistAccountProgressCacheFromLive({
       userId: session.supabaseUserId,
       username: session.username,
     });
   }
+
+  wipeGuestDeviceProgress();
 
   for (const key of APP_SESSION_STORAGE_KEYS) {
     removePersisted(key);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
+import { GuestSavePromptBanner } from "@/components/onboarding/guest-save-prompt-banner";
 import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
 import {
   LESSON_CASH_IN_LABEL,
@@ -19,6 +20,7 @@ import {
   type SkillTrophyTier,
 } from "@/lib/dashboard/skill-trophies";
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
+import { isGuestSaveBadgeTier } from "@/lib/onboarding/guest-save-prompt";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 
@@ -153,6 +155,15 @@ export function LessonCompletionPane({
             Perfect lesson: +{perfectStreakBonus} XP
           </p>
         ) : null}
+
+        <GuestSavePromptBanner
+          claimId={`lesson:${moduleNumber ?? 0}:${lessonNumber ?? 0}`}
+          isNewBadge={isGuestSaveBadgeTier(skillMedalTier)}
+          isModuleOrLevelFinish={isModuleCloser}
+          moduleNumber={moduleNumber}
+          lessonNumber={lessonNumber}
+          className="mt-4 w-full text-left"
+        />
 
         <div className="mt-auto flex w-full justify-center pb-4 pt-8">
           <button

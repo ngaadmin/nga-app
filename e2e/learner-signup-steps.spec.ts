@@ -204,7 +204,9 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await page.locator("#signup-birth-year").selectOption("2013");
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByText("A parent/guardian needs to approve this.")).toBeVisible();
+  await expect(
+    page.getByText("Approval saves your XP. You can keep playing while you wait."),
+  ).toBeVisible();
   await expect(page.getByText("Check the highlighted fields and try again.")).toHaveCount(0);
   await expect(page.getByLabel("Your Email Address")).toHaveCount(0);
   await expect(

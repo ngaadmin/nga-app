@@ -31,6 +31,7 @@ describe("parsePageIntroSeenStore", () => {
             hubs: { academy: true, vault: false, mystery: true },
             vaultAddMoney: true,
             skillsCup: false,
+            medals: true,
           },
         }),
       ),
@@ -39,6 +40,7 @@ describe("parsePageIntroSeenStore", () => {
         hubs: { academy: true },
         vaultAddMoney: true,
         skillsCup: false,
+        medals: true,
       },
     });
   });

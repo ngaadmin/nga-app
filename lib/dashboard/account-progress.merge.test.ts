@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  hasPersistedPageIntros,
+  isEmptyAccountProgress,
+  mergeAccountProgress,
   mergeAcademyProgress,
   mergeWalletProgress,
   overlayAccountProgress,
@@ -231,6 +234,49 @@ describe("pickRestoredAccountProgress", () => {
       "active",
     );
     expect(restored?.wallet?.lifetimePointsEarned).toBe(40);
+  });
+});
+
+describe("page intro flags in learner progress", () => {
+  it("keeps an intro-only payload and ignores unknown hubs", () => {
+    const parsed = parseAccountProgressPayload({
+      pageIntros: {
+        hubs: { academy: true, mystery: true, vault: false },
+        medals: true,
+        skillsCup: false,
+      },
+    });
+
+    expect(parsed?.pageIntros).toEqual({
+      hubs: { academy: true },
+      medals: true,
+    });
+    expect(isEmptyAccountProgress(parsed)).toBe(true);
+    expect(hasPersistedPageIntros(parsed)).toBe(true);
+  });
+
+  it("unions seen intros and never clears one", () => {
+    const merged = mergeAccountProgress(
+      payload({
+        pageIntros: { hubs: { academy: true }, medals: true },
+      }),
+      payload({
+        pageIntros: { hubs: { vault: true }, vaultAddMoney: true },
+      }),
+    );
+
+    expect(merged?.pageIntros).toEqual({
+      hubs: { academy: true, vault: true },
+      medals: true,
+      vaultAddMoney: true,
+    });
+
+    const overlaid = overlayAccountProgress(
+      payload({ pageIntros: { hubs: { academy: true } } }),
+      payload({ wallet: wallet({ totalPoints: 10, lifetimePointsEarned: 10 }) }),
+    );
+    expect(overlaid?.pageIntros).toEqual({ hubs: { academy: true } });
+    expect(overlaid?.wallet?.lifetimePointsEarned).toBe(10);
   });
 });
 

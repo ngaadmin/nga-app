@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import {
   accountProgressLogFields,
+  hasPersistedPageIntros,
   isEmptyAccountProgress,
   overlayAccountProgress,
   type AccountProgressPayload,
@@ -56,6 +57,12 @@ async function resolveChildAuthUserId(): Promise<string | null> {
   return session.supabaseUserId?.trim() || null;
 }
 
+function shouldSaveProgress(
+  payload: AccountProgressPayload | null | undefined,
+): boolean {
+  return !isEmptyAccountProgress(payload) || hasPersistedPageIntros(payload);
+}
+
 function logProgressWrite(
   userId: string | null,
   payload: AccountProgressPayload | null,
@@ -89,15 +96,15 @@ async function pushAccountProgressNow(): Promise<void> {
   try {
     const remote = await loadLearnerProgressByUserId(childId);
     if (
-      isEmptyAccountProgress(local) &&
+      !shouldSaveProgress(local) &&
       remote &&
-      !isEmptyAccountProgress(remote)
+      shouldSaveProgress(remote)
     ) {
       return;
     }
 
     const payload = overlayAccountProgress(remote, local) ?? local;
-    if (isEmptyAccountProgress(payload)) return;
+    if (!shouldSaveProgress(payload)) return;
     await saveLearnerProgressForUser(childId, payload);
   } catch {
     // Next dirty event or dashboard sync can retry.
@@ -138,7 +145,7 @@ export async function persistRegisteredProgressNow(): Promise<void> {
     return;
   }
 
-  if (isEmptyAccountProgress(local)) return;
+  if (!shouldSaveProgress(local)) return;
 
   const remote = await loadLearnerProgressByUserId(childId);
   const payload = overlayAccountProgress(remote, local) ?? local;

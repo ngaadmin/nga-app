@@ -1,30 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useIntroRestoreGate } from "@/components/dashboard/hub-intro/use-intro-restore-gate";
 import {
   hasSeenHubIntro,
   markHubIntroSeen,
 } from "@/lib/dashboard/hub-intro/storage";
 import type { HubIntroId } from "@/lib/dashboard/hub-intro/types";
 import { currentAccountLocalKey } from "@/lib/onboarding/account-local-key";
-import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
 export function useHubIntro(hubId: HubIntroId) {
+  const { ready, sessionTick } = useIntroRestoreGate();
   const [hydrated, setHydrated] = useState(false);
   const [seen, setSeen] = useState(false);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"first" | "info">("info");
-  const [sessionTick, setSessionTick] = useState(0);
-
-  useEffect(() => {
-    function onSessionUpdated() {
-      setSessionTick((tick) => tick + 1);
-    }
-    window.addEventListener(USER_SESSION_UPDATED_EVENT, onSessionUpdated);
-    return () => {
-      window.removeEventListener(USER_SESSION_UPDATED_EVENT, onSessionUpdated);
-    };
-  }, []);
+  const dismissedRef = useRef(false);
 
   useEffect(() => {
     const accountKey = currentAccountLocalKey();
@@ -33,6 +24,12 @@ export function useHubIntro(hubId: HubIntroId) {
     setHydrated(true);
 
     if (!accountKey || alreadySeen) {
+      dismissedRef.current = alreadySeen;
+      setOpen(false);
+      return;
+    }
+
+    if (!ready) {
       setOpen(false);
       return;
     }
@@ -41,15 +38,17 @@ export function useHubIntro(hubId: HubIntroId) {
     // Wait a tick so the nav tap that opened this hub cannot hit the card
     // and mark it seen before the user reads it.
     const timeoutId = window.setTimeout(() => {
+      if (dismissedRef.current || hasSeenHubIntro(hubId)) return;
       setOpen(true);
     }, 80);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [hubId, sessionTick]);
+  }, [hubId, ready, sessionTick]);
 
   const dismiss = useCallback(() => {
+    dismissedRef.current = true;
     markHubIntroSeen(hubId);
     setSeen(true);
     setOpen(false);

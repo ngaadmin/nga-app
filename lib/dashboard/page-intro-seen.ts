@@ -1,18 +1,19 @@
+import { markAccountProgressDirty } from "@/lib/dashboard/account-progress-dirty";
 import {
   HUB_INTRO_IDS,
   type HubIntroId,
   type HubIntroSeenMap,
 } from "@/lib/dashboard/hub-intro/types";
+import {
+  mergePageIntroFlags,
+  type AccountPageIntroFlags,
+} from "@/lib/dashboard/page-intro-flags";
 import { currentAccountLocalKey } from "@/lib/onboarding/account-local-key";
 
 /** Durable per-account first-visit flags. Survives logout; not shared across accounts. */
 export const PAGE_INTRO_SEEN_BY_ACCOUNT_KEY = "nga_page_intro_seen_by_account_v1";
 
-export type AccountPageIntroSeen = {
-  hubs?: HubIntroSeenMap;
-  vaultAddMoney?: boolean;
-  skillsCup?: boolean;
-};
+export type AccountPageIntroSeen = AccountPageIntroFlags;
 
 type PageIntroSeenStore = Record<string, AccountPageIntroSeen>;
 
@@ -42,6 +43,7 @@ export function parsePageIntroSeenStore(raw: string | null): PageIntroSeenStore 
         hubs: parseHubs(value.hubs),
         vaultAddMoney: value.vaultAddMoney === true,
         skillsCup: value.skillsCup === true,
+        medals: value.medals === true,
       };
     }
     return store;
@@ -71,17 +73,33 @@ function readAccountSeen(): AccountPageIntroSeen {
   return readStore()[accountKey] ?? {};
 }
 
+/** Compact seen flags for the signed-in or guest account on this device. */
+export function readCurrentPageIntroFlags(): AccountPageIntroSeen | undefined {
+  return mergePageIntroFlags(readAccountSeen(), null);
+}
+
 function patchAccountSeen(patch: AccountPageIntroSeen): void {
   const accountKey = currentAccountLocalKey();
   if (!accountKey) return;
   const store = readStore();
   const current = store[accountKey] ?? {};
+  const merged = mergePageIntroFlags(current, patch);
   store[accountKey] = {
-    hubs: { ...current.hubs, ...patch.hubs },
-    vaultAddMoney: patch.vaultAddMoney === true || current.vaultAddMoney === true,
-    skillsCup: patch.skillsCup === true || current.skillsCup === true,
+    hubs: merged?.hubs ?? {},
+    vaultAddMoney: merged?.vaultAddMoney === true,
+    skillsCup: merged?.skillsCup === true,
+    medals: merged?.medals === true,
   };
   writeStore(store);
+  markAccountProgressDirty();
+}
+
+/** Union cloud seen-intro flags into this account. Never clears a local dismissal. */
+export function mergeRemotePageIntroFlags(
+  flags: AccountPageIntroSeen | null | undefined,
+): void {
+  if (!flags) return;
+  patchAccountSeen(flags);
 }
 
 export function hasAccountSeenHubIntro(hubId: HubIntroId): boolean {
@@ -106,4 +124,12 @@ export function hasAccountSeenSkillsCupIntro(): boolean {
 
 export function markAccountSkillsCupIntroSeen(): void {
   patchAccountSeen({ skillsCup: true });
+}
+
+export function hasAccountSeenMedalsIntro(): boolean {
+  return readAccountSeen().medals === true;
+}
+
+export function markAccountMedalsIntroSeen(): void {
+  patchAccountSeen({ medals: true });
 }

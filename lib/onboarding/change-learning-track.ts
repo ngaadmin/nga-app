@@ -158,6 +158,7 @@ function applyLocalTrackAndProgressReset(
     skillProgress: {},
     vaultProfile: existingCache?.vaultProfile ?? null,
     vaultSession: existingCache?.vaultSession ?? null,
+    ...(existingCache?.pageIntros ? { pageIntros: existingCache.pageIntros } : {}),
   };
   writeCachedAccountProgress(
     { userId: account.supabaseUserId },

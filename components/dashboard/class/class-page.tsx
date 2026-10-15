@@ -67,6 +67,73 @@ function withNewStudents(
   return [{ ...first, students }, ...classes.slice(1)];
 }
 
+function RosterChevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      className="block size-4 shrink-0 text-nga-primary"
+      aria-hidden
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path
+        d="M5 7.5 10 12.5 15 7.5"
+        transform={expanded ? "rotate(180 10 10)" : undefined}
+      />
+    </svg>
+  );
+}
+
+function ClassXpCard({ cls }: { cls: ClassXpTotal }) {
+  const [expanded, setExpanded] = useState(false);
+  const count = cls.students.length;
+  const listId = `class-xp-students-${cls.classId}`;
+
+  return (
+    <article className="rounded-nga-lg border-2 border-[#BDE9FB] bg-[#F7FBFF] p-4">
+      <p className="font-heading text-base font-extrabold text-nga-primary">{cls.label}</p>
+      <p className="mt-2 font-sans text-xs font-semibold uppercase tracking-wide text-nga-slate">
+        Class total
+      </p>
+      <p className="font-heading text-3xl font-extrabold tabular-nums text-[#031F82]">
+        {cls.totalLifetimeXp.toLocaleString()} XP
+      </p>
+      {count > 0 ? (
+        <div className="mt-3 divide-y divide-[#BDE9FB]">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={listId}
+            onClick={() => setExpanded((open) => !open)}
+            className="flex w-full items-center justify-between gap-3 py-2 text-left font-heading text-sm font-bold text-nga-primary"
+          >
+            <span>{expanded ? "Hide students" : `Show students (${count})`}</span>
+            <RosterChevron expanded={expanded} />
+          </button>
+          <ul id={listId} className={cn(expanded ? "divide-y divide-[#BDE9FB]" : "hidden print:block")}>
+            {cls.students.map((student) => (
+              <li
+                key={student.username}
+                className="flex items-center justify-between gap-3 py-2 font-sans text-sm text-nga-ink"
+              >
+                <span className="min-w-0 truncate">{student.username}</span>
+                <span className="shrink-0 font-heading font-bold tabular-nums text-[#031F82]">
+                  {student.lifetimeXp.toLocaleString()} XP
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-2 font-sans text-sm text-nga-slate">No students yet.</p>
+      )}
+    </article>
+  );
+}
+
 function ClassXpTotals({ classes }: { classes: ClassXpTotal[] }) {
   if (classes.length === 0) return null;
 
@@ -76,35 +143,7 @@ function ClassXpTotals({ classes }: { classes: ClassXpTotal[] }) {
         Class XP
       </h2>
       {classes.map((cls) => (
-        <article
-          key={cls.classId}
-          className="rounded-nga-lg border-2 border-[#BDE9FB] bg-[#F7FBFF] p-4"
-        >
-          <p className="font-heading text-base font-extrabold text-nga-primary">{cls.label}</p>
-          <p className="mt-2 font-sans text-xs font-semibold uppercase tracking-wide text-nga-slate">
-            Class total
-          </p>
-          <p className="font-heading text-3xl font-extrabold tabular-nums text-[#031F82]">
-            {cls.totalLifetimeXp.toLocaleString()} XP
-          </p>
-          {cls.students.length > 0 ? (
-            <ul className="mt-3 divide-y divide-[#BDE9FB]">
-              {cls.students.map((student) => (
-                <li
-                  key={student.username}
-                  className="flex items-center justify-between gap-3 py-2 font-sans text-sm text-nga-ink"
-                >
-                  <span className="min-w-0 truncate">{student.username}</span>
-                  <span className="shrink-0 font-heading font-bold tabular-nums text-[#031F82]">
-                    {student.lifetimeXp.toLocaleString()} XP
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 font-sans text-sm text-nga-slate">No students yet.</p>
-          )}
-        </article>
+        <ClassXpCard key={cls.classId} cls={cls} />
       ))}
     </section>
   );
@@ -130,7 +169,7 @@ function StudentLoginTable({
             Student name
           </th>
           {onRemove ? (
-            <th className="border-b border-nga-ink py-2 pl-4 text-right font-heading font-bold">
+            <th className="border-b border-nga-ink py-2 pl-4 text-right font-heading font-bold print:hidden">
               <span className="sr-only">Remove</span>
             </th>
           ) : null}
@@ -142,7 +181,7 @@ function StudentLoginTable({
             <td className="border-b border-nga-mist py-2 pr-4">{name}</td>
             <td className="border-b border-nga-mist py-2">&nbsp;</td>
             {onRemove ? (
-              <td className="border-b border-nga-mist py-2 pl-4 text-right">
+              <td className="border-b border-nga-mist py-2 pl-4 text-right print:hidden">
                 <button
                   type="button"
                   disabled={removing}
@@ -176,6 +215,7 @@ export function ClassPage({ roster }: ClassPageProps) {
   const [changingPassword, setChangingPassword] = useState(false);
   const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [loginsExpanded, setLoginsExpanded] = useState(false);
 
   const remaining = Math.max(0, roster.seatCap - studentsUsed);
   const cohortLocked = studentsUsed > 0;
@@ -423,14 +463,36 @@ export function ClassPage({ roster }: ClassPageProps) {
         </form>
 
         <div className="space-y-2">
-          <p className="font-heading text-sm font-bold text-nga-primary">Student logins</p>
-          <StudentLoginTable
-            usernames={sortedUsernames}
-            onRemove={(username) =>
-              setPendingRemove({ scope: "one", username })
-            }
-            removing={removing}
-          />
+          {sortedUsernames.length > 0 ? (
+            <button
+              type="button"
+              aria-expanded={loginsExpanded}
+              aria-controls="class-student-logins"
+              onClick={() => setLoginsExpanded((open) => !open)}
+              className="flex w-full items-center justify-between gap-3 py-2 text-left font-heading text-sm font-bold text-nga-primary print:hidden"
+            >
+              <span>
+                {loginsExpanded
+                  ? "Hide student logins"
+                  : `Show student logins (${sortedUsernames.length})`}
+              </span>
+              <RosterChevron expanded={loginsExpanded} />
+            </button>
+          ) : (
+            <p className="font-heading text-sm font-bold text-nga-primary">Student logins</p>
+          )}
+          <div
+            id="class-student-logins"
+            className={cn(loginsExpanded ? "print:block" : "hidden print:block")}
+          >
+            <StudentLoginTable
+              usernames={sortedUsernames}
+              onRemove={(username) =>
+                setPendingRemove({ scope: "one", username })
+              }
+              removing={removing}
+            />
+          </div>
           <p className="font-sans text-xs text-nga-slate">
             Add student names after printing. Names are not stored in the app.
           </p>

@@ -326,11 +326,13 @@
 :root {
   --lesson-screen-edge-inset: 20px;
   --lesson-choice-ring: 4px;
+  /* Slider knob shadow blurs 8px. The choice ring is 4px. Keep the larger one inside the inset. */
+  --lesson-screen-ink-outset: 8px;
 }
 
-/* One side inset for every lesson screen. The ring fits inside it. */
+/* One side inset for every lesson screen. Shadows and rings fit inside it. */
 .lesson-screen-inline {
-  padding-inline: calc(var(--lesson-screen-edge-inset) + var(--lesson-choice-ring));
+  padding-inline: calc(var(--lesson-screen-edge-inset) + var(--lesson-screen-ink-outset));
 }
 
 .lesson-choice-tile[data-selection="selected"] {

@@ -12,9 +12,8 @@ export const lessonInteractiveTextClass = "text-lg font-medium";
 export const lessonScreenContentOffsetClass = "pt-0";
 
 /**
- * Side inset for every lesson screen. The clear 20px is
- * `--lesson-screen-edge-inset`; the choice-tile ring is added on top so a
- * selected card's shadow stays on screen and is not clipped.
+ * Side inset for every lesson screen. `--lesson-screen-edge-inset` (20px)
+ * stays clear, and `--lesson-screen-ink-outset` holds rings and shadows.
  */
 export const lessonScreenInlinePaddingClass = "lesson-screen-inline";
 

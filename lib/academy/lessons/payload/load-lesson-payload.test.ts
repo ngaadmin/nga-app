@@ -132,10 +132,10 @@ describe("lesson payload loader", () => {
     expect(content.meta.lessonTitle).toBe("Keep Spare Cash");
     expect(content.screens.map((screen) => screen.type)).toEqual([
       "binary-choice",
-      "binary-choice",
+      "multiple-choice",
       "bucket-sort",
       "spotlight-rounds",
-      "binary-choice",
+      "multiple-choice",
       "rank-order",
       "allocation-slider",
       "completion",
@@ -191,8 +191,8 @@ describe("lesson payload loader", () => {
       ).toBe(true);
 
       const math = content.screens[4];
-      expect(math).toMatchObject({ type: "binary-choice" });
-      if (math?.type !== "binary-choice") continue;
+      expect(math).toMatchObject({ type: "multiple-choice" });
+      if (math?.type !== "multiple-choice") continue;
       expect(math.prompt).toMatch(row.question);
       expect(math.prompt).not.toMatch(/has enough/i);
       expect(math.options?.map((option) => option.label)).toEqual(row.amounts);
@@ -522,10 +522,10 @@ describe("lesson payload loader", () => {
     expect(lesson7.screens.map((screen) => screen.type)).toEqual([
       "word-drop",
       "binary-choice",
-      "binary-choice",
+      "multiple-choice",
       "savings-goal",
       "binary-choice",
-      "binary-choice",
+      "multiple-choice",
       "drag-to-target",
       "completion",
     ]);
@@ -670,16 +670,16 @@ describe("lesson payload loader", () => {
         expect(thoughts.rounds.every((round) => round.error.includes("rushing you"))).toBe(true);
       }
       expect(sign).toMatchObject({
-        type: "binary-choice",
+        type: "multiple-choice",
         pairImage: "fishing-rod-sign.webp",
         optionLayout: "radio-list",
       });
-      if (sign?.type === "binary-choice") {
+      if (sign?.type === "multiple-choice") {
         expect(sign.options?.filter((option) => option.isCorrect)).toHaveLength(3);
         expect(sign.options?.some((option) => option.label === "DON'T MISS OUT!")).toBe(true);
       }
-      expect(advice).toMatchObject({ type: "binary-choice" });
-      if (advice?.type === "binary-choice") {
+      expect(advice).toMatchObject({ type: "multiple-choice" });
+      if (advice?.type === "multiple-choice") {
         expect(advice.prompt).toMatch(/limited-time offer for extra lives/i);
         expect(advice.options?.map((option) => option.label)).toEqual([
           "Do I really need this?",

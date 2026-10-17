@@ -1022,14 +1022,33 @@ CORRECT: bus,dog lead`,
     expect(drag).toMatchObject({
       type: "drag-to-target",
       sourceIllustrationId: "concept-gift-box",
+      sourceLabel: "Gift box",
       targetIllustrationId: "senna-celebrating",
+      targetLabel: "Senna",
       showZoneLabels: false,
     });
+    expect(`${drag && "sourceLabel" in drag ? drag.sourceLabel : ""} ${drag && "targetLabel" in drag ? drag.targetLabel : ""}`).not.toMatch(
+      /[a-z0-9]+-[a-z0-9]|concept-|\/$/,
+    );
+    const pathfinder = resolvePayloadLesson(loadBundledLessonPayload(1, 2), "pathfinder", 2);
+    const pathfinderDrag = pathfinder.screens.find((screen) => screen.type === "drag-to-target");
     const maverick = resolvePayloadLesson(loadBundledLessonPayload(1, 2), "maverick", 2);
     const maverickDrag = maverick.screens.find((screen) => screen.type === "drag-to-target");
-    expect(maverickDrag).toMatchObject({
-      targetIllustrationId: "aiden-celebrating",
+    expect(pathfinderDrag).toMatchObject({
+      sourceLabel: "Gift box",
+      targetIllustrationId: "mia-celebrating",
+      targetLabel: "Mia",
     });
+    expect(maverickDrag).toMatchObject({
+      sourceLabel: "Gift box",
+      targetIllustrationId: "aiden-celebrating",
+      targetLabel: "Aiden",
+    });
+    for (const screen of [drag, pathfinderDrag, maverickDrag]) {
+      if (!screen || !("sourceLabel" in screen) || !("targetLabel" in screen)) continue;
+      expect(screen.sourceLabel).not.toMatch(/[a-z0-9]+-[a-z0-9]|concept-|\//);
+      expect(screen.targetLabel).not.toMatch(/[a-z0-9]+-[a-z0-9]|concept-|\//);
+    }
   });
 
   it("maps lesson 3 spent totals and the three-blank sentence", () => {
@@ -1041,12 +1060,22 @@ CORRECT: bus,dog lead`,
       targetTotal: 40,
       buckets: [{ id: "spent", label: "Spent" }],
     });
+    expect(spent?.type).toBe("bucket-sort");
     if (spent?.type === "bucket-sort") {
+      expect(spent.items).toHaveLength(3);
       expect(spent.items.map((item) => [item.emoji, item.label, item.price, item.bucket])).toEqual([
         ["🧸", "Squishy toy", 25, "spent"],
         ["🫧", "Slime", 8, "spent"],
         ["🍫", "Snacks", 7, "spent"],
       ]);
+    }
+    const maverickSpent = resolvePayloadLesson(loadBundledLessonPayload(1, 3), "maverick", 3)
+      .screens[1];
+    expect(maverickSpent?.type).toBe("bucket-sort");
+    if (maverickSpent?.type === "bucket-sort") {
+      expect(maverickSpent.items).toHaveLength(3);
+      expect(maverickSpent.targetTotal).toBe(40);
+      expect(maverickSpent.buckets).toEqual([{ id: "spent", label: "Spent" }]);
     }
     const sentence = lesson.screens[5];
     expect(sentence).toMatchObject({

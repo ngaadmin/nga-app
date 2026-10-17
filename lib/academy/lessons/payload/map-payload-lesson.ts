@@ -210,6 +210,23 @@ function readEmojiAt(
   return { emoji: chars.slice(start, end).join(""), end };
 }
 
+/** `senna-celebrating` → Senna. `concept-gift-box` → Gift box. */
+function labelFromIllustrationId(id: string): string {
+  const character = /^(lars|senna|mia|holly|aiden|dash|immi)(?:-|$)/i.exec(id);
+  const name = character?.[1];
+  if (name) {
+    const lower = name.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+  const words = id
+    .replace(/^concept-/, "")
+    .split("-")
+    .filter((word) => word.length > 0);
+  const phrase = words.join(" ");
+  if (!phrase) return id;
+  return phrase.charAt(0).toUpperCase() + phrase.slice(1);
+}
+
 function firstEmoji(text: string): string | undefined {
   const chars = [...text];
   for (let index = 0; index < chars.length; index += 1) {
@@ -761,12 +778,12 @@ export function mapPayloadScreen(
     }
     case "drag-to-target": {
       const source = (settingValue(settings, "SOURCE") ?? "").replace(/\s*\/\s*$/, "").trim();
-      const target = (settingValue(settings, "TARGET") ?? "").trim();
+      const target = (settingValue(settings, "TARGET") ?? "").replace(/\s*\/\s*$/, "").trim();
       const sourceArt = isIllustrationId(source) ? source : undefined;
       const targetArt = isIllustrationId(target) ? target : undefined;
       const emoji = sourceArt ? undefined : firstEmoji(source);
       const sourceLabel = sourceArt
-        ? source
+        ? labelFromIllustrationId(source)
         : (emoji ? source.replace(emoji, "") : source).trim() || "Start";
       const sourceImageFile = settingValue(settings, "ITEM");
       const targetImageFile = settingValue(settings, "IMAGE");
@@ -776,7 +793,7 @@ export function mapPayloadScreen(
         id,
         intro: text,
         sourceLabel,
-        targetLabel: targetArt ? target : target || "Target",
+        targetLabel: targetArt ? labelFromIllustrationId(target) : target || "Target",
         ...(emoji ? { itemEmoji: emoji } : {}),
         ...(sourceArt ? { sourceIllustrationId: sourceArt, itemSize: "lg" as const } : {}),
         ...(targetArt ? { targetIllustrationId: targetArt } : {}),

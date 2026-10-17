@@ -25,8 +25,8 @@ describe("lesson availability", () => {
     expect(hasShippedLesson(10)).toBe(false);
   });
 
-  it("plays lessons 2–5 from the CSV and does not register the old files", () => {
-    for (const id of [2, 3, 4, 5]) {
+  it("plays lessons 1–9 from the CSV and does not register the old files", () => {
+    for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
       expect(bundledPayloadMilestone(id)).toEqual({
         moduleNumber: 1,
         lessonNumber: id,

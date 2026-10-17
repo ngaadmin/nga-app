@@ -889,6 +889,178 @@ describe("lesson payload loader", () => {
     expect(byLabel.get("5-save")).toMatchObject({ continueToLabel: "6" });
   });
 
+  it("maps budget-select totals, tagged items, and correct names", () => {
+    const row = {
+      screenNumber: 4,
+      screenLabel: "4",
+      gameType: "budget-select",
+      text: {
+        explorer: "You have $30 left. Check the boxes to buy what you actually need.",
+        pathfinder: "You have $30 left. Check the boxes to buy what you actually need.",
+        maverick: "",
+      },
+      image: { explorer: "not allowed", pathfinder: "not allowed", maverick: "" },
+      settings: {
+        explorer: `TOTAL: 30
+ITEMS:
+NEED: 🚍 Bus Pass ($15)
+WANT: ⚡Energy Drink ($10)
+NEED: 🔌 Phone Cable ($15)
+CORRECT: bus,cable`,
+        pathfinder: `TOTAL: 30
+ITEMS:
+NEED: 🚍 Bus Pass ($15)
+WANT: ⚡ Energy Drink ($10)
+NEED: 🐕 Dog lead ($15)
+CORRECT: bus,dog lead`,
+        maverick: "",
+      },
+      error: {
+        explorer: "Uncheck the thing you don't really need.",
+        pathfinder: "Uncheck the item you don't really 'need'.",
+        maverick: "",
+      },
+    };
+
+    const explorer = mapPayloadScreen(row, "explorer");
+    expect(explorer).toMatchObject({
+      type: "budget-select",
+      total: 30,
+      pairImage: false,
+      errors: {
+        overBudget: "Uncheck the thing you don't really need.",
+        wrongSelection: "Uncheck the thing you don't really need.",
+      },
+    });
+    if (explorer.type !== "budget-select") return;
+    expect(explorer.errors.itemHints).toBeUndefined();
+    expect(explorer.items.map((item) => [item.emoji, item.label, item.price])).toEqual([
+      ["🚍", "Bus Pass", 15],
+      ["⚡", "Energy Drink", 10],
+      ["🔌", "Phone Cable", 15],
+    ]);
+    expect(explorer.correctIds).toEqual([
+      explorer.items[0]?.id,
+      explorer.items[2]?.id,
+    ]);
+
+    const pathfinder = mapPayloadScreen(row, "pathfinder");
+    if (pathfinder.type !== "budget-select") return;
+    expect(pathfinder.items.map((item) => item.label)).toEqual([
+      "Bus Pass",
+      "Energy Drink",
+      "Dog lead",
+    ]);
+    expect(pathfinder.correctIds).toEqual([
+      pathfinder.items[0]?.id,
+      pathfinder.items[2]?.id,
+    ]);
+    expect(pathfinder.errors.overBudget).toBe("Uncheck the item you don't really 'need'.");
+
+    const maverick = mapPayloadScreen(row, "maverick");
+    if (maverick.type !== "budget-select") return;
+    expect(maverick.items.map((item) => item.label)).toEqual([
+      "Bus Pass",
+      "Energy Drink",
+      "Dog lead",
+    ]);
+    expect(maverick.errors.wrongSelection).toBe("Uncheck the item you don't really 'need'.");
+  });
+
+  it("maps lesson 2 budget-select from the CSV for every cohort", () => {
+    const row = loadBundledLessonPayload(1, 2).screens.find(
+      (screen) => screen.gameType === "budget-select",
+    );
+    expect(row).toBeDefined();
+    if (!row) return;
+
+    const explorer = mapPayloadScreen(row, "explorer");
+    const pathfinder = mapPayloadScreen(row, "pathfinder");
+    const maverick = mapPayloadScreen(row, "maverick");
+    for (const screen of [explorer, pathfinder, maverick]) {
+      expect(screen.type).toBe("budget-select");
+    }
+    if (
+      explorer.type !== "budget-select" ||
+      pathfinder.type !== "budget-select" ||
+      maverick.type !== "budget-select"
+    ) {
+      return;
+    }
+    expect(explorer.items.map((item) => item.label)).toEqual([
+      "Bus Pass",
+      "Energy Drink",
+      "Phone Cable",
+    ]);
+    expect(explorer.correctIds).toEqual([explorer.items[0]?.id, explorer.items[2]?.id]);
+    expect(explorer.errors).toEqual({
+      overBudget: "Uncheck the thing you don't really need.",
+      wrongSelection: "Uncheck the thing you don't really need.",
+    });
+    expect(pathfinder.items.map((item) => item.label)).toEqual([
+      "Bus Pass",
+      "Energy Drink",
+      "Dog lead",
+    ]);
+    expect(pathfinder.correctIds).toEqual([
+      pathfinder.items[0]?.id,
+      pathfinder.items[2]?.id,
+    ]);
+    expect(maverick.items.map((item) => item.label)).toEqual([
+      "Bus Pass",
+      "Energy Drink",
+      "Phone Cable",
+    ]);
+    expect(maverick.correctIds).toEqual([maverick.items[0]?.id, maverick.items[2]?.id]);
+    expect(pathfinder.errors.overBudget).toBe("Uncheck the item you don't really 'need'.");
+    expect(maverick.errors.wrongSelection).toBe("Uncheck the item you don't really 'need'.");
+  });
+
+  it("maps lesson 2 gift drag ids onto illustration art", () => {
+    const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 2), "explorer", 2);
+    const drag = lesson.screens.find((screen) => screen.type === "drag-to-target");
+    expect(drag).toMatchObject({
+      type: "drag-to-target",
+      sourceIllustrationId: "concept-gift-box",
+      targetIllustrationId: "senna-celebrating",
+      showZoneLabels: false,
+    });
+    const maverick = resolvePayloadLesson(loadBundledLessonPayload(1, 2), "maverick", 2);
+    const maverickDrag = maverick.screens.find((screen) => screen.type === "drag-to-target");
+    expect(maverickDrag).toMatchObject({
+      targetIllustrationId: "aiden-celebrating",
+    });
+  });
+
+  it("maps lesson 3 spent totals and the three-blank sentence", () => {
+    const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), "explorer", 3);
+    const spent = lesson.screens[1];
+    expect(spent).toMatchObject({
+      type: "bucket-sort",
+      layout: "spent-total",
+      targetTotal: 40,
+      buckets: [{ id: "spent", label: "Spent" }],
+    });
+    if (spent?.type === "bucket-sort") {
+      expect(spent.items.map((item) => [item.emoji, item.label, item.price, item.bucket])).toEqual([
+        ["🧸", "Squishy toy", 25, "spent"],
+        ["🫧", "Slime", 8, "spent"],
+        ["🍫", "Snacks", 7, "spent"],
+      ]);
+    }
+    const sentence = lesson.screens[5];
+    expect(sentence).toMatchObject({
+      type: "word-drop",
+      prompt:
+        "Because I didn't [blank] everything, I had [blank] to [blank] the headphones immediately.",
+      blanks: [
+        { correctOption: "spend" },
+        { correctOption: "cash for emergencies" },
+        { correctOption: "replace" },
+      ],
+    });
+  });
+
   it("uses pathfinder settings when the explorer settings cell is empty", () => {
     const content = resolvePayloadLesson(loadBundledLessonPayload(1, 1), "pathfinder", 1);
     const wordDrop = content.screens[0];

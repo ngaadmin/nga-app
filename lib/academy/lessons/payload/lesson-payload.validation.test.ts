@@ -20,8 +20,8 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 const COHORTS: readonly MasteryCohort[] = ["explorer", "pathfinder", "maverick"];
 const LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
-/** Lessons the payload player actually opens. Lessons 2–5 stay on their hard-coded files. */
-const PLAYABLE = [1, 6, 7, 8, 9] as const;
+/** Every Module 1 lesson the payload player opens, including lessons 2–5. */
+const PLAYABLE = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 function goTargets(settings: string): string[] {
   return [...settings.matchAll(/GO\s+Screen\s+([A-Za-z0-9-]+)/gi)].map(

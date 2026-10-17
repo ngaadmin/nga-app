@@ -3,11 +3,6 @@ import {
   DESIGN_SHELL_LESSON_DEFINITION,
   DESIGN_SHELL_MILESTONE_ID,
 } from "@/lib/academy/lessons/content/design-shell";
-import { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
-import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
-import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
-import { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
-import { M1_L5_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l5";
 import {
   LESSON_COMPLETION_XP,
   LESSON_PERFECT_STREAK_BONUS,
@@ -27,14 +22,8 @@ export {
   listPlayableLessonMilestoneIds,
 } from "@/lib/academy/lessons/lesson-availability";
 
-/** Shipped lesson definitions keyed by academy milestone id. */
-export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {
-  1: M1_L1_LESSON_DEFINITION,
-  2: M1_L2_LESSON_DEFINITION,
-  3: M1_L3_LESSON_DEFINITION,
-  4: M1_L4_LESSON_DEFINITION,
-  5: M1_L5_LESSON_DEFINITION,
-};
+/** Hard-coded lessons the player still opens. Module 1 files stay on disk and are not registered. */
+export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {};
 
 export const SHIPPED_ACADEMY_LESSON_IDS = new Set<number>(
   Object.keys(LESSON_DEFINITIONS).map((key) => Number.parseInt(key, 10)),
@@ -100,33 +89,29 @@ export function resolveLessonForMilestone(
 
 // ─── Backward-compatible reward/skill exports (registry mirrors) ─────────────
 
-export const M1_L1_SKILL_ID = LESSON_DEFINITIONS[1]!.rewards.skillSlug;
-export const M1_L1_ACHIEVEMENT_SKILL_ID =
-  LESSON_DEFINITIONS[1]!.rewards.achievementSkillSlug;
+/** Live skill slugs from Lesson-Details.csv. Module 1 is not loaded from content files. */
+export const M1_L1_SKILL_ID = "stop-and-think";
+export const M1_L1_ACHIEVEMENT_SKILL_ID = M1_L1_SKILL_ID;
 export const M1_L1_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L1_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
-export const M1_L2_SKILL_ID = LESSON_DEFINITIONS[2]!.rewards.skillSlug;
-export const M1_L2_ACHIEVEMENT_SKILL_ID =
-  LESSON_DEFINITIONS[2]!.rewards.achievementSkillSlug;
+export const M1_L2_SKILL_ID = "put-needs-first";
+export const M1_L2_ACHIEVEMENT_SKILL_ID = M1_L2_SKILL_ID;
 export const M1_L2_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L2_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
-export const M1_L3_SKILL_ID = LESSON_DEFINITIONS[3]!.rewards.skillSlug;
-export const M1_L3_ACHIEVEMENT_SKILL_ID =
-  LESSON_DEFINITIONS[3]!.rewards.achievementSkillSlug;
+export const M1_L3_SKILL_ID = "keep-spare-cash";
+export const M1_L3_ACHIEVEMENT_SKILL_ID = M1_L3_SKILL_ID;
 export const M1_L3_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L3_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
-export const M1_L4_SKILL_ID = LESSON_DEFINITIONS[4]!.rewards.skillSlug;
-export const M1_L4_ACHIEVEMENT_SKILL_ID =
-  LESSON_DEFINITIONS[4]!.rewards.achievementSkillSlug;
+export const M1_L4_SKILL_ID = "stop-and-think";
+export const M1_L4_ACHIEVEMENT_SKILL_ID = M1_L4_SKILL_ID;
 export const M1_L4_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L4_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
-export const M1_L5_SKILL_ID = LESSON_DEFINITIONS[5]!.rewards.skillSlug;
-export const M1_L5_ACHIEVEMENT_SKILL_ID =
-  LESSON_DEFINITIONS[5]!.rewards.achievementSkillSlug;
+export const M1_L5_SKILL_ID = "put-needs-first";
+export const M1_L5_ACHIEVEMENT_SKILL_ID = M1_L5_SKILL_ID;
 export const M1_L5_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L5_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 

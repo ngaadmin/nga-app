@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LessonBudgetSelectGame } from "@/components/academy/lesson/lesson-budget-select-game";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
+  LessonErrorBanner,
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
@@ -34,10 +35,7 @@ export function BudgetSelectScreen({
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <LessonScreenLayout
-      errorMessage={error}
-      emphasizeInstruction={screen.emphasizeInstruction === true}
-    >
+    <LessonScreenLayout emphasizeInstruction={screen.emphasizeInstruction === true}>
       <LessonBudgetSelectGame
         intro={screen.intro}
         walletLabel={screen.walletLabel}
@@ -61,6 +59,7 @@ export function BudgetSelectScreen({
           onDismissPersistentError?.();
         }}
       />
+      {error ? <LessonErrorBanner variant="inline">{error}</LessonErrorBanner> : null}
     </LessonScreenLayout>
   );
 }

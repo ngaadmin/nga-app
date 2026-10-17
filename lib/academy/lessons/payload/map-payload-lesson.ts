@@ -2,6 +2,7 @@ import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
 import { parseCashUpdate, type CashComparison, type CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
 import { screenLabelKey } from "@/lib/academy/lessons/payload/lesson-graph";
+import { isIllustrationId } from "@/lib/academy/illustrations/illustration-registry";
 import {
   isMedalIllustrationId,
   medalIdForSkillNumber,
@@ -18,7 +19,7 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 type SettingEntry = { key: string; value: string };
 
-const ITEM_BUCKETS = new Set(["SHORT", "LONG", "NEED", "WANT", "YES", "NO"]);
+const ITEM_BUCKETS = new Set(["SHORT", "LONG", "NEED", "WANT", "YES", "NO", "SPENT"]);
 
 const BUCKET_LABEL: Record<string, { id: string; label: string; tone: "short" | "long" | "need" | "want"; icon: string }> = {
   SHORT: { id: "short", label: "Short Fun", tone: "short", icon: "⏱️" },
@@ -27,6 +28,7 @@ const BUCKET_LABEL: Record<string, { id: string; label: string; tone: "short" | 
   WANT: { id: "want", label: "Wants", tone: "want", icon: "✨" },
   YES: { id: "yes", label: "Yes", tone: "need", icon: "🛡️" },
   NO: { id: "no", label: "No", tone: "want", icon: "🚫" },
+  SPENT: { id: "spent", label: "Spent", tone: "need", icon: "💸" },
 };
 
 function cohortField(copy: PayloadCohortCopy, cohort: MasteryCohort): string {
@@ -206,6 +208,23 @@ function readEmojiAt(
     break;
   }
   return { emoji: chars.slice(start, end).join(""), end };
+}
+
+/** `senna-celebrating` → Senna. `concept-gift-box` → Gift box. */
+function labelFromIllustrationId(id: string): string {
+  const character = /^(lars|senna|mia|holly|aiden|dash|immi)(?:-|$)/i.exec(id);
+  const name = character?.[1];
+  if (name) {
+    const lower = name.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+  const words = id
+    .replace(/^concept-/, "")
+    .split("-")
+    .filter((word) => word.length > 0);
+  const phrase = words.join(" ");
+  if (!phrase) return id;
+  return phrase.charAt(0).toUpperCase() + phrase.slice(1);
 }
 
 function firstEmoji(text: string): string | undefined {
@@ -587,6 +606,99 @@ function rankOrderFromSettings(raw: string, error: string): {
   return { items, correctOrder, errors };
 }
 
+function splitTrailingPrice(label: string): { label: string; price?: number } {
+  const paren = /^(.*?)(?:\s*[-–—]\s*)?\(\$(\d+)\)\s*$/.exec(label.trim());
+  if (paren?.[1] && paren[2]) {
+    return { label: paren[1].trim(), price: Number(paren[2]) };
+  }
+  const plain = /^(.*?)(?:\s*[-–—]\s*)\$(\d+)\s*$/.exec(label.trim());
+  if (plain?.[1] && plain[2]) {
+    return { label: plain[1].trim(), price: Number(plain[2]) };
+  }
+  return { label: label.trim() };
+}
+
+function budgetMatchScore(label: string, token: string): number {
+  const needle = token.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!needle) return 0;
+  const labelNorm = label.trim().toLowerCase().replace(/\s+/g, " ");
+  if (labelNorm === needle) return 4;
+  const slug = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (slug(label) === slug(token)) return 3;
+  const words = labelNorm.split(/[^a-z0-9]+/).filter(Boolean);
+  if (words[0] === needle) return 2;
+  if (!needle.includes(" ") && words.includes(needle)) return 1;
+  return 0;
+}
+
+function matchBudgetItem<T extends { label: string }>(
+  items: readonly T[],
+  token: string,
+): T | undefined {
+  let best: T | undefined;
+  let bestScore = 0;
+  for (const item of items) {
+    const score = budgetMatchScore(item.label, token);
+    if (score > bestScore) {
+      best = item;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/**
+ * `TOTAL:`, tagged `NEED:` / `WANT:` item lines, and `CORRECT:` names.
+ * A correct name matches the label, its slug, or a word in the label
+ * (`bus`, `dog lead`, `cable`).
+ */
+function budgetSelectFromSettings(raw: string, error: string): {
+  total: number;
+  items: { id: string; label: string; price: number; emoji?: string }[];
+  correctIds: string[];
+  errors: { overBudget: string; wrongSelection: string };
+} {
+  const total = Number.parseInt(/\bTOTAL:\s*\$?(\d+)/i.exec(raw)?.[1] ?? "", 10);
+  const items: { id: string; label: string; price: number; emoji?: string }[] = [];
+  let correctRaw = "";
+  for (const line of raw.split(/\r?\n/).map((entry) => entry.trim()).filter(Boolean)) {
+    const correct = /^CORRECT:\s*(.*)$/i.exec(line);
+    if (correct) {
+      correctRaw = correct[1] ?? "";
+      continue;
+    }
+    const tagged = /^(?:NEED|WANT)\s*:\s*(.+)$/i.exec(line);
+    const inline = /^ITEMS:\s*(.+)$/i.exec(line);
+    const body = tagged?.[1] ?? inline?.[1];
+    if (!body) continue;
+    const split = splitEmojiLabel(body);
+    const priced = splitTrailingPrice(split.label);
+    if (priced.price === undefined || !priced.label) continue;
+    items.push({
+      id: itemSlug(priced.label, items.length),
+      label: priced.label,
+      price: priced.price,
+      ...(split.emoji ? { emoji: split.emoji } : {}),
+    });
+  }
+  const correctIds = correctRaw
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .flatMap((token) => {
+      const match = matchBudgetItem(items, token);
+      return match ? [match.id] : [];
+    });
+  const message = error.trim();
+  return {
+    total: Number.isFinite(total) ? total : 0,
+    items,
+    correctIds,
+    errors: { overBudget: message, wrongSelection: message },
+  };
+}
+
 /**
  * Turn one payload row into the existing screen config for that game template.
  * Completion medals stay on the lesson-number resolver — the sheet's medal
@@ -620,6 +732,28 @@ export function mapPayloadScreen(
         inlineCorrect?.[1]?.trim() ??
         options[0] ??
         "";
+      const blankCount = text.split(blank).length - 1;
+      const correctParts = correctOption
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+      if (blankCount > 1 && correctParts.length === blankCount) {
+        return {
+          type: "word-drop",
+          id,
+          narrativeBefore,
+          narrativeAfter,
+          prompt: text.replaceAll(blank, "[blank]"),
+          options,
+          correctOption: correctParts[0] ?? "",
+          blanks: correctParts.map((part) => ({
+            options,
+            correctOption: part,
+          })),
+          wrongError: error,
+          ...picture,
+        };
+      }
       return {
         type: "word-drop",
         id,
@@ -643,19 +777,27 @@ export function mapPayloadScreen(
       };
     }
     case "drag-to-target": {
-      const source = settingValue(settings, "SOURCE") ?? "";
-      const target = settingValue(settings, "TARGET") ?? "";
-      const emoji = firstEmoji(source);
-      const sourceLabel = (emoji ? source.replace(emoji, "") : source).trim() || "Start";
+      const source = (settingValue(settings, "SOURCE") ?? "").replace(/\s*\/\s*$/, "").trim();
+      const target = (settingValue(settings, "TARGET") ?? "").replace(/\s*\/\s*$/, "").trim();
+      const sourceArt = isIllustrationId(source) ? source : undefined;
+      const targetArt = isIllustrationId(target) ? target : undefined;
+      const emoji = sourceArt ? undefined : firstEmoji(source);
+      const sourceLabel = sourceArt
+        ? labelFromIllustrationId(source)
+        : (emoji ? source.replace(emoji, "") : source).trim() || "Start";
       const sourceImageFile = settingValue(settings, "ITEM");
       const targetImageFile = settingValue(settings, "IMAGE");
+      const hideLabels = Boolean(sourceArt || targetArt || sourceImageFile);
       return {
         type: "drag-to-target",
         id,
         intro: text,
         sourceLabel,
-        targetLabel: target.trim() || "Target",
+        targetLabel: targetArt ? labelFromIllustrationId(target) : target || "Target",
         ...(emoji ? { itemEmoji: emoji } : {}),
+        ...(sourceArt ? { sourceIllustrationId: sourceArt, itemSize: "lg" as const } : {}),
+        ...(targetArt ? { targetIllustrationId: targetArt } : {}),
+        ...(hideLabels ? { showZoneLabels: false } : {}),
         ...(sourceImageFile ? { sourceImageFile, itemSize: "lg" as const, showZoneLabels: false } : {}),
         ...(targetImageFile ? { targetImageFile } : {}),
         coinCount: 1,
@@ -863,6 +1005,33 @@ export function mapPayloadScreen(
           layout: "steps-row",
           buckets,
           items,
+          ...picture,
+        };
+      }
+      const spentRows = itemRows(settings).filter((item) => item.bucket === "SPENT");
+      if (row.gameType === "bucket-sort" && spentRows.length > 0) {
+        const spent = spentRows;
+        const totalRaw = settingValue(settings, "TOTAL") ?? "";
+        const targetTotal = Number.parseInt(totalRaw.replace(/[^\d]/g, ""), 10);
+        const items = spent.map((item, index) => {
+          const parsed = splitEmojiLabel(item.text);
+          const priced = splitTrailingPrice(parsed.label);
+          return {
+            id: itemSlug(priced.label, index),
+            ...(parsed.emoji ? { emoji: parsed.emoji } : {}),
+            label: priced.label,
+            bucket: "spent",
+            ...(priced.price !== undefined ? { price: priced.price } : {}),
+          };
+        });
+        return {
+          type: "bucket-sort",
+          id,
+          intro: text,
+          layout: "spent-total",
+          buckets: [{ id: "spent", label: "Spent" }],
+          items,
+          ...(Number.isFinite(targetTotal) ? { targetTotal } : {}),
           ...picture,
         };
       }
@@ -1078,6 +1247,24 @@ export function mapPayloadScreen(
           },
         ],
         sliderError: error || "Slide until the amount is set aside.",
+        ...picture,
+      };
+    }
+    case "budget-select": {
+      const budget = budgetSelectFromSettings(cohortField(row.settings, cohort), error);
+      if (budget.items.length === 0) {
+        throw new Error(
+          `Screen ${row.screenLabel} (budget-select) has no items.`,
+        );
+      }
+      return {
+        type: "budget-select",
+        id,
+        intro: text,
+        total: budget.total,
+        items: budget.items,
+        correctIds: budget.correctIds,
+        errors: budget.errors,
         ...picture,
       };
     }

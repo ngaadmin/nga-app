@@ -6,16 +6,17 @@ export const ACADEMY_DESIGN_SHELL_PATH =
   "/dashboard/academy/lesson/shell" as const;
 
 /**
- * Milestone ids that have a hard-coded lesson file.
+ * Milestone ids whose hard-coded lesson file is still registered.
  * Must match the keys of `LESSON_DEFINITIONS` in the lesson registry.
+ * Module 1 lessons 1–9 keep their old files on disk, but those files are not registered.
  */
-export const DEFINITION_MILESTONE_IDS = [1, 2, 3, 4, 5] as const;
+export const DEFINITION_MILESTONE_IDS = [] as const;
 
 /**
- * Module 1 lessons played from Screens1.csv that have no hard-coded file.
+ * Module 1 lessons played from Screens1.csv.
  * Milestone id matches the lesson number inside module 1.
  */
-export const BUNDLED_PAYLOAD_MILESTONE_IDS = [6, 7, 8, 9] as const;
+export const BUNDLED_PAYLOAD_MILESTONE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 const definitionIds = new Set<number>(DEFINITION_MILESTONE_IDS);
 const bundledIds = new Set<number>(BUNDLED_PAYLOAD_MILESTONE_IDS);
@@ -27,7 +28,7 @@ export function hasShippedLesson(milestoneId: number): boolean {
 export function bundledPayloadMilestone(
   milestoneId: number,
 ): { moduleNumber: number; lessonNumber: number } | undefined {
-  if (milestoneId === 1 || bundledIds.has(milestoneId)) {
+  if (bundledIds.has(milestoneId)) {
     return { moduleNumber: 1, lessonNumber: milestoneId };
   }
   return undefined;

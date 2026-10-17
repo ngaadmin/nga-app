@@ -45,7 +45,8 @@ import {
   TrophyIcon,
   ZapIcon,
 } from "@/lib/dashboard/icons";
-import { canLaunchAcademyLesson } from "@/lib/academy/lessons/registry";
+import { useDashboardNavPending } from "@/components/dashboard/dashboard-nav-pending";
+import { canLaunchAcademyLesson } from "@/lib/academy/lessons/lesson-availability";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { cn } from "@/lib/utils/cn";
 
@@ -363,6 +364,7 @@ export function AcademySkillTrack({
   milestones = [],
 }: AcademySkillTrackProps) {
   const router = useRouter();
+  const { start: startPendingNavigation } = useDashboardNavPending();
   const activeNodeRef = useRef<HTMLDivElement | null>(null);
   const activeNodeBoxRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
@@ -384,14 +386,13 @@ export function AcademySkillTrack({
   );
 
   useEffect(() => {
-    if (continueMilestoneId == null) return;
-    const milestone = safeMilestones.find((node) => node.id === continueMilestoneId);
-    if (!milestone) return;
-    if (!canLaunchAcademyLesson(continueMilestoneId, milestone.status, masteryCohort)) {
-      return;
+    for (const milestone of safeMilestones) {
+      if (!canLaunchAcademyLesson(milestone.id, milestone.status, masteryCohort)) {
+        continue;
+      }
+      router.prefetch(`/dashboard/academy/lesson/${milestone.id}`);
     }
-    router.prefetch(`/dashboard/academy/lesson/${continueMilestoneId}`);
-  }, [continueMilestoneId, masteryCohort, router, safeMilestones]);
+  }, [masteryCohort, router, safeMilestones]);
 
   const pennyMilestoneId = useMemo(
     () => resolvePennyMilestoneId(safeMilestones),
@@ -448,7 +449,9 @@ export function AcademySkillTrack({
     const milestone = safeMilestones.find((node) => node.id === milestoneId);
     if (!milestone) return;
     if (canLaunchAcademyLesson(milestoneId, milestone.status, masteryCohort)) {
-      router.push(`/dashboard/academy/lesson/${milestoneId}`);
+      const href = `/dashboard/academy/lesson/${milestoneId}`;
+      startPendingNavigation(href);
+      router.push(href);
     }
   };
 

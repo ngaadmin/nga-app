@@ -6,7 +6,7 @@ import {
   bundledPayloadMilestone,
   hasShippedLesson,
   listPlayableLessonMilestoneIds,
-} from "@/lib/academy/lessons/registry";
+} from "@/lib/academy/lessons/lesson-availability";
 import {
   lessonNumberForMilestoneId,
   levelGroupForMilestoneId,

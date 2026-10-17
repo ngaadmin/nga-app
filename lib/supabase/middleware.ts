@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isPublicAppPath } from "@/lib/auth/public-routes";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
+import { shouldRefreshSupabaseSession } from "@/lib/supabase/session-freshness";
 
 export async function updateSession(request: NextRequest) {
   // Do not refresh Auth cookies on sign-out; that would undo cookie deletion.
@@ -10,6 +11,12 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === "/api/auth/sign-out" ||
     isPublicAppPath(request.nextUrl.pathname)
   ) {
+    return NextResponse.next({ request });
+  }
+
+  // A still-valid access token does not need a JWKS or refresh round trip.
+  // Near expiry (and unreadable cookies) fall through to getClaims() below.
+  if (!shouldRefreshSupabaseSession(request.cookies.getAll())) {
     return NextResponse.next({ request });
   }
 

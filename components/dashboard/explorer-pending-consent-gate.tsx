@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { ExplorerPendingConsentView } from "@/components/onboarding/explorer-pending-consent-view";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/registry";
+import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/lesson-availability";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { shouldBlockExplorerPendingPlay } from "@/lib/onboarding/explorer-pending-consent";
 import { readUserSession } from "@/lib/onboarding/guest-session";

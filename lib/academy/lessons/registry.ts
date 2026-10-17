@@ -17,11 +17,15 @@ import {
   type CohortLessonDefinition,
   type ResolvedLessonContent,
 } from "@/lib/academy/lessons/types";
-import { isDevClient } from "@/lib/dev/client-persist";
 
-/** Dev / QA route for Academy template restyle. Not on the Academy map. */
-export const ACADEMY_DESIGN_SHELL_PATH =
-  "/dashboard/academy/lesson/shell" as const;
+export {
+  ACADEMY_DESIGN_SHELL_PATH,
+  bundledPayloadMilestone,
+  canLaunchAcademyLesson,
+  hasShippedLesson,
+  isDevAcademyDesignShellPath,
+  listPlayableLessonMilestoneIds,
+} from "@/lib/academy/lessons/lesson-availability";
 
 /** Shipped lesson definitions keyed by academy milestone id. */
 export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {
@@ -70,13 +74,6 @@ export function getShippedLessonIdsForCohort(
 
 export function isDesignShellLesson(milestoneId: number): boolean {
   return milestoneId === DESIGN_SHELL_MILESTONE_ID;
-}
-
-/** Dev-only: skip onboarding gates for the template lab, never for real lessons. */
-export function isDevAcademyDesignShellPath(
-  pathname: string | null | undefined,
-): boolean {
-  return isDevClient() && pathname === ACADEMY_DESIGN_SHELL_PATH;
 }
 
 export function getLessonDefinition(
@@ -133,51 +130,3 @@ export const M1_L5_ACHIEVEMENT_SKILL_ID =
 export const M1_L5_XP_REWARD = LESSON_COMPLETION_XP;
 export const M1_L5_PERFECT_STREAK_BONUS = LESSON_PERFECT_STREAK_BONUS;
 
-/**
- * Module 1 lessons played from Screens1.csv that have no hard-coded file.
- * Milestone id matches the lesson number inside module 1.
- */
-const BUNDLED_PAYLOAD_MILESTONE_IDS = new Set<number>([6, 7, 8, 9]);
-
-export function bundledPayloadMilestone(
-  milestoneId: number,
-): { moduleNumber: number; lessonNumber: number } | undefined {
-  if (milestoneId === 1 || BUNDLED_PAYLOAD_MILESTONE_IDS.has(milestoneId)) {
-    return { moduleNumber: 1, lessonNumber: milestoneId };
-  }
-  return undefined;
-}
-
-export function hasShippedLesson(milestoneId: number): boolean {
-  return (
-    SHIPPED_ACADEMY_LESSON_IDS.has(milestoneId) ||
-    BUNDLED_PAYLOAD_MILESTONE_IDS.has(milestoneId)
-  );
-}
-
-/** Milestone ids the Academy map can open. Used to prebuild those lesson routes. */
-export function listPlayableLessonMilestoneIds(): number[] {
-  const ids = new Set<number>([
-    ...SHIPPED_ACADEMY_LESSON_IDS,
-    ...BUNDLED_PAYLOAD_MILESTONE_IDS,
-  ]);
-  return [...ids].sort((left, right) => left - right);
-}
-
-/**
- * Active (current) and completed lessons open when the lesson definition exists.
- * Do not use per-cohort `shippedCohorts` here — that was blocking the continue
- * node after lesson 2 for Maverick while the map still marked lesson 3 current.
- * Locked stays locked. Content still falls back Pathfinder → Maverick on resolve.
- */
-export function canLaunchAcademyLesson(
-  milestoneId: number,
-  status: "active" | "completed" | "locked",
-  _cohort: MasteryCohort,
-): boolean {
-  if (!hasShippedLesson(milestoneId)) {
-    return false;
-  }
-
-  return status === "active" || status === "completed";
-}

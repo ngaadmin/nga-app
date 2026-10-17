@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AcademyLessonPlayer } from "@/components/academy/lesson/academy-lesson-player";
 import { DesignShellScreenJumper } from "@/components/academy/lesson/dev/design-shell-screen-jumper";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
-import { DESIGN_SHELL_MILESTONE_ID } from "@/lib/academy/lessons/registry";
+import { DESIGN_SHELL_MILESTONE_ID } from "@/lib/academy/lessons/content/design-shell";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {

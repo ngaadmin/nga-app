@@ -100,7 +100,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     levelId: 1,
     skillNumber: 3,
     skillSlug: "smart-saving",
-    skillName: "Believe Money Can Be Made",
+    skillName: "Don't Spend Money You Don't Have",
     description: "See that money can be earned",
     isAdvancedCohortOnly: false,
     legacySlugs: ["savings-streak", "keep-some-aside", "keep-spare-cash"],

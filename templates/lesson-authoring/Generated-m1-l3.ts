@@ -3,7 +3,7 @@
 import { teenCompletionScreen } from "@/lib/academy/lessons/completion-screen";
 import type { CohortLessonDefinition, ScreenConfig, ScreenOverrideMap } from "@/lib/academy/lessons/types";
 
-const SKILL_TITLE = "Believe Money Can Be Made";
+const SKILL_TITLE = "Don't Spend Money You Don't Have";
 const LEAD_CHARACTER = "Holly";
 
 const M1_L3_META = {

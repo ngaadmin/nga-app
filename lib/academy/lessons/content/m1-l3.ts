@@ -202,7 +202,7 @@ const M1_L3_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "completion",
     id: "milestone-splash",
-    skillLearnedLabel: "Skill Learned: Believe Money Can Be Made",
+    skillLearnedLabel: "Skill Learned: Don't Spend Money You Don't Have",
     bodyCopy:
       "Lesson complete! You've unlocked a huge secret: Having some spare cash means you're ready for whatever comes next.",
     useStandardPane: true,
@@ -276,7 +276,7 @@ const M1_L3_PATHFINDER_OVERRIDES: ScreenOverrideMap = {
       "Holly could fix the problem because she had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
   },
   "milestone-splash": {
-    skillLearnedLabel: "Skill Learned: Believe Money Can Be Made",
+    skillLearnedLabel: "Skill Learned: Don't Spend Money You Don't Have",
     bodyCopy:
       "Lesson complete! You've unlocked a huge secret: Having Cash for Emergencies means you're ready for whatever comes next.",
   },

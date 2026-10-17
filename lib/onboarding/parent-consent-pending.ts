@@ -1,4 +1,4 @@
-import { isConsentTokenUnexpired } from "@/lib/auth/consent-token";
+import { isConsentTokenUnexpired } from "@/lib/auth/consent-token-ttl";
 import {
   readPersisted,
   removePersisted,

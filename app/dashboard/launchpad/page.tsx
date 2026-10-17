@@ -2,8 +2,6 @@
 import { LaunchpadDashboard } from "@/components/dashboard/launchpad/launchpad-dashboard";
 import { copyMatrix } from "@/constants/copyMatrix";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: copyMatrix.dashboard.launchpad.title,
   description: copyMatrix.dashboard.launchpad.description,

@@ -3,11 +3,15 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { DashboardNavigation } from "@/components/dashboard/dashboard-navigation";
+import {
+  DashboardNavPendingProvider,
+  DashboardPendingScreen,
+} from "@/components/dashboard/dashboard-nav-pending";
 import { AppFooter } from "@/components/legal/app-footer";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import { HubIntro } from "@/components/dashboard/hub-intro/hub-intro";
 import { hubIntroIdFromPathname } from "@/lib/dashboard/hub-intro/resolve-hub";
-import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/registry";
+import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/lesson-availability";
 import {
   ONBOARDING_ENTRY_PATH,
   readUserSession,
@@ -51,12 +55,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }, [router, skipOnboardingGate]);
 
   return (
-    <div
-      className={cn(
-        "flex h-dvh max-h-dvh w-full max-w-full flex-col overflow-hidden bg-white",
-        "print:h-auto print:max-h-none print:overflow-visible",
-      )}
-    >
+    <DashboardNavPendingProvider>
+      <div
+        className={cn(
+          "flex h-dvh max-h-dvh w-full max-w-full flex-col overflow-hidden bg-white",
+          "print:h-auto print:max-h-none print:overflow-visible",
+        )}
+      >
       {isLessonRoute ? null : <DashboardNavigation />}
 
       <div
@@ -75,11 +80,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
               : "overflow-y-auto overscroll-y-contain px-4 py-6 pb-[calc(112px+env(safe-area-inset-bottom))] sm:px-6 md:pb-8 print:overflow-visible print:p-0",
           )}
         >
-          {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
-          {children}
-          {isLessonRoute ? null : <AppFooter className="mt-8 print:hidden" />}
+          <DashboardPendingScreen>
+            {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
+            {children}
+            {isLessonRoute ? null : <AppFooter className="mt-8 print:hidden" />}
+          </DashboardPendingScreen>
         </main>
       </div>
-    </div>
+      </div>
+    </DashboardNavPendingProvider>
   );
 }

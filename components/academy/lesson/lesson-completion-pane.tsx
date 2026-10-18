@@ -12,11 +12,8 @@ import {
   lessonGoldClaimClass,
   lessonNextButtonClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import {
-  moduleCloserGoldMedals,
-  resolveCompletionMedalId,
-  type MedalIllustrationId,
-} from "@/lib/academy/illustrations/medal-registry";
+import { presentedCompletionMedals } from "@/lib/academy/lessons/completion-screen";
+import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
 import {
   formatLessonSkillUnlockLine,
   type SkillTrophyTier,
@@ -40,6 +37,8 @@ type LessonCompletionPaneProps = {
   medalId?: MedalIllustrationId;
   /** Show `medalId` as authored. Lesson-number medal rules do not replace it. */
   authoredMedal?: boolean;
+  /** `MEDAL: none`. Do not fill in a lesson-number medal. */
+  suppressMedal?: boolean;
   /** Sheet skill name. Wins over the registry label. */
   skillName?: string;
   skillLearnedLabel?: string;
@@ -72,6 +71,7 @@ export function LessonCompletionPane({
   skillMedalTier,
   medalId,
   authoredMedal = false,
+  suppressMedal = false,
   skillName: skillNameOverride,
   skillLearnedLabel,
   meaningLine,
@@ -90,21 +90,17 @@ export function LessonCompletionPane({
   const isModuleCloser =
     typeof lessonNumber === "number" &&
     isModuleCloserLessonNumber(lessonNumber);
-  const goldMedals = isModuleCloser
-    ? moduleCloserGoldMedals(moduleNumber ?? 1)
-    : [];
-  const resolvedMedalId =
-    goldMedals.length > 0
-      ? undefined
-      : authoredMedal && medalId
-        ? medalId
-        : resolveCompletionMedalId({
-            medalId,
-            lessonNumber,
-            moduleNumber,
-            skillNumber: skill?.skillNumber,
-            tier: skillMedalTier,
-          });
+  const medals = presentedCompletionMedals({
+    lessonNumber,
+    moduleNumber,
+    skillNumber: skill?.skillNumber,
+    skillMedalTier,
+    medalId,
+    authoredMedal,
+    suppressMedal,
+  });
+  const goldMedals = medals.length > 1 ? medals : [];
+  const resolvedMedalId = medals.length === 1 ? medals[0]?.medalId : undefined;
   const skillName =
     skillNameOverride?.trim() ||
     resolveSkillName(achievementSkillId, skillLearnedLabel);
@@ -147,7 +143,7 @@ export function LessonCompletionPane({
             {goldMedals.map((medal) => (
               <LessonSkillMedal
                 key={medal.medalId}
-                skillSlug={medal.skillSlug}
+                skillSlug={medal.skillSlug ?? achievementSkillId}
                 medalId={medal.medalId}
                 size="row"
               />

@@ -20,10 +20,13 @@ export function saveAmountFromClientX(
   return clampSaveAmount(clamped * total, total);
 }
 
-/** Next turns on once the saved amount covers the need. Spending the rest is fine. */
+/**
+ * The screen is solved only when Save is the target amount.
+ * Saving more than the target is still wrong: the rest was meant to stay spendable.
+ */
 export function allocationNextEnabled(save: number, targetMin: number): boolean {
-  if (!Number.isFinite(save)) return false;
-  return Math.round(save) >= Math.max(0, Math.round(targetMin));
+  if (!Number.isFinite(save) || !Number.isFinite(targetMin)) return false;
+  return Math.round(save) === Math.max(0, Math.round(targetMin));
 }
 
 export function allocationSavedBadge(targetMin: number): string {

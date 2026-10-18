@@ -411,11 +411,27 @@ function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
   return isMedalIllustrationId(base) ? base : undefined;
 }
 
+function medalSettingToken(value: string | undefined): string | undefined {
+  const token = value?.trim().toLowerCase().split(/\s+/)[0];
+  return token || undefined;
+}
+
 function medalTierFromSettings(value: string | undefined): PayloadMedalTier | undefined {
-  const tier = value?.trim().toLowerCase().split(/\s+/)[0];
+  const tier = medalSettingToken(value);
   if (tier === "bronze" || tier === "silver" || tier === "gold") return tier;
   if (tier === "unlocked" || tier === "unlock" || tier === "white") return "unlocked";
   return undefined;
+}
+
+/** CSV Error cell. An empty cell stays empty — no stand-in sentence. */
+function authoredError(error: string): { wrongError: string } | Record<string, never> {
+  const trimmed = error.trim();
+  return trimmed ? { wrongError: trimmed } : {};
+}
+
+function authoredHint(error: string): { releaseHint: string } | Record<string, never> {
+  const trimmed = error.trim();
+  return trimmed ? { releaseHint: trimmed } : {};
 }
 
 function medalTierFromId(medalId: MedalIllustrationId): PayloadMedalTier {
@@ -601,8 +617,10 @@ function rankOrderFromSettings(raw: string, error: string): {
     ordered.length === items.length && items.length > 0
       ? ordered
       : items.map((item) => item.id);
-  const fallback = error.trim() || "That order isn't right yet. Try again.";
-  const errors = Object.fromEntries(items.map((item) => [item.id, fallback]));
+  const message = error.trim();
+  const errors = message
+    ? Object.fromEntries(items.map((item) => [item.id, message]))
+    : {};
   return { items, correctOrder, errors };
 }
 
@@ -802,7 +820,7 @@ export function mapPayloadScreen(
         ...(targetImageFile ? { targetImageFile } : {}),
         coinCount: 1,
         successMessage: "",
-        ...(error ? { wrongError: error } : {}),
+        ...authoredError(error),
         ...picture,
       };
     }
@@ -869,6 +887,7 @@ export function mapPayloadScreen(
         lockedLabel: "Locked",
         unlockedLabel: "Done",
         goalAchievedLabel: "Goal reached",
+        ...authoredError(error),
         ...picture,
       };
     }
@@ -1005,6 +1024,7 @@ export function mapPayloadScreen(
           layout: "steps-row",
           buckets,
           items,
+          ...authoredError(error),
           ...picture,
         };
       }
@@ -1032,6 +1052,7 @@ export function mapPayloadScreen(
           buckets: [{ id: "spent", label: "Spent" }],
           items,
           ...(Number.isFinite(targetTotal) ? { targetTotal } : {}),
+          ...authoredError(error),
           ...picture,
         };
       }
@@ -1055,6 +1076,7 @@ export function mapPayloadScreen(
             { id: "thinking", label: "I'm Thinking", tone: "think", icon: "🧠" },
           ],
           items,
+          ...authoredError(error),
           ...picture,
         };
       }
@@ -1097,6 +1119,7 @@ export function mapPayloadScreen(
         intro: text,
         buckets,
         items,
+        ...authoredError(error),
         ...picture,
       };
     }
@@ -1246,7 +1269,7 @@ export function mapPayloadScreen(
             amount: targetMin,
           },
         ],
-        sliderError: error || "Slide until the amount is set aside.",
+        sliderError: error.trim(),
         ...picture,
       };
     }
@@ -1278,11 +1301,21 @@ export function mapPayloadScreen(
         frozenLabel: settingValue(settings, "FROZEN") ?? frozenLabelFromHold(holdLabel),
         successMessage: settingValue(settings, "SUCCESS") ?? "",
         holdDurationMs: 2000,
+        ...authoredHint(error),
         ...picture,
       };
     }
     case "completion": {
-      const settingsTier = medalTierFromSettings(settingValue(settings, "MEDAL"));
+      const medalSetting = settingValue(settings, "MEDAL");
+      if (medalSettingToken(medalSetting) === "none") {
+        return {
+          type: "completion",
+          id,
+          useStandardPane: true,
+          suppressMedal: true,
+        };
+      }
+      const settingsTier = medalTierFromSettings(medalSetting);
       const skillNumber = context.skillId
         ? getSkillRegistryRecord(context.skillId)?.skillNumber
         : undefined;

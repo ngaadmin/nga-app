@@ -17,4 +17,6 @@ export type BucketSortScreenConfig<TBucket extends string = string> = WithDeclar
   /** Left-column heading for spent-total layout (e.g. "Holly's purchases"). */
   poolColumnLabel?: string;
   emphasizeInstruction?: boolean;
+  /** CSV Error cell. Shown after a wrong drop. Blank cells stay blank. */
+  wrongError?: string;
 }>;

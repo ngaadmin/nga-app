@@ -54,6 +54,8 @@ type LessonSavingsGoalGameProps = {
   onGoalLost?: () => void;
   onAdvance: () => void;
   onItemSaved?: () => void;
+  /** Drop released outside the box. */
+  onMiss?: () => void;
 };
 
 function formatDollars(amount: number): string {
@@ -90,6 +92,7 @@ export function LessonSavingsGoalGame({
   items,
   onGoalReady,
   onGoalLost,
+  onMiss,
 }: LessonSavingsGoalGameProps) {
   const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
@@ -101,6 +104,7 @@ export function LessonSavingsGoalGame({
   );
   const [depositedIds, setDepositedIds] = useState<string[]>([]);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [shakingId, setShakingId] = useState<string | null>(null);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const dropZoneRef = useRef<HTMLDivElement | null>(null);
@@ -109,6 +113,7 @@ export function LessonSavingsGoalGame({
   const activePointerIdRef = useRef<number | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const dragListenersRef = useRef<(() => void) | null>(null);
+  const shakeTimerRef = useRef<number | null>(null);
 
   const savedTotal = depositedIds.reduce(
     (sum, itemId) => sum + (itemById.get(itemId)?.price ?? 0),
@@ -122,6 +127,8 @@ export function LessonSavingsGoalGame({
   onGoalReadyRef.current = onGoalReady;
   const onGoalLostRef = useRef(onGoalLost);
   onGoalLostRef.current = onGoalLost;
+  const onMissRef = useRef(onMiss);
+  onMissRef.current = onMiss;
 
   useEffect(() => {
     if (goalReached) onGoalReadyRef.current();
@@ -146,7 +153,13 @@ export function LessonSavingsGoalGame({
     setDragState(null);
   }, [releasePointerCapture]);
 
-  useEffect(() => () => endDrag(), [endDrag]);
+  useEffect(
+    () => () => {
+      endDrag();
+      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+    },
+    [endDrag],
+  );
 
   const depositItem = useCallback((itemId: string) => {
     setPoolIds((current) => {
@@ -252,6 +265,14 @@ export function LessonSavingsGoalGame({
         depositItemRef.current(current.itemId);
       } else if (current?.from === "spent") {
         withdrawItemRef.current(current.itemId);
+      } else if (current?.from === "pool") {
+        setShakingId(current.itemId);
+        if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+        shakeTimerRef.current = window.setTimeout(() => {
+          setShakingId((shaking) => (shaking === current.itemId ? null : shaking));
+          shakeTimerRef.current = null;
+        }, 360);
+        onMissRef.current?.();
       }
       endDrag();
     };
@@ -280,7 +301,11 @@ export function LessonSavingsGoalGame({
         }}
         type="button"
         onPointerDown={(event) => handleChipPointerDown(itemId, from, event)}
-        className={cn(lessonItemChipClass, isDragging && "opacity-25")}
+        className={cn(
+          lessonItemChipClass,
+          isDragging && "opacity-25",
+          shakingId === itemId && "lesson-tile-shake",
+        )}
         style={{ touchAction: "none" }}
       >
         {renderItemChip(item)}

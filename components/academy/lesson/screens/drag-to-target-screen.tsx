@@ -17,11 +17,10 @@ export function DragToTargetScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<DragToTargetScreenConfig>) {
-  const { handleComplete, handleSuccess, handleMismatch } =
-    useLessonScreenFlow({
-      screenIndex,
-      flow,
-    });
+  const { handleComplete, handleMistake, handleSuccess } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+  });
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -70,7 +69,7 @@ export function DragToTargetScreen({
         }}
         onMiss={() => {
           setError(lessonFeedbackCopy(screen.wrongError) ?? null);
-          handleMismatch();
+          handleMistake();
         }}
       />
     </LessonScreenLayout>

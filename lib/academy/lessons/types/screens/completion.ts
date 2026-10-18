@@ -19,6 +19,11 @@ export type CompletionScreenConfig = WithDeclarative<{
   authoredMedal?: boolean;
   /** Tier from the completion row (`MEDAL:`), or inferred from the medal file. */
   medalTier?: "unlocked" | "bronze" | "silver" | "gold";
+  /**
+   * `MEDAL: none` on the completion row.
+   * Lesson-number medals must not fill in.
+   */
+  suppressMedal?: boolean;
   /** Sheet skill name. Wins over the registry label on this screen. */
   skillName?: string;
 }>;

@@ -10,11 +10,13 @@ import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { resolveLessonDefinition } from "@/lib/academy/lessons/types";
 
 describe("allocation slider", () => {
-  it("enables Next once Save covers $20 and not before", () => {
+  it("enables Next only when Save is exactly the target", () => {
     expect(allocationNextEnabled(0, 20)).toBe(false);
     expect(allocationNextEnabled(19, 20)).toBe(false);
     expect(allocationNextEnabled(20, 20)).toBe(true);
-    expect(allocationNextEnabled(25, 20)).toBe(true);
+    expect(allocationNextEnabled(25, 20)).toBe(false);
+    expect(allocationNextEnabled(15, 9)).toBe(false);
+    expect(allocationNextEnabled(9, 9)).toBe(true);
   });
 
   it("treats the left edge as save $0 and the right edge as the full amount", () => {

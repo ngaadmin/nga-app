@@ -48,3 +48,15 @@ export function findAllOfTheAboveCorrectKey<TKey extends string>(
   if (!soleCorrect || !isAllOfTheAboveLabel(soleCorrect.label)) return null;
   return soleCorrect.key;
 }
+
+/**
+ * Individual statements on an all-of-the-above question stay neutral.
+ * Only the catch-all answer is graded. A true statement is not a mistake.
+ */
+export function isNeutralTrueStatement<TKey extends string>(
+  options: readonly AllOfTheAboveDetectableOption<TKey>[],
+  key: TKey,
+): boolean {
+  const catchAll = findAllOfTheAboveCorrectKey(options);
+  return catchAll != null && key !== catchAll;
+}

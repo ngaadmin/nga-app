@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonAnswerTick, LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonAnswerTick,
+  LessonScreenLayout,
+  lessonFeedbackCopy,
+} from "@/components/academy/lesson/lesson-ui";
 import {
   ALLOCATION_KNOB_PX,
   allocationNextEnabled,
@@ -13,6 +17,7 @@ import {
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
 import type { AllocationSliderScreenConfig } from "@/lib/academy/lessons/types";
+import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
 const TRACK_GOLD = "#FFA503";
@@ -27,21 +32,27 @@ export function AllocationSliderScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<AllocationSliderScreenConfig>) {
-  const { handleComplete, handleIncomplete, handleSuccess } = useLessonScreenFlow({
-    screenIndex,
-    flow,
-  });
+  const { handleComplete, handleIncomplete, handleMistake, handleSuccess } =
+    useLessonScreenFlow({
+      screenIndex,
+      flow,
+    });
 
   const total = Math.max(0, screen.total);
   const targetMin = Math.max(0, screen.targetMin);
   const reservedRef = useRef(0);
   const [reservedAmount, setReservedAmount] = useState(0);
+  const [solved, setSolved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [shaking, setShaking] = useState(false);
   const metRef = useRef(false);
+  const lastSettledRef = useRef<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  const shakeTimerRef = useRef<number | null>(null);
   const inset = allocationTrackInsetPx();
 
   const spendableToday = Math.max(0, total - reservedAmount);
-  const meetsTarget = allocationNextEnabled(reservedAmount, targetMin);
+  const meetsTarget = solved && allocationNextEnabled(reservedAmount, targetMin);
   const savePct = total > 0 ? (reservedAmount / total) * 100 : 0;
   const targetPct = total > 0 ? Math.min(100, (targetMin / total) * 100) : 0;
   const showTargetTick = targetMin > 0 && targetMin < total;
@@ -57,6 +68,53 @@ export function AllocationSliderScreen({
     const clamped = clampSaveAmount(next, total);
     reservedRef.current = clamped;
     setReservedAmount(clamped);
+    if (clamped !== targetMin && metRef.current) {
+      metRef.current = false;
+      setSolved(false);
+      handleIncomplete();
+    }
+  };
+
+  const shakeSlider = () => {
+    if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+    setShaking(false);
+    window.requestAnimationFrame(() => {
+      setShaking(true);
+      shakeTimerRef.current = window.setTimeout(() => {
+        setShaking(false);
+        shakeTimerRef.current = null;
+      }, 360);
+    });
+  };
+
+  const settle = (amount: number) => {
+    if (allocationNextEnabled(amount, targetMin)) {
+      lastSettledRef.current = amount;
+      setError(null);
+      setShaking(false);
+      if (!metRef.current) {
+        metRef.current = true;
+        setSolved(true);
+        handleSuccess();
+        handleComplete();
+      }
+      return;
+    }
+    if (metRef.current) {
+      metRef.current = false;
+      setSolved(false);
+      handleIncomplete();
+    }
+    if (amount === 0) {
+      lastSettledRef.current = 0;
+      setError(null);
+      return;
+    }
+    if (lastSettledRef.current === amount) return;
+    lastSettledRef.current = amount;
+    setError(lessonFeedbackCopy(screen.sliderError) ?? null);
+    shakeSlider();
+    handleMistake();
   };
 
   const applyFromClientX = (clientX: number) => {
@@ -70,21 +128,15 @@ export function AllocationSliderScreen({
   const markerAlign =
     targetPct >= 70 ? "translateX(-85%)" : targetPct <= 30 ? "translateX(-15%)" : "translateX(-50%)";
 
-  useEffect(() => {
-    if (meetsTarget && !metRef.current) {
-      metRef.current = true;
-      handleSuccess();
-      handleComplete();
-      return;
-    }
-    if (!meetsTarget && metRef.current) {
-      metRef.current = false;
-      handleIncomplete();
-    }
-  }, [handleComplete, handleIncomplete, handleSuccess, meetsTarget]);
+  useEffect(
+    () => () => {
+      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+    },
+    [],
+  );
 
   return (
-    <LessonScreenLayout>
+    <LessonScreenLayout errorMessage={error}>
       <div className="mt-1">
         <div className="mb-4 space-y-1">
           {lines.map((line) => (
@@ -124,7 +176,10 @@ export function AllocationSliderScreen({
           aria-valuemax={total}
           aria-valuenow={reservedAmount}
           aria-valuetext={`${dollar(reservedAmount)} saved`}
-          className="relative mt-2 h-24 touch-none select-none"
+          className={cn(
+            "relative mt-2 h-24 touch-none select-none",
+            shaking && "lesson-tile-shake",
+          )}
           style={{ touchAction: "none" }}
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -134,6 +189,13 @@ export function AllocationSliderScreen({
             if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
             applyFromClientX(event.clientX);
           }}
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+            settle(reservedRef.current);
+          }}
+          onPointerCancel={() => settle(reservedRef.current)}
           onKeyDown={(event) => {
             if (event.key === "ArrowRight" || event.key === "ArrowUp") {
               event.preventDefault();
@@ -142,6 +204,16 @@ export function AllocationSliderScreen({
             if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
               event.preventDefault();
               applySave(reservedRef.current - 1);
+            }
+          }}
+          onKeyUp={(event) => {
+            if (
+              event.key === "ArrowRight" ||
+              event.key === "ArrowUp" ||
+              event.key === "ArrowLeft" ||
+              event.key === "ArrowDown"
+            ) {
+              settle(reservedRef.current);
             }
           }}
         >

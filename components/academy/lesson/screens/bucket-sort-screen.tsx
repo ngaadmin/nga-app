@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonIllustrationSlot } from "@/components/academy/lesson/lesson-illustration-slot";
 import { LessonBucketSortGame } from "@/components/academy/lesson/lesson-bucket-sort-game";
 import { LessonSequenceSortGame } from "@/components/academy/lesson/lesson-sequence-sort-game";
-import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonScreenLayout,
+  lessonFeedbackCopy,
+} from "@/components/academy/lesson/lesson-ui";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import type { BucketSortScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
@@ -14,11 +18,16 @@ export function BucketSortScreen({
   screenIndex,
   flow,
 }: StandardScreenProps<BucketSortScreenConfig>) {
-  const { handleComplete, handleSuccess, handleMismatch } =
-    useLessonScreenFlow({
-      screenIndex,
-      flow,
-    });
+  const { handleComplete, handleMistake, handleSuccess } = useLessonScreenFlow({
+    screenIndex,
+    flow,
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  const reportWrongDrop = () => {
+    handleMistake();
+    setError(lessonFeedbackCopy(screen.wrongError) ?? null);
+  };
 
   const handleSolved = () => {
     handleSuccess();
@@ -34,7 +43,7 @@ export function BucketSortScreen({
         items={screen.items}
         steps={screen.buckets}
         onComplete={handleSolved}
-        onMismatch={handleMismatch}
+        onMismatch={reportWrongDrop}
       />
     ) : (
       <LessonBucketSortGame
@@ -44,7 +53,7 @@ export function BucketSortScreen({
         targetTotal={screen.targetTotal}
         poolColumnLabel={screen.poolColumnLabel}
         onComplete={handleSolved}
-        onMismatch={handleMismatch}
+        onMismatch={reportWrongDrop}
       />
     );
 
@@ -55,6 +64,7 @@ export function BucketSortScreen({
       cta={screen.cta}
       emphasizeInstruction={screen.emphasizeInstruction === true}
       fill={sortLayout === "steps-row" || sortLayout === "statement-sort"}
+      errorMessage={error}
     >
       {illustration?.src ? <LessonIllustrationSlot {...illustration} /> : null}
       {game}

@@ -11,9 +11,6 @@ import {
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
-import {
-  signalLessonIncorrectAnswer,
-} from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -25,7 +22,7 @@ export function HoldToFillScreen({
   flow,
 }: StandardScreenProps<HoldToFillScreenConfig>) {
   const holdMs = screen.holdDurationMs ?? DEFAULT_HOLD_MS;
-  const { handleComplete, handleSuccess } = useLessonScreenFlow({
+  const { handleComplete, handleMistake, handleSuccess } = useLessonScreenFlow({
     screenIndex,
     flow,
   });
@@ -33,6 +30,8 @@ export function HoldToFillScreen({
   const [progress, setProgress] = useState(0);
   const [complete, setComplete] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);
+  const [shaking, setShaking] = useState(false);
+  const shakeTimerRef = useRef<number | null>(null);
   usePublishLessonHint(releaseError);
   const holdStartRef = useRef<number | null>(null);
   const holdFrameRef = useRef<number | null>(null);
@@ -86,8 +85,17 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
-      signalLessonIncorrectAnswer();
+      handleMistake();
       setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? "");
+      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+      setShaking(false);
+      window.requestAnimationFrame(() => {
+        setShaking(true);
+        shakeTimerRef.current = window.setTimeout(() => {
+          setShaking(false);
+          shakeTimerRef.current = null;
+        }, 360);
+      });
     }
   };
 
@@ -96,6 +104,7 @@ export function HoldToFillScreen({
       if (holdFrameRef.current !== null) {
         cancelAnimationFrame(holdFrameRef.current);
       }
+      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
     },
     [],
   );
@@ -146,7 +155,7 @@ export function HoldToFillScreen({
           lessonHoldButtonClass,
           "lesson-hold-button",
           complete && lessonHoldButtonCompleteClass,
-          releaseError && "lesson-tile-shake",
+          shaking && "lesson-tile-shake",
         )}
       >
         <span

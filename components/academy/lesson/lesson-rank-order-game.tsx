@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   lessonIntroClass,
+  lessonNextButtonClass,
   lessonRankOrderCardClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
@@ -58,9 +59,12 @@ export function LessonRankOrderGame({
   intro,
   items,
   correctOrder,
+  errors,
+  submitLabel = "Submit Answer",
   onComplete,
-  onIncomplete,
+  onMistake,
   onSuccess,
+  onPersistentError,
   onDismissError,
 }: LessonRankOrderGameProps) {
   type ItemId = string;
@@ -85,25 +89,39 @@ export function LessonRankOrderGame({
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const lastReorderYRef = useRef<number | null>(null);
-  const solvedRef = useRef(false);
+  const [shakeBoard, setShakeBoard] = useState(false);
+  const shakeTimerRef = useRef<number | null>(null);
 
-  const orderIsCorrect = rankOrderMatches(rankOrder, correctOrder);
+  useEffect(
+    () => () => {
+      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+    },
+    [],
+  );
 
-  useEffect(() => {
-    if (orderIsCorrect && !solvedRef.current) {
-      solvedRef.current = true;
+  const submitOrder = () => {
+    if (rankSubmitted) return;
+    if (rankOrderMatches(rankOrderRef.current, correctOrder)) {
+      setShakeBoard(false);
       setRankSubmitted(true);
       onDismissError?.();
       onSuccess?.();
       onComplete();
       return;
     }
-    if (!orderIsCorrect && solvedRef.current) {
-      solvedRef.current = false;
-      setRankSubmitted(false);
-      onIncomplete?.();
-    }
-  }, [onComplete, onDismissError, onIncomplete, onSuccess, orderIsCorrect]);
+    onMistake();
+    const message = Object.values(errors).find((value) => value.trim()) ?? "";
+    if (message) onPersistentError?.(message);
+    if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+    setShakeBoard(false);
+    window.requestAnimationFrame(() => {
+      setShakeBoard(true);
+      shakeTimerRef.current = window.setTimeout(() => {
+        setShakeBoard(false);
+        shakeTimerRef.current = null;
+      }, 360);
+    });
+  };
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -208,7 +226,7 @@ export function LessonRankOrderGame({
       <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
       <div
         ref={boardRef}
-        className="flex flex-col gap-2"
+        className={cn("flex flex-col gap-2", shakeBoard && "lesson-tile-shake")}
         onPointerMove={handleBoardPointerMove}
         onPointerUp={handleBoardPointerUp}
         onPointerCancel={handleBoardPointerUp}
@@ -261,7 +279,15 @@ export function LessonRankOrderGame({
         <div className="mt-3 flex justify-center">
           <LessonAnswerTick />
         </div>
-      ) : null}
+      ) : (
+        <button
+          type="button"
+          className={cn(lessonNextButtonClass, "mt-4")}
+          onClick={submitOrder}
+        >
+          {submitLabel}
+        </button>
+      )}
       {dragGhost ? (
         <OverlayPortal className="overflow-visible">
           <div

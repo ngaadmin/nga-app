@@ -18,6 +18,7 @@ import {
   type CashComparison,
   type CashUpdate,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
+import { isNeutralTrueStatement } from "@/lib/academy/lessons/all-of-the-above";
 import { collectMultipleChoiceOptions } from "@/lib/academy/lessons/multiple-choice-options";
 import {
   getCorrectOptionKeys,
@@ -78,6 +79,10 @@ export function MultipleChoiceScreen({
   const isRadioList = screen.optionLayout === "radio-list";
   const correctKeys = getCorrectOptionKeys(choiceOptions);
   const isMultiCorrect = correctKeys.length > 1;
+  const neutralTrueOptions = choiceOptions.filter((option) =>
+    isNeutralTrueStatement(choiceOptions, option.key),
+  );
+  const neutralTrueKeys = new Set(neutralTrueOptions.map((option) => option.key));
   const optionByKey = new Map(choiceOptions.map((option) => [option.key, option]));
 
   const [optionOrder] = useState<ChoiceKey[]>(() =>
@@ -107,6 +112,8 @@ export function MultipleChoiceScreen({
   correctKeysRef.current = correctKeys;
   const isMultiCorrectRef = useRef(isMultiCorrect);
   isMultiCorrectRef.current = isMultiCorrect;
+  const neutralTrueKeysRef = useRef(neutralTrueKeys);
+  neutralTrueKeysRef.current = neutralTrueKeys;
   const commitCashRef = useRef(commitCash);
   commitCashRef.current = commitCash;
   const wrongTimersRef = useRef<Map<ChoiceKey, number>>(new Map());
@@ -211,6 +218,14 @@ export function MultipleChoiceScreen({
       return;
     }
 
+    if (neutralTrueKeysRef.current.has(key)) {
+      setSolved(false);
+      solvedRef.current = false;
+      setError(lessonFeedbackCopy(screenRef.current.wrongError) ?? null);
+      flowRef.current.clearScreenReady(screenIndex);
+      return;
+    }
+
     const selected = optionByKeyRef.current.get(key);
     if (selected && isLessonChoiceOptionCorrect(selected)) {
       lockCorrect();
@@ -296,6 +311,7 @@ export function MultipleChoiceScreen({
             selected &&
             error !== null &&
             screen.decisionPath !== true &&
+            !neutralTrueKeys.has(key) &&
             !isLessonChoiceOptionCorrect(option)
           }
         >

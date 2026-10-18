@@ -24,6 +24,8 @@ export type SavingsGoalScreenConfig = WithDeclarative<{
   unlockedLabel: string;
   goalAchievedLabel: string;
   successMessage?: string;
+  /** CSV Error cell. Shown when a drop misses the box. Blank cells stay blank. */
+  wrongError?: string;
   imagePlaceholder?: {
     label: string;
     alt?: string;

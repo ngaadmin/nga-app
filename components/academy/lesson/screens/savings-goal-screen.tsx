@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonSavingsGoalGame } from "@/components/academy/lesson/lesson-savings-goal-game";
+import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { SavingsGoalScreenConfig } from "@/lib/academy/lessons/types";
 import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
@@ -17,6 +20,9 @@ export function SavingsGoalScreen({
   flowRef.current = flow;
   const celebratedGoalRef = useRef(false);
   const [, setGoalReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  usePublishLessonHint(error);
+  const { handleMistake } = useLessonScreenFlow({ screenIndex, flow });
 
   useEffect(() => {
     flowRef.current.clearScreenReady(screenIndex);
@@ -54,6 +60,10 @@ export function SavingsGoalScreen({
             flowRef.current.clearScreenReady(screenIndex);
           }}
           onAdvance={() => undefined}
+          onMiss={() => {
+            setError(lessonFeedbackCopy(screen.wrongError) ?? null);
+            handleMistake();
+          }}
         />
       </div>
     </div>

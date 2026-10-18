@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   playLessonSelectTap,
   playLessonSuccessPing,
-  playLessonWrongBuzzer,
+  signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 
@@ -224,7 +224,7 @@ export function LessonLinkMatchGame({
     setSelected(null);
     setHintAnchor(hintText ? rightId : null);
     triggerShake([tileKey("left", leftId), tileKey("right", rightId)]);
-    playLessonWrongBuzzer();
+    signalLessonIncorrectAnswer();
     onMismatch?.();
   };
 

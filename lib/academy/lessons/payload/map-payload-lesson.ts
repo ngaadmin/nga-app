@@ -11,6 +11,7 @@ import {
 } from "@/lib/academy/illustrations/medal-registry";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { peelLeadingEmoji } from "@/lib/academy/lessons/peel-leading-emoji";
+import { resolveRankOrderIds } from "@/lib/academy/lessons/rank-order";
 import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { ACADEMY_MODULE_TITLES } from "@/lib/dashboard/academy-content";
@@ -608,15 +609,7 @@ function rankOrderFromSettings(raw: string, error: string): {
     };
   });
   const tokens = orderHint.split(",").map((token) => token.trim()).filter(Boolean);
-  const ordered = tokens
-    .map((token) =>
-      items.find((item) => item.label.toLowerCase().includes(token.toLowerCase()))?.id,
-    )
-    .filter((id): id is string => Boolean(id));
-  const correctOrder =
-    ordered.length === items.length && items.length > 0
-      ? ordered
-      : items.map((item) => item.id);
+  const correctOrder = resolveRankOrderIds(items, tokens);
   const message = error.trim();
   const errors = message
     ? Object.fromEntries(items.map((item) => [item.id, message]))

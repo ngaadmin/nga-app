@@ -23,6 +23,7 @@ import {
  * and never flash.
  */
 const PENDING_SCREEN_DELAY_MS = 120;
+const PENDING_SCREEN_MAX_MS = 4000;
 
 type NavPendingActions = {
   start: (href: string) => void;
@@ -55,9 +56,12 @@ export function DashboardNavPendingProvider({
 
   useEffect(() => {
     if (!pendingHref) return;
-    if (pathname !== originRef.current) {
+    if (pathname === pendingHref || pathname !== originRef.current) {
       setPendingHref(null);
+      return;
     }
+    const timer = window.setTimeout(() => setPendingHref(null), PENDING_SCREEN_MAX_MS);
+    return () => window.clearTimeout(timer);
   }, [pathname, pendingHref]);
 
   const actions = useMemo(() => ({ start, stop }), [start, stop]);

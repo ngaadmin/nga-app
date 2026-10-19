@@ -617,8 +617,8 @@ export const LessonSortBucket = forwardRef<HTMLDivElement, LessonSortBucketProps
         </div>
         <div
           className={cn(
-            "flex flex-1 flex-col items-stretch gap-2 py-1.5 transition-colors",
-            active && "bg-[#E8F6FC]/50",
+            "flex min-h-28 flex-1 flex-col items-stretch gap-2 rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F8FCFF] p-2 transition-colors",
+            active && "border-[#0CC1E0] bg-[#E8F6FC]",
           )}
         >
           {children}
@@ -925,7 +925,7 @@ export const LessonIconOption = forwardRef<
     <div
       className={cn(
         lessonIconOptionStackClass,
-        isCompact && "max-w-[5.75rem] gap-1.5",
+        isCompact && "w-full min-w-0 max-w-full gap-1.5",
         className,
       )}
       style={stackStyle}
@@ -935,7 +935,8 @@ export const LessonIconOption = forwardRef<
         <span
           className={cn(
             lessonIconLabelClass,
-            isCompact && "leading-tight",
+            "whitespace-normal break-normal",
+            isCompact && "text-[13px] leading-tight",
             labelClassName,
           )}
         >

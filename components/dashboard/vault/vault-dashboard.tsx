@@ -278,11 +278,16 @@ export function VaultDashboard() {
       <ModalShell
         isOpen={cashInOpen}
         onClose={() => setCashInOpen(false)}
+        align="center"
+        clearBottomNav
         labelledBy="vault-cash-in-title"
         backdropClassName="bg-[#031F82]/45"
         panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
       >
-        <CashInPointsPanel titleId="vault-cash-in-title" />
+        <CashInPointsPanel
+          titleId="vault-cash-in-title"
+          onDismiss={() => setCashInOpen(false)}
+        />
       </ModalShell>
 
       <PremiumUpgradeModal

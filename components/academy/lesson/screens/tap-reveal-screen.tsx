@@ -54,7 +54,7 @@ export function TapRevealScreen({
               emoji={item.emoji}
               size="compact"
               className="w-[calc(50%-0.375rem)] min-w-0 max-w-[11rem]"
-              labelClassName="w-full min-w-0 break-words"
+              labelClassName="w-full min-w-0 break-normal"
               onClick={() => revealItem(item.id)}
             />
           ))}
@@ -70,7 +70,7 @@ export function TapRevealScreen({
               key={bucket.id}
               className="flex min-h-40 min-w-0 flex-col gap-2 rounded-2xl border-2 border-dashed border-[#BDE9FB] bg-[#F8FCFF] p-3"
             >
-              <h3 className="m-0 break-words font-heading text-base font-bold leading-snug text-[#031F82]">
+              <h3 className="m-0 break-normal font-heading text-base font-bold leading-snug text-[#031F82]">
                 {bucket.label}
               </h3>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -81,7 +81,7 @@ export function TapRevealScreen({
                     emoji={item.emoji}
                     size="compact"
                     className="w-full min-w-0"
-                    labelClassName="w-full min-w-0 break-words"
+                    labelClassName="w-full min-w-0 break-normal"
                   />
                 ))}
               </div>

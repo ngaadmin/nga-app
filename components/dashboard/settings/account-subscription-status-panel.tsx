@@ -538,9 +538,13 @@ export function AccountSubscriptionStatusPanel() {
             <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">
               {copy.title}
             </h1>
-            <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
-              {copy.description}
-            </p>
+            {sessionReady ? (
+              <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
+                {isParentSettingsView || isMasterViewer
+                  ? copy.description
+                  : copy.learnerDescription}
+              </p>
+            ) : null}
           </div>
         </div>
 

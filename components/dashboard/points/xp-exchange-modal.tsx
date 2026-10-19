@@ -15,13 +15,15 @@ export function XpExchangeModal({ isOpen, onClose }: XpExchangeModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       layer="toast"
+      align="center"
+      clearBottomNav
       labelledBy="xp-exchange-title"
       backdropClassName="bg-[#031F82]/50"
       panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md sm:p-6"
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <CashInPointsPanel titleId="xp-exchange-title" />
+          <CashInPointsPanel titleId="xp-exchange-title" onDismiss={onClose} />
         </div>
         <button
           type="button"

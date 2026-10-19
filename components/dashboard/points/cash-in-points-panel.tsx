@@ -45,6 +45,7 @@ type CashInPointsPanelProps = {
   hideHeading?: boolean;
   titleId?: string;
   onConverted?: (payload: PointsConvertedPayload) => void;
+  onDismiss?: () => void;
 };
 
 export function CashInPointsPanel({
@@ -52,6 +53,7 @@ export function CashInPointsPanel({
   hideHeading = false,
   titleId = "cash-in-title",
   onConverted,
+  onDismiss,
 }: CashInPointsPanelProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
   const { formatMoney, currencyCode } = useCurrency();
@@ -290,6 +292,15 @@ export function CashInPointsPanel({
               >
                 {conversionCopy.guestCashInAction}
               </Link>
+            ) : null}
+            {lock === "rate-missing" && onDismiss ? (
+              <button
+                type="button"
+                onClick={onDismiss}
+                className={cn("flex h-touch w-full items-center justify-center px-4 shadow-md", orangeCtaClass)}
+              >
+                Got it
+              </button>
             ) : null}
           </div>
         ) : (

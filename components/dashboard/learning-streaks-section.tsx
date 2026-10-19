@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ACHIEVEMENTS_HORIZONTAL_CAROUSEL_CLASS } from "@/components/achievements/achievements-carousel";
 import { MilestoneCongratsModal } from "@/components/achievements/milestone-congrats-modal";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
 import {
-  DEMO_EARNED_STREAK_IDS,
   LEARNING_STREAK_MILESTONES,
   type MoneyMilestone,
 } from "@/lib/dashboard/achievements-state";
+import { earnedLearningStreakIds } from "@/lib/dashboard/streak-practice";
 import { cn } from "@/lib/utils/cn";
 
 type StreakBadgeProps = {
@@ -60,10 +60,17 @@ function StreakBadge({ milestone, earned, onSelect }: StreakBadgeProps) {
 /** Detailed streak badges — opened from the top-bar streak icon. */
 export function LearningStreaksSection({
   hideHeading = false,
+  dayStreak = 0,
+  bestStreak = 0,
 }: {
   hideHeading?: boolean;
+  dayStreak?: number;
+  bestStreak?: number;
 }) {
-  const [earnedIds] = useState<ReadonlySet<string>>(DEMO_EARNED_STREAK_IDS);
+  const earnedIds = useMemo(
+    () => earnedLearningStreakIds(Math.max(dayStreak, bestStreak)),
+    [bestStreak, dayStreak],
+  );
   const [activeMilestone, setActiveMilestone] = useState<MoneyMilestone | null>(
     null,
   );

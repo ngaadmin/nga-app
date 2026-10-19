@@ -269,15 +269,14 @@ async function playScreen(
     const current = await page.getByRole("button", { name: /^Reorder:/ }).evaluateAll((nodes) =>
       nodes.map((node) => (node.getAttribute("aria-label") ?? "").replace(/^Reorder:\s*/, "")),
     );
+    const next = page.getByRole("button", { name: "Next", exact: true }).last();
     if (current.join("|") === wanted.join("|") && wanted.length > 1) {
       const handle = page.getByRole("button", { name: `Reorder: ${wanted[0]}`, exact: true });
       await handle.focus();
       await handle.press("ArrowDown");
     }
-    await clickButton(page, screen.submitLabel ?? "Submit Answer");
-    await expect(page.getByRole("button", { name: screen.submitLabel ?? "Submit Answer" })).toBeVisible();
+    await expect(next).toBeDisabled();
     await arrangeRank(page, wanted);
-    await clickButton(page, screen.submitLabel ?? "Submit Answer");
     await footerNext(page);
     return fallthrough();
   }

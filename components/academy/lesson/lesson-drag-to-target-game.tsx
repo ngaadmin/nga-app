@@ -106,7 +106,7 @@ export function LessonDragToTargetGame({
   targetIllustrationSrc,
   targetIllustrationAlt,
   targetImagePlaceholder,
-  sourceEmptyMessage = "Coins saved!",
+  sourceEmptyMessage = "XP saved!",
   showZoneLabels = true,
   quarterSource = false,
   onComplete,

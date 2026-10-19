@@ -14,7 +14,7 @@ const EXPLORER_GUEST_SESSION = {
 
 async function xpValue(page: Page): Promise<number> {
   const label = await page
-    .getByRole("button", { name: /coins/i })
+    .getByRole("button", { name: /XP/i })
     .first()
     .getAttribute("aria-label");
   const match = label?.match(/(\d+)/);

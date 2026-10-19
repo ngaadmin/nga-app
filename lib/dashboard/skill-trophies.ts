@@ -215,11 +215,30 @@ export function sortTrophiesByTier(
   );
 }
 
+const MEDAL_LEVEL: Record<
+  Exclude<SkillTrophyTier, "locked" | "unlocked">,
+  number
+> = {
+  bronze: 1,
+  silver: 2,
+  gold: 3,
+};
+
+/** Silver includes bronze. Gold includes silver and bronze. */
+export function medalCoversTier(
+  tier: SkillTrophyTier,
+  medalTier: Exclude<SkillTrophyTier, "locked" | "unlocked">,
+): boolean {
+  if (tier !== "bronze" && tier !== "silver" && tier !== "gold") return false;
+  return MEDAL_LEVEL[tier] >= MEDAL_LEVEL[medalTier];
+}
+
 export function countEarnedMedals(
   trophies: readonly VaultSkillTrophy[],
   medalTier: Exclude<SkillTrophyTier, "locked" | "unlocked">,
 ): number {
-  return trophies.filter((trophy) => trophy.tier === medalTier).length;
+  return trophies.filter((trophy) => medalCoversTier(trophy.tier, medalTier))
+    .length;
 }
 
 export function countUnlockedSkills(

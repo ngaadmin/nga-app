@@ -11,7 +11,11 @@ import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useXpExchangeGate } from "@/lib/dashboard/use-xp-exchange-gate";
 import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
-import { readStoredDayStreak } from "@/lib/dashboard/streak-practice";
+import {
+  PRACTICE_RECORDED_EVENT,
+  readStoredBestStreak,
+  readStoredDayStreak,
+} from "@/lib/dashboard/streak-practice";
 import {
   hasUnseenSkillProgress,
   markSkillsPanelSeen,
@@ -22,7 +26,7 @@ import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 /**
- * Shell-level status strip. Coins, streak, and skills cup stay in the same
+ * Shell-level status strip. XP, streak, and skills cup stay in the same
  * place on every main dashboard screen.
  */
 export function DashboardStatusHeader() {
@@ -31,19 +35,23 @@ export function DashboardStatusHeader() {
   const xpExchange = useXpExchangeGate();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
   const [dayStreak, setDayStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
 
   useEffect(() => {
     function refreshStreak() {
       setDayStreak(readStoredDayStreak());
+      setBestStreak(readStoredBestStreak());
     }
-    function refreshCoins() {
+    function refreshWallet() {
       reloadWalletFromStorage();
       refreshStreak();
     }
-    refreshCoins();
-    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshCoins);
+    refreshWallet();
+    window.addEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshWallet);
+    window.addEventListener(PRACTICE_RECORDED_EVENT, refreshStreak);
     return () => {
-      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshCoins);
+      window.removeEventListener(ACCOUNT_PROGRESS_RESTORED_EVENT, refreshWallet);
+      window.removeEventListener(PRACTICE_RECORDED_EVENT, refreshStreak);
     };
   }, [reloadWalletFromStorage]);
   const masteryCohort = useMasteryCohort();
@@ -115,6 +123,7 @@ export function DashboardStatusHeader() {
       >
         <LearningStreaksPanel
           dayStreak={dayStreak}
+          bestStreak={bestStreak}
           streakFreezes={streakFreezes}
         />
       </FullHeightPanel>

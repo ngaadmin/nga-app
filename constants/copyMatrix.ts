@@ -103,6 +103,7 @@ export const copyMatrix = {
       accountSubscription: {
         title: "Family accounts",
         description: "Manage your master account and linked learners.",
+        learnerDescription: "Your learner account.",
         backLabel: "Back to Settings",
         accountsHeading: "Accounts",
         masterBadge: "Master account",
@@ -249,7 +250,7 @@ export const copyMatrix = {
           "Changing the learner tier updates Academy content to age-relevant scenarios and skills.",
         progressResetWarningTitle: "Progress reset",
         progressResetWarning:
-          "Switching tracks resets Academy lesson progress and skill trophies. Vault balances and coins stay put.",
+          "Switching tracks resets Academy lesson progress and skill trophies. Vault balances and XP stay put.",
         progressResetConfirmed:
           "Academy progress and skill trophies were reset for the new track.",
         currentBadge: "Current",
@@ -264,7 +265,7 @@ export const copyMatrix = {
       currency: {
         heading: "Display currency",
         summary:
-          "Shown in Vault and coins cash-in. Amounts stay the same, only the symbol changes.",
+          "Shown in Vault and XP cash-in. Amounts stay the same, only the symbol changes.",
         lockedHint: "Currency can be changed anytime in Settings.",
         savedNote: "Currency updated across Vault.",
       },
@@ -370,7 +371,7 @@ export const copyMatrix = {
         "Bite-sized learning missions. Master the 24 core financial skills through interactive games.",
       journey: {
         heading: "Your Mission Map",
-        xpLabel: "coins",
+        xpLabel: "XP",
         lockedLabel: "Locked",
         skillsCupLabel: "Medals",
         skillsCupTip: "Your medals live in the cup. Tap it anytime.",
@@ -588,7 +589,7 @@ export const copyMatrix = {
         welcomeMessage: "Vault online! Deposit income, funnel it into jars, and stack wins.",
         categories: {
           deposit: "Deposit",
-          cash_in: "Coins Cash-In",
+          cash_in: "XP Cash-In",
           allocation: "Jar Allocation",
           spend: "Spending",
           transfer: "Transfer",

@@ -16,6 +16,7 @@ import {
   type EarnedSkillMedal,
   type SkillTrophyTier,
 } from "@/lib/dashboard/skill-trophies";
+import { recordLessonPractice } from "@/lib/dashboard/streak-practice";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import {
   lessonNumberForMilestoneId,
@@ -243,6 +244,7 @@ export function useLessonFlow({
           saveAcademyMilestones(updated);
         }
 
+        recordLessonPractice();
         recordUsageEvent("lesson_completed", { lessonNumber });
         for (const medal of earnedMedals) {
           recordUsageEvent("medal_earned", {

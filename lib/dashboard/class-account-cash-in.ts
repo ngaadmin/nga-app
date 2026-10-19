@@ -23,8 +23,9 @@ export function cashInClaimAllowed(input: {
   totalPoints: number;
   audPayout: number;
   isClaiming: boolean;
+  isGuest?: boolean;
 }): boolean {
-  if (input.classAccountWithoutParent) return false;
+  if (input.classAccountWithoutParent || input.isGuest) return false;
   return (
     input.xpExchangeRateSet &&
     input.parsedPoints !== null &&

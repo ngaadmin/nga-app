@@ -21,25 +21,40 @@ import {
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
+import { audPerXpBlockFromSliderIndex } from "@/lib/dashboard/point-conversion";
 import {
-  audPerXpBlockFromSliderIndex,
-  convertPointsToAud,
-} from "@/lib/dashboard/point-conversion";
+  beginCashInAttempt,
+  endCashInAttempt,
+  readLifetimeXp,
+  readSpendableXp,
+  spendSpendableXp,
+  withExchangeRate,
+  type SpendSpendableXpError,
+} from "@/lib/dashboard/xp-cash";
 
 type ClaimPointsResult =
-  | { success: true; audAmount: number; pointsClaimed: number }
-  | { success: false; error: string };
+  | { success: true; audAmount: number; audCents: number; pointsClaimed: number }
+  | { success: false; error: SpendSpendableXpError };
 
 type DashboardWalletContextValue = {
+  /** @deprecated Prefer `spendableXp`. Live balance that cash-in reduces. */
   totalPoints: number;
-  /** Cumulative XP earned - separate from spendable balance after cash-outs. */
+  /** XP not yet cashed in. Header coins and the Vault cash-in use this. */
+  spendableXp: number;
+  /** @deprecated Prefer `lifetimeXp`. */
   lifetimePointsEarned: number;
+  /** Lifetime XP for the leaderboard and class totals. Cash-in does not reduce it. */
+  lifetimeXp: number;
   audSliderIndex: number;
   audPer100Xp: number;
   /** Parent has saved an XP-to-money exchange rate. */
   xpExchangeRateSet: boolean;
+  exchangeRateCentsPer100Xp: number | null;
   setAudSliderIndex: (index: number) => void;
+  setExchangeRateCents: (cents: number) => void;
   claimPointsForVault: (points: number) => ClaimPointsResult;
+  /** Lets the cash-in screen release the double-tap lock after the save finishes. */
+  releaseClaimLock: () => void;
   awardLessonXp: (points: number, eventId?: string) => void;
   /** Pull the saved balance into the header after a lesson cash-in. */
   reloadWalletFromStorage: () => void;
@@ -66,12 +81,16 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   const [xpExchangeRateSet, setXpExchangeRateSet] = useState(
     () => defaults.xpExchangeRateSet,
   );
+  const [exchangeRateCentsPer100Xp, setExchangeRateCentsPer100Xp] = useState<
+    number | null
+  >(defaults.exchangeRateCentsPer100Xp ?? null);
   const [walletHydrated, setWalletHydrated] = useState(false);
   const skipWalletPersistRef = useRef(true);
   const walletPersonRef = useRef<string | null>(null);
   const hydratedRef = useRef(false);
   const balanceRef = useRef({ totalPoints: 0, lifetimePointsEarned: 0 });
   balanceRef.current = { totalPoints, lifetimePointsEarned };
+  const claimGateRef = useRef<{ inFlight: boolean }>(endCashInAttempt());
 
   const reloadWalletFromStorage = useCallback(() => {
     const person = currentWalletPersonKey();
@@ -104,12 +123,14 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       setLifetimePointsEarned(nextLifetime);
       setAudSliderIndexState(persisted.audSliderIndex);
       setXpExchangeRateSet(persisted.xpExchangeRateSet);
+      setExchangeRateCentsPer100Xp(persisted.exchangeRateCentsPer100Xp ?? null);
     } else if (willClear) {
       const fresh = defaultDashboardWalletState();
       setTotalPoints(fresh.totalPoints);
       setLifetimePointsEarned(fresh.lifetimePointsEarned);
       setAudSliderIndexState(fresh.audSliderIndex);
       setXpExchangeRateSet(fresh.xpExchangeRateSet);
+      setExchangeRateCentsPer100Xp(null);
     }
     hydratedRef.current = true;
     setWalletHydrated(true);
@@ -149,7 +170,8 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     const settingsChanged =
       !existing ||
       existing.audSliderIndex !== audSliderIndex ||
-      existing.xpExchangeRateSet !== xpExchangeRateSet;
+      existing.xpExchangeRateSet !== xpExchangeRateSet ||
+      (existing.exchangeRateCentsPer100Xp ?? null) !== exchangeRateCentsPer100Xp;
 
     saveDashboardWalletState({
       ...existing,
@@ -160,12 +182,15 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       ),
       audSliderIndex,
       xpExchangeRateSet,
+      exchangeRateCentsPer100Xp,
+      exchangeRateUpdatedAt: existing?.exchangeRateUpdatedAt,
       updatedAt: settingsChanged
         ? new Date().toISOString()
         : existing?.updatedAt,
     });
   }, [
     audSliderIndex,
+    exchangeRateCentsPer100Xp,
     lifetimePointsEarned,
     totalPoints,
     walletHydrated,
@@ -173,51 +198,71 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
   ]);
 
   const setAudSliderIndex = useCallback((index: number) => {
+    const cents = Math.round(audPerXpBlockFromSliderIndex(index) * 100);
+    const at = new Date().toISOString();
     setAudSliderIndexState(index);
     setXpExchangeRateSet(true);
+    setExchangeRateCentsPer100Xp(cents);
+    const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
+    saveDashboardWalletState(withExchangeRate({ ...persisted, audSliderIndex: index }, cents, at));
   }, []);
 
-  const audPer100Xp = useMemo(
-    () => audPerXpBlockFromSliderIndex(audSliderIndex),
-    [audSliderIndex],
-  );
+  const setExchangeRateCents = useCallback((cents: number) => {
+    const safe = Math.floor(cents);
+    if (!Number.isInteger(safe) || safe <= 0) return;
+    const at = new Date().toISOString();
+    const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
+    const next = withExchangeRate(persisted, safe, at);
+    setAudSliderIndexState(next.audSliderIndex);
+    setXpExchangeRateSet(true);
+    setExchangeRateCentsPer100Xp(safe);
+    saveDashboardWalletState(next);
+  }, []);
+
+  const audPer100Xp = useMemo(() => {
+    if (xpExchangeRateSet && exchangeRateCentsPer100Xp != null) {
+      return exchangeRateCentsPer100Xp / 100;
+    }
+    return audPerXpBlockFromSliderIndex(audSliderIndex);
+  }, [audSliderIndex, exchangeRateCentsPer100Xp, xpExchangeRateSet]);
+
+  const releaseClaimLock = useCallback(() => {
+    claimGateRef.current = endCashInAttempt();
+  }, []);
 
   const claimPointsForVault = useCallback(
     (points: number): ClaimPointsResult => {
-      const safePoints = Math.floor(points);
-      if (!Number.isFinite(safePoints) || safePoints <= 0) {
-        return { success: false, error: "Enter a valid points amount to claim." };
-      }
+      const begun = beginCashInAttempt(claimGateRef.current);
+      if (!begun.ok) return { success: false, error: "busy" };
+      claimGateRef.current = begun.state;
 
-      if (safePoints > totalPoints) {
-        return {
-          success: false,
-          error: "You cannot claim more points than your current balance.",
-        };
-      }
-
-      const audAmount = convertPointsToAud(safePoints, audPer100Xp);
       const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
-      const event: WalletLedgerEvent = {
-        id: createWalletEventId(),
-        kind: "spend",
-        points: safePoints,
-        at: new Date().toISOString(),
+      const rated = {
+        ...persisted,
+        audSliderIndex,
+        xpExchangeRateSet,
+        exchangeRateCentsPer100Xp,
       };
-      const next = appendWalletLedgerEvent(
-        { ...persisted, audSliderIndex, xpExchangeRateSet },
-        event,
-      );
-      if (!next) {
-        return { success: false, error: "That cash-in was already saved." };
+      const result = spendSpendableXp(rated, points, {
+        id: createWalletEventId(),
+        at: new Date().toISOString(),
+      });
+      if (!result.ok) {
+        claimGateRef.current = endCashInAttempt();
+        return { success: false, error: result.error };
       }
 
-      setTotalPoints(next.totalPoints);
-      saveDashboardWalletState(next);
-
-      return { success: true, audAmount, pointsClaimed: safePoints };
+      setTotalPoints(readSpendableXp(result.wallet));
+      setLifetimePointsEarned(readLifetimeXp(result.wallet));
+      saveDashboardWalletState(result.wallet);
+      return {
+        success: true,
+        audAmount: result.audCents / 100,
+        audCents: result.audCents,
+        pointsClaimed: result.pointsClaimed,
+      };
     },
-    [audPer100Xp, audSliderIndex, totalPoints, xpExchangeRateSet],
+    [audSliderIndex, exchangeRateCentsPer100Xp, xpExchangeRateSet],
   );
 
   const awardLessonXp = useCallback((points: number, eventId?: string) => {
@@ -242,15 +287,25 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     saveDashboardWalletState(next);
   }, [audSliderIndex, xpExchangeRateSet]);
 
+  const spendableXp = readSpendableXp({ totalPoints });
+  const lifetimeXp = readLifetimeXp({ lifetimePointsEarned });
+
   const value = useMemo(
     () => ({
-      totalPoints,
-      lifetimePointsEarned,
+      totalPoints: spendableXp,
+      spendableXp,
+      lifetimePointsEarned: lifetimeXp,
+      lifetimeXp,
       audSliderIndex,
       audPer100Xp,
       xpExchangeRateSet,
+      exchangeRateCentsPer100Xp: xpExchangeRateSet
+        ? exchangeRateCentsPer100Xp
+        : null,
       setAudSliderIndex,
+      setExchangeRateCents,
       claimPointsForVault,
+      releaseClaimLock,
       awardLessonXp,
       reloadWalletFromStorage,
     }),
@@ -259,10 +314,13 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       audSliderIndex,
       awardLessonXp,
       claimPointsForVault,
-      lifetimePointsEarned,
+      exchangeRateCentsPer100Xp,
+      lifetimeXp,
+      releaseClaimLock,
       reloadWalletFromStorage,
       setAudSliderIndex,
-      totalPoints,
+      setExchangeRateCents,
+      spendableXp,
       xpExchangeRateSet,
     ],
   );

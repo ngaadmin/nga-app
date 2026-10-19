@@ -28,6 +28,7 @@ import {
 } from "@/lib/dashboard/savings-goals";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { dollarsToCents } from "@/lib/dashboard/vault-amount-input";
+import { planCashBucketAssignment } from "@/lib/dashboard/xp-cash";
 import {
   getVaultIncomeSourceLabel,
   type VaultIncomeSourceId,
@@ -248,6 +249,41 @@ export function useVaultActions() {
       setCustomBuckets,
       setJars,
       vaultBuckets,
+    ],
+  );
+
+  const handleAssignCashBucket = useCallback(
+    (allocations: Record<string, number>) => {
+      const plan = planCashBucketAssignment({
+        cashDollars: moneyToAllocate,
+        allocations,
+      });
+      if (!plan.ok) return false;
+
+      setMoneyToAllocate(plan.remainingDollars);
+      for (const [bucketId, amount] of Object.entries(plan.allocations)) {
+        if (amount <= 0) continue;
+        adjustBucketBalance(
+          bucketId as VaultBucketId,
+          amount,
+          setJars,
+          setCustomBuckets,
+        );
+      }
+      appendLedger(`Assigned ${formatMoney(moneyToAllocate)} from Cash into jars`, {
+        category: "allocation",
+        amount: moneyToAllocate,
+        flow: "in",
+      });
+      return true;
+    },
+    [
+      appendLedger,
+      formatMoney,
+      moneyToAllocate,
+      setCustomBuckets,
+      setJars,
+      setMoneyToAllocate,
     ],
   );
 
@@ -709,6 +745,7 @@ export function useVaultActions() {
     spendingCategories,
     handleDeposit,
     handleLockIn,
+    handleAssignCashBucket,
     handleVaultTransfer,
     handleMarkSpent,
     handleAddCustomSpendingCategory,

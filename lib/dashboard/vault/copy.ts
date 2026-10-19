@@ -6,6 +6,10 @@ export const vaultCopy = {
   closeModalLabel: "Close",
   backToOverview: "Back to overview",
   budgetJarsSectionLabel: "Budget Jars",
+  cashBucketTitle: "Cash",
+  cashBucketBody:
+    "This is from cashed-in XP. Assign it to your jars. It is not real money.",
+  cashBucketAssign: "Assign to jars",
   manageBudgetJarsLabel: "Manage Budget Jars",
   manageBudgetJarsTitle: "Manage Budget Jars",
   manageBudgetJarsBody:

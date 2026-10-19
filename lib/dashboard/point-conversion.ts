@@ -23,16 +23,32 @@ export function sliderIndexFromAudPerXpBlock(audPerBlock: number): number {
   return Math.min(MAX_SLIDER_INDEX, Math.max(MIN_SLIDER_INDEX, index));
 }
 
-/** Convert virtual points to AUD using AUD earned per 100 XP. */
+/**
+ * Whole cents earned for `points` at `centsPer100Xp` per 100 XP.
+ * Integer math, half-up. A rate of 1 cent is allowed. There is no $0.50 floor.
+ */
+export function convertPointsToCents(
+  points: number,
+  centsPer100Xp: number,
+): number {
+  const safePoints = Math.floor(points);
+  const rate = Math.floor(centsPer100Xp);
+  if (!Number.isSafeInteger(safePoints) || safePoints <= 0) return 0;
+  if (!Number.isSafeInteger(rate) || rate <= 0) return 0;
+  const product = safePoints * rate;
+  if (!Number.isSafeInteger(product)) return 0;
+  const whole = Math.floor(product / 100);
+  const remainder = product % 100;
+  return remainder >= 50 ? whole + 1 : whole;
+}
+
+/** Convert spendable XP to a dollar amount using cents per 100 XP. */
 export function convertPointsToAud(
   points: number,
   audPer100Xp: number,
 ): number {
-  const safePoints = Math.max(0, points);
-  const safeRate = Math.max(MIN_AUD_PER_XP_BLOCK, audPer100Xp);
-  return (
-    Math.round(safePoints * (safeRate / FIXED_XP_BLOCK) * 100) / 100
-  );
+  const centsPer100 = Math.round(Math.max(0, audPer100Xp) * 100);
+  return convertPointsToCents(points, centsPer100) / 100;
 }
 
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
@@ -46,7 +62,7 @@ export function formatConversionRateLabel(
   audPer100Xp: number,
   currencyCode: SupportedCurrencyCode = "AUD",
 ): string {
-  return `100 coins = ${formatMoney(audPer100Xp, currencyCode)}`;
+  return `100 XP = ${formatMoney(audPer100Xp, currencyCode)}`;
 }
 
 export function parsePointsInput(rawValue: string): number | null {

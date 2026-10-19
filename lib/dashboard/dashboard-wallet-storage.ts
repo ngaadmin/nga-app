@@ -31,6 +31,13 @@ export type PersistedDashboardWallet = {
   audSliderIndex: number;
   /** True after a parent saves an XP exchange rate. */
   xpExchangeRateSet: boolean;
+  /**
+   * Integer cents per 100 XP. Source of truth once a parent saves a rate.
+   * Older wallets only have `audSliderIndex` (50-cent steps from $0.50 to $5).
+   */
+  exchangeRateCentsPer100Xp?: number | null;
+  /** When the rate was saved. Separate from balance `updatedAt`. */
+  exchangeRateUpdatedAt?: string | null;
   /** Awards and cash-ins since this device started recording a ledger. */
   ledger?: WalletLedgerEvent[];
   /** When this device last changed the balance or the exchange rate. */
@@ -92,6 +99,30 @@ export function appendWalletLedgerEvent(
   };
 }
 
+function parsedExchangeRateFields(value: Record<string, unknown>): {
+  exchangeRateCentsPer100Xp?: number;
+  exchangeRateUpdatedAt?: string;
+} {
+  const fields: {
+    exchangeRateCentsPer100Xp?: number;
+    exchangeRateUpdatedAt?: string;
+  } = {};
+  const cents = value.exchangeRateCentsPer100Xp;
+  if (
+    typeof cents === "number" &&
+    Number.isInteger(cents) &&
+    cents > 0 &&
+    cents <= 99_999
+  ) {
+    fields.exchangeRateCentsPer100Xp = cents;
+  }
+  const at = value.exchangeRateUpdatedAt;
+  if (typeof at === "string" && at.trim()) {
+    fields.exchangeRateUpdatedAt = at.trim();
+  }
+  return fields;
+}
+
 /** Accept a stored wallet object and fill in lifetime XP when older rows omitted it. */
 export function walletFieldsFromUnknown(
   value: unknown,
@@ -132,6 +163,7 @@ export function walletFieldsFromUnknown(
     lifetimePointsEarned,
     audSliderIndex: value.audSliderIndex,
     xpExchangeRateSet: value.xpExchangeRateSet === true,
+    ...parsedExchangeRateFields(value),
     ...(ledger.length > 0 ? { ledger } : {}),
     ...(updatedAt ? { updatedAt } : {}),
   };

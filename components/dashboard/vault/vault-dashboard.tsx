@@ -8,6 +8,7 @@ import { VaultBucketDrilldown } from "@/components/dashboard/vault/vault-bucket-
 import { VaultDepositSection } from "@/components/dashboard/vault/vault-deposit-section";
 import { VaultManageBudgetJarsModal } from "@/components/dashboard/vault/vault-manage-budget-jars-modal";
 import { VaultHomeJarMove } from "@/components/dashboard/vault/vault-home-jar-move";
+import { VaultCashBucket } from "@/components/dashboard/vault/vault-cash-bucket";
 import { VaultMyMoneyCard } from "@/components/dashboard/vault/vault-my-money-card";
 import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -40,7 +41,9 @@ export function VaultDashboard() {
     vaultGoals,
     totalSavings,
     spendingCategories,
+    moneyToAllocate,
     handleLockIn,
+    handleAssignCashBucket,
     handleVaultTransfer,
     handleMarkSpent,
     handleAssignGoals,
@@ -59,6 +62,7 @@ export function VaultDashboard() {
     null,
   );
   const [manageJarsModalOpen, setManageJarsModalOpen] = useState(false);
+  const [assignCashOpen, setAssignCashOpen] = useState(false);
   const [cashInOpen, setCashInOpen] = useState(
     () => searchParams.get("cashIn") === "1",
   );
@@ -124,6 +128,11 @@ export function VaultDashboard() {
             onVaultTransfer={handleVaultTransfer}
           />
         }
+      />
+
+      <VaultCashBucket
+        amount={moneyToAllocate}
+        onAssign={() => setAssignCashOpen(true)}
       />
 
       <div className={`mt-8 ${vaultOverviewHairlineClass}`} role="presentation" />
@@ -206,6 +215,20 @@ export function VaultDashboard() {
         totalSavings={totalSavings}
         moneyIn={pendingDeposit?.amount ?? 0}
         onLockIn={handleAllocatePendingDeposit}
+      />
+
+      <VaultAllocationModal
+        isOpen={assignCashOpen && moneyToAllocate > 0}
+        onClose={() => setAssignCashOpen(false)}
+        buckets={displayBuckets}
+        totalSavings={totalSavings}
+        moneyIn={moneyToAllocate}
+        onLockIn={(allocations) => {
+          const assigned = handleAssignCashBucket(allocations);
+          if (!assigned) return false;
+          setAssignCashOpen(false);
+          return true;
+        }}
       />
 
       <VaultManageBudgetJarsModal

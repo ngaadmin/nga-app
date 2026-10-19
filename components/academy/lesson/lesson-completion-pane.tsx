@@ -46,6 +46,10 @@ type LessonCompletionPaneProps = {
   onCashIn: () => void;
   onContinue: () => void;
   cashInDisabled?: boolean;
+  /** XP still available to cash in for Vault cash. */
+  spendableXp?: number;
+  /** Lifetime XP. Shown beside spendable XP so the two numbers stay distinct. */
+  lifetimeXp?: number;
 };
 
 function resolveSkillName(
@@ -78,6 +82,8 @@ export function LessonCompletionPane({
   onCashIn,
   onContinue,
   cashInDisabled = false,
+  spendableXp,
+  lifetimeXp,
 }: LessonCompletionPaneProps) {
   const router = useRouter();
   const [cashingIn, setCashingIn] = useState(false);
@@ -172,6 +178,16 @@ export function LessonCompletionPane({
         {showPerfectBonus ? (
           <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
             Perfect lesson: +{perfectStreakBonus} XP
+          </p>
+        ) : null}
+        {typeof spendableXp === "number" ? (
+          <p className="mt-2 font-sans text-[15px] font-bold text-[#031F82]">
+            {spendableXp.toLocaleString()} XP to cash in
+          </p>
+        ) : null}
+        {typeof lifetimeXp === "number" ? (
+          <p className="mt-1 font-sans text-[13px] font-semibold text-[#1E3A5F]">
+            Lifetime XP: {lifetimeXp.toLocaleString()}
           </p>
         ) : null}
 

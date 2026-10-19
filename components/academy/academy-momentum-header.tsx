@@ -49,8 +49,8 @@ export function AcademyMomentumHeader({
           }
           value={xp}
           unitLabel={journeyCopy.xpLabel}
-          ariaLabel={`${xp} ${journeyCopy.xpLabel}. Open coins exchange`}
-          title={journeyCopy.xpLabel}
+          ariaLabel={`${xp} ${journeyCopy.xpLabel} to cash in`}
+          title={`${journeyCopy.xpLabel} to cash in`}
         />
       }
       center={

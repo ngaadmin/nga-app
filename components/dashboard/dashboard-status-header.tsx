@@ -26,7 +26,7 @@ import { zLayerStyle } from "@/lib/ui/layers";
  */
 export function DashboardStatusHeader() {
   const { username } = useDashboardUser();
-  const { lifetimePointsEarned, reloadWalletFromStorage } = useDashboardWallet();
+  const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
   const [dayStreak, setDayStreak] = useState(0);
 
@@ -85,7 +85,7 @@ export function DashboardStatusHeader() {
       >
         <AcademyMomentumHeader
           username={username}
-          xp={lifetimePointsEarned}
+          xp={spendableXp}
           dayStreak={dayStreak}
           skillsHasAttention={skillsHasAttention}
           onSkillsClick={openSkills}

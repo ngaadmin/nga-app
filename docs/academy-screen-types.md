@@ -519,6 +519,7 @@ Fix layout once in these components; future lessons need only content updates.
 7. For bucket-sort, set `layout` only when not using default `statement-sort`.
 8. QA against the design shell (`/dashboard/academy/lesson/shell`) before shipping.
 9. If an interaction repeats across lessons, promote a `custom` renderer to a registered type in `lesson-screen-renderer.tsx`.
+10. If the screen can cost a heart, write Error text for Explorer, Pathfinder, and Maverick. See `docs/lesson-authoring.md`.
 
 **Do not add new types for:**
 

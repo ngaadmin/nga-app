@@ -4,7 +4,7 @@ import {
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
   audPerXpBlockFromSliderIndex,
-  convertPointsToCents,
+  quoteXpCashIn,
   sliderIndexFromAudPerXpBlock,
 } from "@/lib/dashboard/point-conversion";
 
@@ -130,12 +130,14 @@ export function cashInLockReason(input: {
   classStatusReady: boolean;
   isGuest: boolean;
   classAccountWithoutParent: boolean;
+  /** Class seats and student seats. No tile and no form, even with a parent linked. */
+  classOrStudentSeat?: boolean;
   rateSet: boolean;
 }): CashInLockReason {
   if (!input.sessionReady) return "checking";
   if (input.isGuest) return "guest";
   if (!input.classStatusReady) return "checking";
-  if (input.classAccountWithoutParent) return "class-seat";
+  if (input.classOrStudentSeat || input.classAccountWithoutParent) return "class-seat";
   if (!input.rateSet) return "rate-missing";
   return "ready";
 }
@@ -172,20 +174,75 @@ export function spendSpendableXp(
       error: checked.error === "over-balance" ? "over-balance" : "invalid",
     };
   }
+  const quote = quoteXpCashIn(checked.points, rate);
+  if (quote.audCents <= 0 || quote.pointsCharged <= 0) {
+    return { ok: false, error: "zero-payout" };
+  }
+  if (quote.pointsCharged > readSpendableXp(wallet)) {
+    return { ok: false, error: "over-balance" };
+  }
   const lifetimeBefore = readLifetimeXp(wallet);
   const next = appendWalletLedgerEvent(wallet, {
     id: event.id,
     kind: "spend",
-    points: checked.points,
+    points: quote.pointsCharged,
+    audCents: quote.audCents,
     at: event.at,
   });
   if (!next) return { ok: false, error: "duplicate" };
   if (readLifetimeXp(next) !== lifetimeBefore) {
     return { ok: false, error: "invalid" };
   }
-  const audCents = convertPointsToCents(checked.points, rate);
-  if (audCents <= 0) return { ok: false, error: "zero-payout" };
-  return { ok: true, wallet: next, audCents, pointsClaimed: checked.points };
+  return {
+    ok: true,
+    wallet: next,
+    audCents: quote.audCents,
+    pointsClaimed: quote.pointsCharged,
+  };
+}
+
+/**
+ * Dollar cents the grown-up still owes from XP cash-ins after the last reset.
+ * Cash-ins at or before the reset do not count. Events without a cent amount do not count.
+ */
+export function sumOwedCashInCents(
+  wallet:
+    | {
+        ledger?: readonly { kind: string; at: string; audCents?: number }[];
+        cashInOwedResetAt?: string | null;
+      }
+    | null
+    | undefined,
+): number {
+  if (!wallet) return 0;
+  const resetMs = wallet.cashInOwedResetAt
+    ? Date.parse(wallet.cashInOwedResetAt)
+    : Number.NaN;
+  const hasReset = Number.isFinite(resetMs);
+  let sum = 0;
+  for (const event of wallet.ledger ?? []) {
+    if (event.kind !== "spend") continue;
+    const cents = event.audCents ?? 0;
+    if (!Number.isInteger(cents) || cents <= 0) continue;
+    if (hasReset) {
+      const at = Date.parse(event.at);
+      if (!Number.isFinite(at) || at <= resetMs) continue;
+    }
+    sum += cents;
+  }
+  return sum;
+}
+
+/** Record that the grown-up paid. XP and the cash-in history stay put. */
+export function withCashInPaidReset(
+  wallet: PersistedDashboardWallet,
+  at: string,
+): PersistedDashboardWallet {
+  return {
+    ...wallet,
+    cashInOwedResetAt: at,
+    updatedAt: at,
+  };
 }
 
 export function withExchangeRate(

@@ -289,11 +289,17 @@ export const copyMatrix = {
         heading: "XP cash rate",
         rateTemplate: " XP = $1.00",
         summary:
-          "When your kid cashes in XP, that amount is added to Cash in their Vault. They can assign it to jars. It is a number in the app, not real money.",
+          "When your kid cashes in XP, that amount goes into Cash in their Vault. They can assign it to jars. It is the amount you agreed to pay them. The app doesn't move any money.",
         vaultCashInHint:
           "Set the rate here in Settings. Example: 100 XP = $2.00. Your kid cashes in from the coin icon.",
         unsetHint:
-          "Type what 100 XP is worth, then save. Example: 2 for $2, or 0.50 for 50 cents. $3 works too. You can change it later. The next cash-in uses the new rate. Cash already in the Vault stays put.",
+          "Type what 100 XP is worth, then save. Example: 2 for $2, or 0.50 for 50 cents. $3 works too. You can change it later. The next cash-in uses the new rate. Cash already in the Vault stays put. The amount is what you agreed to pay. The app doesn't move any money.",
+        owedToTemplate: "Owed to {name}",
+        markAsPaid: "Mark as paid",
+        markAsPaidConfirm: "Mark this as paid? The total goes back to zero.",
+        markAsPaidYes: "Yes, mark as paid",
+        markAsPaidCancel: "Cancel",
+        markAsPaidError: "Could not mark that as paid. Try again.",
         saveRate: "Save rate",
         rateAmountLabel: "Amount for 100 XP",
         rateAmountPlaceholder: "2.00",
@@ -302,18 +308,21 @@ export const copyMatrix = {
         noLinkedChild: "Add your kid under Accounts, then set the rate here.",
         whichKidLabel: "Which kid",
         convertNowHeading: "Convert Now",
-        convertFullBalance: "All XP",
+        convertFullBalance: "Cash in all points",
         customAmountLabel: "XP to cash in",
         customAmountPlaceholder: "Whole number",
-        chooseAmountHint: "Tap All XP, or type a whole number up to your balance.",
+        chooseAmountHint: "Type a whole number, or tap Cash in all points.",
         invalidAmountError: "Enter a whole number of XP.",
         overBalanceError: "That's more XP than you can cash in.",
+        zeroPayoutError: "That's under 1 cent. Those XP stay in your balance.",
+        partialUseTemplate: "That uses {points} XP. The rest stays in your balance.",
         payoutReadoutTemplate: "{points} XP = {amount}",
         sendToVault: "Send to Vault",
-        disclaimer: "This cash is a number in the app. It is not real money.",
+        disclaimer:
+          "This is the amount your grown-up agreed to pay. The app doesn't move any money.",
         confirmTitle: "In-app cash",
         confirmBody:
-          "This does not move real money. The amount is a number in the Vault.",
+          "This is the amount your grown-up agreed to pay. The app doesn't move any money.",
         confirmAcknowledge: "Got it",
         cashInHeading: "Cash in XP",
         cashInRateHint: "Rate: {rate}",
@@ -324,11 +333,11 @@ export const copyMatrix = {
         claimingLabel: "Cashing in…",
         childPayoutReadoutTemplate: "{points} XP = {amount}",
         cashDestinationHint:
-          "This goes into Cash in your Vault. You can assign it to jars. It is not real money.",
+          "This goes into Cash in your Vault. You can assign it to jars. It is the amount your grown-up agreed to pay. The app doesn't move any money.",
         claimCashReward: "Cash in",
         successTitle: "Cashed in",
         successBodyTemplate:
-          "{amount} is now in Cash in your Vault. Assign it to a jar when you are ready. This is not real money.",
+          "{amount} is now in Cash in your Vault. Assign it to a jar when you are ready.",
         successAcknowledge: "Let's Go!",
         checkingAccount: "Checking your account…",
         guestCashInBody:
@@ -336,19 +345,19 @@ export const copyMatrix = {
         guestCashInAction: "Save my progress",
         askParentTitle: "Agree a rate first",
         askParentWhat:
-          "Chat with your grown-up and agree what your XP is worth. For example, 100 XP could be $2.",
+          "Chat with your grown-up and agree a rate, like 100 XP = $2.",
         askParentExchange:
-          "They set that rate in Settings. The cash is a number in this app, not real money.",
+          "They set it in Settings. Then you can cash in here. The amount is what they agreed to pay. The app doesn't move any money.",
         askParentBody:
-          "Chat with your grown-up and agree a rate, like 100 XP = $2. They set it in Settings. Then you can cash in here. The cash is a number in the app, not real money.",
+          "Chat with your grown-up and agree a rate, like 100 XP = $2. They set it in Settings. Then you can cash in here.",
         classAccountBody: CLASS_ACCOUNT_XP_MESSAGE,
         classAccountCashInNote: "Class seats don't cash in XP here.",
         askParentIfParentBody:
-          "Set the XP cash rate in Settings. Pick an amount for 100 XP, like $2 or 50 cents. Then XP can be cashed in here. It is not real money.",
+          "Set the XP cash rate in Settings. Pick an amount for 100 XP, like $2 or 50 cents. Then XP can be cashed in here. The amount is what you agreed to pay. The app doesn't move any money.",
         parentEmail: {
           draftLabel: "Parent notification",
           title: "Email sent to guardian",
-          body: "We sent a heads-up about this XP cash-in. The amount is a number in the app, not real money.",
+          body: "We sent a heads-up about this XP cash-in. The amount is what your grown-up agreed to pay. The app doesn't move any money.",
           toLabel: "To:",
           subjectLabel: "Subject:",
           acknowledge: "Got it",

@@ -18,7 +18,7 @@ type AcademyMomentumHeaderProps = {
   skillsHasAttention?: boolean;
   onSkillsClick: () => void;
   onStreakClick: () => void;
-  onXpClick: () => void;
+  onXpClick?: () => void;
 };
 
 export function AcademyMomentumHeader({
@@ -39,7 +39,7 @@ export function AcademyMomentumHeader({
       clusterGapClassName="gap-4"
       left={
         <StatusMetricPill
-          interactive
+          interactive={Boolean(onXpClick)}
           className="shrink-0"
           onClick={onXpClick}
           icon={
@@ -49,8 +49,12 @@ export function AcademyMomentumHeader({
           }
           value={xp}
           unitLabel={journeyCopy.xpLabel}
-          ariaLabel={`${xp} ${journeyCopy.xpLabel} to cash in`}
-          title={`${journeyCopy.xpLabel} to cash in`}
+          ariaLabel={
+            onXpClick
+              ? `${xp} ${journeyCopy.xpLabel} to cash in`
+              : `${xp} ${journeyCopy.xpLabel}`
+          }
+          title={onXpClick ? `${journeyCopy.xpLabel} to cash in` : journeyCopy.xpLabel}
         />
       }
       center={

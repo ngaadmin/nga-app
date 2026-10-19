@@ -11,7 +11,7 @@ import {
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
-import { useSettingsParentView } from "@/lib/dashboard/testing-settings-view";
+import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 

@@ -23,13 +23,7 @@ export function buildPointsConversionParentEmail(
   const body = [
     "Hi,",
     "",
-    `${safeName} cashed in ${payload.pointsClaimed.toLocaleString()} XP for ${payload.amountFormatted} in the app.`,
-    "",
-    `Rate: ${payload.conversionRateLabel}`,
-    "",
-    "That cash is a number in their Vault. It is not real money, and the app does not pay it out.",
-    "",
-    "- NextGenAchievers",
+    `${safeName} cashed in ${payload.pointsClaimed.toLocaleString()} XP for ${payload.amountFormatted} at the rate you agreed. That's what you owe them. Pay it however you like. The app doesn't move any money.`,
   ].join("\n");
 
   return { subject, body };

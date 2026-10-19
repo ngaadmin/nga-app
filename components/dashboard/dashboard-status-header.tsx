@@ -8,6 +8,7 @@ import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import { useXpExchangeGate } from "@/lib/dashboard/use-xp-exchange-gate";
 import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { readStoredDayStreak } from "@/lib/dashboard/streak-practice";
@@ -27,6 +28,7 @@ import { zLayerStyle } from "@/lib/ui/layers";
 export function DashboardStatusHeader() {
   const { username } = useDashboardUser();
   const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
+  const xpExchange = useXpExchangeGate();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
   const [dayStreak, setDayStreak] = useState(0);
 
@@ -73,8 +75,9 @@ export function DashboardStatusHeader() {
   }, []);
 
   const openXpExchange = useCallback(() => {
+    if (!xpExchange.ready || xpExchange.blocked) return;
     setXpExchangeOpen(true);
-  }, []);
+  }, [xpExchange.blocked, xpExchange.ready]);
 
   return (
     <>
@@ -90,7 +93,7 @@ export function DashboardStatusHeader() {
           skillsHasAttention={skillsHasAttention}
           onSkillsClick={openSkills}
           onStreakClick={openStreaks}
-          onXpClick={openXpExchange}
+          onXpClick={xpExchange.ready && !xpExchange.blocked ? openXpExchange : undefined}
         />
       </header>
 
@@ -116,7 +119,7 @@ export function DashboardStatusHeader() {
         />
       </FullHeightPanel>
       <XpExchangeModal
-        isOpen={xpExchangeOpen}
+        isOpen={xpExchangeOpen && xpExchange.ready && !xpExchange.blocked}
         onClose={() => setXpExchangeOpen(false)}
       />
     </>

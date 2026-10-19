@@ -31,6 +31,7 @@ export async function adoptCloudWalletRate(): Promise<void> {
       merged.xpExchangeRateSet === local.xpExchangeRateSet &&
       (merged.exchangeRateCentsPer100Xp ?? null) ===
         (local.exchangeRateCentsPer100Xp ?? null) &&
+      (merged.cashInOwedResetAt ?? null) === (local.cashInOwedResetAt ?? null) &&
       merged.totalPoints === local.totalPoints &&
       merged.lifetimePointsEarned === local.lifetimePointsEarned &&
       (merged.ledger?.length ?? 0) === (local.ledger?.length ?? 0);

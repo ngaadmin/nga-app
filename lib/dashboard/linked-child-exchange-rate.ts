@@ -16,6 +16,8 @@ import {
   MAX_EXCHANGE_RATE_CENTS,
   MIN_EXCHANGE_RATE_CENTS,
   resolveExchangeRateCents,
+  sumOwedCashInCents,
+  withCashInPaidReset,
   withExchangeRate,
 } from "@/lib/dashboard/xp-cash";
 
@@ -23,6 +25,8 @@ export type LinkedChildCashRate = {
   userId: string;
   username: string;
   centsPer100Xp: number | null;
+  /** Whole cents the grown-up still owes this child since the last reset. */
+  owedCents: number;
 };
 
 function isAllowedRateCents(value: number): boolean {
@@ -63,6 +67,7 @@ export async function loadLinkedChildrenCashRates(): Promise<
         userId: child.userId,
         username: child.username,
         centsPer100Xp: resolveExchangeRateCents(progress?.wallet),
+        owedCents: sumOwedCashInCents(progress?.wallet),
       };
     }),
   );
@@ -119,4 +124,39 @@ export async function saveLinkedChildExchangeRate(input: {
   }
 
   return { ok: true, usernames: writes.filter((username): username is string => Boolean(username)) };
+}
+
+/**
+ * Mark one linked child's cashed-in XP as paid.
+ * Sets a reset time on that child's progress. Their XP balance stays the same.
+ */
+export async function markLinkedChildCashInPaid(input: {
+  childId: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const childId = input.childId.trim();
+  if (!childId) return { ok: false, error: "Pick which kid first." };
+
+  const linked = await linkedChildren();
+  if (!linked.ok) return linked;
+  const child = linked.children.find((entry) => entry.userId === childId);
+  if (!child) {
+    return { ok: false, error: "Add your kid under Accounts, then set the rate here." };
+  }
+
+  const existing = await readLearnerProgressRow(child.userId);
+  const base = existing?.wallet ?? emptyChildWallet(child.userId);
+  const wallet = withCashInPaidReset(base, new Date().toISOString());
+  const payload: AccountProgressPayload = existing
+    ? { ...existing, wallet }
+    : {
+        schemaVersion: ACCOUNT_PROGRESS_SCHEMA_VERSION,
+        academyProgress: null,
+        wallet,
+        skillProgress: null,
+        vaultProfile: null,
+        vaultSession: null,
+      };
+  const wrote = await writeLearnerProgressRow(child.userId, payload);
+  if (!wrote.ok) return { ok: false, error: "Could not mark that as paid. Try again." };
+  return { ok: true };
 }

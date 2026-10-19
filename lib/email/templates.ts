@@ -343,7 +343,7 @@ export function buildExplorerParentEmail(
     "",
     `Approve & create account: ${approveUrl}`,
     "",
-    "Create your parent account to follow what they learn and achieve. You can set a rate so the XP they earn can turn into a cash number in the app.",
+    "Create your parent account to follow what they learn and achieve. You can agree a rate with them, so the XP they earn turns into an amount you pay them at home.",
     "",
     "If you didn't expect this, you can ignore it. The approval link expires and no account is created without you.",
     "",
@@ -375,7 +375,8 @@ export function buildExplorerParentEmail(
       ${ctaButton("Approve & create account", approveUrl)}
       <p style="margin:0 0 16px;font-size:16px;">
         Create your parent account to follow what they learn and achieve. You can
-        set a rate so the XP they earn can turn into a cash number in the app.
+        agree a rate with them, so the XP they earn turns into an amount you pay
+        them at home.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         If you didn&apos;t expect this, you can ignore it. The approval link expires
@@ -419,7 +420,7 @@ export function buildPathfinderParentEmail(
     "",
     "They've chosen the Pathfinder track, for ages 14-16. Their account is active, so they can keep learning right away.",
     "",
-    "Create a free parent account to follow what they learn and achieve. You can set a rate so the XP they earn can turn into a cash number in the app.",
+    "Create a free parent account to follow what they learn and achieve. You can agree a rate with them, so the XP they earn turns into an amount you pay them at home.",
     "",
     `Create parent account: ${claimUrl}`,
     "",
@@ -451,7 +452,8 @@ export function buildPathfinderParentEmail(
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         Create a free parent account to follow what they learn and achieve. You can
-        set a rate so the XP they earn can turn into a cash number in the app.
+        agree a rate with them, so the XP they earn turns into an amount you pay
+        them at home.
       </p>
       ${ctaButton("Create parent account", claimUrl)}
       <p style="margin:0 0 8px;font-size:16px;">

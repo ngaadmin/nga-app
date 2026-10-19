@@ -23,23 +23,44 @@ export function sliderIndexFromAudPerXpBlock(audPerBlock: number): number {
   return Math.min(MAX_SLIDER_INDEX, Math.max(MIN_SLIDER_INDEX, index));
 }
 
+export type XpCashQuote = {
+  /** Whole cents, rounded down. Never a fraction of a cent. */
+  audCents: number;
+  /** XP that those cents actually cost. Leftover XP stays in the balance. */
+  pointsCharged: number;
+};
+
 /**
- * Whole cents earned for `points` at `centsPer100Xp` per 100 XP.
- * Integer math, half-up. A rate of 1 cent is allowed. There is no $0.50 floor.
+ * Whole cents for `points` at `centsPer100Xp` per 100 XP.
+ * Integer math, rounded down. A fraction of a cent pays nothing.
+ * `pointsCharged` is the smallest XP amount that produces those cents.
  */
-export function convertPointsToCents(
-  points: number,
-  centsPer100Xp: number,
-): number {
+export function quoteXpCashIn(points: number, centsPer100Xp: number): XpCashQuote {
   const safePoints = Math.floor(points);
   const rate = Math.floor(centsPer100Xp);
-  if (!Number.isSafeInteger(safePoints) || safePoints <= 0) return 0;
-  if (!Number.isSafeInteger(rate) || rate <= 0) return 0;
+  const none: XpCashQuote = { audCents: 0, pointsCharged: 0 };
+  if (!Number.isSafeInteger(safePoints) || safePoints <= 0) return none;
+  if (!Number.isSafeInteger(rate) || rate <= 0) return none;
   const product = safePoints * rate;
-  if (!Number.isSafeInteger(product)) return 0;
-  const whole = Math.floor(product / 100);
-  const remainder = product % 100;
-  return remainder >= 50 ? whole + 1 : whole;
+  if (!Number.isSafeInteger(product)) return none;
+  const audCents = Math.floor(product / FIXED_XP_BLOCK);
+  if (audCents <= 0) return none;
+  const numerator = audCents * FIXED_XP_BLOCK;
+  if (!Number.isSafeInteger(numerator)) return none;
+  const pointsCharged = Math.floor((numerator + rate - 1) / rate);
+  if (
+    !Number.isSafeInteger(pointsCharged) ||
+    pointsCharged <= 0 ||
+    pointsCharged > safePoints
+  ) {
+    return none;
+  }
+  return { audCents, pointsCharged };
+}
+
+/** Whole cents, rounded down. A rate of 1 cent is allowed. There is no $0.50 floor. */
+export function convertPointsToCents(points: number, centsPer100Xp: number): number {
+  return quoteXpCashIn(points, centsPer100Xp).audCents;
 }
 
 /** Convert spendable XP to a dollar amount using cents per 100 XP. */

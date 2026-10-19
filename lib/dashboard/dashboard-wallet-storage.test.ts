@@ -5,6 +5,7 @@ import {
   currentWalletPersonKey,
   readDashboardWalletState,
   saveDashboardWalletState,
+  walletFieldsFromUnknown,
 } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
   saveUserSession,
@@ -70,6 +71,30 @@ beforeEach(() => {
 
 afterEach(() => {
   Reflect.deleteProperty(globalThis, "window");
+});
+
+describe("wallet cash-in fields", () => {
+  it("keeps the cents on a cash-in and the paid reset time", () => {
+    const parsed = walletFieldsFromUnknown({
+      totalPoints: 40,
+      lifetimePointsEarned: 100,
+      audSliderIndex: 2,
+      xpExchangeRateSet: true,
+      cashInOwedResetAt: "2026-10-04T00:00:00.000Z",
+      ledger: [
+        {
+          id: "cash-1",
+          kind: "spend",
+          points: 60,
+          at: "2026-10-05T00:00:00.000Z",
+          audCents: 120,
+        },
+      ],
+    });
+    expect(parsed?.cashInOwedResetAt).toBe("2026-10-04T00:00:00.000Z");
+    expect(parsed?.ledger?.[0]?.audCents).toBe(120);
+    expect(parsed?.totalPoints).toBe(40);
+  });
 });
 
 describe("dashboard wallet owner", () => {

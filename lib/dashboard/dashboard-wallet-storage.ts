@@ -18,6 +18,8 @@ export type WalletLedgerEvent = {
   kind: "earn" | "spend";
   points: number;
   at: string;
+  /** Whole cents this cash-in added to what the grown-up owes. Spend events only. */
+  audCents?: number;
 };
 
 export type PersistedDashboardWallet = {
@@ -38,6 +40,11 @@ export type PersistedDashboardWallet = {
   exchangeRateCentsPer100Xp?: number | null;
   /** When the rate was saved. Separate from balance `updatedAt`. */
   exchangeRateUpdatedAt?: string | null;
+  /**
+   * Cash-ins at or before this time are treated as paid.
+   * Later spend events still count toward what the grown-up owes.
+   */
+  cashInOwedResetAt?: string | null;
   /** Awards and cash-ins since this device started recording a ledger. */
   ledger?: WalletLedgerEvent[];
   /** When this device last changed the balance or the exchange rate. */
@@ -58,11 +65,19 @@ export function parseWalletLedger(value: unknown): WalletLedgerEvent[] {
     if (typeof raw.points !== "number" || !Number.isFinite(raw.points)) continue;
     const points = Math.floor(raw.points);
     if (points <= 0) continue;
+    const audCents =
+      raw.kind === "spend" &&
+      typeof raw.audCents === "number" &&
+      Number.isInteger(raw.audCents) &&
+      raw.audCents > 0
+        ? raw.audCents
+        : undefined;
     events.push({
       id: raw.id.trim(),
       kind: raw.kind,
       points,
       at: typeof raw.at === "string" ? raw.at : "",
+      ...(audCents != null ? { audCents } : {}),
     });
   }
   return events;
@@ -149,6 +164,10 @@ export function walletFieldsFromUnknown(
     typeof value.updatedAt === "string" && value.updatedAt.trim()
       ? value.updatedAt.trim()
       : null;
+  const cashInOwedResetAt =
+    typeof value.cashInOwedResetAt === "string" && value.cashInOwedResetAt.trim()
+      ? value.cashInOwedResetAt.trim()
+      : null;
 
   return {
     schemaVersion:
@@ -166,6 +185,7 @@ export function walletFieldsFromUnknown(
     ...parsedExchangeRateFields(value),
     ...(ledger.length > 0 ? { ledger } : {}),
     ...(updatedAt ? { updatedAt } : {}),
+    ...(cashInOwedResetAt ? { cashInOwedResetAt } : {}),
   };
 }
 

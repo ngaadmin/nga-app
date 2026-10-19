@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { PointsConvertedSuccessModal } from "@/components/dashboard/points/points-converted-success-modal";
 import { PointsConversionParentEmailModal } from "@/components/dashboard/points/points-conversion-parent-email-modal";
@@ -24,9 +24,9 @@ import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
 import { GUEST_SAVE_SIGN_UP_HREF } from "@/lib/onboarding/guest-save-prompt";
 import { loadSignedInClassAccountCashIn } from "@/lib/school/class-account-status";
+import { quoteXpCashIn } from "@/lib/dashboard/point-conversion";
 import {
   cashInLockReason,
-  convertPointsToCents,
   formatXpCashPreview,
   validateCashInPoints,
 } from "@/lib/dashboard/xp-cash";
@@ -43,12 +43,14 @@ export type PointsConvertedPayload = {
 type CashInPointsPanelProps = {
   className?: string;
   hideHeading?: boolean;
+  titleId?: string;
   onConverted?: (payload: PointsConvertedPayload) => void;
 };
 
 export function CashInPointsPanel({
   className,
   hideHeading = false,
+  titleId = "cash-in-title",
   onConverted,
 }: CashInPointsPanelProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
@@ -59,7 +61,6 @@ export function CashInPointsPanel({
   const isParentMaster = session?.accountRole === "parent_master";
   const {
     spendableXp,
-    lifetimeXp,
     audPer100Xp,
     xpExchangeRateSet,
     exchangeRateCentsPer100Xp,
@@ -79,6 +80,8 @@ export function CashInPointsPanel({
   const [classAccountWithoutParent, setClassAccountWithoutParent] = useState<
     boolean | null
   >(null);
+  const [classOrStudentSeat, setClassOrStudentSeat] = useState<boolean | null>(null);
+  const claimingRef = useRef(false);
 
   useEffect(() => {
     setSessionReady(true);
@@ -87,15 +90,20 @@ export function CashInPointsPanel({
   useEffect(() => {
     let cancelled = false;
     const classStatus = loadSignedInClassAccountCashIn()
-      .then((state) => state.classAccountWithoutParent)
-      .catch(() => false);
+      .then((state) => ({
+        classAccountWithoutParent: state.classAccountWithoutParent,
+        classOrStudentSeat: state.classOrStudentSeat,
+      }))
+      .catch(() => ({ classAccountWithoutParent: false, classOrStudentSeat: false }));
     const cloudRate =
       session?.accessMode === "registered"
         ? adoptCloudWalletRate()
         : Promise.resolve();
 
-    void Promise.all([classStatus, cloudRate]).then(([withoutParent]) => {
-      if (!cancelled) setClassAccountWithoutParent(withoutParent);
+    void Promise.all([classStatus, cloudRate]).then(([status]) => {
+      if (cancelled) return;
+      setClassAccountWithoutParent(status.classAccountWithoutParent);
+      setClassOrStudentSeat(status.classOrStudentSeat);
     });
     return () => {
       cancelled = true;
@@ -110,32 +118,38 @@ export function CashInPointsPanel({
   const isGuest = sessionReady && session?.accessMode !== "registered";
   const lock = cashInLockReason({
     sessionReady,
-    classStatusReady: classAccountWithoutParent !== null,
+    classStatusReady: classAccountWithoutParent !== null && classOrStudentSeat !== null,
     isGuest,
     classAccountWithoutParent: classAccountWithoutParent === true,
+    classOrStudentSeat: classOrStudentSeat === true,
     rateSet: rateCents != null,
   });
 
   const checked = validateCashInPoints(pointsInput, spendableXp);
-  const pointsToClaim = checked.ok ? checked.points : 0;
-  const audCents = useMemo(() => {
-    if (!checked.ok || rateCents == null) return 0;
-    return convertPointsToCents(checked.points, rateCents);
+  const quote = useMemo(() => {
+    if (!checked.ok || rateCents == null) return { audCents: 0, pointsCharged: 0 };
+    return quoteXpCashIn(checked.points, rateCents);
   }, [checked, rateCents]);
+  const audCents = quote.audCents;
   const audPayout = audCents / 100;
 
   const xpAvailableLabel = conversionCopy.xpAvailableTemplate.replace(
     "{points}",
     spendableXp.toLocaleString(),
   );
-  const lifetimeLabel = conversionCopy.lifetimeXpTemplate.replace(
-    "{points}",
-    lifetimeXp.toLocaleString(),
-  );
   const preview =
     checked.ok && audCents > 0
-      ? formatXpCashPreview(pointsToClaim, formatMoney(audPayout))
-      : conversionCopy.chooseAmountHint;
+      ? formatXpCashPreview(quote.pointsCharged, formatMoney(audPayout))
+      : checked.ok && rateCents != null
+        ? conversionCopy.zeroPayoutError
+        : conversionCopy.chooseAmountHint;
+  const partialUse =
+    checked.ok && quote.pointsCharged > 0 && quote.pointsCharged < checked.points
+      ? conversionCopy.partialUseTemplate.replace(
+          "{points}",
+          quote.pointsCharged.toLocaleString(),
+        )
+      : null;
   const successBody = conversionCopy.successBodyTemplate.replace(
     "{amount}",
     formatMoney(successAudAmount),
@@ -151,44 +165,56 @@ export function CashInPointsPanel({
 
   async function handleClaimCashReward() {
     setClaimError(null);
-    if (lock !== "ready" || isClaiming) return;
+    if (lock !== "ready" || claimingRef.current) return;
+    claimingRef.current = true;
+    setIsClaiming(true);
 
-    let classAccount = classAccountWithoutParent === true;
+    let classAccount = classOrStudentSeat === true;
     try {
       const state = await loadSignedInClassAccountCashIn();
-      classAccount = state.classAccountWithoutParent;
+      classAccount = state.classOrStudentSeat;
       setClassAccountWithoutParent(state.classAccountWithoutParent);
+      setClassOrStudentSeat(state.classOrStudentSeat);
     } catch {
-      classAccount = classAccountWithoutParent === true;
+      classAccount = classOrStudentSeat === true;
     }
-    if (classAccount || isGuest) return;
+    if (classAccount || isGuest) {
+      claimingRef.current = false;
+      setIsClaiming(false);
+      return;
+    }
 
     const fresh = validateCashInPoints(pointsInput, spendableXp);
     if (!fresh.ok) {
       setClaimError(amountError(fresh.error));
+      claimingRef.current = false;
+      setIsClaiming(false);
       return;
     }
 
-    setIsClaiming(true);
+    let holdLock = false;
     try {
       const result = claimPointsForVault(fresh.points);
       if (!result.success) {
-        setClaimError(
-          result.error === "over-balance"
-            ? conversionCopy.overBalanceError
-            : result.error === "busy"
-              ? conversionCopy.claimingLabel
-              : result.error === "no-rate"
-                ? cashInRateMissingMessage({
-                    classAccountWithoutParent: false,
-                    isParentMaster,
-                    askParentBody: conversionCopy.askParentBody,
-                    askParentIfParentBody: conversionCopy.askParentIfParentBody,
-                  })
-                : conversionCopy.invalidAmountError,
-        );
+        if (result.error !== "busy") {
+          setClaimError(
+            result.error === "over-balance"
+              ? conversionCopy.overBalanceError
+              : result.error === "zero-payout"
+                ? conversionCopy.zeroPayoutError
+                : result.error === "no-rate"
+                  ? cashInRateMissingMessage({
+                      classAccountWithoutParent: false,
+                      isParentMaster,
+                      askParentBody: conversionCopy.askParentBody,
+                      askParentIfParentBody: conversionCopy.askParentIfParentBody,
+                    })
+                  : conversionCopy.invalidAmountError,
+          );
+        }
         return;
       }
+      holdLock = true;
 
       recordXpCashIn(
         result.audCents,
@@ -215,7 +241,8 @@ export function CashInPointsPanel({
         pointsClaimed: result.pointsClaimed,
       });
     } finally {
-      releaseClaimLock();
+      if (holdLock) releaseClaimLock();
+      claimingRef.current = false;
       setIsClaiming(false);
     }
   }
@@ -227,27 +254,30 @@ export function CashInPointsPanel({
     }
   }
 
+  if (lock === "class-seat") return null;
+
+  const cardTitle =
+    lock === "rate-missing" ? conversionCopy.askParentTitle : conversionCopy.cashInHeading;
+
   const lockedMessage =
     lock === "guest"
       ? conversionCopy.guestCashInBody
-      : lock === "class-seat"
-        ? `${conversionCopy.classAccountBody} ${conversionCopy.classAccountCashInNote}`
-        : lock === "rate-missing"
-          ? cashInRateMissingMessage({
-              classAccountWithoutParent: false,
-              isParentMaster,
-              askParentBody: conversionCopy.askParentBody,
-              askParentIfParentBody: conversionCopy.askParentIfParentBody,
-            })
-          : conversionCopy.checkingAccount;
+      : lock === "rate-missing"
+        ? cashInRateMissingMessage({
+            classAccountWithoutParent: false,
+            isParentMaster,
+            askParentBody: conversionCopy.askParentBody,
+            askParentIfParentBody: conversionCopy.askParentIfParentBody,
+          })
+        : conversionCopy.checkingAccount;
 
   return (
     <>
       <div className={cn("min-w-0", className)}>
         {hideHeading ? null : (
-          <p className="font-heading text-sm font-extrabold text-[#031F82]">
-            {lock === "rate-missing" ? conversionCopy.askParentTitle : conversionCopy.cashInHeading}
-          </p>
+          <h2 id={titleId} className="font-heading text-lg font-extrabold leading-tight text-[#031F82]">
+            {cardTitle}
+          </h2>
         )}
 
         {lock !== "ready" ? (
@@ -266,9 +296,6 @@ export function CashInPointsPanel({
           <>
             <p className="mt-2 font-sans text-xs font-semibold text-[#1E3A5F]">
               {xpAvailableLabel}
-            </p>
-            <p className="mt-1 font-sans text-xs leading-relaxed text-[#1E3A5F]">
-              {lifetimeLabel}
             </p>
             <p className="mt-1 font-sans text-xs leading-relaxed text-[#1E3A5F]">
               {conversionCopy.cashInRateHint.replace("{rate}", conversionRateLabel)}
@@ -292,22 +319,26 @@ export function CashInPointsPanel({
                   aria-label={conversionCopy.customAmountLabel}
                   className="min-w-0 flex-1 rounded-xl border-2 border-[#BDE9FB] bg-[#F7FBFF] px-3 py-2 font-heading text-sm font-bold tabular-nums text-[#031F82] outline-none focus:border-[#0CC1E0]"
                 />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setClaimError(null);
-                    setPointsInput(spendableXp > 0 ? String(spendableXp) : "");
-                  }}
-                  className="shrink-0 rounded-xl px-2 py-2 font-heading text-[11px] font-bold text-[#0CC1E0] transition-colors hover:bg-[#BDE9FB]/50"
-                >
-                  {conversionCopy.convertFullBalance}
-                </button>
               </div>
             </label>
+            <button
+              type="button"
+              onClick={() => {
+                setClaimError(null);
+                setPointsInput(spendableXp > 0 ? String(spendableXp) : "");
+              }}
+              disabled={spendableXp <= 0}
+              className="mt-2 h-touch w-full rounded-nga-lg border-2 border-[#0CC1E0] bg-white px-4 font-heading text-sm font-bold text-[#031F82] transition-colors hover:bg-[#BDE9FB]/40 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {conversionCopy.convertFullBalance}
+            </button>
 
             <p className="mt-2 font-heading text-xs font-bold leading-snug text-[#031F82]">
               {preview}
             </p>
+            {partialUse ? (
+              <p className="mt-1 font-sans text-xs leading-relaxed text-[#1E3A5F]">{partialUse}</p>
+            ) : null}
             <p className="mt-1 font-sans text-xs leading-relaxed text-[#1E3A5F]">
               {conversionCopy.cashDestinationHint}
             </p>
@@ -331,9 +362,11 @@ export function CashInPointsPanel({
           </>
         )}
 
-        <p className="mt-2 font-sans text-[11px] leading-relaxed text-[#1E3A5F]/80">
-          {conversionCopy.disclaimer}
-        </p>
+        {lock === "ready" ? (
+          <p className="mt-2 font-sans text-[11px] leading-relaxed text-[#1E3A5F]/80">
+            {conversionCopy.disclaimer}
+          </p>
+        ) : null}
       </div>
 
       <PointsConvertedSuccessModal

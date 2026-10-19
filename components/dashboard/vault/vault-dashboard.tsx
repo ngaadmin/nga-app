@@ -15,7 +15,7 @@ import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/copy";
 import { ADVANCED_MONEY_TOOLS_HREF } from "@/lib/dashboard/advanced-money-tools/nav";
-import { LockIcon } from "@/lib/dashboard/icons";
+import { GoldCoinIcon, LockIcon } from "@/lib/dashboard/icons";
 import {
   useVaultActions,
   type PendingVaultDeposit,
@@ -29,6 +29,8 @@ import {
   vaultOverviewHairlineClass,
   vaultOverviewSectionTitleClass,
 } from "@/lib/dashboard/vault/vault-my-money-card-styles";
+import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import { useXpExchangeGate } from "@/lib/dashboard/use-xp-exchange-gate";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 
 export function VaultDashboard() {
@@ -56,6 +58,9 @@ export function VaultDashboard() {
     handleResetAllBalances,
   } = useVaultActions();
   const advancedMoneyUnlocked = useTestingPremiumUnlocked();
+  const { spendableXp } = useDashboardWallet();
+  const xpExchange = useXpExchangeGate();
+  const showCashInTile = xpExchange.ready && !xpExchange.blocked;
 
   const [expandedBucketId, setExpandedBucketId] = useState<VaultBucketId | null>(null);
   const [pendingDeposit, setPendingDeposit] = useState<PendingVaultDeposit | null>(
@@ -63,17 +68,19 @@ export function VaultDashboard() {
   );
   const [manageJarsModalOpen, setManageJarsModalOpen] = useState(false);
   const [assignCashOpen, setAssignCashOpen] = useState(false);
-  const [cashInOpen, setCashInOpen] = useState(
-    () => searchParams.get("cashIn") === "1",
-  );
+  const [cashInOpen, setCashInOpen] = useState(false);
   const [advancedMoneyUpgradeOpen, setAdvancedMoneyUpgradeOpen] =
     useState(false);
 
   useEffect(() => {
+    if (!xpExchange.ready || xpExchange.blocked) {
+      setCashInOpen(false);
+      return;
+    }
     if (searchParams.get("cashIn") === "1") {
       setCashInOpen(true);
     }
-  }, [searchParams]);
+  }, [searchParams, xpExchange.blocked, xpExchange.ready]);
 
   useEffect(() => {
     recordUsageEvent("vault_visit");
@@ -129,6 +136,26 @@ export function VaultDashboard() {
           />
         }
       />
+
+      {showCashInTile ? (
+        <button
+          type="button"
+          onClick={() => setCashInOpen(true)}
+          className="mt-6 flex w-full items-center gap-3 rounded-2xl bg-[#FFF7ED] px-4 py-3 text-left shadow-sm transition-transform active:scale-[0.99]"
+        >
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-[#031F82]">
+            <GoldCoinIcon className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={`block ${vaultOverviewSectionTitleClass}`}>
+              {vaultCopy.cashInTileLabel}
+            </span>
+            <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]/75">
+              {vaultCopy.cashInTileSubtext.replace("{points}", spendableXp.toLocaleString())}
+            </span>
+          </span>
+        </button>
+      ) : null}
 
       <VaultCashBucket
         amount={moneyToAllocate}
@@ -255,15 +282,7 @@ export function VaultDashboard() {
         backdropClassName="bg-[#031F82]/45"
         panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
       >
-        <h2
-          id="vault-cash-in-title"
-          className="font-heading text-lg font-extrabold text-[#031F82]"
-        >
-          {vaultCopy.cashInTileLabel}
-        </h2>
-        <div className="mt-4">
-          <CashInPointsPanel hideHeading />
-        </div>
+        <CashInPointsPanel titleId="vault-cash-in-title" />
       </ModalShell>
 
       <PremiumUpgradeModal

@@ -10,11 +10,10 @@ export function CompletionScreen({
   flow,
   rewards,
 }: StandardScreenProps<CompletionScreenConfig>) {
-  const { spendableXp, lifetimeXp } = useDashboardWallet();
+  const { spendableXp } = useDashboardWallet();
   return (
     <LessonCompletionPane
       spendableXp={spendableXp}
-      lifetimeXp={lifetimeXp}
       xpReward={rewards.xpReward}
       perfectStreakBonus={rewards.perfectStreakBonus}
       perfectStreak={flow.perfectStreak}

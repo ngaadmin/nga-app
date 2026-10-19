@@ -15,10 +15,15 @@ import {
   readSpendableXp,
   resolveExchangeRateCents,
   spendSpendableXp,
+  sumOwedCashInCents,
   validateCashInPoints,
+  withCashInPaidReset,
   withExchangeRate,
 } from "@/lib/dashboard/xp-cash";
-import { convertPointsToCents as pointsToCents } from "@/lib/dashboard/point-conversion";
+import {
+  convertPointsToCents as pointsToCents,
+  quoteXpCashIn,
+} from "@/lib/dashboard/point-conversion";
 
 function wallet(
   partial: Partial<PersistedDashboardWallet> &
@@ -45,10 +50,13 @@ describe("XP cash conversion", () => {
     expect(convertPointsToCents(100, 50)).toBe(50);
   });
 
-  it("rounds half-up to the nearest cent and rejects a zero payout rate path", () => {
-    expect(convertPointsToCents(1, 50)).toBe(1);
+  it("rounds a fraction of a cent down and charges only the XP those cents cost", () => {
+    expect(convertPointsToCents(1, 50)).toBe(0);
     expect(convertPointsToCents(1, 1)).toBe(0);
-    expect(convertPointsToCents(3, 50)).toBe(2);
+    expect(convertPointsToCents(3, 50)).toBe(1);
+    expect(quoteXpCashIn(3, 50)).toEqual({ audCents: 1, pointsCharged: 2 });
+    expect(quoteXpCashIn(149, 1)).toEqual({ audCents: 1, pointsCharged: 100 });
+    expect(pointsToCents(3, 50)).toBe(1);
   });
 
   it("rejects empty, zero, and oversized rates", () => {
@@ -111,6 +119,16 @@ describe("cash-in unlock", () => {
         rateSet: true,
       }),
     ).toBe("ready");
+    expect(
+      cashInLockReason({
+        sessionReady: true,
+        classStatusReady: true,
+        isGuest: false,
+        classAccountWithoutParent: false,
+        classOrStudentSeat: true,
+        rateSet: true,
+      }),
+    ).toBe("class-seat");
   });
 });
 
@@ -159,12 +177,100 @@ describe("spendable cash-in versus lifetime XP", () => {
     expect(readSpendableXp(first.wallet)).toBe(60);
   });
 
+  it("refuses a cash-in above the balance and does not spend it", () => {
+    const saved = withExchangeRate(
+      wallet({ totalPoints: 10, lifetimePointsEarned: 10 }),
+      200,
+      "2026-10-01T00:00:00.000Z",
+    );
+    const result = spendSpendableXp(saved, 11, {
+      id: "too-many",
+      at: "2026-10-02T00:00:00.000Z",
+    });
+    expect(result).toEqual({ ok: false, error: "over-balance" });
+    expect(readSpendableXp(saved)).toBe(10);
+  });
+
+  it("rounds the payout down and leaves the leftover XP", () => {
+    const saved = withExchangeRate(
+      wallet({ totalPoints: 149, lifetimePointsEarned: 149 }),
+      1,
+      "2026-10-01T00:00:00.000Z",
+    );
+    const result = spendSpendableXp(saved, 149, {
+      id: "fraction",
+      at: "2026-10-02T00:00:00.000Z",
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.audCents).toBe(1);
+    expect(result.pointsClaimed).toBe(100);
+    expect(readSpendableXp(result.wallet)).toBe(49);
+    expect(readLifetimeXp(result.wallet)).toBe(149);
+    expect(result.wallet.ledger?.[0]).toMatchObject({
+      kind: "spend",
+      points: 100,
+      audCents: 1,
+    });
+  });
+
+  it("does not spend XP when the amount is under one cent", () => {
+    const saved = withExchangeRate(
+      wallet({ totalPoints: 3, lifetimePointsEarned: 40 }),
+      1,
+      "2026-10-01T00:00:00.000Z",
+    );
+    const result = spendSpendableXp(saved, 3, {
+      id: "dust",
+      at: "2026-10-02T00:00:00.000Z",
+    });
+    expect(result).toEqual({ ok: false, error: "zero-payout" });
+    expect(readSpendableXp(saved)).toBe(3);
+    expect(saved.ledger).toBeUndefined();
+  });
+
   it("blocks a second tap while the first cash-in is still saving", () => {
     const started = beginCashInAttempt({ inFlight: false });
     expect(started.ok).toBe(true);
     if (!started.ok) return;
     expect(beginCashInAttempt(started.state).ok).toBe(false);
     expect(beginCashInAttempt(endCashInAttempt()).ok).toBe(true);
+  });
+});
+
+describe("owed cash-in total", () => {
+  it("sums cash-in cents and drops them after mark as paid", () => {
+    const saved = withExchangeRate(
+      wallet({ totalPoints: 300, lifetimePointsEarned: 300 }),
+      200,
+      "2026-10-01T00:00:00.000Z",
+    );
+    const first = spendSpendableXp(saved, 100, {
+      id: "owe-1",
+      at: "2026-10-02T00:00:00.000Z",
+    });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    const second = spendSpendableXp(first.wallet, 50, {
+      id: "owe-2",
+      at: "2026-10-03T00:00:00.000Z",
+    });
+    expect(second.ok).toBe(true);
+    if (!second.ok) return;
+    expect(sumOwedCashInCents(second.wallet)).toBe(300);
+
+    const paid = withCashInPaidReset(second.wallet, "2026-10-04T00:00:00.000Z");
+    expect(sumOwedCashInCents(paid)).toBe(0);
+    expect(readSpendableXp(paid)).toBe(readSpendableXp(second.wallet));
+
+    const later = spendSpendableXp(paid, 100, {
+      id: "owe-3",
+      at: "2026-10-05T00:00:00.000Z",
+    });
+    expect(later.ok).toBe(true);
+    if (!later.ok) return;
+    expect(sumOwedCashInCents(later.wallet)).toBe(200);
+    expect(readLifetimeXp(later.wallet)).toBe(300);
   });
 });
 

@@ -38,7 +38,7 @@ import {
   upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
-import { useSettingsParentView } from "@/lib/dashboard/testing-settings-view";
+import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view";
 import { AccountRowTrack } from "@/components/dashboard/settings/account-row-track";
 import { DeleteLearnerConfirmSheet } from "@/components/dashboard/settings/delete-learner-confirm-sheet";
 import { cn } from "@/lib/utils/cn";

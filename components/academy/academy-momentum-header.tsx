@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useState } from "react";
 import {
   StatusBannerLayout,
   TOP_BAR_ROUND_ICON_CLASS,
@@ -8,6 +9,12 @@ import {
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
+import {
+  COIN_COUNTER_ATTR,
+  clearCoinCounterTick,
+  lessonMotionEnabled,
+  readCoinCounterTick,
+} from "@/lib/academy/lessons/coin-counter-flight";
 import { coinWord } from "@/lib/copy/coin-word";
 import { AchievementsIcon, FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
@@ -33,31 +40,69 @@ export function AcademyMomentumHeader({
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
-  const coinUnit = coinWord(xp);
+  const [shownXp, setShownXp] = useState(xp);
+  const coinUnit = coinWord(shownXp);
+
+  useLayoutEffect(() => {
+    const pending = readCoinCounterTick();
+    const motion = lessonMotionEnabled();
+    if (pending <= 0 || !motion) {
+      if (pending > 0 && xp > 0) clearCoinCounterTick();
+      setShownXp(xp);
+      return;
+    }
+    if (xp <= 0) {
+      setShownXp(xp);
+      return;
+    }
+    const from = Math.max(0, xp - pending);
+    if (xp <= from) {
+      clearCoinCounterTick();
+      setShownXp(xp);
+      return;
+    }
+
+    setShownXp(from);
+    const started = performance.now();
+    let frame = 0;
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - started) / 520);
+      setShownXp(Math.round(from + (xp - from) * progress));
+      if (progress < 1) {
+        frame = requestAnimationFrame(step);
+        return;
+      }
+      clearCoinCounterTick();
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [xp]);
 
   return (
     <StatusBannerLayout
       aria-label="App stats"
       clusterGapClassName="gap-4"
       left={
-        <StatusMetricPill
-          interactive={Boolean(onXpClick)}
-          className="shrink-0"
-          onClick={onXpClick}
-          icon={
-            <TopBarRoundIcon>
-              <GoldCoinIcon className="size-5" />
-            </TopBarRoundIcon>
-          }
-          value={xp}
-          unitLabel={coinUnit}
-          ariaLabel={
-            onXpClick
-              ? `${xp} ${coinUnit} to cash in`
-              : `${xp} ${coinUnit}`
-          }
-          title={onXpClick ? `${coinUnit} to cash in` : coinUnit}
-        />
+        <div {...{ [COIN_COUNTER_ATTR]: "" }} className="min-w-0">
+          <StatusMetricPill
+            interactive={Boolean(onXpClick)}
+            className="shrink-0"
+            onClick={onXpClick}
+            icon={
+              <TopBarRoundIcon>
+                <GoldCoinIcon className="size-5" />
+              </TopBarRoundIcon>
+            }
+            value={shownXp}
+            unitLabel={coinUnit}
+            ariaLabel={
+              onXpClick
+                ? `${shownXp} ${coinUnit} to cash in`
+                : `${shownXp} ${coinUnit}`
+            }
+            title={onXpClick ? `${coinUnit} to cash in` : coinUnit}
+          />
+        </div>
       }
       center={
         <UserHandleControl

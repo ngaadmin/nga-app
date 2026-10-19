@@ -35,6 +35,7 @@ export function useLessonScreenFlow({
   }, [screenIndex]);
 
   const handleSuccess = useCallback(() => {
+    flowRef.current.recordBonusRunCorrect();
     celebrateLessonCorrectAnswer();
   }, []);
 

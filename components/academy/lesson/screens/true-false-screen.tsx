@@ -53,6 +53,7 @@ export function TrueFalseScreen({
       setError(null);
       setSolved(true);
       celebrateLessonCorrectAnswer();
+      flow.recordBonusRunCorrect();
       flow.markScreenReady(screenIndex);
       return;
     }

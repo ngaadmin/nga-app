@@ -25,7 +25,10 @@ export function LinkMatchScreen({
         eventColumnLabel={screen.eventColumnLabel}
         benefitColumnLabel={screen.benefitColumnLabel}
         hint={hint}
-        onComplete={() => flow.markScreenReady(screenIndex)}
+        onComplete={() => {
+          flow.recordBonusRunCorrect();
+          flow.markScreenReady(screenIndex);
+        }}
         onMismatch={() => flow.incrementMistake()}
       />
     </div>

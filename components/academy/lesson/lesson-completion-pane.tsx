@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
+import { LessonCompletionRewardsCard } from "@/components/academy/lesson/lesson-completion-rewards-card";
 import { GuestSavePromptBanner } from "@/components/onboarding/guest-save-prompt-banner";
 import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
+import {
+  flyLessonTotalToCoinCounter,
+  lessonMotionEnabled,
+} from "@/lib/academy/lessons/coin-counter-flight";
 import { coinWord } from "@/lib/copy/coin-word";
 import {
   LESSON_CASH_IN_LABEL,
@@ -28,6 +33,8 @@ type LessonCompletionPaneProps = {
   xpReward: number;
   perfectStreakBonus: number;
   perfectStreak: boolean;
+  bonusCoins?: number;
+  bonusRuns?: number;
   achievementSkillId: string;
   lessonNumber?: number;
   moduleNumber?: number;
@@ -68,6 +75,8 @@ export function LessonCompletionPane({
   xpReward,
   perfectStreakBonus,
   perfectStreak,
+  bonusCoins = 0,
+  bonusRuns = 0,
   achievementSkillId,
   lessonNumber,
   moduleNumber,
@@ -85,6 +94,10 @@ export function LessonCompletionPane({
 }: LessonCompletionPaneProps) {
   const router = useRouter();
   const [cashingIn, setCashingIn] = useState(false);
+  const [flying, setFlying] = useState(false);
+  const flyingRef = useRef(false);
+  const flewRef = useRef(false);
+  const totalRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     router.prefetch(DASHBOARD_ACADEMY_PATH);
@@ -124,12 +137,33 @@ export function LessonCompletionPane({
         : skillLearnedLabel?.trim() || "Skill unlocked";
   const shortMeaning =
     meaningLine?.trim() || skill?.description?.trim() || undefined;
-  const showPerfectBonus = perfectStreak && perfectStreakBonus > 0;
+  const runAfterFlight = (action: () => void) => {
+    if (flyingRef.current) return;
+    const node = totalRef.current;
+    if (!node || flewRef.current || !lessonMotionEnabled()) {
+      action();
+      return;
+    }
+    flyingRef.current = true;
+    flewRef.current = true;
+    setFlying(true);
+    flyLessonTotalToCoinCounter(
+      node,
+      node.dataset.rewardLabel || node.textContent || "",
+      () => {
+        flyingRef.current = false;
+        setFlying(false);
+        action();
+      },
+    );
+  };
 
   const handleCashIn = () => {
-    if (cashingIn || cashInDisabled) return;
-    setCashingIn(true);
-    onCashIn();
+    if (cashingIn || cashInDisabled || flyingRef.current) return;
+    runAfterFlight(() => {
+      setCashingIn(true);
+      onCashIn();
+    });
   };
 
   return (
@@ -170,14 +204,15 @@ export function LessonCompletionPane({
           <p className={lessonCompletionEyebrowClass}>{shortMeaning}</p>
         ) : null}
 
-        <p className="mt-2 font-heading text-[22px] font-bold tabular-nums text-[#031F82]">
-          +{xpReward} {coinWord(xpReward)}
-        </p>
-        {showPerfectBonus ? (
-          <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
-            Perfect lesson: +{perfectStreakBonus} {coinWord(perfectStreakBonus)}
-          </p>
-        ) : null}
+        <LessonCompletionRewardsCard
+          ref={totalRef}
+          xpReward={xpReward}
+          perfectStreakBonus={perfectStreakBonus}
+          perfectStreak={perfectStreak}
+          bonusCoins={bonusCoins}
+          bonusRuns={bonusRuns}
+          animate
+        />
         {typeof spendableXp === "number" ? (
           <p className="mt-2 font-sans text-[15px] font-bold text-[#031F82]">
             {spendableXp.toLocaleString()} {coinWord(spendableXp)} to cash in
@@ -196,8 +231,15 @@ export function LessonCompletionPane({
         <div className="mt-auto flex w-full justify-center pb-4 pt-8">
           <button
             type="button"
-            onClick={cashingIn ? onContinue : handleCashIn}
-            disabled={!cashingIn && cashInDisabled}
+            onClick={
+              cashingIn
+                ? () => {
+                    if (flyingRef.current) return;
+                    runAfterFlight(onContinue);
+                  }
+                : handleCashIn
+            }
+            disabled={flying || (!cashingIn && cashInDisabled)}
             className={cashingIn ? lessonNextButtonClass : lessonGoldClaimClass}
           >
             {cashingIn ? "Continue" : LESSON_CASH_IN_LABEL}

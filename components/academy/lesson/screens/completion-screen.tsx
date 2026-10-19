@@ -17,6 +17,8 @@ export function CompletionScreen({
       xpReward={rewards.xpReward}
       perfectStreakBonus={rewards.perfectStreakBonus}
       perfectStreak={flow.perfectStreak}
+      bonusCoins={flow.bonusCoins}
+      bonusRuns={flow.bonusRuns}
       achievementSkillId={flow.progressSkillSlug}
       lessonNumber={flow.lessonNumber}
       moduleNumber={flow.moduleNumber}

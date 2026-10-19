@@ -27,8 +27,9 @@ import {
   isMultipleChoiceScreen,
   type ResolvedLessonContent,
 } from "@/lib/academy/lessons/types";
+import { bonusRunUnitForScreen } from "@/lib/academy/lessons/bonus-run";
 import { cn } from "@/lib/utils/cn";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, type ReactNode } from "react";
 
 type LessonRunnerProps = {
   content: ResolvedLessonContent;
@@ -57,7 +58,7 @@ export function LessonRunner({
   progressTotal,
   progressComplete,
 }: LessonRunnerProps) {
-  const { screenIndex, markScreenReady } = flow;
+  const { screenIndex, markScreenReady, setBonusRunUnit } = flow;
   const activeScreen = content.screens[screenIndex];
   const isCompletionScreen = activeScreen?.type === "completion";
   const isContinueOnly =
@@ -66,6 +67,11 @@ export function LessonRunner({
   const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
   const isTapReveal = activeScreen?.type === "tap-reveal";
   const isLinkMatch = activeScreen?.type === "link-match";
+
+  useLayoutEffect(() => {
+    if (!activeScreen || activeScreen.type === "spotlight-rounds") return;
+    setBonusRunUnit(bonusRunUnitForScreen(activeScreen, screenIndex));
+  }, [activeScreen, screenIndex, setBonusRunUnit]);
 
   useEffect(() => {
     const screen = content.screens[screenIndex];

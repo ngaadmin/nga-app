@@ -20,6 +20,7 @@ import {
   cashMatches,
   displayCashText,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
+import { spotlightRoundUnitId } from "@/lib/academy/lessons/bonus-run";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -108,6 +109,11 @@ function SpotlightDecisionChoices({
   optionsRef.current = options;
   const commitCashRef = useRef(commitCash);
   commitCashRef.current = commitCash;
+  const { setBonusRunUnit } = flow;
+
+  useLayoutEffect(() => {
+    setBonusRunUnit(null);
+  }, [setBonusRunUnit]);
 
   useEffect(() => {
     activeSpotlightDecisionNextHandler = () => {
@@ -186,6 +192,11 @@ function SpotlightGradedRounds({
     setRoundSideLayouts(buildRoundSideLayouts(screen.rounds.length));
   }, [screen.rounds.length]);
 
+  const { setBonusRunUnit, recordBonusRunCorrect } = flow;
+  useLayoutEffect(() => {
+    setBonusRunUnit(spotlightRoundUnitId(screenIndex, roundIndex));
+  }, [roundIndex, screenIndex, setBonusRunUnit]);
+
   useEffect(
     () => () => {
       if (recoveryTimeoutRef.current !== null) {
@@ -224,6 +235,7 @@ function SpotlightGradedRounds({
     }
 
     celebrateLessonCorrectAnswer();
+    recordBonusRunCorrect();
     if (roundIndex + 1 >= screen.rounds.length) {
       flow.markScreenReady(screenIndex);
       return;

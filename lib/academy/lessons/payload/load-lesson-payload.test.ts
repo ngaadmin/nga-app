@@ -441,7 +441,7 @@ describe("lesson payload loader", () => {
       expect(screen).toMatchObject({
         type: "binary-choice",
         sourceLabel: "4-alt",
-        prompt: `The next day everyone is talking about how good the ${event} was, and they all went to lunch after. ${name} still has ${possessive} $20, but ${pronoun} missed all of it.`,
+        prompt: `The next day everyone is talking about how good the ${event} was, and they all went to lunch after. ${name} still has ${possessive} {cash}, but ${pronoun} missed all of it.`,
       });
     };
     missedAfternoon("explorer", "Senna", "skateboard session");
@@ -855,19 +855,22 @@ describe("lesson payload loader", () => {
     expect(water.options?.map((option) => option.goToLabel)).toEqual(["5-buy", "5-save"]);
 
     const written = {
-      "1-buy": "Lars buys the phone case for $9. He has $6 left.",
-      "1-keep": "Lars leaves the phone case. He still has $15.",
-      "2-played": "Lars pays $8 and plays the arcade. He has $7 left.",
-      "2-kept": "Lars skips the arcade and keeps his $15.",
-      "2-short": "Lars can’t pay the $8. He skips the arcade and keeps his $6.",
-      "5-buy": "Mia buys the water bottle for $9. She has $5 left.",
-      "5-save": "Mia skips the water bottle. She still has $14.",
+      "1-buy": ["Lars buys the phone case for $9. He has {cash} left.", 6],
+      "1-keep": ["Lars leaves the phone case. He still has {cash}.", 15],
+      "2-played": ["Lars pays $8 and plays the arcade. He has {cash} left.", 7],
+      "2-kept": ["Lars skips the arcade and keeps his {cash}.", 15],
+      "2-short": ["Lars can’t pay the $8. He skips the arcade and keeps his {cash}.", 6],
+      "5-buy": ["Mia buys the water bottle for $9. She has {cash} left.", 5],
+      "5-save": ["Mia skips the water bottle. She still has {cash}.", 14],
     } as const;
-    for (const [label, prompt] of Object.entries(written)) {
+    for (const [label, [prompt, cash]] of Object.entries(written)) {
       const screen = byLabel.get(label);
       expect(screen?.type).toBe("binary-choice");
       if (screen?.type === "binary-choice") {
         expect(screen.prompt).toBe(prompt);
+        expect(fillCashPlaceholder(screen.prompt, cash)).toBe(
+          prompt.split("{cash}").join(`$${cash}`),
+        );
         expect(screen.continueToLabel).toBeTruthy();
       }
     }

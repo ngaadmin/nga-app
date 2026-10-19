@@ -30,7 +30,7 @@ Leave Pass/Fail and Note blank until the pass.
 | 3 | 4 · bucket-sort, step order | All three | A card on the wrong step drops a heart. Error cell is empty. Steps in order enable Next. | | |
 | 3 | 5 · multiple-choice, one answer | All three | A wrong answer shows the sheet error. The correct answer continues. | | |
 | 3 | 6 · word-drop, three blanks | All three | A distractor shows “Not quite. Try another combo!” Each blank takes its own correct word. | | |
-| 3 | 7 · multiple-choice, all of the above | All three | Each true statement shows “Yes, but take a look at the other options and see if there's a better answer.” and does not drop a heart. All of the above completes the screen. Pathfinder and Maverick option D reads “afoord”. | | |
+| 3 | 7 · multiple-choice, all of the above | All three | Each true statement shows “Yes, but take a look at the other options and see if there's a better answer.” and does not drop a heart. All of the above completes the screen. Option D says “afford” for all three cohorts. | | |
 | 3 | 8 · completion | All three | Bronze medal for skill 3. Cash in your XP opens the celebration. | | |
 | 4 | 1 · multiple-choice | All three | Wrong answers show “Look again at what Senna is choosing to do.” The correct answer continues. | | |
 | 4 | 2 · bucket-sort, step order | All three | Wrong step drops a heart. Error cell is empty. Correct order enables Next. | | |
@@ -67,15 +67,15 @@ Leave Pass/Fail and Note blank until the pass.
 | 7 | Gelato · drag-to-target | All three | A miss shows “Drag the gelato to share it with Mia.” and drops a heart. The correct drop enables Next. | | |
 | 7 | 8 · completion, no medal | All three | No skill medal is shown. Cash in your XP still opens the celebration. | | |
 | 8 | 1 · spotlight decision, set cash | All three | Both choices are allowed. Buying sets cash to $6. Leaving it sets cash to $15. | | |
-| 8 | 1-buy and 1-keep · story cards | All three | Continue cards state a fixed dollar amount. Explorer uses Lars, Pathfinder uses Holly, Maverick uses Aiden. | | |
+| 8 | 1-buy and 1-keep · story cards | All three | Continue cards show the cash from the choice. Buying leaves $6. Leaving the case leaves $15. The $9 price stays written. Explorer uses Lars, Pathfinder uses Holly, Maverick uses Aiden. | | |
 | 8 | 2 · spotlight decision, if cash | All three | The prompt shows the cash from the previous choice, not a stale number. Choices that need $8 appear only when cash is at least $8. | | |
-| 8 | 2-played, 2-kept, 2-short, 2-alt · story cards | All three | Each result card continues. Dollar amounts on the cards are written out in the sheet. | | |
+| 8 | 2-played, 2-kept, 2-short, 2-alt · story cards | All three | Each result card continues. Remaining cash matches the path: $7 after paying from $15, $15 when the arcade is skipped with the case left, $6 when the case was bought. The $8 price stays written. The “would have $15” card is the road not taken. | | |
 | 8 | 3 · spotlight decision | All three | Explorer is Senna at a skateboard session, Pathfinder is Immi at a roller-skate derby, Maverick is Dash at a gym session. Joining and skipping both continue, with different cash on the next card. | | |
-| 8 | 4 and 4-alt · story cards | All three | Continue cards lead to Mia’s water-bottle choice. | | |
+| 8 | 4 and 4-alt · story cards | All three | Continue cards lead to Mia’s water-bottle choice. Joining shows $12 left. Skipping shows $20 still in hand. | | |
 | 8 | 5 · spotlight decision, set cash | All three | Buying the bottle sets cash to $5. Skipping keeps $14. | | |
-| 8 | 5-buy and 5-save · story cards | All three | Cards state $5 left or $14 left and continue. | | |
+| 8 | 5-buy and 5-save · story cards | All three | Buying shows $5 left. Skipping shows $14 left. The $9 price stays written. Both cards continue. | | |
 | 8 | 6 · spotlight decision, if cash | All three | The prompt shows the current cash. The $5 cinema choice appears when cash is $5. The $8 choice appears when cash is $14. | | |
-| 8 | 7, 7-skip, 7-alt, 7-home · story cards | All three | The card matches the choice just made and continues. | | |
+| 8 | 7, 7-skip, 7-alt, 7-home · story cards | All three | The card matches the choice just made and continues. Remaining cash is $0, $5, $6, or $14 for that choice. The ($5) and ($8) prices stay written. | | |
 | 8 | 8 · narrative-bonus | All three | Closing story beat continues to completion. | | |
 | 8 | 9 · completion, no medal | All three | No skill medal is shown. Cash in your XP still opens the celebration. | | |
 | 9 | 1 · skill hub | All three | Finish stays off until Stop & Think, Put Needs First, and Keep Spare Cash are done. Each skill returns here. | | |
@@ -88,10 +88,8 @@ Leave Pass/Fail and Note blank until the pass.
 
 These are sheet issues. The app should not invent a replacement sentence or rewrite the line.
 
-- Pathfinder and Maverick, lesson 3 screen 7, option D says “afoord”. Explorer says “afford”.
 - Rank-order Error cells are empty: lesson 2 screen 6, lesson 5 screen 6, lesson 6 screen 6. Submit still counts a mistake.
 - Bucket-sort Error cells are empty: lesson 1 screen 4, lesson 2 screen 2, lesson 3 screens 2 and 4, lesson 4 screen 2, lesson 5 screen 4, lesson 6 screen 3.
-- Other empty Error cells on graded screens: lesson 1 screen 6 (hold), lesson 2 screen 3 and lesson 6 screen 4 (spotlight rounds), lesson 2 Gift box and lesson 4 Spend Now (drag), lesson 3 screen 3 (link-match), lesson 4 screen 7 (savings target), lesson 9 screen 7 (word-drop).
-- Lesson 8 result cards write the dollar amount in the sentence (“She has $6 left.”) instead of using `{cash}`. Decision prompts on screens 2 and 6 do use `{cash}` and should follow the path.
+- Other empty Error cells on graded screens: lesson 1 screen 6 (hold), lesson 2 screen 3 and lesson 6 screen 4 (spotlight rounds), lesson 2 Gift box and lesson 4 Spend Now (drag), lesson 3 screen 3 (link-match), lesson 4 screen 7 (savings target), lesson 9 screen 7 (word-drop). The writer list is `docs/m1-blank-errors.md`. Lesson 3 screen 2 is a single Spent bucket, so a drop there does not cost a heart.
 - Lesson 7 and 8 completion rows point at `penny-fistpump.webp`. Those screens are marked medal none, so no medal is shown and that image is not placed on the completion screen.
 - Lesson 9’s settings also say `XP:` and `NODE:`. Completion still uses the standard lesson XP plus the perfect bonus when there are no mistakes.

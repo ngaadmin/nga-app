@@ -21,12 +21,26 @@ export function saveAmountFromClientX(
 }
 
 /**
- * The screen is solved only when Save is the target amount.
- * Saving more than the target is still wrong: the rest was meant to stay spendable.
+ * How the settings cell scores the slider.
+ * `at-least` comes from a KEEP line (save this much or more).
+ * `exact` is a move or pay line with one dollar amount.
  */
-export function allocationNextEnabled(save: number, targetMin: number): boolean {
+export type AllocationMatch = "exact" | "at-least";
+
+/**
+ * Exact screens unlock only on the target amount.
+ * KEEP screens unlock on the target or anything above it.
+ */
+export function allocationNextEnabled(
+  save: number,
+  targetMin: number,
+  match: AllocationMatch = "exact",
+): boolean {
   if (!Number.isFinite(save) || !Number.isFinite(targetMin)) return false;
-  return Math.round(save) === Math.max(0, Math.round(targetMin));
+  const saved = Math.round(save);
+  const target = Math.max(0, Math.round(targetMin));
+  if (match === "at-least") return saved >= target;
+  return saved === target;
 }
 
 export function allocationSavedBadge(targetMin: number): string {

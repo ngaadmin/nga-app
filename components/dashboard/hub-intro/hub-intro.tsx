@@ -21,7 +21,7 @@ export function HubIntro({ hubId }: HubIntroProps) {
           <h1 className="min-w-0 font-heading text-lg font-extrabold leading-tight text-[#031F82]">
             {copy.title}
           </h1>
-          {hydrated && seen ? (
+          {hydrated && seen && hubId !== "community" ? (
             <button
               type="button"
               onClick={reopen}

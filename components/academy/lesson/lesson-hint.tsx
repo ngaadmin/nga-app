@@ -41,7 +41,7 @@ export function usePublishLessonHint(message: string | null | undefined) {
   }, [message, setHint]);
 }
 
-/** Speech bubble over the character. It does not take layout space. */
+/** Speech bubble under the character, in the flow, so it misses the feet and the prompt. */
 export function LessonHintBubble() {
   const api = useContext(LessonHintContext);
   const hint = api?.hint ?? null;
@@ -66,8 +66,8 @@ export function LessonHintBubble() {
     <p
       role="status"
       className={cn(
-        "pointer-events-none absolute bottom-1 right-1 z-raised max-w-[14rem] rounded-2xl bg-white px-3 py-2 text-left font-sans text-[14px] font-semibold leading-snug text-[#031F82] shadow-[0_6px_16px_rgb(3_31_130_/_0.16)] transition-opacity duration-300",
-        "before:absolute before:-bottom-1.5 before:left-5 before:size-3 before:rotate-45 before:bg-white",
+        "pointer-events-none relative z-raised mt-2 max-w-[16rem] rounded-2xl bg-white px-3 py-2 text-left font-sans text-[14px] font-semibold leading-snug text-[#031F82] shadow-[0_6px_16px_rgb(3_31_130_/_0.16)] transition-opacity duration-300",
+        "before:absolute before:-top-1.5 before:left-5 before:size-3 before:rotate-45 before:bg-white",
         visible ? "opacity-100" : "opacity-0",
       )}
     >

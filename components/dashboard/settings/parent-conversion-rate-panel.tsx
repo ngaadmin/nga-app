@@ -77,14 +77,14 @@ export function ParentConversionRatePanel({
   const previewCents = parseExchangeRateToCents(amountInput);
   const preview =
     previewCents != null
-      ? `100 XP = ${formatMoney(previewCents / 100, currencyCode)}`
+      ? `100 coins = ${formatMoney(previewCents / 100, currencyCode)}`
       : null;
 
   function rateLabel(cents: number | null): string {
     if (cents == null) {
       return copyMatrix.dashboard.settings.parentHubFeatures.pointsConversionNotSet;
     }
-    return `100 XP = ${formatMoney(cents / 100, currencyCode)}`;
+    return `100 coins = ${formatMoney(cents / 100, currencyCode)}`;
   }
 
   function selectChild(childId: string) {

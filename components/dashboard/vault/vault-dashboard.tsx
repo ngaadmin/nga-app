@@ -13,6 +13,7 @@ import { VaultMyMoneyCard } from "@/components/dashboard/vault/vault-my-money-ca
 import { PremiumUpgradeModal } from "@/components/dashboard/premium-upgrade-modal";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { fillCoinTemplate } from "@/lib/copy/coin-word";
 import { advancedMoneyToolsCopy } from "@/lib/dashboard/advanced-money-tools/copy";
 import { ADVANCED_MONEY_TOOLS_HREF } from "@/lib/dashboard/advanced-money-tools/nav";
 import { GoldCoinIcon, LockIcon } from "@/lib/dashboard/icons";
@@ -151,7 +152,7 @@ export function VaultDashboard() {
               {vaultCopy.cashInTileLabel}
             </span>
             <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]/75">
-              {vaultCopy.cashInTileSubtext.replace("{points}", spendableXp.toLocaleString())}
+              {fillCoinTemplate(vaultCopy.cashInTileSubtext, spendableXp)}
             </span>
           </span>
         </button>
@@ -278,11 +279,16 @@ export function VaultDashboard() {
       <ModalShell
         isOpen={cashInOpen}
         onClose={() => setCashInOpen(false)}
+        align="center"
+        clearBottomNav
         labelledBy="vault-cash-in-title"
         backdropClassName="bg-[#031F82]/45"
         panelClassName="max-w-sm rounded-nga-xl bg-white p-5 shadow-nga-pop sm:p-6"
       >
-        <CashInPointsPanel titleId="vault-cash-in-title" />
+        <CashInPointsPanel
+          titleId="vault-cash-in-title"
+          onDismiss={() => setCashInOpen(false)}
+        />
       </ModalShell>
 
       <PremiumUpgradeModal

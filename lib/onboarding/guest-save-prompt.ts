@@ -1,3 +1,4 @@
+import { coinWord } from "@/lib/copy/coin-word";
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import {
   isModuleCloserLessonNumber,
@@ -17,7 +18,7 @@ import {
 export const GUEST_SAVE_PROMPT_LATER_SEEN_KEY = "nga_guest_save_prompt_later_seen_v1";
 
 export const GUEST_SAVE_PROMPT_COPY =
-  "Nice work! Save your XP so it's waiting for you next time.";
+  "Nice work! Save your coins so it's waiting for you next time.";
 export const GUEST_SAVE_PROGRESS_LABEL = "Save my progress";
 export const GUEST_SAVE_NOT_NOW_LABEL = "Not now";
 export const GUEST_LEAVE_ANYWAY_LABEL = "Leave anyway";
@@ -38,7 +39,7 @@ const claimedMoments = new Map<string, GuestSaveBannerMoment | null>();
 
 export function guestLeavePromptCopy(xp: number): string {
   const earned = Math.max(0, Math.floor(xp));
-  return `You've earned ${earned} XP! Save it before you go?`;
+  return `You've earned ${earned} ${coinWord(earned)}! Save it before you go?`;
 }
 
 export function isGuestSaveBadgeTier(

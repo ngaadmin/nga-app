@@ -119,8 +119,8 @@ export function VaultCoinStackVisual({
           role="img"
           aria-label={
             percent > 0
-              ? `${percent} percent allocated as ${stacks.reduce((sum, height) => sum + height, 0)} gold coins`
-              : "No coins allocated"
+              ? `${percent} percent allocated`
+              : "Nothing allocated"
           }
         >
           <div

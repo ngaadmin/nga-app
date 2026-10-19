@@ -15,6 +15,7 @@ const MIN_FREEZE_SLOTS = 2;
 
 type LearningStreaksPanelProps = {
   dayStreak: number;
+  bestStreak: number;
   streakFreezes: number;
 };
 
@@ -156,6 +157,7 @@ function PracticeCalendar({ dayStreak }: { dayStreak: number }) {
 /** Full-height Learning Streaks body: counter, freezes, calendar, then badges. */
 export function LearningStreaksPanel({
   dayStreak,
+  bestStreak,
   streakFreezes,
 }: LearningStreaksPanelProps) {
   const streakCopy = copyMatrix.home.streak;
@@ -185,7 +187,11 @@ export function LearningStreaksPanel({
         <SectionLabel id="streak-milestones-heading">
           Streak milestones
         </SectionLabel>
-        <LearningStreaksSection hideHeading />
+        <LearningStreaksSection
+          hideHeading
+          dayStreak={dayStreak}
+          bestStreak={bestStreak}
+        />
       </section>
     </div>
   );

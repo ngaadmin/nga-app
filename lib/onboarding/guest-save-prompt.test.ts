@@ -121,16 +121,19 @@ afterEach(() => {
 describe("guest save prompt copy", () => {
   it("uses the approved banner and leave lines", () => {
     expect(GUEST_SAVE_PROMPT_COPY).toBe(
-      "Nice work! Save your XP so it's waiting for you next time.",
+      "Nice work! Save your coins so it's waiting for you next time.",
     );
     expect(GUEST_SAVE_PROGRESS_LABEL).toBe("Save my progress");
     expect(GUEST_SAVE_NOT_NOW_LABEL).toBe("Not now");
     expect(GUEST_LEAVE_ANYWAY_LABEL).toBe("Leave anyway");
     expect(guestLeavePromptCopy(40)).toBe(
-      "You've earned 40 XP! Save it before you go?",
+      "You've earned 40 coins! Save it before you go?",
     );
     expect(guestLeavePromptCopy(40.8)).toBe(
-      "You've earned 40 XP! Save it before you go?",
+      "You've earned 40 coins! Save it before you go?",
+    );
+    expect(guestLeavePromptCopy(1)).toBe(
+      "You've earned 1 coin! Save it before you go?",
     );
     expect(GUEST_SAVE_SIGN_UP_HREF).toBe("/onboarding/sign-up?as=learner");
   });

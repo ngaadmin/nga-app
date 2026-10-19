@@ -9,12 +9,14 @@ import {
 } from "react";
 import {
   lessonIntroClass,
-  lessonNextButtonClass,
   lessonRankOrderCardClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
-import { rankOrderMatches } from "@/lib/academy/lessons/rank-order";
+import {
+  openingRankOrder,
+  rankOrderMatches,
+} from "@/lib/academy/lessons/rank-order";
 import { cn } from "@/lib/utils/cn";
 import type { RankOrderItem } from "@/lib/academy/lessons/types/screens/rank-order";
 
@@ -59,18 +61,17 @@ export function LessonRankOrderGame({
   intro,
   items,
   correctOrder,
-  errors,
-  submitLabel = "Submit Answer",
   onComplete,
-  onMistake,
+  onIncomplete,
   onSuccess,
-  onPersistentError,
-  onDismissError,
 }: LessonRankOrderGameProps) {
   type ItemId = string;
 
   const [rankOrder, setRankOrder] = useState<ItemId[]>(() =>
-    [...items].map((item) => item.id).reverse(),
+    openingRankOrder(
+      items.map((item) => item.id),
+      correctOrder,
+    ),
   );
   const [rankSubmitted, setRankSubmitted] = useState(false);
   const [dragRankId, setDragRankId] = useState<ItemId | null>(null);
@@ -89,39 +90,25 @@ export function LessonRankOrderGame({
   const captureTargetRef = useRef<HTMLElement | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const lastReorderYRef = useRef<number | null>(null);
-  const [shakeBoard, setShakeBoard] = useState(false);
-  const shakeTimerRef = useRef<number | null>(null);
+  const solvedRef = useRef(false);
 
-  useEffect(
-    () => () => {
-      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
-    },
-    [],
-  );
-
-  const submitOrder = () => {
-    if (rankSubmitted) return;
-    if (rankOrderMatches(rankOrderRef.current, correctOrder)) {
-      setShakeBoard(false);
+  useEffect(() => {
+    const solved = rankOrderMatches(rankOrder, correctOrder);
+    if (solved) {
       setRankSubmitted(true);
-      onDismissError?.();
-      onSuccess?.();
-      onComplete();
+      if (!solvedRef.current) {
+        solvedRef.current = true;
+        onSuccess?.();
+        onComplete();
+      }
       return;
     }
-    onMistake();
-    const message = Object.values(errors).find((value) => value.trim()) ?? "";
-    if (message) onPersistentError?.(message);
-    if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
-    setShakeBoard(false);
-    window.requestAnimationFrame(() => {
-      setShakeBoard(true);
-      shakeTimerRef.current = window.setTimeout(() => {
-        setShakeBoard(false);
-        shakeTimerRef.current = null;
-      }, 360);
-    });
-  };
+    setRankSubmitted(false);
+    if (solvedRef.current) {
+      solvedRef.current = false;
+      onIncomplete?.();
+    }
+  }, [correctOrder, onComplete, onIncomplete, onSuccess, rankOrder]);
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -226,7 +213,7 @@ export function LessonRankOrderGame({
       <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
       <div
         ref={boardRef}
-        className={cn("flex flex-col gap-2", shakeBoard && "lesson-tile-shake")}
+        className="flex flex-col gap-2"
         onPointerMove={handleBoardPointerMove}
         onPointerUp={handleBoardPointerUp}
         onPointerCancel={handleBoardPointerUp}
@@ -270,7 +257,9 @@ export function LessonRankOrderGame({
               <span className="text-center text-[1.35rem] leading-none" aria-hidden>
                 {item.emoji ?? "📌"}
               </span>
-              <span>{item.label}</span>
+              <span className="min-w-0 whitespace-normal break-normal leading-snug">
+                {item.label}
+              </span>
             </div>
           );
         })}
@@ -279,15 +268,7 @@ export function LessonRankOrderGame({
         <div className="mt-3 flex justify-center">
           <LessonAnswerTick />
         </div>
-      ) : (
-        <button
-          type="button"
-          className={cn(lessonNextButtonClass, "mt-4")}
-          onClick={submitOrder}
-        >
-          {submitLabel}
-        </button>
-      )}
+      ) : null}
       {dragGhost ? (
         <OverlayPortal className="overflow-visible">
           <div
@@ -307,7 +288,9 @@ export function LessonRankOrderGame({
             <span className="text-center text-[1.35rem] leading-none" aria-hidden>
               {dragGhost.emoji}
             </span>
-            <span>{dragGhost.label}</span>
+            <span className="min-w-0 whitespace-normal break-normal leading-snug">
+              {dragGhost.label}
+            </span>
           </div>
         </OverlayPortal>
       ) : null}

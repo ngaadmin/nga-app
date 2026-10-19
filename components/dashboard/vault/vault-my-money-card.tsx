@@ -24,7 +24,6 @@ import {
   pickableCircleClass,
   pickableItemClass,
   pickableLabelActiveClass,
-  pickableLabelClass,
   pickableLabelMutedClass,
   pickableMetaActiveClass,
   pickableMetaClass,
@@ -110,7 +109,7 @@ export function VaultMyMoneyCard({
                 aria-label={`Open ${vaultBucketDisplayName(bucket)} details`}
                 className={cn(
                   pickableItemClass,
-                  "w-full transition-transform active:scale-[0.98]",
+                  "w-full px-0 transition-transform active:scale-[0.98]",
                 )}
               >
                 <span
@@ -121,7 +120,7 @@ export function VaultMyMoneyCard({
                 </span>
                 <p
                   className={cn(
-                    pickableLabelClass,
+                    "mt-1.5 w-full min-w-0 whitespace-normal break-normal text-balance text-center font-heading text-[10px] font-bold leading-tight tracking-tight",
                     isMuted ? pickableLabelMutedClass : pickableLabelActiveClass,
                   )}
                 >

@@ -19,15 +19,18 @@ export function useHubIntro(hubId: HubIntroId) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"first" | "info">("info");
   const dismissedRef = useRef(false);
+  const dismissedHubsRef = useRef<Set<HubIntroId>>(new Set());
 
   useEffect(() => {
     const accountKey = currentAccountLocalKey();
-    const alreadySeen = Boolean(accountKey) && hasSeenHubIntro(hubId);
+    const alreadySeen =
+      dismissedHubsRef.current.has(hubId) ||
+      (Boolean(accountKey) && hasSeenHubIntro(hubId));
+    dismissedRef.current = alreadySeen;
     setSeen(alreadySeen);
     setHydrated(true);
 
     if (!accountKey || alreadySeen) {
-      dismissedRef.current = alreadySeen;
       setOpen(false);
       return;
     }
@@ -42,7 +45,13 @@ export function useHubIntro(hubId: HubIntroId) {
     // Wait a tick so the nav tap that opened this hub cannot hit the card
     // and mark it seen before the user reads it.
     const timeoutId = window.setTimeout(() => {
-      if (dismissedRef.current || hasSeenHubIntro(hubId)) return;
+      if (
+        dismissedRef.current ||
+        dismissedHubsRef.current.has(hubId) ||
+        hasSeenHubIntro(hubId)
+      ) {
+        return;
+      }
       setOpen(true);
     }, 80);
 
@@ -52,6 +61,7 @@ export function useHubIntro(hubId: HubIntroId) {
   }, [hubId, ready, sessionTick, recording.ready, recording.suppress]);
 
   const dismiss = useCallback(() => {
+    dismissedHubsRef.current.add(hubId);
     dismissedRef.current = true;
     markHubIntroSeen(hubId);
     setSeen(true);

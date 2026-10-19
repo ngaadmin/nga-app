@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
+import { AppFooter } from "@/components/legal/app-footer";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { copyMatrix } from "@/constants/copyMatrix";
@@ -650,6 +651,7 @@ export function HomeDashboard() {
         </nav>
 
         <ParentHubSection />
+        <AppFooter className="print:hidden" />
       </div>
 
       <PasswordResetModal

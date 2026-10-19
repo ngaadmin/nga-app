@@ -1,3 +1,4 @@
+import { coinWord } from "@/lib/copy/coin-word";
 import { cn } from "@/lib/utils/cn";
 
 type LessonCompletionRewardsCardProps = {
@@ -17,11 +18,11 @@ export function LessonCompletionRewardsCard({
   return (
     <div className={cn("mt-2", className)}>
       <p className="font-heading text-[22px] font-bold tabular-nums text-[#031F82]">
-        +{xpReward} XP
+        +{xpReward} {coinWord(xpReward)}
       </p>
       {perfectStreak && perfectStreakBonus > 0 ? (
         <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
-          Perfect lesson: +{perfectStreakBonus} XP
+          Perfect lesson: +{perfectStreakBonus} {coinWord(perfectStreakBonus)}
         </p>
       ) : null}
     </div>

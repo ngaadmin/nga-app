@@ -8,6 +8,7 @@ import {
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { coinWord } from "@/lib/copy/coin-word";
 import { AchievementsIcon, FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
 import { cn } from "@/lib/utils/cn";
 
@@ -32,6 +33,7 @@ export function AcademyMomentumHeader({
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
+  const coinUnit = coinWord(xp);
 
   return (
     <StatusBannerLayout
@@ -48,13 +50,13 @@ export function AcademyMomentumHeader({
             </TopBarRoundIcon>
           }
           value={xp}
-          unitLabel={journeyCopy.xpLabel}
+          unitLabel={coinUnit}
           ariaLabel={
             onXpClick
-              ? `${xp} ${journeyCopy.xpLabel} to cash in`
-              : `${xp} ${journeyCopy.xpLabel}`
+              ? `${xp} ${coinUnit} to cash in`
+              : `${xp} ${coinUnit}`
           }
-          title={onXpClick ? `${journeyCopy.xpLabel} to cash in` : journeyCopy.xpLabel}
+          title={onXpClick ? `${coinUnit} to cash in` : coinUnit}
         />
       }
       center={

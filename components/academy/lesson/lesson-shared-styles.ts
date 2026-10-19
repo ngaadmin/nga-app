@@ -425,7 +425,7 @@ export const lessonHoldButtonClass =
 export const lessonHoldButtonCompleteClass =
   "bg-[#0CC1E0] text-white opacity-90";
 
-export const LESSON_CASH_IN_LABEL = "Cash in your XP";
+export const LESSON_CASH_IN_LABEL = "Cash in your coins";
 
 const LESSON_PRIMARY_ACTION_CLASS =
   "flex h-14 w-full items-center justify-center rounded-full border-0 bg-[#031F82] text-center font-heading text-[19px] font-bold text-white shadow-[0_4px_0_#FFB822] disabled:cursor-default disabled:bg-[#DCE3F5] disabled:text-[#8C98B8] disabled:shadow-none";

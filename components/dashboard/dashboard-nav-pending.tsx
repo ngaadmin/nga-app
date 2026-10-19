@@ -14,13 +14,14 @@ import {
   DashboardLessonOpening,
   DashboardTabLoading,
 } from "@/components/dashboard/dashboard-tab-loading";
+import { startPendingScreenTimeout } from "@/lib/dashboard/pending-screen-timeout";
 
 /**
  * Static tab payloads do not paint `loading.tsx` until the response arrives.
  * A tap therefore keeps the previous screen up for the whole wait. This
  * records the in-flight href so the shell can swap in the existing skeleton
  * without waiting on that response. Fast navigations stay under the delay
- * and never flash.
+ * and never flash. A stuck transition is recovered by DashboardPendingScreen.
  */
 const PENDING_SCREEN_DELAY_MS = 120;
 
@@ -55,7 +56,7 @@ export function DashboardNavPendingProvider({
 
   useEffect(() => {
     if (!pendingHref) return;
-    if (pathname !== originRef.current) {
+    if (pathname === pendingHref || pathname !== originRef.current) {
       setPendingHref(null);
     }
   }, [pathname, pendingHref]);
@@ -92,20 +93,35 @@ export function DashboardPendingScreen({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const pendingHref = useContext(NavPendingHrefContext);
+  const { stop } = useDashboardNavPending();
   const [shownHref, setShownHref] = useState<string | null>(null);
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   useEffect(() => {
     if (!pendingHref) {
       setShownHref(null);
       return;
     }
-    const timer = window.setTimeout(
+    const showTimer = window.setTimeout(
       () => setShownHref(pendingHref),
       PENDING_SCREEN_DELAY_MS,
     );
-    return () => window.clearTimeout(timer);
-  }, [pendingHref]);
+    const cancelTimeout = startPendingScreenTimeout({
+      pendingHref,
+      readPathname: () => pathnameRef.current,
+      clearPending: () => stop(pendingHref),
+      assign: (href) => {
+        window.location.assign(href);
+      },
+    });
+    return () => {
+      window.clearTimeout(showTimer);
+      cancelTimeout();
+    };
+  }, [pendingHref, stop]);
 
   if (!shownHref) return children;
 

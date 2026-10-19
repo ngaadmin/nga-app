@@ -1,3 +1,4 @@
+import { coinWord } from "@/lib/copy/coin-word";
 import {
   appendWalletLedgerEvent,
   type PersistedDashboardWallet,
@@ -106,7 +107,7 @@ export function formatExchangeRateInput(cents: number): string {
 }
 
 export function formatXpCashPreview(points: number, moneyLabel: string): string {
-  return `${points.toLocaleString()} XP = ${moneyLabel}`;
+  return `${points.toLocaleString()} ${coinWord(points)} = ${moneyLabel}`;
 }
 
 export function validateCashInPoints(

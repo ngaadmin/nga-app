@@ -109,7 +109,7 @@ export default function RootLayout({
         />
         {/* TODO: remove after recordings — run before client redirects drop the query. */}
         <Script id="recording-suppress-intro" strategy="beforeInteractive">
-          {`try{var q=new URLSearchParams(location.search);if(q.get("recording")==="1")sessionStorage.setItem(${JSON.stringify(RECORDING_SUPPRESS_INTRO_FLAG_KEY)},"1")}catch(e){}`}
+          {`try{var q=new URLSearchParams(location.search);var on=q.get("recording")==="1";if(on)sessionStorage.setItem(${JSON.stringify(RECORDING_SUPPRESS_INTRO_FLAG_KEY)},"1");if(on||sessionStorage.getItem(${JSON.stringify(RECORDING_SUPPRESS_INTRO_FLAG_KEY)})==="1")document.documentElement.setAttribute("data-recording","1")}catch(e){}`}
         </Script>
         {children}
         {/* TODO: remove after recordings */}

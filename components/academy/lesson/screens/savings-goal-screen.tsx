@@ -51,6 +51,7 @@ export function SavingsGoalScreen({
             if (!celebratedGoalRef.current) {
               celebratedGoalRef.current = true;
               celebrateLessonCorrectAnswer();
+              flowRef.current.recordBonusRunCorrect();
             }
             flowRef.current.markScreenReady(screenIndex);
           }}

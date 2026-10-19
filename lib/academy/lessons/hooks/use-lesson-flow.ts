@@ -24,9 +24,15 @@ import {
 } from "@/lib/dashboard/academy-state";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import {
-  LESSON_COMPLETION_XP,
-  LESSON_PERFECT_STREAK_BONUS,
+  applyBonusRunEvent,
+  initialBonusRunState,
+} from "@/lib/academy/lessons/bonus-run";
+import { markCoinCounterTick } from "@/lib/academy/lessons/coin-counter-flight";
+import {
+  lessonAwardLedgerEvents,
+  lessonCoinAward,
 } from "@/lib/academy/lessons/completion-xp";
+import { readDashboardWalletState } from "@/lib/dashboard/dashboard-wallet-storage";
 import {
   getSessionCurriculumCohort,
   readGuestAccessSession,
@@ -85,6 +91,10 @@ export function useLessonFlow({
   );
   const [screenMistakes, setScreenMistakes] = useState(0);
   const [lessonComplete, setLessonComplete] = useState(false);
+  const [bonusRun, setBonusRun] = useState(initialBonusRunState);
+  const bonusUnitRef = useRef<string | null>(null);
+  const bonusRunRef = useRef(bonusRun);
+  bonusRunRef.current = bonusRun;
 
   const perfectStreak = screenMistakes === 0;
 
@@ -108,6 +118,8 @@ export function useLessonFlow({
     setScreenReady(Array.from({ length: totalScreens }, () => false));
     setScreenMistakes(0);
     setLessonComplete(false);
+    bonusUnitRef.current = null;
+    setBonusRun(initialBonusRunState());
     cashInStartedRef.current = false;
     leavingAfterCashInRef.current = false;
     pendingActionsRef.current = [];
@@ -163,7 +175,21 @@ export function useLessonFlow({
     });
   }, []);
 
+  const setBonusRunUnit = useCallback((unitId: string | null) => {
+    bonusUnitRef.current = unitId;
+  }, []);
+
+  const recordBonusRunCorrect = useCallback(() => {
+    const unitId = bonusUnitRef.current;
+    if (!unitId) return;
+    setBonusRun((state) => applyBonusRunEvent(state, { kind: "correct", unitId }));
+  }, []);
+
   const incrementMistake = useCallback(() => {
+    const unitId = bonusUnitRef.current;
+    if (unitId) {
+      setBonusRun((state) => applyBonusRunEvent(state, { kind: "wrong", unitId }));
+    }
     enqueueFlowAction({ type: "increment-mistake" });
   }, [enqueueFlowAction]);
 
@@ -215,16 +241,17 @@ export function useLessonFlow({
 
     try {
       if (!isDesignShell && !skipProgressWrites) {
-        awardLessonXp(
-          LESSON_COMPLETION_XP,
-          `lesson:${milestoneId}:completion`,
-        );
-        if (perfectStreak) {
-          awardLessonXp(
-            LESSON_PERFECT_STREAK_BONUS,
-            `lesson:${milestoneId}:perfect`,
-          );
+        const beforePoints = readDashboardWalletState()?.totalPoints ?? 0;
+        const award = lessonCoinAward({
+          perfect: perfectStreak,
+          bonusCoins: bonusRunRef.current.bonusCoins,
+        });
+        for (const event of lessonAwardLedgerEvents(milestoneId, award)) {
+          awardLessonXp(event.points, event.id);
         }
+        const afterPoints = readDashboardWalletState()?.totalPoints ?? beforePoints;
+        const gained = Math.max(0, afterPoints - beforePoints);
+        if (gained > 0) markCoinCounterTick(gained);
 
         const milestones = readAcademyMilestones();
         const alreadyCompleted = milestones.some(
@@ -301,7 +328,11 @@ export function useLessonFlow({
     screenReady,
     screenMistakes,
     perfectStreak,
+    bonusCoins: bonusRun.bonusCoins,
+    bonusRuns: bonusRun.runs,
     lessonComplete,
+    setBonusRunUnit,
+    recordBonusRunCorrect,
     markScreenReady,
     clearScreenReady,
     incrementMistake,

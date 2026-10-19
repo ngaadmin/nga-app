@@ -31,6 +31,8 @@ const previewFlow = {
   screenIndex: M1_L1_SCREEN_8_PREVIEW.screenIndex,
   screenMistakes: M1_L1_SCREEN_8_PREVIEW.mistakes,
   perfectStreak: true,
+  bonusCoins: 0,
+  bonusRuns: 0,
   progressSkillSlug: M1_L1_SCREEN_8_PREVIEW.rewards.achievementSkillSlug,
   skillMedalTier: "unlocked",
   lessonNumber: 1,
@@ -43,6 +45,8 @@ const previewFlow = {
   | "screenIndex"
   | "screenMistakes"
   | "perfectStreak"
+  | "bonusCoins"
+  | "bonusRuns"
   | "progressSkillSlug"
   | "skillMedalTier"
   | "lessonNumber"

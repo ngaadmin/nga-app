@@ -194,10 +194,31 @@
     animation: lesson-tick-pop 250ms ease-out;
   }
 
+  @keyframes lesson-reward-zoom {
+    0% {
+      transform: scale(0.72);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .lesson-reward-line {
+    animation: lesson-reward-zoom 360ms ease-out both;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .lesson-tile-shake,
     .lesson-tick-pop {
       animation: none;
+    }
+
+    html:not([data-recording="1"]) .lesson-reward-line {
+      animation: none;
+      opacity: 1;
+      transform: none;
     }
   }
 

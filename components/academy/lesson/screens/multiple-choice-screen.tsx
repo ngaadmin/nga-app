@@ -163,6 +163,7 @@ export function MultipleChoiceScreen({
     setSolved(true);
     solvedRef.current = true;
     celebrateLessonCorrectAnswer();
+    flowRef.current.recordBonusRunCorrect();
     flowRef.current.markScreenReady(screenIndex);
   };
 

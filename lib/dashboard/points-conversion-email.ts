@@ -18,25 +18,19 @@ export function buildPointsConversionParentEmail(
   payload: PointsConversionEmailPayload,
 ): { subject: string; body: string } {
   const safeName = payload.childUsername.trim() || "Your child";
-  const subject = `${safeName} cashed in coins in NextGenAchievers`;
+  const subject = `${safeName} cashed in XP`;
 
   const body = [
     "Hi,",
     "",
-    `${safeName} converted ${payload.pointsClaimed.toLocaleString()} coins to ${payload.amountFormatted} in NextGenAchievers.`,
-    "",
-    `Conversion rate: ${payload.conversionRateLabel}`,
-    "",
-    "This is a virtual learning balance. If you agreed to a real-world payout, fulfill it through cash, allowance, or your preferred banking app.",
-    "",
-    "- NextGenAchievers",
+    `${safeName} cashed in ${payload.pointsClaimed.toLocaleString()} XP for ${payload.amountFormatted} at the rate you agreed. That's what you owe them. Pay it however you like. The app doesn't move any money.`,
   ].join("\n");
 
   return { subject, body };
 }
 
 /**
- * Simulated parent notification when a child cashes in XP to the Save Jar.
+ * Simulated parent notification when a child cashes XP into Vault cash.
  */
 export async function dispatchPointsConversionParentEmail(
   payload: PointsConversionEmailPayload,

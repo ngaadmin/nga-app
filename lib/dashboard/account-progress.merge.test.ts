@@ -161,6 +161,41 @@ describe("mergeWalletProgress", () => {
     ]);
   });
 
+  it("keeps cash-in cents and the later paid reset", () => {
+    const merged = mergeWalletProgress(
+      wallet({
+        totalPoints: 60,
+        lifetimePointsEarned: 100,
+        ledger: [
+          {
+            id: "cash-in-a",
+            kind: "spend",
+            points: 40,
+            at: "2026-10-02T00:00:00.000Z",
+            audCents: 80,
+          },
+        ],
+        cashInOwedResetAt: "2026-10-01T00:00:00.000Z",
+      }),
+      wallet({
+        totalPoints: 60,
+        lifetimePointsEarned: 100,
+        ledger: [
+          {
+            id: "cash-in-a",
+            kind: "spend",
+            points: 40,
+            at: "2026-10-02T00:00:00.000Z",
+          },
+        ],
+        cashInOwedResetAt: "2026-10-04T00:00:00.000Z",
+      }),
+    );
+
+    expect(merged?.cashInOwedResetAt).toBe("2026-10-04T00:00:00.000Z");
+    expect(merged?.ledger?.[0]?.audCents).toBe(80);
+  });
+
   it("follows the newer exchange-rate setting", () => {
     const merged = mergeWalletProgress(
       wallet({
@@ -180,6 +215,31 @@ describe("mergeWalletProgress", () => {
     );
 
     expect(merged?.audSliderIndex).toBe(4);
+  });
+
+  it("keeps a saved rate when a newer XP award has no rate", () => {
+    const merged = mergeWalletProgress(
+      wallet({
+        totalPoints: 80,
+        lifetimePointsEarned: 80,
+        audSliderIndex: 6,
+        xpExchangeRateSet: true,
+        exchangeRateCentsPer100Xp: 300,
+        exchangeRateUpdatedAt: "2026-10-01T00:00:00.000Z",
+        updatedAt: "2026-10-01T00:00:00.000Z",
+      }),
+      wallet({
+        totalPoints: 180,
+        lifetimePointsEarned: 180,
+        xpExchangeRateSet: false,
+        updatedAt: "2026-10-19T00:00:00.000Z",
+      }),
+    );
+
+    expect(merged?.lifetimePointsEarned).toBe(180);
+    expect(merged?.totalPoints).toBe(180);
+    expect(merged?.xpExchangeRateSet).toBe(true);
+    expect(merged?.exchangeRateCentsPer100Xp).toBe(300);
   });
 });
 

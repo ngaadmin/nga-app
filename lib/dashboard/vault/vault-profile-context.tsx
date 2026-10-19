@@ -35,8 +35,12 @@ import {
   migrateVaultSessionToProfile,
   readVaultProfileState,
   saveVaultProfileState,
+  VAULT_PROFILE_SCHEMA_VERSION,
+  type PersistedVaultProfile,
 } from "@/lib/dashboard/vault/vault-profile-storage";
 import { readUserSession } from "@/lib/onboarding/guest-session";
+import { centsToDollars } from "@/lib/dashboard/vault-amount-input";
+import { addCentsToDollars } from "@/lib/dashboard/xp-cash";
 import { ACCOUNT_PROGRESS_RESTORED_EVENT } from "@/lib/dashboard/account-progress-dirty";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
@@ -78,6 +82,8 @@ type VaultProfileContextValue = {
   ) => void;
   appendLedger: (message: string, options: AppendLedgerOptions) => void;
   creditSaveJar: (amount: number) => void;
+  /** Add cashed-in XP cents to the Vault cash bucket and write it before cloud save. */
+  recordXpCashIn: (cents: number, message: string) => void;
 };
 
 const VaultProfileContext = createContext<VaultProfileContextValue | null>(null);
@@ -290,6 +296,43 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
     ]);
   }, []);
 
+  const snapshotRef = useRef<PersistedVaultProfile>(freshVaultProfileState());
+  snapshotRef.current = {
+    schemaVersion: VAULT_PROFILE_SCHEMA_VERSION,
+    moneyToAllocate,
+    jarBalances: balanceMapFromJars(foundationJars),
+    customBuckets,
+    savingsGoals,
+    spendingCategoryOverrides,
+    customSpendingCategories,
+    ledger,
+  };
+
+  const recordXpCashIn = useCallback((cents: number, message: string) => {
+    const add = Math.floor(cents);
+    if (!Number.isFinite(add) || add <= 0) return;
+    const current = snapshotRef.current;
+    const nextAmount = addCentsToDollars(current.moneyToAllocate, add);
+    const entry: LedgerEntry = {
+      id: `ledger-cash-${createLedgerId()}`,
+      message,
+      category: "cash_in",
+      highlight: true,
+      timestamp: Date.now(),
+      amount: centsToDollars(add),
+      flow: "in",
+    };
+    const next = {
+      ...current,
+      moneyToAllocate: nextAmount,
+      ledger: [entry, ...current.ledger],
+    };
+    snapshotRef.current = next;
+    saveVaultProfileState(next, sessionRef.current);
+    setMoneyToAllocateState(nextAmount);
+    setLedger(next.ledger);
+  }, []);
+
   const creditSaveJar = useCallback(
     (amount: number) => {
       // Vault money is whole dollars only.
@@ -331,10 +374,12 @@ export function VaultProfileProvider({ children }: VaultProfileProviderProps) {
       setCustomSpendingCategories,
       appendLedger,
       creditSaveJar,
+      recordXpCashIn,
     }),
     [
       appendLedger,
       creditSaveJar,
+      recordXpCashIn,
       customBuckets,
       customSpendingCategories,
       foundationJars,

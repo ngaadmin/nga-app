@@ -10,6 +10,7 @@ import {
   type SkillTrophyTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
+import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { cn } from "@/lib/utils/cn";
 
@@ -126,6 +127,7 @@ function SkillGroup({
 
 export function SkillsCollectionPanel() {
   const masteryCohort = useMasteryCohort();
+  const { lifetimeXp } = useDashboardWallet();
 
   const cohortSkills = useMemo(
     () =>
@@ -146,9 +148,18 @@ export function SkillsCollectionPanel() {
 
   return (
     <div>
+      <p className="font-sans text-xs font-bold uppercase tracking-wide text-[#0CC1E0]">
+        Lifetime XP
+      </p>
+      <p
+        className="mt-1 font-heading text-3xl font-extrabold tabular-nums text-[#031F82]"
+        aria-label={`${lifetimeXp.toLocaleString()} lifetime XP`}
+      >
+        {lifetimeXp.toLocaleString()}
+      </p>
       <div
         aria-label="Medal counts"
-        className="flex w-full items-stretch gap-2 rounded-2xl bg-white p-1.5 shadow-sm"
+        className="mt-4 flex w-full items-stretch gap-2 rounded-2xl bg-white p-1.5 shadow-sm"
       >
         <MedalCountChip
           label="Bronze"

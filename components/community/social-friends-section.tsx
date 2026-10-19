@@ -109,7 +109,7 @@ function FriendRow({
           <span className="inline-flex items-center gap-0.5">
             <GoldCoinIcon className="size-2.5 text-[#FFA503]" />
             <span className="font-heading text-[11px] font-bold text-[#031F82]">
-              {lifetimePoints.toLocaleString()} lifetime coins
+              {lifetimePoints.toLocaleString()} lifetime XP
             </span>
           </span>
         </div>
@@ -121,7 +121,7 @@ function FriendRow({
 /** Community leaderboard. Seed rows are sample players, not the user's friends. */
 export function SocialFriendsSection() {
   const { username } = useDashboardUser();
-  const { lifetimePointsEarned } = useDashboardWallet();
+  const { lifetimeXp } = useDashboardWallet();
   const { dayStreak } = DASHBOARD_HOME_PLACEHOLDER_STATE;
 
   const rankedEntries = useMemo((): LeaderboardEntry[] => {
@@ -140,12 +140,12 @@ export function SocialFriendsSection() {
         avatarEmoji: "⭐",
         username,
         dayStreak,
-        lifetimePoints: lifetimePointsEarned,
+        lifetimePoints: lifetimeXp,
         isCurrentUser: true,
         rank: CURRENT_USER_RANK,
       },
     ];
-  }, [dayStreak, lifetimePointsEarned, username]);
+  }, [dayStreak, lifetimeXp, username]);
 
   return (
     <section aria-labelledby="social-friends-heading" className="w-full shrink-0">
@@ -159,7 +159,7 @@ export function SocialFriendsSection() {
         <InviteFriendsControl />
       </div>
       <p className="mt-1 font-sans text-[14px] leading-snug text-nga-slate/80">
-        Ranked by lifetime coins.
+        Ranked by lifetime XP. Cashing in does not change this.
       </p>
 
       <ol className="mt-2 space-y-1">

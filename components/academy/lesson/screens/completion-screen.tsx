@@ -1,6 +1,7 @@
 "use client";
 
 import { LessonCompletionPane } from "@/components/academy/lesson/lesson-completion-pane";
+import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import type { CompletionScreenConfig } from "@/lib/academy/lessons/types";
 import type { StandardScreenProps } from "./types";
 
@@ -9,8 +10,10 @@ export function CompletionScreen({
   flow,
   rewards,
 }: StandardScreenProps<CompletionScreenConfig>) {
+  const { spendableXp } = useDashboardWallet();
   return (
     <LessonCompletionPane
+      spendableXp={spendableXp}
       xpReward={rewards.xpReward}
       perfectStreakBonus={rewards.perfectStreakBonus}
       perfectStreak={flow.perfectStreak}

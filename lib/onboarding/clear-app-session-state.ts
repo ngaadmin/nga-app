@@ -5,7 +5,6 @@ import { LEARNING_STREAK_STORAGE_KEY } from "@/lib/dashboard/streak-practice";
 import { CURRENCY_PREFERENCE_STORAGE_KEY } from "@/lib/dashboard/currency/currency-storage";
 import { PARENT_PIN_STORAGE_KEY } from "@/lib/dashboard/parent-pin";
 import { TESTING_PREMIUM_STORAGE_KEY } from "@/lib/dashboard/testing-premium";
-import { TESTING_SETTINGS_VIEW_STORAGE_KEY } from "@/lib/dashboard/testing-settings-view";
 import { VAULT_SKILL_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/vault-skill-progress-storage";
 import { VAULT_ADD_MONEY_INTRO_SEEN_KEY } from "@/lib/dashboard/vault/add-money-intro";
 import { HUB_INTRO_SEEN_STORAGE_KEY } from "@/lib/dashboard/hub-intro/storage";
@@ -49,7 +48,6 @@ export const APP_SESSION_STORAGE_KEYS = [
   VAULT_PROFILE_STORAGE_KEY,
   PARENT_PIN_STORAGE_KEY,
   TESTING_PREMIUM_STORAGE_KEY,
-  TESTING_SETTINGS_VIEW_STORAGE_KEY,
   GUEST_DEVICE_META_KEY,
 ] as const;
 

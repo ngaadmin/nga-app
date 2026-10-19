@@ -46,6 +46,8 @@ type LessonCompletionPaneProps = {
   onCashIn: () => void;
   onContinue: () => void;
   cashInDisabled?: boolean;
+  /** XP still available to cash in for Vault cash. */
+  spendableXp?: number;
 };
 
 function resolveSkillName(
@@ -78,6 +80,7 @@ export function LessonCompletionPane({
   onCashIn,
   onContinue,
   cashInDisabled = false,
+  spendableXp,
 }: LessonCompletionPaneProps) {
   const router = useRouter();
   const [cashingIn, setCashingIn] = useState(false);
@@ -172,6 +175,11 @@ export function LessonCompletionPane({
         {showPerfectBonus ? (
           <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
             Perfect lesson: +{perfectStreakBonus} XP
+          </p>
+        ) : null}
+        {typeof spendableXp === "number" ? (
+          <p className="mt-2 font-sans text-[15px] font-bold text-[#031F82]">
+            {spendableXp.toLocaleString()} XP to cash in
           </p>
         ) : null}
 

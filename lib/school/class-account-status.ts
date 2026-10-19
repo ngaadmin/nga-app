@@ -12,12 +12,14 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function loadSignedInClassAccountCashIn(): Promise<{
   classAccountWithoutParent: boolean;
+  /** Class seats and student seats never cash in XP, even when a parent is linked. */
+  classOrStudentSeat: boolean;
 }> {
   try {
     const supabase = await createClient();
     const { data: auth } = await supabase.auth.getUser();
     const userId = auth.user?.id?.trim();
-    if (!userId) return { classAccountWithoutParent: false };
+    if (!userId) return { classAccountWithoutParent: false, classOrStudentSeat: false };
 
     const admin = createAdminClient();
     const { data: profile, error } = await admin
@@ -26,7 +28,9 @@ export async function loadSignedInClassAccountCashIn(): Promise<{
       .eq("id", userId)
       .maybeSingle();
 
-    if (error || !profile?.id) return { classAccountWithoutParent: false };
+    if (error || !profile?.id) {
+      return { classAccountWithoutParent: false, classOrStudentSeat: false };
+    }
 
     const teacherId =
       typeof profile.teacher_id === "string" ? profile.teacher_id.trim() : "";
@@ -36,7 +40,7 @@ export async function loadSignedInClassAccountCashIn(): Promise<{
       profile.is_teacher !== true &&
       profile.account_role === "child";
 
-    if (!isClassSeat) return { classAccountWithoutParent: false };
+    if (!isClassSeat) return { classAccountWithoutParent: false, classOrStudentSeat: false };
 
     const { data: links, error: linkError } = await admin
       .from("parent_child")
@@ -45,14 +49,14 @@ export async function loadSignedInClassAccountCashIn(): Promise<{
       .limit(1);
 
     if (linkError) {
-      return { classAccountWithoutParent: true };
+      return { classAccountWithoutParent: true, classOrStudentSeat: true };
     }
 
     const hasParent = (links ?? []).some(
       (row) => typeof row.parent_id === "string" && row.parent_id.trim().length > 0,
     );
-    return { classAccountWithoutParent: !hasParent };
+    return { classAccountWithoutParent: !hasParent, classOrStudentSeat: true };
   } catch {
-    return { classAccountWithoutParent: false };
+    return { classAccountWithoutParent: false, classOrStudentSeat: false };
   }
 }

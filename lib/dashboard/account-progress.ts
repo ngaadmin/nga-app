@@ -13,6 +13,7 @@ import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import type { VaultSkillTierOverrides } from "@/lib/dashboard/vault-skill-progress-storage";
 import type { PersistedVaultProfile } from "@/lib/dashboard/vault/vault-profile-storage";
 import { sumJarBalances } from "@/lib/dashboard/destination-jars";
+import { pickExchangeRate } from "@/lib/dashboard/xp-cash";
 
 export const ACCOUNT_PROGRESS_SCHEMA_VERSION = 1;
 
@@ -256,7 +257,8 @@ export function isEmptyAccountProgress(
   const hasAcademy = completedLessonCount(payload.academyProgress) > 0;
   const hasWallet =
     (payload.wallet?.lifetimePointsEarned ?? 0) > 0 ||
-    (payload.wallet?.totalPoints ?? 0) > 0;
+    (payload.wallet?.totalPoints ?? 0) > 0 ||
+    payload.wallet?.xpExchangeRateSet === true;
   const hasSkills = skillProgressScore(payload.skillProgress) > 0;
   const hasVault =
     vaultBalanceScore(payload.vaultProfile) > 0 ||
@@ -347,6 +349,19 @@ function walletSpent(wallet: PersistedDashboardWallet): number {
   return Math.max(0, wallet.lifetimePointsEarned - wallet.totalPoints);
 }
 
+function mergeLedgerEvent(
+  left: WalletLedgerEvent,
+  right: WalletLedgerEvent,
+): WalletLedgerEvent {
+  const base = left.points >= right.points ? left : right;
+  const audCents = Math.max(left.audCents ?? 0, right.audCents ?? 0);
+  return {
+    ...base,
+    points: Math.max(left.points, right.points),
+    ...(audCents > 0 ? { audCents } : {}),
+  };
+}
+
 function unionWalletLedger(
   left: readonly WalletLedgerEvent[] | undefined,
   right: readonly WalletLedgerEvent[] | undefined,
@@ -354,9 +369,7 @@ function unionWalletLedger(
   const byId = new Map<string, WalletLedgerEvent>();
   for (const event of [...(left ?? []), ...(right ?? [])]) {
     const existing = byId.get(event.id);
-    if (!existing || event.points > existing.points) {
-      byId.set(event.id, event);
-    }
+    byId.set(event.id, existing ? mergeLedgerEvent(existing, event) : event);
   }
   return [...byId.values()].sort(
     (a, b) => (a.at || "").localeCompare(b.at || "") || a.id.localeCompare(b.id),
@@ -390,18 +403,6 @@ function laterWalletTimestamp(
   return leftMs >= rightMs ? (left ?? null) : (right ?? null);
 }
 
-function walletSettingsSource(
-  left: PersistedDashboardWallet,
-  right: PersistedDashboardWallet,
-): PersistedDashboardWallet {
-  const newer = laterWalletTimestamp(left.updatedAt, right.updatedAt);
-  if (newer && newer === left.updatedAt && newer !== right.updatedAt) return left;
-  if (newer && newer === right.updatedAt && newer !== left.updatedAt) return right;
-  if (right.xpExchangeRateSet !== left.xpExchangeRateSet) {
-    return right.xpExchangeRateSet ? right : left;
-  }
-  return right;
-}
 
 /**
  * Lifetime XP is the max. Spendable balance replays the union of cash-in and
@@ -423,16 +424,23 @@ export function mergeWalletProgress(
     replayed.lifetime,
   );
   const spent = Math.max(walletSpent(left), walletSpent(right), replayed.spent);
-  const settings = walletSettingsSource(left, right);
+  const rate = pickExchangeRate(left, right);
+  const cashInOwedResetAt = laterWalletTimestamp(
+    left.cashInOwedResetAt,
+    right.cashInOwedResetAt,
+  );
 
   return {
-    schemaVersion: settings.schemaVersion,
+    schemaVersion: right.schemaVersion ?? left.schemaVersion,
     ownerUserId: right.ownerUserId ?? left.ownerUserId ?? null,
     totalPoints: Math.max(0, lifetimePointsEarned - spent),
     lifetimePointsEarned,
-    audSliderIndex: settings.audSliderIndex,
-    xpExchangeRateSet: settings.xpExchangeRateSet,
+    audSliderIndex: rate.audSliderIndex,
+    xpExchangeRateSet: rate.xpExchangeRateSet,
+    exchangeRateCentsPer100Xp: rate.exchangeRateCentsPer100Xp,
+    exchangeRateUpdatedAt: rate.exchangeRateUpdatedAt,
     ...(ledger.length > 0 ? { ledger } : {}),
+    ...(cashInOwedResetAt ? { cashInOwedResetAt } : {}),
     updatedAt: laterWalletTimestamp(left.updatedAt, right.updatedAt),
   };
 }

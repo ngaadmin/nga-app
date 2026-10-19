@@ -10,7 +10,8 @@ import {
 } from "@/lib/dashboard/point-conversion";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import { useSettingsParentView } from "@/lib/dashboard/testing-settings-view";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
+import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
@@ -18,8 +19,15 @@ export function ParentHubSection() {
   const featuresCopy = copyMatrix.dashboard.settings.parentHubFeatures;
   const { currencyCode } = useCurrency();
   const { audPer100Xp, xpExchangeRateSet } = useDashboardWallet();
+  const session = useUserSession();
   const isParentSettingsView = useSettingsParentView();
+  const isParentMaster = session?.accountRole === "parent_master";
   const conversionRateLabel = formatConversionRateLabel(audPer100Xp, currencyCode);
+  const summary = isParentMaster
+    ? featuresCopy.pointsConversionSummaryLocked
+    : xpExchangeRateSet
+      ? conversionRateLabel
+      : featuresCopy.pointsConversionNotSet;
   const [expanded, setExpanded] = useState(false);
 
   if (!isParentSettingsView) {
@@ -34,11 +42,7 @@ export function ParentHubSection() {
       <ParentHubFeatureItem
         id="preferences-points-conversion"
         title={featuresCopy.pointsConversion}
-        summary={
-          xpExchangeRateSet
-            ? conversionRateLabel
-            : featuresCopy.pointsConversionNotSet
-        }
+        summary={summary}
         isExpanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
       >

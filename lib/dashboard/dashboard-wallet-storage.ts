@@ -18,6 +18,8 @@ export type WalletLedgerEvent = {
   kind: "earn" | "spend";
   points: number;
   at: string;
+  /** Whole cents this cash-in added to what the grown-up owes. Spend events only. */
+  audCents?: number;
 };
 
 export type PersistedDashboardWallet = {
@@ -31,6 +33,18 @@ export type PersistedDashboardWallet = {
   audSliderIndex: number;
   /** True after a parent saves an XP exchange rate. */
   xpExchangeRateSet: boolean;
+  /**
+   * Integer cents per 100 XP. Source of truth once a parent saves a rate.
+   * Older wallets only have `audSliderIndex` (50-cent steps from $0.50 to $5).
+   */
+  exchangeRateCentsPer100Xp?: number | null;
+  /** When the rate was saved. Separate from balance `updatedAt`. */
+  exchangeRateUpdatedAt?: string | null;
+  /**
+   * Cash-ins at or before this time are treated as paid.
+   * Later spend events still count toward what the grown-up owes.
+   */
+  cashInOwedResetAt?: string | null;
   /** Awards and cash-ins since this device started recording a ledger. */
   ledger?: WalletLedgerEvent[];
   /** When this device last changed the balance or the exchange rate. */
@@ -51,11 +65,19 @@ export function parseWalletLedger(value: unknown): WalletLedgerEvent[] {
     if (typeof raw.points !== "number" || !Number.isFinite(raw.points)) continue;
     const points = Math.floor(raw.points);
     if (points <= 0) continue;
+    const audCents =
+      raw.kind === "spend" &&
+      typeof raw.audCents === "number" &&
+      Number.isInteger(raw.audCents) &&
+      raw.audCents > 0
+        ? raw.audCents
+        : undefined;
     events.push({
       id: raw.id.trim(),
       kind: raw.kind,
       points,
       at: typeof raw.at === "string" ? raw.at : "",
+      ...(audCents != null ? { audCents } : {}),
     });
   }
   return events;
@@ -92,6 +114,30 @@ export function appendWalletLedgerEvent(
   };
 }
 
+function parsedExchangeRateFields(value: Record<string, unknown>): {
+  exchangeRateCentsPer100Xp?: number;
+  exchangeRateUpdatedAt?: string;
+} {
+  const fields: {
+    exchangeRateCentsPer100Xp?: number;
+    exchangeRateUpdatedAt?: string;
+  } = {};
+  const cents = value.exchangeRateCentsPer100Xp;
+  if (
+    typeof cents === "number" &&
+    Number.isInteger(cents) &&
+    cents > 0 &&
+    cents <= 99_999
+  ) {
+    fields.exchangeRateCentsPer100Xp = cents;
+  }
+  const at = value.exchangeRateUpdatedAt;
+  if (typeof at === "string" && at.trim()) {
+    fields.exchangeRateUpdatedAt = at.trim();
+  }
+  return fields;
+}
+
 /** Accept a stored wallet object and fill in lifetime XP when older rows omitted it. */
 export function walletFieldsFromUnknown(
   value: unknown,
@@ -118,6 +164,10 @@ export function walletFieldsFromUnknown(
     typeof value.updatedAt === "string" && value.updatedAt.trim()
       ? value.updatedAt.trim()
       : null;
+  const cashInOwedResetAt =
+    typeof value.cashInOwedResetAt === "string" && value.cashInOwedResetAt.trim()
+      ? value.cashInOwedResetAt.trim()
+      : null;
 
   return {
     schemaVersion:
@@ -132,8 +182,10 @@ export function walletFieldsFromUnknown(
     lifetimePointsEarned,
     audSliderIndex: value.audSliderIndex,
     xpExchangeRateSet: value.xpExchangeRateSet === true,
+    ...parsedExchangeRateFields(value),
     ...(ledger.length > 0 ? { ledger } : {}),
     ...(updatedAt ? { updatedAt } : {}),
+    ...(cashInOwedResetAt ? { cashInOwedResetAt } : {}),
   };
 }
 

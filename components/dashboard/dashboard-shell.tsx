@@ -28,6 +28,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
+  const isSettingsRoute = pathname.startsWith("/dashboard/settings");
   const hubIntroId = isLessonRoute ? null : hubIntroIdFromPathname(pathname);
   const skipOnboardingGate = isDevAcademyDesignShellPath(pathname);
 
@@ -83,7 +84,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <DashboardPendingScreen>
             {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
             {children}
-            {isLessonRoute ? null : <AppFooter className="mt-8 print:hidden" />}
+            {isLessonRoute || isSettingsRoute ? null : (
+              <AppFooter className="mt-8 print:hidden" />
+            )}
           </DashboardPendingScreen>
         </main>
       </div>

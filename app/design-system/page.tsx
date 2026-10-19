@@ -211,7 +211,7 @@ export default function DesignSystemPage() {
               Panel background with design accent highlight:
             </p>
             <span className="inline-block rounded-full bg-nga-accent px-4 py-1 font-heading text-sm font-bold text-nga-ink">
-              +50 XP Streak Bonus
+              +50 coins Streak Bonus
             </span>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button variant="primary">Start Mission</Button>

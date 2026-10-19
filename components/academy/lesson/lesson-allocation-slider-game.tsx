@@ -6,6 +6,7 @@ import {
   allocationNextEnabled,
   allocationSavedBadge,
   clampSaveAmount,
+  type AllocationMatch,
 } from "@/lib/academy/lessons/allocation-slider";
 import { cn } from "@/lib/utils/cn";
 import type { AllocationSliderItem } from "@/lib/academy/lessons/types/screens/allocation-slider";
@@ -14,6 +15,7 @@ type LessonAllocationSliderGameProps = {
   intro: string;
   total: number;
   targetMin: number;
+  match?: AllocationMatch;
   reserveGoals: readonly AllocationSliderItem[];
   spendItems?: readonly AllocationSliderItem[];
   sliderError: string;
@@ -27,6 +29,7 @@ export function LessonAllocationSliderGame({
   intro,
   total,
   targetMin,
+  match = "exact",
   reserveGoals,
   onComplete,
   onIncomplete,
@@ -36,7 +39,7 @@ export function LessonAllocationSliderGame({
   const metRef = useRef(false);
   const spendableToday = total - reservedAmount;
   const primaryGoal = reserveGoals[0];
-  const meetsTarget = allocationNextEnabled(reservedAmount, targetMin);
+  const meetsTarget = allocationNextEnabled(reservedAmount, targetMin, match);
 
   useEffect(() => {
     if (meetsTarget && !metRef.current) {

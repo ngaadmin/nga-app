@@ -13,6 +13,7 @@ import {
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import { coinWord, fillCoinTemplate } from "@/lib/copy/coin-word";
 import { formatConversionRateLabel } from "@/lib/dashboard/point-conversion";
 import {
   dispatchPointsConversionParentEmail,
@@ -135,9 +136,9 @@ export function CashInPointsPanel({
   const audCents = quote.audCents;
   const audPayout = audCents / 100;
 
-  const xpAvailableLabel = conversionCopy.xpAvailableTemplate.replace(
-    "{points}",
-    spendableXp.toLocaleString(),
+  const xpAvailableLabel = fillCoinTemplate(
+    conversionCopy.xpAvailableTemplate,
+    spendableXp,
   );
   const preview =
     checked.ok && audCents > 0
@@ -147,10 +148,7 @@ export function CashInPointsPanel({
         : conversionCopy.chooseAmountHint;
   const partialUse =
     checked.ok && quote.pointsCharged > 0 && quote.pointsCharged < checked.points
-      ? conversionCopy.partialUseTemplate.replace(
-          "{points}",
-          quote.pointsCharged.toLocaleString(),
-        )
+      ? fillCoinTemplate(conversionCopy.partialUseTemplate, quote.pointsCharged)
       : null;
   const successBody = conversionCopy.successBodyTemplate.replace(
     "{amount}",
@@ -220,7 +218,7 @@ export function CashInPointsPanel({
 
       recordXpCashIn(
         result.audCents,
-        `Cashed in ${result.pointsClaimed.toLocaleString()} XP to Cash`,
+        `Cashed in ${result.pointsClaimed.toLocaleString()} ${coinWord(result.pointsClaimed)} to Cash`,
       );
       await persistRegisteredProgressNow();
 

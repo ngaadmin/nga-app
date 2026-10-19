@@ -934,9 +934,10 @@ export const LessonIconOption = forwardRef<
       {showLabelBelow ? (
         <span
           className={cn(
-            lessonIconLabelClass,
+            isCompact
+              ? "text-center font-sans text-[13px] font-semibold leading-tight text-[#031F82]"
+              : lessonIconLabelClass,
             "whitespace-normal break-normal",
-            isCompact && "text-[13px] leading-tight",
             labelClassName,
           )}
         >

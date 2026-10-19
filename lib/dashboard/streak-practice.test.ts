@@ -1,9 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   applyLessonPractice,
   buildPracticeCalendar,
   earnedLearningStreakIds,
   emptyPracticeStreak,
+  LEARNING_STREAK_STORAGE_KEY,
+  recordLessonPractice,
   resolvePracticedDateKeys,
   toLocalDateKey,
 } from "@/lib/dashboard/streak-practice";
@@ -76,6 +78,40 @@ describe("applyLessonPractice", () => {
     );
     expect(next.dayStreak).toBe(3);
     expect(next.lastPractice).toBe("2026-08-30");
+  });
+});
+
+describe("recordLessonPractice", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("stores today as practiced after a lesson is completed", () => {
+    const memory = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => memory.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        memory.set(key, value);
+      },
+      removeItem: (key: string) => {
+        memory.delete(key);
+      },
+    };
+    vi.stubGlobal("window", {
+      localStorage: storage,
+      sessionStorage: storage,
+      dispatchEvent: () => true,
+    });
+    vi.stubGlobal("localStorage", storage);
+    vi.stubGlobal("sessionStorage", storage);
+
+    const now = localDate(2026, 7, 30);
+    const saved = recordLessonPractice(now);
+    expect(saved.lastPractice).toBe("2026-08-30");
+    expect(saved.dayStreak).toBe(1);
+    const raw = memory.get(LEARNING_STREAK_STORAGE_KEY);
+    expect(raw).toBeTruthy();
+    expect(resolvePracticedDateKeys(now, saved.dayStreak).has("2026-08-30")).toBe(true);
   });
 });
 

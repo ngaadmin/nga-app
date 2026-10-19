@@ -191,6 +191,38 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await expect(aboutMedals).toBeVisible();
 });
 
+test("community intro stays dismissed and has no info button", async ({ page }) => {
+  await installSession(page, LEARNER_SESSION);
+  await page.goto("/dashboard/community", { waitUntil: "domcontentloaded" });
+
+  const letsGo = page.locator("button", { hasText: "Let's go" });
+  await expect(letsGo).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("#hub-intro-community-title")).toHaveText("Community");
+  await letsGo.click({ force: true });
+  await expect(page.locator("#hub-intro-community-title")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "About Community" })).toHaveCount(0);
+
+  async function openTab(href: string) {
+    await page.locator(`[data-dashboard-nav] a[href="${href}"]`).evaluate((link) => {
+      (link as HTMLAnchorElement).click();
+    });
+    await expect(page).toHaveURL(new RegExp(href), { timeout: 20_000 });
+  }
+  await openTab("/dashboard/academy");
+  await openTab("/dashboard/community");
+  await page.waitForTimeout(400);
+  await expect(page.locator("button", { hasText: "Let's go" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "About Community" })).toHaveCount(0);
+
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "Community", exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.waitForTimeout(400);
+  await expect(page.locator("#hub-intro-community-title")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "About Community" })).toHaveCount(0);
+});
+
 test("settings class link gives immediate feedback", async ({ page }) => {
   await installSession(page, TEACHER_SESSION);
   await page.goto("/dashboard/settings");

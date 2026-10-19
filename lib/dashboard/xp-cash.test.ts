@@ -148,7 +148,8 @@ describe("spendable cash-in versus lifetime XP", () => {
     expect(readSpendableXp(result.wallet)).toBe(0);
     expect(readLifetimeXp(result.wallet)).toBe(800);
     expect(result.audCents).toBe(1000);
-    expect(formatXpCashPreview(500, "$10.00")).toBe("500 XP = $10.00");
+    expect(formatXpCashPreview(500, "$10.00")).toBe("500 coins = $10.00");
+    expect(formatXpCashPreview(1, "$0.02")).toBe("1 coin = $0.02");
 
     const bucket = addCentsToDollars(0, result.audCents);
     expect(dollarsToCents(bucket)).toBe(1000);

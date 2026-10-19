@@ -1,3 +1,4 @@
+import { coinWord } from "@/lib/copy/coin-word";
 import { resolveSimulatedParentEmail } from "@/lib/dashboard/parent-pin";
 
 export type PointsConversionEmailPayload = {
@@ -18,12 +19,12 @@ export function buildPointsConversionParentEmail(
   payload: PointsConversionEmailPayload,
 ): { subject: string; body: string } {
   const safeName = payload.childUsername.trim() || "Your child";
-  const subject = `${safeName} cashed in XP`;
+  const subject = `${safeName} cashed in coins`;
 
   const body = [
     "Hi,",
     "",
-    `${safeName} cashed in ${payload.pointsClaimed.toLocaleString()} XP for ${payload.amountFormatted} at the rate you agreed. That's what you owe them. Pay it however you like. The app doesn't move any money.`,
+    `${safeName} cashed in ${payload.pointsClaimed.toLocaleString()} ${coinWord(payload.pointsClaimed)} for ${payload.amountFormatted} at the rate you agreed. That's what you owe them. Pay it however you like. The app doesn't move any money.`,
   ].join("\n");
 
   return { subject, body };

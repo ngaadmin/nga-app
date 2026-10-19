@@ -1,3 +1,4 @@
+import type { AllocationMatch } from "@/lib/academy/lessons/allocation-slider";
 import type { WithDeclarative } from "../declarative";
 
 export type AllocationSliderItem = {
@@ -16,6 +17,11 @@ export type AllocationSliderScreenConfig = WithDeclarative<{
   total: number;
   /** Minimum amount to reserve before the screen completes. */
   targetMin: number;
+  /**
+   * KEEP settings accept the target or more. Move and pay settings stay exact.
+   * Omitted screens stay exact.
+   */
+  match?: AllocationMatch;
   /** Items protected by reserving (e.g. savings goal). */
   reserveGoals: readonly AllocationSliderItem[];
   /** Optional spend-today items dimmed when reserve goal is met. */

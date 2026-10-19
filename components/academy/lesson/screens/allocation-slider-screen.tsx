@@ -40,6 +40,7 @@ export function AllocationSliderScreen({
 
   const total = Math.max(0, screen.total);
   const targetMin = Math.max(0, screen.targetMin);
+  const match = screen.match ?? "exact";
   const reservedRef = useRef(0);
   const [reservedAmount, setReservedAmount] = useState(0);
   const [solved, setSolved] = useState(false);
@@ -52,7 +53,7 @@ export function AllocationSliderScreen({
   const inset = allocationTrackInsetPx();
 
   const spendableToday = Math.max(0, total - reservedAmount);
-  const meetsTarget = solved && allocationNextEnabled(reservedAmount, targetMin);
+  const meetsTarget = solved && allocationNextEnabled(reservedAmount, targetMin, match);
   const savePct = total > 0 ? (reservedAmount / total) * 100 : 0;
   const targetPct = total > 0 ? Math.min(100, (targetMin / total) * 100) : 0;
   const showTargetTick = targetMin > 0 && targetMin < total;
@@ -68,7 +69,7 @@ export function AllocationSliderScreen({
     const clamped = clampSaveAmount(next, total);
     reservedRef.current = clamped;
     setReservedAmount(clamped);
-    if (clamped !== targetMin && metRef.current) {
+    if (!allocationNextEnabled(clamped, targetMin, match) && metRef.current) {
       metRef.current = false;
       setSolved(false);
       handleIncomplete();
@@ -88,7 +89,7 @@ export function AllocationSliderScreen({
   };
 
   const settle = (amount: number) => {
-    if (allocationNextEnabled(amount, targetMin)) {
+    if (allocationNextEnabled(amount, targetMin, match)) {
       lastSettledRef.current = amount;
       setError(null);
       setShaking(false);

@@ -206,7 +206,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(
-    page.getByText("Approval saves your XP. You can keep playing while you wait."),
+    page.getByText("Approval saves your coins. You can keep playing while you wait."),
   ).toBeVisible();
   await expect(page.getByText("Check the highlighted fields and try again.")).toHaveCount(0);
   await expect(page.getByLabel("Your Email Address")).toHaveCount(0);
@@ -302,7 +302,7 @@ test("bottom tab uses the amber active pill", async ({ page }) => {
   }
   const academy = page.locator("[data-dashboard-nav] a[aria-current='page']");
   await expect(academy).toBeVisible({ timeout: 15_000 });
-  const pill = academy.locator("span").first();
+  const pill = academy.locator("span.rounded-full");
   await expect(pill).toHaveCSS("background-color", "rgb(255, 165, 3)");
   await expect(pill).toHaveCSS("color", "rgb(3, 31, 130)");
   await expect(page.locator("[data-dashboard-nav]")).not.toHaveCSS(

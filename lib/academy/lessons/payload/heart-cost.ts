@@ -1,4 +1,5 @@
 import { findAllOfTheAboveCorrectKey } from "@/lib/academy/lessons/all-of-the-above";
+import { allocationNextEnabled, type AllocationMatch } from "@/lib/academy/lessons/allocation-slider";
 import { collectMultipleChoiceOptions } from "@/lib/academy/lessons/multiple-choice-options";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
@@ -55,10 +56,13 @@ export function screenHeartCost(screen: ScreenConfig): ScreenHeartCost {
     case "savings-goal":
       return { costsHeart: true, wrongAnswer: "a drop outside the box" };
     case "allocation-slider":
-      return sliderCanMiss(screen.total, screen.targetMin)
+      return sliderCanMiss(screen.total, screen.targetMin, screen.match ?? "exact")
         ? {
             costsHeart: true,
-            wrongAnswer: "letting go of the slider on an amount other than the target",
+            wrongAnswer:
+              screen.match === "at-least"
+                ? "letting go of the slider below the amount to keep"
+                : "letting go of the slider on an amount other than the target",
           }
         : none();
     case "budget-select":
@@ -128,13 +132,16 @@ function bucketHeartCost(
   };
 }
 
-/** A non-zero let-go that is not the target drops a heart. $0 does not. */
-function sliderCanMiss(total: number, targetMin: number): boolean {
+/** A non-zero let-go that fails the screen's match drops a heart. $0 does not. */
+function sliderCanMiss(
+  total: number,
+  targetMin: number,
+  match: AllocationMatch,
+): boolean {
   const totalAmount = Math.round(total);
-  const target = Math.max(0, Math.round(targetMin));
   if (totalAmount <= 0) return false;
   for (let amount = 1; amount <= totalAmount; amount += 1) {
-    if (amount !== target) return true;
+    if (!allocationNextEnabled(amount, targetMin, match)) return true;
   }
   return false;
 }

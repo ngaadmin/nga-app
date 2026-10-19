@@ -44,7 +44,7 @@ function visibleChoices(screen: ScreenConfig, cash: number | null): Choice[] {
 }
 
 function marker(screen: ScreenConfig, cash: number | null): string {
-  if (screen.type === "completion") return "Cash in your XP";
+  if (screen.type === "completion") return "Cash in your coins";
   if (screen.type === "word-drop") {
     return (screen.narrativeBefore || screen.narrativeAfter || screen.prompt || "").trim().slice(0, 40);
   }
@@ -302,22 +302,28 @@ async function playScreen(
     await slider.scrollIntoViewIfNeeded();
     const box = await slider.boundingBox();
     if (!box) throw new Error("Save slider was not on screen.");
-    // Land on the track, past the target, so over-saving is the wrong answer.
+    const atLeast = screen.match === "at-least";
+    // KEEP accepts the target or more. A move or pay screen stays exact.
     await page.mouse.click(box.x + box.width - 36, box.y + box.height - 28);
     const settled = Number(await slider.getAttribute("aria-valuenow"));
-    if (settled === screen.targetMin) {
+    if (!atLeast && settled === screen.targetMin) {
       await slider.press("ArrowRight");
     }
-    if (screen.sliderError.trim()) {
+    if (!atLeast && screen.sliderError.trim()) {
       await expect(page.getByText(screen.sliderError, { exact: false }).first()).toBeVisible();
     }
     await slider.focus();
     for (let step = 0; step < screen.total + 2; step += 1) {
       const now = Number(await slider.getAttribute("aria-valuenow"));
-      if (now === screen.targetMin) break;
+      if (atLeast ? now >= screen.targetMin : now === screen.targetMin) break;
       await slider.press(now > screen.targetMin ? "ArrowLeft" : "ArrowRight");
     }
-    await expect(slider).toHaveAttribute("aria-valuenow", String(screen.targetMin));
+    const landed = Number(await slider.getAttribute("aria-valuenow"));
+    if (atLeast) {
+      expect(landed).toBeGreaterThanOrEqual(screen.targetMin);
+    } else {
+      expect(landed).toBe(screen.targetMin);
+    }
     await footerNext(page);
     return fallthrough();
   }
@@ -503,7 +509,7 @@ async function playLesson(page: Page, lesson: number, cohort: MasteryCohort): Pr
     await waitForScreen(page, screen, cash);
     if (screen.type === "completion") {
       await assertMedals(page, lesson);
-      await page.getByRole("button", { name: "Cash in your XP" }).click();
+      await page.getByRole("button", { name: "Cash in your coins" }).click();
       await expect(page.locator('[data-cash-in-celebration="open"]')).toBeVisible();
       return;
     }

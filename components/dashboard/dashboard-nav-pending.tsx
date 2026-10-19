@@ -14,16 +14,16 @@ import {
   DashboardLessonOpening,
   DashboardTabLoading,
 } from "@/components/dashboard/dashboard-tab-loading";
+import { startPendingScreenTimeout } from "@/lib/dashboard/pending-screen-timeout";
 
 /**
  * Static tab payloads do not paint `loading.tsx` until the response arrives.
  * A tap therefore keeps the previous screen up for the whole wait. This
  * records the in-flight href so the shell can swap in the existing skeleton
  * without waiting on that response. Fast navigations stay under the delay
- * and never flash.
+ * and never flash. A stuck transition is recovered by DashboardPendingScreen.
  */
 const PENDING_SCREEN_DELAY_MS = 120;
-const PENDING_SCREEN_MAX_MS = 4000;
 
 type NavPendingActions = {
   start: (href: string) => void;
@@ -58,10 +58,7 @@ export function DashboardNavPendingProvider({
     if (!pendingHref) return;
     if (pathname === pendingHref || pathname !== originRef.current) {
       setPendingHref(null);
-      return;
     }
-    const timer = window.setTimeout(() => setPendingHref(null), PENDING_SCREEN_MAX_MS);
-    return () => window.clearTimeout(timer);
   }, [pathname, pendingHref]);
 
   const actions = useMemo(() => ({ start, stop }), [start, stop]);
@@ -96,20 +93,35 @@ export function DashboardPendingScreen({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const pendingHref = useContext(NavPendingHrefContext);
+  const { stop } = useDashboardNavPending();
   const [shownHref, setShownHref] = useState<string | null>(null);
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   useEffect(() => {
     if (!pendingHref) {
       setShownHref(null);
       return;
     }
-    const timer = window.setTimeout(
+    const showTimer = window.setTimeout(
       () => setShownHref(pendingHref),
       PENDING_SCREEN_DELAY_MS,
     );
-    return () => window.clearTimeout(timer);
-  }, [pendingHref]);
+    const cancelTimeout = startPendingScreenTimeout({
+      pendingHref,
+      readPathname: () => pathnameRef.current,
+      clearPending: () => stop(pendingHref),
+      assign: (href) => {
+        window.location.assign(href);
+      },
+    });
+    return () => {
+      window.clearTimeout(showTimer);
+      cancelTimeout();
+    };
+  }, [pendingHref, stop]);
 
   if (!shownHref) return children;
 

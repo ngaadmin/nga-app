@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import { GuestSavePromptBanner } from "@/components/onboarding/guest-save-prompt-banner";
 import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
+import { coinWord } from "@/lib/copy/coin-word";
 import {
   LESSON_CASH_IN_LABEL,
   lessonCompletionEyebrowClass,
@@ -170,16 +171,16 @@ export function LessonCompletionPane({
         ) : null}
 
         <p className="mt-2 font-heading text-[22px] font-bold tabular-nums text-[#031F82]">
-          +{xpReward} XP
+          +{xpReward} {coinWord(xpReward)}
         </p>
         {showPerfectBonus ? (
           <p className="mt-2.5 font-sans text-[15px] font-bold text-[#031F82]">
-            Perfect lesson: +{perfectStreakBonus} XP
+            Perfect lesson: +{perfectStreakBonus} {coinWord(perfectStreakBonus)}
           </p>
         ) : null}
         {typeof spendableXp === "number" ? (
           <p className="mt-2 font-sans text-[15px] font-bold text-[#031F82]">
-            {spendableXp.toLocaleString()} XP to cash in
+            {spendableXp.toLocaleString()} {coinWord(spendableXp)} to cash in
           </p>
         ) : null}
 

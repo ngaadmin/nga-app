@@ -14,7 +14,7 @@ const EXPLORER_GUEST_SESSION = {
 
 async function xpValue(page: Page): Promise<number> {
   const label = await page
-    .getByRole("button", { name: /XP/i })
+    .getByRole("button", { name: /coins/i })
     .first()
     .getAttribute("aria-label");
   const match = label?.match(/(\d+)/);
@@ -101,7 +101,7 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await expect(page.getByText(/freeze worked/i)).toBeVisible();
   await clickNext(page);
 
-  await page.getByRole("button", { name: "Cash in your XP" }).click();
+  await page.getByRole("button", { name: "Cash in your coins" }).click();
   await expect(page.locator('[data-cash-in-celebration="open"]')).toBeVisible();
   await expect(page).toHaveURL(/\/dashboard\/academy\/lesson\/1$/);
   await page.getByRole("button", { name: "Continue", exact: true }).click();

@@ -1297,7 +1297,7 @@ export function SignUpForm() {
                       id="signup-parent-email-hint"
                       className="font-sans text-sm font-bold text-purple-700"
                     >
-                      Approval saves your XP. You can keep playing while you wait.
+                      Approval saves your coins. You can keep playing while you wait.
                     </p>
                   ) : null}
                   <input

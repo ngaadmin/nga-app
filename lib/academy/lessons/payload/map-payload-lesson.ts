@@ -351,20 +351,25 @@ function leadingSettingsQuestion(raw: string): string | undefined {
   return question || undefined;
 }
 
-/** TOTAL/KEEP win. A "$9 ... ($6 remains)" line stays 9 of 15. */
-function allocationAmounts(raw: string): { total: number; targetMin: number } {
+/** TOTAL/KEEP win. A "$9 ... ($6 remains)" line stays 9 of 15, exact. */
+function allocationAmounts(raw: string): {
+  total: number;
+  targetMin: number;
+  match: "exact" | "at-least";
+} {
   const totalMatch = /\bTOTAL:\s*\$?(\d+)/i.exec(raw);
   const keepMatch = /\bKEEP:\s*\$?(\d+)/i.exec(raw);
+  const match = keepMatch ? "at-least" : "exact";
   if (totalMatch) {
     const total = Number(totalMatch[1]) || 1;
     const targetMin = keepMatch ? Number(keepMatch[1]) : total;
-    return { total, targetMin };
+    return { total, targetMin, match };
   }
-  const amounts = [...raw.matchAll(/\$(\d+)/g)].map((match) => Number(match[1]));
+  const amounts = [...raw.matchAll(/\$(\d+)/g)].map((found) => Number(found[1]));
   const setAside = amounts[0] ?? 0;
   const remains = /remains/i.test(raw) ? (amounts[1] ?? 0) : 0;
   const total = setAside + remains || setAside || 1;
-  return { total, targetMin: setAside || total };
+  return { total, targetMin: setAside || total, match };
 }
 
 /** Unkeyed "Slide …" sentence in a slider settings cell. */
@@ -1246,7 +1251,7 @@ export function mapPayloadScreen(
       const settingsRaw = cohortField(row.settings, cohort);
       const instruction = sliderInstruction(settingsRaw);
       const raw = [instruction || settingsRaw, text].filter(Boolean).join("\n");
-      const { total, targetMin } = allocationAmounts(`${settingsRaw}\n${raw}`);
+      const { total, targetMin, match } = allocationAmounts(`${settingsRaw}\n${raw}`);
       const story = text.trim();
       return {
         type: "allocation-slider",
@@ -1255,6 +1260,7 @@ export function mapPayloadScreen(
         ...(instruction && instruction !== story ? { instruction } : {}),
         total,
         targetMin,
+        match,
         reserveGoals: [
           {
             id: "reserve",

@@ -7,6 +7,8 @@ import {
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
 import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
+import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
+import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { resolveLessonDefinition } from "@/lib/academy/lessons/types";
 
 describe("allocation slider", () => {
@@ -34,6 +36,37 @@ describe("allocation slider", () => {
   it("badges the amount that was saved, not the amount spent", () => {
     expect(allocationSavedBadge(20)).toBe("🔒 $20 saved!");
     expect(allocationSavedBadge(9)).toBe("🔒 $9 saved!");
+  });
+
+  it("treats a KEEP line as at-least and a move line as exact", () => {
+    expect(allocationNextEnabled(19, 20, "at-least")).toBe(false);
+    expect(allocationNextEnabled(20, 20, "at-least")).toBe(true);
+    expect(allocationNextEnabled(25, 20, "at-least")).toBe(true);
+    expect(allocationNextEnabled(10, 9, "exact")).toBe(false);
+
+    for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
+      const keep = resolvePayloadLesson(
+        loadBundledLessonPayload(1, 2),
+        cohort,
+        2,
+      ).screens.find((screen) => screen.type === "allocation-slider");
+      expect(keep, cohort).toMatchObject({
+        total: 25,
+        targetMin: 20,
+        match: "at-least",
+      });
+
+      const pay = resolvePayloadLesson(
+        loadBundledLessonPayload(1, 6),
+        cohort,
+        6,
+      ).screens.find((screen) => screen.type === "allocation-slider");
+      expect(pay, cohort).toMatchObject(
+        cohort === "maverick"
+          ? { total: 30, targetMin: 18, match: "exact" }
+          : { total: 15, targetMin: 9, match: "exact" },
+      );
+    }
   });
 
   it("gives Lars three short lines and a $20 save target", () => {

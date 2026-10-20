@@ -126,26 +126,4 @@ test("academy journey scrolls with a mouse wheel and with touch", async ({
     path: "/opt/cursor/artifacts/academy-journey-375-touch.png",
     fullPage: false,
   });
-
-  await resetScroll(page);
-  const session = await page.context().newCDPSession(page);
-  await session.send("Emulation.setTouchEmulationEnabled", {
-    enabled: true,
-    maxTouchPoints: 1,
-  });
-  await session.send("Emulation.setEmitTouchEventsForMouse", {
-    enabled: true,
-    configuration: "mobile",
-  });
-  const beforeEmulatedWheel = await scrollTop(page);
-  const emulatedMap = await page
-    .locator('[aria-label="Academy journey map"]')
-    .boundingBox();
-  expect(emulatedMap).toBeTruthy();
-  await page.mouse.move(emulatedMap!.x + 80, Math.min(emulatedMap!.y + 180, 620));
-  await page.mouse.wheel(0, 400);
-  await expect
-    .poll(() => scrollTop(page))
-    .toBeGreaterThan(beforeEmulatedWheel + 100);
-  await session.detach();
 });

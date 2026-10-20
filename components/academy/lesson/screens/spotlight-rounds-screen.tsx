@@ -339,6 +339,13 @@ function SpotlightGradedRounds({
       errorMessage={error}
     >
       <LessonPromptParagraphs text={screen.prompt} className={cn("mb-2.5", lessonPromptClass)} />
+      {/* Sheet header stays above. This is the sentence for the current round. */}
+      {round.prompt ? (
+        <LessonPromptParagraphs
+          text={round.prompt}
+          className={cn("mb-2.5", lessonPromptClass)}
+        />
+      ) : null}
       {screen.rounds.length > 1 ? (
         <div className="mb-5 flex justify-center gap-1.5">
           {screen.rounds.map((_, index) => (

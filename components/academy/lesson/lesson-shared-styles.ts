@@ -390,9 +390,9 @@ export function cnLessonChoice(
 export const lessonSortRowClass =
   "flex min-h-[3rem] w-full cursor-grab touch-none select-none items-center justify-center rounded-full border-0 bg-transparent px-4 py-2.5 text-center font-heading text-[18px] font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
 
-/** Rank-order card: emoji column wide enough for the shared glyph, then the choice. */
+/** Rank-order card: emoji, then the choice. The pill itself stays put. */
 export const lessonRankOrderCardClass =
-  "grid w-full min-w-0 grid-cols-[2.25rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
+  "grid w-full min-w-0 grid-cols-[2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
 
 export const lessonRankOrderNumberClass = lessonSequenceNumberClass;
 

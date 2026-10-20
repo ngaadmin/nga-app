@@ -15,7 +15,6 @@ import {
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
-import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
@@ -267,10 +266,6 @@ export function LessonRankOrderGame({
     endDrag();
   };
 
-  const ghostShown = dragGhost
-    ? presentLightningCard({ emoji: dragGhost.emoji, label: dragGhost.label })
-    : null;
-
   return (
     <>
       <LessonPromptParagraphs text={intro} className={cn("mb-5", lessonIntroClass())} />
@@ -285,10 +280,6 @@ export function LessonRankOrderGame({
           const item = items.find((entry) => entry.id === itemId);
           if (!item) return null;
           const isDragging = dragRankId === itemId;
-          const shown = presentLightningCard({
-            emoji: item.emoji ?? "📌",
-            label: item.label,
-          });
           return (
             <div
               key={itemId}
@@ -318,9 +309,9 @@ export function LessonRankOrderGame({
               )}
               style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <AnswerEmoji emoji={shown.emoji} className="justify-self-center" />
+              <AnswerEmoji emoji={item.emoji ?? "📌"} className="justify-self-center" />
               <span className="min-w-0 whitespace-normal break-normal leading-snug">
-                {shown.label}
+                {item.label}
               </span>
             </div>
           );
@@ -348,9 +339,9 @@ export function LessonRankOrderGame({
               width: dragGhost.width,
             }}
           >
-            <AnswerEmoji emoji={ghostShown?.emoji} className="justify-self-center" />
+            <AnswerEmoji emoji={dragGhost.emoji} className="justify-self-center" />
             <span className="min-w-0 whitespace-normal break-normal leading-snug">
-              {ghostShown?.label}
+              {dragGhost.label}
             </span>
           </div>
         </OverlayPortal>

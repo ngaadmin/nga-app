@@ -19,7 +19,6 @@ const EMOJI_TEMPLATE_FILES = [
   "components/academy/lesson/lesson-word-drop-game.tsx",
   "components/academy/lesson/lesson-drag-to-target-game.tsx",
   "components/academy/lesson/lesson-savings-goal-game.tsx",
-  "components/academy/lesson/lesson-sequence-sort-game.tsx",
   "components/academy/lesson/paired-zone-sort.tsx",
   "components/academy/lesson/screens/allocation-slider-screen.tsx",
   "components/academy/lesson/screens/skill-hub-screen.tsx",
@@ -83,5 +82,27 @@ describe("shared answer emoji size", () => {
         expect(text, `${entry.file} still sets ${size}`).not.toContain(size);
       }
     }
+  });
+
+  it("leaves pill boxes and text-only steps alone", () => {
+    expect(source("components/academy/lesson/lesson-shared-styles.ts")).toContain(
+      "grid-cols-[2rem_minmax(0,1fr)]",
+    );
+    expect(source("components/academy/lesson/lesson-choice-button.tsx")).toContain(
+      "rounded-full border-2 border-[#C5D4EA] bg-white px-3.5 py-2",
+    );
+    expect(source("components/academy/lesson/lesson-link-match-game.tsx")).toContain(
+      "size-6 shrink-0",
+    );
+    expect(source("components/academy/lesson/lesson-drag-to-target-game.tsx")).toContain(
+      "size-[22px]",
+    );
+    const steps = source("components/academy/lesson/lesson-sequence-sort-game.tsx");
+    const stepCards = source("components/academy/lesson/lesson-ui.tsx");
+    expect(steps).not.toMatch(/AnswerEmoji/);
+    expect(stepCards).not.toMatch(/AnswerEmojiLabel/);
+    expect(source("components/academy/lesson/screens/multiple-choice-screen.tsx")).not.toMatch(
+      /presentLightningCard/,
+    );
   });
 });

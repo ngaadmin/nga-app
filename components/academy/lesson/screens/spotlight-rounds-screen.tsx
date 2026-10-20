@@ -23,7 +23,6 @@ import {
   displayCashText,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { spotlightRoundUnitId } from "@/lib/academy/lessons/bonus-run";
-import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import type { SpotlightRoundsScreenConfig } from "@/lib/academy/lessons/types";
 import {
   celebrateLessonCorrectAnswer,
@@ -168,14 +167,10 @@ function SpotlightDecisionChoices({
       <div className="grid w-full gap-3">
         {visible.map(({ option, index }) => {
           const selected = choice === index;
-          const shown = presentLightningCard({
-            emoji: option.emoji,
-            label: displayCashText(option.label, cash),
-          });
           return (
             <LessonChoiceButton
               key={`${option.label}-${index}`}
-              emoji={shown.emoji}
+              emoji={option.emoji}
               selected={selected}
               onClick={() => {
                 setChoice(index);
@@ -183,7 +178,7 @@ function SpotlightDecisionChoices({
                 flow.markScreenReady(screenIndex);
               }}
             >
-              {shown.label}
+              {displayCashText(option.label, cash)}
             </LessonChoiceButton>
           );
         })}
@@ -291,38 +286,30 @@ function SpotlightGradedRounds({
 
   const renderCard = (which: "a" | "b") => {
     const meta = optionMeta[which];
-    const shown = presentLightningCard({
-      emoji: realEmoji(meta.icon),
-      label: meta.label,
-    });
     const isChosen = choice === which;
     const isCorrectChoice = which === round.correct;
     return (
       <LessonChoiceButton
-        emoji={shown.emoji}
+        emoji={realEmoji(meta.icon)}
         selected={isChosen}
         locked={isChosen && isCorrectChoice}
         wrong={isChosen && !isCorrectChoice}
         onClick={() => pick(which)}
       >
-        {shown.label}
+        {meta.label}
       </LessonChoiceButton>
     );
   };
 
   const renderSide = (which: "a" | "b") => {
     const meta = optionMeta[which];
-    const shown = presentLightningCard({
-      emoji: realEmoji(meta.icon),
-      label: meta.label,
-    });
     const isChosen = choice === which;
     const isCorrectChoice = which === round.correct;
-    const glyph = spotlightChoiceGlyph(shown.label);
+    const glyph = spotlightChoiceGlyph(meta.label);
     return (
       <LessonIconOption
-        label={shown.label}
-        emoji={glyph ? undefined : shown.emoji}
+        label={meta.label}
+        emoji={glyph ? undefined : realEmoji(meta.icon)}
         glyph={glyph ?? undefined}
         display="emoji-label"
         selected={isChosen}

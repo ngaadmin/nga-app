@@ -10,7 +10,6 @@ import {
 } from "react";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
-import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonCtaClass,
@@ -80,16 +79,16 @@ function meterCountsDown(label: string, showsRemaining: boolean): boolean {
 }
 
 function renderItemChip(item: SavingsGoalGameItem) {
-  const shown = presentLightningCard({ emoji: item.emoji, label: item.label });
+  const emoji = item.emoji?.trim();
   return (
     <>
-      {shown.emoji ? (
+      {emoji ? (
         <span className={lessonItemOrbClass} aria-hidden>
-          <AnswerEmoji emoji={shown.emoji} />
+          <AnswerEmoji emoji={emoji} />
         </span>
       ) : null}
       <span>
-        {shown.label} · {formatDollars(item.price)}
+        {item.label} · {formatDollars(item.price)}
       </span>
     </>
   );

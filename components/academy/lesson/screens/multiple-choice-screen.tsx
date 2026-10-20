@@ -20,7 +20,6 @@ import {
   type CashUpdate,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { isNeutralTrueStatement, isPinnedChoiceLabel } from "@/lib/academy/lessons/all-of-the-above";
-import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { collectMultipleChoiceOptions } from "@/lib/academy/lessons/multiple-choice-options";
 import {
@@ -61,8 +60,8 @@ export function runMultipleChoiceNextHandler(): boolean {
 
 const WRONG_SHAKE_MS = 360;
 
-function shownChoice(label: string, emoji?: string): { emoji?: string; label: string } {
-  return presentLightningCard({ emoji, label });
+function choiceEmoji(_label: string, emoji?: string): string | undefined {
+  return emoji;
 }
 
 export function MultipleChoiceScreen({
@@ -317,16 +316,11 @@ export function MultipleChoiceScreen({
         (skill) => !completedHubSkills.has(skill),
       );
 
-      const shown = shownChoice(displayCashText(option.label, cash), option.emoji);
-      const choiceLabel =
-        option.hubSkillKey && completedHubSkills.has(option.hubSkillKey)
-          ? `${shown.label} · Done`
-          : shown.label;
       return (
         <LessonChoiceButton
           key={key}
           layout={isRadioList ? "radio-row" : "pill"}
-          emoji={shown.emoji}
+          emoji={choiceEmoji(option.label, option.emoji)}
           disabled={lockedUntilHubDone}
           onClick={(event) => {
             event.stopPropagation();
@@ -344,7 +338,9 @@ export function MultipleChoiceScreen({
             !isLessonChoiceOptionCorrect(option)
           }
         >
-          {choiceLabel}
+          {option.hubSkillKey && completedHubSkills.has(option.hubSkillKey)
+            ? `${displayCashText(option.label, cash)} · Done`
+            : displayCashText(option.label, cash)}
         </LessonChoiceButton>
       );
     });

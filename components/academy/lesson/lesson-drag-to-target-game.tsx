@@ -83,7 +83,7 @@ export function personEmojiForTargetLabel(label: string): string | undefined {
   return undefined;
 }
 const LANDED_COIN_CLASS =
-  "grid size-10 place-items-center rounded-full bg-[#FFA503]";
+  "grid size-[22px] place-items-center rounded-full bg-[#FFA503]";
 const DRAG_ILLUSTRATION_FRAME_CLASS =
   "relative flex h-[9rem] shrink-0 items-center justify-center sm:h-[11rem]";
 const DRAG_ILLUSTRATION_IMAGE_CLASS =

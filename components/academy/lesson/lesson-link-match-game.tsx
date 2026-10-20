@@ -104,11 +104,11 @@ function MatchTile({
         style={{ backgroundColor: fill ?? "transparent" }}
       >
         {emoji ? (
-          <span className="grid w-9 shrink-0 place-items-center" aria-hidden>
+          <span className="grid size-6 shrink-0 place-items-center" aria-hidden>
             <AnswerEmoji emoji={emoji} />
           </span>
         ) : (
-          <span className="w-9 shrink-0" aria-hidden />
+          <span className="size-6 shrink-0" aria-hidden />
         )}
         <span className="line-clamp-3 min-w-0 flex-1 font-sans text-[15px] font-semibold leading-[1.25] text-[#14213D]">
           {label}

@@ -13,7 +13,6 @@ import {
 } from "@/lib/academy/lessons/paired-zone-sort";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
-import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { cn } from "@/lib/utils/cn";
 
 type PairedItem = {
@@ -55,7 +54,6 @@ function SortGlyph({
   placed?: boolean;
   shaking?: boolean;
 }) {
-  const shown = presentLightningCard({ emoji: item.emoji, label: item.label });
   return (
     <div
       className={cn(
@@ -71,9 +69,9 @@ function SortGlyph({
           ✓
         </span>
       ) : null}
-      <AnswerEmoji emoji={shown.emoji ?? "•"} />
+      <AnswerEmoji emoji={item.emoji ?? "•"} />
       <span className="sort-label mt-1 w-full font-heading text-xs font-semibold leading-[1.25] text-[#031F82]">
-        {shown.label}
+        {item.label}
       </span>
     </div>
   );

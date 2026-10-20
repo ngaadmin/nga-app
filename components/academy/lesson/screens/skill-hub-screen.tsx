@@ -5,7 +5,6 @@ import { useCompletedHubSkills } from "@/components/academy/lesson/lesson-hub-pr
 import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import type { SkillHubScreenConfig } from "@/lib/academy/lessons/types";
-import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { cn } from "@/lib/utils/cn";
 import type { CoreScreenProps } from "./types";
 
@@ -25,10 +24,6 @@ export function SkillHubScreen({
       <div className="mt-4 flex flex-col gap-3">
         {screen.skills.map((skill) => {
           const done = completed.has(skill.hubSkillKey);
-          const shown = presentLightningCard({
-            emoji: skill.emoji ?? "⭐",
-            label: skill.label,
-          });
           return (
             <button
               key={skill.hubSkillKey}
@@ -41,9 +36,9 @@ export function SkillHubScreen({
               data-selection={done ? "selected" : undefined}
               className="lesson-choice-tile flex min-h-[60px] w-full items-center gap-3.5 rounded-full bg-transparent px-3.5 py-2 text-left active:scale-[0.99]"
             >
-              <AnswerEmoji emoji={shown.emoji} />
+              <AnswerEmoji emoji={skill.emoji ?? "⭐"} />
               <span className="min-w-0 flex-1 font-heading text-[20px] font-extrabold leading-snug text-[#031F82]">
-                {shown.label}
+                {skill.label}
               </span>
               {done ? (
                 <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#FFB822] px-2.5 py-1 font-heading text-sm font-extrabold text-[#031F82]">

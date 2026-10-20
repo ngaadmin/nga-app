@@ -63,6 +63,8 @@ The app is designed for children, so we collect as little as we can. In schools,
 ## 9. How long we keep it and how to delete it
 We keep information while the account or class is active. If an account has no sign-in or activity for about 11 months, we email the parent or the teacher first. Accounts that are still inactive at 12 months are deleted. Activity records are deleted with the account. The sign-in log, which includes IP addresses, is kept for 30 days. Our database has no restorable backups, so deleted data cannot be recovered.
 
+Guest activity records are kept on our servers and deleted automatically after 30 days.
+
 - Parents and teachers can view the data we keep, and download it as a data file, in the app. If they cannot use the app, they can email us instead (see section 12).
 - Teachers can delete a single student or a whole class in the app. This removes their logins, progress, and activity records. Teachers can also delete their own account, which removes their classes and the student logins in them.
 - Parents can delete any of their linked child accounts in the app, one at a time. Deleting a linked child asks for the parent PIN.

@@ -11,19 +11,20 @@ import {
 import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonAnswerTick, LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { dragPositionFromPointer } from "@/lib/academy/lessons/drag-position";
 import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 type DragState = {
   coinIndex: number;
-  offsetX: number;
-  offsetY: number;
+  originPointerX: number;
+  originPointerY: number;
+  originLeft: number;
+  originTop: number;
   x: number;
   y: number;
   width: number;
   height: number;
-  originX: number;
-  originY: number;
 };
 
 type DragItemSize = "md" | "lg";
@@ -231,7 +232,7 @@ export function LessonDragToTargetGame({
     event: ReactPointerEvent<HTMLButtonElement>,
     coinIndex: number,
   ) => {
-    if (remaining <= 0 || dragState) return;
+    if (remaining <= 0 || dragState || dragStateRef.current) return;
     event.preventDefault();
     event.stopPropagation();
 
@@ -245,18 +246,27 @@ export function LessonDragToTargetGame({
       captureTargetRef.current = null;
     }
 
+    const origin = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      left: rect.left,
+      top: rect.top,
+    };
     const nextDrag: DragState = {
       coinIndex,
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top,
-      x: rect.left,
-      y: rect.top,
+      originPointerX: origin.pointerX,
+      originPointerY: origin.pointerY,
+      originLeft: origin.left,
+      originTop: origin.top,
+      ...dragPositionFromPointer(origin, {
+        x: event.clientX,
+        y: event.clientY,
+      }),
       width: rect.width,
       height: rect.height,
-      originX: event.clientX,
-      originY: event.clientY,
     };
     dragStateRef.current = nextDrag;
+    setDragState(nextDrag);
   };
 
   const placeOneCoin = useCallback(() => {
@@ -282,8 +292,15 @@ export function LessonDragToTargetGame({
     if (!current) return;
     const moved: DragState = {
       ...current,
-      x: event.clientX - current.offsetX,
-      y: event.clientY - current.offsetY,
+      ...dragPositionFromPointer(
+        {
+          pointerX: current.originPointerX,
+          pointerY: current.originPointerY,
+          left: current.originLeft,
+          top: current.originTop,
+        },
+        { x: event.clientX, y: event.clientY },
+      ),
     };
     dragStateRef.current = moved;
     setDragState(moved);
@@ -299,8 +316,8 @@ export function LessonDragToTargetGame({
     }
 
     const moved = Math.hypot(
-      event.clientX - current.originX,
-      event.clientY - current.originY,
+      event.clientX - current.originPointerX,
+      event.clientY - current.originPointerY,
     );
     if (moved < TAP_SELECT_PX) {
       setSelectedCoinIndex(current.coinIndex);
@@ -498,22 +515,30 @@ export function LessonDragToTargetGame({
 
       {dragState ? (
         <OverlayPortal>
+          {/*
+            Position is inline so a frame class cannot override it. Those
+            frames are `relative`, and Tailwind lets `relative` beat `fixed`.
+            A relative ghost then stretches to the screen and the picture,
+            centered in that strip, jumps to the right.
+          */}
           <div
+            data-drag-ghost=""
             className={cn(
-              "pointer-events-none fixed z-overlay",
+              "pointer-events-none z-overlay",
               showSourceIllustration
-                ? quarterSource
-                  ? cn(BANK_SIZE_CLASS, sourceFrameClass)
-                  : sourceFrameClass
+                ? "flex items-center justify-center"
                 : sourceChipClass,
             )}
             style={{
+              position: "fixed",
               left: dragState.x,
               top: dragState.y,
+              width: dragState.width,
+              height: dragState.height,
             }}
           >
             {showSourceIllustration
-              ? renderSourceIllustration("")
+              ? renderSourceIllustration("", true)
               : itemEmoji}
           </div>
         </OverlayPortal>

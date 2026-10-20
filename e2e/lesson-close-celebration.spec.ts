@@ -32,6 +32,9 @@ async function openLesson(page: Page): Promise<void> {
   );
   await page.goto("/dashboard/academy/lesson/1?recording=1");
   await expect(page).toHaveURL(/\/dashboard\/academy\/lesson\/1/);
+  await page.addStyleTag({
+    content: "nextjs-portal { display: none !important; }",
+  });
 }
 
 async function clickNext(page: Page): Promise<void> {
@@ -94,16 +97,12 @@ async function playToClose(page: Page, perfect: boolean): Promise<void> {
   await expect(page.getByRole("heading", { name: "You did it!" })).toBeVisible();
 }
 
-async function saveVideo(page: Page, filename: string): Promise<void> {
-  const video = page.video();
-  if (!video) return;
-  await video.saveAs(`${ARTIFACTS}/${filename}`);
-}
-
 test("perfect close screen counts up, cashes in, and offers guest sign-up", async ({
   page,
 }) => {
   test.setTimeout(120_000);
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
   await openLesson(page);
   await playToClose(page, true);
 
@@ -124,8 +123,8 @@ test("perfect close screen counts up, cashes in, and offers guest sign-up", asyn
   await page.screenshot({
     path: `${ARTIFACTS}/lesson-close-guest-popup.png`,
   });
-  await page.waitForTimeout(600);
-  await saveVideo(page, "lesson-close-cash-in.webm");
+  await page.waitForTimeout(700);
+  expect(pageErrors, pageErrors.join("\n")).toEqual([]);
 });
 
 test("plain close screen omits the perfect row", async ({ page }) => {
@@ -141,5 +140,4 @@ test("plain close screen omits the perfect row", async ({ page }) => {
   await page.screenshot({
     path: `${ARTIFACTS}/lesson-close-plain.png`,
   });
-  await saveVideo(page, "lesson-close-plain.webm");
 });

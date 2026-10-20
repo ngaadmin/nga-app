@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonCtaClass,
@@ -83,7 +84,7 @@ function renderItemChip(item: SavingsGoalGameItem) {
     <>
       {emoji ? (
         <span className={lessonItemOrbClass} aria-hidden>
-          {emoji}
+          <AnswerEmoji emoji={emoji} />
         </span>
       ) : null}
       <span>

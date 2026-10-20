@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
@@ -177,8 +178,8 @@ export function LessonBudgetSelectGame({
               )}
             >
               {item.emoji ? (
-                <span className="grid w-9 shrink-0 place-items-center text-[30px] leading-none" aria-hidden>
-                  {item.emoji}
+                <span className="grid w-9 shrink-0 place-items-center" aria-hidden>
+                  <AnswerEmoji emoji={item.emoji} />
                 </span>
               ) : null}
               <span className="min-w-0 flex-1 font-sans text-[18px] font-semibold leading-snug">

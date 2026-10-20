@@ -9,6 +9,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick, LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { dragPositionFromPointer } from "@/lib/academy/lessons/drag-position";
@@ -59,8 +60,8 @@ type LessonDragToTargetGameProps = {
 const TAP_SELECT_PX = 10;
 const DRAG_TO_TARGET_MAX_COINS = 3;
 const COIN_CHIP_CLASS =
-  "grid size-11 place-items-center rounded-full bg-[#FFA503] text-xl";
-const SINGLE_SOURCE_CLASS = "grid size-20 place-items-center text-5xl";
+  "grid size-11 place-items-center rounded-full bg-[#FFA503]";
+const SINGLE_SOURCE_CLASS = "grid size-20 place-items-center";
 
 const CHARACTER_EMOJI: Record<string, string> = {
   mia: "👧",
@@ -82,7 +83,7 @@ export function personEmojiForTargetLabel(label: string): string | undefined {
   return undefined;
 }
 const LANDED_COIN_CLASS =
-  "grid size-[22px] place-items-center rounded-full bg-[#FFA503] text-[12px]";
+  "grid size-[22px] place-items-center rounded-full bg-[#FFA503]";
 const DRAG_ILLUSTRATION_FRAME_CLASS =
   "relative flex h-[9rem] shrink-0 items-center justify-center sm:h-[11rem]";
 const DRAG_ILLUSTRATION_IMAGE_CLASS =
@@ -385,7 +386,7 @@ export function LessonDragToTargetGame({
       <div className="pointer-events-none absolute inset-0 flex flex-wrap content-center justify-center gap-0.5 p-[18px]">
         {Array.from({ length: landed }, (_, index) => (
           <span key={index} className={LANDED_COIN_CLASS} aria-hidden>
-            {itemEmoji}
+            <AnswerEmoji emoji={itemEmoji} />
           </span>
         ))}
       </div>
@@ -426,10 +427,10 @@ export function LessonDragToTargetGame({
     return (
       <div className="flex flex-col items-center gap-2">
         <div
-          className="relative grid size-[104px] place-items-center rounded-full bg-[#E8F6FC] text-4xl"
+          className="relative grid size-[104px] place-items-center rounded-full bg-[#E8F6FC]"
           aria-label={targetLabel}
         >
-          {resolvedTargetEmoji}
+          <AnswerEmoji emoji={resolvedTargetEmoji} />
           {renderJarStack()}
         </div>
         {characterEmoji ? (
@@ -470,7 +471,7 @@ export function LessonDragToTargetGame({
           >
             {showSourceIllustration
               ? renderSourceIllustration(sourceIllustrationAlt ?? sourceLabel)
-              : itemEmoji}
+              : <AnswerEmoji emoji={itemEmoji} />}
           </button>
         ))}
       </div>
@@ -539,7 +540,7 @@ export function LessonDragToTargetGame({
           >
             {showSourceIllustration
               ? renderSourceIllustration("", true)
-              : itemEmoji}
+              : <AnswerEmoji emoji={itemEmoji} />}
           </div>
         </OverlayPortal>
       ) : null}

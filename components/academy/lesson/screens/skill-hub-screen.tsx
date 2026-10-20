@@ -1,5 +1,6 @@
 "use client";
 
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { useCompletedHubSkills } from "@/components/academy/lesson/lesson-hub-progress";
 import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
@@ -35,9 +36,7 @@ export function SkillHubScreen({
               data-selection={done ? "selected" : undefined}
               className="lesson-choice-tile flex min-h-[60px] w-full items-center gap-3.5 rounded-full bg-transparent px-3.5 py-2 text-left active:scale-[0.99]"
             >
-              <span className="text-[2.4rem] leading-none" aria-hidden>
-                {skill.emoji ?? "⭐"}
-              </span>
+              <AnswerEmoji emoji={skill.emoji ?? "⭐"} />
               <span className="min-w-0 flex-1 font-heading text-[20px] font-extrabold leading-snug text-[#031F82]">
                 {skill.label}
               </span>

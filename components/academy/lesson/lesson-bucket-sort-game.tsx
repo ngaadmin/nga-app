@@ -16,10 +16,10 @@ import {
   lessonSortBucketActiveClass,
   lessonSortStatementCardClass,
   lessonSortStatementPlacedClass,
-  lessonSortItemEmojiClass,
   lessonSortPoolSlotPlaceholderClass,
   lessonGameHintClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   LessonAnswerTick,
@@ -498,11 +498,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           />
         ) : (
           <span className="flex w-full items-center justify-center gap-2 text-center">
-            {item.emoji ? (
-              <span className={lessonSortItemEmojiClass} aria-hidden>
-                {item.emoji}
-              </span>
-            ) : null}
+            {item.emoji ? <AnswerEmoji emoji={item.emoji} /> : null}
             <span className="leading-snug">{item.label}</span>
             {item.price !== undefined ? (
               <span className="shrink-0 font-heading font-extrabold text-[#0CC1E0]">
@@ -542,11 +538,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         ) : (
           <span className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
-              {item.emoji ? (
-                <span className={lessonSortItemEmojiClass} aria-hidden>
-                  {item.emoji}
-                </span>
-              ) : null}
+              {item.emoji ? <AnswerEmoji emoji={item.emoji} /> : null}
               <span className="min-w-0 leading-snug">{item.label}</span>
             </span>
             {item.price !== undefined ? (

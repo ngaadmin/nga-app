@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   LessonAnswerTick,
@@ -158,7 +159,10 @@ export function AllocationSliderScreen({
 
         <div className="mb-2.5 flex items-start justify-between gap-3">
           <div className="text-left">
-            <p className="font-sans text-[15px] font-semibold text-[#031F82]/80">🐷 Save</p>
+            <p className="flex items-center gap-1.5 font-sans text-[15px] font-semibold text-[#031F82]/80">
+              <AnswerEmoji emoji="🐷" />
+              Save
+            </p>
             <div className="mt-1 flex items-center gap-2">
               <p className="font-heading text-[40px] font-extrabold leading-[1.05] tabular-nums text-[#031F82]">
                 {dollar(reservedAmount)}
@@ -167,7 +171,10 @@ export function AllocationSliderScreen({
             </div>
           </div>
           <div className="text-right">
-            <p className="font-sans text-[15px] font-semibold text-[#031F82]/80">🛍️ Spend</p>
+            <p className="flex items-center justify-end gap-1.5 font-sans text-[15px] font-semibold text-[#031F82]/80">
+              <AnswerEmoji emoji="🛍️" />
+              Spend
+            </p>
             <p className="mt-1 font-heading text-[40px] font-extrabold leading-[1.05] tabular-nums text-[#031F82]">
               {dollar(spendableToday)}
             </p>

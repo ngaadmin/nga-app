@@ -2,6 +2,7 @@
 
 import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
 import { forwardRef, useEffect } from "react";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import { splitPromptParagraphs } from "@/lib/academy/lessons/prompt-paragraphs";
 import {
@@ -21,7 +22,6 @@ import {
   lessonImagePlaceholderClass,
   lessonImagePlaceholderCompactClass,
   lessonInlineErrorClass,
-  lessonIconEmojiClass,
   lessonIconLabelClass,
   lessonItemOrbClass,
   lessonIconOptionStackClass,
@@ -33,7 +33,6 @@ import {
   lessonSortBucketWellClass,
   lessonSortPoolStaticClass,
   lessonSortStatementCardClass,
-  lessonSortStatementEmojiClass,
   lessonSortStatementListClass,
   lessonSortStatementPlacedClass,
   lessonPricedItemRowClass,
@@ -65,7 +64,6 @@ import {
   lessonSpentTotalAmountClass,
   lessonSpentTotalCaptionClass,
   lessonSuccessMessageClass,
-  lessonSortItemEmojiClass,
   lessonWrongSelectionChipClass,
   type LessonChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -489,7 +487,7 @@ function SortItemEmoji({ emoji }: { emoji?: string }) {
   if (!glyph) return null;
   return (
     <span className={lessonItemOrbClass} aria-hidden>
-      <span className="text-2xl leading-none">{glyph}</span>
+      <AnswerEmoji emoji={glyph} />
     </span>
   );
 }
@@ -572,11 +570,7 @@ export function LessonPricedSortItemContent({
 }: LessonPricedSortItemContentProps) {
   return (
     <span className={lessonPricedItemRowClass}>
-      {emoji ? (
-        <span className={lessonSortItemEmojiClass} aria-hidden>
-          {emoji}
-        </span>
-      ) : null}
+      {emoji ? <AnswerEmoji emoji={emoji} /> : null}
       <span className={lessonPricedItemTextClass}>
         <span className="min-w-0 leading-snug">{label}</span>
         {price !== undefined ? (
@@ -896,14 +890,7 @@ export const LessonIconOption = forwardRef<
       {glyph}
     </span>
   ) : showEmoji ? (
-    <span
-      className={cn(
-        isCompact ? lessonIconEmojiClass : "text-[32px] leading-none",
-      )}
-      aria-hidden
-    >
-      {safeEmoji}
-    </span>
+    <AnswerEmoji emoji={safeEmoji} />
   ) : display === "label" ? (
     <span className={cn(lessonIconLabelClass, "px-2")}>
       {label}

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import {
   lessonTileSelection,
@@ -64,11 +65,8 @@ export function LessonChoiceButton({
       )}
     >
       {emoji ? (
-        <span
-          className="grid w-9 shrink-0 place-items-center text-[30px] leading-none"
-          aria-hidden
-        >
-          {emoji}
+        <span className="grid w-9 shrink-0 place-items-center" aria-hidden>
+          <AnswerEmoji emoji={emoji} />
         </span>
       ) : null}
       <span className="min-w-0 flex-1">{children}</span>

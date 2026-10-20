@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   LessonAnswerTick,
@@ -13,11 +14,24 @@ import {
   lessonPromptClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
+import { peelEdgeEmojis } from "@/lib/academy/lessons/peel-leading-emoji";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
 const DEFAULT_HOLD_MS = 2000;
+
+function HoldLabel({ text }: { text: string }) {
+  const parts = peelEdgeEmojis(text);
+  if (!parts.leading && !parts.trailing) return text;
+  return (
+    <>
+      {parts.leading ? <AnswerEmoji emoji={parts.leading} /> : null}
+      {parts.label ? <span>{parts.label}</span> : null}
+      {parts.trailing ? <AnswerEmoji emoji={parts.trailing} /> : null}
+    </>
+  );
+}
 
 export function HoldToFillScreen({
   screen,
@@ -168,7 +182,7 @@ export function HoldToFillScreen({
           aria-hidden
         />
         <span className="pointer-events-none relative z-raised inline-flex items-center gap-2">
-          {complete ? screen.frozenLabel : screen.holdLabel}
+          <HoldLabel text={complete ? screen.frozenLabel : screen.holdLabel} />
           {complete ? <LessonAnswerTick /> : null}
         </span>
       </button>

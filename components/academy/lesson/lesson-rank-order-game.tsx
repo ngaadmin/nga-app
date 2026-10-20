@@ -14,6 +14,7 @@ import {
   lessonRankOrderCardClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
@@ -308,9 +309,7 @@ export function LessonRankOrderGame({
               )}
               style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <span className="text-center text-[1.35rem] leading-none" aria-hidden>
-                {item.emoji ?? "📌"}
-              </span>
+              <AnswerEmoji emoji={item.emoji ?? "📌"} className="justify-self-center" />
               <span className="min-w-0 whitespace-normal break-normal leading-snug">
                 {item.label}
               </span>
@@ -340,9 +339,7 @@ export function LessonRankOrderGame({
               width: dragGhost.width,
             }}
           >
-            <span className="text-center text-[1.35rem] leading-none" aria-hidden>
-              {dragGhost.emoji}
-            </span>
+            <AnswerEmoji emoji={dragGhost.emoji} className="justify-self-center" />
             <span className="min-w-0 whitespace-normal break-normal leading-snug">
               {dragGhost.label}
             </span>

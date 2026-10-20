@@ -1112,6 +1112,57 @@ CORRECT: bus,dog lead`,
     }
   });
 
+  it("maps lesson 3 screen 5 as emoji multiple-choice and keeps the wording", () => {
+    const tracks = [
+      {
+        cohort: "explorer" as const,
+        prompt:
+          "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
+        options: [
+          "Buy the toy and save $10 more next week.",
+          "Buy the headphones to fix what she broke first.",
+          "Buy the toy and hope the headphones don't cost $40.",
+        ],
+      },
+      {
+        cohort: "pathfinder" as const,
+        prompt:
+          "Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Holly do?",
+        options: [
+          "Buy the craft bundle and save $10 more next week.",
+          "Buy the headphones to fix what she broke first.",
+          "Buy the craft bundle and hope the headphones don't cost $40.",
+        ],
+      },
+      {
+        cohort: "maverick" as const,
+        prompt:
+          "Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: \"I'll spend this $20 now, and I'll just save more next week to buy the headphones.\" What should Aiden do?",
+        options: [
+          "Buy the game and save $20 more next week.",
+          "Buy the headphones to fix what he broke first.",
+          "Buy the game and hope the headphones don't cost $40.",
+        ],
+      },
+    ];
+
+    for (const track of tracks) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), track.cohort, 3);
+      const screen = lesson.screens.find((item) => item.sourceLabel === "5");
+      expect(screen?.type, track.cohort).toBe("multiple-choice");
+      if (screen?.type !== "multiple-choice") continue;
+      expect(screen.prompt, track.cohort).toBe(track.prompt);
+      expect(screen.wrongError, track.cohort).toBe(
+        "That's a trap! Stick to the plan to avoid stress later.",
+      );
+      expect(screen.options, track.cohort).toEqual([
+        { label: track.options[0], isCorrect: false, emoji: "🛍️" },
+        { label: track.options[1], isCorrect: true, emoji: "🎧" },
+        { label: track.options[2], isCorrect: false, emoji: "🤞" },
+      ]);
+    }
+  });
+
   it("maps lesson 3 spent totals and the three-blank sentence", () => {
     const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), "explorer", 3);
     const spent = lesson.screens[1];

@@ -42,6 +42,8 @@ import {
   verifyParentPin,
 } from "@/lib/dashboard/parent-pin";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
+import { GuestDeviceCard } from "@/components/privacy/guest-device-card";
 import { DASHBOARD_CLASS_PATH } from "@/lib/school/paths";
 import { cn } from "@/lib/utils/cn";
 
@@ -180,6 +182,7 @@ type ProfileHeaderProps = {
   joinDateLabel: string;
   joinDate: string | null;
   isLoading: boolean;
+  isGuest?: boolean;
 };
 
 function ProfileHeader({
@@ -188,6 +191,7 @@ function ProfileHeader({
   joinDateLabel,
   joinDate,
   isLoading,
+  isGuest = false,
 }: ProfileHeaderProps) {
   const initial = username.trim().charAt(0).toUpperCase() || "?";
   const showEmail =
@@ -212,6 +216,7 @@ function ProfileHeader({
           </p>
         ) : null}
         <p className="mt-1 font-sans text-[14px] text-[#1E3A5F]/75">
+          {isGuest ? "Guest · " : ""}
           {joinDateLabel} {formatJoinDate(joinDate)}
         </p>
       </div>
@@ -642,7 +647,11 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
 
 export function HomeDashboard() {
   const router = useRouter();
-  const { username, email, joinDate, isLoading, isTeacher } = useDashboardUser();
+  const { username, email, joinDate, isLoading, isTeacher, isGuestMode } = useDashboardUser();
+  const session = useUserSession();
+  const isParent = session?.accountRole === "parent_master";
+  const isChildAccount =
+    session?.accessMode === "registered" && session.accountRole === "child" && !isTeacher;
   const copy = copyMatrix.dashboard.settings;
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
@@ -682,6 +691,7 @@ export function HomeDashboard() {
           joinDateLabel={copy.profile.joinDateLabel}
           joinDate={joinDate}
           isLoading={isLoading}
+          isGuest={isGuestMode}
         />
 
         <nav
@@ -712,6 +722,27 @@ export function HomeDashboard() {
             onClick={() => router.push("/dashboard/settings/subscription")}
           />
           <SettingsCurrencyRow />
+          {isParent ? (
+            <SettingsRow
+              icon={CommunityIcon}
+              label="My child's data"
+              onClick={() => router.push("/dashboard/settings/child-data")}
+            />
+          ) : null}
+          {isParent || isTeacher ? (
+            <SettingsRow
+              icon={CommunityIcon}
+              label="My account"
+              onClick={() => router.push("/dashboard/settings/my-account")}
+            />
+          ) : null}
+          {isChildAccount ? (
+            <SettingsRow
+              icon={CommunityIcon}
+              label="My info"
+              onClick={() => router.push("/dashboard/settings/my-info")}
+            />
+          ) : null}
           <SettingsRow
             icon={LogOutIcon}
             label={isLoggingOut ? "Signing out…" : copy.account.logOut}
@@ -722,6 +753,7 @@ export function HomeDashboard() {
           />
         </nav>
 
+        {isGuestMode ? <GuestDeviceCard /> : null}
         <ParentHubSection />
         <AppFooter className="print:hidden" />
       </div>

@@ -63,16 +63,18 @@ The app is designed for children, so we collect as little as we can. In schools,
 ## 9. How long we keep it and how to delete it
 We keep information while the account or class is active. If an account has no sign-in or activity for about 11 months, we email the parent or the teacher first. Accounts that are still inactive at 12 months are deleted. Activity records are deleted with the account. The sign-in log, which includes IP addresses, is kept for 30 days. Our database has no restorable backups, so deleted data cannot be recovered.
 
-- Teachers can delete a single student or a whole class in the app. This removes their logins, progress, and activity records.
+- Parents and teachers can view the data we keep, and download it as a data file, in the app. If they cannot use the app, they can email us instead (see section 12).
+- Teachers can delete a single student or a whole class in the app. This removes their logins, progress, and activity records. Teachers can also delete their own account, which removes their classes and the student logins in them.
 - Parents can delete any of their linked child accounts in the app, one at a time. Deleting a linked child asks for the parent PIN.
 - Parents can delete their own account, which also deletes all linked child accounts. This also asks for the parent PIN.
 - For any other deletion, email us (see section 12).
+- The community leaderboard is off until a parent switches it on for their child, or a teacher switches it on for their class.
 
 ## 10. Security
 Data is sent over encrypted connections (HTTPS), class login passwords are stored encrypted, access is limited by account role, and only authorised staff can reach stored data. Password reset events record the user ID and role, never the password. If a data breach is likely to cause serious harm, we will notify affected people and the OAIC under the Notifiable Data Breaches scheme.
 
 ## 11. Access, correction and complaints
-You can ask to see or correct the personal information we hold about you or your child. Email us, and we'll respond within 30 days. If you have a privacy complaint, email us first and we will reply within 30 days. If you're not satisfied, you can complain to the Office of the Australian Information Commissioner (OAIC) at www.oaic.gov.au or on 1300 363 992.
+Parents and teachers can see the personal information we hold, download it as a data file, and delete it in the app. You can also email us to see or correct that information, and we'll respond within 30 days. If you have a privacy complaint, email us first and we will reply within 30 days. If you're not satisfied, you can complain to the Office of the Australian Information Commissioner (OAIC) at www.oaic.gov.au or on 1300 363 992.
 
 ## 12. Contact us
 If you have any questions about this policy or your information, please contact our Privacy Officer at cath.drdw@nextgenachievers.com.

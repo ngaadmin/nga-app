@@ -322,7 +322,7 @@ test("teacher class lists stay collapsed until opened and still print", async ({
   const xpChevron = await hideUsers.locator("svg").boundingBox();
   expect(xpChevron?.width ?? 0).toBeGreaterThan(12);
   expect(xpChevron?.height ?? 0).toBeGreaterThan(12);
-  await expect(page.getByRole("button", { name: "Remove amber2" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View amber2" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Allocate users" })).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/class-final-390-users.png",

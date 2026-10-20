@@ -43,6 +43,15 @@ describe("privacy policy source", () => {
     expect(text).toContain(
       "Our database has no restorable backups, so deleted data cannot be recovered.",
     );
+    expect(text).toContain(
+      "Parents and teachers can view the data we keep, and download it as a data file, in the app.",
+    );
+    expect(text).toContain(
+      "The community leaderboard is off until a parent switches it on for their child, or a teacher switches it on for their class.",
+    );
+    expect(text).toContain(
+      "Parents and teachers can see the personal information we hold, download it as a data file, and delete it in the app.",
+    );
     expect(text).toContain("cath.drdw@nextgenachievers.com");
     expect(collectLinks(blocks)).toEqual([]);
   });

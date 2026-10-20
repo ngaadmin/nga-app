@@ -30,7 +30,7 @@ import { zLayerStyle } from "@/lib/ui/layers";
  * place on every main dashboard screen.
  */
 export function DashboardStatusHeader() {
-  const { username } = useDashboardUser();
+  const { username, isTeacher } = useDashboardUser();
   const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
   const xpExchange = useXpExchangeGate();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
@@ -99,6 +99,7 @@ export function DashboardStatusHeader() {
           xp={spendableXp}
           dayStreak={dayStreak}
           skillsHasAttention={skillsHasAttention}
+          showCoins={!isTeacher}
           onSkillsClick={openSkills}
           onStreakClick={openStreaks}
           onXpClick={xpExchange.ready && !xpExchange.blocked ? openXpExchange : undefined}

@@ -42,7 +42,7 @@ const DELTA4: LearnerDataView = {
   ],
   goals: [
     { name: "New bike", emoji: "🚲", balance: 40, target: 120 },
-    { name: "Gift for Nan", emoji: "🎁", balance: 15, target: 25 },
+    { name: "Gift for Nan", emoji: "🎂", balance: 15, target: 25 },
   ],
   activity: [
     { emoji: "🎓", title: "Finished a lesson", detail: "Stop & Think", when: "Today" },

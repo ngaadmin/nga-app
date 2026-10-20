@@ -1,7 +1,16 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { DownloadIcon, LockIcon, TrashIcon } from "@/lib/dashboard/icons";
+import {
+  BookOpenIcon,
+  DownloadIcon,
+  FlameIcon,
+  GoldCoinIcon,
+  LockIcon,
+  TrashIcon,
+  XpStarIcon,
+} from "@/lib/dashboard/icons";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
@@ -122,8 +131,15 @@ export function LearnerDataScreen({
           Progress
         </h2>
         <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-          <StatTile value={String(view.lessonsDone)} label="Lessons done" note="Finished in the Academy" />
           <StatTile
+            icon={<BookOpenIcon className="size-4" />}
+            value={String(view.lessonsDone)}
+            label="Lessons done"
+            note="Finished in the Academy"
+          />
+          <StatTile
+            icon={<FlameIcon className="size-4" />}
+            iconClass="bg-[#FFA503] text-[#031F82]"
             value={String(view.dayStreak)}
             unit="days"
             label="Day streak"
@@ -131,11 +147,14 @@ export function LearnerDataScreen({
           />
         </div>
         <WideStat
+          icon={<GoldCoinIcon className="size-5" />}
           label="Coins balance"
           note="Ready to cash in."
           value={`${view.coins.toLocaleString()} coins`}
         />
         <WideStat
+          icon={<XpStarIcon className="size-5 text-white" />}
+          iconClass="bg-[#0CC1E0] text-white"
           label="Lifetime XP"
           note="A separate total. Cashing in never lowers it."
           value={`${view.lifetimeXp.toLocaleString()} XP`}
@@ -273,11 +292,15 @@ export function LearnerDataScreen({
 }
 
 function StatTile({
+  icon,
+  iconClass = "bg-[#031F82] text-white",
   value,
   unit,
   label,
   note,
 }: {
+  icon: ReactNode;
+  iconClass?: string;
   value: string;
   unit?: string;
   label: string;
@@ -285,10 +308,15 @@ function StatTile({
 }) {
   return (
     <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF] px-3 py-2.5">
-      <p className="font-heading text-[22px] font-extrabold leading-none tabular-nums text-[#031F82]">
-        {value}
-        {unit ? <span className="font-sans text-[13px] font-semibold text-[#4A5675]"> {unit}</span> : null}
-      </p>
+      <div className="flex items-center gap-2">
+        <span className={`flex size-7 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
+          {icon}
+        </span>
+        <p className="font-heading text-[22px] font-extrabold leading-none tabular-nums text-[#031F82]">
+          {value}
+          {unit ? <span className="font-sans text-[13px] font-semibold text-[#4A5675]"> {unit}</span> : null}
+        </p>
+      </div>
       <p className="font-heading text-[13px] font-bold leading-tight text-[#031F82]">{label}</p>
       <p className="font-sans text-xs font-medium text-[#4A5675]">{note}</p>
     </div>
@@ -296,11 +324,15 @@ function StatTile({
 }
 
 function WideStat({
+  icon,
+  iconClass = "bg-[#FFA503] text-[#031F82]",
   label,
   note,
   value,
   accent = false,
 }: {
+  icon: ReactNode;
+  iconClass?: string;
   label: string;
   note: string;
   value: string;
@@ -312,6 +344,9 @@ function WideStat({
         accent ? "border-[#0CC1E0]/35 bg-[#F2FBFD]" : "border-[#BDE9FB]/70 bg-[#F7FBFF]"
       }`}
     >
+      <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
+        {icon}
+      </span>
       <div className="min-w-0 flex-1">
         <p className="font-heading text-[13px] font-bold text-[#031F82]">{label}</p>
         <p className="font-sans text-xs font-medium text-[#4A5675]">{note}</p>

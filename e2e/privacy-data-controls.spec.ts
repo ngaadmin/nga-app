@@ -32,7 +32,7 @@ test("parent PIN opens the child record, download strips secrets, delete lists w
 
   await page.getByLabel("Parent PIN").fill("0000");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByRole("alert")).toContainText("Wrong PIN");
+  await expect(page.getByText("Wrong PIN - nice try.")).toBeVisible();
 
   await page.getByLabel("Parent PIN").fill("2580");
   await page.getByRole("button", { name: "Continue" }).click();
@@ -60,8 +60,8 @@ test("parent PIN opens the child record, download strips secrets, delete lists w
   await page.getByRole("button", { name: "Delete account" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByRole("heading", { name: "Delete delta4's account?" })).toBeVisible();
-  await expect(dialog.getByText("Profile")).toBeVisible();
-  await expect(dialog.getByText("Lifetime XP")).toBeVisible();
+  await expect(dialog.getByText("Profile", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Lifetime XP", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Vault jars and goals")).toBeVisible();
   await expect(dialog.getByText("The recent activity history")).toBeVisible();
   const confirm = dialog.getByRole("button", { name: "Delete delta4's account" });
@@ -100,10 +100,10 @@ test("guest clear removes device progress and keeps the guest session", async ({
   await page.getByRole("button", { name: "Clear this device's progress" }).click();
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByRole("heading", { name: "Clear this device's progress?" })).toBeVisible();
-  await expect(dialog.getByText("Lessons")).toBeVisible();
-  await expect(dialog.getByText("Coins")).toBeVisible();
-  await expect(dialog.getByText("Lifetime XP")).toBeVisible();
-  await expect(dialog.getByText("Medals")).toBeVisible();
+  await expect(dialog.getByText("Lessons", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Coins", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Lifetime XP", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Medals", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Jars, amounts and savings goals")).toBeVisible();
   const confirm = dialog.getByRole("button", { name: "Clear progress" });
   await expect(confirm).toHaveCSS("background-color", "rgb(198, 40, 40)");

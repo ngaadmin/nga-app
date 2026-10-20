@@ -106,9 +106,8 @@ test.describe("savings-goal drop box", () => {
         fontSize: "",
       };
     });
-    expect(zoneStyle.borderTopStyle).toBe("dashed");
-    expect(parseFloat(zoneStyle.borderTopWidth)).toBeGreaterThanOrEqual(2);
-    expect(zoneStyle.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(parseFloat(zoneStyle.borderTopWidth)).toBe(0);
+    expect(zoneStyle.backgroundColor).toBe("rgb(248, 252, 255)");
     expect(zoneStyle.height).toBeGreaterThanOrEqual(96);
 
     const headingStyle = await heading.evaluate((el) => {
@@ -142,7 +141,7 @@ test.describe("savings-goal drop box", () => {
       steps: 12,
     });
     await expect(zone).toHaveAttribute("data-drop-active", "true");
-    await expect(zone).toHaveCSS("border-top-style", "solid");
+    await expect(zone).toHaveCSS("border-top-width", "0px");
     await expect(zone).toHaveCSS("background-color", "rgb(232, 246, 252)");
     await page.mouse.up();
 

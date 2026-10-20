@@ -91,7 +91,8 @@ export function AcademyLessonShell({
         className={cn(
           "flex shrink-0 items-center gap-2.5",
           matchChrome ? "h-12 px-5" : "pb-1 pt-3.5",
-          !matchChrome && lessonScreenInlinePaddingClass,
+          !matchChrome &&
+            (skySurface ? "lesson-screen-inline-24" : lessonScreenInlinePaddingClass),
         )}
       >
         <Link

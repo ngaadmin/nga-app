@@ -86,7 +86,7 @@ describe("lesson coin commit", () => {
     ).toHaveLength(1);
   });
 
-  it("does not put coins back after a spend", () => {
+  it("keeps a Vault spend and restores only the coins the ledger still holds", () => {
     const earned = applyLessonCoinAward(
       freshWallet(),
       lessonAwardLedgerEvents(1, lessonCoinAward({ perfect: false, bonusCoins: 0 })),
@@ -100,15 +100,35 @@ describe("lesson coin commit", () => {
     });
     expect(spent?.totalPoints).toBe(40);
 
+    const claimedAgain = applyLessonCoinAward(
+      spent!,
+      lessonAwardLedgerEvents(1, lessonCoinAward({ perfect: false, bonusCoins: 0 })),
+      AT,
+    );
+    expect(claimedAgain.awarded).toBe(0);
+    expect(claimedAgain.wallet.totalPoints).toBe(40);
+
     const zeroed: PersistedDashboardWallet = { ...spent!, totalPoints: 0 };
-    const again = applyLessonCoinAward(
+    const repaired = applyLessonCoinAward(
       zeroed,
       lessonAwardLedgerEvents(1, lessonCoinAward({ perfect: false, bonusCoins: 0 })),
       AT,
     );
+    expect(repaired.awarded).toBe(0);
+    expect(repaired.wallet.totalPoints).toBe(40);
 
-    expect(again.awarded).toBe(0);
-    expect(again.wallet.totalPoints).toBe(0);
+    const spentAll = appendWalletLedgerEvent(earned, {
+      id: "cash-all",
+      kind: "spend",
+      points: 100,
+      at: AT,
+    });
+    const afterFullSpend = applyLessonCoinAward(
+      spentAll!,
+      lessonAwardLedgerEvents(1, lessonCoinAward({ perfect: false, bonusCoins: 0 })),
+      AT,
+    );
+    expect(afterFullSpend.wallet.totalPoints).toBe(0);
   });
 
   it("decides when cash-in should offer a retry", () => {

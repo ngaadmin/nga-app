@@ -13,26 +13,26 @@ type AwardInput = {
 };
 
 /**
- * When this lesson's coins are in the ledger but missing from the spendable
- * total, put them back. A recorded spend is left alone so a Vault cash-in
- * is not undone. Repair does not add a second payout.
+ * When earned coins are in the ledger but missing from the spendable total,
+ * put the missing amount back. Vault spends stay spent: the floor is
+ * ledger earns minus ledger spends, not the gap implied by a wiped total.
+ * Repair does not add a second payout.
  */
 export function repairUnspentEarnBalance(
   wallet: PersistedDashboardWallet,
 ): PersistedDashboardWallet {
   const ledger = wallet.ledger ?? [];
   if (ledger.length === 0) return wallet;
-  if (ledger.some((event) => event.kind === "spend")) return wallet;
 
-  const earned = ledger.reduce(
-    (sum, event) => sum + (event.kind === "earn" ? event.points : 0),
-    0,
-  );
+  let earned = 0;
+  let spent = 0;
+  for (const event of ledger) {
+    if (event.kind === "earn") earned += event.points;
+    else if (event.kind === "spend") spent += event.points;
+  }
+
   const lifetimePointsEarned = Math.max(wallet.lifetimePointsEarned, earned);
-  const totalPoints = Math.max(
-    wallet.totalPoints,
-    Math.min(lifetimePointsEarned, earned),
-  );
+  const totalPoints = Math.max(wallet.totalPoints, Math.max(0, earned - spent));
   if (
     lifetimePointsEarned === wallet.lifetimePointsEarned &&
     totalPoints === wallet.totalPoints

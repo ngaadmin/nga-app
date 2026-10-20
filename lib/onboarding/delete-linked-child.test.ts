@@ -38,6 +38,10 @@ function harness(
     calls.push(`consent:${id}`);
     return { ok: true as const };
   });
+  const usage = vi.fn(async (username: string) => {
+    calls.push(`usage:${username}`);
+    return { ok: true as const };
+  });
   const auth = vi.fn(async (id: string) => {
     calls.push(`auth:${id}`);
     return { ok: true as const };
@@ -68,6 +72,7 @@ function harness(
     findLinkedChild,
     deleteLearnerProgress: progress,
     deleteConsentRequests: consent,
+    deleteUsageEvents: usage,
     deleteAuthUser: auth,
     deleteParentChildLink: link,
     deleteProfile: profile,
@@ -75,7 +80,7 @@ function harness(
     ...overrides,
   };
 
-  return { admin, calls, findLinkedChild, progress, consent, auth, link, profile, confirm };
+  return { admin, calls, findLinkedChild, progress, consent, usage, auth, link, profile, confirm };
 }
 
 describe("deleteLinkedChildAccount", () => {
@@ -155,6 +160,7 @@ describe("deleteLinkedChildAccount", () => {
     expect(calls).toEqual([
       `progress:${childLinked}`,
       `consent:${childLinked}`,
+      "usage:River",
       `auth:${childLinked}`,
       `link:${parentA}:${childLinked}`,
       `profile:${childLinked}`,
@@ -165,7 +171,7 @@ describe("deleteLinkedChildAccount", () => {
   });
 
   it("stops before the login delete when progress deletion fails", async () => {
-    const { admin, auth, link } = harness({
+    const { admin, auth, link, usage } = harness({
       deleteLearnerProgress: vi.fn(async () => ({ ok: false as const, error: "db" })),
     });
 
@@ -176,8 +182,20 @@ describe("deleteLinkedChildAccount", () => {
       status: 500,
       error: "We could not delete this learner. Try again.",
     });
+    expect(usage).not.toHaveBeenCalled();
     expect(auth).not.toHaveBeenCalled();
     expect(link).not.toHaveBeenCalled();
+  });
+
+  it("does not free the username when activity deletion fails", async () => {
+    const { admin, auth } = harness({
+      deleteUsageEvents: vi.fn(async () => ({ ok: false as const, error: "db" })),
+    });
+
+    const result = await deleteLinkedChildAccount(admin, parentA, childLinked);
+
+    expect(result.ok).toBe(false);
+    expect(auth).not.toHaveBeenCalled();
   });
 
   it("keeps the parent_child row when the Auth delete fails", async () => {

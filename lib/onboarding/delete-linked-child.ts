@@ -38,6 +38,7 @@ export type DeleteLinkedChildAdmin = {
   >;
   deleteLearnerProgress(childId: string): Promise<DeleteLinkedChildStep>;
   deleteConsentRequests(childId: string): Promise<DeleteLinkedChildStep>;
+  deleteUsageEvents(username: string): Promise<DeleteLinkedChildStep>;
   deleteAuthUser(childId: string): Promise<DeleteLinkedChildStep>;
   deleteParentChildLink(
     parentId: string,
@@ -73,10 +74,12 @@ function failed(): DeleteLinkedChildResult {
  * Hard-deletes one linked child.
  *
  * learner_progress and consent_requests go first so saved play and invite
- * tokens are gone even if a later step fails. The Auth user is deleted
- * while the parent_child row still exists, so a failed Auth delete can be
- * retried by the same parent. profiles cascade from auth.users; the
- * parent_child and profile deletes after that clear anything left behind.
+ * tokens are gone even if a later step fails. Activity rows for the username
+ * are deleted before the Auth user, while the username is still reserved, so
+ * a later signup cannot inherit them. The Auth user is deleted while the
+ * parent_child row still exists, so a failed Auth delete can be retried by
+ * the same parent. profiles cascade from auth.users; the parent_child and
+ * profile deletes after that clear anything left behind.
  */
 export async function deleteLinkedChildAccount(
   admin: DeleteLinkedChildAdmin,
@@ -106,6 +109,11 @@ export async function deleteLinkedChildAccount(
 
   const consent = await admin.deleteConsentRequests(child);
   if (!consent.ok) return failed();
+
+  if (username) {
+    const usage = await admin.deleteUsageEvents(username);
+    if (!usage.ok) return failed();
+  }
 
   const auth = await admin.deleteAuthUser(child);
   if (!auth.ok) return failed();

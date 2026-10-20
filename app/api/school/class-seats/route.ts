@@ -5,6 +5,7 @@ import {
   type OwnedClassSeat,
   type RemoveClassSeatsTarget,
 } from "@/lib/school/remove-class-seats";
+import { deleteUsageEventsForUsername } from "@/lib/privacy/delete-usage-events";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -148,6 +149,14 @@ export async function POST(request: Request) {
         if (error) {
           console.error("[class-seats] progress", { message: error.message });
           return { ok: false, error: error.message };
+        }
+        return { ok: true };
+      },
+      async deleteUsageEvents(username) {
+        const usage = await deleteUsageEventsForUsername(admin, username);
+        if (!usage.ok) {
+          console.error("[class-seats] usage", { message: usage.error });
+          return usage;
         }
         return { ok: true };
       },

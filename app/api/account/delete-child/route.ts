@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
+import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { authorizeBrowserMutation } from "@/lib/auth/request-guard";
+import {
+  assessParentPin,
+  PARENT_PIN_GATE_COPY,
+} from "@/lib/dashboard/parent-pin-gate";
 import {
   deleteLinkedChildAccount,
   parseLinkedChildId,
@@ -8,6 +13,7 @@ import {
   type LinkedChildTarget,
 } from "@/lib/onboarding/delete-linked-child";
 import { notifyAccountDeletedChild } from "@/lib/onboarding/issue-account-deleted-email";
+import { deleteUsageEventsForUsername } from "@/lib/privacy/delete-usage-events";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,6 +22,7 @@ export const dynamic = "force-dynamic";
 
 type Body = {
   childId?: unknown;
+  parentPin?: unknown;
 };
 
 type ProfileRoleRow = {
@@ -90,6 +97,42 @@ export async function POST(request: Request) {
     );
   }
 
+  const { data: pinRow, error: pinError } = await db
+    .from("profiles")
+    .select("account_role, parent_pin_hash")
+    .eq("id", parentId)
+    .maybeSingle();
+  if (pinError) {
+    return NextResponse.json(
+      { success: false, error: DELETE_LINKED_CHILD_COPY.failed },
+      { status: 500 },
+    );
+  }
+  const pinProfile = pinRow as {
+    account_role?: string | null;
+    parent_pin_hash?: string | null;
+  } | null;
+  if (pinProfile?.account_role !== "parent_master") {
+    return NextResponse.json(
+      { success: false, error: DELETE_LINKED_CHILD_COPY.notParent },
+      { status: 403 },
+    );
+  }
+  const storedPin = pinProfile.parent_pin_hash?.trim() ?? "";
+  if (storedPin) {
+    const pinLimit = consumeRateLimit(`parent-pin:${parentId}`, 8, 15 * 60 * 1000);
+    if (!pinLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: PARENT_PIN_GATE_COPY.limited },
+        { status: 429 },
+      );
+    }
+  }
+  const pin = assessParentPin(body.parentPin, pinProfile.parent_pin_hash);
+  if (!pin.ok) {
+    return NextResponse.json({ success: false, error: pin.error }, { status: 403 });
+  }
+
   const admin: DeleteLinkedChildAdmin = {
     async loadCallerRole(callerId) {
       const { data, error } = await db
@@ -144,6 +187,11 @@ export async function POST(request: Request) {
         .delete()
         .eq("child_id", targetId);
       if (error) return stepError(error.message);
+      return { ok: true };
+    },
+    async deleteUsageEvents(username) {
+      const usage = await deleteUsageEventsForUsername(db, username);
+      if (!usage.ok) return stepError(usage.error);
       return { ok: true };
     },
     async deleteAuthUser(targetId) {

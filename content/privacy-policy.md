@@ -1,6 +1,6 @@
 # NextGenAchievers App Privacy Policy
 
-**Last updated: 15 October 2026**
+**Last updated: 20 October 2026**
 
 ## 1. Who we are
 The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achievers Pty Ltd (ACN 685 561 344, ABN 49 685 561 344), trading as NextGenAchievers ("we", "us"). We handle personal information in line with the *Privacy Act 1988* (Cth) and the Australian Privacy Principles (APPs). This policy covers the app only. Our website has its own policy.
@@ -15,7 +15,7 @@ The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achiev
 | **Parents and guardians** | Email address; the link between the parent and child accounts; guardian email addresses on consent requests. |
 | **Teachers** | Email address; password (stored as a hash); a generated username (not a name); seat limit, learning track and the shared class password; the classes and student seats the teacher creates. We do not collect teachers' names or school names. |
 
-We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. We do **not** store IP addresses. IP addresses are used briefly, in memory only, to limit misuse (rate-limiting).
+We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. IP addresses are used briefly, in memory only, to limit misuse (rate-limiting). Our sign-in provider also keeps a sign-in log that includes IP addresses. That log is kept for 30 days (see section 9).
 
 ## 3. How we collect it
 
@@ -61,11 +61,11 @@ The app uses a sign-in session cookie, plus a short-lived cookie during password
 The app is designed for children, so we collect as little as we can. In schools, the teacher creates usernames that should not include a child's real name. The school keeps any list that matches usernames to students. Outside school, a parent or guardian sets up and consents to their child's account. We build privacy into the app by design, in line with the OAIC's guidance for children's online privacy.
 
 ## 9. How long we keep it and how to delete it
-We keep information while the account or class is active. Accounts inactive for 12 months are reviewed and deleted. Our database has no restorable backups, so deleted data cannot be recovered.
+We keep information while the account or class is active. If an account has no sign-in or activity for about 11 months, we email the parent or the teacher first. Accounts that are still inactive at 12 months are deleted. Activity records are deleted with the account. The sign-in log, which includes IP addresses, is kept for 30 days. Our database has no restorable backups, so deleted data cannot be recovered.
 
-- Teachers can delete a single student or a whole class in the app. This removes their logins and progress.
-- Parents can delete any of their linked child accounts in the app, one at a time.
-- Parents can delete their own account, which also deletes all linked child accounts.
+- Teachers can delete a single student or a whole class in the app. This removes their logins, progress, and activity records.
+- Parents can delete any of their linked child accounts in the app, one at a time. Deleting a linked child asks for the parent PIN.
+- Parents can delete their own account, which also deletes all linked child accounts. This also asks for the parent PIN.
 - For any other deletion, email us (see section 12).
 
 ## 10. Security

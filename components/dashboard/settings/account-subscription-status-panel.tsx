@@ -45,6 +45,7 @@ import { LearnerFamilyAccount } from "@/components/dashboard/settings/learner-fa
 import { displayAccountLearningTrack } from "@/lib/onboarding/change-learning-track";
 import { PRIVACY_POLICY_PATH } from "@/lib/legal/paths";
 import { DeleteLearnerConfirmSheet } from "@/components/dashboard/settings/delete-learner-confirm-sheet";
+import { isFourDigitPin } from "@/lib/validation/pin";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -150,6 +151,7 @@ export function AccountSubscriptionStatusPanel() {
     useState(false);
   const [isDeletingHousehold, setIsDeletingHousehold] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletePin, setDeletePin] = useState("");
   const [approvingUsername, setApprovingUsername] = useState<string | null>(
     null,
   );
@@ -311,10 +313,12 @@ export function AccountSubscriptionStatusPanel() {
     setPendingDelete(null);
     setMasterDeleteAcknowledged(false);
     setDeleteError(null);
+    setDeletePin("");
   }
 
   function openMasterDelete(username: string) {
     setDeleteError(null);
+    setDeletePin("");
     setMasterDeleteAcknowledged(false);
     setPendingDelete({ kind: "master", username });
   }
@@ -452,6 +456,10 @@ export function AccountSubscriptionStatusPanel() {
           setDeleteError(copy.deleteChildError);
           return;
         }
+        if (!isFourDigitPin(deletePin)) {
+          setDeleteError("Enter the parent PIN to delete this account.");
+          return;
+        }
 
         setIsDeletingHousehold(true);
         setDeleteError(null);
@@ -459,7 +467,7 @@ export function AccountSubscriptionStatusPanel() {
           const response = await fetch("/api/account/delete-child", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ childId }),
+            body: JSON.stringify({ childId, parentPin: deletePin }),
           });
           const payload = (await response.json().catch(() => null)) as {
             success?: boolean;
@@ -503,7 +511,7 @@ export function AccountSubscriptionStatusPanel() {
       return;
     }
 
-    if (!isMasterViewer || !masterDeleteAcknowledged) {
+    if (!isMasterViewer || !masterDeleteAcknowledged || !isFourDigitPin(deletePin)) {
       return;
     }
 
@@ -511,7 +519,7 @@ export function AccountSubscriptionStatusPanel() {
     setDeleteError(null);
 
     try {
-      const result = await deleteHouseholdMasterAccount();
+      const result = await deleteHouseholdMasterAccount(deletePin);
       if (!result.success) {
         setDeleteError(result.error || copy.deleteMasterError);
         return;
@@ -707,6 +715,7 @@ export function AccountSubscriptionStatusPanel() {
                                   onClick={() => {
                                     setOpenChildMenu(null);
                                     setDeleteError(null);
+                                    setDeletePin("");
                                     setPendingDelete({
                                       kind: "child",
                                       username: child.username,
@@ -883,6 +892,13 @@ export function AccountSubscriptionStatusPanel() {
         cancelLabel={copy.deleteCancelAction}
         error={deleteError}
         isDeleting={isDeletingHousehold}
+        pinLabel={isMasterViewer ? copy.deletePinLabel : undefined}
+        pinValue={deletePin}
+        onPinChange={(value) => {
+          setDeleteError(null);
+          setDeletePin(value);
+        }}
+        confirmDisabled={isMasterViewer && !isFourDigitPin(deletePin)}
         onClose={closeDeleteDialog}
         onConfirm={() => void confirmPendingDelete()}
       />
@@ -913,6 +929,26 @@ export function AccountSubscriptionStatusPanel() {
             <li>{copy.deleteMasterConfirmChildren}</li>
             <li>{copy.deleteMasterConfirmData}</li>
           </ul>
+          <label className="block">
+            <span className="font-heading text-sm font-bold text-[#031F82]">
+              {copy.deletePinLabel}
+            </span>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              autoComplete="off"
+              value={deletePin}
+              disabled={isDeletingHousehold}
+              onChange={(event) => {
+                setDeleteError(null);
+                setDeletePin(event.target.value.replace(/\D/g, "").slice(0, 4));
+              }}
+              aria-label={copy.deletePinLabel}
+              className="mt-1.5 w-full rounded-xl border-2 border-[#BDE9FB] bg-[#F7FBFF] px-4 py-2.5 text-center font-heading text-lg font-bold tracking-[0.35em] text-[#031F82] outline-none focus:border-[#0CC1E0]"
+            />
+          </label>
           <label className="flex items-start gap-2 font-sans text-sm leading-snug text-[#031F82]">
             <input
               type="checkbox"
@@ -943,7 +979,11 @@ export function AccountSubscriptionStatusPanel() {
           <button
             type="button"
             onClick={() => void confirmPendingDelete()}
-            disabled={isDeletingHousehold || !masterDeleteAcknowledged}
+            disabled={
+              isDeletingHousehold ||
+              !masterDeleteAcknowledged ||
+              !isFourDigitPin(deletePin)
+            }
             className={cn("flex-1 px-3 py-2", destructiveCtaClass)}
           >
             {isDeletingHousehold

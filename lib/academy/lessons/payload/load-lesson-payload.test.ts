@@ -1194,12 +1194,67 @@ CORRECT: bus,dog lead`,
       type: "word-drop",
       prompt:
         "Because I didn't [blank] everything, I had [blank] to [blank] the headphones immediately.",
+      options: [
+        "🫙 save",
+        "🛍️ spend",
+        "💵 cash for emergencies",
+        "🤝 borrowed money",
+        "🎧 replace",
+        "🗑️ throw away",
+      ],
       blanks: [
-        { correctOption: "spend" },
-        { correctOption: "cash for emergencies" },
-        { correctOption: "replace" },
+        { correctOption: "🛍️ spend" },
+        { correctOption: "💵 cash for emergencies" },
+        { correctOption: "🎧 replace" },
       ],
     });
+  });
+
+  it("maps lesson 3 screen 7 as a five-option emoji multiple-choice", () => {
+    const tracks = [
+      {
+        cohort: "explorer" as const,
+        prompt:
+          "Mia could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+      },
+      {
+        cohort: "pathfinder" as const,
+        prompt:
+          "Holly could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+      },
+      {
+        cohort: "maverick" as const,
+        prompt:
+          "Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+      },
+    ];
+    const labels = [
+      "If I lose something, I can replace it myself.",
+      "I won't have to ask my parents for money if I need something.",
+      "I can save for a big goal instead of wasting it on small stuff that doesn't last.",
+      "I worry less if I can afford things that I want, or have to buy.",
+      "All of the above.",
+    ];
+
+    for (const track of tracks) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), track.cohort, 3);
+      const screen = lesson.screens.find((item) => item.sourceLabel === "7");
+      expect(screen?.type, track.cohort).toBe("multiple-choice");
+      if (screen?.type !== "multiple-choice") continue;
+      expect(screen.prompt, track.cohort).toBe(track.prompt);
+      expect(screen.wrongError, track.cohort).toBe(
+        "Yes, but take a look at the other options and see if there's a better answer.",
+      );
+      expect(screen.pairImage, track.cohort).toBe(false);
+      expect(screen.optionLayout, track.cohort).toBeUndefined();
+      expect(screen.options, track.cohort).toEqual([
+        { label: labels[0], isCorrect: false, emoji: "🔄" },
+        { label: labels[1], isCorrect: false, emoji: "🙋" },
+        { label: labels[2], isCorrect: false, emoji: "🎯" },
+        { label: labels[3], isCorrect: false, emoji: "😌" },
+        { label: labels[4], isCorrect: true, emoji: "✅" },
+      ]);
+    }
   });
 
   it("uses pathfinder settings when the explorer settings cell is empty", () => {

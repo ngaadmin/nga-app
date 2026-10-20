@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   countEarnedMedals,
   formatQuietLessonSkillLine,
+  quietLessonSkillLine,
   medalCoversTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
@@ -36,6 +37,17 @@ describe("formatQuietLessonSkillLine", () => {
 
   it("omits the line when there is no tier and no name", () => {
     expect(formatQuietLessonSkillLine(null)).toBeNull();
+    expect(quietLessonSkillLine(null)).toBeNull();
+  });
+
+  it("keeps the medal separate so each tier can share one size", () => {
+    expect(quietLessonSkillLine("bronze", "Put Needs First")).toEqual({
+      medal: "🥉",
+      text: "Skill unlocked: Put Needs First",
+    });
+    expect(quietLessonSkillLine("silver", "Put Needs First")?.medal).toBe("🥈");
+    expect(quietLessonSkillLine("gold", "Put Needs First")?.medal).toBe("🥇");
+    expect(quietLessonSkillLine("unlocked", "Put Needs First")?.medal).toBe("🔓");
   });
 });
 

@@ -122,12 +122,15 @@ ITEMS: Borrow money from Dash to buy the energy drink.
 ORDER: keep,cheaper,borrow",,,,
 1,2,7,drag-to-target,Fast forward to the next week. Drag the gift to Senna to help Lars deliver his promise.,Fast forward to the next week. Drag the gift to Mia to help Holly deliver her promise.,Fast forward to the next week. Drag the gift to Dash to help Aiden deliver his promise.,lars-senna-sidebyside.webp,holly-mia-sidebyside.webp,aiden-dash-sidebyside.webp,SOURCE: concept-gift-box / TARGET: senna-celebrating,SOURCE: concept-gift-box / TARGET: mia-celebrating,SOURCE: concept-gift-box / TARGET: aiden-celebrating,,,,
 1,2,8,completion,,,,medal-skill2-bronze.webp,medal-skill2-bronze.webp,medal-skill2-bronze.webp,,MEDAL: bronze,,,,,
-1,3,1,binary-choice,Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:,Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:,Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:,holly-mia-sidebyside.webp,holly-mia-chatting.webp,aiden-dash-chatting.webp,"CHOICE A: Mia has no money to buy a new pair
-CHOICE B: Mia tries to fix them with sticky tape and now they're even worse
-CORRECT: A","CHOICE A: Holly has no money to buy a new pair
-CHOICE B: Holly tries to fix them with sticky tape and now they're even worse
-CORRECT: A","CHOICE A: Dash has no money to buy a new pair
-CHOICE B: Dash tries to fix them with sticky tape and now they're even worse
+1,3,1,multiple-choice,Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:,Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:,Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:,holly-mia-sidebyside.webp,holly-mia-chatting.webp,aiden-dash-chatting.webp,"CHOICE A: 💸 Mia has no money to buy a new pair
+CHOICE B: 🩹 Mia tries to fix them with sticky tape and now they're even worse
+CHOICE C: 🐶 the dog runs off with one of the pieces
+CORRECT: A","CHOICE A: 💸 Holly has no money to buy a new pair
+CHOICE B: 🩹 Holly tries to fix them with sticky tape and now they're even worse
+CHOICE C: 🐶 the dog runs off with one of the pieces
+CORRECT: A","CHOICE A: 💸 Dash has no money to buy a new pair
+CHOICE B: 🩹 Dash tries to fix them with sticky tape and now they're even worse
+CHOICE C: 🐶 the dog runs off with one of the pieces
 CORRECT: A","Haha, maybe. Try again!","Haha, maybe. But let's try again.","Haha, maybe. But let's try again.",
 1,3,2,bucket-sort,"Where did the money go? Mia needs $40 for new headphones, but her wallet is empty. Drag the items Mia bought into the 'Spent' bucket.","Where did the money go? Holly needs $40 for new headphones, but her wallet is empty. Drag the items Holly bought into the 'Spent' bucket.","Where did the money go? Dash needs $40 for new headphones, but his wallet is empty. Drag the items Dash bought into the 'Spent' bucket.",,,,"TOTAL: $40
 ITEMS:

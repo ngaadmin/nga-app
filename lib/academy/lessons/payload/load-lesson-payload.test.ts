@@ -1054,6 +1054,64 @@ CORRECT: bus,dog lead`,
     }
   });
 
+  it("maps lesson 3 screen 1 as a three-option multiple-choice with emojis", () => {
+    const tracks = [
+      {
+        cohort: "explorer" as const,
+        name: "Mia",
+        prompt:
+          "Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:",
+        wrongError: "Haha, maybe. Try again!",
+        pairImage: "holly-mia-sidebyside.webp",
+      },
+      {
+        cohort: "pathfinder" as const,
+        name: "Holly",
+        prompt:
+          "Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:",
+        wrongError: "Haha, maybe. But let's try again.",
+        pairImage: "holly-mia-chatting.webp",
+      },
+      {
+        cohort: "maverick" as const,
+        name: "Dash",
+        prompt:
+          "Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:",
+        wrongError: "Haha, maybe. But let's try again.",
+        pairImage: "aiden-dash-chatting.webp",
+      },
+    ];
+
+    for (const track of tracks) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), track.cohort, 3);
+      const screen = lesson.screens.find((item) => item.sourceLabel === "1");
+      expect(screen?.type, track.cohort).toBe("multiple-choice");
+      if (screen?.type !== "multiple-choice") continue;
+      expect(screen.prompt, track.cohort).toBe(track.prompt);
+      expect(screen.wrongError, track.cohort).toBe(track.wrongError);
+      expect(screen.pairImage, track.cohort).toBe(track.pairImage);
+      expect(screen.successMessage, track.cohort).toBeUndefined();
+      expect(screen.optionLayout, track.cohort).toBeUndefined();
+      expect(screen.options, track.cohort).toEqual([
+        {
+          label: `${track.name} has no money to buy a new pair`,
+          isCorrect: true,
+          emoji: "💸",
+        },
+        {
+          label: `${track.name} tries to fix them with sticky tape and now they're even worse`,
+          isCorrect: false,
+          emoji: "🩹",
+        },
+        {
+          label: "the dog runs off with one of the pieces",
+          isCorrect: false,
+          emoji: "🐶",
+        },
+      ]);
+    }
+  });
+
   it("maps lesson 3 spent totals and the three-blank sentence", () => {
     const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), "explorer", 3);
     const spent = lesson.screens[1];

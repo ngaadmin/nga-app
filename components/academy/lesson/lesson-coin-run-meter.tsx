@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import {
   COIN_RUN_METER_SLOTS,
@@ -27,17 +27,23 @@ type LessonCoinRunMeterProps = {
 
 export function LessonCoinRunMeter({ streak, runs = 0 }: LessonCoinRunMeterProps) {
   const filled = coinRunMeterFilledCount(streak);
+  const [trackedRuns, setTrackedRuns] = useState(runs);
   const [clearing, setClearing] = useState(false);
-  const seenRunsRef = useRef(runs);
+
+  if (runs !== trackedRuns) {
+    setTrackedRuns(runs);
+    const paid = runs > trackedRuns;
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setClearing(paid && !reduceMotion);
+  }
 
   useEffect(() => {
-    if (runs <= seenRunsRef.current) return;
-    seenRunsRef.current = runs;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    setClearing(true);
+    if (!clearing) return;
     const timeoutId = window.setTimeout(() => setClearing(false), CLEAR_MS);
     return () => window.clearTimeout(timeoutId);
-  }, [runs]);
+  }, [clearing]);
 
   const showFilled = (index: number) => clearing || index < filled;
 

@@ -215,7 +215,13 @@ test("community intro stays dismissed and has no info button", async ({ page }) 
   await expect(page.getByRole("button", { name: "About Community" })).toHaveCount(0);
 
   await page.reload({ waitUntil: "domcontentloaded", timeout: 20_000 });
-  await expect(page.getByRole("heading", { name: "Community", exact: true })).toBeVisible({
+  // The hub title and the locked leaderboard are both h1s named Community.
+  await expect(
+    page
+      .getByRole("main")
+      .getByRole("heading", { level: 1, name: "Community", exact: true })
+      .first(),
+  ).toBeVisible({
     timeout: 15_000,
   });
   await page.waitForTimeout(400);

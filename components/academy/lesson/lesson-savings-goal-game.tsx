@@ -11,12 +11,21 @@ import {
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
-  lessonItemChipClass,
+  lessonCtaClass,
   lessonItemOrbClass,
+  lessonSavingsGoalChipClass,
+  lessonSavingsGoalDropActiveClass,
+  lessonSavingsGoalDropClass,
+  lessonSavingsGoalDropIdleClass,
   lessonSpentTotalAmountClass,
   lessonSpentTotalCaptionClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
+import {
+  GENEROUS_DROP_PAD_PX,
+  dragHitsZone,
+  domRectToDropRect,
+  expandRect,
+} from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 export type SavingsGoalGameItem = {
@@ -104,6 +113,7 @@ export function LessonSavingsGoalGame({
   );
   const [depositedIds, setDepositedIds] = useState<string[]>([]);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [overDrop, setOverDrop] = useState(false);
   const [shakingId, setShakingId] = useState<string | null>(null);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -151,6 +161,7 @@ export function LessonSavingsGoalGame({
     releasePointerCapture();
     dragStateRef.current = null;
     setDragState(null);
+    setOverDrop(false);
   }, [releasePointerCapture]);
 
   useEffect(
@@ -188,25 +199,16 @@ export function LessonSavingsGoalGame({
 
   const pointerInDropZone = (clientX: number, clientY: number) => {
     const zone = dropZoneRef.current;
-    const board = boardRef.current;
     if (!zone) return false;
-    const rect = zone.getBoundingClientRect();
-    const boardRect = board?.getBoundingClientRect();
-    const destination = domRectToDropRect(rect);
-    if (boardRect) {
-      destination.bottom = Math.max(destination.bottom, boardRect.bottom);
-      destination.left = Math.min(destination.left, boardRect.left);
-      destination.right = Math.max(destination.right, boardRect.right);
-    }
-    const drag = dragStateRef.current;
-    return dragHitsZone(
-      drag
-        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
-        : null,
-      clientX,
-      clientY,
-      destination,
+    // Near misses above and beside the well still land. The total sits just
+    // under the well, so the pointer has to be inside this rect — a tall card
+    // hanging over the total is not a drop.
+    const destination = expandRect(
+      domRectToDropRect(zone.getBoundingClientRect()),
+      GENEROUS_DROP_PAD_PX,
     );
+    destination.bottom -= GENEROUS_DROP_PAD_PX;
+    return dragHitsZone(null, clientX, clientY, destination, 0);
   };
 
   const handleChipPointerDown = (
@@ -242,6 +244,7 @@ export function LessonSavingsGoalGame({
     };
     dragStateRef.current = nextDrag;
     setDragState(nextDrag);
+    setOverDrop(pointerInDropZone(event.clientX, event.clientY));
 
     const pointerId = event.pointerId;
     const onMove = (native: PointerEvent) => {
@@ -256,6 +259,8 @@ export function LessonSavingsGoalGame({
       };
       dragStateRef.current = moved;
       setDragState(moved);
+      const hovering = pointerInDropZone(native.clientX, native.clientY);
+      setOverDrop((currentOver) => (currentOver === hovering ? currentOver : hovering));
     };
     const onUp = (native: PointerEvent) => {
       if (native.pointerId !== pointerId) return;
@@ -301,12 +306,12 @@ export function LessonSavingsGoalGame({
         }}
         type="button"
         onPointerDown={(event) => handleChipPointerDown(itemId, from, event)}
+        aria-grabbed={isDragging}
         className={cn(
-          lessonItemChipClass,
+          lessonSavingsGoalChipClass,
           isDragging && "opacity-25",
           shakingId === itemId && "lesson-tile-shake",
         )}
-        style={{ touchAction: "none" }}
       >
         {renderItemChip(item)}
       </button>
@@ -314,11 +319,28 @@ export function LessonSavingsGoalGame({
   };
 
   return (
-    <div
-      ref={boardRef}
-      className="flex min-h-0 flex-1 flex-col touch-none select-none"
-    >
-      <div className="shrink-0 pb-4 text-center">
+    <div ref={boardRef} className="flex min-h-0 flex-1 flex-col select-none">
+      <div className="flex shrink-0 flex-col gap-1.5">
+        {poolIds.map((itemId) => renderDraggableChip(itemId, "pool"))}
+      </div>
+
+      <div className="mt-3 flex min-h-0 flex-1 flex-col">
+        <h2 className={cn("m-0 shrink-0", lessonCtaClass)}>{dropZoneLabel}</h2>
+        <div
+          ref={dropZoneRef}
+          data-testid="savings-drop-zone"
+          data-drop-active={overDrop ? "true" : "false"}
+          className={cn(
+            "mt-1.5",
+            lessonSavingsGoalDropClass,
+            overDrop ? lessonSavingsGoalDropActiveClass : lessonSavingsGoalDropIdleClass,
+          )}
+        >
+          {depositedIds.map((itemId) => renderDraggableChip(itemId, "spent"))}
+        </div>
+      </div>
+
+      <div className="shrink-0 pt-1 text-center">
         <p className={lessonSpentTotalCaptionClass}>{meterLabel}</p>
         <p className={lessonSpentTotalAmountClass} aria-live="polite">
           {formatDollars(shownTotal)}
@@ -330,29 +352,10 @@ export function LessonSavingsGoalGame({
         ) : null}
       </div>
 
-      <div className="flex shrink-0 flex-col gap-4">
-        {poolIds.map((itemId) => renderDraggableChip(itemId, "pool"))}
-      </div>
-
-      <div
-        ref={dropZoneRef}
-        className="mt-10 flex min-h-48 flex-1 flex-col gap-2 border-0 bg-transparent pt-2"
-      >
-        <h3 className="m-0 shrink-0 font-heading text-base font-bold text-[#031F82]">
-          {dropZoneLabel}
-        </h3>
-        <div className="flex min-h-0 flex-1 flex-col gap-3.5">
-          {depositedIds.map((itemId) => renderDraggableChip(itemId, "spent"))}
-        </div>
-      </div>
-
       {draggedItem && dragState ? (
         <OverlayPortal>
           <div
-            className={cn(
-              lessonItemChipClass,
-              "pointer-events-none fixed",
-            )}
+            className={cn(lessonSavingsGoalChipClass, "pointer-events-none fixed")}
             style={{
               left: dragState.x,
               top: dragState.y,

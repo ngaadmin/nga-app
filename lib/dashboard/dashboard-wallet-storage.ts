@@ -266,6 +266,47 @@ export function readDashboardWalletState(): PersistedDashboardWallet | null {
   }
 }
 
+/**
+ * Write the on-screen balance without letting a stale 0 wipe coins already
+ * saved. A Vault spend is written to storage before this runs, so the stored
+ * total is already the lower one.
+ */
+export function persistedWalletFromLiveState(
+  live: Pick<
+    PersistedDashboardWallet,
+    | "totalPoints"
+    | "lifetimePointsEarned"
+    | "audSliderIndex"
+    | "xpExchangeRateSet"
+    | "exchangeRateCentsPer100Xp"
+  >,
+  existing: PersistedDashboardWallet | null,
+  options?: { settingsChanged?: boolean; now?: string },
+): PersistedDashboardWallet {
+  const base: PersistedDashboardWallet = existing ?? {
+    schemaVersion: WALLET_SCHEMA_VERSION,
+    totalPoints: 0,
+    lifetimePointsEarned: 0,
+    audSliderIndex: live.audSliderIndex,
+    xpExchangeRateSet: live.xpExchangeRateSet,
+  };
+  return {
+    ...base,
+    totalPoints: Math.max(0, Math.floor(live.totalPoints), base.totalPoints),
+    lifetimePointsEarned: Math.max(
+      0,
+      Math.floor(live.lifetimePointsEarned),
+      base.lifetimePointsEarned,
+    ),
+    audSliderIndex: live.audSliderIndex,
+    xpExchangeRateSet: live.xpExchangeRateSet,
+    exchangeRateCentsPer100Xp: live.exchangeRateCentsPer100Xp,
+    updatedAt: options?.settingsChanged
+      ? (options.now ?? new Date().toISOString())
+      : base.updatedAt,
+  };
+}
+
 export function saveDashboardWalletState(state: PersistedDashboardWallet): void {
   if (typeof window === "undefined") return;
 

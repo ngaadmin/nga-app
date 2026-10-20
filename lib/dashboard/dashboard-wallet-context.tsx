@@ -10,11 +10,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { applyLessonCoinAward } from "@/lib/academy/lessons/lesson-coin-commit";
 import {
   appendWalletLedgerEvent,
   createWalletEventId,
   currentWalletPersonKey,
   defaultDashboardWalletState,
+  persistedWalletFromLiveState,
   readDashboardWalletState,
   saveDashboardWalletState,
   type WalletLedgerEvent,
@@ -56,6 +58,13 @@ type DashboardWalletContextValue = {
   /** Lets the cash-in screen release the double-tap lock after the save finishes. */
   releaseClaimLock: () => void;
   awardLessonXp: (points: number, eventId?: string) => void;
+  /**
+   * Save every coin row for one lesson finish, then update the counter.
+   * State changes only after the wallet write succeeds.
+   */
+  saveLessonCoinAward: (events: { id: string; points: number }[]) =>
+    | { ok: true; balance: number; awarded: number }
+    | { ok: false };
   /** Pull the saved balance into the header after a lesson cash-in. */
   reloadWalletFromStorage: () => void;
 };
@@ -173,21 +182,19 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       existing.xpExchangeRateSet !== xpExchangeRateSet ||
       (existing.exchangeRateCentsPer100Xp ?? null) !== exchangeRateCentsPer100Xp;
 
-    saveDashboardWalletState({
-      ...existing,
-      totalPoints,
-      lifetimePointsEarned: Math.max(
-        lifetimePointsEarned,
-        existing?.lifetimePointsEarned ?? 0,
+    saveDashboardWalletState(
+      persistedWalletFromLiveState(
+        {
+          totalPoints,
+          lifetimePointsEarned,
+          audSliderIndex,
+          xpExchangeRateSet,
+          exchangeRateCentsPer100Xp,
+        },
+        existing,
+        { settingsChanged },
       ),
-      audSliderIndex,
-      xpExchangeRateSet,
-      exchangeRateCentsPer100Xp,
-      exchangeRateUpdatedAt: existing?.exchangeRateUpdatedAt,
-      updatedAt: settingsChanged
-        ? new Date().toISOString()
-        : existing?.updatedAt,
-    });
+    );
   }, [
     audSliderIndex,
     exchangeRateCentsPer100Xp,
@@ -287,6 +294,32 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
     saveDashboardWalletState(next);
   }, [audSliderIndex, xpExchangeRateSet]);
 
+  const saveLessonCoinAward = useCallback(
+    (events: { id: string; points: number }[]) => {
+      try {
+        const persisted =
+          readDashboardWalletState() ?? defaultDashboardWalletState();
+        const { wallet, awarded } = applyLessonCoinAward(
+          {
+            ...persisted,
+            audSliderIndex,
+            xpExchangeRateSet,
+            exchangeRateCentsPer100Xp,
+          },
+          events,
+          new Date().toISOString(),
+        );
+        saveDashboardWalletState(wallet);
+        setTotalPoints(wallet.totalPoints);
+        setLifetimePointsEarned(wallet.lifetimePointsEarned);
+        return { ok: true as const, balance: wallet.totalPoints, awarded };
+      } catch {
+        return { ok: false as const };
+      }
+    },
+    [audSliderIndex, exchangeRateCentsPer100Xp, xpExchangeRateSet],
+  );
+
   const spendableXp = readSpendableXp({ totalPoints });
   const lifetimeXp = readLifetimeXp({ lifetimePointsEarned });
 
@@ -307,12 +340,14 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       claimPointsForVault,
       releaseClaimLock,
       awardLessonXp,
+      saveLessonCoinAward,
       reloadWalletFromStorage,
     }),
     [
       audPer100Xp,
       audSliderIndex,
       awardLessonXp,
+      saveLessonCoinAward,
       claimPointsForVault,
       exchangeRateCentsPer100Xp,
       lifetimeXp,

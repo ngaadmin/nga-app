@@ -36,7 +36,7 @@ const previewFlow = {
   lessonNumber: 1,
   moduleNumber: 1,
   lessonComplete: false,
-  handleCashInPoints: noop,
+  handleCashInPoints: async () => ({ ok: true as const, balance: 0 }),
   handleContinueAfterCashIn: noop,
 } as Pick<
   LessonFlow,

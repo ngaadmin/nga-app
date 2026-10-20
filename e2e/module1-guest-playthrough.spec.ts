@@ -521,8 +521,40 @@ async function playLesson(page: Page, lesson: number, cohort: MasteryCohort): Pr
       await assertMedals(page, lesson);
       const cashIn = page.getByRole("button", { name: "Cash in coins" });
       await expect(cashIn).toBeEnabled();
+      const reward = Number(
+        await page.locator("[data-lesson-reward-total]").getAttribute("data-lesson-reward-total"),
+      );
+      const starting = Number(
+        await page.locator("[data-coin-balance]").first().getAttribute("data-coin-balance"),
+      );
       await cashIn.click();
       await expect(page.locator('[data-cash-in-celebration="open"]')).toBeVisible();
+      if (lesson === 2) {
+        expect(reward).toBeGreaterThan(0);
+        const expected = starting + reward;
+        await expect(page.locator("[data-coin-balance]").first()).toHaveAttribute(
+          "data-coin-balance",
+          String(expected),
+          { timeout: 8_000 },
+        );
+        const guestPrompt = page.getByText("Keep exploring in Guest Mode");
+        await guestPrompt.waitFor({ state: "attached", timeout: 8_000 }).catch(() => undefined);
+        if (await guestPrompt.count()) {
+          await guestPrompt.click({ force: true });
+          await expect(page.getByRole("dialog")).toHaveCount(0);
+        }
+        await page.getByRole("button", { name: "Continue", exact: true }).click();
+        await expect(page).toHaveURL(/\/dashboard\/academy\/?(?:\?.*)?$/);
+        await expect(page.locator("[data-coin-balance]").first()).toHaveAttribute(
+          "data-coin-balance",
+          String(expected),
+        );
+        await page.reload();
+        await expect(page.locator("[data-coin-balance]").first()).toHaveAttribute(
+          "data-coin-balance",
+          String(expected),
+        );
+      }
       return;
     }
     const step = await playScreen(page, screen, index, labels, cash);

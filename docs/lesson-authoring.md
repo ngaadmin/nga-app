@@ -4,7 +4,7 @@ Module 1 copy lives in the checked-in sheets under `lib/academy/lessons/payload/
 
 ## Coin meter
 
-The lesson header shows five coin slots in the space beside the progress bar. They fill from the left, one slot for each correct scored answer in a row. Five in a row pays 10 coins and the slots empty, ready for the next run. A wrong answer empties the slots. The meter does not shake, turn red, or say that anything was lost. The question still plays its wrong-answer sound, shakes the answer, and shows its error line.
+The lesson header shows five coin slots in the space beside the progress bar. They fill from the left, one slot for each correct scored answer in a row. Five in a row pays 10 coins. A small chip reading “+10 coins” appears under the meter, five coins fly into the slots, and the slots then empty for the next run. The chip does not dim the screen or cover the answers or Next. Reduced motion fades that chip instead of flying the coins. A wrong answer empties the slots with no chip. The meter does not shake, turn red, or say that anything was lost. The question still plays its wrong-answer sound, shakes the answer, and shows its error line.
 
 Unscored screens do not move the meter. A second try on an answer that already counted does not move it either.
 

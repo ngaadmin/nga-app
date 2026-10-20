@@ -82,7 +82,7 @@ Applies to pills, radio lists, icon options, and persistent error toasts. Only t
 
 ### Lesson chrome & layout
 
-- **Minimal chrome:** five coin slots for the bonus run, and a slim progress bar — `AcademyLessonShell`. Slots fill from the left with each correct scored answer. Five in a row pays 10 coins and the slots empty. A wrong answer empties the slots, with no shake, red, or lost message on the meter. Unscored screens leave the slots as they are. The completion screen draws its own coins counter.
+- **Minimal chrome:** five coin slots for the bonus run, and a slim progress bar — `AcademyLessonShell`. Slots fill from the left with each correct scored answer. Five in a row pays 10 coins: a small “+10 coins” chip appears under the meter, five coins fly into the slots, and the slots then empty. The chip does not dim the screen or block taps. Reduced motion fades the chip instead of flying the coins. A wrong answer empties the slots, with no shake, red, or lost message on the meter. Unscored screens leave the slots as they are. The completion screen draws its own coins counter.
 - **No forced scrolling to reach Next:** dense screen types compress layout; content area may scroll internally but the footer Next button stays visible without scrolling the page
 - **Next** is disabled until the screen is marked ready (`markScreenReady`) or an explicit advance override applies
 - **Last screen:** footer shows **Cash In / Collect Points** (`lessonGoldClaimClass`), not Next

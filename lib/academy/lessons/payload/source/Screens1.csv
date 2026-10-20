@@ -74,13 +74,13 @@ WANT: 💃 New game skin",,,,
 1,2,3,spotlight-rounds,Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?,Which item is the one Holly 'Needs' to buy before she spends money on what she 'Wants' to buy?,Which item is the one Aiden 'Needs' to buy before he spends money on what he 'Wants' to buy?,lars-thinking-512.webp,holly-thinking-512.webp,aiden-thinking-512.webp,"ROUNDS:
 A: 📱 A new phone case, even though his old one is still fine | B: 🎁 A new phone case he promised his brother | CORRECT: B
 A: 💡 A light for his bike to be seen in the dark | B: 🖱️ A new gaming mouse with lights (his old one still works) | CORRECT: A
-A: Buy lunch for all his friends and have nothing left | B: A bus pass to get him to uni | CORRECT: B","ROUNDS:
-A: A new phone case, even though her old one is still fine | B: A new phone case she promised her sister | CORRECT: B
-A: A new lead for her dog as the old one broke | B: A new hoodie that everyone at school has | CORRECT: A
-A: Buy lunch for all her friends and have nothing left | B: Buy lunch at school with her tuckshop money | CORRECT: B","ROUNDS:
+A: 🍱 Buy lunch for all his friends and have nothing left | B: 🚍 A bus pass to get him to uni | CORRECT: B","ROUNDS:
+A: 📱 A new phone case, even though her old one is still fine | B: 🎁 A new phone case she promised her sister | CORRECT: B
+A: 🐕 A new lead for her dog as the old one broke | B: 🧥 A new hoodie that everyone at school has | CORRECT: A
+A: 🍱 Buy lunch for all her friends and have nothing left | B: 🥪 Buy lunch at school with her tuckshop money | CORRECT: B","ROUNDS:
 A: 📱 A new phone case, even though his old one is still fine | B: 🎁 A new phone case he promised his brother | CORRECT: B
 A: 💡 A light for his bike to be seen in the dark | B: 🖱️ A new gaming mouse with lights (his old one still works) | CORRECT: A
-A: Buy lunch for all his friends and have nothing left | B: A bus pass to get him to uni | CORRECT: B",,,,
+A: 🍱 Buy lunch for all his friends and have nothing left | B: 🚍 A bus pass to get him to uni | CORRECT: B",,,,
 1,2,4,budget-select,You have $30 left. Check the boxes to buy what you actually need.,You have $30 left. Check the boxes to buy what you actually need.,You have $30 left. Check the boxes to buy what you actually need.,not allowed,not allowed,not allowed,"TOTAL: 30
 ITEMS:
 NEED: 🚍 Bus Pass ($15)

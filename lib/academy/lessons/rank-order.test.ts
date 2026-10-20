@@ -164,3 +164,60 @@ describe("Screens1.csv rank-order screens", () => {
     },
   );
 });
+
+describe("lesson 3 screen 4 rank-order", () => {
+  const prompts = {
+    explorer:
+      "Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.",
+    pathfinder:
+      "Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.",
+    maverick:
+      "Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.",
+  } as const;
+
+  const sharedTail = [
+    {
+      id: "move-a-small-amount-to-your-emergencies-jar-1",
+      emoji: "🫙",
+      label: "Move a small amount to your Emergencies jar.",
+    },
+    {
+      id: "spend-what-is-left-on-fun-2",
+      emoji: "🎮",
+      label: "Spend what is left on fun.",
+    },
+  ];
+
+  it.each(COHORTS)("builds three ordered steps for %s", (cohort) => {
+    const payload = loadBundledLessonPayload(1, 3);
+    const row = payload.screens.find((screen) => screen.screenLabel === "4");
+    expect(row?.gameType).toBe("rank-order");
+    if (!row) return;
+    const screen = mapPayloadScreen(row, cohort, { lessonNumber: 3 });
+    expect(screen.type).toBe("rank-order");
+    if (screen.type !== "rank-order") return;
+
+    const first =
+      cohort === "explorer"
+        ? {
+            id: "get-your-pocket-money-0",
+            emoji: "💵",
+            label: "Get your pocket money.",
+          }
+        : { id: "earn-money-0", emoji: "💵", label: "Earn money." };
+    const items = [first, ...sharedTail];
+    expect(screen.items).toEqual(items);
+    expect(screen.correctOrder).toEqual(items.map((item) => item.id));
+    expect(screen.intro).toBe(prompts[cohort]);
+    expect(screen.intro).not.toMatch(/Get your pocket money|Earn money|Emergencies jar|Spend what is left/);
+    expect(screen.errors).toEqual({});
+    expect(screen).not.toHaveProperty("pairImage");
+    expect(
+      openingRankOrder(
+        screen.items.map((item) => item.id),
+        screen.correctOrder,
+      ),
+    ).not.toEqual([...screen.correctOrder]);
+    expect(rankOrderMatches(screen.correctOrder, screen.items.map((item) => item.id))).toBe(true);
+  });
+});

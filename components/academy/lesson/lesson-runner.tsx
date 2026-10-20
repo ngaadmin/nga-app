@@ -17,6 +17,7 @@ import {
   lessonScreenContentOffsetClass,
   lessonScreenInlinePaddingClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { isRoomyLessonScreen } from "@/lib/academy/lessons/paired-zone-sort";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import {
   isDenseLessonScreen,
@@ -65,8 +66,8 @@ export function LessonRunner({
     (activeScreen?.type === "binary-choice" || activeScreen?.type === "multiple-choice") &&
     Boolean(activeScreen.continueToLabel);
   const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
-  const isTapReveal = activeScreen?.type === "tap-reveal";
   const isLinkMatch = activeScreen?.type === "link-match";
+  const roomyScreen = isRoomyLessonScreen(activeScreen);
 
   useLayoutEffect(() => {
     if (!activeScreen || activeScreen.type === "spotlight-rounds") return;
@@ -120,9 +121,11 @@ export function LessonRunner({
             flow.handleNext();
           })
         }
-        hideFooter={isCompletionScreen || isContinueOnly || isSkillHub || isTapReveal}
+        hideFooter={isCompletionScreen || isContinueOnly || isSkillHub}
         footerSlot={isCompletionScreen ? <></> : undefined}
         matchChrome={isLinkMatch}
+        skySurface={roomyScreen}
+        cyanFooter={roomyScreen}
       >
         {content.screens.map((screen, index) => (
           <LessonScreenPane
@@ -133,7 +136,13 @@ export function LessonRunner({
               <LessonScreenChromeProvider
                 showIllustrationSlot={supportsLessonScreenIllustration(screen)}
                 illustration={resolveLessonScreenIllustration(screen)}
-                illustrationFrame={screen.type === "link-match" ? "match" : "default"}
+                illustrationFrame={
+                  screen.type === "link-match"
+                    ? "match"
+                    : screen.type === "allocation-slider"
+                      ? "poster"
+                      : "default"
+                }
               >
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                   <div
@@ -141,7 +150,9 @@ export function LessonRunner({
                       "relative w-full min-w-0 shrink-0 overflow-x-hidden",
                       screen.type === "link-match"
                         ? "px-5"
-                        : lessonScreenInlinePaddingClass,
+                        : isRoomyLessonScreen(screen)
+                          ? "lesson-screen-inline-24"
+                          : lessonScreenInlinePaddingClass,
                     )}
                   >
                     <LessonScreenIllustration />
@@ -152,7 +163,9 @@ export function LessonRunner({
                       "min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-none",
                       screen.type === "link-match"
                         ? "px-5"
-                        : lessonScreenInlinePaddingClass,
+                        : isRoomyLessonScreen(screen)
+                          ? "lesson-screen-inline-24"
+                          : lessonScreenInlinePaddingClass,
                       !isDenseLessonScreen(screen) && lessonScreenContentOffsetClass,
                     )}
                   >

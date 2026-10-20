@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
+  masteryCohortAgeRangeWords,
   masteryCohortNameAndAgeLabel,
   parseMasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -29,6 +30,9 @@ describe("mastery cohort list labels", () => {
     expect(masteryCohortNameAndAgeLabel("explorer")).toBe("Explorer 10-13");
     expect(masteryCohortNameAndAgeLabel("pathfinder")).toBe("Pathfinder 14-16");
     expect(masteryCohortNameAndAgeLabel("maverick")).toBe("Maverick 17+");
+    expect(masteryCohortAgeRangeWords("explorer")).toBe("10 to 13");
+    expect(masteryCohortAgeRangeWords("pathfinder")).toBe("14 to 16");
+    expect(masteryCohortAgeRangeWords("maverick")).toBe("17+");
     for (const cohort of MASTERY_COHORT_ORDER) {
       const range = masteryCohortAgeRangeLabel(cohort);
       expect(range).not.toMatch(/[\u2013\u2014]/);

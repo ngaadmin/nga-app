@@ -416,6 +416,31 @@
   padding-inline: calc(var(--lesson-screen-edge-inset) + var(--lesson-screen-ink-outset));
 }
 
+/* Approved slider and sort screens sit on a 24px margin. */
+.lesson-screen-inline-24 {
+  padding-inline: 24px;
+}
+
+/* Item labels and zone headings. Whole words only — never "Skateboar/d". */
+.sort-label {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  text-wrap: balance;
+}
+
+.zone-heading-label {
+  --lh: 1.25;
+  --fs: 17px;
+  font-size: var(--fs);
+  line-height: var(--lh);
+  height: calc(2 * var(--lh) * var(--fs));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 /* Hold buttons must not open the touch callout or select their label. */
 .lesson-hold-button {
   touch-action: none;

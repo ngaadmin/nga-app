@@ -37,18 +37,17 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
   {
     type: "bucket-sort",
     id: "want-vs-need-sort",
-    title: "Wants or Needs?",
     intro:
       "Lars spent all his money on things Lars wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'",
     buckets: [
-      { id: "want", label: "Things Lars wants", tone: "want", icon: "✨" },
-      { id: "need", label: "Things Lars needs", tone: "need", icon: "🛡️" },
+      { id: "want", label: "Things Lars wants", tone: "want", icon: "🎈" },
+      { id: "need", label: "Things Lars needs", tone: "need", icon: "🛠️" },
     ],
     items: [
       {
         id: "case",
         emoji: "📱",
-        label: "Phone Case Birthday Present",
+        label: "Phone case (birthday present)",
         bucket: "need",
         wrongDropError:
           "Hold up! You promised this to your brother for his birthday. Promises are Total Must-Haves!",
@@ -56,7 +55,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       {
         id: "cable",
         emoji: "🔌",
-        label: "Replace broken phone cable",
+        label: "Phone cable",
         bucket: "need",
         wrongDropError:
           "Wait! If your phone cable is broken, your phone dies. That's a Need!",
@@ -72,7 +71,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
       {
         id: "gamepass",
         emoji: "💃",
-        label: "New skin for his favourite game",
+        label: "New game skin",
         bucket: "want",
         wrongDropError:
           "A new skin brings short-term fun, but it isn't an essential lifeline. That goes into Things Lars wants!",
@@ -146,7 +145,7 @@ const M1_L2_BASE_SCREENS: ScreenConfig[] = [
     id: "reserve-slider",
     pairImage: "lars-hands-on-hips-512.webp",
     intro:
-      "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save $20 👇",
+      "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save at least $20 👇",
     total: 25,
     targetMin: 20,
     reserveGoals: [
@@ -225,14 +224,14 @@ const M1_L2_EXPLORER_OVERRIDES: ScreenOverrideMap = {
       {
         id: "case",
         emoji: "📱",
-        label: "Phone Case Birthday Present",
+        label: "Phone case (birthday present)",
         bucket: "need",
         wrongDropError: "You promised Senna. That's a need!",
       },
       {
         id: "cable",
         emoji: "🔌",
-        label: "Replace broken phone cable",
+        label: "Phone cable",
         bucket: "need",
         wrongDropError: "Broken cable, dead phone. Need it!",
       },
@@ -246,7 +245,7 @@ const M1_L2_EXPLORER_OVERRIDES: ScreenOverrideMap = {
       {
         id: "gamepass",
         emoji: "💃",
-        label: "New skin for his favourite game",
+        label: "New game skin",
         bucket: "want",
         wrongDropError: "Cool skin, not a must-have. Want!",
       },

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
+import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
+  masteryCohortAgeRangeWords,
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -16,12 +17,6 @@ import {
 } from "@/lib/onboarding/change-learning-track";
 import type { UserSession } from "@/lib/onboarding/guest-session";
 import { cn } from "@/lib/utils/cn";
-
-const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
-  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
-};
 
 const confirmCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2";
@@ -83,21 +78,20 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <div className="inline-flex h-11 w-56 shrink-0 items-center gap-2.5 rounded-xl border-2 border-[#0CC1E0]/45 bg-[#BDE9FB]/20 px-3">
-          <span className="relative size-8 shrink-0">
-            <Image
-              src={TRACK_AVATAR_SRC[current]}
-              alt=""
-              fill
-              sizes="32px"
-              className="object-contain"
-              unoptimized
-            />
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <span
+            className="grid w-14 shrink-0 place-items-center text-[30px] leading-none"
+            aria-hidden
+          >
+            {COHORT_EMOJI[current]}
           </span>
-          <p className="whitespace-nowrap font-heading text-sm font-extrabold leading-none text-[#031F82]">
-            {masteryCohortLabel(current)} · Ages{" "}
-            {masteryCohortAgeRangeLabel(current)}
+          <p className="min-w-0 break-normal font-heading text-[17px] font-extrabold leading-snug text-[#031F82] hyphens-none">
+            {masteryCohortLabel(current)}
+            <span className="font-sans text-[15px] font-medium text-[#1E3A5F]">
+              {" "}
+              · Ages {masteryCohortAgeRangeWords(current)}
+            </span>
           </p>
         </div>
         {canChange ? (
@@ -132,15 +126,8 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
                     : "border-[#BDE9FB]/70 bg-white hover:border-[#0CC1E0]/50",
                 )}
               >
-                <span className="relative h-12 w-12">
-                  <Image
-                    src={TRACK_AVATAR_SRC[cohort]}
-                    alt=""
-                    fill
-                    sizes="48px"
-                    className="object-contain"
-                    unoptimized
-                  />
+                <span className="text-[30px] leading-none" aria-hidden>
+                  {COHORT_EMOJI[cohort]}
                 </span>
                 <span className="mt-1 font-heading text-sm font-extrabold leading-tight text-[#031F82]">
                   {masteryCohortLabel(cohort)}

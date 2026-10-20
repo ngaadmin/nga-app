@@ -47,6 +47,34 @@ export function allocationSavedBadge(targetMin: number): string {
   return `🔒 $${Math.max(0, Math.round(targetMin))} saved!`;
 }
 
+/** Under-track caption. KEEP reads "$20+". A move or pay line stays a single amount. */
+export function allocationGoalCaption(
+  targetMin: number,
+  match: AllocationMatch = "at-least",
+): string {
+  const target = Math.max(0, Math.round(targetMin));
+  return match === "at-least" ? `🎯 $${target}+` : `🎯 $${target}`;
+}
+
+/** Spoken value for the slider. Over-saving a KEEP goal is still "goal met". */
+export function allocationSliderValueText(
+  save: number,
+  targetMin: number,
+  match: AllocationMatch = "exact",
+): string {
+  const saved = Math.round(save);
+  const target = Math.max(0, Math.round(targetMin));
+  const met = allocationNextEnabled(saved, target, match);
+  if (match === "at-least") {
+    return met
+      ? `$${saved} saved, goal is at least $${target}, goal met`
+      : `$${saved} saved, goal is at least $${target}`;
+  }
+  return met
+    ? `$${saved} saved, goal is $${target}, goal met`
+    : `$${saved} saved, goal is $${target}`;
+}
+
 /** Knob diameter. The track is inset by half of this so the knob stays on the bar. */
 export const ALLOCATION_KNOB_PX = 44;
 

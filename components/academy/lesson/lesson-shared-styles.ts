@@ -432,6 +432,10 @@ const LESSON_PRIMARY_ACTION_CLASS =
 
 export const lessonNextButtonClass = LESSON_PRIMARY_ACTION_CLASS;
 
+/** Approved slider and sort screens: a 200×48 cyan pill that fades until the answer is in. */
+export const lessonCyanNextButtonClass =
+  "mx-auto flex h-12 w-[200px] items-center justify-center rounded-3xl border-0 bg-[#0CC1E0] text-center font-heading text-base font-bold text-white shadow-[0_5px_0_#099FB8] disabled:cursor-default disabled:opacity-40 disabled:shadow-none";
+
 /** Rank-order submit matches the pinned Next control in the lesson footer. */
 export const lessonSubmitAnswerClass =
   "mx-auto mt-2.5 flex w-1/2 items-center justify-center rounded-2xl border-0 bg-[#031F82] px-3 py-2.5 text-center font-heading text-[15px] font-extrabold text-white";

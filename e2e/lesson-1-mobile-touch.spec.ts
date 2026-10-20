@@ -129,7 +129,7 @@ test("tap-reveal opens one item per tap and labels stay inside the card", async 
   await expect(page.getByRole("button", { name: /Show me/i })).toHaveCount(0);
 
   const next = page.getByRole("button", { name: "Next", exact: true });
-  await expect(next).toHaveCount(0);
+  await expect(next).toBeDisabled();
 
   await page.getByRole("button", { name: "Sour Worms", exact: true }).tap();
   await page.waitForTimeout(1200);
@@ -139,7 +139,7 @@ test("tap-reveal opens one item per tap and labels stay inside the card", async 
   await expect(
     page.getByRole("button", { name: "Wireless Headphones", exact: true }),
   ).toBeVisible();
-  await expect(next).toHaveCount(0);
+  await expect(next).toBeDisabled();
 
   await page.getByRole("button", { name: "Cinema Popcorn", exact: true }).tap();
   await page.getByRole("button", { name: "Wireless Headphones", exact: true }).tap();

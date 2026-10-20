@@ -247,6 +247,13 @@ export function masteryCohortAgeRangeLabel(cohort: MasteryCohort): string {
   return `${minAge}-${maxAge}`;
 }
 
+/** Spoken age band for a wide row: "10 to 13", "14 to 16", "17+". */
+export function masteryCohortAgeRangeWords(cohort: MasteryCohort): string {
+  const { minAge, maxAge } = MASTERY_COHORT[cohort];
+  if (maxAge == null) return `${minAge}+`;
+  return `${minAge} to ${maxAge}`;
+}
+
 /** Youngest-first name plus age, e.g. `Explorer 10-13`. */
 export function masteryCohortNameAndAgeLabel(cohort: MasteryCohort): string {
   return `${masteryCohortLabel(cohort)} ${masteryCohortAgeRangeLabel(cohort)}`;

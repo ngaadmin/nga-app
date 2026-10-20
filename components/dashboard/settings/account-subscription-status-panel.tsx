@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { copyMatrix } from "@/constants/copyMatrix";
@@ -40,6 +41,9 @@ import {
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view";
 import { AccountRowTrack } from "@/components/dashboard/settings/account-row-track";
+import { LearnerFamilyAccount } from "@/components/dashboard/settings/learner-family-account";
+import { displayAccountLearningTrack } from "@/lib/onboarding/change-learning-track";
+import { PRIVACY_POLICY_PATH } from "@/lib/legal/paths";
 import { DeleteLearnerConfirmSheet } from "@/components/dashboard/settings/delete-learner-confirm-sheet";
 import { cn } from "@/lib/utils/cn";
 
@@ -523,9 +527,23 @@ export function AccountSubscriptionStatusPanel() {
     }
   }
 
+  const learnerSelf =
+    sessionReady &&
+    !isGuest &&
+    !isMasterViewer &&
+    !isParentSettingsView &&
+    household.children.length > 0
+      ? household.children[0]
+      : null;
+
   return (
     <>
-      <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
+      <div
+        className={cn(
+          "mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden bg-white px-2 py-4 pb-8",
+          learnerSelf ? "gap-7" : "gap-6",
+        )}
+      >
         <div className="space-y-3">
           <button
             type="button"
@@ -535,19 +553,26 @@ export function AccountSubscriptionStatusPanel() {
             ← {copy.backLabel}
           </button>
           <div className="space-y-1">
-            <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">
+            <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
               {copy.title}
             </h1>
             {sessionReady ? (
-              <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
-                {isParentSettingsView || isMasterViewer
-                  ? copy.description
-                  : copy.learnerDescription}
+              <p className="font-sans text-sm leading-[1.6] text-[#1E3A5F]">
+                {copy.description}
               </p>
             ) : null}
           </div>
         </div>
 
+        {learnerSelf ? (
+          <LearnerFamilyAccount
+            username={learnerSelf.username}
+            cohort={displayAccountLearningTrack(learnerSelf)}
+          />
+        ) : null}
+
+        {learnerSelf ? null : (
+        <>
         <section
           aria-labelledby="accounts-heading"
           className={cn(floatingPanelClass, "space-y-4 p-4")}
@@ -833,6 +858,17 @@ export function AccountSubscriptionStatusPanel() {
             </div>
           ) : null}
         </section>
+
+        <div className="flex justify-center">
+          <Link
+            href={PRIVACY_POLICY_PATH}
+            className="inline-flex min-h-11 items-center justify-center px-4 py-3 font-sans text-sm font-semibold text-[#5A6A99] no-underline hover:underline focus-visible:underline"
+          >
+            🔒 Privacy Policy
+          </Link>
+        </div>
+        </>
+        )}
       </div>
 
       <DeleteLearnerConfirmSheet

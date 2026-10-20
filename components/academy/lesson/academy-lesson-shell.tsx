@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, type ReactNode } from "react";
 import {
   LESSON_MAX_LIVES,
+  lessonCyanNextButtonClass,
   lessonNextButtonClass,
   lessonScreenInlinePaddingClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -31,6 +32,9 @@ type AcademyLessonShellProps = {
   progressComplete?: boolean;
   /** Match screen: 20px margins, gold progress, and the brand Next pill. */
   matchChrome?: boolean;
+  /** Slider and paired-sort screens: light blue page and the cyan Next pill. */
+  skySurface?: boolean;
+  cyanFooter?: boolean;
 };
 
 function LessonLifeHeart({ filled }: { filled: boolean }) {
@@ -55,6 +59,8 @@ export function AcademyLessonShell({
   progressTotal,
   progressComplete = false,
   matchChrome = false,
+  skySurface = false,
+  cyanFooter = false,
 }: AcademyLessonShellProps) {
   const livesRemaining = Math.max(0, maxLives - mistakes);
   const barIndex = progressIndex ?? currentScreenIndex;
@@ -75,7 +81,9 @@ export function AcademyLessonShell({
         "mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden",
         matchChrome
           ? "bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)]"
-          : "bg-white",
+          : skySurface
+            ? "bg-[linear-gradient(180deg,#EEF7FD_0%,#FFFFFF_55%)]"
+            : "bg-white",
       )}
       style={{ touchAction: "pan-y", overscrollBehavior: "none" }}
     >
@@ -155,7 +163,7 @@ export function AcademyLessonShell({
               type="button"
               onClick={onNext}
               disabled={!canAdvance}
-              className={lessonNextButtonClass}
+              className={cyanFooter ? lessonCyanNextButtonClass : lessonNextButtonClass}
             >
               Next
             </button>

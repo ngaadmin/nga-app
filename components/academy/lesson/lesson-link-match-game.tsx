@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
+import { seededDerangement } from "@/lib/academy/lessons/seeded-shuffle";
 import {
   playLessonSelectTap,
   playLessonSuccessPing,
@@ -16,6 +18,8 @@ export type LessonLinkMatchPair = {
 
 type LessonLinkMatchGameProps = {
   pairs: readonly LessonLinkMatchPair[];
+  /** Screen id mixed into the right-column shuffle. */
+  orderKey: string;
   eventColumnLabel?: string;
   benefitColumnLabel?: string;
   /** Existing lesson hint. Empty copy does not render a bubble. */
@@ -41,11 +45,6 @@ const EVENT_EMOJI = ["💔", "🎂", "🏷️"] as const;
 const BENEFIT_EMOJI = ["🤝", "🎁", "🛍️"] as const;
 
 type Side = "left" | "right";
-
-function benefitOrderFor(ids: readonly string[]): string[] {
-  if (ids.length <= 1) return [...ids];
-  return ids.map((_, index) => ids[(index + 1) % ids.length]!);
-}
 
 function tileKey(side: Side, id: string): string {
   return `${side}:${id}`;
@@ -131,6 +130,7 @@ function MatchTile({
 
 export function LessonLinkMatchGame({
   pairs,
+  orderKey,
   eventColumnLabel = "Events",
   benefitColumnLabel = "Possibilities",
   hint,
@@ -142,7 +142,17 @@ export function LessonLinkMatchGame({
   const pairIndex = new Map(pairs.map((pair, index) => [pair.id, index]));
   const pairById = new Map(pairs.map((pair) => [pair.id, pair]));
   const eventOrder = pairIds;
-  const benefitOrder = benefitOrderFor(pairIds);
+  const pairSignature = pairIds.join("|");
+  const pairIdsRef = useRef(pairIds);
+  pairIdsRef.current = pairIds;
+  const [benefitOrder, setBenefitOrder] = useState<string[]>(pairIds);
+  const playSeed = usePlaySeed([orderKey, "benefits"]);
+
+  useLayoutEffect(() => {
+    if (playSeed === null) return;
+    const ids = pairIdsRef.current;
+    setBenefitOrder(seededDerangement(ids, playSeed, (id, index) => id === ids[index]));
+  }, [pairSignature, playSeed]);
   const [locked, setLocked] = useState<Readonly<Record<string, number>>>({});
   const [selected, setSelected] = useState<{ id: string; side: Side } | null>(null);
   const [shaking, setShaking] = useState<ReadonlySet<string>>(() => new Set());

@@ -22,6 +22,7 @@ export function LinkMatchScreen({
       <LessonLinkMatchGame
         className={screen.intro ? "mt-9" : undefined}
         pairs={screen.pairs}
+        orderKey={screen.id}
         eventColumnLabel={screen.eventColumnLabel}
         benefitColumnLabel={screen.benefitColumnLabel}
         hint={hint}

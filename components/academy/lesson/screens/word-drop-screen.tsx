@@ -90,6 +90,7 @@ export function WordDropScreen({
         ref={gameRef}
         prompt={prompt}
         blanks={blanks}
+        orderKey={screen.id}
         promptLabel={screen.promptLabel}
         onChoicesChange={handleChoicesChange}
         onComplete={handleSolved}

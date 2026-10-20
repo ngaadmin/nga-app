@@ -1,3 +1,5 @@
+import { seededShuffle, shuffleSeed } from "@/lib/academy/lessons/seeded-shuffle";
+
 export type RankOrderResolvable = {
   id: string;
   label: string;
@@ -112,32 +114,22 @@ export function resolveRankOrderIds(
   return items.map((item) => item.id);
 }
 
-function seededShuffle(ids: readonly string[]): string[] {
-  const next = [...ids];
-  let seed = 2166136261;
-  for (const id of ids) {
-    for (let index = 0; index < id.length; index += 1) {
-      seed ^= id.charCodeAt(index);
-      seed = Math.imul(seed, 16777619);
-    }
-  }
-  for (let index = next.length - 1; index > 0; index -= 1) {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    const swap = seed % (index + 1);
-    const current = next[index];
-    next[index] = next[swap]!;
-    next[swap] = current!;
-  }
-  return next;
-}
-
 /** Starting stack. Never the correct order when there is more than one way to arrange it. */
 export function openingRankOrder(
   itemIds: readonly string[],
   correctOrder: readonly string[],
 ): string[] {
   if (itemIds.length < 2) return [...itemIds];
-  const shuffled = seededShuffle(itemIds);
+  const shuffled = seededShuffle(itemIds, shuffleSeed(...itemIds));
   if (!rankOrderMatches(shuffled, correctOrder)) return shuffled;
   return [...shuffled.slice(1), shuffled[0]!];
+}
+
+/** First authored error string. Empty when the sheet left the Error column blank. */
+export function firstRankOrderError(errors: Record<string, string>): string {
+  for (const value of Object.values(errors)) {
+    const trimmed = value.trim();
+    if (trimmed) return trimmed;
+  }
+  return "";
 }

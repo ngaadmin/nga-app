@@ -3,11 +3,13 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import {
   lessonSortBoardClass,
   lessonSortBucketClass,
@@ -31,6 +33,7 @@ import {
   LessonSpentTotalBar,
 } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { cn } from "@/lib/utils/cn";
 import {
   bestDropZone,
@@ -57,6 +60,8 @@ export type LessonSortBucket<TBucket extends string> = {
 type LessonBucketSortGameProps<TBucket extends string> = {
   items: readonly LessonSortItem<TBucket>[];
   buckets: readonly LessonSortBucket<TBucket>[];
+  /** Screen id mixed into the pool shuffle. Spent totals stay in sheet order. */
+  orderKey: string;
   onComplete: () => void;
   onMismatch?: () => void;
   layout?: "default" | "spent-total" | "stable-grid" | "statement-sort";
@@ -82,29 +87,12 @@ function formatDollars(amount: number): string {
   return `$${amount}`;
 }
 
-/** Same order on the server and the client, so orb glyphs match during hydration. */
-function shuffleIds(ids: readonly string[]): string[] {
-  const next = [...ids];
-  let seed = 2166136261;
-  for (const id of ids) {
-    for (let index = 0; index < id.length; index += 1) {
-      seed ^= id.charCodeAt(index);
-      seed = Math.imul(seed, 16777619);
-    }
-  }
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    const j = seed % (i + 1);
-    [next[i], next[j]] = [next[j]!, next[i]!];
-  }
-  return next;
-}
-
 const TAP_SELECT_PX = 10;
 
 export function LessonBucketSortGame<TBucket extends string>({
   items,
   buckets,
+  orderKey,
   onComplete,
   onMismatch,
   layout = "stable-grid",
@@ -124,10 +112,22 @@ export function LessonBucketSortGame<TBucket extends string>({
     [items],
   );
 
-  const [poolIds, setPoolIds] = useState<string[]>(() => {
-    const ids = items.map((item) => item.id);
-    return isSpentTotalLayout ? ids : shuffleIds(ids);
-  });
+  const authoredIds = useMemo(() => items.map((item) => item.id), [items]);
+  const itemSignature = authoredIds.join("\0");
+  const [poolIds, setPoolIds] = useState<string[]>(() => items.map((item) => item.id));
+  const playSeed = usePlaySeed([orderKey, isSpentTotalLayout ? "spent" : "pool"]);
+  const authoredIdsRef = useRef(authoredIds);
+  authoredIdsRef.current = authoredIds;
+
+  useLayoutEffect(() => {
+    if (isSpentTotalLayout || playSeed === null) return;
+    const authored = authoredIdsRef.current;
+    setPoolIds((current) => {
+      if (current.length !== authored.length) return current;
+      if (!authored.every((id) => current.includes(id))) return current;
+      return seededShuffle(authored, playSeed);
+    });
+  }, [isSpentTotalLayout, itemSignature, playSeed]);
   const [bucketItems, setBucketItems] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(buckets.map((bucket) => [bucket.id, []])),
   );

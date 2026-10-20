@@ -27,6 +27,7 @@ export function TapRevealScreen({
         intro={screen.intro}
         items={screen.items}
         buckets={screen.buckets}
+        orderKey={screen.id}
         mode="tap"
         onComplete={finish}
       />

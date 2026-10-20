@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
+  itemsGroupedLikeZones,
   needsWantsPortrait,
   orderPairedZones,
   pairedZoneEmoji,
   sortPromptLines,
 } from "@/lib/academy/lessons/paired-zone-sort";
+import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { cn } from "@/lib/utils/cn";
 
 type PairedItem = {
@@ -28,6 +31,8 @@ type PairedZoneSortProps = {
   intro: string;
   items: readonly PairedItem[];
   buckets: readonly PairedBucket[];
+  /** Screen id mixed into the item shuffle. */
+  orderKey: string;
   /** Tap flies each item into its zone. Drag lets the learner choose. */
   mode: "tap" | "drag";
   /** Thinking portrait beside the prompt. Needs/Wants only. */
@@ -77,12 +82,38 @@ export function PairedZoneSort({
   intro,
   items,
   buckets,
+  orderKey,
   mode,
   showCharacter = false,
   onComplete,
   onMismatch,
 }: PairedZoneSortProps) {
   const zones = orderPairedZones(buckets);
+  const [orderedItems, setOrderedItems] = useState<readonly PairedItem[]>(items);
+  const itemSignature = items.map((item) => `${item.id}:${item.bucket}`).join("|");
+  const zoneSignature = zones.map((zone) => zone.id).join("|");
+  const playSeed = usePlaySeed([orderKey, mode]);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const zoneIdsRef = useRef(zones.map((zone) => zone.id));
+  zoneIdsRef.current = zones.map((zone) => zone.id);
+
+  useLayoutEffect(() => {
+    const source = itemsRef.current;
+    if (playSeed === null) {
+      setOrderedItems(source);
+      return;
+    }
+    const zoneIds = zoneIdsRef.current;
+    setOrderedItems(
+      seededShuffle(source, playSeed, {
+        avoid:
+          mode === "drag"
+            ? (shuffled) => itemsGroupedLikeZones(shuffled, zoneIds)
+            : undefined,
+      }),
+    );
+  }, [itemSignature, mode, playSeed, zoneSignature]);
   const lines = sortPromptLines(intro);
   const portrait = showCharacter ? needsWantsPortrait(intro) : null;
   const [placedIds, setPlacedIds] = useState<string[]>([]);
@@ -174,7 +205,7 @@ export function PairedZoneSort({
       </div>
 
       <div className="mt-4 flex items-start justify-between">
-        {items.map((item) =>
+        {orderedItems.map((item) =>
           placed.has(item.id) ? (
             <span key={item.id} className="invisible h-24 w-[82px] flex-none" aria-hidden />
           ) : (

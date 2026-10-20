@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import {
@@ -26,6 +27,7 @@ import {
   celebrateLessonCorrectAnswer,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
+import { seededShuffle, shuffleSeed } from "@/lib/academy/lessons/seeded-shuffle";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
@@ -58,13 +60,26 @@ function fixedRoundSideLayouts(roundCount: number): SideLayout[] {
   }));
 }
 
-/** Shuffle which choice sits on which side. Must not run during render. */
-function buildRoundSideLayouts(roundCount: number): SideLayout[] {
-  return Array.from({ length: roundCount }, () =>
-    Math.random() < 0.5
-      ? { left: "a" as const, right: "b" as const }
-      : { left: "b" as const, right: "a" as const },
-  );
+function isTrueFalseRound(optionA: string, optionB: string): boolean {
+  const left = optionA.trim().toLowerCase();
+  const right = optionB.trim().toLowerCase();
+  const isSide = (label: string) => label === "true" || label === "false";
+  return isSide(left) && isSide(right);
+}
+
+/** Seeded side order. True/False rounds stay A then B. */
+function sideLayoutForRound(
+  optionA: string,
+  optionB: string,
+  seed: number,
+): SideLayout {
+  if (isTrueFalseRound(optionA, optionB)) {
+    return { left: "a", right: "b" };
+  }
+  const [first] = seededShuffle(["a", "b"] as const, seed);
+  return first === "b"
+    ? { left: "b", right: "a" }
+    : { left: "a", right: "b" };
 }
 
 type SpotlightScreenProps = StandardScreenProps<SpotlightRoundsScreenConfig> & {
@@ -187,10 +202,21 @@ function SpotlightGradedRounds({
   const [roundSideLayouts, setRoundSideLayouts] = useState<SideLayout[]>(() =>
     fixedRoundSideLayouts(screen.rounds.length),
   );
+  const roundSignature = screen.rounds
+    .map((entry) => `${entry.optionA}\0${entry.optionB}`)
+    .join("\n");
+  const roundsRef = useRef(screen.rounds);
+  roundsRef.current = screen.rounds;
+  const playSeed = usePlaySeed([screen.id, "sides"]);
 
   useLayoutEffect(() => {
-    setRoundSideLayouts(buildRoundSideLayouts(screen.rounds.length));
-  }, [screen.rounds.length]);
+    if (playSeed === null) return;
+    setRoundSideLayouts(
+      roundsRef.current.map((entry, index) =>
+        sideLayoutForRound(entry.optionA, entry.optionB, shuffleSeed(playSeed, index)),
+      ),
+    );
+  }, [playSeed, roundSignature]);
 
   const { setBonusRunUnit, recordBonusRunCorrect } = flow;
   useLayoutEffect(() => {

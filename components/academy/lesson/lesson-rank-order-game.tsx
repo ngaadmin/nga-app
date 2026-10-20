@@ -3,17 +3,21 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
   lessonIntroClass,
   lessonRankOrderCardClass,
+  lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
+  firstRankOrderError,
   openingRankOrder,
   rankOrderMatches,
 } from "@/lib/academy/lessons/rank-order";
@@ -37,7 +41,7 @@ type LessonRankOrderGameProps = {
 };
 
 /** Minimum pointer travel before a reorder swap fires. */
-const RANK_DRAG_REORDER_THRESHOLD_PX = 28;
+const RANK_DRAG_REORDER_THRESHOLD_PX = 12;
 
 function resolveRankRowIndexFromPointer(
   clientY: number,
@@ -61,9 +65,13 @@ export function LessonRankOrderGame({
   intro,
   items,
   correctOrder,
+  errors,
   onComplete,
   onIncomplete,
+  onMistake,
   onSuccess,
+  onPersistentError,
+  onDismissError,
 }: LessonRankOrderGameProps) {
   type ItemId = string;
 
@@ -73,6 +81,8 @@ export function LessonRankOrderGame({
       correctOrder,
     ),
   );
+  const itemSignature = items.map((item) => item.id).join("|");
+  const correctSignature = correctOrder.join("|");
   const [rankSubmitted, setRankSubmitted] = useState(false);
   const [dragRankId, setDragRankId] = useState<ItemId | null>(null);
   const [dragGhost, setDragGhost] = useState<{
@@ -91,6 +101,18 @@ export function LessonRankOrderGame({
   const activePointerIdRef = useRef<number | null>(null);
   const lastReorderYRef = useRef<number | null>(null);
   const solvedRef = useRef(false);
+  const { shakingKey, shake } = useLessonShake();
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const correctOrderRef = useRef(correctOrder);
+  correctOrderRef.current = correctOrder;
+
+  useLayoutEffect(() => {
+    const ids = itemsRef.current.map((item) => item.id);
+    setRankOrder(openingRankOrder(ids, correctOrderRef.current));
+    solvedRef.current = false;
+    setRankSubmitted(false);
+  }, [correctSignature, itemSignature]);
 
   useEffect(() => {
     const solved = rankOrderMatches(rankOrder, correctOrder);
@@ -98,6 +120,7 @@ export function LessonRankOrderGame({
       setRankSubmitted(true);
       if (!solvedRef.current) {
         solvedRef.current = true;
+        onDismissError?.();
         onSuccess?.();
         onComplete();
       }
@@ -108,7 +131,16 @@ export function LessonRankOrderGame({
       solvedRef.current = false;
       onIncomplete?.();
     }
-  }, [correctOrder, onComplete, onIncomplete, onSuccess, rankOrder]);
+  }, [correctOrder, onComplete, onDismissError, onIncomplete, onSuccess, rankOrder]);
+
+  const checkOrder = () => {
+    if (rankSubmitted || rankOrderMatches(rankOrderRef.current, correctOrder)) return;
+    onMistake();
+    shake("board");
+    const message = firstRankOrderError(errors);
+    if (message) onPersistentError?.(message);
+    else onDismissError?.();
+  };
 
   const releasePointerCapture = useCallback(() => {
     const target = captureTargetRef.current;
@@ -129,9 +161,21 @@ export function LessonRankOrderGame({
 
   useEffect(() => () => endDrag(), [endDrag]);
 
+  useEffect(() => {
+    if (!dragRankId) return;
+    const finish = () => endDrag();
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    return () => {
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+    };
+  }, [dragRankId, endDrag]);
+
   const moveRankItem = useCallback(
     (fromIndex: number, toIndex: number) => {
       if (fromIndex === toIndex || rankSubmitted) return;
+      onDismissError?.();
       setRankOrder((current) => {
         const next = [...current];
         const [moved] = next.splice(fromIndex, 1);
@@ -141,7 +185,7 @@ export function LessonRankOrderGame({
         return next;
       });
     },
-    [rankSubmitted],
+    [onDismissError, rankSubmitted],
   );
 
   const reorderDraggedRank = useCallback(
@@ -180,7 +224,20 @@ export function LessonRankOrderGame({
     const captureTarget = boardRef.current ?? event.currentTarget;
     captureTargetRef.current = captureTarget;
     activePointerIdRef.current = event.pointerId;
-    captureTarget.setPointerCapture(event.pointerId);
+    try {
+      captureTarget.setPointerCapture(event.pointerId);
+    } catch {
+      captureTargetRef.current = null;
+    }
+    const pointerId = event.pointerId;
+    const finishDrag = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) return;
+      window.removeEventListener("pointerup", finishDrag);
+      window.removeEventListener("pointercancel", finishDrag);
+      endDrag();
+    };
+    window.addEventListener("pointerup", finishDrag);
+    window.addEventListener("pointercancel", finishDrag);
     lastReorderYRef.current = event.clientY;
     const item = items.find((entry) => entry.id === itemId);
     setDragRankId(itemId);
@@ -213,7 +270,7 @@ export function LessonRankOrderGame({
       <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
       <div
         ref={boardRef}
-        className="flex flex-col gap-2"
+        className={cn("flex flex-col gap-2", shakingKey === "board" && "lesson-tile-shake")}
         onPointerMove={handleBoardPointerMove}
         onPointerUp={handleBoardPointerUp}
         onPointerCancel={handleBoardPointerUp}
@@ -251,9 +308,6 @@ export function LessonRankOrderGame({
               )}
               style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <span className="text-center text-lg leading-none tracking-tighter text-[#031F82]" aria-hidden>
-                ⋮⋮
-              </span>
               <span className="text-center text-[1.35rem] leading-none" aria-hidden>
                 {item.emoji ?? "📌"}
               </span>
@@ -268,7 +322,11 @@ export function LessonRankOrderGame({
         <div className="mt-3 flex justify-center">
           <LessonAnswerTick />
         </div>
-      ) : null}
+      ) : (
+        <button type="button" className={lessonSubmitAnswerClass} onClick={checkOrder}>
+          Check order
+        </button>
+      )}
       {dragGhost ? (
         <OverlayPortal className="overflow-visible">
           <div
@@ -282,9 +340,6 @@ export function LessonRankOrderGame({
               width: dragGhost.width,
             }}
           >
-            <span className="text-center text-lg leading-none tracking-tighter text-[#031F82]" aria-hidden>
-              ⋮⋮
-            </span>
             <span className="text-center text-[1.35rem] leading-none" aria-hidden>
               {dragGhost.emoji}
             </span>

@@ -3,11 +3,13 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import {
   lessonOptionTextClass,
   lessonSequenceBoardClass,
@@ -28,6 +30,7 @@ import {
   domRectToDropRect,
   type DragBounds,
 } from "@/lib/academy/lessons/drop-hit";
+import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { cn } from "@/lib/utils/cn";
 
 export type LessonSequenceItem<TStep extends string = string> = {
@@ -45,6 +48,8 @@ export type LessonSequenceStep<TStep extends string = string> = {
 type LessonSequenceSortGameProps<TStep extends string> = {
   items: readonly LessonSequenceItem<TStep>[];
   steps: readonly LessonSequenceStep<TStep>[];
+  /** Screen id mixed into the pile shuffle. Numbered slots stay in order. */
+  orderKey: string;
   onComplete: () => void;
   onMismatch?: () => void;
 };
@@ -61,19 +66,11 @@ type DragState = {
 
 type PendingSideEffect = { kind: "correct"; willComplete: boolean };
 
-function shuffleIds(ids: readonly string[]): string[] {
-  const next = [...ids];
-  for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [next[i], next[j]] = [next[j]!, next[i]!];
-  }
-  return next;
-}
-
 /** Drag steps from a shuffled pool into vertically stacked numbered slots. */
 export function LessonSequenceSortGame<TStep extends string>({
   items,
   steps,
+  orderKey,
   onComplete,
   onMismatch,
 }: LessonSequenceSortGameProps<TStep>) {
@@ -82,9 +79,22 @@ export function LessonSequenceSortGame<TStep extends string>({
     [items],
   );
 
-  const [poolIds, setPoolIds] = useState<string[]>(() =>
-    shuffleIds(items.map((item) => item.id)),
-  );
+  const authoredIds = useMemo(() => items.map((item) => item.id), [items]);
+  const itemSignature = authoredIds.join("\0");
+  const [poolIds, setPoolIds] = useState<string[]>(() => items.map((item) => item.id));
+  const playSeed = usePlaySeed([orderKey, "pile"]);
+  const authoredIdsRef = useRef(authoredIds);
+  authoredIdsRef.current = authoredIds;
+
+  useLayoutEffect(() => {
+    if (playSeed === null) return;
+    const authored = authoredIdsRef.current;
+    setPoolIds((current) => {
+      if (current.length !== authored.length) return current;
+      if (!authored.every((id) => current.includes(id))) return current;
+      return seededShuffle(authored, playSeed);
+    });
+  }, [itemSignature, playSeed]);
   const [stepItems, setStepItems] = useState<Record<string, string[]>>(() =>
     Object.fromEntries(steps.map((step) => [step.id, []])),
   );

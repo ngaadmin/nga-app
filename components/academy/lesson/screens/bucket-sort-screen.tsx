@@ -48,6 +48,7 @@ export function BucketSortScreen({
           intro={prompt}
           items={screen.items}
           buckets={screen.buckets}
+          orderKey={screen.id}
           mode="drag"
           showCharacter={screen.buckets.some(
             (bucket) => bucket.id === "want" || bucket.id === "need",
@@ -64,6 +65,7 @@ export function BucketSortScreen({
       <LessonSequenceSortGame
         items={screen.items}
         steps={screen.buckets}
+        orderKey={screen.id}
         onComplete={handleSolved}
         onMismatch={reportWrongDrop}
       />
@@ -71,6 +73,7 @@ export function BucketSortScreen({
       <LessonBucketSortGame
         items={screen.items}
         buckets={screen.buckets}
+        orderKey={screen.id}
         layout={sortLayout}
         targetTotal={screen.targetTotal}
         poolColumnLabel={screen.poolColumnLabel}

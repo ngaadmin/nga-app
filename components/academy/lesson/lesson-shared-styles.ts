@@ -377,7 +377,7 @@ export const lessonSortRowClass =
 
 /** Rank-order card: drag handle, emoji, then the choice. */
 export const lessonRankOrderCardClass =
-  "grid w-full min-w-0 grid-cols-[1.5rem_2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
+  "grid w-full min-w-0 grid-cols-[2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
 
 export const lessonRankOrderNumberClass = lessonSequenceNumberClass;
 

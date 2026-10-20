@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
+import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   hasIncorrectSelection,
@@ -157,7 +157,7 @@ export function LessonBudgetSelectGame({
 
   return (
     <>
-      <p className={cn("mb-4", lessonIntroClass())}>{intro}</p>
+      <LessonPromptParagraphs text={intro} className={cn("mb-4", lessonIntroClass())} />
       <div className="space-y-3" role="group" aria-label="Budget items">
         {items.map((item) => {
           const checked = checkedIds.has(item.id);

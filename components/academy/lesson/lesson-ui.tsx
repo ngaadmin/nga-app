@@ -3,6 +3,7 @@
 import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
 import { forwardRef, useEffect } from "react";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
+import { splitPromptParagraphs } from "@/lib/academy/lessons/prompt-paragraphs";
 import {
   lessonTileSelection,
   lessonTileShowsTick,
@@ -154,6 +155,31 @@ type LessonScreenIntroProps = {
   className?: string;
 };
 
+/**
+ * Prompt copy. A blank line in the sheet becomes its own paragraph.
+ * One block stays a single paragraph so existing screens keep their spacing.
+ */
+export function LessonPromptParagraphs({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  const paragraphs = splitPromptParagraphs(text);
+  if (paragraphs.length === 0) return null;
+  if (paragraphs.length === 1) {
+    return <p className={className}>{paragraphs[0]}</p>;
+  }
+  return (
+    <div className={cn("space-y-3", className)}>
+      {paragraphs.map((paragraph, index) => (
+        <p key={index}>{paragraph}</p>
+      ))}
+    </div>
+  );
+}
+
 /** Standard title + intro copy block for lesson screens. */
 export function LessonScreenIntro({
   title,
@@ -176,7 +202,10 @@ export function LessonScreenIntro({
     <div className={className}>
       {title ? <p className={lessonInstructionClass}>{title}</p> : null}
       {body ? (
-        <p className={cn(title && "mt-2", introClass, "mb-5")}>{body}</p>
+        <LessonPromptParagraphs
+          text={body}
+          className={cn(title && "mt-2", introClass, "mb-5")}
+        />
       ) : null}
       {cta ? (
         <p className={cn((title || body) && "mt-2", lessonCtaClass)}>{cta}</p>

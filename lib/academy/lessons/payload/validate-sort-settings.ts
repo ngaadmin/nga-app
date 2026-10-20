@@ -21,20 +21,6 @@ export type SortAuthoringIssue = {
   detail: string;
 };
 
-/**
- * Lesson 4 screen 2 still writes its reorder as `STEP1:`–`STEP4:` on a
- * bucket-sort. That screen is left as authored. New rows are not added here.
- */
-export function isLegacySortAuthoringIssue(issue: SortAuthoringIssue): boolean {
-  return (
-    issue.lessonNumber === 4 &&
-    issue.screenLabel === "2" &&
-    issue.gameType === "bucket-sort" &&
-    issue.kind === "unrecognised-line" &&
-    /^STEP\d+\s*:/i.test(issue.detail)
-  );
-}
-
 export function isUnrecognisedSettingLine(gameType: SortGameType, line: string): boolean {
   const match = SETTING_LINE.exec(line.trim());
   if (!match) return false;
@@ -84,13 +70,12 @@ export function sortAuthoringIssues(input: {
   return issues;
 }
 
-/** Throws unless every issue is the known lesson 4 screen 2 reorder. */
+/** Throws when a reorder or bucket screen has no items or an unrecognised line. */
 export function assertSortAuthoring(issues: readonly SortAuthoringIssue[]): void {
-  const blocking = issues.filter((issue) => !isLegacySortAuthoringIssue(issue));
-  if (blocking.length === 0) return;
-  const first = blocking[0];
+  if (issues.length === 0) return;
+  const first = issues[0];
   if (!first) return;
-  const details = blocking.map((issue) =>
+  const details = issues.map((issue) =>
     issue.kind === "no-items" ? "no parsed items" : `unrecognised line "${issue.detail}"`,
   );
   const lesson = first.lessonNumber > 0 ? `Lesson ${first.lessonNumber} ` : "";

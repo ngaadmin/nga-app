@@ -203,25 +203,25 @@ CORRECT: C","CHOICE A: Aiden is just slow at clicking.
 CHOICE B: Aiden has run out of money.
 CHOICE C: Aiden stops to think.
 CORRECT: C",Look again at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,
-1,4,2,bucket-sort,"Senna explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
+1,4,2,rank-order,"Senna explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
 
 Drag the steps into order.","Holly explains why she waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
 
 Drag the steps into order.","Aiden explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
 
-Drag the steps into order.",,,,"ITEMS:
-STEP1: Senna sees the one-time offer.
-STEP2: Senna remembers the price could drop later.
-STEP3: Senna waits a day and checks again.
-STEP4: Senna is happy he waited - he can buy the same item for even less.","ITEMS:
-STEP1: Holly sees the one-time offer.
-STEP2: Holly remembers the price could drop later.
-STEP3: Holly waits a day and checks again.
-STEP4: Holly is happy she waited - she can buy the same item for even less.","ITEMS:
-STEP1: Aiden sees the one-time offer.
-STEP2: Aiden remembers the price could drop later.
-STEP3: Aiden waits a day and checks again.
-STEP4: Aiden is happy he waited - he can buy the same item for even less.",,,,
+Drag the steps into order.",,,,"ITEMS: Senna sees the one-time offer.
+ITEMS: Senna remembers the price could drop later.
+ITEMS: Senna waits a day and checks again.
+ITEMS: Senna is happy he waited - he can buy the same item for even less.
+ORDER: senna-sees-the-one-time-offer-0,senna-remembers-the-price-could-drop-later-1,senna-waits-a-day-and-checks-again-2,senna-is-happy-he-waited-he-can-buy-the-same-item-for-even-less-3","ITEMS: Holly sees the one-time offer.
+ITEMS: Holly remembers the price could drop later.
+ITEMS: Holly waits a day and checks again.
+ITEMS: Holly is happy she waited - she can buy the same item for even less.
+ORDER: holly-sees-the-one-time-offer-0,holly-remembers-the-price-could-drop-later-1,holly-waits-a-day-and-checks-again-2,holly-is-happy-she-waited-she-can-buy-the-same-item-for-even-less-3","ITEMS: Aiden sees the one-time offer.
+ITEMS: Aiden remembers the price could drop later.
+ITEMS: Aiden waits a day and checks again.
+ITEMS: Aiden is happy he waited - he can buy the same item for even less.
+ORDER: aiden-sees-the-one-time-offer-0,aiden-remembers-the-price-could-drop-later-1,aiden-waits-a-day-and-checks-again-2,aiden-is-happy-he-waited-he-can-buy-the-same-item-for-even-less-3",,,,
 1,4,3,spotlight-rounds,Which one helps Lars stop and think?,Which one helps Holly stop and think?,Which one helps Aiden stop and think?,not allowed,not allowed,not allowed,,"ROUNDS:
 A: ⏰ It's a limited time offer - I have to buy it now! | B: 💰 I can wait and get it cheaper later. | CORRECT: B
 A: 🔥 It looks cool, I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B

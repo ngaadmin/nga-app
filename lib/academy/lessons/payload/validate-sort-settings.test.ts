@@ -5,7 +5,6 @@ import { mapPayloadScreen } from "@/lib/academy/lessons/payload/map-payload-less
 import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import {
   assertSortAuthoring,
-  isLegacySortAuthoringIssue,
   sortAuthoringIssues,
   type SortAuthoringIssue,
 } from "@/lib/academy/lessons/payload/validate-sort-settings";
@@ -84,27 +83,7 @@ describe("sort screen authoring", () => {
     );
   });
 
-  it("keeps the lesson 4 screen 2 reorder and flags no other Module 1 screen", () => {
-    const issues = module1SortIssues();
-    expect(issues.length).toBeGreaterThan(0);
-    expect(issues.every(isLegacySortAuthoringIssue)).toBe(true);
-    const flagged = [
-      ...new Set(issues.map((issue) => `L${issue.lessonNumber} s${issue.screenLabel} ${issue.cohort}`)),
-    ];
-    expect(flagged).toEqual([
-      "L4 s2 explorer",
-      "L4 s2 pathfinder",
-      "L4 s2 maverick",
-    ]);
-    expect(assertSortAuthoring(issues)).toBeUndefined();
-    const fresh = sortAuthoringIssues({
-      lessonNumber: 9,
-      screenLabel: "2",
-      cohort: "explorer",
-      gameType: "bucket-sort",
-      raw: "STEP1: Wait.",
-      itemCount: 1,
-    });
-    expect(() => assertSortAuthoring(fresh)).toThrow(/cannot ship/);
+  it("flags no Module 1 reorder or bucket screen", () => {
+    expect(module1SortIssues()).toEqual([]);
   });
 });

@@ -122,11 +122,11 @@ Maverick: Ready to build your own Cash for Emergencies? Put these steps in order
 
 ## Lesson 4, screen 2
 
-Game type: bucket-sort
+Game type: rank-order
 
 Blank for: Explorer, Pathfinder, Maverick
 
-Wrong answer: a card on the wrong step
+Wrong answer: a wrong order on Submit
 
 Explorer: Senna explains why he waited: "Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed." Drag the steps into order.
 

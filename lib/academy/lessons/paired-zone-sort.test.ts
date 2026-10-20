@@ -42,7 +42,7 @@ describe("paired zone sort", () => {
     );
   });
 
-  it("treats tap-reveal and want/need sorts as the shared layout", () => {
+  it("treats tap-reveal and two-bucket drag sorts as the shared layout", () => {
     const tap = { type: "tap-reveal", buckets: [], items: [] } as unknown as ScreenConfig;
     const wants = {
       type: "bucket-sort",
@@ -51,12 +51,38 @@ describe("paired zone sort", () => {
         { id: "need", label: "Needs" },
       ],
     } as unknown as ScreenConfig;
+    const shortLong = {
+      type: "bucket-sort",
+      buckets: [
+        { id: "short", label: "Short Fun" },
+        { id: "long", label: "More Fun for Longer" },
+      ],
+    } as unknown as ScreenConfig;
+    const yesNo = {
+      type: "bucket-sort",
+      buckets: [
+        { id: "yes", label: "Yes" },
+        { id: "no", label: "No" },
+      ],
+    } as unknown as ScreenConfig;
     const spent = {
       type: "bucket-sort",
+      layout: "spent-total",
       buckets: [{ id: "spent", label: "Spent" }],
+    } as unknown as ScreenConfig;
+    const steps = {
+      type: "bucket-sort",
+      layout: "steps-row",
+      buckets: [
+        { id: "step1", label: "Step 1" },
+        { id: "step2", label: "Step 2" },
+      ],
     } as unknown as ScreenConfig;
     expect(isPairedZoneSortScreen(tap)).toBe(true);
     expect(isPairedZoneSortScreen(wants)).toBe(true);
+    expect(isPairedZoneSortScreen(shortLong)).toBe(true);
+    expect(isPairedZoneSortScreen(yesNo)).toBe(true);
     expect(isPairedZoneSortScreen(spent)).toBe(false);
+    expect(isPairedZoneSortScreen(steps)).toBe(false);
   });
 });

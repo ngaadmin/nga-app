@@ -1,14 +1,18 @@
 import type { ScreenConfig } from "@/lib/academy/lessons/types";
 
-const ZONE_ORDER = ["want", "short", "need", "long"] as const;
+const ZONE_ORDER = ["want", "short", "yes", "need", "long", "no"] as const;
 
-/** Side-by-side tinted zones: Needs/Wants drag, and Short Fun tap-reveal. */
+/**
+ * Side-by-side tinted zones.
+ * Tap-reveal is the demo. Two-bucket drag sorts (Short Fun, Needs/Wants, Yes/No)
+ * use the same layout. Step order and the single Spent bucket stay on their own games.
+ */
 export function isPairedZoneSortScreen(screen: ScreenConfig | undefined): boolean {
   if (!screen) return false;
   if (screen.type === "tap-reveal") return true;
   if (screen.type !== "bucket-sort") return false;
-  const ids = new Set(screen.buckets.map((bucket) => bucket.id));
-  return ids.has("want") && ids.has("need");
+  if (screen.layout === "steps-row" || screen.layout === "spent-total") return false;
+  return screen.buckets.length === 2;
 }
 
 export function isRoomyLessonScreen(screen: ScreenConfig | undefined): boolean {

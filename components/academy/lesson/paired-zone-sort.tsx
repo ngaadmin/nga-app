@@ -21,6 +21,7 @@ type PairedItem = {
 type PairedBucket = {
   id: string;
   label: string;
+  icon?: string;
 };
 
 type PairedZoneSortProps = {
@@ -50,7 +51,7 @@ function SortGlyph({
   return (
     <div
       className={cn(
-        "sort-item relative flex h-24 w-[82px] flex-none flex-col items-center text-center",
+        "sort-item relative flex min-h-24 w-[82px] flex-none flex-col items-center text-center",
         shaking && "lesson-tile-shake",
       )}
     >
@@ -65,7 +66,7 @@ function SortGlyph({
       <span className="text-[40px] leading-[46px]" aria-hidden>
         {item.emoji ?? "•"}
       </span>
-      <span className="sort-label mt-1 line-clamp-3 w-full font-heading text-xs font-semibold leading-[1.25] text-[#031F82]">
+      <span className="sort-label mt-1 w-full font-heading text-xs font-semibold leading-[1.25] text-[#031F82]">
         {item.label}
       </span>
     </div>
@@ -247,7 +248,7 @@ export function PairedZoneSort({
           const zoneItems = items.filter(
             (item) => item.bucket === zone.id && placed.has(item.id),
           );
-          const emoji = pairedZoneEmoji(zone.id);
+          const emoji = pairedZoneEmoji(zone.id) ?? zone.icon;
           return (
             <div
               key={zone.id}

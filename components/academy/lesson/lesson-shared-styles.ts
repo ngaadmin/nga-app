@@ -79,6 +79,20 @@ export const lessonIconMonogramClass =
 export const lessonItemChipClass =
   "flex items-center gap-3 border-0 bg-transparent p-0 text-left font-sans text-[18px] font-medium text-[#031F82]";
 
+/** Savings-goal row. Grab cursor and circle-chip border, sized like a sort card. */
+export const lessonSavingsGoalChipClass =
+  "flex w-full min-h-12 cursor-grab touch-none select-none items-center gap-3 rounded-2xl border-2 border-[#BDE9FB] bg-white px-3 py-1 text-left font-sans text-[18px] font-medium leading-snug text-[#031F82] shadow-sm transition-all active:cursor-grabbing active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0CC1E0]";
+
+/** Savings drop well — same dashed bucket as statement-sort. */
+export const lessonSavingsGoalDropClass =
+  "flex min-h-24 w-full flex-1 flex-col gap-2 rounded-2xl border-2 p-2.5 transition-colors";
+
+/** Idle fill for the savings drop well. */
+export const lessonSavingsGoalDropIdleClass = "border-dashed border-[#BDE9FB] bg-[#F8FCFF]";
+
+/** Drag-over state for the savings drop well. Solid brand border so the well reads as active. */
+export const lessonSavingsGoalDropActiveClass = "border-solid border-[#0CC1E0] bg-[#E8F6FC]";
+
 export const lessonItemOrbClass =
   "grid size-12 shrink-0 place-items-center rounded-full bg-[#E8F6FC] text-base font-bold text-[#031F82] shadow-[0_4px_10px_rgba(3,31,130,0.08)]";
 

@@ -29,13 +29,13 @@ export function SavingsGoalScreen({
   }, [screenIndex]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex min-h-full flex-1 flex-col">
       <LessonPromptParagraphs
         text={screen.intro}
         className={cn("shrink-0", lessonIntroClass(screen.emphasizeInstruction === true))}
       />
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className="mt-3 flex min-h-0 flex-1 flex-col">
         <LessonSavingsGoalGame
           meterLabel={screen.meterLabel}
           targetAmount={screen.targetAmount}

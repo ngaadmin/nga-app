@@ -36,11 +36,11 @@ export function LeaderboardSwitch({
         disabled={disabled}
         onClick={() => onChange(!enabled)}
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-40 ${
-          enabled ? "bg-[#0CC1E0]" : "bg-[#BDE9FB]"
+          enabled ? "bg-[#0CC1E0]" : "bg-gray-300"
         }`}
       >
         <span
-          className={`absolute top-0.5 size-6 rounded-full bg-white shadow-sm transition-transform ${
+          className={`absolute left-0 top-0.5 size-6 rounded-full bg-white shadow-sm transition-transform ${
             enabled ? "translate-x-5" : "translate-x-0.5"
           }`}
         />

@@ -1101,9 +1101,10 @@ CORRECT: bus,dog lead`,
           isCorrect: false,
         },
       ]);
-      expect(screen.options.every((option) => option.emoji === undefined), track.cohort).toBe(
-        true,
-      );
+      expect(
+        screen.options?.every((option) => option.emoji === undefined),
+        track.cohort,
+      ).toBe(true);
     }
   });
 

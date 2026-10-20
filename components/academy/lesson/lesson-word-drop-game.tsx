@@ -18,6 +18,7 @@ import {
   lessonNarrativeClass,
   lessonSortPoolChipClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
@@ -463,7 +464,7 @@ export const LessonWordDropGame = forwardRef<
                   >
                     {visibleBlankWord(blankIndex) ? (
                       <span className={cn(lessonSortPoolChipClass, "relative text-[20px]")}>
-                        {visibleBlankWord(blankIndex)}
+                        <AnswerEmojiLabel label={visibleBlankWord(blankIndex)} />
                         {visibleBlankWord(blankIndex) ===
                         blanks[blankIndex]?.correctOption ? (
                           <LessonAnswerTick className="absolute -right-3 -top-3" />
@@ -531,9 +532,10 @@ export const LessonWordDropGame = forwardRef<
                   dragState.fromBlankIndex === null &&
                   "opacity-40",
               )}
+              aria-label={option}
               style={{ touchAction: "none" }}
             >
-              {option}
+              <AnswerEmojiLabel label={option} />
             </button>
           );
         })}
@@ -553,7 +555,7 @@ export const LessonWordDropGame = forwardRef<
               minHeight: dragState.height,
             }}
           >
-            {dragState.word}
+            <AnswerEmojiLabel label={dragState.word} />
           </div>
         </OverlayPortal>
       ) : null}

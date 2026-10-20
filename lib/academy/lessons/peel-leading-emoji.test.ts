@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { peelLeadingEmoji, presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
+import {
+  peelEdgeEmojis,
+  peelLeadingEmoji,
+  presentLightningCard,
+} from "@/lib/academy/lessons/peel-leading-emoji";
 
 describe("peelLeadingEmoji", () => {
   it("splits a BMP alarm clock off the label so it is not shown twice", () => {
@@ -19,6 +23,22 @@ describe("peelLeadingEmoji", () => {
   it("leaves a label with no emoji unchanged", () => {
     expect(peelLeadingEmoji("I'll sleep on it and decide tomorrow.")).toEqual({
       label: "I'll sleep on it and decide tomorrow.",
+    });
+  });
+});
+
+describe("peelEdgeEmojis", () => {
+  it("lifts the emoji at each end of a hold label", () => {
+    expect(peelEdgeEmojis("❄️ HOLD TO FREEZE ❄️")).toEqual({
+      leading: "❄️",
+      trailing: "❄️",
+      label: "HOLD TO FREEZE",
+    });
+  });
+
+  it("leaves a label with no emoji unchanged", () => {
+    expect(peelEdgeEmojis("HOLD TO FREEZE")).toEqual({
+      label: "HOLD TO FREEZE",
     });
   });
 });

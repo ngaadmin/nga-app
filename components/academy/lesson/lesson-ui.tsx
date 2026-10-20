@@ -2,6 +2,8 @@
 
 import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, ReactNode } from "react";
 import { forwardRef, useEffect } from "react";
+import { AnswerEmoji, AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
+import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import { splitPromptParagraphs } from "@/lib/academy/lessons/prompt-paragraphs";
 import {
@@ -21,7 +23,6 @@ import {
   lessonImagePlaceholderClass,
   lessonImagePlaceholderCompactClass,
   lessonInlineErrorClass,
-  lessonIconEmojiClass,
   lessonIconLabelClass,
   lessonItemOrbClass,
   lessonIconOptionStackClass,
@@ -33,7 +34,6 @@ import {
   lessonSortBucketWellClass,
   lessonSortPoolStaticClass,
   lessonSortStatementCardClass,
-  lessonSortStatementEmojiClass,
   lessonSortStatementListClass,
   lessonSortStatementPlacedClass,
   lessonPricedItemRowClass,
@@ -65,7 +65,6 @@ import {
   lessonSpentTotalAmountClass,
   lessonSpentTotalCaptionClass,
   lessonSuccessMessageClass,
-  lessonSortItemEmojiClass,
   lessonWrongSelectionChipClass,
   type LessonChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -489,7 +488,7 @@ function SortItemEmoji({ emoji }: { emoji?: string }) {
   if (!glyph) return null;
   return (
     <span className={lessonItemOrbClass} aria-hidden>
-      <span className="text-2xl leading-none">{glyph}</span>
+      <AnswerEmoji emoji={glyph} />
     </span>
   );
 }
@@ -509,6 +508,7 @@ export const LessonSortStatementCard = forwardRef<
   { label, emoji, price, isDragging = false, className, type = "button", ...props },
   ref,
 ) {
+  const shown = presentLightningCard({ emoji, label });
   return (
     <button
       ref={ref}
@@ -522,9 +522,9 @@ export const LessonSortStatementCard = forwardRef<
       style={{ touchAction: "none", ...props.style }}
       {...props}
     >
-      <SortItemEmoji emoji={emoji} />
+      <SortItemEmoji emoji={shown.emoji} />
       <span className="min-w-0 leading-snug">
-        {label}
+        {shown.label}
         {price !== undefined ? ` · $${price}` : ""}
       </span>
     </button>
@@ -545,11 +545,12 @@ export function LessonSortStatementPlaced({
   price,
   className,
 }: LessonSortStatementPlacedProps) {
+  const shown = presentLightningCard({ emoji, label });
   return (
     <div className={cn(lessonSortStatementPlacedClass, className)}>
-      <SortItemEmoji emoji={emoji} />
+      <SortItemEmoji emoji={shown.emoji} />
       <span className="min-w-0">
-        {label}
+        {shown.label}
         {price !== undefined ? ` · $${price}` : ""}
       </span>
     </div>
@@ -570,15 +571,12 @@ export function LessonPricedSortItemContent({
   price,
   formatPrice = (amount) => `$${amount}`,
 }: LessonPricedSortItemContentProps) {
+  const shown = presentLightningCard({ emoji, label });
   return (
     <span className={lessonPricedItemRowClass}>
-      {emoji ? (
-        <span className={lessonSortItemEmojiClass} aria-hidden>
-          {emoji}
-        </span>
-      ) : null}
+      {shown.emoji ? <AnswerEmoji emoji={shown.emoji} /> : null}
       <span className={lessonPricedItemTextClass}>
-        <span className="min-w-0 leading-snug">{label}</span>
+        <span className="min-w-0 leading-snug">{shown.label}</span>
         {price !== undefined ? (
           <span className={lessonPricedItemPriceClass}>{formatPrice(price)}</span>
         ) : null}
@@ -718,7 +716,9 @@ export const LessonSequenceStepCard = forwardRef<
       style={{ touchAction: "none", ...props.style }}
       {...props}
     >
-      <span className="w-full text-left leading-snug">{label}</span>
+      <span className="w-full text-left leading-snug">
+        <AnswerEmojiLabel label={label} />
+      </span>
     </button>
   );
 });
@@ -735,7 +735,9 @@ export function LessonSequenceStepPlaced({
 }: LessonSequenceStepPlacedProps) {
   return (
     <div className={cn(lessonSequenceStepPlacedClass, className)}>
-      <span className="w-full text-left leading-snug">{label}</span>
+      <span className="w-full text-left leading-snug">
+        <AnswerEmojiLabel label={label} />
+      </span>
     </div>
   );
 }
@@ -896,14 +898,7 @@ export const LessonIconOption = forwardRef<
       {glyph}
     </span>
   ) : showEmoji ? (
-    <span
-      className={cn(
-        isCompact ? lessonIconEmojiClass : "text-[32px] leading-none",
-      )}
-      aria-hidden
-    >
-      {safeEmoji}
-    </span>
+    <AnswerEmoji emoji={safeEmoji} />
   ) : display === "label" ? (
     <span className={cn(lessonIconLabelClass, "px-2")}>
       {label}

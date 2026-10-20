@@ -9,6 +9,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
 import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import {
   lessonOptionTextClass,
@@ -365,7 +366,7 @@ export function LessonSequenceSortGame<TStep extends string>({
             }}
           >
             <span className={cn(lessonOptionTextClass, "w-full text-left")}>
-              {draggedItem.label}
+              <AnswerEmojiLabel label={draggedItem.label} />
             </span>
           </div>
         </OverlayPortal>

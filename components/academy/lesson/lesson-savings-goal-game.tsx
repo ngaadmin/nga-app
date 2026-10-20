@@ -9,6 +9,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
+import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   lessonCtaClass,
@@ -78,16 +80,16 @@ function meterCountsDown(label: string, showsRemaining: boolean): boolean {
 }
 
 function renderItemChip(item: SavingsGoalGameItem) {
-  const emoji = item.emoji?.trim();
+  const shown = presentLightningCard({ emoji: item.emoji, label: item.label });
   return (
     <>
-      {emoji ? (
+      {shown.emoji ? (
         <span className={lessonItemOrbClass} aria-hidden>
-          {emoji}
+          <AnswerEmoji emoji={shown.emoji} />
         </span>
       ) : null}
       <span>
-        {item.label} · {formatDollars(item.price)}
+        {shown.label} · {formatDollars(item.price)}
       </span>
     </>
   );

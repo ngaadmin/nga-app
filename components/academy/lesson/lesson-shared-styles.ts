@@ -61,13 +61,18 @@ export function usesNeutralTapFeedback(
 
 export const lessonCircleSizeClass = "size-12";
 
+/**
+ * One glyph size for an emoji that belongs to an answer, option, item, or chip.
+ * 30px is the size on the updated choice rows (multiple-choice, binary-choice,
+ * and the same row on budget-select). Two-column lightning circles were 32px.
+ */
+export const lessonAnswerEmojiClass = "text-[30px] leading-none";
+
 /** Emoji glyph inside circular lesson options. */
-export const lessonIconEmojiClass =
-  "text-[1.25rem] leading-none";
+export const lessonIconEmojiClass = lessonAnswerEmojiClass;
 
 /** Inline emoji in sort statement cards, placed items, and step pills. */
-export const lessonSortItemEmojiClass =
-  "shrink-0 text-[1.25rem] leading-none";
+export const lessonSortItemEmojiClass = `shrink-0 ${lessonAnswerEmojiClass}`;
 
 /** Monogram fallback when no emoji is provided. */
 export const lessonIconMonogramClass =
@@ -148,8 +153,7 @@ export const lessonSortStatementListClass =
 export const lessonSortPoolSlotPlaceholderClass = "min-h-12 w-full";
 
 /** Compact emoji inside statement-sort pool/placed cards. */
-export const lessonSortStatementEmojiClass =
-  "shrink-0 text-[1.25rem] leading-none";
+export const lessonSortStatementEmojiClass = lessonSortItemEmojiClass;
 
 /** Draggable pool chip — full grid cell, large enough for kids to grab. */
 export const lessonSortStatementCardClass =
@@ -386,9 +390,9 @@ export function cnLessonChoice(
 export const lessonSortRowClass =
   "flex min-h-[3rem] w-full cursor-grab touch-none select-none items-center justify-center rounded-full border-0 bg-transparent px-4 py-2.5 text-center font-heading text-[18px] font-medium leading-snug text-[#031F82] transition-all active:cursor-grabbing active:scale-[0.995] sm:min-h-[3.25rem]";
 
-/** Rank-order card: drag handle, emoji, then the choice. */
+/** Rank-order card: emoji column wide enough for the shared glyph, then the choice. */
 export const lessonRankOrderCardClass =
-  "grid w-full min-w-0 grid-cols-[2rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
+  "grid w-full min-w-0 grid-cols-[2.25rem_minmax(0,1fr)] cursor-grab touch-none select-none items-center gap-2.5 rounded-full bg-transparent px-3.5 py-2 font-sans text-[15px] font-medium text-[#14213D] active:cursor-grabbing";
 
 export const lessonRankOrderNumberClass = lessonSequenceNumberClass;
 

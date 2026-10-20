@@ -8,6 +8,7 @@ import {
   playLessonSuccessPing,
   signalLessonIncorrectAnswer,
 } from "@/lib/academy/lessons/utils";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { cn } from "@/lib/utils/cn";
 
 export type LessonLinkMatchPair = {
@@ -103,14 +104,11 @@ function MatchTile({
         style={{ backgroundColor: fill ?? "transparent" }}
       >
         {emoji ? (
-          <span
-            className="grid size-6 shrink-0 place-items-center text-[22px] leading-none"
-            aria-hidden
-          >
-            {emoji}
+          <span className="grid w-9 shrink-0 place-items-center" aria-hidden>
+            <AnswerEmoji emoji={emoji} />
           </span>
         ) : (
-          <span className="size-6 shrink-0" aria-hidden />
+          <span className="w-9 shrink-0" aria-hidden />
         )}
         <span className="line-clamp-3 min-w-0 flex-1 font-sans text-[15px] font-semibold leading-[1.25] text-[#14213D]">
           {label}

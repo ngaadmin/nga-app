@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
+import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
 import {
@@ -162,6 +164,7 @@ export function LessonBudgetSelectGame({
         {items.map((item) => {
           const checked = checkedIds.has(item.id);
           const shaking = shakingId === item.id;
+          const shown = presentLightningCard({ emoji: item.emoji, label: item.label });
           return (
             <button
               key={item.id}
@@ -176,13 +179,13 @@ export function LessonBudgetSelectGame({
                 shaking && "lesson-tile-shake",
               )}
             >
-              {item.emoji ? (
-                <span className="grid w-9 shrink-0 place-items-center text-[30px] leading-none" aria-hidden>
-                  {item.emoji}
+              {shown.emoji ? (
+                <span className="grid w-9 shrink-0 place-items-center" aria-hidden>
+                  <AnswerEmoji emoji={shown.emoji} />
                 </span>
               ) : null}
               <span className="min-w-0 flex-1 font-sans text-[18px] font-semibold leading-snug">
-                {item.label}
+                {shown.label}
               </span>
               <strong className="font-heading text-lg">${item.price}</strong>
               {checked && correctIds.includes(item.id) && !shaking ? (

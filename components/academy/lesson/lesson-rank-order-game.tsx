@@ -14,6 +14,8 @@ import {
   lessonRankOrderCardClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
+import { presentLightningCard } from "@/lib/academy/lessons/peel-leading-emoji";
 import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
@@ -265,6 +267,10 @@ export function LessonRankOrderGame({
     endDrag();
   };
 
+  const ghostShown = dragGhost
+    ? presentLightningCard({ emoji: dragGhost.emoji, label: dragGhost.label })
+    : null;
+
   return (
     <>
       <LessonPromptParagraphs text={intro} className={cn("mb-5", lessonIntroClass())} />
@@ -279,6 +285,10 @@ export function LessonRankOrderGame({
           const item = items.find((entry) => entry.id === itemId);
           if (!item) return null;
           const isDragging = dragRankId === itemId;
+          const shown = presentLightningCard({
+            emoji: item.emoji ?? "📌",
+            label: item.label,
+          });
           return (
             <div
               key={itemId}
@@ -308,11 +318,9 @@ export function LessonRankOrderGame({
               )}
               style={{ touchAction: rankSubmitted ? "auto" : "none" }}
             >
-              <span className="text-center text-[1.35rem] leading-none" aria-hidden>
-                {item.emoji ?? "📌"}
-              </span>
+              <AnswerEmoji emoji={shown.emoji} className="justify-self-center" />
               <span className="min-w-0 whitespace-normal break-normal leading-snug">
-                {item.label}
+                {shown.label}
               </span>
             </div>
           );
@@ -340,11 +348,9 @@ export function LessonRankOrderGame({
               width: dragGhost.width,
             }}
           >
-            <span className="text-center text-[1.35rem] leading-none" aria-hidden>
-              {dragGhost.emoji}
-            </span>
+            <AnswerEmoji emoji={ghostShown?.emoji} className="justify-self-center" />
             <span className="min-w-0 whitespace-normal break-normal leading-snug">
-              {dragGhost.label}
+              {ghostShown?.label}
             </span>
           </div>
         </OverlayPortal>

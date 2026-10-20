@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { mapPayloadScreen } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
+import { splitPromptParagraphs } from "@/lib/academy/lessons/prompt-paragraphs";
 import {
   firstRankOrderError,
   openingRankOrder,
@@ -163,4 +164,107 @@ describe("Screens1.csv rank-order screens", () => {
       ).not.toEqual([...ranked.correctOrder]);
     },
   );
+});
+
+describe("lesson 3 screen 4 rank-order", () => {
+  const prompts = {
+    explorer:
+      "Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.",
+    pathfinder:
+      "Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.",
+    maverick:
+      "Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.",
+  } as const;
+
+  const sharedTail = [
+    {
+      id: "move-a-small-amount-to-your-emergencies-jar-1",
+      emoji: "🫙",
+      label: "Move a small amount to your Emergencies jar.",
+    },
+    {
+      id: "spend-what-is-left-on-fun-2",
+      emoji: "🎮",
+      label: "Spend what is left on fun.",
+    },
+  ];
+
+  it.each(COHORTS)("builds three ordered steps for %s", (cohort) => {
+    const payload = loadBundledLessonPayload(1, 3);
+    const row = payload.screens.find((screen) => screen.screenLabel === "4");
+    expect(row?.gameType).toBe("rank-order");
+    if (!row) return;
+    const screen = mapPayloadScreen(row, cohort, { lessonNumber: 3 });
+    expect(screen.type).toBe("rank-order");
+    if (screen.type !== "rank-order") return;
+
+    const first =
+      cohort === "explorer"
+        ? {
+            id: "get-your-pocket-money-0",
+            emoji: "💵",
+            label: "Get your pocket money.",
+          }
+        : { id: "earn-money-0", emoji: "💵", label: "Earn money." };
+    const items = [first, ...sharedTail];
+    expect(screen.items).toEqual(items);
+    expect(screen.correctOrder).toEqual(items.map((item) => item.id));
+    expect(screen.intro).toBe(prompts[cohort]);
+    expect(screen.intro).not.toMatch(/Get your pocket money|Earn money|Emergencies jar|Spend what is left/);
+    expect(screen.errors).toEqual({});
+    expect(screen).not.toHaveProperty("pairImage");
+    expect(
+      openingRankOrder(
+        screen.items.map((item) => item.id),
+        screen.correctOrder,
+      ),
+    ).not.toEqual([...screen.correctOrder]);
+    expect(rankOrderMatches(screen.correctOrder, screen.items.map((item) => item.id))).toBe(true);
+  });
+});
+
+describe("lesson 4 screen 2 rank-order", () => {
+  const steps = {
+    explorer: [
+      "Senna sees the one-time offer.",
+      "Senna remembers the price could drop later.",
+      "Senna waits a day and checks again.",
+      "Senna is happy he waited - he can buy the same item for even less.",
+    ],
+    pathfinder: [
+      "Holly sees the one-time offer.",
+      "Holly remembers the price could drop later.",
+      "Holly waits a day and checks again.",
+      "Holly is happy she waited - she can buy the same item for even less.",
+    ],
+    maverick: [
+      "Aiden sees the one-time offer.",
+      "Aiden remembers the price could drop later.",
+      "Aiden waits a day and checks again.",
+      "Aiden is happy he waited - he can buy the same item for even less.",
+    ],
+  } as const;
+
+  it.each(COHORTS)("builds four ordered steps for %s", (cohort) => {
+    const payload = loadBundledLessonPayload(1, 4);
+    const row = payload.screens.find((screen) => screen.screenLabel === "2");
+    expect(row?.gameType).toBe("rank-order");
+    if (!row) return;
+    const screen = mapPayloadScreen(row, cohort, { lessonNumber: 4 });
+    expect(screen.type).toBe("rank-order");
+    if (screen.type !== "rank-order") return;
+
+    expect(screen.items.map((item) => item.label)).toEqual([...steps[cohort]]);
+    expect(screen.items).toHaveLength(4);
+    expect(screen.correctOrder).toEqual(screen.items.map((item) => item.id));
+    expect(splitPromptParagraphs(screen.intro).at(-1)).toBe("Drag the steps into order.");
+    expect(splitPromptParagraphs(screen.intro)[0]).toContain("explains why");
+    expect(screen.intro).toMatch(/\n\s*\n/);
+    expect(
+      openingRankOrder(
+        screen.items.map((item) => item.id),
+        screen.correctOrder,
+      ),
+    ).not.toEqual([...screen.correctOrder]);
+  });
 });

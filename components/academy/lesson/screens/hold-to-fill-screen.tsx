@@ -2,14 +2,17 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
-import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
+import {
+  LessonAnswerTick,
+  LessonPromptParagraphs,
+  lessonFeedbackCopy,
+} from "@/components/academy/lesson/lesson-ui";
 import {
   lessonHoldButtonClass,
   lessonHoldButtonCompleteClass,
   lessonPromptClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
-import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { HoldToFillScreenConfig } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
@@ -111,9 +114,10 @@ export function HoldToFillScreen({
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <p className={cn(lessonPromptClass, "mb-0 text-center")}>
-        {screen.narrative}
-      </p>
+      <LessonPromptParagraphs
+        text={screen.narrative}
+        className={cn(lessonPromptClass, "mb-0 text-center")}
+      />
       {screen.cta ? (
         <p className={cn(lessonPromptClass, "mb-0 text-center")}>{screen.cta}</p>
       ) : null}

@@ -17,7 +17,7 @@ import {
   lessonMotionEnabled,
 } from "@/lib/academy/lessons/coin-counter-flight";
 import { presentedCompletionMedals } from "@/lib/academy/lessons/completion-screen";
-import { formatQuietLessonSkillLine } from "@/lib/dashboard/skill-trophies";
+import { quietLessonSkillLine } from "@/lib/dashboard/skill-trophies";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
 import {
@@ -147,7 +147,7 @@ export function LessonCompletionPane({
   const skillName =
     skillNameOverride?.trim() ||
     resolveSkillName(achievementSkillId, skillLearnedLabel);
-  const skillLine = formatQuietLessonSkillLine(skillMedalTier, skillName);
+  const skillLine = quietLessonSkillLine(skillMedalTier, skillName);
   const medalList = medals.map((medal) => medal.medalId).join(" ");
 
   const runAfterFlight = (action: () => void) => {
@@ -223,8 +223,9 @@ export function LessonCompletionPane({
             You did it!
           </h2>
           {skillLine ? (
-            <p className="lesson-close-intro mt-1 text-center font-sans text-[15px] font-medium text-[#5A6A99]">
-              {skillLine}
+            <p className="lesson-close-intro mt-1 flex min-h-[23px] w-full items-center justify-center gap-1.5 text-center font-sans text-[16px] font-medium leading-none text-[#5A6A99]">
+              <span className="shrink-0 text-[21px] leading-none">{skillLine.medal}</span>
+              <span className="leading-[20px]">{skillLine.text}</span>
             </p>
           ) : null}
         </div>

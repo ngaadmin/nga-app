@@ -74,13 +74,13 @@ WANT: 💃 New game skin",,,,
 1,2,3,spotlight-rounds,Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?,Which item is the one Holly 'Needs' to buy before she spends money on what she 'Wants' to buy?,Which item is the one Aiden 'Needs' to buy before he spends money on what he 'Wants' to buy?,lars-thinking-512.webp,holly-thinking-512.webp,aiden-thinking-512.webp,"ROUNDS:
 A: 📱 A new phone case, even though his old one is still fine | B: 🎁 A new phone case he promised his brother | CORRECT: B
 A: 💡 A light for his bike to be seen in the dark | B: 🖱️ A new gaming mouse with lights (his old one still works) | CORRECT: A
-A: Buy lunch for all his friends and have nothing left | B: A bus pass to get him to uni | CORRECT: B","ROUNDS:
-A: A new phone case, even though her old one is still fine | B: A new phone case she promised her sister | CORRECT: B
-A: A new lead for her dog as the old one broke | B: A new hoodie that everyone at school has | CORRECT: A
-A: Buy lunch for all her friends and have nothing left | B: Buy lunch at school with her tuckshop money | CORRECT: B","ROUNDS:
+A: 🍱 Buy lunch for all his friends and have nothing left | B: 🚍 A bus pass to get him to uni | CORRECT: B","ROUNDS:
+A: 📱 A new phone case, even though her old one is still fine | B: 🎁 A new phone case she promised her sister | CORRECT: B
+A: 🐕 A new lead for her dog as the old one broke | B: 🧥 A new hoodie that everyone at school has | CORRECT: A
+A: 🍱 Buy lunch for all her friends and have nothing left | B: 🥪 Buy lunch at school with her tuckshop money | CORRECT: B","ROUNDS:
 A: 📱 A new phone case, even though his old one is still fine | B: 🎁 A new phone case he promised his brother | CORRECT: B
 A: 💡 A light for his bike to be seen in the dark | B: 🖱️ A new gaming mouse with lights (his old one still works) | CORRECT: A
-A: Buy lunch for all his friends and have nothing left | B: A bus pass to get him to uni | CORRECT: B",,,,
+A: 🍱 Buy lunch for all his friends and have nothing left | B: 🚍 A bus pass to get him to uni | CORRECT: B",,,,
 1,2,4,budget-select,You have $30 left. Check the boxes to buy what you actually need.,You have $30 left. Check the boxes to buy what you actually need.,You have $30 left. Check the boxes to buy what you actually need.,not allowed,not allowed,not allowed,"TOTAL: 30
 ITEMS:
 NEED: 🚍 Bus Pass ($15)
@@ -155,16 +155,16 @@ There's a sale at the game store = I can buy my favourite game now","PAIRS:
 I broke my brother's headphones = I can replace them
 It's my friend's birthday = I can buy a gift
 There's a sale at the game store = I can buy my favourite game now",,,,
-1,3,4,bucket-sort,Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,,,,"ITEMS:
-STEP1: 💵 Get your pocket money.
-STEP2: 🫙 Move a small amount to your Emergencies jar.
-STEP3: 🎮 Spend what is left on fun.","ITEMS:
-STEP1: 💵 Earn money.
-STEP2: 🫙 Move a small amount to your Emergencies jar.
-STEP3: 🎮 Spend what is left on fun.","ITEMS:
-STEP1: 💵 Earn money.
-STEP2: 🫙 Move a small amount to your Emergencies jar.
-STEP3: 🎮 Spend what is left on fun.",,,,
+1,3,4,rank-order,Ready to build your own Spare Cash? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,Ready to build your own Cash for Emergencies? Put these steps in order so you're never caught out again.,,,,"ITEMS: 💵 Get your pocket money.
+ITEMS: 🫙 Move a small amount to your Emergencies jar.
+ITEMS: 🎮 Spend what is left on fun.
+ORDER: get-your-pocket-money-0,move-a-small-amount-to-your-emergencies-jar-1,spend-what-is-left-on-fun-2","ITEMS: 💵 Earn money.
+ITEMS: 🫙 Move a small amount to your Emergencies jar.
+ITEMS: 🎮 Spend what is left on fun.
+ORDER: earn-money-0,move-a-small-amount-to-your-emergencies-jar-1,spend-what-is-left-on-fun-2","ITEMS: 💵 Earn money.
+ITEMS: 🫙 Move a small amount to your Emergencies jar.
+ITEMS: 🎮 Spend what is left on fun.
+ORDER: earn-money-0,move-a-small-amount-to-your-emergencies-jar-1,spend-what-is-left-on-fun-2",,,,
 1,3,5,multiple-choice,"Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Mia do?","Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Holly do?","Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: ""I'll spend this $20 now, and I'll just save more next week to buy the headphones."" What should Aiden do?",lars-deciding-512.webp,holly-deciding-512.webp,aiden-deciding-512.webp,"CHOICE A: Buy the toy and save $10 more next week.
 CHOICE B: Buy the headphones to fix what she broke first.
 CHOICE C: Buy the toy and hope the headphones don't cost $40.
@@ -206,25 +206,25 @@ CORRECT: C","CHOICE A: Aiden is just slow at clicking.
 CHOICE B: Aiden has run out of money.
 CHOICE C: Aiden stops to think.
 CORRECT: C",Look again at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,Not quite! Take another look at what Senna is choosing to do.,
-1,4,2,bucket-sort,"Senna explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
+1,4,2,rank-order,"Senna explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
 
 Drag the steps into order.","Holly explains why she waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
 
 Drag the steps into order.","Aiden explains why he waited: ""Remember the last time we all bought that game skin immediately? The next day, it was half price and it made me feel like I wasted my money because I rushed.""
 
-Drag the steps into order.",,,,"ITEMS:
-STEP1: Senna sees the one-time offer.
-STEP2: Senna remembers the price could drop later.
-STEP3: Senna waits a day and checks again.
-STEP4: Senna is happy he waited - he can buy the same item for even less.","ITEMS:
-STEP1: Holly sees the one-time offer.
-STEP2: Holly remembers the price could drop later.
-STEP3: Holly waits a day and checks again.
-STEP4: Holly is happy she waited - she can buy the same item for even less.","ITEMS:
-STEP1: Aiden sees the one-time offer.
-STEP2: Aiden remembers the price could drop later.
-STEP3: Aiden waits a day and checks again.
-STEP4: Aiden is happy he waited - he can buy the same item for even less.",,,,
+Drag the steps into order.",,,,"ITEMS: Senna sees the one-time offer.
+ITEMS: Senna remembers the price could drop later.
+ITEMS: Senna waits a day and checks again.
+ITEMS: Senna is happy he waited - he can buy the same item for even less.
+ORDER: senna-sees-the-one-time-offer-0,senna-remembers-the-price-could-drop-later-1,senna-waits-a-day-and-checks-again-2,senna-is-happy-he-waited-he-can-buy-the-same-item-for-even-less-3","ITEMS: Holly sees the one-time offer.
+ITEMS: Holly remembers the price could drop later.
+ITEMS: Holly waits a day and checks again.
+ITEMS: Holly is happy she waited - she can buy the same item for even less.
+ORDER: holly-sees-the-one-time-offer-0,holly-remembers-the-price-could-drop-later-1,holly-waits-a-day-and-checks-again-2,holly-is-happy-she-waited-she-can-buy-the-same-item-for-even-less-3","ITEMS: Aiden sees the one-time offer.
+ITEMS: Aiden remembers the price could drop later.
+ITEMS: Aiden waits a day and checks again.
+ITEMS: Aiden is happy he waited - he can buy the same item for even less.
+ORDER: aiden-sees-the-one-time-offer-0,aiden-remembers-the-price-could-drop-later-1,aiden-waits-a-day-and-checks-again-2,aiden-is-happy-he-waited-he-can-buy-the-same-item-for-even-less-3",,,,
 1,4,3,spotlight-rounds,Which one helps Lars stop and think?,Which one helps Holly stop and think?,Which one helps Aiden stop and think?,not allowed,not allowed,not allowed,,"ROUNDS:
 A: ⏰ It's a limited time offer - I have to buy it now! | B: 💰 I can wait and get it cheaper later. | CORRECT: B
 A: 🔥 It looks cool, I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B

@@ -14,6 +14,7 @@ import {
 } from "@/components/academy/lesson/lesson-shared-styles";
 import {
   LessonIconOption,
+  LessonPromptParagraphs,
   LessonScreenLayout,
   lessonFeedbackCopy,
 } from "@/components/academy/lesson/lesson-ui";
@@ -162,7 +163,7 @@ function SpotlightDecisionChoices({
       emphasizeInstruction={screen.emphasizeInstruction === true}
       errorMessage={error}
     >
-      <p className={cn("mb-2.5", lessonPromptClass)}>{prompt}</p>
+      <LessonPromptParagraphs text={prompt} className={cn("mb-2.5", lessonPromptClass)} />
       <div className="grid w-full gap-3">
         {visible.map(({ option, index }) => {
           const selected = choice === index;
@@ -337,7 +338,7 @@ function SpotlightGradedRounds({
       emphasizeInstruction={screen.emphasizeInstruction === true}
       errorMessage={error}
     >
-      <p className={cn("mb-2.5", lessonPromptClass)}>{screen.prompt}</p>
+      <LessonPromptParagraphs text={screen.prompt} className={cn("mb-2.5", lessonPromptClass)} />
       {screen.rounds.length > 1 ? (
         <div className="mb-5 flex justify-center gap-1.5">
           {screen.rounds.map((_, index) => (

@@ -2,6 +2,13 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { DownloadIcon } from "@/lib/dashboard/icons";
+import { downloadAccountFile } from "@/lib/privacy/download-account-file";
+import {
+  loadClassLeaderboard,
+  setClassLeaderboard,
+} from "@/lib/privacy/account-data-server";
+import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
 import { Button } from "@/components/ui/button";
 import { ClientPortal } from "@/components/ui/client-portal";
 import {
@@ -438,6 +445,13 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
   const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null);
   const [removing, setRemoving] = useState(false);
   const [studentsOpen, setStudentsOpen] = useState(roster.seatsUsed === 0);
+  const [leaderboardOn, setLeaderboardOn] = useState(false);
+  const [leaderboardBusy, setLeaderboardBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void loadClassLeaderboard().then((result) => setLeaderboardOn(result.enabled));
+  }, []);
   const [allocating, setAllocating] = useState(false);
   const [trackOpen, setTrackOpen] = useState(roster.classCohort == null);
   const allocateInputRef = useRef<HTMLInputElement>(null);
@@ -594,6 +608,59 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
             {` of ${roster.seatCap} users allocated`}
           </p>
 
+          <section className="mt-4 rounded-2xl border border-[#BDE9FB] bg-white p-4 shadow-md">
+            <div className="flex items-start gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-xl" aria-hidden>
+                📦
+              </span>
+              <div>
+                <p className="font-heading text-base font-extrabold text-[#031F82]">Class data</p>
+                <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]">
+                  Tap a student to see what&apos;s kept about them. Or export everyone at once.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setExportError(null);
+                void downloadAccountFile({ kind: "class" }).then((message) => {
+                  if (message) setExportError(message);
+                });
+              }}
+              className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white"
+            >
+              <DownloadIcon className="size-5" />
+              Export whole class
+            </button>
+            <p className="mt-1.5 text-center font-sans text-xs font-medium text-[#4A5675]">
+              One plain data file with every student in this class.
+            </p>
+            {exportError ? (
+              <p role="alert" className="mt-2 text-center font-sans text-sm text-[#031F82]">
+                {exportError}
+              </p>
+            ) : null}
+            <div className="mt-3">
+              <LeaderboardSwitch
+                enabled={leaderboardOn}
+                scope="class"
+                disabled={leaderboardBusy}
+                onChange={(enabled) => {
+                  setLeaderboardBusy(true);
+                  void setClassLeaderboard(enabled).then((result) => {
+                    setLeaderboardBusy(false);
+                    if (!result.ok) {
+                      setExportError(result.error);
+                      return;
+                    }
+                    setLeaderboardOn(enabled);
+                  });
+                }}
+              />
+            </div>
+          </section>
+
           <div className="mt-5 flex h-20 items-center gap-3.5 border-y border-[#E1E8F6] px-1">
             <TintCircle size={48}>🏆</TintCircle>
             <div className="min-w-0 flex-1">
@@ -663,15 +730,13 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
                     <span className="shrink-0 font-heading text-[15px] font-bold text-[#031F82]">
                       {`${lifetimeXp.toLocaleString()} XP`}
                     </span>
-                    <button
-                      type="button"
-                      disabled={removing}
-                      aria-label={`Remove ${username}`}
-                      onClick={() => setPendingRemove({ scope: "one", username })}
-                      className="text-xl leading-none text-[#9AA8CC] disabled:opacity-40"
+                    <Link
+                      href={`/dashboard/class/student/${encodeURIComponent(username)}`}
+                      aria-label={`View ${username}`}
+                      className="text-xl leading-none text-[#9AA8CC]"
                     >
                       ›
-                    </button>
+                    </Link>
                   </div>
                 );
               })}

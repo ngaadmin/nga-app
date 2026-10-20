@@ -618,15 +618,10 @@ describe("lesson payload loader", () => {
       const savings = lesson.screens[6];
       const sequence = lesson.screens[1];
       const thoughts = lesson.screens[2];
-      expect(sequence).toMatchObject({ type: "bucket-sort", layout: "steps-row" });
-      if (sequence?.type === "bucket-sort") {
+      expect(sequence).toMatchObject({ type: "rank-order" });
+      if (sequence?.type === "rank-order") {
         expect(sequence.items).toHaveLength(4);
-        expect(sequence.buckets.map((bucket) => bucket.label)).toEqual([
-          "Step 1",
-          "Step 2",
-          "Step 3",
-          "Step 4",
-        ]);
+        expect(sequence.correctOrder).toEqual(sequence.items.map((item) => item.id));
       }
       const lead =
         cohort === "explorer" ? "Lars" : cohort === "pathfinder" ? "Holly" : "Aiden";

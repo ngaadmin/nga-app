@@ -5,7 +5,7 @@ import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesso
 import { LessonSavingsGoalGame } from "@/components/academy/lesson/lesson-savings-goal-game";
 import { usePublishLessonHint } from "@/components/academy/lesson/lesson-hint";
 import { lessonIntroClass } from "@/components/academy/lesson/lesson-shared-styles";
-import { lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
+import { LessonPromptParagraphs, lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import type { SavingsGoalScreenConfig } from "@/lib/academy/lessons/types";
 import { celebrateLessonCorrectAnswer } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
@@ -30,9 +30,10 @@ export function SavingsGoalScreen({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <p className={cn("shrink-0", lessonIntroClass(screen.emphasizeInstruction === true))}>
-        {screen.intro}
-      </p>
+      <LessonPromptParagraphs
+        text={screen.intro}
+        className={cn("shrink-0", lessonIntroClass(screen.emphasizeInstruction === true))}
+      />
 
       <div className="mt-2 flex min-h-0 flex-1 flex-col">
         <LessonSavingsGoalGame

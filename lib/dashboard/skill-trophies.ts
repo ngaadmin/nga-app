@@ -182,18 +182,33 @@ const QUIET_SKILL_TIER_EMOJI = {
   gold: "🥇",
 } as const;
 
+export type QuietLessonSkillLine = {
+  medal: string;
+  text: string;
+};
+
 /**
  * Quiet skill line on the lesson close screen.
  * The tier emoji carries the medal. The name comes from the same skill record.
  */
+export function quietLessonSkillLine(
+  tier: Extract<SkillTrophyTier, "unlocked" | "bronze" | "silver" | "gold"> | null,
+  skillName?: string,
+): QuietLessonSkillLine | null {
+  const name = skillName?.trim();
+  if (!tier && !name) return null;
+  return {
+    medal: QUIET_SKILL_TIER_EMOJI[tier ?? "unlocked"],
+    text: name ? `Skill unlocked: ${name}` : "Skill unlocked",
+  };
+}
+
 export function formatQuietLessonSkillLine(
   tier: Extract<SkillTrophyTier, "unlocked" | "bronze" | "silver" | "gold"> | null,
   skillName?: string,
 ): string | null {
-  const name = skillName?.trim();
-  if (!tier && !name) return null;
-  const emoji = QUIET_SKILL_TIER_EMOJI[tier ?? "unlocked"];
-  return name ? `${emoji} Skill unlocked: ${name}` : `${emoji} Skill unlocked`;
+  const line = quietLessonSkillLine(tier, skillName);
+  return line ? `${line.medal} ${line.text}` : null;
 }
 
 /** Format the skill unlock line shown on lesson completion screens. */

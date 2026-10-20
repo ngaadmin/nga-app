@@ -12,6 +12,11 @@ import {
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { peelLeadingEmoji } from "@/lib/academy/lessons/peel-leading-emoji";
 import { resolveRankOrderIds } from "@/lib/academy/lessons/rank-order";
+import {
+  assertSortAuthoring,
+  isUnrecognisedSettingLine,
+  sortAuthoringIssues,
+} from "@/lib/academy/lessons/payload/validate-sort-settings";
 import type { ResolvedLessonContent, ScreenConfig } from "@/lib/academy/lessons/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { ACADEMY_MODULE_TITLES } from "@/lib/dashboard/academy-content";
@@ -428,6 +433,7 @@ type PayloadMedalTier = Exclude<MedalDisplayStatus, "locked">;
 type PayloadScreenContext = {
   skillId?: string;
   skillName?: string;
+  lessonNumber?: number;
 };
 
 function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
@@ -622,6 +628,7 @@ function rankOrderFromSettings(raw: string, error: string): {
       orderHint = order[1] ?? "";
       continue;
     }
+    if (isUnrecognisedSettingLine("rank-order", line)) continue;
     if (inItems) labels.push(line);
   }
 
@@ -1020,6 +1027,22 @@ export function mapPayloadScreen(
     }
     case "tap-reveal":
     case "bucket-sort": {
+      const settingsRaw = cohortField(row.settings, cohort);
+      const deliver = (screen: ScreenConfig): ScreenConfig => {
+        if (row.gameType === "bucket-sort" && screen.type === "bucket-sort") {
+          assertSortAuthoring(
+            sortAuthoringIssues({
+              lessonNumber: context.lessonNumber,
+              screenLabel: row.screenLabel,
+              cohort,
+              gameType: "bucket-sort",
+              raw: settingsRaw,
+              itemCount: screen.items.length,
+            }),
+          );
+        }
+        return screen;
+      };
       const steps = stepRows(settings);
       const moods = moodRows(settings);
       if (row.gameType === "bucket-sort" && steps.length > 0) {
@@ -1036,7 +1059,7 @@ export function mapPayloadScreen(
             bucket: `step${index + 1}`,
           };
         });
-        return {
+        return deliver({
           type: "bucket-sort",
           id,
           intro: text,
@@ -1045,7 +1068,7 @@ export function mapPayloadScreen(
           items,
           ...authoredError(error),
           ...picture,
-        };
+        });
       }
       const spentRows = itemRows(settings).filter((item) => item.bucket === "SPENT");
       if (row.gameType === "bucket-sort" && spentRows.length > 0) {
@@ -1063,7 +1086,7 @@ export function mapPayloadScreen(
             ...(priced.price !== undefined ? { price: priced.price } : {}),
           };
         });
-        return {
+        return deliver({
           type: "bucket-sort",
           id,
           intro: text,
@@ -1073,7 +1096,7 @@ export function mapPayloadScreen(
           ...(Number.isFinite(targetTotal) ? { targetTotal } : {}),
           ...authoredError(error),
           ...picture,
-        };
+        });
       }
       if (row.gameType === "bucket-sort" && moods.length > 0) {
         const items = moods.map((entry, index) => {
@@ -1085,7 +1108,7 @@ export function mapPayloadScreen(
             bucket: entry.key === "RUSHING" ? "rushing" : "thinking",
           };
         });
-        return {
+        return deliver({
           type: "bucket-sort",
           id,
           intro: text,
@@ -1097,7 +1120,7 @@ export function mapPayloadScreen(
           items,
           ...authoredError(error),
           ...picture,
-        };
+        });
       }
       const rows = itemRows(settings);
       const bucketKeys = [...new Set(rows.map((item) => item.bucket))];
@@ -1118,16 +1141,16 @@ export function mapPayloadScreen(
         };
       });
       if (row.gameType === "tap-reveal") {
-        return {
+        return deliver({
           type: "tap-reveal",
           id,
           intro: text,
           buckets,
           items,
           ...picture,
-        };
+        });
       }
-      return {
+      return deliver({
         type: "bucket-sort",
         id,
         intro: text,
@@ -1135,7 +1158,7 @@ export function mapPayloadScreen(
         items,
         ...authoredError(error),
         ...picture,
-      };
+      });
     }
     case "spotlight-rounds": {
       const decisionScript = parseDecisionScript(cohortField(row.settings, cohort));
@@ -1230,7 +1253,18 @@ export function mapPayloadScreen(
       };
     }
     case "rank-order": {
-      const ranked = rankOrderFromSettings(cohortField(row.settings, cohort), error);
+      const settingsRaw = cohortField(row.settings, cohort);
+      const ranked = rankOrderFromSettings(settingsRaw, error);
+      assertSortAuthoring(
+        sortAuthoringIssues({
+          lessonNumber: context.lessonNumber,
+          screenLabel: row.screenLabel,
+          cohort,
+          gameType: "rank-order",
+          raw: settingsRaw,
+          itemCount: ranked.items.length,
+        }),
+      );
       return {
         type: "rank-order",
         id,
@@ -1589,6 +1623,7 @@ export function resolvePayloadLesson(
       const screen = mapPayloadScreen(row, cohort, {
         skillId: skillSlug,
         skillName: payload.skillName,
+        lessonNumber: payload.lessonNumber,
       });
       const raw = cohortField(row.settings, cohort);
       const continueLabel = screen.continueToLabel ?? continueGoLabel(raw);

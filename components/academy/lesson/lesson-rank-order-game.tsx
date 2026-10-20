@@ -14,7 +14,7 @@ import {
   lessonRankOrderCardClass,
   lessonSubmitAnswerClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
+import { LessonAnswerTick, LessonPromptParagraphs } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   firstRankOrderError,
@@ -267,7 +267,7 @@ export function LessonRankOrderGame({
 
   return (
     <>
-      <p className={cn("mb-5", lessonIntroClass())}>{intro}</p>
+      <LessonPromptParagraphs text={intro} className={cn("mb-5", lessonIntroClass())} />
       <div
         ref={boardRef}
         className={cn("flex flex-col gap-2", shakingKey === "board" && "lesson-tile-shake")}

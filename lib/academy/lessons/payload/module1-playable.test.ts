@@ -500,7 +500,7 @@ describe("module 1 screens from Screens1.csv", () => {
     expect(gift).toMatchObject({ type: "drag-to-target", sourceEmptyMessage: "" });
   });
 
-  it("restores lightning emojis only when a whole round had them", () => {
+  it("gives every lesson 2 lightning round an emoji on each side", () => {
     const roundsFor = (cohort: MasteryCohort) => {
       const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 2), cohort, 2).screens.find(
         (item) => item.type === "spotlight-rounds",
@@ -510,32 +510,60 @@ describe("module 1 screens from Screens1.csv", () => {
       return screen.rounds;
     };
 
-    const explorer = roundsFor("explorer");
-    expect(explorer[0]).toMatchObject({
-      iconA: "📱",
-      optionA: "A new phone case, even though his old one is still fine",
-      iconB: "🎁",
-      optionB: "A new phone case he promised his brother",
-    });
-    expect(explorer[1]).toMatchObject({
-      iconA: "💡",
-      optionA: "A light for his bike to be seen in the dark",
-      iconB: "🖱️",
-      optionB: "A new gaming mouse with lights (his old one still works)",
-    });
-    expect(explorer[2]).toMatchObject({
-      iconA: "",
-      iconB: "",
-      optionA: "Buy lunch for all his friends and have nothing left",
-    });
+    const explorerRounds = [
+      {
+        iconA: "📱",
+        optionA: "A new phone case, even though his old one is still fine",
+        iconB: "🎁",
+        optionB: "A new phone case he promised his brother",
+        correct: "b",
+        error: "",
+      },
+      {
+        iconA: "💡",
+        optionA: "A light for his bike to be seen in the dark",
+        iconB: "🖱️",
+        optionB: "A new gaming mouse with lights (his old one still works)",
+        correct: "a",
+        error: "",
+      },
+      {
+        iconA: "🍱",
+        optionA: "Buy lunch for all his friends and have nothing left",
+        iconB: "🚍",
+        optionB: "A bus pass to get him to uni",
+        correct: "b",
+        error: "",
+      },
+    ];
 
-    const maverick = roundsFor("maverick");
-    expect(maverick[0]?.iconA).toBe("📱");
-    expect(maverick[1]?.iconB).toBe("🖱️");
-    expect(maverick[2]?.iconA).toBe("");
-
-    const pathfinder = roundsFor("pathfinder");
-    expect(pathfinder.every((round) => round.iconA === "" && round.iconB === "")).toBe(true);
-    expect(pathfinder[0]?.optionB).toBe("A new phone case she promised her sister");
+    expect(roundsFor("explorer")).toEqual(explorerRounds);
+    expect(roundsFor("maverick")).toEqual(explorerRounds);
+    expect(roundsFor("pathfinder")).toEqual([
+      {
+        iconA: "📱",
+        optionA: "A new phone case, even though her old one is still fine",
+        iconB: "🎁",
+        optionB: "A new phone case she promised her sister",
+        correct: "b",
+        error: "",
+      },
+      {
+        iconA: "🐕",
+        optionA: "A new lead for her dog as the old one broke",
+        iconB: "🧥",
+        optionB: "A new hoodie that everyone at school has",
+        correct: "a",
+        error: "",
+      },
+      {
+        iconA: "🍱",
+        optionA: "Buy lunch for all her friends and have nothing left",
+        iconB: "🥪",
+        optionB: "Buy lunch at school with her tuckshop money",
+        correct: "b",
+        error: "",
+      },
+    ]);
   });
 });

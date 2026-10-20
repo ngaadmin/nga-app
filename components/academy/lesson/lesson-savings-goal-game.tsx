@@ -20,7 +20,12 @@ import {
   lessonSpentTotalAmountClass,
   lessonSpentTotalCaptionClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
-import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
+import {
+  GENEROUS_DROP_PAD_PX,
+  dragHitsZone,
+  domRectToDropRect,
+  expandRect,
+} from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
 
 export type SavingsGoalGameItem = {
@@ -194,25 +199,16 @@ export function LessonSavingsGoalGame({
 
   const pointerInDropZone = (clientX: number, clientY: number) => {
     const zone = dropZoneRef.current;
-    const board = boardRef.current;
     if (!zone) return false;
-    const rect = zone.getBoundingClientRect();
-    const boardRect = board?.getBoundingClientRect();
-    const destination = domRectToDropRect(rect);
-    if (boardRect) {
-      destination.bottom = Math.max(destination.bottom, boardRect.bottom);
-      destination.left = Math.min(destination.left, boardRect.left);
-      destination.right = Math.max(destination.right, boardRect.right);
-    }
-    const drag = dragStateRef.current;
-    return dragHitsZone(
-      drag
-        ? { x: drag.x, y: drag.y, width: drag.width, height: drag.height }
-        : null,
-      clientX,
-      clientY,
-      destination,
+    // Near misses above and beside the well still land. The total sits just
+    // under the well, so the pointer has to be inside this rect — a tall card
+    // hanging over the total is not a drop.
+    const destination = expandRect(
+      domRectToDropRect(zone.getBoundingClientRect()),
+      GENEROUS_DROP_PAD_PX,
     );
+    destination.bottom -= GENEROUS_DROP_PAD_PX;
+    return dragHitsZone(null, clientX, clientY, destination, 0);
   };
 
   const handleChipPointerDown = (

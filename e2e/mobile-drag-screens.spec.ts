@@ -61,7 +61,18 @@ test("mobile drag completes the sentence, quick-pick rounds, swipe, and didn't-b
   await openAsExplorer(page, "/dashboard/academy/lesson/4?preview=1&screen=2");
   await expect(page.getByText("Which one helps Lars stop and think?")).toBeVisible();
   await expect(next).toBeDisabled();
-  await page.getByRole("button", { name: /limited time offer/i }).click();
+  // Cards swap sides on hydration. Tap only after React has attached handlers.
+  const limitedOffer = page.getByRole("button", { name: /limited time offer/i });
+  await limitedOffer.waitFor();
+  await page.waitForFunction(() => {
+    const match = [...document.querySelectorAll("button")].find((el) =>
+      /limited time offer/i.test(el.getAttribute("aria-label") ?? ""),
+    );
+    return Boolean(
+      match && Object.keys(match).some((key) => key.startsWith("__reactProps")),
+    );
+  });
+  await limitedOffer.click();
   await expect(page.getByText(/that thought is rushing you/i)).toBeVisible();
   await expect(page.getByLabel("3 of 4 lives remaining")).toBeVisible();
   await expect(next).toBeDisabled();

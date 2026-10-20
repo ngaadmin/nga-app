@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   countEarnedMedals,
+  formatQuietLessonSkillLine,
   medalCoversTier,
   type VaultSkillTrophy,
 } from "@/lib/dashboard/skill-trophies";
@@ -16,6 +17,27 @@ function trophy(id: string, tier: VaultSkillTrophy["tier"]): VaultSkillTrophy {
     medalEmoji: "🏅",
   };
 }
+
+describe("formatQuietLessonSkillLine", () => {
+  it("puts the medal tier on a quiet skill line", () => {
+    expect(formatQuietLessonSkillLine("bronze", "Stop & Think")).toBe(
+      "🥉 Skill unlocked: Stop & Think",
+    );
+    expect(formatQuietLessonSkillLine("silver", "Stop & Think")).toBe(
+      "🥈 Skill unlocked: Stop & Think",
+    );
+    expect(formatQuietLessonSkillLine("gold", "Stop & Think")).toBe(
+      "🥇 Skill unlocked: Stop & Think",
+    );
+    expect(formatQuietLessonSkillLine("unlocked", "Stop & Think")).toBe(
+      "🔓 Skill unlocked: Stop & Think",
+    );
+  });
+
+  it("omits the line when there is no tier and no name", () => {
+    expect(formatQuietLessonSkillLine(null)).toBeNull();
+  });
+});
 
 describe("countEarnedMedals", () => {
   it("counts silver skills as bronze and silver", () => {

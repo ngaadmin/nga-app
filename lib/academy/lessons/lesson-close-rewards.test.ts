@@ -11,6 +11,7 @@ function markup(props: {
   perfectStreak: boolean;
   bonusCoins: number;
   bonusRuns: number;
+  cashedIn?: boolean;
 }): string {
   return renderToStaticMarkup(
     createElement(LessonCloseRewardView, {
@@ -19,6 +20,7 @@ function markup(props: {
       perfectStreak: props.perfectStreak,
       bonusCoins: props.bonusCoins,
       bonusRuns: props.bonusRuns,
+      cashedIn: props.cashedIn,
     }),
   );
 }
@@ -32,7 +34,9 @@ describe("lesson close reward lines", () => {
       bonusCoins: 0,
       runs: 0,
     });
-    expect(lines.map((line) => line.text)).toEqual(["Lesson complete +100 coins"]);
+    expect(lines.map((line) => line.label)).toEqual(["Lesson complete"]);
+    expect(lines[0]?.emoji).toBe("🎓");
+    expect(lines[0]?.coins).toBe(100);
     expect(lessonCloseRewardTotal(lines)).toBe(100);
   });
 
@@ -45,7 +49,9 @@ describe("lesson close reward lines", () => {
       runs: 0,
     });
     expect(lines.map((line) => line.id)).toEqual(["base", "perfect"]);
-    expect(lines[1]?.text).toBe("Perfect lesson +50 coins");
+    expect(lines[1]?.label).toBe("Perfect lesson");
+    expect(lines[1]?.detail).toBe("No mistakes");
+    expect(lines[1]?.coins).toBe(50);
     expect(lessonCloseRewardTotal(lines)).toBe(150);
   });
 
@@ -58,46 +64,88 @@ describe("lesson close reward lines", () => {
       runs: 2,
     });
     expect(lines.map((line) => line.id)).toEqual(["base", "perfect", "bonus"]);
-    expect(lines[2]?.text).toBe("Bonus run +20 coins");
-    expect(lines[2]?.detail).toBe("2 runs of 5 in a row");
+    expect(lines[2]?.label).toBe("Bonus runs");
+    expect(lines[2]?.detail).toBe("2 bonus runs × 10");
+    expect(lines[2]?.coins).toBe(20);
     expect(lessonCloseRewardTotal(lines)).toBe(170);
+  });
+
+  it("uses the singular bonus line for one run", () => {
+    const lines = lessonCloseRewardLines({
+      base: 100,
+      perfect: false,
+      perfectBonus: 50,
+      bonusCoins: 10,
+      runs: 1,
+    });
+    expect(lines[1]?.label).toBe("Bonus run");
+    expect(lines[1]?.detail).toBe("1 bonus run × 10");
+  });
+
+  it("omits a bonus line when no run was earned", () => {
+    const lines = lessonCloseRewardLines({
+      base: 100,
+      perfect: true,
+      perfectBonus: 50,
+      bonusCoins: 10,
+      runs: 0,
+    });
+    expect(lines.map((line) => line.id)).toEqual(["base", "perfect"]);
   });
 });
 
 describe("lesson close screen reward rendering", () => {
   it("renders only the lesson line when the lesson was not perfect", () => {
     const html = markup({ perfectStreak: false, bonusCoins: 0, bonusRuns: 0 });
-    expect(html).toContain("Lesson complete +100 coins");
+    expect(html).toContain("Lesson complete");
+    expect(html).toContain("+100");
     expect(html).toContain('data-reward-line="base"');
     expect(html).not.toContain("Perfect lesson");
     expect(html).not.toContain("Bonus run");
     expect(html).toContain('data-lesson-reward-total="100"');
+    expect(html).not.toContain("XP");
+    expect(html).not.toContain("NGA");
   });
 
   it("renders the perfect line and a 150 coin total", () => {
     const html = markup({ perfectStreak: true, bonusCoins: 0, bonusRuns: 0 });
-    expect(html).toContain("Lesson complete +100 coins");
-    expect(html).toContain("Perfect lesson +50 coins");
+    expect(html).toContain("Lesson complete");
+    expect(html).toContain("Perfect lesson");
+    expect(html).toContain("No mistakes");
+    expect(html).toContain("+50");
     expect(html).not.toContain("Bonus run");
     expect(html).toContain('data-lesson-reward-total="150"');
+    expect(html).toContain("penny-master-512.webp");
   });
 
   it("renders the bonus line only when bonus coins are above zero", () => {
     const html = markup({ perfectStreak: true, bonusCoins: 20, bonusRuns: 2 });
-    expect(html).toContain("Lesson complete +100 coins");
-    expect(html).toContain("Perfect lesson +50 coins");
-    expect(html).toContain("Bonus run +20 coins");
-    expect(html).toContain("2 runs of 5 in a row");
+    expect(html).toContain("Lesson complete");
+    expect(html).toContain("Perfect lesson");
+    expect(html).toContain("Bonus runs");
+    expect(html).toContain("2 bonus runs × 10");
+    expect(html).toContain("+20");
     expect(html).toContain('data-reward-line="bonus"');
     expect(html).toContain('data-lesson-reward-total="170"');
   });
 
   it("omits the perfect line when a bonus was earned with a mistake", () => {
     const html = markup({ perfectStreak: false, bonusCoins: 10, bonusRuns: 1 });
-    expect(html).toContain("Lesson complete +100 coins");
+    expect(html).toContain("Lesson complete");
     expect(html).not.toContain("Perfect lesson");
-    expect(html).toContain("Bonus run +10 coins");
-    expect(html).toContain("1 run of 5 in a row");
+    expect(html).toContain("Bonus run");
+    expect(html).toContain("1 bonus run × 10");
     expect(html).toContain('data-lesson-reward-total="110"');
+  });
+
+  it("replaces the total with cashed in once the coins have landed", () => {
+    const html = markup({
+      perfectStreak: true,
+      bonusCoins: 20,
+      bonusRuns: 2,
+      cashedIn: true,
+    });
+    expect(html).toContain("Cashed in ✓");
+    expect(html).not.toContain('data-lesson-reward-total="170"');
   });
 });

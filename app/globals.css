@@ -206,7 +206,56 @@
   }
 
   .lesson-reward-line {
+    transform-origin: center center;
     animation: lesson-reward-zoom 360ms ease-out both;
+  }
+
+  @keyframes lesson-close-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .lesson-close-intro {
+    animation: lesson-close-fade 250ms ease-out both;
+  }
+
+  @keyframes lesson-close-total-pop {
+    0% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(1.12);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .lesson-close-total-pop {
+    animation: lesson-close-total-pop 250ms ease-out;
+  }
+
+  @keyframes lesson-close-counter-bump {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 184, 34, 0);
+    }
+    50% {
+      transform: scale(1.18);
+      box-shadow: 0 0 0 6px rgba(255, 184, 34, 0.28);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(255, 184, 34, 0);
+    }
+  }
+
+  .lesson-close-counter-bump {
+    animation: lesson-close-counter-bump 200ms ease-out;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -215,7 +264,10 @@
       animation: none;
     }
 
-    html:not([data-recording="1"]) .lesson-reward-line {
+    html:not([data-recording="1"]) .lesson-reward-line,
+    html:not([data-recording="1"]) .lesson-close-intro,
+    html:not([data-recording="1"]) .lesson-close-total-pop,
+    html:not([data-recording="1"]) .lesson-close-counter-bump {
       animation: none;
       opacity: 1;
       transform: none;

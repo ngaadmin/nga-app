@@ -38,6 +38,9 @@ describe("privacy policy source", () => {
     );
     expect(text).toContain("Activity records are deleted with the account.");
     expect(text).toContain(
+      "Guest activity records are kept on our servers and deleted automatically after 30 days.",
+    );
+    expect(text).toContain(
       "The sign-in log, which includes IP addresses, is kept for 30 days.",
     );
     expect(text).toContain(

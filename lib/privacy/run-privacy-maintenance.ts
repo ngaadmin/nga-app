@@ -10,6 +10,7 @@ import {
   type PlannedDeletion,
 } from "@/lib/privacy/inactivity";
 import { deleteUsageEventsForUsername } from "@/lib/privacy/delete-usage-events";
+import { PURGE_GUEST_USAGE_RPC } from "@/lib/privacy/guest-usage-retention";
 import { deleteHouseholdAccounts } from "@/lib/onboarding/delete-household-accounts";
 import { notifyAccountDeletedChild } from "@/lib/onboarding/issue-account-deleted-email";
 import {
@@ -31,6 +32,7 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 export type PrivacyMaintenanceSummary = {
   auditLogRemoved: number | null;
+  guestUsageRemoved: number | null;
   warningsSent: number;
   warningsCleared: number;
   accountsDeleted: number;
@@ -74,6 +76,15 @@ async function purgeAuditLog(admin: Admin, errors: string[]): Promise<number | n
   const { data, error } = await admin.rpc("purge_auth_audit_log");
   if (error) {
     errors.push("Could not purge the sign-in log.");
+    return null;
+  }
+  return typeof data === "number" ? data : null;
+}
+
+async function purgeGuestUsage(admin: Admin, errors: string[]): Promise<number | null> {
+  const { data, error } = await admin.rpc(PURGE_GUEST_USAGE_RPC);
+  if (error) {
+    errors.push("Could not delete old guest activity.");
     return null;
   }
   return typeof data === "number" ? data : null;
@@ -459,8 +470,9 @@ async function runDeletion(admin: Admin, planned: PlannedDeletion): Promise<void
 }
 
 /**
- * Daily privacy maintenance: 30-day sign-in log, then inactivity warnings
- * and deletions. One account's failure does not stop the rest.
+ * Daily privacy maintenance: 30-day sign-in log, 30-day guest activity,
+ * then inactivity warnings and deletions. One account's failure does not
+ * stop the rest.
  */
 export async function runPrivacyMaintenance(
   now = new Date(),
@@ -469,6 +481,7 @@ export async function runPrivacyMaintenance(
   const admin = createAdminClient();
   const summary: PrivacyMaintenanceSummary = {
     auditLogRemoved: await purgeAuditLog(admin, errors),
+    guestUsageRemoved: await purgeGuestUsage(admin, errors),
     warningsSent: 0,
     warningsCleared: 0,
     accountsDeleted: 0,

@@ -122,15 +122,15 @@ ITEMS: Borrow money from Dash to buy the energy drink.
 ORDER: keep,cheaper,borrow",,,,
 1,2,7,drag-to-target,Fast forward to the next week. Drag the gift to Senna to help Lars deliver his promise.,Fast forward to the next week. Drag the gift to Mia to help Holly deliver her promise.,Fast forward to the next week. Drag the gift to Dash to help Aiden deliver his promise.,lars-senna-sidebyside.webp,holly-mia-sidebyside.webp,aiden-dash-sidebyside.webp,SOURCE: concept-gift-box / TARGET: senna-celebrating,SOURCE: concept-gift-box / TARGET: mia-celebrating,SOURCE: concept-gift-box / TARGET: aiden-celebrating,,,,
 1,2,8,completion,,,,medal-skill2-bronze.webp,medal-skill2-bronze.webp,medal-skill2-bronze.webp,,MEDAL: bronze,,,,,
-1,3,1,multiple-choice,Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:,Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:,Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:,holly-mia-sidebyside.webp,holly-mia-chatting.webp,aiden-dash-chatting.webp,"CHOICE A: 💸 Mia has no money to buy a new pair
-CHOICE B: 🩹 Mia tries to fix them with sticky tape and now they're even worse
-CHOICE C: 🐶 the dog runs off with one of the pieces
-CORRECT: A","CHOICE A: 💸 Holly has no money to buy a new pair
-CHOICE B: 🩹 Holly tries to fix them with sticky tape and now they're even worse
-CHOICE C: 🐶 the dog runs off with one of the pieces
-CORRECT: A","CHOICE A: 💸 Dash has no money to buy a new pair
-CHOICE B: 🩹 Dash tries to fix them with sticky tape and now they're even worse
-CHOICE C: 🐶 the dog runs off with one of the pieces
+1,3,1,multiple-choice,Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:,Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:,Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:,holly-mia-sidebyside.webp,holly-mia-chatting.webp,aiden-dash-chatting.webp,"CHOICE A: Mia has no money to buy a new pair
+CHOICE B: Mia tries to fix them with sticky tape and now they're even worse
+CHOICE C: the dog runs off with one of the pieces
+CORRECT: A","CHOICE A: Holly has no money to buy a new pair
+CHOICE B: Holly tries to fix them with sticky tape and now they're even worse
+CHOICE C: the dog runs off with one of the pieces
+CORRECT: A","CHOICE A: Dash has no money to buy a new pair
+CHOICE B: Dash tries to fix them with sticky tape and now they're even worse
+CHOICE C: the dog runs off with one of the pieces
 CORRECT: A","Haha, maybe. Try again!","Haha, maybe. But let's try again.","Haha, maybe. But let's try again.",
 1,3,2,bucket-sort,"Where did the money go? Mia needs $40 for new headphones, but her wallet is empty. Drag the items Mia bought into the 'Spent' bucket.","Where did the money go? Holly needs $40 for new headphones, but her wallet is empty. Drag the items Holly bought into the 'Spent' bucket.","Where did the money go? Dash needs $40 for new headphones, but his wallet is empty. Drag the items Dash bought into the 'Spent' bucket.",,,,"TOTAL: $40
 ITEMS:
@@ -165,35 +165,35 @@ STEP3: 🎮 Spend what is left on fun.","ITEMS:
 STEP1: 💵 Earn money.
 STEP2: 🫙 Move a small amount to your Emergencies jar.
 STEP3: 🎮 Spend what is left on fun.",,,,
-1,3,5,multiple-choice,"Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Mia do?","Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Holly do?","Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: ""I'll spend this $20 now, and I'll just save more next week to buy the headphones."" What should Aiden do?",holly-deciding-512.webp,holly-deciding-512.webp,aiden-deciding-512.webp,"CHOICE A: 🛍️ Buy the toy and save $10 more next week.
-CHOICE B: 🎧 Buy the headphones to fix what she broke first.
-CHOICE C: 🤞 Buy the toy and hope the headphones don't cost $40.
-CORRECT: B","CHOICE A: 🛍️ Buy the craft bundle and save $10 more next week.
-CHOICE B: 🎧 Buy the headphones to fix what she broke first.
-CHOICE C: 🤞 Buy the craft bundle and hope the headphones don't cost $40.
-CORRECT: B","CHOICE A: 🛍️ Buy the game and save $20 more next week.
-CHOICE B: 🎧 Buy the headphones to fix what he broke first.
-CHOICE C: 🤞 Buy the game and hope the headphones don't cost $40.
+1,3,5,multiple-choice,"Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Mia do?","Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: ""I'll spend this $10 now, and I'll just save more next week to buy the headphones."" What should Holly do?","Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: ""I'll spend this $20 now, and I'll just save more next week to buy the headphones."" What should Aiden do?",lars-deciding-512.webp,holly-deciding-512.webp,aiden-deciding-512.webp,"CHOICE A: Buy the toy and save $10 more next week.
+CHOICE B: Buy the headphones to fix what she broke first.
+CHOICE C: Buy the toy and hope the headphones don't cost $40.
+CORRECT: B","CHOICE A: Buy the craft bundle and save $10 more next week.
+CHOICE B: Buy the headphones to fix what she broke first.
+CHOICE C: Buy the craft bundle and hope the headphones don't cost $40.
+CORRECT: B","CHOICE A: Buy the game and save $20 more next week.
+CHOICE B: Buy the headphones to fix what he broke first.
+CHOICE C: Buy the game and hope the headphones don't cost $40.
 CORRECT: B",That's a trap! Stick to the plan to avoid stress later.,That's a trap! Stick to the plan to avoid stress later.,That's a trap! Stick to the plan to avoid stress later.,
-1,3,6,word-drop,"Because I didn't ______ everything, I had ______ to ______ the headphones immediately.","Because I didn't ______ everything, I had ______ to ______ the headphones immediately.","Because I didn't ______ everything, I had ______ to ______ the headphones immediately.",lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp,"OPTIONS: 🫙 save | 🛍️ spend | 💵 cash for emergencies | 🤝 borrowed money | 🎧 replace | 🗑️ throw away
-CORRECT: 🛍️ spend, 💵 cash for emergencies, 🎧 replace","OPTIONS: 🫙 save | 🛍️ spend | 💵 cash for emergencies | 🤝 borrowed money | 🎧 replace | 🗑️ throw away
-CORRECT: 🛍️ spend, 💵 cash for emergencies, 🎧 replace","OPTIONS: 🫙 save | 🛍️ spend | 💵 cash for emergencies | 🤝 borrowed money | 🎧 replace | 🗑️ throw away
-CORRECT: 🛍️ spend, 💵 cash for emergencies, 🎧 replace",Not quite. Try another combo!,Not quite. Let's try again.,Not quite. Let's try again.,
-1,3,7,multiple-choice,Mia could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Holly could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:,not allowed,not allowed,not allowed,"CHOICE A: 🔄 If I lose something, I can replace it myself.
-CHOICE B: 🙋 I won't have to ask my parents for money if I need something.
-CHOICE C: 🎯 I can save for a big goal instead of wasting it on small stuff that doesn't last.
-CHOICE D: 😌 I worry less if I can afford things that I want, or have to buy.
-CHOICE E: ✅ All of the above.
-CORRECT: E","CHOICE A: 🔄 If I lose something, I can replace it myself.
-CHOICE B: 🙋 I won't have to ask my parents for money if I need something.
-CHOICE C: 🎯 I can save for a big goal instead of wasting it on small stuff that doesn't last.
-CHOICE D: 😌 I worry less if I can afford things that I want, or have to buy.
-CHOICE E: ✅ All of the above.
-CORRECT: E","CHOICE A: 🔄 If I lose something, I can replace it myself.
-CHOICE B: 🙋 I won't have to ask my parents for money if I need something.
-CHOICE C: 🎯 I can save for a big goal instead of wasting it on small stuff that doesn't last.
-CHOICE D: 😌 I worry less if I can afford things that I want, or have to buy.
-CHOICE E: ✅ All of the above.
+1,3,6,word-drop,"Because I didn't ______ everything, I had ______ to ______ the headphones immediately.","Because I didn't ______ everything, I had ______ to ______ the headphones immediately.","Because I didn't ______ everything, I had ______ to ______ the headphones immediately.",lars-celebrating-512.webp,holly-celebrating-512.webp,aiden-celebrating-512.webp,"OPTIONS: save | spend | cash for emergencies | borrowed money | replace | throw away
+CORRECT: spend, cash for emergencies, replace","OPTIONS: save | spend | cash for emergencies | borrowed money | replace | throw away
+CORRECT: spend, cash for emergencies, replace","OPTIONS: save | spend | cash for emergencies | borrowed money | replace | throw away
+CORRECT: spend, cash for emergencies, replace",Not quite. Try another combo!,Not quite. Let's try again.,Not quite. Let's try again.,
+1,3,7,multiple-choice,Mia could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Holly could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:,Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:,not allowed,not allowed,not allowed,"CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CHOICE C: I can save for a big goal instead of wasting it on small stuff that doesn't last.
+CHOICE D: I worry less if I can afford things that I want, or have to buy.
+CHOICE E: All of the above.
+CORRECT: E","CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CHOICE C: I can save for a big goal instead of wasting it on small stuff that doesn't last.
+CHOICE D: I worry less if I can afford things that I want, or have to buy.
+CHOICE E: All of the above.
+CORRECT: E","CHOICE A: If I lose something, I can replace it myself.
+CHOICE B: I won't have to ask my parents for money if I need something.
+CHOICE C: I can save for a big goal instead of wasting it on small stuff that doesn't last.
+CHOICE D: I worry less if I can afford things that I want, or have to buy.
+CHOICE E: All of the above.
 CORRECT: E","Yes, but take a look at the other options and see if there's a better answer.","Yes, but take a look at the other options and see if there's a better answer.","Yes, but take a look at the other options and see if there's a better answer.",
 1,3,8,completion,,,,medal-skill3-bronze.webp,medal-skill3-bronze.webp,medal-skill3-bronze.webp,,MEDAL: bronze,,,,,
 1,4,1,multiple-choice,Senna’s whole group is buying a game skin before it leaves the shop. Everyone’s saying it’ll be gone soon. Lars sees Senna hold off anyway. What skill is Senna practicing?,Holly’s whole group is buying a game skin before it leaves the shop. Everyone’s saying it’ll be gone soon. Immi sees Holly hold off anyway. What skill is Holly practicing?,Aiden's whole group is buying a game skin before it leaves the shop. Everyone’s saying it’ll be gone soon. Dash sees Aiden hold off anyway. What skill is Aiden practicing?,lars-senna-sidebyside.webp,holly-immi-sidebyside.webp,aiden-dash-sidebyside.webp,"CHOICE A: Senna is just slow at clicking.

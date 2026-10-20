@@ -1054,7 +1054,7 @@ CORRECT: bus,dog lead`,
     }
   });
 
-  it("maps lesson 3 screen 1 as a three-option multiple-choice with emojis", () => {
+  it("maps lesson 3 screen 1 as a three-option pill multiple-choice", () => {
     const tracks = [
       {
         cohort: "explorer" as const,
@@ -1096,26 +1096,27 @@ CORRECT: bus,dog lead`,
         {
           label: `${track.name} has no money to buy a new pair`,
           isCorrect: true,
-          emoji: "💸",
         },
         {
           label: `${track.name} tries to fix them with sticky tape and now they're even worse`,
           isCorrect: false,
-          emoji: "🩹",
         },
         {
           label: "the dog runs off with one of the pieces",
           isCorrect: false,
-          emoji: "🐶",
         },
       ]);
+      expect(screen.options.every((option) => option.emoji === undefined), track.cohort).toBe(
+        true,
+      );
     }
   });
 
-  it("maps lesson 3 screen 5 as emoji multiple-choice and keeps the wording", () => {
+  it("maps lesson 3 screen 5 with the explorer deciding portrait", () => {
     const tracks = [
       {
         cohort: "explorer" as const,
+        pairImage: "lars-deciding-512.webp",
         prompt:
           "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
         options: [
@@ -1126,6 +1127,7 @@ CORRECT: bus,dog lead`,
       },
       {
         cohort: "pathfinder" as const,
+        pairImage: "holly-deciding-512.webp",
         prompt:
           "Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Holly do?",
         options: [
@@ -1136,6 +1138,7 @@ CORRECT: bus,dog lead`,
       },
       {
         cohort: "maverick" as const,
+        pairImage: "aiden-deciding-512.webp",
         prompt:
           "Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: \"I'll spend this $20 now, and I'll just save more next week to buy the headphones.\" What should Aiden do?",
         options: [
@@ -1155,10 +1158,12 @@ CORRECT: bus,dog lead`,
       expect(screen.wrongError, track.cohort).toBe(
         "That's a trap! Stick to the plan to avoid stress later.",
       );
+      expect(screen.pairImage, track.cohort).toBe(track.pairImage);
+      expect(screen.optionLayout, track.cohort).toBeUndefined();
       expect(screen.options, track.cohort).toEqual([
-        { label: track.options[0], isCorrect: false, emoji: "🛍️" },
-        { label: track.options[1], isCorrect: true, emoji: "🎧" },
-        { label: track.options[2], isCorrect: false, emoji: "🤞" },
+        { label: track.options[0], isCorrect: false },
+        { label: track.options[1], isCorrect: true },
+        { label: track.options[2], isCorrect: false },
       ]);
     }
   });
@@ -1194,23 +1199,15 @@ CORRECT: bus,dog lead`,
       type: "word-drop",
       prompt:
         "Because I didn't [blank] everything, I had [blank] to [blank] the headphones immediately.",
-      options: [
-        "🫙 save",
-        "🛍️ spend",
-        "💵 cash for emergencies",
-        "🤝 borrowed money",
-        "🎧 replace",
-        "🗑️ throw away",
-      ],
       blanks: [
-        { correctOption: "🛍️ spend" },
-        { correctOption: "💵 cash for emergencies" },
-        { correctOption: "🎧 replace" },
+        { correctOption: "spend" },
+        { correctOption: "cash for emergencies" },
+        { correctOption: "replace" },
       ],
     });
   });
 
-  it("maps lesson 3 screen 7 as a five-option emoji multiple-choice", () => {
+  it("maps lesson 3 screen 7 as five pill answers with one correct letter", () => {
     const tracks = [
       {
         cohort: "explorer" as const,
@@ -1248,11 +1245,11 @@ CORRECT: bus,dog lead`,
       expect(screen.pairImage, track.cohort).toBe(false);
       expect(screen.optionLayout, track.cohort).toBeUndefined();
       expect(screen.options, track.cohort).toEqual([
-        { label: labels[0], isCorrect: false, emoji: "🔄" },
-        { label: labels[1], isCorrect: false, emoji: "🙋" },
-        { label: labels[2], isCorrect: false, emoji: "🎯" },
-        { label: labels[3], isCorrect: false, emoji: "😌" },
-        { label: labels[4], isCorrect: true, emoji: "✅" },
+        { label: labels[0], isCorrect: false },
+        { label: labels[1], isCorrect: false },
+        { label: labels[2], isCorrect: false },
+        { label: labels[3], isCorrect: false },
+        { label: labels[4], isCorrect: true },
       ]);
     }
   });

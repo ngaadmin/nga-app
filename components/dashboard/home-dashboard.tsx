@@ -28,11 +28,15 @@ import {
   LockIcon,
   LogOutIcon,
 } from "@/lib/dashboard/icons";
+import { generateRecoveryParentPin } from "@/lib/auth/temporary-password";
+import {
+  parentPinConfigured,
+  persistParentPin,
+} from "@/lib/dashboard/persist-parent-pin";
 import {
   dispatchParentPinRecoveryEmail,
   isParentPinConfigured,
   isValidPinFormat,
-  issueParentPinRecovery,
   resolveSimulatedParentEmail,
   saveParentPin,
   verifyParentPin,
@@ -265,6 +269,36 @@ function ChangeParentPinModal({
   const [error, setError] = useState<string | null>(null);
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [pinMode, setPinMode] = useState<"change" | "setup">("change");
+  const [pinModeReady, setPinModeReady] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const session = readUserSession();
+    const isParent =
+      session?.accessMode === "registered" && session.accountRole === "parent_master";
+    if (!isParent) {
+      setPinMode("change");
+      setPinModeReady(true);
+      return;
+    }
+
+    let cancelled = false;
+    setPinModeReady(false);
+    void parentPinConfigured()
+      .then((configured) => {
+        if (!cancelled) setPinMode(configured ? "change" : "setup");
+      })
+      .catch(() => {
+        if (!cancelled) setPinMode("change");
+      })
+      .finally(() => {
+        if (!cancelled) setPinModeReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   function resetForm() {
     setCurrentPin("");
@@ -273,6 +307,8 @@ function ChangeParentPinModal({
     setError(null);
     setRecoveryNotice(null);
     setIsRecovering(false);
+    setPinMode("change");
+    setPinModeReady(false);
   }
 
   function handleClose() {
@@ -286,7 +322,19 @@ function ChangeParentPinModal({
     setIsRecovering(true);
 
     try {
-      const recoveryCode = issueParentPinRecovery();
+      const recoveryCode = generateRecoveryParentPin();
+      const session = readUserSession();
+      const isParent =
+        session?.accessMode === "registered" &&
+        session.accountRole === "parent_master";
+      if (isParent) {
+        const saved = await persistParentPin({ pin: recoveryCode, recovery: true });
+        if (!saved.ok) {
+          setError(saved.error);
+          return;
+        }
+      }
+      saveParentPin(recoveryCode);
       const result = await dispatchParentPinRecoveryEmail(
         parentEmail,
         recoveryCode,
@@ -301,14 +349,21 @@ function ChangeParentPinModal({
     }
   }
 
-  function handleSave() {
-    if (!isParentPinConfigured()) {
-      setError(copy.currentError);
-      return;
-    }
-    if (!verifyParentPin(currentPin)) {
-      setError(copy.currentError);
-      return;
+  async function handleSave() {
+    const session = readUserSession();
+    const isParent =
+      session?.accessMode === "registered" && session.accountRole === "parent_master";
+    const setup = pinMode === "setup";
+
+    if (!setup) {
+      if (!isParent && !isParentPinConfigured()) {
+        setError(copy.currentError);
+        return;
+      }
+      if (!isParent && !verifyParentPin(currentPin)) {
+        setError(copy.currentError);
+        return;
+      }
     }
     if (!isValidPinFormat(newPin)) {
       setError(copy.newInvalid);
@@ -318,9 +373,19 @@ function ChangeParentPinModal({
       setError(copy.mismatch);
       return;
     }
-    if (newPin === currentPin) {
+    if (!setup && newPin === currentPin) {
       setError(copy.sameAsOld);
       return;
+    }
+
+    if (isParent) {
+      const saved = await persistParentPin(
+        setup ? { pin: newPin } : { pin: newPin, currentPin },
+      );
+      if (!saved.ok) {
+        setError(saved.error);
+        return;
+      }
     }
 
     saveParentPin(newPin);
@@ -330,8 +395,11 @@ function ChangeParentPinModal({
 
   if (!isOpen) return null;
 
+  const setupCopy = copyMatrix.dashboard.settings.parentMode;
+  const isSetup = pinMode === "setup";
   const canSave =
-    isValidPinFormat(currentPin) &&
+    pinModeReady &&
+    (isSetup || isValidPinFormat(currentPin)) &&
     isValidPinFormat(newPin) &&
     isValidPinFormat(confirmPin);
 
@@ -348,25 +416,27 @@ function ChangeParentPinModal({
           id="change-parent-pin-title"
           className="font-heading text-lg font-extrabold text-[#031F82]"
         >
-          {copy.title}
+          {isSetup ? setupCopy.setupTitle : copy.title}
         </h2>
         <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-          {copy.body}
+          {isSetup ? setupCopy.setupBody : copy.body}
         </p>
 
         <div className="mt-4 space-y-3">
-          <PinField
-            id="current-parent-pin"
-            label={copy.currentLabel}
-            value={currentPin}
-            onChange={(value) => {
-              setError(null);
-              setCurrentPin(value);
-            }}
-          />
+          {isSetup ? null : (
+            <PinField
+              id="current-parent-pin"
+              label={copy.currentLabel}
+              value={currentPin}
+              onChange={(value) => {
+                setError(null);
+                setCurrentPin(value);
+              }}
+            />
+          )}
           <PinField
             id="new-parent-pin"
-            label={copy.newLabel}
+            label={isSetup ? setupCopy.setupNewLabel : copy.newLabel}
             value={newPin}
             onChange={(value) => {
               setError(null);
@@ -375,7 +445,7 @@ function ChangeParentPinModal({
           />
           <PinField
             id="confirm-parent-pin"
-            label={copy.confirmLabel}
+            label={isSetup ? setupCopy.setupConfirmLabel : copy.confirmLabel}
             value={confirmPin}
             onChange={(value) => {
               setError(null);
@@ -396,22 +466,24 @@ function ChangeParentPinModal({
           </p>
         ) : null}
 
-        <button
-          type="button"
-          onClick={handleForgotPin}
-          disabled={isRecovering}
-          className="mt-4 w-full font-heading text-sm font-bold text-[#0CC1E0] underline-offset-4 transition-colors hover:text-[#031F82] hover:underline disabled:opacity-50"
-        >
-          {isRecovering ? copy.forgotPinSending : copy.forgotPin}
-        </button>
+        {isSetup ? null : (
+          <button
+            type="button"
+            onClick={handleForgotPin}
+            disabled={isRecovering || !pinModeReady}
+            className="mt-4 w-full font-heading text-sm font-bold text-[#0CC1E0] underline-offset-4 transition-colors hover:text-[#031F82] hover:underline disabled:opacity-50"
+          >
+            {isRecovering ? copy.forgotPinSending : copy.forgotPin}
+          </button>
+        )}
 
         <button
           type="button"
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={!canSave}
           className={cn("mt-4 h-touch w-full px-6 shadow-md", orangeCtaClass)}
         >
-          {copy.save}
+          {isSetup ? setupCopy.setupSave : copy.save}
         </button>
         <button
           type="button"

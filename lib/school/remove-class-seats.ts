@@ -25,6 +25,9 @@ export type RemoveClassSeatsAdmin = {
   deleteProgress(
     userId: string,
   ): Promise<{ ok: true } | { ok: false; error: string }>;
+  deleteUsageEvents(
+    username: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }>;
   deleteAuthUser(
     userId: string,
   ): Promise<{ ok: true } | { ok: false; error: string }>;
@@ -79,8 +82,9 @@ export function pickClassSeatsToRemove(
 }
 
 /**
- * Deletes saved progress, then the Auth user. Profile, household, and
- * progress rows cascade from auth.users; the progress delete runs first
+ * Deletes saved progress, then activity rows, then the Auth user.
+ * Activity rows go while the username is still reserved. Profile, household,
+ * and progress rows cascade from auth.users; the progress delete runs first
  * so a later Auth failure still drops the saved play for that seat.
  */
 export async function removeOwnedClassSeats(
@@ -114,6 +118,15 @@ export async function removeOwnedClassSeats(
       return {
         ok: false,
         error: "Could not remove that student's saved progress. Try again.",
+        removed,
+      };
+    }
+
+    const usage = await admin.deleteUsageEvents(seat.username.trim());
+    if (!usage.ok) {
+      return {
+        ok: false,
+        error: "Could not remove that student's activity records. Try again.",
         removed,
       };
     }

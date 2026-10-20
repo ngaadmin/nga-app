@@ -64,16 +64,20 @@ describe("removeOwnedClassSeats", () => {
   function admin(overrides: Partial<RemoveClassSeatsAdmin> = {}): {
     client: RemoveClassSeatsAdmin;
     progress: ReturnType<typeof vi.fn>;
+    usage: ReturnType<typeof vi.fn>;
     auth: ReturnType<typeof vi.fn>;
   } {
     const progress = vi.fn(async () => ({ ok: true as const }));
+    const usage = vi.fn(async () => ({ ok: true as const }));
     const auth = vi.fn(async () => ({ ok: true as const }));
     return {
       progress,
+      usage,
       auth,
       client: {
         listOwnedSeats: async () => ({ ok: true, seats }),
         deleteProgress: progress,
+        deleteUsageEvents: usage,
         deleteAuthUser: auth,
         ...overrides,
       },
@@ -90,9 +94,13 @@ describe("removeOwnedClassSeats", () => {
     expect(result).toEqual({ ok: true, removed: ["Birch7"] });
     expect(harness.progress).toHaveBeenCalledTimes(1);
     expect(harness.progress).toHaveBeenCalledWith("seat-b");
+    expect(harness.usage).toHaveBeenCalledWith("Birch7");
     expect(harness.auth).toHaveBeenCalledTimes(1);
     expect(harness.auth).toHaveBeenCalledWith("seat-b");
     expect(harness.progress.mock.invocationCallOrder[0] ?? 0).toBeLessThan(
+      harness.usage.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(harness.usage.mock.invocationCallOrder[0] ?? 0).toBeLessThan(
       harness.auth.mock.invocationCallOrder[0] ?? 0,
     );
   });
@@ -109,6 +117,20 @@ describe("removeOwnedClassSeats", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.removed).toEqual([]);
+    expect(harness.usage).not.toHaveBeenCalled();
+    expect(harness.auth).not.toHaveBeenCalled();
+  });
+
+  it("does not free the login when activity deletion fails", async () => {
+    const harness = admin({
+      deleteUsageEvents: vi.fn(async () => ({ ok: false as const, error: "db" })),
+    });
+    const result = await removeOwnedClassSeats(harness.client, teacherId, {
+      scope: "one",
+      username: "acorn3",
+    });
+
+    expect(result.ok).toBe(false);
     expect(harness.auth).not.toHaveBeenCalled();
   });
 

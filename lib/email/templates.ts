@@ -11,6 +11,7 @@ export type OnboardingEmailType =
   | "CREDENTIAL_RECOVERY"
   | "ACCOUNT_DELETED_MASTER"
   | "ACCOUNT_DELETED_CHILD"
+  | "INACTIVITY_WARNING"
   | "TEACHER_CLASS_CONFIRM";
 
 export type ExplorerParentEmailData = {
@@ -71,6 +72,18 @@ export type AccountDeletedChildEmailData = {
   username: string;
 };
 
+export type InactivityWarningAudience =
+  | "parent-self"
+  | "parent-child"
+  | "teacher-self"
+  | "teacher-seat";
+
+export type InactivityWarningEmailData = {
+  audience: InactivityWarningAudience;
+  /** Child or class-login username. Omitted from parent and teacher self notices. */
+  username: string;
+};
+
 /** One-shot class page mail after /school teacher signup. */
 export type TeacherClassConfirmEmailData = {
   token: string;
@@ -92,6 +105,7 @@ export type OnboardingEmailDataMap = {
   CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
   ACCOUNT_DELETED_MASTER: AccountDeletedMasterEmailData;
   ACCOUNT_DELETED_CHILD: AccountDeletedChildEmailData;
+  INACTIVITY_WARNING: InactivityWarningEmailData;
   TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
 };
 
@@ -1022,6 +1036,59 @@ export function buildAccountDeletedChildEmail(
   return { subject, preheader, html, text };
 }
 
+export function buildInactivityWarningEmail(
+  data: InactivityWarningEmailData,
+  _appUrl?: string,
+): BuiltEmail {
+  const username = emailPlain(data.username).trim();
+  const aboutChild = data.audience === "parent-child" || data.audience === "teacher-seat";
+  const safeName = username || "this profile";
+
+  const subject = aboutChild
+    ? `${safeName}'s NextGenAchievers profile will be deleted`
+    : data.audience === "teacher-self"
+      ? "Your NextGenAchievers class account will be deleted"
+      : "Your NextGenAchievers account will be deleted";
+
+  const intro = aboutChild
+    ? data.audience === "teacher-seat"
+      ? `The class login ${safeName} has not been used for about 11 months.`
+      : `${safeName} has not signed in to NextGenAchievers or used it for about 11 months.`
+    : data.audience === "teacher-self"
+      ? "Your NextGenAchievers teacher account has not been signed in to or used for about 11 months."
+      : "Your NextGenAchievers account has not been signed in to or used for about 11 months.";
+
+  const consequence = aboutChild
+    ? data.audience === "teacher-seat"
+      ? "If there is still no sign-in or activity in the next month, we will delete that login, including saved progress and activity records. This cannot be undone."
+      : "If there is still no sign-in or activity in the next month, we will delete that profile, including progress and activity records. This cannot be undone."
+    : data.audience === "teacher-self"
+      ? "If there is still no sign-in or activity in the next month, we will delete the account and the class logins on it, including their progress and activity records. This cannot be undone."
+      : "If there is still no sign-in or activity in the next month, we will delete the account and any linked child profiles. That includes progress and activity records. This cannot be undone.";
+
+  const keep = aboutChild
+    ? `Sign in as ${safeName} before then to keep it.`
+    : "Sign in before then to keep the account.";
+
+  const preheader = "Sign in within a month to keep it.";
+  const header = "Account not used";
+  const text = ["Hi,", "", intro, "", consequence, "", keep, "", "NextGenAchievers"].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
+      <p style="margin:0 0 16px;font-size:16px;">${escapeHtml(intro)}</p>
+      <p style="margin:0 0 16px;font-size:16px;">${escapeHtml(consequence)}</p>
+      <p style="margin:0 0 16px;font-size:16px;">${escapeHtml(keep)}</p>
+      ${pennyIllustration()}
+      <p style="margin:24px 0 0;font-size:16px;">NextGenAchievers</p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
 export function buildFriendInviteEmail(
   _data: FriendInviteEmailData,
   _appUrl?: string,
@@ -1155,6 +1222,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "ACCOUNT_DELETED_CHILD":
       return buildAccountDeletedChildEmail(
         data as AccountDeletedChildEmailData,
+        appUrl,
+      );
+    case "INACTIVITY_WARNING":
+      return buildInactivityWarningEmail(
+        data as InactivityWarningEmailData,
         appUrl,
       );
     case "TEACHER_CLASS_CONFIRM":

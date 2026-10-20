@@ -8,7 +8,7 @@ import {
 import { splitTrailingQualifier } from "@/lib/privacy/split-trailing-qualifier";
 
 describe("privacy policy source", () => {
-  it("publishes the approved policy with the 15 October 2026 date", () => {
+  it("publishes the approved policy with the 20 October 2026 date", () => {
     const markdown = loadPrivacyPolicyMarkdown();
     const blocks = parsePrivacyMarkdown(markdown);
     const text = blocks
@@ -24,14 +24,21 @@ describe("privacy policy source", () => {
       })
       .join("\n");
 
-    expect(markdown).toContain("**Last updated: 15 October 2026**");
+    expect(markdown).toContain("**Last updated: 20 October 2026**");
     expect(markdown).not.toContain("[DATE]");
     expect(markdown).not.toContain("[CATH_EMAIL]");
     expect(markdown).not.toContain("## TO CONFIRM");
     expect(markdown).not.toMatch(/\bNGA\b/);
-    expect(text).toContain("15 October 2026");
+    expect(text).toContain("20 October 2026");
     expect(text).toContain(
-      "Accounts inactive for 12 months are reviewed and deleted.",
+      "If an account has no sign-in or activity for about 11 months, we email the parent or the teacher first.",
+    );
+    expect(text).toContain(
+      "Accounts that are still inactive at 12 months are deleted.",
+    );
+    expect(text).toContain("Activity records are deleted with the account.");
+    expect(text).toContain(
+      "The sign-in log, which includes IP addresses, is kept for 30 days.",
     );
     expect(text).toContain(
       "Our database has no restorable backups, so deleted data cannot be recovered.",

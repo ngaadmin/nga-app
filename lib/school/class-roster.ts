@@ -31,6 +31,8 @@ import {
   type ClassXpTotal,
 } from "@/lib/school/class-xp";
 import { CLASS_PAGE_TOKYO_HOP_MS } from "@/lib/school/class-page-timing";
+import { discardUnfinishedAuthUser } from "@/lib/school/discard-unfinished-auth-user";
+import { deleteUsageEventsForUsername } from "@/lib/privacy/delete-usage-events";
 
 const SEAT_AUTH_EMAIL_DOMAIN = "users.nextgenachievers.invalid";
 const MIN_PASSWORD_LENGTH = 6;
@@ -679,7 +681,26 @@ export async function createClassSeats(input: {
       .eq("id", data.user.id);
 
     if (profileError) {
-      await admin.auth.admin.deleteUser(data.user.id);
+      await discardUnfinishedAuthUser(
+        {
+          async readUsername(userId) {
+            const { data: stub } = await admin
+              .from("profiles")
+              .select("username")
+              .eq("id", userId)
+              .maybeSingle();
+            return typeof stub?.username === "string" ? stub.username : null;
+          },
+          async deleteUsageEvents(username) {
+            const usage = await deleteUsageEventsForUsername(admin, username);
+            if (!usage.ok) throw new Error(usage.error);
+          },
+          async deleteAuthUser(userId) {
+            await admin.auth.admin.deleteUser(userId);
+          },
+        },
+        data.user.id,
+      );
       return {
         ok: false,
         error: profileError.message || `Could not save ${username}.`,

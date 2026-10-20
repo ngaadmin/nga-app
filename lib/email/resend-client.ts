@@ -15,6 +15,8 @@ export type SendOnboardingEmailInput<T extends OnboardingEmailType = OnboardingE
      * (localhost / preview / production) so signature verification succeeds.
      */
     appUrl?: string;
+    /** Resend idempotency key. Same key and payload within 24 hours is not sent twice. */
+    idempotencyKey?: string;
   };
 
 export type SendOnboardingEmailResult =
@@ -101,12 +103,16 @@ export async function sendOnboardingEmail<T extends OnboardingEmailType>(
   }
 
   try {
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    };
+    const idempotencyKey = input.idempotencyKey?.trim();
+    if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+
     const response = await fetch(RESEND_API_URL, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         from: resolveFromAddress(),
         to: [recipientEmail],

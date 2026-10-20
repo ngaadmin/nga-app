@@ -12,6 +12,10 @@ type DeleteLearnerConfirmSheetProps = {
   cancelLabel: string;
   error: string | null;
   isDeleting: boolean;
+  pinLabel?: string;
+  pinValue?: string;
+  onPinChange?: (value: string) => void;
+  confirmDisabled?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -65,6 +69,10 @@ export function DeleteLearnerConfirmSheet({
   cancelLabel,
   error,
   isDeleting,
+  pinLabel,
+  pinValue = "",
+  onPinChange,
+  confirmDisabled = false,
   onClose,
   onConfirm,
 }: DeleteLearnerConfirmSheetProps) {
@@ -104,6 +112,31 @@ export function DeleteLearnerConfirmSheet({
           >
             {body}
           </p>
+          {pinLabel ? (
+            <label className="mt-4 block text-left">
+              <span
+                style={headingFont}
+                className="text-sm font-bold text-[#031F82]"
+              >
+                {pinLabel}
+              </span>
+              <input
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                autoComplete="off"
+                value={pinValue}
+                disabled={isDeleting}
+                onChange={(event) => {
+                  onPinChange?.(event.target.value.replace(/\D/g, "").slice(0, 4));
+                }}
+                aria-label={pinLabel}
+                className="mt-1.5 w-full rounded-xl border-2 border-[#BDE9FB] bg-[#F7FBFF] px-4 py-2.5 text-center text-lg font-bold tracking-[0.35em] text-[#031F82] outline-none focus:border-[#0CC1E0]"
+                style={headingFont}
+              />
+            </label>
+          ) : null}
           {error ? (
             <p
               style={bodyFont}
@@ -117,7 +150,7 @@ export function DeleteLearnerConfirmSheet({
             <button
               type="button"
               onClick={onConfirm}
-              disabled={isDeleting}
+              disabled={isDeleting || confirmDisabled}
               style={headingFont}
               className="inline-flex h-[52px] w-full items-center justify-center rounded-[16px] border-b-4 border-[#021558] bg-[#031F82] text-[16px] font-bold text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0 disabled:active:border-b-4"
             >

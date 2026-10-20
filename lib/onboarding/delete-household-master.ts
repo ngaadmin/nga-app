@@ -2,9 +2,16 @@
 
 import "server-only";
 
+import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { assessParentPin, PARENT_PIN_GATE_COPY } from "@/lib/dashboard/parent-pin-gate";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { deleteUsageEventsForUsername } from "@/lib/privacy/delete-usage-events";
+import {
+  deleteHouseholdAccounts,
+  type HouseholdChildRecord,
+} from "@/lib/onboarding/delete-household-accounts";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
 export type DeleteHouseholdMasterResult =
@@ -16,10 +23,14 @@ const GENERIC_ERROR =
 
 /**
  * Permanently deletes the signed-in parent master, every linked learner Auth
- * user, and household rows (parent_child, consent_requests). Profiles cascade
- * from auth.users. Does not report success unless the parent Auth user is gone.
+ * user, and household rows (parent_child, consent_requests). Activity rows for
+ * those usernames go first. Profiles cascade from auth.users. Does not report
+ * success unless the parent Auth user is gone.
+ * Requires the parent PIN stored on the parent profile.
  */
-export async function deleteHouseholdMasterAccount(): Promise<DeleteHouseholdMasterResult> {
+export async function deleteHouseholdMasterAccount(
+  parentPin: string,
+): Promise<DeleteHouseholdMasterResult> {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
@@ -45,7 +56,7 @@ export async function deleteHouseholdMasterAccount(): Promise<DeleteHouseholdMas
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, account_role")
+    .select("id, account_role, username, parent_pin_hash")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -56,13 +67,27 @@ export async function deleteHouseholdMasterAccount(): Promise<DeleteHouseholdMas
     };
   }
 
+  const storedPin =
+    typeof profile.parent_pin_hash === "string" ? profile.parent_pin_hash.trim() : "";
+  if (storedPin) {
+    const pinLimit = consumeRateLimit(`parent-pin:${user.id}`, 8, 15 * 60 * 1000);
+    if (!pinLimit.allowed) {
+      return { success: false, error: PARENT_PIN_GATE_COPY.limited };
+    }
+  }
+  const pin = assessParentPin(parentPin, profile.parent_pin_hash);
+  if (!pin.ok) return { success: false, error: pin.error };
+
   const parentEmail = user.email?.trim().toLowerCase() || null;
-  const collected = await collectHouseholdChildIds(admin, user.id, parentEmail);
+  const collected = await collectHouseholdChildren(admin, user.id, parentEmail);
   if (!collected.ok) {
     return { success: false, error: collected.error };
   }
 
-  const childUsernames = await loadChildUsernames(admin, collected.ids);
+  const childUsernames = collected.children
+    .filter((child) => child.role === "child")
+    .map((child) => child.username.trim())
+    .filter(Boolean);
   if (parentEmail && EMAIL_PATTERN.test(parentEmail)) {
     try {
       await sendOnboardingEmail({
@@ -75,50 +100,39 @@ export async function deleteHouseholdMasterAccount(): Promise<DeleteHouseholdMas
     }
   }
 
-  for (const childId of collected.ids) {
-    const { data: child } = await admin
-      .from("profiles")
-      .select("id, account_role")
-      .eq("id", childId)
-      .maybeSingle();
-    if (child && child.account_role !== "child") continue;
-
-    const { error } = await admin.auth.admin.deleteUser(childId);
-    if (error && !isAlreadyGone(error)) {
-      return {
-        success: false,
-        error:
-          "We could not delete every linked learner account. Your parent login is still active. Try again.",
-      };
-    }
-  }
-
-  const leftoverError = await deleteLeftoverHouseholdRows(
-    admin,
-    user.id,
-    parentEmail,
+  const deleted = await deleteHouseholdAccounts(
+    {
+      async deleteUsageEvents(username) {
+        return deleteUsageEventsForUsername(admin, username);
+      },
+      async deleteAuthUser(userId) {
+        const { error } = await admin.auth.admin.deleteUser(userId);
+        if (error && !isAlreadyGone(error)) {
+          return { ok: false, error: error.message ?? GENERIC_ERROR };
+        }
+        return { ok: true };
+      },
+      async deleteLeftoverRows() {
+        const leftoverError = await deleteLeftoverHouseholdRows(
+          admin,
+          user.id,
+          parentEmail,
+        );
+        return leftoverError ? { ok: false, error: leftoverError } : { ok: true };
+      },
+      async confirmParentGone() {
+        const { data: stillThere } = await admin.auth.admin.getUserById(user.id);
+        if (stillThere.user) return { ok: false, error: GENERIC_ERROR };
+        return { ok: true };
+      },
+    },
+    {
+      id: user.id,
+      username: typeof profile.username === "string" ? profile.username : "",
+    },
+    collected.children,
   );
-  if (leftoverError) {
-    return {
-      success: false,
-      error:
-        "We could not finish deleting household records. Your parent login is still active. Try again.",
-    };
-  }
-
-  const { error: parentError } = await admin.auth.admin.deleteUser(user.id);
-  if (parentError && !isAlreadyGone(parentError)) {
-    return {
-      success: false,
-      error:
-        "Linked learners were removed, but we could not delete the parent account. Try again.",
-    };
-  }
-
-  const { data: stillThere } = await admin.auth.admin.getUserById(user.id);
-  if (stillThere.user) {
-    return { success: false, error: GENERIC_ERROR };
-  }
+  if (!deleted.ok) return { success: false, error: deleted.error };
 
   try {
     await supabase.auth.signOut();
@@ -129,11 +143,11 @@ export async function deleteHouseholdMasterAccount(): Promise<DeleteHouseholdMas
   return { success: true };
 }
 
-async function collectHouseholdChildIds(
+async function collectHouseholdChildren(
   admin: ReturnType<typeof createAdminClient>,
   parentId: string,
   parentEmail: string | null,
-): Promise<{ ok: true; ids: string[] } | { ok: false; error: string }> {
+): Promise<{ ok: true; children: HouseholdChildRecord[] } | { ok: false; error: string }> {
   const ids = new Set<string>();
 
   const { data: links, error: linksError } = await admin
@@ -165,24 +179,23 @@ async function collectHouseholdChildIds(
     if (row.child_id) ids.add(row.child_id);
   }
 
-  return { ok: true, ids: [...ids] };
-}
-
-async function loadChildUsernames(
-  admin: ReturnType<typeof createAdminClient>,
-  childIds: string[],
-): Promise<string[]> {
-  const names: string[] = [];
-  for (const childId of childIds) {
-    const { data } = await admin
+  const children: HouseholdChildRecord[] = [];
+  for (const childId of ids) {
+    const { data, error } = await admin
       .from("profiles")
-      .select("username")
+      .select("id, account_role, username")
       .eq("id", childId)
       .maybeSingle();
-    const username = data?.username?.trim();
-    if (username) names.push(username);
+    if (error) return { ok: false, error: GENERIC_ERROR };
+    if (!data?.id) continue;
+    children.push({
+      id: data.id,
+      role: typeof data.account_role === "string" ? data.account_role : "",
+      username: typeof data.username === "string" ? data.username : "",
+    });
   }
-  return names;
+
+  return { ok: true, children };
 }
 
 async function deleteLeftoverHouseholdRows(

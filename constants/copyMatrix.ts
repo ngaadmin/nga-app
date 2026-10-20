@@ -183,6 +183,7 @@ export const copyMatrix = {
           "We could not delete this household. Your parent login is still active. Try again.",
         deleteConfirmAction: "Delete permanently",
         deleteCancelAction: "Cancel",
+        deletePinLabel: "Parent PIN",
         learningPathLabel: "Learning path",
         changeTrack: "Change path",
         changeTrackClose: "Close",

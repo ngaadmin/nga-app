@@ -2,7 +2,7 @@ import type { BlankHeartErrorKey } from "@/lib/academy/lessons/payload/heart-cos
 
 /**
  * Temporary until Storybird fills these Error cells.
- * Each row is a Module 1 screen that can cost a heart and still has an empty
+ * Each row is a Module 1 scored screen that still has an empty
  * Error cell for that cohort. Delete a row when the cell has text.
  * The guard test fails if this list and the sheet disagree.
  */

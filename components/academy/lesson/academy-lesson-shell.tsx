@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRef, type ReactNode } from "react";
+import { LessonCoinRunMeter } from "@/components/academy/lesson/lesson-coin-run-meter";
 import {
-  LESSON_MAX_LIVES,
   lessonCyanNextButtonClass,
   lessonNextButtonClass,
   lessonScreenInlinePaddingClass,
@@ -14,9 +14,11 @@ import { cn } from "@/lib/utils/cn";
 type AcademyLessonShellProps = {
   currentScreenIndex: number;
   totalScreens: number;
-  mistakes: number;
-  maxLives?: number;
-  /** @deprecated Lesson reward XP is shown on completion; header shows lives only. */
+  /** Correct answers toward the next 10-coin bonus. */
+  bonusStreak?: number;
+  /** Completed bonus runs. A rise clears the coin meter. */
+  bonusRuns?: number;
+  /** @deprecated Lesson coins are shown on completion. The header shows the coin meter. */
   xpReward?: number;
   canAdvance: boolean;
   onNext: () => void;
@@ -30,7 +32,7 @@ type AcademyLessonShellProps = {
   progressTotal?: number;
   /** The open screen is the lesson completion screen. */
   progressComplete?: boolean;
-  /** Completion draws its own coins counter in place of hearts and progress. */
+  /** Completion draws its own coins counter in place of the coin meter and progress. */
   hideHeader?: boolean;
   /** Match screen: 20px margins, gold progress, and the brand Next pill. */
   matchChrome?: boolean;
@@ -39,19 +41,11 @@ type AcademyLessonShellProps = {
   cyanFooter?: boolean;
 };
 
-function LessonLifeHeart({ filled }: { filled: boolean }) {
-  return (
-    <span className="text-[14px] leading-none" aria-hidden>
-      {filled ? "❤️" : "🤍"}
-    </span>
-  );
-}
-
 export function AcademyLessonShell({
   currentScreenIndex,
   totalScreens,
-  mistakes,
-  maxLives = LESSON_MAX_LIVES,
+  bonusStreak = 0,
+  bonusRuns = 0,
   canAdvance,
   onNext,
   children,
@@ -65,7 +59,6 @@ export function AcademyLessonShell({
   skySurface = false,
   cyanFooter = false,
 }: AcademyLessonShellProps) {
-  const livesRemaining = Math.max(0, maxLives - mistakes);
   const barIndex = progressIndex ?? currentScreenIndex;
   const barTotal = progressTotal ?? totalScreens;
   const progressPercent =
@@ -116,14 +109,7 @@ export function AcademyLessonShell({
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
         </Link>
-        <div
-          className="flex shrink-0 items-center gap-0.5"
-          aria-label={`${livesRemaining} of ${maxLives} lives remaining`}
-        >
-          {Array.from({ length: maxLives }, (_, index) => (
-            <LessonLifeHeart key={index} filled={index < livesRemaining} />
-          ))}
-        </div>
+        <LessonCoinRunMeter streak={bonusStreak} runs={bonusRuns} />
         <div
           className={cn(
             "flex-1 overflow-hidden",

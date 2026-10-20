@@ -109,7 +109,8 @@ export function LessonRunner({
         progressIndex={progressIndex}
         progressTotal={progressTotal}
         progressComplete={progressComplete}
-        mistakes={flow.screenMistakes}
+        bonusStreak={flow.bonusStreak}
+        bonusRuns={flow.bonusRuns}
         xpReward={content.rewards.xpReward}
         canAdvance={
           canAdvance ?? (flow.canAdvanceDefault && !isCompletionScreen)

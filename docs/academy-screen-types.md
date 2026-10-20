@@ -82,7 +82,7 @@ Applies to pills, radio lists, icon options, and persistent error toasts. Only t
 
 ### Lesson chrome & layout
 
-- **Minimal chrome:** lives (3 hearts), slim progress bar, optional XP chip — `AcademyLessonShell`
+- **Minimal chrome:** five coin slots for the bonus run, and a slim progress bar — `AcademyLessonShell`. Slots fill from the left with each correct scored answer. Five in a row pays 10 coins and the slots empty. A wrong answer empties the slots, with no shake, red, or lost message on the meter. Unscored screens leave the slots as they are. The completion screen draws its own coins counter.
 - **No forced scrolling to reach Next:** dense screen types compress layout; content area may scroll internally but the footer Next button stays visible without scrolling the page
 - **Next** is disabled until the screen is marked ready (`markScreenReady`) or an explicit advance override applies
 - **Last screen:** footer shows **Cash In / Collect Points** (`lessonGoldClaimClass`), not Next
@@ -519,7 +519,7 @@ Fix layout once in these components; future lessons need only content updates.
 7. For bucket-sort, set `layout` only when not using default `statement-sort`.
 8. QA against the design shell (`/dashboard/academy/lesson/shell`) before shipping.
 9. If an interaction repeats across lessons, promote a `custom` renderer to a registered type in `lesson-screen-renderer.tsx`.
-10. If the screen can cost a heart, write Error text for Explorer, Pathfinder, and Maverick. See `docs/lesson-authoring.md`.
+10. If a miss on the screen is scored, write Error text for Explorer, Pathfinder, and Maverick. A scored miss empties the coin meter and counts against the perfect bonus. See `docs/lesson-authoring.md`.
 
 **Do not add new types for:**
 

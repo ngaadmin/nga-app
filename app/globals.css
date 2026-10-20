@@ -194,6 +194,37 @@
     animation: lesson-tick-pop 250ms ease-out;
   }
 
+  /* Fifth coin lands, then the meter fades back to empty outlines. */
+  @keyframes lesson-coin-run-clear {
+    0%,
+    40% {
+      background-color: #ffc933;
+      box-shadow: inset 0 0 0 1px #e08a00;
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 1.25px #c5d0e4;
+    }
+  }
+
+  .lesson-coin-run-clear {
+    animation: lesson-coin-run-clear 420ms ease-out forwards;
+  }
+
+  @keyframes lesson-coin-run-clear-glyph {
+    0%,
+    40% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .lesson-coin-run-clear-glyph {
+    animation: lesson-coin-run-clear-glyph 420ms ease-out forwards;
+  }
+
   @keyframes lesson-reward-zoom {
     0% {
       transform: scale(0.72);
@@ -260,7 +291,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .lesson-tile-shake,
-    .lesson-tick-pop {
+    .lesson-tick-pop,
+    .lesson-coin-run-clear,
+    .lesson-coin-run-clear-glyph {
       animation: none;
     }
 

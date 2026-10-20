@@ -9,7 +9,7 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 const COHORTS: readonly MasteryCohort[] = ["explorer", "pathfinder", "maverick"];
 
 /**
- * What a wrong answer is on a screen the player can charge a heart for.
+ * What a wrong answer is on a scored screen.
  * Story cards, free decisions, tap-reveal, and the skill hub are not here:
  * those screens never call the mistake counter.
  */
@@ -19,7 +19,8 @@ export type ScreenHeartCost = {
 };
 
 /**
- * Whether the lesson player drops a heart on this screen.
+ * Whether a miss on this screen is scored.
+ * A scored miss empties the header coin meter and counts against the perfect bonus.
  * Mirrors the mistake calls in the screen components: a graded pick, a wrong
  * drop, an early release, a slider let-go on the wrong amount, and the same
  * misses. Continue cards, `decisionPath` choices, all-of-the-above statements,
@@ -132,7 +133,7 @@ function bucketHeartCost(
   };
 }
 
-/** A non-zero let-go that fails the screen's match drops a heart. $0 does not. */
+/** A non-zero let-go that fails the screen's match is scored. $0 does not. */
 function sliderCanMiss(
   total: number,
   targetMin: number,
@@ -268,11 +269,11 @@ export function formatBlankHeartErrorDoc(blanks: readonly BlankHeartError[]): st
   const lines = [
     "# Module 1 blank error lines",
     "",
-    "Storybird: these screens drop a heart when the learner misses, and the Error cell is empty for the cohorts named below. Write a short error line for each blank cohort. Leave every other word on the screen as it is.",
+    "Storybird: a miss on these screens empties the coin meter in the lesson header, and the Error cell is empty for the cohorts named below. Write a short error line for each blank cohort. Leave every other word on the screen as it is.",
     "",
     "This list is temporary. When a cell has text, take that cohort off the list.",
     "",
-    "Not listed: story and continue cards, free choices with no wrong answer (lesson 8's decisions), tap-reveal, the skill hub, an all-of-the-above question (those picks do not drop a heart), and a single Spent bucket (every drop lands in the only bucket).",
+    "Not listed: story and continue cards, free choices with no wrong answer (lesson 8's decisions), tap-reveal, the skill hub, an all-of-the-above question (those picks do not empty the coin meter), and a single Spent bucket (every drop lands in the only bucket).",
     "",
     `${ordered.length} screens.`,
     "",

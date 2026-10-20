@@ -1,3 +1,5 @@
+import { LessonCoinRunMeter } from "@/components/academy/lesson/lesson-coin-run-meter";
+
 /**
  * Instant placeholder for a dashboard tab while its route payload is in flight.
  * Uses the same pulse treatment as the Class loading state.
@@ -18,20 +20,12 @@ export function DashboardTabLoading() {
   );
 }
 
-const LESSON_LOADING_LIVES = 4;
-
-/** Same hearts row the lesson route shows while its payload is in flight. */
+/** Same coin meter the lesson route shows while its payload is in flight. */
 export function DashboardLessonOpening() {
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-white">
       <header className="lesson-screen-inline flex shrink-0 items-center gap-2.5 pb-1 pt-3.5">
-        <div className="flex shrink-0 items-center gap-0.5" aria-hidden>
-          {Array.from({ length: LESSON_LOADING_LIVES }, (_, index) => (
-            <span key={index} className="text-[14px] leading-none">
-              ❤️
-            </span>
-          ))}
-        </div>
+        <LessonCoinRunMeter streak={0} />
         <div
           className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#E8F6FC]"
           role="progressbar"

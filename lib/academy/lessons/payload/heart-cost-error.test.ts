@@ -90,7 +90,7 @@ describe("heart-costing screens need error text", () => {
     expect(source).toContain("Storybird");
   });
 
-  it("does not charge a heart for story cards, free choices, tap-reveal, the hub, or a single spent bucket", () => {
+  it("does not score story cards, free choices, tap-reveal, the hub, or a single spent bucket", () => {
     const lesson = (lessonNumber: number) => {
       const payload = payloads.find((item) => item.moduleNumber === 1 && item.lessonNumber === lessonNumber);
       if (!payload) throw new Error(`Missing lesson ${lessonNumber}`);

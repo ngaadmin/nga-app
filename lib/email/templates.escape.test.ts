@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  buildAccountDeletedChildEmail,
+  buildAccountDeletedMasterEmail,
   buildExplorerParentEmail,
   resolveTrustedAppUrl,
 } from "@/lib/email/templates";
@@ -58,6 +60,21 @@ describe("email template escaping", () => {
     expect(resolveTrustedAppUrl("javascript:alert(1)")).not.toContain(
       "javascript:",
     );
+  });
+});
+
+describe("account-deleted email contact", () => {
+  it("uses info@nextgenachievers.com", () => {
+    const child = buildAccountDeletedChildEmail({ username: "delta4" });
+    const household = buildAccountDeletedMasterEmail({
+      childUsernames: ["delta4"],
+    });
+    for (const built of [child, household]) {
+      expect(built.text).toContain("info@nextgenachievers.com");
+      expect(built.html).toContain("info@nextgenachievers.com");
+      expect(built.text).not.toContain("support@");
+      expect(built.html).not.toContain("support@");
+    }
   });
 });
 

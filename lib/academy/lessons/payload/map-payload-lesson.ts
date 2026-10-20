@@ -23,14 +23,34 @@ type SettingEntry = { key: string; value: string };
 const ITEM_BUCKETS = new Set(["SHORT", "LONG", "NEED", "WANT", "YES", "NO", "SPENT"]);
 
 const BUCKET_LABEL: Record<string, { id: string; label: string; tone: "short" | "long" | "need" | "want"; icon: string }> = {
-  SHORT: { id: "short", label: "Short Fun", tone: "short", icon: "⏱️" },
-  LONG: { id: "long", label: "More Fun for Longer", tone: "long", icon: "🌱" },
-  NEED: { id: "need", label: "Needs", tone: "need", icon: "🛡️" },
-  WANT: { id: "want", label: "Wants", tone: "want", icon: "✨" },
+  SHORT: { id: "short", label: "Short Fun", tone: "short", icon: "⚡" },
+  LONG: { id: "long", label: "More Fun for Longer", tone: "long", icon: "🌈" },
+  NEED: { id: "need", label: "Needs", tone: "need", icon: "🛠️" },
+  WANT: { id: "want", label: "Wants", tone: "want", icon: "🎈" },
   YES: { id: "yes", label: "Yes", tone: "need", icon: "🛡️" },
   NO: { id: "no", label: "No", tone: "want", icon: "🚫" },
   SPENT: { id: "spent", label: "Spent", tone: "need", icon: "💸" },
 };
+
+/** Wants/Needs headings name the learner in the story. Other buckets keep their label. */
+function bucketMeta(
+  key: string,
+  text: string,
+): { id: string; label: string; tone: "short" | "long" | "need" | "want"; icon: string } {
+  const meta = BUCKET_LABEL[key] ?? {
+    id: key.toLowerCase(),
+    label: key,
+    tone: "short" as const,
+    icon: "•",
+  };
+  if (key !== "WANT" && key !== "NEED") return meta;
+  const name = /\b(Lars|Holly|Aiden)\b/.exec(text)?.[1];
+  if (!name) return meta;
+  return {
+    ...meta,
+    label: key === "WANT" ? `Things ${name} wants` : `Things ${name} needs`,
+  };
+}
 
 function cohortField(copy: PayloadCohortCopy, cohort: MasteryCohort): string {
   const own = copy[cohort].trim();
@@ -1081,12 +1101,7 @@ export function mapPayloadScreen(
       const rows = itemRows(settings);
       const bucketKeys = [...new Set(rows.map((item) => item.bucket))];
       const buckets = bucketKeys.map((key) => {
-        const meta = BUCKET_LABEL[key] ?? {
-          id: key.toLowerCase(),
-          label: key,
-          tone: "short" as const,
-          icon: "•",
-        };
+        const meta = bucketMeta(key, text);
         return row.gameType === "tap-reveal"
           ? { id: meta.id, label: meta.label, tone: meta.tone }
           : { id: meta.id, label: meta.label, tone: meta.tone, icon: meta.icon };

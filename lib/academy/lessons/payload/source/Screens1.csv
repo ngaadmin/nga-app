@@ -59,18 +59,18 @@ CORRECT: False","OPTION: True
 OPTION: False
 CORRECT: False",Nope! That cash is already gone.,"Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!","Nope! Once the cash is traded away, it's gone. You can't use the same dollar twice!",
 1,2,2,bucket-sort,"Lars spent all his money on things he wanted, but didn't save anything for things he needs to buy. Help Lars identify which items are 'Things he wants' or 'Things he needs'","Holly spent all her money on things she wanted, but didn't save anything for things she needs to buy. Help Holly identify which items are 'Things she wants' or 'Things she needs'","Aiden spent all his money on things he wanted, but didn't save anything for things he needs to buy. Help Aiden identify which items are 'Things he wants' or 'Things he needs'",,,,"ITEMS:
-NEED: 📱 Phone Case Birthday Present
-NEED: 🔌 Replace broken phone cable
+NEED: 📱 Phone case (birthday present)
+NEED: 🔌 Phone cable
 WANT: 🍫 Beast Munch
-WANT: 💃 New skin for his favourite game","ITEMS:
-NEED: 📱 Phone Case Birthday Present
-NEED: 🔌 Replace broken phone cable
+WANT: 💃 New game skin","ITEMS:
+NEED: 📱 Phone case (birthday present)
+NEED: 🔌 Phone cable
 WANT: 🍫 Beast Munch
 WANT: 💃 Cosmetics","ITEMS:
-NEED: 📱 Phone Case Birthday Present
-NEED: 🔌 Replace broken phone cable
+NEED: 📱 Phone case (birthday present)
+NEED: 🔌 Phone cable
 WANT: 🍫 Beast Munch
-WANT: 💃 New skin for his favourite game",,,,
+WANT: 💃 New game skin",,,,
 1,2,3,spotlight-rounds,Which item is the one Lars 'Needs' to buy before he spends money on what he 'Wants' to buy?,Which item is the one Holly 'Needs' to buy before she spends money on what she 'Wants' to buy?,Which item is the one Aiden 'Needs' to buy before he spends money on what he 'Wants' to buy?,lars-thinking-512.webp,holly-thinking-512.webp,aiden-thinking-512.webp,"ROUNDS:
 A: A new phone case, even though his old one is still fine | B: A new phone case he promised his brother | CORRECT: B
  A: A light for his bike to be seen in the dark | B: A new gaming mouse with lights (his old one still works) | CORRECT: A
@@ -97,7 +97,13 @@ NEED: 🚍 Bus Pass ($15)
 WANT: ⚡ Energy Drink ($10)
 NEED: 🔌 Phone Cable ($15)
 CORRECT: bus,cable",Uncheck the thing you don't really need.,Uncheck the item you don't really 'need'.,Uncheck the item you don't really 'need'.,
-1,2,5,allocation-slider,Lars has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.,Holly has $25 total. She needs $20 next week for her sister's phone case. Help her put the money aside so she doesn't spend it. Slide the divider to secure that money now.,Aiden has $25 total. He needs $20 next week for his brother's phone case. Help him put the money aside so he doesn't spend it. Slide the divider to secure that money now.,lars-hands-on-hips-512.webp,holly-hands-on-hips-512.webp,aiden-hands-on-hips-512.webp,"TOTAL: 25
+1,2,5,allocation-slider,"Lars has $25 💰
+He needs $20 for Senna's phone case 🎁
+Slide to save at least $20 👇","Holly has $25 💰
+She needs $20 for her sister's phone case 🎁
+Slide to save at least $20 👇","Aiden has $25 💰
+He needs $20 for his brother's phone case 🎁
+Slide to save at least $20 👇",lars-hands-on-hips-512.webp,holly-hands-on-hips-512.webp,aiden-hands-on-hips-512.webp,"TOTAL: 25
 KEEP: 20
 ITEM: Phone case","TOTAL: 25
 KEEP: 20

@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils/cn";
 
 type LessonIllustrationSlotProps = LessonIllustration & {
   className?: string;
-  /** Match screens use a 160px frame with the feet on the bottom edge. */
-  frame?: "default" | "match";
+  /** Match screens use a 160px frame. Poster is the 196px slider hero. */
+  frame?: "default" | "match" | "poster";
 };
 
 function LessonIllustrationFallback({
@@ -79,7 +79,7 @@ export function LessonIllustrationSlot({
     };
   }, [src]);
 
-  if (frame === "match") {
+  if (frame === "match" || frame === "poster") {
     const ariaLabel = alt ?? label ?? "Lesson illustration";
     if (!src || imageStatus !== "loaded") {
       if (src) return <div className="mb-4 h-40 w-full" aria-hidden />;
@@ -90,7 +90,11 @@ export function LessonIllustrationSlot({
       <img
         src={src}
         alt={ariaLabel}
-        className="mx-auto mb-4 block h-40 w-auto max-w-full object-contain object-bottom"
+        className={
+          frame === "poster"
+            ? "mx-auto mb-2 block h-[196px] w-auto max-w-full object-contain object-bottom"
+            : "mx-auto mb-4 block h-40 w-auto max-w-full object-contain object-bottom"
+        }
         decoding="async"
         loading="eager"
       />

@@ -9,9 +9,9 @@ import {
 } from "@/components/academy/lesson/lesson-ui";
 import {
   ALLOCATION_KNOB_PX,
+  allocationGoalCaption,
   allocationNextEnabled,
-  allocationSavedBadge,
-  allocationTargetMarker,
+  allocationSliderValueText,
   allocationTrackInsetPx,
   clampSaveAmount,
   saveAmountFromClientX,
@@ -20,11 +20,19 @@ import type { AllocationSliderScreenConfig } from "@/lib/academy/lessons/types";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
 
-const TRACK_GOLD = "#FFA503";
-const TRACK_NAVY = "#031F82";
+const TRACK_BASE = "#DCEFF8";
+const TRACK_FILL = "#0CC1E0";
+const ZONE_REST = "#FFF1CC";
+const ZONE_MET = "#FFE7A3";
 
 function dollar(amount: number) {
   return `$${amount}`;
+}
+
+function trackPosition(amount: number, total: number): string {
+  const ratio = total > 0 ? amount / total : 0;
+  const inset = allocationTrackInsetPx();
+  return `calc(${inset}px + (100% - ${ALLOCATION_KNOB_PX}px) * ${ratio})`;
 }
 
 export function AllocationSliderScreen({
@@ -51,12 +59,12 @@ export function AllocationSliderScreen({
   const barRef = useRef<HTMLDivElement>(null);
   const shakeTimerRef = useRef<number | null>(null);
   const inset = allocationTrackInsetPx();
+  const goalZone = match === "at-least" && targetMin > 0 && targetMin < total;
 
   const spendableToday = Math.max(0, total - reservedAmount);
   const meetsTarget = solved && allocationNextEnabled(reservedAmount, targetMin, match);
   const savePct = total > 0 ? (reservedAmount / total) * 100 : 0;
-  const targetPct = total > 0 ? Math.min(100, (targetMin / total) * 100) : 0;
-  const showTargetTick = targetMin > 0 && targetMin < total;
+  const showGoalLabel = targetMin > 0 && targetMin < total;
 
   const lines = [
     ...screen.intro.split("\n").map((line) => line.trim()).filter(Boolean),
@@ -124,10 +132,8 @@ export function AllocationSliderScreen({
     applySave(saveAmountFromClientX(clientX, rect.left, rect.width, total));
   };
 
-  const knobCenter = `calc(${inset}px + (100% - ${ALLOCATION_KNOB_PX}px) * ${savePct / 100})`;
-  const markerCenter = `calc(${inset}px + (100% - ${ALLOCATION_KNOB_PX}px) * ${targetPct / 100})`;
-  const markerAlign =
-    targetPct >= 70 ? "translateX(-85%)" : targetPct <= 30 ? "translateX(-15%)" : "translateX(-50%)";
+  const knobCenter = trackPosition(reservedAmount, total);
+  const goalAnchor = trackPosition(targetMin, total);
 
   useEffect(
     () => () => {
@@ -143,27 +149,26 @@ export function AllocationSliderScreen({
           {lines.map((line) => (
             <p
               key={line}
-              className="font-heading text-[20px] font-extrabold leading-snug text-[#031F82]"
+              className="font-heading text-[20px] font-extrabold leading-[1.375] text-[#031F82]"
             >
               {line}
             </p>
           ))}
         </div>
 
-        <div className="mb-2 flex items-start justify-between gap-3 px-1">
+        <div className="mb-2.5 flex items-start justify-between gap-3">
           <div className="text-left">
-            <p className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
-              💰 Save
-            </p>
-            <p className="font-heading text-xl font-extrabold tabular-nums text-[#031F82]">
-              {dollar(reservedAmount)}
-            </p>
+            <p className="font-sans text-[15px] font-semibold text-[#031F82]/80">🐷 Save</p>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="font-heading text-[40px] font-extrabold leading-[1.05] tabular-nums text-[#031F82]">
+                {dollar(reservedAmount)}
+              </p>
+              {meetsTarget ? <LessonAnswerTick /> : null}
+            </div>
           </div>
           <div className="text-right">
-            <p className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
-              🛍️ Spend
-            </p>
-            <p className="font-heading text-xl font-extrabold tabular-nums text-[#031F82]">
+            <p className="font-sans text-[15px] font-semibold text-[#031F82]/80">🛍️ Spend</p>
+            <p className="mt-1 font-heading text-[40px] font-extrabold leading-[1.05] tabular-nums text-[#031F82]">
               {dollar(spendableToday)}
             </p>
           </div>
@@ -176,9 +181,9 @@ export function AllocationSliderScreen({
           aria-valuemin={0}
           aria-valuemax={total}
           aria-valuenow={reservedAmount}
-          aria-valuetext={`${dollar(reservedAmount)} saved`}
+          aria-valuetext={allocationSliderValueText(reservedAmount, targetMin, match)}
           className={cn(
-            "relative mt-2 h-24 touch-none select-none",
+            "relative h-[74px] touch-none select-none",
             shaking && "lesson-tile-shake",
           )}
           style={{ touchAction: "none" }}
@@ -218,59 +223,53 @@ export function AllocationSliderScreen({
             }
           }}
         >
-          {showTargetTick ? (
+          {goalZone ? (
             <span
-              className="pointer-events-none absolute top-0 z-raised flex flex-col items-center"
-              style={{ left: markerCenter, transform: markerAlign }}
-            >
-              <span className="whitespace-nowrap rounded-full bg-[#FFB822] px-2.5 py-1 font-sans text-[13px] font-extrabold text-[#031F82] shadow-[0_2px_6px_rgba(3,31,130,0.15)]">
-                {allocationTargetMarker(targetMin)}
-              </span>
-              <span className="h-3 w-1 rounded-full bg-[#FFB822]" aria-hidden />
-            </span>
+              className="pointer-events-none absolute h-8 rounded-2xl transition-colors duration-150"
+              style={{
+                left: `calc(${goalAnchor} - 8px)`,
+                right: 14,
+                top: 14,
+                backgroundColor: meetsTarget ? ZONE_MET : ZONE_REST,
+              }}
+              aria-hidden
+            />
           ) : null}
           <div
             ref={barRef}
-            className="pointer-events-none absolute bottom-3 h-3 overflow-hidden rounded-full"
+            className="pointer-events-none absolute h-3.5 overflow-hidden rounded-full"
             style={{
               left: inset,
               right: inset,
-              backgroundColor: TRACK_NAVY,
+              top: 23,
+              backgroundColor: TRACK_BASE,
             }}
             aria-hidden
           >
             <div
               className="h-full rounded-full"
-              style={{ width: `${savePct}%`, backgroundColor: TRACK_GOLD }}
+              style={{ width: `${savePct}%`, backgroundColor: TRACK_FILL }}
             />
           </div>
-          {showTargetTick ? (
+          {showGoalLabel ? (
             <span
-              className="pointer-events-none absolute bottom-1.5 h-7 w-1.5 -translate-x-1/2 rounded-full bg-[#FFB822]"
-              style={{ left: markerCenter }}
-              aria-hidden
-            />
+              className="pointer-events-none absolute whitespace-nowrap font-heading text-sm font-bold text-[#031F82]"
+              style={{ top: 52, left: `calc(${goalAnchor} - 4px)` }}
+            >
+              {allocationGoalCaption(targetMin, match)}
+            </span>
           ) : null}
           <span
-            className="pointer-events-none absolute bottom-0 z-raised -translate-x-1/2 rounded-full border-[3px] border-white bg-[#FFA503] shadow-[0_2px_8px_rgb(3_31_130_/_0.35)]"
+            className="pointer-events-none absolute z-raised -translate-x-1/2 rounded-full border-[3px] border-white bg-[#FFB822] shadow-[0_2px_8px_rgba(3,31,130,0.30)]"
             style={{
               left: knobCenter,
+              top: 8,
               width: ALLOCATION_KNOB_PX,
               height: ALLOCATION_KNOB_PX,
             }}
             aria-hidden
           />
         </div>
-
-        {meetsTarget ? (
-          <p
-            className="mt-3 flex items-center justify-center gap-2 text-center font-heading text-lg font-extrabold text-[#031F82]"
-            role="status"
-          >
-            <LessonAnswerTick />
-            {allocationSavedBadge(targetMin)}
-          </p>
-        ) : null}
       </div>
     </LessonScreenLayout>
   );

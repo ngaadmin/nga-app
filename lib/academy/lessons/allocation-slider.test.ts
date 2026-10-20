@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  allocationGoalCaption,
   allocationNextEnabled,
   allocationSavedBadge,
-  allocationTargetMarker,
+  allocationSliderValueText,
   allocationTrackInsetPx,
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
@@ -28,9 +29,17 @@ describe("allocation slider", () => {
     expect(saveAmountFromClientX(-10, 0, 100, 25)).toBe(0);
   });
 
-  it("insets the track by half the knob and labels the save target on the bar", () => {
+  it("insets the track by half the knob and captions a keep goal as at least", () => {
     expect(allocationTrackInsetPx(44)).toBe(22);
-    expect(allocationTargetMarker(20)).toBe("Save $20 🎯");
+    expect(allocationGoalCaption(20, "at-least")).toBe("🎯 $20+");
+    expect(allocationGoalCaption(9, "exact")).toBe("🎯 $9");
+    expect(allocationSliderValueText(22, 20, "at-least")).toBe(
+      "$22 saved, goal is at least $20, goal met",
+    );
+    expect(allocationSliderValueText(10, 20, "at-least")).toBe(
+      "$10 saved, goal is at least $20",
+    );
+    expect(allocationSliderValueText(15, 9, "exact")).toBe("$15 saved, goal is $9");
   });
 
   it("badges the amount that was saved, not the amount spent", () => {
@@ -69,6 +78,36 @@ describe("allocation slider", () => {
     }
   });
 
+  it("gives the live lesson 2 slider the at-least line and short sort labels", () => {
+    const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 2), "explorer", 2);
+    const slider = lesson.screens.find((screen) => screen.type === "allocation-slider");
+    expect(slider).toMatchObject({
+      match: "at-least",
+      total: 25,
+      targetMin: 20,
+    });
+    expect(slider && "intro" in slider ? slider.intro.replace(/\r\n/g, "\n") : "").toBe(
+      "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save at least $20 👇",
+    );
+    const sort = lesson.screens.find(
+      (screen) =>
+        screen.type === "bucket-sort" &&
+        screen.buckets.some((bucket) => bucket.id === "want"),
+    );
+    expect(sort?.type).toBe("bucket-sort");
+    if (sort?.type !== "bucket-sort") return;
+    expect(sort.items.map((item) => item.label)).toEqual([
+      "Phone case (birthday present)",
+      "Phone cable",
+      "Beast Munch",
+      "New game skin",
+    ]);
+    expect(sort.buckets.map((bucket) => bucket.label)).toEqual([
+      "Things Lars needs",
+      "Things Lars wants",
+    ]);
+  });
+
   it("gives Lars three short lines and a $20 save target", () => {
     const lesson = resolveLessonDefinition(M1_L2_LESSON_DEFINITION, "explorer");
     const slider = lesson.screens.find((screen) => screen.type === "allocation-slider");
@@ -77,7 +116,7 @@ describe("allocation slider", () => {
       total: 25,
       targetMin: 20,
       intro:
-        "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save $20 👇",
+        "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save at least $20 👇",
     });
   });
 });

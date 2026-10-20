@@ -10,8 +10,8 @@ import {
 type LessonScreenChromeContextValue = {
   showIllustrationSlot: boolean;
   illustration?: LessonIllustration;
-  /** Match uses the small 160px character frame. */
-  illustrationFrame?: "default" | "match";
+  /** Match uses the small 160px character frame. Poster is the 196px slider hero. */
+  illustrationFrame?: "default" | "match" | "poster";
 };
 
 const LessonScreenChromeContext =
@@ -25,7 +25,7 @@ export function LessonScreenChromeProvider({
 }: {
   showIllustrationSlot: boolean;
   illustration?: LessonIllustration;
-  illustrationFrame?: "default" | "match";
+  illustrationFrame?: "default" | "match" | "poster";
   children: ReactNode;
 }) {
   return (

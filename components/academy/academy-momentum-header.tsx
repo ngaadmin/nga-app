@@ -24,6 +24,7 @@ type AcademyMomentumHeaderProps = {
   xp: number;
   dayStreak: number;
   skillsHasAttention?: boolean;
+  showCoins?: boolean;
   onSkillsClick: () => void;
   onStreakClick: () => void;
   onXpClick?: () => void;
@@ -34,6 +35,7 @@ export function AcademyMomentumHeader({
   xp,
   dayStreak,
   skillsHasAttention = false,
+  showCoins = true,
   onSkillsClick,
   onStreakClick,
   onXpClick,
@@ -83,11 +85,15 @@ export function AcademyMomentumHeader({
       aria-label="App stats"
       clusterGapClassName="gap-4"
       left={
-        <div {...{ [COIN_COUNTER_ATTR]: "" }} className="min-w-0">
+        <div
+          {...{ [COIN_COUNTER_ATTR]: "" }}
+          className={showCoins ? "min-w-0" : "invisible min-w-0"}
+          aria-hidden={showCoins ? undefined : true}
+        >
           <StatusMetricPill
-            interactive={Boolean(onXpClick)}
+            interactive={showCoins && Boolean(onXpClick)}
             className="shrink-0"
-            onClick={onXpClick}
+            onClick={showCoins ? onXpClick : undefined}
             icon={
               <TopBarRoundIcon>
                 <GoldCoinIcon className="size-5" />

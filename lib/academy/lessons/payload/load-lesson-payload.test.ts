@@ -1049,6 +1049,121 @@ CORRECT: bus,dog lead`,
     }
   });
 
+  it("maps lesson 3 screen 1 as a three-option pill multiple-choice", () => {
+    const tracks = [
+      {
+        cohort: "explorer" as const,
+        name: "Mia",
+        prompt:
+          "Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:",
+        wrongError: "Haha, maybe. Try again!",
+        pairImage: "holly-mia-sidebyside.webp",
+      },
+      {
+        cohort: "pathfinder" as const,
+        name: "Holly",
+        prompt:
+          "Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:",
+        wrongError: "Haha, maybe. But let's try again.",
+        pairImage: "holly-mia-chatting.webp",
+      },
+      {
+        cohort: "maverick" as const,
+        name: "Dash",
+        prompt:
+          "Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:",
+        wrongError: "Haha, maybe. But let's try again.",
+        pairImage: "aiden-dash-chatting.webp",
+      },
+    ];
+
+    for (const track of tracks) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), track.cohort, 3);
+      const screen = lesson.screens.find((item) => item.sourceLabel === "1");
+      expect(screen?.type, track.cohort).toBe("multiple-choice");
+      if (screen?.type !== "multiple-choice") continue;
+      expect(screen.prompt, track.cohort).toBe(track.prompt);
+      expect(screen.wrongError, track.cohort).toBe(track.wrongError);
+      expect(screen.pairImage, track.cohort).toBe(track.pairImage);
+      expect(screen.successMessage, track.cohort).toBeUndefined();
+      expect(screen.optionLayout, track.cohort).toBeUndefined();
+      expect(screen.options, track.cohort).toEqual([
+        {
+          label: `${track.name} has no money to buy a new pair`,
+          isCorrect: true,
+        },
+        {
+          label: `${track.name} tries to fix them with sticky tape and now they're even worse`,
+          isCorrect: false,
+        },
+        {
+          label: "the dog runs off with one of the pieces",
+          isCorrect: false,
+        },
+      ]);
+      expect(
+        screen.options?.every((option) => option.emoji === undefined),
+        track.cohort,
+      ).toBe(true);
+    }
+  });
+
+  it("maps lesson 3 screen 5 with the explorer deciding portrait", () => {
+    const tracks = [
+      {
+        cohort: "explorer" as const,
+        pairImage: "lars-deciding-512.webp",
+        prompt:
+          "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
+        options: [
+          "Buy the toy and save $10 more next week.",
+          "Buy the headphones to fix what she broke first.",
+          "Buy the toy and hope the headphones don't cost $40.",
+        ],
+      },
+      {
+        cohort: "pathfinder" as const,
+        pairImage: "holly-deciding-512.webp",
+        prompt:
+          "Holly has $40 Cash for Emergencies to replace the headphones. She sees a $10 craft bundle she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Holly do?",
+        options: [
+          "Buy the craft bundle and save $10 more next week.",
+          "Buy the headphones to fix what she broke first.",
+          "Buy the craft bundle and hope the headphones don't cost $40.",
+        ],
+      },
+      {
+        cohort: "maverick" as const,
+        pairImage: "aiden-deciding-512.webp",
+        prompt:
+          "Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: \"I'll spend this $20 now, and I'll just save more next week to buy the headphones.\" What should Aiden do?",
+        options: [
+          "Buy the game and save $20 more next week.",
+          "Buy the headphones to fix what he broke first.",
+          "Buy the game and hope the headphones don't cost $40.",
+        ],
+      },
+    ];
+
+    for (const track of tracks) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), track.cohort, 3);
+      const screen = lesson.screens.find((item) => item.sourceLabel === "5");
+      expect(screen?.type, track.cohort).toBe("multiple-choice");
+      if (screen?.type !== "multiple-choice") continue;
+      expect(screen.prompt, track.cohort).toBe(track.prompt);
+      expect(screen.wrongError, track.cohort).toBe(
+        "That's a trap! Stick to the plan to avoid stress later.",
+      );
+      expect(screen.pairImage, track.cohort).toBe(track.pairImage);
+      expect(screen.optionLayout, track.cohort).toBeUndefined();
+      expect(screen.options, track.cohort).toEqual([
+        { label: track.options[0], isCorrect: false },
+        { label: track.options[1], isCorrect: true },
+        { label: track.options[2], isCorrect: false },
+      ]);
+    }
+  });
+
   it("maps lesson 3 spent totals and the three-blank sentence", () => {
     const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), "explorer", 3);
     const spent = lesson.screens[1];
@@ -1086,6 +1201,53 @@ CORRECT: bus,dog lead`,
         { correctOption: "replace" },
       ],
     });
+  });
+
+  it("maps lesson 3 screen 7 as five pill answers with one correct letter", () => {
+    const tracks = [
+      {
+        cohort: "explorer" as const,
+        prompt:
+          "Mia could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+      },
+      {
+        cohort: "pathfinder" as const,
+        prompt:
+          "Holly could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+      },
+      {
+        cohort: "maverick" as const,
+        prompt:
+          "Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
+      },
+    ];
+    const labels = [
+      "If I lose something, I can replace it myself.",
+      "I won't have to ask my parents for money if I need something.",
+      "I can save for a big goal instead of wasting it on small stuff that doesn't last.",
+      "I worry less if I can afford things that I want, or have to buy.",
+      "All of the above.",
+    ];
+
+    for (const track of tracks) {
+      const lesson = resolvePayloadLesson(loadBundledLessonPayload(1, 3), track.cohort, 3);
+      const screen = lesson.screens.find((item) => item.sourceLabel === "7");
+      expect(screen?.type, track.cohort).toBe("multiple-choice");
+      if (screen?.type !== "multiple-choice") continue;
+      expect(screen.prompt, track.cohort).toBe(track.prompt);
+      expect(screen.wrongError, track.cohort).toBe(
+        "Yes, but take a look at the other options and see if there's a better answer.",
+      );
+      expect(screen.pairImage, track.cohort).toBe(false);
+      expect(screen.optionLayout, track.cohort).toBeUndefined();
+      expect(screen.options, track.cohort).toEqual([
+        { label: labels[0], isCorrect: false },
+        { label: labels[1], isCorrect: false },
+        { label: labels[2], isCorrect: false },
+        { label: labels[3], isCorrect: false },
+        { label: labels[4], isCorrect: true },
+      ]);
+    }
   });
 
   it("uses pathfinder settings when the explorer settings cell is empty", () => {

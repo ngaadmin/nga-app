@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect } from "react";
 import {
   StatusBannerLayout,
   TOP_BAR_ROUND_ICON_CLASS,
@@ -12,7 +12,6 @@ import { copyMatrix } from "@/constants/copyMatrix";
 import {
   COIN_COUNTER_ATTR,
   clearCoinCounterTick,
-  lessonMotionEnabled,
   readCoinCounterTick,
 } from "@/lib/academy/lessons/coin-counter-flight";
 import { coinWord } from "@/lib/copy/coin-word";
@@ -42,42 +41,10 @@ export function AcademyMomentumHeader({
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const journeyCopy = copyMatrix.dashboard.academy.journey;
-  const [shownXp, setShownXp] = useState(xp);
-  const coinUnit = coinWord(shownXp);
+  const coinUnit = coinWord(xp);
 
   useLayoutEffect(() => {
-    const pending = readCoinCounterTick();
-    const motion = lessonMotionEnabled();
-    if (pending <= 0 || !motion) {
-      if (pending > 0 && xp > 0) clearCoinCounterTick();
-      setShownXp(xp);
-      return;
-    }
-    if (xp <= 0) {
-      setShownXp(xp);
-      return;
-    }
-    const from = Math.max(0, xp - pending);
-    if (xp <= from) {
-      clearCoinCounterTick();
-      setShownXp(xp);
-      return;
-    }
-
-    setShownXp(from);
-    const started = performance.now();
-    let frame = 0;
-    const step = (now: number) => {
-      const progress = Math.min(1, (now - started) / 520);
-      setShownXp(Math.round(from + (xp - from) * progress));
-      if (progress < 1) {
-        frame = requestAnimationFrame(step);
-        return;
-      }
-      clearCoinCounterTick();
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
+    if (readCoinCounterTick() > 0) clearCoinCounterTick();
   }, [xp]);
 
   return (
@@ -87,6 +54,7 @@ export function AcademyMomentumHeader({
       left={
         <div
           {...{ [COIN_COUNTER_ATTR]: "" }}
+          data-coin-balance={xp}
           className={showCoins ? "min-w-0" : "invisible min-w-0"}
           aria-hidden={showCoins ? undefined : true}
         >
@@ -99,12 +67,10 @@ export function AcademyMomentumHeader({
                 <GoldCoinIcon className="size-5" />
               </TopBarRoundIcon>
             }
-            value={shownXp}
+            value={xp}
             unitLabel={coinUnit}
             ariaLabel={
-              onXpClick
-                ? `${shownXp} ${coinUnit} to cash in`
-                : `${shownXp} ${coinUnit}`
+              onXpClick ? `${xp} ${coinUnit} to cash in` : `${xp} ${coinUnit}`
             }
             title={onXpClick ? `${coinUnit} to cash in` : coinUnit}
           />

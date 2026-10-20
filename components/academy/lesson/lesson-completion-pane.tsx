@@ -8,8 +8,10 @@ import { LessonCompletionRewardsCard } from "@/components/academy/lesson/lesson-
 import { GuestModeSaveModal } from "@/components/dashboard/guest-mode-save-modal";
 import {
   LESSON_CASH_IN_LABEL,
+  LESSON_CASH_IN_RETRY_LABEL,
   lessonNextButtonClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
+import type { LessonCashInOutcome } from "@/lib/academy/lessons/lesson-coin-commit";
 import { getIllustrationPath } from "@/lib/academy/illustrations/illustration-registry";
 import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
 import {
@@ -57,7 +59,10 @@ type LessonCompletionPaneProps = {
   /** Sheet skill name. Wins over the registry label. */
   skillName?: string;
   skillLearnedLabel?: string;
-  onCashIn: () => void;
+  onCashIn: () =>
+    | void
+    | LessonCashInOutcome
+    | Promise<void | LessonCashInOutcome | undefined>;
   onContinue: () => void;
   cashInDisabled?: boolean;
   /** Balance already saved. The close screen draws its own counter. */
@@ -102,12 +107,15 @@ export function LessonCompletionPane({
   const [landConfetti, setLandConfetti] = useState(false);
   const [burst, setBurst] = useState(false);
   const [cashingIn, setCashingIn] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [flying, setFlying] = useState(false);
   const [cashedIn, setCashedIn] = useState(false);
   const [moment, setMoment] = useState<GuestSaveBannerMoment | null>(null);
   const [saveOpen, setSaveOpen] = useState(false);
   const flyingRef = useRef(false);
   const flewRef = useRef(false);
+  const savingRef = useRef(false);
   const totalRef = useRef<HTMLParagraphElement>(null);
 
   const claimId = `lesson:${moduleNumber ?? 0}:${lessonNumber ?? 0}`;
@@ -171,16 +179,44 @@ export function LessonCompletionPane({
     );
   };
 
+  const finishCashIn = async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    setSaveFailed(false);
+    try {
+      const result = await onCashIn();
+      if (result && result.ok === false) {
+        setSaveFailed(true);
+        return;
+      }
+      setCashedIn(true);
+      setCashingIn(true);
+    } catch {
+      setSaveFailed(true);
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  };
+
   const handleCashIn = () => {
-    if (cashingIn || cashInDisabled || flyingRef.current || !readyToCashIn) return;
+    if (
+      savingRef.current ||
+      cashingIn ||
+      cashInDisabled ||
+      flyingRef.current ||
+      !readyToCashIn
+    ) {
+      return;
+    }
+    setSaveFailed(false);
     if (lessonMotionEnabled()) {
       setLandConfetti(false);
       setBurst(true);
     }
     runAfterFlight(() => {
-      setCashedIn(true);
-      setCashingIn(true);
-      onCashIn();
+      void finishCashIn();
     });
   };
 
@@ -250,10 +286,23 @@ export function LessonCompletionPane({
       </div>
 
       <div className="shrink-0 px-6 pb-6 pt-4">
+        {saveFailed ? (
+          <p
+            role="status"
+            data-cash-in-error=""
+            className="mb-2 text-center font-sans text-[13px] font-semibold text-[#031F82]"
+          >
+            {LESSON_CASH_IN_RETRY_LABEL}
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={cashingIn ? onContinue : handleCashIn}
-          disabled={flying || (!cashingIn && (cashInDisabled || !readyToCashIn))}
+          disabled={
+            flying ||
+            saving ||
+            (!cashingIn && (cashInDisabled || !readyToCashIn))
+          }
           className={cashingIn ? lessonNextButtonClass : CASH_IN_BUTTON_CLASS}
         >
           {cashingIn ? "Continue" : LESSON_CASH_IN_LABEL}

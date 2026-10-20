@@ -10,7 +10,6 @@ import {
 import { coinWord } from "@/lib/copy/coin-word";
 import { cn } from "@/lib/utils/cn";
 
-const COUNT_MS = 500;
 const BUMP_MS = 200;
 
 const COIN_STYLE = {
@@ -25,57 +24,33 @@ type LessonCloseCoinCounterProps = {
 
 /** Coins balance on the lesson close screen. This is the fly target. */
 export function LessonCloseCoinCounter({ balance }: LessonCloseCoinCounterProps) {
-  const [shown, setShown] = useState(balance);
   const [bump, setBump] = useState(false);
-  const unit = coinWord(shown);
+  const unit = coinWord(balance);
 
   useLayoutEffect(() => {
     const pending = readCoinCounterTick();
-    const motion = lessonMotionEnabled();
-    if (pending <= 0 || !motion) {
-      if (pending > 0) clearCoinCounterTick();
-      setShown(balance);
-      setBump(false);
-      return;
+    if (pending > 0) clearCoinCounterTick();
+    if (pending > 0 && lessonMotionEnabled()) {
+      setBump(true);
+      const timer = window.setTimeout(() => setBump(false), BUMP_MS);
+      return () => window.clearTimeout(timer);
     }
-
-    const from = Math.max(0, balance - pending);
-    setShown(from);
-    setBump(true);
-    let frame = 0;
-    const bumpTimer = window.setTimeout(() => {
-      setBump(false);
-      const started = performance.now();
-      const step = (now: number) => {
-        const progress = Math.min(1, (now - started) / COUNT_MS);
-        setShown(Math.round(from + (balance - from) * progress));
-        if (progress < 1) {
-          frame = requestAnimationFrame(step);
-          return;
-        }
-        clearCoinCounterTick();
-      };
-      frame = requestAnimationFrame(step);
-    }, BUMP_MS);
-
-    return () => {
-      window.clearTimeout(bumpTimer);
-      cancelAnimationFrame(frame);
-    };
+    setBump(false);
   }, [balance]);
 
   return (
     <div
       {...{ [COIN_COUNTER_ATTR]: "" }}
+      data-coin-balance={balance}
       className={cn(
         "inline-flex items-center gap-2",
         bump && "lesson-close-counter-bump",
       )}
-      aria-label={`${shown} ${unit}`}
+      aria-label={`${balance} ${unit}`}
     >
       <span className="size-7 shrink-0 rounded-full" style={COIN_STYLE} aria-hidden />
       <span className="font-heading text-[16px] font-extrabold tabular-nums text-[#031F82]">
-        {shown.toLocaleString()}
+        {balance.toLocaleString()}
       </span>
       <span className="font-sans text-[14px] font-semibold text-[#5A6A99]">{unit}</span>
     </div>

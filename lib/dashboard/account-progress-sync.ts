@@ -133,13 +133,17 @@ export function scheduleAccountProgressPush(): void {
   }, PUSH_DEBOUNCE_MS);
 }
 
-/** Immediate cloud + cache write so logout cannot drop the only copy. */
-export async function persistRegisteredProgressNow(): Promise<void> {
+/**
+ * Immediate cloud + cache write so logout cannot drop the only copy.
+ * `{ ok: false }` means the account save did not land. Callers can retry.
+ * Guests and accounts waiting on a parent are not a failure.
+ */
+export async function persistRegisteredProgressNow(): Promise<{ ok: boolean }> {
   try {
-    if (typeof window === "undefined") return;
-    if (pendingConsentBlocksProgressWrite()) return;
+    if (typeof window === "undefined") return { ok: false };
+    if (pendingConsentBlocksProgressWrite()) return { ok: true };
     const owner = registeredOwner();
-    if (!owner) return;
+    if (!owner) return { ok: true };
 
     window.clearTimeout(pushTimer);
     const childId = await resolveChildAuthUserId();
@@ -151,16 +155,19 @@ export async function persistRegisteredProgressNow(): Promise<void> {
 
     if (!childId) {
       logProgressWrite(null, local);
-      return;
+      return { ok: false };
     }
 
-    if (!shouldSaveProgress(local)) return;
+    if (!shouldSaveProgress(local)) return { ok: true };
 
     const remote = await loadLearnerProgressByUserId(childId);
     const payload = overlayAccountProgress(remote, local) ?? local;
-    await saveLearnerProgressForUser(childId, payload);
+    if (!shouldSaveProgress(payload)) return { ok: true };
+    const saved = await saveLearnerProgressForUser(childId, payload);
+    return { ok: saved?.ok === true };
   } catch {
     // A cloud save must not reject into the lesson click handler.
+    return { ok: false };
   }
 }
 

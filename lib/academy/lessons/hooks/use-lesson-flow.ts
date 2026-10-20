@@ -22,7 +22,13 @@ import {
   lessonNumberForMilestoneId,
   levelGroupForMilestoneId,
 } from "@/lib/dashboard/academy-state";
+import { persistAccountProgressCacheFromLive } from "@/lib/dashboard/account-progress-local";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
+import {
+  lessonCashInNeedsRetry,
+  type LessonCashInOutcome,
+} from "@/lib/academy/lessons/lesson-coin-commit";
+import { isExplorerPendingConsent } from "@/lib/onboarding/explorer-pending-consent";
 import {
   applyBonusRunEvent,
   initialBonusRunState,
@@ -81,7 +87,7 @@ export function useLessonFlow({
   trackPathProgress = false,
 }: UseLessonFlowOptions) {
   const router = useRouter();
-  const { awardLessonXp } = useDashboardWallet();
+  const { saveLessonCoinAward } = useDashboardWallet();
 
   const [screenIndex, setScreenIndexState] = useState(initialScreenIndex);
   const [pathStep, setPathStep] = useState(0);
@@ -202,7 +208,9 @@ export function useLessonFlow({
     [],
   );
 
-  const finishLessonRef = useRef<() => void>(() => {});
+  const finishLessonRef = useRef<() => Promise<LessonCashInOutcome>>(async () => ({
+    ok: false,
+  }));
 
   const setScreenIndex = useCallback(
     (value: number | ((current: number) => number)) => {
@@ -234,62 +242,99 @@ export function useLessonFlow({
     [continueIndexByScreen, screenIndex, screenReady, setScreenIndex, totalScreens],
   );
 
-  const handleCashInPoints = useCallback(() => {
-    if (cashInStartedRef.current || lessonComplete) return;
+  const handleCashInPoints = useCallback(async (): Promise<LessonCashInOutcome> => {
+    const balanceNow = () => readDashboardWalletState()?.totalPoints ?? 0;
+    if (cashInStartedRef.current || lessonComplete) {
+      return { ok: true, balance: balanceNow() };
+    }
     cashInStartedRef.current = true;
-    setLessonComplete(true);
+
+    if (isDesignShell || skipProgressWrites) {
+      setLessonComplete(true);
+      return { ok: true, balance: balanceNow() };
+    }
+
+    const award = lessonCoinAward({
+      perfect: perfectStreak,
+      bonusCoins: bonusRunRef.current.bonusCoins,
+    });
+    const saved = saveLessonCoinAward(lessonAwardLedgerEvents(milestoneId, award));
+    if (!saved.ok) {
+      cashInStartedRef.current = false;
+      return { ok: false };
+    }
+    if (saved.awarded > 0) markCoinCounterTick(saved.awarded);
 
     try {
-      if (!isDesignShell && !skipProgressWrites) {
-        const beforePoints = readDashboardWalletState()?.totalPoints ?? 0;
-        const award = lessonCoinAward({
-          perfect: perfectStreak,
-          bonusCoins: bonusRunRef.current.bonusCoins,
+      const milestones = readAcademyMilestones();
+      const alreadyCompleted = milestones.some(
+        (node) => node.id === milestoneId && node.status === "completed",
+      );
+      const lessonNumber = lessonNumberForMilestoneId(milestoneId);
+      let earnedMedals: EarnedSkillMedal[] = [];
+
+      if (!alreadyCompleted) {
+        const session = readGuestAccessSession();
+        const cohort = session ? getSessionCurriculumCohort(session) : "explorer";
+        earnedMedals =
+          skillAwardTier && skillSlug
+            ? applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort)
+            : applyLessonSkillTierProgress(milestoneId, cohort);
+        const updated = completeAcademyMilestone(milestoneId, milestones);
+        saveAcademyMilestones(updated);
+      }
+
+      recordLessonPractice();
+      recordUsageEvent("lesson_completed", { lessonNumber });
+      for (const medal of earnedMedals) {
+        recordUsageEvent("medal_earned", {
+          lessonNumber,
+          metadata: { skill: medal.slug, tier: medal.tier },
         });
-        for (const event of lessonAwardLedgerEvents(milestoneId, award)) {
-          awardLessonXp(event.points, event.id);
-        }
-        const afterPoints = readDashboardWalletState()?.totalPoints ?? beforePoints;
-        const gained = Math.max(0, afterPoints - beforePoints);
-        if (gained > 0) markCoinCounterTick(gained);
-
-        const milestones = readAcademyMilestones();
-        const alreadyCompleted = milestones.some(
-          (node) => node.id === milestoneId && node.status === "completed",
-        );
-        const lessonNumber = lessonNumberForMilestoneId(milestoneId);
-        let earnedMedals: EarnedSkillMedal[] = [];
-
-        if (!alreadyCompleted) {
-          const session = readGuestAccessSession();
-          const cohort = session ? getSessionCurriculumCohort(session) : "explorer";
-          earnedMedals =
-            skillAwardTier && skillSlug
-              ? applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort)
-              : applyLessonSkillTierProgress(milestoneId, cohort);
-          const updated = completeAcademyMilestone(milestoneId, milestones);
-          saveAcademyMilestones(updated);
-        }
-
-        recordLessonPractice();
-        recordUsageEvent("lesson_completed", { lessonNumber });
-        for (const medal of earnedMedals) {
-          recordUsageEvent("medal_earned", {
-            lessonNumber,
-            metadata: { skill: medal.slug, tier: medal.tier },
-          });
-        }
       }
     } catch {
-      // A failed local save must not skip the celebration.
+      // A medal write must not hide coins that already saved.
     }
+
+    const session = readGuestAccessSession();
+    const pendingConsent = isExplorerPendingConsent(session);
+    let cloudOk = true;
+    if (session?.accessMode === "registered") {
+      try {
+        persistAccountProgressCacheFromLive({
+          userId: session.supabaseUserId,
+          username: session.username,
+        });
+        if (!pendingConsent) {
+          const cloud = await persistRegisteredProgressNow();
+          cloudOk = cloud.ok;
+        }
+      } catch {
+        cloudOk = !pendingConsent;
+      }
+    }
+
+    if (
+      lessonCashInNeedsRetry({
+        accessMode: session?.accessMode,
+        pendingConsent,
+        localOk: true,
+        cloudOk,
+      })
+    ) {
+      cashInStartedRef.current = false;
+      return { ok: false };
+    }
+
+    setLessonComplete(true);
+    return { ok: true, balance: saved.balance };
   }, [
-    awardLessonXp,
     isDesignShell,
     skipProgressWrites,
     lessonComplete,
     milestoneId,
     perfectStreak,
+    saveLessonCoinAward,
     skillAwardTier,
     skillSlug,
   ]);

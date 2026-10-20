@@ -85,6 +85,29 @@ async function vibrations(page: Page): Promise<number[][]> {
   );
 }
 
+/**
+ * Spotlight cards render in a fixed order, then swap sides when the page
+ * hydrates. A click in that window lands on whichever card moved under the
+ * pointer. Wait until React has attached handlers before tapping.
+ */
+async function clickHydratedButton(page: Page, name: RegExp): Promise<void> {
+  const button = page.getByRole("button", { name });
+  await button.waitFor();
+  await page.waitForFunction(
+    ({ source, flags }) => {
+      const pattern = new RegExp(source, flags);
+      const match = [...document.querySelectorAll("button")].find((el) =>
+        pattern.test(el.getAttribute("aria-label") ?? ""),
+      );
+      return Boolean(
+        match && Object.keys(match).some((key) => key.startsWith("__reactProps")),
+      );
+    },
+    { source: name.source, flags: name.flags },
+  );
+  await button.click();
+}
+
 test("answer sounds play on the tap, and Next stays quiet", async ({
   page,
 }) => {
@@ -145,7 +168,7 @@ test("answer sounds play on the tap, and Next stays quiet", async ({
   ]);
 
   await openLesson(page, "/dashboard/academy/lesson/4?preview=1&screen=2");
-  await page.getByRole("button", { name: /limited time offer/i }).click();
+  await clickHydratedButton(page, /limited time offer/i);
   await expect(page.getByText(/that thought is rushing you/i)).toBeVisible();
   expect(await playedNotes(page)).toEqual([
     { frequency: 180, type: "square" },

@@ -49,7 +49,9 @@ export function BucketSortScreen({
           items={screen.items}
           buckets={screen.buckets}
           mode="drag"
-          showCharacter
+          showCharacter={screen.buckets.some(
+            (bucket) => bucket.id === "want" || bucket.id === "need",
+          )}
           onComplete={handleSolved}
           onMismatch={reportWrongDrop}
         />

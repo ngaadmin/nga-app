@@ -122,14 +122,29 @@ export function LessonRunner({
         }
         hideFooter={isCompletionScreen || isContinueOnly || isSkillHub || isTapReveal}
         footerSlot={isCompletionScreen ? <></> : undefined}
+        hideHeader={isCompletionScreen}
         matchChrome={isLinkMatch}
       >
         {content.screens.map((screen, index) => (
           <LessonScreenPane
             key={screen.id}
             isActive={index === flow.screenIndex}
+            flush={screen.type === "completion"}
           >
             {index === flow.screenIndex ? (
+              screen.type === "completion" ? (
+                <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                  <LessonScreenRenderer
+                    screen={screen}
+                    screenIndex={index}
+                    flow={flow}
+                    rewards={content.rewards}
+                    awardBonusXp={awardBonusXp}
+                    onPersistentError={onPersistentError}
+                    onDismissPersistentError={onDismissPersistentError}
+                  />
+                </div>
+              ) : (
               <LessonScreenChromeProvider
                 showIllustrationSlot={supportsLessonScreenIllustration(screen)}
                 illustration={resolveLessonScreenIllustration(screen)}
@@ -172,6 +187,7 @@ export function LessonRunner({
                   </div>
                 </div>
               </LessonScreenChromeProvider>
+              )
             ) : null}
           </LessonScreenPane>
         ))}

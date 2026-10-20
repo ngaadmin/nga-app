@@ -29,6 +29,8 @@ type AcademyLessonShellProps = {
   progressTotal?: number;
   /** The open screen is the lesson completion screen. */
   progressComplete?: boolean;
+  /** Completion draws its own coins counter in place of hearts and progress. */
+  hideHeader?: boolean;
   /** Match screen: 20px margins, gold progress, and the brand Next pill. */
   matchChrome?: boolean;
 };
@@ -54,6 +56,7 @@ export function AcademyLessonShell({
   progressIndex,
   progressTotal,
   progressComplete = false,
+  hideHeader = false,
   matchChrome = false,
 }: AcademyLessonShellProps) {
   const livesRemaining = Math.max(0, maxLives - mistakes);
@@ -79,6 +82,7 @@ export function AcademyLessonShell({
       )}
       style={{ touchAction: "pan-y", overscrollBehavior: "none" }}
     >
+      {hideHeader ? null : (
       <header
         className={cn(
           "flex shrink-0 items-center gap-2.5",
@@ -131,6 +135,7 @@ export function AcademyLessonShell({
           />
         </div>
       </header>
+      )}
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div
@@ -169,13 +174,19 @@ export function AcademyLessonShell({
 export function LessonScreenPane({
   children,
   isActive = true,
+  flush = false,
 }: {
   children: ReactNode;
   isActive?: boolean;
+  /** Completion fills the shell, including the header band. */
+  flush?: boolean;
 }) {
   return (
     <div
-      className="flex h-full w-full shrink-0 flex-col overflow-hidden pb-3 pt-1"
+      className={cn(
+        "flex h-full w-full shrink-0 flex-col overflow-hidden",
+        flush ? "p-0" : "pb-3 pt-1",
+      )}
       style={{ overscrollBehavior: "none", touchAction: "pan-y" }}
       aria-hidden={!isActive}
       inert={isActive ? undefined : true}

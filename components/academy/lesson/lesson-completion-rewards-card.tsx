@@ -5,11 +5,9 @@ import { lessonMotionEnabled } from "@/lib/academy/lessons/coin-counter-flight";
 import {
   lessonCloseRewardLines,
   lessonCloseRewardTotal,
-} from "@/lib/academy/lessons/lesson-close-rewards";
-import {
-  LessonCloseRewardView,
   REWARD_LINE_STAGGER_MS,
-} from "@/lib/academy/lessons/lesson-close-reward-view";
+} from "@/lib/academy/lessons/lesson-close-rewards";
+import { LessonCloseRewardView } from "@/lib/academy/lessons/lesson-close-reward-view";
 
 const COUNT_MS = 360;
 
@@ -21,6 +19,11 @@ type LessonCompletionRewardsCardProps = {
   bonusRuns?: number;
   /** Zoom each line in, then count the total up. Off for static summaries. */
   animate?: boolean;
+  concealed?: boolean;
+  cashedIn?: boolean;
+  pop?: boolean;
+  /** Fires when the count-up reaches the final total. */
+  onSettled?: () => void;
   className?: string;
 };
 
@@ -35,6 +38,10 @@ export const LessonCompletionRewardsCard = forwardRef<
     bonusCoins = 0,
     bonusRuns = 0,
     animate = false,
+    concealed = false,
+    cashedIn = false,
+    pop = false,
+    onSettled,
     className,
   },
   ref,
@@ -50,6 +57,8 @@ export const LessonCompletionRewardsCard = forwardRef<
   const signature = lines.map((line) => `${line.id}:${line.coins}`).join("|");
   const linesRef = useRef(lines);
   linesRef.current = lines;
+  const onSettledRef = useRef(onSettled);
+  onSettledRef.current = onSettled;
   const [shown, setShown] = useState(animate ? 0 : finalTotal);
 
   useLayoutEffect(() => {
@@ -57,9 +66,11 @@ export const LessonCompletionRewardsCard = forwardRef<
     const final = lessonCloseRewardTotal(current);
     if (!animate || !lessonMotionEnabled()) {
       setShown(final);
+      onSettledRef.current?.();
       return;
     }
 
+    let cancelled = false;
     setShown(0);
     const started = performance.now();
     const steps = current.map((_, index) => ({
@@ -70,6 +81,7 @@ export const LessonCompletionRewardsCard = forwardRef<
     const last = steps[steps.length - 1];
     let frame = 0;
     const tick = (now: number) => {
+      if (cancelled) return;
       const elapsed = now - started;
       let value = 0;
       for (const step of steps) {
@@ -83,9 +95,13 @@ export const LessonCompletionRewardsCard = forwardRef<
         return;
       }
       setShown(final);
+      onSettledRef.current?.();
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
   }, [animate, signature]);
 
   return (
@@ -97,6 +113,9 @@ export const LessonCompletionRewardsCard = forwardRef<
       bonusRuns={bonusRuns}
       shown={shown}
       animate={animate}
+      concealed={concealed}
+      cashedIn={cashedIn}
+      pop={pop}
       totalRef={ref}
       className={className}
     />

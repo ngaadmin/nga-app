@@ -44,7 +44,7 @@ function visibleChoices(screen: ScreenConfig, cash: number | null): Choice[] {
 }
 
 function marker(screen: ScreenConfig, cash: number | null): string {
-  if (screen.type === "completion") return "Cash in your coins";
+  if (screen.type === "completion") return "You did it!";
   if (screen.type === "word-drop") {
     return (screen.narrativeBefore || screen.narrativeAfter || screen.prompt || "").trim().slice(0, 40);
   }
@@ -446,21 +446,31 @@ function pageContent(page: Page): { screens: readonly ScreenConfig[] } {
 }
 
 async function assertMedals(page: Page, lesson: number): Promise<void> {
+  await expect(page.getByRole("heading", { name: "You did it!" })).toBeVisible();
+  await expect(page.locator('img[src*="medal-skill"]')).toHaveCount(0);
+  const medals = page.locator("[data-completion-medals]");
   if (lesson >= 1 && lesson <= 3) {
-    await expect(page.locator(`img[src*="medal-skill${lesson}-bronze"]`)).toBeVisible();
+    await expect(medals).toHaveAttribute(
+      "data-completion-medals",
+      `medal-skill${lesson}-bronze`,
+    );
     return;
   }
   if (lesson >= 4 && lesson <= 6) {
-    await expect(page.locator(`img[src*="medal-skill${lesson - 3}-silver"]`)).toBeVisible();
+    await expect(medals).toHaveAttribute(
+      "data-completion-medals",
+      `medal-skill${lesson - 3}-silver`,
+    );
     return;
   }
   if (lesson === 9) {
-    await expect(page.locator('img[src*="medal-skill1-gold"]')).toBeVisible();
-    await expect(page.locator('img[src*="medal-skill2-gold"]')).toBeVisible();
-    await expect(page.locator('img[src*="medal-skill3-gold"]')).toBeVisible();
+    await expect(medals).toHaveAttribute(
+      "data-completion-medals",
+      "medal-skill1-gold medal-skill2-gold medal-skill3-gold",
+    );
     return;
   }
-  await expect(page.locator('img[src*="medal-skill"]')).toHaveCount(0);
+  await expect(medals).toHaveCount(0);
 }
 
 async function playLesson(page: Page, lesson: number, cohort: MasteryCohort): Promise<void> {
@@ -509,7 +519,9 @@ async function playLesson(page: Page, lesson: number, cohort: MasteryCohort): Pr
     await waitForScreen(page, screen, cash);
     if (screen.type === "completion") {
       await assertMedals(page, lesson);
-      await page.getByRole("button", { name: "Cash in your coins" }).click();
+      const cashIn = page.getByRole("button", { name: "Cash in coins" });
+      await expect(cashIn).toBeEnabled();
+      await cashIn.click();
       await expect(page.locator('[data-cash-in-celebration="open"]')).toBeVisible();
       return;
     }

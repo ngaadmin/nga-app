@@ -101,9 +101,19 @@ test("finishing lesson 1 unlocks lesson 2 and raises XP", async ({ page }) => {
   await expect(page.getByText(/freeze worked/i)).toBeVisible();
   await clickNext(page);
 
-  await page.getByRole("button", { name: "Cash in your coins" }).click();
+  const cashIn = page.getByRole("button", { name: "Cash in coins" });
+  await expect(cashIn).toBeEnabled();
+  await cashIn.click();
   await expect(page.locator('[data-cash-in-celebration="open"]')).toBeVisible();
   await expect(page).toHaveURL(/\/dashboard\/academy\/lesson\/1$/);
+  const guestPrompt = page.locator("button", {
+    hasText: "Keep exploring in Guest Mode",
+  });
+  try {
+    await guestPrompt.click({ timeout: 4_000 });
+  } catch {
+    // A replay or a signed-in session does not open the guest prompt.
+  }
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard\/academy\/?$/, { timeout: 15_000 });
   try {

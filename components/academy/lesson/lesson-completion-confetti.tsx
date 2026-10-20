@@ -31,15 +31,34 @@ function createParticles(
   count: number,
   burst: boolean,
 ): Particle[] {
-  return Array.from({ length: count }, () => {
+  return Array.from({ length: count }, (_, index) => {
     const fromCenter = burst && Math.random() > 0.45;
+    const fromLeft = !burst && index % 2 === 0;
     const angle = Math.random() * Math.PI * 2;
     const speed = 6 + Math.random() * 12;
     return {
-      x: fromCenter ? width * (0.2 + Math.random() * 0.6) : Math.random() * width,
-      y: fromCenter ? height * (0.2 + Math.random() * 0.35) : -20 - Math.random() * height * 0.15,
-      vx: fromCenter ? Math.cos(angle) * speed : (Math.random() - 0.5) * (burst ? 16 : 11),
-      vy: fromCenter ? Math.sin(angle) * speed : Math.random() * (burst ? 8 : 4) + 2,
+      x: fromCenter
+        ? width * (0.2 + Math.random() * 0.6)
+        : burst
+          ? Math.random() * width
+          : fromLeft
+            ? Math.random() * width * 0.14
+            : width * (0.86 + Math.random() * 0.14),
+      y: fromCenter
+        ? height * (0.2 + Math.random() * 0.35)
+        : burst
+          ? -20 - Math.random() * height * 0.15
+          : Math.random() * height,
+      vx: fromCenter
+        ? Math.cos(angle) * speed
+        : burst
+          ? (Math.random() - 0.5) * 16
+          : (fromLeft ? 1 : -1) * (0.6 + Math.random() * 1.4),
+      vy: fromCenter
+        ? Math.sin(angle) * speed
+        : burst
+          ? Math.random() * 8 + 2
+          : (Math.random() - 0.35) * 1.6,
       size: Math.random() * (burst ? 14 : 10) + 6,
       rotation: Math.random() * Math.PI,
       spin: (Math.random() - 0.5) * 0.35,
@@ -131,7 +150,7 @@ export function LessonCompletionConfetti({ light = false }: { light?: boolean })
   return createPortal(
     <div
       className="pointer-events-none fixed inset-0 h-screen w-screen"
-      style={{ zIndex: Z.dev }}
+      style={{ zIndex: Z.overlay }}
       aria-hidden
     >
       <canvas ref={canvasRef} className="h-full w-full" />

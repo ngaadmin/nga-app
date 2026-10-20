@@ -175,6 +175,27 @@ export function applyPayloadSkillTierProgress(
   return [{ slug: canonical, tier }];
 }
 
+const QUIET_SKILL_TIER_EMOJI = {
+  unlocked: "🔓",
+  bronze: "🥉",
+  silver: "🥈",
+  gold: "🥇",
+} as const;
+
+/**
+ * Quiet skill line on the lesson close screen.
+ * The tier emoji carries the medal. The name comes from the same skill record.
+ */
+export function formatQuietLessonSkillLine(
+  tier: Extract<SkillTrophyTier, "unlocked" | "bronze" | "silver" | "gold"> | null,
+  skillName?: string,
+): string | null {
+  const name = skillName?.trim();
+  if (!tier && !name) return null;
+  const emoji = QUIET_SKILL_TIER_EMOJI[tier ?? "unlocked"];
+  return name ? `${emoji} Skill unlocked: ${name}` : `${emoji} Skill unlocked`;
+}
+
 /** Format the skill unlock line shown on lesson completion screens. */
 export function formatLessonSkillUnlockLine(
   skillId: string,

@@ -5,11 +5,13 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import {
   lessonBlankSlotClass,
   lessonBlankSlotFilledClass,
@@ -18,6 +20,7 @@ import {
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { cn } from "@/lib/utils/cn";
 
 type WordDropBlank = {
@@ -33,6 +36,8 @@ export type LessonWordDropGameHandle = {
 type LessonWordDropGameProps = {
   prompt: string;
   blanks: readonly WordDropBlank[];
+  /** Screen id mixed into the chip shuffle. Blanks stay in sentence order. */
+  orderKey: string;
   promptLabel?: string;
   onChoicesChange?: () => void;
   onComplete?: () => void;
@@ -107,12 +112,12 @@ export const LessonWordDropGame = forwardRef<
   LessonWordDropGameHandle,
   LessonWordDropGameProps
 >(function LessonWordDropGame(
-  { prompt, blanks, onChoicesChange, onComplete, onIncomplete, onMismatch },
+  { prompt, blanks, orderKey, onChoicesChange, onComplete, onIncomplete, onMismatch },
   ref,
 ) {
   const parts = useMemo(() => prompt.split("[blank]"), [prompt]);
 
-  const allOptions = useMemo(() => {
+  const authoredOptions = useMemo(() => {
     const seen = new Set<string>();
     const options: string[] = [];
     for (const blank of blanks) {
@@ -125,6 +130,20 @@ export const LessonWordDropGame = forwardRef<
     }
     return options;
   }, [blanks]);
+  const [allOptions, setAllOptions] = useState<string[]>(authoredOptions);
+  const optionSignature = authoredOptions.join("\0");
+  const authoredOptionsRef = useRef(authoredOptions);
+  authoredOptionsRef.current = authoredOptions;
+  const playSeed = usePlaySeed([orderKey, "words"]);
+
+  useLayoutEffect(() => {
+    const options = authoredOptionsRef.current;
+    if (playSeed === null) {
+      setAllOptions(options);
+      return;
+    }
+    setAllOptions(seededShuffle(options, playSeed));
+  }, [optionSignature, playSeed]);
 
   const [choices, setChoices] = useState<string[]>(() =>
     Array.from({ length: blanks.length }, () => ""),

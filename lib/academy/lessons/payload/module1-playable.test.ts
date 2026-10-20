@@ -483,4 +483,59 @@ describe("module 1 screens from Screens1.csv", () => {
     expect(hold && "releaseHint" in hold ? hold.releaseHint : undefined).toBeUndefined();
     expect(bucket && "wrongError" in bucket ? bucket.wrongError : undefined).toBeUndefined();
   });
+
+  it("keeps the piggy-bank empty line on the sheet and leaves the gift screen blank", () => {
+    for (const cohort of COHORTS) {
+      const bank = resolvePayloadLesson(loadBundledLessonPayload(1, 4), cohort, 4).screens.find(
+        (screen) => screen.type === "drag-to-target",
+      );
+      expect(bank).toMatchObject({
+        type: "drag-to-target",
+        sourceEmptyMessage: "Coins saved!",
+      });
+    }
+    const gift = resolvePayloadLesson(loadBundledLessonPayload(1, 2), "explorer", 2).screens.find(
+      (screen) => screen.type === "drag-to-target",
+    );
+    expect(gift).toMatchObject({ type: "drag-to-target", sourceEmptyMessage: "" });
+  });
+
+  it("restores lightning emojis only when a whole round had them", () => {
+    const roundsFor = (cohort: MasteryCohort) => {
+      const screen = resolvePayloadLesson(loadBundledLessonPayload(1, 2), cohort, 2).screens.find(
+        (item) => item.type === "spotlight-rounds",
+      );
+      expect(screen?.type).toBe("spotlight-rounds");
+      if (screen?.type !== "spotlight-rounds") return [];
+      return screen.rounds;
+    };
+
+    const explorer = roundsFor("explorer");
+    expect(explorer[0]).toMatchObject({
+      iconA: "📱",
+      optionA: "A new phone case, even though his old one is still fine",
+      iconB: "🎁",
+      optionB: "A new phone case he promised his brother",
+    });
+    expect(explorer[1]).toMatchObject({
+      iconA: "💡",
+      optionA: "A light for his bike to be seen in the dark",
+      iconB: "🖱️",
+      optionB: "A new gaming mouse with lights (his old one still works)",
+    });
+    expect(explorer[2]).toMatchObject({
+      iconA: "",
+      iconB: "",
+      optionA: "Buy lunch for all his friends and have nothing left",
+    });
+
+    const maverick = roundsFor("maverick");
+    expect(maverick[0]?.iconA).toBe("📱");
+    expect(maverick[1]?.iconB).toBe("🖱️");
+    expect(maverick[2]?.iconA).toBe("");
+
+    const pathfinder = roundsFor("pathfinder");
+    expect(pathfinder.every((round) => round.iconA === "" && round.iconB === "")).toBe(true);
+    expect(pathfinder[0]?.optionB).toBe("A new phone case she promised her sister");
+  });
 });

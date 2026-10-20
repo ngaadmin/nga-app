@@ -31,6 +31,7 @@ import {
 import { bonusRunUnitForScreen } from "@/lib/academy/lessons/bonus-run";
 import { cn } from "@/lib/utils/cn";
 import { useEffect, useLayoutEffect, type ReactNode } from "react";
+import { LessonShuffleScope } from "@/components/academy/lesson/hooks/use-play-seed";
 
 type LessonRunnerProps = {
   content: ResolvedLessonContent;
@@ -99,6 +100,7 @@ export function LessonRunner({
   }, [content.screens, screenIndex, markScreenReady]);
 
   return (
+    <LessonShuffleScope milestoneId={content.meta.milestoneId}>
     <LessonHintProvider>
     <div className="relative flex min-h-0 flex-1 flex-col">
       <AcademyLessonShell
@@ -207,5 +209,6 @@ export function LessonRunner({
       </AcademyLessonShell>
     </div>
     </LessonHintProvider>
+    </LessonShuffleScope>
   );
 }

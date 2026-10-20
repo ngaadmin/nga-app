@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isPairedZoneSortScreen,
+  itemsGroupedLikeZones,
   needsWantsPortrait,
   orderPairedZones,
   pairedZoneEmoji,
@@ -18,6 +19,23 @@ describe("paired zone sort", () => {
       "Lars spent all his money on things he wanted, but didn't save anything for things he needs to buy.",
       "Help Lars identify which items are 'Things he wants' or 'Things he needs'",
     ]);
+  });
+
+  it("spots items that arrive grouped in zone order", () => {
+    const grouped = [
+      { bucket: "want" },
+      { bucket: "want" },
+      { bucket: "need" },
+      { bucket: "need" },
+    ];
+    expect(itemsGroupedLikeZones(grouped, ["want", "need"])).toBe(true);
+    expect(itemsGroupedLikeZones(grouped, ["need", "want"])).toBe(false);
+    expect(
+      itemsGroupedLikeZones(
+        [{ bucket: "want" }, { bucket: "need" }, { bucket: "want" }],
+        ["want", "need"],
+      ),
+    ).toBe(false);
   });
 
   it("puts wants and short fun on the left", () => {

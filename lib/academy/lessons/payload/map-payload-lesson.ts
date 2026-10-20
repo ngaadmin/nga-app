@@ -837,6 +837,7 @@ export function mapPayloadScreen(
         ...(sourceImageFile ? { sourceImageFile, itemSize: "lg" as const, showZoneLabels: false } : {}),
         ...(targetImageFile ? { targetImageFile } : {}),
         coinCount: 1,
+        sourceEmptyMessage: settingValue(settings, "SUCCESS") ?? "",
         successMessage: "",
         ...authoredError(error),
         ...picture,

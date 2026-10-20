@@ -3,6 +3,7 @@ import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-les
 import { mapPayloadScreen } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import {
+  firstRankOrderError,
   openingRankOrder,
   rankOrderMatches,
   resolveRankOrderIds,
@@ -106,6 +107,15 @@ describe("resolveRankOrderIds", () => {
       "remain",
     ]);
     expect(tokenScore(sequence[0]!.label, "didn't buy")).toBeGreaterThan(0);
+  });
+});
+
+describe("firstRankOrderError", () => {
+  it("uses the first non-empty sheet error and stays blank when the column is empty", () => {
+    expect(firstRankOrderError({ borrow: "  ", cheaper: "Try the top row." })).toBe(
+      "Try the top row.",
+    );
+    expect(firstRankOrderError({})).toBe("");
   });
 });
 

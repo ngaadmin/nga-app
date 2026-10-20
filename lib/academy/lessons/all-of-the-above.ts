@@ -28,6 +28,20 @@ export function isAllOfTheAboveLabel(label: string): boolean {
   );
 }
 
+/** Catch-all answers stay at the bottom of a shuffled choice list. */
+export function isPinnedChoiceLabel(label: string): boolean {
+  if (isAllOfTheAboveLabel(label)) return true;
+  const normalized = normalizeAllOfTheAboveLabel(label);
+  return (
+    normalized === "none of the above" ||
+    normalized.startsWith("none of the above") ||
+    normalized === "none of these" ||
+    normalized.startsWith("none of these") ||
+    normalized === "none of them" ||
+    normalized.startsWith("none of them")
+  );
+}
+
 export type AllOfTheAboveDetectableOption<TKey extends string = string> = {
   key: TKey;
   label: string;

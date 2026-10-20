@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { useCompletedHubSkills } from "@/components/academy/lesson/lesson-hub-progress";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
@@ -18,7 +19,8 @@ import {
   type CashComparison,
   type CashUpdate,
 } from "@/lib/academy/lessons/payload/cash-placeholder";
-import { isNeutralTrueStatement } from "@/lib/academy/lessons/all-of-the-above";
+import { isNeutralTrueStatement, isPinnedChoiceLabel } from "@/lib/academy/lessons/all-of-the-above";
+import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import { collectMultipleChoiceOptions } from "@/lib/academy/lessons/multiple-choice-options";
 import {
   getCorrectOptionKeys,
@@ -85,9 +87,29 @@ export function MultipleChoiceScreen({
   const neutralTrueKeys = new Set(neutralTrueOptions.map((option) => option.key));
   const optionByKey = new Map(choiceOptions.map((option) => [option.key, option]));
 
-  const [optionOrder] = useState<ChoiceKey[]>(() =>
+  const [optionOrder, setOptionOrder] = useState<ChoiceKey[]>(() =>
     choiceOptions.map((option) => option.key),
   );
+  const choiceSignature = choiceOptions
+    .map((option) => `${option.key}:${option.label}`)
+    .join("|");
+  const choiceOptionsRef = useRef(choiceOptions);
+  choiceOptionsRef.current = choiceOptions;
+  const skillHub = screen.skillHub === true;
+  const playSeed = usePlaySeed([screen.id, skillHub ? "fixed" : "choices"]);
+
+  useLayoutEffect(() => {
+    const options = choiceOptionsRef.current;
+    if (skillHub || playSeed === null) {
+      setOptionOrder(options.map((option) => option.key));
+      return;
+    }
+    setOptionOrder(
+      seededShuffle(options, playSeed, {
+        pinLast: (option) => isPinnedChoiceLabel(option.label),
+      }).map((option) => option.key),
+    );
+  }, [choiceSignature, playSeed, skillHub]);
   const [choice, setChoice] = useState<ChoiceKey | null>(null);
   const [multiSelected, setMultiSelected] = useState<ReadonlySet<ChoiceKey>>(
     () => new Set(),

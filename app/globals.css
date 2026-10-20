@@ -194,6 +194,107 @@
     animation: lesson-tick-pop 250ms ease-out;
   }
 
+  /* Coins land in the meter, then the slots fade back to empty outlines. */
+  @keyframes lesson-coin-run-clear {
+    0%,
+    78% {
+      background-color: #ffc933;
+      box-shadow: inset 0 0 0 1px #e08a00;
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 1.25px #c5d0e4;
+    }
+  }
+
+  .lesson-coin-run-clear {
+    animation: lesson-coin-run-clear 1200ms ease-out forwards;
+  }
+
+  @keyframes lesson-coin-run-clear-glyph {
+    0%,
+    78% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .lesson-coin-run-clear-glyph {
+    animation: lesson-coin-run-clear-glyph 1200ms ease-out forwards;
+  }
+
+  @keyframes lesson-coin-reward-fly {
+    0% {
+      opacity: 0;
+      transform: translate(var(--fly-x), 58px) scale(0.7);
+    }
+    14% {
+      opacity: 1;
+      transform: translate(var(--fly-x), 50px) scale(1);
+    }
+    68% {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+    }
+    84%,
+    100% {
+      opacity: 0;
+      transform: translate(0, 0) scale(1);
+    }
+  }
+
+  .lesson-coin-reward-fly {
+    animation: lesson-coin-reward-fly 1060ms ease-out both;
+  }
+
+  @keyframes lesson-coin-reward-chip {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(6px) scale(0.94);
+    }
+    12% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    72% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
+
+  .lesson-coin-reward-chip {
+    animation: lesson-coin-reward-chip 1200ms ease-out both;
+  }
+
+  @keyframes lesson-coin-reward-fade {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%);
+    }
+    18% {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+    72% {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(-50%);
+    }
+  }
+
+  .lesson-coin-reward-fade {
+    animation: lesson-coin-reward-fade 1000ms ease-out both;
+  }
+
   @keyframes lesson-reward-zoom {
     0% {
       transform: scale(0.72);
@@ -260,8 +361,13 @@
 
   @media (prefers-reduced-motion: reduce) {
     .lesson-tile-shake,
-    .lesson-tick-pop {
+    .lesson-tick-pop,
+    .lesson-coin-reward-fly {
       animation: none;
+    }
+
+    .lesson-coin-reward-fly {
+      opacity: 0;
     }
 
     html:not([data-recording="1"]) .lesson-reward-line,

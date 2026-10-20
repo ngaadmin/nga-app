@@ -108,7 +108,7 @@ export function useLessonFlow({
     router.prefetch(exitHref);
   }, [exitHref, router]);
 
-  /** New lesson session — restore full lives (max 4 via LESSON_MAX_LIVES). */
+  /** New lesson session — empty the coin meter and clear the mistake count. */
   useEffect(() => {
     if (activeMilestoneRef.current === milestoneId) return;
     activeMilestoneRef.current = milestoneId;
@@ -328,6 +328,7 @@ export function useLessonFlow({
     screenReady,
     screenMistakes,
     perfectStreak,
+    bonusStreak: bonusRun.streak,
     bonusCoins: bonusRun.bonusCoins,
     bonusRuns: bonusRun.runs,
     lessonComplete,

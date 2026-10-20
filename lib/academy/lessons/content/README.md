@@ -2,7 +2,7 @@
 
 **Authors:** spreadsheet only → **[templates/lesson-authoring/INSTRUCTIONS.md](../../../templates/lesson-authoring/INSTRUCTIONS.md)**
 
-A screen that can cost a heart needs Error text for Explorer, Pathfinder, and Maverick. See **[docs/lesson-authoring.md](../../../docs/lesson-authoring.md)**.
+A scored screen needs Error text for Explorer, Pathfinder, and Maverick. A miss empties the header coin meter. See **[docs/lesson-authoring.md](../../../docs/lesson-authoring.md)**.
 
 **Developers:** screen type inventory → **[docs/academy-screen-types.md](../../../docs/academy-screen-types.md)**
 

@@ -1,10 +1,10 @@
 # Module 1 blank error lines
 
-Storybird: these screens drop a heart when the learner misses, and the Error cell is empty for the cohorts named below. Write a short error line for each blank cohort. Leave every other word on the screen as it is.
+Storybird: a miss on these screens empties the coin meter in the lesson header, and the Error cell is empty for the cohorts named below. Write a short error line for each blank cohort. Leave every other word on the screen as it is.
 
 This list is temporary. When a cell has text, take that cohort off the list.
 
-Not listed: story and continue cards, free choices with no wrong answer (lesson 8's decisions), tap-reveal, the skill hub, an all-of-the-above question (those picks do not drop a heart), and a single Spent bucket (every drop lands in the only bucket).
+Not listed: story and continue cards, free choices with no wrong answer (lesson 8's decisions), tap-reveal, the skill hub, an all-of-the-above question (those picks do not empty the coin meter), and a single Spent bucket (every drop lands in the only bucket).
 
 17 screens.
 

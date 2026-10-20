@@ -59,8 +59,7 @@ const previewFlow = {
  * Dev / QA route; does not read or write lesson progress.
  */
 export function LessonCompletionScreenPreview() {
-  const { totalScreens, screenIndex, mistakes, rewards, screen } =
-    M1_L1_SCREEN_8_PREVIEW;
+  const { totalScreens, screenIndex, rewards, screen } = M1_L1_SCREEN_8_PREVIEW;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -73,7 +72,6 @@ export function LessonCompletionScreenPreview() {
       <AcademyLessonShell
         currentScreenIndex={screenIndex}
         totalScreens={totalScreens}
-        mistakes={mistakes}
         xpReward={rewards.xpReward}
         canAdvance={false}
         onNext={noop}

@@ -74,7 +74,7 @@ test("mobile drag completes the sentence, quick-pick rounds, swipe, and didn't-b
   });
   await limitedOffer.click();
   await expect(page.getByText(/that thought is rushing you/i)).toBeVisible();
-  await expect(page.getByLabel("3 of 4 lives remaining")).toBeVisible();
+  await expect(page.getByLabel("0 of 5 coins towards your bonus")).toBeVisible();
   await expect(next).toBeDisabled();
   await expect(
     page.getByRole("button", { name: /limited time offer/i }),

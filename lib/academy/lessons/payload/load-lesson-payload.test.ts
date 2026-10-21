@@ -133,7 +133,7 @@ describe("lesson payload loader", () => {
     expect(hasShippedLesson(8)).toBe(true);
     expect(hasShippedLesson(9)).toBe(true);
     const content = resolvePayloadLesson(loadBundledLessonPayload(1, 6), "explorer", 6);
-    expect(content.meta.lessonTitle).toBe("Keep Spare Cash");
+    expect(content.meta.lessonTitle).toBe("Stay Above Zero");
     expect(content.screens.map((screen) => screen.type)).toEqual([
       "binary-choice",
       "multiple-choice",
@@ -151,7 +151,7 @@ describe("lesson payload loader", () => {
     });
   });
 
-  it("gives each Keep Spare Cash screen its own prompt and options", () => {
+  it("gives each Stay Above Zero screen its own prompt and options", () => {
     const cohorts = [
       {
         cohort: "explorer" as const,

@@ -72,10 +72,7 @@ export const metadata: Metadata = {
     "Join NextGenAchievers - the free, fun way to master real-world money skills.",
   applicationName: "NextGenAchievers",
   icons: {
-    icon: [
-      { url: "/nga-icon.svg", type: "image/svg+xml" },
-      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
-    ],
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: share.openGraph,

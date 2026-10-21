@@ -70,7 +70,8 @@ export const metadata: Metadata = {
   },
   description:
     "Join NextGenAchievers - the free, fun way to master real-world money skills.",
-  applicationName: "NextGenAchievers",
+  applicationName: "NextGen",
+  appleWebApp: { title: "NextGen", capable: true },
   icons: {
     icon: [
       { url: "/nga-icon.svg", type: "image/svg+xml" },

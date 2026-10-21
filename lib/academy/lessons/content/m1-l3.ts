@@ -5,9 +5,9 @@ const M1_L3_META = {
   milestoneId: 3,
   levelId: 1,
   lessonNumber: 3,
-  moduleTitle: "How the Money Game Works",
+  moduleTitle: "Control Your Spending",
   lessonTitle: "Keep Some Money Aside",
-  shellLabel: "How the Money Game Works · Lesson 3 · Keep Some Money Aside",
+  shellLabel: "Control Your Spending · Lesson 3 · Keep Some Money Aside",
   totalScreens: 8,
   shippedCohorts: ["explorer", "pathfinder", "maverick"],
   characters: {

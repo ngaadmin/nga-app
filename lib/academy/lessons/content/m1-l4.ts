@@ -9,9 +9,9 @@ const M1_L4_META = {
   milestoneId: 4,
   levelId: 1,
   lessonNumber: 4,
-  moduleTitle: "How the Money Game Works",
+  moduleTitle: "Control Your Spending",
   lessonTitle: "Pause Under Pressure",
-  shellLabel: "How the Money Game Works · Lesson 4 · Pause Under Pressure",
+  shellLabel: "Control Your Spending · Lesson 4 · Pause Under Pressure",
   totalScreens: 8,
   shippedCohorts: ["explorer"],
   characters: {

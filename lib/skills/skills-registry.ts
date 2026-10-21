@@ -20,7 +20,7 @@ export type SkillRegistryRecord = {
   skillSlug: string;
   skillName: string;
   description: string;
-  /** Skills 13-18 — restricted to Mavericks (ages 17+). Levels 5-6. */
+  /** Module 6 (skills 16-18) is Maverick only (17+). Module 5 (skills 13-15) is Pathfinder and Maverick. */
   isAdvancedCohortOnly: boolean;
   /** Optional legacy slugs from pre-registry prototypes (lesson + vault keys). */
   legacySlugs?: readonly string[];
@@ -30,42 +30,42 @@ export type SkillRegistryRecord = {
 export const SKILLS_LEVELS: readonly SkillLevelDefinition[] = [
   {
     levelId: 1,
-    title: "How the Money Game Works",
+    title: "Control Your Spending",
     subtitle: "Money is a tool to buy freedom and choices",
     theme: "Awareness",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 2,
-    title: "Protecting Your Money",
+    title: "Make Money",
     subtitle: "Money is lost when you can't see what's happening",
     theme: "Detection",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 3,
-    title: "Taking Control of Your Money",
+    title: "Be the Boss of Your Money",
     subtitle: "If you don't control money, it controls you",
     theme: "Control",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 4,
-    title: "Generating Your Own Income",
+    title: "Turn Money into More Money",
     subtitle: "Money comes from creating value for others",
     theme: "Creation",
     isAdvancedCohortOnly: false,
   },
   {
     levelId: 5,
-    title: "Growing Your Money",
+    title: "Increase Your Earning Power",
     subtitle: "Money grows when it is put to work",
     theme: "Growth",
-    isAdvancedCohortOnly: true,
+    isAdvancedCohortOnly: false,
   },
   {
     levelId: 6,
-    title: "Structuring & Optimising Your Money",
+    title: "Create Income That Doesn't Need You",
     subtitle: "How you structure money determines how much you keep and grow",
     theme: "Optimisation",
     isAdvancedCohortOnly: true,
@@ -210,7 +210,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     skillSlug: "knowing-assets",
     skillName: "Increase the Value of What You Offer",
     description: "Increase the value of what you offer",
-    isAdvancedCohortOnly: true,
+    isAdvancedCohortOnly: false,
     legacySlugs: ["angel-investing-101", "investment-portfolio"],
     medalEmoji: "🏛️",
   },
@@ -221,7 +221,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     skillSlug: "risk-management",
     skillName: "Expand or Improve Income Streams",
     description: "Expand or improve income streams",
-    isAdvancedCohortOnly: true,
+    isAdvancedCohortOnly: false,
     medalEmoji: "🎯",
   },
   {
@@ -231,7 +231,7 @@ export const SKILLS_REGISTRY: readonly SkillRegistryRecord[] = [
     skillSlug: "strategic-debt",
     skillName: "Manage Basic Downside Risk in Earning",
     description: "Manage basic downside risk in earning",
-    isAdvancedCohortOnly: true,
+    isAdvancedCohortOnly: false,
     medalEmoji: "⚡",
   },
   {

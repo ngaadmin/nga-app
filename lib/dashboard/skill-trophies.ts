@@ -39,7 +39,7 @@ export type VaultSkillTrophy = {
   levelId: number;
   tier: SkillTrophyTier;
   medalEmoji: string;
-  /** Skills 13–18 — hidden from Explorers and Pathfinders; Mavericks only. */
+  /** Module 6 (skills 16-18) is Maverick only. Module 5 is Pathfinder and Maverick. */
   advancedOnly?: boolean;
 };
 

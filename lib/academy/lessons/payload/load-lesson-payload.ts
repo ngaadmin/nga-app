@@ -109,6 +109,7 @@ function parseLessonDetails(
     moduleNumber,
     lessonNumber,
     lessonTitle: fields.get("Lesson Title") ?? "",
+    moduleName: fields.get("Module Name") ?? "",
     level: Number.isFinite(level) ? level : moduleNumber,
     characters: {
       explorer: fields.get("Explorer Character") ?? "",

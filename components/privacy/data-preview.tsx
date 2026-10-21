@@ -45,10 +45,10 @@ const DELTA4: LearnerDataView = {
     { name: "Gift for Nan", emoji: "🎂", balance: 15, target: 25 },
   ],
   activity: [
-    { emoji: "🎓", title: "Finished a lesson", detail: "Stop & Think", when: "Today" },
+    { emoji: "🎓", title: "Finished a lesson", detail: "Catch Impulse Spending", when: "Today" },
     { emoji: "🪙", title: "Cashed in 150 coins", detail: "Went to Cash in the Vault", when: "Yesterday" },
     { emoji: "🏦", title: "Moved $5.00 to Save", detail: "Vault", when: "18 Oct" },
-    { emoji: "🥉", title: "Bronze medal", detail: "Needs vs Wants", when: "17 Oct" },
+    { emoji: "🥉", title: "Bronze medal", detail: "Choose Needs Over Wants", when: "17 Oct" },
   ],
   leaderboardEnabled: false,
 };
@@ -73,9 +73,9 @@ const RAVEN3: LearnerDataView = {
   ],
   goals: [],
   activity: [
-    { emoji: "🎓", title: "Finished a lesson", detail: "Needs vs Wants", when: "Today" },
-    { emoji: "🥉", title: "Bronze medal", detail: "Stop & Think", when: "16 Oct" },
-    { emoji: "🎓", title: "Finished a lesson", detail: "Stop & Think", when: "15 Oct" },
+    { emoji: "🎓", title: "Finished a lesson", detail: "Choose Needs Over Wants", when: "Today" },
+    { emoji: "🥉", title: "Bronze medal", detail: "Catch Impulse Spending", when: "16 Oct" },
+    { emoji: "🎓", title: "Finished a lesson", detail: "Catch Impulse Spending", when: "15 Oct" },
   ],
   leaderboardEnabled: false,
 };

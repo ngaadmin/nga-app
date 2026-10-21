@@ -63,9 +63,9 @@ const GAME_TYPE_LABEL: Record<string, string> = {
 };
 
 const SKILL_NAME: Record<string, string> = {
-  "stop-and-think": "Stop & Think",
-  "put-needs-first": "Put Needs First",
-  "keep-some-aside": "Keep Some Aside",
+  "stop-and-think": "Catch Impulse Spending",
+  "put-needs-first": "Choose Needs Over Wants",
+  "keep-some-aside": "Don't Spend Money You Don't Have",
 };
 
 function csvEscape(value: string): string {

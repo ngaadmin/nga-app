@@ -27,9 +27,9 @@ const M1_L3_META = {
   milestoneId: 3,
   levelId: 1,
   lessonNumber: 3,
-  moduleTitle: "How the Money Game Works",
+  moduleTitle: "Control Your Spending",
   lessonTitle: "REPLACE: Lesson Title From Design Doc",
-  shellLabel: "How the Money Game Works · Lesson 3 · REPLACE: Lesson Title",
+  shellLabel: "Control Your Spending · Lesson 3 · REPLACE: Lesson Title",
   totalScreens: 8,
 } as const;
 

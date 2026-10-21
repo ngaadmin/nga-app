@@ -270,9 +270,9 @@ ELSE show button "Keep it" → GO Screen 8`,
       const hub = content.screens[0];
       expect(hub?.skillHub).toBe(true);
       expect(choiceOptions(hub).map((option) => option.label)).toEqual([
-        "Stop & Think",
-        "Put Needs First",
-        "Keep Spare Cash",
+        "Catch Impulse Spending",
+        "Choose Needs Over Wants",
+        "Don't Spend Money You Don't Have",
         "Finish",
       ]);
       const finish = choiceOptions(hub).find((option) => option.label === "Finish");

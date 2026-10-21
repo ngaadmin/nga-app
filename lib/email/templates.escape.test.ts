@@ -51,7 +51,7 @@ describe("email template escaping", () => {
     expect(built.text).not.toContain("evil.example");
   });
 
-  it("sends the under-16 teen approval copy without the child's username", () => {
+  it("sends the locked under-16 teen approval copy with an escaped username", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://nga.example";
     process.env.VERCEL = "1";
     delete process.env.VERCEL_URL;
@@ -60,32 +60,41 @@ describe("email template escaping", () => {
       {
         username: "RiverTeen42<script>",
         token: "tok",
-        track: "pathfinder",
+        track: "maverick",
       },
       "https://evil.example/phish",
     );
 
     expect(built.subject).toBe("Your teen wants to start NextGenAchiever$");
     expect(built.html).toContain("Please approve your teen&#39;s account");
+    expect(built.html).toContain("RiverTeen42&lt;script&gt;");
     expect(built.html).toContain("Approve the account");
-    expect(built.html).toContain(
-      "Button not working? Copy this link into your browser:",
-    );
     expect(built.html).toContain(
       "https://nga.example/onboarding/sign-up?role=parent_master&amp;token=tok",
     );
-    expect(built.text).toContain(
-      "The account stays locked until a parent approves it.",
+    expect(built.html).toContain('href="https://nextgenachievers.com/privacy"');
+    expect(built.html).toContain(
+      "Privacy policy</a>: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia",
     );
     expect(built.text).toContain(
-      "Button not working? Copy this link into your browser: https://nga.example/onboarding/sign-up?role=parent_master&token=tok",
+      "Your teen has just signed up to NextGenAchiever$ with the username RiverTeen42<script>.",
     );
-    expect(built.html).not.toContain("RiverTeen42");
-    expect(built.text).not.toContain("RiverTeen42");
+    expect(built.text).toContain(
+      "the account stays on hold until a parent approves it.",
+    );
+    expect(built.text).toContain("This link only works for 24 hours.");
+    expect(built.text).toContain(
+      "Approve the account: https://nga.example/onboarding/sign-up?role=parent_master&token=tok",
+    );
+    expect(built.text).toContain(
+      "Privacy policy: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia",
+    );
     expect(built.html).not.toContain("<script>");
     expect(built.html).not.toContain("TODO-COPY");
     expect(built.text).not.toContain("TODO-COPY");
+    expect(built.html).not.toContain("www.nextgenachievers.com/privacy");
     expect(built.html).not.toContain("evil.example");
+    expect(built.text).not.toContain("evil.example");
   });
 
   it("keeps a configured preview host", () => {

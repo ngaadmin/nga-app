@@ -418,39 +418,42 @@ export function buildExplorerParentEmail(
 }
 
 /**
- * Parent approval email when an under-16 learner did not pick Explorer.
- * Copy pending Cath approval 21 Oct.
- * The approval link has to stay so the parent can approve.
+ * Under-16 Pathfinder and Maverick parent approval email.
+ * Explorer keeps the email above. Copy locked by Cath 21 Oct 2026.
  */
 function buildTeenParentApprovalEmail(
   data: ExplorerParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
+  const username = emailPlain(data.username).trim();
+  const safeName = escapeHtml(username);
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
+  const privacyPolicyUrl = "https://nextgenachievers.com/privacy";
   const subject = "Your teen wants to start NextGenAchiever$";
   const preheader = "Please approve your teen's account";
   const header = "Please approve your teen's account";
-  const fallback = `Button not working? Copy this link into your browser: ${approveUrl}`;
+  const footer =
+    "Privacy policy: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia";
 
   const text = [
     "Hi,",
     "",
-    "Your teen has just signed up to NextGenAchiever$, the app where kids learn money skills by playing. Because your teen is under 16, the account needs a parent's approval before it can be used.",
+    `Your teen has just signed up to NextGenAchiever$ with the username ${username}. Because your teen is under 16, the account stays on hold until a parent approves it.`,
     "",
-    "NextGenAchiever$ teaches money skills through short lessons and games. Your teen earns coins along the way, and you stay in charge of the settings.",
+    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
     "",
     `Approve the account: ${approveUrl}`,
     "",
-    fallback,
+    "Once you approve, you'll be your teen's account manager, and you can set a parent PIN in Preferences.",
     "",
-    "Once you approve, you'll be your teen's account manager. You can set a parent PIN and choose settings such as the learning track and the coins cash rate in Preferences.",
+    "Didn't expect this email? Just ignore it. This link only works for 24 hours.",
     "",
-    "Didn't expect this email? You can ignore it. The account stays locked until a parent approves it.",
-    "",
-    "Questions? Email us at info@nextgenachievers.com.",
+    "Questions? Email info@nextgenachievers.com",
     "",
     "The NextGenAchiever$ team",
+    "",
+    footer,
   ].join("\n");
 
   const html = wrapHtml({
@@ -459,27 +462,26 @@ function buildTeenParentApprovalEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your teen has just signed up to NextGenAchiever$, the app where kids learn money skills by playing. Because your teen is under 16, the account needs a parent&#39;s approval before it can be used.
+        Your teen has just signed up to NextGenAchiever$ with the username ${safeName}. Because your teen is under 16, the account stays on hold until a parent approves it.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ teaches money skills through short lessons and games. Your teen earns coins along the way, and you stay in charge of the settings.
+        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.
       </p>
       ${ctaButton("Approve the account", approveUrl)}
       <p style="margin:0 0 16px;font-size:16px;">
-        Button not working? Copy this link into your browser:
-        <a href="${safeHttpHref(approveUrl)}">${escapeHtml(approveUrl)}</a>
+        Once you approve, you&#39;ll be your teen&#39;s account manager, and you can set a parent PIN in Preferences.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Once you approve, you&#39;ll be your teen&#39;s account manager. You can set a parent PIN and choose settings such as the learning track and the coins cash rate in Preferences.
+        Didn&#39;t expect this email? Just ignore it. This link only works for 24 hours.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Didn&#39;t expect this email? You can ignore it. The account stays locked until a parent approves it.
+        Questions? Email ${escapeHtml(SUPPORT_EMAIL)}
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Questions? Email us at ${escapeHtml(SUPPORT_EMAIL)}.
-      </p>
-      <p style="margin:0;font-size:16px;">
         The NextGenAchiever$ team
+      </p>
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        <a href="${safeHttpHref(privacyPolicyUrl)}">Privacy policy</a>: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia
       </p>
     `,
   });

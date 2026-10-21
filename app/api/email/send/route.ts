@@ -141,10 +141,17 @@ export async function POST(request: Request) {
     const result = await sendOnboardingEmail({
       type: body.type,
       recipientEmail: stored.request.parentEmail,
-      data: {
-        username: stored.request.childUsername,
-        token,
-      },
+      data:
+        body.type === "EXPLORER_PARENT" || body.type === "EXPLORER_PARENT_RESEND"
+          ? {
+              username: stored.request.childUsername,
+              token,
+              track: stored.request.cohort ?? undefined,
+            }
+          : {
+              username: stored.request.childUsername,
+              token,
+            },
       appUrl: resolveTrustedAppUrl(request.headers.get("origin")),
     });
 

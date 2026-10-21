@@ -462,7 +462,9 @@ async function completeConsentApproval(input: {
 
   const { data: childProfile, error: childLookupError } = await admin
     .from("profiles")
-    .select("id, account_role, account_status, consent_approved_at, curriculum_cohort")
+    .select(
+      "id, account_role, account_status, consent_approved_at, curriculum_cohort, parent_approval_required, age_checked_at",
+    )
     .eq("id", input.childId)
     .maybeSingle();
 
@@ -482,6 +484,22 @@ async function completeConsentApproval(input: {
   const alreadyActive =
     childProfile.account_status === "active" &&
     Boolean(childProfile.consent_approved_at);
+
+  // A pending child with no age flag is only activatable when they are an
+  // Explorer created before the flag existed. New under-16 rows set the flag.
+  // A raw auth stub cannot set the track (clients cannot change it) and cannot
+  // mint this request, so it cannot become active here.
+  const pending = childProfile.account_status === "pending_consent";
+  const flaggedForApproval = childProfile.parent_approval_required === true;
+  const legacyExplorer =
+    childProfile.curriculum_cohort === "explorer" &&
+    !childProfile.age_checked_at;
+  if (pending && !flaggedForApproval && !legacyExplorer) {
+    return {
+      success: false,
+      error: "This approval link cannot activate this profile.",
+    };
+  }
 
   if (!alreadyActive) {
     const { data: updatedChild, error: childError } = await admin

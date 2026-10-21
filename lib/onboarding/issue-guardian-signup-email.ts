@@ -18,6 +18,11 @@ export type GuardianSignupEmailInput = {
   parentEmail: string;
   cohort: MasteryCohort;
   appUrl?: string;
+  /**
+   * Under-16 self sign-up always passes vpc so the parent gets an approval
+   * link, including when the learner picked Pathfinder or Maverick.
+   */
+  consent?: "vpc";
 };
 
 /**
@@ -32,11 +37,12 @@ export async function issueGuardianSignupEmail(
   const parentEmail = input.parentEmail.trim().toLowerCase();
   const appUrl = input.appUrl ?? (await resolveSignupAppUrl());
 
-  if (input.cohort === "explorer") {
+  if (input.consent === "vpc" || input.cohort === "explorer") {
     return issueExplorerVpcEmail({
       childId: input.childId,
       username: input.username,
       parentEmail,
+      cohort: input.cohort,
       appUrl,
     });
   }
@@ -70,6 +76,7 @@ async function issueExplorerVpcEmail(input: {
   childId: string;
   username: string;
   parentEmail: string;
+  cohort: MasteryCohort;
   appUrl: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createAdminClient();
@@ -91,6 +98,7 @@ async function issueExplorerVpcEmail(input: {
     data: {
       username: input.username,
       token,
+      track: input.cohort,
     },
     appUrl: input.appUrl,
   });

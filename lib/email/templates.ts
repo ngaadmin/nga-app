@@ -17,6 +17,11 @@ export type OnboardingEmailType =
 export type ExplorerParentEmailData = {
   username: string;
   token: string;
+  /**
+   * Learning track. Omitted or explorer keeps the existing Explorer mail.
+   * Any other track uses the TODO-COPY approval placeholder.
+   */
+  track?: "explorer" | "pathfinder" | "maverick";
 };
 
 /** Same payload shape as the initial Explorer parent approval email. */
@@ -334,6 +339,9 @@ export function buildExplorerParentEmail(
   data: ExplorerParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
+  if (data.track === "pathfinder" || data.track === "maverick") {
+    return buildTodoCopyParentApprovalEmail(data, appUrl);
+  }
   const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
@@ -403,6 +411,40 @@ export function buildExplorerParentEmail(
       <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
       </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
+/**
+ * TODO-COPY: parent approval email when an under-16 learner did not pick Explorer.
+ * Neutral placeholder until the copywriter writes the final words.
+ * The approval link has to stay so the parent can approve.
+ */
+function buildTodoCopyParentApprovalEmail(
+  data: ExplorerParentEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = emailPlain(data.username).trim() || "your learner";
+  const base = resolveAppUrl(appUrl);
+  const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
+  const safeName = escapeHtml(username);
+  const subject = "TODO-COPY: Approval needed";
+  const preheader = "TODO-COPY";
+  const header = "TODO-COPY";
+  const paragraph = `TODO-COPY: ${username} needs a parent or guardian to approve their account.`;
+
+  const text = [paragraph, "", `TODO-COPY: ${approveUrl}`].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        ${escapeHtml(paragraph)}
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">${safeName}</p>
+      ${ctaButton("TODO-COPY", approveUrl)}
     `,
   });
 

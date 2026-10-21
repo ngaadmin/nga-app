@@ -62,7 +62,7 @@ export type { AccountLifecycleStatus, RegisteredAccountStatus };
 export type GuestProfileInput = {
   username: string;
   genericProfileId?: string;
-  /** Learning track. Explorer is the 13 or under consent path. */
+  /** Learning track. Guest play does not ask for a birth year. */
   curriculumCohort: MasteryCohort;
 };
 
@@ -101,6 +101,12 @@ export type RegisteredProfileInput = {
   consentApprovedAt?: string;
   /** Override lifecycle status; otherwise derived from cohort + consent. */
   accountStatus?: RegisteredAccountStatus;
+  /**
+   * Self sign-up age flag. True means under 16 and parent approval is
+   * required on every track. False means 16 and over, with no parent step.
+   * Omit for guests, parents, teachers, class seats, and older sessions.
+   */
+  parentApprovalRequired?: boolean;
   /** Marketing email opt-in collected at create-profile. */
   marketingOptIn?: boolean;
   /** Supabase Auth / profiles.id when this session is backed by a remote account. */
@@ -111,8 +117,8 @@ export type UserSession = {
   accessMode: AccessMode;
   username: string;
   /**
-   * Learning track. Also the compliance cohort: Explorer requires parent
-   * approval. Same value as `curriculumCohort`.
+   * Learning track. Same value as `curriculumCohort`. Parent approval is
+   * `parentApprovalRequired`, not this track.
    */
   ageTier: MasteryCohort;
   /** Learning track chosen by the learner, parent, or class. */
@@ -142,6 +148,11 @@ export type UserSession = {
   genericProfileId?: string;
   convertedAt?: string;
   consentApprovedAt?: string;
+  /**
+   * Self sign-up age flag. True: under 16, parent approval required.
+   * False: 16 and over, no parent step. Absent on older sessions.
+   */
+  parentApprovalRequired?: boolean;
   /** Hashed 4-digit Parent PIN set during consent approval. */
   parentPinHash?: string;
   /**
@@ -294,7 +305,8 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     !alreadyProvisioned &&
     requirements.requiresParentEmail &&
     !parentEmail &&
-    ageTier === "explorer"
+    ageTier === "explorer" &&
+    session.parentApprovalRequired !== false
   ) {
     throw new Error("A parent or guardian email is required for Explorer profiles.");
   }
@@ -310,7 +322,11 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
           ? session.accountStatus
           : getSignupRequirementsForCohort(ageTier).defaultAccountStatus);
 
-  if (requirements.requiresParentApproval && !session.consentApprovedAt) {
+  if (session.parentApprovalRequired === true && !session.consentApprovedAt) {
+    accountStatus = "PENDING_CONSENT";
+  } else if (session.parentApprovalRequired === false) {
+    // 16 and over keeps the server status, including an Explorer track.
+  } else if (requirements.requiresParentApproval && !session.consentApprovedAt) {
     accountStatus = "PENDING_CONSENT";
   }
   if (session.consentApprovedAt) {
@@ -321,6 +337,7 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
     ...session,
     ageTier,
     curriculumCohort: ageTier,
+    parentApprovalRequired: session.parentApprovalRequired,
     learnerEmail,
     email: learnerEmail,
     parentEmail,
@@ -422,6 +439,12 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
       typeof parsed.consentApprovedAt === "string"
         ? parsed.consentApprovedAt
         : undefined,
+    parentApprovalRequired:
+      parsed.parentApprovalRequired === true
+        ? true
+        : parsed.parentApprovalRequired === false
+          ? false
+          : undefined,
     parentPinHash:
       typeof parsed.parentPinHash === "string"
         ? parsed.parentPinHash
@@ -435,7 +458,8 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
       typeof parsed.temporaryPasswordExpiresAt === "string"
         ? parsed.temporaryPasswordExpiresAt
         : undefined,
-    marketingOptIn: parsed.marketingOptIn === true,
+    marketingOptIn:
+      accountRole === "parent_master" ? parsed.marketingOptIn === true : false,
     supabaseUserId:
       typeof parsed.supabaseUserId === "string" && parsed.supabaseUserId.trim()
         ? parsed.supabaseUserId.trim()
@@ -517,7 +541,12 @@ export function convertToRegisteredProfile(
   if (requirements.requiresParentEmail && !parentEmail) {
     // Pathfinder transitional: older callers may only send learner email.
     // Explorers must always supply parentEmail (no learner email to fall back on).
-    if (!alreadyProvisioned && ageTier === "explorer") {
+    // 16 and over skip the parent step even on the Explorer track.
+    if (
+      !alreadyProvisioned &&
+      ageTier === "explorer" &&
+      input.parentApprovalRequired !== false
+    ) {
       throw new Error(
         "A parent or guardian email is required for Explorer profiles.",
       );
@@ -565,7 +594,11 @@ export function convertToRegisteredProfile(
       ? "ACTIVE"
       : requirements.defaultAccountStatus);
 
-  if (requirements.requiresParentApproval && !input.consentApprovedAt) {
+  if (input.parentApprovalRequired === true && !input.consentApprovedAt) {
+    accountStatus = "PENDING_CONSENT";
+  } else if (input.parentApprovalRequired === false) {
+    accountStatus = input.accountStatus ?? "ACTIVE";
+  } else if (requirements.requiresParentApproval && !input.consentApprovedAt) {
     accountStatus = "PENDING_CONSENT";
   }
   if (input.consentApprovedAt) {
@@ -589,7 +622,9 @@ export function convertToRegisteredProfile(
     createdAt: existing?.createdAt ?? new Date().toISOString(),
     convertedAt: new Date().toISOString(),
     consentApprovedAt: input.consentApprovedAt,
-    marketingOptIn: input.marketingOptIn === true,
+    parentApprovalRequired: input.parentApprovalRequired,
+    marketingOptIn:
+      input.accountRole === "parent_master" ? input.marketingOptIn === true : false,
     supabaseUserId: input.supabaseUserId?.trim() || undefined,
   };
 }
@@ -647,10 +682,15 @@ export function readUserSession(): UserSession | null {
   if (!raw) return null;
 
   try {
-    const session = normalizeStoredSession(JSON.parse(raw));
-    if (session && fromLegacy) {
+    const parsedRaw = JSON.parse(raw) as unknown;
+    const hadBirthYear =
+      !!parsedRaw &&
+      typeof parsedRaw === "object" &&
+      ("birthYear" in parsedRaw || "birth_year" in parsedRaw);
+    const session = normalizeStoredSession(parsedRaw);
+    if (session && (fromLegacy || hadBirthYear)) {
       saveUserSession(session);
-      removePersisted(LEGACY_GHOST_SESSION_STORAGE_KEY);
+      if (fromLegacy) removePersisted(LEGACY_GHOST_SESSION_STORAGE_KEY);
     }
     return session;
   } catch {

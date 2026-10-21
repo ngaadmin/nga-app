@@ -5,13 +5,12 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
-  getSignupRequirementsForCohort,
   parseMasteryCohort,
   type MasteryCohort,
   type RegisteredAccountStatus,
 } from "@/lib/dashboard/mastery-cohort";
 import { issueGuardianSignupEmail } from "@/lib/onboarding/issue-guardian-signup-email";
-import { decideLearnerAge } from "@/lib/onboarding/signup-age-check";
+import { planLearnerSignup } from "@/lib/onboarding/signup-age-check";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
@@ -45,7 +44,10 @@ export type CreateSupabaseAccountInput = {
    * Validated here but not stored yet — consent_requests comes next.
    */
   parentEmail?: string | null;
-  /** Forced false for Explorers. */
+  /**
+   * Ignored for learner self sign-up. Child profiles cannot opt in.
+   * Parent accounts collect their own box elsewhere.
+   */
   marketingOptIn?: boolean;
   /**
    * Learner sign-up only. Checked once, then dropped. Never written to the
@@ -98,11 +100,10 @@ export async function createSupabaseAccount(
     parentEmail,
     marketingOptIn,
     ageCheck,
+    accountStatus: plannedStatus,
+    sendParentConsentEmail,
   } = parsed.value;
-  const requirements = getSignupRequirementsForCohort(cohort);
-  const accountStatus = toSupabaseAccountStatus(
-    parentInitiated ? "ACTIVE" : requirements.defaultAccountStatus,
-  );
+  const accountStatus = toSupabaseAccountStatus(plannedStatus);
   const accountRole = "child" as const;
   const approvedAt = parentInitiated ? new Date().toISOString() : null;
 
@@ -145,10 +146,10 @@ export async function createSupabaseAccount(
     };
   }
 
-  // Explorers, and any parent-added child: placeholder email + admin create
+  // Explorers have no learner inbox. Parent-added children use a placeholder
   // so we never swap the signed-in parent Auth session.
   const created =
-    cohort === "explorer" || parentInitiated
+    cohort === "explorer" || parentInitiated || !learnerEmail
       ? await createPlaceholderAuthUser(
           admin,
           password,
@@ -191,22 +192,19 @@ export async function createSupabaseAccount(
     }
   }
 
-  // Explorer VPC + Pathfinder parent-claim emails. Skip when a parent master
-  // already created this child from Settings.
-  if (
-    !parentInitiated &&
-    parentEmail &&
-    (cohort === "explorer" || cohort === "pathfinder")
-  ) {
+  // Under 16: the Explorer approval email (VPC), whatever track they picked.
+  // 16 and over: no parent email and no parent-dashboard invite.
+  if (!parentInitiated && sendParentConsentEmail && parentEmail) {
     try {
       const emailResult = await issueGuardianSignupEmail({
         childId: created.userId,
         username,
         parentEmail,
         cohort,
+        consent: "vpc",
       });
 
-      if (!emailResult.ok && cohort === "explorer") {
+      if (!emailResult.ok) {
         await admin.auth.admin.deleteUser(created.userId);
         return {
           success: false,
@@ -214,21 +212,20 @@ export async function createSupabaseAccount(
         };
       }
     } catch (error) {
-      if (cohort === "explorer") {
-        await admin.auth.admin.deleteUser(created.userId);
-        return {
-          success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "We could not send the parent approval email. Please try again.",
-        };
-      }
+      await admin.auth.admin.deleteUser(created.userId);
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "We could not send the parent approval email. Please try again.",
+      };
     }
   }
 
   if (
     !parentInitiated &&
+    !sendParentConsentEmail &&
     learnerEmail &&
     (cohort === "pathfinder" || cohort === "maverick")
   ) {
@@ -273,6 +270,8 @@ type ParsedSignup = {
   learnerEmail: string | null;
   parentEmail: string | null;
   marketingOptIn: boolean;
+  accountStatus: RegisteredAccountStatus;
+  sendParentConsentEmail: boolean;
   /** Present only after a learner age check. The birth year is not kept. */
   ageCheck: { parentApprovalRequired: boolean; checkedAt: string } | null;
 };
@@ -302,14 +301,26 @@ function parseSignupInput(
 
   let cohort = pickedCohort;
   let ageCheck: ParsedSignup["ageCheck"] = null;
+  let accountStatus: RegisteredAccountStatus = "ACTIVE";
+  let sendParentConsentEmail = false;
+  let requiresLearnerEmail = false;
+  let requiresParentEmail = false;
   if (!parentInitiated) {
-    const decision = decideLearnerAge(input.birthYear ?? Number.NaN);
-    if (!decision) {
+    const plan = planLearnerSignup({
+      pickedCohort,
+      birthYear: input.birthYear ?? Number.NaN,
+      requestedMarketingOptIn: input.marketingOptIn,
+    });
+    if (!plan) {
       return { ok: false, error: "Choose the year you were born." };
     }
-    cohort = decision.cohort;
+    cohort = plan.cohort;
+    accountStatus = plan.accountStatus;
+    sendParentConsentEmail = plan.sendParentConsentEmail;
+    requiresLearnerEmail = plan.requiresLearnerEmail;
+    requiresParentEmail = plan.requiresParentEmail;
     ageCheck = {
-      parentApprovalRequired: decision.parentApprovalRequired,
+      parentApprovalRequired: plan.parentApprovalRequired,
       checkedAt: new Date().toISOString(),
     };
   }
@@ -319,21 +330,20 @@ function parseSignupInput(
     return { ok: false, error: "Use at least 6 characters for your password." };
   }
 
-  const requirements = getSignupRequirementsForCohort(cohort);
   const learnerEmail =
-    !parentInitiated && requirements.requiresLearnerEmail
+    !parentInitiated && requiresLearnerEmail
       ? (normalizeEmailAddress(input.learnerEmail) ?? null)
       : null;
   const parentEmail =
-    !parentInitiated && requirements.requiresParentEmail
+    !parentInitiated && requiresParentEmail
       ? (normalizeEmailAddress(input.parentEmail) ?? null)
       : null;
 
-  if (!parentInitiated && requirements.requiresLearnerEmail && !learnerEmail) {
+  if (!parentInitiated && requiresLearnerEmail && !learnerEmail) {
     return { ok: false, error: "Please enter a valid email address." };
   }
 
-  if (!parentInitiated && requirements.requiresParentEmail && !parentEmail) {
+  if (!parentInitiated && requiresParentEmail && !parentEmail) {
     return {
       ok: false,
       error: "Please enter a parent or guardian email address.",
@@ -356,7 +366,9 @@ function parseSignupInput(
       password,
       learnerEmail,
       parentEmail,
-      marketingOptIn: parentInitiated ? false : Boolean(input.marketingOptIn),
+      marketingOptIn: false,
+      accountStatus,
+      sendParentConsentEmail,
       ageCheck,
     },
   };

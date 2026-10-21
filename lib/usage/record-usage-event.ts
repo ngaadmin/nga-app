@@ -2,8 +2,9 @@
 
 import { readDashboardWalletState } from "@/lib/dashboard/dashboard-wallet-storage";
 import { readStoredDayStreak } from "@/lib/dashboard/streak-practice";
-import { readUserSession } from "@/lib/onboarding/guest-session";
-import { logUsageEvent } from "@/lib/usage/log-usage-event";
+import { isGuestSession, readUserSession } from "@/lib/onboarding/guest-session";
+import { markLessonAttemptCompleted } from "@/lib/usage/lesson-abandon";
+import { logGuestCountEvent, logUsageEvent } from "@/lib/usage/log-usage-event";
 import { submitUsageEvent } from "@/lib/usage/submit-usage-event";
 import type { UsageEventType } from "@/lib/usage/usage-events";
 
@@ -21,11 +22,23 @@ export function recordUsageEvent(
   extras?: UsageExtras,
 ): void {
   try {
+    if (eventType === "lesson_completed" && typeof extras?.lessonNumber === "number") {
+      markLessonAttemptCompleted(extras.lessonNumber);
+    }
+
+    const lessonNumber = extras?.lessonNumber ?? null;
+    if (isGuestSession(readUserSession())) {
+      logGuestCountEvent({ eventType, lessonNumber }, (event) => {
+        void submitUsageEvent(event);
+      });
+      return;
+    }
+
     logUsageEvent(
       {
         eventType,
         username: readUserSession()?.username ?? "",
-        lessonNumber: extras?.lessonNumber ?? null,
+        lessonNumber,
         xpTotal: readXpTotal(),
         streakDays: readStreakDays(),
         metadata: extras?.metadata ?? null,

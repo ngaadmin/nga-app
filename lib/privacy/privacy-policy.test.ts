@@ -8,7 +8,7 @@ import {
 import { splitTrailingQualifier } from "@/lib/privacy/split-trailing-qualifier";
 
 describe("privacy policy source", () => {
-  it("publishes the approved policy with the 20 October 2026 date", () => {
+  it("publishes the approved policy with the 21 October 2026 date", () => {
     const markdown = loadPrivacyPolicyMarkdown();
     const blocks = parsePrivacyMarkdown(markdown);
     const text = blocks
@@ -24,12 +24,12 @@ describe("privacy policy source", () => {
       })
       .join("\n");
 
-    expect(markdown).toContain("**Last updated: 20 October 2026**");
+    expect(markdown).toContain("**Last updated: 21 October 2026**");
     expect(markdown).not.toContain("[DATE]");
     expect(markdown).not.toContain("[CATH_EMAIL]");
     expect(markdown).not.toContain("## TO CONFIRM");
     expect(markdown).not.toMatch(/\bNGA\b/);
-    expect(text).toContain("20 October 2026");
+    expect(text).toContain("21 October 2026");
     expect(text).toContain(
       "This policy covers the app only. Our website has its own policy.",
     );
@@ -80,13 +80,13 @@ describe("privacy policy source", () => {
     );
     expect(text).toContain("Activity records are deleted with the account.");
     expect(text).toContain(
-      "streak days and a small technical field",
+      "To count guest play.",
     );
     expect(text).toContain(
       "Lessons, coins, Lifetime XP, medals and Vault activity stay on the device.",
     );
     expect(text).toContain(
-      "A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps simple guest activity records under a made-up guest username, with no real name, email or class, and deletes them after 30 days. Clear this device's progress clears the device only.",
+      "A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps daily counts of guest activity (the day, event type, lesson, app version, device type and country) with no username, email, class, coins, streak, IP address or user agent. Older guest rows that used a made-up username are deleted after 30 days. Clear this device's progress clears the device only.",
     );
     expect(text).not.toContain("metadata");
     expect(text).toContain("the parent PIN (stored as a hash)");

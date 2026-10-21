@@ -19,6 +19,10 @@ import {
 } from "@/lib/onboarding/guest-session";
 import { isInternalPlaceholderUsername } from "@/lib/onboarding/placeholder-username";
 import {
+  isReservedGuestUsername,
+  RESERVED_GUEST_USERNAME_ERROR,
+} from "@/lib/onboarding/reserved-guest-username";
+import {
   findRegisteredAccountByUsername,
   resolveHouseholdEmail,
   upsertRegisteredAccount,
@@ -90,6 +94,8 @@ export function AddLinkedProfilePanel() {
       next.username = "Pick a username you choose yourself.";
     } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
       next.username = "Use 2-20 letters, numbers, underscores, or hyphens only.";
+    } else if (isReservedGuestUsername(trimmedUsername)) {
+      next.username = RESERVED_GUEST_USERNAME_ERROR;
     } else {
       const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
       if (
@@ -154,6 +160,10 @@ export function AddLinkedProfilePanel() {
         setIsSubmitting(false);
         if (/username is already taken/i.test(result.error)) {
           setErrors({ username: USERNAME_TAKEN_ERROR });
+          return;
+        }
+        if (/reserved/i.test(result.error)) {
+          setErrors({ username: RESERVED_GUEST_USERNAME_ERROR });
           return;
         }
         setErrors({ form: result.error });

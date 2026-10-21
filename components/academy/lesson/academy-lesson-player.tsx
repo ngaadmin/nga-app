@@ -21,6 +21,7 @@ import {
 import { readAcademyMilestones } from "@/lib/dashboard/academy-progress-storage";
 import { lessonNumberForMilestoneId } from "@/lib/dashboard/academy-state";
 import { markFirstAcademyLessonOpened, FIRST_ACADEMY_LESSON_MILESTONE_ID } from "@/lib/dashboard/academy-first-lesson-opened";
+import { bindLessonAbandon } from "@/lib/usage/lesson-abandon";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 import {
   allowsDirectLessonOpen,
@@ -95,9 +96,9 @@ function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerPr
 
   useEffect(() => {
     if (!isAvailable || isPreview || isDesignShell) return;
-    recordUsageEvent("lesson_started", {
-      lessonNumber: lessonNumberForMilestoneId(milestoneId),
-    });
+    const lessonNumber = lessonNumberForMilestoneId(milestoneId);
+    recordUsageEvent("lesson_started", { lessonNumber });
+    return bindLessonAbandon(lessonNumber);
   }, [isAvailable, isDesignShell, isPreview, milestoneId]);
 
   if (!isAvailable) {

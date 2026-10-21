@@ -13,6 +13,15 @@ const GUEST_SESSION_STORAGE_KEY = "nga_guest_session";
 /** Set once the first guest save banner has been shown. Wiped with guest progress. */
 export const GUEST_SAVE_PROMPT_FIRST_SEEN_KEY = "nga_guest_save_prompt_first_seen_v1";
 
+/**
+ * Page-intro flags live in localStorage and are not part of the logout wipe.
+ * They expire with the rest of the guest device copy.
+ */
+export const GUEST_DEVICE_EXPIRE_EXTRA_KEYS = [
+  "nga_page_intro_seen_by_account_v1",
+  "nga_hub_intro_seen_v2",
+] as const;
+
 const GUEST_DEVICE_KEYS = [
   GUEST_SESSION_STORAGE_KEY,
   "nga_ghost_session",
@@ -122,6 +131,9 @@ function touchGuestDeviceMeta(): void {
 export function releaseGuestDeviceLocalCopy(): void {
   if (typeof window === "undefined") return;
   for (const key of GUEST_DEVICE_KEYS) {
+    window.localStorage.removeItem(key);
+  }
+  for (const key of GUEST_DEVICE_EXPIRE_EXTRA_KEYS) {
     window.localStorage.removeItem(key);
   }
   window.localStorage.removeItem(GUEST_DEVICE_META_KEY);

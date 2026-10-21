@@ -11,6 +11,10 @@ import {
   type RegisteredAccountStatus,
 } from "@/lib/dashboard/mastery-cohort";
 import { issueGuardianSignupEmail } from "@/lib/onboarding/issue-guardian-signup-email";
+import {
+  isReservedGuestUsername,
+  RESERVED_GUEST_USERNAME_ERROR,
+} from "@/lib/onboarding/reserved-guest-username";
 import { decideLearnerAge } from "@/lib/onboarding/signup-age-check";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { normalizeEmailAddress } from "@/lib/validation/email";
@@ -290,6 +294,9 @@ function parseSignupInput(
       ok: false,
       error: "Username must be 2–20 letters, numbers, underscores, or hyphens.",
     };
+  }
+  if (isReservedGuestUsername(username)) {
+    return { ok: false, error: RESERVED_GUEST_USERNAME_ERROR };
   }
 
   const pickedCohort = parseMasteryCohort(input.cohort);

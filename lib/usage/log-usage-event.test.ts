@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  logGuestCountEvent,
   logUsageEvent,
   createMemoryUsageDedupeStore,
   type UsageEventInsert,
@@ -280,5 +281,28 @@ describe("logUsageEvent", () => {
         class_id: null,
       }),
     ]);
+  });
+
+  it("sends a guest count without a handle, coins, or streak", async () => {
+    const sent: unknown[] = [];
+    logGuestCountEvent(
+      { eventType: "lesson_abandoned", lessonNumber: 4 },
+      (event) => {
+        sent.push(event);
+      },
+    );
+    logGuestCountEvent({ eventType: "vault_visit" }, (event) => {
+      sent.push(event);
+    });
+    logGuestCountEvent({ eventType: "vault_visit" }, (event) => {
+      sent.push(event);
+    });
+    await flush();
+
+    expect(sent).toEqual([
+      { eventType: "lesson_abandoned", lessonNumber: 4 },
+      { eventType: "vault_visit", lessonNumber: null },
+    ]);
+    expect(JSON.stringify(sent)).not.toMatch(/guest-count|penny|xp|streak/i);
   });
 });

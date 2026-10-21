@@ -81,6 +81,7 @@ describe("track choice does not decide consent", () => {
       requiresLearnerEmail: true,
       requiresParentEmail: true,
       sendParentConsentEmail: true,
+      sendLearnerWelcomeEmail: false,
       marketingOptIn: false,
     });
     expect(columns).toEqual({
@@ -108,6 +109,7 @@ describe("track choice does not decide consent", () => {
       requiresLearnerEmail: true,
       requiresParentEmail: false,
       sendParentConsentEmail: false,
+      sendLearnerWelcomeEmail: true,
       marketingOptIn: false,
     });
     expect(JSON.stringify(plan)).not.toContain(String(birthYear));
@@ -123,7 +125,72 @@ describe("track choice does not decide consent", () => {
     expect(plan?.accountStatus).toBe("ACTIVE");
     expect(plan?.requiresParentEmail).toBe(false);
     expect(plan?.sendParentConsentEmail).toBe(false);
+    expect(plan?.sendLearnerWelcomeEmail).toBe(true);
     expect(plan?.marketingOptIn).toBe(false);
+  });
+});
+
+describe("16 and over have no parent step", () => {
+  it.each([
+    ["explorer", 16],
+    ["explorer", 17],
+    ["pathfinder", 16],
+    ["pathfinder", 17],
+    ["maverick", 16],
+    ["maverick", 17],
+  ] as const)("keeps a %s aged %s off parent approval", (pickedCohort, age) => {
+    const plan = planLearnerSignup({
+      pickedCohort,
+      birthYear: yearForAge(age),
+      referenceYear: REFERENCE_YEAR,
+      requestedMarketingOptIn: true,
+    });
+    expect(plan?.parentApprovalRequired).toBe(false);
+    expect(plan?.requiresParentEmail).toBe(false);
+    expect(plan?.sendParentConsentEmail).toBe(false);
+    expect(plan?.accountStatus).toBe("ACTIVE");
+    expect(plan?.marketingOptIn).toBe(false);
+  });
+});
+
+describe("16+ Explorer email is for password resets only", () => {
+  it.each([16, 17, 18])("requires an email at age %s and sends nothing at sign-up", (age) => {
+    const plan = planLearnerSignup({
+      pickedCohort: "explorer",
+      birthYear: yearForAge(age),
+      referenceYear: REFERENCE_YEAR,
+      requestedMarketingOptIn: true,
+    });
+    expect(plan).toMatchObject({
+      cohort: "explorer",
+      parentApprovalRequired: false,
+      accountStatus: "ACTIVE",
+      requiresLearnerEmail: true,
+      requiresParentEmail: false,
+      sendParentConsentEmail: false,
+      sendLearnerWelcomeEmail: false,
+      marketingOptIn: false,
+    });
+  });
+
+  it("does not ask an under-16 Explorer for their own email", () => {
+    const plan = planLearnerSignup({
+      pickedCohort: "explorer",
+      birthYear: yearForAge(15),
+      referenceYear: REFERENCE_YEAR,
+    });
+    expect(plan?.requiresLearnerEmail).toBe(false);
+    expect(plan?.requiresParentEmail).toBe(true);
+    expect(plan?.sendParentConsentEmail).toBe(true);
+    expect(plan?.sendLearnerWelcomeEmail).toBe(false);
+  });
+
+  it("shows the reset-only line on the sign-up form and stores a real address", () => {
+    const form = readFileSync("components/onboarding/sign-up-form.tsx", "utf8");
+    const account = readFileSync("lib/onboarding/create-supabase-account.ts", "utf8");
+    expect(form).toContain("For password resets only. You log in with your username.");
+    expect(account).toContain("sendLearnerWelcomeEmail && learnerEmail");
+    expect(account).not.toContain('cohort === "explorer" || parentInitiated || !learnerEmail');
   });
 });
 

@@ -34,6 +34,9 @@ describe("privacy policy source", () => {
       "An account still waiting for a parent to approve it is deleted after 30 days.",
     );
     expect(text).toContain(
+      "A learner who is 16 or over and picks Explorer must give an email address, and we use it only for password resets.",
+    );
+    expect(text).toContain(
       "This policy covers the app only. Our website has its own policy.",
     );
     expect(text).toContain(

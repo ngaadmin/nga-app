@@ -284,8 +284,8 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
   let learnerEmail = normalizeEmail(session.learnerEmail ?? session.email);
   let parentEmail = normalizeEmail(session.parentEmail);
 
-  if (ageTier === "explorer") {
-    // Explorers must never persist a learner email; migrate legacy email → parent.
+  if (ageTier === "explorer" && session.parentApprovalRequired !== false) {
+    // Under-16 Explorers have no learner inbox. A leftover address is the parent.
     if (!parentEmail && learnerEmail) {
       parentEmail = learnerEmail;
     }
@@ -310,7 +310,7 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
   ) {
     throw new Error("A parent or guardian email is required for Explorer profiles.");
   }
-  if (!requirements.requiresLearnerEmail) {
+  if (!requirements.requiresLearnerEmail && session.parentApprovalRequired !== false) {
     learnerEmail = undefined;
   }
 
@@ -392,10 +392,12 @@ function normalizeStoredSession(raw: unknown): UserSession | null {
   let parentEmail = normalizeEmail(parsed.parentEmail);
 
   if (accessMode === "registered") {
-    if (ageTier === "explorer") {
-      // Strictly omit learner email; legacy `email` was parent master email.
+    if (ageTier === "explorer" && parsed.parentApprovalRequired !== false) {
+      // Under-16 Explorers have no learner inbox. A leftover address is the parent.
       if (!parentEmail && legacyEmail) parentEmail = legacyEmail;
       learnerEmail = undefined;
+    } else if (ageTier === "explorer") {
+      learnerEmail = learnerEmail ?? legacyEmail;
     } else {
       learnerEmail = learnerEmail ?? legacyEmail;
       const requirements = getSignupRequirementsForCohort(ageTier);
@@ -518,9 +520,12 @@ export function convertToRegisteredProfile(
   let parentEmail = normalizeEmail(input.parentEmail);
 
   if (ageTier === "explorer") {
-    // Explorers: omit learner email; parent email is required.
-    if (!parentEmail && legacyEmail) parentEmail = legacyEmail;
-    learnerEmail = undefined;
+    if (!parentEmail && legacyEmail && input.parentApprovalRequired !== false) {
+      parentEmail = legacyEmail;
+    }
+    if (input.parentApprovalRequired !== false) {
+      learnerEmail = undefined;
+    }
   } else {
     learnerEmail = learnerEmail ?? legacyEmail;
   }
@@ -534,7 +539,7 @@ export function convertToRegisteredProfile(
   ) {
     throw new Error("A valid learner email is required for this age band.");
   }
-  if (!requirements.requiresLearnerEmail) {
+  if (!requirements.requiresLearnerEmail && input.parentApprovalRequired !== false) {
     learnerEmail = undefined;
   }
 

@@ -102,6 +102,7 @@ export async function createSupabaseAccount(
     ageCheck,
     accountStatus: plannedStatus,
     sendParentConsentEmail,
+    sendLearnerWelcomeEmail,
   } = parsed.value;
   const accountStatus = toSupabaseAccountStatus(plannedStatus);
   const accountRole = "child" as const;
@@ -146,10 +147,11 @@ export async function createSupabaseAccount(
     };
   }
 
-  // Explorers have no learner inbox. Parent-added children use a placeholder
-  // so we never swap the signed-in parent Auth session.
+  // Under-16 Explorers have no learner inbox. A 16+ Explorer stores a real
+  // address, used only for password resets. Parent-added children use a
+  // placeholder so we never swap the signed-in parent Auth session.
   const created =
-    cohort === "explorer" || parentInitiated || !learnerEmail
+    parentInitiated || !learnerEmail
       ? await createPlaceholderAuthUser(
           admin,
           password,
@@ -223,12 +225,7 @@ export async function createSupabaseAccount(
     }
   }
 
-  if (
-    !parentInitiated &&
-    !sendParentConsentEmail &&
-    learnerEmail &&
-    (cohort === "pathfinder" || cohort === "maverick")
-  ) {
+  if (!parentInitiated && sendLearnerWelcomeEmail && learnerEmail) {
     try {
       await sendOnboardingEmail({
         type: cohort === "pathfinder" ? "PATHFINDER_WELCOME" : "MAVERICK_WELCOME",
@@ -272,6 +269,7 @@ type ParsedSignup = {
   marketingOptIn: boolean;
   accountStatus: RegisteredAccountStatus;
   sendParentConsentEmail: boolean;
+  sendLearnerWelcomeEmail: boolean;
   /** Present only after a learner age check. The birth year is not kept. */
   ageCheck: { parentApprovalRequired: boolean; checkedAt: string } | null;
 };
@@ -303,6 +301,7 @@ function parseSignupInput(
   let ageCheck: ParsedSignup["ageCheck"] = null;
   let accountStatus: RegisteredAccountStatus = "ACTIVE";
   let sendParentConsentEmail = false;
+  let sendLearnerWelcomeEmail = false;
   let requiresLearnerEmail = false;
   let requiresParentEmail = false;
   if (!parentInitiated) {
@@ -317,6 +316,7 @@ function parseSignupInput(
     cohort = plan.cohort;
     accountStatus = plan.accountStatus;
     sendParentConsentEmail = plan.sendParentConsentEmail;
+    sendLearnerWelcomeEmail = plan.sendLearnerWelcomeEmail;
     requiresLearnerEmail = plan.requiresLearnerEmail;
     requiresParentEmail = plan.requiresParentEmail;
     ageCheck = {
@@ -369,6 +369,7 @@ function parseSignupInput(
       marketingOptIn: false,
       accountStatus,
       sendParentConsentEmail,
+      sendLearnerWelcomeEmail,
       ageCheck,
     },
   };

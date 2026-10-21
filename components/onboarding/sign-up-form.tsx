@@ -166,7 +166,10 @@ export function SignUpForm() {
   const ageDecision =
     isParentMaster || birthYear == null ? null : decideLearnerAge(birthYear);
   const needsParentApproval = ageDecision?.parentApprovalRequired === true;
-  const needsLearnerEmail = isPathfinder || isMaverick;
+  const needsLearnerEmail =
+    isPathfinder ||
+    isMaverick ||
+    (isExplorer && ageDecision?.parentApprovalRequired === false);
 
   const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
@@ -1225,7 +1228,9 @@ export function SignUpForm() {
                     </p>
                   ) : (
                     <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
-                      For account updates only. You log in with your username.
+                      {isExplorer
+                        ? "For password resets only. You log in with your username."
+                        : "For account updates only. You log in with your username."}
                     </p>
                   )}
                 </div>

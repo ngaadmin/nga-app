@@ -322,6 +322,24 @@ test("age flag decides the parent step and guest play never asks for a year", as
   );
   expect(stored).not.toContain("2009");
   expect(stored).not.toContain("2010");
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("radio", { name: /Explorer/ }).click();
+  await page.locator("#signup-birth-year").selectOption("2009");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByLabel("Your Email Address")).toBeVisible();
+  await expect(
+    page.getByText("For password resets only. You log in with your username."),
+  ).toBeVisible();
+  await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
+  await expect(
+    page.getByText("Send me occasional updates about NextGenAchiever$"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Create My Free Account" }),
+  ).toBeVisible();
 });
 
 test("bottom tab uses the amber active pill", async ({ page }) => {

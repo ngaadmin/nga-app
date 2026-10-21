@@ -119,6 +119,8 @@ export type LearnerSignupPlan = {
   requiresParentEmail: boolean;
   /** VPC approval email. Never a parent-dashboard invite. */
   sendParentConsentEmail: boolean;
+  /** Welcome mail. Never sent to a 16+ Explorer. Their address is for resets only. */
+  sendLearnerWelcomeEmail: boolean;
   marketingOptIn: false;
 };
 
@@ -126,6 +128,8 @@ export type LearnerSignupPlan = {
  * Age flag decides consent. The picked track is kept.
  * Under 16: pending parent approval, whatever track they picked.
  * 16 and over: active, no parent email, no parent invite.
+ * 16+ Explorer must give an email. It is stored for password resets and
+ * nothing is sent at sign-up.
  */
 export function planLearnerSignup(input: {
   pickedCohort: MasteryCohort;
@@ -136,13 +140,17 @@ export function planLearnerSignup(input: {
   const decision = decideLearnerAge(input.birthYear, input.referenceYear);
   if (!decision) return null;
   const parentApprovalRequired = decision.parentApprovalRequired;
+  const sixteenPlusExplorer =
+    input.pickedCohort === "explorer" && !parentApprovalRequired;
   return {
     cohort: input.pickedCohort,
     parentApprovalRequired,
     accountStatus: parentApprovalRequired ? "PENDING_CONSENT" : "ACTIVE",
-    requiresLearnerEmail: input.pickedCohort !== "explorer",
+    requiresLearnerEmail: input.pickedCohort !== "explorer" || sixteenPlusExplorer,
     requiresParentEmail: parentApprovalRequired,
     sendParentConsentEmail: parentApprovalRequired,
+    sendLearnerWelcomeEmail:
+      !parentApprovalRequired && input.pickedCohort !== "explorer",
     marketingOptIn: learnerMarketingOptIn(input.requestedMarketingOptIn),
   };
 }

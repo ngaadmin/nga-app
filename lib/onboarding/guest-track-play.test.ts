@@ -163,12 +163,14 @@ describe("track picker guest play", () => {
       username: "ExplorerSixteen",
       accountRole: "child",
       curriculumCohort: "explorer",
+      learnerEmail: "explorer16@example.com",
       password: "secret1",
       accountStatus: "ACTIVE",
       parentApprovalRequired: false,
       supabaseUserId: "exp-16",
     });
     expect(explorer.accountStatus).toBe("ACTIVE");
+    expect(explorer.learnerEmail).toBe("explorer16@example.com");
     expect(explorer.parentEmail).toBeUndefined();
     expect(explorer.parentApprovalRequired).toBe(false);
     expect(enforceCohortAccountState(explorer).accountStatus).toBe("ACTIVE");

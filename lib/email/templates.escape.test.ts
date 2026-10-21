@@ -51,6 +51,43 @@ describe("email template escaping", () => {
     expect(built.text).not.toContain("evil.example");
   });
 
+  it("sends the under-16 teen approval copy without the child's username", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://nga.example";
+    process.env.VERCEL = "1";
+    delete process.env.VERCEL_URL;
+
+    const built = buildExplorerParentEmail(
+      {
+        username: "RiverTeen42<script>",
+        token: "tok",
+        track: "pathfinder",
+      },
+      "https://evil.example/phish",
+    );
+
+    expect(built.subject).toBe("Your teen wants to start NextGenAchiever$");
+    expect(built.html).toContain("Please approve your teen&#39;s account");
+    expect(built.html).toContain("Approve the account");
+    expect(built.html).toContain(
+      "Button not working? Copy this link into your browser:",
+    );
+    expect(built.html).toContain(
+      "https://nga.example/onboarding/sign-up?role=parent_master&amp;token=tok",
+    );
+    expect(built.text).toContain(
+      "The account stays locked until a parent approves it.",
+    );
+    expect(built.text).toContain(
+      "Button not working? Copy this link into your browser: https://nga.example/onboarding/sign-up?role=parent_master&token=tok",
+    );
+    expect(built.html).not.toContain("RiverTeen42");
+    expect(built.text).not.toContain("RiverTeen42");
+    expect(built.html).not.toContain("<script>");
+    expect(built.html).not.toContain("TODO-COPY");
+    expect(built.text).not.toContain("TODO-COPY");
+    expect(built.html).not.toContain("evil.example");
+  });
+
   it("keeps a configured preview host", () => {
     process.env.VERCEL = "1";
     process.env.VERCEL_URL = "preview.vercel.app";

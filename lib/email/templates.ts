@@ -19,7 +19,7 @@ export type ExplorerParentEmailData = {
   token: string;
   /**
    * Learning track. Omitted or explorer keeps the existing Explorer mail.
-   * Any other track uses the TODO-COPY approval placeholder.
+   * Any other track uses the under-16 parent approval email.
    */
   track?: "explorer" | "pathfinder" | "maverick";
 };
@@ -340,7 +340,7 @@ export function buildExplorerParentEmail(
   appUrl?: string,
 ): BuiltEmail {
   if (data.track === "pathfinder" || data.track === "maverick") {
-    return buildTodoCopyParentApprovalEmail(data, appUrl);
+    return buildTeenParentApprovalEmail(data, appUrl);
   }
   const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
@@ -418,33 +418,69 @@ export function buildExplorerParentEmail(
 }
 
 /**
- * TODO-COPY: parent approval email when an under-16 learner did not pick Explorer.
- * Neutral placeholder until the copywriter writes the final words.
+ * Parent approval email when an under-16 learner did not pick Explorer.
+ * Copy pending Cath approval 21 Oct.
  * The approval link has to stay so the parent can approve.
  */
-function buildTodoCopyParentApprovalEmail(
+function buildTeenParentApprovalEmail(
   data: ExplorerParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
-  const safeName = escapeHtml(username);
-  const subject = "TODO-COPY: Approval needed";
-  const preheader = "TODO-COPY";
-  const header = "TODO-COPY";
-  const paragraph = `TODO-COPY: ${username} needs a parent or guardian to approve their account.`;
+  const subject = "Your teen wants to start NextGenAchiever$";
+  const preheader = "Please approve your teen's account";
+  const header = "Please approve your teen's account";
+  const fallback = `Button not working? Copy this link into your browser: ${approveUrl}`;
 
-  const text = [paragraph, "", `TODO-COPY: ${approveUrl}`].join("\n");
+  const text = [
+    "Hi,",
+    "",
+    "Your teen has just signed up to NextGenAchiever$, the app where kids learn money skills by playing. Because your teen is under 16, the account needs a parent's approval before it can be used.",
+    "",
+    "NextGenAchiever$ teaches money skills through short lessons and games. Your teen earns coins along the way, and you stay in charge of the settings.",
+    "",
+    `Approve the account: ${approveUrl}`,
+    "",
+    fallback,
+    "",
+    "Once you approve, you'll be your teen's account manager. You can set a parent PIN and choose settings such as the learning track and the coins cash rate in Preferences.",
+    "",
+    "Didn't expect this email? You can ignore it. The account stays locked until a parent approves it.",
+    "",
+    "Questions? Email us at info@nextgenachievers.com.",
+    "",
+    "The NextGenAchiever$ team",
+  ].join("\n");
+
   const html = wrapHtml({
     header,
     preheader,
     bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        ${escapeHtml(paragraph)}
+        Your teen has just signed up to NextGenAchiever$, the app where kids learn money skills by playing. Because your teen is under 16, the account needs a parent&#39;s approval before it can be used.
       </p>
-      <p style="margin:0 0 16px;font-size:16px;">${safeName}</p>
-      ${ctaButton("TODO-COPY", approveUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        NextGenAchiever$ teaches money skills through short lessons and games. Your teen earns coins along the way, and you stay in charge of the settings.
+      </p>
+      ${ctaButton("Approve the account", approveUrl)}
+      <p style="margin:0 0 16px;font-size:16px;">
+        Button not working? Copy this link into your browser:
+        <a href="${safeHttpHref(approveUrl)}">${escapeHtml(approveUrl)}</a>
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Once you approve, you&#39;ll be your teen&#39;s account manager. You can set a parent PIN and choose settings such as the learning track and the coins cash rate in Preferences.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Didn&#39;t expect this email? You can ignore it. The account stays locked until a parent approves it.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Questions? Email us at ${escapeHtml(SUPPORT_EMAIL)}.
+      </p>
+      <p style="margin:0;font-size:16px;">
+        The NextGenAchiever$ team
+      </p>
     `,
   });
 

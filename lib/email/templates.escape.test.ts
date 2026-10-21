@@ -49,6 +49,9 @@ describe("email template escaping", () => {
     expect(built.html).toContain("https://nga.example/onboarding/sign-up");
     expect(built.html).not.toContain("evil.example");
     expect(built.text).not.toContain("evil.example");
+    expect(built.html).toContain("NextGenAchievers");
+    expect(built.html).toContain("penny-master-email.png");
+    expect(built.html).not.toContain("penny-email-header");
   });
 
   it("sends the locked under-16 teen approval copy with an escaped username", () => {
@@ -95,6 +98,18 @@ describe("email template escaping", () => {
     expect(built.html).not.toContain("www.nextgenachievers.com/privacy");
     expect(built.html).not.toContain("evil.example");
     expect(built.text).not.toContain("evil.example");
+    expect(built.html).toContain(
+      '<img src="https://app.nextgenachievers.com/email/penny-email-header@2x.png" width="600" height="170" alt="Penny from NextGenAchiever$ saying hello" style="display:block;width:100%;max-width:600px;height:auto;border:0;">',
+    );
+    expect(built.html.indexOf("penny-email-header@2x.png")).toBeLessThan(
+      built.html.indexOf("<h1"),
+    );
+    expect(built.html).toContain("border-radius:16px;overflow:hidden");
+    expect(built.html).toContain("padding:28px 36px 28px");
+    expect(built.html).toContain("background: #FFA503");
+    expect(built.html).not.toContain("NextGenAchievers");
+    expect(built.html).not.toContain("penny-master-email.png");
+    expect(built.text).not.toContain("penny-email-header");
   });
 
   it("keeps a configured preview host", () => {

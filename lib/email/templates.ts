@@ -273,6 +273,8 @@ function ctaButton(label: string, href: string): string {
 
 const PENNY_EMAIL_SRC =
   "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny-master-email.png";
+const TEEN_APPROVAL_HEADER_SRC =
+  "https://app.nextgenachievers.com/email/penny-email-header@2x.png";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "info@nextgenachievers.com";
 
@@ -295,6 +297,8 @@ function wrapHtml(options: {
   bodyInner: string;
   preheader?: string;
   footer?: string;
+  /** Edge-to-edge card image. Replaces the NextGenAchievers kicker. */
+  hero?: { src: string; alt: string };
 }): string {
   const preheader = options.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
@@ -306,6 +310,37 @@ function wrapHtml(options: {
         ${escapeHtml(options.footer)}
       </p>`
     : "";
+  const heading = `<h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
+                  ${escapeHtml(options.header)}
+                </h1>`;
+
+  const card = options.hero
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;padding:0;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
+            <tr>
+              <td style="padding:0;line-height:0;font-size:0;">
+                <img src="${safeHttpHref(options.hero.src)}" width="600" height="170" alt="${escapeHtml(options.hero.alt)}" style="display:block;width:100%;max-width:600px;height:auto;border:0;">
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 36px 28px;">
+                ${heading}
+                ${options.bodyInner}
+                ${footer}
+              </td>
+            </tr>
+          </table>`
+    : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px 24px;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
+            <tr>
+              <td>
+                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
+                  NextGenAchievers
+                </p>
+                ${heading}
+                ${options.bodyInner}
+                ${footer}
+              </td>
+            </tr>
+          </table>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -314,20 +349,7 @@ function wrapHtml(options: {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F7F7F7;padding:24px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px 24px;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
-            <tr>
-              <td>
-                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
-                  NextGenAchievers
-                </p>
-                <h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
-                  ${escapeHtml(options.header)}
-                </h1>
-                ${options.bodyInner}
-                ${footer}
-              </td>
-            </tr>
-          </table>
+          ${card}
         </td>
       </tr>
     </table>
@@ -459,6 +481,10 @@ function buildTeenParentApprovalEmail(
   const html = wrapHtml({
     header,
     preheader,
+    hero: {
+      src: TEEN_APPROVAL_HEADER_SRC,
+      alt: "Penny from NextGenAchiever$ saying hello",
+    },
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 16px;font-size:16px;">

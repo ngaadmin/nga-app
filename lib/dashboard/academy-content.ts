@@ -3,10 +3,11 @@ type AcademyLevelId = 1 | 2 | 3 | 4 | 5 | 6;
 /** Module titles shown on the Academy journey map (Modules 1-6). */
 export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
   1: "Control Your Spending",
-  2: "Make Money",
-  3: "Be the Boss of Your Money",
-  4: "Turn Money into More Money",
-  5: "Increase Your Earning Power",
+  2: "Start making money",
+  3: "Be the boss of your money",
+  4: "Grow the money you have",
+  5: "Increase your earning power",
+  // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
   6: "Create Income That Doesn't Need You",
 };
 

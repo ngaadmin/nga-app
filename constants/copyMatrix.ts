@@ -387,34 +387,35 @@ export const copyMatrix = {
           {
             id: "leveling-up-loot",
             number: 2,
-            subtitle: "Make Money",
+            subtitle: "Start making money",
             focusAreas: "Create real cash so money stops being theoretical",
             iconPath: "/dashboard/trend-up.svg",
           },
           {
             id: "interest-multiplier",
             number: 3,
-            subtitle: "Be the Boss of Your Money",
+            subtitle: "Be the boss of your money",
             focusAreas: "Stop leakage and install a personal operating system",
             iconPath: "/dashboard/bank-building.svg",
           },
           {
             id: "goal-crusher",
             number: 4,
-            subtitle: "Turn Money into More Money",
+            subtitle: "Grow the money you have",
             focusAreas: "Make surplus capital start working",
             iconPath: "/dashboard/goal-target.svg",
           },
           {
             id: "scammer-defense",
             number: 5,
-            subtitle: "Increase Your Earning Power",
+            subtitle: "Increase your earning power",
             focusAreas: "Raise the value and efficiency of what you earn",
             iconPath: "/dashboard/shield-check.svg",
           },
           {
             id: "savings-streak",
             number: 6,
+            // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
             subtitle: "Create Income That Doesn't Need You",
             focusAreas: "Move from trading time for money to ownership",
             iconPath: "/dashboard/piggy-bank.svg",
@@ -629,26 +630,27 @@ export const copyMatrix = {
       },
       {
         id: "level-2",
-        title: "Make Money",
+        title: "Start making money",
         subtext: "Create real cash so money stops being theoretical",
       },
       {
         id: "level-3",
-        title: "Be the Boss of Your Money",
+        title: "Be the boss of your money",
         subtext: "Stop leakage and install a personal operating system",
       },
       {
         id: "level-4",
-        title: "Turn Money into More Money",
+        title: "Grow the money you have",
         subtext: "Make surplus capital start working",
       },
       {
         id: "level-5",
-        title: "Increase Your Earning Power",
+        title: "Increase your earning power",
         subtext: "Raise the value and efficiency of what you earn",
       },
       {
         id: "level-6",
+        // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
         title: "Create Income That Doesn't Need You",
         subtext: "Move from trading time for money to ownership",
       },

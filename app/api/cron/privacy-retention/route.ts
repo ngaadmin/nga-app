@@ -8,6 +8,9 @@ export const maxDuration = 60;
 
 /**
  * Daily retention job. Vercel Cron calls GET with the CRON_SECRET bearer token.
+ * Learner accounts still waiting for parent approval are deleted after 30 days.
+ * Other inactive accounts still follow the 12-month warning. The approval
+ * link itself still expires after 24 hours.
  * Counts only — no usernames or email addresses in the response.
  */
 export async function GET(request: Request) {

@@ -1,6 +1,6 @@
 # NextGenAchievers App Privacy Policy
 
-**Last updated: 20 October 2026**
+**Last updated: 21 October 2026**
 
 ## 1. Who we are
 The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achievers Pty Ltd (ACN 685 561 344, ABN 49 685 561 344), trading as NextGenAchievers ("we", "us"). We handle personal information in line with the *Privacy Act 1988* (Cth) and the Australian Privacy Principles (APPs). This policy covers the app only. Our website has its own policy.
@@ -62,7 +62,7 @@ The app uses a sign-in session cookie, plus a short-lived cookie during password
 The app is designed for children, so we collect as little as we can. In schools, the teacher creates usernames that should not include a child's real name. The school keeps any list that matches usernames to students. Outside school, a parent or guardian sets up and consents to their child's account. We build privacy into the app by design, in line with the OAIC's guidance for children's online privacy.
 
 ## 9. How long we keep it and how to delete it
-We keep information while the account or class is active. If an account has no sign-in or activity at 11 months, we email the parent or the teacher. A parent gets a warning about the parent account, and a teacher gets a warning about the teacher account. We do not email a class student or a child on a parent account. A self sign-up learner does not get this warning, even with a personal email. When a warning is sent, deletion waits at least 30 days after that email. Accounts that are still inactive at 12 months are deleted. If there is nobody to email, the account is deleted at 12 months with no warning. Activity records are deleted with the account. We delete our sign-in audit log, which includes IP addresses, after 30 days (see section 2). Hosting and service providers keep short-term technical logs, which may include IP addresses. We don't currently keep restorable backups, so deleted data cannot be recovered.
+We keep information while the account or class is active. An account still waiting for a parent to approve it is deleted after 30 days. If an account has no sign-in or activity at 11 months, we email the parent or the teacher. A parent gets a warning about the parent account, and a teacher gets a warning about the teacher account. We do not email a class student or a child on a parent account. A self sign-up learner does not get this warning, even with a personal email. When a warning is sent, deletion waits at least 30 days after that email. Accounts that are still inactive at 12 months are deleted. If there is nobody to email, the account is deleted at 12 months with no warning. Activity records are deleted with the account. We delete our sign-in audit log, which includes IP addresses, after 30 days (see section 2). Hosting and service providers keep short-term technical logs, which may include IP addresses. We don't currently keep restorable backups, so deleted data cannot be recovered.
 
 A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps simple guest activity records under a made-up guest username, with no real name, email or class, and deletes them after 30 days. Clear this device's progress clears the device only.
 

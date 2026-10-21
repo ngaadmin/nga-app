@@ -8,7 +8,7 @@ import {
 import { splitTrailingQualifier } from "@/lib/privacy/split-trailing-qualifier";
 
 describe("privacy policy source", () => {
-  it("publishes the approved policy with the 20 October 2026 date", () => {
+  it("publishes the approved policy with the 21 October 2026 date", () => {
     const markdown = loadPrivacyPolicyMarkdown();
     const blocks = parsePrivacyMarkdown(markdown);
     const text = blocks
@@ -24,12 +24,15 @@ describe("privacy policy source", () => {
       })
       .join("\n");
 
-    expect(markdown).toContain("**Last updated: 20 October 2026**");
+    expect(markdown).toContain("**Last updated: 21 October 2026**");
     expect(markdown).not.toContain("[DATE]");
     expect(markdown).not.toContain("[CATH_EMAIL]");
     expect(markdown).not.toContain("## TO CONFIRM");
     expect(markdown).not.toMatch(/\bNGA\b/);
-    expect(text).toContain("20 October 2026");
+    expect(text).toContain("21 October 2026");
+    expect(text).toContain(
+      "An account still waiting for a parent to approve it is deleted after 30 days.",
+    );
     expect(text).toContain(
       "This policy covers the app only. Our website has its own policy.",
     );

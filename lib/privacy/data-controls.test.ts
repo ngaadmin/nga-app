@@ -285,12 +285,12 @@ describe("history and activity copy", () => {
         {
           createdAt: "2026-10-20T09:00:00",
           eventType: "lesson_completed",
-          metadata: { skill: "Stop & Think" },
+          metadata: { skill: "Catch Impulse Spending" },
         },
         {
           createdAt: "2026-10-17T09:00:00",
           eventType: "medal_earned",
-          metadata: { tier: "bronze", skill: "Needs vs Wants" },
+          metadata: { tier: "bronze", skill: "Choose Needs Over Wants" },
         },
       ],
       walletSpends: [{ at: "2026-10-19T09:00:00", points: 150 }],

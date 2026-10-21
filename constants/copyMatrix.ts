@@ -369,7 +369,7 @@ export const copyMatrix = {
     academy: {
       title: "Academy",
       description:
-        "Bite-sized learning missions. Master the 24 core financial skills through interactive games.",
+        "Bite-sized learning missions. Master the 18 core financial skills through interactive games.",
       journey: {
         heading: "Your Mission Map",
         xpLabel: "coins",
@@ -380,42 +380,42 @@ export const copyMatrix = {
           {
             id: "cash-stash",
             number: 1,
-            subtitle: "How the Money Game Works",
+            subtitle: "Control Your Spending",
             focusAreas: "Money is a tool to buy freedom and choices",
             iconPath: "/dashboard/money-bag.svg",
           },
           {
             id: "leveling-up-loot",
             number: 2,
-            subtitle: "Protecting Your Money",
+            subtitle: "Make Money",
             focusAreas: "Money is lost when you can't see what's happening",
             iconPath: "/dashboard/trend-up.svg",
           },
           {
             id: "interest-multiplier",
             number: 3,
-            subtitle: "Taking Control of Your Money",
+            subtitle: "Be the Boss of Your Money",
             focusAreas: "If you don't control money, it controls you",
             iconPath: "/dashboard/bank-building.svg",
           },
           {
             id: "goal-crusher",
             number: 4,
-            subtitle: "Generating Your Own Income",
+            subtitle: "Turn Money into More Money",
             focusAreas: "Money comes from creating value for others",
             iconPath: "/dashboard/goal-target.svg",
           },
           {
             id: "scammer-defense",
             number: 5,
-            subtitle: "Growing Your Money",
+            subtitle: "Increase Your Earning Power",
             focusAreas: "Money grows when it is put to work",
             iconPath: "/dashboard/shield-check.svg",
           },
           {
             id: "savings-streak",
             number: 6,
-            subtitle: "Structuring & Optimising Your Money",
+            subtitle: "Create Income That Doesn't Need You",
             focusAreas:
               "How you structure money determines how much you keep and grow",
             iconPath: "/dashboard/piggy-bank.svg",
@@ -625,32 +625,32 @@ export const copyMatrix = {
     skillNodes: [
       {
         id: "level-1",
-        title: "How the Money Game Works",
+        title: "Control Your Spending",
         subtext: "Money is a tool to buy freedom and choices",
       },
       {
         id: "level-2",
-        title: "Protecting Your Money",
+        title: "Make Money",
         subtext: "Money is lost when you can't see what's happening",
       },
       {
         id: "level-3",
-        title: "Taking Control of Your Money",
+        title: "Be the Boss of Your Money",
         subtext: "If you don't control money, it controls you",
       },
       {
         id: "level-4",
-        title: "Generating Your Own Income",
+        title: "Turn Money into More Money",
         subtext: "Money comes from creating value for others",
       },
       {
         id: "level-5",
-        title: "Growing Your Money",
+        title: "Increase Your Earning Power",
         subtext: "Money grows when it is put to work",
       },
       {
         id: "level-6",
-        title: "Structuring & Optimising Your Money",
+        title: "Create Income That Doesn't Need You",
         subtext:
           "How you structure money determines how much you keep and grow",
       },

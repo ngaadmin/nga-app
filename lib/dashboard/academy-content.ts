@@ -2,12 +2,12 @@ type AcademyLevelId = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Module titles shown on the Academy journey map (Modules 1-6). */
 export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
-  1: "How the Money Game Works",
-  2: "Protecting Your Money",
-  3: "Taking Control of Your Money",
-  4: "Generating Your Own Income",
-  5: "Growing Your Money",
-  6: "Structuring & Optimising Your Money",
+  1: "Control Your Spending",
+  2: "Make Money",
+  3: "Be the Boss of Your Money",
+  4: "Turn Money into More Money",
+  5: "Increase Your Earning Power",
+  6: "Create Income That Doesn't Need You",
 };
 
 /** Short sub-headers shown under each module title. */

@@ -60,10 +60,10 @@ Leave Pass/Fail and Note blank until the pass.
 | 6 | 8 · completion | All three | Silver medal for skill 3. Cash in your XP opens the celebration. | | |
 | 7 | 1 · word-drop | All three | Wrong chip shows “Not quite. He needs to stop and think first.” | | |
 | 7 | 2 · binary-choice, want / need | All three | Want shows “Replacing the headphones is a need.” Need continues. | | |
-| 7 | 3 · multiple-choice | All three | Wrong skill shows “That skill is Put Needs First.” | | |
+| 7 | 3 · multiple-choice | All three | Wrong skill shows “That skill is Choose Needs Over Wants.” | | |
 | 7 | 4 · savings-goal, countdown | All three | Remaining starts at $45 and counts down. A drop outside the box shows “Check the total against the $45.” and empties the coin meter. Headphones and the gelato in the box enable Next. | | |
 | 7 | 5 · binary-choice | All three | Buying his own gelato shows the sheet error. Finding another way continues. | | |
-| 7 | 6 · multiple-choice | All three | Wrong skill shows “That skill is Keep Spare Cash.” | | |
+| 7 | 6 · multiple-choice | All three | Wrong skill shows “That skill is Don't Spend Money You Don't Have.” | | |
 | 7 | Gelato · drag-to-target | All three | A miss shows “Drag the gelato to share it with Mia.” and empties the coin meter. The correct drop enables Next. | | |
 | 7 | 8 · completion, no medal | All three | No skill medal is shown. Cash in your XP still opens the celebration. | | |
 | 8 | 1 · spotlight decision, set cash | All three | Both choices are allowed. Buying sets cash to $6. Leaving it sets cash to $15. | | |
@@ -78,10 +78,10 @@ Leave Pass/Fail and Note blank until the pass.
 | 8 | 7, 7-skip, 7-alt, 7-home · story cards | All three | The card matches the choice just made and continues. Remaining cash is $0, $5, $6, or $14 for that choice. The ($5) and ($8) prices stay written. | | |
 | 8 | 8 · narrative-bonus | All three | Closing story beat continues to completion. | | |
 | 8 | 9 · completion, no medal | All three | No skill medal is shown. Cash in your XP still opens the celebration. | | |
-| 9 | 1 · skill hub | All three | Finish stays off until Stop & Think, Put Needs First, and Keep Spare Cash are done. Each skill returns here. | | |
-| 9 | 2 · story, then 3 · true-false | All three | Stop & Think story continues. “A flashing only 1 minute left deal…” is false. True shows “A countdown is trying to rush you.” | | |
-| 9 | 4 · story, then 5 · binary-choice | All three | Put Needs First story continues. Game skin shows “Headphones first - that’s the need.” Headphones returns to the hub. | | |
-| 9 | 6 · story, then 7 · word-drop | All three | Keep Spare Cash story continues. A wrong chip empties the coin meter. The Error cell is empty. The correct words return to the hub. | | |
+| 9 | 1 · skill hub | All three | Finish stays off until Catch Impulse Spending, Choose Needs Over Wants, and Don't Spend Money You Don't Have are done. Each skill returns here. | | |
+| 9 | 2 · story, then 3 · true-false | All three | Catch Impulse Spending story continues. “A flashing only 1 minute left deal…” is false. True shows “A countdown is trying to rush you.” | | |
+| 9 | 4 · story, then 5 · binary-choice | All three | Choose Needs Over Wants story continues. Game skin shows “Headphones first - that’s the need.” Headphones returns to the hub. | | |
+| 9 | 6 · story, then 7 · word-drop | All three | Don't Spend Money You Don't Have story continues. A wrong chip empties the coin meter. The Error cell is empty. The correct words return to the hub. | | |
 | 9 | 8 · completion, gold | All three | Finish opens three gold medals, one for each skill. Cash in your XP opens the celebration. | | |
 
 ## Content to leave as written

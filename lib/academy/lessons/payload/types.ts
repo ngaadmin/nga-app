@@ -22,6 +22,8 @@ export type LessonPayload = {
   moduleNumber: number;
   lessonNumber: number;
   lessonTitle: string;
+  /** Authoring "Module Name". Blank falls back to the Academy module title. */
+  moduleName: string;
   level: number;
   characters: {
     explorer: string;

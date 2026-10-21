@@ -10,9 +10,9 @@ const M1_L5_META = {
   milestoneId: 5,
   levelId: 1,
   lessonNumber: 5,
-  moduleTitle: "How the Money Game Works",
+  moduleTitle: "Control Your Spending",
   lessonTitle: "The birthday discount",
-  shellLabel: "How the Money Game Works · Lesson 5 · The birthday discount",
+  shellLabel: "Control Your Spending · Lesson 5 · The birthday discount",
   totalScreens: 8,
   shippedCohorts: ["explorer", "pathfinder", "maverick"],
 } as const;

@@ -220,7 +220,7 @@ export function maxAcademyModuleForMasteryCohort(
   }
 }
 
-/** Skills 13-18 unlock for Mavericks (17+) only. */
+/** Skills 16-18 unlock for Mavericks (17+) only. */
 export function canAccessAdvancedSkills(cohort: MasteryCohort): boolean {
   return cohort === "maverick";
 }

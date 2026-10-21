@@ -1616,7 +1616,7 @@ export function resolvePayloadLesson(
 ): ResolvedLessonContent {
   const skillSlug = payload.skillId.trim();
   const characterName = payload.characters[cohort].trim();
-  const title = moduleTitle(payload.moduleNumber);
+  const title = payload.moduleName.trim() || moduleTitle(payload.moduleNumber);
   const labels = payload.screens.map((row) => row.screenLabel);
   const linked = linkContinueTargets(
     payload.screens.map((row) => {

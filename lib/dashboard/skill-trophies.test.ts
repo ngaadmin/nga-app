@@ -21,17 +21,17 @@ function trophy(id: string, tier: VaultSkillTrophy["tier"]): VaultSkillTrophy {
 
 describe("formatQuietLessonSkillLine", () => {
   it("puts the medal tier on a quiet skill line", () => {
-    expect(formatQuietLessonSkillLine("bronze", "Stop & Think")).toBe(
-      "🥉 Skill unlocked: Stop & Think",
+    expect(formatQuietLessonSkillLine("bronze", "Catch Impulse Spending")).toBe(
+      "🥉 Skill unlocked: Catch Impulse Spending",
     );
-    expect(formatQuietLessonSkillLine("silver", "Stop & Think")).toBe(
-      "🥈 Skill unlocked: Stop & Think",
+    expect(formatQuietLessonSkillLine("silver", "Catch Impulse Spending")).toBe(
+      "🥈 Skill unlocked: Catch Impulse Spending",
     );
-    expect(formatQuietLessonSkillLine("gold", "Stop & Think")).toBe(
-      "🥇 Skill unlocked: Stop & Think",
+    expect(formatQuietLessonSkillLine("gold", "Catch Impulse Spending")).toBe(
+      "🥇 Skill unlocked: Catch Impulse Spending",
     );
-    expect(formatQuietLessonSkillLine("unlocked", "Stop & Think")).toBe(
-      "🔓 Skill unlocked: Stop & Think",
+    expect(formatQuietLessonSkillLine("unlocked", "Catch Impulse Spending")).toBe(
+      "🔓 Skill unlocked: Catch Impulse Spending",
     );
   });
 
@@ -41,13 +41,13 @@ describe("formatQuietLessonSkillLine", () => {
   });
 
   it("keeps the medal separate so each tier can share one size", () => {
-    expect(quietLessonSkillLine("bronze", "Put Needs First")).toEqual({
+    expect(quietLessonSkillLine("bronze", "Choose Needs Over Wants")).toEqual({
       medal: "🥉",
-      text: "Skill unlocked: Put Needs First",
+      text: "Skill unlocked: Choose Needs Over Wants",
     });
-    expect(quietLessonSkillLine("silver", "Put Needs First")?.medal).toBe("🥈");
-    expect(quietLessonSkillLine("gold", "Put Needs First")?.medal).toBe("🥇");
-    expect(quietLessonSkillLine("unlocked", "Put Needs First")?.medal).toBe("🔓");
+    expect(quietLessonSkillLine("silver", "Choose Needs Over Wants")?.medal).toBe("🥈");
+    expect(quietLessonSkillLine("gold", "Choose Needs Over Wants")?.medal).toBe("🥇");
+    expect(quietLessonSkillLine("unlocked", "Choose Needs Over Wants")?.medal).toBe("🔓");
   });
 });
 

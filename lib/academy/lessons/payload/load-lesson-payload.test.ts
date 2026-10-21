@@ -11,12 +11,13 @@ import {
 
 const DETAILS_CSV = `Module Number,Lesson Number,Field,Value
 1,1,Lesson Title,The spending spree
+1,1,Module Name,Control Your Spending
 1,1,Level,1
 1,1,Pathfinder Character,Holly
 1,1,Explorer Character,Lars
 1,1,Maverick Character,Aiden
 1,1,Support Character,
-1,1,Skill Name,Stop & Think
+1,1,Skill Name,Catch Impulse Spending
 1,1,Skill ID,stop-and-think
 `;
 
@@ -29,6 +30,8 @@ describe("lesson payload loader", () => {
   it("reads Lesson 1 from the attached workbook and details csv", () => {
     const payload = loadBundledLessonPayload(1, 1);
     expect(payload.lessonTitle).toBe("The spending spree");
+    expect(payload.moduleName).toBe("Control Your Spending");
+    expect(payload.skillName).toBe("Catch Impulse Spending");
     expect(payload.skillId).toBe("stop-and-think");
     expect(payload.characters.explorer).toBe("Lars");
     expect(payload.screens.map((screen) => screen.gameType)).toEqual([
@@ -56,6 +59,7 @@ describe("lesson payload loader", () => {
 
   it("maps Lesson 1 explorer copy onto the existing templates", () => {
     const content = resolvePayloadLesson(loadBundledLessonPayload(1, 1), "explorer", 1);
+    expect(content.meta.moduleTitle).toBe("Control Your Spending");
     expect(content.meta.lessonTitle).toBe("The spending spree");
     expect(content.meta.totalScreens).toBe(8);
     expect(content.characterName).toBe("Lars");
@@ -118,9 +122,9 @@ describe("lesson payload loader", () => {
       medalId: "medal-skill1-bronze",
       authoredMedal: true,
       medalTier: "bronze",
-      skillName: "Stop & Think",
+      skillName: "Catch Impulse Spending",
     });
-    expect(content.meta.skillName).toBe("Stop & Think");
+    expect(content.meta.skillName).toBe("Catch Impulse Spending");
   });
 
   it("loads lesson 6 so it can open after lesson 5", () => {
@@ -539,18 +543,18 @@ describe("lesson payload loader", () => {
     expect(lesson7.screens[2]).toMatchObject({
       prompt: "Replacing Senna's headphones comes before the gelato. Which skill is that?",
       options: [
-        { label: "Stop & Think", isCorrect: false },
-        { label: "Put Needs First", isCorrect: true },
-        { label: "Keep Spare Cash", isCorrect: false },
+        { label: "Catch Impulse Spending", isCorrect: false },
+        { label: "Choose Needs Over Wants", isCorrect: true },
+        { label: "Don't Spend Money You Don't Have", isCorrect: false },
       ],
     });
     expect(lesson7.screens[5]).toMatchObject({
       prompt:
         "Sharing the gelato leaves Lars some money. Buying his own leaves $0. Which skill is he using when he shares?",
       options: [
-        { label: "Stop & Think", isCorrect: false },
-        { label: "Put Needs First", isCorrect: false },
-        { label: "Keep Spare Cash", isCorrect: true },
+        { label: "Catch Impulse Spending", isCorrect: false },
+        { label: "Choose Needs Over Wants", isCorrect: false },
+        { label: "Don't Spend Money You Don't Have", isCorrect: true },
       ],
     });
 

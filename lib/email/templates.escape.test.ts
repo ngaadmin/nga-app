@@ -52,6 +52,8 @@ describe("email template escaping", () => {
     expect(built.html).toContain("NextGenAchievers");
     expect(built.html).toContain("penny-master-email.png");
     expect(built.html).not.toContain("penny-email-header");
+    expect(built.html).toContain("background: #FFA503");
+    expect(built.html).not.toContain("#FFC93C");
   });
 
   it("sends the locked under-16 teen approval copy with an escaped username", () => {
@@ -106,7 +108,9 @@ describe("email template escaping", () => {
     );
     expect(built.html).toContain("border-radius:16px;overflow:hidden");
     expect(built.html).toContain("padding:28px 36px 28px");
-    expect(built.html).toContain("background: #FFA503");
+    expect(built.html).toContain("background: #FFC93C");
+    expect(built.html).toContain("color: #031F82");
+    expect(built.html).not.toContain("#FFA503");
     expect(built.html).not.toContain("NextGenAchievers");
     expect(built.html).not.toContain("penny-master-email.png");
     expect(built.text).not.toContain("penny-email-header");

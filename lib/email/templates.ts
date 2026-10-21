@@ -247,7 +247,7 @@ function safeHttpHref(href: string): string {
   }
 }
 
-function ctaButton(label: string, href: string): string {
+function ctaButton(label: string, href: string, background = "#FFA503"): string {
   const safeHref = safeHttpHref(href);
   const safeLabel = escapeHtml(label);
   return `
@@ -256,7 +256,7 @@ function ctaButton(label: string, href: string): string {
         href="${safeHref}"
         style="
           display: inline-block;
-          background: #FFA503;
+          background: ${background};
           color: #031F82;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 15px;
@@ -493,7 +493,7 @@ function buildTeenParentApprovalEmail(
       <p style="margin:0 0 16px;font-size:16px;">
         NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.
       </p>
-      ${ctaButton("Approve the account", approveUrl)}
+      ${ctaButton("Approve the account", approveUrl, "#FFC93C")}
       <p style="margin:0 0 16px;font-size:16px;">
         Once you approve, you&#39;ll be your teen&#39;s account manager, and you can set a parent PIN in Preferences.
       </p>

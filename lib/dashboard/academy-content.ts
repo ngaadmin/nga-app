@@ -7,7 +7,7 @@ export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
   3: "Be the boss of your money",
   4: "Grow the money you have",
   5: "Increase your earning power",
-  6: "Create Passive Income",
+  6: "Learn Passive Income",
 };
 
 /** Short sub-headers shown under each module title. */

@@ -415,7 +415,7 @@ export const copyMatrix = {
           {
             id: "savings-streak",
             number: 6,
-            subtitle: "Create Passive Income",
+            subtitle: "Learn Passive Income",
             focusAreas: "Move from trading time for money to ownership",
             iconPath: "/dashboard/piggy-bank.svg",
           },
@@ -649,7 +649,7 @@ export const copyMatrix = {
       },
       {
         id: "level-6",
-        title: "Create Passive Income",
+        title: "Learn Passive Income",
         subtext: "Move from trading time for money to ownership",
       },
     ],

@@ -28,8 +28,14 @@ export function OnboardingEntryGate({
   secondaryCtaLabel = copyMatrix.onboarding.signIn.heroLogIn,
 }: OnboardingEntryGateProps) {
   return (
-    <section className="flex flex-col pb-4 pt-[calc(env(safe-area-inset-top,0px)+2.5rem)] sm:pb-6 sm:pt-[calc(env(safe-area-inset-top,0px)+3rem)] lg:flex-1 lg:justify-center lg:pb-10 lg:pt-[calc(env(safe-area-inset-top,0px)+2.5rem)]">
-      <div className="grid items-center gap-3 sm:gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-3">
+    <section className="nga-preapp-screen flex flex-col pb-4 pt-[calc(env(safe-area-inset-top,0px)+2.5rem)] sm:pb-6 sm:pt-[calc(env(safe-area-inset-top,0px)+3rem)] min-[721px]:flex-1 min-[721px]:justify-center min-[721px]:pb-10 min-[721px]:pt-[calc(env(safe-area-inset-top,0px)+5.5rem)]">
+      <style>{`
+        body:has(.nga-preapp-screen) footer {
+          margin-top: 36px;
+          text-align: center;
+        }
+      `}</style>
+      <div className="grid items-center gap-5 min-[721px]:translate-y-12 min-[721px]:gap-7 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-x-7">
         <div className="order-1 flex items-center justify-center lg:order-none lg:justify-end">
           <div className="flex w-full max-w-[15.6rem] items-center justify-center sm:max-w-[18rem] lg:max-w-[19.5rem]">
             <Image

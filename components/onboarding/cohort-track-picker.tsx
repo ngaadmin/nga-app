@@ -62,8 +62,14 @@ export function CohortTrackPicker() {
   }
 
   return (
-    <section className="-mx-6 flex min-h-0 w-[calc(100%+3rem)] flex-1 flex-col bg-white px-5 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)]">
-      <div className="mx-auto flex w-full max-w-[960px] flex-1 flex-col">
+    <section className="nga-preapp-screen -mx-6 flex min-h-0 w-[calc(100%+3rem)] flex-1 flex-col bg-white px-5 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] min-[721px]:justify-center min-[721px]:pt-[calc(env(safe-area-inset-top,0px)+4.25rem)]">
+      <style>{`
+        body:has(.nga-preapp-screen) footer {
+          margin-top: 36px;
+          text-align: center;
+        }
+      `}</style>
+      <div className="mx-auto flex w-full max-w-[960px] flex-col min-[721px]:translate-y-6">
         <div className="flex flex-col items-center text-center">
           <Image
             src={PENNY_AVATAR_SRC}

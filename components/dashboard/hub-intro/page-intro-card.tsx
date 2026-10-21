@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { cn } from "@/lib/utils/cn";
-import { STATUS_BANNER_INSET_CLASS } from "@/components/dashboard/status-banner-layout";
 import { ModalShell } from "@/components/ui/modal-shell";
 
 type PageIntroCardProps = {
@@ -66,14 +64,14 @@ export function PageIntroCard({
       labelledBy={titleId}
       describedBy={disclaimerId ? `${bodyId} ${disclaimerId}` : bodyId}
       clearBottomNav={clearBottomNav}
-      backdropClassName={cn("bg-[#031F82]/45", STATUS_BANNER_INSET_CLASS)}
-      panelClassName="relative max-h-full overflow-y-auto rounded-nga-xl bg-white p-5 shadow-nga-card"
+      backdropClassName="bg-[#031F82]/45"
+      panelClassName="relative mx-auto max-h-full w-full max-w-[480px] overflow-y-auto rounded-[20px] bg-white px-5 py-6 shadow-[0_24px_48px_-24px_rgba(3,31,130,0.45)] min-[721px]:p-7"
     >
       <button
         type="button"
         onClick={onDismiss}
         aria-label="Close"
-        className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full text-[#031F82]/70 transition-colors hover:bg-[#BDE9FB]/50 hover:text-[#031F82]"
+        className="absolute right-[14px] top-[14px] flex size-11 items-center justify-center rounded-full text-[#031F82]/70 transition-colors hover:bg-[#BDE9FB]/50 hover:text-[#031F82] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82]"
       >
         <svg
           viewBox="0 0 24 24"
@@ -89,20 +87,20 @@ export function PageIntroCard({
       </button>
       <h2
         id={titleId}
-        className="pr-10 font-heading text-xl font-extrabold leading-tight text-[#031F82]"
+        className="pr-12 font-heading text-[20px] font-bold leading-tight text-[#031F82] min-[721px]:text-[22px]"
       >
         {title}
       </h2>
       <p
         id={bodyId}
-        className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]"
+        className="mt-[10px] font-sans text-[17px] font-normal leading-relaxed text-[#3a4570]"
       >
         {body}
       </p>
       {disclaimer ? (
         <p
           id={disclaimerId}
-          className="mt-3 font-sans text-xs leading-relaxed text-[#1E3A5F]/70"
+          className="mt-3 font-sans text-xs leading-relaxed text-[#3a4570]/70"
         >
           {disclaimer}
         </p>
@@ -110,7 +108,7 @@ export function PageIntroCard({
       <button
         type="button"
         onClick={onDismiss}
-        className="mt-5 inline-flex h-touch min-h-touch w-full items-center justify-center rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-6 font-heading text-sm font-bold text-[#031F82] shadow-sm transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2"
+        className="mt-6 inline-flex h-12 min-h-12 min-w-[160px] items-center justify-center rounded-[12px] bg-[#FFC93C] px-7 font-heading text-[16px] font-bold text-[#031F82] shadow-[0_2px_0_#d9a12a] transition-colors hover:bg-[#FFD66B] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82]"
       >
         {cta}
       </button>

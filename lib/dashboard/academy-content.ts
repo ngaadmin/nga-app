@@ -7,8 +7,7 @@ export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
   3: "Be the boss of your money",
   4: "Grow the money you have",
   5: "Increase your earning power",
-  // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
-  6: "Create Income That Doesn't Need You",
+  6: "Create Passive Income",
 };
 
 /** Short sub-headers shown under each module title. */

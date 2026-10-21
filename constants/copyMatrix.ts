@@ -415,8 +415,7 @@ export const copyMatrix = {
           {
             id: "savings-streak",
             number: 6,
-            // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
-            subtitle: "Create Income That Doesn't Need You",
+            subtitle: "Create Passive Income",
             focusAreas: "Move from trading time for money to ownership",
             iconPath: "/dashboard/piggy-bank.svg",
           },
@@ -650,8 +649,7 @@ export const copyMatrix = {
       },
       {
         id: "level-6",
-        // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
-        title: "Create Income That Doesn't Need You",
+        title: "Create Passive Income",
         subtext: "Move from trading time for money to ownership",
       },
     ],

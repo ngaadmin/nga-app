@@ -65,8 +65,7 @@ export const SKILLS_LEVELS: readonly SkillLevelDefinition[] = [
   },
   {
     levelId: 6,
-    // TODO-M6-NAME: Cath has not confirmed Module 6. Keep this name until she chooses.
-    title: "Create Income That Doesn't Need You",
+    title: "Create Passive Income",
     subtitle: "Move from trading time for money to ownership",
     theme: "Own",
     isAdvancedCohortOnly: true,

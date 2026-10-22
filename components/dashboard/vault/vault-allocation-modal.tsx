@@ -41,13 +41,31 @@ const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40";
 
 const allocationRowClass =
-  "flex w-full min-w-0 items-center gap-x-1.5 overflow-visible py-1.5";
+  "flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 overflow-visible py-1.5";
 
 const allocationJarInfoClass =
-  "flex min-w-0 w-[7rem] shrink-0 items-center gap-1";
+  "flex min-w-0 flex-1 basis-[9.5rem] items-center gap-1.5";
 
 const allocationAmountInputClass =
-  "flex h-8 w-[5.75rem] shrink-0 items-center gap-0.5 rounded-lg border border-[#BDE9FB] bg-white px-1.5";
+  "ml-auto flex h-8 max-w-full shrink-0 items-center gap-0.5 rounded-lg border border-[#BDE9FB] bg-white px-1.5";
+
+/** Long totals take their own row so they cannot paint over the neighbouring figure. */
+function allocationMetricWrapClass(formatted: string): string {
+  if (formatted.length >= 13) return "min-w-full flex-none basis-full";
+  return "min-w-0 flex-1 basis-[7rem]";
+}
+
+function allocationFigureClass(formatted: string): string {
+  if (formatted.length >= 14) return "text-lg leading-tight";
+  if (formatted.length >= 10) return "text-xl leading-tight";
+  return "text-2xl leading-none";
+}
+
+/** Grow with the digits, and never narrower than the original field. */
+function allocationInputWidth(value: string): string {
+  const chars = Math.max(value.length, 1);
+  return `min(100%, max(5.75rem, calc(${chars}ch + 2rem)))`;
+}
 
 function AllocationInputRow({
   bucket,
@@ -72,47 +90,58 @@ function AllocationInputRow({
   const theme = bucketTheme(bucket);
   const displayName = vaultBucketDisplayName(bucket);
   const currentBalance = savingsBucketDisplayBalance(bucket, totalSavings);
+  const balanceText = formatMoney(currentBalance);
+  const wideFigures = inputValue.length >= 10 || balanceText.length >= 12;
 
   return (
-    <div className={allocationRowClass}>
-      <div className={allocationJarInfoClass}>
+    <div className={cn(allocationRowClass, wideFigures && "flex-col items-stretch")}>
+      <div className={cn(allocationJarInfoClass, wideFigures && "w-full flex-none basis-auto")}>
         <BucketEmojiIcon size="sm" emoji={bucket.emoji} theme={theme} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "truncate font-heading text-sm font-bold leading-tight",
+              "whitespace-normal break-words font-heading text-sm font-bold leading-tight",
               theme.label,
             )}
           >
             {displayName}
           </p>
-          <p className="truncate font-heading text-sm font-extrabold leading-none tabular-nums text-[#1E3A5F]/70">
-            {formatMoney(currentBalance)}
+          <p className="whitespace-normal break-words font-heading text-xs font-extrabold leading-tight tabular-nums text-[#1E3A5F]/70">
+            {balanceText}
           </p>
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 items-center">
+      <div
+        className={cn(
+          "flex min-w-0 max-w-full items-center gap-1.5",
+          wideFigures ? "w-full justify-end" : "ml-auto",
+        )}
+      >
         {draft > 0 ? (
-          <AllocationSheetCoins allocatedAmount={draft} poolTotal={moneyIn} />
+          <div className="min-w-0 shrink overflow-hidden">
+            <AllocationSheetCoins allocatedAmount={draft} poolTotal={moneyIn} />
+          </div>
         ) : null}
+        <label
+          className={allocationAmountInputClass}
+          style={{ width: allocationInputWidth(inputValue) }}
+        >
+          <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
+            {currencySymbol}
+          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={inputValue}
+            onChange={(event) => onInputChange(bucket.id, event.target.value)}
+            onFocus={() => onInputFocus(bucket.id)}
+            onBlur={() => onInputBlur(bucket.id)}
+            aria-label={`Amount to allocate to ${displayName}`}
+            className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm leading-none tabular-nums text-[#031F82] outline-none"
+          />
+        </label>
       </div>
-
-      <label className={allocationAmountInputClass}>
-        <span className="shrink-0 font-heading text-sm font-bold text-[#031F82]">
-          {currencySymbol}
-        </span>
-        <input
-          type="text"
-          inputMode="decimal"
-          value={inputValue}
-          onChange={(event) => onInputChange(bucket.id, event.target.value)}
-          onFocus={() => onInputFocus(bucket.id)}
-          onBlur={() => onInputBlur(bucket.id)}
-          aria-label={`Amount to allocate to ${displayName}`}
-          className="min-w-0 flex-1 bg-transparent text-right font-sans text-sm leading-none tabular-nums text-[#031F82] outline-none"
-        />
-      </label>
     </div>
   );
 }
@@ -147,6 +176,7 @@ export function VaultAllocationModal({
   const moneyInTotal = roundAudAmount(Math.max(0, moneyIn));
   const allocatedTotal = sumAllocationDraftValues(allocationDrafts);
   const notAllocated = vaultNotAllocatedAmount(moneyInTotal, allocatedTotal);
+  const moneyInDisplay = formatMoney(moneyInTotal);
   const notAllocatedDisplay =
     notAllocated < 0 ? `-${formatMoney(-notAllocated)}` : formatMoney(notAllocated);
   const isOverAllocated = notAllocated < 0;
@@ -271,32 +301,42 @@ export function VaultAllocationModal({
       align="center"
       labelledBy="vault-allocation-title"
       backdropClassName="bg-[#031F82]/50"
-      panelClassName="w-full max-w-sm rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:px-5"
+      panelClassName="w-full max-w-sm rounded-2xl border-0 bg-white px-4 py-5 shadow-md sm:max-w-md sm:px-5"
     >
       <div className="flex items-start gap-2">
-        <div className="grid min-w-0 flex-1 grid-cols-2 items-end gap-x-3 gap-y-1">
-          <p
-            id="vault-allocation-title"
-            className="w-[2.4rem] font-heading text-xs font-bold leading-tight text-[#031F82]"
-          >
-            {copy.moneyInLabel}
-          </p>
-          <p className="max-w-[4.75rem] font-heading text-xs font-bold leading-tight text-[#031F82]">
-            {copy.notAllocatedLabel}
-          </p>
-          <p className="font-heading text-2xl font-extrabold leading-none tabular-nums text-[#031F82]">
-            {formatMoney(moneyInTotal)}
-          </p>
-          <p
-            className={cn(
-              "font-heading text-2xl font-extrabold leading-none tabular-nums transition-colors",
-              isOverAllocated || inputWasCapped ? "text-[#031F82]" : "text-[#FFA503]",
-            )}
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {notAllocatedDisplay}
-          </p>
+        <div className="flex min-w-0 flex-1 flex-wrap items-start gap-x-4 gap-y-3">
+          <div className={cn("min-w-0", allocationMetricWrapClass(moneyInDisplay))}>
+            <p
+              id="vault-allocation-title"
+              className="font-heading text-xs font-bold leading-tight text-[#031F82]"
+            >
+              {copy.moneyInLabel}
+            </p>
+            <p
+              className={cn(
+                "mt-1 font-heading font-extrabold tabular-nums text-[#031F82] [overflow-wrap:anywhere]",
+                allocationFigureClass(moneyInDisplay),
+              )}
+            >
+              {moneyInDisplay}
+            </p>
+          </div>
+          <div className={cn("min-w-0", allocationMetricWrapClass(notAllocatedDisplay))}>
+            <p className="font-heading text-xs font-bold leading-tight text-[#031F82]">
+              {copy.notAllocatedLabel}
+            </p>
+            <p
+              className={cn(
+                "mt-1 font-heading font-extrabold tabular-nums transition-colors [overflow-wrap:anywhere]",
+                allocationFigureClass(notAllocatedDisplay),
+                isOverAllocated || inputWasCapped ? "text-[#031F82]" : "text-[#FFA503]",
+              )}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {notAllocatedDisplay}
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 items-start gap-1">
           <div className="relative">

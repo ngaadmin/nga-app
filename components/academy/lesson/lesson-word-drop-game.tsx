@@ -19,9 +19,15 @@ import {
   lessonSortPoolChipClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
-import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
+import {
+  wordDropIsComplete,
+  wordDropMatches,
+  wordDropPlace,
+  wordDropRemove,
+  wordDropTapTarget,
+} from "@/lib/academy/lessons/word-drop-placement";
 import { cn } from "@/lib/utils/cn";
 
 type WordDropBlank = {
@@ -41,9 +47,9 @@ type LessonWordDropGameProps = {
   orderKey: string;
   promptLabel?: string;
   onChoicesChange?: () => void;
-  onComplete?: () => void;
+  /** Every gap has a word. Correctness is still unknown. */
+  onAttemptReady?: () => void;
   onIncomplete?: () => void;
-  onMismatch?: () => void;
 };
 
 const TAP_MOVE_PX = 10;
@@ -113,7 +119,7 @@ export const LessonWordDropGame = forwardRef<
   LessonWordDropGameHandle,
   LessonWordDropGameProps
 >(function LessonWordDropGame(
-  { prompt, blanks, orderKey, onChoicesChange, onComplete, onIncomplete, onMismatch },
+  { prompt, blanks, orderKey, onChoicesChange, onAttemptReady, onIncomplete },
   ref,
 ) {
   const parts = useMemo(() => prompt.split("[blank]"), [prompt]);
@@ -150,7 +156,7 @@ export const LessonWordDropGame = forwardRef<
     Array.from({ length: blanks.length }, () => ""),
   );
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [shakeWord, setShakeWord] = useState<string | null>(null);
+  const [selectedBlankIndex, setSelectedBlankIndex] = useState<number | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoverBlankIndex, setHoverBlankIndex] = useState<number | null>(null);
   const [hoverPool, setHoverPool] = useState(false);
@@ -161,78 +167,71 @@ export const LessonWordDropGame = forwardRef<
   blanksRef.current = blanks;
   const onChoicesChangeRef = useRef(onChoicesChange);
   onChoicesChangeRef.current = onChoicesChange;
-  const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  const onAttemptReadyRef = useRef(onAttemptReady);
+  onAttemptReadyRef.current = onAttemptReady;
   const onIncompleteRef = useRef(onIncomplete);
   onIncompleteRef.current = onIncomplete;
-  const onMismatchRef = useRef(onMismatch);
-  onMismatchRef.current = onMismatch;
   const pressRef = useRef<PressSession | null>(null);
-  const shakeTimerRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
   const placeTappedWordRef = useRef<(word: string) => void>(() => {});
+  const activateBlankRef = useRef<(blankIndex: number) => void>(() => {});
+  const selectedBlankRef = useRef<number | null>(null);
+  const selectedWordRef = useRef<string | null>(null);
+  selectedBlankRef.current = selectedBlankIndex;
+  selectedWordRef.current = selectedWord;
 
-  const rejectWord = (word: string) => {
+  const commitChoices = useCallback((next: string[]) => {
+    choicesRef.current = next;
+    setChoices(next);
+    onChoicesChangeRef.current?.();
+    if (wordDropIsComplete(next)) onAttemptReadyRef.current?.();
+    else onIncompleteRef.current?.();
+  }, []);
+
+  const setArmedWord = (word: string | null) => {
+    selectedWordRef.current = word;
     setSelectedWord(word);
-    setShakeWord(word);
-    onMismatchRef.current?.();
-    if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
-    shakeTimerRef.current = window.setTimeout(() => {
-      setShakeWord((current) => (current === word ? null : current));
-      setSelectedWord((current) => (current === word ? null : current));
-      shakeTimerRef.current = null;
-    }, 360);
   };
 
-  const reportSolvedState = useCallback((placedBlankIndex?: number) => {
-    const solved = blanksRef.current.every(
-      (blank, index) => choicesRef.current[index] === blank.correctOption,
-    );
-    if (solved) {
-      onCompleteRef.current?.();
-      return;
-    }
-    onIncompleteRef.current?.();
-    if (placedBlankIndex === undefined) return;
-    const blank = blanksRef.current[placedBlankIndex];
-    const placed = choicesRef.current[placedBlankIndex];
-    if (blank && placed && placed !== blank.correctOption) {
-      onMismatchRef.current?.();
-    }
-  }, []);
+  const setBlankSelection = (index: number | null) => {
+    selectedBlankRef.current = index;
+    setSelectedBlankIndex(index);
+  };
 
   const poolRef = useRef<HTMLDivElement>(null);
   const blankRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const dragCleanupRef = useRef<(() => void) | null>(null);
 
   useImperativeHandle(ref, () => ({
-    evaluate: () => {
-      const current = choicesRef.current;
-      return blanksRef.current.every(
-        (blank, index) => current[index] === blank.correctOption,
-      );
-    },
+    evaluate: () =>
+      wordDropMatches(
+        choicesRef.current,
+        blanksRef.current.map((blank) => blank.correctOption),
+      ),
   }));
 
   const placeWordInBlank = useCallback(
-    (blankIndex: number, word: string) => {
-      const next = [...choicesRef.current];
-      const repeats =
+    (blankIndex: number, word: string, fromBlankIndex: number | null) => {
+      const allowDuplicate =
         blanksRef.current.filter((blank) => blank.correctOption === word).length > 1;
-      if (!repeats) {
-        for (let index = 0; index < next.length; index += 1) {
-          if (index !== blankIndex && next[index] === word) {
-            next[index] = "";
-          }
-        }
-      }
-      next[blankIndex] = word;
-      choicesRef.current = next;
-      setChoices(next);
-      onChoicesChangeRef.current?.();
-      reportSolvedState(blankIndex);
+      commitChoices(
+        wordDropPlace(
+          choicesRef.current,
+          blankIndex,
+          word,
+          fromBlankIndex,
+          allowDuplicate,
+        ),
+      );
     },
-    [reportSolvedState],
+    [commitChoices],
+  );
+
+  const removeWordFromBlank = useCallback(
+    (blankIndex: number) => {
+      commitChoices(wordDropRemove(choicesRef.current, blankIndex));
+    },
+    [commitChoices],
   );
 
   const endDrag = useCallback(() => {
@@ -326,9 +325,16 @@ export const LessonWordDropGame = forwardRef<
 
       if (!press.dragging) {
         if (nativeEvent.type !== "pointercancel") {
-          placeTappedWordRef.current(press.word);
+          if (press.fromBlankIndex !== null) {
+            activateBlankRef.current(press.fromBlankIndex);
+          } else {
+            placeTappedWordRef.current(press.word);
+          }
         }
         endDrag();
+        window.setTimeout(() => {
+          suppressClickRef.current = false;
+        }, 0);
         return;
       }
 
@@ -337,19 +343,25 @@ export const LessonWordDropGame = forwardRef<
         nativeEvent.clientY,
         blankRefs.current,
       );
-      const blank = slotIndex === null ? undefined : blanksRef.current[slotIndex];
-      const locked =
-        slotIndex !== null &&
-        choicesRef.current[slotIndex] === blank?.correctOption &&
-        Boolean(choicesRef.current[slotIndex]);
+      const overPool = isPointInRect(
+        nativeEvent.clientX,
+        nativeEvent.clientY,
+        poolRef.current?.getBoundingClientRect(),
+      );
 
-      if (slotIndex !== null && blank && !locked && press.word === blank.correctOption) {
-        placeWordInBlank(slotIndex, press.word);
-      } else if (slotIndex !== null && press.word !== blank?.correctOption) {
-        rejectWord(press.word);
+      if (slotIndex !== null) {
+        placeWordInBlank(slotIndex, press.word, press.fromBlankIndex);
+        setArmedWord(null);
+        setBlankSelection(null);
+      } else if (overPool && press.fromBlankIndex !== null) {
+        removeWordFromBlank(press.fromBlankIndex);
+        setBlankSelection(press.fromBlankIndex);
       }
 
       endDrag();
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
     };
 
     dragCleanupRef.current?.();
@@ -366,69 +378,45 @@ export const LessonWordDropGame = forwardRef<
   useEffect(
     () => () => {
       dragCleanupRef.current?.();
-      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
     },
     [],
   );
 
   const placeTappedWord = (word: string) => {
-    const blanksNow = blanksRef.current;
-    const choicesNow = choicesRef.current;
-    const open = blanksNow
-      .map((blank, index) => ({ blank, index }))
-      .filter(({ blank, index }) => {
-        const filled = choicesNow[index];
-        return !(filled && filled === blank.correctOption);
-      });
-
-    if (open.length === 0) return;
-
-    let target = open.length === 1 ? open[0] : undefined;
-    if (!target) {
-      const matches = open.filter(
-        ({ blank, index }) => !choicesNow[index] && word === blank.correctOption,
-      );
-      if (matches.length === 1) target = matches[0];
-    }
-
-    if (!target) {
-      setSelectedWord(word);
-      setShakeWord((current) => (current === word ? current : null));
+    const target = wordDropTapTarget(choicesRef.current, selectedBlankRef.current);
+    if (target === null) {
+      setArmedWord(selectedWordRef.current === word ? null : word);
       return;
     }
-
-    if (word === target.blank.correctOption) {
-      placeWordInBlank(target.index, word);
-      setSelectedWord(null);
-      return;
-    }
-
-    rejectWord(word);
+    placeWordInBlank(target, word, null);
+    setArmedWord(null);
+    setBlankSelection(null);
   };
   placeTappedWordRef.current = placeTappedWord;
 
-  const placeSelectedWord = (blankIndex: number) => {
-    const word = selectedWord;
-    if (!word) return;
-    const blank = blanksRef.current[blankIndex];
-    if (!blank) return;
-    const locked =
-      choicesRef.current[blankIndex] === blank.correctOption &&
-      Boolean(choicesRef.current[blankIndex]);
-    if (locked) return;
-    if (word === blank.correctOption) {
-      placeWordInBlank(blankIndex, word);
-      setSelectedWord(null);
+  const activateBlank = (blankIndex: number) => {
+    const armed = selectedWordRef.current;
+    if (armed) {
+      placeWordInBlank(blankIndex, armed, null);
+      setArmedWord(null);
+      setBlankSelection(null);
       return;
     }
-    rejectWord(word);
+    if (choicesRef.current[blankIndex]) {
+      removeWordFromBlank(blankIndex);
+      setBlankSelection(blankIndex);
+      return;
+    }
+    setBlankSelection(selectedBlankRef.current === blankIndex ? null : blankIndex);
   };
+  activateBlankRef.current = activateBlank;
 
   const blankSlotClass = (index: number, filled: boolean) =>
     cn(
       filled ? lessonBlankSlotFilledClass : lessonBlankSlotClass,
       "align-middle transition-colors",
       hoverBlankIndex === index && "bg-[#E8F6FC]/60",
+      selectedBlankIndex === index && "shadow-[inset_0_0_0_2px_#031F82]",
     );
 
   const visibleBlankWord = (index: number) => {
@@ -455,24 +443,32 @@ export const LessonWordDropGame = forwardRef<
                       blankRefs.current[blankIndex] = node;
                     }}
                     data-word-drop-slot={blankIndex}
+                    aria-pressed={selectedBlankIndex === blankIndex}
                     aria-label={
                       visibleBlankWord(blankIndex)
                         ? `Blank, ${visibleBlankWord(blankIndex)}`
                         : "Blank. Place the selected word here."
                     }
-                    onClick={() => placeSelectedWord(blankIndex)}
+                    onClick={() => {
+                      if (suppressClickRef.current) {
+                        suppressClickRef.current = false;
+                        return;
+                      }
+                      activateBlank(blankIndex);
+                    }}
+                    onPointerDown={(event) => {
+                      const word = visibleBlankWord(blankIndex);
+                      if (!word) return;
+                      beginPress(event, word, blankIndex);
+                    }}
                     className={cn(
                       blankSlotClass(blankIndex, Boolean(visibleBlankWord(blankIndex))),
                       "text-[22px]",
                     )}
                   >
                     {visibleBlankWord(blankIndex) ? (
-                      <span className={cn(lessonSortPoolChipClass, "relative text-[20px]")}>
+                      <span className={cn(lessonSortPoolChipClass, "text-[20px]")}>
                         <AnswerEmojiLabel label={visibleBlankWord(blankIndex)} />
-                        {visibleBlankWord(blankIndex) ===
-                        blanks[blankIndex]?.correctOption ? (
-                          <LessonAnswerTick className="absolute -right-3 -top-3" />
-                        ) : null}
                       </span>
                     ) : null}
                   </button>
@@ -531,7 +527,6 @@ export const LessonWordDropGame = forwardRef<
                 used && "hidden",
                 selectedWord === option &&
                   "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
-                shakeWord === option && "lesson-tile-shake",
                 dragState?.word === option &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",

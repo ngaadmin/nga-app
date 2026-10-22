@@ -131,10 +131,12 @@ async function playScreen(
     );
     if (distractor) {
       await clickButton(page, distractor);
-      if (blanks.length > 1) {
-        await clickButton(page, /Blank/);
-      }
-      await page.waitForTimeout(400);
+      const placed = page.getByRole("button", {
+        name: `Blank, ${distractor}`,
+        exact: true,
+      });
+      await expect(placed).toBeVisible();
+      await placed.click();
     }
     for (const blank of blanks) {
       await clickButton(page, blank.correctOption);
@@ -277,6 +279,8 @@ async function playScreen(
     }
     await expect(next).toBeDisabled();
     await arrangeRank(page, wanted);
+    await expect(next).toBeDisabled();
+    await clickButton(page, "Check order");
     await footerNext(page);
     return fallthrough();
   }

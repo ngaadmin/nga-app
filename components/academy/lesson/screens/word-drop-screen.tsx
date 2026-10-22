@@ -61,28 +61,32 @@ export function WordDropScreen({
     setFeedback(null);
   }, []);
 
-  const handleSolved = useCallback(() => {
-    setFeedback(null);
-    handleSuccess();
-    handleComplete();
-  }, [handleComplete, handleSuccess]);
-
-  const handleWrongPlacement = useCallback(() => {
-    setFeedback("error");
-    handleMistake();
-  }, [handleMistake]);
+  const handleAttemptReady = useCallback(() => {
+    flowRef.current.markScreenReady(screenIndex);
+  }, [screenIndex]);
 
   useEffect(() => {
     flowRef.current.clearScreenReady(screenIndex);
   }, [screenIndex]);
 
   useEffect(() => {
-    activeWordDropNextHandler = () => gameRef.current?.evaluate() === true;
+    activeWordDropNextHandler = () => {
+      const correct = gameRef.current?.evaluate() === true;
+      if (correct) {
+        setFeedback(null);
+        handleSuccess();
+        handleComplete();
+        return true;
+      }
+      setFeedback("error");
+      handleMistake();
+      return false;
+    };
 
     return () => {
       activeWordDropNextHandler = null;
     };
-  }, []);
+  }, [handleComplete, handleMistake, handleSuccess]);
 
   return (
     <>
@@ -93,9 +97,8 @@ export function WordDropScreen({
         orderKey={screen.id}
         promptLabel={screen.promptLabel}
         onChoicesChange={handleChoicesChange}
-        onComplete={handleSolved}
+        onAttemptReady={handleAttemptReady}
         onIncomplete={handleIncomplete}
-        onMismatch={handleWrongPlacement}
       />
     </>
   );

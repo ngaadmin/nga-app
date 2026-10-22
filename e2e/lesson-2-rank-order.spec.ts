@@ -79,7 +79,7 @@ async function rowLabels(page: Page): Promise<string[]> {
 
 /** Move each choice into best-to-avoid order with touch drags. */
 async function arrangeBestFirst(page: Page): Promise<void> {
-  const wanted = [/keep the \$10/i, /cheaper/i, /borrow/i];
+  const wanted = [/keep the \$\d+/i, /cheaper/i, /borrow/i];
   for (let index = 0; index < wanted.length; index += 1) {
     for (let attempt = 0; attempt < 4; attempt += 1) {
       const labels = await rowLabels(page);
@@ -107,6 +107,9 @@ for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
     await expect(next).toBeDisabled();
 
     await arrangeBestFirst(page);
+    await expect(page.getByRole("button", { name: "Check order" })).toBeVisible();
+    await expect(next).toBeDisabled();
+    await page.getByRole("button", { name: "Check order" }).click();
     await expect(next).toBeEnabled();
   });
 }

@@ -3,6 +3,8 @@ import {
   buildAccountDeletedChildEmail,
   buildAccountDeletedMasterEmail,
   buildExplorerParentEmail,
+  buildMaverickWelcomeEmail,
+  getDefaultAppUrl,
   resolveTrustedAppUrl,
 } from "@/lib/email/templates";
 import {
@@ -51,12 +53,14 @@ describe("email template escaping", () => {
     expect(built.text).not.toContain("evil.example");
   });
 
-  it("keeps a configured preview host", () => {
+  it("ignores a stale vercel.app host", () => {
     process.env.VERCEL = "1";
     process.env.VERCEL_URL = "preview.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL = "https://nga-app-other.vercel.app";
     expect(resolveTrustedAppUrl("https://preview.vercel.app/path")).toBe(
-      "https://preview.vercel.app",
+      "https://app.nextgenachievers.com",
     );
+    expect(getDefaultAppUrl()).toBe("https://app.nextgenachievers.com");
     expect(resolveTrustedAppUrl("javascript:alert(1)")).not.toContain(
       "javascript:",
     );
@@ -142,6 +146,39 @@ describe("public email send policy", () => {
     ).toBe(true);
     expect(storedConsentMatchesEmailType("PATHFINDER_PARENT", "vpc")).toBe(
       false,
+    );
+  });
+});
+
+describe("email app origin", () => {
+  it("uses the production app for links and the Penny image", () => {
+    delete process.env.NEXT_PUBLIC_APP_URL;
+    delete process.env.VERCEL_URL;
+    process.env.VERCEL = "1";
+
+    expect(getDefaultAppUrl()).toBe("https://app.nextgenachievers.com");
+
+    process.env.NEXT_PUBLIC_APP_URL = "https://nga-app-three.vercel.app";
+    expect(getDefaultAppUrl()).toBe("https://app.nextgenachievers.com");
+
+    const welcome = buildMaverickWelcomeEmail({ username: "River" });
+    const approval = buildExplorerParentEmail({
+      username: "River",
+      token: "tok",
+    });
+    for (const built of [welcome, approval]) {
+      expect(built.html).toContain("https://app.nextgenachievers.com");
+      expect(built.html).toContain(
+        "https://app.nextgenachievers.com/assets/illustrations/characters/penny/penny-master-email.png",
+      );
+      expect(built.html).not.toContain("nga-app-three.vercel.app");
+      expect(built.text).not.toContain("nga-app-three.vercel.app");
+    }
+    expect(welcome.text).toContain(
+      "https://app.nextgenachievers.com/dashboard/academy",
+    );
+    expect(approval.text).toContain(
+      "https://app.nextgenachievers.com/onboarding/sign-up",
     );
   });
 });

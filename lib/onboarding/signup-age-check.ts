@@ -131,15 +131,35 @@ export type LearnerSignupPlan = {
  * 16+ Explorer must give an email. It is stored for password resets and
  * nothing is sent at sign-up.
  */
+/**
+ * Once this sign-up session has taken the under-16 path, a later birth year
+ * cannot switch it onto the 16+ path.
+ */
+export function signupRequiresParentApproval(input: {
+  birthYear: number | null;
+  under16PathReached: boolean;
+  referenceYear?: number;
+}): boolean {
+  if (input.under16PathReached) return true;
+  if (input.birthYear == null) return false;
+  return (
+    decideLearnerAge(input.birthYear, input.referenceYear)?.parentApprovalRequired ===
+    true
+  );
+}
+
 export function planLearnerSignup(input: {
   pickedCohort: MasteryCohort;
   birthYear: number;
   referenceYear?: number;
   requestedMarketingOptIn?: boolean;
+  /** Sticky for this sign-up session after the under-16 path was reached. */
+  under16PathReached?: boolean;
 }): LearnerSignupPlan | null {
   const decision = decideLearnerAge(input.birthYear, input.referenceYear);
   if (!decision) return null;
-  const parentApprovalRequired = decision.parentApprovalRequired;
+  const parentApprovalRequired =
+    decision.parentApprovalRequired || input.under16PathReached === true;
   const sixteenPlusExplorer =
     input.pickedCohort === "explorer" && !parentApprovalRequired;
   return {

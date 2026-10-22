@@ -21,11 +21,12 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const MIN_PASSWORD_LENGTH = 6;
 
 /** profiles.account_status values (DB check constraint). */
-export type SupabaseAccountStatus = "pending_consent" | "active";
+export type SupabaseAccountStatus = "pending_consent" | "declined" | "active";
 
 function toSupabaseAccountStatus(
   status: RegisteredAccountStatus,
 ): SupabaseAccountStatus {
+  if (status === "DECLINED") return "declined";
   return status === "PENDING_CONSENT" ? "pending_consent" : "active";
 }
 
@@ -54,6 +55,11 @@ export type CreateSupabaseAccountInput = {
    * profile, Auth metadata, or logs. Omit for a parent-added child.
    */
   birthYear?: number;
+  /**
+   * Set after this sign-up session already took the under-16 path.
+   * A later birth year must not clear parent approval.
+   */
+  under16PathReached?: boolean;
   /**
    * Signed-in parent master is adding this child. Skip guardian emails,
    * create the child as already approved, and link `parent_child`.
@@ -309,6 +315,7 @@ function parseSignupInput(
       pickedCohort,
       birthYear: input.birthYear ?? Number.NaN,
       requestedMarketingOptIn: input.marketingOptIn,
+      under16PathReached: input.under16PathReached === true,
     });
     if (!plan) {
       return { ok: false, error: "Choose the year you were born." };
@@ -390,6 +397,31 @@ async function isUsernameTaken(
   }
 
   return Boolean(data);
+}
+
+/** Checked on the username step, before the learner reaches email. */
+export async function checkSignupUsernameAvailable(
+  username: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const trimmed = username.trim();
+  if (!USERNAME_PATTERN.test(trimmed)) {
+    return {
+      ok: false,
+      error: "Use 2-20 letters, numbers, underscores, or hyphens only.",
+    };
+  }
+  try {
+    const taken = await isUsernameTaken(createAdminClient(), trimmed);
+    if (taken) {
+      return {
+        ok: false,
+        error: "That username is already taken. Try adding a favorite number!",
+      };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Could not check that username. Try again." };
+  }
 }
 
 async function saveLearnerProfile(

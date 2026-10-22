@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { ExplorerPendingConsentView } from "@/components/onboarding/explorer-pending-consent-view";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/lesson-availability";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { shouldBlockExplorerPendingPlay } from "@/lib/onboarding/explorer-pending-consent";
-import { readUserSession } from "@/lib/onboarding/guest-session";
 
 /** Blocks Academy and other dashboard play until Explorer VPC is approved. */
 export function ExplorerPendingConsentGate({
@@ -16,14 +14,12 @@ export function ExplorerPendingConsentGate({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const live = useUserSession();
-  const [bootSession] = useState(() =>
-    typeof window === "undefined" ? null : readUserSession(),
-  );
-  const session = live ?? bootSession;
+  const session = useUserSession();
+  const declined =
+    session?.accessMode === "registered" && session.accountStatus === "DECLINED";
   const blocking =
     !isDevAcademyDesignShellPath(pathname) &&
-    shouldBlockExplorerPendingPlay(session);
+    (declined || shouldBlockExplorerPendingPlay(session));
 
   return (
     <>
@@ -41,7 +37,24 @@ export function ExplorerPendingConsentGate({
         describedBy="explorer-pending-body"
         panelClassName="rounded-nga-xl border-2 border-[#BDE9FB] bg-white p-6 shadow-nga-pop"
       >
-        <ExplorerPendingConsentView approved={false} session={session} />
+        {declined ? (
+          <div className="space-y-4 text-center">
+            <h1
+              id="explorer-pending-heading"
+              className="font-heading text-3xl font-extrabold leading-tight text-nga-primary"
+            >
+              Your account wasn&apos;t approved
+            </h1>
+            <p
+              id="explorer-pending-body"
+              className="font-sans text-sm leading-relaxed text-nga-ink"
+            >
+              Your account manager didn&apos;t approve this profile. You can close this and try again later with them.
+            </p>
+          </div>
+        ) : (
+          <ExplorerPendingConsentView approved={false} session={session} />
+        )}
       </ModalShell>
     </>
   );

@@ -3,7 +3,7 @@ import { isFourDigitPin } from "@/lib/validation/pin";
 
 export const PARENT_PIN_GATE_COPY = {
   required: "Enter the parent PIN to delete this account.",
-  wrong: "Wrong PIN - nice try.",
+  wrong: "That PIN didn't match. Try again.",
   missing: "Set a parent PIN in Settings before you delete an account.",
   limited: "Too many PIN attempts. Wait a few minutes, then try again.",
 } as const;

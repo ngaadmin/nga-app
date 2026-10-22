@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 import { AppFooter } from "@/components/legal/app-footer";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
+import { SelfManagedRatePanel } from "@/components/dashboard/settings/self-managed-rate-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
@@ -28,16 +29,14 @@ import {
   LockIcon,
   LogOutIcon,
 } from "@/lib/dashboard/icons";
-import { generateRecoveryParentPin } from "@/lib/auth/temporary-password";
 import {
   parentPinConfigured,
   persistParentPin,
 } from "@/lib/dashboard/persist-parent-pin";
+import { requestParentPinReset } from "@/lib/dashboard/parent-pin-reset";
 import {
-  dispatchParentPinRecoveryEmail,
   isParentPinConfigured,
   isValidPinFormat,
-  resolveSimulatedParentEmail,
   saveParentPin,
   verifyParentPin,
 } from "@/lib/dashboard/parent-pin";
@@ -258,14 +257,12 @@ function PinField({ id, label, value, onChange }: PinFieldProps) {
 type ChangeParentPinModalProps = {
   isOpen: boolean;
   copy: (typeof copyMatrix.dashboard.settings)["changePin"];
-  parentEmail: string;
   onClose: () => void;
 };
 
 function ChangeParentPinModal({
   isOpen,
   copy,
-  parentEmail,
   onClose,
 }: ChangeParentPinModalProps) {
   const [currentPin, setCurrentPin] = useState("");
@@ -273,6 +270,7 @@ function ChangeParentPinModal({
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [recoveryNotice, setRecoveryNotice] = useState<string | null>(null);
+  const [pinSaved, setPinSaved] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
   const [pinMode, setPinMode] = useState<"change" | "setup">("change");
   const [pinModeReady, setPinModeReady] = useState(false);
@@ -311,6 +309,7 @@ function ChangeParentPinModal({
     setConfirmPin("");
     setError(null);
     setRecoveryNotice(null);
+    setPinSaved(false);
     setIsRecovering(false);
     setPinMode("change");
     setPinModeReady(false);
@@ -327,28 +326,17 @@ function ChangeParentPinModal({
     setIsRecovering(true);
 
     try {
-      const recoveryCode = generateRecoveryParentPin();
       const session = readUserSession();
       const isParent =
         session?.accessMode === "registered" &&
         session.accountRole === "parent_master";
-      if (isParent) {
-        const saved = await persistParentPin({ pin: recoveryCode, recovery: true });
-        if (!saved.ok) {
-          setError(saved.error);
-          return;
-        }
+      if (!isParent) return;
+      const sent = await requestParentPinReset();
+      if (!sent.ok) {
+        setError(sent.error);
+        return;
       }
-      saveParentPin(recoveryCode);
-      const result = await dispatchParentPinRecoveryEmail(
-        parentEmail,
-        recoveryCode,
-      );
-      setRecoveryNotice(
-        copy.forgotPinSuccess
-          .replace("{code}", result.recoveryCode)
-          .replace("{email}", result.email),
-      );
+      setRecoveryNotice(copy.forgotPinSuccess);
     } finally {
       setIsRecovering(false);
     }
@@ -394,8 +382,11 @@ function ChangeParentPinModal({
     }
 
     saveParentPin(newPin);
-    resetForm();
-    onClose();
+    setCurrentPin("");
+    setNewPin("");
+    setConfirmPin("");
+    setError(null);
+    setPinSaved(true);
   }
 
   if (!isOpen) return null;
@@ -465,8 +456,14 @@ function ChangeParentPinModal({
           </p>
         ) : null}
 
+        {pinSaved ? (
+          <p className="mt-3 font-sans text-sm font-semibold text-[#031F82]" role="status">
+            {copy.pinSaved}
+          </p>
+        ) : null}
+
         {recoveryNotice ? (
-          <p className="mt-3 rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-sm leading-relaxed text-[#031F82]">
+          <p className="mt-3 rounded-xl bg-[#BDE9FB]/35 px-3 py-2 font-sans text-sm leading-relaxed text-[#031F82]" role="status">
             {recoveryNotice}
           </p>
         ) : null}
@@ -652,17 +649,15 @@ export function HomeDashboard() {
   const isParent = session?.accountRole === "parent_master";
   const isChildAccount =
     session?.accessMode === "registered" && session.accountRole === "child" && !isTeacher;
+  const waitingForApproval = session?.accountStatus === "PENDING_CONSENT";
+  const canSelfManageRate =
+    isChildAccount && session?.parentApprovalRequired === false && !session.parentEmail;
   const copy = copyMatrix.dashboard.settings;
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const loggingOutRef = useRef(false);
-
-  const simulatedParentEmail = useMemo(
-    () => email ?? resolveSimulatedParentEmail(username),
-    [email, username],
-  );
 
   async function performLogOut() {
     if (loggingOutRef.current) return;
@@ -684,7 +679,7 @@ export function HomeDashboard() {
 
   return (
     <>
-      <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
+      <div className="mx-auto flex w-full max-w-md shrink-0 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
         <ProfileHeader
           username={username}
           email={email}
@@ -694,17 +689,25 @@ export function HomeDashboard() {
           isGuest={isGuestMode}
         />
 
+        {waitingForApproval ? (
+          <p className="rounded-2xl bg-[#FFF7ED] px-4 py-3 font-sans text-sm font-semibold text-[#031F82]" role="status">
+            Waiting for approval. Your account manager still needs to approve this profile.
+          </p>
+        ) : null}
+
         <nav
           aria-label="Account settings"
           className={cn(floatingPanelClass, "divide-y divide-[#BDE9FB]/60 px-3")}
         >
-          {isTeacher ? <ClassSettingsLink /> : null}
+          {waitingForApproval ? null : isTeacher ? <ClassSettingsLink /> : null}
+          {waitingForApproval ? null : (
+            <>
           <SettingsRow
             icon={KeyIcon}
             label={copy.account.passwordReset}
             onClick={() => setPasswordResetOpen(true)}
           />
-          {!isTeacher ? (
+          {isParent ? (
             <SettingsRow
               icon={LockIcon}
               label={copy.account.changeParentPin}
@@ -743,6 +746,8 @@ export function HomeDashboard() {
               onClick={() => router.push("/dashboard/settings/my-info")}
             />
           ) : null}
+            </>
+          )}
           <SettingsRow
             icon={LogOutIcon}
             label={isLoggingOut ? "Signing out…" : copy.account.logOut}
@@ -755,6 +760,7 @@ export function HomeDashboard() {
 
         {isGuestMode ? <GuestDeviceCard /> : null}
         <ParentHubSection />
+        {canSelfManageRate ? <SelfManagedRatePanel /> : null}
         <AppFooter className="print:hidden" />
       </div>
 
@@ -767,7 +773,6 @@ export function HomeDashboard() {
       <ChangeParentPinModal
         isOpen={changePinModalOpen}
         copy={copy.changePin}
-        parentEmail={simulatedParentEmail}
         onClose={() => setChangePinModalOpen(false)}
       />
     </>

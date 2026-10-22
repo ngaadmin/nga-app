@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
 import { MedalsIntro } from "@/components/achievements/medals-intro";
 import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
@@ -22,6 +23,7 @@ import {
 } from "@/lib/dashboard/skills-attention";
 import { resolveVaultSkillTrophiesForCohort } from "@/lib/dashboard/skill-trophies";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { zLayerStyle } from "@/lib/ui/layers";
 
@@ -30,6 +32,8 @@ import { zLayerStyle } from "@/lib/ui/layers";
  * place on every main dashboard screen.
  */
 export function DashboardStatusHeader() {
+  const router = useRouter();
+  const session = useUserSession();
   const { username, isTeacher } = useDashboardUser();
   const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
   const xpExchange = useXpExchangeGate();
@@ -82,10 +86,15 @@ export function DashboardStatusHeader() {
     setStreaksOpen(true);
   }, []);
 
+  const isParent = session?.accountRole === "parent_master";
   const openXpExchange = useCallback(() => {
+    if (isParent) {
+      router.push("/dashboard/settings");
+      return;
+    }
     if (!xpExchange.ready || xpExchange.blocked) return;
     setXpExchangeOpen(true);
-  }, [xpExchange.blocked, xpExchange.ready]);
+  }, [isParent, router, xpExchange.blocked, xpExchange.ready]);
 
   return (
     <>
@@ -102,7 +111,11 @@ export function DashboardStatusHeader() {
           showCoins={!isTeacher}
           onSkillsClick={openSkills}
           onStreakClick={openStreaks}
-          onXpClick={xpExchange.ready && !xpExchange.blocked ? openXpExchange : undefined}
+          onXpClick={
+            isParent || (xpExchange.ready && !xpExchange.blocked)
+              ? openXpExchange
+              : undefined
+          }
         />
       </header>
 

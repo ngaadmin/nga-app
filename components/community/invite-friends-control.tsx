@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { vaultHomeCompactCtaAutoClass } from "@/lib/dashboard/vault/vault-action-form-styles";
 
-const PRODUCTION_LANDING_URL = "https://nga-app-three.vercel.app/";
+const PRODUCTION_LANDING_URL = "https://app.nextgenachievers.com/";
 
 /** One-line invite. Site URL belongs in Web Share `url`, not in this text. */
 const APP_INVITE_LINE = "Come try NextGenAchiever$ with me.";

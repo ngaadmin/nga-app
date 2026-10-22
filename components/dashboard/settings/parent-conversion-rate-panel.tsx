@@ -13,6 +13,7 @@ import {
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import {
   formatExchangeRateInput,
+  LARGE_EXCHANGE_RATE_CONFIRM_CENTS,
   parseExchangeRateToCents,
 } from "@/lib/dashboard/xp-cash";
 import { cn } from "@/lib/utils/cn";
@@ -38,6 +39,7 @@ export function ParentConversionRatePanel({
   const [saving, setSaving] = useState(false);
   const [loadingChildren, setLoadingChildren] = useState(false);
   const [confirmingChildId, setConfirmingChildId] = useState<string | null>(null);
+  const [confirmingLargeRate, setConfirmingLargeRate] = useState(false);
   const [payingChildId, setPayingChildId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -109,6 +111,11 @@ export function ParentConversionRatePanel({
       setError(conversionCopy.noLinkedChild);
       return;
     }
+    if (cents > LARGE_EXCHANGE_RATE_CONFIRM_CENTS && !confirmingLargeRate) {
+      setConfirmingLargeRate(true);
+      return;
+    }
+    setConfirmingLargeRate(false);
 
     setSaving(true);
     try {
@@ -275,6 +282,7 @@ export function ParentConversionRatePanel({
             onChange={(event) => {
               setStatus(null);
               setError(null);
+              setConfirmingLargeRate(false);
               setAmountInput(event.target.value);
             }}
             placeholder={conversionCopy.rateAmountPlaceholder}
@@ -286,6 +294,14 @@ export function ParentConversionRatePanel({
 
       {preview ? (
         <p className="mt-2 font-heading text-base font-extrabold text-[#031F82]">{preview}</p>
+      ) : null}
+      {confirmingLargeRate && previewCents != null ? (
+        <p className="mt-2 font-sans text-sm font-semibold text-[#031F82]" role="status">
+          {conversionCopy.largeRateConfirm.replace(
+            "{amount}",
+            formatMoney(previewCents / 100, currencyCode),
+          )}
+        </p>
       ) : null}
       {error ? (
         <p className="mt-2 font-sans text-sm font-semibold text-[#031F82]" role="alert">
@@ -306,7 +322,11 @@ export function ParentConversionRatePanel({
         disabled={saving || children.length === 0}
         className="mt-3 h-touch w-full rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {saving ? conversionCopy.claimingLabel : conversionCopy.saveRate}
+        {saving
+          ? conversionCopy.claimingLabel
+          : confirmingLargeRate
+            ? conversionCopy.largeRateConfirmYes
+            : conversionCopy.saveRate}
       </button>
     </div>
   );

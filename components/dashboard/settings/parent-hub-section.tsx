@@ -37,7 +37,7 @@ export function ParentHubSection() {
   return (
     <section
       aria-label={featuresCopy.pointsConversion}
-      className={cn(floatingPanelClass, "overflow-hidden px-3")}
+      className={cn(floatingPanelClass, "shrink-0 overflow-hidden px-3")}
     >
       <ParentHubFeatureItem
         id="preferences-points-conversion"

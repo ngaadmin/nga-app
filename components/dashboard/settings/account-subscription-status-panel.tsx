@@ -9,6 +9,7 @@ import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
   approveConsentRequestInApp,
+  declineConsentRequestInApp,
   listPendingConsentRequestsForParent,
   type PendingConsentRequestView,
 } from "@/lib/onboarding/approve-consent-request";
@@ -343,8 +344,42 @@ export function AccountSubscriptionStatusPanel() {
     };
   }
 
+  const [confirmApproveUsername, setConfirmApproveUsername] = useState<string | null>(null);
+
   function handleApproveChild(username: string) {
-    void handleLinkProfile(pendingItemForUsername(username));
+    setConfirmApproveUsername(username);
+  }
+
+  async function handleDeclineChild(username: string) {
+    const item = pendingItemForUsername(username);
+    if (!item.requestId) {
+      setApproveError("This profile can't be declined from here.");
+      return;
+    }
+    setApprovingUsername(username);
+    setApproveError(null);
+    try {
+      const declined = await declineConsentRequestInApp(item.requestId);
+      if (!declined.success) {
+        setApproveError(declined.error);
+        return;
+      }
+      const key = usernameKey(username);
+      setRemotePending((current) =>
+        current.filter((request) => usernameKey(request.childUsername) !== key),
+      );
+      setHousehold((current) => ({
+        ...current,
+        children: current.children.map((child) =>
+          usernameKey(child.username) === key
+            ? { ...child, accountStatus: "DECLINED" }
+            : child,
+        ),
+      }));
+      setConfirmApproveUsername(null);
+    } finally {
+      setApprovingUsername(null);
+    }
   }
 
   function markChildApprovedInList(
@@ -562,11 +597,11 @@ export function AccountSubscriptionStatusPanel() {
           </button>
           <div className="space-y-1">
             <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
-              {copy.title}
+              {learnerSelf ? "Your account" : copy.title}
             </h1>
             {sessionReady ? (
               <p className="font-sans text-sm leading-[1.6] text-[#1E3A5F]">
-                {copy.description}
+                {learnerSelf ? copy.learnerDescription : copy.description}
               </p>
             ) : null}
           </div>
@@ -605,10 +640,6 @@ export function AccountSubscriptionStatusPanel() {
                       {copy.masterBadge}
                     </p>
                   </div>
-                  <AccountRowTrack
-                    account={household.master}
-                    canChange={false}
-                  />
                 </div>
               </li>
             ) : null}
@@ -667,16 +698,26 @@ export function AccountSubscriptionStatusPanel() {
                       </div>
                       <div className="flex shrink-0 items-start gap-2">
                         {canApproveChild ? (
-                          <button
-                            type="button"
-                            className={approveButtonClass}
-                            disabled={approvingUsername === child.username}
-                            onClick={() => handleApproveChild(child.username)}
-                          >
-                            {approvingUsername === child.username
-                              ? copy.linkingProfile
-                              : copy.linkProfile}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
+                              disabled={approvingUsername === child.username}
+                              onClick={() => void handleDeclineChild(child.username)}
+                            >
+                              Decline
+                            </button>
+                            <button
+                              type="button"
+                              className={approveButtonClass}
+                              disabled={approvingUsername === child.username}
+                              onClick={() => handleApproveChild(child.username)}
+                            >
+                              {approvingUsername === child.username
+                                ? copy.linkingProfile
+                                : copy.linkProfile}
+                            </button>
+                          </div>
                         ) : null}
                         {canDeleteChild ? (
                           <div
@@ -756,16 +797,26 @@ export function AccountSubscriptionStatusPanel() {
                           {` · ${copy.pendingApprovalBadge}`}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        className={approveButtonClass}
-                        disabled={approvingUsername === item.username}
-                        onClick={() => void handleLinkProfile(item)}
-                      >
-                        {approvingUsername === item.username
-                          ? copy.linkingProfile
-                          : copy.linkProfile}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
+                          disabled={approvingUsername === item.username}
+                          onClick={() => void handleDeclineChild(item.username)}
+                        >
+                          Decline
+                        </button>
+                        <button
+                          type="button"
+                          className={approveButtonClass}
+                          disabled={approvingUsername === item.username}
+                          onClick={() => handleApproveChild(item.username)}
+                        >
+                          {approvingUsername === item.username
+                            ? copy.linkingProfile
+                            : copy.linkProfile}
+                        </button>
+                      </div>
                     </div>
                   </li>
                 ))
@@ -776,6 +827,34 @@ export function AccountSubscriptionStatusPanel() {
             <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {householdLoadError}
             </p>
+          ) : null}
+
+          {confirmApproveUsername ? (
+            <div className="rounded-xl bg-[#FFF7ED] px-3 py-3">
+              <p className="font-sans text-sm font-semibold text-[#031F82]">
+                Approve {confirmApproveUsername}&apos;s account?
+              </p>
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  className="h-touch flex-1 rounded-nga-lg font-heading text-xs font-bold text-[#0CC1E0]"
+                  onClick={() => setConfirmApproveUsername(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={approveButtonClass}
+                  onClick={() => {
+                    const username = confirmApproveUsername;
+                    setConfirmApproveUsername(null);
+                    void handleLinkProfile(pendingItemForUsername(username));
+                  }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
           ) : null}
 
           {approveError ? (

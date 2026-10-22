@@ -12,6 +12,7 @@ export function MyInfoPage() {
         status: "ready";
         username: string;
         trackLabel: string | null;
+        cohort: "explorer" | "pathfinder" | "maverick" | null;
         managedBy: "teacher" | "account_manager";
       }
   >({ status: "loading" });
@@ -26,6 +27,7 @@ export function MyInfoPage() {
         status: "ready",
         username: result.username,
         trackLabel: result.trackLabel,
+        cohort: result.cohort,
         managedBy: result.managedBy,
       });
     });
@@ -41,6 +43,7 @@ export function MyInfoPage() {
     <MyInfoScreen
       username={state.username}
       trackLabel={state.trackLabel}
+      cohort={state.cohort}
       managedBy={state.managedBy}
     />
   );

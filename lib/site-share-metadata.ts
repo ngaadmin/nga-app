@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const FALLBACK_SITE_URL = "https://nga-app-three.vercel.app";
+const FALLBACK_SITE_URL = "https://app.nextgenachievers.com";
 
 export const LANDING_SHARE_TITLE = "NextGenAchievers";
 export const LANDING_SHARE_DESCRIPTION = "Finally. A fun way to learn money skills.";
@@ -9,7 +9,11 @@ export function getCanonicalSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (fromEnv) {
     try {
-      return new URL(fromEnv).origin;
+      const url = new URL(fromEnv);
+      const host = url.hostname.toLowerCase();
+      if (host !== "nga-app-three.vercel.app" && !host.endsWith(".vercel.app")) {
+        return url.origin;
+      }
     } catch {
       // fall through
     }

@@ -115,7 +115,7 @@ export default function RootLayout({
         </Suspense>
         <div id="overlay-root" aria-hidden="true" />
         <div id="modal-root" />
-        <div id="toast-root" aria-hidden="true" />
+        <div id="toast-root" />
       </body>
     </html>
   );

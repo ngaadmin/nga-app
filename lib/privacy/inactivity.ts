@@ -36,7 +36,7 @@ export type ActivityAccount = {
    * Missing until the retention job can see approval state.
    * Only `pending_consent` with no approval date is the 30-day clock.
    */
-  accountStatus?: "pending_consent" | "active" | null;
+  accountStatus?: "pending_consent" | "declined" | "active" | null;
   consentApprovedAt?: string | null;
 };
 
@@ -125,7 +125,9 @@ function warningAudience(
 export function isUnapprovedLearnerAccount(account: ActivityAccount): boolean {
   if (account.role !== "child") return false;
   if (account.teacherId) return false;
-  if (account.accountStatus !== "pending_consent") return false;
+  if (account.accountStatus !== "pending_consent" && account.accountStatus !== "declined") {
+    return false;
+  }
   if (account.consentApprovedAt) return false;
   return true;
 }

@@ -34,9 +34,9 @@ export const hubIntroCopy: Record<HubIntroId, HubIntroCopy> = {
   community: {
     title: "Community",
     firstVisitBody:
-      "See where you stand. Climb the leaderboard, invite friends, and take on monthly challenges together. Friendly competition makes the money game way more fun.",
+      "Take on monthly challenges together. Friendly competition makes the money game way more fun.",
     infoPanelBody:
-      "Leaderboard, friends, and monthly challenges. Get on the board.",
+      "Monthly challenges with other learners. Jump in when you are ready.",
     firstVisitCta: "Let's go",
     infoPanelCta: "Got it",
     infoButtonAriaLabel: "About Community",

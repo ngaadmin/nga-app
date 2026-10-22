@@ -62,10 +62,8 @@ test("learner sign-up steps keep the guest track and guest progress", async ({ p
 
   await page.locator("#signup-birth-year").selectOption("2013");
   await expect(next).toBeEnabled();
-  await expect(page.getByRole("status")).toHaveText(
-    "Based on your age, Explorer is the right fit",
-  );
-  await expect(page.getByRole("radio", { name: /Explorer/ })).toHaveAttribute(
+  await expect(page.getByRole("status")).toHaveCount(0);
+  await expect(page.getByRole("radio", { name: /Pathfinder/ })).toHaveAttribute(
     "aria-checked",
     "true",
   );
@@ -162,9 +160,9 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await expect(page.getByLabel("Parent/guardian email address")).toBeVisible();
   await expect(
     page.getByText("Send me occasional updates about NextGenAchiever$"),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Create My Free Account" }),
+    page.getByRole("button", { name: "Request Parent Approval" }),
   ).toBeVisible();
 
   for (const viewport of WIDTHS) {
@@ -192,6 +190,9 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await expect(page.getByLabel("Your Email Address")).toBeVisible();
   await expect(page.getByText("Check the highlighted fields and try again.")).toHaveCount(0);
   await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
+  await expect(
+    page.getByText("Send me occasional updates about NextGenAchiever$"),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Create My Free Account" }),
   ).toBeVisible();
@@ -262,6 +263,84 @@ async function expectPinnedSignupBar(page: Page) {
   });
   expect(gap).toBeGreaterThanOrEqual(24);
 }
+
+test("age flag decides the parent step and guest play never asks for a year", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/onboarding/start");
+  await expect(page.getByRole("heading", { name: "Pick the path that matches your age." })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.locator("#signup-birth-year")).toHaveCount(0);
+  await expect(page.getByText("What year were you born?")).toHaveCount(0);
+
+  await page.goto("/onboarding/sign-up?as=learner");
+  await expect(page.locator("#signup-birth-year")).toBeVisible();
+  await page.getByRole("radio", { name: /Maverick/ }).click();
+  await page.locator("#signup-birth-year").selectOption("2010");
+  await expect(page.getByRole("radio", { name: /Maverick/ })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByLabel("Username").fill("YoungMav");
+  await page.getByLabel("Create your password").fill("secret1");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByLabel("Your Email Address")).toBeVisible();
+  await expect(page.getByLabel("Parent/guardian email address")).toBeVisible();
+  await expect(
+    page.getByText("Approval saves your coins. You can keep playing while you wait."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Send me occasional updates about NextGenAchiever$"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Request Parent Approval" }),
+  ).toBeVisible();
+  expect(page.url()).not.toContain("2010");
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.locator("#signup-birth-year")).toHaveValue("2010");
+  await page.getByRole("radio", { name: /Pathfinder/ }).click();
+  await page.locator("#signup-birth-year").selectOption("2009");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByLabel("Username")).toHaveValue("YoungMav");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByLabel("Your Email Address")).toBeVisible();
+  await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
+  await expect(
+    page.getByText("Send me occasional updates about NextGenAchiever$"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Create My Free Account" }),
+  ).toBeVisible();
+  const stored = await page.evaluate(
+    (key) => window.localStorage.getItem(key) ?? "",
+    "nga_guest_session",
+  );
+  expect(stored).not.toContain("2009");
+  expect(stored).not.toContain("2010");
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("radio", { name: /Explorer/ }).click();
+  await page.locator("#signup-birth-year").selectOption("2009");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByLabel("Your Email Address")).toBeVisible();
+  await expect(
+    page.getByText("For account updates only. You log in with your username."),
+  ).toBeVisible();
+  await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
+  await expect(
+    page.getByText("Send me occasional updates about NextGenAchiever$"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Create My Free Account" }),
+  ).toBeVisible();
+});
 
 test("bottom tab uses the amber active pill", async ({ page }) => {
   await page.addInitScript(

@@ -4,6 +4,7 @@ import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import {
   planInactivityDeletions,
   selectInactivityActions,
+  selectUnapprovedAccountDeletions,
   type ActivityAccount,
   type AccountRole,
   type InactivityDecision,
@@ -69,7 +70,14 @@ export function mapActivityRow(row: Record<string, unknown>): ActivityAccount | 
     parentEmail: text(row.parent_email),
     teacherEmail: text(row.teacher_email),
     guardianEmail: text(row.guardian_email),
+    accountStatus: asAccountStatus(row.account_status),
+    consentApprovedAt: text(row.consent_approved_at),
   };
+}
+
+function asAccountStatus(value: unknown): "pending_consent" | "active" | null {
+  if (value === "pending_consent" || value === "active") return value;
+  return null;
 }
 
 async function purgeAuditLog(admin: Admin, errors: string[]): Promise<number | null> {
@@ -471,8 +479,9 @@ async function runDeletion(admin: Admin, planned: PlannedDeletion): Promise<void
 
 /**
  * Daily privacy maintenance: 30-day sign-in log, 30-day guest activity,
- * then inactivity warnings and deletions. One account's failure does not
- * stop the rest.
+ * learner accounts still waiting for parent approval after 30 days,
+ * then 12-month inactivity warnings and deletions.
+ * One account's failure does not stop the rest.
  */
 export async function runPrivacyMaintenance(
   now = new Date(),
@@ -494,6 +503,16 @@ export async function runPrivacyMaintenance(
   } catch {
     errors.push("Could not load accounts for the inactivity check.");
     return summary;
+  }
+
+  const unapproved = selectUnapprovedAccountDeletions(accounts, now).slice(0, DELETE_BATCH);
+  for (const item of unapproved) {
+    try {
+      await runDeletion(admin, item);
+      summary.accountsDeleted += 1;
+    } catch {
+      errors.push("Could not delete an unapproved account.");
+    }
   }
 
   const decisions = selectInactivityActions(accounts, now);

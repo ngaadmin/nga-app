@@ -17,6 +17,11 @@ export type OnboardingEmailType =
 export type ExplorerParentEmailData = {
   username: string;
   token: string;
+  /**
+   * Omitted or explorer keeps the existing Explorer sentence.
+   * Pathfinder and Maverick name the track and leave the ages out.
+   */
+  track?: "explorer" | "pathfinder" | "maverick";
 };
 
 /** Same payload shape as the initial Explorer parent approval email. */
@@ -338,6 +343,13 @@ export function buildExplorerParentEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
+  const trackPhrase =
+    data.track === "pathfinder"
+      ? "the Pathfinder track"
+      : data.track === "maverick"
+        ? "the Maverick track"
+        : "the Explorer track, for kids aged 10-13";
+  const trackSentence = `Your child has chosen ${trackPhrase}. And to make their profile official, we need a parent/guardian's approval.`;
 
   const subject = `Your child ${username} wants to build money skills - approval needed`;
   const preheader =
@@ -353,7 +365,7 @@ export function buildExplorerParentEmail(
     "",
     "Did you know? Kids who learn to save and grow money in their early teens can end up $100,000s ahead of peers who start later, by middle age.",
     "",
-    "Your child has chosen the Explorer track, for kids aged 10-13. And to make their profile official, we need a parent/guardian's approval.",
+    trackSentence,
     "",
     `Approve & create account: ${approveUrl}`,
     "",
@@ -383,7 +395,7 @@ export function buildExplorerParentEmail(
         end up $100,000s ahead of peers who start later, by middle age.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your child has chosen the Explorer track, for kids aged 10-13. And to make
+        Your child has chosen ${trackPhrase}. And to make
         their profile official, we need a parent/guardian&apos;s approval.
       </p>
       ${ctaButton("Approve & create account", approveUrl)}

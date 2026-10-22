@@ -36,10 +36,7 @@ import {
   parseMasteryCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import {
-  ageTrackFitMessage,
-  decideLearnerAge,
-} from "@/lib/onboarding/signup-age-check";
+import { decideLearnerAge } from "@/lib/onboarding/signup-age-check";
 import {
   lookupConsentToken,
   type PendingParentConsent,
@@ -160,13 +157,19 @@ export function SignUpForm() {
   });
   const [learnerStep, setLearnerStep] = useState<LearnerSignupStep>("track");
   const [birthYear, setBirthYear] = useState<number | null>(null);
-  const [ageFitMessage, setAgeFitMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const ageTier = isParentMaster ? null : cohort;
   const isExplorer = !isParentMaster && ageTier === "explorer";
   const isPathfinder = !isParentMaster && ageTier === "pathfinder";
   const isMaverick = !isParentMaster && ageTier === "maverick";
+  const ageDecision =
+    isParentMaster || birthYear == null ? null : decideLearnerAge(birthYear);
+  const needsParentApproval = ageDecision?.parentApprovalRequired === true;
+  const needsLearnerEmail =
+    isPathfinder ||
+    isMaverick ||
+    (isExplorer && ageDecision?.parentApprovalRequired === false);
 
   const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
@@ -366,18 +369,7 @@ export function SignUpForm() {
       }
     }
 
-    if (checkEmails && isExplorer) {
-      const trimmedParent = parentEmail.trim().toLowerCase();
-      if (!trimmedParent) {
-        next.parentEmail =
-          "Enter a parent or guardian email so they can approve your account.";
-      } else if (!EMAIL_PATTERN.test(trimmedParent)) {
-        next.parentEmail = INVALID_EMAIL_ERROR;
-      }
-      // Pre-existing parent emails are allowed — multiple Explorers may share one.
-    }
-
-    if (checkEmails && (isPathfinder || isMaverick)) {
+    if (checkEmails && needsLearnerEmail) {
       const trimmedLearner = learnerEmail.trim().toLowerCase();
       if (!trimmedLearner) {
         next.learnerEmail = "Enter your email so we can save your account.";
@@ -386,21 +378,23 @@ export function SignUpForm() {
       }
     }
 
-    if (checkEmails && isPathfinder) {
+    if (checkEmails && needsParentApproval) {
       const trimmedParent = parentEmail.trim().toLowerCase();
       const trimmedLearner = learnerEmail.trim().toLowerCase();
       if (!trimmedParent) {
         next.parentEmail =
-          "Enter a parent or guardian email for the Parent Dashboard.";
+          "Enter a parent or guardian email so they can approve your account.";
       } else if (!EMAIL_PATTERN.test(trimmedParent)) {
         next.parentEmail = INVALID_EMAIL_ERROR;
       } else if (
+        needsLearnerEmail &&
         trimmedLearner &&
         EMAIL_PATTERN.test(trimmedLearner) &&
         trimmedParent === trimmedLearner
       ) {
         next.parentEmail = SAME_EMAIL_ERROR;
       }
+      // Pre-existing parent emails are allowed — multiple learners may share one.
     }
 
     if (isParentMaster && checkEmails) {
@@ -428,55 +422,15 @@ export function SignUpForm() {
     }
   }
 
-  /** Switches the track when the year does not fit. Returns false to stay put. */
-  function applyAgeFit(): boolean {
-    if (birthYear == null || !cohort) return false;
-    const decision = decideLearnerAge(birthYear);
-    if (!decision) {
-      setErrors((prev) => ({
-        ...prev,
-        birthYear: "Choose the year you were born.",
-      }));
-      setLearnerStep("track");
-      return false;
-    }
-    if (decision.cohort !== cohort) {
-      setCohort(decision.cohort);
-      setAgeFitMessage(ageTrackFitMessage(decision.cohort));
-      setLearnerStep("track");
-      return false;
-    }
-    setAgeFitMessage(null);
-    return true;
-  }
-
   function handleTrackPick(track: MasteryCohort) {
     if (track === cohort) return;
-    const decision = birthYear == null ? null : decideLearnerAge(birthYear);
-    if (decision && decision.cohort !== track) {
-      setCohort(decision.cohort);
-      setAgeFitMessage(ageTrackFitMessage(decision.cohort));
-    } else {
-      setCohort(track);
-      if (decision) setAgeFitMessage(null);
-    }
+    setCohort(track);
     clearError("track");
   }
 
   function handleBirthYearChange(year: number | null) {
     setBirthYear(year);
     clearError("birthYear");
-    if (year == null) {
-      setAgeFitMessage(null);
-      return;
-    }
-    const decision = decideLearnerAge(year);
-    if (decision && cohort && decision.cohort !== cohort) {
-      setCohort(decision.cohort);
-      setAgeFitMessage(ageTrackFitMessage(decision.cohort));
-      return;
-    }
-    setAgeFitMessage(null);
   }
 
   function handleLearnerBack() {
@@ -516,7 +470,10 @@ export function SignUpForm() {
         setErrors(nextErrors);
         return;
       }
-      if (!applyAgeFit()) return;
+      if (birthYear == null || !decideLearnerAge(birthYear)) {
+        setErrors({ birthYear: "Choose the year you were born." });
+        return;
+      }
       // Replacing Next with the finish button can submit the form in the
       // same click. Ignore only that follow-up event.
       skipSubmitRef.current = true;
@@ -637,12 +594,9 @@ export function SignUpForm() {
         nextErrors.track ?? "Pick the learning track for this profile.";
     }
 
-    const ageDecision =
-      birthYear == null ? null : decideLearnerAge(birthYear);
-    if (ageDecision && cohort && ageDecision.cohort !== cohort) {
-      setCohort(ageDecision.cohort);
-      setAgeFitMessage(ageTrackFitMessage(ageDecision.cohort));
-      return;
+    if (!ageDecision) {
+      nextErrors.birthYear =
+        nextErrors.birthYear ?? "Choose the year you were born.";
     }
 
     if (!cohort || Object.keys(nextErrors).length > 0) {
@@ -656,8 +610,6 @@ export function SignUpForm() {
       return;
     }
 
-    if (!applyAgeFit()) return;
-
     approvalEmailInFlightRef.current = true;
     setIsSendingApprovalEmail(true);
     setErrors((prev) => ({ ...prev, form: undefined }));
@@ -669,9 +621,9 @@ export function SignUpForm() {
         cohort,
         birthYear: birthYear ?? undefined,
         password: password.trim(),
-        learnerEmail: isPathfinder || isMaverick ? learnerEmail.trim() : undefined,
-        parentEmail: isExplorer || isPathfinder ? parentEmail.trim() : undefined,
-        marketingOptIn: isExplorer ? false : marketingOptIn,
+        learnerEmail: needsLearnerEmail ? learnerEmail.trim() : undefined,
+        parentEmail: needsParentApproval ? parentEmail.trim() : undefined,
+        marketingOptIn: false,
       });
 
       if (!result.success) {
@@ -705,13 +657,12 @@ export function SignUpForm() {
       const childSession = convertToRegisteredProfile({
         username: result.username,
         accountRole: "child",
-        parentEmail:
-          savedCohort === "maverick" ? undefined : parentEmail.trim(),
-        learnerEmail:
-          savedCohort === "explorer" ? undefined : learnerEmail.trim(),
+        parentEmail: needsParentApproval ? parentEmail.trim() : undefined,
+        learnerEmail: needsLearnerEmail ? learnerEmail.trim() : undefined,
         password: password.trim(),
         accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
-        marketingOptIn: savedCohort === "explorer" ? false : marketingOptIn,
+        parentApprovalRequired: ageDecision?.parentApprovalRequired,
+        marketingOptIn: false,
         supabaseUserId: result.userId,
         curriculumCohort: savedCohort,
       });
@@ -1151,7 +1102,6 @@ export function SignUpForm() {
                 value={birthYear}
                 onChange={handleBirthYearChange}
                 error={errors.birthYear}
-                fitMessage={ageFitMessage}
               />
             </>
           ) : null}
@@ -1247,7 +1197,7 @@ export function SignUpForm() {
 
           {learnerStep === "emails" ? (
             <>
-              {isPathfinder || isMaverick ? (
+              {needsLearnerEmail ? (
                 <div className="space-y-2">
                   <label
                     htmlFor="signup-learner-email"
@@ -1284,7 +1234,7 @@ export function SignUpForm() {
                 </div>
               ) : null}
 
-              {isExplorer || isPathfinder ? (
+              {needsParentApproval ? (
                 <div className="space-y-2">
                   <label
                     htmlFor="signup-parent-email"
@@ -1292,14 +1242,12 @@ export function SignUpForm() {
                   >
                     Parent/guardian email address
                   </label>
-                  {isExplorer ? (
-                    <p
-                      id="signup-parent-email-hint"
-                      className="font-sans text-sm font-bold text-purple-700"
-                    >
-                      Approval saves your coins. You can keep playing while you wait.
-                    </p>
-                  ) : null}
+                  <p
+                    id="signup-parent-email-hint"
+                    className="font-sans text-sm font-bold text-purple-700"
+                  >
+                    Approval saves your coins. You can keep playing while you wait.
+                  </p>
                   <input
                     id="signup-parent-email"
                     name="parentEmail"
@@ -1312,13 +1260,7 @@ export function SignUpForm() {
                       clearError("parentEmail");
                     }}
                     aria-invalid={Boolean(errors.parentEmail)}
-                    aria-describedby={
-                      isExplorer
-                        ? "signup-parent-email-hint"
-                        : errors.parentEmail
-                          ? undefined
-                          : "signup-parent-email-hint"
-                    }
+                    aria-describedby="signup-parent-email-hint"
                     className={learnerFieldClass}
                   />
                   {errors.parentEmail ? (
@@ -1328,30 +1270,9 @@ export function SignUpForm() {
                     >
                       {errors.parentEmail}
                     </p>
-                  ) : isExplorer ? null : (
-                    <p
-                      id="signup-parent-email-hint"
-                      className="font-sans text-sm italic leading-relaxed text-nga-slate"
-                    >
-                      We send your parent or guardian a link so they can set up a Parent Dashboard to view your progress and manage Vault permissions.
-                    </p>
-                  )}
+                  ) : null}
                 </div>
               ) : null}
-
-              {isExplorer ? null : (
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={marketingOptIn}
-                    onChange={(e) => setMarketingOptIn(e.target.checked)}
-                    className="mt-1 h-4 w-4 shrink-0 rounded border-[#E5E5E5] accent-[#031F82]"
-                  />
-                  <span className="font-sans text-sm leading-relaxed text-nga-slate">
-                    Send me occasional updates about NextGenAchiever$
-                  </span>
-                </label>
-              )}
             </>
           ) : null}
 
@@ -1375,7 +1296,7 @@ export function SignUpForm() {
                   disabled={isSendingApprovalEmail}
                   aria-busy={isSendingApprovalEmail || undefined}
                 >
-                  {isExplorer
+                  {needsParentApproval
                     ? isSendingApprovalEmail
                       ? "Sending…"
                       : "Request Parent Approval"

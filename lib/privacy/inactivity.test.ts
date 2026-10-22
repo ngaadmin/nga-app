@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   INACTIVITY_DELETE_AFTER_MS,
   INACTIVITY_WARN_AFTER_MS,
   INACTIVITY_WARNING_LEAD_MS,
+  PENDING_UNAPPROVED_DELETE_AFTER_MS,
   planInactivityDeletions,
   selectInactivityActions,
+  selectUnapprovedAccountDeletions,
   type ActivityAccount,
 } from "@/lib/privacy/inactivity";
 
@@ -191,6 +195,19 @@ describe("selectInactivityActions", () => {
     expect(actions).toEqual([{ kind: "reset", id: "parent-1" }]);
   });
 
+  it("leaves a never-approved learner to the 30-day clock", () => {
+    const pending = account({
+      accountStatus: "pending_consent",
+      consentApprovedAt: null,
+      createdAt: daysAgo(400),
+      lastSignInAt: daysAgo(400),
+      parentId: null,
+      parentEmail: null,
+      guardianEmail: null,
+    });
+    expect(selectInactivityActions([pending], now)).toEqual([]);
+  });
+
   it("treats recent usage as activity even when the last sign-in is old", () => {
     const actions = selectInactivityActions(
       [
@@ -202,6 +219,87 @@ describe("selectInactivityActions", () => {
       now,
     );
     expect(actions).toEqual([]);
+  });
+});
+
+describe("selectUnapprovedAccountDeletions", () => {
+  it("deletes a never-approved learner 30 days after the account was created", () => {
+    const pending = account({
+      accountStatus: "pending_consent",
+      consentApprovedAt: null,
+      createdAt: daysAgo(PENDING_UNAPPROVED_DELETE_AFTER_MS / DAY),
+      lastSignInAt: daysAgo(1),
+      parentId: null,
+      parentEmail: "parent@example.com",
+    });
+    expect(selectUnapprovedAccountDeletions([pending], now)).toEqual([
+      {
+        kind: "standalone",
+        userId: "account-1",
+        username: "River",
+      },
+    ]);
+  });
+
+  it("keeps a never-approved learner for 29 days", () => {
+    const pending = account({
+      accountStatus: "pending_consent",
+      consentApprovedAt: null,
+      createdAt: daysAgo(PENDING_UNAPPROVED_DELETE_AFTER_MS / DAY - 1),
+      parentId: null,
+    });
+    expect(selectUnapprovedAccountDeletions([pending], now)).toEqual([]);
+  });
+
+  it("does not use the 30-day clock for teachers, class seats, or approved accounts", () => {
+    const old = daysAgo(40);
+    const rows = [
+      account({
+        id: "teacher-1",
+        role: "teacher",
+        accountStatus: "pending_consent",
+        consentApprovedAt: null,
+        createdAt: old,
+        parentId: null,
+      }),
+      account({
+        id: "seat-1",
+        accountStatus: "pending_consent",
+        consentApprovedAt: null,
+        createdAt: old,
+        parentId: null,
+        teacherId: "teacher-1",
+      }),
+      account({
+        id: "approved-1",
+        accountStatus: "active",
+        consentApprovedAt: daysAgo(10),
+        createdAt: old,
+        parentId: null,
+      }),
+      account({
+        id: "dated-1",
+        accountStatus: "pending_consent",
+        consentApprovedAt: daysAgo(2),
+        createdAt: old,
+        parentId: null,
+      }),
+    ];
+    expect(selectUnapprovedAccountDeletions(rows, now)).toEqual([]);
+  });
+
+  it("states the 30-day clock in the retention migration", () => {
+    const sql = readFileSync(
+      join(process.cwd(), "supabase/migrations/20261022120000_under16_consent_mechanics.sql"),
+      "utf8",
+    );
+    expect(sql).toContain("deleted after 30 days");
+    expect(sql).toContain("account_status");
+    expect(sql).toContain("consent_approved_at");
+    expect(sql).toContain("grandfathered");
+    expect(sql).not.toContain("interval '12 months'");
+    expect(sql).not.toMatch(/UPDATE\s+public\.profiles/i);
+    expect(sql).not.toMatch(/DELETE\s+FROM\s+public\.profiles/i);
   });
 });
 

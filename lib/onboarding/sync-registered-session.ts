@@ -101,6 +101,12 @@ export function applyLearnerAccountSnapshot(
       isTeacher: remote.isTeacher === true || remote.accountRole === "teacher",
       accountStatus,
       consentApprovedAt,
+      parentApprovalRequired:
+        remote.parentApprovalRequired === true
+          ? true
+          : remote.parentApprovalRequired === false
+            ? false
+            : existing.parentApprovalRequired,
       mustChangePassword: remote.mustChangePassword === true,
       ageTier: curriculumCohort,
       curriculumCohort,
@@ -139,6 +145,12 @@ export function applyLearnerAccountSnapshot(
     passwordHash: existing?.passwordHash,
     consentApprovedAt,
     accountStatus,
+    parentApprovalRequired:
+      remote.parentApprovalRequired === true
+        ? true
+        : remote.parentApprovalRequired === false
+          ? false
+          : existing?.parentApprovalRequired,
     supabaseUserId: remote.userId,
   });
 

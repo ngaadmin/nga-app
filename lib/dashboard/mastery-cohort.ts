@@ -1,8 +1,8 @@
 import { SKILLS_REGISTRY } from "@/lib/skills/skills-registry";
 
 /**
- * Learning tracks. The chosen track is also the compliance cohort:
- * Explorer requires parent approval. Do not store a birth year.
+ * Learning tracks. Self-signup parent approval is the under-16 flag in
+ * `lib/onboarding/signup-age-check`, not this track. Do not store a birth year.
  *
  * Explorers 10-13 · Pathfinders 14-16 · Mavericks 17+
  */

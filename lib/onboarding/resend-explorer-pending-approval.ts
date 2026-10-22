@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/consent-request-token";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { rotateConsentRequestToken } from "@/lib/onboarding/lookup-consent-request";
+import { parseMasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,8 +17,8 @@ export type ResendExplorerPendingResult =
   | { ok: false; error: string };
 
 /**
- * Resend the Explorer VPC approval email for the signed-in pending child.
- * Pathfinder / Maverick accounts are rejected — they do not use this hold.
+ * Resend the VPC approval email for the signed-in pending child.
+ * Any under-16 track can be pending. Active accounts are rejected.
  */
 export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplorerPendingResult> {
   const supabase = await createClient();
@@ -45,12 +46,12 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
   const admin = createAdminClient();
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("id, username, account_status, account_role")
+    .select("id, username, account_status, account_role, curriculum_cohort")
     .eq("id", childId)
     .maybeSingle();
 
   if (profileError || !profile?.id || !profile.username) {
-    return { ok: false, error: "We could not find this Explorer profile." };
+    return { ok: false, error: "We could not find this profile." };
   }
   if (profile.account_role === "parent_master") {
     return { ok: false, error: "Parent accounts don't need this approval email." };
@@ -101,6 +102,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
     data: {
       username: profile.username,
       token: nextToken,
+      track: parseMasteryCohort(profile.curriculum_cohort) ?? "explorer",
     },
   });
 

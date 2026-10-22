@@ -141,6 +141,7 @@ async function handleResend(
     data: {
       username: childUsername,
       token: nextToken,
+      track: stored.request.cohort ?? "explorer",
     },
     appUrl: resolveTrustedAppUrl(request.headers.get("origin")),
   });

@@ -111,6 +111,9 @@ describe("class seat session", () => {
       getMasteryCohortFromBirthYear(legacyYear),
     );
     expect(session).not.toHaveProperty("birthYear");
+    const stored = window.sessionStorage.getItem(GUEST_SESSION_STORAGE_KEY) ?? "";
+    expect(stored).not.toContain("birthYear");
+    expect(stored).not.toContain(String(legacyYear));
   });
 
   it("keeps a saved track when an old birth year is also stored", () => {

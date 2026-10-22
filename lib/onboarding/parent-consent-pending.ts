@@ -155,7 +155,7 @@ function readAllPendingConsents(): PendingParentConsent[] {
 
     const valid = entries.filter((entry) => isConsentStillValid(entry));
 
-    if (valid.length !== entries.length) {
+    if (valid.length !== entries.length || /birth[_ ]?year/i.test(raw)) {
       writeAllPendingConsents(valid);
     }
 

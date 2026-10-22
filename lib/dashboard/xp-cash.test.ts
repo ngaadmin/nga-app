@@ -19,6 +19,7 @@ import {
   validateCashInPoints,
   withCashInPaidReset,
   withExchangeRate,
+  withFreshestExchangeRate,
 } from "@/lib/dashboard/xp-cash";
 import {
   convertPointsToCents as pointsToCents,
@@ -325,6 +326,31 @@ describe("exchange rate source of truth", () => {
       "2026-10-18T00:00:00.000Z",
     );
     expect(pickExchangeRate(earlier, later).exchangeRateCentsPer100Xp).toBe(50);
+  });
+
+  it("cashes in at the newer saved rate and keeps the local coin balance", () => {
+    const onScreen = withExchangeRate(
+      wallet({ totalPoints: 400, lifetimePointsEarned: 500 }),
+      100,
+      "2026-10-22T01:00:00.000Z",
+    );
+    const savedByParent = withExchangeRate(
+      wallet({ totalPoints: 500, lifetimePointsEarned: 500 }),
+      50,
+      "2026-10-22T01:05:00.000Z",
+    );
+    const quoted = withFreshestExchangeRate(onScreen, savedByParent);
+    expect(quoted.totalPoints).toBe(400);
+    expect(quoted.exchangeRateCentsPer100Xp).toBe(50);
+
+    const spent = spendSpendableXp(quoted, 100, {
+      id: "cash-in-fresh-rate",
+      at: "2026-10-22T01:06:00.000Z",
+    });
+    expect(spent.ok).toBe(true);
+    if (!spent.ok) return;
+    expect(spent.audCents).toBe(50);
+    expect(spent.pointsClaimed).toBe(100);
   });
 });
 

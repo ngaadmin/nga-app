@@ -189,12 +189,12 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByLabel("Your Email Address")).toBeVisible();
   await expect(page.getByText("Check the highlighted fields and try again.")).toHaveCount(0);
-  await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
+  await expect(page.getByLabel("Parent/guardian email address")).toBeVisible();
   await expect(
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Create My Free Account" }),
+    page.getByRole("button", { name: "Request Parent Approval" }),
   ).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/signup-375-C-maverick.png",
@@ -309,13 +309,16 @@ test("age flag decides the parent step and guest play never asks for a year", as
   await expect(page.getByLabel("Username")).toHaveValue("YoungMav");
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByLabel("Your Email Address")).toBeVisible();
-  await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
+  await expect(page.getByLabel("Parent/guardian email address")).toBeVisible();
   await expect(
     page.getByText("Send me occasional updates about NextGenAchiever$"),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Create My Free Account" }),
+    page.getByRole("button", { name: "Request Parent Approval" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create My Free Account" }),
+  ).toHaveCount(0);
   const stored = await page.evaluate(
     (key) => window.localStorage.getItem(key) ?? "",
     "nga_guest_session",
@@ -323,11 +326,13 @@ test("age flag decides the parent step and guest play never asks for a year", as
   expect(stored).not.toContain("2009");
   expect(stored).not.toContain("2010");
 
-  await page.getByRole("button", { name: "Back", exact: true }).click();
-  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.goto("/onboarding/sign-up?as=learner");
+  await expect(page.locator("#signup-birth-year")).toBeVisible();
   await page.getByRole("radio", { name: /Explorer/ }).click();
   await page.locator("#signup-birth-year").selectOption("2009");
   await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByLabel("Username").fill("OlderExp");
+  await page.getByLabel("Create your password").fill("secret1");
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByLabel("Your Email Address")).toBeVisible();
   await expect(

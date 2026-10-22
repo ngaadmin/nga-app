@@ -32,7 +32,7 @@ test("parent PIN opens the child record, download strips secrets, delete lists w
 
   await page.getByLabel("Parent PIN").fill("0000");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByText("Wrong PIN - nice try.")).toBeVisible();
+  await expect(page.getByText("That PIN didn't match. Try again.")).toBeVisible();
 
   await page.getByLabel("Parent PIN").fill("2580");
   await page.getByRole("button", { name: "Continue" }).click();

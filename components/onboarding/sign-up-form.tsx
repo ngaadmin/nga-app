@@ -10,8 +10,16 @@ import { OnboardingProgress } from "@/components/onboarding/onboarding-progress"
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { createParentMasterAndApprove, approveConsentRequest } from "@/lib/onboarding/approve-consent-request";
-import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
+import {
+  createParentMasterAndApprove,
+  approveConsentRequest,
+  declineConsentRequest,
+  lookupParentMasterByEmail,
+} from "@/lib/onboarding/approve-consent-request";
+import {
+  checkSignupUsernameAvailable,
+  createSupabaseAccount,
+} from "@/lib/onboarding/create-supabase-account";
 import {
   displayUsernameOrEmpty,
   isInternalPlaceholderUsername,
@@ -40,7 +48,10 @@ import {
   parseMasteryCohort,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { decideLearnerAge } from "@/lib/onboarding/signup-age-check";
+import {
+  decideLearnerAge,
+  signupRequiresParentApproval,
+} from "@/lib/onboarding/signup-age-check";
 import {
   lookupConsentToken,
   type PendingParentConsent,
@@ -161,6 +172,7 @@ export function SignUpForm() {
   });
   const [learnerStep, setLearnerStep] = useState<LearnerSignupStep>("track");
   const [birthYear, setBirthYear] = useState<number | null>(null);
+  const [under16PathReached, setUnder16PathReached] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const ageTier = isParentMaster ? null : cohort;
@@ -169,11 +181,14 @@ export function SignUpForm() {
   const isMaverick = !isParentMaster && ageTier === "maverick";
   const ageDecision =
     isParentMaster || birthYear == null ? null : decideLearnerAge(birthYear);
-  const needsParentApproval = ageDecision?.parentApprovalRequired === true;
+  const needsParentApproval = signupRequiresParentApproval({
+    birthYear,
+    under16PathReached,
+  });
   const needsLearnerEmail =
     isPathfinder ||
     isMaverick ||
-    (isExplorer && ageDecision?.parentApprovalRequired === false);
+    (isExplorer && birthYear != null && !needsParentApproval);
 
   const [username, setUsername] = useState("");
   const [learnerEmail, setLearnerEmail] = useState("");
@@ -190,12 +205,15 @@ export function SignUpForm() {
     "explorer_consent" | "pathfinder_claim" | null
   >(null);
   const [parentConsentLoading, setParentConsentLoading] = useState(isParentMaster);
+  const [needsExplicitApproval, setNeedsExplicitApproval] = useState(false);
+  const [confirmExplicitApproval, setConfirmExplicitApproval] = useState(false);
   const [isSendingApprovalEmail, setIsSendingApprovalEmail] = useState(false);
   const [isCreatingParentMaster, setIsCreatingParentMaster] = useState(false);
   const [approvalSavedUsername, setApprovalSavedUsername] = useState<string | null>(
     null,
   );
   const approvalEmailInFlightRef = useRef(false);
+  const explicitApprovalInFlightRef = useRef(false);
   const parentMasterInFlightRef = useRef(false);
   const skipSubmitRef = useRef(false);
   const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
@@ -260,28 +278,17 @@ export function SignUpForm() {
         return;
       }
 
-      // Explorer VPC: existing parent master auto-approves; otherwise create-account.
+      // An existing parent master must tap Approve. Never approve on load.
       if (flow === "explorer_consent") {
-        const approved = await approveConsentRequest(consentToken);
+        const master = await lookupParentMasterByEmail(pending.parentEmail);
         if (cancelled) return;
 
-        if (approved.success) {
-          setApprovalSavedUsername(approved.childUsername);
-          setPendingConsent(null);
-          setParentMasterFlow(null);
+        if (master.exists) {
+          setPendingConsent(pending);
+          setParentMasterFlow(flow);
+          setParentEmail(pending.parentEmail);
+          setNeedsExplicitApproval(true);
           setParentConsentLoading(false);
-          return;
-        }
-
-        if (!approved.needsParentAccount) {
-          setPendingConsent(null);
-          setParentMasterFlow(null);
-          setParentConsentLoading(false);
-          setErrors({
-            form:
-              approved.error ||
-              "We could not approve this learner. Try again or use a fresh approval email.",
-          });
           return;
         }
       }
@@ -469,7 +476,7 @@ export function SignUpForm() {
     router.push("/");
   }
 
-  function handleLearnerNext() {
+  async function handleLearnerNext() {
     if (learnerStep === "track") {
       const nextErrors = collectValidationErrors("track");
       if (Object.keys(nextErrors).length > 0) {
@@ -479,6 +486,14 @@ export function SignUpForm() {
       if (birthYear == null || !decideLearnerAge(birthYear)) {
         setErrors({ birthYear: "Choose the year you were born." });
         return;
+      }
+      if (
+        signupRequiresParentApproval({
+          birthYear,
+          under16PathReached,
+        })
+      ) {
+        setUnder16PathReached(true);
       }
       // Replacing Next with the finish button can submit the form in the
       // same click. Ignore only that follow-up event.
@@ -496,6 +511,13 @@ export function SignUpForm() {
         setErrors(nextErrors);
         return;
       }
+      if (!isParentMaster && username.trim()) {
+        const available = await checkSignupUsernameAvailable(username);
+        if (!available.ok) {
+          setErrors({ username: available.error });
+          return;
+        }
+      }
       skipSubmitRef.current = true;
       queueMicrotask(() => {
         skipSubmitRef.current = false;
@@ -509,6 +531,57 @@ export function SignUpForm() {
     const next = collectValidationErrors();
     setErrors(next);
     return Object.keys(next).length === 0;
+  }
+
+  async function handleExplicitDecline() {
+    if (!consentToken || explicitApprovalInFlightRef.current) return;
+    explicitApprovalInFlightRef.current = true;
+    setIsCreatingParentMaster(true);
+    setErrors((prev) => ({ ...prev, form: undefined }));
+    try {
+      const declined = await declineConsentRequest(consentToken);
+      if (!declined.success) {
+        setErrors({
+          form: declined.error || "We could not decline this learner. Try again.",
+        });
+        return;
+      }
+      setNeedsExplicitApproval(false);
+      setPendingConsent(null);
+      setParentMasterFlow(null);
+      setErrors({
+        form: `${declined.childUsername}'s account wasn't approved. It stays closed.`,
+      });
+    } finally {
+      explicitApprovalInFlightRef.current = false;
+      setIsCreatingParentMaster(false);
+    }
+  }
+
+  async function handleExplicitApprove() {
+    if (!consentToken || explicitApprovalInFlightRef.current) return;
+    explicitApprovalInFlightRef.current = true;
+    setIsCreatingParentMaster(true);
+    setErrors((prev) => ({ ...prev, form: undefined }));
+
+    try {
+      const approved = await approveConsentRequest(consentToken);
+      if (approved.success) {
+        setApprovalSavedUsername(approved.childUsername);
+        setNeedsExplicitApproval(false);
+        setPendingConsent(null);
+        setParentMasterFlow(null);
+        return;
+      }
+      setErrors({
+        form:
+          approved.error ||
+          "We could not approve this learner. Try again or use a fresh approval email.",
+      });
+    } finally {
+      explicitApprovalInFlightRef.current = false;
+      setIsCreatingParentMaster(false);
+    }
   }
 
   async function handleParentMasterSubmit() {
@@ -630,6 +703,7 @@ export function SignUpForm() {
         username: username.trim(),
         cohort,
         birthYear: birthYear ?? undefined,
+        under16PathReached,
         password: password.trim(),
         learnerEmail: needsLearnerEmail ? learnerEmail.trim() : undefined,
         parentEmail: needsParentApproval ? parentEmail.trim() : undefined,
@@ -680,7 +754,7 @@ export function SignUpForm() {
         learnerEmail: needsLearnerEmail ? learnerEmail.trim() : undefined,
         password: password.trim(),
         accountStatus: isPendingConsent ? "PENDING_CONSENT" : "ACTIVE",
-        parentApprovalRequired: ageDecision?.parentApprovalRequired,
+        parentApprovalRequired: needsParentApproval,
         marketingOptIn: false,
         supabaseUserId: result.userId,
         curriculumCohort: savedCohort,
@@ -739,6 +813,82 @@ export function SignUpForm() {
             <ButtonLink href={ONBOARDING_SIGN_IN_PATH} variant="cta" fullWidth>
               {approvalCopy.logIn}
             </ButtonLink>
+          </div>
+        </section>
+      );
+    }
+
+    if (needsExplicitApproval && pendingConsent) {
+      const childName =
+        displayUsernameOrEmpty(pendingConsent.childUsername) || "this learner";
+      return (
+        <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
+          <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
+            <h1 className="font-heading text-3xl font-extrabold leading-tight text-nga-primary sm:text-[2rem]">
+              Approve {childName}
+            </h1>
+            <p className="font-sans text-base leading-relaxed text-nga-slate">
+              {childName} is waiting for you to approve their profile. Nothing
+              is approved until you tap the button.
+            </p>
+            {confirmExplicitApproval ? (
+              <p className="font-sans text-base font-semibold text-nga-primary">
+                Approve {childName}&apos;s account?
+              </p>
+            ) : null}
+            {errors.form ? (
+              <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
+                {errors.form}
+              </p>
+            ) : null}
+            {confirmExplicitApproval ? (
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  fullWidth
+                  onClick={() => setConfirmExplicitApproval(false)}
+                  disabled={isCreatingParentMaster}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="cta"
+                  fullWidth
+                  onClick={() => {
+                    void handleExplicitApprove();
+                  }}
+                  disabled={isCreatingParentMaster}
+                  aria-busy={isCreatingParentMaster || undefined}
+                >
+                  {isCreatingParentMaster ? "Approving…" : "Confirm"}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  fullWidth
+                  onClick={() => {
+                    void handleExplicitDecline();
+                  }}
+                  disabled={isCreatingParentMaster}
+                >
+                  Decline
+                </Button>
+                <Button
+                  type="button"
+                  variant="cta"
+                  fullWidth
+                  onClick={() => setConfirmExplicitApproval(true)}
+                  disabled={isCreatingParentMaster}
+                >
+                  Approve
+                </Button>
+              </div>
+            )}
           </div>
         </section>
       );

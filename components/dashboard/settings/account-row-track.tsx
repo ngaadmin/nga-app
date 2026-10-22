@@ -7,7 +7,6 @@ import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
-  masteryCohortAgeRangeWords,
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -90,7 +89,7 @@ export function AccountRowTrack({ account, canChange }: AccountRowTrackProps) {
             {masteryCohortLabel(current)}
             <span className="font-sans text-[15px] font-medium text-[#1E3A5F]">
               {" "}
-              · Ages {masteryCohortAgeRangeWords(current)}
+              · Ages {masteryCohortAgeRangeLabel(current)}
             </span>
           </p>
         </div>

@@ -220,7 +220,7 @@ export const copyMatrix = {
         setupNewLabel: "New PIN",
         pinPlaceholder: "4-digit PIN",
         setupConfirmLabel: "Confirm new PIN",
-        pinError: "Wrong PIN - nice try.",
+        pinError: "That PIN didn't match. Try again.",
         setupMismatch: "PINs don't match - try again.",
         pinConfirm: "Unlock Preferences",
         setupSave: "Save & Unlock Preferences",
@@ -281,9 +281,9 @@ export const copyMatrix = {
         mismatch: "New PINs don't match - try again.",
         sameAsOld: "Pick a different PIN than your current one.",
         forgotPin: "Forgot PIN?",
-        forgotPinSending: "Sending recovery code…",
-        forgotPinSuccess:
-          "Recovery code {code} sent to {email}. Use it as your current PIN, then set a new one.",
+        forgotPinSending: "Sending…",
+        forgotPinSuccess: "We've emailed you a link to reset your PIN.",
+        pinSaved: "PIN saved",
         save: "Save New PIN",
         cancel: "Cancel",
       },
@@ -305,15 +305,19 @@ export const copyMatrix = {
         saveRate: "Save rate",
         rateAmountLabel: "Amount for 100 coins",
         rateAmountPlaceholder: "2.00",
-        invalidRateError: "Enter an amount like 2, 3, or 0.50.",
+        invalidRateError:
+          "Enter an amount like 2, 3, or 0.50, up to $999.99 per 100 coins.",
+        largeRateConfirm: "That's a large rate. Save 100 coins = {amount}?",
+        largeRateConfirmYes: "Confirm",
+        largeRateConfirmNo: "Cancel",
         rateSavedTemplate: "Saved. 100 coins = {amount}. They can cash in now.",
         noLinkedChild: "Add your kid under Accounts, then set the rate here.",
         whichKidLabel: "Which kid",
         convertNowHeading: "Convert Now",
-        convertFullBalance: "Cash in all points",
+        convertFullBalance: "Cash in all coins",
         customAmountLabel: "Coins to cash in",
         customAmountPlaceholder: "Whole number",
-        chooseAmountHint: "Type a whole number, or tap Cash in all points.",
+        chooseAmountHint: "Type a whole number, or tap Cash in all coins.",
         invalidAmountError: "Enter a whole number of coins.",
         overBalanceError: "That's more coins than you can cash in.",
         zeroPayoutError: "That's under 1 cent. Those coins stay in your balance.",
@@ -321,10 +325,10 @@ export const copyMatrix = {
         payoutReadoutTemplate: "{points} {unit} = {amount}",
         sendToVault: "Send to Vault",
         disclaimer:
-          "This is the amount your grown-up agreed to pay. The app doesn't move any money.",
+          "This is the amount your account manager agreed to pay. The app doesn't move any money.",
         confirmTitle: "In-app cash",
         confirmBody:
-          "This is the amount your grown-up agreed to pay. The app doesn't move any money.",
+          "This is the amount your account manager agreed to pay. The app doesn't move any money.",
         confirmAcknowledge: "Got it",
         cashInHeading: "Cash in coins",
         cashInRateHint: "Rate: {rate}",
@@ -335,11 +339,11 @@ export const copyMatrix = {
         claimingLabel: "Cashing in…",
         childPayoutReadoutTemplate: "{points} {unit} = {amount}",
         cashDestinationHint:
-          "This goes into Cash in your Vault. You can assign it to jars. It is the amount your grown-up agreed to pay. The app doesn't move any money.",
+          "This goes into Cash in your Vault. You can assign it to jars. It is the amount your account manager agreed to pay. The app doesn't move any money.",
         claimCashReward: "Cash in",
         successTitle: "Cashed in",
         successBodyTemplate:
-          "{amount} is now in Cash in your Vault. Assign it to a jar when you are ready.",
+          "{amount} is now in Cash in your Vault. Assign it to a jar when you are ready. Your account manager can see this in their account.",
         successAcknowledge: "Let's Go!",
         checkingAccount: "Checking your account…",
         guestCashInBody:
@@ -347,23 +351,15 @@ export const copyMatrix = {
         guestCashInAction: "Save my progress",
         askParentTitle: "Agree a rate first",
         askParentWhat:
-          "Chat with your grown-up and agree a rate, like 100 coins = $2.",
+          "Chat with your account manager and agree a rate, like 100 coins = $2.",
         askParentExchange:
           "They set it in Settings. Then you can cash in here. The amount is what they agreed to pay. The app doesn't move any money.",
         askParentBody:
-          "Chat with your grown-up and agree a rate, like 100 coins = $2. They set it in Settings. Then you can cash in here.",
+          "Chat with your account manager and agree a rate, like 100 coins = $2. They set it in Settings. Then you can cash in here.",
         classAccountBody: CLASS_ACCOUNT_XP_MESSAGE,
         classAccountCashInNote: "Class seats don't cash in coins here.",
         askParentIfParentBody:
           "Set the coins cash rate in Settings. Pick an amount for 100 coins, like $2 or 50 cents. Then coins can be cashed in here. The amount is what you agreed to pay. The app doesn't move any money.",
-        parentEmail: {
-          draftLabel: "Parent notification",
-          title: "Email sent to guardian",
-          body: "We sent a heads-up about this coin cash-in. The amount is what your grown-up agreed to pay. The app doesn't move any money.",
-          toLabel: "To:",
-          subjectLabel: "Subject:",
-          acknowledge: "Got it",
-        },
       },
     },
     academy: {

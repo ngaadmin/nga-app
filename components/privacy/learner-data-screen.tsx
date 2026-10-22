@@ -9,7 +9,6 @@ import {
   GoldCoinIcon,
   LockIcon,
   TrashIcon,
-  XpStarIcon,
 } from "@/lib/dashboard/icons";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
@@ -63,7 +62,7 @@ export function LearnerDataScreen({
         {title}
       </h1>
       <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Everything NextGenAchiever$ keeps about this account.
+        Everything NextGenAchievers keeps about this account.
       </p>
 
       {siblings.length > 1 ? (
@@ -153,12 +152,10 @@ export function LearnerDataScreen({
           value={`${view.coins.toLocaleString()} coins`}
         />
         <WideStat
-          icon={<XpStarIcon className="size-5 text-white" />}
-          iconClass="bg-[#0CC1E0] text-white"
-          label="Lifetime XP"
-          note="A separate total. Cashing in never lowers it."
-          value={`${view.lifetimeXp.toLocaleString()} XP`}
-          accent
+          icon={<GoldCoinIcon className="size-5" />}
+          label="Coins earned"
+          note="The total coins this account has earned."
+          value={`${view.lifetimeXp.toLocaleString()} coins`}
         />
       </section>
 

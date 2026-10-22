@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
 import {
-  masteryCohortAgeRangeWords,
+  masteryCohortAgeRangeLabel,
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
@@ -53,7 +53,7 @@ export function LearnerFamilyAccount({ username, cohort }: LearnerFamilyAccountP
             {track}
             <span className="font-sans text-[15px] font-medium text-[#1E3A5F]">
               {" "}
-              · Ages {masteryCohortAgeRangeWords(cohort)}
+              · Ages {masteryCohortAgeRangeLabel(cohort)}
             </span>
           </p>
         </div>

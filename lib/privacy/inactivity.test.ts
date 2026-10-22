@@ -241,6 +241,22 @@ describe("selectUnapprovedAccountDeletions", () => {
     ]);
   });
 
+  it("deletes a declined learner on the same 30-day clock", () => {
+    const declined = account({
+      accountStatus: "declined",
+      consentApprovedAt: null,
+      createdAt: daysAgo(PENDING_UNAPPROVED_DELETE_AFTER_MS / DAY),
+      parentId: null,
+    });
+    expect(selectUnapprovedAccountDeletions([declined], now)).toEqual([
+      {
+        kind: "standalone",
+        userId: "account-1",
+        username: "River",
+      },
+    ]);
+  });
+
   it("keeps a never-approved learner for 29 days", () => {
     const pending = account({
       accountStatus: "pending_consent",

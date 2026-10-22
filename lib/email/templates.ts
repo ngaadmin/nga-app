@@ -12,7 +12,8 @@ export type OnboardingEmailType =
   | "ACCOUNT_DELETED_MASTER"
   | "ACCOUNT_DELETED_CHILD"
   | "INACTIVITY_WARNING"
-  | "TEACHER_CLASS_CONFIRM";
+  | "TEACHER_CLASS_CONFIRM"
+  | "PARENT_PIN_RESET";
 
 export type ExplorerParentEmailData = {
   username: string;
@@ -94,6 +95,10 @@ export type TeacherClassConfirmEmailData = {
   token: string;
 };
 
+export type ParentPinResetEmailData = {
+  token: string;
+};
+
 /** v1 friend invite: landing URL only, no codes or personalization. */
 export type FriendInviteEmailData = Record<string, never>;
 
@@ -112,6 +117,7 @@ export type OnboardingEmailDataMap = {
   ACCOUNT_DELETED_CHILD: AccountDeletedChildEmailData;
   INACTIVITY_WARNING: InactivityWarningEmailData;
   TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
+  PARENT_PIN_RESET: ParentPinResetEmailData;
 };
 
 export type BuiltEmail = {
@@ -135,30 +141,31 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** Last-resort host when NEXT_PUBLIC_APP_URL is unset (local/misconfigured). */
-const FALLBACK_APP_URL = "https://nga-app-three.vercel.app";
+/**
+ * Production app origin for email links and images.
+ * `NEXT_PUBLIC_APP_URL` can point somewhere else (a preview or local host).
+ * The retired preview host is ignored so mail does not keep that address.
+ */
+export const PRODUCTION_APP_URL = "https://app.nextgenachievers.com";
 
 /**
  * Canonical app origin for email CTAs and allowlisting.
- * Prefers `NEXT_PUBLIC_APP_URL`, then the hardcoded production fallback.
+ * Prefers `NEXT_PUBLIC_APP_URL`, then {@link PRODUCTION_APP_URL}.
  */
 export function getDefaultAppUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (fromEnv) {
     try {
-      return new URL(fromEnv).origin;
+      const url = new URL(fromEnv);
+      if (!isStaleAppHost(url.host)) {
+        return url.origin;
+      }
     } catch {
       // fall through
     }
   }
-  return FALLBACK_APP_URL;
+  return PRODUCTION_APP_URL;
 }
-
-/**
- * @deprecated Prefer {@link getDefaultAppUrl}. Kept for existing imports.
- * Resolves to the same env-aware origin.
- */
-export const PRODUCTION_APP_URL = getDefaultAppUrl();
 
 function deploymentHost(value: string | undefined): string | null {
   const trimmed = value?.trim();
@@ -171,6 +178,11 @@ function deploymentHost(value: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+function isStaleAppHost(host: string): boolean {
+  const hostname = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "").toLowerCase();
+  return hostname === "nga-app-three.vercel.app" || hostname.endsWith(".vercel.app");
 }
 
 function isLoopbackHost(host: string): boolean {
@@ -196,7 +208,7 @@ export function allowedEmailLinkHosts(): Set<string> {
     "VERCEL_PROJECT_PRODUCTION_URL",
   ] as const) {
     const host = deploymentHost(process.env[name]);
-    if (host) hosts.add(host);
+    if (host && !isStaleAppHost(host)) hosts.add(host);
   }
 
   if (!process.env.VERCEL) {
@@ -219,7 +231,11 @@ export function resolveTrustedAppUrl(candidate?: string | null): string {
       const protocolOk = url.protocol === "https:" || url.protocol === "http:";
       const host = url.host.toLowerCase();
       const loopbackOk = !process.env.VERCEL && isLoopbackHost(host);
-      if (protocolOk && (allowedEmailLinkHosts().has(host) || loopbackOk)) {
+      if (
+        protocolOk &&
+        !isStaleAppHost(host) &&
+        (allowedEmailLinkHosts().has(host) || loopbackOk)
+      ) {
         return url.origin;
       }
     } catch {
@@ -271,18 +287,20 @@ function ctaButton(label: string, href: string, background = "#FFA503"): string 
   `;
 }
 
-const PENNY_EMAIL_SRC =
-  "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny-master-email.png";
 const TEEN_APPROVAL_HEADER_SRC =
   "https://app.nextgenachievers.com/email/penny-email-header@2x.png";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "info@nextgenachievers.com";
 
+function pennyEmailSrc(): string {
+  return `${getDefaultAppUrl()}/assets/illustrations/characters/penny/penny-master-email.png`;
+}
+
 function pennyIllustration(): string {
   return `
     <p style="margin:20px 0;text-align:left;">
       <img
-        src="${escapeHtml(PENNY_EMAIL_SRC)}"
+        src="${escapeHtml(pennyEmailSrc())}"
         alt="Penny"
         width="160"
         height="160"
@@ -1275,6 +1293,44 @@ export function buildTeacherClassConfirmEmail(
   return { subject, preheader, html, text };
 }
 
+export function buildParentPinResetEmail(
+  data: ParentPinResetEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const base = resolveAppUrl(appUrl);
+  const resetUrl = `${base}/onboarding/reset-pin?token=${encodeURIComponent(data.token.trim())}`;
+  const subject = "Reset your NextGenAchievers parent PIN";
+  const preheader = "This link expires in 30 minutes.";
+  const header = "Reset your parent PIN";
+  const text = [
+    "Set a new parent PIN for your NextGenAchievers account.",
+    "",
+    "This link works once and expires in 30 minutes.",
+    "",
+    `Set a new PIN: ${resetUrl}`,
+    "",
+    "The Team at NextGenAchievers",
+  ].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        Set a new parent PIN for your NextGenAchievers account.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        This link works once and expires in 30 minutes.
+      </p>
+      ${ctaButton("Set a new PIN", resetUrl)}
+      ${pennyIllustration()}
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchievers
+      </p>
+    `,
+  });
+  return { subject, preheader, html, text };
+}
+
 export function buildOnboardingEmail<T extends OnboardingEmailType>(
   type: T,
   data: OnboardingEmailDataMap[T],
@@ -1345,6 +1401,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "TEACHER_CLASS_CONFIRM":
       return buildTeacherClassConfirmEmail(
         data as TeacherClassConfirmEmailData,
+        appUrl,
+      );
+    case "PARENT_PIN_RESET":
+      return buildParentPinResetEmail(
+        data as ParentPinResetEmailData,
         appUrl,
       );
     default: {

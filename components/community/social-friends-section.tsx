@@ -1,71 +1,28 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { InviteFriendsControl } from "@/components/community/invite-friends-control";
 import { DashboardSectionHeading } from "@/components/dashboard/dashboard-section-heading";
-import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
-import { FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
+import {
+  loadOptedInLeaderboard,
+  type LeaderboardPlayer,
+} from "@/lib/community/opted-in-leaderboard";
+import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
-import { DASHBOARD_HOME_PLACEHOLDER_STATE } from "@/lib/dashboard/home-state";
 import { cn } from "@/lib/utils/cn";
-
-const CURRENT_USER_RANK = 67;
-
-type LeaderboardEntry = {
-  id: string;
-  avatarEmoji: string;
-  username: string;
-  dayStreak: number;
-  lifetimePoints: number;
-  isCurrentUser: boolean;
-  rank: number;
-};
-
-type SeedPlayer = Omit<LeaderboardEntry, "isCurrentUser" | "rank">;
-
-const COMMUNITY_SEED_PLAYERS: readonly SeedPlayer[] =
-  [
-    {
-      id: "seed-1",
-      username: "Pat_40$",
-      avatarEmoji: "🦊",
-      dayStreak: 42,
-      lifetimePoints: 6100,
-    },
-    {
-      id: "seed-2",
-      username: "Hann4h",
-      avatarEmoji: "🐯",
-      dayStreak: 18,
-      lifetimePoints: 4820,
-    },
-    {
-      id: "seed-3",
-      username: "JonnyCa$h",
-      avatarEmoji: "🦁",
-      dayStreak: 7,
-      lifetimePoints: 3890,
-    },
-  ];
 
 type FriendRowProps = {
   rank: number;
-  avatarEmoji: string;
   username: string;
-  dayStreak: number;
-  lifetimePoints: number;
+  coinsEarned: number;
   highlight?: boolean;
-  showYouMarker?: boolean;
 };
 
 function FriendRow({
   rank,
-  avatarEmoji,
   username,
-  dayStreak,
-  lifetimePoints,
+  coinsEarned,
   highlight = false,
-  showYouMarker = false,
 }: FriendRowProps) {
   return (
     <li
@@ -81,71 +38,42 @@ function FriendRow({
         #{rank}
       </span>
 
-      <span
-        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#BDE9FB]/35 text-sm leading-none"
-        aria-hidden
-      >
-        {avatarEmoji}
-      </span>
-
       <div className="min-w-0 flex-1">
-        <p className="flex min-w-0 items-center gap-1">
-          <span className="truncate font-heading text-sm font-extrabold text-[#031F82]">
-            {username}
-          </span>
-          {showYouMarker ? (
-            <span className="shrink-0 rounded bg-[#FFA503]/20 px-1 py-px font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
+        <p className="truncate font-heading text-sm font-extrabold text-[#031F82]">
+          {username}
+          {highlight ? (
+            <span className="ml-1 rounded bg-[#FFA503]/20 px-1 py-px font-heading text-[10px] font-bold uppercase tracking-wide text-[#031F82]">
               You
             </span>
           ) : null}
         </p>
-        <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0">
-          <span className="inline-flex items-center gap-0.5">
-            <FlameIcon className="size-2.5 text-[#FFA503]" />
-            <span className="font-heading text-[11px] font-bold text-[#031F82]">
-              {dayStreak} day streak
-            </span>
+        <span className="mt-0.5 inline-flex items-center gap-0.5">
+          <GoldCoinIcon className="size-2.5 text-[#FFA503]" />
+          <span className="font-heading text-[11px] font-bold text-[#031F82]">
+            {coinsEarned.toLocaleString()} coins earned
           </span>
-          <span className="inline-flex items-center gap-0.5">
-            <GoldCoinIcon className="size-2.5 text-[#FFA503]" />
-            <span className="font-heading text-[11px] font-bold text-[#031F82]">
-              {lifetimePoints.toLocaleString()} lifetime XP
-            </span>
-          </span>
-        </div>
+        </span>
       </div>
     </li>
   );
 }
 
-/** Community leaderboard. Seed rows are sample players, not the user's friends. */
+/** Community leaderboard of real opted-in players, ranked by coins earned. */
 export function SocialFriendsSection() {
   const { username } = useDashboardUser();
-  const { lifetimeXp } = useDashboardWallet();
-  const { dayStreak } = DASHBOARD_HOME_PLACEHOLDER_STATE;
+  const [players, setPlayers] = useState<LeaderboardPlayer[] | null>(null);
 
-  const rankedEntries = useMemo((): LeaderboardEntry[] => {
-    const seeds: LeaderboardEntry[] = COMMUNITY_SEED_PLAYERS.slice(0, 3).map(
-      (player, index) => ({
-        ...player,
-        rank: index + 1,
-        isCurrentUser: false,
-      }),
-    );
+  useEffect(() => {
+    let cancelled = false;
+    void loadOptedInLeaderboard().then((rows) => {
+      if (!cancelled) setPlayers(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-    return [
-      ...seeds,
-      {
-        id: "current-user",
-        avatarEmoji: "⭐",
-        username,
-        dayStreak,
-        lifetimePoints: lifetimeXp,
-        isCurrentUser: true,
-        rank: CURRENT_USER_RANK,
-      },
-    ];
-  }, [dayStreak, lifetimeXp, username]);
+  const you = username.trim().toLowerCase();
 
   return (
     <section aria-labelledby="social-friends-heading" className="w-full shrink-0">
@@ -159,23 +87,28 @@ export function SocialFriendsSection() {
         <InviteFriendsControl />
       </div>
       <p className="mt-1 font-sans text-[14px] leading-snug text-nga-slate/80">
-        Ranked by lifetime XP. Cashing in does not change this.
+        Ranked by coins earned.
       </p>
 
-      <ol className="mt-2 space-y-1">
-        {rankedEntries.map((entry) => (
-          <FriendRow
-            key={entry.id}
-            rank={entry.rank}
-            avatarEmoji={entry.avatarEmoji}
-            username={entry.username}
-            dayStreak={entry.dayStreak}
-            lifetimePoints={entry.lifetimePoints}
-            highlight={entry.isCurrentUser}
-            showYouMarker={entry.isCurrentUser && entry.lifetimePoints > 0}
-          />
-        ))}
-      </ol>
+      {players == null ? (
+        <p className="mt-3 font-sans text-sm text-[#1E3A5F]">Loading the leaderboard…</p>
+      ) : players.length === 0 ? (
+        <p className="mt-3 font-sans text-sm text-[#1E3A5F]" role="status">
+          No one on the leaderboard yet
+        </p>
+      ) : (
+        <ol className="mt-2 space-y-1">
+          {players.map((entry, index) => (
+            <FriendRow
+              key={entry.username}
+              rank={index + 1}
+              username={entry.username}
+              coinsEarned={entry.coinsEarned}
+              highlight={entry.username.trim().toLowerCase() === you}
+            />
+          ))}
+        </ol>
+      )}
     </section>
   );
 }

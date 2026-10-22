@@ -75,8 +75,8 @@ export function mapActivityRow(row: Record<string, unknown>): ActivityAccount | 
   };
 }
 
-function asAccountStatus(value: unknown): "pending_consent" | "active" | null {
-  if (value === "pending_consent" || value === "active") return value;
+function asAccountStatus(value: unknown): "pending_consent" | "declined" | "active" | null {
+  if (value === "pending_consent" || value === "declined" || value === "active") return value;
   return null;
 }
 

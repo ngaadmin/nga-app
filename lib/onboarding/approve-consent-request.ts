@@ -586,3 +586,129 @@ async function completeConsentApproval(input: {
 function isUniqueViolation(error: { code?: string; message?: string }): boolean {
   return error.code === "23505" || /duplicate key|unique/i.test(error.message ?? "");
 }
+
+export type DeclineConsentResult =
+  | { success: true; childUsername: string }
+  | { success: false; error: string };
+
+/**
+ * Parent declines a pending learner. The profile stays, marked declined, and
+ * the existing 30-day unapproved-account job removes it later. Nothing is
+ * deleted here.
+ */
+export async function declineConsentRequest(token: string): Promise<DeclineConsentResult> {
+  const lookup = await lookupConsentRequestByToken(token);
+  if (lookup.status === "expired") {
+    return {
+      success: false,
+      error: "This approval link has expired. Resend a fresh email to continue.",
+    };
+  }
+  if (lookup.status !== "valid") {
+    return {
+      success: false,
+      error: "This approval link is invalid or has already been used.",
+    };
+  }
+  return markChildDeclined({
+    requestId: lookup.request.id,
+    childId: lookup.request.childId,
+    childUsername: lookup.request.childUsername,
+  });
+}
+
+export async function declineConsentRequestInApp(
+  requestId: string,
+): Promise<DeclineConsentResult> {
+  const trimmedId = requestId.trim();
+  if (!trimmedId) {
+    return { success: false, error: "This approval request is missing." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: "Sign in as a parent to decline this profile." };
+  }
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("account_role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile || profile.account_role !== "parent_master") {
+    return { success: false, error: "Sign in as a parent to decline this profile." };
+  }
+
+  const { data: row } = await admin
+    .from("consent_requests")
+    .select("id, status, child_id, parent_email")
+    .eq("id", trimmedId)
+    .maybeSingle();
+  if (!row || row.status !== "pending") {
+    return { success: false, error: "This approval request is no longer pending." };
+  }
+
+  const { data: authUser } = await admin.auth.admin.getUserById(user.id);
+  const parentEmail = authUser.user?.email?.trim().toLowerCase() ?? "";
+  if (!parentEmail || parentEmail !== String(row.parent_email ?? "").trim().toLowerCase()) {
+    return { success: false, error: "This approval request is for a different parent email." };
+  }
+
+  const { data: child } = await admin
+    .from("profiles")
+    .select("username")
+    .eq("id", row.child_id)
+    .maybeSingle();
+
+  return markChildDeclined({
+    requestId: row.id,
+    childId: row.child_id,
+    childUsername: child?.username?.trim() || "this learner",
+  });
+}
+
+async function markChildDeclined(input: {
+  requestId: string;
+  childId: string;
+  childUsername: string;
+}): Promise<DeclineConsentResult> {
+  const admin = createAdminClient();
+  const { data: child } = await admin
+    .from("profiles")
+    .select("id, account_role, account_status, consent_approved_at")
+    .eq("id", input.childId)
+    .maybeSingle();
+  if (!child || child.account_role !== "child") {
+    return { success: false, error: "Could not find this learner profile." };
+  }
+  if (child.consent_approved_at || child.account_status === "active") {
+    return { success: false, error: "This profile is already approved." };
+  }
+  if (child.account_status === "declined") {
+    return { success: true, childUsername: input.childUsername };
+  }
+
+  const { error: childError } = await admin
+    .from("profiles")
+    .update({ account_status: "declined" })
+    .eq("id", input.childId)
+    .eq("account_status", "pending_consent");
+  if (childError) {
+    return {
+      success: false,
+      error: "Could not decline this profile. Try again.",
+    };
+  }
+
+  await admin
+    .from("consent_requests")
+    .update({ status: "cancelled" })
+    .eq("id", input.requestId)
+    .eq("status", "pending");
+
+  return { success: true, childUsername: input.childUsername };
+}

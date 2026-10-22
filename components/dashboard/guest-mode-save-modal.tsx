@@ -58,7 +58,7 @@ export function GuestModeSaveModal({
         Don&apos;t lose your achievements!
       </h2>
       <p className="mt-3 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Create a learner login or a parent login to keep your points, streaks
+        Create a learner login or a parent login to keep your coins, streaks
         and skills.
       </p>
 

@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
 import { ShieldIcon } from "@/lib/dashboard/icons";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
 type MyInfoScreenProps = {
   username: string;
   trackLabel: string | null;
+  cohort?: MasteryCohort | null;
   managedBy: "teacher" | "account_manager";
 };
 
-export function MyInfoScreen({ username, trackLabel, managedBy }: MyInfoScreenProps) {
+export function MyInfoScreen({ username, trackLabel, cohort, managedBy }: MyInfoScreenProps) {
   const initial = username.trim().charAt(0).toUpperCase() || "?";
   const teacher = managedBy === "teacher";
   const [trackName, ages] = splitTrack(trackLabel);
@@ -34,7 +37,7 @@ export function MyInfoScreen({ username, trackLabel, managedBy }: MyInfoScreenPr
         </div>
         <div className="flex items-center gap-3 py-3.5">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-[22px]">
-            🔭
+            {cohort ? COHORT_EMOJI[cohort] : "⭐"}
           </span>
           <span>
             <span className="block font-sans text-[13px] font-medium text-[#4A5675]">Learning track</span>

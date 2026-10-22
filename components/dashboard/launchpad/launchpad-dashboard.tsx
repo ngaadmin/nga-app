@@ -296,8 +296,7 @@ function JourneyMapMockup({ onTap }: JourneyMapMockupProps) {
             id="launchpad-journey-map-caption"
             className={cn("mt-2 max-w-xs", launchpadBodyMutedClass)}
           >
-            Mockup for testing. When you start a venture, its progress path will
-            show here.
+            When you start a venture, its progress path will show here.
           </p>
         </div>
       </button>

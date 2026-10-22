@@ -528,6 +528,7 @@ export async function loadMyInfo(): Promise<
       ok: true;
       username: string;
       trackLabel: string | null;
+      cohort: "explorer" | "pathfinder" | "maverick" | null;
       managedBy: "teacher" | "account_manager";
     }
   | Fail
@@ -553,6 +554,7 @@ export async function loadMyInfo(): Promise<
     ok: true,
     username: text(profile.username),
     trackLabel: trackLabel(text(profile.curriculum_cohort)),
+    cohort: asCohort(profile.curriculum_cohort),
     managedBy: text(profile.teacher_id) ? "teacher" : "account_manager",
   };
 }

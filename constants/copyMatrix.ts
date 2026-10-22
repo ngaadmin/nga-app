@@ -415,7 +415,7 @@ export const copyMatrix = {
           {
             id: "savings-streak",
             number: 6,
-            subtitle: "Create Income That Doesn't Need You",
+            subtitle: "Learn Passive Income",
             focusAreas:
               "How you structure money determines how much you keep and grow",
             iconPath: "/dashboard/piggy-bank.svg",
@@ -650,7 +650,7 @@ export const copyMatrix = {
       },
       {
         id: "level-6",
-        title: "Create Income That Doesn't Need You",
+        title: "Learn Passive Income",
         subtext:
           "How you structure money determines how much you keep and grow",
       },

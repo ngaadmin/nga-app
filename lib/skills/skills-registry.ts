@@ -65,7 +65,7 @@ export const SKILLS_LEVELS: readonly SkillLevelDefinition[] = [
   },
   {
     levelId: 6,
-    title: "Create Income That Doesn't Need You",
+    title: "Learn Passive Income",
     subtitle: "How you structure money determines how much you keep and grow",
     theme: "Optimisation",
     isAdvancedCohortOnly: true,

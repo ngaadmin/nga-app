@@ -125,7 +125,12 @@ describe("privacy policy source", () => {
     expect(text).not.toContain("for their child");
     expect(text).not.toContain("support@nextgenachievers.com");
     expect(text).not.toContain("sign-in provider also keeps");
-    expect(collectLinks(blocks)).toEqual([]);
+    expect(collectLinks(blocks)).toEqual([
+      {
+        href: "https://nextgenachievers.com/privacy/providers",
+        text: "nextgenachievers.com/privacy/providers",
+      },
+    ]);
   });
 });
 

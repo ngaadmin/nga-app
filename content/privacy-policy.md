@@ -48,6 +48,8 @@ We don't show ads, we don't use third-party analytics or tracking tools, and we 
 ## 6. Service providers
 We use trusted third-party providers for our database, sign-in, app hosting and email. They keep data securely and have their own requirements for storing it in line with global regulatory requirements.
 
+Our providers may store or process your information in countries outside your own. Where the law requires it, we protect these transfers with safeguards such as standard contractual clauses, and you can ask us for a copy. You can see our current list of service providers, what they do and where they are at [nextgenachievers.com/privacy/providers](https://nextgenachievers.com/privacy/providers).
+
 Our email provider sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com. That includes teacher class confirmations, welcome emails, password and username recovery, and the inactivity warning at 11 months. The inactivity warning goes to a parent or a teacher. We do not email a class student or a child on a parent account. A self sign-up learner does not get that warning, even with a personal email.
 
 We use no other third-party services in the app. That means no error monitoring, analytics, third-party fonts or third-party images.

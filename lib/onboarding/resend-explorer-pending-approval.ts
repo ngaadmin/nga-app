@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/consent-request-token";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { rotateConsentRequestToken } from "@/lib/onboarding/lookup-consent-request";
+import { parseMasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,7 +46,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
   const admin = createAdminClient();
   const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("id, username, account_status, account_role")
+    .select("id, username, account_status, account_role, curriculum_cohort")
     .eq("id", childId)
     .maybeSingle();
 
@@ -101,6 +102,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
     data: {
       username: profile.username,
       token: nextToken,
+      track: parseMasteryCohort(profile.curriculum_cohort) ?? "explorer",
     },
   });
 

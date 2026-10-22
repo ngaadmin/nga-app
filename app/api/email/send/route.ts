@@ -138,13 +138,20 @@ export async function POST(request: Request) {
       );
     }
 
+    const approvalData = {
+      username: stored.request.childUsername,
+      token,
+    };
     const result = await sendOnboardingEmail({
       type: body.type,
       recipientEmail: stored.request.parentEmail,
-      data: {
-        username: stored.request.childUsername,
-        token,
-      },
+      data:
+        body.type === "EXPLORER_PARENT" || body.type === "EXPLORER_PARENT_RESEND"
+          ? {
+              ...approvalData,
+              track: stored.request.cohort ?? "explorer",
+            }
+          : approvalData,
       appUrl: resolveTrustedAppUrl(request.headers.get("origin")),
     });
 

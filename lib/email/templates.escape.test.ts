@@ -63,6 +63,58 @@ describe("email template escaping", () => {
   });
 });
 
+describe("parent approval track line", () => {
+  const explorerSentence =
+    "Your child has chosen the Explorer track, for kids aged 10-13. And to make their profile official, we need a parent/guardian's approval.";
+  const pathfinderSentence =
+    "Your child has chosen the Pathfinder track. And to make their profile official, we need a parent/guardian's approval.";
+  const maverickSentence =
+    "Your child has chosen the Maverick track. And to make their profile official, we need a parent/guardian's approval.";
+
+  it.each([
+    ["explorer" as const, explorerSentence],
+    ["pathfinder" as const, pathfinderSentence],
+    ["maverick" as const, maverickSentence],
+  ])("renders the %s sentence in text and html", (track, sentence) => {
+    const built = buildExplorerParentEmail({
+      username: "River",
+      token: "tok",
+      track,
+    });
+    const htmlSentence = sentence.replace("'", "&apos;");
+
+    expect(built.text).toContain(sentence);
+    expect(built.html.replace(/\s+/g, " ")).toContain(htmlSentence);
+    expect(built.html).toContain('background: #FFA503');
+    expect(built.html).not.toContain("#FFC93C");
+  });
+
+  it("keeps the Explorer sentence when the track is omitted", () => {
+    const built = buildExplorerParentEmail({
+      username: "River",
+      token: "tok",
+    });
+    expect(built.text).toContain(explorerSentence);
+    expect(built.html.replace(/\s+/g, " ")).toContain(
+      explorerSentence.replace("'", "&apos;"),
+    );
+  });
+
+  it("leaves ages out of the Pathfinder and Maverick lines", () => {
+    for (const track of ["pathfinder", "maverick"] as const) {
+      const built = buildExplorerParentEmail({
+        username: "River",
+        token: "tok",
+        track,
+      });
+      expect(built.text).not.toMatch(/track,/);
+      expect(built.text).not.toMatch(/ages|aged|10-13|14-|16-/);
+      expect(built.html).not.toMatch(/track,/);
+      expect(built.html).not.toMatch(/ages|aged|10-13|14-|16-/);
+    }
+  });
+});
+
 describe("account-deleted email contact", () => {
   it("uses info@nextgenachievers.com", () => {
     const child = buildAccountDeletedChildEmail({ username: "delta4" });

@@ -45,6 +45,7 @@ export async function issueGuardianSignupEmail(
       username: input.username,
       parentEmail,
       appUrl,
+      cohort: input.cohort,
     });
   }
 
@@ -77,6 +78,7 @@ async function issueExplorerVpcEmail(input: {
   childId: string;
   username: string;
   parentEmail: string;
+  cohort: MasteryCohort;
   appUrl: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const admin = createAdminClient();
@@ -98,6 +100,7 @@ async function issueExplorerVpcEmail(input: {
     data: {
       username: input.username,
       token,
+      track: input.cohort,
     },
     appUrl: input.appUrl,
   });

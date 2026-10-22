@@ -4,6 +4,7 @@ export const USAGE_EVENT_TYPES = [
   "login",
   "lesson_started",
   "lesson_completed",
+  "lesson_abandoned",
   "medal_earned",
   "vault_visit",
   "launchpad_visit",
@@ -24,6 +25,7 @@ const MEDAL_TIERS = new Set(["unlocked", "bronze", "silver", "gold"]);
 const LESSON_EVENT_TYPES = new Set<UsageEventType>([
   "lesson_started",
   "lesson_completed",
+  "lesson_abandoned",
   "medal_earned",
 ]);
 const PAGE_VISIT_TYPES = new Set<UsageEventType>(PAGE_VISIT_EVENT_TYPES);

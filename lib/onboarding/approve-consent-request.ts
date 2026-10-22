@@ -11,6 +11,10 @@ import {
   findAuthUserIdByEmail,
   findParentMasterByEmail,
 } from "@/lib/onboarding/parent-master-lookup";
+import {
+  isReservedGuestUsername,
+  RESERVED_GUEST_USERNAME_ERROR,
+} from "@/lib/onboarding/reserved-guest-username";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -95,6 +99,9 @@ export async function createParentMasterAndApprove(
       success: false,
       error: "Pick a username with 2–20 letters, numbers, underscores, or hyphens.",
     };
+  }
+  if (isReservedGuestUsername(username)) {
+    return { success: false, error: RESERVED_GUEST_USERNAME_ERROR };
   }
   if (input.password.length < MIN_PASSWORD_LENGTH) {
     return {

@@ -1,12 +1,12 @@
 /**
- * Guest activity retention.
+ * Guest activity retention for rows already stored in usage_events.
  *
- * insertGuestUsageRow writes a usage_events row only when no profile has that
- * username. profiles.username is citext, so the lookup ignores letter case.
- * usage_events has no user id. A row belongs to a real account when any profile
- * username matches, ignoring case. Every other row is a guest row.
+ * New guest play does not write usage_events. It increments guest_event_counts.
+ * Older guest rows remain until this purge: a usage_events row whose username
+ * matches no profile. profiles.username is citext, so the match ignores case.
+ * Real-account rows are kept at any age.
  *
- * The nightly cron deletes guest rows older than 30 days in one statement,
+ * The nightly cron deletes those old guest rows in one statement,
  * purge_guest_usage_events(). This function is that same rule.
  */
 

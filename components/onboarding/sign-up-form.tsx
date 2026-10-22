@@ -17,6 +17,10 @@ import {
   isInternalPlaceholderUsername,
 } from "@/lib/onboarding/placeholder-username";
 import {
+  isReservedGuestUsername,
+  RESERVED_GUEST_USERNAME_ERROR,
+} from "@/lib/onboarding/reserved-guest-username";
+import {
   convertToRegisteredProfile,
   DASHBOARD_ACADEMY_PATH,
   DASHBOARD_SETTINGS_ACCOUNT_PATH,
@@ -333,6 +337,8 @@ export function SignUpForm() {
       } else if (!USERNAME_PATTERN.test(trimmedUsername)) {
         next.username =
           "Use 2-20 letters, numbers, underscores, or hyphens only.";
+      } else if (isReservedGuestUsername(trimmedUsername)) {
+        next.username = RESERVED_GUEST_USERNAME_ERROR;
       } else if (!isParentMaster && trimmedUsername) {
         // Username must be unique; the same parent email may link many children.
         const existingAccount = findRegisteredAccountByUsername(trimmedUsername);
@@ -524,6 +530,10 @@ export function SignUpForm() {
       });
 
       if (!result.success) {
+        if (/reserved/i.test(result.error)) {
+          setErrors({ username: RESERVED_GUEST_USERNAME_ERROR });
+          return;
+        }
         setErrors({ form: result.error });
         return;
       }
@@ -632,6 +642,15 @@ export function SignUpForm() {
           setErrors((prev) => ({
             ...prev,
             username: USERNAME_TAKEN_ERROR,
+            form: undefined,
+          }));
+          return;
+        }
+        if (/reserved/i.test(result.error)) {
+          setLearnerStep("credentials");
+          setErrors((prev) => ({
+            ...prev,
+            username: RESERVED_GUEST_USERNAME_ERROR,
             form: undefined,
           }));
           return;

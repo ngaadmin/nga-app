@@ -6,6 +6,7 @@ import {
   USAGE_PAGE_VISIT_DEDUPE_MS,
   type UsageDedupeStore,
   type UsageEventInsert,
+  type UsageEventType,
 } from "@/lib/usage/usage-events";
 
 export { createMemoryUsageDedupeStore, USAGE_PAGE_VISIT_DEDUPE_MS };
@@ -19,6 +20,33 @@ export type LogUsageEventOptions = {
   store?: UsageDedupeStore;
   insert: (row: UsageEventInsert) => Promise<void> | void;
 };
+
+export type GuestCountSend = {
+  eventType: UsageEventType;
+  lessonNumber: number | null;
+};
+
+/**
+ * Guest page visits use the same one-minute collapse as signed-in visits.
+ * The send callback receives the event type and lesson number only.
+ */
+export function logGuestCountEvent(
+  input: { eventType: UsageEventType; lessonNumber?: number | null },
+  send: (event: GuestCountSend) => void,
+): void {
+  logUsageEvent(
+    {
+      eventType: input.eventType,
+      username: "guest-count",
+      lessonNumber: input.lessonNumber ?? null,
+    },
+    {
+      insert: (row) => {
+        send({ eventType: row.event_type, lessonNumber: row.lesson_number });
+      },
+    },
+  );
+}
 
 /**
  * Schedule one usage insert. Returns immediately, never throws, and never

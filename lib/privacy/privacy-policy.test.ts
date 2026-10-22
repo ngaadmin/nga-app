@@ -86,13 +86,13 @@ describe("privacy policy source", () => {
     );
     expect(text).toContain("Activity records are deleted with the account.");
     expect(text).toContain(
-      "streak days and a small technical field",
+      "To count guest play.",
     );
     expect(text).toContain(
       "Lessons, coins, Lifetime XP, medals and Vault activity stay on the device.",
     );
     expect(text).toContain(
-      "A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps simple guest activity records under a made-up guest username, with no real name, email or class, and deletes them after 30 days. Clear this device's progress clears the device only.",
+      "A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps daily counts of guest activity (the day, event type, lesson, app version, device type and country) with no username, email, class, coins, streak, IP address or user agent. Older guest rows that used a made-up username are deleted after 30 days. Clear this device's progress clears the device only.",
     );
     expect(text).not.toContain("metadata");
     expect(text).toContain("the parent PIN (stored as a hash)");

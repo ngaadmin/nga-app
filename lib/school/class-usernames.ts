@@ -1,3 +1,5 @@
+import { isReservedGuestUsername } from "@/lib/onboarding/reserved-guest-username";
+
 const CLASS_SEAT_WORDS = [
   "acorn",
   "amber",
@@ -85,6 +87,7 @@ export function pickClassSeatUsernames(
       if (picked.length >= needed) return picked;
       const username = `${word}${digit}`;
       if (!USERNAME_PATTERN.test(username) || taken.has(username)) continue;
+      if (isReservedGuestUsername(username)) continue;
       taken.add(username);
       picked.push(username);
     }

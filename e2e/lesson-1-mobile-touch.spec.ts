@@ -181,24 +181,21 @@ test("tap-reveal opens one item per tap and labels stay inside the card", async 
   });
 });
 
-test("tapping a word chip fills the blank and drag still works", async ({ page }) => {
+test("tapping a word chip does not fill the blank and drag still works", async ({ page }) => {
   const next = page.getByRole("button", { name: "Next", exact: true });
+  const gap = page.getByRole("button", { name: /Drag a word here/i });
 
   await openLesson(page, "/dashboard/academy/lesson/1?preview=1&screen=0");
   await expect(next).toBeDisabled();
   await page.getByRole("button", { name: "Spent", exact: true }).tap();
-  await expect(page.getByRole("button", { name: /Blank, Spent/i })).toBeVisible();
-  await expect(next).toBeEnabled();
-  await page.screenshot({
-    path: "/opt/cursor/artifacts/lesson-1-word-chip-tap.png",
-  });
-
-  await openLesson(page, "/dashboard/academy/lesson/1?preview=1&screen=0");
+  await expect(gap).toBeVisible();
+  await expect(page.getByRole("button", { name: /Blank, Spent/i })).toHaveCount(0);
   await expect(next).toBeDisabled();
+
   await touchDrag(
     page,
     page.getByRole("button", { name: "Spent", exact: true }),
-    page.getByRole("button", { name: /Place the selected word here/i }),
+    gap,
   );
   await expect(page.getByRole("button", { name: /Blank, Spent/i })).toBeVisible();
   await expect(next).toBeEnabled();

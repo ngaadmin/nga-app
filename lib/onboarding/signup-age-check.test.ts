@@ -14,6 +14,7 @@ import {
   payloadStoresBirthYear,
   planLearnerSignup,
   profileColumnsForAudience,
+  signupRequiresParentApproval,
 } from "@/lib/onboarding/signup-age-check";
 
 const REFERENCE_YEAR = 2026;
@@ -91,6 +92,43 @@ describe("track choice does not decide consent", () => {
     expect(payloadStoresBirthYear(plan)).toBe(false);
     expect(payloadStoresBirthYear(columns)).toBe(false);
     expect(JSON.stringify({ plan, columns })).not.toContain(String(birthYear));
+  });
+
+  it("keeps parent approval after the under-16 path, even if the year changes to 16+", () => {
+    const under16 = yearForAge(15);
+    const sixteen = yearForAge(16);
+    expect(
+      signupRequiresParentApproval({
+        birthYear: under16,
+        under16PathReached: false,
+        referenceYear: REFERENCE_YEAR,
+      }),
+    ).toBe(true);
+    expect(
+      signupRequiresParentApproval({
+        birthYear: sixteen,
+        under16PathReached: true,
+        referenceYear: REFERENCE_YEAR,
+      }),
+    ).toBe(true);
+
+    const plan = planLearnerSignup({
+      pickedCohort: "explorer",
+      birthYear: sixteen,
+      referenceYear: REFERENCE_YEAR,
+      under16PathReached: true,
+    });
+    expect(plan).toMatchObject({
+      cohort: "explorer",
+      parentApprovalRequired: true,
+      accountStatus: "PENDING_CONSENT",
+      requiresLearnerEmail: false,
+      requiresParentEmail: true,
+      sendParentConsentEmail: true,
+      sendLearnerWelcomeEmail: false,
+    });
+    expect(JSON.stringify(plan)).not.toContain(String(sixteen));
+    expect(JSON.stringify(plan)).not.toContain(String(under16));
   });
 
   it("lets a 16-year-old Pathfinder skip every parent step", () => {
@@ -185,11 +223,10 @@ describe("16+ Explorer email is for password resets only", () => {
     expect(plan?.sendLearnerWelcomeEmail).toBe(false);
   });
 
-  it("keeps the existing email helper and stores a real address", () => {
+  it("shows the reset-only line on the sign-up form and stores a real address", () => {
     const form = readFileSync("components/onboarding/sign-up-form.tsx", "utf8");
     const account = readFileSync("lib/onboarding/create-supabase-account.ts", "utf8");
-    expect(form).toContain("For account updates only. You log in with your username.");
-    expect(form).not.toContain("For password resets only. You log in with your username.");
+    expect(form).toContain("For password resets only. You log in with your username.");
     expect(account).toContain("sendLearnerWelcomeEmail && learnerEmail");
     expect(account).not.toContain('cohort === "explorer" || parentInitiated || !learnerEmail');
   });
@@ -233,6 +270,12 @@ describe("who is asked for a birth year", () => {
     expect(picker).not.toContain("LearnerBirthYearField");
     expect(picker).not.toContain("What year were you born?");
     expect(form).toContain("LearnerBirthYearField");
+    expect(form).toContain("under16PathReached");
+    const loadConsent = form.slice(
+      form.indexOf("async function loadConsent"),
+      form.indexOf("void loadConsent()"),
+    );
+    expect(loadConsent).not.toContain("approveConsentRequest");
   });
 
   it("writes no age columns for teachers, class seats, or guests", () => {

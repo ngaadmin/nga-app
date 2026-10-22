@@ -49,6 +49,7 @@ function screenByLabel(screens: readonly ScreenConfig[], label: string): ScreenC
 function choiceOptions(screen: ScreenConfig | undefined): {
   label: string;
   emoji?: string;
+  isCorrect?: boolean;
   goToLabel?: string;
   goToIndex?: number;
   requiresHubSkills?: readonly string[];
@@ -163,7 +164,7 @@ describe("bundled lesson payloads", () => {
       screens: {
         filename: "Screens.csv",
         text: `Module Number,Lesson Number,Screen,Game Type,Explorer Text,Pathfinder Text,Maverick Text,Explorer Image,Pathfinder Image,Maverick Image,Explorer Settings,Game Settings,Maverick Settings,Error Explorer,Error Pathfinder,Error Maverick,Notes
-1,7,1,binary-choice,Hi,Hi,Hi,Holly.walking.webp,Holly.walking.webp,Holly.walking.webp,,,,,,,
+1,7,1,binary-choice,Hi,Hi,Hi,Holly.walking.webp,Holly.walking.webp,Holly.walking.webp,CONTINUE → GO Screen 2,CONTINUE → GO Screen 2,CONTINUE → GO Screen 2,,,,
 1,7,2,completion,,,,,,,,,,,
 `,
       },
@@ -279,7 +280,16 @@ ELSE show button "Keep it" → GO Screen 8`,
       expect(finish?.goToLabel).toBe("8");
       expect(finish?.requiresHubSkills).toEqual(["2", "4", "6"]);
       expect(content.screens.find((screen) => screen.sourceLabel === "3")?.continueToLabel).toBe("1");
-      expect(content.screens.find((screen) => screen.sourceLabel === "5")?.continueToLabel).toBe("1");
+      const skillCheck = content.screens.find((screen) => screen.sourceLabel === "5");
+      expect(skillCheck?.continueToLabel).toBeUndefined();
+      expect(choiceOptions(skillCheck).map((option) => option.label)).toEqual([
+        "Headphones",
+        "Game skin",
+      ]);
+      expect(choiceOptions(skillCheck).every((option) => option.goToLabel === "1")).toBe(true);
+      expect(choiceOptions(skillCheck).find((option) => option.label === "Headphones")?.isCorrect).toBe(
+        true,
+      );
       expect(content.screens.find((screen) => screen.sourceLabel === "6")?.continueToLabel).toBe("7");
       expect(content.screens.find((screen) => screen.sourceLabel === "7")?.continueToLabel).toBe("1");
       expect(content.screens.find((screen) => screen.sourceLabel === "3")?.hubSkillKey).toBe("2");

@@ -29,6 +29,7 @@ export function CompletionScreen({
       authoredMedal={screen.suppressMedal ? false : screen.authoredMedal}
       suppressMedal={screen.suppressMedal === true}
       skillName={screen.skillName}
+      leadCharacter={screen.leadCharacter}
       skillLearnedLabel={screen.skillLearnedLabel}
       onCashIn={flow.handleCashInPoints}
       onContinue={flow.handleContinueAfterCashIn}

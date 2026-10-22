@@ -123,7 +123,7 @@ export type UserSession = {
   ageTier: MasteryCohort;
   /** Learning track chosen by the learner, parent, or class. */
   curriculumCohort?: MasteryCohort;
-  /** Lifecycle: GUEST | PENDING_CONSENT | ACTIVE. */
+  /** Lifecycle: GUEST | PENDING_CONSENT | DECLINED | ACTIVE. */
   accountStatus?: AccountLifecycleStatus;
   /**
    * @deprecated Read-only fallback for older localStorage. Never written on new saves.
@@ -230,7 +230,10 @@ function resolveStoredTrack(
 
 function isLifecycleStatus(value: unknown): value is AccountLifecycleStatus {
   return (
-    value === "GUEST" || value === "PENDING_CONSENT" || value === "ACTIVE"
+    value === "GUEST" ||
+    value === "PENDING_CONSENT" ||
+    value === "DECLINED" ||
+    value === "ACTIVE"
   );
 }
 
@@ -322,7 +325,9 @@ export function enforceCohortAccountState(session: UserSession): UserSession {
           ? session.accountStatus
           : getSignupRequirementsForCohort(ageTier).defaultAccountStatus);
 
-  if (session.parentApprovalRequired === true && !session.consentApprovedAt) {
+  if (session.accountStatus === "DECLINED" && !session.consentApprovedAt) {
+    accountStatus = "DECLINED";
+  } else if (session.parentApprovalRequired === true && !session.consentApprovedAt) {
     accountStatus = "PENDING_CONSENT";
   } else if (session.parentApprovalRequired === false) {
     // 16 and over keeps the server status, including an Explorer track.

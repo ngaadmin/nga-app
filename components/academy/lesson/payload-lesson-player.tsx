@@ -9,6 +9,10 @@ import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import {
+  hasSyncedUserSession,
+  useUserSession,
+} from "@/lib/dashboard/use-user-session";
+import {
   fallbackNextIndex,
   lessonNeedsPathProgress,
   shortestCompletionLength,
@@ -30,7 +34,19 @@ type PayloadLessonPlayerProps = {
  * game template and receives that row's copy, settings, image, and error.
  * Cash In still awards the standard lesson XP and perfect-streak bonus.
  */
-export function PayloadLessonPlayer({
+export function PayloadLessonPlayer(props: PayloadLessonPlayerProps) {
+  useUserSession();
+  const [cohortReady, setCohortReady] = useState(() => hasSyncedUserSession());
+
+  useEffect(() => {
+    setCohortReady(true);
+  }, []);
+
+  if (!cohortReady) return null;
+  return <PayloadLessonPlayerReady {...props} />;
+}
+
+function PayloadLessonPlayerReady({
   payload,
   milestoneId,
   isPreview = false,

@@ -1,6 +1,6 @@
 # NextGenAchievers App Privacy Policy
 
-**Last updated: 20 October 2026**
+**Last updated: 21 October 2026**
 
 ## 1. Who we are
 The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achievers Pty Ltd (ACN 685 561 344, ABN 49 685 561 344), trading as NextGenAchievers ("we", "us"). We handle personal information in line with the *Privacy Act 1988* (Cth) and the Australian Privacy Principles (APPs). This policy covers the app only. Our website has its own policy.
@@ -11,12 +11,12 @@ The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achiev
 |---|---|
 | **Students (school class seats)** | A username created by the teacher; a placeholder email (not a real address); the shared class password; role, learning track and link to the teacher; progress (lessons completed, coins, Lifetime XP, skills, Vault jars and goals, streak); usage activity events linked to the username (for example, lessons opened or completed). |
 | **Students (parent accounts)** | A username; a placeholder email (not a real address); the link to the parent's account; role and learning track; progress and usage activity events, as above. |
-| **Students (self sign-up)** | A username; an email address, if the learner signs up with a personal one; role and learning track; progress and usage activity events, as above. We ask for the year of birth once at sign-up to confirm the right age group and whether a parent needs to approve. We don't store it: we keep only whether parent approval was required and when the check happened. |
+| **Students (self sign-up)** | A username; an email address, if the learner signs up with a personal one. A learner who is 16 or over and picks Explorer must give an email address, and we use it only for password resets. Role and learning track; progress and usage activity events, as above. We ask for the year of birth once at sign-up to confirm the right age group and whether a parent needs to approve. We don't store it: we keep only whether parent approval was required and when the check happened. |
 | **Parents and guardians** | Email address; the parent PIN (stored as a hash); the link between the parent and child accounts; guardian email addresses on consent requests; consent history. |
 | **Teachers** | Email address; password (stored as a hash); a generated username (not a name); seat limit, learning track and the shared class password; the classes and student seats the teacher creates. We do not collect teachers' names or school names. |
-| **Guests** | Server activity records: a guest username (not a real name), event type, lesson number, XP total, streak days and a small technical field. No email and no class. Deleted after 30 days. Lessons, coins, Lifetime XP, medals and Vault activity stay on the device. |
+| **Guests** | Daily counts of guest activity: the UTC day, event type, lesson number, app version, device type (mobile, tablet or desktop) and country. No username, email, class, coins, streak, IP address or user agent. Lessons, coins, Lifetime XP, medals and Vault activity stay on the device. |
 
-We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. For rate-limiting, IP addresses are used briefly, in memory only. We keep our own sign-in audit log, which includes IP addresses, and delete it after 30 days (see section 9). Our sign-in provider (Supabase Auth) keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted. Our hosting and service providers also keep short-term technical logs, which may include IP addresses.
+We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. For rate-limiting, IP addresses are used briefly, in memory only. We keep our own sign-in audit log, which includes IP addresses, and delete it after 30 days (see section 9). Our sign-in provider keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted. Our hosting and service providers also keep short-term technical logs, which may include IP addresses.
 
 ## 3. How we collect it
 
@@ -33,8 +33,9 @@ We use personal information only to run NextGenAchievers:
 - **To link parents and children.** We record which parent is linked to which child so parents can give consent, manage their household, change a child's learning track, recover usernames and delete accounts.
 - **To send essential emails.** These are parent approval and consent emails, welcome emails, teacher class confirmations, password and username recovery, account-deleted notices, and the inactivity warning at 11 months. We don't send marketing emails.
 - **To understand how the app is used in school trials.** We record simple activity, such as signing in, starting and finishing lessons, earning medals and opening Vault or Launchpad, together with the username, class, Lifetime XP and streak. We use it to report on how classes use the app, for example school-hours versus home use. It doesn't include email addresses, real names or device details, and it stays in our own database.
+- **To count guest play.** We store daily totals only: the day, event type, lesson, app version, device type and country. There is no username, and we do not store the IP address or the user agent.
 
-We don't show ads, we don't use third-party analytics or tracking tools, and we don't sell or share personal information. Our service providers handle data only to run the app: Supabase stores it, Resend sends emails and Vercel hosts the app.
+We don't show ads, we don't use third-party analytics or tracking tools, and we don't sell or share personal information. Our service providers handle data only to run the app: they store it, send emails and host the app.
 
 ## 5. Who can see it
 
@@ -44,14 +45,14 @@ We don't show ads, we don't use third-party analytics or tracking tools, and we 
 - The **Community leaderboard** is off unless a parent switches it on for a child, or a teacher switches it on for a class. When it is on, it shows the signed-in user's username and sample player names, each with a rank, a day streak and Lifetime XP. It does not show other students, and nothing on it links to a profile.
 - We do not share information with anyone else unless the law requires it.
 
-## 6. Service providers and overseas hosting
-We use trusted providers to run the app. Some of them store or process data outside Australia:
+## 6. Service providers
+We use trusted third-party providers for our database, sign-in, app hosting and email. They keep data securely and have their own requirements for storing it in line with global regulatory requirements.
 
-- **Vercel** (app hosting): app functions run in the **United States** (Washington DC).
-- **Supabase** (database and sign-in): data is stored in **Japan** (Tokyo).
-- **Resend** (email): sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com. That includes teacher class confirmations, welcome emails, password and username recovery, and the inactivity warning at 11 months. The inactivity warning goes to a parent or a teacher. We do not email a class student or a child on a parent account. A self sign-up learner does not get that warning, even with a personal email. Email is processed in **Japan** (Tokyo).
+Our providers may store or process your information in countries outside your own. Where the law requires it, we protect these transfers with safeguards such as standard contractual clauses, and you can ask us for a copy. You can see our current list of service providers, what they do and where they are at [nextgenachievers.com/privacy/providers](https://nextgenachievers.com/privacy/providers).
 
-We use no other third-party services in the app. That means no error monitoring, analytics, Google Fonts or third-party images.
+Our email provider sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com. That includes teacher class confirmations, welcome emails, password and username recovery, and the inactivity warning at 11 months. The inactivity warning goes to a parent or a teacher. We do not email a class student or a child on a parent account. A self sign-up learner does not get that warning, even with a personal email.
+
+We use no other third-party services in the app. That means no error monitoring, analytics, third-party fonts or third-party images.
 
 We choose established providers that publish their security and privacy certifications, and we rely on these when using them. We remain responsible for how your information is handled.
 
@@ -62,9 +63,9 @@ The app uses a sign-in session cookie, plus a short-lived cookie during password
 The app is designed for children, so we collect as little as we can. In schools, the teacher creates usernames that should not include a child's real name. The school keeps any list that matches usernames to students. Outside school, a parent or guardian sets up and consents to their child's account. We build privacy into the app by design, in line with the OAIC's guidance for children's online privacy.
 
 ## 9. How long we keep it and how to delete it
-We keep information while the account or class is active. If an account has no sign-in or activity at 11 months, we email the parent or the teacher. A parent gets a warning about the parent account, and a teacher gets a warning about the teacher account. We do not email a class student or a child on a parent account. A self sign-up learner does not get this warning, even with a personal email. When a warning is sent, deletion waits at least 30 days after that email. Accounts that are still inactive at 12 months are deleted. If there is nobody to email, the account is deleted at 12 months with no warning. Activity records are deleted with the account. We delete our sign-in audit log, which includes IP addresses, after 30 days (see section 2). Hosting and service providers keep short-term technical logs, which may include IP addresses. We don't currently keep restorable backups, so deleted data cannot be recovered.
+We keep information while the account or class is active. An account still waiting for a parent to approve it is deleted after 30 days. If an account has no sign-in or activity at 11 months, we email the parent or the teacher. A parent gets a warning about the parent account, and a teacher gets a warning about the teacher account. We do not email a class student or a child on a parent account. A self sign-up learner does not get this warning, even with a personal email. When a warning is sent, deletion waits at least 30 days after that email. Accounts that are still inactive at 12 months are deleted. If there is nobody to email, the account is deleted at 12 months with no warning. Activity records are deleted with the account. We delete our sign-in audit log, which includes IP addresses, after 30 days (see section 2). Hosting and service providers keep short-term technical logs, which may include IP addresses. We don't currently keep restorable backups, so deleted data cannot be recovered.
 
-A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps simple guest activity records under a made-up guest username, with no real name, email or class, and deletes them after 30 days. Clear this device's progress clears the device only.
+A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps daily counts of guest activity (the day, event type, lesson, app version, device type and country) with no username, email, class, coins, streak, IP address or user agent. Older guest rows that used a made-up username are deleted after 30 days. Clear this device's progress clears the device only.
 
 - Behind the parent PIN, a parent can view a linked child's data, download it as a plain data file, or delete that child. A parent can also see the parent account record and consent history, and can download or delete that record. Deleting the parent account also deletes every linked child account, and asks for the parent PIN.
 - A teacher has a data page for each student, and can export the whole class as one plain data file. A teacher can delete one student or a whole class. This removes those logins, progress and activity records. Deleting the teacher account also removes the class and every student login in it.

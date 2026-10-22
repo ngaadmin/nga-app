@@ -17,7 +17,7 @@ export type LearnerAccountSnapshot = {
   curriculumCohort?: MasteryCohort | null;
   accountRole: "child" | "parent_master" | "teacher";
   isTeacher?: boolean;
-  accountStatus: "pending_consent" | "active";
+  accountStatus: "pending_consent" | "declined" | "active";
   consentApprovedAt: string | null;
   /**
    * True under 16, false at 16 and over, null when this profile never ran
@@ -34,7 +34,7 @@ export type LearnerAccountSnapshot = {
 export type LearnerConsentStatus = {
   userId: string;
   username: string;
-  accountStatus: "pending_consent" | "active";
+  accountStatus: "pending_consent" | "declined" | "active";
   consentApprovedAt: string | null;
 };
 
@@ -71,6 +71,7 @@ export async function lookupLearnerConsentStatus(
   if (error || !data?.id || !data.username) return null;
   if (
     data.account_status !== "pending_consent" &&
+    data.account_status !== "declined" &&
     data.account_status !== "active"
   ) {
     return null;

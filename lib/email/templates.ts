@@ -12,14 +12,15 @@ export type OnboardingEmailType =
   | "ACCOUNT_DELETED_MASTER"
   | "ACCOUNT_DELETED_CHILD"
   | "INACTIVITY_WARNING"
-  | "TEACHER_CLASS_CONFIRM";
+  | "TEACHER_CLASS_CONFIRM"
+  | "PARENT_PIN_RESET";
 
 export type ExplorerParentEmailData = {
   username: string;
   token: string;
   /**
-   * Omitted or explorer keeps the existing Explorer sentence.
-   * Pathfinder and Maverick name the track and leave the ages out.
+   * Omitted or explorer keeps the existing Explorer email.
+   * Pathfinder and Maverick use the under-16 parent approval email.
    */
   track?: "explorer" | "pathfinder" | "maverick";
 };
@@ -94,6 +95,10 @@ export type TeacherClassConfirmEmailData = {
   token: string;
 };
 
+export type ParentPinResetEmailData = {
+  token: string;
+};
+
 /** v1 friend invite: landing URL only, no codes or personalization. */
 export type FriendInviteEmailData = Record<string, never>;
 
@@ -112,6 +117,7 @@ export type OnboardingEmailDataMap = {
   ACCOUNT_DELETED_CHILD: AccountDeletedChildEmailData;
   INACTIVITY_WARNING: InactivityWarningEmailData;
   TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
+  PARENT_PIN_RESET: ParentPinResetEmailData;
 };
 
 export type BuiltEmail = {
@@ -135,30 +141,36 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** Last-resort host when NEXT_PUBLIC_APP_URL is unset (local/misconfigured). */
-const FALLBACK_APP_URL = "https://nga-app-three.vercel.app";
+/**
+ * Production app origin for email links and images.
+ * `NEXT_PUBLIC_APP_URL` can point somewhere else (a preview or local host).
+ * The retired preview host is ignored so mail does not keep that address.
+ */
+export const PRODUCTION_APP_URL = "https://app.nextgenachievers.com";
 
 /**
  * Canonical app origin for email CTAs and allowlisting.
- * Prefers `NEXT_PUBLIC_APP_URL`, then the hardcoded production fallback.
+ * A Vercel preview uses its own branch host (`VERCEL_BRANCH_URL`, then
+ * `VERCEL_URL`). Production and local prefer `NEXT_PUBLIC_APP_URL`, then
+ * {@link PRODUCTION_APP_URL}.
  */
 export function getDefaultAppUrl(): string {
+  const preview = previewAppOrigin();
+  if (preview) return preview;
+
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (fromEnv) {
     try {
-      return new URL(fromEnv).origin;
+      const url = new URL(fromEnv);
+      if (!isStaleAppHost(url.host)) {
+        return url.origin;
+      }
     } catch {
       // fall through
     }
   }
-  return FALLBACK_APP_URL;
+  return PRODUCTION_APP_URL;
 }
-
-/**
- * @deprecated Prefer {@link getDefaultAppUrl}. Kept for existing imports.
- * Resolves to the same env-aware origin.
- */
-export const PRODUCTION_APP_URL = getDefaultAppUrl();
 
 function deploymentHost(value: string | undefined): string | null {
   const trimmed = value?.trim();
@@ -171,6 +183,57 @@ function deploymentHost(value: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/** Hosts Vercel sets for this deployment. Preview also reads the public copies. */
+const DEPLOYMENT_HOST_ENV_KEYS = [
+  "VERCEL_URL",
+  "NEXT_PUBLIC_VERCEL_URL",
+  "VERCEL_BRANCH_URL",
+  "NEXT_PUBLIC_VERCEL_BRANCH_URL",
+  "VERCEL_PROJECT_PRODUCTION_URL",
+] as const;
+
+/** Branch host first, then the deployment URL. Used only when VERCEL_ENV=preview. */
+const PREVIEW_APP_HOST_ENV_KEYS = [
+  "VERCEL_BRANCH_URL",
+  "NEXT_PUBLIC_VERCEL_BRANCH_URL",
+  "VERCEL_URL",
+  "NEXT_PUBLIC_VERCEL_URL",
+] as const;
+
+function normalizeHost(host: string): string {
+  return host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "").toLowerCase();
+}
+
+function isOwnPreviewHost(host: string): boolean {
+  if (process.env.VERCEL_ENV !== "preview") return false;
+  const hostname = normalizeHost(host);
+  return PREVIEW_APP_HOST_ENV_KEYS.some((name) => {
+    const candidate = deploymentHost(process.env[name]);
+    return candidate !== null && normalizeHost(candidate) === hostname;
+  });
+}
+
+/**
+ * Preview link origin. `VERCEL_BRANCH_URL` wins so stable branch aliases are
+ * used when both the branch host and the deployment host are set.
+ */
+function previewAppOrigin(): string | null {
+  if (process.env.VERCEL_ENV !== "preview") return null;
+  for (const name of PREVIEW_APP_HOST_ENV_KEYS) {
+    const host = deploymentHost(process.env[name]);
+    if (!host || isStaleAppHost(host)) continue;
+    return `https://${normalizeHost(host)}`;
+  }
+  return null;
+}
+
+function isStaleAppHost(host: string): boolean {
+  const hostname = normalizeHost(host);
+  if (hostname === "nga-app-three.vercel.app") return true;
+  if (!hostname.endsWith(".vercel.app")) return false;
+  return !isOwnPreviewHost(host);
 }
 
 function isLoopbackHost(host: string): boolean {
@@ -190,13 +253,9 @@ export function allowedEmailLinkHosts(): Set<string> {
     // ignore invalid configured URL
   }
 
-  for (const name of [
-    "VERCEL_URL",
-    "VERCEL_BRANCH_URL",
-    "VERCEL_PROJECT_PRODUCTION_URL",
-  ] as const) {
+  for (const name of DEPLOYMENT_HOST_ENV_KEYS) {
     const host = deploymentHost(process.env[name]);
-    if (host) hosts.add(host);
+    if (host && !isStaleAppHost(host)) hosts.add(normalizeHost(host));
   }
 
   if (!process.env.VERCEL) {
@@ -219,7 +278,11 @@ export function resolveTrustedAppUrl(candidate?: string | null): string {
       const protocolOk = url.protocol === "https:" || url.protocol === "http:";
       const host = url.host.toLowerCase();
       const loopbackOk = !process.env.VERCEL && isLoopbackHost(host);
-      if (protocolOk && (allowedEmailLinkHosts().has(host) || loopbackOk)) {
+      if (
+        protocolOk &&
+        !isStaleAppHost(host) &&
+        (allowedEmailLinkHosts().has(host) || loopbackOk)
+      ) {
         return url.origin;
       }
     } catch {
@@ -247,7 +310,7 @@ function safeHttpHref(href: string): string {
   }
 }
 
-function ctaButton(label: string, href: string): string {
+function ctaButton(label: string, href: string, background = "#FFA503"): string {
   const safeHref = safeHttpHref(href);
   const safeLabel = escapeHtml(label);
   return `
@@ -256,7 +319,7 @@ function ctaButton(label: string, href: string): string {
         href="${safeHref}"
         style="
           display: inline-block;
-          background: #FFA503;
+          background: ${background};
           color: #031F82;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 15px;
@@ -271,16 +334,20 @@ function ctaButton(label: string, href: string): string {
   `;
 }
 
-const PENNY_EMAIL_SRC =
-  "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny-master-email.png";
+const TEEN_APPROVAL_HEADER_SRC =
+  "https://app.nextgenachievers.com/email/penny-email-header@2x.png";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "info@nextgenachievers.com";
+
+function pennyEmailSrc(): string {
+  return `${getDefaultAppUrl()}/assets/illustrations/characters/penny/penny-master-email.png`;
+}
 
 function pennyIllustration(): string {
   return `
     <p style="margin:20px 0;text-align:left;">
       <img
-        src="${escapeHtml(PENNY_EMAIL_SRC)}"
+        src="${escapeHtml(pennyEmailSrc())}"
         alt="Penny"
         width="160"
         height="160"
@@ -295,6 +362,8 @@ function wrapHtml(options: {
   bodyInner: string;
   preheader?: string;
   footer?: string;
+  /** Edge-to-edge card image. Replaces the NextGenAchievers kicker. */
+  hero?: { src: string; alt: string };
 }): string {
   const preheader = options.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
@@ -306,6 +375,37 @@ function wrapHtml(options: {
         ${escapeHtml(options.footer)}
       </p>`
     : "";
+  const heading = `<h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
+                  ${escapeHtml(options.header)}
+                </h1>`;
+
+  const card = options.hero
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;padding:0;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
+            <tr>
+              <td style="padding:0;line-height:0;font-size:0;">
+                <img src="${safeHttpHref(options.hero.src)}" width="600" height="170" alt="${escapeHtml(options.hero.alt)}" style="display:block;width:100%;max-width:600px;height:auto;border:0;">
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 36px 28px;">
+                ${heading}
+                ${options.bodyInner}
+                ${footer}
+              </td>
+            </tr>
+          </table>`
+    : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px 24px;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
+            <tr>
+              <td>
+                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
+                  NextGenAchievers
+                </p>
+                ${heading}
+                ${options.bodyInner}
+                ${footer}
+              </td>
+            </tr>
+          </table>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -314,20 +414,7 @@ function wrapHtml(options: {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F7F7F7;padding:24px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px 24px;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
-            <tr>
-              <td>
-                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
-                  NextGenAchievers
-                </p>
-                <h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
-                  ${escapeHtml(options.header)}
-                </h1>
-                ${options.bodyInner}
-                ${footer}
-              </td>
-            </tr>
-          </table>
+          ${card}
         </td>
       </tr>
     </table>
@@ -339,16 +426,14 @@ export function buildExplorerParentEmail(
   data: ExplorerParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
+  if (data.track === "pathfinder" || data.track === "maverick") {
+    return buildTeenParentApprovalEmail(data, appUrl);
+  }
   const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
-  const trackPhrase =
-    data.track === "pathfinder"
-      ? "the Pathfinder track"
-      : data.track === "maverick"
-        ? "the Maverick track"
-        : "the Explorer track, for kids aged 10-13";
+  const trackPhrase = "the Explorer track, for kids aged 10-13";
   const trackSentence = `Your child has chosen ${trackPhrase}. And to make their profile official, we need a parent/guardian's approval.`;
 
   const subject = `Your child ${username} wants to build money skills - approval needed`;
@@ -414,6 +499,82 @@ export function buildExplorerParentEmail(
       ${pennyIllustration()}
       <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
+      </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
+/**
+ * Under-16 Pathfinder and Maverick parent approval email.
+ * Explorer keeps the email above. Copy locked by Cath 21 Oct 2026.
+ */
+function buildTeenParentApprovalEmail(
+  data: ExplorerParentEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = emailPlain(data.username).trim();
+  const safeName = escapeHtml(username);
+  const base = resolveAppUrl(appUrl);
+  const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
+  const privacyPolicyUrl = "https://nextgenachievers.com/privacy";
+  const subject = "Your teen wants to start NextGenAchiever$";
+  const preheader = "Please approve your teen's account";
+  const header = "Please approve your teen's account";
+  const footer =
+    "Privacy policy: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia";
+
+  const text = [
+    "Hi,",
+    "",
+    `Your teen has just signed up to NextGenAchiever$ with the username ${username}. Because your teen is under 16, the account stays on hold until a parent approves it.`,
+    "",
+    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
+    "",
+    `Approve the account: ${approveUrl}`,
+    "",
+    "Once you approve, you'll be your teen's account manager, and you can set a parent PIN in Preferences.",
+    "",
+    "Didn't expect this email? Just ignore it. This link only works for 24 hours.",
+    "",
+    "Questions? Email info@nextgenachievers.com",
+    "",
+    "The NextGenAchiever$ team",
+    "",
+    footer,
+  ].join("\n");
+
+  const html = wrapHtml({
+    header,
+    preheader,
+    hero: {
+      src: TEEN_APPROVAL_HEADER_SRC,
+      alt: "Penny from NextGenAchiever$ saying hello",
+    },
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your teen has just signed up to NextGenAchiever$ with the username ${safeName}. Because your teen is under 16, the account stays on hold until a parent approves it.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.
+      </p>
+      ${ctaButton("Approve the account", approveUrl, "#FFC93C")}
+      <p style="margin:0 0 16px;font-size:16px;">
+        Once you approve, you&#39;ll be your teen&#39;s account manager, and you can set a parent PIN in Preferences.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Didn&#39;t expect this email? Just ignore it. This link only works for 24 hours.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Questions? Email ${escapeHtml(SUPPORT_EMAIL)}
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        The NextGenAchiever$ team
+      </p>
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        <a href="${safeHttpHref(privacyPolicyUrl)}">Privacy policy</a>: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia
       </p>
     `,
   });
@@ -1174,6 +1335,44 @@ export function buildTeacherClassConfirmEmail(
   return { subject, preheader, html, text };
 }
 
+export function buildParentPinResetEmail(
+  data: ParentPinResetEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const base = resolveAppUrl(appUrl);
+  const resetUrl = `${base}/onboarding/reset-pin?token=${encodeURIComponent(data.token.trim())}`;
+  const subject = "Reset your NextGenAchievers parent PIN";
+  const preheader = "This link expires in 30 minutes.";
+  const header = "Reset your parent PIN";
+  const text = [
+    "Set a new parent PIN for your NextGenAchievers account.",
+    "",
+    "This link works once and expires in 30 minutes.",
+    "",
+    `Set a new PIN: ${resetUrl}`,
+    "",
+    "The Team at NextGenAchievers",
+  ].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">
+        Set a new parent PIN for your NextGenAchievers account.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        This link works once and expires in 30 minutes.
+      </p>
+      ${ctaButton("Set a new PIN", resetUrl)}
+      ${pennyIllustration()}
+      <p style="margin:24px 0 0;font-size:16px;">
+        The Team at NextGenAchievers
+      </p>
+    `,
+  });
+  return { subject, preheader, html, text };
+}
+
 export function buildOnboardingEmail<T extends OnboardingEmailType>(
   type: T,
   data: OnboardingEmailDataMap[T],
@@ -1244,6 +1443,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "TEACHER_CLASS_CONFIRM":
       return buildTeacherClassConfirmEmail(
         data as TeacherClassConfirmEmailData,
+        appUrl,
+      );
+    case "PARENT_PIN_RESET":
+      return buildParentPinResetEmail(
+        data as ParentPinResetEmailData,
         appUrl,
       );
     default: {

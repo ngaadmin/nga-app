@@ -38,6 +38,8 @@ vi.mock("@/lib/onboarding/registered-accounts", () => ({
 }));
 
 import { ACADEMY_PROGRESS_STORAGE_KEY } from "@/lib/dashboard/academy-progress-storage";
+import { HUB_INTRO_SEEN_STORAGE_KEY } from "@/lib/dashboard/hub-intro/storage";
+import { PAGE_INTRO_SEEN_BY_ACCOUNT_KEY } from "@/lib/dashboard/page-intro-seen";
 import {
   completeAcademyMilestone,
   defaultAcademyMilestones,
@@ -51,6 +53,7 @@ import { writeVaultSessionRaw, readVaultSessionRaw } from "@/lib/dashboard/vault
 import { VAULT_SESSION_STORAGE_KEY } from "@/lib/dashboard/vault/vault-profile-storage";
 import { readPersisted, writePersisted } from "@/lib/dev/client-persist";
 import {
+  GUEST_DEVICE_EXPIRE_EXTRA_KEYS,
   GUEST_DEVICE_META_KEY,
   GUEST_DEVICE_TTL_MS,
   wipeGuestDeviceProgress,
@@ -193,20 +196,34 @@ describe("guest device progress", () => {
     expect(meta.expiresAt).toBeGreaterThan(Date.now() + GUEST_DEVICE_TTL_MS - 60_000);
   });
 
-  it("drops an expired guest copy", () => {
+  it("drops an expired guest copy, including page-intro flags", () => {
     seedGuestPlay();
+    window.localStorage.setItem(
+      PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+      JSON.stringify({ "guest:guest-penny": { hubs: { academy: true } } }),
+    );
+    window.localStorage.setItem(
+      HUB_INTRO_SEEN_STORAGE_KEY,
+      JSON.stringify({ academy: true }),
+    );
     window.localStorage.setItem(
       GUEST_DEVICE_META_KEY,
       JSON.stringify({ guestId: "guest-penny", expiresAt: Date.now() - 1000 }),
     );
     window.sessionStorage.clear();
 
+    expect(GUEST_DEVICE_EXPIRE_EXTRA_KEYS).toEqual([
+      PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+      HUB_INTRO_SEEN_STORAGE_KEY,
+    ]);
     expect(readPersisted(ACADEMY_PROGRESS_STORAGE_KEY)).toBeNull();
     expect(readPersisted(DASHBOARD_WALLET_STORAGE_KEY)).toBeNull();
     expect(readUserSession()).toBeNull();
     expect(window.localStorage.getItem(ACADEMY_PROGRESS_STORAGE_KEY)).toBeNull();
     expect(window.localStorage.getItem(GUEST_DEVICE_META_KEY)).toBeNull();
     expect(window.localStorage.getItem(GUEST_SESSION_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(PAGE_INTRO_SEEN_BY_ACCOUNT_KEY)).toBeNull();
+    expect(window.localStorage.getItem(HUB_INTRO_SEEN_STORAGE_KEY)).toBeNull();
   });
 
   it("leaves a registered account on the session store", () => {
@@ -222,7 +239,11 @@ describe("guest device progress", () => {
 
   it("wipes guest progress on logout and when a new guest starts", () => {
     seedGuestPlay();
+    window.localStorage.setItem(PAGE_INTRO_SEEN_BY_ACCOUNT_KEY, "{\"user:1\":{}}");
     wipeGuestDeviceProgress();
+    expect(window.localStorage.getItem(PAGE_INTRO_SEEN_BY_ACCOUNT_KEY)).toBe(
+      "{\"user:1\":{}}",
+    );
 
     expect(readUserSession()).toBeNull();
     expect(window.localStorage.getItem(ACADEMY_PROGRESS_STORAGE_KEY)).toBeNull();

@@ -19,9 +19,16 @@ import {
   lessonSortPoolChipClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
-import { LessonAnswerTick } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
+import {
+  wordBankItems,
+  wordDropIsComplete,
+  wordDropMatches,
+  wordDropPlace,
+  wordDropRemove,
+  type WordBankItem,
+} from "@/lib/academy/lessons/word-drop-placement";
 import { cn } from "@/lib/utils/cn";
 
 type WordDropBlank = {
@@ -41,16 +48,16 @@ type LessonWordDropGameProps = {
   orderKey: string;
   promptLabel?: string;
   onChoicesChange?: () => void;
-  onComplete?: () => void;
+  /** Every gap has a word. Correctness is still unknown. */
+  onAttemptReady?: () => void;
   onIncomplete?: () => void;
-  onMismatch?: () => void;
 };
 
 const TAP_MOVE_PX = 10;
 
 type PressSession = {
   pointerId: number;
-  word: string;
+  itemId: string;
   fromBlankIndex: number | null;
   startX: number;
   startY: number;
@@ -62,7 +69,7 @@ type PressSession = {
 };
 
 type DragState = {
-  word: string;
+  itemId: string;
   fromBlankIndex: number | null;
   offsetX: number;
   offsetY: number;
@@ -70,6 +77,11 @@ type DragState = {
   y: number;
   width: number;
   height: number;
+};
+
+type PressedChip = {
+  itemId: string;
+  fromBlankIndex: number | null;
 };
 
 function splitLeadingPunctuation(part: string): { punctuation: string; rest: string } {
@@ -113,45 +125,33 @@ export const LessonWordDropGame = forwardRef<
   LessonWordDropGameHandle,
   LessonWordDropGameProps
 >(function LessonWordDropGame(
-  { prompt, blanks, orderKey, onChoicesChange, onComplete, onIncomplete, onMismatch },
+  { prompt, blanks, orderKey, onChoicesChange, onAttemptReady, onIncomplete },
   ref,
 ) {
   const parts = useMemo(() => prompt.split("[blank]"), [prompt]);
 
-  const authoredOptions = useMemo(() => {
-    const seen = new Set<string>();
-    const options: string[] = [];
-    for (const blank of blanks) {
-      for (const option of blank.options) {
-        if (!seen.has(option)) {
-          seen.add(option);
-          options.push(option);
-        }
-      }
-    }
-    return options;
-  }, [blanks]);
-  const [allOptions, setAllOptions] = useState<string[]>(authoredOptions);
-  const optionSignature = authoredOptions.join("\0");
-  const authoredOptionsRef = useRef(authoredOptions);
-  authoredOptionsRef.current = authoredOptions;
+  const authoredBank = useMemo(() => wordBankItems(blanks), [blanks]);
+  const [bankItems, setBankItems] = useState<WordBankItem[]>(authoredBank);
+  const bankSignature = authoredBank.map((item) => item.id).join("\u0001");
+  const authoredBankRef = useRef(authoredBank);
+  authoredBankRef.current = authoredBank;
   const playSeed = usePlaySeed([orderKey, "words"]);
 
   useLayoutEffect(() => {
-    const options = authoredOptionsRef.current;
+    const items = authoredBankRef.current;
     if (playSeed === null) {
-      setAllOptions(options);
+      setBankItems(items);
       return;
     }
-    setAllOptions(seededShuffle(options, playSeed));
-  }, [optionSignature, playSeed]);
+    setBankItems(seededShuffle(items, playSeed));
+  }, [bankSignature, playSeed]);
 
   const [choices, setChoices] = useState<string[]>(() =>
     Array.from({ length: blanks.length }, () => ""),
   );
-  const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [shakeWord, setShakeWord] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [pressedChip, setPressedChip] = useState<PressedChip | null>(null);
   const [hoverBlankIndex, setHoverBlankIndex] = useState<number | null>(null);
   const [hoverPool, setHoverPool] = useState(false);
 
@@ -161,96 +161,88 @@ export const LessonWordDropGame = forwardRef<
   blanksRef.current = blanks;
   const onChoicesChangeRef = useRef(onChoicesChange);
   onChoicesChangeRef.current = onChoicesChange;
-  const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  const onAttemptReadyRef = useRef(onAttemptReady);
+  onAttemptReadyRef.current = onAttemptReady;
   const onIncompleteRef = useRef(onIncomplete);
   onIncompleteRef.current = onIncomplete;
-  const onMismatchRef = useRef(onMismatch);
-  onMismatchRef.current = onMismatch;
   const pressRef = useRef<PressSession | null>(null);
-  const shakeTimerRef = useRef<number | null>(null);
-  const suppressClickRef = useRef(false);
-  const placeTappedWordRef = useRef<(word: string) => void>(() => {});
+  const selectedItemIdRef = useRef<string | null>(null);
+  selectedItemIdRef.current = selectedItemId;
+  const bankItemsRef = useRef(bankItems);
+  bankItemsRef.current = bankItems;
+  const pendingBankFocusId = useRef<string | null>(null);
+  const bankButtonRefs = useRef(new Map<string, HTMLButtonElement>());
 
-  const rejectWord = (word: string) => {
-    setSelectedWord(word);
-    setShakeWord(word);
-    onMismatchRef.current?.();
-    if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
-    shakeTimerRef.current = window.setTimeout(() => {
-      setShakeWord((current) => (current === word ? null : current));
-      setSelectedWord((current) => (current === word ? null : current));
-      shakeTimerRef.current = null;
-    }, 360);
-  };
-
-  const reportSolvedState = useCallback((placedBlankIndex?: number) => {
-    const solved = blanksRef.current.every(
-      (blank, index) => choicesRef.current[index] === blank.correctOption,
-    );
-    if (solved) {
-      onCompleteRef.current?.();
-      return;
-    }
-    onIncompleteRef.current?.();
-    if (placedBlankIndex === undefined) return;
-    const blank = blanksRef.current[placedBlankIndex];
-    const placed = choicesRef.current[placedBlankIndex];
-    if (blank && placed && placed !== blank.correctOption) {
-      onMismatchRef.current?.();
-    }
+  const commitChoices = useCallback((next: string[]) => {
+    choicesRef.current = next;
+    setChoices(next);
+    onChoicesChangeRef.current?.();
+    if (wordDropIsComplete(next)) onAttemptReadyRef.current?.();
+    else onIncompleteRef.current?.();
   }, []);
+
+  const labelFor = (itemId: string) =>
+    bankItemsRef.current.find((item) => item.id === itemId)?.label ?? "";
+
+  const setArmedItem = (itemId: string | null) => {
+    selectedItemIdRef.current = itemId;
+    setSelectedItemId(itemId);
+  };
 
   const poolRef = useRef<HTMLDivElement>(null);
   const blankRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const dragCleanupRef = useRef<(() => void) | null>(null);
 
   useImperativeHandle(ref, () => ({
-    evaluate: () => {
-      const current = choicesRef.current;
-      return blanksRef.current.every(
-        (blank, index) => current[index] === blank.correctOption,
-      );
-    },
+    evaluate: () =>
+      wordDropMatches(
+        choicesRef.current.map((choice) => (choice ? labelFor(choice) : "")),
+        blanksRef.current.map((blank) => blank.correctOption),
+      ),
   }));
 
   const placeWordInBlank = useCallback(
-    (blankIndex: number, word: string) => {
-      const next = [...choicesRef.current];
-      for (let index = 0; index < next.length; index += 1) {
-        if (index !== blankIndex && next[index] === word) {
-          next[index] = "";
-        }
-      }
-      next[blankIndex] = word;
-      choicesRef.current = next;
-      setChoices(next);
-      onChoicesChangeRef.current?.();
-      reportSolvedState(blankIndex);
+    (blankIndex: number, itemId: string, fromBlankIndex: number | null) => {
+      commitChoices(
+        wordDropPlace(choicesRef.current, blankIndex, itemId, fromBlankIndex),
+      );
     },
-    [reportSolvedState],
+    [commitChoices],
+  );
+
+  const removeWordFromBlank = useCallback(
+    (blankIndex: number) => {
+      commitChoices(wordDropRemove(choicesRef.current, blankIndex));
+    },
+    [commitChoices],
   );
 
   const endDrag = useCallback(() => {
     setDragState(null);
+    setPressedChip(null);
     setHoverBlankIndex(null);
     setHoverPool(false);
   }, []);
 
   const beginPress = (
     event: ReactPointerEvent<HTMLElement>,
-    word: string,
+    itemId: string,
     fromBlankIndex: number | null,
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    suppressClickRef.current = true;
+    setPressedChip({ itemId, fromBlankIndex });
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // The pointer can end before the element captures it.
+    }
 
     const rect = event.currentTarget.getBoundingClientRect();
     const pointerId = event.pointerId;
     pressRef.current = {
       pointerId,
-      word,
+      itemId,
       fromBlankIndex,
       startX: event.clientX,
       startY: event.clientY,
@@ -261,6 +253,10 @@ export const LessonWordDropGame = forwardRef<
       dragging: false,
     };
 
+    const blockTouchScroll = (touchEvent: TouchEvent) => {
+      if (touchEvent.cancelable) touchEvent.preventDefault();
+    };
+
     const move = (nativeEvent: PointerEvent) => {
       const press = pressRef.current;
       if (!press || nativeEvent.pointerId !== pointerId) return;
@@ -268,11 +264,13 @@ export const LessonWordDropGame = forwardRef<
         nativeEvent.clientX - press.startX,
         nativeEvent.clientY - press.startY,
       );
+      nativeEvent.preventDefault();
       if (!press.dragging) {
         if (distance < TAP_MOVE_PX) return;
         press.dragging = true;
+        setPressedChip(null);
         setDragState({
-          word: press.word,
+          itemId: press.itemId,
           fromBlankIndex: press.fromBlankIndex,
           offsetX: press.offsetX,
           offsetY: press.offsetY,
@@ -315,15 +313,7 @@ export const LessonWordDropGame = forwardRef<
       dragCleanupRef.current = null;
       pressRef.current = null;
 
-      if (!press) {
-        endDrag();
-        return;
-      }
-
-      if (!press.dragging) {
-        if (nativeEvent.type !== "pointercancel") {
-          placeTappedWordRef.current(press.word);
-        }
+      if (!press || !press.dragging || nativeEvent.type === "pointercancel") {
         endDrag();
         return;
       }
@@ -333,105 +323,77 @@ export const LessonWordDropGame = forwardRef<
         nativeEvent.clientY,
         blankRefs.current,
       );
-      const blank = slotIndex === null ? undefined : blanksRef.current[slotIndex];
-      const locked =
-        slotIndex !== null &&
-        choicesRef.current[slotIndex] === blank?.correctOption &&
-        Boolean(choicesRef.current[slotIndex]);
 
-      if (slotIndex !== null && blank && !locked && press.word === blank.correctOption) {
-        placeWordInBlank(slotIndex, press.word);
-      } else if (slotIndex !== null && press.word !== blank?.correctOption) {
-        rejectWord(press.word);
+      if (slotIndex !== null) {
+        placeWordInBlank(slotIndex, press.itemId, press.fromBlankIndex);
+      } else if (press.fromBlankIndex !== null) {
+        removeWordFromBlank(press.fromBlankIndex);
       }
+      setArmedItem(null);
 
       endDrag();
     };
 
     dragCleanupRef.current?.();
-    window.addEventListener("pointermove", move);
+    window.addEventListener("pointermove", move, { passive: false });
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
+    window.addEventListener("touchmove", blockTouchScroll, { passive: false });
     dragCleanupRef.current = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
+      window.removeEventListener("touchmove", blockTouchScroll);
     };
   };
 
   useEffect(
     () => () => {
       dragCleanupRef.current?.();
-      if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
     },
     [],
   );
 
-  const placeTappedWord = (word: string) => {
-    const blanksNow = blanksRef.current;
-    const choicesNow = choicesRef.current;
-    const open = blanksNow
-      .map((blank, index) => ({ blank, index }))
-      .filter(({ blank, index }) => {
-        const filled = choicesNow[index];
-        return !(filled && filled === blank.correctOption);
-      });
+  useLayoutEffect(() => {
+    const itemId = pendingBankFocusId.current;
+    if (!itemId || choices.includes(itemId)) return;
+    const button = bankButtonRefs.current.get(itemId);
+    if (!button) return;
+    pendingBankFocusId.current = null;
+    button.focus();
+  }, [choices]);
 
-    if (open.length === 0) return;
-
-    let target = open.length === 1 ? open[0] : undefined;
-    if (!target) {
-      const matches = open.filter(
-        ({ blank, index }) => !choicesNow[index] && word === blank.correctOption,
-      );
-      if (matches.length === 1) target = matches[0];
-    }
-
-    if (!target) {
-      setSelectedWord(word);
-      setShakeWord((current) => (current === word ? current : null));
-      return;
-    }
-
-    if (word === target.blank.correctOption) {
-      placeWordInBlank(target.index, word);
-      setSelectedWord(null);
-      return;
-    }
-
-    rejectWord(word);
+  const armBankItem = (itemId: string) => {
+    setArmedItem(selectedItemIdRef.current === itemId ? null : itemId);
   };
-  placeTappedWordRef.current = placeTappedWord;
 
-  const placeSelectedWord = (blankIndex: number) => {
-    const word = selectedWord;
-    if (!word) return;
-    const blank = blanksRef.current[blankIndex];
-    if (!blank) return;
-    const locked =
-      choicesRef.current[blankIndex] === blank.correctOption &&
-      Boolean(choicesRef.current[blankIndex]);
-    if (locked) return;
-    if (word === blank.correctOption) {
-      placeWordInBlank(blankIndex, word);
-      setSelectedWord(null);
+  const activateBlankFromKeyboard = (blankIndex: number) => {
+    const armed = selectedItemIdRef.current;
+    if (armed) {
+      placeWordInBlank(blankIndex, armed, null);
+      setArmedItem(null);
       return;
     }
-    rejectWord(word);
+    const itemId = choicesRef.current[blankIndex];
+    if (!itemId) return;
+    pendingBankFocusId.current = itemId;
+    removeWordFromBlank(blankIndex);
+    setArmedItem(itemId);
   };
 
   const blankSlotClass = (index: number, filled: boolean) =>
     cn(
       filled ? lessonBlankSlotFilledClass : lessonBlankSlotClass,
-      "align-middle transition-colors",
+      "align-middle transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#031F82]",
       hoverBlankIndex === index && "bg-[#E8F6FC]/60",
+      pressedChip?.fromBlankIndex === index && !dragState && "-translate-y-0.5",
     );
 
   const visibleBlankWord = (index: number) => {
-    const word = choices[index];
-    if (!word) return "";
+    const itemId = choices[index];
+    if (!itemId) return "";
     if (dragState?.fromBlankIndex === index) return "";
-    return word;
+    return labelFor(itemId);
   };
 
   return (
@@ -453,22 +415,29 @@ export const LessonWordDropGame = forwardRef<
                     data-word-drop-slot={blankIndex}
                     aria-label={
                       visibleBlankWord(blankIndex)
-                        ? `Blank, ${visibleBlankWord(blankIndex)}`
-                        : "Blank. Place the selected word here."
+                        ? `Blank, ${visibleBlankWord(blankIndex)}. Return to the word bank.`
+                        : "Blank. Drag a word here."
                     }
-                    onClick={() => placeSelectedWord(blankIndex)}
+                    onKeyDown={(event) => {
+                      if (event.repeat) return;
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      activateBlankFromKeyboard(blankIndex);
+                    }}
+                    onPointerDown={(event) => {
+                      const itemId = choices[blankIndex];
+                      if (!itemId) return;
+                      beginPress(event, itemId, blankIndex);
+                    }}
                     className={cn(
                       blankSlotClass(blankIndex, Boolean(visibleBlankWord(blankIndex))),
-                      "text-[22px]",
+                      "select-none text-[22px]",
+                      choices[blankIndex] && "cursor-grab touch-none",
                     )}
                   >
                     {visibleBlankWord(blankIndex) ? (
-                      <span className={cn(lessonSortPoolChipClass, "relative text-[20px]")}>
+                      <span className={cn(lessonSortPoolChipClass, "text-[20px]")}>
                         <AnswerEmojiLabel label={visibleBlankWord(blankIndex)} />
-                        {visibleBlankWord(blankIndex) ===
-                        blanks[blankIndex]?.correctOption ? (
-                          <LessonAnswerTick className="absolute -right-3 -top-3" />
-                        ) : null}
                       </span>
                     ) : null}
                   </button>
@@ -491,51 +460,43 @@ export const LessonWordDropGame = forwardRef<
           hoverPool && dragState?.fromBlankIndex !== null && "bg-[#E8F6FC]/40",
         )}
       >
-        {allOptions.map((option) => {
-          const used =
-            choices.includes(option) &&
-            !(
-              dragState?.fromBlankIndex != null &&
-              choices[dragState.fromBlankIndex] === option
-            );
+        {bankItems.map((item) => {
+          if (choices.includes(item.id)) return null;
           return (
             <button
-              key={option}
-              type="button"
-              aria-pressed={selectedWord === option}
-              onClick={() => {
-                if (suppressClickRef.current) {
-                  suppressClickRef.current = false;
-                  return;
-                }
-                if (used) return;
-                placeTappedWord(option);
+              key={item.id}
+              ref={(node) => {
+                if (node) bankButtonRefs.current.set(item.id, node);
+                else bankButtonRefs.current.delete(item.id);
               }}
+              type="button"
+              aria-pressed={selectedItemId === item.id}
               onKeyDown={(event) => {
+                if (event.repeat) return;
                 if (event.key !== "Enter" && event.key !== " ") return;
                 event.preventDefault();
-                if (used) return;
-                placeTappedWord(option);
+                armBankItem(item.id);
               }}
               onPointerDown={(event) => {
-                if (used) return;
-                beginPress(event, option, null);
+                beginPress(event, item.id, null);
               }}
               className={cn(
                 lessonSortPoolChipClass,
                 "text-[20px]",
-                used && "hidden",
-                selectedWord === option &&
+                selectedItemId === item.id &&
                   "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
-                shakeWord === option && "lesson-tile-shake",
-                dragState?.word === option &&
+                pressedChip?.itemId === item.id &&
+                  pressedChip.fromBlankIndex === null &&
+                  !dragState &&
+                  "-translate-y-0.5 shadow-[0_6px_0_rgba(3,31,130,0.18)]",
+                dragState?.itemId === item.id &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",
               )}
-              aria-label={option}
+              aria-label={item.label}
               style={{ touchAction: "none" }}
             >
-              <AnswerEmojiLabel label={option} />
+              <AnswerEmojiLabel label={item.label} />
             </button>
           );
         })}
@@ -555,7 +516,7 @@ export const LessonWordDropGame = forwardRef<
               minHeight: dragState.height,
             }}
           >
-            <AnswerEmojiLabel label={dragState.word} />
+            <AnswerEmojiLabel label={labelFor(dragState.itemId)} />
           </div>
         </OverlayPortal>
       ) : null}

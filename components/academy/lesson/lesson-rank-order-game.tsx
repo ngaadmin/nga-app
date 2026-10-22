@@ -107,35 +107,27 @@ export function LessonRankOrderGame({
   itemsRef.current = items;
   const correctOrderRef = useRef(correctOrder);
   correctOrderRef.current = correctOrder;
+  const onIncompleteRef = useRef(onIncomplete);
+  onIncompleteRef.current = onIncomplete;
 
   useLayoutEffect(() => {
     const ids = itemsRef.current.map((item) => item.id);
     setRankOrder(openingRankOrder(ids, correctOrderRef.current));
     solvedRef.current = false;
     setRankSubmitted(false);
+    onIncompleteRef.current?.();
   }, [correctSignature, itemSignature]);
 
-  useEffect(() => {
-    const solved = rankOrderMatches(rankOrder, correctOrder);
-    if (solved) {
+  const checkOrder = () => {
+    if (rankSubmitted || solvedRef.current) return;
+    if (rankOrderMatches(rankOrderRef.current, correctOrder)) {
+      solvedRef.current = true;
       setRankSubmitted(true);
-      if (!solvedRef.current) {
-        solvedRef.current = true;
-        onDismissError?.();
-        onSuccess?.();
-        onComplete();
-      }
+      onDismissError?.();
+      onSuccess?.();
+      onComplete();
       return;
     }
-    setRankSubmitted(false);
-    if (solvedRef.current) {
-      solvedRef.current = false;
-      onIncomplete?.();
-    }
-  }, [correctOrder, onComplete, onDismissError, onIncomplete, onSuccess, rankOrder]);
-
-  const checkOrder = () => {
-    if (rankSubmitted || rankOrderMatches(rankOrderRef.current, correctOrder)) return;
     onMistake();
     shake("board");
     const message = firstRankOrderError(errors);

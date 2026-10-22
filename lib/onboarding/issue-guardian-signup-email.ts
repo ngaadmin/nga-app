@@ -44,8 +44,8 @@ export async function issueGuardianSignupEmail(
       childId: input.childId,
       username: input.username,
       parentEmail,
-      appUrl,
       cohort: input.cohort,
+      appUrl,
     });
   }
 

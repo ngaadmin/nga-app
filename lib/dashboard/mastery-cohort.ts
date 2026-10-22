@@ -18,10 +18,15 @@ export function parseMasteryCohort(value: unknown): MasteryCohort | null {
 /**
  * Account lifecycle status on the local session/profile.
  * - GUEST: personalization complete, not yet registered
- * - PENDING_CONSENT: Explorer registered, awaiting verifiable parental approval
+ * - PENDING_CONSENT: registered, awaiting verifiable parental approval
+ * - DECLINED: a parent declined approval. The account stays until the 30-day removal.
  * - ACTIVE: fully usable registered account
  */
-export type AccountLifecycleStatus = "GUEST" | "PENDING_CONSENT" | "ACTIVE";
+export type AccountLifecycleStatus =
+  | "GUEST"
+  | "PENDING_CONSENT"
+  | "DECLINED"
+  | "ACTIVE";
 
 /** Statuses assigned at registered signup (never GUEST). */
 export type RegisteredAccountStatus = Exclude<AccountLifecycleStatus, "GUEST">;

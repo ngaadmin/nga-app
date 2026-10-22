@@ -17,8 +17,15 @@ import {
 
 /** One cent per 100 XP. Parents can save $0.50, $2, $3, or any other cent amount. */
 export const MIN_EXCHANGE_RATE_CENTS = 1;
-/** $999.99 per 100 XP. Stops a typo from writing a huge rate. */
+/** $999.99 per 100 coins. Stops a typo from writing a huge rate. */
 export const MAX_EXCHANGE_RATE_CENTS = 99_999;
+
+/** Shown when the amount is missing, not money, or above the limit. */
+export const EXCHANGE_RATE_LIMIT_ERROR =
+  "Enter an amount like 2, 3, or 0.50, up to $999.99 per 100 coins.";
+
+/** Rates above $10 per 100 coins ask for a confirm tap before they save. */
+export const LARGE_EXCHANGE_RATE_CONFIRM_CENTS = 1_000;
 
 export type CashInAmountError = "empty" | "not-whole" | "not-positive" | "over-balance";
 
@@ -327,6 +334,25 @@ export function pickExchangeRate(
     return rateSnapshot(leftAt > rightAt ? left : right);
   }
   return rateSnapshot(right);
+}
+
+/**
+ * Copy the newer saved rate onto the local wallet.
+ * Coin balance and cash-in history stay on `local`.
+ */
+export function withFreshestExchangeRate(
+  local: PersistedDashboardWallet,
+  remote: PersistedDashboardWallet | null | undefined,
+): PersistedDashboardWallet {
+  if (!remote) return local;
+  const rate = pickExchangeRate(local, remote);
+  return {
+    ...local,
+    audSliderIndex: rate.audSliderIndex,
+    xpExchangeRateSet: rate.xpExchangeRateSet,
+    exchangeRateCentsPer100Xp: rate.exchangeRateCentsPer100Xp,
+    exchangeRateUpdatedAt: rate.exchangeRateUpdatedAt,
+  };
 }
 
 /** Add integer cents onto a dollar balance without binary float drift. */

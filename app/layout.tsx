@@ -70,7 +70,8 @@ export const metadata: Metadata = {
   },
   description:
     "Join NextGenAchievers - the free, fun way to master real-world money skills.",
-  applicationName: "NextGenAchievers",
+  applicationName: "NextGen",
+  appleWebApp: { title: "NextGen", capable: true },
   icons: {
     icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
@@ -115,7 +116,7 @@ export default function RootLayout({
         </Suspense>
         <div id="overlay-root" aria-hidden="true" />
         <div id="modal-root" />
-        <div id="toast-root" aria-hidden="true" />
+        <div id="toast-root" />
       </body>
     </html>
   );

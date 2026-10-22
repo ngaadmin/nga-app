@@ -47,6 +47,8 @@ type DragState = {
   y: number;
   width: number;
   height: number;
+  startX: number;
+  startY: number;
 };
 
 type LessonSavingsGoalGameProps = {
@@ -242,6 +244,8 @@ export function LessonSavingsGoalGame({
       y: rect.top,
       width: rect.width,
       height: rect.height,
+      startX: event.clientX,
+      startY: event.clientY,
     };
     dragStateRef.current = nextDrag;
     setDragState(nextDrag);
@@ -272,6 +276,13 @@ export function LessonSavingsGoalGame({
       } else if (current?.from === "spent") {
         withdrawItemRef.current(current.itemId);
       } else if (current?.from === "pool") {
+        const moved =
+          Math.hypot(native.clientX - current.startX, native.clientY - current.startY) > 8;
+        if (!moved) {
+          depositItemRef.current(current.itemId);
+          endDrag();
+          return;
+        }
         setShakingId(current.itemId);
         if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
         shakeTimerRef.current = window.setTimeout(() => {
@@ -307,6 +318,12 @@ export function LessonSavingsGoalGame({
         }}
         type="button"
         onPointerDown={(event) => handleChipPointerDown(itemId, from, event)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          if (from === "pool") depositItemRef.current(itemId);
+          else withdrawItemRef.current(itemId);
+        }}
         aria-grabbed={isDragging}
         className={cn(
           lessonSavingsGoalChipClass,

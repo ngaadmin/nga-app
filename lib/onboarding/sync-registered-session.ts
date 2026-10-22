@@ -31,7 +31,8 @@ function remoteIsActive(
 
 function toLocalAccountStatus(
   remote: Pick<LearnerConsentStatus, "accountStatus" | "consentApprovedAt">,
-): "ACTIVE" | "PENDING_CONSENT" {
+): "ACTIVE" | "PENDING_CONSENT" | "DECLINED" {
+  if (remote.accountStatus === "declined") return "DECLINED";
   return remoteIsActive(remote) ? "ACTIVE" : "PENDING_CONSENT";
 }
 

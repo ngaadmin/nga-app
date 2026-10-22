@@ -225,6 +225,7 @@ export async function loadLearnerAccountById(
   }
   if (
     profile.account_status !== "pending_consent" &&
+    profile.account_status !== "declined" &&
     profile.account_status !== "active"
   ) {
     console.error("[sign-in] Profile status rejected", {
@@ -270,7 +271,7 @@ export async function loadLearnerAccountById(
     curriculumCohort: parseMasteryCohort(profile.curriculum_cohort),
     accountRole: profile.account_role,
     isTeacher: profile.is_teacher === true || profile.account_role === "teacher",
-    accountStatus: profile.account_status as "pending_consent" | "active",
+    accountStatus: profile.account_status as "pending_consent" | "declined" | "active",
     consentApprovedAt: profile.consent_approved_at ?? null,
     parentApprovalRequired:
       profile.parent_approval_required === true

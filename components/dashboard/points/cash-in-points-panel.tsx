@@ -3,24 +3,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { PointsConvertedSuccessModal } from "@/components/dashboard/points/points-converted-success-modal";
-import { PointsConversionParentEmailModal } from "@/components/dashboard/points/points-conversion-parent-email-modal";
 import { copyMatrix } from "@/constants/copyMatrix";
-import { adoptCloudWalletRate } from "@/lib/dashboard/adopt-cloud-wallet-rate";
 import {
-  cashInRateMissingMessage,
-  shouldSendParentCashInEmail,
-} from "@/lib/dashboard/class-account-cash-in";
+  adoptCloudWalletRate,
+  refreshCashInRateFromCloud,
+} from "@/lib/dashboard/adopt-cloud-wallet-rate";
+import { cashInRateMissingMessage } from "@/lib/dashboard/class-account-cash-in";
 import { useCurrency } from "@/lib/dashboard/currency-context";
 import { persistRegisteredProgressNow } from "@/lib/dashboard/account-progress-sync";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { coinWord, fillCoinTemplate } from "@/lib/copy/coin-word";
 import { formatConversionRateLabel } from "@/lib/dashboard/point-conversion";
-import {
-  dispatchPointsConversionParentEmail,
-  resolveParentEmailForChild,
-  type PointsConversionEmailDispatch,
-} from "@/lib/dashboard/points-conversion-email";
-import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useVaultProfile } from "@/lib/dashboard/vault/vault-profile-context";
 import { GUEST_SAVE_SIGN_UP_HREF } from "@/lib/onboarding/guest-save-prompt";
@@ -58,7 +51,6 @@ export function CashInPointsPanel({
 }: CashInPointsPanelProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
   const { formatMoney, currencyCode } = useCurrency();
-  const { username } = useDashboardUser();
   const session = useUserSession();
   const { recordXpCashIn } = useVaultProfile();
   const isParentMaster = session?.accountRole === "parent_master";
@@ -74,10 +66,7 @@ export function CashInPointsPanel({
   const [pointsInput, setPointsInput] = useState("");
   const [claimError, setClaimError] = useState<string | null>(null);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [parentEmailModalOpen, setParentEmailModalOpen] = useState(false);
   const [successAudAmount, setSuccessAudAmount] = useState(0);
-  const [parentEmailDispatch, setParentEmailDispatch] =
-    useState<PointsConversionEmailDispatch | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [classAccountWithoutParent, setClassAccountWithoutParent] = useState<
@@ -140,8 +129,11 @@ export function CashInPointsPanel({
     conversionCopy.xpAvailableTemplate,
     spendableXp,
   );
-  const preview =
-    checked.ok && audCents > 0
+  const amountProblem =
+    pointsInput.trim() && !checked.ok ? amountError(checked.error) : null;
+  const preview = amountProblem
+    ? amountProblem
+    : checked.ok && audCents > 0
       ? formatXpCashPreview(quote.pointsCharged, formatMoney(audPayout))
       : checked.ok && rateCents != null
         ? conversionCopy.zeroPayoutError
@@ -192,6 +184,14 @@ export function CashInPointsPanel({
       return;
     }
 
+    const currentRate = await refreshCashInRateFromCloud();
+    if (!currentRate.ok) {
+      setClaimError("Could not check the current rate. Try again.");
+      claimingRef.current = false;
+      setIsClaiming(false);
+      return;
+    }
+
     let holdLock = false;
     try {
       const result = claimPointsForVault(fresh.points);
@@ -222,19 +222,8 @@ export function CashInPointsPanel({
       );
       await persistRegisteredProgressNow();
 
-      const emailDispatch = shouldSendParentCashInEmail(classAccount)
-        ? await dispatchPointsConversionParentEmail({
-            parentEmail: resolveParentEmailForChild(username),
-            childUsername: username,
-            amountFormatted: formatMoney(result.audAmount),
-            pointsClaimed: result.pointsClaimed,
-            conversionRateLabel,
-          })
-        : null;
-
       setPointsInput("");
       setSuccessAudAmount(result.audAmount);
-      setParentEmailDispatch(emailDispatch);
       setSuccessModalOpen(true);
       onConverted?.({
         audAmount: result.audAmount,
@@ -249,9 +238,6 @@ export function CashInPointsPanel({
 
   function handleSuccessClose() {
     setSuccessModalOpen(false);
-    if (parentEmailDispatch && shouldSendParentCashInEmail(classAccountWithoutParent === true)) {
-      setParentEmailModalOpen(true);
-    }
   }
 
   if (lock === "class-seat") return null;
@@ -322,7 +308,7 @@ export function CashInPointsPanel({
                   value={pointsInput}
                   onChange={(event) => {
                     setClaimError(null);
-                    setPointsInput(event.target.value.replace(/\D/g, ""));
+                    setPointsInput(event.target.value);
                   }}
                   placeholder={conversionCopy.customAmountPlaceholder}
                   aria-label={conversionCopy.customAmountLabel}
@@ -342,7 +328,10 @@ export function CashInPointsPanel({
               {conversionCopy.convertFullBalance}
             </button>
 
-            <p className="mt-2 font-heading text-xs font-bold leading-snug text-[#031F82]">
+            <p
+              className="mt-2 font-heading text-xs font-bold leading-snug text-[#031F82]"
+              role={amountProblem ? "alert" : undefined}
+            >
               {preview}
             </p>
             {partialUse ? (
@@ -384,12 +373,6 @@ export function CashInPointsPanel({
         title={conversionCopy.successTitle}
         body={successBody}
         acknowledgeLabel={conversionCopy.successAcknowledge}
-      />
-
-      <PointsConversionParentEmailModal
-        isOpen={parentEmailModalOpen}
-        dispatch={parentEmailDispatch}
-        onClose={() => setParentEmailModalOpen(false)}
       />
     </>
   );

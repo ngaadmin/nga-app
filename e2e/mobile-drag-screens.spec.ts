@@ -54,7 +54,7 @@ test("mobile drag completes the sentence, quick-pick rounds, swipe, and didn't-b
   await dragOnto(
     page,
     page.getByRole("button", { name: "Spent", exact: true }),
-    page.getByRole("button", { name: /Place the selected word here/i }),
+    page.getByRole("button", { name: /Drag a word here/i }),
   );
   await expect(next).toBeEnabled();
 

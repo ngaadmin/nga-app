@@ -25,6 +25,7 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { pathToFileURL } from "node:url";
+import { isReservedGuestUsername } from "@/lib/onboarding/reserved-guest-username";
 import { pickClassSeatUsernames } from "@/lib/school/class-usernames";
 import {
   classPasswordCipherUpdate,
@@ -92,6 +93,12 @@ export function readDemoSeedConfig(
   }
   if (!USERNAME_PATTERN.test(teacherUsername) || !USERNAME_PATTERN.test(studentUsername)) {
     throw new Error("Demo usernames must be 2–20 letters, numbers, _ or -.");
+  }
+  if (
+    isReservedGuestUsername(teacherUsername) ||
+    isReservedGuestUsername(studentUsername)
+  ) {
+    throw new Error("Demo usernames cannot use a guest Penny name.");
   }
   if (teacherUsername.toLowerCase() === studentUsername.toLowerCase()) {
     throw new Error("DEMO_TEACHER_USERNAME and DEMO_STUDENT_USERNAME must be different.");

@@ -35,6 +35,7 @@ export function ExplorerPendingConsentView({
   const copy = copyMatrix.onboarding.pendingConsent;
   const justSubmitted = variant === "justSubmitted" && !approved;
   const [isResending, setIsResending] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const resendInFlightRef = useRef(false);
@@ -68,7 +69,7 @@ export function ExplorerPendingConsentView({
       if (localToken) {
         try {
           await resendParentConsentApproval(localToken);
-          await leaveToLogin();
+          setResendSent(true);
           return;
         } catch {
           // Fall through to the signed-in child resend path.
@@ -80,7 +81,7 @@ export function ExplorerPendingConsentView({
         setError(result.error);
         return;
       }
-      await leaveToLogin();
+      setResendSent(true);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -110,6 +111,11 @@ export function ExplorerPendingConsentView({
         </p>
       </div>
 
+      {resendSent ? (
+        <p className="font-sans text-sm font-semibold text-[#031F82]" role="status">
+          Approval email sent
+        </p>
+      ) : null}
       {error ? (
         <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
           {error}
@@ -138,10 +144,10 @@ export function ExplorerPendingConsentView({
             onClick={() => {
               void handleResend();
             }}
-            disabled={isResending}
+            disabled={isResending || resendSent}
             aria-busy={isResending || undefined}
           >
-            {isResending ? copy.resending : copy.resend}
+            {resendSent ? "Approval email sent" : isResending ? copy.resending : copy.resend}
           </Button>
         )}
         <Button

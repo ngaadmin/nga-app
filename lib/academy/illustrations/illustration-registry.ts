@@ -206,6 +206,8 @@ export function getPairSheetImagePath(fileName: string): string | undefined {
   if (pose) {
     return `${ILLUSTRATIONS_BASE}/characters/${pose[1]}/${stem}.webp`;
   }
+  const loosePose = characterPoseFilePath(stem);
+  if (loosePose) return loosePose;
   if (
     /^(aiden-dash|aiden-max|holly-immi|holly-mia|lars-mason|lars-mia|lars-senna)-(chatting|sidebyside)$/.test(
       stem,
@@ -214,6 +216,18 @@ export function getPairSheetImagePath(fileName: string): string | undefined {
     return `${ILLUSTRATIONS_BASE}/pairs/${stem}.webp`;
   }
   return `${PAIR_SHEET_IMAGES_BASE}/${withExt}`;
+}
+
+/**
+ * Support-cast pose files such as `dash-celebrating` live next to the
+ * `*-512.webp` art. Registered character ids are resolved earlier.
+ */
+export function characterPoseFilePath(fileName: string): string | undefined {
+  const trimmed = fileName.trim().split(/[/\\]/).pop() ?? "";
+  const stem = trimmed.replace(/\.(webp|png|jpe?g)$/i, "").toLowerCase();
+  const match = /^(lars|holly|aiden|senna|immi|dash)-[a-z]+$/.exec(stem);
+  if (!match || stem.endsWith("-512")) return undefined;
+  return `${ILLUSTRATIONS_BASE}/characters/${match[1]}/${stem}-512.webp`;
 }
 
 export function getIllustrationPath(id: IllustrationId): string {

@@ -3,99 +3,63 @@ type AcademyLevelId = 1 | 2 | 3 | 4 | 5 | 6;
 /** Module titles shown on the Academy journey map (Modules 1-6). */
 export const ACADEMY_MODULE_TITLES: Record<AcademyLevelId, string> = {
   1: "Control Your Spending",
-  2: "Make Money",
-  3: "Be the Boss of Your Money",
-  4: "Turn Money into More Money",
-  5: "Increase Your Earning Power",
-  6: "Create Income That Doesn't Need You",
+  2: "Start making money",
+  3: "Be the boss of your money",
+  4: "Grow the money you have",
+  5: "Increase your earning power",
+  6: "Learn Passive Income",
 };
 
 /** Short sub-headers shown under each module title. */
 export const ACADEMY_MODULE_DESCRIPTIONS: Record<AcademyLevelId, string> = {
-  1: "Money is a tool to buy freedom and choices",
-  2: "Money is lost when you can't see what's happening",
-  3: "If you don't control money, it controls you",
-  4: "Money comes from creating value for others",
-  5: "Money grows when it is put to work",
-  6: "How you structure money determines how much you keep and grow",
+  1: "Stop the behaviours and beliefs that keep people stuck in scarcity",
+  2: "Create real cash so money stops being theoretical",
+  3: "Stop leakage and install a personal operating system",
+  4: "Make surplus capital start working",
+  5: "Raise the value and efficiency of what you earn",
+  6: "Move from trading time for money to ownership",
 };
 
 /** @deprecated Use ACADEMY_MODULE_DESCRIPTIONS — retained for imports. */
 export const ACADEMY_MODULE_FOCUS_AREAS = ACADEMY_MODULE_DESCRIPTIONS;
 
 /**
- * Fallback lesson topic strings per module (Lessons 1–9).
- * Lesson 9 is the phase-closer checkpoint for each module.
+ * Fallback lesson topics per module: the three skill names, in order.
+ * Lessons 1–9 cycle through these three names.
  */
 export const ACADEMY_LESSON_TOPICS_BY_MODULE: Record<
   AcademyLevelId,
-  readonly [string, string, string, string, string, string, string, string, string]
+  readonly [string, string, string]
 > = {
   1: [
-    "Money In, Money Out",
-    "Needs vs Wants Sort",
-    "The 50/30/20 Split",
-    "Pocket Money Map",
-    "The birthday discount",
-    "Save-First Power",
-    "Spending Triggers",
-    "Stash Audit",
-    "Cash Stash Checkpoint",
+    "Catch Impulse Spending",
+    "Choose Needs Over Wants",
+    "Don't Spend Money You Don't Have",
   ],
   2: [
-    "Income Sources 101",
-    "Side Hustle Spark",
-    "Value Your Time",
-    "Pricing Your Skills",
-    "Negotiation Basics",
-    "Raise Your Rates",
-    "Passive Income Intro",
-    "Loot Leverage Review",
-    "Loot Level Checkpoint",
+    "Create Value People Will Pay For",
+    "Find & Close Simple Opportunities",
+    "Track What You Earn and Spend",
   ],
   3: [
-    "Interest Explained",
-    "Compound Growth",
-    "APR vs APY",
-    "Savings Account Power",
-    "Rule of 72",
-    "Inflation Reality Check",
-    "Time Value of Money",
-    "Multiplier Math Lab",
-    "Interest Checkpoint",
+    "Run a Simple Money System",
+    "Protect a Safety Buffer",
+    "Review Your Numbers",
   ],
   4: [
-    "Set a Real Goal",
-    "Break Goals Into Steps",
-    "Console Quest Budget",
-    "Trade-Off Decisions",
-    "Delay Gratification",
-    "Goal Timeline Map",
-    "Progress Check Ritual",
-    "Crush the Milestone",
-    "Goal Crusher Checkpoint",
+    "Understand Assets vs Liabilities",
+    "Understand Compounding & Starting Young",
+    "Put Money to Work",
   ],
   5: [
-    "Spot the Red Flags",
-    "Phishing & Fake Links",
-    "Too-Good-To-Be-True Offers",
-    "Password & Privacy Basics",
-    "Social Media Scams",
-    "In-App Purchase Traps",
-    "Report & Block Playbook",
-    "Defense Drill",
-    "Scam Shield Checkpoint",
+    "Increase the Value of What You Offer",
+    "Expand or Improve Income Streams",
+    "Manage Basic Downside Risk in Earning",
   ],
   6: [
-    "Build the Streak Habit",
-    "Weekly Save Challenge",
-    "Automate Your Stash",
-    "Celebrate Small Wins",
-    "Streak Recovery Plan",
-    "Long-Term Consistency",
-    "Streak + Goal Combo",
-    "Final Push Review",
-    "Savings Streak Checkpoint",
+    "Spot Where You Are Still the Bottleneck",
+    "Design Ownership Instead of Just Work",
+    "Replace Yourself with a System, Person or Tool",
   ],
 };
 

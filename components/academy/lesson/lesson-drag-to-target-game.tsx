@@ -117,7 +117,7 @@ export function LessonDragToTargetGame({
   itemEmoji = "🪙",
   itemSize = "lg",
   coinCount = 1,
-  targetEmoji = "🐷",
+  targetEmoji,
   sourceIllustrationSrc,
   sourceIllustrationAlt,
   targetIllustrationSrc,
@@ -137,7 +137,7 @@ export function LessonDragToTargetGame({
   const singleSource = totalCoins === 1 && !sourceIllustrationSrc;
   const sourceChipClass = singleSource ? SINGLE_SOURCE_CLASS : COIN_CHIP_CLASS;
   const characterEmoji = personEmojiForTargetLabel(targetLabel);
-  const resolvedTargetEmoji = characterEmoji ?? targetEmoji;
+  const resolvedTargetEmoji = targetEmoji ?? characterEmoji ?? "🐷";
   const [remaining, setRemaining] = useState(totalCoins);
   const [landed, setLanded] = useState(0);
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -433,11 +433,6 @@ export function LessonDragToTargetGame({
           <AnswerEmoji emoji={resolvedTargetEmoji} />
           {renderJarStack()}
         </div>
-        {characterEmoji ? (
-          <p className="max-w-[9rem] text-center font-heading text-sm font-bold text-[#031F82]">
-            {targetLabel}
-          </p>
-        ) : null}
       </div>
     );
   };
@@ -495,23 +490,37 @@ export function LessonDragToTargetGame({
           quarterSource && BANK_SIZE_CLASS,
         )}
       >
-        <div className="flex items-center">{renderSourceCoins()}</div>
-        <button
-          ref={targetRef}
-          type="button"
-          aria-label={`Drop selected ${sourceLabel} on ${targetLabel}`}
-          onClick={dropSelectedCoin}
-          onKeyDown={dropSelectedFromKeyboard}
-          className={cn(
-            "relative cursor-pointer border-0 bg-transparent p-0",
-            shakingKey === "target" && "lesson-tile-shake",
-          )}
-        >
-          {renderTargetVisual()}
-          {remaining <= 0 ? (
-            <LessonAnswerTick className="absolute -right-1 -top-1" />
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center">{renderSourceCoins()}</div>
+          {showZoneLabels ? (
+            <p className="max-w-[9rem] text-center font-heading text-sm font-bold text-[#031F82]">
+              {sourceLabel}
+            </p>
           ) : null}
-        </button>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            ref={targetRef}
+            type="button"
+            aria-label={`Drop selected ${sourceLabel} on ${targetLabel}`}
+            onClick={dropSelectedCoin}
+            onKeyDown={dropSelectedFromKeyboard}
+            className={cn(
+              "relative cursor-pointer border-0 bg-transparent p-0",
+              shakingKey === "target" && "lesson-tile-shake",
+            )}
+          >
+            {renderTargetVisual()}
+            {remaining <= 0 ? (
+              <LessonAnswerTick className="absolute -right-1 -top-1" />
+            ) : null}
+          </button>
+          {showZoneLabels ? (
+            <p className="max-w-[9rem] text-center font-heading text-sm font-bold text-[#031F82]">
+              {targetLabel}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {dragState ? (

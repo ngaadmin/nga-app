@@ -59,7 +59,10 @@ export function AcademyModuleSignpost({
 
   return (
     <>
-      <div className="w-full shrink-0" style={{ backgroundColor: barTheme.fill }}>
+      <div
+        className="w-full shrink-0 overflow-visible rounded-[10px]"
+        style={{ backgroundColor: barTheme.fill }}
+      >
         <button
           type="button"
           onClick={() => setPreviewOpen(true)}
@@ -77,11 +80,11 @@ export function AcademyModuleSignpost({
             {isLocked ? (
               <LockIcon className="size-3.5 shrink-0" aria-hidden />
             ) : null}
-            <span className="line-clamp-1">{title}</span>
+            <span className="line-clamp-2">{title}</span>
           </p>
           <p
             className={cn(
-              "mt-0.5 line-clamp-1 font-sans text-[13px] font-medium leading-tight",
+              "mt-0.5 line-clamp-2 font-sans text-[13px] font-medium leading-tight",
               isLocked && "opacity-90",
             )}
             style={{ color: ink }}

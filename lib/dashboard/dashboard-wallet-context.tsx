@@ -176,20 +176,35 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       }
     }
 
+    const savedRateWins = Boolean(
+      existing?.exchangeRateUpdatedAt &&
+        (existing.exchangeRateCentsPer100Xp ?? null) !==
+          (exchangeRateCentsPer100Xp ?? null),
+    );
+    const rateForSave = savedRateWins
+      ? {
+          audSliderIndex: existing?.audSliderIndex ?? audSliderIndex,
+          xpExchangeRateSet: existing?.xpExchangeRateSet ?? xpExchangeRateSet,
+          exchangeRateCentsPer100Xp: existing?.exchangeRateCentsPer100Xp ?? null,
+        }
+      : {
+          audSliderIndex,
+          xpExchangeRateSet,
+          exchangeRateCentsPer100Xp,
+        };
     const settingsChanged =
       !existing ||
-      existing.audSliderIndex !== audSliderIndex ||
-      existing.xpExchangeRateSet !== xpExchangeRateSet ||
-      (existing.exchangeRateCentsPer100Xp ?? null) !== exchangeRateCentsPer100Xp;
+      existing.audSliderIndex !== rateForSave.audSliderIndex ||
+      existing.xpExchangeRateSet !== rateForSave.xpExchangeRateSet ||
+      (existing.exchangeRateCentsPer100Xp ?? null) !==
+        (rateForSave.exchangeRateCentsPer100Xp ?? null);
 
     saveDashboardWalletState(
       persistedWalletFromLiveState(
         {
           totalPoints,
           lifetimePointsEarned,
-          audSliderIndex,
-          xpExchangeRateSet,
-          exchangeRateCentsPer100Xp,
+          ...rateForSave,
         },
         existing,
         { settingsChanged },
@@ -244,13 +259,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
       claimGateRef.current = begun.state;
 
       const persisted = readDashboardWalletState() ?? defaultDashboardWalletState();
-      const rated = {
-        ...persisted,
-        audSliderIndex,
-        xpExchangeRateSet,
-        exchangeRateCentsPer100Xp,
-      };
-      const result = spendSpendableXp(rated, points, {
+      const result = spendSpendableXp(persisted, points, {
         id: createWalletEventId(),
         at: new Date().toISOString(),
       });
@@ -269,7 +278,7 @@ export function DashboardWalletProvider({ children }: DashboardWalletProviderPro
         pointsClaimed: result.pointsClaimed,
       };
     },
-    [audSliderIndex, exchangeRateCentsPer100Xp, xpExchangeRateSet],
+    [],
   );
 
   const awardLessonXp = useCallback((points: number, eventId?: string) => {

@@ -12,7 +12,10 @@ import {
   lessonNextButtonClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonCashInOutcome } from "@/lib/academy/lessons/lesson-coin-commit";
-import { getIllustrationPath } from "@/lib/academy/illustrations/illustration-registry";
+import {
+  getIllustrationPath,
+  isIllustrationId,
+} from "@/lib/academy/illustrations/illustration-registry";
 import type { MedalIllustrationId } from "@/lib/academy/illustrations/medal-registry";
 import {
   flyLessonTotalToCoinCounter,
@@ -33,7 +36,20 @@ import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
-const LARS_CELEBRATING_SRC = getIllustrationPath("lars-celebrating");
+function celebratingPortrait(name?: string): { src: string; alt: string } {
+  const trimmed = name?.trim();
+  const id = trimmed ? `${trimmed.toLowerCase()}-celebrating` : "";
+  if (id && isIllustrationId(id)) {
+    return {
+      src: getIllustrationPath(id),
+      alt: `${trimmed} celebrating`,
+    };
+  }
+  return {
+    src: getIllustrationPath("lars-celebrating"),
+    alt: "Lars celebrating",
+  };
+}
 
 const CASH_IN_BUTTON_CLASS =
   "flex h-[52px] w-full items-center justify-center rounded-full border-0 bg-[#FFA503] px-4 text-center font-heading text-[17px] font-extrabold text-[#031F82] shadow-[0_5px_0_#C88202] transition-opacity duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#031F82] active:translate-y-[3px] active:shadow-[0_2px_0_#C88202] disabled:translate-y-0 disabled:cursor-default disabled:opacity-40 disabled:shadow-none";
@@ -58,6 +74,8 @@ type LessonCompletionPaneProps = {
   suppressMedal?: boolean;
   /** Sheet skill name. Wins over the registry label. */
   skillName?: string;
+  /** Cohort lead from Lesson-Details. Their celebrating pose replaces the default portrait. */
+  leadCharacter?: string;
   skillLearnedLabel?: string;
   onCashIn: () =>
     | void
@@ -96,6 +114,7 @@ export function LessonCompletionPane({
   authoredMedal = false,
   suppressMedal = false,
   skillName: skillNameOverride,
+  leadCharacter,
   skillLearnedLabel,
   onCashIn,
   onContinue,
@@ -155,7 +174,23 @@ export function LessonCompletionPane({
   const skillName =
     skillNameOverride?.trim() ||
     resolveSkillName(achievementSkillId, skillLearnedLabel);
-  const skillLine = quietLessonSkillLine(skillMedalTier, skillName);
+  const closerSkillNames = isModuleCloser
+    ? medals
+        .map((medal) =>
+          medal.skillSlug
+            ? getSkillRegistryRecord(medal.skillSlug)?.skillName?.trim()
+            : undefined,
+        )
+        .filter((name): name is string => Boolean(name))
+    : [];
+  const skillLine =
+    closerSkillNames.length > 1
+      ? {
+          medal: "🥇",
+          text: `Skills unlocked: ${closerSkillNames.join(", ")}`,
+        }
+      : quietLessonSkillLine(skillMedalTier, skillName);
+  const portrait = celebratingPortrait(leadCharacter);
   const medalList = medals.map((medal) => medal.medalId).join(" ");
 
   const runAfterFlight = (action: () => void) => {
@@ -250,8 +285,8 @@ export function LessonCompletionPane({
         <div className="flex flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={LARS_CELEBRATING_SRC}
-            alt="Lars celebrating"
+            src={portrait.src}
+            alt={portrait.alt}
             className="h-[120px] w-auto object-contain"
             decoding="async"
           />
@@ -261,7 +296,9 @@ export function LessonCompletionPane({
           {skillLine ? (
             <p className="lesson-close-intro mt-1 flex min-h-[23px] w-full items-center justify-center gap-1.5 text-center font-sans text-[16px] font-medium leading-none text-[#5A6A99]">
               <span className="shrink-0 text-[21px] leading-none">{skillLine.medal}</span>
-              <span className="leading-[20px]">{skillLine.text}</span>
+              <span className={cn("leading-[20px]", closerSkillNames.length > 1 && "text-center leading-snug")}>
+                {skillLine.text}
+              </span>
             </p>
           ) : null}
         </div>
@@ -294,6 +331,15 @@ export function LessonCompletionPane({
           >
             {LESSON_CASH_IN_RETRY_LABEL}
           </p>
+        ) : null}
+        {saveFailed ? (
+          <button
+            type="button"
+            onClick={() => router.push(DASHBOARD_ACADEMY_PATH)}
+            className={`${lessonNextButtonClass} mb-2`}
+          >
+            Back to map
+          </button>
         ) : null}
         <button
           type="button"

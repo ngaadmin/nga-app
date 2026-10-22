@@ -46,6 +46,8 @@ import {
   ZapIcon,
 } from "@/lib/dashboard/icons";
 import { useDashboardNavPending } from "@/components/dashboard/dashboard-nav-pending";
+import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
+import { ModalShell } from "@/components/ui/modal-shell";
 import { canLaunchAcademyLesson } from "@/lib/academy/lessons/lesson-availability";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { cn } from "@/lib/utils/cn";
@@ -369,6 +371,7 @@ export function AcademySkillTrack({
   const activeNodeBoxRef = useRef<HTMLDivElement | null>(null);
   const lastFocusedStepRef = useRef<number | null>(null);
   const masteryCohort = useLessonMasteryCohort();
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   const safeMilestones = useMemo(
     () => milestones.filter(isRenderableAcademyMilestone),
@@ -452,7 +455,9 @@ export function AcademySkillTrack({
       const href = `/dashboard/academy/lesson/${milestoneId}`;
       startPendingNavigation(href);
       router.push(href);
+      return;
     }
+    setComingSoonOpen(true);
   };
 
   return (
@@ -531,6 +536,45 @@ export function AcademySkillTrack({
             })}
         </div>
       </div>
+      <AcademyComingSoonSheet
+        isOpen={comingSoonOpen}
+        onClose={() => setComingSoonOpen(false)}
+      />
     </section>
+  );
+}
+
+function AcademyComingSoonSheet({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      labelledBy="academy-coming-soon-title"
+      describedBy="academy-coming-soon-body"
+    >
+      <div className="px-6 pb-6 pt-8 text-center">
+        <h2
+          id="academy-coming-soon-title"
+          className="font-heading text-[26px] font-extrabold text-[#031F82]"
+        >
+          Coming soon
+        </h2>
+        <p
+          id="academy-coming-soon-body"
+          className="mt-2 font-sans text-[16px] font-medium leading-snug text-[#1E3A5F]"
+        >
+          This part of the map isn&apos;t open yet. Stick with the lessons you can play.
+        </p>
+        <button type="button" onClick={onClose} className={`${lessonNextButtonClass} mt-6`}>
+          Got it
+        </button>
+      </div>
+    </ModalShell>
   );
 }

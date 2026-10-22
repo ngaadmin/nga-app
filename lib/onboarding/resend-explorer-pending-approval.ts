@@ -16,8 +16,8 @@ export type ResendExplorerPendingResult =
   | { ok: false; error: string };
 
 /**
- * Resend the Explorer VPC approval email for the signed-in pending child.
- * Pathfinder / Maverick accounts are rejected — they do not use this hold.
+ * Resend the VPC approval email for the signed-in pending child.
+ * Any under-16 track can be pending. Active accounts are rejected.
  */
 export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplorerPendingResult> {
   const supabase = await createClient();
@@ -50,7 +50,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
     .maybeSingle();
 
   if (profileError || !profile?.id || !profile.username) {
-    return { ok: false, error: "We could not find this Explorer profile." };
+    return { ok: false, error: "We could not find this profile." };
   }
   if (profile.account_role === "parent_master") {
     return { ok: false, error: "Parent accounts don't need this approval email." };

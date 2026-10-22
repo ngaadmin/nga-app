@@ -3,11 +3,18 @@ import { resolveInactivityNotice } from "@/lib/privacy/notice-email";
 /** 334 days: 11 months counted from 1 January in a non-leap year. */
 export const INACTIVITY_WARN_AFTER_MS = 334 * 24 * 60 * 60 * 1000;
 
-/** 365 days. */
+/** 365 days. Approved and other accounts. Not the pending-approval clock. */
 export const INACTIVITY_DELETE_AFTER_MS = 365 * 24 * 60 * 60 * 1000;
 
 /** Minimum time between the warning email and deletion. */
 export const INACTIVITY_WARNING_LEAD_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Learner accounts still waiting for a parent to approve them.
+ * 30 days from account creation. Sign-ins do not extend it.
+ * The 24-hour approval link expiry is a separate clock.
+ */
+export const PENDING_UNAPPROVED_DELETE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type AccountRole = "child" | "parent_master" | "teacher";
 
@@ -25,6 +32,12 @@ export type ActivityAccount = {
   parentEmail: string | null;
   teacherEmail: string | null;
   guardianEmail: string | null;
+  /**
+   * Missing until the retention job can see approval state.
+   * Only `pending_consent` with no approval date is the 30-day clock.
+   */
+  accountStatus?: "pending_consent" | "active" | null;
+  consentApprovedAt?: string | null;
 };
 
 export type InactivityWarningAudience =
@@ -106,10 +119,76 @@ function warningAudience(
 }
 
 /**
+ * A child account that was never approved by a parent.
+ * Teachers, class seats, and approved accounts are not on this clock.
+ */
+export function isUnapprovedLearnerAccount(account: ActivityAccount): boolean {
+  if (account.role !== "child") return false;
+  if (account.teacherId) return false;
+  if (account.accountStatus !== "pending_consent") return false;
+  if (account.consentApprovedAt) return false;
+  return true;
+}
+
+/**
+ * Delete never-approved learner accounts 30 days after they were created.
+ */
+export function selectUnapprovedAccountDeletions(
+  accounts: readonly ActivityAccount[],
+  now: Date,
+): PlannedDeletion[] {
+  const nowMs = now.getTime();
+  const planned: PlannedDeletion[] = [];
+  for (const account of accounts) {
+    if (!isUnapprovedLearnerAccount(account)) continue;
+    const created = parsedTime(account.createdAt);
+    if (created === null || nowMs - created < PENDING_UNAPPROVED_DELETE_AFTER_MS) {
+      continue;
+    }
+    if (account.parentId) {
+      planned.push({
+        kind: "linked-child",
+        parentId: account.parentId,
+        childId: account.id,
+      });
+      continue;
+    }
+    planned.push({
+      kind: "standalone",
+      userId: account.id,
+      username: account.username.trim(),
+    });
+  }
+  return planned.sort((left, right) =>
+    unapprovedDeletionId(left).localeCompare(unapprovedDeletionId(right)),
+  );
+}
+
+function unapprovedDeletionId(item: PlannedDeletion): string {
+  switch (item.kind) {
+    case "standalone":
+      return item.userId;
+    case "linked-child":
+      return item.childId;
+    case "household":
+      return item.parentId;
+    case "teacher":
+      return item.teacherId;
+    case "class-seat":
+      return `${item.teacherId}:${item.username}`;
+    default: {
+      const _exhaustive: never = item;
+      return JSON.stringify(_exhaustive);
+    }
+  }
+}
+
+/**
  * Warn at about 11 months, delete at 12 months.
  * A warning is sent once per quiet period and cleared when the account
  * (or, for a parent or teacher, someone in their household or class) is active again.
  * Deletion waits at least 30 days after that email, unless there is nobody we can email.
+ * Never-approved learner accounts are left to the 30-day clock above.
  */
 export function selectInactivityActions(
   accounts: readonly ActivityAccount[],
@@ -119,6 +198,7 @@ export function selectInactivityActions(
   const decisions: InactivityDecision[] = [];
 
   for (const account of accounts) {
+    if (isUnapprovedLearnerAccount(account)) continue;
     const lastActive = effectiveLastActiveMs(account, accounts);
     if (lastActive === null) continue;
 

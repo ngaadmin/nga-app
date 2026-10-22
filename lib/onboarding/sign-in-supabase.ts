@@ -175,7 +175,7 @@ export async function loadLearnerAccountById(
   const withTeacher = await admin
     .from("profiles")
     .select(
-      "id, username, curriculum_cohort, account_role, account_status, consent_approved_at, is_teacher",
+      "id, username, curriculum_cohort, account_role, account_status, consent_approved_at, is_teacher, parent_approval_required",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -184,7 +184,7 @@ export async function loadLearnerAccountById(
       ? await admin
           .from("profiles")
           .select(
-            "id, username, curriculum_cohort, account_role, account_status, consent_approved_at",
+            "id, username, curriculum_cohort, account_role, account_status, consent_approved_at, parent_approval_required",
           )
           .eq("id", userId)
           .maybeSingle()
@@ -198,6 +198,7 @@ export async function loadLearnerAccountById(
         account_status: string | null;
         consent_approved_at: string | null;
         is_teacher?: boolean | null;
+        parent_approval_required?: boolean | null;
       }
     | null;
   const error = profileQuery.error;
@@ -271,6 +272,12 @@ export async function loadLearnerAccountById(
     isTeacher: profile.is_teacher === true || profile.account_role === "teacher",
     accountStatus: profile.account_status as "pending_consent" | "active",
     consentApprovedAt: profile.consent_approved_at ?? null,
+    parentApprovalRequired:
+      profile.parent_approval_required === true
+        ? true
+        : profile.parent_approval_required === false
+          ? false
+          : null,
     parentEmail,
     learnerEmail,
     mustChangePassword,

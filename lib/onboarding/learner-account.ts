@@ -19,6 +19,11 @@ export type LearnerAccountSnapshot = {
   isTeacher?: boolean;
   accountStatus: "pending_consent" | "active";
   consentApprovedAt: string | null;
+  /**
+   * True under 16, false at 16 and over, null when this profile never ran
+   * the self sign-up age check.
+   */
+  parentApprovalRequired?: boolean | null;
   parentEmail: string | null;
   learnerEmail: string | null;
   mustChangePassword?: boolean;

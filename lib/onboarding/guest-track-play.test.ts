@@ -7,6 +7,7 @@ import {
 import {
   convertToRegisteredProfile,
   createGuestAccessSession,
+  enforceCohortAccountState,
   hasCompletedPersonalizationGate,
   readUserSession,
   saveUserSession,
@@ -73,6 +74,8 @@ describe("track picker guest play", () => {
       expect(session?.curriculumCohort).toBe(cohort);
       expect(session?.ageTier).toBe(cohort);
       expect(session?.parentEmail).toBeUndefined();
+      expect(session).not.toHaveProperty("birthYear");
+      expect(session?.parentApprovalRequired).toBeUndefined();
       expect(hasCompletedPersonalizationGate(session)).toBe(true);
       expect(shouldBlockExplorerPendingPlay(session)).toBe(false);
     },
@@ -115,5 +118,62 @@ describe("track picker guest play", () => {
     expect(maverick.accountStatus).toBe("ACTIVE");
     expect(maverick.parentEmail).toBeUndefined();
     expect(shouldBlockExplorerPendingPlay(maverick)).toBe(false);
+  });
+
+  it("holds a 15-year-old Maverick for parent approval and leaves the track", () => {
+    const session = convertToRegisteredProfile({
+      username: "YoungMav",
+      accountRole: "child",
+      curriculumCohort: "maverick",
+      learnerEmail: "young@example.com",
+      parentEmail: "parent@example.com",
+      password: "secret1",
+      accountStatus: "ACTIVE",
+      parentApprovalRequired: true,
+      marketingOptIn: true,
+      supabaseUserId: "mav-15",
+    });
+    expect(session.curriculumCohort).toBe("maverick");
+    expect(session.accountStatus).toBe("PENDING_CONSENT");
+    expect(session.parentApprovalRequired).toBe(true);
+    expect(session.marketingOptIn).toBe(false);
+    expect(session).not.toHaveProperty("birthYear");
+    expect(shouldBlockExplorerPendingPlay(session)).toBe(true);
+  });
+
+  it("lets a 16-year-old Pathfinder and a 16-year-old Explorer skip the parent step", () => {
+    const pathfinder = convertToRegisteredProfile({
+      username: "TrailSixteen",
+      accountRole: "child",
+      curriculumCohort: "pathfinder",
+      learnerEmail: "trail@example.com",
+      password: "secret1",
+      accountStatus: "ACTIVE",
+      parentApprovalRequired: false,
+      marketingOptIn: true,
+      supabaseUserId: "path-16",
+    });
+    expect(pathfinder.curriculumCohort).toBe("pathfinder");
+    expect(pathfinder.accountStatus).toBe("ACTIVE");
+    expect(pathfinder.parentEmail).toBeUndefined();
+    expect(pathfinder.marketingOptIn).toBe(false);
+    expect(shouldBlockExplorerPendingPlay(pathfinder)).toBe(false);
+
+    const explorer = convertToRegisteredProfile({
+      username: "ExplorerSixteen",
+      accountRole: "child",
+      curriculumCohort: "explorer",
+      learnerEmail: "explorer16@example.com",
+      password: "secret1",
+      accountStatus: "ACTIVE",
+      parentApprovalRequired: false,
+      supabaseUserId: "exp-16",
+    });
+    expect(explorer.accountStatus).toBe("ACTIVE");
+    expect(explorer.learnerEmail).toBe("explorer16@example.com");
+    expect(explorer.parentEmail).toBeUndefined();
+    expect(explorer.parentApprovalRequired).toBe(false);
+    expect(enforceCohortAccountState(explorer).accountStatus).toBe("ACTIVE");
+    expect(shouldBlockExplorerPendingPlay(explorer)).toBe(false);
   });
 });

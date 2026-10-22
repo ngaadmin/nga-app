@@ -18,13 +18,20 @@ export type GuardianSignupEmailInput = {
   parentEmail: string;
   cohort: MasteryCohort;
   appUrl?: string;
+  /**
+   * Under-16 self sign-up always passes vpc so the parent gets an approval
+   * link, including when the learner picked Pathfinder or Maverick.
+   */
+  consent?: "vpc";
 };
 
 /**
  * After Auth + profiles are created:
- * - Explorer: write consent_requests (vpc) and send EXPLORER_PARENT (hard-fail).
- * - Pathfinder: send PATHFINDER_PARENT_LINKED if a master exists, otherwise
- *   write consent_requests (parent_claim) and send PATHFINDER_PARENT (soft-fail).
+ * - Under-16 self sign-up passes consent "vpc" on every track. That writes a
+ *   vpc consent request and sends the existing Explorer approval email.
+ * - Explorer without that flag does the same.
+ * - Pathfinder without that flag sends PATHFINDER_PARENT_LINKED if a master
+ *   exists, otherwise a parent-claim email.
  */
 export async function issueGuardianSignupEmail(
   input: GuardianSignupEmailInput,
@@ -32,7 +39,7 @@ export async function issueGuardianSignupEmail(
   const parentEmail = input.parentEmail.trim().toLowerCase();
   const appUrl = input.appUrl ?? (await resolveSignupAppUrl());
 
-  if (input.cohort === "explorer") {
+  if (input.consent === "vpc" || input.cohort === "explorer") {
     return issueExplorerVpcEmail({
       childId: input.childId,
       username: input.username,

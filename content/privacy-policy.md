@@ -16,7 +16,7 @@ The NextGenAchievers app teaches kids money skills. It is run by Next Gen Achiev
 | **Teachers** | Email address; password (stored as a hash); a generated username (not a name); seat limit, learning track and the shared class password; the classes and student seats the teacher creates. We do not collect teachers' names or school names. |
 | **Guests** | Server activity records: a guest username (not a real name), event type, lesson number, XP total, streak days and a small technical field. No email and no class. Deleted after 30 days. Lessons, coins, Lifetime XP, medals and Vault activity stay on the device. |
 
-We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. For rate-limiting, IP addresses are used briefly, in memory only. We keep our own sign-in audit log, which includes IP addresses, and delete it after 30 days (see section 9). Our sign-in provider (Supabase Auth) keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted. Our hosting and service providers also keep short-term technical logs, which may include IP addresses.
+We do **not** collect students' real names, dates of birth or home addresses, and we do **not** store birth years. For rate-limiting, IP addresses are used briefly, in memory only. We keep our own sign-in audit log, which includes IP addresses, and delete it after 30 days (see section 9). Our sign-in provider keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted. Our hosting and service providers also keep short-term technical logs, which may include IP addresses.
 
 ## 3. How we collect it
 
@@ -34,7 +34,7 @@ We use personal information only to run NextGenAchievers:
 - **To send essential emails.** These are parent approval and consent emails, welcome emails, teacher class confirmations, password and username recovery, account-deleted notices, and the inactivity warning at 11 months. We don't send marketing emails.
 - **To understand how the app is used in school trials.** We record simple activity, such as signing in, starting and finishing lessons, earning medals and opening Vault or Launchpad, together with the username, class, Lifetime XP and streak. We use it to report on how classes use the app, for example school-hours versus home use. It doesn't include email addresses, real names or device details, and it stays in our own database.
 
-We don't show ads, we don't use third-party analytics or tracking tools, and we don't sell or share personal information. Our service providers handle data only to run the app: Supabase stores it, Resend sends emails and Vercel hosts the app.
+We don't show ads, we don't use third-party analytics or tracking tools, and we don't sell or share personal information. Our service providers handle data only to run the app: they store it, send emails and host the app.
 
 ## 5. Who can see it
 
@@ -51,7 +51,7 @@ We use trusted providers to run the app. Some of them store or process data outs
 - **Supabase** (database and sign-in): data is stored in **Japan** (Tokyo).
 - **Resend** (email): sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com. That includes teacher class confirmations, welcome emails, password and username recovery, and the inactivity warning at 11 months. The inactivity warning goes to a parent or a teacher. We do not email a class student or a child on a parent account. A self sign-up learner does not get that warning, even with a personal email. Email is processed in **Japan** (Tokyo).
 
-We use no other third-party services in the app. That means no error monitoring, analytics, Google Fonts or third-party images.
+We use no other third-party services in the app. That means no error monitoring, analytics, third-party fonts or third-party images.
 
 We choose established providers that publish their security and privacy certifications, and we rely on these when using them. We remain responsible for how your information is handled.
 

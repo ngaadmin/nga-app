@@ -386,12 +386,7 @@ export function buildExplorerParentEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
-  const trackPhrase =
-    data.track === "pathfinder"
-      ? "the Pathfinder track"
-      : data.track === "maverick"
-        ? "the Maverick track"
-        : "the Explorer track, for kids aged 10-13";
+  const trackPhrase = "the Explorer track, for kids aged 10-13";
   const trackSentence = `Your child has chosen ${trackPhrase}. And to make their profile official, we need a parent/guardian's approval.`;
 
   const subject = `Your child ${username} wants to build money skills - approval needed`;

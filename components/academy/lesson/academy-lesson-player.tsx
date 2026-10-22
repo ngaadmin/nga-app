@@ -8,6 +8,7 @@ import {
 } from "@/components/academy/lesson/dev/design-shell-screen-jumper";
 import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
 import { PayloadLessonPlayer } from "@/components/academy/lesson/payload-lesson-player";
+import { useIntroRestoreGate } from "@/components/dashboard/hub-intro/use-intro-restore-gate";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
@@ -46,6 +47,7 @@ export function AcademyLessonPlayer({ milestoneId, payload }: AcademyLessonPlaye
 
 function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
+  const { ready: progressReady } = useIntroRestoreGate();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDesignShell = isDesignShellLesson(milestoneId);
@@ -61,6 +63,7 @@ function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerPr
     (isDesignShell || directOpen || hasShippedLesson(milestoneId));
 
   useEffect(() => {
+    if (!progressReady && !isDesignShell && !directOpen) return;
     if (isDesignShell || directOpen) {
       setProgressLocked(false);
       setProgressChecked(true);
@@ -74,7 +77,7 @@ function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerPr
       canLaunchAcademyLesson(milestoneId, node.status, cohort);
     setProgressLocked(!allowed);
     setProgressChecked(true);
-  }, [cohort, directOpen, isDesignShell, milestoneId]);
+  }, [cohort, directOpen, isDesignShell, milestoneId, progressReady]);
 
   useEffect(() => {
     if (!progressChecked) return;

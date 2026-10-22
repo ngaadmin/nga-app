@@ -53,7 +53,8 @@ export function academyLessonTopicForMilestone(
 
   const lessonNumber = lessonNumberForMilestoneId(milestone.id);
   const topics = ACADEMY_LESSON_TOPICS_BY_MODULE[milestone.levelGroup];
-  return topics[lessonNumber - 1] ?? ACADEMY_MODULE_TITLES[milestone.levelGroup];
+  const topicIndex = (lessonNumber - 1) % topics.length;
+  return topics[topicIndex] ?? ACADEMY_MODULE_TITLES[milestone.levelGroup];
 }
 
 /** Pick the user's current structural position from the milestone scaffold. */

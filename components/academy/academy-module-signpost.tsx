@@ -81,7 +81,7 @@ export function AcademyModuleSignpost({
           </p>
           <p
             className={cn(
-              "mt-0.5 line-clamp-1 font-sans text-[13px] font-medium leading-tight",
+              "mt-0.5 line-clamp-2 font-sans text-[13px] font-medium leading-tight",
               isLocked && "opacity-90",
             )}
             style={{ color: ink }}

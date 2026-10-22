@@ -59,7 +59,10 @@ export function AcademyModuleSignpost({
 
   return (
     <>
-      <div className="w-full shrink-0" style={{ backgroundColor: barTheme.fill }}>
+      <div
+        className="w-full shrink-0 overflow-visible rounded-[10px]"
+        style={{ backgroundColor: barTheme.fill }}
+      >
         <button
           type="button"
           onClick={() => setPreviewOpen(true)}

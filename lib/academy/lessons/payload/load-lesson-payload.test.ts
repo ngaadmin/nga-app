@@ -195,9 +195,9 @@ describe("lesson payload loader", () => {
         rounds.rounds.every(
           (round) =>
             round.optionA === "True" &&
-            round.iconA === "✅" &&
+            round.iconA === "" &&
             round.optionB === "False" &&
-            round.iconB === "❌",
+            round.iconB === "",
         ),
       ).toBe(true);
       expect(rounds.rounds[2]?.correct).toBe("b");

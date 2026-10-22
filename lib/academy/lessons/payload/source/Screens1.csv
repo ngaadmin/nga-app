@@ -323,15 +323,15 @@ YES: 💰 Use the money for something else this weekend
 NO: 🎮 Buy the game tokens and go to the cinema
 NO: 🚫 Never spend any money",,,,
 1,6,4,spotlight-rounds,True or False?,True or False?,True or False?,lars-deciding-512.webp,holly-deciding-512.webp,aiden-deciding-512.webp,"ROUNDS:
-Round 1 | Lars saved his money last week so now he can pay his half of the cinema outing. | ✅ True | ❌ False | CORRECT: A
-Round 2 | Mason will pay for everything because Lars spent all his money. | ✅ True | ❌ False | CORRECT: B
-Round 3 | Lars bought the Dart Blaster and now he has less than $15 left. | ✅ True | ❌ False | CORRECT: B","ROUNDS:
-Round 1 | Holly saved her money last week so now she can pay her half of the cinema outing. | ✅ True | ❌ False | CORRECT: A
-Round 2 | Immi will pay for everything because Holly spent all her money. | ✅ True | ❌ False | CORRECT: B
-Round 3 | Holly bought the craft pack and now she has less than $15 left. | ✅ True | ❌ False | CORRECT: B","ROUNDS:
-Round 1 | Aiden saved his money last week so now he can pay for the cinema outing. | ✅ True | ❌ False | CORRECT: A
-Round 2 | Max will pay for everything because Aiden spent all his money. | ✅ True | ❌ False | CORRECT: B
-Round 3 | Aiden bought the game tokens and now he has less than $30 left. | ✅ True | ❌ False | CORRECT: B",,,,
+Round 1 | Lars saved his money last week so now he can pay his half of the cinema outing. | True | False | CORRECT: A
+Round 2 | Mason will pay for everything because Lars spent all his money. | True | False | CORRECT: B
+Round 3 | Lars bought the Dart Blaster and now he has less than $15 left. | True | False | CORRECT: B","ROUNDS:
+Round 1 | Holly saved her money last week so now she can pay her half of the cinema outing. | True | False | CORRECT: A
+Round 2 | Immi will pay for everything because Holly spent all her money. | True | False | CORRECT: B
+Round 3 | Holly bought the craft pack and now she has less than $15 left. | True | False | CORRECT: B","ROUNDS:
+Round 1 | Aiden saved his money last week so now he can pay for the cinema outing. | True | False | CORRECT: A
+Round 2 | Max will pay for everything because Aiden spent all his money. | True | False | CORRECT: B
+Round 3 | Aiden bought the game tokens and now he has less than $30 left. | True | False | CORRECT: B",,,,
 1,6,5,multiple-choice,Lars has enough to pay his half of the $18 outing.,Holly has enough to pay her half of the $18 outing.,Aiden has enough to pay for the $18 outing.,lars-hands-on-hips-512.webp,holly-hands-on-hips-512.webp,aiden-hands-on-hips-512.webp,"How much does Lars have left after he pays his half?
 CHOICE A: 💵 $6
 CHOICE B: 🎟️ $9

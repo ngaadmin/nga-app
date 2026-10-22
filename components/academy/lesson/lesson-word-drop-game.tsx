@@ -22,10 +22,12 @@ import { AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import {
+  wordBankItems,
   wordDropIsComplete,
   wordDropMatches,
   wordDropPlace,
   wordDropRemove,
+  type WordBankItem,
 } from "@/lib/academy/lessons/word-drop-placement";
 import { cn } from "@/lib/utils/cn";
 
@@ -55,7 +57,7 @@ const TAP_MOVE_PX = 10;
 
 type PressSession = {
   pointerId: number;
-  word: string;
+  itemId: string;
   fromBlankIndex: number | null;
   startX: number;
   startY: number;
@@ -67,7 +69,7 @@ type PressSession = {
 };
 
 type DragState = {
-  word: string;
+  itemId: string;
   fromBlankIndex: number | null;
   offsetX: number;
   offsetY: number;
@@ -78,7 +80,7 @@ type DragState = {
 };
 
 type PressedChip = {
-  word: string;
+  itemId: string;
   fromBlankIndex: number | null;
 };
 
@@ -128,38 +130,26 @@ export const LessonWordDropGame = forwardRef<
 ) {
   const parts = useMemo(() => prompt.split("[blank]"), [prompt]);
 
-  const authoredOptions = useMemo(() => {
-    const seen = new Set<string>();
-    const options: string[] = [];
-    for (const blank of blanks) {
-      for (const option of blank.options) {
-        if (!seen.has(option)) {
-          seen.add(option);
-          options.push(option);
-        }
-      }
-    }
-    return options;
-  }, [blanks]);
-  const [allOptions, setAllOptions] = useState<string[]>(authoredOptions);
-  const optionSignature = authoredOptions.join("\0");
-  const authoredOptionsRef = useRef(authoredOptions);
-  authoredOptionsRef.current = authoredOptions;
+  const authoredBank = useMemo(() => wordBankItems(blanks), [blanks]);
+  const [bankItems, setBankItems] = useState<WordBankItem[]>(authoredBank);
+  const bankSignature = authoredBank.map((item) => item.id).join("\u0001");
+  const authoredBankRef = useRef(authoredBank);
+  authoredBankRef.current = authoredBank;
   const playSeed = usePlaySeed([orderKey, "words"]);
 
   useLayoutEffect(() => {
-    const options = authoredOptionsRef.current;
+    const items = authoredBankRef.current;
     if (playSeed === null) {
-      setAllOptions(options);
+      setBankItems(items);
       return;
     }
-    setAllOptions(seededShuffle(options, playSeed));
-  }, [optionSignature, playSeed]);
+    setBankItems(seededShuffle(items, playSeed));
+  }, [bankSignature, playSeed]);
 
   const [choices, setChoices] = useState<string[]>(() =>
     Array.from({ length: blanks.length }, () => ""),
   );
-  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [pressedChip, setPressedChip] = useState<PressedChip | null>(null);
   const [hoverBlankIndex, setHoverBlankIndex] = useState<number | null>(null);
@@ -176,8 +166,12 @@ export const LessonWordDropGame = forwardRef<
   const onIncompleteRef = useRef(onIncomplete);
   onIncompleteRef.current = onIncomplete;
   const pressRef = useRef<PressSession | null>(null);
-  const selectedWordRef = useRef<string | null>(null);
-  selectedWordRef.current = selectedWord;
+  const selectedItemIdRef = useRef<string | null>(null);
+  selectedItemIdRef.current = selectedItemId;
+  const bankItemsRef = useRef(bankItems);
+  bankItemsRef.current = bankItems;
+  const pendingBankFocusId = useRef<string | null>(null);
+  const bankButtonRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const commitChoices = useCallback((next: string[]) => {
     choicesRef.current = next;
@@ -187,9 +181,12 @@ export const LessonWordDropGame = forwardRef<
     else onIncompleteRef.current?.();
   }, []);
 
-  const setArmedWord = (word: string | null) => {
-    selectedWordRef.current = word;
-    setSelectedWord(word);
+  const labelFor = (itemId: string) =>
+    bankItemsRef.current.find((item) => item.id === itemId)?.label ?? "";
+
+  const setArmedItem = (itemId: string | null) => {
+    selectedItemIdRef.current = itemId;
+    setSelectedItemId(itemId);
   };
 
   const poolRef = useRef<HTMLDivElement>(null);
@@ -199,23 +196,15 @@ export const LessonWordDropGame = forwardRef<
   useImperativeHandle(ref, () => ({
     evaluate: () =>
       wordDropMatches(
-        choicesRef.current,
+        choicesRef.current.map((choice) => (choice ? labelFor(choice) : "")),
         blanksRef.current.map((blank) => blank.correctOption),
       ),
   }));
 
   const placeWordInBlank = useCallback(
-    (blankIndex: number, word: string, fromBlankIndex: number | null) => {
-      const allowDuplicate =
-        blanksRef.current.filter((blank) => blank.correctOption === word).length > 1;
+    (blankIndex: number, itemId: string, fromBlankIndex: number | null) => {
       commitChoices(
-        wordDropPlace(
-          choicesRef.current,
-          blankIndex,
-          word,
-          fromBlankIndex,
-          allowDuplicate,
-        ),
+        wordDropPlace(choicesRef.current, blankIndex, itemId, fromBlankIndex),
       );
     },
     [commitChoices],
@@ -237,12 +226,12 @@ export const LessonWordDropGame = forwardRef<
 
   const beginPress = (
     event: ReactPointerEvent<HTMLElement>,
-    word: string,
+    itemId: string,
     fromBlankIndex: number | null,
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    setPressedChip({ word, fromBlankIndex });
+    setPressedChip({ itemId, fromBlankIndex });
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {
@@ -253,7 +242,7 @@ export const LessonWordDropGame = forwardRef<
     const pointerId = event.pointerId;
     pressRef.current = {
       pointerId,
-      word,
+      itemId,
       fromBlankIndex,
       startX: event.clientX,
       startY: event.clientY,
@@ -281,7 +270,7 @@ export const LessonWordDropGame = forwardRef<
         press.dragging = true;
         setPressedChip(null);
         setDragState({
-          word: press.word,
+          itemId: press.itemId,
           fromBlankIndex: press.fromBlankIndex,
           offsetX: press.offsetX,
           offsetY: press.offsetY,
@@ -336,11 +325,11 @@ export const LessonWordDropGame = forwardRef<
       );
 
       if (slotIndex !== null) {
-        placeWordInBlank(slotIndex, press.word, press.fromBlankIndex);
+        placeWordInBlank(slotIndex, press.itemId, press.fromBlankIndex);
       } else if (press.fromBlankIndex !== null) {
         removeWordFromBlank(press.fromBlankIndex);
       }
-      setArmedWord(null);
+      setArmedItem(null);
 
       endDrag();
     };
@@ -365,21 +354,31 @@ export const LessonWordDropGame = forwardRef<
     [],
   );
 
-  const armBankWord = (word: string) => {
-    setArmedWord(selectedWordRef.current === word ? null : word);
+  useLayoutEffect(() => {
+    const itemId = pendingBankFocusId.current;
+    if (!itemId || choices.includes(itemId)) return;
+    const button = bankButtonRefs.current.get(itemId);
+    if (!button) return;
+    pendingBankFocusId.current = null;
+    button.focus();
+  }, [choices]);
+
+  const armBankItem = (itemId: string) => {
+    setArmedItem(selectedItemIdRef.current === itemId ? null : itemId);
   };
 
   const activateBlankFromKeyboard = (blankIndex: number) => {
-    const armed = selectedWordRef.current;
+    const armed = selectedItemIdRef.current;
     if (armed) {
       placeWordInBlank(blankIndex, armed, null);
-      setArmedWord(null);
+      setArmedItem(null);
       return;
     }
-    const word = choicesRef.current[blankIndex];
-    if (!word) return;
+    const itemId = choicesRef.current[blankIndex];
+    if (!itemId) return;
+    pendingBankFocusId.current = itemId;
     removeWordFromBlank(blankIndex);
-    setArmedWord(word);
+    setArmedItem(itemId);
   };
 
   const blankSlotClass = (index: number, filled: boolean) =>
@@ -391,10 +390,10 @@ export const LessonWordDropGame = forwardRef<
     );
 
   const visibleBlankWord = (index: number) => {
-    const word = choices[index];
-    if (!word) return "";
+    const itemId = choices[index];
+    if (!itemId) return "";
     if (dragState?.fromBlankIndex === index) return "";
-    return word;
+    return labelFor(itemId);
   };
 
   return (
@@ -416,7 +415,7 @@ export const LessonWordDropGame = forwardRef<
                     data-word-drop-slot={blankIndex}
                     aria-label={
                       visibleBlankWord(blankIndex)
-                        ? `Blank, ${visibleBlankWord(blankIndex)}`
+                        ? `Blank, ${visibleBlankWord(blankIndex)}. Return to the word bank.`
                         : "Blank. Drag a word here."
                     }
                     onKeyDown={(event) => {
@@ -426,9 +425,9 @@ export const LessonWordDropGame = forwardRef<
                       activateBlankFromKeyboard(blankIndex);
                     }}
                     onPointerDown={(event) => {
-                      const word = choices[blankIndex];
-                      if (!word) return;
-                      beginPress(event, word, blankIndex);
+                      const itemId = choices[blankIndex];
+                      if (!itemId) return;
+                      beginPress(event, itemId, blankIndex);
                     }}
                     className={cn(
                       blankSlotClass(blankIndex, Boolean(visibleBlankWord(blankIndex))),
@@ -461,47 +460,43 @@ export const LessonWordDropGame = forwardRef<
           hoverPool && dragState?.fromBlankIndex !== null && "bg-[#E8F6FC]/40",
         )}
       >
-        {allOptions.map((option) => {
-          const used =
-            choices.includes(option) &&
-            !(
-              dragState?.fromBlankIndex != null &&
-              choices[dragState.fromBlankIndex] === option
-            );
+        {bankItems.map((item) => {
+          if (choices.includes(item.id)) return null;
           return (
             <button
-              key={option}
+              key={item.id}
+              ref={(node) => {
+                if (node) bankButtonRefs.current.set(item.id, node);
+                else bankButtonRefs.current.delete(item.id);
+              }}
               type="button"
-              aria-pressed={selectedWord === option}
+              aria-pressed={selectedItemId === item.id}
               onKeyDown={(event) => {
                 if (event.repeat) return;
                 if (event.key !== "Enter" && event.key !== " ") return;
                 event.preventDefault();
-                if (used) return;
-                armBankWord(option);
+                armBankItem(item.id);
               }}
               onPointerDown={(event) => {
-                if (used) return;
-                beginPress(event, option, null);
+                beginPress(event, item.id, null);
               }}
               className={cn(
                 lessonSortPoolChipClass,
                 "text-[20px]",
-                used && "hidden",
-                selectedWord === option &&
+                selectedItemId === item.id &&
                   "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
-                pressedChip?.word === option &&
+                pressedChip?.itemId === item.id &&
                   pressedChip.fromBlankIndex === null &&
                   !dragState &&
                   "-translate-y-0.5 shadow-[0_6px_0_rgba(3,31,130,0.18)]",
-                dragState?.word === option &&
+                dragState?.itemId === item.id &&
                   dragState.fromBlankIndex === null &&
                   "opacity-40",
               )}
-              aria-label={option}
+              aria-label={item.label}
               style={{ touchAction: "none" }}
             >
-              <AnswerEmojiLabel label={option} />
+              <AnswerEmojiLabel label={item.label} />
             </button>
           );
         })}
@@ -521,7 +516,7 @@ export const LessonWordDropGame = forwardRef<
               minHeight: dragState.height,
             }}
           >
-            <AnswerEmojiLabel label={dragState.word} />
+            <AnswerEmojiLabel label={labelFor(dragState.itemId)} />
           </div>
         </OverlayPortal>
       ) : null}

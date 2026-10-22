@@ -152,7 +152,7 @@ async function playScreen(
         page.locator("[data-word-drop-slot='0']"),
       );
       const placed = page.getByRole("button", {
-        name: `Blank, ${distractor}`,
+        name: `Blank, ${distractor}. Return to the word bank.`,
         exact: true,
       });
       await expect(placed).toBeVisible();

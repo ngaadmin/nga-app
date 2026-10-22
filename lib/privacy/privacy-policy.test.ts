@@ -46,7 +46,7 @@ describe("privacy policy source", () => {
       "We keep our own sign-in audit log, which includes IP addresses, and delete it after 30 days (see section 9).",
     );
     expect(text).toContain(
-      "Our sign-in provider (Supabase Auth) keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted.",
+      "Our sign-in provider keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted.",
     );
     expect(text).toContain(
       "Our hosting and service providers also keep short-term technical logs, which may include IP addresses.",

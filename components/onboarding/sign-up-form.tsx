@@ -56,6 +56,7 @@ import {
   lookupConsentToken,
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
+import { parentLinkResultHeading } from "@/lib/onboarding/parent-link-result";
 import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
@@ -212,6 +213,7 @@ export function SignUpForm() {
   const [approvalSavedUsername, setApprovalSavedUsername] = useState<string | null>(
     null,
   );
+  const [accountDeclined, setAccountDeclined] = useState(false);
   const approvalEmailInFlightRef = useRef(false);
   const explicitApprovalInFlightRef = useRef(false);
   const parentMasterInFlightRef = useRef(false);
@@ -250,6 +252,7 @@ export function SignUpForm() {
       }
 
       if (lookup.status !== "valid" || !lookup.pending) {
+        setAccountDeclined(false);
         setPendingConsent(null);
         setParentMasterFlow(null);
         setParentConsentLoading(false);
@@ -269,6 +272,7 @@ export function SignUpForm() {
             : null;
 
       if (!flow) {
+        setAccountDeclined(false);
         setPendingConsent(null);
         setParentMasterFlow(null);
         setParentConsentLoading(false);
@@ -298,6 +302,7 @@ export function SignUpForm() {
         flow === "pathfinder_claim" &&
         findActiveParentMasterByEmail(pending.parentEmail)
       ) {
+        setAccountDeclined(false);
         setPendingConsent(null);
         setParentMasterFlow(null);
         setParentConsentLoading(false);
@@ -549,6 +554,7 @@ export function SignUpForm() {
       setNeedsExplicitApproval(false);
       setPendingConsent(null);
       setParentMasterFlow(null);
+      setAccountDeclined(true);
       setErrors({
         form: `${declined.childUsername}'s account wasn't approved. It stays closed.`,
       });
@@ -899,7 +905,7 @@ export function SignUpForm() {
         <section className="flex flex-1 flex-col justify-center py-10 sm:py-14">
           <div className="mx-auto w-full max-w-md space-y-6 px-1 text-center">
             <h1 className="font-heading text-2xl font-extrabold text-nga-primary">
-              Parent link unavailable
+              {parentLinkResultHeading(accountDeclined ? "declined" : "unavailable")}
             </h1>
             <p className="font-sans text-sm text-nga-slate">
               {errors.form ??

@@ -45,12 +45,10 @@ We don't show ads, we don't use third-party analytics or tracking tools, and we 
 - The **Community leaderboard** is off unless a parent switches it on for a child, or a teacher switches it on for a class. When it is on, it shows the signed-in user's username and sample player names, each with a rank, a day streak and Lifetime XP. It does not show other students, and nothing on it links to a profile.
 - We do not share information with anyone else unless the law requires it.
 
-## 6. Service providers and overseas hosting
-We use trusted providers to run the app. Some of them store or process data outside Australia:
+## 6. Service providers
+We use trusted third-party providers for our database, sign-in, app hosting and email. They keep data securely and have their own requirements for storing it in line with global regulatory requirements.
 
-- **Vercel** (app hosting): app functions run in the **United States** (Washington DC).
-- **Supabase** (database and sign-in): data is stored in **Japan** (Tokyo).
-- **Resend** (email): sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com. That includes teacher class confirmations, welcome emails, password and username recovery, and the inactivity warning at 11 months. The inactivity warning goes to a parent or a teacher. We do not email a class student or a child on a parent account. A self sign-up learner does not get that warning, even with a personal email. Email is processed in **Japan** (Tokyo).
+Our email provider sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com. That includes teacher class confirmations, welcome emails, password and username recovery, and the inactivity warning at 11 months. The inactivity warning goes to a parent or a teacher. We do not email a class student or a child on a parent account. A self sign-up learner does not get that warning, even with a personal email.
 
 We use no other third-party services in the app. That means no error monitoring, analytics, third-party fonts or third-party images.
 

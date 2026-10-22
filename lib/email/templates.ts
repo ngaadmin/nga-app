@@ -150,9 +150,14 @@ export const PRODUCTION_APP_URL = "https://app.nextgenachievers.com";
 
 /**
  * Canonical app origin for email CTAs and allowlisting.
- * Prefers `NEXT_PUBLIC_APP_URL`, then {@link PRODUCTION_APP_URL}.
+ * A Vercel preview uses its own branch host (`VERCEL_BRANCH_URL`, then
+ * `VERCEL_URL`). Production and local prefer `NEXT_PUBLIC_APP_URL`, then
+ * {@link PRODUCTION_APP_URL}.
  */
 export function getDefaultAppUrl(): string {
+  const preview = previewAppOrigin();
+  if (preview) return preview;
+
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (fromEnv) {
     try {
@@ -180,9 +185,55 @@ function deploymentHost(value: string | undefined): string | null {
   }
 }
 
+/** Hosts Vercel sets for this deployment. Preview also reads the public copies. */
+const DEPLOYMENT_HOST_ENV_KEYS = [
+  "VERCEL_URL",
+  "NEXT_PUBLIC_VERCEL_URL",
+  "VERCEL_BRANCH_URL",
+  "NEXT_PUBLIC_VERCEL_BRANCH_URL",
+  "VERCEL_PROJECT_PRODUCTION_URL",
+] as const;
+
+/** Branch host first, then the deployment URL. Used only when VERCEL_ENV=preview. */
+const PREVIEW_APP_HOST_ENV_KEYS = [
+  "VERCEL_BRANCH_URL",
+  "NEXT_PUBLIC_VERCEL_BRANCH_URL",
+  "VERCEL_URL",
+  "NEXT_PUBLIC_VERCEL_URL",
+] as const;
+
+function normalizeHost(host: string): string {
+  return host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "").toLowerCase();
+}
+
+function isOwnPreviewHost(host: string): boolean {
+  if (process.env.VERCEL_ENV !== "preview") return false;
+  const hostname = normalizeHost(host);
+  return PREVIEW_APP_HOST_ENV_KEYS.some((name) => {
+    const candidate = deploymentHost(process.env[name]);
+    return candidate !== null && normalizeHost(candidate) === hostname;
+  });
+}
+
+/**
+ * Preview link origin. `VERCEL_BRANCH_URL` wins so stable branch aliases are
+ * used when both the branch host and the deployment host are set.
+ */
+function previewAppOrigin(): string | null {
+  if (process.env.VERCEL_ENV !== "preview") return null;
+  for (const name of PREVIEW_APP_HOST_ENV_KEYS) {
+    const host = deploymentHost(process.env[name]);
+    if (!host || isStaleAppHost(host)) continue;
+    return `https://${normalizeHost(host)}`;
+  }
+  return null;
+}
+
 function isStaleAppHost(host: string): boolean {
-  const hostname = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "").toLowerCase();
-  return hostname === "nga-app-three.vercel.app" || hostname.endsWith(".vercel.app");
+  const hostname = normalizeHost(host);
+  if (hostname === "nga-app-three.vercel.app") return true;
+  if (!hostname.endsWith(".vercel.app")) return false;
+  return !isOwnPreviewHost(host);
 }
 
 function isLoopbackHost(host: string): boolean {
@@ -202,13 +253,9 @@ export function allowedEmailLinkHosts(): Set<string> {
     // ignore invalid configured URL
   }
 
-  for (const name of [
-    "VERCEL_URL",
-    "VERCEL_BRANCH_URL",
-    "VERCEL_PROJECT_PRODUCTION_URL",
-  ] as const) {
+  for (const name of DEPLOYMENT_HOST_ENV_KEYS) {
     const host = deploymentHost(process.env[name]);
-    if (host && !isStaleAppHost(host)) hosts.add(host);
+    if (host && !isStaleAppHost(host)) hosts.add(normalizeHost(host));
   }
 
   if (!process.env.VERCEL) {

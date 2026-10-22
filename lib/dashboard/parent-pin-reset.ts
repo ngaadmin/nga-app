@@ -11,7 +11,7 @@ import {
   verifyParentPinResetToken,
 } from "@/lib/auth/parent-pin-reset-token";
 import { hashCredential } from "@/lib/auth/credential-hash";
-import { PRODUCTION_APP_URL } from "@/lib/email/templates";
+import { getDefaultAppUrl } from "@/lib/email/templates";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -81,7 +81,7 @@ export async function requestParentPinReset(): Promise<
     type: "PARENT_PIN_RESET",
     recipientEmail: email,
     data: { token },
-    appUrl: PRODUCTION_APP_URL,
+    appUrl: getDefaultAppUrl(),
   });
   if (!sent.success) {
     await admin

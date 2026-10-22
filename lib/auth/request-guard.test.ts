@@ -4,10 +4,13 @@ import { authorizeBrowserMutation } from "@/lib/auth/request-guard";
 const ENV_KEYS = [
   "NODE_ENV",
   "VERCEL",
+  "VERCEL_ENV",
   "VERCEL_URL",
   "VERCEL_BRANCH_URL",
   "VERCEL_PROJECT_PRODUCTION_URL",
   "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_VERCEL_URL",
+  "NEXT_PUBLIC_VERCEL_BRANCH_URL",
   "EMAIL_API_SECRET",
   "NGA_TOKEN_SECRET",
 ] as const;
@@ -33,8 +36,12 @@ function call(
 ) {
   setEnv("NODE_ENV", nodeEnv);
   process.env.VERCEL = "1";
+  delete process.env.VERCEL_ENV;
   process.env.NEXT_PUBLIC_APP_URL = "https://nga.example";
   delete process.env.VERCEL_URL;
+  delete process.env.VERCEL_BRANCH_URL;
+  delete process.env.NEXT_PUBLIC_VERCEL_URL;
+  delete process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL;
   delete process.env.EMAIL_API_SECRET;
   delete process.env.NGA_TOKEN_SECRET;
   return authorizeBrowserMutation(
@@ -100,5 +107,109 @@ describe("authorizeBrowserMutation", () => {
   it("allows a local browser call without Origin outside production", () => {
     const result = call({ host: "localhost:3000" }, "development");
     expect(result).toEqual({ ok: true });
+  });
+
+  it("rejects this deployment's vercel.app host in production", () => {
+    setEnv("NODE_ENV", "production");
+    process.env.VERCEL = "1";
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_URL = "nga-mhazyq8a0-nga-v2.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "nga-app-git-uat-2026-10-22-nga-v2.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL = "https://app.nextgenachievers.com";
+    delete process.env.EMAIL_API_SECRET;
+    delete process.env.NGA_TOKEN_SECRET;
+
+    const ownPreview = authorizeBrowserMutation(
+      new Request("https://app.nextgenachievers.com/api/auth/sign-in", {
+        method: "POST",
+        headers: {
+          origin: "https://nga-app-git-uat-2026-10-22-nga-v2.vercel.app",
+          "sec-fetch-site": "same-origin",
+        },
+      }),
+    );
+    const other = authorizeBrowserMutation(
+      new Request("https://app.nextgenachievers.com/api/auth/sign-in", {
+        method: "POST",
+        headers: {
+          origin: "https://nga-app-other.vercel.app",
+          "sec-fetch-site": "same-origin",
+        },
+      }),
+    );
+    const production = authorizeBrowserMutation(
+      new Request("https://app.nextgenachievers.com/api/auth/sign-in", {
+        method: "POST",
+        headers: {
+          origin: "https://app.nextgenachievers.com",
+          "sec-fetch-site": "same-origin",
+        },
+      }),
+    );
+
+    expect(ownPreview).toEqual({
+      ok: false,
+      status: 403,
+      error: "Forbidden origin.",
+    });
+    expect(other).toEqual({
+      ok: false,
+      status: 403,
+      error: "Forbidden origin.",
+    });
+    expect(production).toEqual({ ok: true });
+  });
+
+  it("allows this preview's own hosts and rejects another vercel.app host", () => {
+    setEnv("NODE_ENV", "production");
+    process.env.VERCEL = "1";
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_BRANCH_URL = "nga-app-git-uat-2026-10-22-nga-v2.vercel.app";
+    process.env.VERCEL_URL = "nga-mhazyq8a0-nga-v2.vercel.app";
+    process.env.NEXT_PUBLIC_APP_URL = "https://app.nextgenachievers.com";
+    delete process.env.EMAIL_API_SECRET;
+    delete process.env.NGA_TOKEN_SECRET;
+
+    const branch = authorizeBrowserMutation(
+      new Request(
+        "https://nga-app-git-uat-2026-10-22-nga-v2.vercel.app/api/auth/sign-in",
+        {
+          method: "POST",
+          headers: {
+            origin: "https://nga-app-git-uat-2026-10-22-nga-v2.vercel.app",
+            "sec-fetch-site": "same-origin",
+          },
+        },
+      ),
+    );
+    const deployment = authorizeBrowserMutation(
+      new Request("https://nga-mhazyq8a0-nga-v2.vercel.app/api/auth/consent-token", {
+        method: "POST",
+        headers: {
+          origin: "https://nga-mhazyq8a0-nga-v2.vercel.app",
+          "sec-fetch-site": "same-origin",
+        },
+      }),
+    );
+    const other = authorizeBrowserMutation(
+      new Request(
+        "https://nga-app-git-uat-2026-10-22-nga-v2.vercel.app/api/auth/sign-in",
+        {
+          method: "POST",
+          headers: {
+            origin: "https://nga-app-other.vercel.app",
+            "sec-fetch-site": "same-origin",
+          },
+        },
+      ),
+    );
+
+    expect(branch).toEqual({ ok: true });
+    expect(deployment).toEqual({ ok: true });
+    expect(other).toEqual({
+      ok: false,
+      status: 403,
+      error: "Forbidden origin.",
+    });
   });
 });

@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  allowedEmailLinkHosts,
   buildAccountDeletedChildEmail,
   buildAccountDeletedMasterEmail,
+  buildCredentialRecoveryEmail,
   buildExplorerParentEmail,
+  buildFriendInviteEmail,
   buildMaverickWelcomeEmail,
+  buildParentPinResetEmail,
+  buildParentWelcomeEmail,
   getDefaultAppUrl,
   resolveTrustedAppUrl,
 } from "@/lib/email/templates";
@@ -14,8 +19,13 @@ import {
 
 const ENV_KEYS = [
   "NEXT_PUBLIC_APP_URL",
+  "NEXT_PUBLIC_VERCEL_URL",
+  "NEXT_PUBLIC_VERCEL_BRANCH_URL",
   "VERCEL",
+  "VERCEL_ENV",
   "VERCEL_URL",
+  "VERCEL_BRANCH_URL",
+  "VERCEL_PROJECT_PRODUCTION_URL",
 ] as const;
 
 const envSnapshot = Object.fromEntries(
@@ -120,6 +130,7 @@ describe("email template escaping", () => {
 
   it("ignores a stale vercel.app host", () => {
     process.env.VERCEL = "1";
+    delete process.env.VERCEL_ENV;
     process.env.VERCEL_URL = "preview.vercel.app";
     process.env.NEXT_PUBLIC_APP_URL = "https://nga-app-other.vercel.app";
     expect(resolveTrustedAppUrl("https://preview.vercel.app/path")).toBe(
@@ -128,6 +139,135 @@ describe("email template escaping", () => {
     expect(getDefaultAppUrl()).toBe("https://app.nextgenachievers.com");
     expect(resolveTrustedAppUrl("javascript:alert(1)")).not.toContain(
       "javascript:",
+    );
+  });
+});
+
+const BRANCH_HOST = "nga-app-git-uat-2026-10-22-nga-v2.vercel.app";
+const DEPLOYMENT_HOST = "nga-mhazyq8a0-nga-v2.vercel.app";
+const OTHER_HOST = "nga-app-other.vercel.app";
+const PRODUCTION_ORIGIN = "https://app.nextgenachievers.com";
+
+function clearHostEnv() {
+  delete process.env.NEXT_PUBLIC_APP_URL;
+  delete process.env.NEXT_PUBLIC_VERCEL_URL;
+  delete process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL;
+  delete process.env.VERCEL_ENV;
+  delete process.env.VERCEL_URL;
+  delete process.env.VERCEL_BRANCH_URL;
+  delete process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  process.env.VERCEL = "1";
+}
+
+function linkText(built: { text: string }): string {
+  return built.text;
+}
+
+describe("preview and production app hosts", () => {
+  it("keeps production email links and rejects every vercel.app host", () => {
+    clearHostEnv();
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_URL = DEPLOYMENT_HOST;
+    process.env.VERCEL_BRANCH_URL = BRANCH_HOST;
+    process.env.NEXT_PUBLIC_VERCEL_URL = DEPLOYMENT_HOST;
+    process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL = BRANCH_HOST;
+    process.env.NEXT_PUBLIC_APP_URL = PRODUCTION_ORIGIN;
+
+    expect(getDefaultAppUrl()).toBe(PRODUCTION_ORIGIN);
+    expect(resolveTrustedAppUrl(`https://${BRANCH_HOST}/onboarding/sign-in`)).toBe(
+      PRODUCTION_ORIGIN,
+    );
+    expect(resolveTrustedAppUrl(`https://${OTHER_HOST}/path`)).toBe(
+      PRODUCTION_ORIGIN,
+    );
+    expect(allowedEmailLinkHosts().has(BRANCH_HOST)).toBe(false);
+    expect(allowedEmailLinkHosts().has(DEPLOYMENT_HOST)).toBe(false);
+    expect(allowedEmailLinkHosts().has(OTHER_HOST)).toBe(false);
+    expect(allowedEmailLinkHosts().has("app.nextgenachievers.com")).toBe(true);
+
+    const approval = buildExplorerParentEmail({ username: "River", token: "tok" });
+    const welcome = buildParentWelcomeEmail({ username: "River" });
+    const pin = buildParentPinResetEmail({ token: "tok" });
+    const password = buildCredentialRecoveryEmail({ label: "River", token: "tok" });
+    const invite = buildFriendInviteEmail({});
+    for (const built of [approval, welcome, pin, password, invite]) {
+      expect(linkText(built)).toContain(PRODUCTION_ORIGIN);
+      expect(linkText(built)).not.toContain(BRANCH_HOST);
+      expect(linkText(built)).not.toContain(OTHER_HOST);
+    }
+    expect(approval.text).toContain(`${PRODUCTION_ORIGIN}/onboarding/sign-up`);
+    expect(welcome.text).toContain(`${PRODUCTION_ORIGIN}/dashboard/settings/account`);
+    expect(pin.text).toContain(`${PRODUCTION_ORIGIN}/onboarding/reset-pin`);
+    expect(password.text).toContain(`${PRODUCTION_ORIGIN}/onboarding/reset-password`);
+    expect(invite.text).toContain(`${PRODUCTION_ORIGIN}/`);
+  });
+
+  it("trusts this preview's own hosts and builds email links from the branch host", () => {
+    clearHostEnv();
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_BRANCH_URL = BRANCH_HOST;
+    process.env.VERCEL_URL = DEPLOYMENT_HOST;
+    process.env.NEXT_PUBLIC_APP_URL = PRODUCTION_ORIGIN;
+
+    const branchOrigin = `https://${BRANCH_HOST}`;
+    expect(getDefaultAppUrl()).toBe(branchOrigin);
+    expect(resolveTrustedAppUrl(`${branchOrigin}/onboarding/sign-in`)).toBe(
+      branchOrigin,
+    );
+    expect(resolveTrustedAppUrl(`https://${DEPLOYMENT_HOST}/api/auth/sign-in`)).toBe(
+      `https://${DEPLOYMENT_HOST}`,
+    );
+    expect(resolveTrustedAppUrl(`https://${OTHER_HOST}/path`)).toBe(branchOrigin);
+    expect(allowedEmailLinkHosts().has(BRANCH_HOST)).toBe(true);
+    expect(allowedEmailLinkHosts().has(DEPLOYMENT_HOST)).toBe(true);
+    expect(allowedEmailLinkHosts().has(OTHER_HOST)).toBe(false);
+
+    const approval = buildExplorerParentEmail(
+      { username: "River", token: "tok" },
+      PRODUCTION_ORIGIN,
+    );
+    const welcome = buildParentWelcomeEmail({ username: "River" }, PRODUCTION_ORIGIN);
+    const pin = buildParentPinResetEmail({ token: "tok" }, PRODUCTION_ORIGIN);
+    const password = buildCredentialRecoveryEmail(
+      { label: "River", token: "tok" },
+      PRODUCTION_ORIGIN,
+    );
+    const invite = buildFriendInviteEmail({}, PRODUCTION_ORIGIN);
+    for (const built of [approval, welcome, pin, password, invite]) {
+      expect(linkText(built)).toContain(branchOrigin);
+      expect(linkText(built)).not.toContain(OTHER_HOST);
+      expect(linkText(built)).not.toContain(PRODUCTION_ORIGIN);
+    }
+  });
+
+  it("falls back to VERCEL_URL when the preview has no branch host", () => {
+    clearHostEnv();
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_URL = DEPLOYMENT_HOST;
+    process.env.NEXT_PUBLIC_APP_URL = PRODUCTION_ORIGIN;
+
+    expect(getDefaultAppUrl()).toBe(`https://${DEPLOYMENT_HOST}`);
+    expect(resolveTrustedAppUrl(`https://${DEPLOYMENT_HOST}/path`)).toBe(
+      `https://${DEPLOYMENT_HOST}`,
+    );
+    expect(resolveTrustedAppUrl(`https://${OTHER_HOST}/path`)).toBe(
+      `https://${DEPLOYMENT_HOST}`,
+    );
+    expect(
+      buildParentPinResetEmail({ token: "tok" }).text,
+    ).toContain(`https://${DEPLOYMENT_HOST}/onboarding/reset-pin`);
+  });
+
+  it("reads the public preview host when that is the copy Vercel exposed", () => {
+    clearHostEnv();
+    process.env.VERCEL_ENV = "preview";
+    process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL = BRANCH_HOST;
+
+    expect(getDefaultAppUrl()).toBe(`https://${BRANCH_HOST}`);
+    expect(allowedEmailLinkHosts().has(BRANCH_HOST)).toBe(true);
+    expect(allowedEmailLinkHosts().has(OTHER_HOST)).toBe(false);
+    expect(resolveTrustedAppUrl(`https://${OTHER_HOST}`)).toBe(
+      `https://${BRANCH_HOST}`,
     );
   });
 });

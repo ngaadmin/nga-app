@@ -9,6 +9,7 @@ import {
   LessonTrueIcon,
 } from "@/components/academy/lesson/lesson-icons";
 import {
+  lessonNextButtonClass,
   lessonPromptClass,
   resolveChoiceVariant,
 } from "@/components/academy/lesson/lesson-shared-styles";
@@ -112,9 +113,10 @@ function SpotlightDecisionChoices({
 }: SpotlightScreenProps) {
   const { cash, commitCash } = useLessonCash();
   const options = screen.options ?? [];
-  const visible = options
+  const matched = options
     .map((option, index) => ({ option, index }))
     .filter(({ option }) => cashMatches(option.showWhen, cash));
+  const visible = matched.length > 0 ? matched : options.map((option, index) => ({ option, index }));
   const [choice, setChoice] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const flowRef = useRef(flow);
@@ -379,9 +381,26 @@ function SpotlightGradedRounds({
   );
 }
 
+function SpotlightEmptyRounds({ screen, flow }: SpotlightScreenProps) {
+  return (
+    <LessonScreenLayout prompt={screen.prompt}>
+      <button
+        type="button"
+        className={`${lessonNextButtonClass} mt-6`}
+        onClick={() => flow.handleNext({ canAdvance: true })}
+      >
+        Continue
+      </button>
+    </LessonScreenLayout>
+  );
+}
+
 export function SpotlightRoundsScreen(props: SpotlightScreenProps) {
   if (props.screen.decisionPath) {
     return <SpotlightDecisionChoices {...props} />;
+  }
+  if (props.screen.rounds.length === 0) {
+    return <SpotlightEmptyRounds {...props} />;
   }
   return <SpotlightGradedRounds {...props} />;
 }

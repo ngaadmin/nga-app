@@ -47,7 +47,7 @@ describe("allocation slider", () => {
     expect(allocationSavedBadge(9)).toBe("🔒 $9 saved!");
   });
 
-  it("treats a KEEP line as at-least and a move line as exact", () => {
+  it("treats a KEEP line as at-least on the gift and cinema sliders", () => {
     expect(allocationNextEnabled(19, 20, "at-least")).toBe(false);
     expect(allocationNextEnabled(20, 20, "at-least")).toBe(true);
     expect(allocationNextEnabled(25, 20, "at-least")).toBe(true);
@@ -72,8 +72,8 @@ describe("allocation slider", () => {
       ).screens.find((screen) => screen.type === "allocation-slider");
       expect(pay, cohort).toMatchObject(
         cohort === "maverick"
-          ? { total: 30, targetMin: 18, match: "exact" }
-          : { total: 15, targetMin: 9, match: "exact" },
+          ? { total: 30, targetMin: 18, match: "at-least" }
+          : { total: 15, targetMin: 9, match: "at-least" },
       );
     }
   });

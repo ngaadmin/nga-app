@@ -531,14 +531,21 @@ describe("module 1 screens from Screens1.csv", () => {
         iconA: "🍱",
         optionA: "Buy lunch for all his friends and have nothing left",
         iconB: "🚍",
-        optionB: "A bus pass to get him to uni",
+        optionB: "A bus pass to get him to school",
         correct: "b",
         error: "",
       },
     ];
 
     expect(roundsFor("explorer")).toEqual(explorerRounds);
-    expect(roundsFor("maverick")).toEqual(explorerRounds);
+    expect(roundsFor("maverick")).toEqual([
+      {
+        ...explorerRounds[0],
+        optionB: "A new phone case he promised his friend",
+      },
+      explorerRounds[1],
+      explorerRounds[2],
+    ]);
     expect(roundsFor("pathfinder")).toEqual([
       {
         iconA: "📱",

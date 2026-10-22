@@ -217,9 +217,13 @@ export const LessonWordDropGame = forwardRef<
   const placeWordInBlank = useCallback(
     (blankIndex: number, word: string) => {
       const next = [...choicesRef.current];
-      for (let index = 0; index < next.length; index += 1) {
-        if (index !== blankIndex && next[index] === word) {
-          next[index] = "";
+      const repeats =
+        blanksRef.current.filter((blank) => blank.correctOption === word).length > 1;
+      if (!repeats) {
+        for (let index = 0; index < next.length; index += 1) {
+          if (index !== blankIndex && next[index] === word) {
+            next[index] = "";
+          }
         }
       }
       next[blankIndex] = word;

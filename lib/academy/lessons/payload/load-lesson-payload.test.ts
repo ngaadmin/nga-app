@@ -117,6 +117,7 @@ describe("lesson payload loader", () => {
     expect(completion).toEqual({
       type: "completion",
       id: "screen-8",
+      leadCharacter: "Lars",
       sourceLabel: "8",
       useStandardPane: true,
       medalId: "medal-skill1-bronze",
@@ -191,8 +192,15 @@ describe("lesson payload loader", () => {
       expect(rounds.rounds[0]?.prompt).toBe(row.round);
       expect(rounds.rounds[0]?.prompt).not.toMatch(/gelato/i);
       expect(
-        rounds.rounds.every((round) => round.optionA === "True" && round.optionB === "False"),
+        rounds.rounds.every(
+          (round) =>
+            round.optionA === "True" &&
+            round.iconA === "✅" &&
+            round.optionB === "False" &&
+            round.iconB === "❌",
+        ),
       ).toBe(true);
+      expect(rounds.rounds[2]?.correct).toBe("b");
 
       const math = content.screens[4];
       expect(math).toMatchObject({ type: "multiple-choice" });
@@ -740,7 +748,7 @@ describe("lesson payload loader", () => {
       pairImage: "holly-hands-on-hips-512.webp",
       pairs: [
         {
-          event: "I broke my brother's headphones",
+          event: "I broke my sister's headphones",
           benefit: "I can replace them",
         },
         {
@@ -1027,8 +1035,8 @@ CORRECT: bus,dog lead`,
       sourceLabel: "Gift box",
       targetIllustrationId: "senna-celebrating",
       targetLabel: "Senna",
-      showZoneLabels: false,
     });
+    expect(drag && "showZoneLabels" in drag ? drag.showZoneLabels : undefined).toBeUndefined();
     expect(`${drag && "sourceLabel" in drag ? drag.sourceLabel : ""} ${drag && "targetLabel" in drag ? drag.targetLabel : ""}`).not.toMatch(
       /[a-z0-9]+-[a-z0-9]|concept-|\/$/,
     );
@@ -1043,8 +1051,8 @@ CORRECT: bus,dog lead`,
     });
     expect(maverickDrag).toMatchObject({
       sourceLabel: "Gift box",
-      targetIllustrationId: "aiden-celebrating",
-      targetLabel: "Aiden",
+      targetImageFile: "dash-celebrating",
+      targetLabel: "Dash",
     });
     for (const screen of [drag, pathfinderDrag, maverickDrag]) {
       if (!screen || !("sourceLabel" in screen) || !("targetLabel" in screen)) continue;
@@ -1116,7 +1124,7 @@ CORRECT: bus,dog lead`,
     const tracks = [
       {
         cohort: "explorer" as const,
-        pairImage: "lars-deciding-512.webp",
+        pairImage: "mia-thinking",
         prompt:
           "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
         options: [

@@ -59,6 +59,9 @@ export function AllocationSliderScreen({
   const lastSettledRef = useRef<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const shakeTimerRef = useRef<number | null>(null);
+  const settleTimerRef = useRef<number | null>(null);
+  const chipLabel = screen.reserveGoals[0]?.label?.trim();
+  const saveLabel = chipLabel && chipLabel !== "Set aside" ? chipLabel : "Save";
   const inset = allocationTrackInsetPx();
   const goalZone = match === "at-least" && targetMin > 0 && targetMin < total;
 
@@ -139,6 +142,7 @@ export function AllocationSliderScreen({
   useEffect(
     () => () => {
       if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
+      if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
     },
     [],
   );
@@ -161,7 +165,7 @@ export function AllocationSliderScreen({
           <div className="text-left">
             <p className="flex items-center gap-1.5 font-sans text-[15px] font-semibold text-[#031F82]/80">
               <AnswerEmoji emoji="🐷" />
-              Save
+              {saveLabel}
             </p>
             <div className="mt-1 flex items-center gap-2">
               <p className="font-heading text-[40px] font-extrabold leading-[1.05] tabular-nums text-[#031F82]">
@@ -206,28 +210,28 @@ export function AllocationSliderScreen({
             if (event.currentTarget.hasPointerCapture(event.pointerId)) {
               event.currentTarget.releasePointerCapture(event.pointerId);
             }
+            if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
             settle(reservedRef.current);
           }}
-          onPointerCancel={() => settle(reservedRef.current)}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowRight" || event.key === "ArrowUp") {
-              event.preventDefault();
-              applySave(reservedRef.current + 1);
-            }
-            if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
-              event.preventDefault();
-              applySave(reservedRef.current - 1);
-            }
+          onPointerCancel={() => {
+            if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
+            settle(reservedRef.current);
           }}
-          onKeyUp={(event) => {
-            if (
-              event.key === "ArrowRight" ||
-              event.key === "ArrowUp" ||
-              event.key === "ArrowLeft" ||
-              event.key === "ArrowDown"
-            ) {
+          onKeyDown={(event) => {
+            const step =
+              event.key === "ArrowRight" || event.key === "ArrowUp"
+                ? 1
+                : event.key === "ArrowLeft" || event.key === "ArrowDown"
+                  ? -1
+                  : 0;
+            if (step === 0) return;
+            event.preventDefault();
+            applySave(reservedRef.current + step);
+            if (settleTimerRef.current !== null) window.clearTimeout(settleTimerRef.current);
+            settleTimerRef.current = window.setTimeout(() => {
+              settleTimerRef.current = null;
               settle(reservedRef.current);
-            }
+            }, 400);
           }}
         >
           {goalZone ? (

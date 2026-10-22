@@ -2,7 +2,10 @@ import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
 import { parseCashUpdate, type CashComparison, type CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
 import { screenLabelKey } from "@/lib/academy/lessons/payload/lesson-graph";
-import { isIllustrationId } from "@/lib/academy/illustrations/illustration-registry";
+import {
+  characterPoseFilePath,
+  isIllustrationId,
+} from "@/lib/academy/illustrations/illustration-registry";
 import {
   isMedalIllustrationId,
   medalIdForSkillNumber,
@@ -11,7 +14,10 @@ import {
 } from "@/lib/academy/illustrations/medal-registry";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { peelLeadingEmoji } from "@/lib/academy/lessons/peel-leading-emoji";
-import { resolveRankOrderIds } from "@/lib/academy/lessons/rank-order";
+import {
+  resolveRankOrderIds,
+  unmatchedRankOrderTokens,
+} from "@/lib/academy/lessons/rank-order";
 import {
   assertSortAuthoring,
   isUnrecognisedSettingLine,
@@ -63,18 +69,33 @@ function cohortField(copy: PayloadCohortCopy, cohort: MasteryCohort): string {
   return copy.pathfinder.trim();
 }
 
-/** Pathfinder Game Settings are the base. A cohort cell replaces any keys it sets. */
-function mergedSettings(copy: PayloadCohortCopy, cohort: MasteryCohort): SettingEntry[] {
-  const base = parseSettings(copy.pathfinder);
-  if (cohort === "pathfinder") return base;
+/**
+ * Pathfinder settings are the base. A cohort cell that sets every base key
+ * replaces the cell. A partial cell keeps the Pathfinder keys it does not set.
+ */
+function mergedSettingsRaw(copy: PayloadCohortCopy, cohort: MasteryCohort): string {
+  const baseRaw = copy.pathfinder;
+  if (cohort === "pathfinder") return baseRaw;
   const own = copy[cohort].trim();
-  if (!own) return base;
-  const overlay = parseSettings(own);
-  const overlayKeys = new Set(overlay.map((entry) => entry.key));
-  return [
-    ...base.filter((entry) => !overlayKeys.has(entry.key)),
-    ...overlay,
-  ];
+  if (!own) return baseRaw;
+  const baseEntries = parseSettings(baseRaw);
+  const overlayEntries = parseSettings(own);
+  const overlayKeys = new Set(overlayEntries.map((entry) => entry.key));
+  const baseKeys = new Set(baseEntries.map((entry) => entry.key));
+  const coversAll =
+    baseEntries.length > 0 && [...baseKeys].every((key) => overlayKeys.has(key));
+  if (coversAll) return own;
+  const keptBase = baseRaw.split(/\r?\n/).filter((line) => {
+    const match = /^([^:]+):\s*/.exec(line.trim());
+    if (!match) return overlayEntries.length === 0;
+    const key = (match[1] ?? "").trim().toUpperCase();
+    return !overlayKeys.has(key);
+  });
+  return [...keptBase, own].filter((line) => line.trim()).join("\n");
+}
+
+function mergedSettings(copy: PayloadCohortCopy, cohort: MasteryCohort): SettingEntry[] {
+  return parseSettings(mergedSettingsRaw(copy, cohort));
 }
 
 const SETTINGS_KEY =
@@ -187,6 +208,30 @@ function correctChoiceLetters(entries: readonly SettingEntry[]): Set<string> {
     return new Set(raw.match(/[A-H]/g) ?? ["A"]);
   }
   return new Set([raw.startsWith("B") ? "B" : "A"]);
+}
+
+function parseSavingsGoalItems(
+  itemText: string,
+): { id: string; label: string; price: number; emoji: string }[] {
+  const items: { id: string; label: string; price: number; emoji: string }[] = [];
+  for (const chunk of itemText.split(/(?<=\))/)) {
+    const trimmed = chunk.trim();
+    if (!trimmed || /^RESULT\b/i.test(trimmed)) continue;
+    const chars = [...trimmed];
+    const emoji = readEmojiAt(chars, 0);
+    const body = emoji ? chars.slice(emoji.end).join("") : trimmed;
+    const priced = /^\s*([^($]+?)\s*\(\$(\d+)\)/.exec(body);
+    if (!priced?.[1]) continue;
+    const label = priced[1].trim();
+    if (!label) continue;
+    items.push({
+      id: itemSlug(label, items.length),
+      label,
+      price: Number(priced[2]),
+      emoji: emoji?.emoji ?? "",
+    });
+  }
+  return items;
 }
 
 function settingValue(entries: readonly SettingEntry[], key: string): string | undefined {
@@ -376,7 +421,7 @@ function leadingSettingsQuestion(raw: string): string | undefined {
   return question || undefined;
 }
 
-/** TOTAL/KEEP win. A "$9 ... ($6 remains)" line stays 9 of 15, exact. */
+/** TOTAL/KEEP win. KEEP is at-least. A bare "$9 ... ($6 remains)" line stays exact. */
 function allocationAmounts(raw: string): {
   total: number;
   targetMin: number;
@@ -434,6 +479,8 @@ type PayloadScreenContext = {
   skillId?: string;
   skillName?: string;
   lessonNumber?: number;
+  /** Lesson-Details cohort character. Completion art uses this name. */
+  leadCharacter?: string;
 };
 
 function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
@@ -752,6 +799,15 @@ export function mapPayloadScreen(
   cohort: MasteryCohort,
   context: PayloadScreenContext = {},
 ): ScreenConfig {
+  if (
+    cohort !== "pathfinder" &&
+    !row.settings.pathfinder.trim() &&
+    row.settings[cohort].trim()
+  ) {
+    throw new Error(
+      `Screen ${row.screenLabel} fills ${cohort} settings while Pathfinder settings are blank.`,
+    );
+  }
   const text = cohortField(row.text, cohort);
   const error = cohortField(row.error, cohort);
   const settings = mergedSettings(row.settings, cohort);
@@ -780,6 +836,19 @@ export function mapPayloadScreen(
         .split(",")
         .map((part) => part.trim())
         .filter(Boolean);
+      if (blankCount > 1 && correctParts.length !== blankCount) {
+        throw new Error(
+          `Screen ${row.screenLabel} (word-drop) has ${blankCount} blanks and ${correctParts.length} CORRECT parts.`,
+        );
+      }
+      const answers = blankCount > 1 ? correctParts : [correctOption.trim()];
+      for (const part of answers) {
+        if (part && !options.includes(part)) {
+          throw new Error(
+            `Screen ${row.screenLabel} (word-drop) CORRECT "${part}" is not in OPTIONS.`,
+          );
+        }
+      }
       if (blankCount > 1 && correctParts.length === blankCount) {
         return {
           type: "word-drop",
@@ -809,7 +878,13 @@ export function mapPayloadScreen(
       };
     }
     case "true-false": {
-      const correct = (settingValue(settings, "CORRECT") ?? "true").trim().toLowerCase();
+      const correctRaw = (settingValue(settings, "CORRECT") ?? "").trim();
+      if (!/^(true|false)$/i.test(correctRaw)) {
+        throw new Error(
+          `Screen ${row.screenLabel} (true-false) needs CORRECT: True or CORRECT: False.`,
+        );
+      }
+      const correct = correctRaw.toLowerCase();
       return {
         type: "true-false",
         id,
@@ -822,26 +897,31 @@ export function mapPayloadScreen(
     case "drag-to-target": {
       const source = (settingValue(settings, "SOURCE") ?? "").replace(/\s*\/\s*$/, "").trim();
       const target = (settingValue(settings, "TARGET") ?? "").replace(/\s*\/\s*$/, "").trim();
+      const targetSplit = splitEmojiLabel(target);
+      const targetName = targetSplit.label;
       const sourceArt = isIllustrationId(source) ? source : undefined;
-      const targetArt = isIllustrationId(target) ? target : undefined;
+      const targetArt = isIllustrationId(targetName) ? targetName : undefined;
+      const targetPose = !targetArt && characterPoseFilePath(targetName) ? targetName : undefined;
       const emoji = sourceArt ? undefined : firstEmoji(source);
       const sourceLabel = sourceArt
         ? labelFromIllustrationId(source)
         : (emoji ? source.replace(emoji, "") : source).trim() || "Start";
       const sourceImageFile = settingValue(settings, "ITEM");
-      const targetImageFile = settingValue(settings, "IMAGE");
-      const hideLabels = Boolean(sourceArt || targetArt || sourceImageFile);
+      const authoredTargetImage = settingValue(settings, "IMAGE");
+      const targetImageFile = authoredTargetImage ?? targetPose;
       return {
         type: "drag-to-target",
         id,
         intro: text,
         sourceLabel,
-        targetLabel: targetArt ? labelFromIllustrationId(target) : target || "Target",
+        targetLabel: targetArt || targetPose
+          ? labelFromIllustrationId(targetName)
+          : targetName || "Target",
         ...(emoji ? { itemEmoji: emoji } : {}),
+        ...(targetSplit.emoji ? { targetEmoji: targetSplit.emoji } : {}),
         ...(sourceArt ? { sourceIllustrationId: sourceArt, itemSize: "lg" as const } : {}),
         ...(targetArt ? { targetIllustrationId: targetArt } : {}),
-        ...(hideLabels ? { showZoneLabels: false } : {}),
-        ...(sourceImageFile ? { sourceImageFile, itemSize: "lg" as const, showZoneLabels: false } : {}),
+        ...(sourceImageFile ? { sourceImageFile, itemSize: "lg" as const } : {}),
         ...(targetImageFile ? { targetImageFile } : {}),
         coinCount: 1,
         sourceEmptyMessage: settingValue(settings, "SUCCESS") ?? "",
@@ -851,7 +931,7 @@ export function mapPayloadScreen(
       };
     }
     case "savings-goal": {
-      const raw = cohortField(row.settings, cohort);
+      const raw = mergedSettingsRaw(row.settings, cohort);
       const available = Number.parseInt(/AVAILABLE:\s*\$(\d+)/i.exec(raw)?.[1] ?? "", 10);
       const target = Number.parseInt(/TARGET:\s*\$?(\d+)/i.exec(raw)?.[1] ?? "", 10);
       const itemChunks: string[] = [];
@@ -868,21 +948,9 @@ export function mapPayloadScreen(
         }
         if (collectingItems) itemChunks.push(trimmed);
       }
-      const itemChars = [...itemChunks.join(" ")];
-      const items: { id: string; label: string; price: number; emoji: string }[] = [];
-      for (let index = 0; index < itemChars.length; index += 1) {
-        const found = readEmojiAt(itemChars, index);
-        if (!found) continue;
-        const priced = /^\s*([^($]+?)\s*\(\$(\d+)\)/.exec(itemChars.slice(found.end).join(""));
-        if (!priced) continue;
-        const label = (priced[1] ?? "").trim();
-        items.push({
-          id: itemSlug(label, items.length),
-          label,
-          price: Number(priced[2]),
-          emoji: found.emoji,
-        });
-        index = found.end + priced[0].length - 1;
+      const items = parseSavingsGoalItems(itemChunks.join(" "));
+      if (items.length === 0) {
+        throw new Error(`Screen ${row.screenLabel} (savings-goal) has no items.`);
       }
       const prices = items.reduce((sum, item) => sum + item.price, 0);
       const named = items.map((item) => `the ${item.label.toLowerCase()}`);
@@ -919,7 +987,7 @@ export function mapPayloadScreen(
     }
     case "binary-choice":
     case "multiple-choice": {
-      const decisionScript = parseDecisionScript(cohortField(row.settings, cohort));
+      const decisionScript = parseDecisionScript(mergedSettingsRaw(row.settings, cohort));
       const decisionChoices = decisionScript?.choices;
       const choices = decisionChoices
         ? decisionChoices.map((choice, index) => ({
@@ -928,7 +996,7 @@ export function mapPayloadScreen(
           }))
         : authoredChoices(settings);
       const continueToLabel =
-        choices.length === 0 ? continueGoLabel(cohortField(row.settings, cohort)) : undefined;
+        choices.length === 0 ? continueGoLabel(mergedSettingsRaw(row.settings, cohort)) : undefined;
       if (continueToLabel) {
         return {
           type: row.gameType,
@@ -941,7 +1009,7 @@ export function mapPayloadScreen(
           ...picture,
         };
       }
-      const rawSettings = cohortField(row.settings, cohort);
+      const rawSettings = mergedSettingsRaw(row.settings, cohort);
       const question = leadingSettingsQuestion(rawSettings);
       const skillHub = /^\s*HUB\s*$/im.test(rawSettings);
       const skillKeys = choices
@@ -988,6 +1056,9 @@ export function mapPayloadScreen(
           (option) => option.hubSkillKey && !option.requiresHubSkills,
         );
         const finish = mappedOptions.find((option) => option.requiresHubSkills);
+        if (skillOptions.length === 0) {
+          throw new Error(`Screen ${row.screenLabel} (skill-hub) has no skills.`);
+        }
         return {
           type: "skill-hub",
           id,
@@ -1004,6 +1075,19 @@ export function mapPayloadScreen(
           skillHub: true,
           ...picture,
         };
+      }
+      if (options.length === 0) {
+        throw new Error(`Screen ${row.screenLabel} (${row.gameType}) has no choices.`);
+      }
+      if (explicitCorrect) {
+        const present = new Set(choices.map((choice) => choice.letter));
+        for (const letter of correctChoiceLetters(settings)) {
+          if (!present.has(letter)) {
+            throw new Error(
+              `Screen ${row.screenLabel} (${row.gameType}) CORRECT ${letter} does not match a choice.`,
+            );
+          }
+        }
       }
       return {
         type: row.gameType,
@@ -1027,7 +1111,7 @@ export function mapPayloadScreen(
     }
     case "tap-reveal":
     case "bucket-sort": {
-      const settingsRaw = cohortField(row.settings, cohort);
+      const settingsRaw = mergedSettingsRaw(row.settings, cohort);
       const deliver = (screen: ScreenConfig): ScreenConfig => {
         if (row.gameType === "bucket-sort" && screen.type === "bucket-sort") {
           assertSortAuthoring(
@@ -1161,7 +1245,7 @@ export function mapPayloadScreen(
       });
     }
     case "spotlight-rounds": {
-      const decisionScript = parseDecisionScript(cohortField(row.settings, cohort));
+      const decisionScript = parseDecisionScript(mergedSettingsRaw(row.settings, cohort));
       const decisionChoices = decisionScript?.choices;
       const choices = decisionChoices
         ? decisionChoices.map((choice, index) => ({
@@ -1204,7 +1288,7 @@ export function mapPayloadScreen(
           ...picture,
         };
       }
-      const sheetRounds = spotlightSheetRounds(cohortField(row.settings, cohort), error);
+      const sheetRounds = spotlightSheetRounds(mergedSettingsRaw(row.settings, cohort), error);
       if (sheetRounds.length > 0) {
         const blank = sheetRounds.find((round) => !round.optionA.trim() || !round.optionB.trim());
         if (blank) {
@@ -1253,8 +1337,18 @@ export function mapPayloadScreen(
       };
     }
     case "rank-order": {
-      const settingsRaw = cohortField(row.settings, cohort);
+      const settingsRaw = mergedSettingsRaw(row.settings, cohort);
       const ranked = rankOrderFromSettings(settingsRaw, error);
+      const orderTokens = (settingsRaw.match(/^ORDER:\s*(.*)$/im)?.[1] ?? "")
+        .split(",")
+        .map((token) => token.trim())
+        .filter(Boolean);
+      const unmatchedOrder = unmatchedRankOrderTokens(ranked.items, orderTokens);
+      if (unmatchedOrder.length > 0) {
+        throw new Error(
+          `Screen ${row.screenLabel} (rank-order) ORDER does not match its items (${unmatchedOrder.join(", ")}).`,
+        );
+      }
       assertSortAuthoring(
         sortAuthoringIssues({
           lessonNumber: context.lessonNumber,
@@ -1276,7 +1370,7 @@ export function mapPayloadScreen(
       };
     }
     case "link-match": {
-      const pairs = linkMatchPairsFromSettings(cohortField(row.settings, cohort)).map(
+      const pairs = linkMatchPairsFromSettings(mergedSettingsRaw(row.settings, cohort)).map(
         (pair, index) => ({
           id: itemSlug(pair.event, index),
           event: pair.event,
@@ -1298,7 +1392,7 @@ export function mapPayloadScreen(
       };
     }
     case "allocation-slider": {
-      const settingsRaw = cohortField(row.settings, cohort);
+      const settingsRaw = mergedSettingsRaw(row.settings, cohort);
       const instruction = sliderInstruction(settingsRaw);
       const raw = [instruction || settingsRaw, text].filter(Boolean).join("\n");
       const { total, targetMin, match } = allocationAmounts(`${settingsRaw}\n${raw}`);
@@ -1314,7 +1408,7 @@ export function mapPayloadScreen(
         reserveGoals: [
           {
             id: "reserve",
-            label: "Set aside",
+            label: settingValue(settings, "ITEM")?.trim() || "Set aside",
             amount: targetMin,
           },
         ],
@@ -1323,7 +1417,20 @@ export function mapPayloadScreen(
       };
     }
     case "budget-select": {
-      const budget = budgetSelectFromSettings(cohortField(row.settings, cohort), error);
+      const budgetRaw = mergedSettingsRaw(row.settings, cohort);
+      const budget = budgetSelectFromSettings(budgetRaw, error);
+      if (!/\bTOTAL:\s*\$?\d+/i.test(budgetRaw)) {
+        throw new Error(`Screen ${row.screenLabel} (budget-select) is missing TOTAL.`);
+      }
+      const correctTokens = (/^CORRECT:\s*(.*)$/im.exec(budgetRaw)?.[1] ?? "")
+        .split(",")
+        .map((token) => token.trim())
+        .filter(Boolean);
+      if (correctTokens.length === 0 || budget.correctIds.length !== correctTokens.length) {
+        throw new Error(
+          `Screen ${row.screenLabel} (budget-select) CORRECT does not match its items.`,
+        );
+      }
       if (budget.items.length === 0) {
         throw new Error(
           `Screen ${row.screenLabel} (budget-select) has no items.`,
@@ -1356,12 +1463,14 @@ export function mapPayloadScreen(
     }
     case "completion": {
       const medalSetting = settingValue(settings, "MEDAL");
+      const leadCharacter = context.leadCharacter?.trim();
       if (medalSettingToken(medalSetting) === "none") {
         return {
           type: "completion",
           id,
           useStandardPane: true,
           suppressMedal: true,
+          ...(leadCharacter ? { leadCharacter } : {}),
         };
       }
       const settingsTier = medalTierFromSettings(medalSetting);
@@ -1382,6 +1491,7 @@ export function mapPayloadScreen(
         ...(medalId ? { medalId, authoredMedal: true as const } : {}),
         ...(medalTier ? { medalTier } : {}),
         ...(skillName ? { skillName } : {}),
+        ...(leadCharacter ? { leadCharacter } : {}),
       };
     }
     default:
@@ -1605,6 +1715,34 @@ function tagHubSkillKeys(screens: ScreenConfig[]): ScreenConfig[] {
     }
   }
 
+  const hubSkills = "skills" in hub && Array.isArray(hub.skills) ? hub.skills : [];
+  for (const skill of hubSkills) {
+    const key = skill.hubSkillKey;
+    const returns = tagged.some((screen) => {
+      if (screen.hubSkillKey !== key) return false;
+      const exits =
+        "options" in screen && Array.isArray(screen.options)
+          ? screen.options
+              .map((choice) =>
+                typeof choice === "object" && choice !== null && "goToIndex" in choice
+                  ? choice.goToIndex
+                  : undefined,
+              )
+              .filter((target): target is number => typeof target === "number")
+          : [];
+      const targets =
+        exits.length > 0
+          ? exits
+          : typeof screen.continueToIndex === "number"
+            ? [screen.continueToIndex]
+            : [];
+      return targets.includes(hubIndex);
+    });
+    if (!returns) {
+      throw new Error(`Skill hub branch "${key}" never returns to the hub.`);
+    }
+  }
+
   return tagged;
 }
 
@@ -1624,9 +1762,20 @@ export function resolvePayloadLesson(
         skillId: skillSlug,
         skillName: payload.skillName,
         lessonNumber: payload.lessonNumber,
+        leadCharacter: characterName,
       });
-      const raw = cohortField(row.settings, cohort);
-      const continueLabel = screen.continueToLabel ?? continueGoLabel(raw);
+      const raw = mergedSettingsRaw(row.settings, cohort);
+      const hasGradedChoices =
+        "options" in screen &&
+        Array.isArray(screen.options) &&
+        screen.options.some((option) => {
+          if (!option || typeof option !== "object" || !("label" in option)) return false;
+          const label = String(option.label ?? "").trim();
+          return label.length > 0 && !/^continue$/i.test(label);
+        });
+      const continueLabel = hasGradedChoices
+        ? undefined
+        : (screen.continueToLabel ?? continueGoLabel(raw));
       return {
         ...screen,
         // Drag screens use sourceLabel as the item name. Other screens use it

@@ -72,11 +72,14 @@ export function MultipleChoiceScreen({
   const { cash, commitCash } = useLessonCash();
   const completedHubSkills = useCompletedHubSkills();
   const continueToLabel = screen.continueToLabel;
-  const choiceOptions: ChoiceOption[] = continueToLabel
+  const authoredOptions = collectMultipleChoiceOptions(screen);
+  const continueOnly = Boolean(continueToLabel) && authoredOptions.length === 0;
+  const cashFiltered = authoredOptions.filter((option) => cashMatches(option.showWhen, cash));
+  const choiceOptions: ChoiceOption[] = continueOnly
     ? []
-    : collectMultipleChoiceOptions(screen).filter((option) =>
-        cashMatches(option.showWhen, cash),
-      );
+    : cashFiltered.length > 0
+      ? cashFiltered
+      : authoredOptions;
 
   const isRadioList = screen.optionLayout === "radio-list";
   const correctKeys = getCorrectOptionKeys(choiceOptions);
@@ -355,7 +358,7 @@ export function MultipleChoiceScreen({
     (option) => option.hubSkillKey && completedHubSkills.has(option.hubSkillKey),
   ).length;
 
-  if (continueToLabel) {
+  if (continueOnly) {
     return (
       <LessonScreenLayout prompt={prompt}>
         <button

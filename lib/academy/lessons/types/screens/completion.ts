@@ -26,4 +26,6 @@ export type CompletionScreenConfig = WithDeclarative<{
   suppressMedal?: boolean;
   /** Sheet skill name. Wins over the registry label on this screen. */
   skillName?: string;
+  /** Lesson-Details character for this cohort. The close screen uses their celebrating pose. */
+  leadCharacter?: string;
 }>;

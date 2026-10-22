@@ -203,7 +203,7 @@ export function PairedZoneSort({
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-start justify-between">
+      <div className="mt-4 flex flex-wrap items-start gap-2">
         {orderedItems.map((item) =>
           placed.has(item.id) ? (
             <span key={item.id} className="invisible h-24 w-[82px] flex-none" aria-hidden />
@@ -270,7 +270,7 @@ export function PairedZoneSort({
         )}
       </div>
 
-      <div className="mt-4 flex min-w-0 gap-2">
+      <div className="mt-4 flex min-w-0 flex-wrap gap-2">
         {zones.map((zone, index) => {
           const tint = ZONE_TINT[index] ?? ZONE_TINT[1];
           const activeTint = ZONE_TINT_ACTIVE[index] ?? ZONE_TINT_ACTIVE[1];

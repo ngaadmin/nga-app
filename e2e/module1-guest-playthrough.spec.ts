@@ -68,6 +68,22 @@ async function clickButton(page: Page, name: string | RegExp): Promise<void> {
   await button.click();
 }
 
+async function dragChipTo(page: Page, source: Locator, target: Locator): Promise<void> {
+  await source.scrollIntoViewIfNeeded();
+  await target.scrollIntoViewIfNeeded();
+  const sourceBox = await source.boundingBox();
+  const targetBox = await target.boundingBox();
+  if (!sourceBox || !targetBox) throw new Error("Word-drop drag is missing a box.");
+  const startX = sourceBox.x + sourceBox.width / 2;
+  const startY = sourceBox.y + sourceBox.height / 2;
+  const endX = targetBox.x + targetBox.width / 2;
+  const endY = targetBox.y + targetBox.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(endX, endY, { steps: 16 });
+  await page.mouse.up();
+}
+
 async function footerNext(page: Page): Promise<void> {
   const next = page.getByRole("button", { name: "Next", exact: true }).last();
   await expect(next).toBeEnabled({ timeout: 8_000 });
@@ -130,16 +146,24 @@ async function playScreen(
       (option) => !blanks.some((blank) => blank.correctOption === option),
     );
     if (distractor) {
-      await clickButton(page, distractor);
+      await dragChipTo(
+        page,
+        page.getByRole("button", { name: distractor, exact: true }),
+        page.locator("[data-word-drop-slot='0']"),
+      );
       const placed = page.getByRole("button", {
         name: `Blank, ${distractor}`,
         exact: true,
       });
       await expect(placed).toBeVisible();
-      await placed.click();
+      await dragChipTo(page, placed, page.locator("#word-drop-bank"));
     }
-    for (const blank of blanks) {
-      await clickButton(page, blank.correctOption);
+    for (const [slot, blank] of blanks.entries()) {
+      await dragChipTo(
+        page,
+        page.getByRole("button", { name: blank.correctOption, exact: true }),
+        page.locator(`[data-word-drop-slot='${slot}']`),
+      );
     }
     await footerNext(page);
     return fallthrough();

@@ -1,23 +1,7 @@
 /**
- * Fill-in-the-blank placement. The chosen gap is the learner's selection or the
- * next empty gap. Correctness is not an input — that is judged on submit.
+ * Fill-in-the-blank placement. A drop lands in the gap under the pointer.
+ * Correctness is not an input — that is judged on submit.
  */
-
-/** Gap that receives a tapped bank word. Null when every gap is full and none is selected. */
-export function wordDropTapTarget(
-  choices: readonly string[],
-  selectedBlankIndex: number | null,
-): number | null {
-  if (
-    selectedBlankIndex !== null &&
-    selectedBlankIndex >= 0 &&
-    selectedBlankIndex < choices.length
-  ) {
-    return selectedBlankIndex;
-  }
-  const emptyIndex = choices.findIndex((choice) => choice.length === 0);
-  return emptyIndex >= 0 ? emptyIndex : null;
-}
 
 export function wordDropIsComplete(choices: readonly string[]): boolean {
   return choices.length > 0 && choices.every((choice) => choice.length > 0);

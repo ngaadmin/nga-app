@@ -5,33 +5,24 @@ import {
   wordDropMatches,
   wordDropPlace,
   wordDropRemove,
-  wordDropTapTarget,
 } from "@/lib/academy/lessons/word-drop-placement";
 
-describe("wordDropTapTarget", () => {
-  it("uses the selected gap even when the word would be wrong there", () => {
-    expect(wordDropTapTarget(["", ""], 1)).toBe(1);
-    expect(wordDropTapTarget(["Spent", ""], 0)).toBe(0);
-  });
-
-  it("uses the next empty gap when nothing is selected", () => {
-    expect(wordDropTapTarget(["", "Saved"], null)).toBe(0);
-    expect(wordDropTapTarget(["Spent", ""], null)).toBe(1);
-  });
-
-  it("does not hunt for the correct gap when several are empty", () => {
-    expect(wordDropTapTarget(["", "", ""], null)).toBe(0);
-  });
-
-  it("returns null when every gap is filled and none is selected", () => {
-    expect(wordDropTapTarget(["Spent", "Saved"], null)).toBeNull();
-  });
-});
-
 describe("wordDropPlace", () => {
-  it("keeps a wrong word in the gap the learner chose", () => {
-    expect(wordDropPlace(["", ""], 0, "Hidden", null, false)).toEqual(["Hidden", ""]);
+  it("lands in the gap under the drop, leaving earlier gaps empty", () => {
+    expect(wordDropPlace(["", "", ""], 2, "replace", null, false)).toEqual([
+      "",
+      "",
+      "replace",
+    ]);
     expect(wordDropPlace(["", ""], 1, "Hidden", null, false)).toEqual(["", "Hidden"]);
+  });
+
+  it("sends the previous word back to the bank when a bank word replaces it", () => {
+    expect(wordDropPlace(["spend", "cash", ""], 0, "save", null, false)).toEqual([
+      "save",
+      "cash",
+      "",
+    ]);
   });
 
   it("moves a placed word into another gap", () => {
@@ -47,7 +38,7 @@ describe("wordDropPlace", () => {
 });
 
 describe("wordDropRemove", () => {
-  it("clears the gap so the word can be placed again", () => {
+  it("clears the gap so the word returns to the bank", () => {
     expect(wordDropRemove(["Hidden", "Saved"], 0)).toEqual(["", "Saved"]);
     expect(wordDropIsComplete(["", "Saved"])).toBe(false);
     expect(wordDropIsComplete(["Hidden", "Saved"])).toBe(true);

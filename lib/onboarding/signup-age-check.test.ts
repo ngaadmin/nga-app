@@ -185,11 +185,10 @@ describe("16+ Explorer email is for password resets only", () => {
     expect(plan?.sendLearnerWelcomeEmail).toBe(false);
   });
 
-  it("keeps the existing email helper and stores a real address", () => {
+  it("shows the reset-only line on the sign-up form and stores a real address", () => {
     const form = readFileSync("components/onboarding/sign-up-form.tsx", "utf8");
     const account = readFileSync("lib/onboarding/create-supabase-account.ts", "utf8");
-    expect(form).toContain("For account updates only. You log in with your username.");
-    expect(form).not.toContain("For password resets only. You log in with your username.");
+    expect(form).toContain("For password resets only. You log in with your username.");
     expect(account).toContain("sendLearnerWelcomeEmail && learnerEmail");
     expect(account).not.toContain('cohort === "explorer" || parentInitiated || !learnerEmail');
   });

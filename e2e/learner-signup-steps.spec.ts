@@ -331,7 +331,7 @@ test("age flag decides the parent step and guest play never asks for a year", as
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByLabel("Your Email Address")).toBeVisible();
   await expect(
-    page.getByText("For account updates only. You log in with your username."),
+    page.getByText("For password resets only. You log in with your username."),
   ).toBeVisible();
   await expect(page.getByLabel("Parent/guardian email address")).toHaveCount(0);
   await expect(

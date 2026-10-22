@@ -18,8 +18,8 @@ export type ExplorerParentEmailData = {
   username: string;
   token: string;
   /**
-   * Omitted or explorer keeps the existing Explorer sentence.
-   * Pathfinder and Maverick name the track and leave the ages out.
+   * Omitted or explorer keeps the existing Explorer email.
+   * Pathfinder and Maverick use the under-16 parent approval email.
    */
   track?: "explorer" | "pathfinder" | "maverick";
 };
@@ -247,7 +247,7 @@ function safeHttpHref(href: string): string {
   }
 }
 
-function ctaButton(label: string, href: string): string {
+function ctaButton(label: string, href: string, background = "#FFA503"): string {
   const safeHref = safeHttpHref(href);
   const safeLabel = escapeHtml(label);
   return `
@@ -256,7 +256,7 @@ function ctaButton(label: string, href: string): string {
         href="${safeHref}"
         style="
           display: inline-block;
-          background: #FFA503;
+          background: ${background};
           color: #031F82;
           font-family: Arial, Helvetica, sans-serif;
           font-size: 15px;
@@ -273,6 +273,8 @@ function ctaButton(label: string, href: string): string {
 
 const PENNY_EMAIL_SRC =
   "https://nga-app-three.vercel.app/assets/illustrations/characters/penny/penny-master-email.png";
+const TEEN_APPROVAL_HEADER_SRC =
+  "https://app.nextgenachievers.com/email/penny-email-header@2x.png";
 const PRIVACY_POLICY_URL = "https://www.nextgenachievers.com/privacy";
 const SUPPORT_EMAIL = "info@nextgenachievers.com";
 
@@ -295,6 +297,8 @@ function wrapHtml(options: {
   bodyInner: string;
   preheader?: string;
   footer?: string;
+  /** Edge-to-edge card image. Replaces the NextGenAchievers kicker. */
+  hero?: { src: string; alt: string };
 }): string {
   const preheader = options.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
@@ -306,6 +310,37 @@ function wrapHtml(options: {
         ${escapeHtml(options.footer)}
       </p>`
     : "";
+  const heading = `<h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
+                  ${escapeHtml(options.header)}
+                </h1>`;
+
+  const card = options.hero
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;padding:0;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
+            <tr>
+              <td style="padding:0;line-height:0;font-size:0;">
+                <img src="${safeHttpHref(options.hero.src)}" width="600" height="170" alt="${escapeHtml(options.hero.alt)}" style="display:block;width:100%;max-width:600px;height:auto;border:0;">
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 36px 28px;">
+                ${heading}
+                ${options.bodyInner}
+                ${footer}
+              </td>
+            </tr>
+          </table>`
+    : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px 24px;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
+            <tr>
+              <td>
+                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
+                  NextGenAchievers
+                </p>
+                ${heading}
+                ${options.bodyInner}
+                ${footer}
+              </td>
+            </tr>
+          </table>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -314,20 +349,7 @@ function wrapHtml(options: {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F7F7F7;padding:24px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:28px 24px;font-family:Arial, Helvetica, sans-serif;color:#1E3A5F;line-height:1.55;">
-            <tr>
-              <td>
-                <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0CC1E0;">
-                  NextGenAchievers
-                </p>
-                <h1 style="margin:0 0 20px;font-size:22px;line-height:1.3;color:#031F82;">
-                  ${escapeHtml(options.header)}
-                </h1>
-                ${options.bodyInner}
-                ${footer}
-              </td>
-            </tr>
-          </table>
+          ${card}
         </td>
       </tr>
     </table>
@@ -339,6 +361,9 @@ export function buildExplorerParentEmail(
   data: ExplorerParentEmailData,
   appUrl?: string,
 ): BuiltEmail {
+  if (data.track === "pathfinder" || data.track === "maverick") {
+    return buildTeenParentApprovalEmail(data, appUrl);
+  }
   const username = emailPlain(data.username).trim() || "your learner";
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
@@ -414,6 +439,82 @@ export function buildExplorerParentEmail(
       ${pennyIllustration()}
       <p style="margin:0;font-size:16px;">
         The Team at NextGenAchiever$
+      </p>
+    `,
+  });
+
+  return { subject, preheader, html, text };
+}
+
+/**
+ * Under-16 Pathfinder and Maverick parent approval email.
+ * Explorer keeps the email above. Copy locked by Cath 21 Oct 2026.
+ */
+function buildTeenParentApprovalEmail(
+  data: ExplorerParentEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const username = emailPlain(data.username).trim();
+  const safeName = escapeHtml(username);
+  const base = resolveAppUrl(appUrl);
+  const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
+  const privacyPolicyUrl = "https://nextgenachievers.com/privacy";
+  const subject = "Your teen wants to start NextGenAchiever$";
+  const preheader = "Please approve your teen's account";
+  const header = "Please approve your teen's account";
+  const footer =
+    "Privacy policy: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia";
+
+  const text = [
+    "Hi,",
+    "",
+    `Your teen has just signed up to NextGenAchiever$ with the username ${username}. Because your teen is under 16, the account stays on hold until a parent approves it.`,
+    "",
+    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
+    "",
+    `Approve the account: ${approveUrl}`,
+    "",
+    "Once you approve, you'll be your teen's account manager, and you can set a parent PIN in Preferences.",
+    "",
+    "Didn't expect this email? Just ignore it. This link only works for 24 hours.",
+    "",
+    "Questions? Email info@nextgenachievers.com",
+    "",
+    "The NextGenAchiever$ team",
+    "",
+    footer,
+  ].join("\n");
+
+  const html = wrapHtml({
+    header,
+    preheader,
+    hero: {
+      src: TEEN_APPROVAL_HEADER_SRC,
+      alt: "Penny from NextGenAchiever$ saying hello",
+    },
+    bodyInner: `
+      <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Your teen has just signed up to NextGenAchiever$ with the username ${safeName}. Because your teen is under 16, the account stays on hold until a parent approves it.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.
+      </p>
+      ${ctaButton("Approve the account", approveUrl, "#FFC93C")}
+      <p style="margin:0 0 16px;font-size:16px;">
+        Once you approve, you&#39;ll be your teen&#39;s account manager, and you can set a parent PIN in Preferences.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Didn&#39;t expect this email? Just ignore it. This link only works for 24 hours.
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        Questions? Email ${escapeHtml(SUPPORT_EMAIL)}
+      </p>
+      <p style="margin:0 0 16px;font-size:16px;">
+        The NextGenAchiever$ team
+      </p>
+      <p style="margin:24px 0 0;font-size:12px;color:#5B6B7C;line-height:1.5;">
+        <a href="${safeHttpHref(privacyPolicyUrl)}">Privacy policy</a>: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia
       </p>
     `,
   });

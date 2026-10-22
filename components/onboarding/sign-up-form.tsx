@@ -1228,7 +1228,9 @@ export function SignUpForm() {
                     </p>
                   ) : (
                     <p className="font-sans text-sm italic leading-relaxed text-nga-slate">
-                      For account updates only. You log in with your username.
+                      {isExplorer
+                        ? "For password resets only. You log in with your username."
+                        : "For account updates only. You log in with your username."}
                     </p>
                   )}
                 </div>

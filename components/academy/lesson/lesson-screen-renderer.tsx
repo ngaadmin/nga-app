@@ -3,7 +3,11 @@
 import type { ReactNode } from "react";
 import type { LessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import type { LessonRewards, ScreenConfig } from "@/lib/academy/lessons/types";
-import { LESSON_CASH_IN_LABEL } from "@/components/academy/lesson/lesson-shared-styles";
+import {
+  LESSON_CASH_IN_LABEL,
+  lessonNextButtonClass,
+} from "@/components/academy/lesson/lesson-shared-styles";
+import { LessonScreenLayout } from "@/components/academy/lesson/lesson-ui";
 import { AllocationSliderScreen } from "./screens/allocation-slider-screen";
 import { MultipleChoiceScreen } from "./screens/multiple-choice-screen";
 import { BudgetSelectScreen } from "./screens/budget-select-screen";
@@ -206,7 +210,17 @@ const LESSON_SCREEN_RENDERERS: Partial<
       rewards={rewards}
     />
   ),
-  custom: () => null,
+  custom: ({ flow }) => (
+    <LessonScreenLayout>
+      <button
+        type="button"
+        className={`${lessonNextButtonClass} mt-6`}
+        onClick={() => flow.handleNext({ canAdvance: true })}
+      >
+        Continue
+      </button>
+    </LessonScreenLayout>
+  ),
 };
 
 export function LessonScreenRenderer(props: LessonScreenRendererProps) {

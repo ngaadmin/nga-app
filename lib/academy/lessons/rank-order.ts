@@ -63,6 +63,27 @@ function bestItemForToken(
   return best;
 }
 
+/** ORDER tokens that do not match a distinct item. An empty list means the keys fit. */
+export function unmatchedRankOrderTokens(
+  items: readonly RankOrderResolvable[],
+  orderTokens: readonly string[],
+): string[] {
+  const tokens = orderTokens.map((token) => token.trim()).filter(Boolean);
+  if (tokens.length === 0) return [];
+  if (tokens.length !== items.length) return tokens;
+  const used = new Set<string>();
+  const misses: string[] = [];
+  for (const token of tokens) {
+    const match = bestItemForToken(items, token, used);
+    if (!match) {
+      misses.push(token);
+      continue;
+    }
+    used.add(match.id);
+  }
+  return misses;
+}
+
 /**
  * Map ORDER keys onto items. A key matches a label by phrase or keyword.
  * When the key count equals the item count and a key still has no keyword

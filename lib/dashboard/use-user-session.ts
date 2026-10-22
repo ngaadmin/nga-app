@@ -9,11 +9,28 @@ import {
 } from "@/lib/onboarding/guest-session";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 
+/**
+ * Filled after the first client read. A later mount can start from this
+ * instead of painting Explorer copy for one frame. `undefined` means the
+ * read has not happened yet; `null` means it happened and there is no session.
+ */
+let syncedSession: UserSession | null | undefined;
+
+export function hasSyncedUserSession(): boolean {
+  return syncedSession !== undefined;
+}
+
 export function useUserSession(): UserSession | null {
-  const [session, setSession] = useState<UserSession | null>(null);
+  const [session, setSession] = useState<UserSession | null>(() =>
+    syncedSession === undefined ? null : syncedSession,
+  );
 
   useEffect(() => {
-    const sync = () => setSession(readUserSession());
+    const sync = () => {
+      const next = readUserSession();
+      syncedSession = next;
+      setSession(next);
+    };
     sync();
     window.addEventListener(USER_SESSION_UPDATED_EVENT, sync);
     return () => window.removeEventListener(USER_SESSION_UPDATED_EVENT, sync);

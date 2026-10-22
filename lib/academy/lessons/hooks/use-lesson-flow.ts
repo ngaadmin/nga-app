@@ -217,11 +217,12 @@ export function useLessonFlow({
       const current = screenIndexRef.current;
       const next = typeof value === "function" ? value(current) : value;
       if (next === current) return;
+      clearScreenReady(next);
       screenIndexRef.current = next;
       if (trackPathProgress) setPathStep((step) => step + 1);
       setScreenIndexState(next);
     },
-    [trackPathProgress],
+    [clearScreenReady, trackPathProgress],
   );
 
   const handleNext = useCallback(

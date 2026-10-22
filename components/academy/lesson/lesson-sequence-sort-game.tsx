@@ -62,6 +62,8 @@ type DragState = {
   y: number;
   width: number;
   height: number;
+  pointerX: number;
+  pointerY: number;
 };
 
 type PendingSideEffect = { kind: "correct"; willComplete: boolean };
@@ -99,6 +101,7 @@ export function LessonSequenceSortGame<TStep extends string>({
     Object.fromEntries(steps.map((step) => [step.id, []])),
   );
   const [dragState, setDragState] = useState<DragState | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const [activeStepId, setActiveStepId] = useState<TStep | null>(null);
   const [lockedStepIds, setLockedStepIds] = useState<ReadonlySet<TStep>>(
@@ -250,6 +253,8 @@ export function LessonSequenceSortGame<TStep extends string>({
       y: rect.top,
       width: rect.width,
       height: rect.height,
+      pointerX: event.clientX,
+      pointerY: event.clientY,
     };
     dragStateRef.current = nextDrag;
     setDragState(nextDrag);
@@ -272,14 +277,24 @@ export function LessonSequenceSortGame<TStep extends string>({
   const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) return;
 
-    if (!dragState) {
+    const drag = dragStateRef.current;
+    if (!drag) {
+      endDrag();
+      return;
+    }
+
+    const moved =
+      Math.hypot(event.clientX - drag.pointerX, event.clientY - drag.pointerY) > 8;
+    if (!moved) {
+      setSelectedId(drag.itemId);
       endDrag();
       return;
     }
 
     const stepId = resolveStepAtPoint(event.clientX, event.clientY);
     if (stepId) {
-      assignToStep(dragState.itemId, stepId);
+      setSelectedId(null);
+      assignToStep(drag.itemId, stepId);
     }
 
     endDrag();
@@ -306,6 +321,19 @@ export function LessonSequenceSortGame<TStep extends string>({
           active={activeStepId === step.id}
           locked={lockedStepIds.has(step.id)}
           isEmpty={!isFilled}
+          tabIndex={0}
+          onClick={() => {
+            if (!selectedId) return;
+            assignToStep(selectedId, step.id);
+            setSelectedId(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            if (!selectedId) return;
+            event.preventDefault();
+            assignToStep(selectedId, step.id);
+            setSelectedId(null);
+          }}
         >
           {placedItem ? (
             <LessonSequenceStepPlaced label={placedItem.label} />
@@ -338,7 +366,13 @@ export function LessonSequenceSortGame<TStep extends string>({
               label={item.label}
               isDragging={dragState?.itemId === itemId}
               className={shakingKey === itemId ? "lesson-tile-shake" : undefined}
+              aria-pressed={selectedId === itemId}
               onPointerDown={(event) => handleChipPointerDown(itemId, event)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                setSelectedId(itemId);
+              }}
             />
           );
         })}

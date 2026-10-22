@@ -77,7 +77,7 @@ export function AcademyModuleSignpost({
             {isLocked ? (
               <LockIcon className="size-3.5 shrink-0" aria-hidden />
             ) : null}
-            <span className="line-clamp-1">{title}</span>
+            <span className="line-clamp-2">{title}</span>
           </p>
           <p
             className={cn(

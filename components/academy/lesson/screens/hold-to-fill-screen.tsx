@@ -92,7 +92,7 @@ export function HoldToFillScreen({
     holdFrameRef.current = requestAnimationFrame(tick);
   };
 
-  const endHold = () => {
+  const endHold = (countMistake: boolean) => {
     if (complete) return;
     if (holdFrameRef.current !== null) {
       cancelAnimationFrame(holdFrameRef.current);
@@ -102,6 +102,7 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
+      if (!countMistake) return;
       handleMistake();
       setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? "");
       if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
@@ -153,13 +154,25 @@ export function HoldToFillScreen({
           if (event.currentTarget.hasPointerCapture(event.pointerId)) {
             event.currentTarget.releasePointerCapture(event.pointerId);
           }
-          endHold();
+          endHold(true);
         }}
         onPointerLeave={(event) => {
           if (event.currentTarget.hasPointerCapture(event.pointerId)) return;
-          endHold();
+          endHold(true);
         }}
-        onPointerCancel={endHold}
+        onPointerCancel={() => endHold(true)}
+        onKeyDown={(event) => {
+          if (event.key !== " " && event.key !== "Enter") return;
+          if (event.repeat) return;
+          event.preventDefault();
+          startHold();
+        }}
+        onKeyUp={(event) => {
+          if (event.key !== " " && event.key !== "Enter") return;
+          event.preventDefault();
+          endHold(false);
+        }}
+        onBlur={() => endHold(false)}
         onContextMenu={(event) => {
           event.preventDefault();
         }}

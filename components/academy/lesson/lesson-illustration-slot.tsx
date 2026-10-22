@@ -131,7 +131,14 @@ export function LessonIllustrationSlot({
   }
 
   if (src && imageStatus === "failed") {
-    return <LessonIllustrationSlotReserve className={className} />;
+    return (
+      <LessonIllustrationFallback
+        emoji={emoji}
+        label={label ?? alt}
+        alt={alt ?? label}
+        className={className}
+      />
+    );
   }
 
   if (emoji || label) {

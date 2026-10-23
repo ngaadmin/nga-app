@@ -60,7 +60,7 @@ export function TrueFalseScreen({
 
     setChoice(option);
     setShaking(option);
-    setError(lessonFeedbackCopy(screen.wrongError) ?? "");
+    setError(lessonFeedbackCopy(screen.wrongError) ?? null);
     flow.clearScreenReady(screenIndex);
     flow.incrementMistake();
     signalLessonIncorrectAnswer();

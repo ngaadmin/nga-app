@@ -32,6 +32,8 @@ import { bonusRunUnitForScreen } from "@/lib/academy/lessons/bonus-run";
 import { cn } from "@/lib/utils/cn";
 import { useEffect, useLayoutEffect, type ReactNode } from "react";
 import { LessonShuffleScope } from "@/components/academy/lesson/hooks/use-play-seed";
+import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
+import { nextStoryAudioSrc } from "@/lib/academy/lessons/story-audio/next-clip";
 
 type LessonRunnerProps = {
   content: ResolvedLessonContent;
@@ -69,6 +71,9 @@ export function LessonRunner({
   const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
   const isLinkMatch = activeScreen?.type === "link-match";
   const roomyScreen = isRoomyLessonScreen(activeScreen);
+  const storyClip =
+    activeScreen?.type === "narrative-bonus" ? activeScreen.audio : undefined;
+  const storyPreload = nextStoryAudioSrc(content.screens, screenIndex);
 
   useLayoutEffect(() => {
     if (!activeScreen || activeScreen.type === "spotlight-rounds") return;
@@ -103,6 +108,7 @@ export function LessonRunner({
     <LessonShuffleScope milestoneId={content.meta.milestoneId}>
     <LessonHintProvider>
     <div className="relative flex min-h-0 flex-1 flex-col">
+      <StoryAudioPlayer clip={storyClip} preloadSrc={storyPreload} />
       <AcademyLessonShell
         currentScreenIndex={flow.screenIndex}
         totalScreens={content.meta.totalScreens}

@@ -104,7 +104,7 @@ export function HoldToFillScreen({
       setProgress(0);
       if (!countMistake) return;
       handleMistake();
-      setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? "");
+      setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? null);
       if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
       setShaking(false);
       window.requestAnimationFrame(() => {

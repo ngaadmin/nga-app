@@ -1,0 +1,2682 @@
+{
+  "lessons": [
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 1,
+      "lessonTitle": "The spending spree",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "Catch Impulse Spending",
+      "skillId": "stop-and-think",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "word-drop",
+          "text": {
+            "explorer": "Lars just got $20 for his birthday! He runs to the store, but his brain tricks him into thinking cash must be ______ right away!",
+            "pathfinder": "Lars just got $20 for his birthday! He runs to the store, but his brain tricks him into thinking cash must be ______ right away!",
+            "maverick": "Lars just got $20 for his birthday! He runs to the store, but his brain tricks him into thinking cash must be ______ right away!"
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "OPTIONS: spent | saved | hidden\nCORRECT: spent",
+            "pathfinder": "OPTIONS: spent | saved | hidden\nCORRECT: spent",
+            "maverick": "OPTIONS: spent | saved | hidden\nCORRECT: spent"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars buys a giant bag of sour worms and a fidget spinner. He's super happy, but ten minutes later...",
+            "pathfinder": "Lars buys a giant bag of sour worms and a fidget spinner. He's super happy, but ten minutes later...",
+            "maverick": "Lars buys a giant bag of sour worms and a fidget spinner. He's super happy, but ten minutes later..."
+          },
+          "image": {
+            "explorer": "lars-sitting-512.webp",
+            "pathfinder": "lars-sitting-512.webp",
+            "maverick": "lars-sitting-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🍬 ...the candy is gone and the toy feels boring.\nCHOICE B: 💵 ...his $20 magically comes back.\nCORRECT: A",
+            "pathfinder": "CHOICE A: 🍬 ...the candy is gone and the toy feels boring.\nCHOICE B: 💵 ...his $20 magically comes back.\nCORRECT: A",
+            "maverick": "CHOICE A: 🍬 ...the candy is gone and the toy feels boring.\nCHOICE B: 💵 ...his $20 magically comes back.\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "tap-reveal",
+          "text": {
+            "explorer": "Lars's money is gone, and the fun lasted only 10 minutes. Tap each item to see if it's short fun or fun that lasts!",
+            "pathfinder": "Lars's money is gone, and the fun lasted only 10 minutes. Tap each item to see if it's short fun or fun that lasts!",
+            "maverick": "Lars's money is gone, and the fun lasted only 10 minutes. Tap each item to see if it's short fun or fun that lasts!"
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS:\nSHORT: 🍬 Sour worms\nSHORT: 🍿 Movie popcorn\nLONG: 🎧 Wireless headphones\nLONG: 🛹 Skateboard",
+            "pathfinder": "ITEMS:\nSHORT: 🍬 Sour worms\nSHORT: 🍿 Movie popcorn\nLONG: 🎧 Wireless headphones\nLONG: 🛹 Skateboard",
+            "maverick": "ITEMS:\nSHORT: 🍬 Sour worms\nSHORT: 🍿 Movie popcorn\nLONG: 🎧 Wireless headphones\nLONG: 🛹 Skateboard"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "bucket-sort",
+          "text": {
+            "explorer": "Your turn! Drag each item into the right bucket. How long will the fun really last?",
+            "pathfinder": "Your turn! Drag each item into the right bucket. How long will the fun really last?",
+            "maverick": "Your turn! Drag each item into the right bucket. How long will the fun really last?"
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS:\nSHORT: 🍕 Pizza slice\nSHORT: 🥤 Slushie with extra syrup\nLONG: 🎮 Game controller\nLONG: 🃏 Deck of cards",
+            "pathfinder": "ITEMS:\nSHORT: 🍕 Pizza slice\nSHORT: 🥤 Slushie with extra syrup\nLONG: 🎮 Game controller\nLONG: 🃏 Deck of cards",
+            "maverick": "ITEMS:\nSHORT: 🍕 Pizza slice\nSHORT: 🥤 Slushie with extra syrup\nLONG: 🎮 Game controller\nLONG: 🃏 Deck of cards"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l1-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Lars's birthday money is gone. At home, he watches his big brother Senna count his money.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
+            "pathfinder": "Lars's birthday money is gone. At home, he watches his big brother Senna count his money.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
+            "maverick": "Lars's birthday money is gone. At home, he watches his big brother Senna count his money.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-1d29872b.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-1d29872b.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-1d29872b.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
+            "pathfinder": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
+            "maverick": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?"
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🧠 To trick his brain into buying fast.\nCHOICE B: ❤️ Because the game makers love him.\nCORRECT: A",
+            "pathfinder": "CHOICE A: 🧠 To trick his brain into buying fast.\nCHOICE B: ❤️ Because the game makers love him.\nCORRECT: A",
+            "maverick": "CHOICE A: 🧠 To trick his brain into buying fast.\nCHOICE B: ❤️ Because the game makers love him.\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "Don't fall for the flashing countdown! Try again!",
+            "pathfinder": "Don't fall for the flashing countdown! Try again!",
+            "maverick": "Don't fall for the flashing countdown! Try again!"
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "hold-to-fill",
+          "text": {
+            "explorer": "Help Lars by giving him a 'buy freeze', so his brain has time to think.",
+            "pathfinder": "Help Lars by giving him a 'buy freeze', so his brain has time to think.",
+            "maverick": "Help Lars by giving him a 'buy freeze', so his brain has time to think."
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "HOLD: ❄️ HOLD TO FREEZE ❄️\nFROZEN: ❄️ FROZEN ❄️\nSUCCESS: Frozen! Now Lars has time to think.",
+            "pathfinder": "HOLD: ❄️ HOLD TO FREEZE ❄️\nFROZEN: ❄️ FROZEN ❄️\nSUCCESS: Frozen! Now Lars has time to think.",
+            "maverick": "HOLD: ❄️ HOLD TO FREEZE ❄️\nFROZEN: ❄️ FROZEN ❄️\nSUCCESS: Frozen! Now Lars has time to think."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "The freeze worked! The next morning, Lars doesn't even want that skin anymore. What did the freeze help him do with his $5?",
+            "pathfinder": "The freeze worked! The next morning, Lars doesn't even want that skin anymore. What did the freeze help him do with his $5?",
+            "maverick": "The freeze worked! The next morning, Lars doesn't even want that skin anymore. What did the freeze help him do with his $5?"
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 💰 Keep his $5 safe\nCHOICE B: 🎮 Buy the skin even faster\nCORRECT: A",
+            "pathfinder": "CHOICE A: 💰 Keep his $5 safe\nCHOICE B: 🎮 Buy the skin even faster\nCORRECT: A",
+            "maverick": "CHOICE A: 💰 Keep his $5 safe\nCHOICE B: 🎮 Buy the skin even faster\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l1-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Lars kept his $5 safe today. That night, he thinks about Senna's dog walking.\n\nHe decides to start his own business: a lemonade stand!",
+            "pathfinder": "Lars kept his $5 safe today. That night, he thinks about Senna's dog walking.\n\nHe decides to start his own business: a lemonade stand!",
+            "maverick": "Lars kept his $5 safe today. That night, he thinks about Senna's dog walking.\n\nHe decides to start his own business: a lemonade stand!"
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-ea692647.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",
+            "pathfinder": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-ea692647.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",
+            "maverick": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-ea692647.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "medal-skill1-bronze.webp",
+            "pathfinder": "medal-skill1-bronze.webp",
+            "maverick": "medal-skill1-bronze.webp"
+          },
+          "settings": {
+            "explorer": "MEDAL: bronze",
+            "pathfinder": "MEDAL: bronze",
+            "maverick": "MEDAL: bronze"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 2,
+      "lessonTitle": "The birthday promise",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "Choose Needs Over Wants",
+      "skillId": "put-needs-first",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "true-false",
+          "text": {
+            "explorer": "Lars promised Senna a $10 phone case for his birthday on Saturday. Lars only has the $5 he kept safe. True or false: he can buy the case now.",
+            "pathfinder": "Lars promised Senna a $10 phone case for his birthday on Saturday. Lars only has the $5 he kept safe. True or false: he can buy the case now.",
+            "maverick": "Lars promised Senna a $10 phone case for his birthday on Saturday. Lars only has the $5 he kept safe. True or false: he can buy the case now."
+          },
+          "image": {
+            "explorer": "lars-senna-chatting.webp",
+            "pathfinder": "lars-senna-chatting.webp",
+            "maverick": "lars-senna-chatting.webp"
+          },
+          "settings": {
+            "explorer": "CORRECT: False",
+            "pathfinder": "CORRECT: False",
+            "maverick": "CORRECT: False"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "bucket-sort",
+          "text": {
+            "explorer": "Lars spent his birthday money on things he wanted, and saved nothing for things he needs. Help him sort each item.",
+            "pathfinder": "Lars spent his birthday money on things he wanted, and saved nothing for things he needs. Help him sort each item.",
+            "maverick": "Lars spent his birthday money on things he wanted, and saved nothing for things he needs. Help him sort each item."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS:\nNEED: 📱 Phone case (birthday present)\nNEED: 🔌 Phone charging cable\nWANT: 🍫 Fancy chocolate bar\nWANT: 🎮 New game skin",
+            "pathfinder": "ITEMS:\nNEED: 📱 Phone case (birthday present)\nNEED: 🔌 Phone charging cable\nWANT: 🍫 Fancy chocolate bar\nWANT: 🎮 New game skin",
+            "maverick": "ITEMS:\nNEED: 📱 Phone case (birthday present)\nNEED: 🔌 Phone charging cable\nWANT: 🍫 Fancy chocolate bar\nWANT: 🎮 New game skin"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Needs come before wants. In each round, tap the one Lars should buy first.",
+            "pathfinder": "Needs come before wants. In each round, tap the one Lars should buy first.",
+            "maverick": "Needs come before wants. In each round, tap the one Lars should buy first."
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "ROUNDS:\nA: 📱 A new case for his own phone (his is fine) | B: 🎁 The phone case he promised Senna | CORRECT: B\nA: 💡 A bike light so he's seen at night | B: 🖱️ A glowing game mouse (his works fine) | CORRECT: A\nA: 🍱 Pay for lunch for all his friends | B: 🥪 Buy lunch at school for himself | CORRECT: B",
+            "pathfinder": "ROUNDS:\nA: 📱 A new case for his own phone (his is fine) | B: 🎁 The phone case he promised Senna | CORRECT: B\nA: 💡 A bike light so he's seen at night | B: 🖱️ A glowing game mouse (his works fine) | CORRECT: A\nA: 🍱 Pay for lunch for all his friends | B: 🥪 Buy lunch at school for himself | CORRECT: B",
+            "maverick": "ROUNDS:\nA: 📱 A new case for his own phone (his is fine) | B: 🎁 The phone case he promised Senna | CORRECT: B\nA: 💡 A bike light so he's seen at night | B: 🖱️ A glowing game mouse (his works fine) | CORRECT: A\nA: 🍱 Pay for lunch for all his friends | B: 🥪 Buy lunch at school for himself | CORRECT: B"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Lars writes a list of things he might buy next. Which ones does he really need? Select all that apply.",
+            "pathfinder": "Lars writes a list of things he might buy next. Which ones does he really need? Select all that apply.",
+            "maverick": "Lars writes a list of things he might buy next. Which ones does he really need? Select all that apply."
+          },
+          "image": {
+            "explorer": "lars-sitting-512.webp",
+            "pathfinder": "lars-sitting-512.webp",
+            "maverick": "lars-sitting-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🎒 A new schoolbag\nCHOICE B: 🥤 Fancy smoothie\nCHOICE C: 🔌 Phone charging cable\nCORRECT: A+C",
+            "pathfinder": "CHOICE A: 🎒 A new schoolbag\nCHOICE B: 🥤 Fancy smoothie\nCHOICE C: 🔌 Phone charging cable\nCORRECT: A+C",
+            "maverick": "CHOICE A: 🎒 A new schoolbag\nCHOICE B: 🥤 Fancy smoothie\nCHOICE C: 🔌 Phone charging cable\nCORRECT: A+C"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "allocation-slider",
+          "text": {
+            "explorer": "On Friday, Lars earns $10 helping Mom with chores. Now he has $15. The phone case costs $10.\n\nSlide to keep at least $10 for the gift.",
+            "pathfinder": "On Friday, Lars earns $10 helping Mom with chores. Now he has $15. The phone case costs $10.\n\nSlide to keep at least $10 for the gift.",
+            "maverick": "On Friday, Lars earns $10 helping Mom with chores. Now he has $15. The phone case costs $10.\n\nSlide to keep at least $10 for the gift."
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "TOTAL: 15\nKEEP: 10\nITEM: 🎁 Phone case",
+            "pathfinder": "TOTAL: 15\nKEEP: 10\nITEM: 🎁 Phone case",
+            "maverick": "TOTAL: 15\nKEEP: 10\nITEM: 🎁 Phone case"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "rank-order",
+          "text": {
+            "explorer": "Lars has $5 left after saving the gift money. At the store, a sign says 2-FOR-1 JUICE! Rank his choices from best to worst.",
+            "pathfinder": "Lars has $5 left after saving the gift money. At the store, a sign says 2-FOR-1 JUICE! Rank his choices from best to worst.",
+            "maverick": "Lars has $5 left after saving the gift money. At the store, a sign says 2-FOR-1 JUICE! Rank his choices from best to worst."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS: 🫙 Keep his $5 for things he needs.\nITEMS: 🧃 Buy the deal while it lasts.\nITEMS: 🙅 Borrow money to get the deal.\nORDER: keep, buy, borrow",
+            "pathfinder": "ITEMS: 🫙 Keep his $5 for things he needs.\nITEMS: 🧃 Buy the deal while it lasts.\nITEMS: 🙅 Borrow money to get the deal.\nORDER: keep, buy, borrow",
+            "maverick": "ITEMS: 🫙 Keep his $5 for things he needs.\nITEMS: 🧃 Buy the deal while it lasts.\nITEMS: 🙅 Borrow money to get the deal.\nORDER: keep, buy, borrow"
+          },
+          "error": {
+            "explorer": "Not quite! Keeping his $5 comes first. Try again!",
+            "pathfinder": "Not quite! Keeping his $5 comes first. Try again!",
+            "maverick": "Not quite! Keeping his $5 comes first. Try again!"
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "drag-to-target",
+          "text": {
+            "explorer": "It's Saturday, Senna's birthday, and the party is about to start. Drag the gift to Senna so Lars can keep his promise.",
+            "pathfinder": "It's Saturday, Senna's birthday, and the party is about to start. Drag the gift to Senna so Lars can keep his promise.",
+            "maverick": "It's Saturday, Senna's birthday, and the party is about to start. Drag the gift to Senna so Lars can keep his promise."
+          },
+          "image": {
+            "explorer": "lars-senna-sidebyside.webp",
+            "pathfinder": "lars-senna-sidebyside.webp",
+            "maverick": "lars-senna-sidebyside.webp"
+          },
+          "settings": {
+            "explorer": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! 🎉",
+            "pathfinder": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! 🎉",
+            "maverick": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! 🎉"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l2-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nMom says she'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan: a lemonade stand!",
+            "pathfinder": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nMom says she'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan: a lemonade stand!",
+            "maverick": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nMom says she'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan: a lemonade stand!"
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-1bea1ba2.mp3\nAUDIO_MS: 16039\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-1bea1ba2.mp3\nAUDIO_MS: 16039\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-1bea1ba2.mp3\nAUDIO_MS: 16039\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l2-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "First he needs a jug, paper cups, lemons and sugar. That costs money too, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him.",
+            "pathfinder": "First he needs a jug, paper cups, lemons and sugar. That costs money too, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him.",
+            "maverick": "First he needs a jug, paper cups, lemons and sugar. That costs money too, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-0177dd27.mp3\nAUDIO_MS: 11860\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling.",
+            "pathfinder": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-0177dd27.mp3\nAUDIO_MS: 11860\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling.",
+            "maverick": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-0177dd27.mp3\nAUDIO_MS: 11860\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "medal-skill2-bronze.webp",
+            "pathfinder": "medal-skill2-bronze.webp",
+            "maverick": "medal-skill2-bronze.webp"
+          },
+          "settings": {
+            "explorer": "MEDAL: bronze",
+            "pathfinder": "MEDAL: bronze",
+            "maverick": "MEDAL: bronze"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 3,
+      "lessonTitle": "The broken headphones",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Mia",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": "Senna"
+      },
+      "skillName": "Don't Spend Money You Don't Have",
+      "skillId": "keep-spare-cash",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Over the next few weeks, Lars spends every dollar on fun stuff and forgets to save. Then he breaks Senna's headphones by accident. What's the real problem?",
+            "pathfinder": "Over the next few weeks, Lars spends every dollar on fun stuff and forgets to save. Then he breaks Senna's headphones by accident. What's the real problem?",
+            "maverick": "Over the next few weeks, Lars spends every dollar on fun stuff and forgets to save. Then he breaks Senna's headphones by accident. What's the real problem?"
+          },
+          "image": {
+            "explorer": "lars-senna-chatting.webp",
+            "pathfinder": "lars-senna-chatting.webp",
+            "maverick": "lars-senna-chatting.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 💸 Lars has no money for a new pair.\nCHOICE B: 🩹 Lars tapes them up and makes them worse.\nCHOICE C: 🐶 A dog runs off with one of the pieces.\nCORRECT: A",
+            "pathfinder": "CHOICE A: 💸 Lars has no money for a new pair.\nCHOICE B: 🩹 Lars tapes them up and makes them worse.\nCHOICE C: 🐶 A dog runs off with one of the pieces.\nCORRECT: A",
+            "maverick": "CHOICE A: 💸 Lars has no money for a new pair.\nCHOICE B: 🩹 Lars tapes them up and makes them worse.\nCHOICE C: 🐶 A dog runs off with one of the pieces.\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "bucket-sort",
+          "text": {
+            "explorer": "Where did his money go? New headphones cost $20, but Lars's wallet is empty. Drag everything Lars bought into the Spent bucket.",
+            "pathfinder": "Where did his money go? New headphones cost $20, but Lars's wallet is empty. Drag everything Lars bought into the Spent bucket.",
+            "maverick": "Where did his money go? New headphones cost $20, but Lars's wallet is empty. Drag everything Lars bought into the Spent bucket."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "TOTAL: $20\nITEMS:\nSPENT: 🐙 Squishy toy - $10\nSPENT: 🫧 Slime - $5\nSPENT: 🍫 Snacks - $5",
+            "pathfinder": "TOTAL: $20\nITEMS:\nSPENT: 🐙 Squishy toy - $10\nSPENT: 🫧 Slime - $5\nSPENT: 🍫 Snacks - $5",
+            "maverick": "TOTAL: $20\nITEMS:\nSPENT: 🐙 Squishy toy - $10\nSPENT: 🫧 Slime - $5\nSPENT: 🍫 Snacks - $5"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "link-match",
+          "text": {
+            "explorer": "Senna isn't upset for long, but Lars hates this feeling. Senna says keeping Cash for Emergencies gives you choices. Match each event to what you could do.",
+            "pathfinder": "Senna isn't upset for long, but Lars hates this feeling. Senna says keeping Cash for Emergencies gives you choices. Match each event to what you could do.",
+            "maverick": "Senna isn't upset for long, but Lars hates this feeling. Senna says keeping Cash for Emergencies gives you choices. Match each event to what you could do."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "PAIRS:\nI broke my brother's headphones = I can replace them\nIt's my friend's birthday = I can buy a gift\nThere's a sale at the game store = I can buy my favorite game now",
+            "pathfinder": "PAIRS:\nI broke my brother's headphones = I can replace them\nIt's my friend's birthday = I can buy a gift\nThere's a sale at the game store = I can buy my favorite game now",
+            "maverick": "PAIRS:\nI broke my brother's headphones = I can replace them\nIt's my friend's birthday = I can buy a gift\nThere's a sale at the game store = I can buy my favorite game now"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "rank-order",
+          "text": {
+            "explorer": "Senna helps Lars make a plan, so he's never caught out again. Put the plan in order, first to last.",
+            "pathfinder": "Senna helps Lars make a plan, so he's never caught out again. Put the plan in order, first to last.",
+            "maverick": "Senna helps Lars make a plan, so he's never caught out again. Put the plan in order, first to last."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS: 💵 First, Lars gets his pocket money.\nITEMS: 🫙 Next, some goes in his Emergencies jar.\nITEMS: 🎮 Last, he spends what's left on fun.\nORDER: pocket, jar, fun",
+            "pathfinder": "ITEMS: 💵 First, Lars gets his pocket money.\nITEMS: 🫙 Next, some goes in his Emergencies jar.\nITEMS: 🎮 Last, he spends what's left on fun.\nORDER: pocket, jar, fun",
+            "maverick": "ITEMS: 💵 First, Lars gets his pocket money.\nITEMS: 🫙 Next, some goes in his Emergencies jar.\nITEMS: 🎮 Last, he spends what's left on fun.\nORDER: pocket, jar, fun"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l3-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Lars finds an old jam jar and writes 'Emergencies' on the lid. It's only a jar, but it's a start.\n\nEvery time he gets money, some goes in. Next time something breaks, he'll be ready.",
+            "pathfinder": "Lars finds an old jam jar and writes 'Emergencies' on the lid. It's only a jar, but it's a start.\n\nEvery time he gets money, some goes in. Next time something breaks, he'll be ready.",
+            "maverick": "Lars finds an old jam jar and writes 'Emergencies' on the lid. It's only a jar, but it's a start.\n\nEvery time he gets money, some goes in. Next time something breaks, he'll be ready."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-1119aa48.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-1119aa48.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-1119aa48.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "A few weeks later, Lars has saved $20, just enough for Senna's new headphones. Then he sees a $5 toy car. \"I'll buy it now and save more next week,\" he thinks. What should he do?",
+            "pathfinder": "A few weeks later, Lars has saved $20, just enough for Senna's new headphones. Then he sees a $5 toy car. \"I'll buy it now and save more next week,\" he thinks. What should he do?",
+            "maverick": "A few weeks later, Lars has saved $20, just enough for Senna's new headphones. Then he sees a $5 toy car. \"I'll buy it now and save more next week,\" he thinks. What should he do?"
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🚗 Buy the toy car and save $5 more next week.\nCHOICE B: 🎧 Buy Senna's new headphones first.\nCHOICE C: 🤞 Buy the toy car and hope headphones cost less.\nCORRECT: B",
+            "pathfinder": "CHOICE A: 🚗 Buy the toy car and save $5 more next week.\nCHOICE B: 🎧 Buy Senna's new headphones first.\nCHOICE C: 🤞 Buy the toy car and hope headphones cost less.\nCORRECT: B",
+            "maverick": "CHOICE A: 🚗 Buy the toy car and save $5 more next week.\nCHOICE B: 🎧 Buy Senna's new headphones first.\nCHOICE C: 🤞 Buy the toy car and hope headphones cost less.\nCORRECT: B"
+          },
+          "error": {
+            "explorer": "That's a trap! Stick to the plan, so there's no stress later. Try again!",
+            "pathfinder": "That's a trap! Stick to the plan, so there's no stress later. Try again!",
+            "maverick": "That's a trap! Stick to the plan, so there's no stress later. Try again!"
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "word-drop",
+          "text": {
+            "explorer": "Lars thinks: \"Because I didn't ______ it all, I had cash to ______ Senna's headphones right away.\"",
+            "pathfinder": "Lars thinks: \"Because I didn't ______ it all, I had cash to ______ Senna's headphones right away.\"",
+            "maverick": "Lars thinks: \"Because I didn't ______ it all, I had cash to ______ Senna's headphones right away.\""
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "OPTIONS: 💸 spend | 🫙 save | 🔧 replace | 🗑️ throw away\nCORRECT: 💸 spend, 🔧 replace",
+            "pathfinder": "OPTIONS: 💸 spend | 🫙 save | 🔧 replace | 🗑️ throw away\nCORRECT: 💸 spend, 🔧 replace",
+            "maverick": "OPTIONS: 💸 spend | 🫙 save | 🔧 replace | 🗑️ throw away\nCORRECT: 💸 spend, 🔧 replace"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Lars could replace the headphones because he kept some cash aside. Which are good things about keeping some money? Pick all that apply.",
+            "pathfinder": "Lars could replace the headphones because he kept some cash aside. Which are good things about keeping some money? Pick all that apply.",
+            "maverick": "Lars could replace the headphones because he kept some cash aside. Which are good things about keeping some money? Pick all that apply."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🔧 If something breaks, I can replace it.\nCHOICE B: 🎯 I can save for something big.\nCHOICE C: 😌 I worry less about paying for things.\nCHOICE D: 🛍️ I can buy every deal I see.\nCORRECT: A+B+C",
+            "pathfinder": "CHOICE A: 🔧 If something breaks, I can replace it.\nCHOICE B: 🎯 I can save for something big.\nCHOICE C: 😌 I worry less about paying for things.\nCHOICE D: 🛍️ I can buy every deal I see.\nCORRECT: A+B+C",
+            "maverick": "CHOICE A: 🔧 If something breaks, I can replace it.\nCHOICE B: 🎯 I can save for something big.\nCHOICE C: 😌 I worry less about paying for things.\nCHOICE D: 🛍️ I can buy every deal I see.\nCORRECT: A+B+C"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l3-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "The headphones are replaced, but Lars's startup money is still $0.\n\n\"Before you buy something, ask if you really want or need it,\" says his school friend Mason. \"That's how I've saved so much.\"",
+            "pathfinder": "The headphones are replaced, but Lars's startup money is still $0.\n\n\"Before you buy something, ask if you really want or need it,\" says his school friend Mason. \"That's how I've saved so much.\"",
+            "maverick": "The headphones are replaced, but Lars's startup money is still $0.\n\n\"Before you buy something, ask if you really want or need it,\" says his school friend Mason. \"That's how I've saved so much.\""
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-6fae301d.mp3\nAUDIO_MS: 10580\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug.",
+            "pathfinder": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-6fae301d.mp3\nAUDIO_MS: 10580\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug.",
+            "maverick": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-6fae301d.mp3\nAUDIO_MS: 10580\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "medal-skill3-bronze.webp",
+            "pathfinder": "medal-skill3-bronze.webp",
+            "maverick": "medal-skill3-bronze.webp"
+          },
+          "settings": {
+            "explorer": "MEDAL: bronze",
+            "pathfinder": "MEDAL: bronze",
+            "maverick": "MEDAL: bronze"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 4,
+      "lessonTitle": "The countdown trap",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": "Senna"
+      },
+      "skillName": "Catch Impulse Spending",
+      "skillId": "stop-and-think",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Lars's friends are all buying a game skin before the timer runs out. Mason sees Lars holding off. What is Lars really doing by waiting?",
+            "pathfinder": "Lars's friends are all buying a game skin before the timer runs out. Mason sees Lars holding off. What is Lars really doing by waiting?",
+            "maverick": "Lars's friends are all buying a game skin before the timer runs out. Mason sees Lars holding off. What is Lars really doing by waiting?"
+          },
+          "image": {
+            "explorer": "lars-mason-sidebyside.webp",
+            "pathfinder": "lars-mason-sidebyside.webp",
+            "maverick": "lars-mason-sidebyside.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🐢 Lars is just slow at clicking.\nCHOICE B: 🫙 Lars has run out of money.\nCHOICE C: 🧠 Lars stops to think.\nCORRECT: C",
+            "pathfinder": "CHOICE A: 🐢 Lars is just slow at clicking.\nCHOICE B: 🫙 Lars has run out of money.\nCHOICE C: 🧠 Lars stops to think.\nCORRECT: C",
+            "maverick": "CHOICE A: 🐢 Lars is just slow at clicking.\nCHOICE B: 🫙 Lars has run out of money.\nCHOICE C: 🧠 Lars stops to think.\nCORRECT: C"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "rank-order",
+          "text": {
+            "explorer": "The next day, Mason asks why Lars waited. \"First I saw the countdown. Then I remembered my buy freeze,\" Lars says. Put Lars's story in order, first to last.",
+            "pathfinder": "The next day, Mason asks why Lars waited. \"First I saw the countdown. Then I remembered my buy freeze,\" Lars says. Put Lars's story in order, first to last.",
+            "maverick": "The next day, Mason asks why Lars waited. \"First I saw the countdown. Then I remembered my buy freeze,\" Lars says. Put Lars's story in order, first to last."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS: ⏰ Lars sees the countdown.\nITEMS: 🧠 He remembers his buy freeze.\nITEMS: 🏷️ Next day, the skin is half price.\nITEMS: 😊 Lars is glad he waited.\nORDER: countdown, freeze, half, glad",
+            "pathfinder": "ITEMS: ⏰ Lars sees the countdown.\nITEMS: 🧠 He remembers his buy freeze.\nITEMS: 🏷️ Next day, the skin is half price.\nITEMS: 😊 Lars is glad he waited.\nORDER: countdown, freeze, half, glad",
+            "maverick": "ITEMS: ⏰ Lars sees the countdown.\nITEMS: 🧠 He remembers his buy freeze.\nITEMS: 🏷️ Next day, the skin is half price.\nITEMS: 😊 Lars is glad he waited.\nORDER: countdown, freeze, half, glad"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Lars's head is buzzing about the skin. In each round, which thought helps him stop and think?",
+            "pathfinder": "Lars's head is buzzing about the skin. In each round, which thought helps him stop and think?",
+            "maverick": "Lars's head is buzzing about the skin. In each round, which thought helps him stop and think?"
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ROUNDS:\nA: ⏰ It ends soon. I have to buy it now! | B: 💰 I can wait and maybe get it cheaper. | CORRECT: B\nA: 🔥 It looks so cool. I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: 👥 Everyone has it. I can't be left out! | B: 💬 I'll ask my friends if it's any good. | CORRECT: B",
+            "pathfinder": "ROUNDS:\nA: ⏰ It ends soon. I have to buy it now! | B: 💰 I can wait and maybe get it cheaper. | CORRECT: B\nA: 🔥 It looks so cool. I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: 👥 Everyone has it. I can't be left out! | B: 💬 I'll ask my friends if it's any good. | CORRECT: B",
+            "maverick": "ROUNDS:\nA: ⏰ It ends soon. I have to buy it now! | B: 💰 I can wait and maybe get it cheaper. | CORRECT: B\nA: 🔥 It looks so cool. I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: 👥 Everyone has it. I can't be left out! | B: 💬 I'll ask my friends if it's any good. | CORRECT: B"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "A bright sign outside a store grabs Lars's eye. Which parts of the sign are trying to make him rush? Pick all that apply.",
+            "pathfinder": "A bright sign outside a store grabs Lars's eye. Which parts of the sign are trying to make him rush? Pick all that apply.",
+            "maverick": "A bright sign outside a store grabs Lars's eye. Which parts of the sign are trying to make him rush? Pick all that apply."
+          },
+          "image": {
+            "explorer": "fishing-rod-sign.webp",
+            "pathfinder": "fishing-rod-sign.webp",
+            "maverick": "fishing-rod-sign.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: DON'T MISS OUT!\nCHOICE B: ONLY 2 LEFT!\nCHOICE C: ENDS TOMORROW!\nCHOICE D: Made in France\nCHOICE E: Quality checked\nCORRECT: A+B+C",
+            "pathfinder": "CHOICE A: DON'T MISS OUT!\nCHOICE B: ONLY 2 LEFT!\nCHOICE C: ENDS TOMORROW!\nCHOICE D: Made in France\nCHOICE E: Quality checked\nCORRECT: A+B+C",
+            "maverick": "CHOICE A: DON'T MISS OUT!\nCHOICE B: ONLY 2 LEFT!\nCHOICE C: ENDS TOMORROW!\nCHOICE D: Made in France\nCHOICE E: Quality checked\nCORRECT: A+B+C"
+          },
+          "error": {
+            "explorer": "Hold up! That's just sign info, not a rush trick. Try again!",
+            "pathfinder": "Hold up! That's just sign info, not a rush trick. Try again!",
+            "maverick": "Hold up! That's just sign info, not a rush trick. Try again!"
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Lars gets a limited-time offer for extra lives in his game. He remembers the skin that dropped to half price, so he pauses. What should he ask himself? Pick all that apply.",
+            "pathfinder": "Lars gets a limited-time offer for extra lives in his game. He remembers the skin that dropped to half price, so he pauses. What should he ask himself? Pick all that apply.",
+            "maverick": "Lars gets a limited-time offer for extra lives in his game. He remembers the skin that dropped to half price, so he pauses. What should he ask himself? Pick all that apply."
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: Do I really need this?\nCHOICE B: Do I want it now, or is something rushing me?\nCHOICE C: Will I have enough left for my goals?\nCHOICE D: CLICK HERE TO BUY NOW!\nCORRECT: A+B+C",
+            "pathfinder": "CHOICE A: Do I really need this?\nCHOICE B: Do I want it now, or is something rushing me?\nCHOICE C: Will I have enough left for my goals?\nCHOICE D: CLICK HERE TO BUY NOW!\nCORRECT: A+B+C",
+            "maverick": "CHOICE A: Do I really need this?\nCHOICE B: Do I want it now, or is something rushing me?\nCHOICE C: Will I have enough left for my goals?\nCHOICE D: CLICK HERE TO BUY NOW!\nCORRECT: A+B+C"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "drag-to-target",
+          "text": {
+            "explorer": "Lars keeps his money instead of buying extra lives. Drag his money from Spend Now to Save for Later.",
+            "pathfinder": "Lars keeps his money instead of buying extra lives. Drag his money from Spend Now to Save for Later.",
+            "maverick": "Lars keeps his money instead of buying extra lives. Drag his money from Spend Now to Save for Later."
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "SOURCE: 🛒 Spend Now\nTARGET: 🐷 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!",
+            "pathfinder": "SOURCE: 🛒 Spend Now\nTARGET: 🐷 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!",
+            "maverick": "SOURCE: 🛒 Spend Now\nTARGET: 🐷 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "savings-goal",
+          "text": {
+            "explorer": "Lars's startup money started at $0. He put the money from three things he skipped into his envelope. Drag each one into the box to watch his startup money climb.",
+            "pathfinder": "Lars's startup money started at $0. He put the money from three things he skipped into his envelope. Drag each one into the box to watch his startup money climb.",
+            "maverick": "Lars's startup money started at $0. He put the money from three things he skipped into his envelope. Drag each one into the box to watch his startup money climb."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: 🍫 Snacks at school ($2) 🎮 Extra lives bundle ($3) ✨ Glow sticks ($5)",
+            "pathfinder": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: 🍫 Snacks at school ($2) 🎮 Extra lives bundle ($3) ✨ Glow sticks ($5)",
+            "maverick": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: 🍫 Snacks at school ($2) 🎮 Extra lives bundle ($3) ✨ Glow sticks ($5)"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l4-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Lars grabs an envelope to keep his stand money separate. He writes 'Startup money needed: $15' on the front.",
+            "pathfinder": "Lars grabs an envelope to keep his stand money separate. He writes 'Startup money needed: $15' on the front.",
+            "maverick": "Lars grabs an envelope to keep his stand money separate. He writes 'Startup money needed: $15' on the front."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-f7791f5a.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-f7791f5a.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-f7791f5a.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l4-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "He tucks the envelope away. $10 saved, $5 to go.\n\nHe pictures his stand by the front gate, with a bright sign and a jug of lemonade.",
+            "pathfinder": "He tucks the envelope away. $10 saved, $5 to go.\n\nHe pictures his stand by the front gate, with a bright sign and a jug of lemonade.",
+            "maverick": "He tucks the envelope away. $10 saved, $5 to go.\n\nHe pictures his stand by the front gate, with a bright sign and a jug of lemonade."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-eb5702d1.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate.",
+            "pathfinder": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-eb5702d1.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate.",
+            "maverick": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-eb5702d1.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "medal-skill1-silver.webp",
+            "pathfinder": "medal-skill1-silver.webp",
+            "maverick": "medal-skill1-silver.webp"
+          },
+          "settings": {
+            "explorer": "MEDAL: silver",
+            "pathfinder": "MEDAL: silver",
+            "maverick": "MEDAL: silver"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 5,
+      "lessonTitle": "The special offer",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "Choose Needs Over Wants",
+      "skillId": "put-needs-first",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "word-drop",
+          "text": {
+            "explorer": "It's Mia's birthday, and the gelato shop has a birthday deal. Mia wants Lars to get one too. For Lars, his own gelato is a ______.",
+            "pathfinder": "It's Mia's birthday, and the gelato shop has a birthday deal. Mia wants Lars to get one too. For Lars, his own gelato is a ______.",
+            "maverick": "It's Mia's birthday, and the gelato shop has a birthday deal. Mia wants Lars to get one too. For Lars, his own gelato is a ______."
+          },
+          "image": {
+            "explorer": "lars-mia-sidebyside.webp",
+            "pathfinder": "lars-mia-sidebyside.webp",
+            "maverick": "lars-mia-sidebyside.webp"
+          },
+          "settings": {
+            "explorer": "OPTIONS: 🍦 want | ✅ need | 🧾 bill\nCORRECT: 🍦 want",
+            "pathfinder": "OPTIONS: 🍦 want | ✅ need | 🧾 bill\nCORRECT: 🍦 want",
+            "maverick": "OPTIONS: 🍦 want | ✅ need | 🧾 bill\nCORRECT: 🍦 want"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "A birthday gelato costs $5. The only money Lars has is his $10 startup money. What should he do?",
+            "pathfinder": "A birthday gelato costs $5. The only money Lars has is his $10 startup money. What should he do?",
+            "maverick": "A birthday gelato costs $5. The only money Lars has is his $10 startup money. What should he do?"
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🤝 Skip his own gelato and share Mia's.\nCHOICE B: 🍦 Buy his own, because the deal ends today.\nCORRECT: A",
+            "pathfinder": "CHOICE A: 🤝 Skip his own gelato and share Mia's.\nCHOICE B: 🍦 Buy his own, because the deal ends today.\nCORRECT: A",
+            "maverick": "CHOICE A: 🤝 Skip his own gelato and share Mia's.\nCHOICE B: 🍦 Buy his own, because the deal ends today.\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "true-false",
+          "text": {
+            "explorer": "True or false: the gelato is a need because the deal is only on today.",
+            "pathfinder": "True or false: the gelato is a need because the deal is only on today.",
+            "maverick": "True or false: the gelato is a need because the deal is only on today."
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "CORRECT: False",
+            "pathfinder": "CORRECT: False",
+            "maverick": "CORRECT: False"
+          },
+          "error": {
+            "explorer": "Nope! A deal that ends today doesn't turn a want into a need. Try again!",
+            "pathfinder": "Nope! A deal that ends today doesn't turn a want into a need. Try again!",
+            "maverick": "Nope! A deal that ends today doesn't turn a want into a need. Try again!"
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "bucket-sort",
+          "text": {
+            "explorer": "Sort each item into the right bucket. Is it a want or a need for Lars right now?",
+            "pathfinder": "Sort each item into the right bucket. Is it a want or a need for Lars right now?",
+            "maverick": "Sort each item into the right bucket. Is it a want or a need for Lars right now?"
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS:\nNEED: 🍋 Lemons for his stand\nNEED: 🥤 Paper cups for his stand\nWANT: 🍦 His own gelato\nWANT: 🍨 Extra gelato toppings",
+            "pathfinder": "ITEMS:\nNEED: 🍋 Lemons for his stand\nNEED: 🥤 Paper cups for his stand\nWANT: 🍦 His own gelato\nWANT: 🍨 Extra gelato toppings",
+            "maverick": "ITEMS:\nNEED: 🍋 Lemons for his stand\nNEED: 🥤 Paper cups for his stand\nWANT: 🍦 His own gelato\nWANT: 🍨 Extra gelato toppings"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "At the counter, a sign flashes: DEAL ENDS TODAY! Lars feels left out without his own cup. What should he do now?",
+            "pathfinder": "At the counter, a sign flashes: DEAL ENDS TODAY! Lars feels left out without his own cup. What should he do now?",
+            "maverick": "At the counter, a sign flashes: DEAL ENDS TODAY! Lars feels left out without his own cup. What should he do now?"
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🤝 Stick with sharing Mia's gelato.\nCHOICE B: 🍦 Buy his own before the deal ends.\nCORRECT: A",
+            "pathfinder": "CHOICE A: 🤝 Stick with sharing Mia's gelato.\nCHOICE B: 🍦 Buy his own before the deal ends.\nCORRECT: A",
+            "maverick": "CHOICE A: 🤝 Stick with sharing Mia's gelato.\nCHOICE B: 🍦 Buy his own before the deal ends.\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "rank-order",
+          "text": {
+            "explorer": "Look back at Lars's trip to the gelato shop. Put what he did in order, first to last.",
+            "pathfinder": "Look back at Lars's trip to the gelato shop. Put what he did in order, first to last.",
+            "maverick": "Look back at Lars's trip to the gelato shop. Put what he did in order, first to last."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS: 🤔 First, Lars asks if it's a want or a need.\nITEMS: 🤝 Then he asks Mia if they can share hers.\nITEMS: 🍦 Mia says yes, and they both dig in.\nORDER: want, share, yes",
+            "pathfinder": "ITEMS: 🤔 First, Lars asks if it's a want or a need.\nITEMS: 🤝 Then he asks Mia if they can share hers.\nITEMS: 🍦 Mia says yes, and they both dig in.\nORDER: want, share, yes",
+            "maverick": "ITEMS: 🤔 First, Lars asks if it's a want or a need.\nITEMS: 🤝 Then he asks Mia if they can share hers.\nITEMS: 🍦 Mia says yes, and they both dig in.\nORDER: want, share, yes"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Mia is happy to share her gelato, and Lars doesn't have to pay. What happens to his $10 startup money?",
+            "pathfinder": "Mia is happy to share her gelato, and Lars doesn't have to pay. What happens to his $10 startup money?",
+            "maverick": "Mia is happy to share her gelato, and Lars doesn't have to pay. What happens to his $10 startup money?"
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🫙 It stays safe at $10\nCHOICE B: 🍦 It drops to $5\nCORRECT: A",
+            "pathfinder": "CHOICE A: 🫙 It stays safe at $10\nCHOICE B: 🍦 It drops to $5\nCORRECT: A",
+            "maverick": "CHOICE A: 🫙 It stays safe at $10\nCHOICE B: 🍦 It drops to $5\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l5-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10.",
+            "pathfinder": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10.",
+            "maverick": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-434a6a51.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-434a6a51.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-434a6a51.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "medal-skill2-silver.webp",
+            "pathfinder": "medal-skill2-silver.webp",
+            "maverick": "medal-skill2-silver.webp"
+          },
+          "settings": {
+            "explorer": "MEDAL: silver",
+            "pathfinder": "MEDAL: silver",
+            "maverick": "MEDAL: silver"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 6,
+      "lessonTitle": "Stay Above Zero",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "Don't Spend Money You Don't Have",
+      "skillId": "keep-spare-cash",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Mia asks Lars to the movies. The ticket and popcorn cost $10, and Mom will pay half. Lars has saved $8 of pocket money. Can he pay his half?",
+            "pathfinder": "Mia asks Lars to the movies. The ticket and popcorn cost $10, and Mom will pay half. Lars has saved $8 of pocket money. Can he pay his half?",
+            "maverick": "Mia asks Lars to the movies. The ticket and popcorn cost $10, and Mom will pay half. Lars has saved $8 of pocket money. Can he pay his half?"
+          },
+          "image": {
+            "explorer": "lars-mia-chatting.webp",
+            "pathfinder": "lars-mia-chatting.webp",
+            "maverick": "lars-mia-chatting.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: ✅ Yes, he has enough\nCHOICE B: ❌ No, he's short\nCORRECT: A",
+            "pathfinder": "CHOICE A: ✅ Yes, he has enough\nCHOICE B: ❌ No, he's short\nCORRECT: A",
+            "maverick": "CHOICE A: ✅ Yes, he has enough\nCHOICE B: ❌ No, he's short\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Earlier this week, Lars nearly bought a $5 mini dart blaster. What would have happened if he had bought it?",
+            "pathfinder": "Earlier this week, Lars nearly bought a $5 mini dart blaster. What would have happened if he had bought it?",
+            "maverick": "Earlier this week, Lars nearly bought a $5 mini dart blaster. What would have happened if he had bought it?"
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 😬 He'd have $3, not enough for his $5 half.\nCHOICE B: 🎟️ The movie ticket would have been free.\nCHOICE C: 🎁 Mia would have paid for everything.\nCORRECT: A",
+            "pathfinder": "CHOICE A: 😬 He'd have $3, not enough for his $5 half.\nCHOICE B: 🎟️ The movie ticket would have been free.\nCHOICE C: 🎁 Mia would have paid for everything.\nCORRECT: A",
+            "maverick": "CHOICE A: 😬 He'd have $3, not enough for his $5 half.\nCHOICE B: 🎟️ The movie ticket would have been free.\nCHOICE C: 🎁 Mia would have paid for everything.\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "bucket-sort",
+          "text": {
+            "explorer": "Can Lars do it with his $8, without going below zero or borrowing? Sort each idea into Yes or No.",
+            "pathfinder": "Can Lars do it with his $8, without going below zero or borrowing? Sort each idea into Yes or No.",
+            "maverick": "Can Lars do it with his $8, without going below zero or borrowing? Sort each idea into Yes or No."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS:\nYES: 🎟️ Pay his $5 half\nYES: 💰 Keep $3 for later\nNO: 🎯 Dart blaster and the movie\nNO: 🙋 Borrow $5 from Senna",
+            "pathfinder": "ITEMS:\nYES: 🎟️ Pay his $5 half\nYES: 💰 Keep $3 for later\nNO: 🎯 Dart blaster and the movie\nNO: 🙋 Borrow $5 from Senna",
+            "maverick": "ITEMS:\nYES: 🎟️ Pay his $5 half\nYES: 💰 Keep $3 for later\nNO: 🎯 Dart blaster and the movie\nNO: 🙋 Borrow $5 from Senna"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "True or false? Check each statement against Lars's story.",
+            "pathfinder": "True or false? Check each statement against Lars's story.",
+            "maverick": "True or false? Check each statement against Lars's story."
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "ROUNDS:\nRound 1 | Lars kept his money earlier this week. Now he can pay his half. | True | False | CORRECT: A\nRound 2 | Mia will pay for everything because Lars spent all his money. | True | False | CORRECT: B\nRound 3 | Lars has to borrow from his brother Senna to go. | True | False | CORRECT: B",
+            "pathfinder": "ROUNDS:\nRound 1 | Lars kept his money earlier this week. Now he can pay his half. | True | False | CORRECT: A\nRound 2 | Mia will pay for everything because Lars spent all his money. | True | False | CORRECT: B\nRound 3 | Lars has to borrow from his brother Senna to go. | True | False | CORRECT: B",
+            "maverick": "ROUNDS:\nRound 1 | Lars kept his money earlier this week. Now he can pay his half. | True | False | CORRECT: A\nRound 2 | Mia will pay for everything because Lars spent all his money. | True | False | CORRECT: B\nRound 3 | Lars has to borrow from his brother Senna to go. | True | False | CORRECT: B"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Mom will pay half of the $10. Lars will pay his $5 from his $8. How much will he have left?",
+            "pathfinder": "Mom will pay half of the $10. Lars will pay his $5 from his $8. How much will he have left?",
+            "maverick": "Mom will pay half of the $10. Lars will pay his $5 from his $8. How much will he have left?"
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 💵 $3\nCHOICE B: 🎟️ $5\nCHOICE C: 🫙 $0\nCORRECT: A",
+            "pathfinder": "CHOICE A: 💵 $3\nCHOICE B: 🎟️ $5\nCHOICE C: 🫙 $0\nCORRECT: A",
+            "maverick": "CHOICE A: 💵 $3\nCHOICE B: 🎟️ $5\nCHOICE C: 🫙 $0\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "Not quite! $8 minus $5 leaves $3. Try again!",
+            "pathfinder": "Not quite! $8 minus $5 leaves $3. Try again!",
+            "maverick": "Not quite! $8 minus $5 leaves $3. Try again!"
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "rank-order",
+          "text": {
+            "explorer": "Look back at Lars's week. Put what happened in order, first to last.",
+            "pathfinder": "Look back at Lars's week. Put what happened in order, first to last.",
+            "maverick": "Look back at Lars's week. Put what happened in order, first to last."
+          },
+          "image": {
+            "explorer": "not allowed",
+            "pathfinder": "not allowed",
+            "maverick": "not allowed"
+          },
+          "settings": {
+            "explorer": "ITEMS: 🎯 Earlier this week, Lars skips a $5 dart blaster.\nITEMS: 📱 Today, Mia asks him to the movies.\nITEMS: ✅ Lars says yes. He can pay his half!\nORDER: blaster, asks, yes",
+            "pathfinder": "ITEMS: 🎯 Earlier this week, Lars skips a $5 dart blaster.\nITEMS: 📱 Today, Mia asks him to the movies.\nITEMS: ✅ Lars says yes. He can pay his half!\nORDER: blaster, asks, yes",
+            "maverick": "ITEMS: 🎯 Earlier this week, Lars skips a $5 dart blaster.\nITEMS: 📱 Today, Mia asks him to the movies.\nITEMS: ✅ Lars says yes. He can pay his half!\nORDER: blaster, asks, yes"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "drag-to-target",
+          "text": {
+            "explorer": "At the ticket counter, Mom pays her half. Drag Lars's $5 to the counter.",
+            "pathfinder": "At the ticket counter, Mom pays her half. Drag Lars's $5 to the counter.",
+            "maverick": "At the ticket counter, Mom pays her half. Drag Lars's $5 to the counter."
+          },
+          "image": {
+            "explorer": "lars-mia-sidebyside.webp",
+            "pathfinder": "lars-mia-sidebyside.webp",
+            "maverick": "lars-mia-sidebyside.webp"
+          },
+          "settings": {
+            "explorer": "SOURCE: 💵 $5\nTARGET: 🎟️ Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!",
+            "pathfinder": "SOURCE: 💵 $5\nTARGET: 🎟️ Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!",
+            "maverick": "SOURCE: 💵 $5\nTARGET: 🎟️ Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l6-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Lars paid his own half. No borrowing, no stress.\n\nHis startup money stayed at $10, and he still has $3 spare.",
+            "pathfinder": "Lars paid his own half. No borrowing, no stress.\n\nHis startup money stayed at $10, and he still has $3 spare.",
+            "maverick": "Lars paid his own half. No borrowing, no stress.\n\nHis startup money stayed at $10, and he still has $3 spare."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-79bd0bb1.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-79bd0bb1.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-79bd0bb1.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l6-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "While they wait, Mia doodles a lemon on her ticket.\n\n\"I could design the sign for your stand,\" she says.",
+            "pathfinder": "While they wait, Mia doodles a lemon on her ticket.\n\n\"I could design the sign for your stand,\" she says.",
+            "maverick": "While they wait, Mia doodles a lemon on her ticket.\n\n\"I could design the sign for your stand,\" she says."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-97d75fab.mp3\nAUDIO_MS: 6113\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins.",
+            "pathfinder": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-97d75fab.mp3\nAUDIO_MS: 6113\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins.",
+            "maverick": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-97d75fab.mp3\nAUDIO_MS: 6113\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "medal-skill3-silver.webp",
+            "pathfinder": "medal-skill3-silver.webp",
+            "maverick": "medal-skill3-silver.webp"
+          },
+          "settings": {
+            "explorer": "MEDAL: silver",
+            "pathfinder": "MEDAL: silver",
+            "maverick": "MEDAL: silver"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l6-beat3",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "At the bus stop, Lars tells Mason his big news.\n\nMom told the neighbors, and lots of them want to buy lemonade!",
+            "pathfinder": "At the bus stop, Lars tells Mason his big news.\n\nMom told the neighbors, and lots of them want to buy lemonade!",
+            "maverick": "At the bus stop, Lars tells Mason his big news.\n\nMom told the neighbors, and lots of them want to buy lemonade!"
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-8dc460f1.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening.",
+            "pathfinder": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-8dc460f1.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening.",
+            "maverick": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-8dc460f1.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 7,
+      "lessonTitle": "Levelling up",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "",
+      "skillId": "",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "word-drop",
+          "text": {
+            "explorer": "Lars and Mia walk past a store with a slushie deal, on today only. Before reaching for his wallet, Lars ______.",
+            "pathfinder": "Lars and Mia walk past a store with a slushie deal, on today only. Before reaching for his wallet, Lars ______.",
+            "maverick": "Lars and Mia walk past a store with a slushie deal, on today only. Before reaching for his wallet, Lars ______."
+          },
+          "image": {
+            "explorer": "lars-mia-sidebyside.webp",
+            "pathfinder": "lars-mia-sidebyside.webp",
+            "maverick": "lars-mia-sidebyside.webp"
+          },
+          "settings": {
+            "explorer": "OPTIONS: 🧠 stops and thinks | 🛍️ buys it straight away | 🙋 asks Mia to pay\nCORRECT: 🧠 stops and thinks",
+            "pathfinder": "OPTIONS: 🧠 stops and thinks | 🛍️ buys it straight away | 🙋 asks Mia to pay\nCORRECT: 🧠 stops and thinks",
+            "maverick": "OPTIONS: 🧠 stops and thinks | 🛍️ buys it straight away | 🙋 asks Mia to pay\nCORRECT: 🧠 stops and thinks"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Mia is designing Lars's sign. Today they buy the poster board and markers together. Lars's share is $6. Is paying his share a want or a need?",
+            "pathfinder": "Mia is designing Lars's sign. Today they buy the poster board and markers together. Lars's share is $6. Is paying his share a want or a need?",
+            "maverick": "Mia is designing Lars's sign. Today they buy the poster board and markers together. Lars's share is $6. Is paying his share a want or a need?"
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: ✨ Want\nCHOICE B: ✅ Need\nCORRECT: B",
+            "pathfinder": "CHOICE A: ✨ Want\nCHOICE B: ✅ Need\nCORRECT: B",
+            "maverick": "CHOICE A: ✨ Want\nCHOICE B: ✅ Need\nCORRECT: B"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "multiple-choice",
+          "text": {
+            "explorer": "Paying his share comes before the slushie. Which skill is he using?",
+            "pathfinder": "Paying his share comes before the slushie. Which skill is he using?",
+            "maverick": "Paying his share comes before the slushie. Which skill is he using?"
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🧠 Catch Impulse Spending\nCHOICE B: ✅ Choose Needs Over Wants\nCHOICE C: 💰 Don't Spend Money You Don't Have\nCORRECT: B",
+            "pathfinder": "CHOICE A: 🧠 Catch Impulse Spending\nCHOICE B: ✅ Choose Needs Over Wants\nCHOICE C: 💰 Don't Spend Money You Don't Have\nCORRECT: B",
+            "maverick": "CHOICE A: 🧠 Catch Impulse Spending\nCHOICE B: ✅ Choose Needs Over Wants\nCHOICE C: 💰 Don't Spend Money You Don't Have\nCORRECT: B"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars has $8: his $3 spare plus this week's $5 pocket money. He pays his $6 share first. A slushie is $2. What should Lars do?",
+            "pathfinder": "Lars has $8: his $3 spare plus this week's $5 pocket money. He pays his $6 share first. A slushie is $2. What should Lars do?",
+            "maverick": "Lars has $8: his $3 spare plus this week's $5 pocket money. He pays his $6 share first. A slushie is $2. What should Lars do?"
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🥤 Buy his own slushie with his last $2\nCHOICE B: 🤝 Share one slushie with Mia\nCORRECT: B",
+            "pathfinder": "CHOICE A: 🥤 Buy his own slushie with his last $2\nCHOICE B: 🤝 Share one slushie with Mia\nCORRECT: B",
+            "maverick": "CHOICE A: 🥤 Buy his own slushie with his last $2\nCHOICE B: 🤝 Share one slushie with Mia\nCORRECT: B"
+          },
+          "error": {
+            "explorer": "Hold up! His own slushie would use his last $2. Try again!",
+            "pathfinder": "Hold up! His own slushie would use his last $2. Try again!",
+            "maverick": "Hold up! His own slushie would use his last $2. Try again!"
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "savings-goal",
+          "text": {
+            "explorer": "Let's check the other choice. Drag his $6 share and a $2 slushie into the box to see what Lars would have left.",
+            "pathfinder": "Let's check the other choice. Drag his $6 share and a $2 slushie into the box to see what Lars would have left.",
+            "maverick": "Let's check the other choice. Drag his $6 share and a $2 slushie into the box to see what Lars would have left."
+          },
+          "image": {
+            "explorer": "concept-wallet.webp",
+            "pathfinder": "concept-wallet.webp",
+            "maverick": "concept-wallet.webp"
+          },
+          "settings": {
+            "explorer": "AVAILABLE: $8\nITEMS: 🎨 Sign supplies ($6) 🥤 Slushie ($2)",
+            "pathfinder": "AVAILABLE: $8\nITEMS: 🎨 Sign supplies ($6) 🥤 Slushie ($2)",
+            "maverick": "AVAILABLE: $8\nITEMS: 🎨 Sign supplies ($6) 🥤 Slushie ($2)"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "What if the slushie cost $3? After his share, Lars has $2. Can he buy his own?",
+            "pathfinder": "What if the slushie cost $3? After his share, Lars has $2. Can he buy his own?",
+            "maverick": "What if the slushie cost $3? After his share, Lars has $2. Can he buy his own?"
+          },
+          "image": {
+            "explorer": "lars-mia-chatting.webp",
+            "pathfinder": "lars-mia-chatting.webp",
+            "maverick": "lars-mia-chatting.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: ❌ No, he's $1 short\nCHOICE B: 🙋 Yes, if Mia lends him $1\nCORRECT: A",
+            "pathfinder": "CHOICE A: ❌ No, he's $1 short\nCHOICE B: 🙋 Yes, if Mia lends him $1\nCORRECT: A",
+            "maverick": "CHOICE A: ❌ No, he's $1 short\nCHOICE B: 🙋 Yes, if Mia lends him $1\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "drag-to-target",
+          "text": {
+            "explorer": "Lars and Mia each pay $1 and share one slushie. Drag the slushie to Mia to share it.",
+            "pathfinder": "Lars and Mia each pay $1 and share one slushie. Drag the slushie to Mia to share it.",
+            "maverick": "Lars and Mia each pay $1 and share one slushie. Drag the slushie to Mia to share it."
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "SOURCE: 🥤 Slushie\nTARGET: 🤝 Share with Mia\nSUCCESS: Shared! And Lars still has $1.",
+            "pathfinder": "SOURCE: 🥤 Slushie\nTARGET: 🤝 Share with Mia\nSUCCESS: Shared! And Lars still has $1.",
+            "maverick": "SOURCE: 🥤 Slushie\nTARGET: 🤝 Share with Mia\nSUCCESS: Shared! And Lars still has $1."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "MEDAL: none",
+            "pathfinder": "MEDAL: none",
+            "maverick": "MEDAL: none"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l7-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Two straws, one slushie, and $1 still in Lars's pocket.\n\n\"Deals like that used to get me every time,\" Lars laughs.",
+            "pathfinder": "Two straws, one slushie, and $1 still in Lars's pocket.\n\n\"Deals like that used to get me every time,\" Lars laughs.",
+            "maverick": "Two straws, one slushie, and $1 still in Lars's pocket.\n\n\"Deals like that used to get me every time,\" Lars laughs."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-64709b83.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-64709b83.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-64709b83.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l7-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Saturday morning. Lars looks at the note above his desk: 'Mountain bike'.\n\nHis startup envelope stays at home. Today's money is just for the mall.",
+            "pathfinder": "Saturday morning. Lars looks at the note above his desk: 'Mountain bike'.\n\nHis startup envelope stays at home. Today's money is just for the mall.",
+            "maverick": "Saturday morning. Lars looks at the note above his desk: 'Mountain bike'.\n\nHis startup envelope stays at home. Today's money is just for the mall."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-f127370c.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'.",
+            "pathfinder": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-f127370c.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'.",
+            "maverick": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-f127370c.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l7-beat3",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "But today he's going to the mall with his friends.\n\nWhat he does with his money today is up to you!",
+            "pathfinder": "But today he's going to the mall with his friends.\n\nWhat he does with his money today is up to you!",
+            "maverick": "But today he's going to the mall with his friends.\n\nWhat he does with his money today is up to you!"
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-6582610d.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom.",
+            "pathfinder": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-6582610d.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom.",
+            "maverick": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-6582610d.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 8,
+      "lessonTitle": "Making choices",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "",
+      "skillId": "",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Lars has two weeks of pocket money, $10, at the mall. His startup money is safe at home. He sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?",
+            "pathfinder": "Lars has two weeks of pocket money, $10, at the mall. His startup money is safe at home. He sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?",
+            "maverick": "Lars has two weeks of pocket money, $10, at the mall. His startup money is safe at home. He sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?"
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🪀 Buy it. He wants it and will still have money left → SET cash=4 → GO Screen 1-buy\nCHOICE B: ✋ Don't buy it. He doesn't need it → SET cash=10 → GO Screen 1-keep",
+            "pathfinder": "CHOICE A: 🪀 Buy it. He wants it and will still have money left → SET cash=4 → GO Screen 1-buy\nCHOICE B: ✋ Don't buy it. He doesn't need it → SET cash=10 → GO Screen 1-keep",
+            "maverick": "CHOICE A: 🪀 Buy it. He wants it and will still have money left → SET cash=4 → GO Screen 1-buy\nCHOICE B: ✋ Don't buy it. He doesn't need it → SET cash=10 → GO Screen 1-keep"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 1,
+          "screenLabel": "1-buy",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars buys the yo-yo for $6. He has {cash} left.",
+            "pathfinder": "Lars buys the yo-yo for $6. He has {cash} left.",
+            "maverick": "Lars buys the yo-yo for $6. He has {cash} left."
+          },
+          "image": {
+            "explorer": "lars-walking-512.webp",
+            "pathfinder": "lars-walking-512.webp",
+            "maverick": "lars-walking-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 2",
+            "pathfinder": "CONTINUE → GO Screen 2",
+            "maverick": "CONTINUE → GO Screen 2"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 1,
+          "screenLabel": "1-keep",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars puts the yo-yo back and keeps walking. He still has {cash}.",
+            "pathfinder": "Lars puts the yo-yo back and keeps walking. He still has {cash}.",
+            "maverick": "Lars puts the yo-yo back and keeps walking. He still has {cash}."
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 2",
+            "pathfinder": "CONTINUE → GO Screen 2",
+            "maverick": "CONTINUE → GO Screen 2"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Lars has {cash} left when he passes the arcade. A game card costs $5. What do you want Lars to do?",
+            "pathfinder": "Lars has {cash} left when he passes the arcade. A game card costs $5. What do you want Lars to do?",
+            "maverick": "Lars has {cash} left when he passes the arcade. A game card costs $5. What do you want Lars to do?"
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "IF cash >= 5 THEN\nCHOICE A: 🕹️ Pay $5 and play → SET cash=cash-5 → GO Screen 2-played\nCHOICE B: 💰 Skip the arcade and keep the money → GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: 💭 See what would have happened if he hadn't bought the yo-yo → GO Screen 2-alt\nCHOICE B: 🚶 Skip the arcade → GO Screen 2-short",
+            "pathfinder": "IF cash >= 5 THEN\nCHOICE A: 🕹️ Pay $5 and play → SET cash=cash-5 → GO Screen 2-played\nCHOICE B: 💰 Skip the arcade and keep the money → GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: 💭 See what would have happened if he hadn't bought the yo-yo → GO Screen 2-alt\nCHOICE B: 🚶 Skip the arcade → GO Screen 2-short",
+            "maverick": "IF cash >= 5 THEN\nCHOICE A: 🕹️ Pay $5 and play → SET cash=cash-5 → GO Screen 2-played\nCHOICE B: 💰 Skip the arcade and keep the money → GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: 💭 See what would have happened if he hadn't bought the yo-yo → GO Screen 2-alt\nCHOICE B: 🚶 Skip the arcade → GO Screen 2-short"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2-played",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars pays $5 and plays with his friends. He has {cash} left.",
+            "pathfinder": "Lars pays $5 and plays with his friends. He has {cash} left.",
+            "maverick": "Lars pays $5 and plays with his friends. He has {cash} left."
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 3",
+            "pathfinder": "CONTINUE → GO Screen 3",
+            "maverick": "CONTINUE → GO Screen 3"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2-kept",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars skips the arcade, chats with his friends instead and keeps his {cash}.",
+            "pathfinder": "Lars skips the arcade, chats with his friends instead and keeps his {cash}.",
+            "maverick": "Lars skips the arcade, chats with his friends instead and keeps his {cash}."
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 3",
+            "pathfinder": "CONTINUE → GO Screen 3",
+            "maverick": "CONTINUE → GO Screen 3"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2-short",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars can't pay the $5, so he skips it and keeps his {cash}.",
+            "pathfinder": "Lars can't pay the $5, so he skips it and keeps his {cash}.",
+            "maverick": "Lars can't pay the $5, so he skips it and keeps his {cash}."
+          },
+          "image": {
+            "explorer": "lars-sitting-512.webp",
+            "pathfinder": "lars-sitting-512.webp",
+            "maverick": "lars-sitting-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 3",
+            "pathfinder": "CONTINUE → GO Screen 3",
+            "maverick": "CONTINUE → GO Screen 3"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2-alt",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "If Lars hadn't bought the yo-yo, he'd still have $10. He could pay for the card.",
+            "pathfinder": "If Lars hadn't bought the yo-yo, he'd still have $10. He could pay for the card.",
+            "maverick": "If Lars hadn't bought the yo-yo, he'd still have $10. He could pay for the card."
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 3",
+            "pathfinder": "CONTINUE → GO Screen 3",
+            "maverick": "CONTINUE → GO Screen 3"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Meanwhile, across town, Mia has $10. Her friends invite her to a skate park session that costs $5. What do you want Mia to do?",
+            "pathfinder": "Meanwhile, across town, Mia has $10. Her friends invite her to a skate park session that costs $5. What do you want Mia to do?",
+            "maverick": "Meanwhile, across town, Mia has $10. Her friends invite her to a skate park session that costs $5. What do you want Mia to do?"
+          },
+          "image": {
+            "explorer": "mia-thinking.webp",
+            "pathfinder": "mia-thinking.webp",
+            "maverick": "mia-thinking.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🛹 Yes, Mia joins in ($5) → GO Screen 4\nCHOICE B: 💰 No, she doesn't want to spend the money → GO Screen 4-alt",
+            "pathfinder": "CHOICE A: 🛹 Yes, Mia joins in ($5) → GO Screen 4\nCHOICE B: 💰 No, she doesn't want to spend the money → GO Screen 4-alt",
+            "maverick": "CHOICE A: 🛹 Yes, Mia joins in ($5) → GO Screen 4\nCHOICE B: 💰 No, she doesn't want to spend the money → GO Screen 4-alt"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Mia has $5 left after a fun afternoon at the skate park. When the group goes for a snack, she's glad she said yes.",
+            "pathfinder": "Mia has $5 left after a fun afternoon at the skate park. When the group goes for a snack, she's glad she said yes.",
+            "maverick": "Mia has $5 left after a fun afternoon at the skate park. When the group goes for a snack, she's glad she said yes."
+          },
+          "image": {
+            "explorer": "mia-celebrating.webp",
+            "pathfinder": "mia-celebrating.webp",
+            "maverick": "mia-celebrating.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 5",
+            "pathfinder": "CONTINUE → GO Screen 5",
+            "maverick": "CONTINUE → GO Screen 5"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4-alt",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "The next day, everyone is talking about the skate park, and the snack after. Mia still has her $10, but she missed all of it.",
+            "pathfinder": "The next day, everyone is talking about the skate park, and the snack after. Mia still has her $10, but she missed all of it.",
+            "maverick": "The next day, everyone is talking about the skate park, and the snack after. Mia still has her $10, but she missed all of it."
+          },
+          "image": {
+            "explorer": "mia-walking.webp",
+            "pathfinder": "mia-walking.webp",
+            "maverick": "mia-walking.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 5",
+            "pathfinder": "CONTINUE → GO Screen 5",
+            "maverick": "CONTINUE → GO Screen 5"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Later that afternoon, Lars has {cash}. He sees a cool water bottle for $4. What do you want Lars to do?",
+            "pathfinder": "Later that afternoon, Lars has {cash}. He sees a cool water bottle for $4. What do you want Lars to do?",
+            "maverick": "Later that afternoon, Lars has {cash}. He sees a cool water bottle for $4. What do you want Lars to do?"
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "IF cash >= 4 THEN\nCHOICE A: 🧴 Buy the water bottle ($4) → SET cash=cash-4 → GO Screen 5-buy\nCHOICE B: 💰 Don't buy the water bottle → GO Screen 5-save",
+            "pathfinder": "IF cash >= 4 THEN\nCHOICE A: 🧴 Buy the water bottle ($4) → SET cash=cash-4 → GO Screen 5-buy\nCHOICE B: 💰 Don't buy the water bottle → GO Screen 5-save",
+            "maverick": "IF cash >= 4 THEN\nCHOICE A: 🧴 Buy the water bottle ($4) → SET cash=cash-4 → GO Screen 5-buy\nCHOICE B: 💰 Don't buy the water bottle → GO Screen 5-save"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5-buy",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars buys the water bottle and fills it straight away. He has {cash} left.",
+            "pathfinder": "Lars buys the water bottle and fills it straight away. He has {cash} left.",
+            "maverick": "Lars buys the water bottle and fills it straight away. He has {cash} left."
+          },
+          "image": {
+            "explorer": "lars-walking-512.webp",
+            "pathfinder": "lars-walking-512.webp",
+            "maverick": "lars-walking-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 6",
+            "pathfinder": "CONTINUE → GO Screen 6",
+            "maverick": "CONTINUE → GO Screen 6"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5-save",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars skips the water bottle for now. He still has {cash}.",
+            "pathfinder": "Lars skips the water bottle for now. He still has {cash}.",
+            "maverick": "Lars skips the water bottle for now. He still has {cash}."
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 6",
+            "pathfinder": "CONTINUE → GO Screen 6",
+            "maverick": "CONTINUE → GO Screen 6"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "spotlight-rounds",
+          "text": {
+            "explorer": "Then Mason messages: some friends are going bowling tonight. A game is $5. Lars has {cash}. What do you want Lars to do?",
+            "pathfinder": "Then Mason messages: some friends are going bowling tonight. A game is $5. Lars has {cash}. What do you want Lars to do?",
+            "maverick": "Then Mason messages: some friends are going bowling tonight. A game is $5. Lars has {cash}. What do you want Lars to do?"
+          },
+          "image": {
+            "explorer": "lars-mason-chatting.webp",
+            "pathfinder": "lars-mason-chatting.webp",
+            "maverick": "lars-mason-chatting.webp"
+          },
+          "settings": {
+            "explorer": "IF cash >= 5 THEN\nCHOICE A: 🎳 Go bowling ($5) → SET cash=cash-5 → GO Screen 7\nCHOICE B: 🏠 Stay home and keep his money → GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: 🧩 Ask if everyone can play board games at Mason's place instead (free) → GO Screen 7-games\nCHOICE B: 🚶 Skip bowling → GO Screen 7-skip",
+            "pathfinder": "IF cash >= 5 THEN\nCHOICE A: 🎳 Go bowling ($5) → SET cash=cash-5 → GO Screen 7\nCHOICE B: 🏠 Stay home and keep his money → GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: 🧩 Ask if everyone can play board games at Mason's place instead (free) → GO Screen 7-games\nCHOICE B: 🚶 Skip bowling → GO Screen 7-skip",
+            "maverick": "IF cash >= 5 THEN\nCHOICE A: 🎳 Go bowling ($5) → SET cash=cash-5 → GO Screen 7\nCHOICE B: 🏠 Stay home and keep his money → GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: 🧩 Ask if everyone can play board games at Mason's place instead (free) → GO Screen 7-games\nCHOICE B: 🚶 Skip bowling → GO Screen 7-skip"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars bowls with the whole group. He has {cash} left.",
+            "pathfinder": "Lars bowls with the whole group. He has {cash} left.",
+            "maverick": "Lars bowls with the whole group. He has {cash} left."
+          },
+          "image": {
+            "explorer": "lars-celebrating-512.webp",
+            "pathfinder": "lars-celebrating-512.webp",
+            "maverick": "lars-celebrating-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 8",
+            "pathfinder": "CONTINUE → GO Screen 8",
+            "maverick": "CONTINUE → GO Screen 8"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7-home",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars keeps his {cash}, but he misses bowling with his friends.",
+            "pathfinder": "Lars keeps his {cash}, but he misses bowling with his friends.",
+            "maverick": "Lars keeps his {cash}, but he misses bowling with his friends."
+          },
+          "image": {
+            "explorer": "lars-sitting-512.webp",
+            "pathfinder": "lars-sitting-512.webp",
+            "maverick": "lars-sitting-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 8",
+            "pathfinder": "CONTINUE → GO Screen 8",
+            "maverick": "CONTINUE → GO Screen 8"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7-games",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "The group happily agrees, and Mason's mom makes popcorn. Lars joins in and still has {cash}.",
+            "pathfinder": "The group happily agrees, and Mason's mom makes popcorn. Lars joins in and still has {cash}.",
+            "maverick": "The group happily agrees, and Mason's mom makes popcorn. Lars joins in and still has {cash}."
+          },
+          "image": {
+            "explorer": "lars-mason-sidebyside.webp",
+            "pathfinder": "lars-mason-sidebyside.webp",
+            "maverick": "lars-mason-sidebyside.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 8",
+            "pathfinder": "CONTINUE → GO Screen 8",
+            "maverick": "CONTINUE → GO Screen 8"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7-skip",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars has {cash}, but he misses the night with his friends.",
+            "pathfinder": "Lars has {cash}, but he misses the night with his friends.",
+            "maverick": "Lars has {cash}, but he misses the night with his friends."
+          },
+          "image": {
+            "explorer": "lars-sitting-512.webp",
+            "pathfinder": "lars-sitting-512.webp",
+            "maverick": "lars-sitting-512.webp"
+          },
+          "settings": {
+            "explorer": "CONTINUE → GO Screen 8",
+            "pathfinder": "CONTINUE → GO Screen 8",
+            "maverick": "CONTINUE → GO Screen 8"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "MEDAL: none",
+            "pathfinder": "MEDAL: none",
+            "maverick": "MEDAL: none"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    },
+    {
+      "moduleNumber": 1,
+      "lessonNumber": 9,
+      "lessonTitle": "Skill check",
+      "moduleName": "Control Your Spending",
+      "level": 1,
+      "characters": {
+        "explorer": "Lars",
+        "pathfinder": "Holly",
+        "maverick": "Aiden",
+        "support": ""
+      },
+      "skillName": "",
+      "skillId": "",
+      "screens": [
+        {
+          "screenNumber": 1,
+          "screenLabel": "1",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Tap a skill to test yourself. When all three are done, tap Finish.",
+            "pathfinder": "Tap a skill to test yourself. When all three are done, tap Finish.",
+            "maverick": "Tap a skill to test yourself. When all three are done, tap Finish."
+          },
+          "image": {
+            "explorer": "lars-waving-512.webp",
+            "pathfinder": "lars-waving-512.webp",
+            "maverick": "lars-waving-512.webp"
+          },
+          "settings": {
+            "explorer": "HUB\nBUTTON: 🧠 Catch Impulse Spending → GO Screen 2\nBUTTON: ✅ Choose Needs Over Wants → GO Screen 4\nBUTTON: 💰 Don't Spend Money You Don't Have → GO Screen 6\nBUTTON: Finish → GO Screen 8 WHEN complete",
+            "pathfinder": "HUB\nBUTTON: 🧠 Catch Impulse Spending → GO Screen 2\nBUTTON: ✅ Choose Needs Over Wants → GO Screen 4\nBUTTON: 💰 Don't Spend Money You Don't Have → GO Screen 6\nBUTTON: Finish → GO Screen 8 WHEN complete",
+            "maverick": "HUB\nBUTTON: 🧠 Catch Impulse Spending → GO Screen 2\nBUTTON: ✅ Choose Needs Over Wants → GO Screen 4\nBUTTON: 💰 Don't Spend Money You Don't Have → GO Screen 6\nBUTTON: Finish → GO Screen 8 WHEN complete"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 2,
+          "screenLabel": "2",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Catch Impulse Spending means pausing before you spend. Which one is a pause?",
+            "pathfinder": "Catch Impulse Spending means pausing before you spend. Which one is a pause?",
+            "maverick": "Catch Impulse Spending means pausing before you spend. Which one is a pause?"
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 😴 Sleep on it first → GO Screen 3\nCHOICE B: ⏰ Buy before the timer ends → GO Screen 3\nCORRECT: A",
+            "pathfinder": "CHOICE A: 😴 Sleep on it first → GO Screen 3\nCHOICE B: ⏰ Buy before the timer ends → GO Screen 3\nCORRECT: A",
+            "maverick": "CHOICE A: 😴 Sleep on it first → GO Screen 3\nCHOICE B: ⏰ Buy before the timer ends → GO Screen 3\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 3,
+          "screenLabel": "3",
+          "gameType": "true-false",
+          "text": {
+            "explorer": "True or false: a flashing \"only 1 minute left\" deal is a good reason to buy straight away.",
+            "pathfinder": "True or false: a flashing \"only 1 minute left\" deal is a good reason to buy straight away.",
+            "maverick": "True or false: a flashing \"only 1 minute left\" deal is a good reason to buy straight away."
+          },
+          "image": {
+            "explorer": "lars-deciding-512.webp",
+            "pathfinder": "lars-deciding-512.webp",
+            "maverick": "lars-deciding-512.webp"
+          },
+          "settings": {
+            "explorer": "CORRECT: False\nCONTINUE → GO Screen 1",
+            "pathfinder": "CORRECT: False\nCONTINUE → GO Screen 1",
+            "maverick": "CORRECT: False\nCONTINUE → GO Screen 1"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 4,
+          "screenLabel": "4",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Choose Needs Over Wants means covering what you need before you spend on wants. Which one does Lars's stand need?",
+            "pathfinder": "Choose Needs Over Wants means covering what you need before you spend on wants. Which one does Lars's stand need?",
+            "maverick": "Choose Needs Over Wants means covering what you need before you spend on wants. Which one does Lars's stand need?"
+          },
+          "image": {
+            "explorer": "lars-hands-on-hips-512.webp",
+            "pathfinder": "lars-hands-on-hips-512.webp",
+            "maverick": "lars-hands-on-hips-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 🍋 Lemons for his stand → GO Screen 5\nCHOICE B: 🍬 A big bag of candy → GO Screen 5\nCORRECT: A",
+            "pathfinder": "CHOICE A: 🍋 Lemons for his stand → GO Screen 5\nCHOICE B: 🍬 A big bag of candy → GO Screen 5\nCORRECT: A",
+            "maverick": "CHOICE A: 🍋 Lemons for his stand → GO Screen 5\nCHOICE B: 🍬 A big bag of candy → GO Screen 5\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 5,
+          "screenLabel": "5",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Lars's school shoes have a hole, and he needs new ones. He also wants a new game skin. Which should he buy first?",
+            "pathfinder": "Lars's school shoes have a hole, and he needs new ones. He also wants a new game skin. Which should he buy first?",
+            "maverick": "Lars's school shoes have a hole, and he needs new ones. He also wants a new game skin. Which should he buy first?"
+          },
+          "image": {
+            "explorer": "lars-walking-512.webp",
+            "pathfinder": "lars-walking-512.webp",
+            "maverick": "lars-walking-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: 👟 School shoes → GO Screen 1\nCHOICE B: 🎮 Game skin → GO Screen 1\nCORRECT: A",
+            "pathfinder": "CHOICE A: 👟 School shoes → GO Screen 1\nCHOICE B: 🎮 Game skin → GO Screen 1\nCORRECT: A",
+            "maverick": "CHOICE A: 👟 School shoes → GO Screen 1\nCHOICE B: 🎮 Game skin → GO Screen 1\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 6,
+          "screenLabel": "6",
+          "gameType": "binary-choice",
+          "text": {
+            "explorer": "Don't Spend Money You Don't Have means never going below zero. Lars has $4. A comic costs $7. Can he buy it?",
+            "pathfinder": "Don't Spend Money You Don't Have means never going below zero. Lars has $4. A comic costs $7. Can he buy it?",
+            "maverick": "Don't Spend Money You Don't Have means never going below zero. Lars has $4. A comic costs $7. Can he buy it?"
+          },
+          "image": {
+            "explorer": "lars-sitting-512.webp",
+            "pathfinder": "lars-sitting-512.webp",
+            "maverick": "lars-sitting-512.webp"
+          },
+          "settings": {
+            "explorer": "CHOICE A: ❌ No, he's $3 short → GO Screen 7\nCHOICE B: 🙋 Yes, if he borrows $3 → GO Screen 7\nCORRECT: A",
+            "pathfinder": "CHOICE A: ❌ No, he's $3 short → GO Screen 7\nCHOICE B: 🙋 Yes, if he borrows $3 → GO Screen 7\nCORRECT: A",
+            "maverick": "CHOICE A: ❌ No, he's $3 short → GO Screen 7\nCHOICE B: 🙋 Yes, if he borrows $3 → GO Screen 7\nCORRECT: A"
+          },
+          "error": {
+            "explorer": "Hold up! Borrowing means spending money he doesn't have. Try again!",
+            "pathfinder": "Hold up! Borrowing means spending money he doesn't have. Try again!",
+            "maverick": "Hold up! Borrowing means spending money he doesn't have. Try again!"
+          }
+        },
+        {
+          "screenNumber": 7,
+          "screenLabel": "7",
+          "gameType": "word-drop",
+          "text": {
+            "explorer": "Lars kept his $10 startup money safe, then earned $5 doing chores. Now he has $15, so he can ______ his whole stand kit!",
+            "pathfinder": "Lars kept his $10 startup money safe, then earned $5 doing chores. Now he has $15, so he can ______ his whole stand kit!",
+            "maverick": "Lars kept his $10 startup money safe, then earned $5 doing chores. Now he has $15, so he can ______ his whole stand kit!"
+          },
+          "image": {
+            "explorer": "lars-thinking-512.webp",
+            "pathfinder": "lars-thinking-512.webp",
+            "maverick": "lars-thinking-512.webp"
+          },
+          "settings": {
+            "explorer": "OPTIONS: 💸 afford | 🙈 forget | 🗑️ lose\nCORRECT: 💸 afford\nCONTINUE → GO Screen 1",
+            "pathfinder": "OPTIONS: 💸 afford | 🙈 forget | 🗑️ lose\nCORRECT: 💸 afford\nCONTINUE → GO Screen 1",
+            "maverick": "OPTIONS: 💸 afford | 🙈 forget | 🗑️ lose\nCORRECT: 💸 afford\nCONTINUE → GO Screen 1"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 8,
+          "screenLabel": "8",
+          "gameType": "completion",
+          "text": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "MEDAL: gold",
+            "pathfinder": "MEDAL: gold",
+            "maverick": "MEDAL: gold"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l9-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\n\nOn Saturday, his stand opens by the front gate.",
+            "pathfinder": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\n\nOn Saturday, his stand opens by the front gate.",
+            "maverick": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\n\nOn Saturday, his stand opens by the front gate."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-44700b9d.mp3\nAUDIO_MS: 9639\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-44700b9d.mp3\nAUDIO_MS: 9639\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-44700b9d.mp3\nAUDIO_MS: 9639\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-l9-beat2",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "He's one step closer to his mountain bike!",
+            "pathfinder": "He's one step closer to his mountain bike!",
+            "maverick": "He's one step closer to his mountain bike!"
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-df899a4c.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
+            "pathfinder": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-df899a4c.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
+            "maverick": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-df899a4c.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade."
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        }
+      ]
+    }
+  ]
+}

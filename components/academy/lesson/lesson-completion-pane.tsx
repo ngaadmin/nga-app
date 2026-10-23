@@ -21,7 +21,10 @@ import {
   flyLessonTotalToCoinCounter,
   lessonMotionEnabled,
 } from "@/lib/academy/lessons/coin-counter-flight";
-import { presentedCompletionMedals } from "@/lib/academy/lessons/completion-screen";
+import {
+  moduleCloserGoldSkillLine,
+  presentedCompletionMedals,
+} from "@/lib/academy/lessons/completion-screen";
 import { quietLessonSkillLine } from "@/lib/dashboard/skill-trophies";
 import type { SkillTrophyTier } from "@/lib/dashboard/skill-trophies";
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
@@ -174,22 +177,10 @@ export function LessonCompletionPane({
   const skillName =
     skillNameOverride?.trim() ||
     resolveSkillName(achievementSkillId, skillLearnedLabel);
-  const closerSkillNames = isModuleCloser
-    ? medals
-        .map((medal) =>
-          medal.skillSlug
-            ? getSkillRegistryRecord(medal.skillSlug)?.skillName?.trim()
-            : undefined,
-        )
-        .filter((name): name is string => Boolean(name))
-    : [];
-  const skillLine =
-    closerSkillNames.length > 1
-      ? {
-          medal: "🥇",
-          text: `Skills unlocked: ${closerSkillNames.join(", ")}`,
-        }
-      : quietLessonSkillLine(skillMedalTier, skillName);
+  const closerLine = isModuleCloser
+    ? moduleCloserGoldSkillLine(moduleNumber ?? 1)
+    : null;
+  const skillLine = closerLine ?? quietLessonSkillLine(skillMedalTier, skillName);
   const portrait = celebratingPortrait(leadCharacter);
   const medalList = medals.map((medal) => medal.medalId).join(" ");
 
@@ -296,7 +287,7 @@ export function LessonCompletionPane({
           {skillLine ? (
             <p className="lesson-close-intro mt-1 flex min-h-[23px] w-full items-center justify-center gap-1.5 text-center font-sans text-[16px] font-medium leading-none text-[#5A6A99]">
               <span className="shrink-0 text-[21px] leading-none">{skillLine.medal}</span>
-              <span className={cn("leading-[20px]", closerSkillNames.length > 1 && "text-center leading-snug")}>
+              <span className={cn("leading-[20px]", closerLine && "text-center leading-snug")}>
                 {skillLine.text}
               </span>
             </p>

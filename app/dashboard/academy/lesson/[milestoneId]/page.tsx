@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AcademyLessonPlayer } from "@/components/academy/lesson/academy-lesson-player";
+import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import {
@@ -54,13 +55,22 @@ export default async function AcademyLessonPage({
     assertLessonPayloadAssets(payload, parsedId);
   }
 
+  const explorerPayload =
+    bundled?.moduleNumber === 1
+      ? loadExplorerM1Payload(bundled.lessonNumber)
+      : undefined;
+
   if (!hasShippedLesson(parsedId) && !payload) {
     notFound();
   }
 
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-white">
-      <AcademyLessonPlayer milestoneId={parsedId} payload={payload} />
+      <AcademyLessonPlayer
+        milestoneId={parsedId}
+        payload={payload}
+        explorerPayload={explorerPayload}
+      />
     </div>
   );
 }

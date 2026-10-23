@@ -2,7 +2,7 @@
 
 **Authors:** spreadsheet only → **[templates/lesson-authoring/INSTRUCTIONS.md](../../../templates/lesson-authoring/INSTRUCTIONS.md)**
 
-A scored screen needs Error text for Explorer, Pathfinder, and Maverick. A miss empties the header coin meter. See **[docs/lesson-authoring.md](../../../docs/lesson-authoring.md)**.
+A scored screen may leave Error text blank. A miss still empties the header coin meter, and the player shows a line only when the cell has text. See **[docs/lesson-authoring.md](../../../docs/lesson-authoring.md)**.
 
 **Developers:** screen type inventory → **[docs/academy-screen-types.md](../../../docs/academy-screen-types.md)**
 

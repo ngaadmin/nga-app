@@ -44,7 +44,7 @@ export function RankOrderScreen({
         onMistake={handleMistake}
         onSuccess={handleSuccess}
         onPersistentError={(message) => {
-          const copy = lessonFeedbackCopy(message) ?? "";
+          const copy = lessonFeedbackCopy(message) ?? null;
           setError(copy);
           if (copy) onPersistentError?.(copy);
         }}

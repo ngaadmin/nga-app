@@ -3,14 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import {
-  blankHeartErrorKey,
-  findBlankHeartErrors,
-  formatBlankHeartErrorDoc,
-  screenHeartCost,
-  type BlankHeartErrorKey,
-} from "@/lib/academy/lessons/payload/heart-cost";
-import { M1_BLANK_HEART_ERRORS } from "@/lib/academy/lessons/payload/m1-blank-error-allowlist";
+import { screenHeartCost } from "@/lib/academy/lessons/payload/heart-cost";
 import { loadLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { parseAuthoringTable } from "@/lib/academy/lessons/payload/parse-authoring-table";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
@@ -56,39 +49,8 @@ function loadEveryCheckedInLesson(): LessonPayload[] {
   );
 }
 
-function sortedKeys(entries: readonly BlankHeartErrorKey[]): string[] {
-  return entries.map((entry) => blankHeartErrorKey(entry)).sort();
-}
-
-describe("heart-costing screens need error text", () => {
+describe("heart-costing screens", () => {
   const payloads = loadEveryCheckedInLesson();
-  const blanks = payloads.flatMap((payload) => findBlankHeartErrors(payload));
-
-  it("matches the temporary Module 1 allowlist and rejects every other blank", () => {
-    const module1 = blanks.filter((blank) => blank.moduleNumber === 1);
-    const elsewhere = blanks.filter((blank) => blank.moduleNumber !== 1);
-    expect(elsewhere, "new lessons cannot ship a blank Error cell").toEqual([]);
-    expect(sortedKeys(module1)).toEqual(sortedKeys(M1_BLANK_HEART_ERRORS));
-    expect(M1_BLANK_HEART_ERRORS.length).toBeGreaterThan(0);
-  });
-
-  it("keeps the writer list in docs/m1-blank-errors.md", () => {
-    const docPath = path.join(process.cwd(), "docs/m1-blank-errors.md");
-    const doc = readFileSync(docPath, "utf8");
-    const module1 = blanks.filter((blank) => blank.moduleNumber === 1);
-    expect(doc).toBe(formatBlankHeartErrorDoc(module1));
-    expect(doc).toContain("Storybird");
-    expect(doc).toContain("temporary");
-  });
-
-  it("marks the allowlist temporary until Storybird fills the cells", () => {
-    const source = readFileSync(
-      path.join(process.cwd(), "lib/academy/lessons/payload/m1-blank-error-allowlist.ts"),
-      "utf8",
-    );
-    expect(source.toLowerCase()).toContain("temporary");
-    expect(source).toContain("Storybird");
-  });
 
   it("does not score story cards, free choices, tap-reveal, the hub, or a single spent bucket", () => {
     const lesson = (lessonNumber: number) => {

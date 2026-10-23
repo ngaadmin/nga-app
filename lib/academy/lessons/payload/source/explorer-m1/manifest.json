@@ -1,0 +1,87 @@
+[
+  {
+    "beat_id": "explorer-m1-l1-beat1",
+    "file": "explorer-m1-l1-beat1-1d29872b.mp3",
+    "durationMs": 10919
+  },
+  {
+    "beat_id": "explorer-m1-l1-beat2",
+    "file": "explorer-m1-l1-beat2-ea692647.mp3",
+    "durationMs": 8986
+  },
+  {
+    "beat_id": "explorer-m1-l2-beat1",
+    "file": "explorer-m1-l2-beat1-1bea1ba2.mp3",
+    "durationMs": 16039
+  },
+  {
+    "beat_id": "explorer-m1-l2-beat2",
+    "file": "explorer-m1-l2-beat2-0177dd27.mp3",
+    "durationMs": 11860
+  },
+  {
+    "beat_id": "explorer-m1-l3-beat1",
+    "file": "explorer-m1-l3-beat1-1119aa48.mp3",
+    "durationMs": 11233
+  },
+  {
+    "beat_id": "explorer-m1-l3-beat2",
+    "file": "explorer-m1-l3-beat2-6fae301d.mp3",
+    "durationMs": 10580
+  },
+  {
+    "beat_id": "explorer-m1-l4-beat1",
+    "file": "explorer-m1-l4-beat1-f7791f5a.mp3",
+    "durationMs": 7079
+  },
+  {
+    "beat_id": "explorer-m1-l4-beat2",
+    "file": "explorer-m1-l4-beat2-eb5702d1.mp3",
+    "durationMs": 8986
+  },
+  {
+    "beat_id": "explorer-m1-l5-beat1",
+    "file": "explorer-m1-l5-beat1-434a6a51.mp3",
+    "durationMs": 7079
+  },
+  {
+    "beat_id": "explorer-m1-l6-beat1",
+    "file": "explorer-m1-l6-beat1-79bd0bb1.mp3",
+    "durationMs": 7706
+  },
+  {
+    "beat_id": "explorer-m1-l6-beat2",
+    "file": "explorer-m1-l6-beat2-97d75fab.mp3",
+    "durationMs": 6113
+  },
+  {
+    "beat_id": "explorer-m1-l6-beat3",
+    "file": "explorer-m1-l6-beat3-8dc460f1.mp3",
+    "durationMs": 6426
+  },
+  {
+    "beat_id": "explorer-m1-l7-beat1",
+    "file": "explorer-m1-l7-beat1-64709b83.mp3",
+    "durationMs": 7706
+  },
+  {
+    "beat_id": "explorer-m1-l7-beat2",
+    "file": "explorer-m1-l7-beat2-f127370c.mp3",
+    "durationMs": 8986
+  },
+  {
+    "beat_id": "explorer-m1-l7-beat3",
+    "file": "explorer-m1-l7-beat3-6582610d.mp3",
+    "durationMs": 5799
+  },
+  {
+    "beat_id": "explorer-m1-l9-beat1",
+    "file": "explorer-m1-l9-beat1-44700b9d.mp3",
+    "durationMs": 9639
+  },
+  {
+    "beat_id": "explorer-m1-l9-beat2",
+    "file": "explorer-m1-l9-beat2-df899a4c.mp3",
+    "durationMs": 2586
+  }
+]

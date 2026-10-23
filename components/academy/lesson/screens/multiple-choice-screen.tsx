@@ -264,13 +264,13 @@ export function MultipleChoiceScreen({
     scheduleWrongReset(key);
   };
 
-  const resolveErrorCopy = (): string => {
+  const resolveErrorCopy = (): string | null => {
     const screen = screenRef.current;
     if (!isMultiCorrectRef.current) {
       const selected = optionByKeyRef.current.get(choiceRef.current ?? "");
-      return lessonFeedbackCopy(selected?.feedback, screen.wrongError) ?? "";
+      return lessonFeedbackCopy(selected?.feedback, screen.wrongError) ?? null;
     }
-    return lessonFeedbackCopy(screen.wrongError) ?? "";
+    return lessonFeedbackCopy(screen.wrongError) ?? null;
   };
 
   useEffect(() => {

@@ -253,7 +253,7 @@ function SpotlightGradedRounds({
 
     if (which !== round.correct) {
       flow.incrementMistake();
-      setError(lessonFeedbackCopy(round.error) ?? "");
+      setError(lessonFeedbackCopy(round.error) ?? null);
       if (onPersistentError) {
         const copy = lessonFeedbackCopy(round.error);
         if (copy) onPersistentError(copy);

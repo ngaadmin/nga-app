@@ -10,6 +10,7 @@ import { LessonRunner } from "@/components/academy/lesson/lesson-runner";
 import { PayloadLessonPlayer } from "@/components/academy/lesson/payload-lesson-player";
 import { useIntroRestoreGate } from "@/components/dashboard/hub-intro/use-intro-restore-gate";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
+import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
 import { useLessonFlow } from "@/lib/academy/lessons/hooks/use-lesson-flow";
 import { useLessonDefinition } from "@/lib/academy/lessons/hooks/use-lesson-definition";
@@ -36,17 +37,31 @@ type AcademyLessonPlayerProps = {
   milestoneId: number;
   /** When set, this lesson renders from the payload instead of a hard-coded file. */
   payload?: LessonPayload;
+  /** Explorer Module 1 proof of concept. Other cohorts keep `payload`. */
+  explorerPayload?: LessonPayload;
 };
 
-export function AcademyLessonPlayer({ milestoneId, payload }: AcademyLessonPlayerProps) {
+export function AcademyLessonPlayer({
+  milestoneId,
+  payload,
+  explorerPayload,
+}: AcademyLessonPlayerProps) {
   return (
     <SearchParamsBoundary>
-      <AcademyLessonPlayerGate milestoneId={milestoneId} payload={payload} />
+      <AcademyLessonPlayerGate
+        milestoneId={milestoneId}
+        payload={payload}
+        explorerPayload={explorerPayload}
+      />
     </SearchParamsBoundary>
   );
 }
 
-function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerProps) {
+function AcademyLessonPlayerGate({
+  milestoneId,
+  payload,
+  explorerPayload,
+}: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const { ready: progressReady } = useIntroRestoreGate();
   const router = useRouter();
@@ -112,7 +127,7 @@ function AcademyLessonPlayerGate({ milestoneId, payload }: AcademyLessonPlayerPr
     <AcademyLessonPlayerInner
       milestoneId={milestoneId}
       isPreview={isPreview}
-      payload={payload}
+      payload={selectLessonPayload(cohort, payload, explorerPayload)}
     />
   );
 }

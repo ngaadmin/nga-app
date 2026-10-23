@@ -1,9 +1,10 @@
 import { isModuleCloserLessonNumber } from "@/lib/dashboard/academy-state";
 import {
-  moduleCloserGoldMedals,
+  moduleCloserPresentedMedal,
   resolveCompletionMedalId,
   type MedalIllustrationId,
 } from "@/lib/academy/illustrations/medal-registry";
+import { moduleCloserSkillNames } from "@/lib/skills/lesson-skill-award";
 import type { CompletionScreenConfig } from "@/lib/academy/lessons/types";
 
 export type PresentedCompletionMedal = {
@@ -14,7 +15,8 @@ export type PresentedCompletionMedal = {
 /**
  * Medals the completion pane actually shows.
  * `MEDAL: none` suppresses the lesson-number fallback.
- * Lesson 9 golds all three module skills.
+ * Lesson 9 shows one gold medal. The three skill names are
+ * `moduleCloserGoldSkillLine`, not three medal pictures.
  */
 export function presentedCompletionMedals(args: {
   lessonNumber?: number;
@@ -30,7 +32,8 @@ export function presentedCompletionMedals(args: {
     typeof args.lessonNumber === "number" &&
     isModuleCloserLessonNumber(args.lessonNumber)
   ) {
-    return moduleCloserGoldMedals(args.moduleNumber ?? 1);
+    const medal = moduleCloserPresentedMedal(args.moduleNumber ?? 1);
+    return medal ? [medal] : [];
   }
   const medalId =
     args.authoredMedal && args.medalId
@@ -43,6 +46,21 @@ export function presentedCompletionMedals(args: {
           tier: args.skillMedalTier,
         });
   return medalId ? [{ medalId }] : [];
+}
+
+/** Lesson 9 close copy: one gold medal, three registry skill names. */
+export function moduleCloserGoldSkillLine(moduleNumber: number): {
+  medal: "🥇";
+  text: string;
+  names: string[];
+} | null {
+  const names = moduleCloserSkillNames(moduleNumber);
+  if (names.length === 0) return null;
+  return {
+    medal: "🥇",
+    text: `Turned gold: ${names.join(", ")}`,
+    names,
+  };
 }
 
 /**

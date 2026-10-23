@@ -1461,6 +1461,28 @@ export function mapPayloadScreen(
         ...picture,
       };
     }
+    case "scenario-beat": {
+      const credit = settingValue(settings, "CREDIT")?.trim();
+      const audioSrc = settingValue(settings, "AUDIO")?.trim();
+      const audioMsRaw = Number(settingValue(settings, "AUDIO_MS") ?? "");
+      const brief = settingValue(settings, "IMAGE_BRIEF")?.trim();
+      const audio = audioSrc
+        ? { src: audioSrc, durationMs: Number.isFinite(audioMsRaw) ? audioMsRaw : 0 }
+        : undefined;
+      return {
+        type: "narrative-bonus",
+        id,
+        narrative: text.trim(),
+        bonusXp: 0,
+        bonusTapLabel: "",
+        autoReadyWhenNoBonus: true,
+        advance: { mode: "auto-ready" },
+        ...(credit ? { credit } : {}),
+        ...(audio ? { audio } : {}),
+        ...(brief ? { illustration: { label: brief, alt: brief } } : {}),
+        ...picture,
+      };
+    }
     case "completion": {
       const medalSetting = settingValue(settings, "MEDAL");
       const leadCharacter = context.leadCharacter?.trim();

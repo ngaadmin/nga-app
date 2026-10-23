@@ -9,8 +9,7 @@ import {
 } from "@/lib/dashboard/academy-progress-storage";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import {
-  applyLessonSkillTierProgress,
-  applyPayloadSkillTierProgress,
+  awardSkillMedalsOnCashIn,
   resolveSkillSlugForMilestone,
   skillTierForLessonNumber,
   type EarnedSkillMedal,
@@ -64,8 +63,9 @@ export type UseLessonFlowOptions = {
   /** Count advances along the path the student takes, instead of the row index. */
   trackPathProgress?: boolean;
   /**
-   * Medal tier from a payload completion row. When set, Cash In stores this
-   * tier instead of the lesson-number unlock/bronze rule.
+   * Medal tier from a payload completion row. When set with a skill slug,
+   * Cash In stores that one tier. Lesson 9 ignores it and golds all three
+   * module skills.
    */
   skillAwardTier?: Exclude<SkillTrophyTier, "locked">;
 };
@@ -225,6 +225,21 @@ export function useLessonFlow({
     [clearScreenReady, trackPathProgress],
   );
 
+  const leaveAfterCashIn = useCallback(() => {
+    if (leavingAfterCashInRef.current) return;
+    leavingAfterCashInRef.current = true;
+    try {
+      router.push(exitHref);
+    } catch {
+      leavingAfterCashInRef.current = false;
+    }
+    if (!skipProgressWrites) {
+      window.setTimeout(() => {
+        void persistRegisteredProgressNow();
+      }, 0);
+    }
+  }, [exitHref, router, skipProgressWrites]);
+
   const handleNext = useCallback(
     (options?: { canAdvance?: boolean }) => {
       const canAdvance = options?.canAdvance ?? Boolean(screenReady[screenIndex]);
@@ -235,12 +250,16 @@ export function useLessonFlow({
         return;
       }
       if (screenIndex >= totalScreens - 1) {
+        if (cashInStartedRef.current) {
+          leaveAfterCashIn();
+          return;
+        }
         finishLessonRef.current();
         return;
       }
       setScreenIndex((current) => Math.min(totalScreens - 1, current + 1));
     },
-    [continueIndexByScreen, screenIndex, screenReady, setScreenIndex, totalScreens],
+    [continueIndexByScreen, leaveAfterCashIn, screenIndex, screenReady, setScreenIndex, totalScreens],
   );
 
   const handleCashInPoints = useCallback(async (): Promise<LessonCashInOutcome> => {
@@ -277,10 +296,12 @@ export function useLessonFlow({
       if (!alreadyCompleted) {
         const session = readGuestAccessSession();
         const cohort = session ? getSessionCurriculumCohort(session) : "explorer";
-        earnedMedals =
-          skillAwardTier && skillSlug
-            ? applyPayloadSkillTierProgress(skillSlug, skillAwardTier, cohort)
-            : applyLessonSkillTierProgress(milestoneId, cohort);
+        earnedMedals = awardSkillMedalsOnCashIn({
+          milestoneId,
+          masteryCohort: cohort,
+          skillSlug,
+          skillAwardTier,
+        });
         const updated = completeAcademyMilestone(milestoneId, milestones);
         saveAcademyMilestones(updated);
       }
@@ -342,18 +363,12 @@ export function useLessonFlow({
 
   const handleContinueAfterCashIn = useCallback(() => {
     if (!cashInStartedRef.current || leavingAfterCashInRef.current) return;
-    leavingAfterCashInRef.current = true;
-    try {
-      router.push(exitHref);
-    } catch {
-      leavingAfterCashInRef.current = false;
+    if (screenIndexRef.current < totalScreens - 1) {
+      setScreenIndex(screenIndexRef.current + 1);
+      return;
     }
-    if (!skipProgressWrites) {
-      window.setTimeout(() => {
-        void persistRegisteredProgressNow();
-      }, 0);
-    }
-  }, [exitHref, router, skipProgressWrites]);
+    leaveAfterCashIn();
+  }, [leaveAfterCashIn, setScreenIndex, totalScreens]);
   finishLessonRef.current = handleCashInPoints;
 
   const isLastScreen = screenIndex === totalScreens - 1;

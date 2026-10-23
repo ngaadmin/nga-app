@@ -50,7 +50,7 @@ export function BudgetSelectScreen({
         onIncomplete={handleIncomplete}
         onMistake={handleMistake}
         onPersistentError={(message) => {
-          const copy = lessonFeedbackCopy(message) ?? "";
+          const copy = lessonFeedbackCopy(message) ?? null;
           setError(copy);
           if (copy) onPersistentError?.(copy);
         }}

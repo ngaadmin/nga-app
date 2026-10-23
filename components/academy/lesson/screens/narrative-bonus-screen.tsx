@@ -71,6 +71,11 @@ export function NarrativeBonusScreen({
           {screen.successMessage}
         </p>
       ) : null}
+      {screen.credit ? (
+        <p className="mt-3 text-center font-sans text-xs font-medium text-[#5A6A99]">
+          {screen.credit}
+        </p>
+      ) : null}
       {hasBonus ? (
         <button
           type="button"

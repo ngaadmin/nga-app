@@ -90,6 +90,6 @@ These are sheet issues. The app should not invent a replacement sentence or rewr
 
 - Rank-order Error cells are empty: lesson 2 screen 6, lesson 5 screen 6, lesson 6 screen 6. Submit still counts a mistake.
 - Bucket-sort Error cells are empty: lesson 1 screen 4, lesson 2 screen 2, lesson 3 screens 2 and 4, lesson 4 screen 2, lesson 5 screen 4, lesson 6 screen 3.
-- Other empty Error cells on graded screens: lesson 1 screen 6 (hold), lesson 2 screen 3 and lesson 6 screen 4 (spotlight rounds), lesson 2 Gift box and lesson 4 Spend Now (drag), lesson 3 screen 3 (link-match), lesson 4 screen 7 (savings target), lesson 9 screen 7 (word-drop). The writer list is `docs/m1-blank-errors.md`. Lesson 3 screen 2 is a single Spent bucket, so a drop there does not empty the coin meter.
+- A graded screen may leave its Error cell blank. The miss still empties the coin meter, and the player does not show an empty feedback box. Lesson 3 screen 2 is a single Spent bucket, so a drop there does not empty the coin meter.
 - Lesson 7 and 8 completion rows point at `penny-fistpump.webp`. Those screens are marked medal none, so no medal is shown and that image is not placed on the completion screen.
 - Lesson 9’s settings also say `XP:` and `NODE:`. Completion still uses the standard lesson XP plus the perfect bonus when there are no mistakes.

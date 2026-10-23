@@ -30,8 +30,15 @@ import {
 } from "@/lib/academy/lessons/types";
 import { bonusRunUnitForScreen } from "@/lib/academy/lessons/bonus-run";
 import { cn } from "@/lib/utils/cn";
-import { useEffect, useLayoutEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { LessonShuffleScope } from "@/components/academy/lesson/hooks/use-play-seed";
+import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
+import { nextStoryAudioSrc } from "@/lib/academy/lessons/story-audio/next-clip";
+import {
+  STORY_BEAT_NEXT_LOCK_MS,
+  isStoryBeatScreen,
+  storyBeatNextEnabled,
+} from "@/lib/academy/lessons/story-audio/playback";
 
 type LessonRunnerProps = {
   content: ResolvedLessonContent;
@@ -69,11 +76,32 @@ export function LessonRunner({
   const isSkillHub = Boolean(activeScreen && "skillHub" in activeScreen && activeScreen.skillHub);
   const isLinkMatch = activeScreen?.type === "link-match";
   const roomyScreen = isRoomyLessonScreen(activeScreen);
+  const storyClip =
+    activeScreen?.type === "narrative-bonus" ? activeScreen.audio : undefined;
+  const storyCredit =
+    activeScreen?.type === "narrative-bonus" ? activeScreen.credit : undefined;
+  const storyPreload = nextStoryAudioSrc(content.screens, screenIndex);
+  const storyBeat = isStoryBeatScreen(activeScreen);
+  const beatKey = storyBeat ? activeScreen?.id ?? "" : "";
+  const [lockKey, setLockKey] = useState(beatKey);
+  const [beatElapsedMs, setBeatElapsedMs] = useState(0);
+  if (beatKey !== lockKey) {
+    setLockKey(beatKey);
+    setBeatElapsedMs(0);
+  }
 
   useLayoutEffect(() => {
     if (!activeScreen || activeScreen.type === "spotlight-rounds") return;
     setBonusRunUnit(bonusRunUnitForScreen(activeScreen, screenIndex));
   }, [activeScreen, screenIndex, setBonusRunUnit]);
+
+  useEffect(() => {
+    if (!beatKey) return;
+    const timer = window.setTimeout(() => {
+      setBeatElapsedMs(STORY_BEAT_NEXT_LOCK_MS);
+    }, STORY_BEAT_NEXT_LOCK_MS);
+    return () => window.clearTimeout(timer);
+  }, [beatKey]);
 
   useEffect(() => {
     const screen = content.screens[screenIndex];
@@ -103,6 +131,11 @@ export function LessonRunner({
     <LessonShuffleScope milestoneId={content.meta.milestoneId}>
     <LessonHintProvider>
     <div className="relative flex min-h-0 flex-1 flex-col">
+      <StoryAudioPlayer
+        clip={storyClip}
+        preloadSrc={storyPreload}
+        aboveCredit={Boolean(storyCredit)}
+      />
       <AcademyLessonShell
         currentScreenIndex={flow.screenIndex}
         totalScreens={content.meta.totalScreens}
@@ -112,9 +145,11 @@ export function LessonRunner({
         bonusStreak={flow.bonusStreak}
         bonusRuns={flow.bonusRuns}
         xpReward={content.rewards.xpReward}
-        canAdvance={
-          canAdvance ?? (flow.canAdvanceDefault && !isCompletionScreen)
-        }
+        canAdvance={storyBeatNextEnabled({
+          isStoryBeat: storyBeat,
+          screenReady: canAdvance ?? (flow.canAdvanceDefault && !isCompletionScreen),
+          elapsedMs: beatElapsedMs,
+        })}
         onNext={
           onNext ??
           (() => {

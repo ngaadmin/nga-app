@@ -492,10 +492,10 @@ async function assertMedals(page: Page, lesson: number): Promise<void> {
     return;
   }
   if (lesson === 9) {
-    await expect(medals).toHaveAttribute(
-      "data-completion-medals",
-      "medal-skill1-gold medal-skill2-gold medal-skill3-gold",
-    );
+    await expect(medals).toHaveAttribute("data-completion-medals", "medal-skill1-gold");
+    await expect(page.getByText(/Turned gold:/)).toContainText("Catch Impulse Spending");
+    await expect(page.getByText(/Turned gold:/)).toContainText("Choose Needs Over Wants");
+    await expect(page.getByText(/Turned gold:/)).toContainText("Don't Spend Money You Don't Have");
     return;
   }
   await expect(medals).toHaveCount(0);

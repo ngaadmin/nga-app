@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type ReactNode } from "react";
+import { createContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { LessonCoinRunMeter } from "@/components/academy/lesson/lesson-coin-run-meter";
 import {
   lessonCyanNextButtonClass,
@@ -9,7 +9,11 @@ import {
   lessonScreenInlinePaddingClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { pathProgressPercent } from "@/lib/academy/lessons/payload/lesson-graph";
+import { stopStoryAudio } from "@/lib/academy/lessons/story-audio/playback";
 import { cn } from "@/lib/utils/cn";
+
+/** Story beats portal their credit into the lesson footer, above Next. */
+export const StoryCreditSlotContext = createContext<HTMLElement | null>(null);
 
 type AcademyLessonShellProps = {
   currentScreenIndex: number;
@@ -70,8 +74,16 @@ export function AcademyLessonShell({
   const previousIndexRef = useRef(currentScreenIndex);
   const skippedPane = Math.abs(currentScreenIndex - previousIndexRef.current) > 1;
   previousIndexRef.current = currentScreenIndex;
+  const [creditSlot, setCreditSlot] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      stopStoryAudio();
+    };
+  }, []);
 
   return (
+    <StoryCreditSlotContext.Provider value={creditSlot}>
     <div
       className={cn(
         "mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden",
@@ -95,6 +107,9 @@ export function AcademyLessonShell({
         <Link
           href="/dashboard/academy"
           aria-label="Close lesson"
+          onClick={() => {
+            stopStoryAudio();
+          }}
           className="grid size-8 shrink-0 place-items-center rounded-full text-[#031F82] transition-colors hover:bg-[#E8F6FC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0CC1E0]"
         >
           <svg
@@ -147,7 +162,8 @@ export function AcademyLessonShell({
       </div>
 
       {hideFooter ? null : (
-        <footer className="flex shrink-0 justify-center bg-transparent px-5 pb-7 pt-2">
+        <footer className="flex shrink-0 flex-col items-center bg-transparent px-5 pb-7 pt-2">
+          <div ref={setCreditSlot} className="w-full" />
           {footerSlot !== undefined ? (
             footerSlot
           ) : (
@@ -155,6 +171,7 @@ export function AcademyLessonShell({
               type="button"
               onClick={onNext}
               disabled={!canAdvance}
+              aria-disabled={!canAdvance}
               className={cyanFooter ? lessonCyanNextButtonClass : lessonNextButtonClass}
             >
               Next
@@ -163,6 +180,7 @@ export function AcademyLessonShell({
         </footer>
       )}
     </div>
+    </StoryCreditSlotContext.Provider>
   );
 }
 

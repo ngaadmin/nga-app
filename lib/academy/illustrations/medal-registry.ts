@@ -133,7 +133,11 @@ export type ModuleCloserGoldMedal = {
   medalId: MedalIllustrationId;
 };
 
-/** Lesson 9 golds every skill in the module. Each one keeps its own medal file. */
+/**
+ * Gold medal file for each skill in the module.
+ * Lesson 9 turns all three skills gold in state. The close screen shows one
+ * of these files (`moduleCloserPresentedMedal`), not three pictures.
+ */
 export function moduleCloserGoldMedals(
   moduleNumber: number,
 ): ModuleCloserGoldMedal[] {
@@ -145,6 +149,13 @@ export function moduleCloserGoldMedals(
   });
 }
 
+/** The single gold medal shown on a module-closer completion screen. */
+export function moduleCloserPresentedMedal(
+  moduleNumber: number,
+): ModuleCloserGoldMedal | undefined {
+  return moduleCloserGoldMedals(moduleNumber)[0];
+}
+
 /** Module 1 convenience — prefer `medalIdForModuleLesson` for later modules. */
 export function medalIdForLessonNumber(
   lessonNumber: number,
@@ -154,7 +165,8 @@ export function medalIdForLessonNumber(
 
 /**
  * Completion medal follows the module ladder first: bronze on lessons 1–3,
- * silver on 4–6. Lesson 9 has no single medal file; it golds all three skills.
+ * silver on 4–6. Lesson 9 does not use this resolver. The close screen shows
+ * one gold medal from `moduleCloserPresentedMedal` and lists all three skills.
  */
 export function resolveCompletionMedalId(args: {
   medalId?: MedalIllustrationId;

@@ -222,9 +222,23 @@ export function getPairSheetImagePath(fileName: string): string | undefined {
  * Support-cast pose files such as `dash-celebrating` live next to the
  * `*-512.webp` art. Registered character ids are resolved earlier.
  */
+const MIA_POSE_NAMES = new Set([
+  "celebrating",
+  "happy",
+  "thinking",
+  "walking",
+  "working",
+]);
+
 export function characterPoseFilePath(fileName: string): string | undefined {
   const trimmed = fileName.trim().split(/[/\\]/).pop() ?? "";
   const stem = trimmed.replace(/\.(webp|png|jpe?g)$/i, "").toLowerCase();
+  const mia = /^mia-([a-z]+)$/.exec(stem);
+  if (mia && MIA_POSE_NAMES.has(mia[1] ?? "")) {
+    const pose = mia[1] ?? "";
+    const titled = `${pose.charAt(0).toUpperCase()}${pose.slice(1)}`;
+    return `${ILLUSTRATIONS_BASE}/characters/mia/Mia-${titled}.webp`;
+  }
   const match = /^(lars|holly|aiden|senna|immi|dash)-[a-z]+$/.exec(stem);
   if (!match || stem.endsWith("-512")) return undefined;
   return `${ILLUSTRATIONS_BASE}/characters/${match[1]}/${stem}-512.webp`;

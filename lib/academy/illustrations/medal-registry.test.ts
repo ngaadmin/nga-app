@@ -34,7 +34,7 @@ describe("lesson overview and screen 8 medals", () => {
     ).toBe("medal-skill1-bronze");
   });
 
-  it("does not pick one medal file for lesson 9", () => {
+  it("keeps a gold file for each lesson 9 skill and does not let the sheet pick the closer medal", () => {
     expect(medalIdForModuleLesson(1, 9)).toBeUndefined();
     expect(medalIdForModuleLesson(1, 7)).toBeUndefined();
     expect(medalIdForModuleLesson(1, 8)).toBeUndefined();

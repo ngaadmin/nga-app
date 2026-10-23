@@ -1,10 +1,13 @@
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
   lessonNumberForMilestoneId,
   levelGroupForMilestoneId,
 } from "@/lib/dashboard/academy-state";
 import {
   getSkillRegistryRecordByNumber,
+  skillsForLevel,
   SKILLS_PER_LEVEL,
+  type SkillLevelId,
 } from "@/lib/skills/skills-registry";
 
 export type LessonSkillAwardTier = "unlocked" | "bronze" | "silver" | "gold";
@@ -56,6 +59,20 @@ export function skillNumbersForModuleLesson(
   const slot = skillSlotForLessonNumber(lessonNumber);
   if (!slot) return [];
   return [base + slot];
+}
+
+/**
+ * Display names for the three skills a module turns gold on lesson 9.
+ * Names are the same for every cohort today. `cohort` is accepted so a
+ * future cohort-specific name still has one lookup.
+ */
+export function moduleCloserSkillNames(
+  moduleNumber: number,
+  cohort?: MasteryCohort,
+): string[] {
+  void cohort;
+  if (moduleNumber < 1 || moduleNumber > 6) return [];
+  return skillsForLevel(moduleNumber as SkillLevelId).map((skill) => skill.skillName);
 }
 
 export function lessonSkillAwards(

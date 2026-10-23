@@ -22,6 +22,7 @@ import {
   resolvePayloadLesson,
 } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
+import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 
 type PayloadLessonPlayerProps = {
   payload: LessonPayload;
@@ -88,6 +89,12 @@ function PayloadLessonPlayerReady({
     initialScreenIndex,
     continueIndexByScreen,
     trackPathProgress,
+    onWillShowScreen: (index) => {
+      const screen = content.screens[index];
+      if (screen?.type === "narrative-bonus" && screen.audio?.src) {
+        playStoryClipFromGesture(screen.audio.src);
+      }
+    },
   });
   const [completedSkills, setCompletedSkills] = useState<ReadonlySet<string>>(
     () => new Set(),

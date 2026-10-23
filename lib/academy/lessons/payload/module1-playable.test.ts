@@ -384,7 +384,7 @@ describe("module 1 screens from Screens1.csv", () => {
           skillMedalTier: completion?.type === "completion" ? completion.medalTier : "gold",
           suppressMedal: completion?.type === "completion" ? completion.suppressMedal : false,
         }).map((medal) => medal.medalId),
-      ).toEqual(["medal-skill1-gold", "medal-skill2-gold", "medal-skill3-gold"]);
+      ).toEqual(["medal-skill1-gold"]);
     }
   });
 

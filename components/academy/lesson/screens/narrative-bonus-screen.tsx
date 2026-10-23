@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { StoryCreditSlotContext } from "@/components/academy/lesson/academy-lesson-shell";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import {
   lessonGoldClaimClass,
@@ -14,6 +16,16 @@ import {
 } from "@/lib/academy/lessons/utils";
 import { cn } from "@/lib/utils/cn";
 import type { StandardScreenProps } from "./types";
+
+/** Small credit in the lesson footer, just above Next. Not part of the narration block. */
+function StoryBeatCredit({ credit }: { credit: string }) {
+  const slot = useContext(StoryCreditSlotContext);
+  if (!slot) return null;
+  return createPortal(
+    <p className="pb-1 text-center font-sans text-xs font-medium text-[#5A6A99]">{credit}</p>,
+    slot,
+  );
+}
 
 export function NarrativeBonusScreen({
   screen,
@@ -71,6 +83,7 @@ export function NarrativeBonusScreen({
           {screen.successMessage}
         </p>
       ) : null}
+      {screen.credit ? <StoryBeatCredit credit={screen.credit} /> : null}
       {hasBonus ? (
         <button
           type="button"

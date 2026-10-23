@@ -1,5 +1,6 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
+  isModuleCloserLessonNumber,
   lessonNumberForMilestoneId,
   levelGroupForMilestoneId,
 } from "@/lib/dashboard/academy-state";
@@ -160,8 +161,35 @@ export function applyLessonSkillTierProgress(
 }
 
 /**
+ * Cash-in medal write.
+ * Lesson 9 always golds all three module skills, even when the sheet names
+ * a single skill slug. Other lessons keep the payload tier when both the
+ * slug and the tier are set.
+ */
+export function awardSkillMedalsOnCashIn(args: {
+  milestoneId: number;
+  masteryCohort: MasteryCohort;
+  skillSlug?: string;
+  skillAwardTier?: Exclude<SkillTrophyTier, "locked"> | null;
+}): EarnedSkillMedal[] {
+  const lessonNumber = lessonNumberForMilestoneId(args.milestoneId);
+  if (isModuleCloserLessonNumber(lessonNumber)) {
+    return applyLessonSkillTierProgress(args.milestoneId, args.masteryCohort);
+  }
+  if (args.skillAwardTier && args.skillSlug) {
+    return applyPayloadSkillTierProgress(
+      args.skillSlug,
+      args.skillAwardTier,
+      args.masteryCohort,
+    );
+  }
+  return applyLessonSkillTierProgress(args.milestoneId, args.masteryCohort);
+}
+
+/**
  * Write the medal tier from a payload completion row.
  * Lesson-number rules (lessons 1–3 unlocked, 4–6 bronze) do not apply.
+ * Do not call this for lesson 9 — use `awardSkillMedalsOnCashIn`.
  */
 export function applyPayloadSkillTierProgress(
   skillSlug: string,

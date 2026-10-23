@@ -103,7 +103,11 @@ export function resolveLessonScreenIllustration(
     if (!src) return undefined;
     return {
       src,
-      alt: screen.illustration?.alt ?? pairFile.replace(/[-_]/g, " ").replace(/\.[a-z0-9]+$/i, ""),
+      alt:
+        screen.illustration?.alt ??
+        screen.illustration?.label ??
+        pairFile.replace(/[-_]/g, " ").replace(/\.[a-z0-9]+$/i, ""),
+      ...(screen.illustration?.label ? { label: screen.illustration.label } : {}),
       scale: screen.illustration?.scale,
     };
   }

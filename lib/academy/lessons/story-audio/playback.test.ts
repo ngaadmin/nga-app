@@ -108,6 +108,25 @@ describe("story beat autoplay", () => {
     expect(calls.at(-1)).toBe("pause");
   });
 
+  it("keeps a newer clip playing when an earlier play finishes", async () => {
+    const resolvers: Array<() => void> = [];
+    const { sink, calls } = fakeSink(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+    const playback = createStoryPlayback(sink);
+    const first = playback.playFromGesture("/clips/intro.mp3", false);
+    const second = playback.playFromGesture("/clips/l2.mp3", false);
+    resolvers[0]?.();
+    resolvers[1]?.();
+    expect(await first).toBe(false);
+    expect(await second).toBe(true);
+    expect(sink.src).toBe("/clips/l2.mp3");
+    expect(calls.at(-1)).toBe("play:/clips/l2.mp3:muted=false");
+  });
+
   it("pauses a play that finishes after stop", async () => {
     let release = () => {};
     const { sink, calls } = fakeSink(

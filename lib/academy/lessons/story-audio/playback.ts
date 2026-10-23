@@ -50,9 +50,12 @@ export function createStoryPlayback(sink: StoryAudioSink) {
   let blocked = false;
   let activeSrc = "";
   let playGeneration = 0;
+  /** A stop or mute owns the element. An older play() must not pause a newer one. */
+  let releaseStalePlay = false;
 
   const silence = (src: string) => {
     playGeneration += 1;
+    releaseStalePlay = true;
     activeSrc = src;
     sink.muted = true;
     sink.pause();
@@ -62,6 +65,7 @@ export function createStoryPlayback(sink: StoryAudioSink) {
 
   const beginPlay = (src: string, muted: boolean, restart: boolean) => {
     const generation = ++playGeneration;
+    releaseStalePlay = false;
     const switching = !sameClip(sink.src, src);
     const audible = Boolean(sink.src) && !sink.src.startsWith("data:");
     if ((switching || restart) && audible) {
@@ -87,7 +91,7 @@ export function createStoryPlayback(sink: StoryAudioSink) {
     return Promise.resolve(pending).then(
       () => {
         if (generation !== playGeneration) {
-          sink.pause();
+          if (releaseStalePlay) sink.pause();
           return false;
         }
         return true;
@@ -103,6 +107,7 @@ export function createStoryPlayback(sink: StoryAudioSink) {
 
   const stop = () => {
     playGeneration += 1;
+    releaseStalePlay = true;
     activeSrc = "";
     blocked = false;
     sink.pause();

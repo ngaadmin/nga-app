@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type ReactNode } from "react";
+import { createContext, useRef, useState, type ReactNode } from "react";
 import { LessonCoinRunMeter } from "@/components/academy/lesson/lesson-coin-run-meter";
 import {
   lessonCyanNextButtonClass,
@@ -10,6 +10,9 @@ import {
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { pathProgressPercent } from "@/lib/academy/lessons/payload/lesson-graph";
 import { cn } from "@/lib/utils/cn";
+
+/** Story beats portal their credit into the lesson footer, above Next. */
+export const StoryCreditSlotContext = createContext<HTMLElement | null>(null);
 
 type AcademyLessonShellProps = {
   currentScreenIndex: number;
@@ -70,8 +73,10 @@ export function AcademyLessonShell({
   const previousIndexRef = useRef(currentScreenIndex);
   const skippedPane = Math.abs(currentScreenIndex - previousIndexRef.current) > 1;
   previousIndexRef.current = currentScreenIndex;
+  const [creditSlot, setCreditSlot] = useState<HTMLDivElement | null>(null);
 
   return (
+    <StoryCreditSlotContext.Provider value={creditSlot}>
     <div
       className={cn(
         "mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden",
@@ -147,7 +152,8 @@ export function AcademyLessonShell({
       </div>
 
       {hideFooter ? null : (
-        <footer className="flex shrink-0 justify-center bg-transparent px-5 pb-7 pt-2">
+        <footer className="flex shrink-0 flex-col items-center bg-transparent px-5 pb-7 pt-2">
+          <div ref={setCreditSlot} className="w-full" />
           {footerSlot !== undefined ? (
             footerSlot
           ) : (
@@ -155,6 +161,7 @@ export function AcademyLessonShell({
               type="button"
               onClick={onNext}
               disabled={!canAdvance}
+              aria-disabled={!canAdvance}
               className={cyanFooter ? lessonCyanNextButtonClass : lessonNextButtonClass}
             >
               Next
@@ -163,6 +170,7 @@ export function AcademyLessonShell({
         </footer>
       )}
     </div>
+    </StoryCreditSlotContext.Provider>
   );
 }
 

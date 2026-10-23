@@ -68,6 +68,11 @@ export type UseLessonFlowOptions = {
    * module skills.
    */
   skillAwardTier?: Exclude<SkillTrophyTier, "locked">;
+  /**
+   * Runs synchronously inside the tap that moves to this screen, before React
+   * paints it. Story beats start their clip here.
+   */
+  onWillShowScreen?: (index: number) => void;
 };
 
 type PendingFlowAction =
@@ -85,6 +90,7 @@ export function useLessonFlow({
   skillAwardTier,
   continueIndexByScreen,
   trackPathProgress = false,
+  onWillShowScreen,
 }: UseLessonFlowOptions) {
   const router = useRouter();
   const { saveLessonCoinAward } = useDashboardWallet();
@@ -109,6 +115,8 @@ export function useLessonFlow({
   const cashInStartedRef = useRef(false);
   const leavingAfterCashInRef = useRef(false);
   const activeMilestoneRef = useRef(milestoneId);
+  const onWillShowScreenRef = useRef(onWillShowScreen);
+  onWillShowScreenRef.current = onWillShowScreen;
 
   useEffect(() => {
     router.prefetch(exitHref);
@@ -203,6 +211,7 @@ export function useLessonFlow({
     () => () => {
       if (flushTimeoutRef.current !== null) {
         window.clearTimeout(flushTimeoutRef.current);
+        flushTimeoutRef.current = null;
       }
     },
     [],
@@ -217,6 +226,7 @@ export function useLessonFlow({
       const current = screenIndexRef.current;
       const next = typeof value === "function" ? value(current) : value;
       if (next === current) return;
+      onWillShowScreenRef.current?.(next);
       clearScreenReady(next);
       screenIndexRef.current = next;
       if (trackPathProgress) setPathStep((step) => step + 1);

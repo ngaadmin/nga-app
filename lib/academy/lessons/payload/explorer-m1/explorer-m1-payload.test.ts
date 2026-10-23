@@ -49,7 +49,7 @@ describe("explorer module 1 payload", () => {
       }
     }
     expect(credited.has("explorer-m1-intro-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l1-beat1")).toBe(true);
+    expect(credited.has("explorer-m1-l1-beat1")).toBe(false);
     expect(credited.has("explorer-m1-l1-beat2")).toBe(false);
     expect(credited.has("explorer-m1-l6-beat3")).toBe(false);
     expect(credited.has("explorer-m1-l7-beat1")).toBe(true);
@@ -83,7 +83,7 @@ describe("explorer module 1 payload", () => {
     const firstLessonBeat = screens.find((screen) => screen.id === "explorer-m1-l1-beat1");
     expect(firstLessonBeat?.type).toBe("narrative-bonus");
     if (firstLessonBeat?.type !== "narrative-bonus") return;
-    expect(firstLessonBeat.credit).toBe(STORY_CREDIT);
+    expect(firstLessonBeat.credit).toBeUndefined();
     expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-76bfc19a.mp3");
   });
 

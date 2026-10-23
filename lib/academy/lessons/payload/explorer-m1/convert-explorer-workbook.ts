@@ -2,7 +2,10 @@ import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-les
 import { errorLineIsAcceptable, findBritishSpelling } from "@/lib/academy/lessons/payload/error-line";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { ACADEMY_AUDIO_BASE_URL, STORY_CREDIT } from "@/lib/academy/lessons/story-audio/audio-base";
-import { storyCreditBeatIds } from "@/lib/academy/lessons/story-audio/story-credit";
+import {
+  lessonNumberFromBeatId,
+  storyCreditBeatIds,
+} from "@/lib/academy/lessons/story-audio/story-credit";
 
 export type ExplorerManifestBeat = {
   beat_id: string;
@@ -36,7 +39,7 @@ function cell(row: readonly string[], index: number): string {
  * Turn the Explorer Module 1 workbook into one payload per lesson.
  * Scenario beats stay in sheet order. A beat that sits after a lesson's
  * completion row is part of that lesson, after the completion screen.
- * Credit is the first voiced beat of each beat-id lesson, not once per module.
+ * Credit is the first voiced beat of each lesson. The module intro counts as lesson 1.
  */
 export function convertExplorerModule1(input: {
   table: readonly (readonly string[])[];
@@ -160,12 +163,7 @@ export function convertExplorerModule1(input: {
     );
   }
 
-  const credits = storyCreditBeatIds(
-    input.narration.map((beat) => ({
-      beatId: beat.beatId,
-      voiced: manifestById.has(beat.beatId),
-    })),
-  );
+  const credits = storyCreditBeatIds(creditCandidates(input.narration, manifestById));
 
   const metaByLesson = new Map(
     (input.lessonMeta ?? defaultLessonMeta()).map((meta) => [meta.lessonNumber, meta]),
@@ -194,6 +192,33 @@ export function convertExplorerModule1(input: {
   }
 
   return payloads;
+}
+
+/**
+ * Narration order, with any voiced intro that is only in the audio manifest
+ * counted first. That intro is lesson 1's first voice, so a re-import does
+ * not put the credit back on the next beat.
+ */
+function creditCandidates(
+  narration: readonly ExplorerNarrationBeat[],
+  manifestById: ReadonlyMap<string, ExplorerManifestBeat>,
+): { beatId: string; voiced: boolean }[] {
+  const listed = new Set(narration.map((beat) => beat.beatId));
+  const intros = [...manifestById.values()]
+    .filter(
+      (beat) =>
+        !listed.has(beat.beat_id) &&
+        /-intro-beat/i.test(beat.beat_id) &&
+        lessonNumberFromBeatId(beat.beat_id) === 1,
+    )
+    .map((beat) => ({ beatId: beat.beat_id, voiced: Boolean(beat.file.trim()) }));
+  return [
+    ...intros,
+    ...narration.map((beat) => ({
+      beatId: beat.beatId,
+      voiced: manifestById.has(beat.beatId),
+    })),
+  ];
 }
 
 function applyCredit(screen: PayloadScreenRow, credits: ReadonlySet<string>): PayloadScreenRow {

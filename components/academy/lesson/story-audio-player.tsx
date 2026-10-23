@@ -1,27 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { STORY_AUDIO_MUTED_KEY } from "@/lib/academy/lessons/story-audio/audio-base";
+import { useEffect, useState } from "react";
 import { storyClipDurationLabel } from "@/lib/academy/lessons/story-audio/next-clip";
 import {
-  isStoryAudioUnlocked,
-  unlockStoryAudio,
-} from "@/lib/academy/lessons/story-audio/unlock";
+  installStoryAudioFallback,
+  playStoryClipFromGesture,
+  playStoryClipOnScreen,
+  readStoryMuted,
+  storyAudioElement,
+} from "@/lib/academy/lessons/story-audio/playback";
+import { STORY_AUDIO_MUTED_KEY } from "@/lib/academy/lessons/story-audio/audio-base";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
 type StoryAudioPlayerProps = {
   clip?: { src: string; durationMs: number };
   preloadSrc?: string;
+  /** The footer is taller when a credit sits above Next. */
+  aboveCredit?: boolean;
 };
-
-function readMuted(): boolean {
-  try {
-    return window.localStorage.getItem(STORY_AUDIO_MUTED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
 
 function writeMuted(muted: boolean): void {
   try {
@@ -33,84 +30,41 @@ function writeMuted(muted: boolean): void {
 
 /**
  * One narration player for the lesson. Text stays on the story screen.
- * The first tap or key unlocks sound, then a beat plays when it opens.
+ * A beat plays when it opens, after the lesson tap has unlocked sound.
  */
-export function StoryAudioPlayer({ clip, preloadSrc }: StoryAudioPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const loadedSrcRef = useRef("");
-  const mutedRef = useRef(false);
+export function StoryAudioPlayer({ clip, preloadSrc, aboveCredit = false }: StoryAudioPlayerProps) {
   const [ready, setReady] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
   const [muted, setMuted] = useState(false);
 
   useEffect(() => {
-    const element = new Audio();
-    element.preload = "auto";
-    audioRef.current = element;
+    storyAudioElement();
+    setMuted(readStoryMuted());
     setReady(true);
-    setUnlocked(isStoryAudioUnlocked());
-    const storedMuted = readMuted();
-    mutedRef.current = storedMuted;
-    setMuted(storedMuted);
-
-    const unlock = () => {
-      unlockStoryAudio();
-      setUnlocked(true);
-    };
-    document.addEventListener("pointerdown", unlock);
-    document.addEventListener("keydown", unlock);
-    return () => {
-      document.removeEventListener("pointerdown", unlock);
-      document.removeEventListener("keydown", unlock);
-      element.pause();
-      element.src = "";
-      audioRef.current = null;
-    };
+    return installStoryAudioFallback();
   }, []);
 
   useEffect(() => {
-    const element = audioRef.current;
+    const element = storyAudioElement();
     if (!element) return;
     element.muted = muted;
-    mutedRef.current = muted;
   }, [muted, ready]);
 
   useEffect(() => {
-    const element = audioRef.current;
-    if (!ready || !element) return;
-    element.pause();
-    if (!clip?.src) {
-      element.removeAttribute("src");
-      loadedSrcRef.current = "";
-      return;
-    }
-    if (loadedSrcRef.current !== clip.src) {
-      element.src = clip.src;
-      loadedSrcRef.current = clip.src;
-    }
-    element.muted = mutedRef.current;
-    if (!unlocked) return;
-    void element.play().catch(() => {});
-  }, [clip?.src, ready, unlocked]);
+    if (!ready) return;
+    void playStoryClipOnScreen(clip?.src);
+  }, [clip?.src, ready]);
 
   const replay = () => {
-    const element = audioRef.current;
-    if (!element || !clip?.src) return;
-    unlockStoryAudio();
-    setUnlocked(true);
-    if (loadedSrcRef.current !== clip.src) {
-      element.src = clip.src;
-      loadedSrcRef.current = clip.src;
-    }
-    element.muted = mutedRef.current;
-    element.currentTime = 0;
-    void element.play().catch(() => {});
+    if (!clip?.src) return;
+    playStoryClipFromGesture(clip.src);
   };
 
   const toggleMuted = () => {
     setMuted((current) => {
       const next = !current;
       writeMuted(next);
+      const element = storyAudioElement();
+      if (element) element.muted = next;
       return next;
     });
   };
@@ -123,7 +77,8 @@ export function StoryAudioPlayer({ clip, preloadSrc }: StoryAudioPlayerProps) {
       {clip ? (
         <div
           className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-20 flex justify-center px-5",
+            "pointer-events-none absolute inset-x-0 flex justify-center px-5",
+            aboveCredit ? "bottom-28" : "bottom-20",
             LAYER_CLASS.chrome,
           )}
         >

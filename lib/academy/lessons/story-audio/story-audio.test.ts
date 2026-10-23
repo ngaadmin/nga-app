@@ -24,9 +24,10 @@ describe("error line rules", () => {
 });
 
 describe("story credit", () => {
-  it("credits the first voiced beat of each lesson, including lesson 7 and 9", () => {
+  it("credits the first voiced beat of each lesson, and counts the intro as lesson 1", () => {
     const beats = [
       "explorer-m1-l1-beat1",
+      "explorer-m1-intro-beat1",
       "explorer-m1-l1-beat2",
       "explorer-m1-l6-beat1",
       "explorer-m1-l6-beat2",
@@ -37,7 +38,8 @@ describe("story credit", () => {
       "explorer-m1-l9-beat2",
     ].map((beatId) => ({ beatId, voiced: true }));
     const credited = storyCreditBeatIds(beats);
-    expect(credited.has("explorer-m1-l1-beat1")).toBe(true);
+    expect(credited.has("explorer-m1-intro-beat1")).toBe(true);
+    expect(credited.has("explorer-m1-l1-beat1")).toBe(false);
     expect(credited.has("explorer-m1-l1-beat2")).toBe(false);
     expect(credited.has("explorer-m1-l6-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l6-beat3")).toBe(false);
@@ -45,7 +47,16 @@ describe("story credit", () => {
     expect(credited.has("explorer-m1-l7-beat2")).toBe(false);
     expect(credited.has("explorer-m1-l9-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l9-beat2")).toBe(false);
-    expect(STORY_CREDIT).toBe("Created with Grok");
+    expect(STORY_CREDIT).toBe("Voice created with Grok");
+  });
+
+  it("credits lesson 1's first beat when that lesson has no intro", () => {
+    const credited = storyCreditBeatIds([
+      { beatId: "explorer-m1-l1-beat1", voiced: true },
+      { beatId: "explorer-m1-l1-beat2", voiced: true },
+    ]);
+    expect(credited.has("explorer-m1-l1-beat1")).toBe(true);
+    expect(credited.has("explorer-m1-l1-beat2")).toBe(false);
   });
 
   it("hides a zero duration instead of showing a countdown", () => {

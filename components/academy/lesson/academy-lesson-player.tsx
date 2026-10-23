@@ -31,6 +31,7 @@ import {
 } from "@/lib/dev/academy-dev-tools";
 import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
+import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { cn } from "@/lib/utils/cn";
 
 type AcademyLessonPlayerProps = {
@@ -188,6 +189,12 @@ function RegistryLessonPlayer({
     skipProgressWrites: isPreview,
     exitHref: isDesignShell ? "/dashboard/academy" : undefined,
     initialScreenIndex,
+    onWillShowScreen: (index) => {
+      const screen = content.screens[index];
+      if (screen?.type === "narrative-bonus" && screen.audio?.src) {
+        playStoryClipFromGesture(screen.audio.src);
+      }
+    },
   });
 
   const awardBonusXp = useCallback(

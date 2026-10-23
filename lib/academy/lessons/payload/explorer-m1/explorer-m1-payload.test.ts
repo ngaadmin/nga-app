@@ -106,6 +106,21 @@ describe("explorer module 1 payload", () => {
     if (firstLessonBeat?.type !== "narrative-bonus") return;
     expect(firstLessonBeat.credit).toBeUndefined();
     expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-76bfc19a.mp3");
+    expect(firstLessonBeat.pairImage).toBe("em1-02-l1r7-senna-coins-r3.webp");
+    expect(resolveLessonScreenIllustration(firstLessonBeat)).toMatchObject({
+      src: "/assets/illustrations/characters/pairs/em1-02-l1r7-senna-coins-r3.webp",
+    });
+    const secondLessonBeat = screens.find((screen) => screen.id === "explorer-m1-l1-beat2");
+    expect(secondLessonBeat?.type).toBe("narrative-bonus");
+    if (secondLessonBeat?.type !== "narrative-bonus") return;
+    expect(secondLessonBeat.credit).toBeUndefined();
+    expect(secondLessonBeat.pairImage).toBe("em1-03-l1r11-lars-lemonade-r3.webp");
+    expect(resolveLessonScreenIllustration(secondLessonBeat)).toMatchObject({
+      src: "/assets/illustrations/characters/pairs/em1-03-l1r11-lars-lemonade-r3.webp",
+    });
+    const numbered = screens.filter((screen) => screen.type !== "narrative-bonus");
+    expect(numbered.some((screen) => "pairImage" in screen && screen.pairImage === "em1-02-l1r7-senna-coins-r3.webp")).toBe(false);
+    expect(numbered.some((screen) => "pairImage" in screen && screen.pairImage === "em1-03-l1r11-lars-lemonade-r3.webp")).toBe(false);
   });
 
   it("places between-lesson beats after that lesson's completion screen", () => {

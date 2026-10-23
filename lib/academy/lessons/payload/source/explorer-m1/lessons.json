@@ -25,9 +25,9 @@
             "maverick": "Meet Lars. He's 11, loves riding his bike and he lives with Mom, Dad and his big brother Senna. Lars spends every dollar the minute it lands in his hands. Follow along with Lars as he goes from being broke, to earning and having money to buy what he really wants. You'll learn the same moves right alongside him."
           },
           "image": {
-            "explorer": "",
-            "pathfinder": "",
-            "maverick": ""
+            "explorer": "lemonade-family-scene-r10.webp",
+            "pathfinder": "lemonade-family-scene-r10.webp",
+            "maverick": "lemonade-family-scene-r10.webp"
           },
           "settings": {
             "explorer": "ID: explorer-m1-intro-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-intro-beat1-6a9361ab.mp3\nAUDIO_MS: 19226\nIMAGE_BRIEF: Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.\nCREDIT: Voice created with Grok\nFOLLOW: Are you ready? Let's go!",

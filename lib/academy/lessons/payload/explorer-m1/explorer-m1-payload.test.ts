@@ -1,9 +1,13 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
 import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
 import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
+import { missingLessonImages } from "@/lib/academy/lessons/payload/validate-lesson-assets";
+import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import { moduleCloserGoldSkillLine } from "@/lib/academy/lessons/completion-screen";
 import { STORY_CREDIT } from "@/lib/academy/lessons/story-audio/audio-base";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
@@ -74,11 +78,28 @@ describe("explorer module 1 payload", () => {
       src: "/academy-audio/explorer-m1/explorer-m1-intro-beat1-6a9361ab.mp3",
       durationMs: 19226,
     });
-    expect(intro.illustration).toEqual({
-      label:
-        "Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.",
-      alt: "Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.",
+    const brief =
+      "Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.";
+    const introSource = JSON.parse(
+      readFileSync(
+        path.join(process.cwd(), "lib/academy/lessons/payload/source/explorer-m1/intro.json"),
+        "utf8",
+      ),
+    ) as { image?: string };
+    expect(introSource.image).toBe("lemonade-family-scene-r10.webp");
+    expect(payload.screens[0]?.image).toEqual({
+      explorer: introSource.image,
+      pathfinder: introSource.image,
+      maverick: introSource.image,
     });
+    expect(intro.pairImage).toBe(introSource.image);
+    expect(intro.illustration).toEqual({ label: brief, alt: brief });
+    expect(resolveLessonScreenIllustration(intro)).toEqual({
+      src: "/assets/illustrations/characters/pairs/lemonade-family-scene-r10.webp",
+      alt: brief,
+      label: brief,
+    });
+    expect(missingLessonImages(payload)).toEqual([]);
     expect(screens[1]?.type).toBe("word-drop");
     const firstLessonBeat = screens.find((screen) => screen.id === "explorer-m1-l1-beat1");
     expect(firstLessonBeat?.type).toBe("narrative-bonus");

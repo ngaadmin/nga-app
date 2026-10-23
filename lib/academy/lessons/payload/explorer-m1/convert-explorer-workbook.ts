@@ -18,6 +18,17 @@ export type ExplorerNarrationBeat = {
   imageBrief: string;
 };
 
+/** Module intro. The workbook has no row for it, so the importer reads this instead. */
+export type ExplorerIntroBeat = {
+  beatId: string;
+  lessonNumber: number;
+  text: string;
+  /** Explorer Image filename. The same file is used for every cohort. */
+  image: string;
+  imageBrief: string;
+  follow: string;
+};
+
 const SCENARIO_LESSON = "scenario beat";
 
 function mirror(value: string): PayloadCohortCopy {
@@ -45,6 +56,7 @@ export function convertExplorerModule1(input: {
   table: readonly (readonly string[])[];
   narration: readonly ExplorerNarrationBeat[];
   manifest: readonly ExplorerManifestBeat[];
+  intro?: ExplorerIntroBeat;
   lessonMeta?: readonly Omit<LessonPayload, "screens">[];
 }): LessonPayload[] {
   const headers = input.table[0] ?? [];
@@ -163,6 +175,10 @@ export function convertExplorerModule1(input: {
     );
   }
 
+  if (input.intro) {
+    prependIntro(lessons, manifestById, input.intro);
+  }
+
   const credits = storyCreditBeatIds(creditCandidates(input.narration, manifestById));
 
   const metaByLesson = new Map(
@@ -221,13 +237,59 @@ function creditCandidates(
   ];
 }
 
+/**
+ * The intro is voiced in the audio manifest and is not a workbook row.
+ * Prepend it so a re-import keeps the beat, its art, and its follow line.
+ */
+function prependIntro(
+  lessons: Map<number, PayloadScreenRow[]>,
+  manifestById: ReadonlyMap<string, ExplorerManifestBeat>,
+  intro: ExplorerIntroBeat,
+): void {
+  const british = findBritishSpelling(`${intro.text}\n${intro.imageBrief}\n${intro.follow}`);
+  if (british) {
+    throw new Error(`Explorer intro uses British spelling "${british}".`);
+  }
+  const image = intro.image.trim();
+  if (!image || image.toLowerCase() === "not allowed" || image.includes("..")) {
+    throw new Error(`Explorer intro ${intro.beatId} is missing an image filename.`);
+  }
+  const audio = manifestById.get(intro.beatId);
+  if (!audio) {
+    throw new Error(`No audio manifest entry for ${intro.beatId}.`);
+  }
+  const screens = lessons.get(intro.lessonNumber);
+  if (!screens) {
+    throw new Error(`Explorer intro ${intro.beatId} has no lesson ${intro.lessonNumber}.`);
+  }
+  screens.unshift(
+    scenarioScreen({
+      beatId: intro.beatId,
+      text: intro.text.trim(),
+      brief: intro.imageBrief.trim(),
+      file: audio.file,
+      durationMs: audio.durationMs,
+      credit: false,
+      image,
+      follow: intro.follow.trim(),
+    }),
+  );
+}
+
 function applyCredit(screen: PayloadScreenRow, credits: ReadonlySet<string>): PayloadScreenRow {
   if (screen.gameType !== "scenario-beat") return screen;
   const id = screen.screenLabel;
   if (!credits.has(id)) return screen;
+  const current = screen.settings.explorer;
+  if (current.split("\n").some((line) => line.startsWith("CREDIT:"))) return screen;
+  const followAt = current.indexOf("\nFOLLOW:");
+  const next =
+    followAt >= 0
+      ? `${current.slice(0, followAt)}\nCREDIT: ${STORY_CREDIT}${current.slice(followAt)}`
+      : `${current}\nCREDIT: ${STORY_CREDIT}`;
   return {
     ...screen,
-    settings: mirror(`${screen.settings.explorer}\nCREDIT: ${STORY_CREDIT}`),
+    settings: mirror(next),
   };
 }
 
@@ -238,6 +300,8 @@ function scenarioScreen(args: {
   file: string;
   durationMs: number;
   credit: boolean;
+  image?: string;
+  follow?: string;
 }): PayloadScreenRow {
   const file = args.file.split(/[/\\]/).pop() ?? args.file;
   const lines = [
@@ -246,13 +310,14 @@ function scenarioScreen(args: {
     `AUDIO_MS: ${Math.max(0, Math.round(args.durationMs))}`,
     ...(args.brief ? [`IMAGE_BRIEF: ${args.brief}`] : []),
     ...(args.credit ? [`CREDIT: ${STORY_CREDIT}`] : []),
+    ...(args.follow ? [`FOLLOW: ${args.follow}`] : []),
   ];
   return {
     screenNumber: 0,
     screenLabel: args.beatId,
     gameType: "scenario-beat",
     text: mirror(args.text),
-    image: mirror(""),
+    image: mirror(args.image ?? ""),
     settings: mirror(lines.join("\n")),
     error: mirror(""),
   };

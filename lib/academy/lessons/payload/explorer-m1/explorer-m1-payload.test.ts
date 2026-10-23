@@ -121,6 +121,26 @@ describe("explorer module 1 payload", () => {
     const numbered = screens.filter((screen) => screen.type !== "narrative-bonus");
     expect(numbered.some((screen) => "pairImage" in screen && screen.pairImage === "em1-02-l1r7-senna-coins-r3.webp")).toBe(false);
     expect(numbered.some((screen) => "pairImage" in screen && screen.pairImage === "em1-03-l1r11-lars-lemonade-r3.webp")).toBe(false);
+
+    const lesson2 = loadExplorerM1Payload(2);
+    if (!lesson2) throw new Error("missing lesson 2");
+    expect(missingLessonImages(lesson2)).toEqual([]);
+    const lesson2Screens = resolvePayloadLesson(lesson2, "explorer", 2).screens;
+    const bikeBeat = lesson2Screens.find((screen) => screen.id === "explorer-m1-l2-beat1");
+    expect(bikeBeat?.type).toBe("narrative-bonus");
+    if (bikeBeat?.type !== "narrative-bonus") return;
+    expect(bikeBeat.pairImage).toBe("em1-04-l2r20-lars-mom-bike-note-r3.webp");
+    expect(resolveLessonScreenIllustration(bikeBeat)).toMatchObject({
+      src: "/assets/illustrations/characters/pairs/em1-04-l2r20-lars-mom-bike-note-r3.webp",
+    });
+    expect(
+      lesson2Screens.some(
+        (screen) =>
+          screen.type !== "narrative-bonus" &&
+          "pairImage" in screen &&
+          screen.pairImage === "em1-04-l2r20-lars-mom-bike-note-r3.webp",
+      ),
+    ).toBe(false);
   });
 
   it("places between-lesson beats after that lesson's completion screen", () => {

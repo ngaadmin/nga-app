@@ -48,12 +48,43 @@ describe("explorer module 1 payload", () => {
         }
       }
     }
+    expect(credited.has("explorer-m1-intro-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l1-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l1-beat2")).toBe(false);
     expect(credited.has("explorer-m1-l6-beat3")).toBe(false);
     expect(credited.has("explorer-m1-l7-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l9-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l9-beat2")).toBe(false);
+  });
+
+  it("opens lesson 1 with the module intro before the first practice screen", () => {
+    const payload = loadExplorerM1Payload(1);
+    if (!payload) throw new Error("missing lesson 1");
+    const screens = resolvePayloadLesson(payload, "explorer", 1).screens;
+    const intro = screens[0];
+    expect(intro?.type).toBe("narrative-bonus");
+    if (intro?.type !== "narrative-bonus") return;
+    expect(intro.id).toBe("explorer-m1-intro-beat1");
+    expect(intro.narrative).toBe(
+      "Meet Lars. He's 11, loves riding his bike and he lives with Mom, Dad and his big brother Senna. Lars spends every dollar the minute it lands in his hands. Follow along with Lars as he goes from being broke, to earning and having money to buy what he really wants. You'll learn the same moves right alongside him.",
+    );
+    expect(intro.successMessage).toBe("Are you ready? Let's go!");
+    expect(intro.credit).toBe(STORY_CREDIT);
+    expect(intro.audio).toEqual({
+      src: "/academy-audio/explorer-m1/explorer-m1-intro-beat1-6a9361ab.mp3",
+      durationMs: 19226,
+    });
+    expect(intro.illustration).toEqual({
+      label:
+        "Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.",
+      alt: "Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.",
+    });
+    expect(screens[1]?.type).toBe("word-drop");
+    const firstLessonBeat = screens.find((screen) => screen.id === "explorer-m1-l1-beat1");
+    expect(firstLessonBeat?.type).toBe("narrative-bonus");
+    if (firstLessonBeat?.type !== "narrative-bonus") return;
+    expect(firstLessonBeat.credit).toBe(STORY_CREDIT);
+    expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-76bfc19a.mp3");
   });
 
   it("places between-lesson beats after that lesson's completion screen", () => {

@@ -16,6 +16,31 @@
       "skillId": "stop-and-think",
       "screens": [
         {
+          "screenNumber": 0,
+          "screenLabel": "explorer-m1-intro-beat1",
+          "gameType": "scenario-beat",
+          "text": {
+            "explorer": "Meet Lars. He's 11, loves riding his bike and he lives with Mom, Dad and his big brother Senna. Lars spends every dollar the minute it lands in his hands. Follow along with Lars as he goes from being broke, to earning and having money to buy what he really wants. You'll learn the same moves right alongside him.",
+            "pathfinder": "Meet Lars. He's 11, loves riding his bike and he lives with Mom, Dad and his big brother Senna. Lars spends every dollar the minute it lands in his hands. Follow along with Lars as he goes from being broke, to earning and having money to buy what he really wants. You'll learn the same moves right alongside him.",
+            "maverick": "Meet Lars. He's 11, loves riding his bike and he lives with Mom, Dad and his big brother Senna. Lars spends every dollar the minute it lands in his hands. Follow along with Lars as he goes from being broke, to earning and having money to buy what he really wants. You'll learn the same moves right alongside him."
+          },
+          "image": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          },
+          "settings": {
+            "explorer": "ID: explorer-m1-intro-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-intro-beat1-6a9361ab.mp3\nAUDIO_MS: 19226\nIMAGE_BRIEF: Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.\nCREDIT: Created with Grok\nFOLLOW: Are you ready? Let's go!",
+            "pathfinder": "ID: explorer-m1-intro-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-intro-beat1-6a9361ab.mp3\nAUDIO_MS: 19226\nIMAGE_BRIEF: Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.\nCREDIT: Created with Grok\nFOLLOW: Are you ready? Let's go!",
+            "maverick": "ID: explorer-m1-intro-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-intro-beat1-6a9361ab.mp3\nAUDIO_MS: 19226\nIMAGE_BRIEF: Lars at home, grinning beside his bike, with Mom, Dad and his big brother Senna in the background, coins and a bill slipping through his fingers.\nCREDIT: Created with Grok\nFOLLOW: Are you ready? Let's go!"
+          },
+          "error": {
+            "explorer": "",
+            "pathfinder": "",
+            "maverick": ""
+          }
+        },
+        {
           "screenNumber": 1,
           "screenLabel": "1",
           "gameType": "word-drop",
@@ -55,9 +80,9 @@
             "maverick": "lars-sitting-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🍬 ...the candy is gone and the toy feels boring.\nCHOICE B: 💵 ...his $20 magically comes back.\nCORRECT: A",
-            "pathfinder": "CHOICE A: 🍬 ...the candy is gone and the toy feels boring.\nCHOICE B: 💵 ...his $20 magically comes back.\nCORRECT: A",
-            "maverick": "CHOICE A: 🍬 ...the candy is gone and the toy feels boring.\nCHOICE B: 💵 ...his $20 magically comes back.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83c\udf6c ...the candy is gone and the toy feels boring.\nCHOICE B: \ud83d\udcb5 ...his $20 magically comes back.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83c\udf6c ...the candy is gone and the toy feels boring.\nCHOICE B: \ud83d\udcb5 ...his $20 magically comes back.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83c\udf6c ...the candy is gone and the toy feels boring.\nCHOICE B: \ud83d\udcb5 ...his $20 magically comes back.\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -80,9 +105,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS:\nSHORT: 🍬 Sour worms\nSHORT: 🍿 Movie popcorn\nLONG: 🎧 Wireless headphones\nLONG: 🛹 Skateboard",
-            "pathfinder": "ITEMS:\nSHORT: 🍬 Sour worms\nSHORT: 🍿 Movie popcorn\nLONG: 🎧 Wireless headphones\nLONG: 🛹 Skateboard",
-            "maverick": "ITEMS:\nSHORT: 🍬 Sour worms\nSHORT: 🍿 Movie popcorn\nLONG: 🎧 Wireless headphones\nLONG: 🛹 Skateboard"
+            "explorer": "ITEMS:\nSHORT: \ud83c\udf6c Sour worms\nSHORT: \ud83c\udf7f Movie popcorn\nLONG: \ud83c\udfa7 Wireless headphones\nLONG: \ud83d\udef9 Skateboard",
+            "pathfinder": "ITEMS:\nSHORT: \ud83c\udf6c Sour worms\nSHORT: \ud83c\udf7f Movie popcorn\nLONG: \ud83c\udfa7 Wireless headphones\nLONG: \ud83d\udef9 Skateboard",
+            "maverick": "ITEMS:\nSHORT: \ud83c\udf6c Sour worms\nSHORT: \ud83c\udf7f Movie popcorn\nLONG: \ud83c\udfa7 Wireless headphones\nLONG: \ud83d\udef9 Skateboard"
           },
           "error": {
             "explorer": "",
@@ -105,9 +130,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS:\nSHORT: 🍕 Pizza slice\nSHORT: 🥤 Slushie with extra syrup\nLONG: 🎮 Game controller\nLONG: 🃏 Deck of cards",
-            "pathfinder": "ITEMS:\nSHORT: 🍕 Pizza slice\nSHORT: 🥤 Slushie with extra syrup\nLONG: 🎮 Game controller\nLONG: 🃏 Deck of cards",
-            "maverick": "ITEMS:\nSHORT: 🍕 Pizza slice\nSHORT: 🥤 Slushie with extra syrup\nLONG: 🎮 Game controller\nLONG: 🃏 Deck of cards"
+            "explorer": "ITEMS:\nSHORT: \ud83c\udf55 Pizza slice\nSHORT: \ud83e\udd64 Slushie with extra syrup\nLONG: \ud83c\udfae Game controller\nLONG: \ud83c\udccf Deck of cards",
+            "pathfinder": "ITEMS:\nSHORT: \ud83c\udf55 Pizza slice\nSHORT: \ud83e\udd64 Slushie with extra syrup\nLONG: \ud83c\udfae Game controller\nLONG: \ud83c\udccf Deck of cards",
+            "maverick": "ITEMS:\nSHORT: \ud83c\udf55 Pizza slice\nSHORT: \ud83e\udd64 Slushie with extra syrup\nLONG: \ud83c\udfae Game controller\nLONG: \ud83c\udccf Deck of cards"
           },
           "error": {
             "explorer": "",
@@ -130,9 +155,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-1d29872b.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-1d29872b.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-1d29872b.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-76bfc19a.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-76bfc19a.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l1-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat1-76bfc19a.mp3\nAUDIO_MS: 10919\nIMAGE_BRIEF: Lars sitting on the edge of a bed, watching his big brother Senna count dog-walking money into a jar at home.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -145,9 +170,9 @@
           "screenLabel": "5",
           "gameType": "spotlight-rounds",
           "text": {
-            "explorer": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
-            "pathfinder": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
-            "maverick": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?"
+            "explorer": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?",
+            "pathfinder": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?",
+            "maverick": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?"
           },
           "image": {
             "explorer": "lars-deciding-512.webp",
@@ -155,9 +180,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🧠 To trick his brain into buying fast.\nCHOICE B: ❤️ Because the game makers love him.\nCORRECT: A",
-            "pathfinder": "CHOICE A: 🧠 To trick his brain into buying fast.\nCHOICE B: ❤️ Because the game makers love him.\nCORRECT: A",
-            "maverick": "CHOICE A: 🧠 To trick his brain into buying fast.\nCHOICE B: ❤️ Because the game makers love him.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83e\udde0 To trick his brain into buying fast.\nCHOICE B: \u2764\ufe0f Because the game makers love him.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83e\udde0 To trick his brain into buying fast.\nCHOICE B: \u2764\ufe0f Because the game makers love him.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83e\udde0 To trick his brain into buying fast.\nCHOICE B: \u2764\ufe0f Because the game makers love him.\nCORRECT: A"
           },
           "error": {
             "explorer": "Don't fall for the flashing countdown! Try again!",
@@ -180,9 +205,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "HOLD: ❄️ HOLD TO FREEZE ❄️\nFROZEN: ❄️ FROZEN ❄️\nSUCCESS: Frozen! Now Lars has time to think.",
-            "pathfinder": "HOLD: ❄️ HOLD TO FREEZE ❄️\nFROZEN: ❄️ FROZEN ❄️\nSUCCESS: Frozen! Now Lars has time to think.",
-            "maverick": "HOLD: ❄️ HOLD TO FREEZE ❄️\nFROZEN: ❄️ FROZEN ❄️\nSUCCESS: Frozen! Now Lars has time to think."
+            "explorer": "HOLD: \u2744\ufe0f HOLD TO FREEZE \u2744\ufe0f\nFROZEN: \u2744\ufe0f FROZEN \u2744\ufe0f\nSUCCESS: Frozen! Now Lars has time to think.",
+            "pathfinder": "HOLD: \u2744\ufe0f HOLD TO FREEZE \u2744\ufe0f\nFROZEN: \u2744\ufe0f FROZEN \u2744\ufe0f\nSUCCESS: Frozen! Now Lars has time to think.",
+            "maverick": "HOLD: \u2744\ufe0f HOLD TO FREEZE \u2744\ufe0f\nFROZEN: \u2744\ufe0f FROZEN \u2744\ufe0f\nSUCCESS: Frozen! Now Lars has time to think."
           },
           "error": {
             "explorer": "",
@@ -205,9 +230,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 💰 Keep his $5 safe\nCHOICE B: 🎮 Buy the skin even faster\nCORRECT: A",
-            "pathfinder": "CHOICE A: 💰 Keep his $5 safe\nCHOICE B: 🎮 Buy the skin even faster\nCORRECT: A",
-            "maverick": "CHOICE A: 💰 Keep his $5 safe\nCHOICE B: 🎮 Buy the skin even faster\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83d\udcb0 Keep his $5 safe\nCHOICE B: \ud83c\udfae Buy the skin even faster\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83d\udcb0 Keep his $5 safe\nCHOICE B: \ud83c\udfae Buy the skin even faster\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83d\udcb0 Keep his $5 safe\nCHOICE B: \ud83c\udfae Buy the skin even faster\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -230,9 +255,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-ea692647.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",
-            "pathfinder": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-ea692647.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",
-            "maverick": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-ea692647.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him."
+            "explorer": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-82ce7599.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",
+            "pathfinder": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-82ce7599.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",
+            "maverick": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-82ce7599.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him."
           },
           "error": {
             "explorer": "",
@@ -322,9 +347,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS:\nNEED: 📱 Phone case (birthday present)\nNEED: 🔌 Phone charging cable\nWANT: 🍫 Fancy chocolate bar\nWANT: 🎮 New game skin",
-            "pathfinder": "ITEMS:\nNEED: 📱 Phone case (birthday present)\nNEED: 🔌 Phone charging cable\nWANT: 🍫 Fancy chocolate bar\nWANT: 🎮 New game skin",
-            "maverick": "ITEMS:\nNEED: 📱 Phone case (birthday present)\nNEED: 🔌 Phone charging cable\nWANT: 🍫 Fancy chocolate bar\nWANT: 🎮 New game skin"
+            "explorer": "ITEMS:\nNEED: \ud83d\udcf1 Phone case (birthday present)\nNEED: \ud83d\udd0c Phone charging cable\nWANT: \ud83c\udf6b Fancy chocolate bar\nWANT: \ud83c\udfae New game skin",
+            "pathfinder": "ITEMS:\nNEED: \ud83d\udcf1 Phone case (birthday present)\nNEED: \ud83d\udd0c Phone charging cable\nWANT: \ud83c\udf6b Fancy chocolate bar\nWANT: \ud83c\udfae New game skin",
+            "maverick": "ITEMS:\nNEED: \ud83d\udcf1 Phone case (birthday present)\nNEED: \ud83d\udd0c Phone charging cable\nWANT: \ud83c\udf6b Fancy chocolate bar\nWANT: \ud83c\udfae New game skin"
           },
           "error": {
             "explorer": "",
@@ -347,9 +372,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "ROUNDS:\nA: 📱 A new case for his own phone (his is fine) | B: 🎁 The phone case he promised Senna | CORRECT: B\nA: 💡 A bike light so he's seen at night | B: 🖱️ A glowing game mouse (his works fine) | CORRECT: A\nA: 🍱 Pay for lunch for all his friends | B: 🥪 Buy lunch at school for himself | CORRECT: B",
-            "pathfinder": "ROUNDS:\nA: 📱 A new case for his own phone (his is fine) | B: 🎁 The phone case he promised Senna | CORRECT: B\nA: 💡 A bike light so he's seen at night | B: 🖱️ A glowing game mouse (his works fine) | CORRECT: A\nA: 🍱 Pay for lunch for all his friends | B: 🥪 Buy lunch at school for himself | CORRECT: B",
-            "maverick": "ROUNDS:\nA: 📱 A new case for his own phone (his is fine) | B: 🎁 The phone case he promised Senna | CORRECT: B\nA: 💡 A bike light so he's seen at night | B: 🖱️ A glowing game mouse (his works fine) | CORRECT: A\nA: 🍱 Pay for lunch for all his friends | B: 🥪 Buy lunch at school for himself | CORRECT: B"
+            "explorer": "ROUNDS:\nA: \ud83d\udcf1 A new case for his own phone (his is fine) | B: \ud83c\udf81 The phone case he promised Senna | CORRECT: B\nA: \ud83d\udca1 A bike light so he's seen at night | B: \ud83d\uddb1\ufe0f A glowing game mouse (his works fine) | CORRECT: A\nA: \ud83c\udf71 Pay for lunch for all his friends | B: \ud83e\udd6a Buy lunch at school for himself | CORRECT: B",
+            "pathfinder": "ROUNDS:\nA: \ud83d\udcf1 A new case for his own phone (his is fine) | B: \ud83c\udf81 The phone case he promised Senna | CORRECT: B\nA: \ud83d\udca1 A bike light so he's seen at night | B: \ud83d\uddb1\ufe0f A glowing game mouse (his works fine) | CORRECT: A\nA: \ud83c\udf71 Pay for lunch for all his friends | B: \ud83e\udd6a Buy lunch at school for himself | CORRECT: B",
+            "maverick": "ROUNDS:\nA: \ud83d\udcf1 A new case for his own phone (his is fine) | B: \ud83c\udf81 The phone case he promised Senna | CORRECT: B\nA: \ud83d\udca1 A bike light so he's seen at night | B: \ud83d\uddb1\ufe0f A glowing game mouse (his works fine) | CORRECT: A\nA: \ud83c\udf71 Pay for lunch for all his friends | B: \ud83e\udd6a Buy lunch at school for himself | CORRECT: B"
           },
           "error": {
             "explorer": "",
@@ -372,9 +397,9 @@
             "maverick": "lars-sitting-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🎒 A new schoolbag\nCHOICE B: 🥤 Fancy smoothie\nCHOICE C: 🔌 Phone charging cable\nCORRECT: A+C",
-            "pathfinder": "CHOICE A: 🎒 A new schoolbag\nCHOICE B: 🥤 Fancy smoothie\nCHOICE C: 🔌 Phone charging cable\nCORRECT: A+C",
-            "maverick": "CHOICE A: 🎒 A new schoolbag\nCHOICE B: 🥤 Fancy smoothie\nCHOICE C: 🔌 Phone charging cable\nCORRECT: A+C"
+            "explorer": "CHOICE A: \ud83c\udf92 A new schoolbag\nCHOICE B: \ud83e\udd64 Fancy smoothie\nCHOICE C: \ud83d\udd0c Phone charging cable\nCORRECT: A+C",
+            "pathfinder": "CHOICE A: \ud83c\udf92 A new schoolbag\nCHOICE B: \ud83e\udd64 Fancy smoothie\nCHOICE C: \ud83d\udd0c Phone charging cable\nCORRECT: A+C",
+            "maverick": "CHOICE A: \ud83c\udf92 A new schoolbag\nCHOICE B: \ud83e\udd64 Fancy smoothie\nCHOICE C: \ud83d\udd0c Phone charging cable\nCORRECT: A+C"
           },
           "error": {
             "explorer": "",
@@ -397,9 +422,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "TOTAL: 15\nKEEP: 10\nITEM: 🎁 Phone case",
-            "pathfinder": "TOTAL: 15\nKEEP: 10\nITEM: 🎁 Phone case",
-            "maverick": "TOTAL: 15\nKEEP: 10\nITEM: 🎁 Phone case"
+            "explorer": "TOTAL: 15\nKEEP: 10\nITEM: \ud83c\udf81 Phone case",
+            "pathfinder": "TOTAL: 15\nKEEP: 10\nITEM: \ud83c\udf81 Phone case",
+            "maverick": "TOTAL: 15\nKEEP: 10\nITEM: \ud83c\udf81 Phone case"
           },
           "error": {
             "explorer": "",
@@ -422,9 +447,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS: 🫙 Keep his $5 for things he needs.\nITEMS: 🧃 Buy the deal while it lasts.\nITEMS: 🙅 Borrow money to get the deal.\nORDER: keep, buy, borrow",
-            "pathfinder": "ITEMS: 🫙 Keep his $5 for things he needs.\nITEMS: 🧃 Buy the deal while it lasts.\nITEMS: 🙅 Borrow money to get the deal.\nORDER: keep, buy, borrow",
-            "maverick": "ITEMS: 🫙 Keep his $5 for things he needs.\nITEMS: 🧃 Buy the deal while it lasts.\nITEMS: 🙅 Borrow money to get the deal.\nORDER: keep, buy, borrow"
+            "explorer": "ITEMS: \ud83e\uded9 Keep his $5 for things he needs.\nITEMS: \ud83e\uddc3 Buy the deal while it lasts.\nITEMS: \ud83d\ude45 Borrow money to get the deal.\nORDER: keep, buy, borrow",
+            "pathfinder": "ITEMS: \ud83e\uded9 Keep his $5 for things he needs.\nITEMS: \ud83e\uddc3 Buy the deal while it lasts.\nITEMS: \ud83d\ude45 Borrow money to get the deal.\nORDER: keep, buy, borrow",
+            "maverick": "ITEMS: \ud83e\uded9 Keep his $5 for things he needs.\nITEMS: \ud83e\uddc3 Buy the deal while it lasts.\nITEMS: \ud83d\ude45 Borrow money to get the deal.\nORDER: keep, buy, borrow"
           },
           "error": {
             "explorer": "Not quite! Keeping his $5 comes first. Try again!",
@@ -447,9 +472,9 @@
             "maverick": "lars-senna-sidebyside.webp"
           },
           "settings": {
-            "explorer": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! 🎉",
-            "pathfinder": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! 🎉",
-            "maverick": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! 🎉"
+            "explorer": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! \ud83c\udf89",
+            "pathfinder": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! \ud83c\udf89",
+            "maverick": "SOURCE: concept-gift-box\nTARGET: senna-celebrating\nSUCCESS: Promise kept! Happy birthday, Senna! \ud83c\udf89"
           },
           "error": {
             "explorer": "",
@@ -472,9 +497,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-1bea1ba2.mp3\nAUDIO_MS: 16039\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-1bea1ba2.mp3\nAUDIO_MS: 16039\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-1bea1ba2.mp3\nAUDIO_MS: 16039\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-f687d612.mp3\nAUDIO_MS: 16353\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-f687d612.mp3\nAUDIO_MS: 16353\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l2-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat1-f687d612.mp3\nAUDIO_MS: 16353\nIMAGE_BRIEF: Lars and Mom talking at the kitchen table in the evening, Lars excited, a picture of a mountain bike in his mind.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -497,9 +522,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-0177dd27.mp3\nAUDIO_MS: 11860\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling.",
-            "pathfinder": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-0177dd27.mp3\nAUDIO_MS: 11860\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling.",
-            "maverick": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-0177dd27.mp3\nAUDIO_MS: 11860\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling."
+            "explorer": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-e210fffc.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling.",
+            "pathfinder": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-e210fffc.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling.",
+            "maverick": "ID: explorer-m1-l2-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l2-beat2-e210fffc.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars writing his startup list (jug, cups, lemons, sugar) while Mom reads over his shoulder, smiling."
           },
           "error": {
             "explorer": "",
@@ -564,9 +589,9 @@
             "maverick": "lars-senna-chatting.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 💸 Lars has no money for a new pair.\nCHOICE B: 🩹 Lars tapes them up and makes them worse.\nCHOICE C: 🐶 A dog runs off with one of the pieces.\nCORRECT: A",
-            "pathfinder": "CHOICE A: 💸 Lars has no money for a new pair.\nCHOICE B: 🩹 Lars tapes them up and makes them worse.\nCHOICE C: 🐶 A dog runs off with one of the pieces.\nCORRECT: A",
-            "maverick": "CHOICE A: 💸 Lars has no money for a new pair.\nCHOICE B: 🩹 Lars tapes them up and makes them worse.\nCHOICE C: 🐶 A dog runs off with one of the pieces.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83d\udcb8 Lars has no money for a new pair.\nCHOICE B: \ud83e\ude79 Lars tapes them up and makes them worse.\nCHOICE C: \ud83d\udc36 A dog runs off with one of the pieces.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83d\udcb8 Lars has no money for a new pair.\nCHOICE B: \ud83e\ude79 Lars tapes them up and makes them worse.\nCHOICE C: \ud83d\udc36 A dog runs off with one of the pieces.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83d\udcb8 Lars has no money for a new pair.\nCHOICE B: \ud83e\ude79 Lars tapes them up and makes them worse.\nCHOICE C: \ud83d\udc36 A dog runs off with one of the pieces.\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -589,9 +614,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "TOTAL: $20\nITEMS:\nSPENT: 🐙 Squishy toy - $10\nSPENT: 🫧 Slime - $5\nSPENT: 🍫 Snacks - $5",
-            "pathfinder": "TOTAL: $20\nITEMS:\nSPENT: 🐙 Squishy toy - $10\nSPENT: 🫧 Slime - $5\nSPENT: 🍫 Snacks - $5",
-            "maverick": "TOTAL: $20\nITEMS:\nSPENT: 🐙 Squishy toy - $10\nSPENT: 🫧 Slime - $5\nSPENT: 🍫 Snacks - $5"
+            "explorer": "TOTAL: $20\nITEMS:\nSPENT: \ud83d\udc19 Squishy toy - $10\nSPENT: \ud83e\udee7 Slime - $5\nSPENT: \ud83c\udf6b Snacks - $5",
+            "pathfinder": "TOTAL: $20\nITEMS:\nSPENT: \ud83d\udc19 Squishy toy - $10\nSPENT: \ud83e\udee7 Slime - $5\nSPENT: \ud83c\udf6b Snacks - $5",
+            "maverick": "TOTAL: $20\nITEMS:\nSPENT: \ud83d\udc19 Squishy toy - $10\nSPENT: \ud83e\udee7 Slime - $5\nSPENT: \ud83c\udf6b Snacks - $5"
           },
           "error": {
             "explorer": "",
@@ -639,9 +664,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS: 💵 First, Lars gets his pocket money.\nITEMS: 🫙 Next, some goes in his Emergencies jar.\nITEMS: 🎮 Last, he spends what's left on fun.\nORDER: pocket, jar, fun",
-            "pathfinder": "ITEMS: 💵 First, Lars gets his pocket money.\nITEMS: 🫙 Next, some goes in his Emergencies jar.\nITEMS: 🎮 Last, he spends what's left on fun.\nORDER: pocket, jar, fun",
-            "maverick": "ITEMS: 💵 First, Lars gets his pocket money.\nITEMS: 🫙 Next, some goes in his Emergencies jar.\nITEMS: 🎮 Last, he spends what's left on fun.\nORDER: pocket, jar, fun"
+            "explorer": "ITEMS: \ud83d\udcb5 First, Lars gets his pocket money.\nITEMS: \ud83e\uded9 Next, some goes in his Emergencies jar.\nITEMS: \ud83c\udfae Last, he spends what's left on fun.\nORDER: pocket, jar, fun",
+            "pathfinder": "ITEMS: \ud83d\udcb5 First, Lars gets his pocket money.\nITEMS: \ud83e\uded9 Next, some goes in his Emergencies jar.\nITEMS: \ud83c\udfae Last, he spends what's left on fun.\nORDER: pocket, jar, fun",
+            "maverick": "ITEMS: \ud83d\udcb5 First, Lars gets his pocket money.\nITEMS: \ud83e\uded9 Next, some goes in his Emergencies jar.\nITEMS: \ud83c\udfae Last, he spends what's left on fun.\nORDER: pocket, jar, fun"
           },
           "error": {
             "explorer": "",
@@ -664,9 +689,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-1119aa48.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-1119aa48.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-1119aa48.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-c60458b9.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-c60458b9.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l3-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat1-c60458b9.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars at his desk, writing 'Emergencies' on the lid of an old jam jar, a few coins beside it.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -689,9 +714,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🚗 Buy the toy car and save $5 more next week.\nCHOICE B: 🎧 Buy Senna's new headphones first.\nCHOICE C: 🤞 Buy the toy car and hope headphones cost less.\nCORRECT: B",
-            "pathfinder": "CHOICE A: 🚗 Buy the toy car and save $5 more next week.\nCHOICE B: 🎧 Buy Senna's new headphones first.\nCHOICE C: 🤞 Buy the toy car and hope headphones cost less.\nCORRECT: B",
-            "maverick": "CHOICE A: 🚗 Buy the toy car and save $5 more next week.\nCHOICE B: 🎧 Buy Senna's new headphones first.\nCHOICE C: 🤞 Buy the toy car and hope headphones cost less.\nCORRECT: B"
+            "explorer": "CHOICE A: \ud83d\ude97 Buy the toy car and save $5 more next week.\nCHOICE B: \ud83c\udfa7 Buy Senna's new headphones first.\nCHOICE C: \ud83e\udd1e Buy the toy car and hope headphones cost less.\nCORRECT: B",
+            "pathfinder": "CHOICE A: \ud83d\ude97 Buy the toy car and save $5 more next week.\nCHOICE B: \ud83c\udfa7 Buy Senna's new headphones first.\nCHOICE C: \ud83e\udd1e Buy the toy car and hope headphones cost less.\nCORRECT: B",
+            "maverick": "CHOICE A: \ud83d\ude97 Buy the toy car and save $5 more next week.\nCHOICE B: \ud83c\udfa7 Buy Senna's new headphones first.\nCHOICE C: \ud83e\udd1e Buy the toy car and hope headphones cost less.\nCORRECT: B"
           },
           "error": {
             "explorer": "That's a trap! Stick to the plan, so there's no stress later. Try again!",
@@ -714,9 +739,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "OPTIONS: 💸 spend | 🫙 save | 🔧 replace | 🗑️ throw away\nCORRECT: 💸 spend, 🔧 replace",
-            "pathfinder": "OPTIONS: 💸 spend | 🫙 save | 🔧 replace | 🗑️ throw away\nCORRECT: 💸 spend, 🔧 replace",
-            "maverick": "OPTIONS: 💸 spend | 🫙 save | 🔧 replace | 🗑️ throw away\nCORRECT: 💸 spend, 🔧 replace"
+            "explorer": "OPTIONS: \ud83d\udcb8 spend | \ud83e\uded9 save | \ud83d\udd27 replace | \ud83d\uddd1\ufe0f throw away\nCORRECT: \ud83d\udcb8 spend, \ud83d\udd27 replace",
+            "pathfinder": "OPTIONS: \ud83d\udcb8 spend | \ud83e\uded9 save | \ud83d\udd27 replace | \ud83d\uddd1\ufe0f throw away\nCORRECT: \ud83d\udcb8 spend, \ud83d\udd27 replace",
+            "maverick": "OPTIONS: \ud83d\udcb8 spend | \ud83e\uded9 save | \ud83d\udd27 replace | \ud83d\uddd1\ufe0f throw away\nCORRECT: \ud83d\udcb8 spend, \ud83d\udd27 replace"
           },
           "error": {
             "explorer": "",
@@ -739,9 +764,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "CHOICE A: 🔧 If something breaks, I can replace it.\nCHOICE B: 🎯 I can save for something big.\nCHOICE C: 😌 I worry less about paying for things.\nCHOICE D: 🛍️ I can buy every deal I see.\nCORRECT: A+B+C",
-            "pathfinder": "CHOICE A: 🔧 If something breaks, I can replace it.\nCHOICE B: 🎯 I can save for something big.\nCHOICE C: 😌 I worry less about paying for things.\nCHOICE D: 🛍️ I can buy every deal I see.\nCORRECT: A+B+C",
-            "maverick": "CHOICE A: 🔧 If something breaks, I can replace it.\nCHOICE B: 🎯 I can save for something big.\nCHOICE C: 😌 I worry less about paying for things.\nCHOICE D: 🛍️ I can buy every deal I see.\nCORRECT: A+B+C"
+            "explorer": "CHOICE A: \ud83d\udd27 If something breaks, I can replace it.\nCHOICE B: \ud83c\udfaf I can save for something big.\nCHOICE C: \ud83d\ude0c I worry less about paying for things.\nCHOICE D: \ud83d\udecd\ufe0f I can buy every deal I see.\nCORRECT: A+B+C",
+            "pathfinder": "CHOICE A: \ud83d\udd27 If something breaks, I can replace it.\nCHOICE B: \ud83c\udfaf I can save for something big.\nCHOICE C: \ud83d\ude0c I worry less about paying for things.\nCHOICE D: \ud83d\udecd\ufe0f I can buy every deal I see.\nCORRECT: A+B+C",
+            "maverick": "CHOICE A: \ud83d\udd27 If something breaks, I can replace it.\nCHOICE B: \ud83c\udfaf I can save for something big.\nCHOICE C: \ud83d\ude0c I worry less about paying for things.\nCHOICE D: \ud83d\udecd\ufe0f I can buy every deal I see.\nCORRECT: A+B+C"
           },
           "error": {
             "explorer": "",
@@ -764,9 +789,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-6fae301d.mp3\nAUDIO_MS: 10580\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug.",
-            "pathfinder": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-6fae301d.mp3\nAUDIO_MS: 10580\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug.",
-            "maverick": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-6fae301d.mp3\nAUDIO_MS: 10580\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug."
+            "explorer": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-f0fd7aac.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug.",
+            "pathfinder": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-f0fd7aac.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug.",
+            "maverick": "ID: explorer-m1-l3-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l3-beat2-f0fd7aac.mp3\nAUDIO_MS: 11233\nIMAGE_BRIEF: Lars and his school friend Mason eating lunch in the school yard, Mason giving advice with a calm shrug."
           },
           "error": {
             "explorer": "",
@@ -831,9 +856,9 @@
             "maverick": "lars-mason-sidebyside.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🐢 Lars is just slow at clicking.\nCHOICE B: 🫙 Lars has run out of money.\nCHOICE C: 🧠 Lars stops to think.\nCORRECT: C",
-            "pathfinder": "CHOICE A: 🐢 Lars is just slow at clicking.\nCHOICE B: 🫙 Lars has run out of money.\nCHOICE C: 🧠 Lars stops to think.\nCORRECT: C",
-            "maverick": "CHOICE A: 🐢 Lars is just slow at clicking.\nCHOICE B: 🫙 Lars has run out of money.\nCHOICE C: 🧠 Lars stops to think.\nCORRECT: C"
+            "explorer": "CHOICE A: \ud83d\udc22 Lars is just slow at clicking.\nCHOICE B: \ud83e\uded9 Lars has run out of money.\nCHOICE C: \ud83e\udde0 Lars stops to think.\nCORRECT: C",
+            "pathfinder": "CHOICE A: \ud83d\udc22 Lars is just slow at clicking.\nCHOICE B: \ud83e\uded9 Lars has run out of money.\nCHOICE C: \ud83e\udde0 Lars stops to think.\nCORRECT: C",
+            "maverick": "CHOICE A: \ud83d\udc22 Lars is just slow at clicking.\nCHOICE B: \ud83e\uded9 Lars has run out of money.\nCHOICE C: \ud83e\udde0 Lars stops to think.\nCORRECT: C"
           },
           "error": {
             "explorer": "",
@@ -856,9 +881,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS: ⏰ Lars sees the countdown.\nITEMS: 🧠 He remembers his buy freeze.\nITEMS: 🏷️ Next day, the skin is half price.\nITEMS: 😊 Lars is glad he waited.\nORDER: countdown, freeze, half, glad",
-            "pathfinder": "ITEMS: ⏰ Lars sees the countdown.\nITEMS: 🧠 He remembers his buy freeze.\nITEMS: 🏷️ Next day, the skin is half price.\nITEMS: 😊 Lars is glad he waited.\nORDER: countdown, freeze, half, glad",
-            "maverick": "ITEMS: ⏰ Lars sees the countdown.\nITEMS: 🧠 He remembers his buy freeze.\nITEMS: 🏷️ Next day, the skin is half price.\nITEMS: 😊 Lars is glad he waited.\nORDER: countdown, freeze, half, glad"
+            "explorer": "ITEMS: \u23f0 Lars sees the countdown.\nITEMS: \ud83e\udde0 He remembers his buy freeze.\nITEMS: \ud83c\udff7\ufe0f Next day, the skin is half price.\nITEMS: \ud83d\ude0a Lars is glad he waited.\nORDER: countdown, freeze, half, glad",
+            "pathfinder": "ITEMS: \u23f0 Lars sees the countdown.\nITEMS: \ud83e\udde0 He remembers his buy freeze.\nITEMS: \ud83c\udff7\ufe0f Next day, the skin is half price.\nITEMS: \ud83d\ude0a Lars is glad he waited.\nORDER: countdown, freeze, half, glad",
+            "maverick": "ITEMS: \u23f0 Lars sees the countdown.\nITEMS: \ud83e\udde0 He remembers his buy freeze.\nITEMS: \ud83c\udff7\ufe0f Next day, the skin is half price.\nITEMS: \ud83d\ude0a Lars is glad he waited.\nORDER: countdown, freeze, half, glad"
           },
           "error": {
             "explorer": "",
@@ -881,9 +906,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ROUNDS:\nA: ⏰ It ends soon. I have to buy it now! | B: 💰 I can wait and maybe get it cheaper. | CORRECT: B\nA: 🔥 It looks so cool. I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: 👥 Everyone has it. I can't be left out! | B: 💬 I'll ask my friends if it's any good. | CORRECT: B",
-            "pathfinder": "ROUNDS:\nA: ⏰ It ends soon. I have to buy it now! | B: 💰 I can wait and maybe get it cheaper. | CORRECT: B\nA: 🔥 It looks so cool. I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: 👥 Everyone has it. I can't be left out! | B: 💬 I'll ask my friends if it's any good. | CORRECT: B",
-            "maverick": "ROUNDS:\nA: ⏰ It ends soon. I have to buy it now! | B: 💰 I can wait and maybe get it cheaper. | CORRECT: B\nA: 🔥 It looks so cool. I need it right now! | B: 😴 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: 👥 Everyone has it. I can't be left out! | B: 💬 I'll ask my friends if it's any good. | CORRECT: B"
+            "explorer": "ROUNDS:\nA: \u23f0 It ends soon. I have to buy it now! | B: \ud83d\udcb0 I can wait and maybe get it cheaper. | CORRECT: B\nA: \ud83d\udd25 It looks so cool. I need it right now! | B: \ud83d\ude34 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: \ud83d\udc65 Everyone has it. I can't be left out! | B: \ud83d\udcac I'll ask my friends if it's any good. | CORRECT: B",
+            "pathfinder": "ROUNDS:\nA: \u23f0 It ends soon. I have to buy it now! | B: \ud83d\udcb0 I can wait and maybe get it cheaper. | CORRECT: B\nA: \ud83d\udd25 It looks so cool. I need it right now! | B: \ud83d\ude34 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: \ud83d\udc65 Everyone has it. I can't be left out! | B: \ud83d\udcac I'll ask my friends if it's any good. | CORRECT: B",
+            "maverick": "ROUNDS:\nA: \u23f0 It ends soon. I have to buy it now! | B: \ud83d\udcb0 I can wait and maybe get it cheaper. | CORRECT: B\nA: \ud83d\udd25 It looks so cool. I need it right now! | B: \ud83d\ude34 I'll sleep on it and decide tomorrow. | CORRECT: B\nA: \ud83d\udc65 Everyone has it. I can't be left out! | B: \ud83d\udcac I'll ask my friends if it's any good. | CORRECT: B"
           },
           "error": {
             "explorer": "",
@@ -956,9 +981,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "SOURCE: 🛒 Spend Now\nTARGET: 🐷 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!",
-            "pathfinder": "SOURCE: 🛒 Spend Now\nTARGET: 🐷 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!",
-            "maverick": "SOURCE: 🛒 Spend Now\nTARGET: 🐷 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!"
+            "explorer": "SOURCE: \ud83d\uded2 Spend Now\nTARGET: \ud83d\udc37 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!",
+            "pathfinder": "SOURCE: \ud83d\uded2 Spend Now\nTARGET: \ud83d\udc37 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!",
+            "maverick": "SOURCE: \ud83d\uded2 Spend Now\nTARGET: \ud83d\udc37 Save for Later\nITEM: money-coin.webp\nIMAGE: piggy-bank.webp\nSUCCESS: Money saved!"
           },
           "error": {
             "explorer": "",
@@ -981,9 +1006,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: 🍫 Snacks at school ($2) 🎮 Extra lives bundle ($3) ✨ Glow sticks ($5)",
-            "pathfinder": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: 🍫 Snacks at school ($2) 🎮 Extra lives bundle ($3) ✨ Glow sticks ($5)",
-            "maverick": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: 🍫 Snacks at school ($2) 🎮 Extra lives bundle ($3) ✨ Glow sticks ($5)"
+            "explorer": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: \ud83c\udf6b Snacks at school ($2) \ud83c\udfae Extra lives bundle ($3) \u2728 Glow sticks ($5)",
+            "pathfinder": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: \ud83c\udf6b Snacks at school ($2) \ud83c\udfae Extra lives bundle ($3) \u2728 Glow sticks ($5)",
+            "maverick": "TARGET: 10\nLABEL: Startup money\nDROP: Things Lars didn't buy\nITEMS: \ud83c\udf6b Snacks at school ($2) \ud83c\udfae Extra lives bundle ($3) \u2728 Glow sticks ($5)"
           },
           "error": {
             "explorer": "",
@@ -1006,9 +1031,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-f7791f5a.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-f7791f5a.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-f7791f5a.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-5f5d0d44.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-5f5d0d44.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l4-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat1-5f5d0d44.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars at his desk writing 'Startup money needed: $15' on an envelope, coins stacked beside it.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -1031,9 +1056,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-eb5702d1.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate.",
-            "pathfinder": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-eb5702d1.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate.",
-            "maverick": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-eb5702d1.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate."
+            "explorer": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-ed7459dc.mp3\nAUDIO_MS: 9300\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate.",
+            "pathfinder": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-ed7459dc.mp3\nAUDIO_MS: 9300\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate.",
+            "maverick": "ID: explorer-m1-l4-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l4-beat2-ed7459dc.mp3\nAUDIO_MS: 9300\nIMAGE_BRIEF: Lars tucking the envelope into a drawer, with a dreamy thought bubble of his lemonade stand by the front gate."
           },
           "error": {
             "explorer": "",
@@ -1098,9 +1123,9 @@
             "maverick": "lars-mia-sidebyside.webp"
           },
           "settings": {
-            "explorer": "OPTIONS: 🍦 want | ✅ need | 🧾 bill\nCORRECT: 🍦 want",
-            "pathfinder": "OPTIONS: 🍦 want | ✅ need | 🧾 bill\nCORRECT: 🍦 want",
-            "maverick": "OPTIONS: 🍦 want | ✅ need | 🧾 bill\nCORRECT: 🍦 want"
+            "explorer": "OPTIONS: \ud83c\udf66 want | \u2705 need | \ud83e\uddfe bill\nCORRECT: \ud83c\udf66 want",
+            "pathfinder": "OPTIONS: \ud83c\udf66 want | \u2705 need | \ud83e\uddfe bill\nCORRECT: \ud83c\udf66 want",
+            "maverick": "OPTIONS: \ud83c\udf66 want | \u2705 need | \ud83e\uddfe bill\nCORRECT: \ud83c\udf66 want"
           },
           "error": {
             "explorer": "",
@@ -1123,9 +1148,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🤝 Skip his own gelato and share Mia's.\nCHOICE B: 🍦 Buy his own, because the deal ends today.\nCORRECT: A",
-            "pathfinder": "CHOICE A: 🤝 Skip his own gelato and share Mia's.\nCHOICE B: 🍦 Buy his own, because the deal ends today.\nCORRECT: A",
-            "maverick": "CHOICE A: 🤝 Skip his own gelato and share Mia's.\nCHOICE B: 🍦 Buy his own, because the deal ends today.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83e\udd1d Skip his own gelato and share Mia's.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83e\udd1d Skip his own gelato and share Mia's.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83e\udd1d Skip his own gelato and share Mia's.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1173,9 +1198,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS:\nNEED: 🍋 Lemons for his stand\nNEED: 🥤 Paper cups for his stand\nWANT: 🍦 His own gelato\nWANT: 🍨 Extra gelato toppings",
-            "pathfinder": "ITEMS:\nNEED: 🍋 Lemons for his stand\nNEED: 🥤 Paper cups for his stand\nWANT: 🍦 His own gelato\nWANT: 🍨 Extra gelato toppings",
-            "maverick": "ITEMS:\nNEED: 🍋 Lemons for his stand\nNEED: 🥤 Paper cups for his stand\nWANT: 🍦 His own gelato\nWANT: 🍨 Extra gelato toppings"
+            "explorer": "ITEMS:\nNEED: \ud83c\udf4b Lemons for his stand\nNEED: \ud83e\udd64 Paper cups for his stand\nWANT: \ud83c\udf66 His own gelato\nWANT: \ud83c\udf68 Extra gelato toppings",
+            "pathfinder": "ITEMS:\nNEED: \ud83c\udf4b Lemons for his stand\nNEED: \ud83e\udd64 Paper cups for his stand\nWANT: \ud83c\udf66 His own gelato\nWANT: \ud83c\udf68 Extra gelato toppings",
+            "maverick": "ITEMS:\nNEED: \ud83c\udf4b Lemons for his stand\nNEED: \ud83e\udd64 Paper cups for his stand\nWANT: \ud83c\udf66 His own gelato\nWANT: \ud83c\udf68 Extra gelato toppings"
           },
           "error": {
             "explorer": "",
@@ -1198,9 +1223,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🤝 Stick with sharing Mia's gelato.\nCHOICE B: 🍦 Buy his own before the deal ends.\nCORRECT: A",
-            "pathfinder": "CHOICE A: 🤝 Stick with sharing Mia's gelato.\nCHOICE B: 🍦 Buy his own before the deal ends.\nCORRECT: A",
-            "maverick": "CHOICE A: 🤝 Stick with sharing Mia's gelato.\nCHOICE B: 🍦 Buy his own before the deal ends.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83e\udd1d Stick with sharing Mia's gelato.\nCHOICE B: \ud83c\udf66 Buy his own before the deal ends.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83e\udd1d Stick with sharing Mia's gelato.\nCHOICE B: \ud83c\udf66 Buy his own before the deal ends.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83e\udd1d Stick with sharing Mia's gelato.\nCHOICE B: \ud83c\udf66 Buy his own before the deal ends.\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1223,9 +1248,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS: 🤔 First, Lars asks if it's a want or a need.\nITEMS: 🤝 Then he asks Mia if they can share hers.\nITEMS: 🍦 Mia says yes, and they both dig in.\nORDER: want, share, yes",
-            "pathfinder": "ITEMS: 🤔 First, Lars asks if it's a want or a need.\nITEMS: 🤝 Then he asks Mia if they can share hers.\nITEMS: 🍦 Mia says yes, and they both dig in.\nORDER: want, share, yes",
-            "maverick": "ITEMS: 🤔 First, Lars asks if it's a want or a need.\nITEMS: 🤝 Then he asks Mia if they can share hers.\nITEMS: 🍦 Mia says yes, and they both dig in.\nORDER: want, share, yes"
+            "explorer": "ITEMS: \ud83e\udd14 First, Lars asks if it's a want or a need.\nITEMS: \ud83e\udd1d Then he asks Mia if they can share hers.\nITEMS: \ud83c\udf66 Mia says yes, and they both dig in.\nORDER: want, share, yes",
+            "pathfinder": "ITEMS: \ud83e\udd14 First, Lars asks if it's a want or a need.\nITEMS: \ud83e\udd1d Then he asks Mia if they can share hers.\nITEMS: \ud83c\udf66 Mia says yes, and they both dig in.\nORDER: want, share, yes",
+            "maverick": "ITEMS: \ud83e\udd14 First, Lars asks if it's a want or a need.\nITEMS: \ud83e\udd1d Then he asks Mia if they can share hers.\nITEMS: \ud83c\udf66 Mia says yes, and they both dig in.\nORDER: want, share, yes"
           },
           "error": {
             "explorer": "",
@@ -1248,9 +1273,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🫙 It stays safe at $10\nCHOICE B: 🍦 It drops to $5\nCORRECT: A",
-            "pathfinder": "CHOICE A: 🫙 It stays safe at $10\nCHOICE B: 🍦 It drops to $5\nCORRECT: A",
-            "maverick": "CHOICE A: 🫙 It stays safe at $10\nCHOICE B: 🍦 It drops to $5\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83e\uded9 It stays safe at $10\nCHOICE B: \ud83c\udf66 It drops to $5\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83e\uded9 It stays safe at $10\nCHOICE B: \ud83c\udf66 It drops to $5\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83e\uded9 It stays safe at $10\nCHOICE B: \ud83c\udf66 It drops to $5\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1273,9 +1298,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-434a6a51.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-434a6a51.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-434a6a51.mp3\nAUDIO_MS: 7079\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-8b358340.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-8b358340.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-8b358340.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -1340,9 +1365,9 @@
             "maverick": "lars-mia-chatting.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: ✅ Yes, he has enough\nCHOICE B: ❌ No, he's short\nCORRECT: A",
-            "pathfinder": "CHOICE A: ✅ Yes, he has enough\nCHOICE B: ❌ No, he's short\nCORRECT: A",
-            "maverick": "CHOICE A: ✅ Yes, he has enough\nCHOICE B: ❌ No, he's short\nCORRECT: A"
+            "explorer": "CHOICE A: \u2705 Yes, he has enough\nCHOICE B: \u274c No, he's short\nCORRECT: A",
+            "pathfinder": "CHOICE A: \u2705 Yes, he has enough\nCHOICE B: \u274c No, he's short\nCORRECT: A",
+            "maverick": "CHOICE A: \u2705 Yes, he has enough\nCHOICE B: \u274c No, he's short\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1365,9 +1390,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 😬 He'd have $3, not enough for his $5 half.\nCHOICE B: 🎟️ The movie ticket would have been free.\nCHOICE C: 🎁 Mia would have paid for everything.\nCORRECT: A",
-            "pathfinder": "CHOICE A: 😬 He'd have $3, not enough for his $5 half.\nCHOICE B: 🎟️ The movie ticket would have been free.\nCHOICE C: 🎁 Mia would have paid for everything.\nCORRECT: A",
-            "maverick": "CHOICE A: 😬 He'd have $3, not enough for his $5 half.\nCHOICE B: 🎟️ The movie ticket would have been free.\nCHOICE C: 🎁 Mia would have paid for everything.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83d\ude2c He'd have $3, not enough for his $5 half.\nCHOICE B: \ud83c\udf9f\ufe0f The movie ticket would have been free.\nCHOICE C: \ud83c\udf81 Mia would have paid for everything.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83d\ude2c He'd have $3, not enough for his $5 half.\nCHOICE B: \ud83c\udf9f\ufe0f The movie ticket would have been free.\nCHOICE C: \ud83c\udf81 Mia would have paid for everything.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83d\ude2c He'd have $3, not enough for his $5 half.\nCHOICE B: \ud83c\udf9f\ufe0f The movie ticket would have been free.\nCHOICE C: \ud83c\udf81 Mia would have paid for everything.\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1390,9 +1415,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS:\nYES: 🎟️ Pay his $5 half\nYES: 💰 Keep $3 for later\nNO: 🎯 Dart blaster and the movie\nNO: 🙋 Borrow $5 from Senna",
-            "pathfinder": "ITEMS:\nYES: 🎟️ Pay his $5 half\nYES: 💰 Keep $3 for later\nNO: 🎯 Dart blaster and the movie\nNO: 🙋 Borrow $5 from Senna",
-            "maverick": "ITEMS:\nYES: 🎟️ Pay his $5 half\nYES: 💰 Keep $3 for later\nNO: 🎯 Dart blaster and the movie\nNO: 🙋 Borrow $5 from Senna"
+            "explorer": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Keep $3 for later\nNO: \ud83c\udfaf Dart blaster and the movie\nNO: \ud83d\ude4b Borrow $5 from Senna",
+            "pathfinder": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Keep $3 for later\nNO: \ud83c\udfaf Dart blaster and the movie\nNO: \ud83d\ude4b Borrow $5 from Senna",
+            "maverick": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Keep $3 for later\nNO: \ud83c\udfaf Dart blaster and the movie\nNO: \ud83d\ude4b Borrow $5 from Senna"
           },
           "error": {
             "explorer": "",
@@ -1440,9 +1465,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 💵 $3\nCHOICE B: 🎟️ $5\nCHOICE C: 🫙 $0\nCORRECT: A",
-            "pathfinder": "CHOICE A: 💵 $3\nCHOICE B: 🎟️ $5\nCHOICE C: 🫙 $0\nCORRECT: A",
-            "maverick": "CHOICE A: 💵 $3\nCHOICE B: 🎟️ $5\nCHOICE C: 🫙 $0\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83d\udcb5 $3\nCHOICE B: \ud83c\udf9f\ufe0f $5\nCHOICE C: \ud83e\uded9 $0\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83d\udcb5 $3\nCHOICE B: \ud83c\udf9f\ufe0f $5\nCHOICE C: \ud83e\uded9 $0\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83d\udcb5 $3\nCHOICE B: \ud83c\udf9f\ufe0f $5\nCHOICE C: \ud83e\uded9 $0\nCORRECT: A"
           },
           "error": {
             "explorer": "Not quite! $8 minus $5 leaves $3. Try again!",
@@ -1465,9 +1490,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS: 🎯 Earlier this week, Lars skips a $5 dart blaster.\nITEMS: 📱 Today, Mia asks him to the movies.\nITEMS: ✅ Lars says yes. He can pay his half!\nORDER: blaster, asks, yes",
-            "pathfinder": "ITEMS: 🎯 Earlier this week, Lars skips a $5 dart blaster.\nITEMS: 📱 Today, Mia asks him to the movies.\nITEMS: ✅ Lars says yes. He can pay his half!\nORDER: blaster, asks, yes",
-            "maverick": "ITEMS: 🎯 Earlier this week, Lars skips a $5 dart blaster.\nITEMS: 📱 Today, Mia asks him to the movies.\nITEMS: ✅ Lars says yes. He can pay his half!\nORDER: blaster, asks, yes"
+            "explorer": "ITEMS: \ud83c\udfaf Earlier this week, Lars skips a $5 dart blaster.\nITEMS: \ud83d\udcf1 Today, Mia asks him to the movies.\nITEMS: \u2705 Lars says yes. He can pay his half!\nORDER: blaster, asks, yes",
+            "pathfinder": "ITEMS: \ud83c\udfaf Earlier this week, Lars skips a $5 dart blaster.\nITEMS: \ud83d\udcf1 Today, Mia asks him to the movies.\nITEMS: \u2705 Lars says yes. He can pay his half!\nORDER: blaster, asks, yes",
+            "maverick": "ITEMS: \ud83c\udfaf Earlier this week, Lars skips a $5 dart blaster.\nITEMS: \ud83d\udcf1 Today, Mia asks him to the movies.\nITEMS: \u2705 Lars says yes. He can pay his half!\nORDER: blaster, asks, yes"
           },
           "error": {
             "explorer": "",
@@ -1490,9 +1515,9 @@
             "maverick": "lars-mia-sidebyside.webp"
           },
           "settings": {
-            "explorer": "SOURCE: 💵 $5\nTARGET: 🎟️ Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!",
-            "pathfinder": "SOURCE: 💵 $5\nTARGET: 🎟️ Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!",
-            "maverick": "SOURCE: 💵 $5\nTARGET: 🎟️ Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!"
+            "explorer": "SOURCE: \ud83d\udcb5 $5\nTARGET: \ud83c\udf9f\ufe0f Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!",
+            "pathfinder": "SOURCE: \ud83d\udcb5 $5\nTARGET: \ud83c\udf9f\ufe0f Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!",
+            "maverick": "SOURCE: \ud83d\udcb5 $5\nTARGET: \ud83c\udf9f\ufe0f Ticket counter\nSUCCESS: Paid his half, and $3 is still safe!"
           },
           "error": {
             "explorer": "",
@@ -1515,9 +1540,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-79bd0bb1.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-79bd0bb1.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-79bd0bb1.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-0fa9f741.mp3\nAUDIO_MS: 7393\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-0fa9f741.mp3\nAUDIO_MS: 7393\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l6-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat1-0fa9f741.mp3\nAUDIO_MS: 7393\nIMAGE_BRIEF: Lars and Mia waiting in line at the movie theater, tickets in hand, Lars looking relaxed.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -1540,9 +1565,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-97d75fab.mp3\nAUDIO_MS: 6113\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins.",
-            "pathfinder": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-97d75fab.mp3\nAUDIO_MS: 6113\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins.",
-            "maverick": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-97d75fab.mp3\nAUDIO_MS: 6113\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins."
+            "explorer": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-489c0149.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins.",
+            "pathfinder": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-489c0149.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins.",
+            "maverick": "ID: explorer-m1-l6-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat2-489c0149.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Close-up of Mia doodling a lemon on her movie ticket while Lars grins."
           },
           "error": {
             "explorer": "",
@@ -1590,9 +1615,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-8dc460f1.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening.",
-            "pathfinder": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-8dc460f1.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening.",
-            "maverick": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-8dc460f1.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening."
+            "explorer": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-b589cc81.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening.",
+            "pathfinder": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-b589cc81.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening.",
+            "maverick": "ID: explorer-m1-l6-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l6-beat3-b589cc81.mp3\nAUDIO_MS: 6426\nIMAGE_BRIEF: Lars and Mason at the school bus stop, Lars excitedly sharing his news, Mason listening."
           },
           "error": {
             "explorer": "",
@@ -1632,9 +1657,9 @@
             "maverick": "lars-mia-sidebyside.webp"
           },
           "settings": {
-            "explorer": "OPTIONS: 🧠 stops and thinks | 🛍️ buys it straight away | 🙋 asks Mia to pay\nCORRECT: 🧠 stops and thinks",
-            "pathfinder": "OPTIONS: 🧠 stops and thinks | 🛍️ buys it straight away | 🙋 asks Mia to pay\nCORRECT: 🧠 stops and thinks",
-            "maverick": "OPTIONS: 🧠 stops and thinks | 🛍️ buys it straight away | 🙋 asks Mia to pay\nCORRECT: 🧠 stops and thinks"
+            "explorer": "OPTIONS: \ud83e\udde0 stops and thinks | \ud83d\udecd\ufe0f buys it straight away | \ud83d\ude4b asks Mia to pay\nCORRECT: \ud83e\udde0 stops and thinks",
+            "pathfinder": "OPTIONS: \ud83e\udde0 stops and thinks | \ud83d\udecd\ufe0f buys it straight away | \ud83d\ude4b asks Mia to pay\nCORRECT: \ud83e\udde0 stops and thinks",
+            "maverick": "OPTIONS: \ud83e\udde0 stops and thinks | \ud83d\udecd\ufe0f buys it straight away | \ud83d\ude4b asks Mia to pay\nCORRECT: \ud83e\udde0 stops and thinks"
           },
           "error": {
             "explorer": "",
@@ -1657,9 +1682,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: ✨ Want\nCHOICE B: ✅ Need\nCORRECT: B",
-            "pathfinder": "CHOICE A: ✨ Want\nCHOICE B: ✅ Need\nCORRECT: B",
-            "maverick": "CHOICE A: ✨ Want\nCHOICE B: ✅ Need\nCORRECT: B"
+            "explorer": "CHOICE A: \u2728 Want\nCHOICE B: \u2705 Need\nCORRECT: B",
+            "pathfinder": "CHOICE A: \u2728 Want\nCHOICE B: \u2705 Need\nCORRECT: B",
+            "maverick": "CHOICE A: \u2728 Want\nCHOICE B: \u2705 Need\nCORRECT: B"
           },
           "error": {
             "explorer": "",
@@ -1682,9 +1707,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🧠 Catch Impulse Spending\nCHOICE B: ✅ Choose Needs Over Wants\nCHOICE C: 💰 Don't Spend Money You Don't Have\nCORRECT: B",
-            "pathfinder": "CHOICE A: 🧠 Catch Impulse Spending\nCHOICE B: ✅ Choose Needs Over Wants\nCHOICE C: 💰 Don't Spend Money You Don't Have\nCORRECT: B",
-            "maverick": "CHOICE A: 🧠 Catch Impulse Spending\nCHOICE B: ✅ Choose Needs Over Wants\nCHOICE C: 💰 Don't Spend Money You Don't Have\nCORRECT: B"
+            "explorer": "CHOICE A: \ud83e\udde0 Catch Impulse Spending\nCHOICE B: \u2705 Choose Needs Over Wants\nCHOICE C: \ud83d\udcb0 Don't Spend Money You Don't Have\nCORRECT: B",
+            "pathfinder": "CHOICE A: \ud83e\udde0 Catch Impulse Spending\nCHOICE B: \u2705 Choose Needs Over Wants\nCHOICE C: \ud83d\udcb0 Don't Spend Money You Don't Have\nCORRECT: B",
+            "maverick": "CHOICE A: \ud83e\udde0 Catch Impulse Spending\nCHOICE B: \u2705 Choose Needs Over Wants\nCHOICE C: \ud83d\udcb0 Don't Spend Money You Don't Have\nCORRECT: B"
           },
           "error": {
             "explorer": "",
@@ -1707,9 +1732,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🥤 Buy his own slushie with his last $2\nCHOICE B: 🤝 Share one slushie with Mia\nCORRECT: B",
-            "pathfinder": "CHOICE A: 🥤 Buy his own slushie with his last $2\nCHOICE B: 🤝 Share one slushie with Mia\nCORRECT: B",
-            "maverick": "CHOICE A: 🥤 Buy his own slushie with his last $2\nCHOICE B: 🤝 Share one slushie with Mia\nCORRECT: B"
+            "explorer": "CHOICE A: \ud83e\udd64 Buy his own slushie with his last $2\nCHOICE B: \ud83e\udd1d Share one slushie with Mia\nCORRECT: B",
+            "pathfinder": "CHOICE A: \ud83e\udd64 Buy his own slushie with his last $2\nCHOICE B: \ud83e\udd1d Share one slushie with Mia\nCORRECT: B",
+            "maverick": "CHOICE A: \ud83e\udd64 Buy his own slushie with his last $2\nCHOICE B: \ud83e\udd1d Share one slushie with Mia\nCORRECT: B"
           },
           "error": {
             "explorer": "Hold up! His own slushie would use his last $2. Try again!",
@@ -1732,9 +1757,9 @@
             "maverick": "concept-wallet.webp"
           },
           "settings": {
-            "explorer": "AVAILABLE: $8\nITEMS: 🎨 Sign supplies ($6) 🥤 Slushie ($2)",
-            "pathfinder": "AVAILABLE: $8\nITEMS: 🎨 Sign supplies ($6) 🥤 Slushie ($2)",
-            "maverick": "AVAILABLE: $8\nITEMS: 🎨 Sign supplies ($6) 🥤 Slushie ($2)"
+            "explorer": "AVAILABLE: $8\nITEMS: \ud83c\udfa8 Sign supplies ($6) \ud83e\udd64 Slushie ($2)",
+            "pathfinder": "AVAILABLE: $8\nITEMS: \ud83c\udfa8 Sign supplies ($6) \ud83e\udd64 Slushie ($2)",
+            "maverick": "AVAILABLE: $8\nITEMS: \ud83c\udfa8 Sign supplies ($6) \ud83e\udd64 Slushie ($2)"
           },
           "error": {
             "explorer": "",
@@ -1757,9 +1782,9 @@
             "maverick": "lars-mia-chatting.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: ❌ No, he's $1 short\nCHOICE B: 🙋 Yes, if Mia lends him $1\nCORRECT: A",
-            "pathfinder": "CHOICE A: ❌ No, he's $1 short\nCHOICE B: 🙋 Yes, if Mia lends him $1\nCORRECT: A",
-            "maverick": "CHOICE A: ❌ No, he's $1 short\nCHOICE B: 🙋 Yes, if Mia lends him $1\nCORRECT: A"
+            "explorer": "CHOICE A: \u274c No, he's $1 short\nCHOICE B: \ud83d\ude4b Yes, if Mia lends him $1\nCORRECT: A",
+            "pathfinder": "CHOICE A: \u274c No, he's $1 short\nCHOICE B: \ud83d\ude4b Yes, if Mia lends him $1\nCORRECT: A",
+            "maverick": "CHOICE A: \u274c No, he's $1 short\nCHOICE B: \ud83d\ude4b Yes, if Mia lends him $1\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1782,9 +1807,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "SOURCE: 🥤 Slushie\nTARGET: 🤝 Share with Mia\nSUCCESS: Shared! And Lars still has $1.",
-            "pathfinder": "SOURCE: 🥤 Slushie\nTARGET: 🤝 Share with Mia\nSUCCESS: Shared! And Lars still has $1.",
-            "maverick": "SOURCE: 🥤 Slushie\nTARGET: 🤝 Share with Mia\nSUCCESS: Shared! And Lars still has $1."
+            "explorer": "SOURCE: \ud83e\udd64 Slushie\nTARGET: \ud83e\udd1d Share with Mia\nSUCCESS: Shared! And Lars still has $1.",
+            "pathfinder": "SOURCE: \ud83e\udd64 Slushie\nTARGET: \ud83e\udd1d Share with Mia\nSUCCESS: Shared! And Lars still has $1.",
+            "maverick": "SOURCE: \ud83e\udd64 Slushie\nTARGET: \ud83e\udd1d Share with Mia\nSUCCESS: Shared! And Lars still has $1."
           },
           "error": {
             "explorer": "",
@@ -1832,9 +1857,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-64709b83.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-64709b83.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-64709b83.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-dbb24a2f.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-dbb24a2f.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-dbb24a2f.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -1857,9 +1882,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-f127370c.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'.",
-            "pathfinder": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-f127370c.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'.",
-            "maverick": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-f127370c.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'."
+            "explorer": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-df569755.mp3\nAUDIO_MS: 8359\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'.",
+            "pathfinder": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-df569755.mp3\nAUDIO_MS: 8359\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'.",
+            "maverick": "ID: explorer-m1-l7-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat2-df569755.mp3\nAUDIO_MS: 8359\nIMAGE_BRIEF: Lars at his desk on a sunny morning, looking at a note on his wall that says 'Mountain bike'."
           },
           "error": {
             "explorer": "",
@@ -1882,9 +1907,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-6582610d.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom.",
-            "pathfinder": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-6582610d.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom.",
-            "maverick": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-6582610d.mp3\nAUDIO_MS: 5799\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom."
+            "explorer": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-015a4ca5.mp3\nAUDIO_MS: 5146\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom.",
+            "pathfinder": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-015a4ca5.mp3\nAUDIO_MS: 5146\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom.",
+            "maverick": "ID: explorer-m1-l7-beat3\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat3-015a4ca5.mp3\nAUDIO_MS: 5146\nIMAGE_BRIEF: Lars heading out the front door with a small wallet, waving to Mom."
           },
           "error": {
             "explorer": "",
@@ -1924,9 +1949,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🪀 Buy it. He wants it and will still have money left → SET cash=4 → GO Screen 1-buy\nCHOICE B: ✋ Don't buy it. He doesn't need it → SET cash=10 → GO Screen 1-keep",
-            "pathfinder": "CHOICE A: 🪀 Buy it. He wants it and will still have money left → SET cash=4 → GO Screen 1-buy\nCHOICE B: ✋ Don't buy it. He doesn't need it → SET cash=10 → GO Screen 1-keep",
-            "maverick": "CHOICE A: 🪀 Buy it. He wants it and will still have money left → SET cash=4 → GO Screen 1-buy\nCHOICE B: ✋ Don't buy it. He doesn't need it → SET cash=10 → GO Screen 1-keep"
+            "explorer": "CHOICE A: \ud83e\ude80 Buy it. He wants it and will still have money left \u2192 SET cash=4 \u2192 GO Screen 1-buy\nCHOICE B: \u270b Don't buy it. He doesn't need it \u2192 SET cash=10 \u2192 GO Screen 1-keep",
+            "pathfinder": "CHOICE A: \ud83e\ude80 Buy it. He wants it and will still have money left \u2192 SET cash=4 \u2192 GO Screen 1-buy\nCHOICE B: \u270b Don't buy it. He doesn't need it \u2192 SET cash=10 \u2192 GO Screen 1-keep",
+            "maverick": "CHOICE A: \ud83e\ude80 Buy it. He wants it and will still have money left \u2192 SET cash=4 \u2192 GO Screen 1-buy\nCHOICE B: \u270b Don't buy it. He doesn't need it \u2192 SET cash=10 \u2192 GO Screen 1-keep"
           },
           "error": {
             "explorer": "",
@@ -1949,9 +1974,9 @@
             "maverick": "lars-walking-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 2",
-            "pathfinder": "CONTINUE → GO Screen 2",
-            "maverick": "CONTINUE → GO Screen 2"
+            "explorer": "CONTINUE \u2192 GO Screen 2",
+            "pathfinder": "CONTINUE \u2192 GO Screen 2",
+            "maverick": "CONTINUE \u2192 GO Screen 2"
           },
           "error": {
             "explorer": "",
@@ -1974,9 +1999,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 2",
-            "pathfinder": "CONTINUE → GO Screen 2",
-            "maverick": "CONTINUE → GO Screen 2"
+            "explorer": "CONTINUE \u2192 GO Screen 2",
+            "pathfinder": "CONTINUE \u2192 GO Screen 2",
+            "maverick": "CONTINUE \u2192 GO Screen 2"
           },
           "error": {
             "explorer": "",
@@ -1999,9 +2024,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "IF cash >= 5 THEN\nCHOICE A: 🕹️ Pay $5 and play → SET cash=cash-5 → GO Screen 2-played\nCHOICE B: 💰 Skip the arcade and keep the money → GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: 💭 See what would have happened if he hadn't bought the yo-yo → GO Screen 2-alt\nCHOICE B: 🚶 Skip the arcade → GO Screen 2-short",
-            "pathfinder": "IF cash >= 5 THEN\nCHOICE A: 🕹️ Pay $5 and play → SET cash=cash-5 → GO Screen 2-played\nCHOICE B: 💰 Skip the arcade and keep the money → GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: 💭 See what would have happened if he hadn't bought the yo-yo → GO Screen 2-alt\nCHOICE B: 🚶 Skip the arcade → GO Screen 2-short",
-            "maverick": "IF cash >= 5 THEN\nCHOICE A: 🕹️ Pay $5 and play → SET cash=cash-5 → GO Screen 2-played\nCHOICE B: 💰 Skip the arcade and keep the money → GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: 💭 See what would have happened if he hadn't bought the yo-yo → GO Screen 2-alt\nCHOICE B: 🚶 Skip the arcade → GO Screen 2-short"
+            "explorer": "IF cash >= 5 THEN\nCHOICE A: \ud83d\udd79\ufe0f Pay $5 and play \u2192 SET cash=cash-5 \u2192 GO Screen 2-played\nCHOICE B: \ud83d\udcb0 Skip the arcade and keep the money \u2192 GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: \ud83d\udcad See what would have happened if he hadn't bought the yo-yo \u2192 GO Screen 2-alt\nCHOICE B: \ud83d\udeb6 Skip the arcade \u2192 GO Screen 2-short",
+            "pathfinder": "IF cash >= 5 THEN\nCHOICE A: \ud83d\udd79\ufe0f Pay $5 and play \u2192 SET cash=cash-5 \u2192 GO Screen 2-played\nCHOICE B: \ud83d\udcb0 Skip the arcade and keep the money \u2192 GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: \ud83d\udcad See what would have happened if he hadn't bought the yo-yo \u2192 GO Screen 2-alt\nCHOICE B: \ud83d\udeb6 Skip the arcade \u2192 GO Screen 2-short",
+            "maverick": "IF cash >= 5 THEN\nCHOICE A: \ud83d\udd79\ufe0f Pay $5 and play \u2192 SET cash=cash-5 \u2192 GO Screen 2-played\nCHOICE B: \ud83d\udcb0 Skip the arcade and keep the money \u2192 GO Screen 2-kept\nIF cash < 5 THEN\nTEXT: Lars has {cash}. The arcade card is $5, so he can't pay. What do you want Lars to do?\nCHOICE A: \ud83d\udcad See what would have happened if he hadn't bought the yo-yo \u2192 GO Screen 2-alt\nCHOICE B: \ud83d\udeb6 Skip the arcade \u2192 GO Screen 2-short"
           },
           "error": {
             "explorer": "",
@@ -2024,9 +2049,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 3",
-            "pathfinder": "CONTINUE → GO Screen 3",
-            "maverick": "CONTINUE → GO Screen 3"
+            "explorer": "CONTINUE \u2192 GO Screen 3",
+            "pathfinder": "CONTINUE \u2192 GO Screen 3",
+            "maverick": "CONTINUE \u2192 GO Screen 3"
           },
           "error": {
             "explorer": "",
@@ -2049,9 +2074,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 3",
-            "pathfinder": "CONTINUE → GO Screen 3",
-            "maverick": "CONTINUE → GO Screen 3"
+            "explorer": "CONTINUE \u2192 GO Screen 3",
+            "pathfinder": "CONTINUE \u2192 GO Screen 3",
+            "maverick": "CONTINUE \u2192 GO Screen 3"
           },
           "error": {
             "explorer": "",
@@ -2074,9 +2099,9 @@
             "maverick": "lars-sitting-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 3",
-            "pathfinder": "CONTINUE → GO Screen 3",
-            "maverick": "CONTINUE → GO Screen 3"
+            "explorer": "CONTINUE \u2192 GO Screen 3",
+            "pathfinder": "CONTINUE \u2192 GO Screen 3",
+            "maverick": "CONTINUE \u2192 GO Screen 3"
           },
           "error": {
             "explorer": "",
@@ -2099,9 +2124,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 3",
-            "pathfinder": "CONTINUE → GO Screen 3",
-            "maverick": "CONTINUE → GO Screen 3"
+            "explorer": "CONTINUE \u2192 GO Screen 3",
+            "pathfinder": "CONTINUE \u2192 GO Screen 3",
+            "maverick": "CONTINUE \u2192 GO Screen 3"
           },
           "error": {
             "explorer": "",
@@ -2124,9 +2149,9 @@
             "maverick": "mia-thinking.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🛹 Yes, Mia joins in ($5) → GO Screen 4\nCHOICE B: 💰 No, she doesn't want to spend the money → GO Screen 4-alt",
-            "pathfinder": "CHOICE A: 🛹 Yes, Mia joins in ($5) → GO Screen 4\nCHOICE B: 💰 No, she doesn't want to spend the money → GO Screen 4-alt",
-            "maverick": "CHOICE A: 🛹 Yes, Mia joins in ($5) → GO Screen 4\nCHOICE B: 💰 No, she doesn't want to spend the money → GO Screen 4-alt"
+            "explorer": "CHOICE A: \ud83d\udef9 Yes, Mia joins in ($5) \u2192 GO Screen 4\nCHOICE B: \ud83d\udcb0 No, she doesn't want to spend the money \u2192 GO Screen 4-alt",
+            "pathfinder": "CHOICE A: \ud83d\udef9 Yes, Mia joins in ($5) \u2192 GO Screen 4\nCHOICE B: \ud83d\udcb0 No, she doesn't want to spend the money \u2192 GO Screen 4-alt",
+            "maverick": "CHOICE A: \ud83d\udef9 Yes, Mia joins in ($5) \u2192 GO Screen 4\nCHOICE B: \ud83d\udcb0 No, she doesn't want to spend the money \u2192 GO Screen 4-alt"
           },
           "error": {
             "explorer": "",
@@ -2149,9 +2174,9 @@
             "maverick": "mia-celebrating.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 5",
-            "pathfinder": "CONTINUE → GO Screen 5",
-            "maverick": "CONTINUE → GO Screen 5"
+            "explorer": "CONTINUE \u2192 GO Screen 5",
+            "pathfinder": "CONTINUE \u2192 GO Screen 5",
+            "maverick": "CONTINUE \u2192 GO Screen 5"
           },
           "error": {
             "explorer": "",
@@ -2174,9 +2199,9 @@
             "maverick": "mia-walking.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 5",
-            "pathfinder": "CONTINUE → GO Screen 5",
-            "maverick": "CONTINUE → GO Screen 5"
+            "explorer": "CONTINUE \u2192 GO Screen 5",
+            "pathfinder": "CONTINUE \u2192 GO Screen 5",
+            "maverick": "CONTINUE \u2192 GO Screen 5"
           },
           "error": {
             "explorer": "",
@@ -2199,9 +2224,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "IF cash >= 4 THEN\nCHOICE A: 🧴 Buy the water bottle ($4) → SET cash=cash-4 → GO Screen 5-buy\nCHOICE B: 💰 Don't buy the water bottle → GO Screen 5-save",
-            "pathfinder": "IF cash >= 4 THEN\nCHOICE A: 🧴 Buy the water bottle ($4) → SET cash=cash-4 → GO Screen 5-buy\nCHOICE B: 💰 Don't buy the water bottle → GO Screen 5-save",
-            "maverick": "IF cash >= 4 THEN\nCHOICE A: 🧴 Buy the water bottle ($4) → SET cash=cash-4 → GO Screen 5-buy\nCHOICE B: 💰 Don't buy the water bottle → GO Screen 5-save"
+            "explorer": "IF cash >= 4 THEN\nCHOICE A: \ud83e\uddf4 Buy the water bottle ($4) \u2192 SET cash=cash-4 \u2192 GO Screen 5-buy\nCHOICE B: \ud83d\udcb0 Don't buy the water bottle \u2192 GO Screen 5-save",
+            "pathfinder": "IF cash >= 4 THEN\nCHOICE A: \ud83e\uddf4 Buy the water bottle ($4) \u2192 SET cash=cash-4 \u2192 GO Screen 5-buy\nCHOICE B: \ud83d\udcb0 Don't buy the water bottle \u2192 GO Screen 5-save",
+            "maverick": "IF cash >= 4 THEN\nCHOICE A: \ud83e\uddf4 Buy the water bottle ($4) \u2192 SET cash=cash-4 \u2192 GO Screen 5-buy\nCHOICE B: \ud83d\udcb0 Don't buy the water bottle \u2192 GO Screen 5-save"
           },
           "error": {
             "explorer": "",
@@ -2224,9 +2249,9 @@
             "maverick": "lars-walking-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 6",
-            "pathfinder": "CONTINUE → GO Screen 6",
-            "maverick": "CONTINUE → GO Screen 6"
+            "explorer": "CONTINUE \u2192 GO Screen 6",
+            "pathfinder": "CONTINUE \u2192 GO Screen 6",
+            "maverick": "CONTINUE \u2192 GO Screen 6"
           },
           "error": {
             "explorer": "",
@@ -2249,9 +2274,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 6",
-            "pathfinder": "CONTINUE → GO Screen 6",
-            "maverick": "CONTINUE → GO Screen 6"
+            "explorer": "CONTINUE \u2192 GO Screen 6",
+            "pathfinder": "CONTINUE \u2192 GO Screen 6",
+            "maverick": "CONTINUE \u2192 GO Screen 6"
           },
           "error": {
             "explorer": "",
@@ -2274,9 +2299,9 @@
             "maverick": "lars-mason-chatting.webp"
           },
           "settings": {
-            "explorer": "IF cash >= 5 THEN\nCHOICE A: 🎳 Go bowling ($5) → SET cash=cash-5 → GO Screen 7\nCHOICE B: 🏠 Stay home and keep his money → GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: 🧩 Ask if everyone can play board games at Mason's place instead (free) → GO Screen 7-games\nCHOICE B: 🚶 Skip bowling → GO Screen 7-skip",
-            "pathfinder": "IF cash >= 5 THEN\nCHOICE A: 🎳 Go bowling ($5) → SET cash=cash-5 → GO Screen 7\nCHOICE B: 🏠 Stay home and keep his money → GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: 🧩 Ask if everyone can play board games at Mason's place instead (free) → GO Screen 7-games\nCHOICE B: 🚶 Skip bowling → GO Screen 7-skip",
-            "maverick": "IF cash >= 5 THEN\nCHOICE A: 🎳 Go bowling ($5) → SET cash=cash-5 → GO Screen 7\nCHOICE B: 🏠 Stay home and keep his money → GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: 🧩 Ask if everyone can play board games at Mason's place instead (free) → GO Screen 7-games\nCHOICE B: 🚶 Skip bowling → GO Screen 7-skip"
+            "explorer": "IF cash >= 5 THEN\nCHOICE A: \ud83c\udfb3 Go bowling ($5) \u2192 SET cash=cash-5 \u2192 GO Screen 7\nCHOICE B: \ud83c\udfe0 Stay home and keep his money \u2192 GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: \ud83e\udde9 Ask if everyone can play board games at Mason's place instead (free) \u2192 GO Screen 7-games\nCHOICE B: \ud83d\udeb6 Skip bowling \u2192 GO Screen 7-skip",
+            "pathfinder": "IF cash >= 5 THEN\nCHOICE A: \ud83c\udfb3 Go bowling ($5) \u2192 SET cash=cash-5 \u2192 GO Screen 7\nCHOICE B: \ud83c\udfe0 Stay home and keep his money \u2192 GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: \ud83e\udde9 Ask if everyone can play board games at Mason's place instead (free) \u2192 GO Screen 7-games\nCHOICE B: \ud83d\udeb6 Skip bowling \u2192 GO Screen 7-skip",
+            "maverick": "IF cash >= 5 THEN\nCHOICE A: \ud83c\udfb3 Go bowling ($5) \u2192 SET cash=cash-5 \u2192 GO Screen 7\nCHOICE B: \ud83c\udfe0 Stay home and keep his money \u2192 GO Screen 7-home\nIF cash < 5 THEN\nCHOICE A: \ud83e\udde9 Ask if everyone can play board games at Mason's place instead (free) \u2192 GO Screen 7-games\nCHOICE B: \ud83d\udeb6 Skip bowling \u2192 GO Screen 7-skip"
           },
           "error": {
             "explorer": "",
@@ -2299,9 +2324,9 @@
             "maverick": "lars-celebrating-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 8",
-            "pathfinder": "CONTINUE → GO Screen 8",
-            "maverick": "CONTINUE → GO Screen 8"
+            "explorer": "CONTINUE \u2192 GO Screen 8",
+            "pathfinder": "CONTINUE \u2192 GO Screen 8",
+            "maverick": "CONTINUE \u2192 GO Screen 8"
           },
           "error": {
             "explorer": "",
@@ -2324,9 +2349,9 @@
             "maverick": "lars-sitting-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 8",
-            "pathfinder": "CONTINUE → GO Screen 8",
-            "maverick": "CONTINUE → GO Screen 8"
+            "explorer": "CONTINUE \u2192 GO Screen 8",
+            "pathfinder": "CONTINUE \u2192 GO Screen 8",
+            "maverick": "CONTINUE \u2192 GO Screen 8"
           },
           "error": {
             "explorer": "",
@@ -2349,9 +2374,9 @@
             "maverick": "lars-mason-sidebyside.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 8",
-            "pathfinder": "CONTINUE → GO Screen 8",
-            "maverick": "CONTINUE → GO Screen 8"
+            "explorer": "CONTINUE \u2192 GO Screen 8",
+            "pathfinder": "CONTINUE \u2192 GO Screen 8",
+            "maverick": "CONTINUE \u2192 GO Screen 8"
           },
           "error": {
             "explorer": "",
@@ -2374,9 +2399,9 @@
             "maverick": "lars-sitting-512.webp"
           },
           "settings": {
-            "explorer": "CONTINUE → GO Screen 8",
-            "pathfinder": "CONTINUE → GO Screen 8",
-            "maverick": "CONTINUE → GO Screen 8"
+            "explorer": "CONTINUE \u2192 GO Screen 8",
+            "pathfinder": "CONTINUE \u2192 GO Screen 8",
+            "maverick": "CONTINUE \u2192 GO Screen 8"
           },
           "error": {
             "explorer": "",
@@ -2441,9 +2466,9 @@
             "maverick": "lars-waving-512.webp"
           },
           "settings": {
-            "explorer": "HUB\nBUTTON: 🧠 Catch Impulse Spending → GO Screen 2\nBUTTON: ✅ Choose Needs Over Wants → GO Screen 4\nBUTTON: 💰 Don't Spend Money You Don't Have → GO Screen 6\nBUTTON: Finish → GO Screen 8 WHEN complete",
-            "pathfinder": "HUB\nBUTTON: 🧠 Catch Impulse Spending → GO Screen 2\nBUTTON: ✅ Choose Needs Over Wants → GO Screen 4\nBUTTON: 💰 Don't Spend Money You Don't Have → GO Screen 6\nBUTTON: Finish → GO Screen 8 WHEN complete",
-            "maverick": "HUB\nBUTTON: 🧠 Catch Impulse Spending → GO Screen 2\nBUTTON: ✅ Choose Needs Over Wants → GO Screen 4\nBUTTON: 💰 Don't Spend Money You Don't Have → GO Screen 6\nBUTTON: Finish → GO Screen 8 WHEN complete"
+            "explorer": "HUB\nBUTTON: \ud83e\udde0 Catch Impulse Spending \u2192 GO Screen 2\nBUTTON: \u2705 Choose Needs Over Wants \u2192 GO Screen 4\nBUTTON: \ud83d\udcb0 Don't Spend Money You Don't Have \u2192 GO Screen 6\nBUTTON: Finish \u2192 GO Screen 8 WHEN complete",
+            "pathfinder": "HUB\nBUTTON: \ud83e\udde0 Catch Impulse Spending \u2192 GO Screen 2\nBUTTON: \u2705 Choose Needs Over Wants \u2192 GO Screen 4\nBUTTON: \ud83d\udcb0 Don't Spend Money You Don't Have \u2192 GO Screen 6\nBUTTON: Finish \u2192 GO Screen 8 WHEN complete",
+            "maverick": "HUB\nBUTTON: \ud83e\udde0 Catch Impulse Spending \u2192 GO Screen 2\nBUTTON: \u2705 Choose Needs Over Wants \u2192 GO Screen 4\nBUTTON: \ud83d\udcb0 Don't Spend Money You Don't Have \u2192 GO Screen 6\nBUTTON: Finish \u2192 GO Screen 8 WHEN complete"
           },
           "error": {
             "explorer": "",
@@ -2466,9 +2491,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 😴 Sleep on it first → GO Screen 3\nCHOICE B: ⏰ Buy before the timer ends → GO Screen 3\nCORRECT: A",
-            "pathfinder": "CHOICE A: 😴 Sleep on it first → GO Screen 3\nCHOICE B: ⏰ Buy before the timer ends → GO Screen 3\nCORRECT: A",
-            "maverick": "CHOICE A: 😴 Sleep on it first → GO Screen 3\nCHOICE B: ⏰ Buy before the timer ends → GO Screen 3\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83d\ude34 Sleep on it first \u2192 GO Screen 3\nCHOICE B: \u23f0 Buy before the timer ends \u2192 GO Screen 3\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83d\ude34 Sleep on it first \u2192 GO Screen 3\nCHOICE B: \u23f0 Buy before the timer ends \u2192 GO Screen 3\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83d\ude34 Sleep on it first \u2192 GO Screen 3\nCHOICE B: \u23f0 Buy before the timer ends \u2192 GO Screen 3\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -2491,9 +2516,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CORRECT: False\nCONTINUE → GO Screen 1",
-            "pathfinder": "CORRECT: False\nCONTINUE → GO Screen 1",
-            "maverick": "CORRECT: False\nCONTINUE → GO Screen 1"
+            "explorer": "CORRECT: False\nCONTINUE \u2192 GO Screen 1",
+            "pathfinder": "CORRECT: False\nCONTINUE \u2192 GO Screen 1",
+            "maverick": "CORRECT: False\nCONTINUE \u2192 GO Screen 1"
           },
           "error": {
             "explorer": "",
@@ -2516,9 +2541,9 @@
             "maverick": "lars-hands-on-hips-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 🍋 Lemons for his stand → GO Screen 5\nCHOICE B: 🍬 A big bag of candy → GO Screen 5\nCORRECT: A",
-            "pathfinder": "CHOICE A: 🍋 Lemons for his stand → GO Screen 5\nCHOICE B: 🍬 A big bag of candy → GO Screen 5\nCORRECT: A",
-            "maverick": "CHOICE A: 🍋 Lemons for his stand → GO Screen 5\nCHOICE B: 🍬 A big bag of candy → GO Screen 5\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83c\udf4b Lemons for his stand \u2192 GO Screen 5\nCHOICE B: \ud83c\udf6c A big bag of candy \u2192 GO Screen 5\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83c\udf4b Lemons for his stand \u2192 GO Screen 5\nCHOICE B: \ud83c\udf6c A big bag of candy \u2192 GO Screen 5\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83c\udf4b Lemons for his stand \u2192 GO Screen 5\nCHOICE B: \ud83c\udf6c A big bag of candy \u2192 GO Screen 5\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -2541,9 +2566,9 @@
             "maverick": "lars-walking-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: 👟 School shoes → GO Screen 1\nCHOICE B: 🎮 Game skin → GO Screen 1\nCORRECT: A",
-            "pathfinder": "CHOICE A: 👟 School shoes → GO Screen 1\nCHOICE B: 🎮 Game skin → GO Screen 1\nCORRECT: A",
-            "maverick": "CHOICE A: 👟 School shoes → GO Screen 1\nCHOICE B: 🎮 Game skin → GO Screen 1\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83d\udc5f School shoes \u2192 GO Screen 1\nCHOICE B: \ud83c\udfae Game skin \u2192 GO Screen 1\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83d\udc5f School shoes \u2192 GO Screen 1\nCHOICE B: \ud83c\udfae Game skin \u2192 GO Screen 1\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83d\udc5f School shoes \u2192 GO Screen 1\nCHOICE B: \ud83c\udfae Game skin \u2192 GO Screen 1\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -2566,9 +2591,9 @@
             "maverick": "lars-sitting-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: ❌ No, he's $3 short → GO Screen 7\nCHOICE B: 🙋 Yes, if he borrows $3 → GO Screen 7\nCORRECT: A",
-            "pathfinder": "CHOICE A: ❌ No, he's $3 short → GO Screen 7\nCHOICE B: 🙋 Yes, if he borrows $3 → GO Screen 7\nCORRECT: A",
-            "maverick": "CHOICE A: ❌ No, he's $3 short → GO Screen 7\nCHOICE B: 🙋 Yes, if he borrows $3 → GO Screen 7\nCORRECT: A"
+            "explorer": "CHOICE A: \u274c No, he's $3 short \u2192 GO Screen 7\nCHOICE B: \ud83d\ude4b Yes, if he borrows $3 \u2192 GO Screen 7\nCORRECT: A",
+            "pathfinder": "CHOICE A: \u274c No, he's $3 short \u2192 GO Screen 7\nCHOICE B: \ud83d\ude4b Yes, if he borrows $3 \u2192 GO Screen 7\nCORRECT: A",
+            "maverick": "CHOICE A: \u274c No, he's $3 short \u2192 GO Screen 7\nCHOICE B: \ud83d\ude4b Yes, if he borrows $3 \u2192 GO Screen 7\nCORRECT: A"
           },
           "error": {
             "explorer": "Hold up! Borrowing means spending money he doesn't have. Try again!",
@@ -2591,9 +2616,9 @@
             "maverick": "lars-thinking-512.webp"
           },
           "settings": {
-            "explorer": "OPTIONS: 💸 afford | 🙈 forget | 🗑️ lose\nCORRECT: 💸 afford\nCONTINUE → GO Screen 1",
-            "pathfinder": "OPTIONS: 💸 afford | 🙈 forget | 🗑️ lose\nCORRECT: 💸 afford\nCONTINUE → GO Screen 1",
-            "maverick": "OPTIONS: 💸 afford | 🙈 forget | 🗑️ lose\nCORRECT: 💸 afford\nCONTINUE → GO Screen 1"
+            "explorer": "OPTIONS: \ud83d\udcb8 afford | \ud83d\ude48 forget | \ud83d\uddd1\ufe0f lose\nCORRECT: \ud83d\udcb8 afford\nCONTINUE \u2192 GO Screen 1",
+            "pathfinder": "OPTIONS: \ud83d\udcb8 afford | \ud83d\ude48 forget | \ud83d\uddd1\ufe0f lose\nCORRECT: \ud83d\udcb8 afford\nCONTINUE \u2192 GO Screen 1",
+            "maverick": "OPTIONS: \ud83d\udcb8 afford | \ud83d\ude48 forget | \ud83d\uddd1\ufe0f lose\nCORRECT: \ud83d\udcb8 afford\nCONTINUE \u2192 GO Screen 1"
           },
           "error": {
             "explorer": "",
@@ -2641,9 +2666,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-44700b9d.mp3\nAUDIO_MS: 9639\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok",
-            "pathfinder": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-44700b9d.mp3\nAUDIO_MS: 9639\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok",
-            "maverick": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-44700b9d.mp3\nAUDIO_MS: 9639\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok"
+            "explorer": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-113775f2.mp3\nAUDIO_MS: 9953\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok",
+            "pathfinder": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-113775f2.mp3\nAUDIO_MS: 9953\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok",
+            "maverick": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-113775f2.mp3\nAUDIO_MS: 9953\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Created with Grok"
           },
           "error": {
             "explorer": "",
@@ -2666,9 +2691,9 @@
             "maverick": ""
           },
           "settings": {
-            "explorer": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-df899a4c.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
-            "pathfinder": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-df899a4c.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
-            "maverick": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-df899a4c.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade."
+            "explorer": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-163bcac6.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
+            "pathfinder": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-163bcac6.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
+            "maverick": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-163bcac6.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade."
           },
           "error": {
             "explorer": "",

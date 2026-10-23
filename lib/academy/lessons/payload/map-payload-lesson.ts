@@ -1466,6 +1466,7 @@ export function mapPayloadScreen(
       const audioSrc = settingValue(settings, "AUDIO")?.trim();
       const audioMsRaw = Number(settingValue(settings, "AUDIO_MS") ?? "");
       const brief = settingValue(settings, "IMAGE_BRIEF")?.trim();
+      const follow = settingValue(settings, "FOLLOW")?.trim();
       const audio = audioSrc
         ? { src: audioSrc, durationMs: Number.isFinite(audioMsRaw) ? audioMsRaw : 0 }
         : undefined;
@@ -1479,6 +1480,7 @@ export function mapPayloadScreen(
         advance: { mode: "auto-ready" },
         ...(credit ? { credit } : {}),
         ...(audio ? { audio } : {}),
+        ...(follow ? { successMessage: follow } : {}),
         ...(brief ? { illustration: { label: brief, alt: brief } } : {}),
         ...picture,
       };

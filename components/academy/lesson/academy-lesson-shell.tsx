@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { LessonCoinRunMeter } from "@/components/academy/lesson/lesson-coin-run-meter";
 import {
   lessonCyanNextButtonClass,
@@ -9,6 +9,7 @@ import {
   lessonScreenInlinePaddingClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { pathProgressPercent } from "@/lib/academy/lessons/payload/lesson-graph";
+import { stopStoryAudio } from "@/lib/academy/lessons/story-audio/playback";
 import { cn } from "@/lib/utils/cn";
 
 /** Story beats portal their credit into the lesson footer, above Next. */
@@ -75,6 +76,12 @@ export function AcademyLessonShell({
   previousIndexRef.current = currentScreenIndex;
   const [creditSlot, setCreditSlot] = useState<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    return () => {
+      stopStoryAudio();
+    };
+  }, []);
+
   return (
     <StoryCreditSlotContext.Provider value={creditSlot}>
     <div
@@ -100,6 +107,9 @@ export function AcademyLessonShell({
         <Link
           href="/dashboard/academy"
           aria-label="Close lesson"
+          onClick={() => {
+            stopStoryAudio();
+          }}
           className="grid size-8 shrink-0 place-items-center rounded-full text-[#031F82] transition-colors hover:bg-[#E8F6FC] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0CC1E0]"
         >
           <svg

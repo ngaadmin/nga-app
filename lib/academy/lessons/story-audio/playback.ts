@@ -51,9 +51,24 @@ export function createStoryPlayback(sink: StoryAudioSink) {
   let activeSrc = "";
   let playGeneration = 0;
 
+  const silence = (src: string) => {
+    playGeneration += 1;
+    activeSrc = src;
+    sink.muted = true;
+    sink.pause();
+    sink.currentTime = 0;
+    return Promise.resolve(false);
+  };
+
   const beginPlay = (src: string, muted: boolean, restart: boolean) => {
     const generation = ++playGeneration;
-    if (!sameClip(sink.src, src) || restart) {
+    const switching = !sameClip(sink.src, src);
+    const audible = Boolean(sink.src) && !sink.src.startsWith("data:");
+    if ((switching || restart) && audible) {
+      sink.pause();
+      sink.currentTime = 0;
+    }
+    if (switching || restart) {
       sink.src = src;
       sink.currentTime = 0;
     }
@@ -70,7 +85,13 @@ export function createStoryPlayback(sink: StoryAudioSink) {
     unlocked = true;
     blocked = false;
     return Promise.resolve(pending).then(
-      () => generation === playGeneration,
+      () => {
+        if (generation !== playGeneration) {
+          sink.pause();
+          return false;
+        }
+        return true;
+      },
       () => {
         if (generation !== playGeneration) return false;
         unlocked = false;
@@ -78,6 +99,15 @@ export function createStoryPlayback(sink: StoryAudioSink) {
         return false;
       },
     );
+  };
+
+  const stop = () => {
+    playGeneration += 1;
+    activeSrc = "";
+    blocked = false;
+    sink.pause();
+    sink.currentTime = 0;
+    sink.src = "";
   };
 
   return {
@@ -116,26 +146,28 @@ export function createStoryPlayback(sink: StoryAudioSink) {
       );
     },
     playFromGesture(src: string, muted: boolean): Promise<boolean> {
-      return beginPlay(src, muted, true);
+      if (muted) return silence(src);
+      return beginPlay(src, false, true);
     },
     playOnScreen(src: string | undefined, muted: boolean): Promise<boolean> {
       if (!src) {
-        playGeneration += 1;
-        activeSrc = "";
-        sink.pause();
+        stop();
         return Promise.resolve(false);
       }
+      if (muted) return silence(src);
       activeSrc = src;
       if (!unlocked) {
         blocked = true;
         return Promise.resolve(false);
       }
-      return beginPlay(src, muted, false);
+      return beginPlay(src, false, false);
     },
     resumeBlocked(muted: boolean): Promise<boolean> {
       if (!blocked || !activeSrc) return Promise.resolve(false);
-      return beginPlay(activeSrc, muted, false);
+      if (muted) return silence(activeSrc);
+      return beginPlay(activeSrc, false, false);
     },
+    stop,
   };
 }
 
@@ -144,6 +176,18 @@ type StoryPlayback = ReturnType<typeof createStoryPlayback>;
 let element: HTMLAudioElement | null = null;
 let playback: StoryPlayback | null = null;
 let fallbackInstalled = false;
+let lifecycleInstalled = false;
+
+/** One listener set for the shared element. Leaving the page cannot miss it. */
+function installStoryAudioLifecycle(): void {
+  if (lifecycleInstalled || typeof window === "undefined") return;
+  lifecycleInstalled = true;
+  window.addEventListener("pagehide", stopStoryAudio);
+  window.addEventListener("popstate", stopStoryAudio);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") stopStoryAudio();
+  });
+}
 
 export function readStoryMuted(): boolean {
   if (typeof window === "undefined") return false;
@@ -159,6 +203,7 @@ export function storyAudioElement(): HTMLAudioElement | null {
   if (!element) {
     element = new Audio();
     element.preload = "auto";
+    installStoryAudioLifecycle();
   }
   return element;
 }
@@ -172,6 +217,12 @@ function session(): StoryPlayback | null {
         return audio.src;
       },
       set src(value: string) {
+        if (!value) {
+          audio.pause();
+          audio.removeAttribute("src");
+          audio.load();
+          return;
+        }
         if (audio.src !== value && !audio.src.endsWith(value)) audio.src = value;
       },
       get muted() {
@@ -184,7 +235,11 @@ function session(): StoryPlayback | null {
         return audio.currentTime;
       },
       set currentTime(value: number) {
-        audio.currentTime = value;
+        try {
+          audio.currentTime = value;
+        } catch {
+          // A released element rejects seeks. Stop still clears the clip.
+        }
       },
       play: () => audio.play().then(() => undefined),
       pause: () => audio.pause(),
@@ -204,6 +259,11 @@ export function playStoryClipFromGesture(src: string): void {
   const active = session();
   if (!active) return;
   void active.playFromGesture(src, readStoryMuted());
+}
+
+/** Pause, rewind, and drop the shared clip. Safe to call when no lesson is open. */
+export function stopStoryAudio(): void {
+  playback?.stop();
 }
 
 /** Start the clip for the beat that just appeared, after a gesture has unlocked sound. */

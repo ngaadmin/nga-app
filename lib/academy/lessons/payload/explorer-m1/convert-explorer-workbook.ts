@@ -131,6 +131,7 @@ export function convertExplorerModule1(input: {
           file: audio.file,
           durationMs: audio.durationMs,
           credit: false,
+          image: cell(row, columns.image),
         }),
       );
       lessons.set(currentLesson, screens);

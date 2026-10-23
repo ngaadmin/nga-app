@@ -57,22 +57,82 @@ describe("story beat autoplay", () => {
     expect(playback.isUnlocked()).toBe(true);
   });
 
-  it("autoplays each later beat after the lesson gesture, and keeps mute", async () => {
+  it("autoplays each later beat after the lesson gesture and pauses the clip it replaces", async () => {
     const { sink, calls } = fakeSink();
     const playback = createStoryPlayback(sink);
     await playback.primeFromGesture();
     calls.length = 0;
     const intro = await playback.playOnScreen("/clips/intro.mp3", false);
-    const second = await playback.playOnScreen("/clips/l2-beat2.mp3", true);
-    const afterClose = await playback.playOnScreen("/clips/l6-beat3.mp3", true);
+    const second = await playback.playOnScreen("/clips/l2-beat2.mp3", false);
+    const afterClose = await playback.playOnScreen("/clips/l6-beat3.mp3", false);
     const moduleEnd = await playback.playOnScreen("/clips/l9-beat1.mp3", false);
     expect(intro && second && afterClose && moduleEnd).toBe(true);
     expect(calls).toEqual([
       "play:/clips/intro.mp3:muted=false",
-      "play:/clips/l2-beat2.mp3:muted=true",
-      "play:/clips/l6-beat3.mp3:muted=true",
+      "pause",
+      "play:/clips/l2-beat2.mp3:muted=false",
+      "pause",
+      "play:/clips/l6-beat3.mp3:muted=false",
+      "pause",
       "play:/clips/l9-beat1.mp3:muted=false",
     ]);
+  });
+
+  it("pauses a muted beat instead of autoplaying it, then restarts on unmute", async () => {
+    const { sink, calls } = fakeSink();
+    const playback = createStoryPlayback(sink);
+    await playback.primeFromGesture();
+    calls.length = 0;
+    const intro = await playback.playOnScreen("/clips/intro.mp3", false);
+    const held = await playback.playOnScreen("/clips/l2-beat2.mp3", true);
+    const restarted = await playback.playFromGesture("/clips/l2-beat2.mp3", false);
+    expect(intro).toBe(true);
+    expect(held).toBe(false);
+    expect(restarted).toBe(true);
+    expect(sink.muted).toBe(false);
+    expect(calls).toEqual([
+      "play:/clips/intro.mp3:muted=false",
+      "pause",
+      "pause",
+      "play:/clips/l2-beat2.mp3:muted=false",
+    ]);
+  });
+
+  it("releases the clip when the lesson stops", async () => {
+    const { sink, calls } = fakeSink();
+    const playback = createStoryPlayback(sink);
+    await playback.playFromGesture("/clips/intro.mp3", false);
+    playback.stop();
+    expect(sink.src).toBe("");
+    expect(sink.currentTime).toBe(0);
+    expect(calls.at(-1)).toBe("pause");
+  });
+
+  it("pauses a play that finishes after stop", async () => {
+    let release = () => {};
+    const { sink, calls } = fakeSink(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
+    const playback = createStoryPlayback(sink);
+    const started = playback.playFromGesture("/clips/intro.mp3", false);
+    playback.stop();
+    release();
+    expect(await started).toBe(false);
+    expect(sink.src).toBe("");
+    expect(calls.filter((call) => call === "pause").length).toBeGreaterThan(0);
+  });
+
+  it("does not start a blocked clip while muted", async () => {
+    const { sink, calls } = fakeSink();
+    const playback = createStoryPlayback(sink);
+    await playback.playOnScreen("/clips/intro.mp3", false);
+    const resumed = await playback.resumeBlocked(true);
+    expect(resumed).toBe(false);
+    expect(sink.muted).toBe(true);
+    expect(calls).toEqual(["pause"]);
   });
 
   it("does not call play until a gesture when the screen opens on its own", async () => {

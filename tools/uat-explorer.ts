@@ -741,47 +741,26 @@ async function walkLoadedLesson(page: Page, lesson: number, viewport: string, ba
       console.log(`shot ${file}`);
       shotPending = false;
     }
+    if (index === 0 && !mutedChecked) {
+      const mute = page.getByRole("button", { name: /^(Mute sound|Unmute sound)$/ });
+      const visible = await mute.isVisible().catch(() => false);
+      if (!visible) {
+        const file = await shot(page, `bug-mute-missing-l${lesson}-${viewport}`);
+        addBug({
+          id: `mute-missing-${lesson}`,
+          severity: "major",
+          lesson,
+          screen: index,
+          words: wordsOf(screen),
+          title: "Master mute button is missing",
+          detail: "Every lesson screen needs the sound button in the top-right of the lesson column.",
+          shot: file,
+        });
+      }
+      mutedChecked = true;
+    }
     if (screen.type === "narrative-bonus" && screen.audio) {
       await inspectBeat(page, lesson, index, screen, viewport);
-      if (!mutedChecked) {
-        const readMute = () =>
-          page.evaluate(() =>
-            document
-              .querySelector('button[aria-label="Mute voiceover"], button[aria-label="Unmute voiceover"]')
-              ?.getAttribute("aria-label") ?? "",
-          );
-        const before = await readMute();
-        if (before) {
-          await page.evaluate(() => {
-            const button = document.querySelector(
-              'button[aria-label="Mute voiceover"], button[aria-label="Unmute voiceover"]',
-            );
-            if (button instanceof HTMLButtonElement) button.click();
-          });
-          await page.waitForTimeout(250);
-          const after = await readMute();
-          if (after === before) {
-            const file = await shot(page, `bug-mute-l${lesson}-${viewport}`);
-            addBug({
-              id: `mute-${lesson}`,
-              severity: "major",
-              lesson,
-              screen: index,
-              words: wordsOf(screen),
-              title: "Mute toggle did not change",
-              detail: `aria-label stayed ${before}`,
-              shot: file,
-            });
-          }
-          await page.evaluate(() => {
-            const button = document.querySelector(
-              'button[aria-label="Mute voiceover"], button[aria-label="Unmute voiceover"]',
-            );
-            if (button instanceof HTMLButtonElement) button.click();
-          });
-        }
-        mutedChecked = true;
-      }
     }
     if (screen.type === "completion") {
       const cashIn = page.getByRole("button", { name: /Cash in/i });

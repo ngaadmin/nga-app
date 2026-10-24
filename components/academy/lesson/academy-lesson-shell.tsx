@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { createContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { LessonCoinRunMeter } from "@/components/academy/lesson/lesson-coin-run-meter";
+import { MasterMuteButton } from "@/components/academy/lesson/master-mute-button";
 import {
   lessonCyanNextButtonClass,
   lessonNextButtonClass,
@@ -86,7 +87,7 @@ export function AcademyLessonShell({
     <StoryCreditSlotContext.Provider value={creditSlot}>
     <div
       className={cn(
-        "mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden",
+        "relative mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden",
         matchChrome
           ? "bg-[linear-gradient(180deg,#EEF5FF_0%,#FFFFFF_55%)]"
           : skySurface
@@ -95,6 +96,7 @@ export function AcademyLessonShell({
       )}
       style={{ touchAction: "pan-y", overscrollBehavior: "none" }}
     >
+      <MasterMuteButton />
       {hideHeader ? null : (
       <header
         className={cn(
@@ -144,6 +146,7 @@ export function AcademyLessonShell({
             style={{ width: `${progressPercent}%` }}
           />
         </div>
+        <div className="w-11 shrink-0" aria-hidden />
       </header>
       )}
 

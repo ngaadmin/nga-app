@@ -17,6 +17,8 @@ const FLOW_TESTS = [
   "lib/academy/lessons/payload/module1-playable.test.ts",
   "lib/academy/lessons/story-audio/playback.test.ts",
   "lib/academy/lessons/story-audio/story-audio.test.ts",
+  "lib/academy/lessons/story-audio/master-mute.test.ts",
+  "lib/academy/lessons/utils.test.ts",
   "tools/uat-explorer-args.test.ts",
 ];
 

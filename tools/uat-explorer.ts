@@ -443,6 +443,59 @@ async function playRange(
   return { index, cash: runningCash };
 }
 
+async function inspectImages(
+  page: Page,
+  lesson: number,
+  index: number,
+  screen: ScreenConfig,
+  viewport: string,
+): Promise<void> {
+  const broken = (await page.evaluate(`(() => {
+    const imgs = [...document.querySelectorAll("img")];
+    const wait = imgs.map((img) => new Promise((resolve) => {
+      const finish = () => {
+        const src = img.currentSrc || img.src || "";
+        if (!src.includes("/assets/")) {
+          resolve(null);
+          return;
+        }
+        const box = img.getBoundingClientRect();
+        if (!img.complete || img.naturalWidth === 0 || box.width < 8 || box.height < 8) {
+          resolve(src + " (" + Math.round(box.width) + "x" + Math.round(box.height) + ", natural " + img.naturalWidth + ")");
+          return;
+        }
+        resolve(null);
+      };
+      if (img.complete) finish();
+      else {
+        img.addEventListener("load", finish, { once: true });
+        img.addEventListener("error", finish, { once: true });
+        setTimeout(finish, 5000);
+      }
+    }));
+    return Promise.all(wait).then((rows) => rows.filter(Boolean));
+  })()`)) as string[];
+  const leakedName = await page.locator("body").innerText().then(
+    (text) => /\b(?:sidebyside|chatting)\b/i.test(text),
+    () => false,
+  );
+  if (broken.length > 0 || leakedName) {
+    const file = await shot(page, `bug-broken-img-l${lesson}-s${index}-${viewport}`);
+    addBug({
+      id: `broken-img-${lesson}-${index}`,
+      severity: "major",
+      lesson,
+      screen: index,
+      words: wordsOf(screen),
+      title: leakedName ? "Image file name is on screen" : "Image failed to load",
+      detail: leakedName
+        ? `A picture file name is visible. ${broken.join(", ")}`
+        : broken.join(", "),
+      shot: file,
+    });
+  }
+}
+
 async function inspectBeat(page: Page, lesson: number, index: number, screen: ScreenConfig, viewport: string): Promise<void> {
   if (screen.type !== "narrative-bonus" || !screen.audio) return;
   const credit = page.getByText("Voice created with Grok", { exact: true });
@@ -485,26 +538,6 @@ async function inspectBeat(page: Page, lesson: number, index: number, screen: Sc
       words: wordsOf(screen),
       title: "Replay control missing on a voiced beat",
       detail: "A story beat with audio did not show Replay.",
-      shot: file,
-    });
-  }
-  const imgs = page.locator("img");
-  const broken = await imgs.evaluateAll((nodes) =>
-    nodes
-      .map((node) => node as HTMLImageElement)
-      .filter((node) => node.complete && node.naturalWidth === 0)
-      .map((node) => node.currentSrc || node.src),
-  );
-  if (broken.length > 0) {
-    const file = await shot(page, `bug-broken-img-l${lesson}-s${index}-${viewport}`);
-    addBug({
-      id: `broken-img-${lesson}-${index}`,
-      severity: "major",
-      lesson,
-      screen: index,
-      words: wordsOf(screen),
-      title: "Image failed to load",
-      detail: broken.join(", "),
       shot: file,
     });
   }
@@ -759,6 +792,7 @@ async function walkLoadedLesson(page: Page, lesson: number, viewport: string, ba
       }
       mutedChecked = true;
     }
+    await inspectImages(page, lesson, index, screen, viewport);
     if (screen.type === "narrative-bonus" && screen.audio) {
       await inspectBeat(page, lesson, index, screen, viewport);
     }

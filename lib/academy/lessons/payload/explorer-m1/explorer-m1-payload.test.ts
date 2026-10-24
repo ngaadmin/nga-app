@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
+import { getIllustrationPath, getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
 import { rehomeBetweenLessonBeats } from "@/lib/academy/lessons/payload/explorer-m1/convert-explorer-workbook";
 import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
 import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
@@ -303,6 +303,68 @@ describe("explorer module 1 payload", () => {
     const bundled = loadBundledLessonPayload(1, 1);
     expect(selectLessonPayload("pathfinder", bundled, payload)?.lessonTitle).toBe(
       bundled.lessonTitle,
+    );
+  });
+
+  it("resolves every explorer picture, including drag sprites, to a file on disk", () => {
+    const missing: string[] = [];
+    const blankDrags: string[] = [];
+    const publicFile = (src: string) => existsSync(path.join(process.cwd(), "public", src));
+
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
+      screens.forEach((screen, index) => {
+        const picture = resolveLessonScreenIllustration(screen);
+        if (picture?.src && !publicFile(picture.src)) {
+          missing.push(`L${lessonNumber} s${index} scene ${picture.src}`);
+        }
+        if (screen.type !== "drag-to-target") return;
+        const sprites: string[] = [];
+        if (screen.sourceIllustrationId) sprites.push(getIllustrationPath(screen.sourceIllustrationId));
+        if (screen.targetIllustrationId) sprites.push(getIllustrationPath(screen.targetIllustrationId));
+        for (const fileName of [screen.sourceImageFile, screen.targetImageFile]) {
+          if (!fileName) continue;
+          const src = getPairSheetImagePath(fileName);
+          if (!src) missing.push(`L${lessonNumber} s${index} unresolved ${fileName}`);
+          else sprites.push(src);
+        }
+        for (const src of sprites) {
+          if (!publicFile(src)) missing.push(`L${lessonNumber} s${index} drag ${src}`);
+        }
+        if (sprites.length === 0 && !screen.itemEmoji && !screen.targetEmoji) {
+          blankDrags.push(`L${lessonNumber} s${index} ${screen.sourceLabel} → ${screen.targetLabel}`);
+        }
+      });
+    }
+
+    expect(blankDrags).toEqual([]);
+    expect(missing).toEqual([]);
+
+    const lesson2 = loadExplorerM1Payload(2);
+    if (!lesson2) throw new Error("missing lesson 2");
+    const gift = resolvePayloadLesson(lesson2, "explorer", 2).screens.find(
+      (screen) => screen.type === "drag-to-target" && screen.sourceIllustrationId === "concept-gift-box",
+    );
+    expect(gift).toMatchObject({
+      sourceLabel: "Gift box",
+      targetLabel: "Senna",
+      sourceIllustrationId: "concept-gift-box",
+      targetIllustrationId: "senna-celebrating",
+      pairImage: "lars-senna-sidebyside.webp",
+    });
+    if (!gift || gift.type !== "drag-to-target") return;
+    expect(resolveLessonScreenIllustration(gift)).toMatchObject({
+      src: "/assets/illustrations/pairs/lars-senna-sidebyside.webp",
+      alt: "lars senna sidebyside",
+    });
+    expect(resolveLessonScreenIllustration(gift)?.label).toBeUndefined();
+    expect(getIllustrationPath("concept-gift-box")).toBe(
+      "/assets/illustrations/concepts/concept-gift-box.webp",
+    );
+    expect(getIllustrationPath("senna-celebrating")).toBe(
+      "/assets/illustrations/characters/senna/senna-celebrating-512.webp",
     );
   });
 });

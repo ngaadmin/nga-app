@@ -6,6 +6,7 @@ import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1
 import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
+import { fallbackNextIndex } from "@/lib/academy/lessons/payload/lesson-graph";
 import { missingLessonImages } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import { moduleCloserGoldSkillLine } from "@/lib/academy/lessons/completion-screen";
@@ -165,6 +166,32 @@ describe("explorer module 1 payload", () => {
     const completion = lesson1Screens.findIndex((screen) => screen.type === "completion");
     expect(firstBeat).toBeGreaterThanOrEqual(0);
     expect(firstBeat).toBeLessThan(completion);
+  });
+
+  it("gives the story beat after the medal a Next that can leave", () => {
+    for (const lessonNumber of [1, 2, 3, 4, 5, 6, 7, 9]) {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
+      const labels = screens.map((screen) => screen.sourceLabel ?? screen.id);
+      const last = screens.length - 1;
+      const beat = screens[last];
+      expect(beat?.type, `lesson ${lessonNumber}`).toBe("narrative-bonus");
+      expect(fallbackNextIndex(beat!, last, labels), `lesson ${lessonNumber}`).toBeUndefined();
+    }
+  });
+
+  it("keeps the imageless gelato beat from showing its image brief", () => {
+    const payload = loadExplorerM1Payload(5);
+    if (!payload) throw new Error("missing lesson 5");
+    const beat = resolvePayloadLesson(payload, "explorer", 5).screens.find(
+      (screen) => screen.id === "explorer-m1-l5-beat1",
+    );
+    expect(beat?.type).toBe("narrative-bonus");
+    if (beat?.type !== "narrative-bonus") return;
+    expect(beat.pairImage).toBe(false);
+    expect(beat.illustration).toBeUndefined();
+    expect(beat.narrative.startsWith("Lars and Mia share the birthday gelato")).toBe(true);
   });
 
   it("lists the three Module 1 gold skills on the explorer lesson 9 close", () => {

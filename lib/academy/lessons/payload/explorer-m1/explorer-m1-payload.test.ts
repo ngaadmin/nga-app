@@ -7,6 +7,7 @@ import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1
 import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
+import { parseAuthoringTable } from "@/lib/academy/lessons/payload/parse-authoring-table";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { fallbackNextIndex } from "@/lib/academy/lessons/payload/lesson-graph";
 import { missingLessonImages } from "@/lib/academy/lessons/payload/validate-lesson-assets";
@@ -278,7 +279,7 @@ describe("explorer module 1 payload", () => {
     }
   });
 
-  it("keeps the imageless gelato beat from showing its image brief", () => {
+  it("shows the approved gelato scene on the share beat", () => {
     const payload = loadExplorerM1Payload(5);
     if (!payload) throw new Error("missing lesson 5");
     const beat = resolvePayloadLesson(payload, "explorer", 5).screens.find(
@@ -286,9 +287,87 @@ describe("explorer module 1 payload", () => {
     );
     expect(beat?.type).toBe("narrative-bonus");
     if (beat?.type !== "narrative-bonus") return;
-    expect(beat.pairImage).toBe(false);
-    expect(beat.illustration).toBeUndefined();
+    const brief =
+      "Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.";
+    expect(beat.pairImage).toBe("beat-ex-m1-l5-r4.webp");
+    expect(beat.illustration).toEqual({ label: brief, alt: brief });
     expect(beat.narrative.startsWith("Lars and Mia share the birthday gelato")).toBe(true);
+    expect(resolveLessonScreenIllustration(beat)?.src).toBe(
+      "/assets/illustrations/characters/pairs/beat-ex-m1-l5-r4.webp",
+    );
+  });
+
+  it("gives every explorer story beat a 1600x1200 workbook still", () => {
+    const workbook = parseAuthoringTable({
+      filename: "workbook.xlsx",
+      bytes: new Uint8Array(
+        readFileSync(
+          path.join(
+            process.cwd(),
+            "lib/academy/lessons/payload/source/explorer-m1/workbook.xlsx",
+          ),
+        ),
+      ),
+    });
+    const headers = workbook[0] ?? [];
+    const column = (name: string) =>
+      headers.findIndex((header) => header.trim().toLowerCase() === name.toLowerCase());
+    const lessonCol = column("Lesson Number");
+    const textCol = column("Explorer Text");
+    const imageCol = column("Explorer Image");
+    const sheetByText = new Map<string, string>();
+    for (const row of workbook.slice(1)) {
+      if ((row[lessonCol] ?? "").trim().toLowerCase() !== "scenario beat") continue;
+      const text = (row[textCol] ?? "").replace(/\s+/g, " ").trim();
+      sheetByText.set(text, (row[imageCol] ?? "").trim());
+    }
+
+    const blanks: string[] = [];
+    const problems: string[] = [];
+    const minBytes = 23 * 1024;
+    const maxBytes = 82 * 1024;
+
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
+      for (const screen of screens) {
+        if (screen.type !== "narrative-bonus" || !screen.id.includes("beat")) continue;
+        const text = screen.narrative.replace(/\s+/g, " ").trim();
+        const sheetImage = sheetByText.get(text);
+        const file = typeof screen.pairImage === "string" ? screen.pairImage : "";
+        const label = `L${lessonNumber} ${screen.id}`;
+        if (!file) {
+          blanks.push(label);
+          continue;
+        }
+        if (sheetImage === "" && screen.id !== "explorer-m1-intro-beat1") {
+          problems.push(`${label} workbook image is blank`);
+        } else if (sheetImage && sheetImage !== file) {
+          problems.push(`${label} plays ${file} but the workbook maps ${sheetImage}`);
+        }
+        const src = getPairSheetImagePath(file);
+        const disk = src ? path.join(process.cwd(), "public", src) : "";
+        if (!src || !existsSync(disk)) {
+          problems.push(`${label} missing ${file}`);
+          continue;
+        }
+        const bytes = readFileSync(disk);
+        const tag = bytes.subarray(12, 16).toString("ascii");
+        const width = tag === "VP8X" ? 1 + bytes.readUIntLE(24, 3) : 0;
+        const height = tag === "VP8X" ? 1 + bytes.readUIntLE(27, 3) : 0;
+        if (tag !== "VP8X" || width !== 1600 || height !== 1200) {
+          problems.push(`${label} ${file} is ${width}x${height} ${tag}`);
+        }
+        if (bytes.length < minBytes || bytes.length > maxBytes) {
+          problems.push(`${label} ${file} is ${bytes.length} bytes`);
+        }
+      }
+    }
+
+    expect(blanks).toEqual([]);
+    expect(problems).toEqual([]);
+    expect(sheetByText.size).toBe(27);
   });
 
   it("lists the three Module 1 gold skills on the explorer lesson 9 close", () => {

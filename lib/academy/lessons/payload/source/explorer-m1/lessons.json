@@ -1468,9 +1468,9 @@
             "maverick": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10."
           },
           "image": {
-            "explorer": "",
-            "pathfinder": "",
-            "maverick": ""
+            "explorer": "beat-ex-m1-l5-r4.webp",
+            "pathfinder": "beat-ex-m1-l5-r4.webp",
+            "maverick": "beat-ex-m1-l5-r4.webp"
           },
           "settings": {
             "explorer": "ID: explorer-m1-l5-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l5-beat1-8b358340.mp3\nAUDIO_MS: 6740\nIMAGE_BRIEF: Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.",

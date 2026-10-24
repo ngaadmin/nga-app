@@ -21,6 +21,8 @@ const FLOW_TESTS = [
   "lib/academy/lessons/utils.test.ts",
   "tools/uat-explorer-args.test.ts",
   "lib/academy/lessons/lesson-availability.test.ts",
+  "lib/academy/lessons/drag-source-column.test.ts",
+  "lib/academy/lessons/payload/unresolved-placeholders.test.ts",
 ];
 
 function run(label: string, command: string, args: string[]): number {

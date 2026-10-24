@@ -154,10 +154,13 @@ export function AcademyLessonShell({
         <div
           className={cn(
             "flex h-full w-full ease-out",
-            skippedPane ? "transition-none" : "transition-transform duration-300",
+            skippedPane ? "transition-none" : "transition-[margin] duration-300",
           )}
           style={{
-            transform: `translateX(-${currentScreenIndex * 100}%)`,
+            // Margin, not translate. A transformed track stops iOS from
+            // scrolling a choice list, so a correct answer below the fold
+            // can never be tapped and Next stays off.
+            marginLeft: `-${currentScreenIndex * 100}%`,
           }}
         >
           {children}

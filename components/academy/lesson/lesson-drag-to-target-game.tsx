@@ -12,6 +12,7 @@ import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-scr
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick, LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { visibleDragSourceLabel } from "@/lib/academy/lessons/drag-source-column";
 import { dragPositionFromPointer } from "@/lib/academy/lessons/drag-position";
 import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
@@ -127,7 +128,6 @@ export function LessonDragToTargetGame({
   targetIllustrationSrc,
   targetIllustrationAlt,
   targetImagePlaceholder,
-  sourceEmptyMessage = "",
   showZoneLabels = true,
   quarterSource = false,
   onComplete,
@@ -448,14 +448,14 @@ export function LessonDragToTargetGame({
     );
   };
 
+  const sourceColumnLabel = visibleDragSourceLabel({
+    remaining,
+    showZoneLabels,
+    sourceLabel,
+  });
+
   const renderSourceCoins = () => {
-    if (remaining <= 0) {
-      const message = sourceEmptyMessage.trim();
-      if (!message) return null;
-      return (
-        <p className="font-sans text-sm text-[#1E3A5F]/60">{message}</p>
-      );
-    }
+    if (remaining <= 0) return null;
 
     return (
       <div className="flex gap-2">
@@ -509,9 +509,9 @@ export function LessonDragToTargetGame({
       >
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center">{renderSourceCoins()}</div>
-          {showZoneLabels ? (
+          {sourceColumnLabel ? (
             <p className="max-w-[9rem] text-center font-heading text-sm font-bold text-[#031F82]">
-              {sourceLabel}
+              {sourceColumnLabel}
             </p>
           ) : null}
         </div>

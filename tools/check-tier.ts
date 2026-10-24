@@ -20,6 +20,7 @@ const FLOW_TESTS = [
   "lib/academy/lessons/story-audio/master-mute.test.ts",
   "lib/academy/lessons/utils.test.ts",
   "tools/uat-explorer-args.test.ts",
+  "lib/academy/lessons/lesson-availability.test.ts",
 ];
 
 function run(label: string, command: string, args: string[]): number {

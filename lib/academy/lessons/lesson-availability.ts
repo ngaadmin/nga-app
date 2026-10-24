@@ -40,21 +40,69 @@ export function listPlayableLessonMilestoneIds(): number[] {
 }
 
 /**
+ * Deploy environment used to decide the test-build unlock.
+ * `publicVercelEnv` is `NEXT_PUBLIC_VERCEL_ENV` (what the browser bundle can see).
+ * `vercelEnv` is `VERCEL_ENV` (server and tests). Vercel sets both itself.
+ */
+export type VercelDeployEnv = {
+  publicVercelEnv?: string;
+  vercelEnv?: string;
+};
+
+function presentDeployEnv(value: string | undefined): string | undefined {
+  if (value == null || value === "") return undefined;
+  return value;
+}
+
+/**
+ * `NEXT_PUBLIC_VERCEL_ENV` wins when it is set, then `VERCEL_ENV`.
+ * An omitted argument reads `process.env`. A passed object does not.
+ */
+export function readVercelDeployEnv(env?: VercelDeployEnv): string | undefined {
+  if (env) {
+    return (
+      presentDeployEnv(env.publicVercelEnv) ?? presentDeployEnv(env.vercelEnv)
+    );
+  }
+  return (
+    presentDeployEnv(process.env.NEXT_PUBLIC_VERCEL_ENV) ??
+    presentDeployEnv(process.env.VERCEL_ENV)
+  );
+}
+
+/**
+ * Test builds can open Explorer lessons 1–9 out of order.
+ * Exact condition: the deploy env is `preview` or `development`.
+ * `production`, any other string, and an unset env keep today's sequential gate.
+ */
+export function isExplorerPreviewLessonUnlock(env?: VercelDeployEnv): boolean {
+  const deployEnv = readVercelDeployEnv(env);
+  return deployEnv === "preview" || deployEnv === "development";
+}
+
+/**
  * Active (current) and completed lessons open when the lesson definition exists.
  * Do not use per-cohort `shippedCohorts` here — that was blocking the continue
  * node after lesson 2 for Maverick while the map still marked lesson 3 current.
- * Locked stays locked. Content still falls back Pathfinder → Maverick on resolve.
+ * Locked stays locked in production. A preview or development deploy may open a
+ * locked Explorer lesson in 1–9 without writing progress. Content still falls
+ * back Pathfinder → Maverick on resolve.
  */
 export function canLaunchAcademyLesson(
   milestoneId: number,
   status: "active" | "completed" | "locked",
-  _cohort: MasteryCohort,
+  cohort: MasteryCohort,
+  env?: VercelDeployEnv,
 ): boolean {
   if (!hasShippedLesson(milestoneId)) {
     return false;
   }
 
-  return status === "active" || status === "completed";
+  if (status === "active" || status === "completed") {
+    return true;
+  }
+
+  return cohort === "explorer" && isExplorerPreviewLessonUnlock(env);
 }
 
 /** Dev-only: skip onboarding gates for the template lab, never for real lessons. */

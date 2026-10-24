@@ -2,10 +2,6 @@ import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-les
 import { errorLineIsAcceptable, findBritishSpelling } from "@/lib/academy/lessons/payload/error-line";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { ACADEMY_AUDIO_BASE_URL, STORY_CREDIT } from "@/lib/academy/lessons/story-audio/audio-base";
-import {
-  lessonNumberFromBeatId,
-  storyCreditBeatIds,
-} from "@/lib/academy/lessons/story-audio/story-credit";
 
 export type ExplorerManifestBeat = {
   beat_id: string;
@@ -48,9 +44,12 @@ function cell(row: readonly string[], index: number): string {
 
 /**
  * Turn the Explorer Module 1 workbook into one payload per lesson.
- * Scenario beats stay in sheet order. A beat that sits after a lesson's
- * completion row is part of that lesson, after the completion screen.
- * Credit is the first voiced beat of each lesson. The module intro counts as lesson 1.
+ * Mid-lesson beats stay where the sheet puts them. A beat after the
+ * completion row is a between-lesson beat: one trailer opens the next
+ * lesson, and when several trail the first wraps this lesson (it moves
+ * in front of the medal) while the rest open the next lesson. With no
+ * next lesson, every trailer wraps this lesson. Nothing stays after the
+ * medal. Credit is the first voiced beat the learner actually hears.
  */
 export function convertExplorerModule1(input: {
   table: readonly (readonly string[])[];
@@ -176,11 +175,11 @@ export function convertExplorerModule1(input: {
     );
   }
 
+  rehomeBetweenLessonBeats(lessons);
+
   if (input.intro) {
     prependIntro(lessons, manifestById, input.intro);
   }
-
-  const credits = storyCreditBeatIds(creditCandidates(input.narration, manifestById));
 
   const metaByLesson = new Map(
     (input.lessonMeta ?? defaultLessonMeta()).map((meta) => [meta.lessonNumber, meta]),
@@ -197,7 +196,7 @@ export function convertExplorerModule1(input: {
       ...meta,
       moduleNumber: 1,
       lessonNumber,
-      screens: screens.map((screen) => applyCredit(screen, credits)),
+      screens: creditFirstVoicedBeat(screens),
     });
   }
 
@@ -212,30 +211,94 @@ export function convertExplorerModule1(input: {
 }
 
 /**
- * Narration order, with any voiced intro that is only in the audio manifest
- * counted first. That intro is lesson 1's first voice, so a re-import does
- * not put the credit back on the next beat.
+ * Place beats that sit after a completion row.
+ * One trailer opens the next lesson. Several trailers: the first wraps
+ * this lesson (just before the medal) and the rest open the next lesson.
+ * No next lesson: every trailer wraps this lesson, still before the medal.
  */
-function creditCandidates(
-  narration: readonly ExplorerNarrationBeat[],
-  manifestById: ReadonlyMap<string, ExplorerManifestBeat>,
-): { beatId: string; voiced: boolean }[] {
-  const listed = new Set(narration.map((beat) => beat.beatId));
-  const intros = [...manifestById.values()]
-    .filter(
-      (beat) =>
-        !listed.has(beat.beat_id) &&
-        /-intro-beat/i.test(beat.beat_id) &&
-        lessonNumberFromBeatId(beat.beat_id) === 1,
-    )
-    .map((beat) => ({ beatId: beat.beat_id, voiced: Boolean(beat.file.trim()) }));
-  return [
-    ...intros,
-    ...narration.map((beat) => ({
-      beatId: beat.beatId,
-      voiced: manifestById.has(beat.beatId),
-    })),
-  ];
+export function rehomeBetweenLessonBeats(lessons: Map<number, PayloadScreenRow[]>): void {
+  const lessonNumbers = [...lessons.keys()].sort((left, right) => left - right);
+  for (const lessonNumber of lessonNumbers) {
+    const screens = lessons.get(lessonNumber) ?? [];
+    const completionAt = screens.findIndex((screen) => screen.gameType === "completion");
+    if (completionAt < 0) continue;
+    const trailing = screens.slice(completionAt + 1);
+    if (trailing.length === 0) continue;
+    const stray = trailing.find((screen) => screen.gameType !== "scenario-beat");
+    if (stray) {
+      throw new Error(
+        `Explorer lesson ${lessonNumber} has a ${stray.gameType} screen after completion.`,
+      );
+    }
+
+    const nextNumber = lessonNumbers.find((candidate) => candidate > lessonNumber);
+    const closings = !nextNumber || trailing.length > 1 ? trailing.slice(0, nextNumber ? 1 : trailing.length) : [];
+    const openings = nextNumber ? trailing.slice(closings.length) : [];
+    const completion = screens[completionAt];
+    if (!completion) continue;
+    lessons.set(lessonNumber, [
+      ...screens.slice(0, completionAt),
+      ...closings,
+      completion,
+    ]);
+    if (nextNumber && openings.length > 0) {
+      const next = lessons.get(nextNumber) ?? [];
+      lessons.set(nextNumber, [...openings, ...next]);
+      retargetCompletionLinks(lessons.get(lessonNumber) ?? [], closings[0]?.screenLabel);
+    } else if (closings[0]) {
+      retargetCompletionLinks(lessons.get(lessonNumber) ?? [], closings[0].screenLabel);
+    }
+  }
+}
+
+/** Finish actions that jumped straight to the medal now land on the closing beat. */
+function retargetCompletionLinks(screens: PayloadScreenRow[], firstClosingLabel: string | undefined): void {
+  if (!firstClosingLabel) return;
+  const completion = screens.find((screen) => screen.gameType === "completion");
+  const completionLabel = completion?.screenLabel.trim();
+  if (!completionLabel || completionLabel === firstClosingLabel) return;
+  for (const screen of screens) {
+    if (screen.gameType === "completion" || screen.screenLabel === firstClosingLabel) continue;
+    const rewrite = (value: string) =>
+      value.replace(
+        new RegExp(`(GO\\s+Screen\\s+)${escapeRegExp(completionLabel)}(?!\\d)`, "gi"),
+        `$1${firstClosingLabel}`,
+      );
+    screen.settings = {
+      explorer: rewrite(screen.settings.explorer),
+      pathfinder: rewrite(screen.settings.pathfinder),
+      maverick: rewrite(screen.settings.maverick),
+    };
+  }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function withoutCredit(settings: string): string {
+  return settings
+    .split("\n")
+    .filter((line) => !line.startsWith("CREDIT:"))
+    .join("\n")
+    .trim();
+}
+
+/** The first voiced beat in play order carries the one credit for that lesson. */
+function creditFirstVoicedBeat(screens: PayloadScreenRow[]): PayloadScreenRow[] {
+  const stripped = screens.map((screen) =>
+    screen.gameType === "scenario-beat"
+      ? { ...screen, settings: mirror(withoutCredit(screen.settings.explorer)) }
+      : screen,
+  );
+  const first = stripped.find(
+    (screen) =>
+      screen.gameType === "scenario-beat" && /(?:^|\n)AUDIO:/.test(screen.settings.explorer),
+  );
+  if (!first) return stripped;
+  return stripped.map((screen) =>
+    screen.screenLabel === first.screenLabel ? applyCredit(screen, new Set([screen.screenLabel])) : screen,
+  );
 }
 
 /**

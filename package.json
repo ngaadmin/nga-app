@@ -17,7 +17,10 @@
     "seed:demo": "npx tsx --conditions=react-server scripts/seed-demo-accounts.ts",
     "backfill:class-passwords": "npx tsx --conditions=react-server scripts/backfill-class-password-enc.ts",
     "lesson:import": "node tools/import-lesson-from-sheet.mjs",
-    "lesson:import:explorer-m1": "npx tsx tools/import-explorer-m1.ts"
+    "lesson:import:explorer-m1": "npx tsx tools/import-explorer-m1.ts",
+    "check:quick": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts quick",
+    "check:flow": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts flow",
+    "check:full": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts full"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

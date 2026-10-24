@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
+import { rehomeBetweenLessonBeats } from "@/lib/academy/lessons/payload/explorer-m1/convert-explorer-workbook";
 import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
+import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
@@ -12,6 +14,74 @@ import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-l
 import { moduleCloserGoldSkillLine } from "@/lib/academy/lessons/completion-screen";
 import { STORY_CREDIT } from "@/lib/academy/lessons/story-audio/audio-base";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
+
+function row(gameType: string, screenLabel: string, settings = ""): PayloadScreenRow {
+  const copy = { explorer: settings, pathfinder: settings, maverick: settings };
+  const text = { explorer: screenLabel, pathfinder: screenLabel, maverick: screenLabel };
+  return {
+    screenNumber: gameType === "scenario-beat" ? 0 : 1,
+    screenLabel,
+    gameType,
+    text,
+    image: text,
+    settings: copy,
+    error: { explorer: "", pathfinder: "", maverick: "" },
+  };
+}
+
+describe("between-lesson beat placement", () => {
+  it("moves a single trailer onto the next lesson and a wrap in front of the medal", () => {
+    const lessons = new Map<number, PayloadScreenRow[]>([
+      [
+        1,
+        [row("word-drop", "1"), row("completion", "8"), row("scenario-beat", "l1-trailer")],
+      ],
+      [
+        7,
+        [
+          row("drag-to-target", "7"),
+          row("completion", "8"),
+          row("scenario-beat", "l7-wrap"),
+          row("scenario-beat", "l7-open-a"),
+          row("scenario-beat", "l7-open-b"),
+        ],
+      ],
+      [8, [row("spotlight-rounds", "1"), row("completion", "8")]],
+      [
+        9,
+        [
+          row("skill-hub", "1", "BUTTON: Finish → GO Screen 8 WHEN complete"),
+          row("completion", "8"),
+          row("scenario-beat", "l9-close-a"),
+          row("scenario-beat", "l9-close-b"),
+        ],
+      ],
+    ]);
+
+    rehomeBetweenLessonBeats(lessons);
+
+    expect(lessons.get(1)?.map((screen) => screen.screenLabel)).toEqual(["1", "8"]);
+    expect(lessons.get(7)?.map((screen) => screen.screenLabel)).toEqual([
+      "l1-trailer",
+      "7",
+      "l7-wrap",
+      "8",
+    ]);
+    expect(lessons.get(8)?.map((screen) => screen.screenLabel)).toEqual([
+      "l7-open-a",
+      "l7-open-b",
+      "1",
+      "8",
+    ]);
+    expect(lessons.get(9)?.map((screen) => screen.screenLabel)).toEqual([
+      "1",
+      "l9-close-a",
+      "l9-close-b",
+      "8",
+    ]);
+    expect(lessons.get(9)?.[0]?.settings.explorer).toContain("GO Screen l9-close-a");
+  });
+});
 
 describe("explorer module 1 payload", () => {
   it("resolves Mia pose files to the character folder", () => {
@@ -53,13 +123,19 @@ describe("explorer module 1 payload", () => {
         }
       }
     }
-    expect(credited.has("explorer-m1-intro-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l1-beat1")).toBe(false);
-    expect(credited.has("explorer-m1-l1-beat2")).toBe(false);
-    expect(credited.has("explorer-m1-l6-beat3")).toBe(false);
-    expect(credited.has("explorer-m1-l7-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l9-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l9-beat2")).toBe(false);
+    expect(credited).toEqual(
+      new Set([
+        "explorer-m1-intro-beat1",
+        "explorer-m1-l1-beat3",
+        "explorer-m1-l2-beat4",
+        "explorer-m1-l3-beat3",
+        "explorer-m1-l4-beat4",
+        "explorer-m1-l5-beat3",
+        "explorer-m1-l6-beat3",
+        "explorer-m1-l7-beat2",
+        "explorer-m1-l9-beat1",
+      ]),
+    );
   });
 
   it("opens lesson 1 with the module intro before the first practice screen", () => {
@@ -144,40 +220,61 @@ describe("explorer module 1 payload", () => {
     ).toBe(false);
   });
 
-  it("places between-lesson beats after that lesson's completion screen", () => {
-    const afterCompletion = (lessonNumber: number, beatId: string) => {
-      const payload = loadExplorerM1Payload(lessonNumber);
-      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
-      const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
-      const completion = screens.findIndex((screen) => screen.type === "completion");
-      const beat = screens.findIndex((screen) => screen.id === beatId);
-      expect(completion).toBeGreaterThanOrEqual(0);
-      expect(beat).toBeGreaterThan(completion);
+  it("plays opening beats, then practice, then a closing beat, then the medal", () => {
+    const openings: Record<number, readonly string[]> = {
+      1: ["explorer-m1-intro-beat1"],
+      2: ["explorer-m1-l1-beat3"],
+      3: ["explorer-m1-l2-beat4"],
+      4: ["explorer-m1-l3-beat3"],
+      5: ["explorer-m1-l4-beat4"],
+      6: ["explorer-m1-l5-beat3"],
+      7: ["explorer-m1-l6-beat3"],
+      8: ["explorer-m1-l7-beat2", "explorer-m1-l7-beat3"],
+      9: [],
     };
-    afterCompletion(6, "explorer-m1-l6-beat3");
-    afterCompletion(7, "explorer-m1-l7-beat1");
-    afterCompletion(9, "explorer-m1-l9-beat1");
-    afterCompletion(9, "explorer-m1-l9-beat2");
-
-    const lesson1 = loadExplorerM1Payload(1);
-    if (!lesson1) throw new Error("missing lesson 1");
-    const lesson1Screens = resolvePayloadLesson(lesson1, "explorer", 1).screens;
-    const firstBeat = lesson1Screens.findIndex((screen) => screen.id === "explorer-m1-l1-beat1");
-    const completion = lesson1Screens.findIndex((screen) => screen.type === "completion");
-    expect(firstBeat).toBeGreaterThanOrEqual(0);
-    expect(firstBeat).toBeLessThan(completion);
-  });
-
-  it("gives the story beat after the medal a Next that can leave", () => {
-    for (const lessonNumber of [1, 2, 3, 4, 5, 6, 7, 9]) {
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
       const payload = loadExplorerM1Payload(lessonNumber);
       if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
       const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
       const labels = screens.map((screen) => screen.sourceLabel ?? screen.id);
-      const last = screens.length - 1;
-      const beat = screens[last];
-      expect(beat?.type, `lesson ${lessonNumber}`).toBe("narrative-bonus");
-      expect(fallbackNextIndex(beat!, last, labels), `lesson ${lessonNumber}`).toBeUndefined();
+      const completion = screens.findIndex((screen) => screen.type === "completion");
+      expect(completion, `lesson ${lessonNumber} medal`).toBe(screens.length - 1);
+      expect(
+        screens.slice(completion + 1).map((screen) => screen.type),
+        `lesson ${lessonNumber} after medal`,
+      ).toEqual([]);
+
+      const opening = openings[lessonNumber] ?? [];
+      expect(
+        screens.slice(0, opening.length).map((screen) => screen.id),
+        `lesson ${lessonNumber} opening`,
+      ).toEqual(opening);
+      for (const [offset, beatId] of opening.entries()) {
+        const beat = screens[offset];
+        expect(beat?.type, beatId).toBe("narrative-bonus");
+        const next = fallbackNextIndex(beat!, offset, labels);
+        expect(next === undefined || (next > offset && next < completion), `${beatId} advances`).toBe(
+          true,
+        );
+      }
+
+      const closing = [...screens.entries()]
+        .reverse()
+        .find(([index, screen]) => index < completion && screen.type === "narrative-bonus");
+      expect(closing, `lesson ${lessonNumber} closing beat`).toBeTruthy();
+      if (!closing) continue;
+      const [index, beat] = closing;
+      const next = fallbackNextIndex(beat, index, labels);
+      const destination = next ?? index + 1;
+      expect(screens[destination]?.type, `lesson ${lessonNumber} last beat`).toBe("completion");
+    }
+
+    const lesson2 = loadExplorerM1Payload(2);
+    if (!lesson2) throw new Error("missing lesson 2");
+    const opener = resolvePayloadLesson(lesson2, "explorer", 2).screens[0];
+    expect(opener?.type).toBe("narrative-bonus");
+    if (opener?.type === "narrative-bonus") {
+      expect(opener.narrative.startsWith("Senna's birthday is on Saturday")).toBe(true);
     }
   });
 

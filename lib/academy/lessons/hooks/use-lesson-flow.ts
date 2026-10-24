@@ -255,7 +255,9 @@ export function useLessonFlow({
       const canAdvance = options?.canAdvance ?? Boolean(screenReady[screenIndex]);
       if (!canAdvance) return;
       const jumped = continueIndexByScreen?.[screenIndex];
-      if (typeof jumped === "number") {
+      // A jump to the screen already showing is not a move. The last story
+      // beat used to land here and Next did nothing.
+      if (typeof jumped === "number" && jumped !== screenIndex) {
         setScreenIndex(jumped);
         return;
       }

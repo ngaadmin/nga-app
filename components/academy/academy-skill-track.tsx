@@ -115,11 +115,14 @@ function MilestoneIcon({
   return <Icon className={className} />;
 }
 
-function milestoneAriaLabel(milestone: AcademyLessonMilestoneNode): string {
+function milestoneAriaLabel(
+  milestone: AcademyLessonMilestoneNode,
+  options?: { ignoreLock?: boolean },
+): string {
   const copy = copyMatrix.dashboard.academy.journey;
   const isPhaseCloser = isPhaseCloserMilestone(milestone);
 
-  if (milestone.status === "locked") {
+  if (milestone.status === "locked" && !options?.ignoreLock) {
     if (isPhaseCloser) {
       return `Level ${milestone.levelGroup} milestone - ${copy.lockedLabel}`;
     }
@@ -158,9 +161,13 @@ function AcademyNode({
   const isActive = milestone.status === "active";
   const isCompleted = milestone.status === "completed";
   const isLocked = milestone.status === "locked";
+  const opensWhileLocked =
+    isLocked &&
+    canLaunchAcademyLesson(milestone.id, milestone.status, masteryCohort);
+  const looksLocked = isLocked && !opensWhileLocked;
   const isGoldModuleNode =
     isPhaseCloserMilestone(milestone) && isCompleted;
-  const showPhaseFill = isCompleted || isActive;
+  const showPhaseFill = isCompleted || isActive || opensWhileLocked;
   const nodeFill = isGoldModuleNode
     ? ACADEMY_MODULE_CLOSER_THEME
     : phase;
@@ -171,7 +178,7 @@ function AcademyNode({
         borderBottomColor: nodeFill.shadow,
         boxShadow: `0 4px 0 ${nodeFill.shadow}`,
       }
-    : isLocked
+    : looksLocked
       ? {
           backgroundColor: "#D5DAE2",
         }
@@ -188,7 +195,7 @@ function AcademyNode({
       <div
         className={cn(
           "relative flex items-center justify-center rounded-full transition-all duration-75",
-          isLocked
+          looksLocked
             ? "border-0 text-gray-400"
             : "border-0 border-b-[4px]",
           showPhaseFill && (isGoldModuleNode ? "text-[#031F82]" : "text-white"),
@@ -217,12 +224,14 @@ function AcademyNode({
     </div>
   );
 
-  if (isActive) {
+  if (isActive || opensWhileLocked) {
     return (
       <button
         type="button"
         onClick={() => onLaunch?.(milestone.id)}
-        aria-label={milestoneAriaLabel(milestone)}
+        aria-label={milestoneAriaLabel(milestone, {
+          ignoreLock: opensWhileLocked,
+        })}
         className="group rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-secondary"
       >
         {circle}

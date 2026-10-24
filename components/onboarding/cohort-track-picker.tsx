@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
@@ -9,13 +11,31 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
+import {
+  COHORT_READY_BODY,
+  COHORT_READY_ERROR,
+  COHORT_READY_HEADING,
+  COHORT_READY_RETRY,
+  COHORT_READY_SLOW,
+  cohortReadyPickedLine,
+} from "@/lib/onboarding/cohort-ready-copy";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   createGuestAccessSession,
   DASHBOARD_ACADEMY_PATH,
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
+import { LAYER_CLASS } from "@/lib/ui/layers";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
+import { cn } from "@/lib/utils/cn";
+
+const COHORT_SLOW_MS = 8000;
+
+type PendingCohort = {
+  cohort: MasteryCohort;
+  slow: boolean;
+  error: boolean;
+};
 
 const TRACK_AVATAR_SRC: Record<
   MasteryCohort,
@@ -46,23 +66,58 @@ const PENNY_AVATAR_SRC =
 
 export function CohortTrackPicker() {
   const router = useRouter();
+  const busyRef = useRef(false);
+  const [pending, setPending] = useState<PendingCohort | null>(null);
+  const pendingCohort = pending?.cohort ?? null;
+  const pendingError = pending?.error ?? false;
+
+  useEffect(() => {
+    router.prefetch(DASHBOARD_ACADEMY_PATH);
+  }, [router]);
+
+  useEffect(() => {
+    if (!pendingCohort || pendingError) return;
+    const timer = window.setTimeout(() => {
+      setPending((current) =>
+        current && current.cohort === pendingCohort && !current.error
+          ? { ...current, slow: true }
+          : current,
+      );
+    }, COHORT_SLOW_MS);
+    return () => window.clearTimeout(timer);
+  }, [pendingCohort, pendingError]);
 
   function handleSelect(cohort: MasteryCohort) {
-    // Explorer -> explorer, Pathfinder -> pathfinder, Maverick -> maverick.
-    const reserved = reserveGenericProfileId();
-    const session = createGuestAccessSession({
-      username: reserved.username,
-      genericProfileId: reserved.id,
-      curriculumCohort: cohort,
+    if (busyRef.current) return;
+    busyRef.current = true;
+    flushSync(() => {
+      setPending({ cohort, slow: false, error: false });
     });
-    wipeGuestDeviceProgress();
-    saveGuestAccessSession(session);
-    recordUsageEvent("login");
-    router.push(DASHBOARD_ACADEMY_PATH);
+    window.setTimeout(() => {
+      try {
+        const reserved = reserveGenericProfileId();
+        const session = createGuestAccessSession({
+          username: reserved.username,
+          genericProfileId: reserved.id,
+          curriculumCohort: cohort,
+        });
+        wipeGuestDeviceProgress();
+        saveGuestAccessSession(session);
+        router.push(DASHBOARD_ACADEMY_PATH);
+        recordUsageEvent("login");
+      } catch {
+        busyRef.current = false;
+        setPending({ cohort, slow: false, error: true });
+      }
+    }, 0);
   }
 
   return (
-    <section className="nga-preapp-screen -mx-6 flex min-h-0 w-[calc(100%+3rem)] flex-1 flex-col bg-white px-5 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] min-[721px]:justify-center min-[721px]:pt-[calc(env(safe-area-inset-top,0px)+4.25rem)]">
+    <>
+    <section
+      aria-hidden={pending !== null}
+      className="nga-preapp-screen -mx-6 flex min-h-0 w-[calc(100%+3rem)] flex-1 flex-col bg-white px-5 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] min-[721px]:justify-center min-[721px]:pt-[calc(env(safe-area-inset-top,0px)+4.25rem)]"
+    >
       <style>{`
         body:has(.nga-preapp-screen) footer {
           margin-top: 36px;
@@ -96,7 +151,8 @@ export function CohortTrackPicker() {
                 key={cohort}
                 type="button"
                 onClick={() => handleSelect(cohort)}
-                className="flex min-h-[104px] w-full flex-row items-center gap-[18px] rounded-[16px] border-0 bg-[#FFF8EC] py-3 pl-5 pr-4 text-left shadow-none hover:shadow-[0_0_0_2px_#031F82] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82] active:shadow-[0_0_0_2px_#031F82] min-[721px]:flex-col min-[721px]:items-center min-[721px]:gap-0 min-[721px]:rounded-[20px] min-[721px]:px-5 min-[721px]:pb-[26px] min-[721px]:pt-7 min-[721px]:text-center"
+                disabled={pending !== null}
+                className="flex min-h-[104px] w-full flex-row items-center gap-[18px] rounded-[16px] border-0 bg-[#FFF8EC] py-3 pl-5 pr-4 text-left shadow-none hover:shadow-[0_0_0_2px_#031F82] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82] active:shadow-[0_0_0_2px_#031F82] disabled:pointer-events-none min-[721px]:flex-col min-[721px]:items-center min-[721px]:gap-0 min-[721px]:rounded-[20px] min-[721px]:px-5 min-[721px]:pb-[26px] min-[721px]:pt-7 min-[721px]:text-center"
               >
                 <span className="flex h-[80px] w-[52px] shrink-0 items-end justify-center min-[721px]:h-[200px] min-[721px]:w-full">
                   <Image
@@ -135,5 +191,55 @@ export function CohortTrackPicker() {
         </div>
       </div>
     </section>
+      {pending ? (
+        <div
+          className={cn(
+            "fixed inset-0 flex items-center justify-center bg-white px-6",
+            LAYER_CLASS.overlay,
+          )}
+          role="status"
+          aria-live="polite"
+          aria-busy={pending.error ? undefined : true}
+        >
+          <div className="w-full max-w-sm text-center">
+            <h2 className="font-heading text-[30px] font-bold leading-tight text-[#031F82]">
+              {COHORT_READY_HEADING}
+            </h2>
+            <p className="mt-3 font-heading text-[22px] font-bold text-[#031F82]">
+              {cohortReadyPickedLine(pending.cohort)}
+            </p>
+            {pending.error ? (
+              <>
+                <p className="mt-3 font-sans text-base leading-relaxed text-[#3a4570]">
+                  {COHORT_READY_ERROR}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(pending.cohort)}
+                  className="mt-6 inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-[12px] bg-[#FFC93C] px-7 font-heading text-[16px] font-bold text-[#031F82] shadow-[0_2px_0_#d9a12a]"
+                >
+                  {COHORT_READY_RETRY}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 font-sans text-base leading-relaxed text-[#3a4570]">
+                  {COHORT_READY_BODY}
+                </p>
+                {pending.slow ? (
+                  <p className="mt-2 font-sans text-base leading-relaxed text-[#3a4570]">
+                    {COHORT_READY_SLOW}
+                  </p>
+                ) : null}
+                <span
+                  className="mx-auto mt-6 block size-8 rounded-full border-4 border-[#D6E4FF] border-t-[#031F82] motion-safe:animate-spin"
+                  aria-hidden
+                />
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

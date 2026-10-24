@@ -234,18 +234,10 @@ export async function loadLearnerAccountById(
     return null;
   }
 
-  const { data: authUser } = await admin.auth.admin.getUserById(userId);
-  const mustChangePassword =
-    authUser.user?.user_metadata?.mustChangePassword === true;
-
   const normalizedAuthEmail =
     authEmail && EMAIL_PATTERN.test(authEmail.trim().toLowerCase())
       ? authEmail.trim().toLowerCase()
       : null;
-  const parentEmail =
-    profile.account_role === "parent_master" || profile.account_role === "teacher"
-      ? normalizedAuthEmail
-      : await loadLatestParentEmail(admin, userId);
   const learnerEmail =
     profile.account_role === "parent_master" || profile.account_role === "teacher"
       ? normalizedAuthEmail
@@ -263,7 +255,15 @@ export async function loadLearnerAccountById(
           : "";
   if (!username) return null;
 
-  const progress = await readLearnerProgressRow(userId);
+  const staffRole =
+    profile.account_role === "parent_master" || profile.account_role === "teacher";
+  const [authUserResult, parentEmail, progress] = await Promise.all([
+    admin.auth.admin.getUserById(userId),
+    staffRole ? Promise.resolve(normalizedAuthEmail) : loadLatestParentEmail(admin, userId),
+    readLearnerProgressRow(userId),
+  ]);
+  const mustChangePassword =
+    authUserResult.data.user?.user_metadata?.mustChangePassword === true;
 
   return {
     userId: profile.id,

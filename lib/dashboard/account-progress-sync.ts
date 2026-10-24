@@ -21,6 +21,7 @@ import {
   loadLearnerProgressByUserId,
   saveLearnerProgressForUser,
 } from "@/lib/onboarding/learner-progress";
+import { suppliedRemoteProgress } from "@/lib/dashboard/supplied-remote-progress";
 import { createClient } from "@/lib/supabase/client";
 
 const PUSH_DEBOUNCE_MS = 700;
@@ -185,9 +186,12 @@ export async function restoreRegisteredAccountProgress(input?: {
   restoreInFlight = true;
   try {
     const childId = owner.userId?.trim() || (await resolveChildAuthUserId());
+    const supplied = suppliedRemoteProgress(input);
     const remote = childId
-      ? await loadLearnerProgressByUserId(childId)
-      : (input?.remotePayload ?? null);
+      ? supplied.supplied
+        ? supplied.payload
+        : await loadLearnerProgressByUserId(childId)
+      : supplied.payload;
     restoreAccountProgressForUser({
       userId: childId ?? owner.userId,
       username: owner.username,

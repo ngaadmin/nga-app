@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PrefetchAcademy } from "@/components/onboarding/prefetch-academy";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
   ONBOARDING_SIGN_IN_PATH,
@@ -29,6 +30,7 @@ export function OnboardingEntryGate({
 }: OnboardingEntryGateProps) {
   return (
     <section className="nga-preapp-screen flex flex-col pb-4 pt-[calc(env(safe-area-inset-top,0px)+2.5rem)] sm:pb-6 sm:pt-[calc(env(safe-area-inset-top,0px)+3rem)] min-[721px]:flex-1 min-[721px]:justify-center min-[721px]:pb-10 min-[721px]:pt-[calc(env(safe-area-inset-top,0px)+5.5rem)]">
+      {signUpHref === ONBOARDING_START_PATH ? <PrefetchAcademy /> : null}
       <style>{`
         body:has(.nga-preapp-screen) footer {
           margin-top: 36px;

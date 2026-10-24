@@ -7,9 +7,12 @@ import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
 import { Button } from "@/components/ui/button";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { registeredPlayPath } from "@/lib/onboarding/explorer-pending-consent";
+import { LOGGING_IN_LABEL } from "@/lib/onboarding/cohort-ready-copy";
 import {
+  DASHBOARD_ACADEMY_PATH,
   ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_PATH,
+  ONBOARDING_SIGN_UP_PENDING_PATH,
   readUserSession,
   saveUserSession,
 } from "@/lib/onboarding/guest-session";
@@ -60,6 +63,11 @@ export function SignInForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  useEffect(() => {
+    router.prefetch(DASHBOARD_ACADEMY_PATH);
+    router.prefetch(ONBOARDING_SIGN_UP_PENDING_PATH);
+  }, [router]);
 
   useEffect(() => {
     const session = readUserSession();
@@ -167,7 +175,6 @@ export function SignInForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     event.stopPropagation();
-    setIsSigningIn(true);
     setErrors({});
     setRecoveryNotice(null);
 
@@ -206,6 +213,8 @@ export function SignInForm() {
     if (trimmedCredential !== credential) {
       setCredential(trimmedCredential);
     }
+    setIsSigningIn(true);
+    let signedIn = false;
     try {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
@@ -253,7 +262,6 @@ export function SignInForm() {
           remotePayload: remote.account.progress ?? null,
         });
         dispatchUserSessionUpdated();
-        recordUsageEvent("login");
 
         if (session.mustChangePassword) {
           setPendingUsername(session.username);
@@ -261,10 +269,13 @@ export function SignInForm() {
           setNewPassword("");
           setConfirmPassword("");
           setErrors({});
+          recordUsageEvent("login");
           return;
         }
 
         router.push(registeredPlayPath(session));
+        recordUsageEvent("login");
+        signedIn = true;
       } catch (error) {
         console.error("[sign-in] Profile apply failed", {
           message: error instanceof Error ? error.message : "unknown",
@@ -274,7 +285,7 @@ export function SignInForm() {
     } catch {
       setErrors({ form: copy.signInUnavailable });
     } finally {
-      setIsSigningIn(false);
+      if (!signedIn) setIsSigningIn(false);
     }
   }
 
@@ -682,8 +693,20 @@ export function SignInForm() {
               variant="cta"
               fullWidth
               disabled={isSigningIn}
+              aria-busy={isSigningIn}
+              style={isSigningIn ? { textTransform: "none", opacity: 1 } : undefined}
             >
-              {isSigningIn ? copy.signingIn : copy.submit}
+              {isSigningIn ? (
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="size-4 rounded-full border-2 border-current border-t-transparent motion-safe:animate-spin"
+                    aria-hidden
+                  />
+                  {LOGGING_IN_LABEL}
+                </span>
+              ) : (
+                copy.submit
+              )}
             </Button>
           </form>
         )}

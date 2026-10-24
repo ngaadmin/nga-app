@@ -1852,9 +1852,9 @@
             "maverick": "Two straws, one slushie, and $1 still in Lars's pocket.\n\n\"Deals like that used to get me every time,\" Lars laughs."
           },
           "image": {
-            "explorer": "prop-ex-m1-slushie-r1.webp",
-            "pathfinder": "prop-ex-m1-slushie-r1.webp",
-            "maverick": "prop-ex-m1-slushie-r1.webp"
+            "explorer": "prop-ex-m1-slushie-r2.webp",
+            "pathfinder": "prop-ex-m1-slushie-r2.webp",
+            "maverick": "prop-ex-m1-slushie-r2.webp"
           },
           "settings": {
             "explorer": "ID: explorer-m1-l7-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l7-beat1-dbb24a2f.mp3\nAUDIO_MS: 7706\nIMAGE_BRIEF: Lars and Mia sharing one slushie with two straws, Lars laughing.\nCREDIT: Voice created with Grok",

@@ -96,8 +96,11 @@ export function convertExplorerModule1(input: {
       throw new Error(`Explorer workbook ${where} is not module 1.`);
     }
 
-      if (lessonCell.toLowerCase() === SCENARIO_LESSON) {
+    if (lessonCell.toLowerCase() === SCENARIO_LESSON) {
       if (!currentLesson) {
+        // The approved workbook repeats the module intro as row 2. Copy and
+        // audio for that beat stay in intro.json, which is prepended below.
+        if (input.intro && cell(row, columns.text).startsWith("Meet Lars")) continue;
         throw new Error(`Scenario beat ${where} appears before a lesson.`);
       }
       const scenarioBritish = findBritishSpelling(cell(row, columns.text));
@@ -119,17 +122,14 @@ export function convertExplorerModule1(input: {
         );
       }
       const audio = manifestById.get(beat.beatId);
-      if (!audio) {
-        throw new Error(`No audio manifest entry for ${beat.beatId}.`);
-      }
       const screens = lessons.get(currentLesson) ?? [];
       screens.push(
         scenarioScreen({
           beatId: beat.beatId,
           text: cell(row, columns.text),
           brief: cell(row, columns.brief),
-          file: audio.file,
-          durationMs: audio.durationMs,
+          file: audio?.file ?? "",
+          durationMs: audio?.durationMs ?? 0,
           credit: false,
           image: cell(row, columns.image),
         }),
@@ -304,11 +304,15 @@ function scenarioScreen(args: {
   image?: string;
   follow?: string;
 }): PayloadScreenRow {
-  const file = args.file.split(/[/\\]/).pop() ?? args.file;
+  const file = (args.file.split(/[/\\]/).pop() ?? args.file).trim();
   const lines = [
     `ID: ${args.beatId}`,
-    `AUDIO: ${ACADEMY_AUDIO_BASE_URL}/${file}`,
-    `AUDIO_MS: ${Math.max(0, Math.round(args.durationMs))}`,
+    ...(file
+      ? [
+          `AUDIO: ${ACADEMY_AUDIO_BASE_URL}/${file}`,
+          `AUDIO_MS: ${Math.max(0, Math.round(args.durationMs))}`,
+        ]
+      : []),
     ...(args.brief ? [`IMAGE_BRIEF: ${args.brief}`] : []),
     ...(args.credit ? [`CREDIT: ${STORY_CREDIT}`] : []),
     ...(args.follow ? [`FOLLOW: ${args.follow}`] : []),

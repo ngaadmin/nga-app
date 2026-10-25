@@ -194,7 +194,10 @@ export function LessonRunner({
                     ? "match"
                     : screen.type === "allocation-slider"
                       ? "poster"
-                      : "default"
+                      : screen.type === "multiple-choice" &&
+                          (screen.options?.length ?? 0) >= 4
+                        ? "compact"
+                        : "default"
                 }
               >
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

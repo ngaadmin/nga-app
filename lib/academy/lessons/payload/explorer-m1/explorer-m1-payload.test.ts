@@ -1,16 +1,88 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
+import { getIllustrationPath, getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
+import { rehomeBetweenLessonBeats } from "@/lib/academy/lessons/payload/explorer-m1/convert-explorer-workbook";
 import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
+import type { PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
+import { parseAuthoringTable } from "@/lib/academy/lessons/payload/parse-authoring-table";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
+import { fallbackNextIndex } from "@/lib/academy/lessons/payload/lesson-graph";
 import { missingLessonImages } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import { moduleCloserGoldSkillLine } from "@/lib/academy/lessons/completion-screen";
 import { STORY_CREDIT } from "@/lib/academy/lessons/story-audio/audio-base";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
+
+function row(gameType: string, screenLabel: string, settings = ""): PayloadScreenRow {
+  const copy = { explorer: settings, pathfinder: settings, maverick: settings };
+  const text = { explorer: screenLabel, pathfinder: screenLabel, maverick: screenLabel };
+  return {
+    screenNumber: gameType === "scenario-beat" ? 0 : 1,
+    screenLabel,
+    gameType,
+    text,
+    image: text,
+    settings: copy,
+    error: { explorer: "", pathfinder: "", maverick: "" },
+  };
+}
+
+describe("between-lesson beat placement", () => {
+  it("moves a single trailer onto the next lesson and a wrap in front of the medal", () => {
+    const lessons = new Map<number, PayloadScreenRow[]>([
+      [
+        1,
+        [row("word-drop", "1"), row("completion", "8"), row("scenario-beat", "l1-trailer")],
+      ],
+      [
+        7,
+        [
+          row("drag-to-target", "7"),
+          row("completion", "8"),
+          row("scenario-beat", "l7-wrap"),
+          row("scenario-beat", "l7-open-a"),
+          row("scenario-beat", "l7-open-b"),
+        ],
+      ],
+      [8, [row("spotlight-rounds", "1"), row("completion", "8")]],
+      [
+        9,
+        [
+          row("skill-hub", "1", "BUTTON: Finish → GO Screen 8 WHEN complete"),
+          row("completion", "8"),
+          row("scenario-beat", "l9-close-a"),
+          row("scenario-beat", "l9-close-b"),
+        ],
+      ],
+    ]);
+
+    rehomeBetweenLessonBeats(lessons);
+
+    expect(lessons.get(1)?.map((screen) => screen.screenLabel)).toEqual(["1", "8"]);
+    expect(lessons.get(7)?.map((screen) => screen.screenLabel)).toEqual([
+      "l1-trailer",
+      "7",
+      "l7-wrap",
+      "8",
+    ]);
+    expect(lessons.get(8)?.map((screen) => screen.screenLabel)).toEqual([
+      "l7-open-a",
+      "l7-open-b",
+      "1",
+      "8",
+    ]);
+    expect(lessons.get(9)?.map((screen) => screen.screenLabel)).toEqual([
+      "1",
+      "l9-close-a",
+      "l9-close-b",
+      "8",
+    ]);
+    expect(lessons.get(9)?.[0]?.settings.explorer).toContain("GO Screen l9-close-a");
+  });
+});
 
 describe("explorer module 1 payload", () => {
   it("resolves Mia pose files to the character folder", () => {
@@ -52,13 +124,19 @@ describe("explorer module 1 payload", () => {
         }
       }
     }
-    expect(credited.has("explorer-m1-intro-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l1-beat1")).toBe(false);
-    expect(credited.has("explorer-m1-l1-beat2")).toBe(false);
-    expect(credited.has("explorer-m1-l6-beat3")).toBe(false);
-    expect(credited.has("explorer-m1-l7-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l9-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l9-beat2")).toBe(false);
+    expect(credited).toEqual(
+      new Set([
+        "explorer-m1-intro-beat1",
+        "explorer-m1-l1-beat3",
+        "explorer-m1-l2-beat4",
+        "explorer-m1-l3-beat3",
+        "explorer-m1-l4-beat4",
+        "explorer-m1-l5-beat3",
+        "explorer-m1-l6-beat3",
+        "explorer-m1-l7-beat2",
+        "explorer-m1-l9-beat1",
+      ]),
+    );
   });
 
   it("opens lesson 1 with the module intro before the first practice screen", () => {
@@ -105,7 +183,7 @@ describe("explorer module 1 payload", () => {
     expect(firstLessonBeat?.type).toBe("narrative-bonus");
     if (firstLessonBeat?.type !== "narrative-bonus") return;
     expect(firstLessonBeat.credit).toBeUndefined();
-    expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-76bfc19a.mp3");
+    expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-6e798820.mp3");
     expect(firstLessonBeat.pairImage).toBe("em1-02-l1r7-senna-coins-r3.webp");
     expect(resolveLessonScreenIllustration(firstLessonBeat)).toMatchObject({
       src: "/assets/illustrations/characters/pairs/em1-02-l1r7-senna-coins-r3.webp",
@@ -114,9 +192,9 @@ describe("explorer module 1 payload", () => {
     expect(secondLessonBeat?.type).toBe("narrative-bonus");
     if (secondLessonBeat?.type !== "narrative-bonus") return;
     expect(secondLessonBeat.credit).toBeUndefined();
-    expect(secondLessonBeat.pairImage).toBe("em1-03-l1r11-lars-lemonade-r3.webp");
+    expect(secondLessonBeat.pairImage).toBe("prop-ex-m1-stand-set-lars-r1.webp");
     expect(resolveLessonScreenIllustration(secondLessonBeat)).toMatchObject({
-      src: "/assets/illustrations/characters/pairs/em1-03-l1r11-lars-lemonade-r3.webp",
+      src: "/assets/illustrations/characters/pairs/prop-ex-m1-stand-set-lars-r1.webp",
     });
     const numbered = screens.filter((screen) => screen.type !== "narrative-bonus");
     expect(numbered.some((screen) => "pairImage" in screen && screen.pairImage === "em1-02-l1r7-senna-coins-r3.webp")).toBe(false);
@@ -143,28 +221,226 @@ describe("explorer module 1 payload", () => {
     ).toBe(false);
   });
 
-  it("places between-lesson beats after that lesson's completion screen", () => {
-    const afterCompletion = (lessonNumber: number, beatId: string) => {
+  it("plays opening beats, then practice, then a closing beat, then the medal", () => {
+    const openings: Record<number, readonly string[]> = {
+      1: ["explorer-m1-intro-beat1"],
+      2: ["explorer-m1-l1-beat3"],
+      3: ["explorer-m1-l2-beat4"],
+      4: ["explorer-m1-l3-beat3"],
+      5: ["explorer-m1-l4-beat4"],
+      6: ["explorer-m1-l5-beat3"],
+      7: ["explorer-m1-l6-beat3"],
+      8: ["explorer-m1-l7-beat2", "explorer-m1-l7-beat3"],
+      9: [],
+    };
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
       const payload = loadExplorerM1Payload(lessonNumber);
       if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
       const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
+      const labels = screens.map((screen) => screen.sourceLabel ?? screen.id);
       const completion = screens.findIndex((screen) => screen.type === "completion");
-      const beat = screens.findIndex((screen) => screen.id === beatId);
-      expect(completion).toBeGreaterThanOrEqual(0);
-      expect(beat).toBeGreaterThan(completion);
-    };
-    afterCompletion(6, "explorer-m1-l6-beat3");
-    afterCompletion(7, "explorer-m1-l7-beat1");
-    afterCompletion(9, "explorer-m1-l9-beat1");
-    afterCompletion(9, "explorer-m1-l9-beat2");
+      expect(completion, `lesson ${lessonNumber} medal`).toBe(screens.length - 1);
+      expect(
+        screens.slice(completion + 1).map((screen) => screen.type),
+        `lesson ${lessonNumber} after medal`,
+      ).toEqual([]);
 
-    const lesson1 = loadExplorerM1Payload(1);
-    if (!lesson1) throw new Error("missing lesson 1");
-    const lesson1Screens = resolvePayloadLesson(lesson1, "explorer", 1).screens;
-    const firstBeat = lesson1Screens.findIndex((screen) => screen.id === "explorer-m1-l1-beat1");
-    const completion = lesson1Screens.findIndex((screen) => screen.type === "completion");
-    expect(firstBeat).toBeGreaterThanOrEqual(0);
-    expect(firstBeat).toBeLessThan(completion);
+      const opening = openings[lessonNumber] ?? [];
+      expect(
+        screens.slice(0, opening.length).map((screen) => screen.id),
+        `lesson ${lessonNumber} opening`,
+      ).toEqual(opening);
+      for (const [offset, beatId] of opening.entries()) {
+        const beat = screens[offset];
+        expect(beat?.type, beatId).toBe("narrative-bonus");
+        const next = fallbackNextIndex(beat!, offset, labels);
+        expect(next === undefined || (next > offset && next < completion), `${beatId} advances`).toBe(
+          true,
+        );
+      }
+
+      const closing = [...screens.entries()]
+        .reverse()
+        .find(([index, screen]) => index < completion && screen.type === "narrative-bonus");
+      expect(closing, `lesson ${lessonNumber} closing beat`).toBeTruthy();
+      if (!closing) continue;
+      const [index, beat] = closing;
+      const next = fallbackNextIndex(beat, index, labels);
+      const destination = next ?? index + 1;
+      expect(screens[destination]?.type, `lesson ${lessonNumber} last beat`).toBe("completion");
+    }
+
+    const lesson2 = loadExplorerM1Payload(2);
+    if (!lesson2) throw new Error("missing lesson 2");
+    const opener = resolvePayloadLesson(lesson2, "explorer", 2).screens[0];
+    expect(opener?.type).toBe("narrative-bonus");
+    if (opener?.type === "narrative-bonus") {
+      expect(opener.narrative.startsWith("Senna's birthday is on Saturday")).toBe(true);
+    }
+  });
+
+  it("shows the approved gelato scene on the share beat", () => {
+    const payload = loadExplorerM1Payload(5);
+    if (!payload) throw new Error("missing lesson 5");
+    const beat = resolvePayloadLesson(payload, "explorer", 5).screens.find(
+      (screen) => screen.id === "explorer-m1-l5-beat1",
+    );
+    expect(beat?.type).toBe("narrative-bonus");
+    if (beat?.type !== "narrative-bonus") return;
+    const brief =
+      "Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.";
+    expect(beat.pairImage).toBe("beat-ex-m1-l5-r4.webp");
+    expect(beat.illustration).toEqual({ label: brief, alt: brief });
+    expect(beat.narrative).toBe(
+      "Lars and Mia share the birthday gelato. She's happy Lars came along, and Lars is grateful for Mia's generosity. He decides to repay the favor to Mia when he can.\n\nHis startup envelope still holds $10.",
+    );
+    expect(resolveLessonScreenIllustration(beat)?.src).toBe(
+      "/assets/illustrations/characters/pairs/beat-ex-m1-l5-r4.webp",
+    );
+  });
+
+  it("plays the five cleared copy cells in US spelling", () => {
+    const textOf = (lessonNumber: number) => {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      return resolvePayloadLesson(payload, "explorer", lessonNumber).screens.map((screen) => {
+        if (screen.type === "narrative-bonus") return screen.narrative;
+        if ("prompt" in screen && typeof screen.prompt === "string") return screen.prompt;
+        return "";
+      });
+    };
+    expect(textOf(1)).toContain(
+      "Lars spent all his birthday money. At home, he watches his big brother Senna count his bills and coins.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
+    );
+    expect(textOf(1)).toContain(
+      "The next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
+    );
+    expect(textOf(4)).toContain(
+      "One afternoon, Lars's friends all ping him. A new skin has dropped on their favorite game. A limited time offer and the countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0.",
+    );
+    expect(textOf(8)).toContain("Lars sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?");
+  });
+
+  it("scores Cath's Lesson 5 share choice and Lesson 6 yes/no sort", () => {
+    const lesson5 = loadExplorerM1Payload(5);
+    if (!lesson5) throw new Error("missing lesson 5");
+    const share = resolvePayloadLesson(lesson5, "explorer", 5).screens.find(
+      (screen) => screen.type === "binary-choice" && screen.prompt.startsWith("The gelato costs $5."),
+    );
+    expect(share?.type).toBe("binary-choice");
+    if (share?.type !== "binary-choice") return;
+    expect(share.options).toBeTruthy();
+    if (!share.options) return;
+    expect(share.options.map((option) => ({ label: option.label, isCorrect: option.isCorrect }))).toEqual([
+      { label: "Skip his own gelato and ask if Mia wants to share.", isCorrect: true },
+      { label: "Buy his own, because the deal ends today.", isCorrect: false },
+    ]);
+
+    const lesson6 = loadExplorerM1Payload(6);
+    if (!lesson6) throw new Error("missing lesson 6");
+    const sort = resolvePayloadLesson(lesson6, "explorer", 6).screens.find(
+      (screen) => screen.type === "bucket-sort" && screen.intro.includes("good ideas for Lars"),
+    );
+    expect(sort?.type).toBe("bucket-sort");
+    if (sort?.type !== "bucket-sort") return;
+    expect(sort.buckets.map((bucket) => bucket.label)).toEqual(["Yes", "No"]);
+    expect(sort.items.map((item) => ({ label: item.label, bucket: item.bucket }))).toEqual([
+      { label: "Pay his $5 half", bucket: "yes" },
+      { label: "Save the remaining $3 for later", bucket: "yes" },
+      { label: "Buy the dart blaster and movie ticket", bucket: "no" },
+      { label: "Borrow $5 from Senna", bucket: "no" },
+    ]);
+  });
+
+  it("plays the folded Lesson 9 close as one beat before the medal", () => {
+    const payload = loadExplorerM1Payload(9);
+    if (!payload) throw new Error("missing lesson 9");
+    const screens = resolvePayloadLesson(payload, "explorer", 9).screens;
+    const beats = screens.filter((screen) => screen.type === "narrative-bonus");
+    expect(beats.map((beat) => beat.id)).toEqual(["explorer-m1-l9-beat1"]);
+    const beat = beats[0];
+    if (!beat || beat.type !== "narrative-bonus") return;
+    expect(beat.narrative).toBe(
+      "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\nOn Saturday, his stand opens by the front gate.\nHe's one step closer to his mountain bike!",
+    );
+    expect(beat.pairImage).toBe("beat-ex-m1-l9-r1.webp");
+    expect(beat.credit).toBe(STORY_CREDIT);
+    expect(beat.audio?.src).toContain("explorer-m1-l9-beat1-0f124ac0.mp3");
+    const completion = screens.findIndex((screen) => screen.type === "completion");
+    expect(screens[completion - 1]?.id).toBe("explorer-m1-l9-beat1");
+  });
+
+  it("gives every explorer story beat a 1600x1200 workbook still", () => {
+    const workbook = parseAuthoringTable({
+      filename: "workbook.xlsx",
+      bytes: new Uint8Array(
+        readFileSync(
+          path.join(
+            process.cwd(),
+            "lib/academy/lessons/payload/source/explorer-m1/workbook.xlsx",
+          ),
+        ),
+      ),
+    });
+    const headers = workbook[0] ?? [];
+    const column = (name: string) =>
+      headers.findIndex((header) => header.trim().toLowerCase() === name.toLowerCase());
+    const lessonCol = column("Lesson Number");
+    const textCol = column("Explorer Text");
+    const imageCol = column("Explorer Image");
+    const sheetByText = new Map<string, string>();
+    for (const row of workbook.slice(1)) {
+      if ((row[lessonCol] ?? "").trim().toLowerCase() !== "scenario beat") continue;
+      const text = (row[textCol] ?? "").replace(/\s+/g, " ").trim();
+      sheetByText.set(text, (row[imageCol] ?? "").trim());
+    }
+
+    const blanks: string[] = [];
+    const problems: string[] = [];
+    const minBytes = 23 * 1024;
+    const maxBytes = 82 * 1024;
+
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
+      for (const screen of screens) {
+        if (screen.type !== "narrative-bonus" || !screen.id.includes("beat")) continue;
+        const text = screen.narrative.replace(/\s+/g, " ").trim();
+        const sheetImage = sheetByText.get(text);
+        const file = typeof screen.pairImage === "string" ? screen.pairImage : "";
+        const label = `L${lessonNumber} ${screen.id}`;
+        if (!file) {
+          blanks.push(label);
+          continue;
+        }
+        if (sheetImage === "" && screen.id !== "explorer-m1-intro-beat1") {
+          problems.push(`${label} workbook image is blank`);
+        } else if (sheetImage && sheetImage !== file) {
+          problems.push(`${label} plays ${file} but the workbook maps ${sheetImage}`);
+        }
+        const src = getPairSheetImagePath(file);
+        const disk = src ? path.join(process.cwd(), "public", src) : "";
+        if (!src || !existsSync(disk)) {
+          problems.push(`${label} missing ${file}`);
+          continue;
+        }
+        const bytes = readFileSync(disk);
+        const tag = bytes.subarray(12, 16).toString("ascii");
+        const width = tag === "VP8X" ? 1 + bytes.readUIntLE(24, 3) : 0;
+        const height = tag === "VP8X" ? 1 + bytes.readUIntLE(27, 3) : 0;
+        if (tag !== "VP8X" || width !== 1600 || height !== 1200) {
+          problems.push(`${label} ${file} is ${width}x${height} ${tag}`);
+        }
+        if (bytes.length < minBytes || bytes.length > maxBytes) {
+          problems.push(`${label} ${file} is ${bytes.length} bytes`);
+        }
+      }
+    }
+
+    expect(blanks).toEqual([]);
+    expect(problems).toEqual([]);
+    expect(sheetByText.size).toBe(26);
   });
 
   it("lists the three Module 1 gold skills on the explorer lesson 9 close", () => {
@@ -179,6 +455,68 @@ describe("explorer module 1 payload", () => {
     const bundled = loadBundledLessonPayload(1, 1);
     expect(selectLessonPayload("pathfinder", bundled, payload)?.lessonTitle).toBe(
       bundled.lessonTitle,
+    );
+  });
+
+  it("resolves every explorer picture, including drag sprites, to a file on disk", () => {
+    const missing: string[] = [];
+    const blankDrags: string[] = [];
+    const publicFile = (src: string) => existsSync(path.join(process.cwd(), "public", src));
+
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      const screens = resolvePayloadLesson(payload, "explorer", lessonNumber).screens;
+      screens.forEach((screen, index) => {
+        const picture = resolveLessonScreenIllustration(screen);
+        if (picture?.src && !publicFile(picture.src)) {
+          missing.push(`L${lessonNumber} s${index} scene ${picture.src}`);
+        }
+        if (screen.type !== "drag-to-target") return;
+        const sprites: string[] = [];
+        if (screen.sourceIllustrationId) sprites.push(getIllustrationPath(screen.sourceIllustrationId));
+        if (screen.targetIllustrationId) sprites.push(getIllustrationPath(screen.targetIllustrationId));
+        for (const fileName of [screen.sourceImageFile, screen.targetImageFile]) {
+          if (!fileName) continue;
+          const src = getPairSheetImagePath(fileName);
+          if (!src) missing.push(`L${lessonNumber} s${index} unresolved ${fileName}`);
+          else sprites.push(src);
+        }
+        for (const src of sprites) {
+          if (!publicFile(src)) missing.push(`L${lessonNumber} s${index} drag ${src}`);
+        }
+        if (sprites.length === 0 && !screen.itemEmoji && !screen.targetEmoji) {
+          blankDrags.push(`L${lessonNumber} s${index} ${screen.sourceLabel} → ${screen.targetLabel}`);
+        }
+      });
+    }
+
+    expect(blankDrags).toEqual([]);
+    expect(missing).toEqual([]);
+
+    const lesson2 = loadExplorerM1Payload(2);
+    if (!lesson2) throw new Error("missing lesson 2");
+    const gift = resolvePayloadLesson(lesson2, "explorer", 2).screens.find(
+      (screen) => screen.type === "drag-to-target" && screen.sourceIllustrationId === "concept-gift-box",
+    );
+    expect(gift).toMatchObject({
+      sourceLabel: "Gift box",
+      targetLabel: "Senna",
+      sourceIllustrationId: "concept-gift-box",
+      targetIllustrationId: "senna-celebrating",
+      pairImage: "lars-senna-sidebyside.webp",
+    });
+    if (!gift || gift.type !== "drag-to-target") return;
+    expect(resolveLessonScreenIllustration(gift)).toMatchObject({
+      src: "/assets/illustrations/pairs/lars-senna-sidebyside.webp",
+      alt: "lars senna sidebyside",
+    });
+    expect(resolveLessonScreenIllustration(gift)?.label).toBeUndefined();
+    expect(getIllustrationPath("concept-gift-box")).toBe(
+      "/assets/illustrations/concepts/concept-gift-box.webp",
+    );
+    expect(getIllustrationPath("senna-celebrating")).toBe(
+      "/assets/illustrations/characters/senna/senna-celebrating-512.webp",
     );
   });
 });

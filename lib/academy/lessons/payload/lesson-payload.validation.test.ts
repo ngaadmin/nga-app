@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { cashMatches, unselectedNextIsMistake } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
 import {
+  fallbackNextIndex,
   implicitNextIndex,
   isSiblingBranchLabel,
   lessonNavigationIssues,
@@ -179,6 +180,15 @@ describe("bundled lesson payloads", () => {
     expect(implicitNextIndex(0, ["4", "4-alt", "5"])).toBe(2);
     expect(implicitNextIndex(1, ["4", "4-alt", "5"])).toBe(2);
     expect(implicitNextIndex(0, ["1", "2", "3"])).toBe(1);
+    const last = {
+      type: "narrative-bonus" as const,
+      id: "tail",
+      narrative: "After the medal.",
+      bonusXp: 0,
+      bonusTapLabel: "",
+    };
+    expect(fallbackNextIndex(last, 2, ["1", "2", "tail"])).toBeUndefined();
+    expect(fallbackNextIndex(last, 1, ["1", "2", "tail"])).toBeUndefined();
   });
 
   it("negates an equals cash check on the otherwise branch", () => {

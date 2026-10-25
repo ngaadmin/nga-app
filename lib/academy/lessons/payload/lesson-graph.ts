@@ -59,6 +59,9 @@ export function fallbackNextIndex(
   const nav = asNav(screen);
   if (typeof nav.continueToIndex === "number") return nav.continueToIndex;
   const implicit = implicitNextIndex(index, labels);
+  // The last row clamps onto itself. That is not a destination. Next
+  // finishes the lesson or leaves, instead of pressing the same screen again.
+  if (implicit === index) return undefined;
   if (implicit !== index + 1) return implicit;
   return undefined;
 }

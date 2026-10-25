@@ -1481,8 +1481,12 @@ export function mapPayloadScreen(
         ...(credit ? { credit } : {}),
         ...(audio ? { audio } : {}),
         ...(follow ? { successMessage: follow } : {}),
-        ...(brief ? { illustration: { label: brief, alt: brief } } : {}),
-        ...picture,
+        // The image brief is alt text for a real picture. With no file it
+        // was rendering as the picture itself.
+        ...(brief && typeof image === "string"
+          ? { illustration: { label: brief, alt: brief } }
+          : {}),
+        ...(typeof image === "string" ? { pairImage: image } : { pairImage: false }),
       };
     }
     case "completion": {

@@ -6,7 +6,7 @@
   },
   {
     "beat_id": "explorer-m1-l1-beat1",
-    "file": "explorer-m1-l1-beat1-76bfc19a.mp3",
+    "file": "explorer-m1-l1-beat1-6e798820.mp3",
     "durationMs": 10919
   },
   {
@@ -15,19 +15,34 @@
     "durationMs": 8986
   },
   {
+    "beat_id": "explorer-m1-l1-beat3",
+    "file": "explorer-m1-l1-beat3-59e3b2a5.mp3",
+    "durationMs": 8359
+  },
+  {
+    "beat_id": "explorer-m1-l2-beat3",
+    "file": "explorer-m1-l2-beat3-69506625.mp3",
+    "durationMs": 8359
+  },
+  {
     "beat_id": "explorer-m1-l2-beat1",
-    "file": "explorer-m1-l2-beat1-f687d612.mp3",
-    "durationMs": 16353
+    "file": "explorer-m1-l2-beat1-7a5ee3c6.mp3",
+    "durationMs": 14759
   },
   {
     "beat_id": "explorer-m1-l2-beat2",
-    "file": "explorer-m1-l2-beat2-e210fffc.mp3",
-    "durationMs": 11233
+    "file": "explorer-m1-l2-beat2-f61aa9bb.mp3",
+    "durationMs": 15073
+  },
+  {
+    "beat_id": "explorer-m1-l2-beat4",
+    "file": "explorer-m1-l2-beat4-dbec93d3.mp3",
+    "durationMs": 10266
   },
   {
     "beat_id": "explorer-m1-l3-beat1",
-    "file": "explorer-m1-l3-beat1-c60458b9.mp3",
-    "durationMs": 11233
+    "file": "explorer-m1-l3-beat1-3c920bf9.mp3",
+    "durationMs": 12513
   },
   {
     "beat_id": "explorer-m1-l3-beat2",
@@ -35,9 +50,19 @@
     "durationMs": 11233
   },
   {
+    "beat_id": "explorer-m1-l3-beat3",
+    "file": "explorer-m1-l3-beat3-0e9295ad.mp3",
+    "durationMs": 12513
+  },
+  {
+    "beat_id": "explorer-m1-l4-beat3",
+    "file": "explorer-m1-l4-beat3-e61399db.mp3",
+    "durationMs": 5460
+  },
+  {
     "beat_id": "explorer-m1-l4-beat1",
-    "file": "explorer-m1-l4-beat1-5f5d0d44.mp3",
-    "durationMs": 6740
+    "file": "explorer-m1-l4-beat1-d7e222fc.mp3",
+    "durationMs": 7706
   },
   {
     "beat_id": "explorer-m1-l4-beat2",
@@ -45,9 +70,29 @@
     "durationMs": 9300
   },
   {
+    "beat_id": "explorer-m1-l4-beat4",
+    "file": "explorer-m1-l4-beat4-12587413.mp3",
+    "durationMs": 5146
+  },
+  {
+    "beat_id": "explorer-m1-l5-beat2",
+    "file": "explorer-m1-l5-beat2-4b3b6461.mp3",
+    "durationMs": 7393
+  },
+  {
     "beat_id": "explorer-m1-l5-beat1",
-    "file": "explorer-m1-l5-beat1-8b358340.mp3",
-    "durationMs": 6740
+    "file": "explorer-m1-l5-beat1-da75597d.mp3",
+    "durationMs": 12199
+  },
+  {
+    "beat_id": "explorer-m1-l5-beat3",
+    "file": "explorer-m1-l5-beat3-63e30b80.mp3",
+    "durationMs": 5146
+  },
+  {
+    "beat_id": "explorer-m1-l6-beat4",
+    "file": "explorer-m1-l6-beat4-89cafab4.mp3",
+    "durationMs": 5460
   },
   {
     "beat_id": "explorer-m1-l6-beat1",
@@ -61,8 +106,8 @@
   },
   {
     "beat_id": "explorer-m1-l6-beat3",
-    "file": "explorer-m1-l6-beat3-b589cc81.mp3",
-    "durationMs": 6426
+    "file": "explorer-m1-l6-beat3-64c955d0.mp3",
+    "durationMs": 8020
   },
   {
     "beat_id": "explorer-m1-l7-beat1",
@@ -71,22 +116,17 @@
   },
   {
     "beat_id": "explorer-m1-l7-beat2",
-    "file": "explorer-m1-l7-beat2-df569755.mp3",
-    "durationMs": 8359
-  },
-  {
-    "beat_id": "explorer-m1-l7-beat3",
-    "file": "explorer-m1-l7-beat3-015a4ca5.mp3",
-    "durationMs": 5146
-  },
-  {
-    "beat_id": "explorer-m1-l9-beat1",
-    "file": "explorer-m1-l9-beat1-113775f2.mp3",
+    "file": "explorer-m1-l7-beat2-345adb43.mp3",
     "durationMs": 9953
   },
   {
-    "beat_id": "explorer-m1-l9-beat2",
-    "file": "explorer-m1-l9-beat2-163bcac6.mp3",
-    "durationMs": 2586
+    "beat_id": "explorer-m1-l7-beat3",
+    "file": "explorer-m1-l7-beat3-33ba5d20.mp3",
+    "durationMs": 8986
+  },
+  {
+    "beat_id": "explorer-m1-l9-beat1",
+    "file": "explorer-m1-l9-beat1-0f124ac0.mp3",
+    "durationMs": 12826
   }
 ]

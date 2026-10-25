@@ -297,6 +297,53 @@ describe("explorer module 1 payload", () => {
     );
   });
 
+  it("scores Cath's Lesson 5 share choice and Lesson 6 yes/no sort", () => {
+    const lesson5 = loadExplorerM1Payload(5);
+    if (!lesson5) throw new Error("missing lesson 5");
+    const share = resolvePayloadLesson(lesson5, "explorer", 5).screens.find(
+      (screen) => screen.type === "binary-choice" && screen.prompt.startsWith("The gelato costs $5."),
+    );
+    expect(share?.type).toBe("binary-choice");
+    if (share?.type !== "binary-choice") return;
+    expect(share.options.map((option) => ({ label: option.label, isCorrect: option.isCorrect }))).toEqual([
+      { label: "Skip his own gelato and ask if Mia wants to share.", isCorrect: true },
+      { label: "Buy his own, because the deal ends today.", isCorrect: false },
+    ]);
+
+    const lesson6 = loadExplorerM1Payload(6);
+    if (!lesson6) throw new Error("missing lesson 6");
+    const sort = resolvePayloadLesson(lesson6, "explorer", 6).screens.find(
+      (screen) => screen.type === "bucket-sort" && screen.intro.includes("good ideas for Lars"),
+    );
+    expect(sort?.type).toBe("bucket-sort");
+    if (sort?.type !== "bucket-sort") return;
+    expect(sort.buckets.map((bucket) => bucket.label)).toEqual(["Yes", "No"]);
+    expect(sort.items.map((item) => ({ label: item.label, bucket: item.bucket }))).toEqual([
+      { label: "Pay his $5 half", bucket: "yes" },
+      { label: "Save the remaining $3 for later", bucket: "yes" },
+      { label: "Buy the dart blaster and movie ticket", bucket: "no" },
+      { label: "Borrow $5 from Senna", bucket: "no" },
+    ]);
+  });
+
+  it("plays the folded Lesson 9 close as one beat before the medal", () => {
+    const payload = loadExplorerM1Payload(9);
+    if (!payload) throw new Error("missing lesson 9");
+    const screens = resolvePayloadLesson(payload, "explorer", 9).screens;
+    const beats = screens.filter((screen) => screen.type === "narrative-bonus");
+    expect(beats.map((beat) => beat.id)).toEqual(["explorer-m1-l9-beat1"]);
+    const beat = beats[0];
+    if (!beat || beat.type !== "narrative-bonus") return;
+    expect(beat.narrative).toBe(
+      "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\nOn Saturday, his stand opens by the front gate.\nHe's one step closer to his mountain bike!",
+    );
+    expect(beat.pairImage).toBe("beat-ex-m1-l9-r1.webp");
+    expect(beat.credit).toBe(STORY_CREDIT);
+    expect(beat.audio?.src).toContain("explorer-m1-l9-beat1-113775f2.mp3");
+    const completion = screens.findIndex((screen) => screen.type === "completion");
+    expect(screens[completion - 1]?.id).toBe("explorer-m1-l9-beat1");
+  });
+
   it("gives every explorer story beat a 1600x1200 workbook still", () => {
     const workbook = parseAuthoringTable({
       filename: "workbook.xlsx",
@@ -367,7 +414,7 @@ describe("explorer module 1 payload", () => {
 
     expect(blanks).toEqual([]);
     expect(problems).toEqual([]);
-    expect(sheetByText.size).toBe(27);
+    expect(sheetByText.size).toBe(26);
   });
 
   it("lists the three Module 1 gold skills on the explorer lesson 9 close", () => {

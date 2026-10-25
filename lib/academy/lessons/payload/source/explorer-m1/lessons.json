@@ -537,9 +537,9 @@
           "screenLabel": "explorer-m1-l2-beat1",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nMom says she'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan: a lemonade stand!",
-            "pathfinder": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nMom says she'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan: a lemonade stand!",
-            "maverick": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nMom says she'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan: a lemonade stand!"
+            "explorer": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nHis parents say they'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan.",
+            "pathfinder": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nHis parents say they'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan.",
+            "maverick": "Senna loves his new phone case. That night, Lars tells Mom his big dream: swapping his old bike for a better mountain bike.\n\nHis parents say they'll help, but Lars has to pay for part of it himself. Pocket money won't get him there, so Lars makes a plan."
           },
           "image": {
             "explorer": "em1-04-l2r20-lars-mom-bike-note-r3.webp",
@@ -562,9 +562,9 @@
           "screenLabel": "explorer-m1-l2-beat2",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "First he needs a jug, paper cups, lemons and sugar. That costs money too, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him.",
-            "pathfinder": "First he needs a jug, paper cups, lemons and sugar. That costs money too, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him.",
-            "maverick": "First he needs a jug, paper cups, lemons and sugar. That costs money too, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him."
+            "explorer": "Lars wants to run a lemonade stand. First he needs a jug, paper cups, lemons, sugar and ingredients to bake cookies. That all costs money, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him.",
+            "pathfinder": "Lars wants to run a lemonade stand. First he needs a jug, paper cups, lemons, sugar and ingredients to bake cookies. That all costs money, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him.",
+            "maverick": "Lars wants to run a lemonade stand. First he needs a jug, paper cups, lemons, sugar and ingredients to bake cookies. That all costs money, so he decides to save for it.\n\nMom agrees, as long as the stand goes by their front gate, where she can see him."
           },
           "image": {
             "explorer": "prop-ex-m1-stand-set-r1.webp",
@@ -629,9 +629,9 @@
           "screenLabel": "explorer-m1-l2-beat4",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "Saving for the stand sounds easy. But his friends keep heading to the corner store, and the weeks fly by.\n\nThen one afternoon, Lars borrows Senna's headphones...",
-            "pathfinder": "Saving for the stand sounds easy. But his friends keep heading to the corner store, and the weeks fly by.\n\nThen one afternoon, Lars borrows Senna's headphones...",
-            "maverick": "Saving for the stand sounds easy. But his friends keep heading to the corner store, and the weeks fly by.\n\nThen one afternoon, Lars borrows Senna's headphones..."
+            "explorer": "Saving for the lemonade stand idea sounds easy, but he keeps spending his money at the corner store. The weeks fly by.\n\nThen one afternoon, Lars borrows Senna's headphones...",
+            "pathfinder": "Saving for the lemonade stand idea sounds easy, but he keeps spending his money at the corner store. The weeks fly by.\n\nThen one afternoon, Lars borrows Senna's headphones...",
+            "maverick": "Saving for the lemonade stand idea sounds easy, but he keeps spending his money at the corner store. The weeks fly by.\n\nThen one afternoon, Lars borrows Senna's headphones..."
           },
           "image": {
             "explorer": "beat-ex-m1-l3-r1.webp",
@@ -654,9 +654,9 @@
           "screenLabel": "1",
           "gameType": "multiple-choice",
           "text": {
-            "explorer": "Over the next few weeks, Lars spends every dollar on fun stuff and forgets to save. Then he breaks Senna's headphones by accident. What's the real problem?",
-            "pathfinder": "Over the next few weeks, Lars spends every dollar on fun stuff and forgets to save. Then he breaks Senna's headphones by accident. What's the real problem?",
-            "maverick": "Over the next few weeks, Lars spends every dollar on fun stuff and forgets to save. Then he breaks Senna's headphones by accident. What's the real problem?"
+            "explorer": "He accidentally breaks Senna's headphones. What's the problem Lars faces?",
+            "pathfinder": "He accidentally breaks Senna's headphones. What's the problem Lars faces?",
+            "maverick": "He accidentally breaks Senna's headphones. What's the problem Lars faces?"
           },
           "image": {
             "explorer": "lars-senna-chatting.webp",
@@ -946,9 +946,9 @@
           "screenLabel": "1",
           "gameType": "multiple-choice",
           "text": {
-            "explorer": "Lars's friends are all buying a game skin before the timer runs out. Mason sees Lars holding off. What is Lars really doing by waiting?",
-            "pathfinder": "Lars's friends are all buying a game skin before the timer runs out. Mason sees Lars holding off. What is Lars really doing by waiting?",
-            "maverick": "Lars's friends are all buying a game skin before the timer runs out. Mason sees Lars holding off. What is Lars really doing by waiting?"
+            "explorer": "Lars's friends are all buying the game skin before the timer runs out. Mason sees that Lars is holding off. What is Lars really doing by waiting?",
+            "pathfinder": "Lars's friends are all buying the game skin before the timer runs out. Mason sees that Lars is holding off. What is Lars really doing by waiting?",
+            "maverick": "Lars's friends are all buying the game skin before the timer runs out. Mason sees that Lars is holding off. What is Lars really doing by waiting?"
           },
           "image": {
             "explorer": "lars-mason-sidebyside.webp",
@@ -1146,9 +1146,9 @@
           "screenLabel": "explorer-m1-l4-beat1",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "Lars grabs an envelope to keep his stand money separate. He writes 'Startup money needed: $15' on the front.",
-            "pathfinder": "Lars grabs an envelope to keep his stand money separate. He writes 'Startup money needed: $15' on the front.",
-            "maverick": "Lars grabs an envelope to keep his stand money separate. He writes 'Startup money needed: $15' on the front."
+            "explorer": "Lars grabs an envelope to keep the money for his lemonade stand separate. He writes 'Startup money needed: $15' on the front.",
+            "pathfinder": "Lars grabs an envelope to keep the money for his lemonade stand separate. He writes 'Startup money needed: $15' on the front.",
+            "maverick": "Lars grabs an envelope to keep the money for his lemonade stand separate. He writes 'Startup money needed: $15' on the front."
           },
           "image": {
             "explorer": "prop-ex-m1-lars-thinking-r1.webp",
@@ -1288,9 +1288,9 @@
           "screenLabel": "2",
           "gameType": "binary-choice",
           "text": {
-            "explorer": "A birthday gelato costs $5. The only money Lars has is his $10 startup money. What should he do?",
-            "pathfinder": "A birthday gelato costs $5. The only money Lars has is his $10 startup money. What should he do?",
-            "maverick": "A birthday gelato costs $5. The only money Lars has is his $10 startup money. What should he do?"
+            "explorer": "The gelato costs $5. The only money Lars has is his $10 startup money. What should he do?",
+            "pathfinder": "The gelato costs $5. The only money Lars has is his $10 startup money. What should he do?",
+            "maverick": "The gelato costs $5. The only money Lars has is his $10 startup money. What should he do?"
           },
           "image": {
             "explorer": "lars-deciding-512.webp",
@@ -1298,9 +1298,9 @@
             "maverick": "lars-deciding-512.webp"
           },
           "settings": {
-            "explorer": "CHOICE A: \ud83e\udd1d Skip his own gelato and share Mia's.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A",
-            "pathfinder": "CHOICE A: \ud83e\udd1d Skip his own gelato and share Mia's.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A",
-            "maverick": "CHOICE A: \ud83e\udd1d Skip his own gelato and share Mia's.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A"
+            "explorer": "CHOICE A: \ud83e\udd1d Skip his own gelato and ask if Mia wants to share.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A",
+            "pathfinder": "CHOICE A: \ud83e\udd1d Skip his own gelato and ask if Mia wants to share.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A",
+            "maverick": "CHOICE A: \ud83e\udd1d Skip his own gelato and ask if Mia wants to share.\nCHOICE B: \ud83c\udf66 Buy his own, because the deal ends today.\nCORRECT: A"
           },
           "error": {
             "explorer": "",
@@ -1313,9 +1313,9 @@
           "screenLabel": "3",
           "gameType": "true-false",
           "text": {
-            "explorer": "True or false: the gelato is a need because the deal is only on today.",
-            "pathfinder": "True or false: the gelato is a need because the deal is only on today.",
-            "maverick": "True or false: the gelato is a need because the deal is only on today."
+            "explorer": "True or false: the gelato is a 'Need' because the deal is only on today.",
+            "pathfinder": "True or false: the gelato is a 'Need' because the deal is only on today.",
+            "maverick": "True or false: the gelato is a 'Need' because the deal is only on today."
           },
           "image": {
             "explorer": "lars-thinking-512.webp",
@@ -1388,9 +1388,9 @@
           "screenLabel": "5",
           "gameType": "spotlight-rounds",
           "text": {
-            "explorer": "At the counter, a sign flashes: DEAL ENDS TODAY! Lars feels left out without his own cup. What should he do now?",
-            "pathfinder": "At the counter, a sign flashes: DEAL ENDS TODAY! Lars feels left out without his own cup. What should he do now?",
-            "maverick": "At the counter, a sign flashes: DEAL ENDS TODAY! Lars feels left out without his own cup. What should he do now?"
+            "explorer": "The birthday deal is only on today. Lars feels left out without his own cup. What should he do now?",
+            "pathfinder": "The birthday deal is only on today. Lars feels left out without his own cup. What should he do now?",
+            "maverick": "The birthday deal is only on today. Lars feels left out without his own cup. What should he do now?"
           },
           "image": {
             "explorer": "lars-hands-on-hips-512.webp",
@@ -1580,9 +1580,9 @@
           "screenLabel": "2",
           "gameType": "multiple-choice",
           "text": {
-            "explorer": "Earlier this week, Lars nearly bought a $5 mini dart blaster. What would have happened if he had bought it?",
-            "pathfinder": "Earlier this week, Lars nearly bought a $5 mini dart blaster. What would have happened if he had bought it?",
-            "maverick": "Earlier this week, Lars nearly bought a $5 mini dart blaster. What would have happened if he had bought it?"
+            "explorer": "Earlier this week, Lars nearly bought a $5 mini dart blaster, but he decided he didn't need it. What would have happened if he had bought it?",
+            "pathfinder": "Earlier this week, Lars nearly bought a $5 mini dart blaster, but he decided he didn't need it. What would have happened if he had bought it?",
+            "maverick": "Earlier this week, Lars nearly bought a $5 mini dart blaster, but he decided he didn't need it. What would have happened if he had bought it?"
           },
           "image": {
             "explorer": "lars-thinking-512.webp",
@@ -1605,9 +1605,9 @@
           "screenLabel": "3",
           "gameType": "bucket-sort",
           "text": {
-            "explorer": "Lars has $8, and his half of the movie costs $5. Which ideas work without going below zero or borrowing? Sort each idea into Yes or No.",
-            "pathfinder": "Lars has $8, and his half of the movie costs $5. Which ideas work without going below zero or borrowing? Sort each idea into Yes or No.",
-            "maverick": "Lars has $8, and his half of the movie costs $5. Which ideas work without going below zero or borrowing? Sort each idea into Yes or No."
+            "explorer": "Because he didn't buy the blaster, Lars has $8. His half of the movie costs $5. Which are good ideas for Lars? Sort each idea into Yes or No.",
+            "pathfinder": "Because he didn't buy the blaster, Lars has $8. His half of the movie costs $5. Which are good ideas for Lars? Sort each idea into Yes or No.",
+            "maverick": "Because he didn't buy the blaster, Lars has $8. His half of the movie costs $5. Which are good ideas for Lars? Sort each idea into Yes or No."
           },
           "image": {
             "explorer": "not allowed",
@@ -1615,9 +1615,9 @@
             "maverick": "not allowed"
           },
           "settings": {
-            "explorer": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Keep $3 for later\nNO: \ud83c\udfaf Dart blaster and the movie\nNO: \ud83d\ude4b Borrow $5 from Senna",
-            "pathfinder": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Keep $3 for later\nNO: \ud83c\udfaf Dart blaster and the movie\nNO: \ud83d\ude4b Borrow $5 from Senna",
-            "maverick": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Keep $3 for later\nNO: \ud83c\udfaf Dart blaster and the movie\nNO: \ud83d\ude4b Borrow $5 from Senna"
+            "explorer": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Save the remaining $3 for later\nNO: \ud83c\udfaf Buy the dart blaster and movie ticket\nNO: \ud83d\ude4b Borrow $5 from Senna",
+            "pathfinder": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Save the remaining $3 for later\nNO: \ud83c\udfaf Buy the dart blaster and movie ticket\nNO: \ud83d\ude4b Borrow $5 from Senna",
+            "maverick": "ITEMS:\nYES: \ud83c\udf9f\ufe0f Pay his $5 half\nYES: \ud83d\udcb0 Save the remaining $3 for later\nNO: \ud83c\udfaf Buy the dart blaster and movie ticket\nNO: \ud83d\ude4b Borrow $5 from Senna"
           },
           "error": {
             "explorer": "",
@@ -1655,9 +1655,9 @@
           "screenLabel": "5",
           "gameType": "multiple-choice",
           "text": {
-            "explorer": "Mom will pay half of the $10. Lars will pay his $5 from his $8. How much will he have left?",
-            "pathfinder": "Mom will pay half of the $10. Lars will pay his $5 from his $8. How much will he have left?",
-            "maverick": "Mom will pay half of the $10. Lars will pay his $5 from his $8. How much will he have left?"
+            "explorer": "Lars's parents will pay half of the $10. Lars pays the other half from the $8 he has. How much will Lars have left?",
+            "pathfinder": "Lars's parents will pay half of the $10. Lars pays the other half from the $8 he has. How much will Lars have left?",
+            "maverick": "Lars's parents will pay half of the $10. Lars pays the other half from the $8 he has. How much will Lars have left?"
           },
           "image": {
             "explorer": "lars-hands-on-hips-512.webp",
@@ -1847,9 +1847,9 @@
           "screenLabel": "explorer-m1-l6-beat3",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "At the bus stop, Lars tells Mason his big news.\n\nMom told the neighbors, and lots of them want to buy lemonade!",
-            "pathfinder": "At the bus stop, Lars tells Mason his big news.\n\nMom told the neighbors, and lots of them want to buy lemonade!",
-            "maverick": "At the bus stop, Lars tells Mason his big news.\n\nMom told the neighbors, and lots of them want to buy lemonade!"
+            "explorer": "At the bus stop, Lars shares some big news with Mason.\n\nMom told the neighbors about his lemonade stand idea, and lots of them want to buy some!",
+            "pathfinder": "At the bus stop, Lars shares some big news with Mason.\n\nMom told the neighbors about his lemonade stand idea, and lots of them want to buy some!",
+            "maverick": "At the bus stop, Lars shares some big news with Mason.\n\nMom told the neighbors about his lemonade stand idea, and lots of them want to buy some!"
           },
           "image": {
             "explorer": "beat-ex-m1-l7-r1.webp",
@@ -2114,9 +2114,9 @@
           "screenLabel": "explorer-m1-l7-beat2",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "Saturday morning. Lars looks at the note above his desk: 'Mountain bike'.\n\nHis startup envelope stays at home. Today's money is just for the mall.",
-            "pathfinder": "Saturday morning. Lars looks at the note above his desk: 'Mountain bike'.\n\nHis startup envelope stays at home. Today's money is just for the mall.",
-            "maverick": "Saturday morning. Lars looks at the note above his desk: 'Mountain bike'.\n\nHis startup envelope stays at home. Today's money is just for the mall."
+            "explorer": "Saturday morning. Lars and his friends are going to the mall. Lars looks at the note and picture above his desk: 'Mountain bike'.\nHe decides to leave the money for his startup at home.",
+            "pathfinder": "Saturday morning. Lars and his friends are going to the mall. Lars looks at the note and picture above his desk: 'Mountain bike'.\nHe decides to leave the money for his startup at home.",
+            "maverick": "Saturday morning. Lars and his friends are going to the mall. Lars looks at the note and picture above his desk: 'Mountain bike'.\nHe decides to leave the money for his startup at home."
           },
           "image": {
             "explorer": "prop-ex-m1-bike-bubble-r1.webp",
@@ -2139,9 +2139,9 @@
           "screenLabel": "explorer-m1-l7-beat3",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "But today he's going to the mall with his friends.\n\nWhat he does with his money today is up to you!",
-            "pathfinder": "But today he's going to the mall with his friends.\n\nWhat he does with his money today is up to you!",
-            "maverick": "But today he's going to the mall with his friends.\n\nWhat he does with his money today is up to you!"
+            "explorer": "Lars has two weeks of pocket money, $10, at the mall. And what he does with the money he brought, is up to you!\nLet's see the choices Lars has to make today.",
+            "pathfinder": "Lars has two weeks of pocket money, $10, at the mall. And what he does with the money he brought, is up to you!\nLet's see the choices Lars has to make today.",
+            "maverick": "Lars has two weeks of pocket money, $10, at the mall. And what he does with the money he brought, is up to you!\nLet's see the choices Lars has to make today."
           },
           "image": {
             "explorer": "beat-ex-m1-l8-r2.webp",
@@ -2856,9 +2856,9 @@
           "screenLabel": "explorer-m1-l9-beat1",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\n\nOn Saturday, his stand opens by the front gate.",
-            "pathfinder": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\n\nOn Saturday, his stand opens by the front gate.",
-            "maverick": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\n\nOn Saturday, his stand opens by the front gate."
+            "explorer": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\nOn Saturday, his stand opens by the front gate.\nHe's one step closer to his mountain bike!",
+            "pathfinder": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\nOn Saturday, his stand opens by the front gate.\nHe's one step closer to his mountain bike!",
+            "maverick": "With $15 in his envelope, Lars buys a jug, cups, lemons and sugar. Mia's sign goes on the front.\nOn Saturday, his stand opens by the front gate.\nHe's one step closer to his mountain bike!"
           },
           "image": {
             "explorer": "beat-ex-m1-l9-r1.webp",
@@ -2869,31 +2869,6 @@
             "explorer": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-113775f2.mp3\nAUDIO_MS: 9953\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Voice created with Grok",
             "pathfinder": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-113775f2.mp3\nAUDIO_MS: 9953\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Voice created with Grok",
             "maverick": "ID: explorer-m1-l9-beat1\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat1-113775f2.mp3\nAUDIO_MS: 9953\nIMAGE_BRIEF: Lars at his new lemonade stand by the front gate, Mia's sign on the front, Mom watching from the porch.\nCREDIT: Voice created with Grok"
-          },
-          "error": {
-            "explorer": "",
-            "pathfinder": "",
-            "maverick": ""
-          }
-        },
-        {
-          "screenNumber": 0,
-          "screenLabel": "explorer-m1-l9-beat2",
-          "gameType": "scenario-beat",
-          "text": {
-            "explorer": "He's one step closer to his mountain bike!",
-            "pathfinder": "He's one step closer to his mountain bike!",
-            "maverick": "He's one step closer to his mountain bike!"
-          },
-          "image": {
-            "explorer": "prop-ex-m1-lars-cheering-bike-r1.webp",
-            "pathfinder": "prop-ex-m1-lars-cheering-bike-r1.webp",
-            "maverick": "prop-ex-m1-lars-cheering-bike-r1.webp"
-          },
-          "settings": {
-            "explorer": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-163bcac6.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
-            "pathfinder": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-163bcac6.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade.",
-            "maverick": "ID: explorer-m1-l9-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l9-beat2-163bcac6.mp3\nAUDIO_MS: 2586\nIMAGE_BRIEF: Lars behind his stand, proudly holding up a cup of lemonade."
           },
           "error": {
             "explorer": "",

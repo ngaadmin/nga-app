@@ -305,6 +305,8 @@ describe("explorer module 1 payload", () => {
     );
     expect(share?.type).toBe("binary-choice");
     if (share?.type !== "binary-choice") return;
+    expect(share.options).toBeTruthy();
+    if (!share.options) return;
     expect(share.options.map((option) => ({ label: option.label, isCorrect: option.isCorrect }))).toEqual([
       { label: "Skip his own gelato and ask if Mia wants to share.", isCorrect: true },
       { label: "Buy his own, because the deal ends today.", isCorrect: false },

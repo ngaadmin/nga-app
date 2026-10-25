@@ -478,7 +478,7 @@ export function LessonDragToTargetGame({
             {hasSourceIllustration ? renderSourceIllustration() : null}
             {showSourceIllustration ? null : (
               <span
-                className={cn(hasSourceIllustration && "grid h-full w-full place-items-center text-5xl")}
+                className={cn(hasSourceIllustration && "grid h-full w-full place-items-center")}
                 aria-hidden={hasSourceIllustration}
               >
                 <AnswerEmoji emoji={itemEmoji} />

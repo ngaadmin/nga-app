@@ -49,6 +49,7 @@ const ngaLayeringPlugin = {
 };
 
 const eslintConfig = [
+  { ignores: ["archive/**"] },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     plugins: {

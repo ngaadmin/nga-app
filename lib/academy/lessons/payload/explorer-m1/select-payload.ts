@@ -2,8 +2,8 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import type { LessonPayload } from "@/lib/academy/lessons/payload/types";
 
 /**
- * Explorer Module 1 uses the converted workbook. Pathfinder and Maverick
- * stay on Screens1.csv.
+ * Explorer Module 1 uses the converted workbook (`lessons.json`).
+ * Pathfinder and Maverick stay on Screens1.csv until stage 3.
  */
 export function selectLessonPayload(
   cohort: MasteryCohort,

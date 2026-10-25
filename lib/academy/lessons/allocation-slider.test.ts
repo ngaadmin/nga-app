@@ -7,10 +7,8 @@ import {
   allocationTrackInsetPx,
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
-import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
-import { resolveLessonDefinition } from "@/lib/academy/lessons/types";
 
 describe("allocation slider", () => {
   it("enables Next only when Save is exactly the target", () => {
@@ -106,17 +104,5 @@ describe("allocation slider", () => {
       "Things Lars needs",
       "Things Lars wants",
     ]);
-  });
-
-  it("gives Lars three short lines and a $20 save target", () => {
-    const lesson = resolveLessonDefinition(M1_L2_LESSON_DEFINITION, "explorer");
-    const slider = lesson.screens.find((screen) => screen.type === "allocation-slider");
-    expect(slider).toMatchObject({
-      type: "allocation-slider",
-      total: 25,
-      targetMin: 20,
-      intro:
-        "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save at least $20 👇",
-    });
   });
 });

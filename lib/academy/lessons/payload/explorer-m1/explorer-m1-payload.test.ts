@@ -192,9 +192,9 @@ describe("explorer module 1 payload", () => {
     expect(secondLessonBeat?.type).toBe("narrative-bonus");
     if (secondLessonBeat?.type !== "narrative-bonus") return;
     expect(secondLessonBeat.credit).toBeUndefined();
-    expect(secondLessonBeat.pairImage).toBe("em1-03-l1r11-lars-lemonade-r3.webp");
+    expect(secondLessonBeat.pairImage).toBe("prop-ex-m1-stand-set-lars-r1.webp");
     expect(resolveLessonScreenIllustration(secondLessonBeat)).toMatchObject({
-      src: "/assets/illustrations/characters/pairs/em1-03-l1r11-lars-lemonade-r3.webp",
+      src: "/assets/illustrations/characters/pairs/prop-ex-m1-stand-set-lars-r1.webp",
     });
     const numbered = screens.filter((screen) => screen.type !== "narrative-bonus");
     expect(numbered.some((screen) => "pairImage" in screen && screen.pairImage === "em1-02-l1r7-senna-coins-r3.webp")).toBe(false);

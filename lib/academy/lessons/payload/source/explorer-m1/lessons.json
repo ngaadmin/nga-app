@@ -250,9 +250,9 @@
             "maverick": "Lars kept his $5 safe today. That night, he thinks about Senna's dog walking.\n\nHe decides to start his own business: a lemonade stand!"
           },
           "image": {
-            "explorer": "em1-03-l1r11-lars-lemonade-r3.webp",
-            "pathfinder": "em1-03-l1r11-lars-lemonade-r3.webp",
-            "maverick": "em1-03-l1r11-lars-lemonade-r3.webp"
+            "explorer": "prop-ex-m1-stand-set-lars-r1.webp",
+            "pathfinder": "prop-ex-m1-stand-set-lars-r1.webp",
+            "maverick": "prop-ex-m1-stand-set-lars-r1.webp"
           },
           "settings": {
             "explorer": "ID: explorer-m1-l1-beat2\nAUDIO: /academy-audio/explorer-m1/explorer-m1-l1-beat2-82ce7599.mp3\nAUDIO_MS: 8986\nIMAGE_BRIEF: Lars at his desk at night, drawing a lemonade stand in his notebook, a $5 bill beside him.",

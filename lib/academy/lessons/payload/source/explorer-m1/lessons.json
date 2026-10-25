@@ -145,9 +145,9 @@
           "screenLabel": "explorer-m1-l1-beat1",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "Lars's birthday money is gone. At home, he watches his big brother Senna count his money.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
-            "pathfinder": "Lars's birthday money is gone. At home, he watches his big brother Senna count his money.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
-            "maverick": "Lars's birthday money is gone. At home, he watches his big brother Senna count his money.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says."
+            "explorer": "Lars spent all his birthday money. At home, he watches his big brother Senna count his bills and coins.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
+            "pathfinder": "Lars spent all his birthday money. At home, he watches his big brother Senna count his bills and coins.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
+            "maverick": "Lars spent all his birthday money. At home, he watches his big brother Senna count his bills and coins.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says."
           },
           "image": {
             "explorer": "em1-02-l1r7-senna-coins-r3.webp",
@@ -170,9 +170,9 @@
           "screenLabel": "5",
           "gameType": "spotlight-rounds",
           "text": {
-            "explorer": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?",
-            "pathfinder": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?",
-            "maverick": "Next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?"
+            "explorer": "The next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?",
+            "pathfinder": "The next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?",
+            "maverick": "The next day, Lars gets his $5 pocket money. Then his tablet flashes: \ud83d\udca5 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! \ud83d\udca5 Why is the game rushing him?"
           },
           "image": {
             "explorer": "lars-deciding-512.webp",
@@ -921,9 +921,9 @@
           "screenLabel": "explorer-m1-l3-beat3",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "At lunch, everyone's phones are buzzing. A new skin has dropped, and a countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0.",
-            "pathfinder": "At lunch, everyone's phones are buzzing. A new skin has dropped, and a countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0.",
-            "maverick": "At lunch, everyone's phones are buzzing. A new skin has dropped, and a countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0."
+            "explorer": "One afternoon, Lars's friends all ping him. A new skin has dropped on their favorite game. A limited time offer and the countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0.",
+            "pathfinder": "One afternoon, Lars's friends all ping him. A new skin has dropped on their favorite game. A limited time offer and the countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0.",
+            "maverick": "One afternoon, Lars's friends all ping him. A new skin has dropped on their favorite game. A limited time offer and the countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0."
           },
           "image": {
             "explorer": "beat-ex-m1-l4-r1.webp",
@@ -1463,9 +1463,9 @@
           "screenLabel": "explorer-m1-l5-beat1",
           "gameType": "scenario-beat",
           "text": {
-            "explorer": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10.",
-            "pathfinder": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10.",
-            "maverick": "Lars and Mia share the birthday gelato, one spoonful each.\n\nHis startup envelope still holds $10."
+            "explorer": "Lars and Mia share the birthday gelato. She's happy Lars came along, and Lars is grateful for Mia's generosity. He decides to repay the favor to Mia when he can.\n\nHis startup envelope still holds $10.",
+            "pathfinder": "Lars and Mia share the birthday gelato. She's happy Lars came along, and Lars is grateful for Mia's generosity. He decides to repay the favor to Mia when he can.\n\nHis startup envelope still holds $10.",
+            "maverick": "Lars and Mia share the birthday gelato. She's happy Lars came along, and Lars is grateful for Mia's generosity. He decides to repay the favor to Mia when he can.\n\nHis startup envelope still holds $10."
           },
           "image": {
             "explorer": "beat-ex-m1-l5-r4.webp",
@@ -2164,9 +2164,9 @@
           "screenLabel": "1",
           "gameType": "spotlight-rounds",
           "text": {
-            "explorer": "Lars has two weeks of pocket money, $10, at the mall. His startup money is safe at home. He sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?",
-            "pathfinder": "Lars has two weeks of pocket money, $10, at the mall. His startup money is safe at home. He sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?",
-            "maverick": "Lars has two weeks of pocket money, $10, at the mall. His startup money is safe at home. He sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?"
+            "explorer": "Lars sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?",
+            "pathfinder": "Lars sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?",
+            "maverick": "Lars sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?"
           },
           "image": {
             "explorer": "lars-deciding-512.webp",

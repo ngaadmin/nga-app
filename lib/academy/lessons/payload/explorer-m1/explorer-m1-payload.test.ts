@@ -291,10 +291,34 @@ describe("explorer module 1 payload", () => {
       "Lars and Mia leaving the gelato shop, sharing one gelato with two spoons, Mia in a birthday badge.";
     expect(beat.pairImage).toBe("beat-ex-m1-l5-r4.webp");
     expect(beat.illustration).toEqual({ label: brief, alt: brief });
-    expect(beat.narrative.startsWith("Lars and Mia share the birthday gelato")).toBe(true);
+    expect(beat.narrative).toBe(
+      "Lars and Mia share the birthday gelato. She's happy Lars came along, and Lars is grateful for Mia's generosity. He decides to repay the favor to Mia when he can.\n\nHis startup envelope still holds $10.",
+    );
     expect(resolveLessonScreenIllustration(beat)?.src).toBe(
       "/assets/illustrations/characters/pairs/beat-ex-m1-l5-r4.webp",
     );
+  });
+
+  it("plays the five cleared copy cells in US spelling", () => {
+    const textOf = (lessonNumber: number) => {
+      const payload = loadExplorerM1Payload(lessonNumber);
+      if (!payload) throw new Error(`missing lesson ${lessonNumber}`);
+      return resolvePayloadLesson(payload, "explorer", lessonNumber).screens.map((screen) => {
+        if (screen.type === "narrative-bonus") return screen.narrative;
+        if ("prompt" in screen && typeof screen.prompt === "string") return screen.prompt;
+        return "";
+      });
+    };
+    expect(textOf(1)).toContain(
+      "Lars spent all his birthday money. At home, he watches his big brother Senna count his bills and coins.\n\nSenna earned it walking dogs in the neighborhood. \"It's a great way to make some money,\" Senna says.",
+    );
+    expect(textOf(1)).toContain(
+      "The next day, Lars gets his $5 pocket money. Then his tablet flashes: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?",
+    );
+    expect(textOf(4)).toContain(
+      "One afternoon, Lars's friends all ping him. A new skin has dropped on their favorite game. A limited time offer and the countdown is ticking.\n\nLars remembers Mason's words. His startup money is still $0.",
+    );
+    expect(textOf(8)).toContain("Lars sees a glow-in-the-dark yo-yo for $6. What do you want Lars to do?");
   });
 
   it("scores Cath's Lesson 5 share choice and Lesson 6 yes/no sort", () => {

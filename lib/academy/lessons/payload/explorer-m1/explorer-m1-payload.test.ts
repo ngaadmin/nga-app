@@ -183,7 +183,7 @@ describe("explorer module 1 payload", () => {
     expect(firstLessonBeat?.type).toBe("narrative-bonus");
     if (firstLessonBeat?.type !== "narrative-bonus") return;
     expect(firstLessonBeat.credit).toBeUndefined();
-    expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-76bfc19a.mp3");
+    expect(firstLessonBeat.audio?.src).toContain("explorer-m1-l1-beat1-6e798820.mp3");
     expect(firstLessonBeat.pairImage).toBe("em1-02-l1r7-senna-coins-r3.webp");
     expect(resolveLessonScreenIllustration(firstLessonBeat)).toMatchObject({
       src: "/assets/illustrations/characters/pairs/em1-02-l1r7-senna-coins-r3.webp",
@@ -365,7 +365,7 @@ describe("explorer module 1 payload", () => {
     );
     expect(beat.pairImage).toBe("beat-ex-m1-l9-r1.webp");
     expect(beat.credit).toBe(STORY_CREDIT);
-    expect(beat.audio?.src).toContain("explorer-m1-l9-beat1-113775f2.mp3");
+    expect(beat.audio?.src).toContain("explorer-m1-l9-beat1-0f124ac0.mp3");
     const completion = screens.findIndex((screen) => screen.type === "completion");
     expect(screens[completion - 1]?.id).toBe("explorer-m1-l9-beat1");
   });

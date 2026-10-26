@@ -9,6 +9,7 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
+import { COHORT_AVATAR } from "@/lib/onboarding/cohort-avatars";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   createGuestAccessSession,
@@ -29,21 +30,15 @@ const TRACK_AVATAR_SRC: Record<
   }
 > = {
   explorer: {
-    src: "/assets/illustrations/characters/lars/lars-waving-512.webp",
-    width: 191,
-    height: 391,
+    ...COHORT_AVATAR.explorer,
     figureClassName: "h-[80px] min-[721px]:h-[200px]",
   },
   pathfinder: {
-    src: "/assets/illustrations/characters/holly/holly-waving-512.webp",
-    width: 199,
-    height: 391,
+    ...COHORT_AVATAR.pathfinder,
     figureClassName: "h-[78px] min-[721px]:h-[194px]",
   },
   maverick: {
-    src: "/assets/illustrations/characters/senna-older/senna-older-waving-r1-512.webp",
-    width: 512,
-    height: 512,
+    ...COHORT_AVATAR.maverick,
     figureClassName: "h-[80px] min-[721px]:h-[200px]",
     frameFigure: true,
   },

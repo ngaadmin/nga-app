@@ -77,8 +77,16 @@ describe("master workbook reader", () => {
     expect(master.byCohort.pathfinder).toHaveLength(9);
     expect(master.byCohort.maverick).toHaveLength(9);
     const sheetNames = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH)).map((sheet) => sheet.name);
-    expect(sheetNames).toContain("Sheet1");
-    expect(master.issues.some((issue) => issue.sheet === "Sheet1")).toBe(false);
+    expect(sheetNames).toEqual([
+      "M1 Explorer",
+      "M1 Pathfinder",
+      "M1 Maverick",
+      "M2 Explorer",
+      "M2 Pathfinder",
+      "M2 Maverick",
+      "Lesson Details",
+    ]);
+    expect(master.issues).toEqual([]);
     expect(
       master.byCohort.explorer[0]?.screens.some((screen) =>
         screen.settings.explorer.includes("explorer-m1-intro-beat1-3cb1a9a8.mp3"),

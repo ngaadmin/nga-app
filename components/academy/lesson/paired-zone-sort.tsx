@@ -38,6 +38,8 @@ type PairedZoneSortProps = {
   mode: "tap" | "drag";
   /** Thinking portrait beside the prompt. Needs/Wants only. */
   showCharacter?: boolean;
+  /** Drop-zone min height. The pictured two-bucket sort uses a shorter zone so the picture fits. */
+  zoneMinClassName?: string;
   onComplete: () => void;
   onMismatch?: () => void;
 };
@@ -84,6 +86,7 @@ export function PairedZoneSort({
   orderKey,
   mode,
   showCharacter = false,
+  zoneMinClassName = "min-h-[316px]",
   onComplete,
   onMismatch,
 }: PairedZoneSortProps) {
@@ -300,7 +303,8 @@ export function PairedZoneSort({
                 if (selectedId) placeItem(selectedId, zone.id);
               }}
               className={cn(
-                "flex min-h-[316px] min-w-0 flex-1 basis-0 flex-col items-center rounded-[20px] px-2 py-[14px] text-center transition-transform duration-150",
+                "flex min-w-0 flex-1 basis-0 flex-col items-center rounded-[20px] px-2 py-[14px] text-center transition-transform duration-150",
+                zoneMinClassName,
                 active && "scale-[1.02]",
               )}
               style={{ backgroundColor: active ? activeTint : tint }}

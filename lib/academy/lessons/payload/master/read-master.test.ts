@@ -13,12 +13,7 @@ import {
 } from "@/lib/academy/lessons/payload/master/read-master";
 import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authoring-table";
 
-/** Picture cells that literally say "not allowed". The reader treats each as no picture. */
-const NOT_ALLOWED_IMAGE_ROWS: Record<string, number[]> = {
-  "M1 Explorer": [5, 6, 15, 20, 27, 28, 29, 33, 38, 39, 44, 52, 55, 62, 65],
-  "M1 Pathfinder": [5, 29, 33, 38, 39, 44, 65],
-  "M1 Maverick": [5, 29, 33, 38, 39, 44, 65],
-};
+const M1_SHEETS = ["M1 Explorer", "M1 Pathfinder", "M1 Maverick"] as const;
 
 const SCREEN_HEADER = [
   "Module Number",
@@ -102,34 +97,77 @@ describe("master workbook reader", () => {
     );
   });
 
-  it("maps Explorer mia filenames through the existing registry", () => {
+  it("resolves the Explorer picture cells on rows 91 through 93", () => {
     const explorer = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH)).find(
       (sheet) => sheet.name === "M1 Explorer" || sheet.name === "Explorer M1",
     );
     const header = explorer?.rows[0]?.values ?? [];
     const imageCol = header.findIndex((name) => name.trim() === "Explorer Image");
-    for (const rowNumber of [91, 92, 93]) {
-      const row = explorer?.rows.find((entry) => entry.row === rowNumber);
+    const expected: Record<number, string> = {
+      91: "/assets/illustrations/pairs/lars-mia-chatting.webp",
+      92: "/assets/illustrations/pairs/lars-mia-sidebyside.webp",
+      93: "/assets/illustrations/concepts/concept-piggy-bank.webp",
+    };
+    for (const [rowNumber, path] of Object.entries(expected)) {
+      const row = explorer?.rows.find((entry) => entry.row === Number(rowNumber));
       const fileName = row?.values[imageCol]?.trim() ?? "";
-      expect(fileName.toLowerCase().startsWith("mia-")).toBe(true);
-      expect(getPairSheetImagePath(fileName)).toMatch(/\/characters\/mia\/Mia-/);
+      expect(getPairSheetImagePath(fileName), `row ${rowNumber}`).toBe(path);
     }
   });
 
-  it("treats a literal not allowed picture cell as no picture", () => {
+  it("names a picture on every M1 row and still drops a blank or not allowed cell", () => {
     const sheets = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH));
-    for (const [sheetName, rows] of Object.entries(NOT_ALLOWED_IMAGE_ROWS)) {
+    for (const sheetName of M1_SHEETS) {
       const sheet = sheets.find((entry) => entry.name === sheetName);
       const header = sheet?.rows[0]?.values ?? [];
-      const imageCol = header.findIndex((name) => /image$/i.test(name.trim()) && !/name$/i.test(name.trim()));
-      for (const rowNumber of rows) {
-        const row = sheet?.rows.find((entry) => entry.row === rowNumber);
-        expect(row?.values[imageCol]?.trim() ?? "", `${sheetName} row ${rowNumber}`).toBe("not allowed");
+      const imageCol = header.findIndex(
+        (name) => /image$/i.test(name.trim()) && !/name$/i.test(name.trim()),
+      );
+      expect(sheet?.rows.slice(1).length ?? 0).toBeGreaterThan(0);
+      for (const row of sheet?.rows.slice(1) ?? []) {
+        const value = row.values[imageCol]?.trim() ?? "";
+        expect(value, `${sheetName} row ${row.row}`).not.toBe("");
+        expect(value.toLowerCase(), `${sheetName} row ${row.row}`).not.toBe("not allowed");
       }
     }
+    expect(master.missing.filter((item) => item.kind === "image")).toEqual([]);
     expect(master.missing.some((item) => item.name.toLowerCase() === "not allowed")).toBe(false);
-    expect(master.issues).toEqual([]);
-    expect(Object.values(NOT_ALLOWED_IMAGE_ROWS).flat()).toHaveLength(29);
+
+    const dropped = masterModuleFromSheets([
+      lessonDetailsSheet(),
+      {
+        name: "M1 Explorer",
+        rows: [
+          { row: 1, values: cohortHeader("Explorer") },
+          ...[1, 2, 3, 4, 5, 6, 7, 8].map((lesson) => ({
+            row: lesson + 1,
+            values: ["1", String(lesson), "1", "word-drop", "Hi", "concept-wallet.webp", "OPTIONS: a\nCORRECT: a", ""],
+          })),
+          {
+            row: 10,
+            values: ["1", "9", "1", "word-drop", "Named", "concept-wallet.webp", "OPTIONS: a\nCORRECT: a", ""],
+          },
+          {
+            row: 11,
+            values: ["1", "9", "2", "word-drop", "Blank", "", "OPTIONS: b\nCORRECT: b", ""],
+          },
+          {
+            row: 12,
+            values: ["1", "9", "3", "word-drop", "Omitted", "not allowed", "OPTIONS: c\nCORRECT: c", ""],
+          },
+        ],
+      },
+      { name: "M1 Pathfinder", rows: lessonRows("Pathfinder", "Pathfinder") },
+      { name: "M1 Maverick", rows: lessonRows("Maverick", "Maverick") },
+    ]);
+    expect(dropped.issues).toEqual([]);
+    expect(dropped.missing.some((item) => item.name.toLowerCase() === "not allowed")).toBe(false);
+    const lessonNine = dropped.byCohort.explorer.find((lesson) => lesson.lessonNumber === 9);
+    expect(lessonNine?.screens.map((screen) => screen.image.explorer)).toEqual([
+      "concept-wallet.webp",
+      "",
+      "",
+    ]);
   });
 
   it("resolves versioned pair, Mia, and app-medal filenames", () => {

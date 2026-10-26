@@ -44,6 +44,9 @@ export function BucketSortScreen({
     const prompt = [screen.intro, screen.cta].filter(Boolean).join("\n");
     return (
       <LessonScreenLayout fill errorMessage={error}>
+        {illustration?.src ? (
+          <LessonIllustrationSlot {...illustration} frame="sort" />
+        ) : null}
         <PairedZoneSort
           intro={prompt}
           items={screen.items}
@@ -53,6 +56,7 @@ export function BucketSortScreen({
           showCharacter={screen.buckets.some(
             (bucket) => bucket.id === "want" || bucket.id === "need",
           )}
+          zoneMinClassName={illustration?.src ? "min-h-[212px]" : undefined}
           onComplete={handleSolved}
           onMismatch={reportWrongDrop}
         />

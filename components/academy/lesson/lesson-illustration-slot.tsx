@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils/cn";
 
 type LessonIllustrationSlotProps = LessonIllustration & {
   className?: string;
-  /** Match screens use a 160px frame. Poster is the 196px slider hero. Compact is a short portrait for long choice lists. */
-  frame?: "default" | "match" | "poster" | "compact";
+  /** Match screens use a 160px frame. Poster is the 196px slider hero. Compact is a short portrait for long choice lists. Sort is the two-bucket picture, short enough to leave the chips and both buckets on screen. */
+  frame?: "default" | "match" | "poster" | "compact" | "sort";
 };
 
 function LessonIllustrationFallback({
@@ -135,9 +135,11 @@ export function LessonIllustrationSlot({
         alt={ariaLabel}
         emoji={emoji}
         className={cn(
-          frame === "compact"
-            ? "relative mx-auto mb-1 h-[clamp(5.5rem,_16vh,_7.5rem)] w-[clamp(8rem,_52vw,_12rem)] max-w-full shrink-0 bg-transparent"
-            : lessonIllustrationMediaFrameClass,
+          frame === "sort"
+            ? "relative mx-auto mb-1 h-[5.5rem] w-[8.5rem] max-w-full shrink-0 bg-transparent"
+            : frame === "compact"
+              ? "relative mx-auto mb-1 h-[clamp(5.5rem,_16vh,_7.5rem)] w-[clamp(8rem,_52vw,_12rem)] max-w-full shrink-0 bg-transparent"
+              : lessonIllustrationMediaFrameClass,
           "overflow-hidden bg-transparent",
           className,
         )}

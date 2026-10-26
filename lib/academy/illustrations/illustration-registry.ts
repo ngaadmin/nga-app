@@ -216,13 +216,23 @@ export function localPairSheetImagePath(fileName: string): string | undefined {
   if (isIllustrationId(stem)) {
     return getIllustrationPath(stem);
   }
+  // Pair art, including the versioned -rN and -512 card files. This runs
+  // before the solo-pose rules so `lars-mason-chatting-512` and
+  // `senna-older-max-*-512` stay in the pairs folder.
+  if (
+    /^(aiden-dash|aiden-max|holly-immi|holly-mia|holly-senna|lars-mason|lars-mia|lars-senna|senna-older-max)-(chatting|sidebyside)(?:-r\d+)?(?:-512)?$/.test(
+      stem,
+    )
+  ) {
+    return `${ILLUSTRATIONS_BASE}/pairs/${stem}.webp`;
+  }
   if (stem.startsWith("senna-older-")) {
     return `${ILLUSTRATIONS_BASE}/characters/senna-older/${stem}.webp`;
   }
   if (stem.startsWith("saskia-")) {
     return `${ILLUSTRATIONS_BASE}/characters/saskia/${stem}.webp`;
   }
-  if (/^medal-skill\d+-[a-z]+$/.test(stem)) {
+  if (/^medal-skill\d+-[a-z]+(?:-app)?$/.test(stem)) {
     return `${ILLUSTRATIONS_BASE}/medal/${stem}.webp`;
   }
   const pose = /^(lars|holly|aiden|senna|immi|dash)-[a-z0-9-]+-512$/.exec(stem);
@@ -231,13 +241,6 @@ export function localPairSheetImagePath(fileName: string): string | undefined {
   }
   const loosePose = characterPoseFilePath(stem);
   if (loosePose) return loosePose;
-  if (
-    /^(aiden-dash|aiden-max|holly-immi|holly-mia|lars-mason|lars-mia|lars-senna)-(chatting|sidebyside)$/.test(
-      stem,
-    )
-  ) {
-    return `${ILLUSTRATIONS_BASE}/pairs/${stem}.webp`;
-  }
   return `${PAIR_SHEET_IMAGES_BASE}/${withExt}`;
 }
 
@@ -256,9 +259,12 @@ const MIA_POSE_NAMES = new Set([
 export function characterPoseFilePath(fileName: string): string | undefined {
   const trimmed = fileName.trim().split(/[/\\]/).pop() ?? "";
   const stem = trimmed.replace(/\.(webp|png|jpe?g)$/i, "").toLowerCase();
-  const mia = /^mia-([a-z]+)$/.exec(stem);
+  const mia = /^mia-([a-z]+)(?:-512)?$/.exec(stem);
   if (mia && MIA_POSE_NAMES.has(mia[1] ?? "")) {
     const pose = mia[1] ?? "";
+    if (stem.endsWith("-512")) {
+      return `${ILLUSTRATIONS_BASE}/characters/mia/Mia-${pose}-512.webp`;
+    }
     const titled = `${pose.charAt(0).toUpperCase()}${pose.slice(1)}`;
     return `${ILLUSTRATIONS_BASE}/characters/mia/Mia-${titled}.webp`;
   }

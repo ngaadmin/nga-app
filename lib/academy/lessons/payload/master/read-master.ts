@@ -94,7 +94,7 @@ function sheetFor(sheets: readonly WorkbookSheet[], pattern: RegExp): WorkbookSh
   return sheets.find((sheet) => pattern.test(sheet.name.trim()) && !/^notes\b/i.test(sheet.name.trim()));
 }
 
-/** "M1 Explorer". The bundled workbook still uses "Explorer M1" until it is replaced. */
+/** "M1 Explorer". Older workbooks used "Explorer M1"; that name is still accepted. */
 function moduleOneTabName(cohort: MasteryCohort): string {
   return `M1 ${cohort.charAt(0).toUpperCase()}${cohort.slice(1)}`;
 }

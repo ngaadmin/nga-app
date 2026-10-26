@@ -13,9 +13,11 @@ import {
 } from "@/lib/academy/lessons/payload/master/read-master";
 import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authoring-table";
 
-const KNOWN_BLANK_ART: Record<string, number[]> = {
-  "M1 Pathfinder": [34, 37, 97],
-  "M1 Maverick": [14, 37, 97, 100],
+/** Picture cells that literally say "not allowed". The reader treats each as no picture. */
+const NOT_ALLOWED_IMAGE_ROWS: Record<string, number[]> = {
+  "M1 Explorer": [5, 6, 15, 20, 27, 28, 29, 33, 38, 39, 44, 52, 55, 62, 65],
+  "M1 Pathfinder": [5, 29, 33, 38, 39, 44, 65],
+  "M1 Maverick": [5, 29, 33, 38, 39, 44, 65],
 };
 
 const SCREEN_HEADER = [
@@ -114,21 +116,41 @@ describe("master workbook reader", () => {
     }
   });
 
-  it("leaves the known art-gap rows blank", () => {
+  it("treats a literal not allowed picture cell as no picture", () => {
     const sheets = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH));
-    for (const [sheetName, rows] of Object.entries(KNOWN_BLANK_ART)) {
-      const legacyName = sheetName.replace(/^M1\s+/i, "") + " M1";
-      const sheet =
-        sheets.find((entry) => entry.name === sheetName) ??
-        sheets.find((entry) => entry.name === legacyName);
+    for (const [sheetName, rows] of Object.entries(NOT_ALLOWED_IMAGE_ROWS)) {
+      const sheet = sheets.find((entry) => entry.name === sheetName);
       const header = sheet?.rows[0]?.values ?? [];
       const imageCol = header.findIndex((name) => /image$/i.test(name.trim()) && !/name$/i.test(name.trim()));
       for (const rowNumber of rows) {
         const row = sheet?.rows.find((entry) => entry.row === rowNumber);
-        expect(row?.values[imageCol]?.trim() ?? "", `${sheetName} row ${rowNumber}`).toBe("");
+        expect(row?.values[imageCol]?.trim() ?? "", `${sheetName} row ${rowNumber}`).toBe("not allowed");
       }
     }
-    expect(Object.values(KNOWN_BLANK_ART).flat()).toHaveLength(7);
+    expect(master.missing.some((item) => item.name.toLowerCase() === "not allowed")).toBe(false);
+    expect(master.issues).toEqual([]);
+    expect(Object.values(NOT_ALLOWED_IMAGE_ROWS).flat()).toHaveLength(29);
+  });
+
+  it("resolves versioned pair, Mia, and app-medal filenames", () => {
+    expect(getPairSheetImagePath("lars-mason-chatting-512.webp")).toBe(
+      "/assets/illustrations/pairs/lars-mason-chatting-512.webp",
+    );
+    expect(getPairSheetImagePath("holly-senna-sidebyside-r1-512.webp")).toBe(
+      "/assets/illustrations/pairs/holly-senna-sidebyside-r1-512.webp",
+    );
+    expect(getPairSheetImagePath("senna-older-max-chatting-r1-512.webp")).toBe(
+      "/assets/illustrations/pairs/senna-older-max-chatting-r1-512.webp",
+    );
+    expect(getPairSheetImagePath("Mia-thinking-512.webp")).toBe(
+      "/assets/illustrations/characters/mia/Mia-thinking-512.webp",
+    );
+    expect(getPairSheetImagePath("medal-skill1-bronze-app.webp")).toBe(
+      "/assets/illustrations/medal/medal-skill1-bronze-app.webp",
+    );
+    expect(getPairSheetImagePath("senna-older-thinking-r1-512.webp")).toBe(
+      "/assets/illustrations/characters/senna-older/senna-older-thinking-r1-512.webp",
+    );
   });
 
   it("resolves every lesson for every cohort", () => {
@@ -220,7 +242,7 @@ describe("master workbook reader", () => {
     expect(read.issues.some((issue) => issue.sheet.startsWith("M2"))).toBe(false);
   });
 
-  it("still reads the bundled workbook's Explorer M1 sheet names", () => {
+  it("still reads legacy Explorer M1 sheet names", () => {
     const read = masterModuleFromSheets([
       lessonDetailsSheet(),
       {

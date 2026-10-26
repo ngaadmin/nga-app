@@ -36,7 +36,8 @@ const USERNAME_TAKEN_ERROR =
 
 const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
   explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
+  pathfinder:
+    "/assets/illustrations/characters/senna-older/senna-older-waving-r1-512.webp",
   maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
 };
 
@@ -258,15 +259,26 @@ export function AddLinkedProfilePanel() {
                       : "border-[#BDE9FB]/70 bg-white hover:border-[#0CC1E0]/50",
                   )}
                 >
-                  <span className="relative h-20 w-20">
-                    <Image
-                      src={TRACK_AVATAR_SRC[track]}
-                      alt=""
-                      fill
-                      sizes="80px"
-                      className="object-contain"
-                      unoptimized
-                    />
+                  <span className="relative h-20 w-20 overflow-hidden">
+                    {track === "pathfinder" ? (
+                      <Image
+                        src={TRACK_AVATAR_SRC[track]}
+                        alt=""
+                        width={512}
+                        height={512}
+                        unoptimized
+                        className="!absolute !left-[-65%] !top-[-50%] !h-[256%] !w-[256%] !max-w-none"
+                      />
+                    ) : (
+                      <Image
+                        src={TRACK_AVATAR_SRC[track]}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-contain"
+                        unoptimized
+                      />
+                    )}
                   </span>
                   <span className="mt-2 font-heading text-sm font-extrabold text-[#031F82]">
                     {masteryCohortLabel(track)}

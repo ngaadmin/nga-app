@@ -70,6 +70,7 @@ const CHARACTER_EMOJI: Record<string, string> = {
   senna: "👦",
   dash: "👦",
   max: "👦",
+  pippa: "👧",
 };
 
 /** Person emoji for a target written as a name, including “Share with Mia”. */

@@ -1,8 +1,12 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
+import {
+  characterPoseFilePath,
+  getPairSheetImagePath,
+} from "@/lib/academy/illustrations/illustration-registry";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import { publishMasterModule } from "@/lib/academy/lessons/payload/master/publish-master";
@@ -233,6 +237,39 @@ describe("master workbook reader", () => {
       expect(third).toMatchObject({ medalId: "medal-skill3-bronze" });
       expect(third && "medalSrc" in third ? third.medalSrc : undefined).toBeUndefined();
     }
+  });
+
+  it("resolves Max and Pippa celebrating without a piggy-bank stand-in", () => {
+    expect(characterPoseFilePath("max-celebrating")).toBe(
+      "/assets/illustrations/characters/max/max-celebrating-512.webp",
+    );
+    expect(characterPoseFilePath("pippa-celebrating")).toBe(
+      "/assets/illustrations/characters/pippa/pippa-celebrating-512.webp",
+    );
+    for (const pose of ["max-celebrating-512.webp", "pippa-celebrating-512.webp"] as const) {
+      const character = pose.startsWith("max") ? "max" : "pippa";
+      expect(
+        existsSync(
+          path.join(process.cwd(), "public/assets/illustrations/characters", character, pose),
+        ),
+        pose,
+      ).toBe(false);
+    }
+    const maverickLesson = master.byCohort.maverick.find((lesson) => lesson.lessonNumber === 2);
+    const pathfinderLesson = master.byCohort.pathfinder.find((lesson) => lesson.lessonNumber === 2);
+    expect(maverickLesson).toBeDefined();
+    expect(pathfinderLesson).toBeDefined();
+    if (!maverickLesson || !pathfinderLesson) return;
+    const maverickDrag = resolvePayloadLesson(maverickLesson, "maverick", 2).screens.find(
+      (screen) => screen.type === "drag-to-target" && screen.targetImageFile === "max-celebrating",
+    );
+    const pathfinderDrag = resolvePayloadLesson(pathfinderLesson, "pathfinder", 2).screens.find(
+      (screen) => screen.type === "drag-to-target" && screen.targetImageFile === "pippa-celebrating",
+    );
+    expect(maverickDrag).toMatchObject({ targetLabel: "Max", sourceLabel: "Gift box" });
+    expect(pathfinderDrag).toMatchObject({ targetLabel: "Pippa", sourceLabel: "Gift box" });
+    expect(JSON.stringify(maverickDrag)).not.toContain("piggy");
+    expect(JSON.stringify(pathfinderDrag)).not.toContain("piggy");
   });
 
   it("resolves every lesson for every cohort", () => {

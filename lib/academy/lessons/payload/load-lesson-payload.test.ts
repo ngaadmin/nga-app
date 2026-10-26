@@ -1067,6 +1067,38 @@ CORRECT: bus,dog lead`,
       targetImageFile: "dash-celebrating",
       targetLabel: "Dash",
     });
+    const maxRow = {
+      screenNumber: 7,
+      screenLabel: "7",
+      gameType: "drag-to-target",
+      text: {
+        explorer: "Drag the gift.",
+        pathfinder: "Drag the gift.",
+        maverick: "Drag the gift to Max.",
+      },
+      image: { explorer: "", pathfinder: "", maverick: "" },
+      settings: {
+        explorer: "SOURCE: concept-gift-box\nTARGET: senna-celebrating",
+        pathfinder: "SOURCE: concept-gift-box\nTARGET: pippa-celebrating",
+        maverick: "SOURCE: concept-gift-box\nTARGET: max-celebrating",
+      },
+      error: { explorer: "", pathfinder: "", maverick: "" },
+    };
+    const maxDrag = mapPayloadScreen(maxRow, "maverick");
+    const pippaDrag = mapPayloadScreen(maxRow, "pathfinder");
+    expect(maxDrag).toMatchObject({
+      type: "drag-to-target",
+      sourceLabel: "Gift box",
+      targetLabel: "Max",
+      targetImageFile: "max-celebrating",
+    });
+    expect(pippaDrag).toMatchObject({
+      type: "drag-to-target",
+      targetLabel: "Pippa",
+      targetImageFile: "pippa-celebrating",
+    });
+    expect(maxDrag).not.toMatchObject({ targetLabel: "max-celebrating" });
+    expect("targetIllustrationId" in maxDrag ? maxDrag.targetIllustrationId : undefined).toBeUndefined();
     for (const screen of [drag, pathfinderDrag, maverickDrag]) {
       if (!screen || !("sourceLabel" in screen) || !("targetLabel" in screen)) continue;
       expect(screen.sourceLabel).not.toMatch(/[a-z0-9]+-[a-z0-9]|concept-|\//);

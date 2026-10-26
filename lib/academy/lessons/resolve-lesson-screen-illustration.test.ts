@@ -102,7 +102,7 @@ describe("resolveLessonScreenIllustration", () => {
     ).toContain("concept-gift-box.webp");
   });
 
-  it("ignores a picture name on a two-bucket sort and still paints step and spent pictures", () => {
+  it("ignores a picture name on a two-bucket sort and a spent total, and still paints steps", () => {
     const wants = {
       type: "bucket-sort",
       id: "birthday-money",
@@ -141,13 +141,51 @@ describe("resolveLessonScreenIllustration", () => {
     expect(resolveLessonScreenIllustration(wants)).toBeUndefined();
     expect(lessonImageSrcs([wants]).join("\n")).not.toContain("concept-gift-box.webp");
     expect(resolveLessonScreenIllustration(steps)?.src).toContain("concept-gift-box.webp");
-    expect(resolveLessonScreenIllustration(spent)?.src).toContain("concept-gift-box.webp");
+    expect(screenDropsNamedPicture(spent)).toBe(true);
+    expect(supportsLessonScreenIllustration(spent)).toBe(false);
+    expect(resolveLessonScreenIllustration(spent)).toBeUndefined();
+    expect(lessonImageSrcs([spent]).join("\n")).not.toContain("concept-gift-box.webp");
+    const match = {
+      type: "link-match",
+      id: "emergencies",
+      intro: "Match each event to what the cash can do.",
+      pairs: [{ id: "headphones", event: "I broke the headphones", benefit: "I can replace them" }],
+      pairImage: "lars-senna-sidebyside.webp",
+    } as ScreenConfig;
+    expect(screenDropsNamedPicture(match)).toBe(true);
+    expect(supportsLessonScreenIllustration(match)).toBe(false);
+    expect(resolveLessonScreenIllustration(match)).toBeUndefined();
+    const tap = {
+      type: "tap-reveal",
+      id: "short-fun-demo",
+      intro: "Senna's money is gone, and the fun lasted only 10 minutes.",
+      buckets: [
+        { id: "short", label: "Short Fun", tone: "short" as const },
+        { id: "long", label: "More Fun for Longer", tone: "long" as const },
+      ],
+      items: [{ id: "donut", label: "Doughnut box", bucket: "short" }],
+      pairImage: "concept-coin-stack.webp",
+    } as ScreenConfig;
+    const wantsPreload = lessonImageSrcs([wants]).join("\n");
+
+    expect(screenDropsNamedPicture(tap)).toBe(true);
+    expect(supportsLessonScreenIllustration(tap)).toBe(false);
+    expect(resolveLessonScreenIllustration(tap)).toBeUndefined();
+    expect(lessonImageSrcs([tap]).join("\n")).not.toContain("concept-coin-stack.webp");
+    expect(wantsPreload).not.toContain("concept-gift-box.webp");
+    expect(wantsPreload).not.toMatch(/thinking-512\.webp/);
+    expect(payloadGameDropsNamedPicture("tap-reveal", "SHORT: Doughnut\nLONG: Guitar")).toBe(
+      true,
+    );
     expect(payloadGameDropsNamedPicture("bucket-sort", "WANT: Gift\nNEED: Shoes")).toBe(true);
     expect(payloadGameDropsNamedPicture("bucket-sort", "STEP1: Wait.\nSTEP2: Buy.")).toBe(false);
-    expect(payloadGameDropsNamedPicture("bucket-sort", "SPENT: Ticket $8\nTOTAL: 8")).toBe(false);
+    expect(payloadGameDropsNamedPicture("bucket-sort", "SPENT: Ticket $8\nTOTAL: 8")).toBe(true);
     expect(payloadGameDropsNamedPicture("spotlight-rounds", "A: One | B: Two | CORRECT: A")).toBe(
       true,
     );
+    expect(payloadGameDropsNamedPicture("link-match", "PAIRS: A = B")).toBe(true);
+    expect(payloadGameDropsNamedPicture("multiple-choice", "CHOICE A: Yes")).toBe(false);
+    expect(payloadGameDropsNamedPicture("allocation-slider", "TOTAL: 40\nKEEP: 30")).toBe(false);
   });
 
   it("agrees with the sheet rule on every Module 1 row", () => {

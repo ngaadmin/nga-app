@@ -207,7 +207,7 @@ export function LessonRunner({
                       : screen.type === "savings-goal"
                         ? "compact"
                         : screen.type === "multiple-choice" &&
-                            (screen.options?.length ?? 0) >= 4
+                            (screen.options?.length ?? 0) >= 3
                           ? "compact"
                           : "default"
                 }

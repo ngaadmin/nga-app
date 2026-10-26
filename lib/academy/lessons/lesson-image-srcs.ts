@@ -3,7 +3,6 @@ import {
   getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
-import { needsWantsPortrait } from "@/lib/academy/lessons/paired-zone-sort";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import type { ScreenConfig } from "@/lib/academy/lessons/types";
 
@@ -45,14 +44,6 @@ export function lessonImageSrcs(
     if (screen.type === "drag-to-target") {
       addSrc(srcs, seen, dragArtSrc(screen.sourceImageFile, screen.sourceIllustrationId));
       addSrc(srcs, seen, dragArtSrc(screen.targetImageFile, screen.targetIllustrationId));
-    }
-
-    if (
-      screen.type === "bucket-sort" &&
-      screen.buckets.some((bucket) => bucket.id === "want" || bucket.id === "need")
-    ) {
-      const intro = [screen.intro, screen.cta].filter(Boolean).join("\n");
-      addSrc(srcs, seen, needsWantsPortrait(intro).src);
     }
 
     if (screen.type === "completion") {

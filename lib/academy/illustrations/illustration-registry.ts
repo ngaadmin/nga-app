@@ -247,6 +247,8 @@ export function localPairSheetImagePath(fileName: string): string | undefined {
 /**
  * Support-cast pose files such as `dash-celebrating` live next to the
  * `*-512.webp` art. Registered character ids are resolved earlier.
+ * `max-celebrating` and `pippa-celebrating` use this same rule. The
+ * folders stay empty until those pose files are added.
  */
 const MIA_POSE_NAMES = new Set([
   "celebrating",
@@ -268,7 +270,7 @@ export function characterPoseFilePath(fileName: string): string | undefined {
     const titled = `${pose.charAt(0).toUpperCase()}${pose.slice(1)}`;
     return `${ILLUSTRATIONS_BASE}/characters/mia/Mia-${titled}.webp`;
   }
-  const match = /^(lars|holly|aiden|senna|immi|dash)-[a-z]+$/.exec(stem);
+  const match = /^(lars|holly|aiden|senna|immi|dash|max|pippa)-[a-z]+$/.exec(stem);
   if (!match || stem.endsWith("-512")) return undefined;
   return `${ILLUSTRATIONS_BASE}/characters/${match[1]}/${stem}-512.webp`;
 }

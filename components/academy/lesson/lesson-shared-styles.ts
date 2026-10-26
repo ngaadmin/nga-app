@@ -539,8 +539,10 @@ export const LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS =
   "h-[clamp(8rem,_26vh,_13rem)]";
 
 /** Shared layout for top-of-screen lesson media. Transparent; the avatar is the picture. */
-export const lessonIllustrationMediaFrameClass =
-  "relative mx-auto mb-1 h-[clamp(9rem,_30vh,_14.5rem)] w-[clamp(12rem,_86vw,_18rem)] max-w-full shrink-0 bg-transparent";
+export const lessonIllustrationMediaFrameClass = cn(
+  "relative mx-auto mb-1 w-[clamp(12rem,_86vw,_18rem)] max-w-full shrink-0 bg-transparent",
+  LESSON_ILLUSTRATION_MAX_HEIGHT_CLASS,
+);
 
 /** Modest scene slot below lesson chrome. */
 export const lessonIllustrationSlotClass = cn(

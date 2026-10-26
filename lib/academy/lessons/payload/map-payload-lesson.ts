@@ -284,7 +284,7 @@ function readEmojiAt(
 
 /** `senna-celebrating` → Senna. `concept-gift-box` → Gift box. */
 function labelFromIllustrationId(id: string): string {
-  const character = /^(lars|senna|mia|holly|aiden|dash|immi)(?:-|$)/i.exec(id);
+  const character = /^(lars|senna|mia|holly|aiden|dash|immi|max|pippa)(?:-|$)/i.exec(id);
   const name = character?.[1];
   if (name) {
     const lower = name.toLowerCase();

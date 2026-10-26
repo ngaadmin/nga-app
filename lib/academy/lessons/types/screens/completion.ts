@@ -13,6 +13,11 @@ export type CompletionScreenConfig = WithDeclarative<{
   /** Skill medal asset from `public/assets/illustrations/medal/`. */
   medalId?: MedalIllustrationId;
   /**
+   * Picture the sheet named for this medal, when it is the `-app` file.
+   * `medalId` stays the medal without that suffix.
+   */
+  medalSrc?: string;
+  /**
    * Payload completion row. Show `medalId` as written on the sheet.
    * Lesson-number medal rules do not replace it.
    */

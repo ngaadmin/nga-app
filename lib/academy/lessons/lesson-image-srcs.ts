@@ -56,6 +56,7 @@ export function lessonImageSrcs(
     }
 
     if (screen.type === "completion") {
+      addSrc(srcs, seen, screen.medalSrc);
       addSrc(srcs, seen, celebratingPortraitSrc(leadName));
     }
   }

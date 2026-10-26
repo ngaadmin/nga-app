@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LessonCloseCoinCounter } from "@/components/academy/lesson/lesson-close-coin-counter";
+import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import { LessonCompletionRewardsCard } from "@/components/academy/lesson/lesson-completion-rewards-card";
 import { GuestModeSaveModal } from "@/components/dashboard/guest-mode-save-modal";
@@ -71,6 +72,8 @@ type LessonCompletionPaneProps = {
     "unlocked" | "bronze" | "silver" | "gold"
   > | null;
   medalId?: MedalIllustrationId;
+  /** `-app` file named on the sheet. The medal id stays without that suffix. */
+  medalSrc?: string;
   /** Show `medalId` as authored. Lesson-number medal rules do not replace it. */
   authoredMedal?: boolean;
   /** `MEDAL: none`. Do not fill in a lesson-number medal. */
@@ -114,6 +117,7 @@ export function LessonCompletionPane({
   moduleNumber,
   skillMedalTier,
   medalId,
+  medalSrc,
   authoredMedal = false,
   suppressMedal = false,
   skillName: skillNameOverride,
@@ -293,6 +297,16 @@ export function LessonCompletionPane({
                 {skillLine.text}
               </span>
             </p>
+          ) : null}
+          {medalSrc && medalId && medals.some((medal) => medal.medalId === medalId) ? (
+            <LessonSkillMedal
+              className="mt-3"
+              skillSlug={achievementSkillId}
+              medalId={medalId}
+              src={medalSrc}
+              skillName={skillName}
+              size="hero"
+            />
           ) : null}
         </div>
 

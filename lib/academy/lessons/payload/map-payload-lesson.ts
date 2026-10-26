@@ -4,6 +4,7 @@ import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payl
 import { screenLabelKey } from "@/lib/academy/lessons/payload/lesson-graph";
 import {
   characterPoseFilePath,
+  getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
 import {
@@ -483,11 +484,16 @@ type PayloadScreenContext = {
   leadCharacter?: string;
 };
 
-function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
+function medalFromFile(fileName: string): { medalId: MedalIllustrationId; src?: string } | undefined {
   const trimmed = fileName.trim();
   if (!trimmed || trimmed.toLowerCase() === "not allowed") return undefined;
   const base = trimmed.replace(/\.(webp|png|jpe?g)$/i, "");
-  return isMedalIllustrationId(base) ? base : undefined;
+  const appFile = /-app$/i.test(base);
+  const idStem = appFile ? base.replace(/-app$/i, "") : base;
+  if (!isMedalIllustrationId(idStem)) return undefined;
+  if (!appFile) return { medalId: idStem };
+  const src = getPairSheetImagePath(trimmed);
+  return src ? { medalId: idStem, src } : { medalId: idStem };
 }
 
 function medalSettingToken(value: string | undefined): string | undefined {
@@ -520,10 +526,10 @@ function medalTierFromId(medalId: MedalIllustrationId): PayloadMedalTier {
   return "unlocked";
 }
 
-function firstMedalId(
+function firstMedal(
   image: PayloadCohortCopy,
   cohort: MasteryCohort,
-): MedalIllustrationId | undefined {
+): { medalId: MedalIllustrationId; src?: string } | undefined {
   const ordered = [
     image[cohort],
     image.pathfinder,
@@ -531,8 +537,8 @@ function firstMedalId(
     image.maverick,
   ];
   for (const fileName of ordered) {
-    const medalId = medalIdFromImage(fileName);
-    if (medalId) return medalId;
+    const medal = medalFromFile(fileName);
+    if (medal) return medal;
   }
   return undefined;
 }
@@ -791,8 +797,7 @@ function budgetSelectFromSettings(raw: string, error: string): {
 
 /**
  * Turn one payload row into the existing screen config for that game template.
- * Completion medals stay on the lesson-number resolver — the sheet's medal
- * file is not applied here.
+ * A completion file ending in `-app` keeps the medal id and the pane renders that file.
  */
 export function mapPayloadScreen(
   row: PayloadScreenRow,
@@ -1505,8 +1510,9 @@ export function mapPayloadScreen(
       const skillNumber = context.skillId
         ? getSkillRegistryRecord(context.skillId)?.skillNumber
         : undefined;
+      const namedMedal = firstMedal(row.image, cohort);
       const medalId =
-        firstMedalId(row.image, cohort) ??
+        namedMedal?.medalId ??
         (settingsTier && skillNumber
           ? medalIdForSkillNumber(skillNumber, settingsTier)
           : undefined);
@@ -1517,6 +1523,7 @@ export function mapPayloadScreen(
         id,
         useStandardPane: true,
         ...(medalId ? { medalId, authoredMedal: true as const } : {}),
+        ...(namedMedal?.src ? { medalSrc: namedMedal.src } : {}),
         ...(medalTier ? { medalTier } : {}),
         ...(skillName ? { skillName } : {}),
         ...(leadCharacter ? { leadCharacter } : {}),

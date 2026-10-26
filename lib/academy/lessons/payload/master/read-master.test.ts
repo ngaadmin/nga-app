@@ -191,6 +191,39 @@ describe("master workbook reader", () => {
     );
   });
 
+  it("keeps the medal id and renders the app file the sheet names", () => {
+    for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
+      const lessonOne = resolvePayloadLesson(
+        master.byCohort[cohort].find((lesson) => lesson.lessonNumber === 1)!,
+        cohort,
+        1,
+      );
+      const lessonTwo = resolvePayloadLesson(
+        master.byCohort[cohort].find((lesson) => lesson.lessonNumber === 2)!,
+        cohort,
+        2,
+      );
+      const lessonThree = resolvePayloadLesson(
+        master.byCohort[cohort].find((lesson) => lesson.lessonNumber === 3)!,
+        cohort,
+        3,
+      );
+      const first = lessonOne.screens.find((screen) => screen.type === "completion");
+      const second = lessonTwo.screens.find((screen) => screen.type === "completion");
+      const third = lessonThree.screens.find((screen) => screen.type === "completion");
+      expect(first).toMatchObject({
+        medalId: "medal-skill1-bronze",
+        medalSrc: "/assets/illustrations/medal/medal-skill1-bronze-app.webp",
+      });
+      expect(second).toMatchObject({
+        medalId: "medal-skill2-bronze",
+        medalSrc: "/assets/illustrations/medal/medal-skill2-bronze-app.webp",
+      });
+      expect(third).toMatchObject({ medalId: "medal-skill3-bronze" });
+      expect(third && "medalSrc" in third ? third.medalSrc : undefined).toBeUndefined();
+    }
+  });
+
   it("resolves every lesson for every cohort", () => {
     for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
       for (const lesson of master.byCohort[cohort]) {

@@ -38,7 +38,8 @@ const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
   explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
   pathfinder:
     "/assets/illustrations/characters/senna-older/senna-older-waving-r1-512.webp",
-  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
+  maverick:
+    "/assets/illustrations/characters/senna-older/senna-older-waving-r1-512.webp",
 };
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
@@ -260,7 +261,7 @@ export function AddLinkedProfilePanel() {
                   )}
                 >
                   <span className="relative h-20 w-20 overflow-hidden">
-                    {track === "pathfinder" ? (
+                    {track === "pathfinder" || track === "maverick" ? (
                       <Image
                         src={TRACK_AVATAR_SRC[track]}
                         alt=""

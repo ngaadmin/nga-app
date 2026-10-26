@@ -24,9 +24,14 @@ describe("cohort avatar maps", () => {
     );
     expect(picker).toContain("lars-waving-512.webp");
     expect(picker).toContain("holly-waving-512.webp");
-    expect(maps[1]).toContain("senna-older-waving-r1-512.webp");
     expect(maps[1]).toContain("Lars-onboarding.webp");
-    expect(maps[1]).toContain("Saskia-onboarding.webp");
+    expect(maps[1]).toMatch(
+      /maverick:\s*\n?\s*"\/assets\/illustrations\/characters\/senna-older\/senna-older-waving-r1-512\.webp"/,
+    );
+    expect(maps[1]).toMatch(
+      /pathfinder:\s*\n?\s*"\/assets\/illustrations\/characters\/senna-older\/senna-older-waving-r1-512\.webp"/,
+    );
+    expect(maps[1]).not.toContain("Saskia-onboarding.webp");
 
     for (const map of maps) {
       expect(map.toLowerCase()).not.toContain("aiden");

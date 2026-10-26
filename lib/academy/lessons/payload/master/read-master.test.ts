@@ -76,6 +76,9 @@ describe("master workbook reader", () => {
     expect(master.byCohort.explorer).toHaveLength(9);
     expect(master.byCohort.pathfinder).toHaveLength(9);
     expect(master.byCohort.maverick).toHaveLength(9);
+    const sheetNames = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH)).map((sheet) => sheet.name);
+    expect(sheetNames).toContain("Sheet1");
+    expect(master.issues.some((issue) => issue.sheet === "Sheet1")).toBe(false);
     expect(
       master.byCohort.explorer[0]?.screens.some((screen) =>
         screen.settings.explorer.includes("explorer-m1-intro-beat1-3cb1a9a8.mp3"),
@@ -123,7 +126,7 @@ describe("master workbook reader", () => {
       const imageCol = header.findIndex(
         (name) => /image$/i.test(name.trim()) && !/name$/i.test(name.trim()),
       );
-      expect(sheet?.rows.slice(1).length ?? 0).toBeGreaterThan(0);
+      expect(sheet?.rows.slice(1).length ?? 0).toBe(110);
       for (const row of sheet?.rows.slice(1) ?? []) {
         const value = row.values[imageCol]?.trim() ?? "";
         expect(value, `${sheetName} row ${row.row}`).not.toBe("");

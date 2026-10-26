@@ -199,6 +199,9 @@ export function PairedZoneSort({
             src={portrait.src}
             alt={portrait.alt}
             className="h-[150px] w-auto max-w-[108px] shrink-0 object-contain object-bottom"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
         ) : null}
       </div>

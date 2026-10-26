@@ -84,6 +84,8 @@ function FramedPicture({
         alt=""
         className={cn(imgClassName, failed && "hidden")}
         style={{ ...PICTURE_STYLE, ...imgStyle }}
+        loading="eager"
+        fetchPriority="high"
         decoding="async"
         draggable={false}
         onError={() => setFailed(true)}

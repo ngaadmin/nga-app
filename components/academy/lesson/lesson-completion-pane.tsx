@@ -279,6 +279,8 @@ export function LessonCompletionPane({
             src={portrait.src}
             alt={portrait.alt}
             className="h-[120px] w-auto object-contain"
+            loading="eager"
+            fetchPriority="high"
             decoding="async"
           />
           <h2 className="lesson-close-intro mt-3 text-center font-heading text-[26px] font-extrabold text-[#031F82]">

@@ -367,6 +367,8 @@ export function LessonDragToTargetGame({
           fitted ? FITTED_IMAGE_CLASS : sourceImageClass,
           sourceImageFailed && "hidden",
         )}
+        loading="eager"
+        fetchPriority="high"
         decoding="async"
         draggable={false}
         onError={() => setSourceImageFailed(true)}
@@ -408,6 +410,8 @@ export function LessonDragToTargetGame({
             src={targetIllustrationSrc}
             alt=""
             className={cn(targetImageClass, targetImageFailed && "hidden")}
+            loading="eager"
+            fetchPriority="high"
             decoding="async"
             draggable={false}
             onError={() => setTargetImageFailed(true)}

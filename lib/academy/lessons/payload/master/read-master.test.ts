@@ -14,9 +14,59 @@ import {
 import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authoring-table";
 
 const KNOWN_BLANK_ART: Record<string, number[]> = {
-  "Pathfinder M1": [34, 37, 97],
-  "Maverick M1": [14, 37, 97, 100],
+  "M1 Pathfinder": [34, 37, 97],
+  "M1 Maverick": [14, 37, 97, 100],
 };
+
+const SCREEN_HEADER = [
+  "Module Number",
+  "Lesson Number",
+  "Screen",
+  "Game Type",
+  "Explorer Text",
+  "Explorer Image",
+  "Explorer Settings",
+  "Audio File Name",
+];
+
+function cohortHeader(label: string): string[] {
+  return SCREEN_HEADER.map((name) => name.replace("Explorer", label));
+}
+
+function lessonRows(label: string, text: string): { row: number; values: string[] }[] {
+  const rows = [{ row: 1, values: cohortHeader(label) }];
+  for (let lesson = 1; lesson <= 9; lesson += 1) {
+    rows.push({
+      row: lesson + 1,
+      values: ["1", String(lesson), "1", "word-drop", text, "", "OPTIONS: a\nCORRECT: a", ""],
+    });
+  }
+  return rows;
+}
+
+function lessonDetailsSheet(): { name: string; rows: { row: number; values: string[] }[] } {
+  const rows = [
+    {
+      row: 1,
+      values: ["Cohort", "Module Number", "Lesson Number", "Lesson Title", "Level", "Main Character", "Skill Name", "Skill ID"],
+    },
+  ];
+  let row = 2;
+  for (const [cohort, lead] of [
+    ["Explorer", "Lars"],
+    ["Pathfinder", "Holly"],
+    ["Maverick", "Senna"],
+  ] as const) {
+    for (let lesson = 1; lesson <= 9; lesson += 1) {
+      rows.push({
+        row,
+        values: [cohort, "1", String(lesson), `Lesson ${lesson}`, "1", lead, "", ""],
+      });
+      row += 1;
+    }
+  }
+  return { name: "Lesson Details", rows };
+}
 
 describe("master workbook reader", () => {
   const master = readMasterModule(readFileSync(MASTER_WORKBOOK_PATH));
@@ -52,7 +102,7 @@ describe("master workbook reader", () => {
 
   it("maps Explorer mia filenames through the existing registry", () => {
     const explorer = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH)).find(
-      (sheet) => sheet.name === "Explorer M1",
+      (sheet) => sheet.name === "M1 Explorer" || sheet.name === "Explorer M1",
     );
     const header = explorer?.rows[0]?.values ?? [];
     const imageCol = header.findIndex((name) => name.trim() === "Explorer Image");
@@ -67,7 +117,10 @@ describe("master workbook reader", () => {
   it("leaves the known art-gap rows blank", () => {
     const sheets = readWorkbookSheets(readFileSync(MASTER_WORKBOOK_PATH));
     for (const [sheetName, rows] of Object.entries(KNOWN_BLANK_ART)) {
-      const sheet = sheets.find((entry) => entry.name === sheetName);
+      const legacyName = sheetName.replace(/^M1\s+/i, "") + " M1";
+      const sheet =
+        sheets.find((entry) => entry.name === sheetName) ??
+        sheets.find((entry) => entry.name === legacyName);
       const header = sheet?.rows[0]?.values ?? [];
       const imageCol = header.findIndex((name) => /image$/i.test(name.trim()) && !/name$/i.test(name.trim()));
       for (const rowNumber of rows) {
@@ -94,7 +147,7 @@ describe("master workbook reader", () => {
         rows: [{ row: 1, values: ["Cohort", "Module Number", "Lesson Number", "Lesson Title", "Level", "Main Character", "Skill Name", "Skill ID"] }],
       },
       {
-        name: "Explorer M1",
+        name: "M1 Explorer",
         rows: [
           {
             row: 1,
@@ -104,7 +157,7 @@ describe("master workbook reader", () => {
         ],
       },
       {
-        name: "Pathfinder M1",
+        name: "M1 Pathfinder",
         rows: [
           {
             row: 1,
@@ -113,7 +166,7 @@ describe("master workbook reader", () => {
         ],
       },
       {
-        name: "Maverick M1",
+        name: "M1 Maverick",
         rows: [
           {
             row: 1,
@@ -126,7 +179,7 @@ describe("master workbook reader", () => {
     expect(rejected.contentHash).toBe("");
     expect(rejected.byCohort.explorer).toEqual([]);
     expect(rejected.issues).toContainEqual({
-      sheet: "Explorer M1",
+      sheet: "M1 Explorer",
       row: 4,
       reason: "Lesson Number must be 1 through 9 or Scenario Beat.",
     });
@@ -137,5 +190,67 @@ describe("master workbook reader", () => {
     });
     expect(result).toMatchObject({ ok: false, wrote: false });
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it("reads M1 tabs and ignores header-only M2 tabs", () => {
+    const read = masterModuleFromSheets([
+      lessonDetailsSheet(),
+      {
+        name: "M2 Explorer",
+        rows: [
+          { row: 1, values: cohortHeader("Explorer") },
+          { row: 2, values: ["1", "0", "1", "word-drop", "M2 must not load", "", "", ""] },
+        ],
+      },
+      { name: "M2 Pathfinder", rows: [{ row: 1, values: cohortHeader("Pathfinder") }] },
+      { name: "M2 Maverick", rows: [{ row: 1, values: cohortHeader("Maverick") }] },
+      { name: "M1 Explorer", rows: lessonRows("Explorer", "From M1 Explorer") },
+      { name: "M1 Pathfinder", rows: lessonRows("Pathfinder", "From M1 Pathfinder") },
+      { name: "M1 Maverick", rows: lessonRows("Maverick", "From M1 Maverick") },
+    ]);
+
+    expect(read.issues).toEqual([]);
+    expect(read.contentHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(read.byCohort.explorer).toHaveLength(9);
+    expect(read.byCohort.explorer[0]?.screens[0]?.text.explorer).toBe("From M1 Explorer");
+    expect(read.byCohort.maverick[0]).toMatchObject({
+      lessonTitle: "Lesson 1",
+      characters: { maverick: "Senna" },
+    });
+    expect(read.issues.some((issue) => issue.sheet.startsWith("M2"))).toBe(false);
+  });
+
+  it("still reads the bundled workbook's Explorer M1 sheet names", () => {
+    const read = masterModuleFromSheets([
+      lessonDetailsSheet(),
+      {
+        name: "Explorer M2",
+        rows: [
+          { row: 1, values: cohortHeader("Explorer") },
+          { row: 2, values: ["2", "1", "1", "word-drop", "Not module 1", "", "", ""] },
+        ],
+      },
+      { name: "Explorer M1", rows: lessonRows("Explorer", "Legacy explorer") },
+      { name: "Pathfinder M1", rows: lessonRows("Pathfinder", "Legacy pathfinder") },
+      { name: "Maverick M1", rows: lessonRows("Maverick", "Legacy maverick") },
+    ]);
+
+    expect(read.issues).toEqual([]);
+    expect(read.byCohort.explorer[0]?.screens[0]?.text.explorer).toBe("Legacy explorer");
+    expect(read.byCohort.pathfinder[0]?.screens[0]?.text.pathfinder).toBe("Legacy pathfinder");
+    expect(read.byCohort.maverick[0]?.screens[0]?.text.maverick).toBe("Legacy maverick");
+  });
+
+  it("names the missing M1 tab when a cohort sheet is absent", () => {
+    const read = masterModuleFromSheets([
+      lessonDetailsSheet(),
+      { name: "M2 Explorer", rows: [{ row: 1, values: cohortHeader("Explorer") }] },
+    ]);
+    expect(read.contentHash).toBe("");
+    expect(read.issues).toContainEqual({
+      sheet: "M1 Explorer",
+      row: 1,
+      reason: 'No sheet named "M1 Explorer".',
+    });
   });
 });

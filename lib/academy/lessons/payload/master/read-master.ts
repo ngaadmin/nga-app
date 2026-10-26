@@ -94,6 +94,23 @@ function sheetFor(sheets: readonly WorkbookSheet[], pattern: RegExp): WorkbookSh
   return sheets.find((sheet) => pattern.test(sheet.name.trim()) && !/^notes\b/i.test(sheet.name.trim()));
 }
 
+/** "M1 Explorer". The bundled workbook still uses "Explorer M1" until it is replaced. */
+function moduleOneTabName(cohort: MasteryCohort): string {
+  return `M1 ${cohort.charAt(0).toUpperCase()}${cohort.slice(1)}`;
+}
+
+function moduleOneCohortSheet(
+  sheets: readonly WorkbookSheet[],
+  cohort: MasteryCohort,
+): WorkbookSheet | undefined {
+  const current = new RegExp(`^M1\\s+${cohort}$`, "i");
+  const legacy = new RegExp(`^${cohort}\\s+M1$`, "i");
+  return (
+    sheets.find((sheet) => current.test(sheet.name.trim())) ??
+    sheets.find((sheet) => legacy.test(sheet.name.trim()))
+  );
+}
+
 function pictureCell(value: string): string {
   const trimmed = value.trim();
   if (!trimmed || trimmed.toLowerCase() === "not allowed") return "";
@@ -158,9 +175,10 @@ export function masterModuleFromSheets(sheets: readonly WorkbookSheet[]): Master
     issues.push({ sheet: "Lesson Details", row: 1, reason: "Lesson Details sheet is missing." });
   }
   for (const cohort of COHORTS) {
-    const sheet = sheetFor(sheets, new RegExp(`^${cohort}\\b`, "i"));
+    const sheet = moduleOneCohortSheet(sheets, cohort);
     if (!sheet) {
-      issues.push({ sheet: cohort, row: 1, reason: `No sheet named for ${cohort}.` });
+      const expected = moduleOneTabName(cohort);
+      issues.push({ sheet: expected, row: 1, reason: `No sheet named "${expected}".` });
     }
   }
   if (issues.length > 0 || !details) {
@@ -169,7 +187,7 @@ export function masterModuleFromSheets(sheets: readonly WorkbookSheet[]): Master
 
   const detailLessons = readLessonDetails(details, issues);
   for (const cohort of COHORTS) {
-    const sheet = sheetFor(sheets, new RegExp(`^${cohort}\\b`, "i"));
+    const sheet = moduleOneCohortSheet(sheets, cohort);
     if (!sheet) continue;
     byCohort[cohort] = readCohortSheet(sheet, cohort, detailLessons, issues, missing);
   }

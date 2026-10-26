@@ -1,6 +1,6 @@
 # Stage 3 master workbook
 
-Preview reads Module 1 from `lib/academy/lessons/payload/source/master/module-1-screens.xlsx` (Cath's master, md5 `03b6f4167a1ee39df7d2203949626c10`). Production stays on Screens1.csv, Lesson-Details.csv, and Explorer `lessons.json`.
+Preview reads Module 1 from `lib/academy/lessons/payload/source/master/module-1-screens.xlsx` (Cath's master, md5 `03b6f4167a1ee39df7d2203949626c10`). The workbook is named Academy - Screens (All Cohorts). Cohort tabs are `M1 Explorer`, `M1 Pathfinder`, and `M1 Maverick`, plus `Lesson Details`. Header-only `M2 Explorer`, `M2 Pathfinder`, and `M2 Maverick` tabs are ignored. The file bundled today still uses the older `Explorer M1` names, and the reader accepts those until the renamed workbook replaces it. Production stays on Screens1.csv, Lesson-Details.csv, and Explorer `lessons.json`.
 
 Flag: `ACADEMY_MASTER_PAYLOAD` (server) and `NEXT_PUBLIC_ACADEMY_MASTER_PAYLOAD` (the Academy map). `1` or `true` turns it on. `0` or `false` turns it off. When neither is set, it is on only for a Vercel preview (`VERCEL_ENV=preview`).
 
@@ -12,6 +12,6 @@ Pictures and clips resolve from `NEXT_PUBLIC_ACADEMY_MEDIA_BASE` when that is se
 
 ## Still open
 
-- Explorer Module 2 is only on `lib/academy/lessons/payload/source/explorer-m1/workbook.xlsx` sheet `Explorer M2 Screens`. It is not in the master. Routes do not play it. The old workbook stays.
+- Module 2 screens still live only on `lib/academy/lessons/payload/source/explorer-m1/workbook.xlsx` sheet `Explorer M2 Screens`. The master's `M2 Explorer`, `M2 Pathfinder`, and `M2 Maverick` tabs are headers only, and routes do not play them. The old workbook stays.
 - The migration has not been applied, and nothing has been uploaded to storage. Preview uses the files under `/public`.
 - Seven picture cells are still blank on purpose: Pathfinder rows 34, 37, and 97, and Maverick rows 14, 37, 97, and 100. Every filled picture cell and every Audio File Name cell resolves.

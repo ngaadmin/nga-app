@@ -4,7 +4,7 @@ Stage 2 removes old lesson files and importers. It does not add a master-workboo
 
 Base commit for every removed path: `23625f2f21fe3ad5aea812f9c8b4f2cdcc8fe91c` on `explorer-m1-images-b3`. Recover a file with `git show 23625f2f21fe3ad5aea812f9c8b4f2cdcc8fe91c:<path>`. The same bytes are also copied under `archive/stage2-lesson-files/`, which is outside the TypeScript program and the lint set.
 
-The master workbook (sheets Explorer M1, Pathfinder M1, Maverick M1, Lesson Details) wins every difference below. Stage 3 reads that workbook on preview. See `docs/stage3-master.md`. Production still reads the files in [Kept until stage 3](#kept-until-stage-3).
+The master workbook (sheets Explorer M1, Pathfinder M1, Maverick M1, Lesson Details) wins every difference below. Those were the tab names in the workbook this report compared. Stage 3 now reads `M1 Explorer`, `M1 Pathfinder`, and `M1 Maverick`. See `docs/stage3-master.md`. Production still reads the files in [Kept until stage 3](#kept-until-stage-3).
 
 ## Verification
 

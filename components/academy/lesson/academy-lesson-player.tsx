@@ -94,7 +94,7 @@ function AcademyLessonPlayerGate({
     const node = readAcademyMilestones().find(
       (entry) => entry.id === milestoneId,
     );
-    // Preview and development deploys may open a locked Explorer lesson.
+    // Preview and development deploys may open a locked lesson for any cohort.
     // Production still requires the previous lesson to be finished.
     const allowed =
       node != null &&

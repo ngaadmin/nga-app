@@ -72,7 +72,7 @@ export function readVercelDeployEnv(env?: VercelDeployEnv): string | undefined {
 }
 
 /**
- * Test builds can open Explorer lessons 1–9 out of order.
+ * Test builds can open lessons 1–9 out of order for every cohort.
  * Exact condition: the deploy env is `preview` or `development`.
  * `production`, any other string, and an unset env keep today's sequential gate.
  */
@@ -86,7 +86,7 @@ export function isExplorerPreviewLessonUnlock(env?: VercelDeployEnv): boolean {
  * Do not use per-cohort `shippedCohorts` here — that was blocking the continue
  * node after lesson 2 for Maverick while the map still marked lesson 3 current.
  * Locked stays locked in production. A preview or development deploy may open a
- * locked Explorer lesson in 1–9 without writing progress. Content still falls
+ * locked lesson in 1–9 for any cohort without writing progress. Content still falls
  * back Pathfinder → Maverick on resolve.
  */
 export function canLaunchAcademyLesson(
@@ -103,7 +103,7 @@ export function canLaunchAcademyLesson(
     return true;
   }
 
-  return cohort === "explorer" && isExplorerPreviewLessonUnlock(env);
+  return isExplorerPreviewLessonUnlock(env);
 }
 
 /** Dev-only: skip onboarding gates for the template lab, never for real lessons. */

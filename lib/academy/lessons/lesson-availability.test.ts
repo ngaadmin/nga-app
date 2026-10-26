@@ -91,34 +91,51 @@ describe("canLaunchAcademyLesson sequential gate", () => {
     expect(canLaunchAcademyLesson(9, "locked", "explorer", unset)).toBe(false);
   });
 
-  it("opens Explorer lessons 1–9 on a preview deploy without changing status", () => {
-    for (const lesson of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
-      expect(
-        canLaunchAcademyLesson(lesson, "locked", "explorer", preview),
-      ).toBe(true);
+  it("opens lessons 1–9 on a preview deploy for every cohort", () => {
+    for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
+      for (const lesson of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+        expect(
+          canLaunchAcademyLesson(lesson, "locked", cohort, preview),
+        ).toBe(true);
+      }
     }
   });
 
-  it("opens Explorer lessons 1–9 on a development deploy", () => {
-    expect(canLaunchAcademyLesson(5, "locked", "explorer", development)).toBe(
-      true,
-    );
-    expect(canLaunchAcademyLesson(9, "locked", "explorer", development)).toBe(
-      true,
-    );
+  it("opens lessons 1–9 on a development deploy for every cohort", () => {
+    for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
+      expect(canLaunchAcademyLesson(5, "locked", cohort, development)).toBe(
+        true,
+      );
+      expect(canLaunchAcademyLesson(7, "locked", cohort, development)).toBe(
+        true,
+      );
+      expect(canLaunchAcademyLesson(9, "locked", cohort, development)).toBe(
+        true,
+      );
+    }
   });
 
-  it("does not open an unshipped lesson or another cohort", () => {
+  it("keeps locked Pathfinder and Maverick lessons closed in production", () => {
+    expect(canLaunchAcademyLesson(7, "locked", "pathfinder", production)).toBe(
+      false,
+    );
+    expect(canLaunchAcademyLesson(7, "locked", "maverick", production)).toBe(
+      false,
+    );
+    expect(canLaunchAcademyLesson(9, "locked", "pathfinder", unset)).toBe(
+      false,
+    );
+    expect(canLaunchAcademyLesson(5, "locked", "maverick", unset)).toBe(false);
+  });
+
+  it("does not open an unshipped lesson on a preview deploy", () => {
     expect(canLaunchAcademyLesson(10, "locked", "explorer", preview)).toBe(
       false,
     );
-    expect(canLaunchAcademyLesson(5, "locked", "pathfinder", preview)).toBe(
+    expect(canLaunchAcademyLesson(10, "locked", "pathfinder", preview)).toBe(
       false,
     );
-    expect(canLaunchAcademyLesson(9, "locked", "maverick", preview)).toBe(
-      false,
-    );
-    expect(canLaunchAcademyLesson(5, "locked", "pathfinder", production)).toBe(
+    expect(canLaunchAcademyLesson(10, "locked", "maverick", preview)).toBe(
       false,
     );
   });

@@ -489,9 +489,11 @@ function medalFromFile(fileName: string): { medalId: MedalIllustrationId; src?: 
   if (!trimmed || trimmed.toLowerCase() === "not allowed") return undefined;
   const base = trimmed.replace(/\.(webp|png|jpe?g)$/i, "");
   const appFile = /-app$/i.test(base);
-  const idStem = appFile ? base.replace(/-app$/i, "") : base;
+  const withoutApp = appFile ? base.replace(/-app$/i, "") : base;
+  const revised = /-r\d+$/i.test(withoutApp);
+  const idStem = withoutApp.replace(/-r\d+$/i, "");
   if (!isMedalIllustrationId(idStem)) return undefined;
-  if (!appFile) return { medalId: idStem };
+  if (!appFile && !revised) return { medalId: idStem };
   const src = getPairSheetImagePath(trimmed);
   return src ? { medalId: idStem, src } : { medalId: idStem };
 }

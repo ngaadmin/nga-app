@@ -121,7 +121,7 @@ describe("master workbook reader", () => {
     const expected: Record<number, string> = {
       91: "/assets/illustrations/pairs/lars-mia-chatting.webp",
       92: "/assets/illustrations/pairs/lars-mia-sidebyside.webp",
-      93: "/assets/illustrations/concepts/concept-piggy-bank.webp",
+      93: "/assets/illustrations/concepts/concept-piggy-bank-r2.webp",
     };
     for (const [rowNumber, path] of Object.entries(expected)) {
       const row = explorer?.rows.find((entry) => entry.row === Number(rowNumber));
@@ -195,6 +195,9 @@ describe("master workbook reader", () => {
     expect(getPairSheetImagePath("senna-older-max-chatting-r1-512.webp")).toBe(
       "/assets/illustrations/pairs/senna-older-max-chatting-r1-512.webp",
     );
+    expect(getPairSheetImagePath("senna-older-aiden19-sidebyside-r1-512.webp")).toBe(
+      "/assets/illustrations/pairs/senna-older-aiden19-sidebyside-r1-512.webp",
+    );
     expect(getPairSheetImagePath("Mia-thinking-512.webp")).toBe(
       "/assets/illustrations/characters/mia/Mia-thinking-512.webp",
     );
@@ -228,14 +231,16 @@ describe("master workbook reader", () => {
       const third = lessonThree.screens.find((screen) => screen.type === "completion");
       expect(first).toMatchObject({
         medalId: "medal-skill1-bronze",
-        medalSrc: "/assets/illustrations/medal/medal-skill1-bronze-app.webp",
+        medalSrc: "/assets/illustrations/medal/medal-skill1-bronze-r2-app.webp",
       });
       expect(second).toMatchObject({
         medalId: "medal-skill2-bronze",
-        medalSrc: "/assets/illustrations/medal/medal-skill2-bronze-app.webp",
+        medalSrc: "/assets/illustrations/medal/medal-skill2-bronze-r2-app.webp",
       });
-      expect(third).toMatchObject({ medalId: "medal-skill3-bronze" });
-      expect(third && "medalSrc" in third ? third.medalSrc : undefined).toBeUndefined();
+      expect(third).toMatchObject({
+        medalId: "medal-skill3-bronze",
+        medalSrc: "/assets/illustrations/medal/medal-skill3-bronze-r2.webp",
+      });
     }
   });
 

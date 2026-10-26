@@ -212,7 +212,7 @@ describe("lesson 3 screen 4 rank-order", () => {
     expect(screen.intro).toBe(prompts[cohort]);
     expect(screen.intro).not.toMatch(/Get your pocket money|Earn money|Emergencies jar|Spend what is left/);
     expect(screen.errors).toEqual({});
-    expect(screen.pairImage).toBe("concept-piggy-bank.webp");
+    expect(screen.pairImage).toBe("concept-piggy-bank-r2.webp");
     expect(
       openingRankOrder(
         screen.items.map((item) => item.id),

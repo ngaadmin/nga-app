@@ -1,4 +1,5 @@
 import {
+  conceptPropPath,
   getIllustrationPath,
   getPairSheetImagePath,
   isIllustrationId,
@@ -15,7 +16,7 @@ function addSrc(srcs: string[], seen: Set<string>, src: string | undefined): voi
 function dragArtSrc(fileName?: string, illustrationId?: string): string | undefined {
   if (fileName) return getPairSheetImagePath(fileName);
   if (illustrationId && isIllustrationId(illustrationId)) {
-    return getIllustrationPath(illustrationId);
+    return conceptPropPath(illustrationId) ?? getIllustrationPath(illustrationId);
   }
   return undefined;
 }

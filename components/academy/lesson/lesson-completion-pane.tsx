@@ -298,12 +298,12 @@ export function LessonCompletionPane({
               </span>
             </p>
           ) : null}
-          {medalSrc && medalId && medals.some((medal) => medal.medalId === medalId) ? (
+          {medals[0] ? (
             <LessonSkillMedal
               className="mt-3"
-              skillSlug={achievementSkillId}
-              medalId={medalId}
-              src={medalSrc}
+              skillSlug={medals[0].skillSlug ?? achievementSkillId}
+              medalId={medals[0].medalId}
+              src={medalId === medals[0].medalId ? medalSrc : undefined}
               skillName={skillName}
               size="hero"
             />

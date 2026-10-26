@@ -128,6 +128,25 @@ function conceptIllustrationPath(id: ConceptIllustrationId): string {
   return `${ILLUSTRATIONS_BASE}/concepts/${id}.webp`;
 }
 
+/**
+ * Current prop art for the five concepts Jasper replaced in round 2.
+ * The sheet token stays `concept-gift-box`. The painted file is the new name.
+ */
+const CONCEPT_PROP_FILE: Partial<Record<ConceptIllustrationId, string>> = {
+  "concept-piggy-bank": "concept-piggy-bank-r2.webp",
+  "concept-coin-stack": "concept-coin-stack-r2.webp",
+  "concept-wallet": "concept-wallet-r2.webp",
+  "concept-gift-box": "concept-gift-box-r2.webp",
+  "concept-growth-chart": "concept-growth-chart-r2.webp",
+};
+
+export function conceptPropPath(id: string): string | undefined {
+  if (!isConceptIllustrationId(id)) return undefined;
+  const file = CONCEPT_PROP_FILE[id];
+  if (!file) return conceptIllustrationPath(id);
+  return `${ILLUSTRATIONS_BASE}/concepts/${file}`;
+}
+
 function buildCharacterIllustrationRegistry(): Record<
   CharacterIllustrationId,
   string
@@ -220,7 +239,7 @@ export function localPairSheetImagePath(fileName: string): string | undefined {
   // before the solo-pose rules so `lars-mason-chatting-512` and
   // `senna-older-max-*-512` stay in the pairs folder.
   if (
-    /^(aiden-dash|aiden-max|holly-immi|holly-mia|holly-senna|lars-mason|lars-mia|lars-senna|senna-older-max)-(chatting|sidebyside)(?:-r\d+)?(?:-512)?$/.test(
+    /^(aiden-dash|aiden-max|holly-immi|holly-mia|holly-senna|lars-mason|lars-mia|lars-senna|senna-older-max|senna-older-aiden19)-(chatting|sidebyside)(?:-r\d+)?(?:-512)?$/.test(
       stem,
     )
   ) {
@@ -232,7 +251,11 @@ export function localPairSheetImagePath(fileName: string): string | undefined {
   if (stem.startsWith("saskia-")) {
     return `${ILLUSTRATIONS_BASE}/characters/saskia/${stem}.webp`;
   }
-  if (/^medal-skill\d+-[a-z]+(?:-app)?$/.test(stem)) {
+  const revisedConcept = /^(concept-[a-z0-9-]+)-r\d+$/.exec(stem);
+  if (revisedConcept?.[1] && isConceptIllustrationId(revisedConcept[1])) {
+    return `${ILLUSTRATIONS_BASE}/concepts/${stem}.webp`;
+  }
+  if (/^medal-skill\d+-(?:unlocked|unlock|white|bronze|silver|gold)(?:-r\d+)?(?:-app)?$/.test(stem)) {
     return `${ILLUSTRATIONS_BASE}/medal/${stem}.webp`;
   }
   const pose = /^(lars|holly|aiden|senna|immi|dash)-[a-z0-9-]+-512$/.exec(stem);

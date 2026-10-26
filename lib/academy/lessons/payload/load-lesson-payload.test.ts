@@ -87,7 +87,7 @@ describe("lesson payload loader", () => {
     });
     expect(tap).toMatchObject({
       type: "tap-reveal",
-      pairImage: "concept-coin-stack.webp",
+      pairImage: "concept-coin-stack-r2.webp",
     });
     if (tap?.type === "tap-reveal") {
       expect(tap.items[0]).toMatchObject({
@@ -99,7 +99,7 @@ describe("lesson payload loader", () => {
     expect(sort).toMatchObject({
       type: "bucket-sort",
     });
-    expect(sort && "pairImage" in sort ? sort.pairImage : undefined).toBe("concept-wallet.webp");
+    expect(sort && "pairImage" in sort ? sort.pairImage : undefined).toBe("concept-wallet-r2.webp");
     expect(spotlight).toMatchObject({
       type: "spotlight-rounds",
       rounds: [
@@ -123,7 +123,7 @@ describe("lesson payload loader", () => {
       medalId: "medal-skill1-bronze",
       authoredMedal: true,
       medalTier: "bronze",
-      medalSrc: "/assets/illustrations/medal/medal-skill1-bronze-app.webp",
+      medalSrc: "/assets/illustrations/medal/medal-skill1-bronze-r2-app.webp",
       skillName: "Catch Impulse Spending",
     });
     expect(content.meta.skillName).toBe("Catch Impulse Spending");
@@ -499,7 +499,7 @@ describe("lesson payload loader", () => {
       ["🎯", "Buy the dart blaster and go to the cinema", "no"],
       ["🚫", "Never spend any money", "no"],
     ]);
-    expect(sort.pairImage).toBe("concept-coin-stack.webp");
+    expect(sort.pairImage).toBe("concept-coin-stack-r2.webp");
     expect(resolveLessonScreenIllustration(sort)).toBeUndefined();
     expect(
       resolveLessonScreenIllustration({
@@ -1130,7 +1130,7 @@ CORRECT: bus,dog lead`,
         prompt:
           "Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:",
         wrongError: "Haha, maybe. But let's try again.",
-        pairImage: "senna-older-max-chatting-r1-512.webp",
+        pairImage: "senna-older-aiden19-chatting-r1-512.webp",
       },
     ];
 

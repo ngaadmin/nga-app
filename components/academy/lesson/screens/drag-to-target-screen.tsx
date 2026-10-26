@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useLessonScreenFlow } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import { LessonScreenLayout, lessonFeedbackCopy } from "@/components/academy/lesson/lesson-ui";
 import {
+  conceptPropPath,
   getIllustrationPath,
   getPairSheetImagePath,
   isIllustrationId,
@@ -41,7 +42,8 @@ export function DragToTargetScreen({
             ? getPairSheetImagePath(screen.sourceImageFile)
             : screen.sourceIllustrationId &&
                 isIllustrationId(screen.sourceIllustrationId)
-              ? getIllustrationPath(screen.sourceIllustrationId)
+              ? (conceptPropPath(screen.sourceIllustrationId) ??
+                getIllustrationPath(screen.sourceIllustrationId))
               : undefined
         }
         sourceIllustrationAlt={

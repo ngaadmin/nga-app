@@ -38,14 +38,17 @@ type AcademyLessonPlayerProps = {
   milestoneId: number;
   /** When set, this lesson renders from the payload instead of a hard-coded file. */
   payload?: LessonPayload;
-  /** Explorer Module 1 proof of concept. Other cohorts keep `payload`. */
+  /** Explorer Module 1. Other cohorts keep `payload` unless `maverickPayload` is set. */
   explorerPayload?: LessonPayload;
+  /** Maverick Module 1 from the master workbook. */
+  maverickPayload?: LessonPayload;
 };
 
 export function AcademyLessonPlayer({
   milestoneId,
   payload,
   explorerPayload,
+  maverickPayload,
 }: AcademyLessonPlayerProps) {
   return (
     <SearchParamsBoundary>
@@ -53,6 +56,7 @@ export function AcademyLessonPlayer({
         milestoneId={milestoneId}
         payload={payload}
         explorerPayload={explorerPayload}
+        maverickPayload={maverickPayload}
       />
     </SearchParamsBoundary>
   );
@@ -62,6 +66,7 @@ function AcademyLessonPlayerGate({
   milestoneId,
   payload,
   explorerPayload,
+  maverickPayload,
 }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const { ready: progressReady } = useIntroRestoreGate();
@@ -130,7 +135,7 @@ function AcademyLessonPlayerGate({
     <AcademyLessonPlayerInner
       milestoneId={milestoneId}
       isPreview={isPreview}
-      payload={selectLessonPayload(cohort, payload, explorerPayload)}
+      payload={selectLessonPayload(cohort, payload, explorerPayload, maverickPayload)}
     />
   );
 }

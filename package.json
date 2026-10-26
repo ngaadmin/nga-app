@@ -16,6 +16,8 @@
     "seed:demo": "npx tsx --conditions=react-server scripts/seed-demo-accounts.ts",
     "backfill:class-passwords": "npx tsx --conditions=react-server scripts/backfill-class-password-enc.ts",
     "lesson:import:explorer-m1": "npx tsx tools/import-explorer-m1.ts",
+    "lesson:publish:master": "npx tsx tools/publish-master-lessons.ts",
+    "lesson:upload:media": "npx tsx tools/upload-academy-media.ts",
     "check:quick": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts quick",
     "check:flow": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts flow",
     "check:full": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts full"

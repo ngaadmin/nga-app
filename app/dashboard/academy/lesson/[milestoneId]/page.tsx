@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { AcademyLessonPlayer } from "@/components/academy/lesson/academy-lesson-player";
 import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
+import { academyMasterPayloadEnabled } from "@/lib/academy/lessons/payload/master/master-flag";
+import { loadMasterLessonTrio } from "@/lib/academy/lessons/payload/master/fetch-published";
 import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import {
   bundledPayloadMilestone,
@@ -45,6 +48,26 @@ export default async function AcademyLessonPage({
   }
 
   const bundled = bundledPayloadMilestone(parsedId);
+  if (academyMasterPayloadEnabled() && bundled?.moduleNumber === 1) {
+    await connection();
+    const trio = await loadMasterLessonTrio(bundled.lessonNumber);
+    if (trio) {
+      assertLessonPayloadAssets(trio.pathfinder, parsedId);
+      assertLessonPayloadAssets(trio.explorer, parsedId);
+      assertLessonPayloadAssets(trio.maverick, parsedId);
+      return (
+        <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col bg-white">
+          <AcademyLessonPlayer
+            milestoneId={parsedId}
+            payload={trio.pathfinder}
+            explorerPayload={trio.explorer}
+            maverickPayload={trio.maverick}
+          />
+        </div>
+      );
+    }
+  }
+
   const payload = bundled
     ? loadBundledLessonPayload(bundled.moduleNumber, bundled.lessonNumber)
     : directOpen

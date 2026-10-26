@@ -49,12 +49,11 @@ import { useDashboardNavPending } from "@/components/dashboard/dashboard-nav-pen
 import { lessonNextButtonClass } from "@/components/academy/lesson/lesson-shared-styles";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { canLaunchAcademyLesson } from "@/lib/academy/lessons/lesson-availability";
-import { ACADEMY_AUDIO_BASE_URL } from "@/lib/academy/lessons/story-audio/audio-base";
 import {
   playStoryClipFromGesture,
   primeStoryAudioFromGesture,
 } from "@/lib/academy/lessons/story-audio/playback";
-import explorerM1Manifest from "@/lib/academy/lessons/payload/source/explorer-m1/manifest.json";
+import { lessonOneMapIntroSrc } from "@/lib/academy/lessons/payload/master/master-flag";
 import { useLessonMasteryCohort } from "@/lib/academy/lessons/hooks/use-lesson-cohort";
 import { cn } from "@/lib/utils/cn";
 
@@ -468,12 +467,9 @@ export function AcademySkillTrack({
     if (!milestone) return;
     if (canLaunchAcademyLesson(milestoneId, milestone.status, masteryCohort)) {
       const href = `/dashboard/academy/lesson/${milestoneId}`;
-      const intro =
-        milestoneId === 1
-          ? explorerM1Manifest.find((row) => row.beat_id === "explorer-m1-intro-beat1")
-          : undefined;
+      const intro = milestoneId === 1 ? lessonOneMapIntroSrc(masteryCohort) : undefined;
       if (intro) {
-        playStoryClipFromGesture(`${ACADEMY_AUDIO_BASE_URL}/${intro.file}`);
+        playStoryClipFromGesture(intro);
       } else {
         primeStoryAudioFromGesture();
       }

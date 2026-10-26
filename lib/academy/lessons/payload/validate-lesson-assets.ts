@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { getPairSheetImagePath } from "@/lib/academy/illustrations/illustration-registry";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
+import { payloadGameDropsNamedPicture } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import type { LessonPayload, PayloadCohortCopy } from "@/lib/academy/lessons/payload/types";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
@@ -32,6 +33,9 @@ export function missingLessonImages(payload: LessonPayload): MissingLessonImage[
   for (const screen of payload.screens) {
     if (screen.gameType === "completion") continue;
     for (const cohort of COHORTS) {
+      if (payloadGameDropsNamedPicture(screen.gameType, cohortField(screen.settings, cohort))) {
+        continue;
+      }
       const fileName = cohortField(screen.image, cohort);
       if (!fileName || fileName.toLowerCase() === "not allowed") continue;
       const src = getPairSheetImagePath(fileName);

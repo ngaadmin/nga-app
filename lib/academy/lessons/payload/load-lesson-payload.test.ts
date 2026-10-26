@@ -500,13 +500,13 @@ describe("lesson payload loader", () => {
       ["🚫", "Never spend any money", "no"],
     ]);
     expect(sort.pairImage).toBe("concept-coin-stack.webp");
-    expect(resolveLessonScreenIllustration(sort)?.src).toContain("concept-coin-stack.webp");
+    expect(resolveLessonScreenIllustration(sort)).toBeUndefined();
     expect(
       resolveLessonScreenIllustration({
         ...sort,
         pairImage: "concept-wallet.webp",
-      })?.src,
-    ).toContain("concept-wallet.webp");
+      }),
+    ).toBeUndefined();
   });
 
   it("leaves bucket-sort image cells blank instead of not allowed", () => {

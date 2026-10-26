@@ -3,6 +3,7 @@ import {
   getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
+import { isPairedZoneSortScreen } from "@/lib/academy/lessons/paired-zone-sort";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import {
   isMultipleChoiceScreen,
@@ -40,11 +41,48 @@ function radioListHasPicture(screen: ScreenConfig): boolean {
   return false;
 }
 
+const STEP_SETTING = /^STEP\d+\s*:/i;
+const SPENT_SETTING = /^SPENT\s*:/i;
+const TWO_BUCKET_SETTING = /^(SHORT|LONG|NEED|WANT|YES|NO|RUSHING|THINKING)\s*:/i;
+
+function settingLines(settings: string): string[] {
+  return settings.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+
+/**
+ * Lightning rounds and two-bucket sorts keep a picture name on the row and
+ * do not paint it. Step order and the spent total still do.
+ */
+export function payloadGameDropsNamedPicture(
+  gameType: string,
+  settings: string,
+): boolean {
+  if (gameType === "spotlight-rounds") return true;
+  if (gameType !== "bucket-sort") return false;
+  const lines = settingLines(settings);
+  if (lines.some((line) => STEP_SETTING.test(line) || SPENT_SETTING.test(line))) {
+    return false;
+  }
+  const buckets = new Set<string>();
+  for (const line of lines) {
+    const match = TWO_BUCKET_SETTING.exec(line);
+    if (match?.[1]) buckets.add(match[1].toUpperCase());
+  }
+  return buckets.size === 2;
+}
+
+/** Resolved screen whose payload picture is kept on the row and never painted. */
+export function screenDropsNamedPicture(screen: ScreenConfig): boolean {
+  if (screen.type === "spotlight-rounds") return true;
+  return screen.type === "bucket-sort" && isPairedZoneSortScreen(screen);
+}
+
 /** True when the shared top illustration slot is part of this screen template. */
 export function supportsLessonScreenIllustration(
   screen: ScreenConfig,
 ): boolean {
-  // Bucket-sort owns its own optional slot, above the buckets.
+  if (screenDropsNamedPicture(screen)) return false;
+  // Other bucket-sort layouts own their picture inside the game, not in chrome.
   if (screen.type === "bucket-sort") return false;
   if (screen.pairImage === false) return false;
   if (pairSheetFileName(screen.pairImage)) return true;
@@ -93,7 +131,7 @@ function resolveRegistryIllustration(
 export function resolveLessonScreenIllustration(
   screen: ScreenConfig,
 ): LessonIllustration | undefined {
-  if (screen.pairImage === false) {
+  if (screenDropsNamedPicture(screen) || screen.pairImage === false) {
     return undefined;
   }
 

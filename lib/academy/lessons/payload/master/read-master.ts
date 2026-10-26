@@ -14,6 +14,7 @@ import {
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { resolveAcademyAudioUrl, resolveAcademyImageUrl } from "@/lib/academy/lessons/payload/master/media-url";
+import { payloadGameDropsNamedPicture } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 
 export const MASTER_WORKBOOK_PATH = path.join(
   process.cwd(),
@@ -330,7 +331,13 @@ function readCohortSheet(
     const audioName = cell(entry.values, audioCol);
     const brief = briefCol >= 0 ? cell(entry.values, briefCol) : "";
 
-    if (image && !resolveAcademyImageUrl(image)) {
+    const gameTypeRaw = cell(entry.values, gameCol).toLowerCase();
+    const settingsRaw = settingsCol >= 0 ? cell(entry.values, settingsCol) : "";
+    if (
+      image &&
+      !payloadGameDropsNamedPicture(gameTypeRaw, settingsRaw) &&
+      !resolveAcademyImageUrl(image)
+    ) {
       missing.push({ sheet: sheet.name, row: entry.row, kind: "image", name: image });
     }
     if (audioName && !resolveAcademyAudioUrl(audioName)) {

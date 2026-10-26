@@ -1,6 +1,6 @@
 # Stage 3 master workbook
 
-Preview reads Module 1 from `lib/academy/lessons/payload/source/master/module-1-screens.xlsx` (Cath's master, md5 `f7144e052adb39cc28c0a719f423e75e`). Production stays on Screens1.csv, Lesson-Details.csv, and Explorer `lessons.json`.
+Preview reads Module 1 from `lib/academy/lessons/payload/source/master/module-1-screens.xlsx` (Cath's master, md5 `03b6f4167a1ee39df7d2203949626c10`). Production stays on Screens1.csv, Lesson-Details.csv, and Explorer `lessons.json`.
 
 Flag: `ACADEMY_MASTER_PAYLOAD` (server) and `NEXT_PUBLIC_ACADEMY_MASTER_PAYLOAD` (the Academy map). `1` or `true` turns it on. `0` or `false` turns it off. When neither is set, it is on only for a Vercel preview (`VERCEL_ENV=preview`).
 
@@ -14,4 +14,4 @@ Pictures and clips resolve from `NEXT_PUBLIC_ACADEMY_MEDIA_BASE` when that is se
 
 - Explorer Module 2 is only on `lib/academy/lessons/payload/source/explorer-m1/workbook.xlsx` sheet `Explorer M2 Screens`. It is not in the master. Routes do not play it. The old workbook stays.
 - The migration has not been applied, and nothing has been uploaded to storage. Preview uses the files under `/public`.
-- 24 picture cells are blank on purpose: Pathfinder rows 14, 21, 26, 34, 37, 40, 49, 60, 67, 72, 77, 97, 100 and Maverick rows 14, 21, 26, 37, 49, 60, 67, 72, 77, 97, 100. Those screens have no picture. Every filled picture cell and every Audio File Name cell resolves.
+- Seven picture cells are still blank on purpose: Pathfinder rows 34, 37, and 97, and Maverick rows 14, 37, 97, and 100. Every filled picture cell and every Audio File Name cell resolves.

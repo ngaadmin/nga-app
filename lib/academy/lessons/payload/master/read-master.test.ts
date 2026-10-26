@@ -14,8 +14,8 @@ import {
 import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authoring-table";
 
 const KNOWN_BLANK_ART: Record<string, number[]> = {
-  "Pathfinder M1": [14, 21, 26, 34, 37, 40, 49, 60, 67, 72, 77, 97, 100],
-  "Maverick M1": [14, 21, 26, 37, 49, 60, 67, 72, 77, 97, 100],
+  "Pathfinder M1": [34, 37, 97],
+  "Maverick M1": [14, 37, 97, 100],
 };
 
 describe("master workbook reader", () => {
@@ -75,7 +75,7 @@ describe("master workbook reader", () => {
         expect(row?.values[imageCol]?.trim() ?? "", `${sheetName} row ${rowNumber}`).toBe("");
       }
     }
-    expect(Object.values(KNOWN_BLANK_ART).flat()).toHaveLength(24);
+    expect(Object.values(KNOWN_BLANK_ART).flat()).toHaveLength(7);
   });
 
   it("resolves every lesson for every cohort", () => {

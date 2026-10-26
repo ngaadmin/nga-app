@@ -77,17 +77,17 @@ describe("lesson payload loader", () => {
       narrativeAfter: "right away!",
       options: ["Spent", "Saved", "Hidden"],
       correctOption: "Spent",
-      pairImage: "lars-thinking-512.webp",
+      pairImage: "lars-senna-chatting.webp",
     });
     expect(binary).toMatchObject({
       type: "binary-choice",
       id: "short-fun-reality",
       optionA: { isCorrect: true },
-      pairImage: "lars-sitting-512.webp",
+      pairImage: "lars-celebrating-512.webp",
     });
     expect(tap).toMatchObject({
       type: "tap-reveal",
-      pairImage: false,
+      pairImage: "concept-coin-stack.webp",
     });
     if (tap?.type === "tap-reveal") {
       expect(tap.items[0]).toMatchObject({
@@ -99,7 +99,7 @@ describe("lesson payload loader", () => {
     expect(sort).toMatchObject({
       type: "bucket-sort",
     });
-    expect(sort && "pairImage" in sort ? sort.pairImage : undefined).toBeUndefined();
+    expect(sort && "pairImage" in sort ? sort.pairImage : undefined).toBe("concept-wallet.webp");
     expect(spotlight).toMatchObject({
       type: "spotlight-rounds",
       rounds: [
@@ -123,6 +123,7 @@ describe("lesson payload loader", () => {
       medalId: "medal-skill1-bronze",
       authoredMedal: true,
       medalTier: "bronze",
+      medalSrc: "/assets/illustrations/medal/medal-skill1-bronze-app.webp",
       skillName: "Catch Impulse Spending",
     });
     expect(content.meta.skillName).toBe("Catch Impulse Spending");
@@ -498,8 +499,8 @@ describe("lesson payload loader", () => {
       ["🎯", "Buy the dart blaster and go to the cinema", "no"],
       ["🚫", "Never spend any money", "no"],
     ]);
-    expect(sort.pairImage).toBeUndefined();
-    expect(resolveLessonScreenIllustration(sort)).toBeUndefined();
+    expect(sort.pairImage).toBe("concept-coin-stack.webp");
+    expect(resolveLessonScreenIllustration(sort)?.src).toContain("concept-coin-stack.webp");
     expect(
       resolveLessonScreenIllustration({
         ...sort,
@@ -637,10 +638,16 @@ describe("lesson payload loader", () => {
       }
       const lead =
         cohort === "explorer" ? "Lars" : cohort === "pathfinder" ? "Holly" : "Aiden";
+      const thoughtsImage =
+        cohort === "explorer"
+          ? "lars-deciding-512.webp"
+          : cohort === "pathfinder"
+            ? "holly-deciding-512.webp"
+            : "senna-older-deciding-r1-512.webp";
       expect(thoughts).toMatchObject({
         type: "spotlight-rounds",
         prompt: `Which one helps ${lead} stop and think?`,
-        pairImage: false,
+        pairImage: thoughtsImage,
       });
       if (thoughts?.type === "spotlight-rounds") {
         expect(
@@ -676,9 +683,15 @@ describe("lesson payload loader", () => {
         ]);
         expect(thoughts.rounds.every((round) => round.error.includes("rushing you"))).toBe(true);
       }
+      const signImage =
+        cohort === "explorer"
+          ? "fishing-rod-sign.webp"
+          : cohort === "pathfinder"
+            ? "prop-pf-m1-store-sign-r3-app.webp"
+            : "prop-mv-m1-store-sign-r2-app.webp";
       expect(sign).toMatchObject({
         type: "multiple-choice",
-        pairImage: "fishing-rod-sign.webp",
+        pairImage: signImage,
         optionLayout: "radio-list",
       });
       if (sign?.type === "multiple-choice") {
@@ -745,7 +758,7 @@ describe("lesson payload loader", () => {
         "Holly explains that keeping Spare Cash gives you options. Match the event to what's possible if you have cash:",
       eventColumnLabel: "Events",
       benefitColumnLabel: "Possibilities",
-      pairImage: "holly-hands-on-hips-512.webp",
+      pairImage: "lars-senna-sidebyside.webp",
       pairs: [
         {
           event: "I broke my sister's headphones",
@@ -1069,7 +1082,7 @@ CORRECT: bus,dog lead`,
         prompt:
           "Mia spent all her pocket money. She accidentally steps on Holly's headphones and breaks them. Holly crashes out because:",
         wrongError: "Haha, maybe. Try again!",
-        pairImage: "holly-mia-sidebyside.webp",
+        pairImage: "lars-senna-chatting.webp",
       },
       {
         cohort: "pathfinder" as const,
@@ -1077,7 +1090,7 @@ CORRECT: bus,dog lead`,
         prompt:
           "Holly spent all her pocket money. She accidentally steps on Mia's headphones and breaks them. Mia crashes out because:",
         wrongError: "Haha, maybe. But let's try again.",
-        pairImage: "holly-mia-chatting.webp",
+        pairImage: "holly-senna-chatting-r1-512.webp",
       },
       {
         cohort: "maverick" as const,
@@ -1085,7 +1098,7 @@ CORRECT: bus,dog lead`,
         prompt:
           "Dash spent all his money. He accidentally steps on Aiden's headphones and breaks them. Aiden crashes out because:",
         wrongError: "Haha, maybe. But let's try again.",
-        pairImage: "aiden-dash-chatting.webp",
+        pairImage: "senna-older-max-chatting-r1-512.webp",
       },
     ];
 
@@ -1124,7 +1137,7 @@ CORRECT: bus,dog lead`,
     const tracks = [
       {
         cohort: "explorer" as const,
-        pairImage: "mia-thinking",
+        pairImage: "lars-deciding-512.webp",
         prompt:
           "Mia has $40 Spare Cash to replace the headphones. She sees a $10 toy she wants and thinks: \"I'll spend this $10 now, and I'll just save more next week to buy the headphones.\" What should Mia do?",
         options: [
@@ -1146,7 +1159,7 @@ CORRECT: bus,dog lead`,
       },
       {
         cohort: "maverick" as const,
-        pairImage: "aiden-deciding-512.webp",
+        pairImage: "senna-older-deciding-r1-512.webp",
         prompt:
           "Aiden has $40 Cash to replace the headphones. He sees a $20 game he wants and thinks: \"I'll spend this $20 now, and I'll just save more next week to buy the headphones.\" What should Aiden do?",
         options: [
@@ -1219,16 +1232,19 @@ CORRECT: bus,dog lead`,
     const tracks = [
       {
         cohort: "explorer" as const,
+        pairImage: "beat-ex-m1-l3-r1.webp",
         prompt:
           "Mia could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
       },
       {
         cohort: "pathfinder" as const,
+        pairImage: "beat-pf-m1-l3-r5-app.webp",
         prompt:
           "Holly could fix the problem because she had cash for emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
       },
       {
         cohort: "maverick" as const,
+        pairImage: "beat-mv-m1-l3-r5-app.webp",
         prompt:
           "Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
       },
@@ -1250,7 +1266,7 @@ CORRECT: bus,dog lead`,
       expect(screen.wrongError, track.cohort).toBe(
         "Yes, but take a look at the other options and see if there's a better answer.",
       );
-      expect(screen.pairImage, track.cohort).toBe(false);
+      expect(screen.pairImage, track.cohort).toBe(track.pairImage);
       expect(screen.optionLayout, track.cohort).toBeUndefined();
       expect(screen.options, track.cohort).toEqual([
         { label: labels[0], isCorrect: false },

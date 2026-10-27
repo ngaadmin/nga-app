@@ -260,18 +260,29 @@ describe("master workbook reader", () => {
         pose,
       ).toBe(false);
     }
+    expect(characterPoseFilePath("aiden19-celebrating")).toBe(
+      "/assets/illustrations/characters/aiden19/aiden19-celebrating-r1-512.webp",
+    );
+    expect(
+      existsSync(
+        path.join(
+          process.cwd(),
+          "public/assets/illustrations/characters/aiden19/aiden19-celebrating-r1-512.webp",
+        ),
+      ),
+    ).toBe(true);
     const maverickLesson = master.byCohort.maverick.find((lesson) => lesson.lessonNumber === 2);
     const pathfinderLesson = master.byCohort.pathfinder.find((lesson) => lesson.lessonNumber === 2);
     expect(maverickLesson).toBeDefined();
     expect(pathfinderLesson).toBeDefined();
     if (!maverickLesson || !pathfinderLesson) return;
     const maverickDrag = resolvePayloadLesson(maverickLesson, "maverick", 2).screens.find(
-      (screen) => screen.type === "drag-to-target" && screen.targetImageFile === "max-celebrating",
+      (screen) => screen.type === "drag-to-target" && screen.targetImageFile === "aiden19-celebrating",
     );
     const pathfinderDrag = resolvePayloadLesson(pathfinderLesson, "pathfinder", 2).screens.find(
       (screen) => screen.type === "drag-to-target" && screen.targetImageFile === "pippa-celebrating",
     );
-    expect(maverickDrag).toMatchObject({ targetLabel: "Max", sourceLabel: "Gift box" });
+    expect(maverickDrag).toMatchObject({ targetLabel: "Aiden", sourceLabel: "Gift box" });
     expect(pathfinderDrag).toMatchObject({ targetLabel: "Pippa", sourceLabel: "Gift box" });
     expect(JSON.stringify(maverickDrag)).not.toContain("piggy");
     expect(JSON.stringify(pathfinderDrag)).not.toContain("piggy");

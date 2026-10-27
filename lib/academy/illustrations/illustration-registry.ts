@@ -272,6 +272,8 @@ export function localPairSheetImagePath(fileName: string): string | undefined {
  * `*-512.webp` art. Registered character ids are resolved earlier.
  * `max-celebrating` and `pippa-celebrating` use this same rule. The
  * folders stay empty until those pose files are added.
+ * A cast name with an age suffix, such as `aiden19-celebrating`, uses the
+ * revised `{name}-{pose}-r1-512.webp` file in that character's folder.
  */
 const MIA_POSE_NAMES = new Set([
   "celebrating",
@@ -292,6 +294,16 @@ export function characterPoseFilePath(fileName: string): string | undefined {
     }
     const titled = `${pose.charAt(0).toUpperCase()}${pose.slice(1)}`;
     return `${ILLUSTRATIONS_BASE}/characters/mia/Mia-${titled}.webp`;
+  }
+  const aged = /^([a-z]+\d+)-([a-z]+)(?:-r\d+)?(?:-512)?$/.exec(stem);
+  if (aged?.[1] && aged[2]) {
+    const character = aged[1];
+    const pose = aged[2];
+    const fileStem =
+      /-r\d+(?:-512)?$/.test(stem) || stem.endsWith("-512")
+        ? stem
+        : `${character}-${pose}-r1-512`;
+    return `${ILLUSTRATIONS_BASE}/characters/${character}/${fileStem}.webp`;
   }
   const match = /^(lars|holly|aiden|senna|immi|dash|max|pippa)-[a-z]+$/.exec(stem);
   if (!match || stem.endsWith("-512")) return undefined;

@@ -282,9 +282,9 @@ function readEmojiAt(
   return { emoji: chars.slice(start, end).join(""), end };
 }
 
-/** `senna-celebrating` → Senna. `concept-gift-box` → Gift box. */
+/** `senna-celebrating` → Senna. `aiden19-celebrating` → Aiden. `concept-gift-box` → Gift box. */
 function labelFromIllustrationId(id: string): string {
-  const character = /^(lars|senna|mia|holly|aiden|dash|immi|max|pippa)(?:-|$)/i.exec(id);
+  const character = /^(lars|senna|mia|holly|aiden|dash|immi|max|pippa)\d*(?:-|$)/i.exec(id);
   const name = character?.[1];
   if (name) {
     const lower = name.toLowerCase();

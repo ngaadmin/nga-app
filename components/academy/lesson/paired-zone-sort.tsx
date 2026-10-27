@@ -181,7 +181,7 @@ export function PairedZoneSort({
             <p
               key={line}
               className={cn(
-                "sort-label font-heading text-[17px] leading-[1.35] text-[#031F82]",
+                "font-heading text-[17px] leading-[1.35] text-[#031F82]",
                 instruction ? "font-extrabold" : "font-bold",
               )}
             >

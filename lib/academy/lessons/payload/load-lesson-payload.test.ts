@@ -39,7 +39,7 @@ describe("lesson payload loader", () => {
       "binary-choice",
       "tap-reveal",
       "bucket-sort",
-      "spotlight-rounds",
+      "binary-choice",
       "hold-to-fill",
       "binary-choice",
       "completion",
@@ -70,7 +70,7 @@ describe("lesson payload loader", () => {
       perfectStreakBonus: LESSON_PERFECT_STREAK_BONUS,
     });
 
-    const [wordDrop, binary, tap, sort, spotlight, hold, , completion] = content.screens;
+    const [wordDrop, binary, tap, sort, rush, hold, , completion] = content.screens;
     expect(wordDrop).toMatchObject({
       type: "word-drop",
       narrativeBefore: expect.stringContaining("Lars just got $20"),
@@ -100,14 +100,11 @@ describe("lesson payload loader", () => {
       type: "bucket-sort",
     });
     expect(sort && "pairImage" in sort ? sort.pairImage : undefined).toBe("concept-wallet-r2.webp");
-    expect(spotlight).toMatchObject({
-      type: "spotlight-rounds",
-      rounds: [
-        expect.objectContaining({
-          optionA: "To trick his brain into buying fast.",
-          correct: "a",
-        }),
-      ],
+    expect(rush).toMatchObject({
+      type: "binary-choice",
+      pairImage: "lars-senna-chatting.webp",
+      optionA: { label: "To trick his brain into buying fast.", isCorrect: true },
+      optionB: { label: "Because the game creators love him.", isCorrect: false },
     });
     expect(hold).toMatchObject({
       type: "hold-to-fill",
@@ -812,7 +809,7 @@ describe("lesson payload loader", () => {
       "binary-choice",
       "true-false",
       "bucket-sort",
-      "spotlight-rounds",
+      "binary-choice",
       "rank-order",
       "narrative-bonus",
       "completion",

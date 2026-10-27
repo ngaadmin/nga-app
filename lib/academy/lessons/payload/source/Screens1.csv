@@ -35,7 +35,7 @@ SHORT: 🍔 Food delivery with priority fee
 SHORT: 👕 Disposable concert merch
 LONG: 🎸 Second-hand quality guitar
 LONG: 🧥 High-quality piece of clothing",,,,
-1,1,5,spotlight-rounds,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Later that day Aiden receives a text message: ""Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",lars-senna-chatting.webp,holly-senna-chatting-r1-512.webp,senna-older-max-chatting-r1-512.webp,"CHOICE A: 🧠 To trick his brain into buying fast.
+1,1,5,binary-choice,"Next day, an alert flashes on Lars's tablet: 💥 RARE SKIN DEAL! ONLY 1 MINUTE LEFT! 💥 Why is the game rushing him?","Holly's playing online and a game alert flashes: ""Limited time - new skin 70% off! 15 MINUTES LEFT!"" Why is the game rushing her?","Later that day Aiden receives a text message: ""Flash sale on premium bike lights - huge discount but ONLY 10 MINUTES LEFT!"" Why is the offer rushing him?",lars-senna-chatting.webp,holly-senna-chatting-r1-512.webp,senna-older-max-chatting-r1-512.webp,"CHOICE A: 🧠 To trick his brain into buying fast.
 CHOICE B: ❤️ Because the game creators love him.
 CORRECT: A","CHOICE A: 🧠 To stop her from pausing to decide if she really needs it.
 CHOICE B: ❤️ Because they want to make sure she gets a good deal.
@@ -273,7 +273,7 @@ NEED: 🎫 Airline ticket
 WANT: 🍦 His own gelato
 WANT: 🍨 Extra gelato toppings
 NEED: 🪪 A new passport",,,,
-1,5,5,spotlight-rounds,"Lars does not want to feel left out, but the birthday deal expires today. What now?","Holly does not want to feel left out, but the birthday deal expires today. What now?","Aiden does not want to feel left out, but the birthday deal expires today. What now?",prop-ex-m1-wallet-r2.webp,prop-ex-m1-wallet-r2.webp,prop-ex-m1-wallet-r2.webp,"CHOICE A: 🤝 Share a gelato and keep at least half of what he would otherwise have spent.
+1,5,5,binary-choice,"Lars does not want to feel left out, but the birthday deal expires today. What now?","Holly does not want to feel left out, but the birthday deal expires today. What now?","Aiden does not want to feel left out, but the birthday deal expires today. What now?",prop-ex-m1-wallet-r2.webp,prop-ex-m1-wallet-r2.webp,prop-ex-m1-wallet-r2.webp,"CHOICE A: 🤝 Share a gelato and keep at least half of what he would otherwise have spent.
 CHOICE B: 🍦 Buy one so he isn't the odd one out
 CORRECT: A","CHOICE A: 🤝 Share a gelato and keep at least half of what she would otherwise have spent.
 CHOICE B: 🍦 Buy one so she isn't the odd one out

@@ -1273,7 +1273,7 @@ CORRECT: bus,dog lead`,
       },
       {
         cohort: "maverick" as const,
-        pairImage: "beat-mv-m1-l3-r5-app.webp",
+        pairImage: "beat-mv-m1-l3-r6-app.webp",
         prompt:
           "Aiden could fix the problem because he had Cash for Emergencies. What are the other benefits of not spending all of your money? Select the best answer:",
       },

@@ -8,7 +8,7 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 export type ProfileAvatarId =
   | "lars"
   | "holly"
-  | "aiden"
+  | "senna-older"
   | "senna"
   | "immi"
   | "dash";
@@ -50,14 +50,14 @@ export const PROFILE_AVATAR_OPTIONS: readonly ProfileAvatarOption[] = [
     cropSize: 117,
   },
   {
-    id: "aiden",
-    name: "Aiden",
-    src: `${CHARACTER_DIR}/aiden/aiden-waving-512.webp`,
-    width: 207,
-    height: 391,
-    cropX: 34,
+    id: "senna-older",
+    name: "Senna Older",
+    src: `${CHARACTER_DIR}/senna-older/senna-older-waving-512.webp`,
+    width: 189,
+    height: 394,
+    cropX: 43,
     cropY: 9,
-    cropSize: 117,
+    cropSize: 118,
   },
   {
     id: "senna",
@@ -91,14 +91,14 @@ export const PROFILE_AVATAR_OPTIONS: readonly ProfileAvatarOption[] = [
   },
 ];
 
-/** Same characters as the track picker on the welcome screen. */
+/** Track art defaults. Maverick uses Senna Older (Aiden is retired). */
 export const DEFAULT_PROFILE_AVATAR_BY_COHORT: Record<
   MasteryCohort,
   ProfileAvatarId
 > = {
   explorer: "lars",
   pathfinder: "holly",
-  maverick: "aiden",
+  maverick: "senna-older",
 };
 
 export const PROFILE_AVATAR_STORAGE_KEY = "nga_profile_avatar_v1";

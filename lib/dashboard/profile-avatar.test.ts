@@ -10,7 +10,7 @@ describe("profile avatar", () => {
   it("defaults to the track picker character", () => {
     expect(resolveProfileAvatarId(null, "me", "explorer")).toBe("lars");
     expect(resolveProfileAvatarId(null, "me", "pathfinder")).toBe("holly");
-    expect(resolveProfileAvatarId(null, "me", "maverick")).toBe("aiden");
+    expect(resolveProfileAvatarId(null, "me", "maverick")).toBe("senna-older");
   });
 
   it("keeps a saved choice per profile", () => {
@@ -23,7 +23,21 @@ describe("profile avatar", () => {
     expect(resolveProfileAvatarId("not json", "me", "pathfinder")).toBe("holly");
     expect(
       resolveProfileAvatarId(JSON.stringify({ me: "nobody" }), "me", "maverick"),
-    ).toBe("aiden");
+    ).toBe("senna-older");
+  });
+
+  it("falls back to the default for a retired Aiden choice", () => {
+    expect(
+      resolveProfileAvatarId(JSON.stringify({ me: "aiden" }), "me", "maverick"),
+    ).toBe("senna-older");
+  });
+
+  it("keeps the child Senna and Senna Older as separate options", () => {
+    const senna = PROFILE_AVATAR_OPTIONS.find((o) => o.id === "senna");
+    const older = PROFILE_AVATAR_OPTIONS.find((o) => o.id === "senna-older");
+    expect(senna?.src).not.toBe(older?.src);
+    expect(senna?.name).not.toBe(older?.name);
+    expect(PROFILE_AVATAR_OPTIONS.some((o) => o.id === ("aiden" as never))).toBe(false);
   });
 
   it("only offers art that exists for every default", () => {

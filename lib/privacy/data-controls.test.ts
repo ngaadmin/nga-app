@@ -276,6 +276,37 @@ describe("history and activity copy", () => {
       "Leaderboard kept off",
     ]);
     expect(historySummary(entries)).toBe("Latest: 12 Oct 2026, Leaderboard kept off");
+    expect(entries[0]?.detail).toBe("");
+  });
+
+  it("says the parent agreed to the Terms only when an acceptance was recorded", () => {
+    const entries = buildParentHistory({
+      accountCreatedAt: "2026-10-30T00:00:00.000Z",
+      consents: [],
+      events: [
+        {
+          at: "2026-10-30T00:00:01.000Z",
+          title: "Agreed to the Terms and Privacy Policy",
+          detail: "Terms version 2026-10-30",
+        },
+      ],
+    });
+    expect(entries).toEqual([
+      {
+        at: "2026-10-30T00:00:00.000Z",
+        title: "Made a parent account",
+        detail: "Agreed to the Terms and Privacy Policy",
+      },
+    ]);
+  });
+
+  it("does not claim Terms agreement when none was recorded", () => {
+    const entries = buildParentHistory({
+      accountCreatedAt: "2026-10-30T00:00:00.000Z",
+      consents: [],
+      events: [],
+    });
+    expect(entries[0]?.detail).not.toContain("Agreed");
   });
 
   it("lists recent activity with coins and XP kept apart", () => {

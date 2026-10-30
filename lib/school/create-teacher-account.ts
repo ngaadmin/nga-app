@@ -16,6 +16,8 @@ import {
 import { signClassOpenToken } from "@/lib/school/class-open-token";
 import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { normalizeEmailAddress } from "@/lib/validation/email";
+import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
+import { checkTermsAcceptance } from "@/lib/legal/terms-consent";
 
 const MIN_PASSWORD_LENGTH = 6;
 const DEFAULT_SEAT_CAP = 30;
@@ -65,7 +67,17 @@ export async function createTeacherAccount(input: {
   email: string;
   password: string;
   classCohort: MasteryCohort;
+  /** Terms tick box. Must be `true`. */
+  termsAccepted?: boolean;
 }): Promise<CreateTeacherAccountResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const classCohort = parseMasteryCohort(input.classCohort);
   if (!classCohort) {
     return {
@@ -168,6 +180,12 @@ export async function createTeacherAccount(input: {
         success: false,
         error: TEACHER_SIGNUP_ERROR,
       };
+    }
+
+    const recorded = await recordTermsAcceptance(admin, userId);
+    if (!recorded.ok) {
+      await admin.auth.admin.deleteUser(userId);
+      return { success: false, error: recorded.error };
     }
 
     const username =

@@ -4,6 +4,11 @@
  * Callers pass already-loaded rows. This module does not touch the database.
  */
 
+import {
+  isTermsAcceptanceEntry,
+  TERMS_ACCEPTANCE_TITLE,
+} from "@/lib/legal/terms-consent";
+
 export type DataActor =
   | { role: "parent_master"; userId: string; linkedChildIds: readonly string[] }
   | { role: "teacher"; userId: string; seatIds: readonly string[] }
@@ -309,11 +314,17 @@ export function buildParentHistory(input: {
   events: readonly HistoryEntry[];
 }): HistoryEntry[] {
   const entries: HistoryEntry[] = [];
+  // Only say the parent agreed when an acceptance was actually recorded
+  // (account_history rows written by the Terms tick box).
+  const termsAccepted = input.events.some(isTermsAcceptanceEntry);
+  const events = input.accountCreatedAt
+    ? input.events.filter((event) => !isTermsAcceptanceEntry(event))
+    : input.events;
   if (input.accountCreatedAt) {
     entries.push({
       at: input.accountCreatedAt,
       title: "Made a parent account",
-      detail: "Agreed to the Terms and Privacy Policy",
+      detail: termsAccepted ? TERMS_ACCEPTANCE_TITLE : "",
     });
   }
   for (const consent of input.consents) {
@@ -323,7 +334,7 @@ export function buildParentHistory(input: {
       detail: consent.trackLabel,
     });
   }
-  entries.push(...input.events);
+  entries.push(...events);
   return entries.sort((left, right) => Date.parse(left.at) - Date.parse(right.at));
 }
 

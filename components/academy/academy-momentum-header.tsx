@@ -89,7 +89,7 @@ export function AcademyMomentumHeader({
           {trackLabel ? (
             <span
               data-top-bar-track
-              className="min-w-0 truncate font-heading text-[11px] font-bold uppercase tracking-wide text-[#0288A3]"
+              className="min-w-0 truncate font-heading text-[10px] font-bold uppercase tracking-normal text-[#0288A3]"
             >
               {trackLabel}
             </span>

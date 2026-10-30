@@ -14,7 +14,6 @@ import {
   markParentFirstWelcomeSeen,
   shouldShowParentFirstWelcome,
 } from "@/lib/onboarding/parent-first-welcome";
-import { useRecordingSuppressIntro } from "@/lib/recording/use-recording-suppress-intro";
 
 function parentWelcomeKey(
   session: ReturnType<typeof readUserSession>,
@@ -34,8 +33,6 @@ function parentWelcomeKey(
 export function ParentFirstWelcomeModal() {
   const router = useRouter();
   const live = useUserSession();
-  // TODO: remove after recordings
-  const recording = useRecordingSuppressIntro();
   const [open, setOpen] = useState(false);
   const [accountKey, setAccountKey] = useState<string | null>(null);
   const copy = copyMatrix.onboarding.parentFirstWelcome;
@@ -44,13 +41,8 @@ export function ParentFirstWelcomeModal() {
     const session = live ?? readUserSession();
     const key = parentWelcomeKey(session);
     setAccountKey(key);
-    // TODO: remove after recordings — stay closed, and do not mark seen.
-    if (!recording.ready || recording.suppress) {
-      setOpen(false);
-      return;
-    }
     setOpen(Boolean(key && shouldShowParentFirstWelcome(key)));
-  }, [live, recording.ready, recording.suppress]);
+  }, [live]);
 
   function continueIntoApp() {
     if (accountKey) {

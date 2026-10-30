@@ -28,10 +28,6 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-vi.mock("@/lib/email/request-send", () => ({
-  requestOnboardingEmailSend: vi.fn(async () => ({ success: true })),
-}));
-
 vi.mock("@/lib/onboarding/registered-accounts", () => ({
   REGISTERED_ACCOUNTS_STORAGE_KEY: "nga_registered_accounts_v1",
   upsertRegisteredAccount: vi.fn(),
@@ -259,22 +255,9 @@ describe("guest device progress", () => {
 });
 
 describe("signup progress carry-over", () => {
-  it("holds Explorer progress on the device until approval, including the pending email branch", async () => {
+  it("holds Explorer progress on the device until approval", async () => {
     seedGuestPlay("explorer");
-
-    await finalizeRegisteredSignup(registeredChild("explorer", "PENDING_CONSENT"), {
-      explorerConsentToken: "consent-token",
-    });
-
-    expect(saveLearnerProgressForUser).not.toHaveBeenCalled();
-    expect(readGuestProgressSnapshot()?.heldForConsent).toBe(true);
-
-    saveLearnerProgressForUser.mockClear();
-    installWindow();
-    seedGuestPlay("explorer");
-    await finalizeRegisteredSignup(registeredChild("explorer", "PENDING_CONSENT"), {
-      skipEmail: true,
-    });
+    await finalizeRegisteredSignup(registeredChild("explorer", "PENDING_CONSENT"));
 
     expect(saveLearnerProgressForUser).not.toHaveBeenCalled();
     expect(readGuestProgressSnapshot()?.heldForConsent).toBe(true);
@@ -285,9 +268,7 @@ describe("signup progress carry-over", () => {
     );
 
     saveUserSession(registeredChild("explorer", "ACTIVE"));
-    await finalizeRegisteredSignup(registeredChild("explorer", "ACTIVE"), {
-      skipEmail: true,
-    });
+    await finalizeRegisteredSignup(registeredChild("explorer", "ACTIVE"));
 
     expect(saveLearnerProgressForUser).toHaveBeenCalledTimes(1);
     const payload = saveLearnerProgressForUser.mock.calls[0]?.[1] as AccountProgressPayload;
@@ -300,9 +281,7 @@ describe("signup progress carry-over", () => {
 
   it("does not upload learner progress while an Explorer is still pending", async () => {
     seedGuestPlay("explorer");
-    await finalizeRegisteredSignup(registeredChild("explorer", "PENDING_CONSENT"), {
-      skipEmail: true,
-    });
+    await finalizeRegisteredSignup(registeredChild("explorer", "PENDING_CONSENT"));
     saveLearnerProgressForUser.mockClear();
 
     await persistRegisteredProgressNow();
@@ -316,9 +295,7 @@ describe("signup progress carry-over", () => {
       saveLearnerProgressForUser.mockClear();
       seedGuestPlay(cohort);
 
-      await finalizeRegisteredSignup(registeredChild(cohort, "ACTIVE"), {
-        skipEmail: true,
-      });
+      await finalizeRegisteredSignup(registeredChild(cohort, "ACTIVE"));
 
       expect(saveLearnerProgressForUser).toHaveBeenCalledTimes(1);
       expect(readGuestProgressSnapshot()).toBeNull();

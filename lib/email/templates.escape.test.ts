@@ -5,7 +5,6 @@ import {
   buildAccountDeletedMasterEmail,
   buildCredentialRecoveryEmail,
   buildExplorerParentEmail,
-  buildFriendInviteEmail,
   buildMaverickWelcomeEmail,
   buildParentPinResetEmail,
   buildParentWelcomeEmail,
@@ -189,8 +188,7 @@ describe("preview and production app hosts", () => {
     const welcome = buildParentWelcomeEmail({ username: "River" });
     const pin = buildParentPinResetEmail({ token: "tok" });
     const password = buildCredentialRecoveryEmail({ label: "River", token: "tok" });
-    const invite = buildFriendInviteEmail({});
-    for (const built of [approval, welcome, pin, password, invite]) {
+    for (const built of [approval, welcome, pin, password]) {
       expect(linkText(built)).toContain(PRODUCTION_ORIGIN);
       expect(linkText(built)).not.toContain(BRANCH_HOST);
       expect(linkText(built)).not.toContain(OTHER_HOST);
@@ -199,7 +197,6 @@ describe("preview and production app hosts", () => {
     expect(welcome.text).toContain(`${PRODUCTION_ORIGIN}/dashboard/settings/account`);
     expect(pin.text).toContain(`${PRODUCTION_ORIGIN}/onboarding/reset-pin`);
     expect(password.text).toContain(`${PRODUCTION_ORIGIN}/onboarding/reset-password`);
-    expect(invite.text).toContain(`${PRODUCTION_ORIGIN}/`);
   });
 
   it("trusts this preview's own hosts and builds email links from the branch host", () => {
@@ -232,8 +229,7 @@ describe("preview and production app hosts", () => {
       { label: "River", token: "tok" },
       PRODUCTION_ORIGIN,
     );
-    const invite = buildFriendInviteEmail({}, PRODUCTION_ORIGIN);
-    for (const built of [approval, welcome, pin, password, invite]) {
+    for (const built of [approval, welcome, pin, password]) {
       expect(linkText(built)).toContain(branchOrigin);
       expect(linkText(built)).not.toContain(OTHER_HOST);
       expect(linkText(built)).not.toContain(PRODUCTION_ORIGIN);
@@ -339,7 +335,7 @@ describe("account-deleted email contact", () => {
 describe("public email send policy", () => {
   it("only allows stored consent types", () => {
     expect(isPublicConsentEmailType("EXPLORER_PARENT")).toBe(true);
-    expect(isPublicConsentEmailType("FRIEND_INVITE")).toBe(false);
+    expect(isPublicConsentEmailType("EXPLORER_PARENT_RESEND")).toBe(false);
     expect(isPublicConsentEmailType("USERNAME_RECOVERY")).toBe(false);
     expect(isPublicConsentEmailType("PARENT_WELCOME")).toBe(false);
     expect(storedConsentMatchesEmailType("EXPLORER_PARENT", "vpc")).toBe(true);

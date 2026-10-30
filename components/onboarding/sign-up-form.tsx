@@ -765,7 +765,7 @@ export function SignUpForm() {
         supabaseUserId: result.userId,
         curriculumCohort: savedCohort,
       });
-      await finalizeRegisteredSignup(childSession, { skipEmail: true });
+      await finalizeRegisteredSignup(childSession);
       succeeded = true;
 
       if (isPendingConsent) {

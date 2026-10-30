@@ -151,9 +151,6 @@ export const copyMatrix = {
           "You're in a temporary session. Create an account to keep this progress.",
         guestCreateParent: "Create parent account",
         guestSaveLearner: "Save learner progress",
-        pendingHeading: "Waiting to link",
-        pendingHint:
-          "These learners asked for approval with your email. Link them here, or use the email approval link.",
         linkingProfile: "Approving…",
         deleteChild: "Delete account",
         deleteChildNamed: "Delete {username} account",

@@ -188,7 +188,7 @@ export async function syncLocalSessionWithSupabaseAccount(): Promise<UserSession
     if (current) {
       const applied = applyLearnerAccountSnapshot(current, { existing: local });
       if (applied.accessMode === "registered") {
-        await finalizeRegisteredSignup(applied, { skipEmail: true });
+        await finalizeRegisteredSignup(applied);
         return readUserSession() ?? applied;
       }
     }
@@ -206,7 +206,7 @@ export async function syncLocalSessionWithSupabaseAccount(): Promise<UserSession
         applied.consentApprovedAt !== local.consentApprovedAt ||
         applied.supabaseUserId !== local.supabaseUserId
       ) {
-        await finalizeRegisteredSignup(applied, { skipEmail: true });
+        await finalizeRegisteredSignup(applied);
         return readUserSession() ?? applied;
       }
       return applied;

@@ -6,7 +6,6 @@
  */
 export const PUBLIC_CONSENT_EMAIL_TYPES = [
   "EXPLORER_PARENT",
-  "EXPLORER_PARENT_RESEND",
   "PATHFINDER_PARENT",
 ] as const;
 

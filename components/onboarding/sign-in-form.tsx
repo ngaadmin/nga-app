@@ -246,7 +246,7 @@ export function SignInForm() {
           existing,
           password: trimmedCredential,
         });
-        await finalizeRegisteredSignup(session, { skipEmail: true });
+        await finalizeRegisteredSignup(session);
         await restoreRegisteredAccountProgress({
           userId: remote.account.userId,
           username: remote.account.username,

@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       type: body.type,
       recipientEmail: stored.request.parentEmail,
       data:
-        body.type === "EXPLORER_PARENT" || body.type === "EXPLORER_PARENT_RESEND"
+        body.type === "EXPLORER_PARENT"
           ? {
               ...approvalData,
               track: stored.request.cohort ?? "explorer",

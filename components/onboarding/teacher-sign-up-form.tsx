@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PrivacyPolicyLink } from "@/components/legal/privacy-policy-link";
+import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { Button } from "@/components/ui/button";
 import { CohortTrackField } from "@/components/onboarding/cohort-track-field";
 import { OnboardingHeader } from "@/components/onboarding/onboarding-header";
@@ -28,6 +29,7 @@ export function TeacherSignUpForm() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [checkEmailFor, setCheckEmailFor] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -47,6 +49,7 @@ export function TeacherSignUpForm() {
       setErrors(next);
       return;
     }
+    if (!termsAccepted) return;
 
     setIsSubmitting(true);
     setErrors({});
@@ -55,6 +58,7 @@ export function TeacherSignUpForm() {
         email: trimmedEmail,
         password,
         classCohort,
+        termsAccepted: true,
       });
       if (!result.success) {
         setErrors({ form: result.error });
@@ -156,12 +160,23 @@ export function TeacherSignUpForm() {
                 </p>
               ) : null}
             </div>
+            <TermsConsentCheckbox
+              id="teacher-terms-consent"
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              disabled={isSubmitting}
+            />
             {errors.form ? (
               <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.form}
               </p>
             ) : null}
-            <Button type="submit" variant="cta" fullWidth disabled={isSubmitting}>
+            <Button
+              type="submit"
+              variant="cta"
+              fullWidth
+              disabled={isSubmitting || !termsAccepted}
+            >
               {isSubmitting ? "Creating…" : "Create account"}
             </Button>
           </form>

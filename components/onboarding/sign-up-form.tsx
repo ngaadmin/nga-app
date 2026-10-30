@@ -6,6 +6,8 @@ import Link from "next/link";
 import { LearnerBirthYearField, learnerFieldClass } from "@/components/onboarding/learner-birth-year-field";
 import { LEARNER_SIGNUP_BAR_CLASS } from "@/components/onboarding/learner-signup-bar";
 import { LearnerTrackCards } from "@/components/onboarding/learner-track-cards";
+import { LearnerTermsArea } from "@/components/onboarding/learner-terms-area";
+import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
@@ -198,6 +200,8 @@ export function SignUpForm() {
   const [parentEmail, setParentEmail] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [parentalConsentGiven, setParentalConsentGiven] = useState(false);
+  // Terms tick box: adults and approving parents only, never under-16s.
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [pendingConsent, setPendingConsent] =
     useState<PendingParentConsent | null>(null);
@@ -566,12 +570,15 @@ export function SignUpForm() {
 
   async function handleExplicitApprove() {
     if (!consentToken || explicitApprovalInFlightRef.current) return;
+    if (!termsAccepted) return;
     explicitApprovalInFlightRef.current = true;
     setIsCreatingParentMaster(true);
     setErrors((prev) => ({ ...prev, form: undefined }));
 
     try {
-      const approved = await approveConsentRequest(consentToken);
+      const approved = await approveConsentRequest(consentToken, {
+        termsAccepted: true,
+      });
       if (approved.success) {
         setApprovalSavedUsername(approved.childUsername);
         setNeedsExplicitApproval(false);
@@ -594,6 +601,7 @@ export function SignUpForm() {
     if (!consentToken || !pendingConsent || !parentMasterFlow || !validate()) {
       return;
     }
+    if (!termsAccepted) return;
     if (parentMasterInFlightRef.current) return;
     parentMasterInFlightRef.current = true;
     setIsCreatingParentMaster(true);
@@ -606,6 +614,7 @@ export function SignUpForm() {
         username: username.trim(),
         password: password.trim(),
         marketingOptIn,
+        termsAccepted: true,
       });
 
       if (!result.success) {
@@ -667,6 +676,7 @@ export function SignUpForm() {
     }
 
     if (approvalEmailInFlightRef.current) return;
+    if (!needsParentApproval && !termsAccepted) return;
 
     let nextErrors: FormErrors = {};
     try {
@@ -714,6 +724,8 @@ export function SignUpForm() {
         learnerEmail: needsLearnerEmail ? learnerEmail.trim() : undefined,
         parentEmail: needsParentApproval ? parentEmail.trim() : undefined,
         marketingOptIn: false,
+        // Under 16: no Terms value at all. The parent agrees when approving.
+        ...(needsParentApproval ? {} : { termsAccepted: true }),
       });
 
       if (!result.success) {
@@ -842,6 +854,13 @@ export function SignUpForm() {
                 Approve {childName}&apos;s account?
               </p>
             ) : null}
+            <TermsConsentCheckbox
+              id="approve-terms-consent"
+              className="text-left"
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              disabled={isCreatingParentMaster}
+            />
             {errors.form ? (
               <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.form}
@@ -865,7 +884,7 @@ export function SignUpForm() {
                   onClick={() => {
                     void handleExplicitApprove();
                   }}
-                  disabled={isCreatingParentMaster}
+                  disabled={isCreatingParentMaster || !termsAccepted}
                   aria-busy={isCreatingParentMaster || undefined}
                 >
                   {isCreatingParentMaster ? "Approving…" : "Confirm"}
@@ -889,7 +908,7 @@ export function SignUpForm() {
                   variant="cta"
                   fullWidth
                   onClick={() => setConfirmExplicitApproval(true)}
-                  disabled={isCreatingParentMaster}
+                  disabled={isCreatingParentMaster || !termsAccepted}
                 >
                   Approve
                 </Button>
@@ -1154,12 +1173,20 @@ export function SignUpForm() {
               </span>
             </label>
 
+            <TermsConsentCheckbox
+              id="parent-master-terms-consent"
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              disabled={isCreatingParentMaster}
+            />
+
             <Button
               type="submit"
               variant="cta"
               fullWidth
               disabled={
                 isCreatingParentMaster ||
+                !termsAccepted ||
                 (isExplorerConsentFlow && !parentalConsentGiven)
               }
               aria-busy={isCreatingParentMaster || undefined}
@@ -1453,6 +1480,15 @@ export function SignUpForm() {
             </>
           ) : null}
 
+          {learnerStep === "emails" ? (
+            <LearnerTermsArea
+              needsParentApproval={needsParentApproval}
+              termsAccepted={termsAccepted}
+              onTermsAcceptedChange={setTermsAccepted}
+              disabled={isSendingApprovalEmail}
+            />
+          ) : null}
+
           {errors.form ? (
             <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.form}
@@ -1470,7 +1506,10 @@ export function SignUpForm() {
                   type="submit"
                   variant="cta"
                   fullWidth
-                  disabled={isSendingApprovalEmail}
+                  disabled={
+                    isSendingApprovalEmail ||
+                    (!needsParentApproval && !termsAccepted)
+                  }
                   aria-busy={isSendingApprovalEmail || undefined}
                 >
                   {needsParentApproval

@@ -15,6 +15,11 @@ import {
   RESERVED_GUEST_USERNAME_ERROR,
 } from "@/lib/onboarding/reserved-guest-username";
 import { planLearnerSignup } from "@/lib/onboarding/signup-age-check";
+import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
+import {
+  checkTermsAcceptance,
+  type TermsAudience,
+} from "@/lib/legal/terms-consent";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { normalizeEmailAddress } from "@/lib/validation/email";
 
@@ -69,6 +74,11 @@ export type CreateSupabaseAccountInput = {
    * create the child as already approved, and link `parent_child`.
    */
   parentInitiatedById?: string | null;
+  /**
+   * Terms tick box. Required (`true`) for a 16+ learner signing themselves
+   * up. Must be left out for an under-16 learner and a parent-added child.
+   */
+  termsAccepted?: boolean;
 };
 
 export type CreateSupabaseAccountResult =
@@ -114,6 +124,17 @@ export async function createSupabaseAccount(
     sendParentConsentEmail,
     sendLearnerWelcomeEmail,
   } = parsed.value;
+
+  const terms = checkTermsAcceptance({
+    audience: learnerTermsAudience({
+      parentInitiated,
+      parentApprovalRequired: ageCheck?.parentApprovalRequired ?? true,
+    }),
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
   const accountStatus = toSupabaseAccountStatus(plannedStatus);
   const accountRole = "child" as const;
   const approvedAt = parentInitiated ? new Date().toISOString() : null;
@@ -196,6 +217,14 @@ export async function createSupabaseAccount(
     return { success: false, error: profileSaved.error };
   }
 
+  if (terms.record) {
+    const recorded = await recordTermsAcceptance(admin, created.userId);
+    if (!recorded.ok) {
+      await admin.auth.admin.deleteUser(created.userId);
+      return { success: false, error: recorded.error };
+    }
+  }
+
   if (claimedParentId) {
     const linked = await linkParentChild(admin, claimedParentId, created.userId);
     if (!linked.ok) {
@@ -268,6 +297,15 @@ export async function createSupabaseAccount(
     accountStatus,
     authEmail: created.authEmail,
   };
+}
+
+/** Only a 16+ learner signing themselves up can agree to the Terms. */
+function learnerTermsAudience(input: {
+  parentInitiated: boolean;
+  parentApprovalRequired: boolean;
+}): TermsAudience {
+  if (input.parentInitiated) return "child_added_by_parent";
+  return input.parentApprovalRequired ? "under16_learner" : "can_agree";
 }
 
 type ParsedSignup = {

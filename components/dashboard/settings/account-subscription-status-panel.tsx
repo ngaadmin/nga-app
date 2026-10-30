@@ -30,6 +30,7 @@ import {
 } from "@/lib/onboarding/guest-session";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { notifyAccountDeletedChild } from "@/lib/onboarding/issue-account-deleted-email";
+import { resolveSelfDeleteNoticeRecipient } from "@/lib/onboarding/self-delete-notice-recipient";
 import { approvePendingLearnerAccount } from "@/lib/onboarding/parent-consent-pending";
 import {
   deleteMasterAccountCascade,
@@ -525,12 +526,10 @@ export function AccountSubscriptionStatusPanel() {
       }
 
       const account = findRegisteredAccountByUsername(pendingDelete.username);
-      const noticeEmail =
-        household.householdEmail ??
-        account?.parentEmail ??
-        account?.learnerEmail ??
-        account?.email ??
-        null;
+      const noticeEmail = resolveSelfDeleteNoticeRecipient({
+        householdEmail: household.householdEmail,
+        account,
+      });
       if (noticeEmail) {
         void notifyAccountDeletedChild({
           recipientEmail: noticeEmail,

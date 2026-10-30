@@ -61,6 +61,10 @@ import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
 } from "@/lib/onboarding/registered-accounts";
+import {
+  resolveSignupFailureMessage,
+  USERNAME_TAKEN_ERROR,
+} from "@/lib/onboarding/signup-failure-message";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
@@ -71,50 +75,6 @@ const INVALID_EMAIL_ERROR =
   "Please enter a valid email address (e.g. name@example.com).";
 const SAME_EMAIL_ERROR =
   "Please enter a parent or guardian's email address that is different from your own.";
-const USERNAME_TAKEN_ERROR =
-  "That username is already taken. Try adding a favorite number!";
-
-function resolveSignupFailureMessage(error: unknown, isExplorer: boolean): string {
-  const message = error instanceof Error ? error.message.trim() : "";
-
-  if (message) {
-    if (/username is already taken/i.test(message)) {
-      return USERNAME_TAKEN_ERROR;
-    }
-    if (/too many approval|too many email|try again shortly|wait about a minute/i.test(message)) {
-      return message;
-    }
-    if (
-      /parent approval email|parent or guardian email|valid parent|approval link|approval-link/i.test(
-        message,
-      )
-    ) {
-      return message;
-    }
-    if (/consent token signature|consent token email|consent token username/i.test(message)) {
-      return "We could not verify the approval link for this Explorer. Please try sending again.";
-    }
-    if (/password must be at least 6|password \(at least 6\)/i.test(message)) {
-      return "Use at least 6 characters for your password.";
-    }
-    if (/learner email/i.test(message)) {
-      return message;
-    }
-    if (/Username is required|Pick a username/i.test(message)) {
-      return isExplorer
-        ? "Pick a username for your Explorer profile."
-        : "Pick a username for your account.";
-    }
-    // Prefer the thrown message when it is already user-facing.
-    if (message.length <= 180 && !/finalizeRegisteredSignup|requires a registered/i.test(message)) {
-      return message;
-    }
-  }
-
-  return isExplorer
-    ? "We could not start parent approval for this Explorer profile. Check your details and try again."
-    : "We could not create your profile. Check your details and try again.";
-}
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
@@ -186,6 +146,7 @@ export function SignUpForm() {
     birthYear,
     under16PathReached,
   });
+  const signupFailureContext = { isExplorer, needsParentApproval };
   const needsLearnerEmail =
     isPathfinder ||
     isMaverick ||
@@ -635,7 +596,10 @@ export function SignUpForm() {
       succeeded = true;
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
-      const message = resolveSignupFailureMessage(error, false);
+      const message = resolveSignupFailureMessage(error, {
+        isExplorer: false,
+        needsParentApproval: false,
+      });
       setErrors({
         form: /could not create your profile/i.test(message)
           ? "We could not create your parent master profile. Check your details and try again."
@@ -673,7 +637,7 @@ export function SignUpForm() {
       nextErrors = collectValidationErrors();
     } catch {
       setErrors({
-        form: resolveSignupFailureMessage(new Error(""), isExplorer),
+        form: resolveSignupFailureMessage(new Error(""), signupFailureContext),
       });
       return;
     }
@@ -746,7 +710,7 @@ export function SignUpForm() {
         }
         setErrors((prev) => ({
           ...prev,
-          form: resolveSignupFailureMessage(new Error(result.error), isExplorer),
+          form: resolveSignupFailureMessage(new Error(result.error), signupFailureContext),
         }));
         return;
       }
@@ -778,7 +742,7 @@ export function SignUpForm() {
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        form: resolveSignupFailureMessage(error, isExplorer),
+        form: resolveSignupFailureMessage(error, signupFailureContext),
       }));
     } finally {
       if (!succeeded) {

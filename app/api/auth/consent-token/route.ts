@@ -100,7 +100,9 @@ async function handleResend(
     return NextResponse.json(
       {
         success: false,
-        error: "Parent approval resend is only available for Explorer profiles.",
+        // kind "vpc" is the parent approval request for every under-16 track
+        // (Explorer, Pathfinder and Maverick). Never name a cohort here.
+        error: "Parent approval resend is only available for profiles waiting for parent approval.",
       },
       { status: 400 },
     );

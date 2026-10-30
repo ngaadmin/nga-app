@@ -1,11 +1,18 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ExplorerPendingConsentView } from "@/components/onboarding/explorer-pending-consent-view";
+import { DeclinedNoticeDialog } from "@/components/onboarding/parent-decline-dialogs";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { isDevAcademyDesignShellPath } from "@/lib/academy/lessons/lesson-availability";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { shouldBlockExplorerPendingPlay } from "@/lib/onboarding/explorer-pending-consent";
+import { ONBOARDING_START_PATH } from "@/lib/onboarding/guest-session";
+import { signOutApp } from "@/lib/onboarding/sign-out";
+
+/** Where a declined learner goes after closing the notice: a fresh sign-up start. */
+export const DECLINED_LEARNER_CLOSE_PATH = `${ONBOARDING_START_PATH}?fresh=1`;
 
 /** Blocks Academy and other dashboard play until Explorer VPC is approved. */
 export function ExplorerPendingConsentGate({
@@ -14,12 +21,25 @@ export function ExplorerPendingConsentGate({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const session = useUserSession();
+  const [leaving, setLeaving] = useState(false);
   const declined =
     session?.accessMode === "registered" && session.accountStatus === "DECLINED";
   const blocking =
     !isDevAcademyDesignShellPath(pathname) &&
     (declined || shouldBlockExplorerPendingPlay(session));
+
+  async function closeDeclined() {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      // The account is being deleted, so leave it fully on this device too.
+      await signOutApp();
+    } finally {
+      router.replace(DECLINED_LEARNER_CLOSE_PATH);
+    }
+  }
 
   return (
     <>
@@ -28,34 +48,24 @@ export function ExplorerPendingConsentGate({
       ) : (
         children
       )}
-      <ModalShell
-        isOpen={blocking}
-        dismissOnBackdrop={false}
-        role="alertdialog"
-        align="center"
-        labelledBy="explorer-pending-heading"
-        describedBy="explorer-pending-body"
-        panelClassName="rounded-nga-xl border-2 border-[#BDE9FB] bg-white p-6 shadow-nga-pop"
-      >
-        {declined ? (
-          <div className="space-y-4 text-center">
-            <h1
-              id="explorer-pending-heading"
-              className="font-heading text-3xl font-extrabold leading-tight text-nga-primary"
-            >
-              Your account wasn&apos;t approved
-            </h1>
-            <p
-              id="explorer-pending-body"
-              className="font-sans text-sm leading-relaxed text-nga-ink"
-            >
-              Your account manager didn&apos;t approve this profile. You can close this and try again later with them.
-            </p>
-          </div>
-        ) : (
+      {declined ? (
+        <DeclinedNoticeDialog
+          isOpen={blocking && !leaving}
+          onClose={() => void closeDeclined()}
+        />
+      ) : (
+        <ModalShell
+          isOpen={blocking}
+          dismissOnBackdrop={false}
+          role="alertdialog"
+          align="center"
+          labelledBy="explorer-pending-heading"
+          describedBy="explorer-pending-body"
+          panelClassName="rounded-nga-xl border-2 border-[#BDE9FB] bg-white p-6 shadow-nga-pop"
+        >
           <ExplorerPendingConsentView approved={false} session={session} />
-        )}
-      </ModalShell>
+        </ModalShell>
+      )}
     </>
   );
 }

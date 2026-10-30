@@ -4,6 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
+import {
+  DeclinedNoticeDialog,
+  ParentDeclineConfirmDialog,
+} from "@/components/onboarding/parent-decline-dialogs";
+import {
+  useParentDeclineFlow,
+  type ParentDeclineOutcome,
+} from "@/lib/onboarding/use-parent-decline-flow";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { signOutApp } from "@/lib/onboarding/sign-out";
@@ -345,24 +353,34 @@ export function AccountSubscriptionStatusPanel() {
   }
 
   const [confirmApproveUsername, setConfirmApproveUsername] = useState<string | null>(null);
+  const declineFlow = useParentDeclineFlow<string>(declineChildConfirmed);
 
   function handleApproveChild(username: string) {
     setConfirmApproveUsername(username);
   }
 
-  async function handleDeclineChild(username: string) {
+  /** Decline tapped: only opens the "Are you sure?" dialog. */
+  function handleDeclineChild(username: string) {
     const item = pendingItemForUsername(username);
     if (!item.requestId) {
       setApproveError("This profile can't be declined from here.");
       return;
     }
-    setApprovingUsername(username);
     setApproveError(null);
+    declineFlow.requestDecline(username);
+  }
+
+  /** Runs only after the parent confirms. The server declines and deletes. */
+  async function declineChildConfirmed(username: string): Promise<ParentDeclineOutcome> {
+    const item = pendingItemForUsername(username);
+    if (!item.requestId) {
+      return { ok: false, error: "This profile can't be declined from here." };
+    }
+    setApprovingUsername(username);
     try {
       const declined = await declineConsentRequestInApp(item.requestId);
       if (!declined.success) {
-        setApproveError(declined.error);
-        return;
+        return { ok: false, error: declined.error };
       }
       const key = usernameKey(username);
       setRemotePending((current) =>
@@ -370,13 +388,16 @@ export function AccountSubscriptionStatusPanel() {
       );
       setHousehold((current) => ({
         ...current,
-        children: current.children.map((child) =>
-          usernameKey(child.username) === key
-            ? { ...child, accountStatus: "DECLINED" }
-            : child,
-        ),
+        children: declined.deleted
+          ? current.children.filter((child) => usernameKey(child.username) !== key)
+          : current.children.map((child) =>
+              usernameKey(child.username) === key
+                ? { ...child, accountStatus: "DECLINED" }
+                : child,
+            ),
       }));
       setConfirmApproveUsername(null);
+      return { ok: true };
     } finally {
       setApprovingUsername(null);
     }
@@ -703,7 +724,7 @@ export function AccountSubscriptionStatusPanel() {
                               type="button"
                               className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
                               disabled={approvingUsername === child.username}
-                              onClick={() => void handleDeclineChild(child.username)}
+                              onClick={() => handleDeclineChild(child.username)}
                             >
                               Decline
                             </button>
@@ -802,7 +823,7 @@ export function AccountSubscriptionStatusPanel() {
                           type="button"
                           className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
                           disabled={approvingUsername === item.username}
-                          onClick={() => void handleDeclineChild(item.username)}
+                          onClick={() => handleDeclineChild(item.username)}
                         >
                           Decline
                         </button>
@@ -958,6 +979,12 @@ export function AccountSubscriptionStatusPanel() {
         </>
         )}
       </div>
+
+      <ParentDeclineConfirmDialog flow={declineFlow} />
+      <DeclinedNoticeDialog
+        isOpen={declineFlow.isDeclinedOpen}
+        onClose={declineFlow.closeDeclined}
+      />
 
       <DeleteLearnerConfirmSheet
         isOpen={pendingDelete?.kind === "child"}

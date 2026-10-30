@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { lookupConsentRequestByToken } from "@/lib/onboarding/lookup-consent-request";
+import { deleteDeclinedLearner } from "@/lib/privacy/delete-declined-learner";
 import {
   findAuthUserIdByEmail,
   findParentMasterByEmail,
@@ -588,13 +589,23 @@ function isUniqueViolation(error: { code?: string; message?: string }): boolean 
 }
 
 export type DeclineConsentResult =
-  | { success: true; childUsername: string }
+  | {
+      success: true;
+      childUsername: string;
+      /**
+       * True when the learner's records were deleted straight away. False
+       * when that step failed: the profile stays declined and the 30-day
+       * unapproved-account job removes it later.
+       */
+      deleted: boolean;
+    }
   | { success: false; error: string };
 
 /**
- * Parent declines a pending learner. The profile stays, marked declined, and
- * the existing 30-day unapproved-account job removes it later. Nothing is
- * deleted here.
+ * Parent declines a pending learner, after confirming on screen. The profile
+ * is marked declined, then deleted with the same steps the 30-day
+ * unapproved-account job uses (only that learner's own records). If the
+ * delete step fails, the 30-day job still removes it.
  */
 export async function declineConsentRequest(token: string): Promise<DeclineConsentResult> {
   const lookup = await lookupConsentRequestByToken(token);
@@ -676,6 +687,22 @@ async function markChildDeclined(input: {
   childId: string;
   childUsername: string;
 }): Promise<DeclineConsentResult> {
+  const marked = await markChildDeclinedOnly(input);
+  if (!marked.success) return marked;
+  const deletion = await deleteDeclinedLearner(input.childId);
+  if (!deletion.deleted) {
+    console.error("[decline] immediate delete did not run", {
+      reason: deletion.reason,
+    });
+  }
+  return { ...marked, deleted: deletion.deleted };
+}
+
+async function markChildDeclinedOnly(input: {
+  requestId: string;
+  childId: string;
+  childUsername: string;
+}): Promise<{ success: true; childUsername: string } | { success: false; error: string }> {
   const admin = createAdminClient();
   const { data: child } = await admin
     .from("profiles")

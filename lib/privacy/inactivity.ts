@@ -133,6 +133,30 @@ export function isUnapprovedLearnerAccount(account: ActivityAccount): boolean {
 }
 
 /**
+ * How one never-approved learner account is deleted: through the parent link
+ * when there is one, otherwise on its own. Shared by the 30-day job and by a
+ * parent's confirmed decline, so both use the same deletion steps.
+ * Returns null for any account that is not an unapproved learner.
+ */
+export function planUnapprovedAccountDeletion(
+  account: ActivityAccount,
+): Extract<PlannedDeletion, { kind: "linked-child" | "standalone" }> | null {
+  if (!isUnapprovedLearnerAccount(account)) return null;
+  if (account.parentId) {
+    return {
+      kind: "linked-child",
+      parentId: account.parentId,
+      childId: account.id,
+    };
+  }
+  return {
+    kind: "standalone",
+    userId: account.id,
+    username: account.username.trim(),
+  };
+}
+
+/**
  * Delete never-approved learner accounts 30 days after they were created.
  */
 export function selectUnapprovedAccountDeletions(
@@ -147,19 +171,8 @@ export function selectUnapprovedAccountDeletions(
     if (created === null || nowMs - created < PENDING_UNAPPROVED_DELETE_AFTER_MS) {
       continue;
     }
-    if (account.parentId) {
-      planned.push({
-        kind: "linked-child",
-        parentId: account.parentId,
-        childId: account.id,
-      });
-      continue;
-    }
-    planned.push({
-      kind: "standalone",
-      userId: account.id,
-      username: account.username.trim(),
-    });
+    const item = planUnapprovedAccountDeletion(account);
+    if (item) planned.push(item);
   }
   return planned.sort((left, right) =>
     unapprovedDeletionId(left).localeCompare(unapprovedDeletionId(right)),

@@ -8,6 +8,10 @@ import { LEARNER_SIGNUP_BAR_CLASS } from "@/components/onboarding/learner-signup
 import { LearnerTrackCards } from "@/components/onboarding/learner-track-cards";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
+import {
+  DeclinedNoticeDialog,
+  ParentDeclineConfirmDialog,
+} from "@/components/onboarding/parent-decline-dialogs";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
@@ -33,6 +37,7 @@ import {
   DASHBOARD_ACADEMY_PATH,
   DASHBOARD_SETTINGS_ACCOUNT_PATH,
   isGuestSession,
+  ONBOARDING_ENTRY_PATH,
   ONBOARDING_PARENT_CONSENT_PATH,
   ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_LEARNER_PATH,
@@ -57,6 +62,10 @@ import {
   type PendingParentConsent,
 } from "@/lib/onboarding/parent-consent-pending";
 import { parentLinkResultHeading } from "@/lib/onboarding/parent-link-result";
+import {
+  useParentDeclineFlow,
+  type ParentDeclineOutcome,
+} from "@/lib/onboarding/use-parent-decline-flow";
 import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
@@ -218,6 +227,7 @@ export function SignUpForm() {
   const explicitApprovalInFlightRef = useRef(false);
   const parentMasterInFlightRef = useRef(false);
   const skipSubmitRef = useRef(false);
+  const declineFlow = useParentDeclineFlow<string>(handleExplicitDecline);
   const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
   const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
 
@@ -538,26 +548,32 @@ export function SignUpForm() {
     return Object.keys(next).length === 0;
   }
 
-  async function handleExplicitDecline() {
-    if (!consentToken || explicitApprovalInFlightRef.current) return;
+  /**
+   * Runs only after the parent confirms in the "Are you sure?" dialog.
+   * The server marks the learner declined and deletes their records.
+   */
+  async function handleExplicitDecline(token: string): Promise<ParentDeclineOutcome> {
+    if (!token || explicitApprovalInFlightRef.current) {
+      return { ok: false, error: "We could not decline this learner. Try again." };
+    }
     explicitApprovalInFlightRef.current = true;
     setIsCreatingParentMaster(true);
     setErrors((prev) => ({ ...prev, form: undefined }));
     try {
-      const declined = await declineConsentRequest(consentToken);
+      const declined = await declineConsentRequest(token);
       if (!declined.success) {
-        setErrors({
-          form: declined.error || "We could not decline this learner. Try again.",
-        });
-        return;
+        return {
+          ok: false,
+          error: declined.error || "We could not decline this learner. Try again.",
+        };
       }
       setNeedsExplicitApproval(false);
+      setConfirmExplicitApproval(false);
       setPendingConsent(null);
       setParentMasterFlow(null);
       setAccountDeclined(true);
-      setErrors({
-        form: `${declined.childUsername}'s account wasn't approved. It stays closed.`,
-      });
+      setErrors({ form: copyMatrix.onboarding.parentDecline.declinedBody });
+      return { ok: true };
     } finally {
       explicitApprovalInFlightRef.current = false;
       setIsCreatingParentMaster(false);
@@ -878,7 +894,7 @@ export function SignUpForm() {
                   variant="ghost"
                   fullWidth
                   onClick={() => {
-                    void handleExplicitDecline();
+                    if (consentToken) declineFlow.requestDecline(consentToken);
                   }}
                   disabled={isCreatingParentMaster}
                 >
@@ -896,6 +912,7 @@ export function SignUpForm() {
               </div>
             )}
           </div>
+          <ParentDeclineConfirmDialog flow={declineFlow} />
         </section>
       );
     }
@@ -924,6 +941,13 @@ export function SignUpForm() {
               </ButtonLink>
             </div>
           </div>
+          <DeclinedNoticeDialog
+            isOpen={accountDeclined && declineFlow.isDeclinedOpen}
+            onClose={() => {
+              declineFlow.closeDeclined();
+              router.replace(ONBOARDING_ENTRY_PATH);
+            }}
+          />
         </section>
       );
     }

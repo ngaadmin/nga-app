@@ -439,7 +439,25 @@ async function deleteStandalone(admin: Admin, userId: string, username: string):
   if (!auth.ok) throw new Error(auth.error);
 }
 
-async function runDeletion(admin: Admin, planned: PlannedDeletion): Promise<void> {
+export type RunDeletionOptions = {
+  /**
+   * Email the linked parent after a linked child is deleted (A11).
+   * On by default for the scheduled job. A parent's own confirmed decline
+   * turns it off, since they just chose it on screen.
+   */
+  notifyLinkedParent?: boolean;
+};
+
+/**
+ * Carry out one planned deletion with the same steps the daily job uses.
+ * Exported so a parent's confirmed decline reuses it instead of new delete code.
+ */
+export async function runDeletion(
+  admin: Admin,
+  planned: PlannedDeletion,
+  options: RunDeletionOptions = {},
+): Promise<void> {
+  const notifyLinkedParent = options.notifyLinkedParent ?? true;
   switch (planned.kind) {
     case "household":
       await deleteHousehold(admin, planned.parentId);
@@ -454,6 +472,7 @@ async function runDeletion(admin: Admin, planned: PlannedDeletion): Promise<void
         planned.childId,
       );
       if (!result.ok) throw new Error(result.error);
+      if (!notifyLinkedParent) return;
       const { data: parent } = await admin.auth.admin.getUserById(planned.parentId);
       const parentEmail = parent.user?.email?.trim().toLowerCase() ?? "";
       if (parentEmail && result.username) {

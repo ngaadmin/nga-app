@@ -1,3 +1,5 @@
+import { MASTERY_COHORT, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+
 export type OnboardingEmailType =
   | "EXPLORER_PARENT"
   | "EXPLORER_PARENT_RESEND"
@@ -13,7 +15,8 @@ export type OnboardingEmailType =
   | "ACCOUNT_DELETED_CHILD"
   | "INACTIVITY_WARNING"
   | "TEACHER_CLASS_CONFIRM"
-  | "PARENT_PIN_RESET";
+  | "PARENT_PIN_RESET"
+  | "LEARNER_WELCOME";
 
 export type ExplorerParentEmailData = {
   username: string;
@@ -41,11 +44,32 @@ export type PathfinderParentLinkedEmailData = {
   masterUsername?: string;
 };
 
-/** Welcome email to the Pathfinder learner after signup. */
+/** Learner tracks that get a welcome email (Explorers never do). */
+export type LearnerWelcomeCohort = Exclude<MasteryCohort, "explorer">;
+
+export const LEARNER_WELCOME_COHORTS: readonly LearnerWelcomeCohort[] = [
+  "pathfinder",
+  "maverick",
+];
+
+/** Welcome email to a Pathfinder or Maverick learner after signup. */
+export type LearnerWelcomeEmailData = {
+  username: string;
+  cohort: LearnerWelcomeCohort;
+};
+
+/**
+ * Alias payload for `PATHFINDER_WELCOME`. Routes to
+ * {@link buildLearnerWelcomeEmail} with cohort "pathfinder".
+ */
 export type PathfinderWelcomeEmailData = {
   username: string;
 };
 
+/**
+ * Alias payload for `MAVERICK_WELCOME`. Routes to
+ * {@link buildLearnerWelcomeEmail} with cohort "maverick".
+ */
 export type MaverickWelcomeEmailData = {
   username: string;
 };
@@ -118,6 +142,7 @@ export type OnboardingEmailDataMap = {
   INACTIVITY_WARNING: InactivityWarningEmailData;
   TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
   PARENT_PIN_RESET: ParentPinResetEmailData;
+  LEARNER_WELCOME: LearnerWelcomeEmailData;
 };
 
 export type BuiltEmail = {
@@ -711,80 +736,27 @@ export function buildPathfinderParentLinkedEmail(
   return { subject, preheader, html, text };
 }
 
-export function buildPathfinderWelcomeEmail(
-  data: PathfinderWelcomeEmailData,
+/**
+ * Welcome email to a Pathfinder or Maverick learner after signup.
+ * One template for both tracks. `{cohortName}` comes from the track label in
+ * `MASTERY_COHORT` (pathfinder -> "Pathfinder", maverick -> "Maverick") and is
+ * used in the preheader and as the username fallback. Output is byte-identical
+ * to the former buildPathfinderWelcomeEmail / buildMaverickWelcomeEmail.
+ */
+export function buildLearnerWelcomeEmail(
+  data: LearnerWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = emailPlain(data.username).trim() || "Pathfinder";
+  if (!LEARNER_WELCOME_COHORTS.includes(data.cohort)) {
+    throw new Error(`Unsupported learner welcome cohort: ${String(data.cohort)}`);
+  }
+  const cohortName = MASTERY_COHORT[data.cohort].label;
+  const username = emailPlain(data.username).trim() || cohortName;
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
   const subject = `Welcome to NextGenAchiever$, ${username}`;
-  const preheader = "Your Pathfinder account is ready. Jump into Academy.";
-  const header = "You're in";
-
-  const text = [
-    `Hi ${username},`,
-    "",
-    "Congratulations! You're officially on your way to financial independence.",
-    "",
-    "Did you know? Teens who build money skills early can end up $100,000s ahead of peers who start later.",
-    "",
-    "Get smart with money in the Academy, start your own business in days with Launchpad, or beat your friends in the monthly challenges.",
-    "",
-    "And yes, you can even negotiate with your parents to get paid for the points you earn in the app.",
-    "",
-    "Let's go!",
-    "",
-    `Launch Academy: ${academyUrl}`,
-    "",
-    "The Team at NextGenAchiever$",
-  ].join("\n");
-
-  const html = wrapHtml({
-    header,
-    preheader,
-    bodyInner: `
-      <p style="margin:0 0 16px;font-size:16px;">
-        Hi ${escapeHtml(username)},
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        Congratulations! You&apos;re officially on your way to financial independence.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        Did you know? Teens who build money skills early can end up $100,000s ahead of
-        peers who start later.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        Get smart with money in the Academy, start your own business in days with Launchpad,
-        or beat your friends in the monthly challenges.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        And yes, you can even negotiate with your parents to get paid for the points you
-        earn in the app.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">Let&apos;s go!</p>
-      ${ctaButton("Launch Academy", academyUrl)}
-      ${pennyIllustration()}
-      <p style="margin:24px 0 0;font-size:16px;">
-        The Team at NextGenAchiever$
-      </p>
-    `,
-  });
-
-  return { subject, preheader, html, text };
-}
-
-export function buildMaverickWelcomeEmail(
-  data: MaverickWelcomeEmailData,
-  appUrl?: string,
-): BuiltEmail {
-  const username = emailPlain(data.username).trim() || "Maverick";
-  const base = resolveAppUrl(appUrl);
-  const academyUrl = `${base}/dashboard/academy`;
-
-  const subject = `Welcome to NextGenAchiever$, ${username}`;
-  const preheader = "Your Maverick account is ready. Jump into Academy.";
+  const preheader = `Your ${cohortName} account is ready. Jump into Academy.`;
   const header = "You're in";
 
   const text = [
@@ -1396,13 +1368,13 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
         appUrl,
       );
     case "PATHFINDER_WELCOME":
-      return buildPathfinderWelcomeEmail(
-        data as PathfinderWelcomeEmailData,
+      return buildLearnerWelcomeEmail(
+        { ...(data as PathfinderWelcomeEmailData), cohort: "pathfinder" },
         appUrl,
       );
     case "MAVERICK_WELCOME":
-      return buildMaverickWelcomeEmail(
-        data as MaverickWelcomeEmailData,
+      return buildLearnerWelcomeEmail(
+        { ...(data as MaverickWelcomeEmailData), cohort: "maverick" },
         appUrl,
       );
     case "PARENT_WELCOME":
@@ -1448,6 +1420,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "PARENT_PIN_RESET":
       return buildParentPinResetEmail(
         data as ParentPinResetEmailData,
+        appUrl,
+      );
+    case "LEARNER_WELCOME":
+      return buildLearnerWelcomeEmail(
+        data as LearnerWelcomeEmailData,
         appUrl,
       );
     default: {

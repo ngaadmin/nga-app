@@ -6,7 +6,7 @@ import {
   buildCredentialRecoveryEmail,
   buildExplorerParentEmail,
   buildFriendInviteEmail,
-  buildMaverickWelcomeEmail,
+  buildLearnerWelcomeEmail,
   buildParentPinResetEmail,
   buildParentWelcomeEmail,
   getDefaultAppUrl,
@@ -363,7 +363,10 @@ describe("email app origin", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://nga-app-three.vercel.app";
     expect(getDefaultAppUrl()).toBe("https://app.nextgenachievers.com");
 
-    const welcome = buildMaverickWelcomeEmail({ username: "River" });
+    const welcome = buildLearnerWelcomeEmail({
+      username: "River",
+      cohort: "maverick",
+    });
     const approval = buildExplorerParentEmail({
       username: "River",
       token: "tok",

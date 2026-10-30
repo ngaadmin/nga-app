@@ -1,3 +1,5 @@
+import { displayUsernameOrEmpty } from "@/lib/onboarding/placeholder-username";
+
 export type OnboardingEmailType =
   | "EXPLORER_PARENT"
   | "EXPLORER_PARENT_RESEND"
@@ -433,7 +435,9 @@ export function buildExplorerParentEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
-  const trackPhrase = "the Explorer track, for kids aged 10-13";
+  // No age band: the track is the learner's choice, so a 14- or 15-year-old
+  // can be an Explorer. The birth year is not stored, so the real age is unknown.
+  const trackPhrase = "the Explorer track";
   const trackSentence = `Your child has chosen ${trackPhrase}. And to make their profile official, we need a parent/guardian's approval.`;
 
   const subject = `Your child ${username} wants to build money skills - approval needed`;
@@ -509,6 +513,9 @@ export function buildExplorerParentEmail(
 /**
  * Under-16 Pathfinder and Maverick parent approval email.
  * Explorer keeps the email above. Copy locked by Cath 21 Oct 2026.
+ * "Your teen" became "your child" (draft, 30 Oct 2026): the track is the
+ * learner's choice and the birth year is not stored, so an under-13 can be on
+ * this track. The copy must not assume an age.
  */
 function buildTeenParentApprovalEmail(
   data: ExplorerParentEmailData,
@@ -519,22 +526,22 @@ function buildTeenParentApprovalEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const privacyPolicyUrl = "https://nextgenachievers.com/privacy";
-  const subject = "Your teen wants to start NextGenAchiever$";
-  const preheader = "Please approve your teen's account";
-  const header = "Please approve your teen's account";
+  const subject = "Your child wants to start NextGenAchiever$";
+  const preheader = "Please approve your child's account";
+  const header = "Please approve your child's account";
   const footer =
     "Privacy policy: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia";
 
   const text = [
     "Hi,",
     "",
-    `Your teen has just signed up to NextGenAchiever$ with the username ${username}. Because your teen is under 16, the account stays on hold until a parent approves it.`,
+    `Your child has just signed up to NextGenAchiever$ with the username ${username}. Because your child is under 16, the account stays on hold until a parent approves it.`,
     "",
-    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
+    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your child learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
     "",
     `Approve the account: ${approveUrl}`,
     "",
-    "Once you approve, you'll be your teen's account manager, and you can set a parent PIN in Preferences.",
+    "Once you approve, you'll be your child's account manager, and you can set a parent PIN in Preferences.",
     "",
     "Didn't expect this email? Just ignore it. This link only works for 24 hours.",
     "",
@@ -555,14 +562,14 @@ function buildTeenParentApprovalEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your teen has just signed up to NextGenAchiever$ with the username ${safeName}. Because your teen is under 16, the account stays on hold until a parent approves it.
+        Your child has just signed up to NextGenAchiever$ with the username ${safeName}. Because your child is under 16, the account stays on hold until a parent approves it.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.
+        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your child learns how money works, puts it into practice and manages it with confidence, building money habits for life.
       </p>
       ${ctaButton("Approve the account", approveUrl, "#FFC93C")}
       <p style="margin:0 0 16px;font-size:16px;">
-        Once you approve, you&#39;ll be your teen&#39;s account manager, and you can set a parent PIN in Preferences.
+        Once you approve, you&#39;ll be your child&#39;s account manager, and you can set a parent PIN in Preferences.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         Didn&#39;t expect this email? Just ignore it. This link only works for 24 hours.
@@ -843,7 +850,8 @@ export function buildParentWelcomeEmail(
   data: ParentWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = emailPlain(data.username).trim();
+  // Never greet with an internal `p…` / `u…` stub. Fall back to "Hi there,".
+  const username = displayUsernameOrEmpty(emailPlain(data.username));
   const greeting = username ? `Hi ${username},` : "Hi there,";
   const base = resolveAppUrl(appUrl);
   const accountUrl = `${base}/dashboard/settings/account`;

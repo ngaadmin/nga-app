@@ -68,7 +68,7 @@ describe("email template escaping", () => {
     expect(built.html).not.toContain("#FFC93C");
   });
 
-  it("sends the locked under-16 teen approval copy with an escaped username", () => {
+  it("sends the under-16 Pathfinder/Maverick approval copy with an escaped username", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://nga.example";
     process.env.VERCEL = "1";
     delete process.env.VERCEL_URL;
@@ -82,8 +82,8 @@ describe("email template escaping", () => {
       "https://evil.example/phish",
     );
 
-    expect(built.subject).toBe("Your teen wants to start NextGenAchiever$");
-    expect(built.html).toContain("Please approve your teen&#39;s account");
+    expect(built.subject).toBe("Your child wants to start NextGenAchiever$");
+    expect(built.html).toContain("Please approve your child&#39;s account");
     expect(built.html).toContain("RiverTeen42&lt;script&gt;");
     expect(built.html).toContain("Approve the account");
     expect(built.html).toContain(
@@ -94,7 +94,7 @@ describe("email template escaping", () => {
       "Privacy policy</a>: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia",
     );
     expect(built.text).toContain(
-      "Your teen has just signed up to NextGenAchiever$ with the username RiverTeen42<script>.",
+      "Your child has just signed up to NextGenAchiever$ with the username RiverTeen42<script>.",
     );
     expect(built.text).toContain(
       "the account stays on hold until a parent approves it.",
@@ -274,7 +274,7 @@ describe("preview and production app hosts", () => {
 
 describe("parent approval track line", () => {
   const explorerSentence =
-    "Your child has chosen the Explorer track, for kids aged 10-13. And to make their profile official, we need a parent/guardian's approval.";
+    "Your child has chosen the Explorer track. And to make their profile official, we need a parent/guardian's approval.";
 
   it("renders the Explorer sentence in text and html", () => {
     const built = buildExplorerParentEmail({
@@ -309,11 +309,11 @@ describe("parent approval track line", () => {
         token: "tok",
         track,
       });
-      expect(built.subject).toBe("Your teen wants to start NextGenAchiever$");
+      expect(built.subject).toBe("Your child wants to start NextGenAchiever$");
       expect(built.text).toContain(
-        "Because your teen is under 16, the account stays on hold until a parent approves it.",
+        "Because your child is under 16, the account stays on hold until a parent approves it.",
       );
-      expect(built.text).toContain("you'll be your teen's account manager");
+      expect(built.text).toContain("you'll be your child's account manager");
       expect(built.text).not.toContain("Your child has chosen the");
       expect(built.html).toContain("background: #FFC93C");
       expect(built.html).not.toContain("#FFA503");

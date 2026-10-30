@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { findAuthUserIdByEmail } from "@/lib/onboarding/parent-master-lookup";
 import { normalizeEmailAddress } from "@/lib/validation/email";
+import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
+import { checkTermsAcceptance } from "@/lib/legal/terms-consent";
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -14,6 +16,8 @@ export type CreateParentMasterInput = {
   password: string;
   email: string;
   marketingOptIn?: boolean;
+  /** Terms tick box. Must be `true`. */
+  termsAccepted?: boolean;
 };
 
 export type CreateParentMasterResult =
@@ -35,6 +39,14 @@ export type CreateParentMasterResult =
 export async function createParentMasterAccount(
   input: CreateParentMasterInput,
 ): Promise<CreateParentMasterResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   if (input.password.length < MIN_PASSWORD_LENGTH) {
     return {
       success: false,
@@ -105,6 +117,12 @@ export async function createParentMasterAccount(
       success: false,
       error: profileError?.message || "Could not save the parent profile.",
     };
+  }
+
+  const recorded = await recordTermsAcceptance(admin, parentId);
+  if (!recorded.ok) {
+    await admin.auth.admin.deleteUser(parentId);
+    return { success: false, error: recorded.error };
   }
 
   const parentUsername =

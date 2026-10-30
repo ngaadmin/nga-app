@@ -12,6 +12,7 @@ import {
   useParentDeclineFlow,
   type ParentDeclineOutcome,
 } from "@/lib/onboarding/use-parent-decline-flow";
+import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { signOutApp } from "@/lib/onboarding/sign-out";
@@ -355,8 +356,11 @@ export function AccountSubscriptionStatusPanel() {
 
   const [confirmApproveUsername, setConfirmApproveUsername] = useState<string | null>(null);
   const declineFlow = useParentDeclineFlow<string>(declineChildConfirmed);
+  // Parent ticks the Terms box before approving a child in the app.
+  const [approveTermsAccepted, setApproveTermsAccepted] = useState(false);
 
   function handleApproveChild(username: string) {
+    setApproveTermsAccepted(false);
     setConfirmApproveUsername(username);
   }
 
@@ -454,7 +458,9 @@ export function AccountSubscriptionStatusPanel() {
       let linkedRemotely = false;
       let approvedChild: UserSession | null = null;
       if (item.requestId && isMasterViewer) {
-        const remote = await approveConsentRequestInApp(item.requestId);
+        const remote = await approveConsentRequestInApp(item.requestId, {
+          termsAccepted: true,
+        });
         if (!remote.success) {
           setApproveError(remote.error || copy.approveChildError);
           return;
@@ -854,6 +860,12 @@ export function AccountSubscriptionStatusPanel() {
               <p className="font-sans text-sm font-semibold text-[#031F82]">
                 Approve {confirmApproveUsername}&apos;s account?
               </p>
+              <TermsConsentCheckbox
+                id="in-app-approve-terms-consent"
+                className="mt-2"
+                checked={approveTermsAccepted}
+                onChange={setApproveTermsAccepted}
+              />
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
@@ -865,7 +877,9 @@ export function AccountSubscriptionStatusPanel() {
                 <button
                   type="button"
                   className={approveButtonClass}
+                  disabled={!approveTermsAccepted}
                   onClick={() => {
+                    if (!approveTermsAccepted) return;
                     const username = confirmApproveUsername;
                     setConfirmApproveUsername(null);
                     void handleLinkProfile(pendingItemForUsername(username));

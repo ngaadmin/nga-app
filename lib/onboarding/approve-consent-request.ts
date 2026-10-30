@@ -16,6 +16,8 @@ import {
   isReservedGuestUsername,
   RESERVED_GUEST_USERNAME_ERROR,
 } from "@/lib/onboarding/reserved-guest-username";
+import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
+import { checkTermsAcceptance } from "@/lib/legal/terms-consent";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -45,7 +47,16 @@ export type ApproveConsentResult =
  */
 export async function approveConsentRequest(
   token: string,
+  options: { termsAccepted?: boolean } = {},
 ): Promise<ApproveConsentResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: options.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const lookup = await lookupConsentRequestByToken(token);
   if (lookup.status === "expired") {
     return {
@@ -77,6 +88,7 @@ export async function approveConsentRequest(
     parentId: master.id,
     parentUsername: master.username,
     parentEmail: lookup.request.parentEmail,
+    termsAccepted: options.termsAccepted,
   });
 }
 
@@ -85,6 +97,8 @@ export type CreateParentMasterAndApproveInput = {
   username: string;
   password: string;
   marketingOptIn?: boolean;
+  /** Terms tick box. Must be `true`. */
+  termsAccepted?: boolean;
 };
 
 /**
@@ -94,6 +108,14 @@ export type CreateParentMasterAndApproveInput = {
 export async function createParentMasterAndApprove(
   input: CreateParentMasterAndApproveInput,
 ): Promise<ApproveConsentResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const username = input.username.trim();
   if (!username || !USERNAME_PATTERN.test(username)) {
     return {
@@ -136,6 +158,7 @@ export async function createParentMasterAndApprove(
       parentId: existingMaster.id,
       parentUsername: existingMaster.username,
       parentEmail,
+      termsAccepted: input.termsAccepted,
     });
   }
 
@@ -209,6 +232,7 @@ export async function createParentMasterAndApprove(
     parentId,
     parentUsername: username,
     parentEmail,
+    termsAccepted: input.termsAccepted,
   });
 
   if (!approved.success) {
@@ -365,7 +389,16 @@ export async function listPendingConsentRequestsForParent(): Promise<
  */
 export async function approveConsentRequestInApp(
   requestId: string,
+  options: { termsAccepted?: boolean } = {},
 ): Promise<ApproveConsentResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: options.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const trimmedId = requestId.trim();
   if (!trimmedId) {
     return { success: false, error: "This approval request is missing." };
@@ -440,6 +473,7 @@ export async function approveConsentRequestInApp(
     parentId: user.id,
     parentUsername: profile.username,
     parentEmail: parentEmail || userEmail,
+    termsAccepted: options.termsAccepted,
   });
 }
 
@@ -451,7 +485,18 @@ async function completeConsentApproval(input: {
   parentId: string;
   parentUsername: string;
   parentEmail: string;
+  /** The approving parent ticked the Terms box. Must be `true`. */
+  termsAccepted: boolean | undefined;
 }): Promise<ApproveConsentResult> {
+  // Every approval route ends here, so the Terms rule is enforced here too.
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const admin = createAdminClient();
   const approvedAt = new Date().toISOString();
 
@@ -507,6 +552,12 @@ async function completeConsentApproval(input: {
       success: false,
       error: "This approval link cannot activate this profile.",
     };
+  }
+
+  // Record the parent's Terms agreement before anything is approved.
+  const recorded = await recordTermsAcceptance(admin, input.parentId, approvedAt);
+  if (!recorded.ok) {
+    return { success: false, error: recorded.error };
   }
 
   if (!alreadyActive) {

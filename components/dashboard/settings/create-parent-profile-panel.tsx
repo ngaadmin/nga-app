@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { createParentMasterAccount } from "@/lib/onboarding/create-parent-master";
 import {
@@ -55,6 +56,7 @@ export function CreateParentProfilePanel({
   const [email, setEmail] = useState(existingEmail);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const submitInFlightRef = useRef(false);
 
   function clearError(key: keyof FormErrors) {
@@ -92,6 +94,7 @@ export function CreateParentProfilePanel({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!validate()) return;
+    if (!termsAccepted) return;
     if (submitInFlightRef.current) return;
     submitInFlightRef.current = true;
     setIsSubmitting(true);
@@ -100,6 +103,7 @@ export function CreateParentProfilePanel({
       const result = await createParentMasterAccount({
         password: password.trim(),
         email: email.trim(),
+        termsAccepted: true,
       });
 
       if (!result.success) {
@@ -262,6 +266,13 @@ export function CreateParentProfilePanel({
           ) : null}
         </div>
 
+        <TermsConsentCheckbox
+          id="create-parent-terms-consent"
+          checked={termsAccepted}
+          onChange={setTermsAccepted}
+          disabled={isSubmitting}
+        />
+
         {errors.form ? (
           <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
             {errors.form}
@@ -272,7 +283,7 @@ export function CreateParentProfilePanel({
           type="submit"
           variant="cta"
           fullWidth
-          disabled={isSubmitting}
+          disabled={isSubmitting || !termsAccepted}
           aria-busy={isSubmitting || undefined}
         >
           {isSubmitting ? copy.createParentSubmitting : copy.createParentSubmit}

@@ -398,7 +398,8 @@ describe("explorer module 1 payload", () => {
     const blanks: string[] = [];
     const problems: string[] = [];
     const minBytes = 23 * 1024;
-    const maxBytes = 82 * 1024;
+    // 256 KB fits Cath's approved Lars-fixed Module 1 Explorer art from 30 Oct 2026 (170-211 KB).
+    const maxBytes = 256 * 1024;
 
     for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
       const payload = loadExplorerM1Payload(lessonNumber);

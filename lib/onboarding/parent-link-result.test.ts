@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { parentLinkResultHeading } from "@/lib/onboarding/parent-link-result";
 
 describe("parent link result heading", () => {
-  it("uses Account not approved only after a decline", () => {
-    expect(parentLinkResultHeading("declined")).toBe("Account not approved");
+  it("uses Request declined only after a decline", () => {
+    expect(parentLinkResultHeading("declined")).toBe("Request declined");
   });
 
   it("keeps Parent link unavailable for an invalid or expired link", () => {
@@ -19,7 +19,7 @@ describe("parent link result heading", () => {
     );
     expect(decline).toContain("setAccountDeclined(true)");
     expect(decline).toContain(
-      "`${declined.childUsername}'s account wasn't approved. It stays closed.`",
+      "setErrors({ form: copyMatrix.onboarding.parentDecline.declinedBody })",
     );
     expect(form).toContain(
       'parentLinkResultHeading(accountDeclined ? "declined" : "unavailable")',

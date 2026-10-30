@@ -8,7 +8,7 @@ import {
 import { splitTrailingQualifier } from "@/lib/privacy/split-trailing-qualifier";
 
 describe("privacy policy source", () => {
-  it("publishes the approved policy with the 21 October 2026 date", () => {
+  it("publishes the approved policy dated October 30, 2026", () => {
     const markdown = loadPrivacyPolicyMarkdown();
     const blocks = parsePrivacyMarkdown(markdown);
     const text = blocks
@@ -24,108 +24,52 @@ describe("privacy policy source", () => {
       })
       .join("\n");
 
-    expect(markdown).toContain("**Last updated: 21 October 2026**");
+    expect(markdown.startsWith("# NextGenAchievers app privacy policy\n")).toBe(
+      true,
+    );
+    expect(markdown).toContain("\nPublished October 30, 2026\n");
+    expect(markdown).not.toContain("Last updated");
+    expect(markdown).not.toContain("21 October 2026");
     expect(markdown).not.toContain("[DATE]");
     expect(markdown).not.toContain("[CATH_EMAIL]");
     expect(markdown).not.toContain("## TO CONFIRM");
     expect(markdown).not.toMatch(/\bNGA\b/);
-    expect(text).toContain("21 October 2026");
+    expect(blocks.filter((block) => block.kind === "h2")).toHaveLength(13);
     expect(text).toContain(
-      "An account still waiting for a parent to approve it is deleted after 30 days.",
+      "This page gives the details for the app. It's part of our Privacy policy, which covers the app and our website and forms part of our Terms and Conditions of Service.",
     );
     expect(text).toContain(
-      "A learner who is 16 or over and picks Explorer must give an email address, and we use it only for password resets.",
+      "Every learner who picks Pathfinder or Maverick gives one, including learners under 16, and so does a learner 16 or over who picks Explorer.",
     );
     expect(text).toContain(
-      "This policy covers the app only. Our website has its own policy.",
+      "We don't store it: we keep only whether parent approval was required and when the check happened.",
     );
     expect(text).toContain(
-      "progress (lessons completed, coins, Lifetime XP, skills, Vault jars and goals, streak)",
+      "An account still waiting for a parent to approve it, or declined, is deleted 30 days after sign-up, together with the whole consent request, including the parent's email address.",
     );
     expect(text).toContain(
-      "We keep our own sign-in audit log, which includes IP addresses, and delete it after 30 days (see section 9).",
+      "Learners can't delete their own account in the app, including Self sign-up and Adult account holders.",
     );
     expect(text).toContain(
-      "Our sign-in provider keeps the IP address and device or browser details for each active sign-in until the user signs out, the session is revoked, or the account is deleted.",
+      "It doesn't include email addresses, real names, IP addresses or device details, and it stays in our own database.",
     );
     expect(text).toContain(
-      "Our hosting and service providers also keep short-term technical logs, which may include IP addresses.",
+      "Deleting an account doesn't cancel a subscription, whether you bought it on our website or through an app store.",
     );
     expect(text).toContain(
-      "Coins are what a learner earns and cashes in. Lifetime XP is a separate progress score, and cashing in does not lower it.",
+      "After a parent enters the parent PIN, a cookie keeps \"My child's data\" open for 15 minutes.",
     );
     expect(text).toContain(
-      "The Community leaderboard is off unless a parent switches it on for a child, or a teacher switches it on for a class.",
+      "please contact our Privacy Officer at info@nextgenachievers.com.",
     );
-    expect(text).toContain(
-      "When it is on, it shows the signed-in user's username and sample player names, each with a rank, a day streak and Lifetime XP.",
-    );
-    expect(text).toContain(
-      "sends emails to parents, teachers and self sign-up learners who give a personal email, from mail.nextgenachievers.com.",
-    );
-    expect(text).toContain(
-      "We do not email a class student or a child on a parent account.",
-    );
-    expect(text).toContain(
-      "A self sign-up learner does not get that warning, even with a personal email.",
-    );
-    expect(text).toContain(
-      "For rate-limiting, IP addresses are used briefly, in memory only.",
-    );
-    expect(text).toContain(
-      "If an account has no sign-in or activity at 11 months, we email the parent or the teacher.",
-    );
-    expect(text).toContain(
-      "When a warning is sent, deletion waits at least 30 days after that email.",
-    );
-    expect(text).toContain(
-      "If there is nobody to email, the account is deleted at 12 months with no warning.",
-    );
-    expect(text).toContain(
-      "Accounts that are still inactive at 12 months are deleted.",
-    );
-    expect(text).toContain("Activity records are deleted with the account.");
-    expect(text).toContain(
-      "To count guest play.",
-    );
-    expect(text).toContain(
-      "Lessons, coins, Lifetime XP, medals and Vault activity stay on the device.",
-    );
-    expect(text).toContain(
-      "A guest's lessons, coins, Lifetime XP, medals and Vault activity stay on the device. Our server keeps daily counts of guest activity (the day, event type, lesson, app version, device type and country) with no username, email, class, coins, streak, IP address or user agent. Older guest rows that used a made-up username are deleted after 30 days. Clear this device's progress clears the device only.",
-    );
-    expect(text).not.toContain("metadata");
-    expect(text).toContain("the parent PIN (stored as a hash)");
-    expect(text).toContain("consent history");
-    expect(text).toContain(
-      "Teacher passwords and the parent PIN are stored as a hash.",
-    );
-    expect(text).toContain(
-      "You can view, download and delete data in the app (see section 9).",
-    );
-    expect(text).toContain(
-      "We delete our sign-in audit log, which includes IP addresses, after 30 days (see section 2).",
-    );
-    expect(text).toContain(
-      "Hosting and service providers keep short-term technical logs, which may include IP addresses.",
-    );
-    expect(text).toContain(
-      "We don't currently keep restorable backups, so deleted data cannot be recovered.",
-    );
-    expect(text).toContain("Clear this device's progress");
-    expect(text).toContain("read-only My info page");
-    expect(text).toContain("info@nextgenachievers.com");
     expect(text).not.toContain("cath.drdw@nextgenachievers.com");
-    expect(text).not.toContain("XP/points");
-    expect(text).not.toContain("about 11 months");
-    expect(text).not.toContain("parents only");
-    expect(text).not.toContain("cannot see other students");
-    expect(text).not.toContain("no restorable backups");
-    expect(text).not.toContain("This policy covers the app and nextgenachievers.com.");
-    expect(text).not.toContain("for their child");
     expect(text).not.toContain("support@nextgenachievers.com");
-    expect(text).not.toContain("sign-in provider also keeps");
     expect(collectLinks(blocks)).toEqual([
+      { href: "https://nextgenachievers.com/privacy", text: "Privacy policy" },
+      {
+        href: "https://nextgenachievers.com/terms",
+        text: "Terms and Conditions of Service",
+      },
       {
         href: "https://nextgenachievers.com/privacy/providers",
         text: "nextgenachievers.com/privacy/providers",

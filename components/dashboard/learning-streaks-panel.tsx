@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { LearningStreaksSection } from "@/components/dashboard/learning-streaks-section";
+import { StreakChallengesSection } from "@/components/dashboard/streak-challenges-section";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { SnowflakeIcon } from "@/lib/dashboard/icons";
 import {
@@ -154,7 +155,7 @@ function PracticeCalendar({ dayStreak }: { dayStreak: number }) {
   );
 }
 
-/** Full-height Learning Streaks body: counter, freezes, calendar, then badges. */
+/** Full-height Learning Streaks body: counter, freezes, calendar, badges, then challenges. */
 export function LearningStreaksPanel({
   dayStreak,
   bestStreak,
@@ -192,6 +193,11 @@ export function LearningStreaksPanel({
           dayStreak={dayStreak}
           bestStreak={bestStreak}
         />
+      </section>
+
+      <section aria-labelledby="streak-challenges-heading" data-streak-challenges>
+        <SectionLabel id="streak-challenges-heading">Challenges</SectionLabel>
+        <StreakChallengesSection />
       </section>
     </div>
   );

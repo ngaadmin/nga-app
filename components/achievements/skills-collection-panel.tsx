@@ -149,11 +149,11 @@ export function SkillsCollectionPanel() {
   return (
     <div>
       <p className="font-sans text-xs font-bold uppercase tracking-wide text-[#0CC1E0]">
-        Lifetime XP
+        Lifetime coins
       </p>
       <p
         className="mt-1 font-heading text-3xl font-extrabold tabular-nums text-[#031F82]"
-        aria-label={`${lifetimeXp.toLocaleString()} lifetime XP`}
+        aria-label={`${lifetimeXp.toLocaleString()} lifetime coins`}
       >
         {lifetimeXp.toLocaleString()}
       </p>

@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
-import { MedalsIntro } from "@/components/achievements/medals-intro";
-import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
 import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
+import { useProfileAvatar } from "@/components/dashboard/profile/profile-avatar";
+import { ProfilePanel } from "@/components/dashboard/profile/profile-panel";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useXpExchangeGate } from "@/lib/dashboard/use-xp-exchange-gate";
@@ -25,11 +25,12 @@ import { resolveVaultSkillTrophiesForCohort } from "@/lib/dashboard/skill-trophi
 import { useDashboardUser } from "@/lib/dashboard/use-dashboard-user";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
+import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 /**
- * Shell-level status strip. XP, streak, and skills cup stay in the same
- * place on every main dashboard screen.
+ * Shell-level status strip. Avatar (profile and medals), username, streak,
+ * and coins stay in the same place on every main dashboard screen.
  */
 export function DashboardStatusHeader() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export function DashboardStatusHeader() {
   }, [reloadWalletFromStorage]);
   const masteryCohort = useMasteryCohort();
 
-  const [skillsOpen, setSkillsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [streaksOpen, setStreaksOpen] = useState(false);
   const [xpExchangeOpen, setXpExchangeOpen] = useState(false);
   const [skillsAttentionTick, setSkillsAttentionTick] = useState(0);
@@ -76,8 +77,8 @@ export function DashboardStatusHeader() {
     setSkillsHasAttention(hasUnseenSkillProgress(cohortSkills));
   }, [cohortSkills, skillsAttentionTick]);
 
-  const openSkills = useCallback(() => {
-    setSkillsOpen(true);
+  const openProfile = useCallback(() => {
+    setProfileOpen(true);
     markSkillsPanelSeen(cohortSkills);
     setSkillsAttentionTick((tick) => tick + 1);
   }, [cohortSkills]);
@@ -87,6 +88,14 @@ export function DashboardStatusHeader() {
   }, []);
 
   const isParent = session?.accountRole === "parent_master";
+  const showTrack = Boolean(session) && !isParent && !isTeacher;
+  const trackLabel = showTrack ? masteryCohortLabel(masteryCohort) : null;
+  const profileKey =
+    session?.supabaseUserId?.trim() ||
+    session?.genericProfileId?.trim() ||
+    session?.username?.trim() ||
+    "device";
+  const { avatarId, chooseAvatar } = useProfileAvatar(profileKey, masteryCohort);
   const openXpExchange = useCallback(() => {
     if (isParent) {
       router.push("/dashboard/settings");
@@ -107,9 +116,11 @@ export function DashboardStatusHeader() {
           username={username}
           xp={spendableXp}
           dayStreak={dayStreak}
-          skillsHasAttention={skillsHasAttention}
+          avatarId={avatarId}
+          trackLabel={trackLabel}
+          profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
-          onSkillsClick={openSkills}
+          onProfileClick={openProfile}
           onStreakClick={openStreaks}
           onXpClick={
             isParent || (xpExchange.ready && !xpExchange.blocked)
@@ -120,13 +131,17 @@ export function DashboardStatusHeader() {
       </header>
 
       <FullHeightPanel
-        isOpen={skillsOpen}
-        title="Medals"
-        titleId="medals-collection-title"
-        titleAccessory={<MedalsIntro />}
-        onClose={() => setSkillsOpen(false)}
+        isOpen={profileOpen}
+        title="Profile"
+        titleId="profile-panel-title"
+        onClose={() => setProfileOpen(false)}
       >
-        <SkillsCollectionPanel />
+        <ProfilePanel
+          displayName={username}
+          trackLabel={trackLabel}
+          avatarId={avatarId}
+          onChooseAvatar={chooseAvatar}
+        />
       </FullHeightPanel>
 
       <FullHeightPanel

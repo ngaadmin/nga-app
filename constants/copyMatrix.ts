@@ -371,7 +371,7 @@ export const copyMatrix = {
         xpLabel: "coins",
         lockedLabel: "Locked",
         skillsCupLabel: "Medals",
-        skillsCupTip: "Your medals live in the cup. Tap it anytime.",
+        skillsCupTip: "Your medals live in your profile. Tap your avatar anytime.",
         nodes: [
           {
             id: "cash-stash",

@@ -3,11 +3,11 @@
 import { useLayoutEffect } from "react";
 import {
   StatusBannerLayout,
-  TOP_BAR_ROUND_ICON_CLASS,
   TopBarRoundIcon,
 } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
+import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
   COIN_COUNTER_ATTR,
@@ -15,33 +15,43 @@ import {
   readCoinCounterTick,
 } from "@/lib/academy/lessons/coin-counter-flight";
 import { coinWord } from "@/lib/copy/coin-word";
-import { AchievementsIcon, FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
-import { cn } from "@/lib/utils/cn";
+import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
+import { FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
 
 type AcademyMomentumHeaderProps = {
   username: string;
   xp: number;
   dayStreak: number;
-  skillsHasAttention?: boolean;
+  avatarId: ProfileAvatarId;
+  /** Track name (Explorer, Pathfinder, Maverick). Null hides the label. */
+  trackLabel: string | null;
+  /** Dot on the avatar when a new medal is waiting in the profile panel. */
+  profileHasAttention?: boolean;
   showCoins?: boolean;
-  onSkillsClick: () => void;
+  onProfileClick: () => void;
   onStreakClick: () => void;
   onXpClick?: () => void;
 };
 
+/**
+ * Top bar: avatar and track on the left, username in the true center,
+ * streak and coins on the right.
+ */
 export function AcademyMomentumHeader({
   username,
   xp,
   dayStreak,
-  skillsHasAttention = false,
+  avatarId,
+  trackLabel,
+  profileHasAttention = false,
   showCoins = true,
-  onSkillsClick,
+  onProfileClick,
   onStreakClick,
   onXpClick,
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
-  const journeyCopy = copyMatrix.dashboard.academy.journey;
   const coinUnit = coinWord(xp);
+  const profileName = username.trim() || "your profile";
 
   useLayoutEffect(() => {
     if (readCoinCounterTick() > 0) clearCoinCounterTick();
@@ -50,31 +60,41 @@ export function AcademyMomentumHeader({
   return (
     <StatusBannerLayout
       aria-label="App stats"
-      clusterGapClassName="gap-4"
       left={
-        <div
-          {...{ [COIN_COUNTER_ATTR]: "" }}
-          data-coin-balance={xp}
-          className={showCoins ? "min-w-0" : "invisible min-w-0"}
-          aria-hidden={showCoins ? undefined : true}
+        <button
+          type="button"
+          onClick={onProfileClick}
+          data-top-bar-avatar
+          aria-label={[
+            `Open profile for ${profileName}`,
+            trackLabel ? `${trackLabel} track` : null,
+            profileHasAttention ? "New medal earned" : null,
+          ]
+            .filter(Boolean)
+            .join(". ")}
+          className="relative z-raised flex h-full min-w-0 max-w-full items-center gap-1.5 rounded-full pr-1 transition-opacity hover:opacity-80 active:opacity-60"
         >
-          <StatusMetricPill
-            interactive={showCoins && Boolean(onXpClick)}
-            className="shrink-0"
-            onClick={showCoins ? onXpClick : undefined}
-            icon={
-              <TopBarRoundIcon>
-                <GoldCoinIcon className="size-5" />
-              </TopBarRoundIcon>
-            }
-            value={xp}
-            unitLabel={coinUnit}
-            ariaLabel={
-              onXpClick ? `${xp} ${coinUnit} to cash in` : `${xp} ${coinUnit}`
-            }
-            title={onXpClick ? `${coinUnit} to cash in` : coinUnit}
-          />
-        </div>
+          <span className="relative shrink-0">
+            <ProfileAvatarImage
+              avatarId={avatarId}
+              className="size-8 ring-2 ring-[#FFA503]"
+            />
+            {profileHasAttention ? (
+              <span
+                className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-[#031F82] ring-2 ring-white"
+                aria-hidden
+              />
+            ) : null}
+          </span>
+          {trackLabel ? (
+            <span
+              data-top-bar-track
+              className="min-w-0 truncate font-heading text-[11px] font-bold uppercase tracking-wide text-[#0288A3]"
+            >
+              {trackLabel}
+            </span>
+          ) : null}
+        </button>
       }
       center={
         <UserHandleControl
@@ -89,38 +109,37 @@ export function AcademyMomentumHeader({
           <StatusMetricPill
             interactive
             onClick={onStreakClick}
+            className="shrink-0"
             icon={
               <TopBarRoundIcon>
-                <FlameIcon className="size-5" />
+                <FlameIcon className="size-[18px]" />
               </TopBarRoundIcon>
             }
             value={dayStreak}
             ariaLabel={`${dayStreak} ${streakCopy.label}`}
             title={streakCopy.label}
           />
-          <div className="relative z-raised flex h-full items-center">
-            <button
-              type="button"
-              onClick={onSkillsClick}
-              aria-label={
-                skillsHasAttention
-                  ? "Open medals. New medal earned."
-                  : "Open medals"
+          <div
+            {...{ [COIN_COUNTER_ATTR]: "" }}
+            data-coin-balance={xp}
+            className={showCoins ? "shrink-0" : "invisible shrink-0"}
+            aria-hidden={showCoins ? undefined : true}
+          >
+            <StatusMetricPill
+              interactive={showCoins && Boolean(onXpClick)}
+              className="shrink-0"
+              onClick={showCoins ? onXpClick : undefined}
+              icon={
+                <TopBarRoundIcon>
+                  <GoldCoinIcon className="size-[18px]" />
+                </TopBarRoundIcon>
               }
-              title={journeyCopy.skillsCupLabel}
-              className={cn(
-                TOP_BAR_ROUND_ICON_CLASS,
-                "relative transition-[filter,transform] hover:brightness-[1.05] active:scale-95",
-              )}
-            >
-              <AchievementsIcon className="size-5" />
-              {skillsHasAttention ? (
-                <span
-                  className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-[#031F82] ring-2 ring-white"
-                  aria-hidden
-                />
-              ) : null}
-            </button>
+              value={xp}
+              ariaLabel={
+                onXpClick ? `${xp} ${coinUnit} to cash in` : `${xp} ${coinUnit}`
+              }
+              title={onXpClick ? `${coinUnit} to cash in` : coinUnit}
+            />
           </div>
         </>
       }

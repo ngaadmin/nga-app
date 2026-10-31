@@ -11,6 +11,7 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { cohortTrackPicture } from "@/lib/dashboard/cohort-track-pictures";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
 import {
   convertToRegisteredProfile,
@@ -33,12 +34,6 @@ import { cn } from "@/lib/utils/cn";
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const USERNAME_TAKEN_ERROR =
   "That username is already taken. Try adding a favorite number!";
-
-const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
-  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
-};
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 const fieldBase =
@@ -260,7 +255,7 @@ export function AddLinkedProfilePanel() {
                 >
                   <span className="relative h-20 w-20">
                     <Image
-                      src={TRACK_AVATAR_SRC[track]}
+                      src={cohortTrackPicture(track).src}
                       alt=""
                       fill
                       sizes="80px"

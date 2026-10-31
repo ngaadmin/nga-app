@@ -9,6 +9,10 @@ import {
 } from "@/lib/dashboard/account-progress-local";
 import { resetDashboardWalletForCurrentAccount } from "@/lib/dashboard/dashboard-wallet-storage";
 import { releaseGuestDeviceLocalCopy } from "@/lib/dev/guest-device-store";
+import {
+  mergeRemotePageIntroFlags,
+  readGuestDevicePageIntroFlags,
+} from "@/lib/dashboard/page-intro-seen";
 import { isExplorerPendingConsent } from "@/lib/onboarding/explorer-pending-consent";
 import {
   absorbLiveProgressIntoHeldSnapshot,
@@ -152,6 +156,11 @@ export async function finalizeRegisteredSignup(
   if (typeof window !== "undefined" && shouldPreserveGuestProgress) {
     ensureGuestProgressSnapshot();
   }
+  // A guest who signs up keeps the intros they already dismissed.
+  const guestIntroFlags =
+    typeof window !== "undefined" && shouldPreserveGuestProgress
+      ? readGuestDevicePageIntroFlags()
+      : undefined;
 
   const enforced = enforceCohortAccountState({
     ...session,
@@ -162,7 +171,9 @@ export async function finalizeRegisteredSignup(
     throw new Error("finalizeRegisteredSignup requires a registered session.");
   }
   if (enforced.accountStatus === "GUEST") {
-    throw new Error("Registered profiles cannot remain in GUEST lifecycle state.");
+    throw new Error(
+      "Registered profiles cannot remain in GUEST lifecycle state.",
+    );
   }
 
   const withMarketingGate = enforced;
@@ -179,6 +190,7 @@ export async function finalizeRegisteredSignup(
     await dispatchOnboardingEmails(withMarketingGate, options);
     saveUserSession(withMarketingGate);
     upsertRegisteredAccount(withMarketingGate);
+    mergeRemotePageIntroFlags(guestIntroFlags);
     if (shouldPreserveGuestProgress) {
       markGuestProgressHeldForConsent();
     }
@@ -187,6 +199,7 @@ export async function finalizeRegisteredSignup(
 
   saveUserSession(withMarketingGate);
   upsertRegisteredAccount(withMarketingGate);
+  mergeRemotePageIntroFlags(guestIntroFlags);
   const switchedOntoTeacher =
     isTeacher &&
     (prior?.accessMode !== "registered" ||

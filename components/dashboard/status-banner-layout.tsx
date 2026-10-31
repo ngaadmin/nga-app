@@ -13,8 +13,13 @@ export const STATUS_BANNER_SHELL_CLASS =
 /** Matches dashboard `<main>` horizontal padding (`px-4 sm:px-6`). */
 export const STATUS_BANNER_INSET_CLASS = "px-4 sm:px-6";
 
+/**
+ * Three columns: equal-width sides (`1fr` each, never narrower than
+ * `7.25rem`) around a center that shrinks and truncates. Equal sides keep the
+ * username on the true center of the bar, whatever sits left or right.
+ */
 export const STATUS_BANNER_ROW_CLASS =
-  "relative mx-auto grid h-9 w-full max-w-md grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3";
+  "relative mx-auto grid h-9 w-full max-w-md grid-cols-[minmax(7.25rem,1fr)_minmax(0,auto)_minmax(7.25rem,1fr)] items-center gap-2";
 
 /**
  * Frameless inline stat / handle text — one size for every banner item.
@@ -27,9 +32,9 @@ export const STATUS_BANNER_ITEM_CLASS =
 /** Uniform icon box aligned to banner text. */
 export const STATUS_BANNER_ICON_CLASS = "size-3.5 shrink-0";
 
-/** Round orange treatment for top-bar coins, streak, and skills cup icons. */
+/** Round orange treatment for top-bar coin and streak icons. */
 export const TOP_BAR_ROUND_ICON_CLASS =
-  "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-[#031F82] shadow-md";
+  "inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-[#031F82] shadow-md";
 
 export function TopBarRoundIcon({
   children,
@@ -89,7 +94,10 @@ export function StatusBannerLayout({
             {left}
           </div>
 
-          <div className="flex h-full min-w-0 items-center justify-center">
+          <div
+            data-status-banner-center
+            className="flex h-full min-w-0 items-center justify-center"
+          >
             {center}
           </div>
 

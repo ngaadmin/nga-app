@@ -10,6 +10,8 @@ import {
 } from "@/lib/dashboard/navigation";
 import { withDashboardNavExtensions } from "@/lib/dashboard/dashboard-nav-extensions";
 import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
+import { withParentTabNavItem } from "@/lib/parent/parent-tab-nav";
+import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 const DESKTOP_NAV_QUERY = "(min-width: 768px)";
@@ -39,9 +41,13 @@ function useIsDesktopNav() {
 export function DashboardNavigation() {
   const isDesktop = useIsDesktopNav();
   const advancedMoneyUnlocked = useTestingPremiumUnlocked();
-  const navItems = withDashboardNavExtensions(DASHBOARD_NAV_ITEMS, {
-    advancedMoneyUnlocked,
-  });
+  const parentTab = useParentTabAccess();
+  const navItems = withParentTabNavItem(
+    withDashboardNavExtensions(DASHBOARD_NAV_ITEMS, {
+      advancedMoneyUnlocked,
+    }),
+    parentTab.eligible,
+  );
 
   if (isDesktop) {
     return (

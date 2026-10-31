@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
-import { AppFooter } from "@/components/legal/app-footer";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
 import { SelfManagedRatePanel } from "@/components/dashboard/settings/self-managed-rate-panel";
@@ -761,7 +760,6 @@ export function HomeDashboard() {
         {isGuestMode ? <GuestDeviceCard /> : null}
         <ParentHubSection />
         {canSelfManageRate ? <SelfManagedRatePanel /> : null}
-        <AppFooter className="print:hidden" />
       </div>
 
       <PasswordResetModal

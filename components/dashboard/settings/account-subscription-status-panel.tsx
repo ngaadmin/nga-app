@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { signOutApp } from "@/lib/onboarding/sign-out";
@@ -350,16 +351,32 @@ export function AccountSubscriptionStatusPanel() {
     setConfirmApproveUsername(username);
   }
 
-  async function handleDeclineChild(username: string) {
+  /**
+   * Every approve or decline asks for the parent PIN. The server checks the
+   * PIN and signs a short-lived pass; the approve/decline action re-checks
+   * that pass. The pass is used for this one action and then dropped.
+   */
+  const [pinGateFor, setPinGateFor] = useState<
+    | { action: "approve"; item: PendingLinkItem }
+    | { action: "decline"; username: string }
+    | null
+  >(null);
+
+  async function handleDeclineChild(username: string, pass?: string) {
     const item = pendingItemForUsername(username);
     if (!item.requestId) {
       setApproveError("This profile can't be declined from here.");
       return;
     }
+    if (!pass) {
+      setApproveError(null);
+      setPinGateFor({ action: "decline", username });
+      return;
+    }
     setApprovingUsername(username);
     setApproveError(null);
     try {
-      const declined = await declineConsentRequestInApp(item.requestId);
+      const declined = await declineConsentRequestInApp(item.requestId, pass);
       if (!declined.success) {
         setApproveError(declined.error);
         return;
@@ -415,8 +432,13 @@ export function AccountSubscriptionStatusPanel() {
     });
   }
 
-  async function handleLinkProfile(item: PendingLinkItem) {
+  async function handleLinkProfile(item: PendingLinkItem, pass?: string) {
     if ((!isMasterViewer && !isParentSettingsView) || approvingUsername) return;
+    if (!pass) {
+      setApproveError(null);
+      setPinGateFor({ action: "approve", item });
+      return;
+    }
     const masterEmail =
       household.householdEmail ??
       (readUserSession() ? resolveHouseholdEmail(readUserSession()!) : null);
@@ -432,7 +454,7 @@ export function AccountSubscriptionStatusPanel() {
       let linkedRemotely = false;
       let approvedChild: UserSession | null = null;
       if (item.requestId && isMasterViewer) {
-        const remote = await approveConsentRequestInApp(item.requestId);
+        const remote = await approveConsentRequestInApp(item.requestId, pass);
         if (!remote.success) {
           setApproveError(remote.error || copy.approveChildError);
           return;
@@ -981,6 +1003,45 @@ export function AccountSubscriptionStatusPanel() {
         onClose={closeDeleteDialog}
         onConfirm={() => void confirmPendingDelete()}
       />
+
+      <ModalShell
+        isOpen={pinGateFor !== null}
+        onClose={() => setPinGateFor(null)}
+        align="center"
+        backdropClassName="bg-[#031F82]/55"
+        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-0 shadow-md"
+      >
+        {pinGateFor ? (
+          <div data-settings-parent-pin-gate={pinGateFor.action}>
+            <ParentPinGate
+              parentName=""
+              className="mt-0 shadow-none"
+              enterBody={
+                pinGateFor.action === "approve"
+                  ? `Enter your parent PIN to approve ${pinGateFor.item.username}.`
+                  : `Enter your parent PIN to decline ${pinGateFor.username}.`
+              }
+              onUnlocked={(pass) => {
+                const pending = pinGateFor;
+                setPinGateFor(null);
+                if (pending.action === "approve") {
+                  void handleLinkProfile(pending.item, pass);
+                } else {
+                  void handleDeclineChild(pending.username, pass);
+                }
+              }}
+            />
+            <button
+              type="button"
+              data-settings-parent-pin-cancel
+              onClick={() => setPinGateFor(null)}
+              className="mb-4 block w-full font-sans text-xs font-semibold text-[#1E3A5F]"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : null}
+      </ModalShell>
 
       <ModalShell
         isOpen={pendingDelete?.kind === "master"}

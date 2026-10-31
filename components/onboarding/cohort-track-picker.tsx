@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -8,6 +9,7 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { cohortTrackPicture } from "@/lib/dashboard/cohort-track-pictures";
 import { wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
@@ -16,29 +18,13 @@ import {
   saveGuestAccessSession,
 } from "@/lib/onboarding/guest-session";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
+import { cn } from "@/lib/utils/cn";
 
-const TRACK_AVATAR_SRC: Record<
-  MasteryCohort,
-  { src: string; width: number; height: number; figureClassName: string }
-> = {
-  explorer: {
-    src: "/assets/illustrations/characters/lars/lars-waving-512.webp",
-    width: 191,
-    height: 391,
-    figureClassName: "h-[80px] min-[721px]:h-[200px]",
-  },
-  pathfinder: {
-    src: "/assets/illustrations/characters/holly/holly-waving-512.webp",
-    width: 199,
-    height: 391,
-    figureClassName: "h-[78px] min-[721px]:h-[194px]",
-  },
-  maverick: {
-    src: "/assets/illustrations/characters/aiden/aiden-waving-512.webp",
-    width: 207,
-    height: 391,
-    figureClassName: "h-[80px] min-[721px]:h-[200px]",
-  },
+/** Per-track figure height; the picture itself comes from the shared track list. */
+const TRACK_FIGURE_CLASS: Record<MasteryCohort, string> = {
+  explorer: "h-[80px] min-[721px]:h-[200px]",
+  pathfinder: "h-[78px] min-[721px]:h-[194px]",
+  maverick: "h-[80px] min-[721px]:h-[200px]",
 };
 
 const PENNY_AVATAR_SRC =
@@ -46,8 +32,14 @@ const PENNY_AVATAR_SRC =
 
 export function CohortTrackPicker() {
   const router = useRouter();
+  /** The tapped track while the app home loads; locks every card against a second tap. */
+  const [pendingCohort, setPendingCohort] = useState<MasteryCohort | null>(
+    null,
+  );
 
   function handleSelect(cohort: MasteryCohort) {
+    if (pendingCohort) return;
+    setPendingCohort(cohort);
     // Explorer -> explorer, Pathfinder -> pathfinder, Maverick -> maverick.
     const reserved = reserveGenericProfileId();
     const session = createGuestAccessSession({
@@ -89,14 +81,24 @@ export function CohortTrackPicker() {
           {MASTERY_COHORT_ORDER.map((cohort) => {
             const label = masteryCohortLabel(cohort);
             const ageSupport = `For ages ${masteryCohortAgeRangeLabel(cohort)}`;
-            const avatar = TRACK_AVATAR_SRC[cohort];
+            const avatar = cohortTrackPicture(cohort);
+            const isPending = pendingCohort === cohort;
+            const isLocked = pendingCohort !== null;
 
             return (
               <button
                 key={cohort}
                 type="button"
                 onClick={() => handleSelect(cohort)}
-                className="flex min-h-[104px] w-full flex-row items-center gap-[18px] rounded-[16px] border-0 bg-[#FFF8EC] py-3 pl-5 pr-4 text-left shadow-none hover:shadow-[0_0_0_2px_#031F82] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82] active:shadow-[0_0_0_2px_#031F82] min-[721px]:flex-col min-[721px]:items-center min-[721px]:gap-0 min-[721px]:rounded-[20px] min-[721px]:px-5 min-[721px]:pb-[26px] min-[721px]:pt-7 min-[721px]:text-center"
+                disabled={isLocked}
+                aria-busy={isPending || undefined}
+                data-pending={isPending ? "true" : undefined}
+                className={cn(
+                  "flex min-h-[104px] w-full flex-row items-center gap-[18px] rounded-[16px] border-0 bg-[#FFF8EC] py-3 pl-5 pr-4 text-left shadow-none hover:shadow-[0_0_0_2px_#031F82] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82] active:shadow-[0_0_0_2px_#031F82] min-[721px]:flex-col min-[721px]:items-center min-[721px]:gap-0 min-[721px]:rounded-[20px] min-[721px]:px-5 min-[721px]:pb-[26px] min-[721px]:pt-7 min-[721px]:text-center",
+                  "transition-[transform,opacity] disabled:cursor-default",
+                  isPending && "scale-[0.98] shadow-[0_0_0_3px_#031F82]",
+                  isLocked && !isPending && "opacity-50",
+                )}
               >
                 <span className="flex h-[80px] w-[52px] shrink-0 items-end justify-center min-[721px]:h-[200px] min-[721px]:w-full">
                   <Image
@@ -104,7 +106,7 @@ export function CohortTrackPicker() {
                     alt=""
                     width={avatar.width}
                     height={avatar.height}
-                    className={`${avatar.figureClassName} w-auto max-w-full object-contain object-bottom`}
+                    className={`${TRACK_FIGURE_CLASS[cohort]} w-auto max-w-full object-contain object-bottom`}
                     style={{ width: "auto" }}
                     unoptimized
                   />
@@ -117,6 +119,18 @@ export function CohortTrackPicker() {
                     {ageSupport}
                   </span>
                 </span>
+                {isPending ? (
+                  <span
+                    role="status"
+                    className="flex shrink-0 items-center gap-2 font-sans text-[15px] font-semibold text-[#031F82] min-[721px]:mt-3"
+                  >
+                    <span
+                      aria-hidden
+                      className="size-5 animate-spin rounded-full border-[3px] border-[#031F82]/25 border-t-[#031F82]"
+                    />
+                    Loading…
+                  </span>
+                ) : null}
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -124,7 +138,10 @@ export function CohortTrackPicker() {
                   strokeWidth={2.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="size-6 shrink-0 text-[#031F82] min-[721px]:hidden"
+                  className={cn(
+                    "size-6 shrink-0 text-[#031F82] min-[721px]:hidden",
+                    isPending && "hidden",
+                  )}
                   aria-hidden
                 >
                   <path d="M9 6l6 6-6 6" />

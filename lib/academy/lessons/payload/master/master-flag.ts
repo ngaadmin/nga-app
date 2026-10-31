@@ -1,3 +1,4 @@
+import { academyAudioUrl } from "@/lib/academy/media/academy-media";
 import { ACADEMY_AUDIO_BASE_URL } from "@/lib/academy/lessons/story-audio/audio-base";
 import explorerM1Manifest from "@/lib/academy/lessons/payload/source/explorer-m1/manifest.json";
 
@@ -16,7 +17,7 @@ export function academyMasterPayloadEnabled(
   return vercel === "preview";
 }
 
-/** Lesson 1 map tap. The master names are not all on disk yet. */
+/** Lesson 1 map tap clip names in the academy-media bucket. */
 export const MASTER_LESSON_ONE_INTRO_FILE: Record<
   "explorer" | "pathfinder" | "maverick",
   string
@@ -33,10 +34,8 @@ export function lessonOneMapIntroSrc(
   if (!academyMasterPayloadEnabled()) {
     return cohort === "explorer" ? legacyExplorerIntro() : undefined;
   }
-  const file = MASTER_LESSON_ONE_INTRO_FILE[cohort];
-  const base = process.env.NEXT_PUBLIC_ACADEMY_MEDIA_BASE?.trim().replace(/\/$/, "");
-  if (base) return `${base}/audio/${encodeURIComponent(file)}`;
-  return `/academy-audio/${cohort}-m1/${file}`;
+  // Storage only. No /public fallback for master lessons.
+  return academyAudioUrl(MASTER_LESSON_ONE_INTRO_FILE[cohort]) || undefined;
 }
 
 function legacyExplorerIntro(): string | undefined {

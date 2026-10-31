@@ -1,17 +1,74 @@
 # Stage 3 master workbook
 
-Preview reads Module 1 from `lib/academy/lessons/payload/source/master/module-1-screens.xlsx` (Cath's master, md5 `206ed0cc0fc0153a9e33a615b244be9c`). The workbook is named Academy - Screens (All Cohorts). Cohort tabs are `M1 Explorer`, `M1 Pathfinder`, and `M1 Maverick`, plus `Lesson Details`. `M2 Explorer`, `M2 Pathfinder`, and `M2 Maverick` are ignored, including when `M2 Explorer` has rows. The reader still accepts the older `Explorer M1` tab names. Production stays on Screens1.csv, Lesson-Details.csv, and Explorer `lessons.json`. The three image columns in Screens1.csv are copied from this workbook by `npx tsx --tsconfig tsconfig.json tools/sync-screens1-images.ts`, so a CSV fallback shows the same pictures. Image Name (column J) is optional. A blank cell is not an error. A picture cell that says `not allowed` is no picture.
+Module 1 lessons are read from the database, one lesson at a time. A content change needs a new version, not a redeploy.
 
-Flag: `ACADEMY_MASTER_PAYLOAD` (server) and `NEXT_PUBLIC_ACADEMY_MASTER_PAYLOAD` (the Academy map). `1` or `true` turns it on. `0` or `false` turns it off. When neither is set, it is on only for a Vercel preview (`VERCEL_ENV=preview`).
+## Source
 
-Lesson pages on that flag call `connection()` and fetch `academy_lesson_current` with `cache: "no-store"`, so a preview request is not baked at build time. An empty table, a missing table, or a failed request falls back to the bundled workbook. A production build leaves the flag off, so lessons 1–9 stay static and still read the old files. A bad row rejects the publish. The current pointer stays on the last good version.
+The workbook is `lib/academy/lessons/payload/source/master/module-1-screens.xlsx`. It is Cath's master, md5 `d1be7cb71278952bdd8772c857e70af7`, and it's named Academy - Screens (All Cohorts).
 
-Migration (not applied): `supabase/migrations/20261026001000_academy_lesson_versions.sql`. Bucket `academy-media` is in that file. `npm run lesson:upload:media` is a dry run until `--apply`. It copies WebP and MP3 bytes as-is and skips an object name that already exists.
+- The reader takes `--module <n>` and reads `Lesson Details` plus the `M<n> Explorer`, `M<n> Pathfinder`, and `M<n> Maverick` tabs. The older `Explorer M1` tab names still work.
+- Module 2 still plays the old Explorer workbook. `ACADEMY_DB_LESSON_MODULES` in `schema-version.ts` lists the modules that are read from the database. Add a module there once its draft is published.
+- Lesson numbers are progress keys (milestones 1–54). A publish that moves a lesson title to another number is refused.
 
-Pictures and clips resolve from `NEXT_PUBLIC_ACADEMY_MEDIA_BASE` when that is set, and from `/public` when it is empty.
+## Flag
+
+The flags are `ACADEMY_MASTER_PAYLOAD` (server) and `NEXT_PUBLIC_ACADEMY_MASTER_PAYLOAD` (the Academy map).
+
+- `1` or `true` turns it on, and `0` or `false` turns it off.
+- When neither is set, the flag is on only for a Vercel preview (`VERCEL_ENV=preview`).
+- With the flag off, Module 1 still plays the bundled Screens1.csv path from `/public`.
+
+## How a lesson loads
+
+A lesson loads in this order:
+
+1. The current version, from `academy_lesson_current` joined to `academy_lesson_versions`. Only that lesson's slice is selected. The Next data cache keeps it for 5 minutes under the tag `academy-lessons`.
+2. The last good copy this server fetched, if the read fails. This logs `academy_lesson_served_stale`.
+3. A friendly error screen, "This lesson can't load right now". This logs `academy_lesson_error_screen`.
+
+There is no bundled fallback, and every fallback logs a JSON line.
+
+An unknown `schemaVersion`, a row for another module, or a version without an https `mediaBase` counts as a failed read.
+
+## Drafts
+
+Drafts show only when `VERCEL_ENV=preview`, through `?draft=<version id>`, `?draft=latest`, or `ACADEMY_PREVIEW_VERSION_ID`. Draft reads aren't cached. A production deployment never reads a draft.
+
+## Media
+
+Pictures and clips come only from the public `academy-media` bucket, under `images/<name>` and `audio/<name>`.
+
+- A picture that fails to load shows a placeholder and logs `academy_media_failed`. So does a clip that fails.
+- Uploads are delta-only and never overwrite a name. An existing object of a different size is reported as a conflict, so a changed picture needs a new name.
+- Uploads are stored with `cache-control: public, max-age=31536000, immutable`.
+- New or changed pictures are capped at 120KB. Lars pictures are capped at 90KB.
+- Lars art (any name with `lars`, and the `beat-ex-m1-l*` scenes) is held until Jasper approves the compressed set. After that, run:
+
+      npx tsx tools/upload-academy-media.ts --module 1 --apply --release-held \
+        --source <approved-dir> --source <approved-dir>/pairs
+
+## Publishing
+
+    npx tsx tools/publish-master-lessons.ts --module 1 --draft
+
+This checks the workbook and the bucket, then stores a draft. A missing picture or clip blocks the draft.
+
+- `--allow-held-pending` stores missing held Lars objects in `media.pending` instead. A draft with anything pending can't be promoted.
+- `--promote <id>` prints what is blocking, or the SQL to move `academy_lesson_current` plus the revalidate call. It never runs either one.
+
+To revalidate after a promote, POST `/api/academy/revalidate` with the header `x-academy-revalidate-secret` set to `ACADEMY_REVALIDATE_SECRET`. The route returns 404 when that secret is unset.
+
+## Preview job
+
+`tools/academy-preview-job.ts` runs in `prebuild`, and only when all three of these hold:
+
+- `VERCEL_ENV=preview`
+- `ACADEMY_PREVIEW_JOB=1`
+- the branch is in its allow-list
+
+It uploads the media that isn't held, using the preview's own Supabase env, then stores a draft with the held Lars art pending. It never writes `academy_lesson_current`, never prints a key, and never fails the build.
 
 ## Still open
 
-- Module 2 routes still play `lib/academy/lessons/payload/source/explorer-m1/workbook.xlsx` sheet `Explorer M2 Screens`. The master's M2 tabs are not played. The old workbook stays.
-- The migration has not been applied, and nothing has been uploaded to storage. Preview uses the files under `/public`.
-- Every picture cell on the three M1 tabs names a file, and every named picture and Audio File Name resolves. A named file shows on the lesson screen, including a two-bucket sort. A blank cell or `not allowed` still shows no picture. This master has neither. The extra `Sheet1` tab is Cath's reference list. The reader selects `Lesson Details` and the `M1` cohort tabs by name and does not read `Sheet1`.
+- Screens1.csv (the flag-off path) still names the `beat-ex-m1-l*-r1` scenes on 6 rows where the master now names `-r2`. Those `-r2` files are held Lars art and aren't in `/public`, so the CSV is left alone.
+- M1 pictures stay in `/public` until every M1 object, including the held Lars set, is verified in the bucket and the flag is on in production.

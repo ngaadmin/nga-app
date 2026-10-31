@@ -66,16 +66,27 @@ function assetSignature(payload: LessonPayload, milestoneId: number): string {
   return `${milestoneId}:${images}`;
 }
 
-/** Throw when a GO target is unknown or a rendered image file is missing. */
+/**
+ * Throw when a GO target is unknown or a rendered image file is missing.
+ * `pictures: "bucket"` is for lessons read from the database. Their pictures
+ * live in academy-media and were checked when the version was published, so
+ * only the screens are checked here.
+ */
 export function assertLessonPayloadAssets(
   payload: LessonPayload,
   milestoneId: number,
+  options: { pictures?: "public" | "bucket" } = {},
 ): void {
-  const signature = assetSignature(payload, milestoneId);
+  const pictures = options.pictures ?? "public";
+  const signature = `${pictures}:${assetSignature(payload, milestoneId)}`;
   if (checkedAssetSignatures.has(signature)) return;
 
   for (const cohort of COHORTS) {
     resolvePayloadLesson(payload, cohort, milestoneId);
+  }
+  if (pictures === "bucket") {
+    checkedAssetSignatures.add(signature);
+    return;
   }
   const missing = missingLessonImages(payload);
   if (missing.length === 0) {

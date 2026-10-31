@@ -9,13 +9,17 @@ import {
 } from "@/lib/academy/illustrations/illustration-registry";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
-import { publishMasterModule } from "@/lib/academy/lessons/payload/master/publish-master";
+import { publishMasterDraft } from "@/lib/academy/lessons/payload/master/publish-master";
 import {
   MASTER_WORKBOOK_PATH,
   masterModuleFromSheets,
   readMasterModule,
 } from "@/lib/academy/lessons/payload/master/read-master";
 import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authoring-table";
+import { isHeldLarsMedia } from "@/lib/academy/media/held-media";
+import { planMediaUploads } from "@/lib/academy/media/media-sync";
+
+vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test-project.supabase.co");
 
 const M1_SHEETS = ["M1 Explorer", "M1 Pathfinder", "M1 Maverick"] as const;
 
@@ -292,9 +296,27 @@ describe("master workbook reader", () => {
     for (const cohort of ["explorer", "pathfinder", "maverick"] as const) {
       for (const lesson of master.byCohort[cohort]) {
         expect(() => resolvePayloadLesson(lesson, cohort, lesson.lessonNumber)).not.toThrow();
-        expect(() => assertLessonPayloadAssets(lesson, lesson.lessonNumber)).not.toThrow();
+        expect(() =>
+          assertLessonPayloadAssets(lesson, lesson.lessonNumber, { pictures: "bucket" }),
+        ).not.toThrow();
       }
     }
+  });
+
+  it("has an upload source under the size cap for every picture and clip that isn't held", () => {
+    const plan = planMediaUploads([...master.media.images, ...master.media.audio]);
+    const problems = plan.filter((item) => item.status === "no-source" || item.status === "too-large");
+    expect(problems).toEqual([]);
+    expect(plan.filter((item) => item.status === "held").every((item) => isHeldLarsMedia(item.objectPath))).toBe(true);
+    expect(master.media.images.length).toBeGreaterThan(50);
+    expect(master.media.audio.length).toBeGreaterThan(50);
+  });
+
+  it("points every picture and clip at the academy-media bucket", () => {
+    expect(master.mediaBase).toBe("https://test-project.supabase.co/storage/v1/object/public/academy-media");
+    const text = JSON.stringify(master.byCohort);
+    expect(text).not.toMatch(/"\/academy-audio\//);
+    expect(text).toContain("https://test-project.supabase.co/storage/v1/object/public/academy-media/audio/");
   });
 
   it("rejects a bad row with the sheet name and row number and does not publish", async () => {
@@ -340,13 +362,12 @@ describe("master workbook reader", () => {
       row: 4,
       reason: "Lesson Number must be 1 through 9 or Scenario Beat.",
     });
-    const save = vi.fn();
-    const result = await publishMasterModule(rejected, {
-      currentHash: async () => "previous",
-      save,
+    const saveDraft = vi.fn();
+    const result = await publishMasterDraft(rejected, {
+      store: { findByHash: async () => null, saveDraft },
     });
     expect(result).toMatchObject({ ok: false, wrote: false });
-    expect(save).not.toHaveBeenCalled();
+    expect(saveDraft).not.toHaveBeenCalled();
   });
 
   it("reads M1 tabs and ignores header-only M2 tabs", () => {

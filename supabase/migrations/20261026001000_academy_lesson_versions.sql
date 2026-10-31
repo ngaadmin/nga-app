@@ -1,5 +1,3 @@
--- Do not apply until Cath says so.
--- The app does not run this file. Nothing here has been applied to a project.
 --
 -- Versioned Module 1 lesson payloads, plus one current pointer.
 -- A rejected publish does not change the pointer, so the last good version stays served.
@@ -12,7 +10,7 @@
 
 create table if not exists public.academy_lesson_versions (
   id uuid primary key default gen_random_uuid(),
-  module_number integer not null check (module_number = 1),
+  module_number integer not null check (module_number >= 1),
   content_hash text not null,
   payload jsonb not null,
   created_at timestamptz not null default now(),
@@ -20,7 +18,7 @@ create table if not exists public.academy_lesson_versions (
 );
 
 create table if not exists public.academy_lesson_current (
-  module_number integer primary key check (module_number = 1),
+  module_number integer primary key check (module_number >= 1),
   version_id uuid not null,
   updated_at timestamptz not null default now(),
   constraint academy_lesson_current_version_fk

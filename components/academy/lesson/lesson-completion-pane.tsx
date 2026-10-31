@@ -1,5 +1,7 @@
 "use client";
 
+import { useAcademyMediaSrc } from "@/lib/academy/media/academy-media-context";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LessonCloseCoinCounter } from "@/components/academy/lesson/lesson-close-coin-counter";
@@ -185,7 +187,9 @@ export function LessonCompletionPane({
     ? moduleCloserGoldSkillLine(moduleNumber ?? 1)
     : null;
   const skillLine = closerLine ?? quietLessonSkillLine(skillMedalTier, skillName);
-  const portrait = celebratingPortrait(leadCharacter);
+  const localPortrait = celebratingPortrait(leadCharacter);
+  const portraitSrc = useAcademyMediaSrc(localPortrait.src);
+  const portrait = { ...localPortrait, src: portraitSrc };
   const medalList = medals.map((medal) => medal.medalId).join(" ");
 
   const runAfterFlight = (action: () => void) => {
@@ -286,6 +290,7 @@ export function LessonCompletionPane({
             loading="eager"
             fetchPriority="high"
             decoding="async"
+            onError={() => reportAcademyMediaFailed(portrait.src, "image")}
           />
           <h2 className="lesson-close-intro mt-3 text-center font-heading text-[26px] font-extrabold text-[#031F82]">
             You did it!

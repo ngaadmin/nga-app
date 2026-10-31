@@ -13,13 +13,33 @@ import {
 } from "@/lib/academy/lessons/payload/parse-authoring-table";
 import type { LessonPayload, PayloadCohortCopy, PayloadScreenRow } from "@/lib/academy/lessons/payload/types";
 import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
-import { resolveAcademyAudioUrl, resolveAcademyImageUrl } from "@/lib/academy/lessons/payload/master/media-url";
+import {
+  masterAudioObjectName,
+  masterImageObjectName,
+  resolveAcademyAudioUrl,
+  resolveAcademyImageUrl,
+} from "@/lib/academy/lessons/payload/master/media-url";
+import { academyMediaBase } from "@/lib/academy/media/academy-media";
 import { payloadGameDropsNamedPicture } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 
 export const MASTER_WORKBOOK_PATH = path.join(
   process.cwd(),
   "lib/academy/lessons/payload/source/master/module-1-screens.xlsx",
 );
+
+export { MASTER_PAYLOAD_SCHEMA_VERSION } from "@/lib/academy/lessons/payload/master/schema-version";
+
+export type MasterReadOptions = {
+  /** Module to read. Its tabs are `M<n> Explorer`, `M<n> Pathfinder`, `M<n> Maverick`. */
+  moduleNumber?: number;
+  /** Bucket base for audio URLs. Defaults to `academyMediaBase()`. */
+  mediaBase?: string;
+  /**
+   * Object paths in the bucket (`images/<name>`, `audio/<name>`). When given,
+   * any picture or clip not in this set is reported in `missing`.
+   */
+  knownMedia?: ReadonlySet<string>;
+};
 
 const GAME_TYPES = new Set([
   "word-drop",
@@ -56,6 +76,11 @@ export type MissingMasterAsset = {
 };
 
 export type MasterModule = {
+  moduleNumber: number;
+  /** Bucket base the audio URLs were built with. */
+  mediaBase: string;
+  /** Every bucket object the module plays, `images/<name>` and `audio/<name>`. */
+  media: { images: string[]; audio: string[] };
   byCohort: Record<MasteryCohort, LessonPayload[]>;
   missing: MissingMasterAsset[];
   /** Any entry rejects the whole module. The last good publish stays current. */
@@ -96,16 +121,17 @@ function sheetFor(sheets: readonly WorkbookSheet[], pattern: RegExp): WorkbookSh
 }
 
 /** "M1 Explorer". Older workbooks used "Explorer M1"; that name is still accepted. */
-function moduleOneTabName(cohort: MasteryCohort): string {
-  return `M1 ${cohort.charAt(0).toUpperCase()}${cohort.slice(1)}`;
+function moduleTabName(moduleNumber: number, cohort: MasteryCohort): string {
+  return `M${moduleNumber} ${cohort.charAt(0).toUpperCase()}${cohort.slice(1)}`;
 }
 
-function moduleOneCohortSheet(
+function moduleCohortSheet(
   sheets: readonly WorkbookSheet[],
+  moduleNumber: number,
   cohort: MasteryCohort,
 ): WorkbookSheet | undefined {
-  const current = new RegExp(`^M1\\s+${cohort}$`, "i");
-  const legacy = new RegExp(`^${cohort}\\s+M1$`, "i");
+  const current = new RegExp(`^M${moduleNumber}\\s+${cohort}$`, "i");
+  const legacy = new RegExp(`^${cohort}\\s+M${moduleNumber}$`, "i");
   return (
     sheets.find((sheet) => current.test(sheet.name.trim())) ??
     sheets.find((sheet) => legacy.test(sheet.name.trim()))
@@ -158,13 +184,54 @@ const EMPTY_COHORTS: Record<MasteryCohort, LessonPayload[]> = {
   maverick: [],
 };
 
-export function readMasterModule(bytes: Uint8Array): MasterModule {
-  return masterModuleFromSheets(readWorkbookSheets(bytes));
+export function readMasterModule(bytes: Uint8Array, options: MasterReadOptions = {}): MasterModule {
+  return masterModuleFromSheets(readWorkbookSheets(bytes), options);
 }
 
-export function masterModuleFromSheets(sheets: readonly WorkbookSheet[]): MasterModule {
+type ReadContext = {
+  moduleNumber: number;
+  mediaBase: string;
+  knownMedia?: ReadonlySet<string>;
+  images: Set<string>;
+  audio: Set<string>;
+};
+
+export function masterModuleFromSheets(
+  sheets: readonly WorkbookSheet[],
+  options: MasterReadOptions = {},
+): MasterModule {
+  const moduleNumber = options.moduleNumber ?? 1;
+  const mediaBase = (options.mediaBase ?? academyMediaBase()).trim().replace(/\/+$/, "");
+  const context: ReadContext = {
+    moduleNumber,
+    mediaBase,
+    knownMedia: options.knownMedia,
+    images: new Set(),
+    audio: new Set(),
+  };
   const issues: MasterRowIssue[] = [];
   const missing: MissingMasterAsset[] = [];
+  const empty = (): MasterModule => ({
+    moduleNumber,
+    mediaBase,
+    media: { images: [], audio: [] },
+    byCohort: EMPTY_COHORTS,
+    missing,
+    issues,
+    contentHash: "",
+  });
+  if (!Number.isInteger(moduleNumber) || moduleNumber < 1) {
+    issues.push({ sheet: "Lesson Details", row: 1, reason: "Module number must be 1 or more." });
+    return empty();
+  }
+  if (!mediaBase) {
+    issues.push({
+      sheet: "Lesson Details",
+      row: 1,
+      reason: "No media base. Set NEXT_PUBLIC_ACADEMY_MEDIA_BASE or NEXT_PUBLIC_SUPABASE_URL.",
+    });
+    return empty();
+  }
   const byCohort: Record<MasteryCohort, LessonPayload[]> = {
     explorer: [],
     pathfinder: [],
@@ -176,28 +243,35 @@ export function masterModuleFromSheets(sheets: readonly WorkbookSheet[]): Master
     issues.push({ sheet: "Lesson Details", row: 1, reason: "Lesson Details sheet is missing." });
   }
   for (const cohort of COHORTS) {
-    const sheet = moduleOneCohortSheet(sheets, cohort);
+    const sheet = moduleCohortSheet(sheets, moduleNumber, cohort);
     if (!sheet) {
-      const expected = moduleOneTabName(cohort);
+      const expected = moduleTabName(moduleNumber, cohort);
       issues.push({ sheet: expected, row: 1, reason: `No sheet named "${expected}".` });
     }
   }
-  if (issues.length > 0 || !details) {
-    return { byCohort: EMPTY_COHORTS, missing, issues, contentHash: "" };
-  }
+  if (issues.length > 0 || !details) return empty();
 
-  const detailLessons = readLessonDetails(details, issues);
+  const detailLessons = readLessonDetails(details, moduleNumber, issues);
   for (const cohort of COHORTS) {
-    const sheet = moduleOneCohortSheet(sheets, cohort);
+    const sheet = moduleCohortSheet(sheets, moduleNumber, cohort);
     if (!sheet) continue;
-    byCohort[cohort] = readCohortSheet(sheet, cohort, detailLessons, issues, missing);
+    byCohort[cohort] = readCohortSheet(sheet, cohort, detailLessons, issues, missing, context);
   }
 
-  if (issues.length > 0) {
-    return { byCohort: EMPTY_COHORTS, missing, issues, contentHash: "" };
-  }
+  if (issues.length > 0) return empty();
   const contentHash = createHash("sha256").update(JSON.stringify(byCohort)).digest("hex");
-  return { byCohort, missing, issues, contentHash };
+  return {
+    moduleNumber,
+    mediaBase,
+    media: {
+      images: [...context.images].sort(),
+      audio: [...context.audio].sort(),
+    },
+    byCohort,
+    missing,
+    issues,
+    contentHash,
+  };
 }
 
 type DetailLesson = {
@@ -212,6 +286,7 @@ type DetailLesson = {
 
 function readLessonDetails(
   sheet: WorkbookSheet,
+  expectedModule: number,
   issues: MasterRowIssue[],
 ): Map<string, DetailLesson> {
   const header = sheet.rows[0]?.values ?? [];
@@ -237,12 +312,14 @@ function readLessonDetails(
     const skillName = cell(entry.values, skillNameCol);
     const skillId = cell(entry.values, skillIdCol);
     const level = Number(cell(entry.values, levelCol));
-    if (!cohort) {
-      issues.push({ sheet: sheet.name, row: entry.row, reason: "Cohort must be Explorer, Pathfinder, or Maverick." });
+    if (!Number.isInteger(moduleNumber) || moduleNumber < 1) {
+      issues.push({ sheet: sheet.name, row: entry.row, reason: "Module Number must be a whole number, 1 or more." });
       continue;
     }
-    if (moduleNumber !== 1) {
-      issues.push({ sheet: sheet.name, row: entry.row, reason: "Module Number must be 1." });
+    // Lesson Details lists every module. Only this module's rows are read.
+    if (moduleNumber !== expectedModule) continue;
+    if (!cohort) {
+      issues.push({ sheet: sheet.name, row: entry.row, reason: "Cohort must be Explorer, Pathfinder, or Maverick." });
       continue;
     }
     if (!Number.isInteger(lessonNumber) || lessonNumber < 1 || lessonNumber > 9) {
@@ -297,6 +374,7 @@ function readCohortSheet(
   details: Map<string, DetailLesson>,
   issues: MasterRowIssue[],
   missing: MissingMasterAsset[],
+  context: ReadContext,
 ): LessonPayload[] {
   const header = sheet.rows[0]?.values ?? [];
   const moduleCol = requireHeader(issues, sheet.name, header, "Module Number");
@@ -321,8 +399,12 @@ function readCohortSheet(
   for (const entry of sheet.rows.slice(1)) {
     const lessonCell = cell(entry.values, lessonCol);
     const moduleNumber = Number(cell(entry.values, moduleCol));
-    if (moduleNumber !== 1) {
-      issues.push({ sheet: sheet.name, row: entry.row, reason: "Module Number must be 1." });
+    if (moduleNumber !== context.moduleNumber) {
+      issues.push({
+        sheet: sheet.name,
+        row: entry.row,
+        reason: `Module Number must be ${context.moduleNumber} on this tab.`,
+      });
       continue;
     }
     const text = cell(entry.values, textCol);
@@ -333,15 +415,27 @@ function readCohortSheet(
 
     const gameTypeRaw = cell(entry.values, gameCol).toLowerCase();
     const settingsRaw = settingsCol >= 0 ? cell(entry.values, settingsCol) : "";
-    if (
-      image &&
-      !payloadGameDropsNamedPicture(gameTypeRaw, settingsRaw) &&
-      !resolveAcademyImageUrl(image)
-    ) {
-      missing.push({ sheet: sheet.name, row: entry.row, kind: "image", name: image });
+    const imageObject = image ? masterImageObjectName(image) : undefined;
+    const audioObject = audioName ? masterAudioObjectName(audioName) : undefined;
+    if (image && !payloadGameDropsNamedPicture(gameTypeRaw, settingsRaw)) {
+      if (!imageObject) {
+        missing.push({ sheet: sheet.name, row: entry.row, kind: "image", name: image });
+      } else {
+        context.images.add(`images/${imageObject}`);
+        if (context.knownMedia && !context.knownMedia.has(`images/${imageObject}`)) {
+          missing.push({ sheet: sheet.name, row: entry.row, kind: "image", name: imageObject });
+        }
+      }
     }
-    if (audioName && !resolveAcademyAudioUrl(audioName)) {
-      missing.push({ sheet: sheet.name, row: entry.row, kind: "audio", name: audioName });
+    if (audioName) {
+      if (!audioObject) {
+        missing.push({ sheet: sheet.name, row: entry.row, kind: "audio", name: audioName });
+      } else {
+        context.audio.add(`audio/${audioObject}`);
+        if (context.knownMedia && !context.knownMedia.has(`audio/${audioObject}`)) {
+          missing.push({ sheet: sheet.name, row: entry.row, kind: "audio", name: audioObject });
+        }
+      }
     }
 
     if (lessonCell.toLowerCase() === "scenario beat") {
@@ -351,8 +445,8 @@ function readCohortSheet(
       }
       const lessonNumber = currentLesson || 1;
       const spoken = splitFollow(text);
-      const audioUrl = audioName ? resolveAcademyAudioUrl(audioName) : undefined;
-      const imageUrl = image ? resolveAcademyImageUrl(image) : undefined;
+      const audioUrl = audioName ? resolveAcademyAudioUrl(audioName, context.mediaBase) : undefined;
+      const imageUrl = image ? resolveAcademyImageUrl(image, context.mediaBase) : undefined;
       const row: PayloadScreenRow = {
         screenNumber: 0,
         screenLabel: beatId(audioName, entry.row),
@@ -403,7 +497,7 @@ function readCohortSheet(
       screenLabel,
       gameType,
       text: mirror(text),
-      image: mirror(image && resolveAcademyImageUrl(image) ? image : ""),
+      image: mirror(image && resolveAcademyImageUrl(image, context.mediaBase) ? image : ""),
       settings: mirror(cell(entry.values, settingsCol)),
       error: mirror(errorCol >= 0 ? cell(entry.values, errorCol) : ""),
     });
@@ -435,11 +529,9 @@ function readCohortSheet(
       continue;
     }
     const moduleName =
-      lessonNumber >= 1 && lessonNumber <= 6
-        ? ACADEMY_MODULE_TITLES[1 as AcademyLevelId]
-        : ACADEMY_MODULE_TITLES[1];
+      ACADEMY_MODULE_TITLES[context.moduleNumber as AcademyLevelId] ?? ACADEMY_MODULE_TITLES[1];
     payloads.push({
-      moduleNumber: 1,
+      moduleNumber: context.moduleNumber,
       lessonNumber,
       lessonTitle: meta.title,
       moduleName,
@@ -473,10 +565,10 @@ function creditOpeningBeat(screens: PayloadScreenRow[]): PayloadScreenRow[] {
   });
 }
 
-let cached: MasterModule | null = null;
-
-export function loadBundledMasterModule(): MasterModule {
-  if (cached) return cached;
-  cached = readMasterModule(readFileSync(MASTER_WORKBOOK_PATH));
-  return cached;
+/** Read a workbook file from disk. Used by the publish tool, never by a request. */
+export function readMasterWorkbookFile(
+  workbookPath: string = MASTER_WORKBOOK_PATH,
+  options: MasterReadOptions = {},
+): MasterModule {
+  return readMasterModule(readFileSync(workbookPath), options);
 }

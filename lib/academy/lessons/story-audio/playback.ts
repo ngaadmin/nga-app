@@ -1,3 +1,4 @@
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 import { readMasterMuted, writeMasterMuted } from "@/lib/academy/lessons/story-audio/master-mute";
 import { silenceLessonFeedback } from "@/lib/academy/lessons/utils";
 
@@ -211,6 +212,11 @@ export function storyAudioElement(): HTMLAudioElement | null {
   if (!element) {
     element = new Audio();
     element.preload = "auto";
+    const audio = element;
+    audio.addEventListener("error", () => {
+      const src = audio.currentSrc || audio.src;
+      if (src) reportAcademyMediaFailed(src, "audio");
+    });
     installStoryAudioLifecycle();
   }
   return element;

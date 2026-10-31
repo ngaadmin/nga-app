@@ -1,5 +1,7 @@
 "use client";
 
+import { useAcademyMediaSrc } from "@/lib/academy/media/academy-media-context";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 import {
   useCallback,
   useEffect,
@@ -124,9 +126,9 @@ export function LessonDragToTargetGame({
   itemSize = "lg",
   coinCount = 1,
   targetEmoji,
-  sourceIllustrationSrc,
+  sourceIllustrationSrc: localSourceIllustrationSrc,
   sourceIllustrationAlt,
-  targetIllustrationSrc,
+  targetIllustrationSrc: localTargetIllustrationSrc,
   targetIllustrationAlt,
   targetImagePlaceholder,
   showZoneLabels = true,
@@ -135,6 +137,8 @@ export function LessonDragToTargetGame({
   onSuccess,
   onMiss,
 }: LessonDragToTargetGameProps) {
+  const sourceIllustrationSrc = useAcademyMediaSrc(localSourceIllustrationSrc);
+  const targetIllustrationSrc = useAcademyMediaSrc(localTargetIllustrationSrc);
   const totalCoins = Math.min(
     DRAG_TO_TARGET_MAX_COINS,
     Math.max(1, coinCount),
@@ -372,7 +376,10 @@ export function LessonDragToTargetGame({
         fetchPriority="high"
         decoding="async"
         draggable={false}
-        onError={() => setSourceImageFailed(true)}
+        onError={() => {
+          setSourceImageFailed(true);
+          if (sourceIllustrationSrc) reportAcademyMediaFailed(sourceIllustrationSrc, "image");
+        }}
       />
     ) : null;
 
@@ -415,7 +422,10 @@ export function LessonDragToTargetGame({
             fetchPriority="high"
             decoding="async"
             draggable={false}
-            onError={() => setTargetImageFailed(true)}
+            onError={() => {
+              setTargetImageFailed(true);
+              if (targetIllustrationSrc) reportAcademyMediaFailed(targetIllustrationSrc, "image");
+            }}
           />
           {targetImageFailed ? (
             <span className="grid h-full w-full place-items-center text-6xl" aria-hidden>

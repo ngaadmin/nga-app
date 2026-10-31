@@ -203,21 +203,13 @@ export const PAIR_SHEET_IMAGES_BASE = `${ILLUSTRATIONS_BASE}/characters/pairs`;
 const PAIR_SHEET_FILE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(webp|png|jpe?g)$/i;
 
 /**
- * Resolve a Screens.csv file name.
- * Known character/concept ids use the illustration registry; anything else
- * is a file in `public/assets/illustrations/characters/pairs/`.
- */
-/**
- * Public URL for a screen image.
- * A storage base wins when it is set. Otherwise the file under /public.
+ * Path for a lesson screen image named in the workbook, under /public.
+ * Lessons read from the database swap this for the academy-media bucket URL
+ * when the picture is painted (see useAcademyMediaSrc). The bucket object is
+ * the same file name, so `lars-celebrating` is `lars-celebrating-512.webp`.
  */
 export function getPairSheetImagePath(fileName: string): string | undefined {
-  const local = localPairSheetImagePath(fileName);
-  if (!local) return undefined;
-  const base = process.env.NEXT_PUBLIC_ACADEMY_MEDIA_BASE?.trim().replace(/\/$/, "");
-  if (!base) return local;
-  const name = fileName.trim().split(/[/\\]/).pop() ?? "";
-  return `${base}/images/${encodeURIComponent(name)}`;
+  return localPairSheetImagePath(fileName);
 }
 
 /** File under /public, before any storage base is applied. */

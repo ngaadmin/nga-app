@@ -1,131 +1,108 @@
 /**
- * Upload lesson pictures and audio to the academy-media bucket.
- * Dry run unless --apply is passed. Does not recompress or resize.
- * An object name that already exists is skipped. Names are never overwritten.
+ * Upload the pictures and clips a module's lessons name to the academy-media
+ * bucket. Dry run unless --apply. Delta only: an object already in the bucket
+ * is skipped, and a name is never overwritten. Held Lars art is skipped unless
+ * --release-held is passed (only after Jasper's OK, with the approved
+ * compressed files passed first via --source).
  *
- *   npx tsx tools/upload-academy-media.ts
- *   npx tsx tools/upload-academy-media.ts --apply
+ *   npx tsx tools/upload-academy-media.ts --module 1
+ *   npx tsx tools/upload-academy-media.ts --module 1 --apply
+ *   npx tsx tools/upload-academy-media.ts --module 1 --verify
+ *   npx tsx tools/upload-academy-media.ts --module 1 --release-held \
+ *     --source /path/to/lars-compressed --source /path/to/lars-compressed/pairs --apply
+ *
+ * --apply needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the
+ * environment. --verify needs only NEXT_PUBLIC_SUPABASE_URL (public reads).
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import path from "node:path";
+import { MASTER_WORKBOOK_PATH, readMasterWorkbookFile } from "@/lib/academy/lessons/payload/master/read-master";
+import { ACADEMY_MEDIA_CACHE_CONTROL } from "@/lib/academy/media/held-media";
+import {
+  DEFAULT_MEDIA_SOURCE_DIRS,
+  headPublicObjects,
+  planMediaUploads,
+  uploadPlannedMedia,
+} from "@/lib/academy/media/media-sync";
 
-const ROOTS = [
-  { dir: path.join(process.cwd(), "public/assets/illustrations"), folder: "images" },
-  { dir: path.join(process.cwd(), "public/academy-audio"), folder: "audio" },
-];
-
-type PlannedUpload = {
-  folder: "images" | "audio";
-  objectName: string;
-  absolutePath: string;
-  bytes: number;
-};
-
-const apply = process.argv.includes("--apply");
-const planned = planUploads();
-const names = new Map<string, string>();
-let collisions = 0;
-for (const item of planned) {
-  const key = `${item.folder}/${item.objectName}`;
-  const previous = names.get(key);
-  if (previous && previous !== item.absolutePath) {
-    collisions += 1;
-    console.error(`Name collision ${key}: ${previous} and ${item.absolutePath}`);
-  }
-  names.set(key, item.absolutePath);
+function argValue(name: string): string | undefined {
+  const index = process.argv.indexOf(name);
+  return index >= 0 ? process.argv[index + 1] : undefined;
 }
-if (collisions > 0) {
-  console.error("Stopped. Fix the duplicate names before uploading.");
-  process.exit(1);
-}
-
-console.log(`Planned ${planned.length} objects. WebP and MP3 bytes are copied as-is.`);
-if (!apply) {
-  console.log("Dry run. Pass --apply with Supabase credentials to upload. Existing names are skipped.");
-  process.exit(0);
-}
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? "";
-if (!url || !serviceKey) {
-  console.error("Refusing to upload. Supabase URL or service role key is missing.");
-  process.exit(1);
-}
-
-void applyUpload(url, serviceKey, planned).catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : "Upload failed.");
-  process.exit(1);
-});
-
-async function applyUpload(
-  url: string,
-  serviceKey: string,
-  planned: PlannedUpload[],
-): Promise<void> {
-let uploaded = 0;
-let skipped = 0;
-for (const item of planned) {
-  const objectPath = `${item.folder}/${encodeURIComponent(item.objectName)}`;
-  const head = await fetch(`${url}/storage/v1/object/academy-media/${objectPath}`, {
-    method: "HEAD",
-    headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey },
+function argValues(name: string): string[] {
+  const values: string[] = [];
+  process.argv.forEach((value, index) => {
+    const next = process.argv[index + 1];
+    if (value === name && next) values.push(next);
   });
-  if (head.ok) {
-    skipped += 1;
-    continue;
-  }
-  if (head.status !== 400 && head.status !== 404) {
-    console.error(`Could not check ${objectPath} (${head.status}). Stopped without overwriting.`);
-    process.exit(1);
-  }
-  const body = readFileSync(item.absolutePath);
-  const type = item.objectName.endsWith(".mp3") ? "audio/mpeg" : "image/webp";
-  const put = await fetch(`${url}/storage/v1/object/academy-media/${objectPath}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${serviceKey}`,
-      apikey: serviceKey,
-      "Content-Type": type,
-      "x-upsert": "false",
-    },
-    body,
-  });
-  if (put.status === 409 || put.status === 400) {
-    skipped += 1;
-    continue;
-  }
-  if (!put.ok) {
-    console.error(`Upload failed for ${objectPath} (${put.status}).`);
-    process.exit(1);
-  }
-  uploaded += 1;
-}
-console.log(`Uploaded ${uploaded}. Skipped ${skipped} existing names.`);
+  return values;
 }
 
-function planUploads(): PlannedUpload[] {
-  const planned: PlannedUpload[] = [];
-  for (const root of ROOTS) {
-    for (const absolute of walk(root.dir)) {
-      const base = path.basename(absolute);
-      if (!/\.(webp|mp3)$/i.test(base)) continue;
-      planned.push({
-        folder: root.folder as "images" | "audio",
-        objectName: base,
-        absolutePath: absolute,
-        bytes: statSync(absolute).size,
-      });
+async function main(): Promise<number> {
+  const apply = process.argv.includes("--apply");
+  const verify = process.argv.includes("--verify");
+  const releaseHeld = process.argv.includes("--release-held");
+  const moduleNumber = Number(argValue("--module") ?? "1");
+  const workbook = argValue("--workbook") ?? MASTER_WORKBOOK_PATH;
+  const sourceDirs = [...argValues("--source"), ...DEFAULT_MEDIA_SOURCE_DIRS];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+
+  const master = readMasterWorkbookFile(workbook, {
+    moduleNumber,
+    mediaBase: supabaseUrl ? undefined : "https://example.invalid/academy-media",
+  });
+  if (master.issues.length > 0) {
+    for (const issue of master.issues) console.error(`${issue.sheet} row ${issue.row}: ${issue.reason}`);
+    console.error("Workbook has errors. Nothing uploaded.");
+    return 1;
+  }
+  const objects = [...master.media.images, ...master.media.audio];
+  const plan = planMediaUploads(objects, { sourceDirs, releaseHeld });
+  const count = (status: string) => plan.filter((item) => item.status === status).length;
+  console.log(
+    `Module ${moduleNumber}: ${objects.length} objects. Upload ${count("upload")}, held ${count("held")}, ` +
+      `no source ${count("no-source")}, over cap ${count("too-large")}. Cache-Control: ${ACADEMY_MEDIA_CACHE_CONTROL}`,
+  );
+  for (const item of plan) {
+    if (item.status !== "upload") console.log(`  ${item.status}: ${item.objectPath}${item.note ? ` (${item.note})` : ""}`);
+  }
+  const blocking = plan.filter((item) => item.status === "no-source" || item.status === "too-large");
+
+  if (verify) {
+    if (!supabaseUrl) {
+      console.error("Set NEXT_PUBLIC_SUPABASE_URL to verify.");
+      return 1;
+    }
+    const heads = await headPublicObjects(supabaseUrl, objects);
+    const bad = heads.filter((head) => head.status !== 200);
+    console.log(JSON.stringify({ verified: heads.length, ok: heads.length - bad.length, heads }, null, 2));
+    return bad.length > 0 ? 2 : 0;
+  }
+
+  if (!apply) {
+    console.log("Dry run. Pass --apply with Supabase credentials to upload.");
+    return blocking.length > 0 ? 1 : 0;
+  }
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ?? "";
+  if (!supabaseUrl || !serviceKey) {
+    console.error("Refusing to upload. Supabase URL or service role key is missing.");
+    return 1;
+  }
+  const outcomes = await uploadPlannedMedia(plan, { supabaseUrl, serviceKey });
+  const tally = (result: string) => outcomes.filter((item) => item.result === result).length;
+  for (const item of outcomes) {
+    if (item.result === "conflict" || item.result === "failed") {
+      console.error(`  ${item.result}: ${item.objectPath} ${item.status ?? ""} ${item.note ?? ""}`);
     }
   }
-  return planned;
+  console.log(
+    `Uploaded ${tally("uploaded")}. Already there ${tally("skipped-same")}. Conflicts ${tally("conflict")}. Failed ${tally("failed")}.`,
+  );
+  return tally("conflict") + tally("failed") > 0 || blocking.length > 0 ? 1 : 0;
 }
 
-function walk(dir: string): string[] {
-  const found: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const absolute = path.join(dir, entry.name);
-    if (entry.isDirectory()) found.push(...walk(absolute));
-    else if (entry.isFile()) found.push(absolute);
-  }
-  return found;
-}
+main().then(
+  (code) => process.exit(code),
+  (error: unknown) => {
+    console.error(error instanceof Error ? error.message : "Upload failed.");
+    process.exit(1);
+  },
+);

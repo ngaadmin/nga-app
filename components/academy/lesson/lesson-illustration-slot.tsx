@@ -1,5 +1,6 @@
 "use client";
 
+import { useAcademyMediaSrc } from "@/lib/academy/media/academy-media-context";
 import { useEffect, useState } from "react";
 import {
   lessonIllustrationEmojiClass,
@@ -9,6 +10,7 @@ import {
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import { cn } from "@/lib/utils/cn";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 
 type LessonIllustrationSlotProps = LessonIllustration & {
   className?: string;
@@ -42,6 +44,23 @@ function LessonIllustrationFallback({
   );
 }
 
+/** Neutral frame shown in place of a picture that failed to load. */
+function MissingPicturePlaceholder() {
+  return (
+    <span
+      className="absolute inset-2 flex items-center justify-center rounded-2xl border-2 border-dashed border-[#B9C7EA] bg-[#F4F7FF]"
+      data-testid="academy-media-placeholder"
+      aria-hidden
+    >
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8FA3D6" strokeWidth="1.6">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <circle cx="9" cy="10" r="1.6" />
+        <path d="M4 17l5-5 4 4 3-3 4 4" />
+      </svg>
+    </span>
+  );
+}
+
 const PICTURE_STYLE = {
   position: "absolute" as const,
   inset: 0,
@@ -56,7 +75,7 @@ const PICTURE_STYLE = {
  * printed the file name in place of the picture.
  */
 function FramedPicture({
-  src,
+  src: localSrc,
   alt,
   emoji,
   className,
@@ -70,6 +89,7 @@ function FramedPicture({
   imgClassName: string;
   imgStyle?: { transform: string; transformOrigin: string };
 }) {
+  const src = useAcademyMediaSrc(localSrc);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -88,12 +108,19 @@ function FramedPicture({
         fetchPriority="high"
         decoding="async"
         draggable={false}
-        onError={() => setFailed(true)}
+        onError={() => {
+          setFailed(true);
+          reportAcademyMediaFailed(src, "image");
+        }}
       />
-      {failed && emoji ? (
-        <span className={lessonIllustrationEmojiClass} aria-hidden>
-          {emoji}
-        </span>
+      {failed ? (
+        emoji ? (
+          <span className={lessonIllustrationEmojiClass} aria-hidden>
+            {emoji}
+          </span>
+        ) : (
+          <MissingPicturePlaceholder />
+        )
       ) : null}
     </div>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { useAcademyMediaBase } from "@/lib/academy/media/academy-media-context";
+import { academyLessonImageSrc } from "@/lib/academy/media/academy-media";
 import { useEffect, useRef } from "react";
 
 /**
@@ -14,18 +16,20 @@ export function LessonImagePreload({
   prioritySrc?: string;
 }) {
   const started = useRef(new Set<string>());
+  const base = useAcademyMediaBase();
 
   useEffect(() => {
-    for (const src of srcs) {
+    for (const localSrc of srcs) {
+      const src = academyLessonImageSrc(localSrc, base);
       if (started.current.has(src)) continue;
       started.current.add(src);
       const image = new Image();
       image.decoding = "async";
-      image.fetchPriority = src === prioritySrc ? "high" : "low";
+      image.fetchPriority = localSrc === prioritySrc ? "high" : "low";
       image.src = src;
       void image.decode?.().catch(() => undefined);
     }
-  }, [prioritySrc, srcs]);
+  }, [base, prioritySrc, srcs]);
 
   return null;
 }

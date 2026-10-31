@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "node tools/clean-next.mjs && next dev",
-    "prebuild": "node tools/check-dev-not-running.mjs",
+    "prebuild": "node tools/check-dev-not-running.mjs && npm run --silent academy:preview-job",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -20,7 +20,8 @@
     "lesson:upload:media": "npx tsx tools/upload-academy-media.ts",
     "check:quick": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts quick",
     "check:flow": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts flow",
-    "check:full": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts full"
+    "check:full": "npx tsx --tsconfig tsconfig.json tools/check-tier.ts full",
+    "academy:preview-job": "node -e \"process.exit(process.env.VERCEL_ENV==='preview'&&process.env.ACADEMY_PREVIEW_JOB==='1'?0:1)\" && tsx tools/academy-preview-job.ts || true"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -40,6 +41,7 @@
     "eslint": "^9.27.0",
     "eslint-config-next": "15.5.27",
     "tailwindcss": "^4.1.8",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.3",
     "vitest": "4.1.11"
   },

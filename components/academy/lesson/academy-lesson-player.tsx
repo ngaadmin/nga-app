@@ -33,6 +33,7 @@ import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { cn } from "@/lib/utils/cn";
+import { AcademyMediaProvider } from "@/lib/academy/media/academy-media-context";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;
@@ -42,6 +43,8 @@ type AcademyLessonPlayerProps = {
   explorerPayload?: LessonPayload;
   /** Maverick Module 1 from the master workbook. */
   maverickPayload?: LessonPayload;
+  /** academy-media bucket base. Set for lessons read from the database. */
+  mediaBase?: string;
 };
 
 export function AcademyLessonPlayer({
@@ -49,16 +52,19 @@ export function AcademyLessonPlayer({
   payload,
   explorerPayload,
   maverickPayload,
+  mediaBase = "",
 }: AcademyLessonPlayerProps) {
   return (
-    <SearchParamsBoundary>
-      <AcademyLessonPlayerGate
-        milestoneId={milestoneId}
-        payload={payload}
-        explorerPayload={explorerPayload}
-        maverickPayload={maverickPayload}
-      />
-    </SearchParamsBoundary>
+    <AcademyMediaProvider base={mediaBase}>
+      <SearchParamsBoundary>
+        <AcademyLessonPlayerGate
+          milestoneId={milestoneId}
+          payload={payload}
+          explorerPayload={explorerPayload}
+          maverickPayload={maverickPayload}
+        />
+      </SearchParamsBoundary>
+    </AcademyMediaProvider>
   );
 }
 

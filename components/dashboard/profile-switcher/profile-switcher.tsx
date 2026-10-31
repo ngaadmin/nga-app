@@ -35,6 +35,7 @@ export const PROFILE_SWITCHER_COPY = {
   here: "You're here",
   soon: "Coming soon",
   soonNote: "Switching profiles is coming soon.",
+  loading: "Loading profiles…",
 } as const;
 
 function ChevronGlyph({ up, className }: { up: boolean; className?: string }) {
@@ -209,21 +210,50 @@ function measure(anchor: HTMLElement | null): MenuBox | null {
   return { top: barBottom + 10, left, width, caretLeft };
 }
 
+function LoadingRow() {
+  return (
+    <li
+      data-profile-switcher-loading
+      role="status"
+      aria-live="polite"
+      className="flex items-center gap-[11px] rounded-[14px] border-2 border-transparent px-2.5 py-2"
+    >
+      <span
+        aria-hidden
+        className="size-10 shrink-0 animate-pulse rounded-full bg-[#E8F6FC]"
+      />
+      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <span
+          aria-hidden
+          className="h-3 w-28 animate-pulse rounded-full bg-[#E8F6FC]"
+        />
+        <span className="text-[11.5px] font-medium text-[#64748b]">
+          {PROFILE_SWITCHER_COPY.loading}
+        </span>
+      </span>
+    </li>
+  );
+}
+
 /**
  * Dropdown under the top-bar avatar: "View my profile", then the household's
  * profiles with the current one highlighted. No PIN and no lock icons.
+ * Always used for the avatar tap: while the household is loading the list
+ * shows a loading row; with no linked profiles only "View my profile" shows.
  */
 export function ProfileSwitcherMenu({
   open,
   anchorRef,
   household,
+  loading = false,
   currentAvatarId,
   onClose,
   onViewProfile,
 }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
-  household: HouseholdProfiles;
+  household: HouseholdProfiles | null;
+  loading?: boolean;
   currentAvatarId: ProfileAvatarId | null;
   onClose: () => void;
   onViewProfile: () => void;
@@ -263,7 +293,9 @@ export function ProfileSwitcherMenu({
   }, [anchorRef, onClose, open]);
 
   if (!open || !box || typeof document === "undefined") return null;
-  const hasOthers = household.profiles.some((profile) => !profile.isCurrent);
+  const profiles = household?.profiles ?? [];
+  const hasOthers = profiles.some((profile) => !profile.isCurrent);
+  const showList = loading || profiles.length > 0;
 
   return createPortal(
     <>
@@ -325,19 +357,32 @@ export function ProfileSwitcherMenu({
             />
           </svg>
         </button>
-        <p className="px-2.5 pb-1.5 pt-3 font-heading text-[11px] font-bold uppercase tracking-[0.6px] text-[#64748b]">
-          {PROFILE_SWITCHER_COPY.switchHeading}
-        </p>
-        <ul data-profile-switcher-list className="flex flex-col gap-1">
-          {household.profiles.map((profile) => (
-            <ProfileRow
-              key={profile.userId}
-              profile={profile}
-              currentAvatarId={currentAvatarId}
-            />
-          ))}
-        </ul>
-        {hasOthers && !PROFILE_SWITCHING_AVAILABLE ? (
+        {showList ? (
+          <>
+            <p className="px-2.5 pb-1.5 pt-3 font-heading text-[11px] font-bold uppercase tracking-[0.6px] text-[#64748b]">
+              {PROFILE_SWITCHER_COPY.switchHeading}
+            </p>
+            <ul
+              data-profile-switcher-list
+              data-profile-switcher-list-state={loading ? "loading" : "ready"}
+              aria-busy={loading || undefined}
+              className="flex flex-col gap-1"
+            >
+              {loading ? (
+                <LoadingRow />
+              ) : (
+                profiles.map((profile) => (
+                  <ProfileRow
+                    key={profile.userId}
+                    profile={profile}
+                    currentAvatarId={currentAvatarId}
+                  />
+                ))
+              )}
+            </ul>
+          </>
+        ) : null}
+        {!loading && hasOthers && !PROFILE_SWITCHING_AVAILABLE ? (
           <p
             data-profile-switcher-soon-note
             className="px-2.5 pb-1 pt-2 text-[11.5px] font-medium leading-snug text-[#64748b]"

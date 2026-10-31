@@ -388,3 +388,26 @@ export function planCashBucketAssignment(input: {
   if (sum !== cashCents) return { ok: false, reason: "mismatch" };
   return { ok: true, remainingDollars: 0, allocations };
 }
+
+/** How many cash-ins make up the owed total (same rules as the sum). */
+export function countOwedCashIns(
+  wallet: Parameters<typeof sumOwedCashInCents>[0],
+): number {
+  if (!wallet) return 0;
+  const resetMs = wallet.cashInOwedResetAt
+    ? Date.parse(wallet.cashInOwedResetAt)
+    : Number.NaN;
+  const hasReset = Number.isFinite(resetMs);
+  let count = 0;
+  for (const event of wallet.ledger ?? []) {
+    if (event.kind !== "spend") continue;
+    const cents = event.audCents ?? 0;
+    if (!Number.isInteger(cents) || cents <= 0) continue;
+    if (hasReset) {
+      const at = Date.parse(event.at);
+      if (!Number.isFinite(at) || at <= resetMs) continue;
+    }
+    count += 1;
+  }
+  return count;
+}

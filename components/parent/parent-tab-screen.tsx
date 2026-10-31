@@ -6,13 +6,16 @@ import {
   useRef,
   useState,
 } from "react";
-import Link from "next/link";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { CheckIcon, GoldCoinIcon, LockIcon } from "@/lib/dashboard/icons";
-import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
+import { GoldCoinIcon } from "@/lib/dashboard/icons";
+import { markLinkedChildCashInPaid } from "@/lib/dashboard/linked-child-exchange-rate";
+import {
+  masteryCohortLabel,
+  type MasteryCohort,
+} from "@/lib/dashboard/mastery-cohort";
 import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import {
   approveConsentRequestFromParentTab,
@@ -21,6 +24,7 @@ import {
 import { convertToRegisteredProfile } from "@/lib/onboarding/guest-session";
 import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
+import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
 import {
   loadParentTabData,
   type ParentTabChildSummary,
@@ -103,46 +107,38 @@ export function ParentTabScreen({
     <div
       data-parent-tab
       data-parent-tab-state={unlocked ? "unlocked" : "locked"}
-      className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden bg-white px-1 py-2 pb-8"
-    >
-      <div className="px-1">
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="font-heading text-[25px] font-extrabold leading-tight tracking-[-0.2px] text-[#031F82]">
-            Parent dashboard
-          </h1>
-          {unlocked ? (
-            <button
-              type="button"
-              data-parent-tab-lock
-              onClick={lock}
-              className="mt-1 inline-flex shrink-0 items-center gap-1 rounded-full bg-[#E8F6FC] px-2.5 py-1 font-sans text-[11px] font-semibold text-[#031F82] transition-opacity hover:opacity-80"
-            >
-              <LockIcon className="size-3.5" />
-              Lock
-            </button>
-          ) : null}
-        </div>
-        <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]">
-          Only you can see this. We ask for your PIN every time you open it.
-        </p>
-      </div>
-
-      {unlocked ? (
-        pass ? (
-          <UnlockedView
-            data={data}
-            loadError={loadError}
-            onChanged={() => void refresh(pass)}
-          />
-        ) : null
-      ) : (
-        <ParentPinGate
-          key={`${parentUserId}:${gateKey}`}
-          parentName={parentName}
-          enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent tab.`}
-          onUnlocked={unlock}
-        />
+      className={cn(
+        // Full-bleed light blue page, as in the r6 design. Cancels the
+        // dashboard main padding so the color reaches the edges.
+        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex min-h-0 flex-1 flex-col bg-[#E8F6FC] px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
       )}
+    >
+      <div className="mx-auto flex w-full max-w-md flex-col overflow-x-hidden">
+        <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
+          Parent dashboard
+        </h1>
+        <p className="mt-px font-sans text-[13px] text-[#1E3A5F]">
+          Only you can see this. It&apos;s PIN-protected.
+        </p>
+
+        {unlocked ? (
+          pass ? (
+            <UnlockedView
+              data={data}
+              loadError={loadError}
+              onChanged={() => void refresh(pass)}
+            />
+          ) : null
+        ) : (
+          <ParentPinGate
+            key={`${parentUserId}:${gateKey}`}
+            parentName={parentName}
+            className="mx-0"
+            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent tab.`}
+            onUnlocked={unlock}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -157,76 +153,143 @@ function shortDate(iso: string): string | null {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function ChildCard({
-  child,
-  selected,
-  onSelect,
-}: {
-  child: ParentTabChildSummary;
-  selected: boolean;
-  onSelect: () => void;
-}) {
+const TRACK_CHIP: Record<MasteryCohort, string> = {
+  explorer: "bg-[#EDE7FE] text-[#6D3FE0]",
+  pathfinder: "bg-[#E0F7FB] text-[#0288A3]",
+  maverick: "bg-[#FFE9D6] text-[#B45309]",
+};
+
+/** One child: avatar, name, track, lifetime lessons, coins to cash in. */
+function ChildCard({ child }: { child: ParentTabChildSummary }) {
   const avatarId = readStoredProfileAvatarId(
     child.userId,
     child.cohort ?? "explorer",
   );
   return (
-    <button
-      type="button"
+    <div
       data-parent-tab-child={child.username}
-      aria-pressed={selected}
-      onClick={onSelect}
       className={cn(
-        "relative min-w-0 rounded-[14px] border-2 px-[9px] py-2 text-left transition-colors",
-        selected
-          ? "border-[#031F82] bg-white"
-          : "border-transparent bg-[#E8F6FC]",
+        "grid grid-cols-[56px_1fr_auto] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5",
+        CARD_SHADOW,
       )}
     >
-      {selected ? (
-        <span className="absolute right-2 top-[7px] flex size-4 items-center justify-center rounded-full bg-[#031F82] text-white">
-          <CheckIcon className="size-2.5" />
-        </span>
-      ) : null}
-      <span className="flex items-center gap-[7px] pr-4">
-        <ProfileAvatarImage avatarId={avatarId} className="size-8" />
-        <span className="min-w-0">
-          <span className="block truncate font-heading text-sm font-bold leading-tight text-[#031F82]">
-            {child.username}
+      <ProfileAvatarImage avatarId={avatarId} className="size-14" />
+      <div className="min-w-0">
+        <p className="truncate font-heading text-[17px] font-bold leading-tight text-[#031F82]">
+          {child.username}
+        </p>
+        {child.status === "waiting" ? (
+          <span className="mt-1 inline-block rounded-full bg-[#FFE7B3] px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px] text-[#8A5300]">
+            Waiting
           </span>
-          {child.status === "waiting" ? (
-            <span className="mt-0.5 inline-block rounded-full bg-[#FFE7B3] px-1.5 py-px font-sans text-[10px] font-semibold text-[#8A5300]">
-              Waiting
-            </span>
-          ) : child.cohort ? (
-            <span className="block font-heading text-[10px] font-bold uppercase text-[#0288A3]">
-              {masteryCohortLabel(child.cohort)}
-            </span>
-          ) : null}
-        </span>
-      </span>
-      <span
+        ) : child.cohort ? (
+          <span
+            data-parent-tab-child-track
+            className={cn(
+              "mt-1 inline-block rounded-full px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px]",
+              TRACK_CHIP[child.cohort],
+            )}
+          >
+            {masteryCohortLabel(child.cohort)}
+          </span>
+        ) : null}
+      </div>
+      <div
         data-parent-tab-child-summary
-        className="mt-[7px] flex items-center gap-[7px] whitespace-nowrap font-sans text-[11px] font-semibold text-[#1E3A5F]"
+        className="flex flex-col items-end gap-1.5 text-right font-sans text-[12.5px] font-medium text-[#1E3A5F]"
       >
-        <span>
-          <b className="font-heading text-xs font-bold text-[#031F82]">
+        <span className="inline-flex items-center whitespace-nowrap">
+          <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
             {child.lessonsDone}
-          </b>{" "}
-          {summaryWord(child.lessonsDone, "lesson", "lessons")} done
+          </b>
+          {summaryWord(child.lessonsDone, "lesson", "lessons")}
         </span>
         <span
-          className="flex items-center gap-0.5"
           data-parent-tab-child-coins
-          aria-label={`${child.coins} coins to cash in`}
+          className="inline-flex items-center whitespace-nowrap rounded-full bg-[#FFF4DE] py-[3px] pl-1.5 pr-2.5"
         >
-          <GoldCoinIcon className="size-[13px]" />
-          <b className="font-heading text-xs font-bold text-[#031F82]">
+          <GoldCoinIcon className="mr-[5px] size-[15px]" />
+          <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
             {child.coins}
           </b>
+          {summaryWord(child.coins, "coin", "coins")} to cash in
         </span>
-      </span>
-    </button>
+      </div>
+    </div>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      width="18"
+      height="18"
+      aria-hidden
+      className={cn(
+        "block shrink-0 text-[#031F82] transition-transform",
+        open && "rotate-180",
+      )}
+    >
+      <path
+        d="M5 7.5 10 12.5 15 7.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Messages log, collapsed by default. No messages table exists yet, so the
+ * open log says so; the unread badge counts unread rows (0 for now).
+ */
+function MessagesLog({ messages }: { messages: readonly never[] }) {
+  const [open, setOpen] = useState(false);
+  const unread = 0;
+  return (
+    <section
+      data-parent-tab-messages
+      data-parent-tab-messages-state={open ? "open" : "closed"}
+      className={cn("mt-3 rounded-2xl bg-white px-3.5", CARD_SHADOW)}
+    >
+      <button
+        type="button"
+        data-parent-tab-messages-toggle
+        aria-expanded={open}
+        aria-controls="parent-tab-messages-log"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center gap-2 py-[13px] text-left"
+      >
+        <h2 className="flex-1 font-heading text-[15px] font-bold text-[#031F82]">
+          Messages
+        </h2>
+        <span
+          data-parent-tab-messages-unread={unread}
+          className={cn(
+            "rounded-full px-2 py-0.5 font-sans text-[11.5px] font-semibold",
+            unread > 0
+              ? "bg-[#E11D48] text-white"
+              : "bg-[#EEF3FA] text-[#64748b]",
+          )}
+        >
+          {unread} unread
+        </span>
+        <ChevronIcon open={open} />
+      </button>
+      {open ? (
+        <div id="parent-tab-messages-log" className="pb-[13px]">
+          {messages.length === 0 ? (
+            <p className="border-t border-[#eef3fa] pt-2.5 font-sans text-[13px] font-semibold text-[#031F82]">
+              No messages yet.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -240,7 +303,6 @@ function UnlockedView({
   onChanged: () => void;
 }) {
   const { currencyCode } = useCurrency();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [review, setReview] = useState<Extract<
     ParentTabOkItem,
     { kind: "approval" }
@@ -249,6 +311,13 @@ function UnlockedView({
   const [reviewError, setReviewError] = useState<string | null>(null);
   /** Approve/decline tapped: the PIN is asked again for this one action. */
   const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
+  /** To settle: the parent confirms they paid this amount outside the app. */
+  const [settle, setSettle] = useState<Extract<
+    ParentTabOkItem,
+    { kind: "owed" }
+  > | null>(null);
+  const [settleBusy, setSettleBusy] = useState(false);
+  const [settleError, setSettleError] = useState<string | null>(null);
 
   if (loadError) {
     return (
@@ -264,11 +333,6 @@ function UnlockedView({
       </p>
     );
   }
-
-  const selected =
-    data.children.find((child) => child.userId === selectedId) ??
-    data.children[0] ??
-    null;
 
   async function decide(approve: boolean, actionPass: string) {
     if (!review || busy) return;
@@ -317,39 +381,57 @@ function UnlockedView({
     }
   }
 
+  async function markPaid() {
+    if (!settle || settleBusy) return;
+    setSettleBusy(true);
+    setSettleError(null);
+    try {
+      const result = await markLinkedChildCashInPaid({
+        childId: settle.childUserId,
+      });
+      if (!result.ok) {
+        setSettleError(result.error || "Could not mark that as paid. Try again.");
+        return;
+      }
+      setSettle(null);
+      onChanged();
+    } finally {
+      setSettleBusy(false);
+    }
+  }
+
   return (
-    <div data-parent-tab-content className="px-1">
+    <div data-parent-tab-content>
       <div
-        className="mt-3 grid grid-cols-2 gap-2"
+        data-parent-tab-children
+        className="mt-3 flex flex-col gap-2.5"
         role="group"
         aria-label="Your children"
       >
         {data.children.map((child) => (
-          <ChildCard
-            key={child.userId}
-            child={child}
-            selected={selected?.userId === child.userId}
-            onSelect={() => setSelectedId(child.userId)}
-          />
+          <ChildCard key={child.userId} child={child} />
         ))}
       </div>
 
       <section
         data-parent-tab-needs-ok
-        className="mt-3 rounded-2xl border-2 border-[#FFA503] bg-[#FFF8EA] px-[13px] pb-1.5 pt-3"
+        className={cn(
+          "mt-3 rounded-2xl border-2 border-[#FFA503] bg-[#FFF8EA] px-3.5 pb-1 pt-[13px]",
+          CARD_SHADOW,
+        )}
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-heading text-[15px] font-bold text-[#031F82]">
             Needs your OK
           </h2>
-          <small className="font-sans text-xs font-semibold text-[#8A5300]">
+          <small className="font-sans text-[11.5px] font-semibold text-[#8A5300]">
             {data.needsOk.length === 0
               ? "All done"
               : `${data.needsOk.length} to do`}
           </small>
         </div>
         {data.needsOk.length === 0 ? (
-          <p className="pb-2 pt-1 font-sans text-[12.5px] text-[#1E3A5F]">
+          <p className="pb-2.5 pt-1 font-sans text-[12.5px] text-[#1E3A5F]">
             Nothing needs your OK right now.
           </p>
         ) : (
@@ -362,11 +444,11 @@ function UnlockedView({
               }
               data-parent-tab-ok-row={item.kind}
               className={cn(
-                "flex items-center gap-2.5 py-[9px]",
+                "flex items-center gap-2.5 py-2.5",
                 index > 0 && "border-t border-[#F6DFA8]",
               )}
             >
-              <div className="min-w-0 flex-1 font-sans text-[13px] font-bold leading-tight text-[#031F82]">
+              <div className="min-w-0 flex-1 font-sans text-[13.5px] font-bold leading-tight text-[#031F82]">
                 <em className="mb-0.5 block font-sans text-[10.5px] font-semibold uppercase not-italic tracking-[0.3px] text-[#8A5300]">
                   {item.kind === "approval" ? "Account approval" : "To settle"}
                 </em>
@@ -374,7 +456,7 @@ function UnlockedView({
                   <>
                     {item.childUsername} is waiting for approval
                     {shortDate(item.expiresAt) ? (
-                      <span className="mt-px block font-sans text-[11px] font-medium text-[#1E3A5F]">
+                      <span className="mt-0.5 block font-sans text-[11.5px] font-medium text-[#1E3A5F]">
                         Request expires on {shortDate(item.expiresAt)}.
                       </span>
                     ) : null}
@@ -385,8 +467,11 @@ function UnlockedView({
                     <span className="font-heading text-base font-extrabold">
                       {formatMoney(item.owedCents / 100, currencyCode)}
                     </span>
-                    <span className="mt-px block font-sans text-[11px] font-medium text-[#1E3A5F]">
-                      You pay this outside the app.
+                    <span
+                      data-parent-tab-settle-help
+                      className="mt-0.5 block font-sans text-[11.5px] font-medium text-[#1E3A5F]"
+                    >
+                      {settleHelpLine(item.cashIns)}
                     </span>
                   </>
                 )}
@@ -395,57 +480,92 @@ function UnlockedView({
                 <button
                   type="button"
                   data-parent-tab-review
+                  data-parent-ok-pill
                   onClick={() => {
                     setReviewError(null);
                     setReview(item);
                   }}
-                  className="shrink-0 rounded-full bg-[#FFA503] px-3.5 py-[7px] font-heading text-[12.5px] font-bold text-white shadow-[0_3px_0_#C88202]"
+                  className="parent-ok-pill"
                 >
                   Review
                 </button>
               ) : (
-                <Link
-                  href="/dashboard/settings"
-                  className="shrink-0 rounded-full bg-[#FFA503] px-3.5 py-[7px] font-heading text-[12.5px] font-bold text-white shadow-[0_3px_0_#C88202]"
+                <button
+                  type="button"
+                  data-parent-tab-mark-paid
+                  data-parent-ok-pill
+                  onClick={() => {
+                    setSettleError(null);
+                    setSettle(item);
+                  }}
+                  className="parent-ok-pill"
                 >
-                  Settle
-                </Link>
+                  Mark as paid
+                </button>
               )}
             </div>
           ))
         )}
       </section>
 
-      <section
-        data-parent-tab-messages
-        className={cn(
-          "mt-2.5 rounded-2xl bg-white px-3.5 py-[13px]",
-          CARD_SHADOW,
-        )}
-      >
-        <div className="mb-1 flex items-center justify-between">
-          <h2 className="font-heading text-[15px] font-bold text-[#031F82]">
-            Messages
-          </h2>
-        </div>
-        <p className="font-sans text-[12.5px] font-semibold text-[#031F82]">
-          No messages yet.
-        </p>
-        <p className="font-sans text-[11px] text-[#64748b]">
-          Updates about your children will show up here.
-        </p>
-      </section>
+      <MessagesLog messages={data.messages} />
 
-      <p className="mt-3 text-center font-sans text-xs text-[#1E3A5F]">
-        Profiles, coin rates and other controls are in{" "}
-        <Link
-          href="/dashboard/settings"
-          className="font-semibold text-[#031F82] underline underline-offset-2"
-        >
-          Settings
-        </Link>
-        .
-      </p>
+      <ModalShell
+        isOpen={Boolean(settle)}
+        onClose={() => {
+          if (settleBusy) return;
+          setSettle(null);
+        }}
+        layer="toast"
+        labelledBy="parent-tab-settle-title"
+        backdropClassName="bg-[#031F82]/55"
+        panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
+      >
+        {settle ? (
+          <div data-parent-tab-settle-sheet>
+            <h2
+              id="parent-tab-settle-title"
+              className="font-heading text-lg font-extrabold text-[#031F82]"
+            >
+              Did you pay {settle.childUsername}{" "}
+              {formatMoney(settle.owedCents / 100, currencyCode)}?
+            </h2>
+            <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">
+              The app doesn&apos;t move money. Pay {settle.childUsername}{" "}
+              yourself, then mark it as paid here. The amount owed goes back
+              to zero.
+            </p>
+            {settleError ? (
+              <p
+                role="alert"
+                className="mt-2 font-sans text-[12.5px] font-semibold text-[#B42318]"
+              >
+                {settleError}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                type="button"
+                data-parent-tab-mark-paid-confirm
+                disabled={settleBusy}
+                onClick={() => void markPaid()}
+                className="rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] disabled:opacity-50"
+              >
+                Yes, mark as paid
+              </button>
+              <button
+                type="button"
+                data-parent-tab-mark-paid-cancel
+                disabled={settleBusy}
+                onClick={() => setSettle(null)}
+                className="py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
+              >
+                Not yet
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </ModalShell>
 
       <ModalShell
         isOpen={Boolean(review)}

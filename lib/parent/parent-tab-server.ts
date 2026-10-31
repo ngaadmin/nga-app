@@ -3,7 +3,7 @@
 import "server-only";
 
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
-import { sumOwedCashInCents } from "@/lib/dashboard/xp-cash";
+import { countOwedCashIns, sumOwedCashInCents } from "@/lib/dashboard/xp-cash";
 import { readLearnerProgressPayloads } from "@/lib/onboarding/learner-progress-store";
 import { listPendingConsentRequestsForParent } from "@/lib/onboarding/approve-consent-request";
 import { isParentTabEligible } from "@/lib/parent/parent-tab-eligibility";
@@ -372,6 +372,8 @@ export type ParentTabOkItem =
       childUserId: string;
       childUsername: string;
       owedCents: number;
+      /** Cash-ins that make up owedCents. */
+      cashIns: number;
     };
 
 export type ParentTabData = {
@@ -459,15 +461,17 @@ export async function loadParentTabData(
   for (const row of shown) {
     if (row.account_status !== "active") continue;
     const progress = payloads.get(row.id) as { wallet?: unknown } | undefined;
-    const owedCents = sumOwedCashInCents(
-      (progress?.wallet ?? null) as Parameters<typeof sumOwedCashInCents>[0],
-    );
+    const wallet = (progress?.wallet ?? null) as Parameters<
+      typeof sumOwedCashInCents
+    >[0];
+    const owedCents = sumOwedCashInCents(wallet);
     if (owedCents > 0) {
       needsOk.push({
         kind: "owed",
         childUserId: row.id,
         childUsername: String(row.username).trim(),
         owedCents,
+        cashIns: countOwedCashIns(wallet),
       });
     }
   }

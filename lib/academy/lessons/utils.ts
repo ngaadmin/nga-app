@@ -1,11 +1,27 @@
+import { readMasterMuted } from "@/lib/academy/lessons/story-audio/master-mute";
+
 const WRONG_VIBRATION_PATTERN = [60, 40, 60];
 
-/**
- * Lesson feedback audio stays on. The app has no sound or mute preference
- * to read. Callers can still pass `sound: false` to skip a single cue.
- */
+const liveContexts = new Set<AudioContext>();
+const liveStops: ReturnType<typeof setTimeout>[] = [];
+
+/** Answer sounds follow the master mute. Callers can still pass `sound: false` for one cue. */
 function lessonFeedbackSoundEnabled(): boolean {
-  return true;
+  return !readMasterMuted();
+}
+
+/** Stop every answer sound that is still ringing. */
+export function silenceLessonFeedback(): void {
+  for (const timer of liveStops) clearTimeout(timer);
+  liveStops.length = 0;
+  for (const ctx of liveContexts) {
+    try {
+      void ctx.close();
+    } catch {
+      /* A closed or fake context can refuse. */
+    }
+  }
+  liveContexts.clear();
 }
 
 function playOscillators(
@@ -20,8 +36,10 @@ function playOscillators(
   if (typeof window === "undefined" || !lessonFeedbackSoundEnabled()) return;
   try {
     const ctx = new window.AudioContext();
+    liveContexts.add(ctx);
     void ctx.resume?.();
     const now = ctx.currentTime;
+    let endAt = 0;
     for (const note of notes) {
       const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -34,7 +52,17 @@ function playOscillators(
       gain.gain.exponentialRampToValueAtTime(0.01, startAt + note.duration);
       oscillator.start(startAt);
       oscillator.stop(startAt + note.duration);
+      endAt = Math.max(endAt, note.start + note.duration);
     }
+    const timer = setTimeout(() => {
+      liveContexts.delete(ctx);
+      try {
+        void ctx.close();
+      } catch {
+        /* Already closed by the master switch. */
+      }
+    }, endAt * 1000 + 40);
+    liveStops.push(timer);
   } catch {
     /* Audio optional in sandboxed contexts */
   }

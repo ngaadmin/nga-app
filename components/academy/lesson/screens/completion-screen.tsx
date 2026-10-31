@@ -26,10 +26,12 @@ export function CompletionScreen({
         screen.suppressMedal ? null : (screen.medalTier ?? flow.skillMedalTier)
       }
       medalId={screen.suppressMedal ? undefined : screen.medalId}
+      medalSrc={screen.suppressMedal ? undefined : screen.medalSrc}
       authoredMedal={screen.suppressMedal ? false : screen.authoredMedal}
       suppressMedal={screen.suppressMedal === true}
       skillName={screen.skillName}
       leadCharacter={screen.leadCharacter}
+      portraitSrc={screen.portraitSrc}
       skillLearnedLabel={screen.skillLearnedLabel}
       onCashIn={flow.handleCashInPoints}
       onContinue={flow.handleContinueAfterCashIn}

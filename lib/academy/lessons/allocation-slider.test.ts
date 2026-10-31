@@ -7,10 +7,10 @@ import {
   allocationTrackInsetPx,
   saveAmountFromClientX,
 } from "@/lib/academy/lessons/allocation-slider";
-import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
+import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
+import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
 import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
-import { resolveLessonDefinition } from "@/lib/academy/lessons/types";
 
 describe("allocation slider", () => {
   it("enables Next only when Save is exactly the target", () => {
@@ -108,15 +108,26 @@ describe("allocation slider", () => {
     ]);
   });
 
-  it("gives Lars three short lines and a $20 save target", () => {
-    const lesson = resolveLessonDefinition(M1_L2_LESSON_DEFINITION, "explorer");
+  it("plays the Explorer lesson 2 slider from the live Explorer payload", () => {
+    const bundled = loadBundledLessonPayload(1, 2);
+    const explorer = loadExplorerM1Payload(2);
+    const selected = selectLessonPayload("explorer", bundled, explorer);
+    expect(selected).toBe(explorer);
+    expect(selected).toBeTruthy();
+    if (!selected) return;
+
+    const lesson = resolvePayloadLesson(selected, "explorer", 2);
     const slider = lesson.screens.find((screen) => screen.type === "allocation-slider");
+    // The archived baked lesson expected total 25, targetMin 20, and the
+    // Senna phone-case intro. The payload Explorer plays today is below.
     expect(slider).toMatchObject({
       type: "allocation-slider",
-      total: 25,
-      targetMin: 20,
-      intro:
-        "Lars has $25 💰\nHe needs $20 for Senna's phone case 🎁\nSlide to save at least $20 👇",
+      total: 15,
+      targetMin: 10,
+      match: "at-least",
     });
+    expect(slider && "intro" in slider ? slider.intro.replace(/\r\n/g, "\n") : "").toBe(
+      "On Friday, Lars earns $10 helping Mom with chores. Now he has $15. The phone case costs $10.\n\nSlide to keep at least $10 for the gift.",
+    );
   });
 });

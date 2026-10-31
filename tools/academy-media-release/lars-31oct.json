@@ -1,0 +1,147 @@
+{
+  "approvedBy": "Jasper (image placement)",
+  "approvedOn": "2026-10-31",
+  "note": "Compressed Lars set approved from the 28-file contact sheet. beat-ex-m1-l8-r2 holds the approved l8-r4 art and beat-ex-m1-l9-r1 the approved l9-r3 art. Upload releases only these names, only if every md5 matches and none of them exists in the bucket yet.",
+  "files": {
+    "beat-ex-m1-l2-r2.webp": {
+      "md5": "528cf57e74b74097291ff4257d7f603b",
+      "bytes": 83520,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l3-r2.webp": {
+      "md5": "abfaf4c60571839c64aecf6febf546d1",
+      "bytes": 86748,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l4-r2.webp": {
+      "md5": "c2eb4b7e71e3d3895f79681ae9d25c4d",
+      "bytes": 88318,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l5-r5.webp": {
+      "md5": "76d27a426abbe403b2ffa748b77a5d08",
+      "bytes": 83248,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l6-r2.webp": {
+      "md5": "2ecacb4bf18d92f95e774d12b67a0611",
+      "bytes": 91152,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l7-r2.webp": {
+      "md5": "427be798faa37f77062c8105d5f12aa0",
+      "bytes": 88628,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l8-r2.webp": {
+      "md5": "5f48a59966e41febacbf1ea1afbafcb8",
+      "bytes": 90094,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "beat-ex-m1-l9-r1.webp": {
+      "md5": "e6d1b85ed963c03e127c68d194263fc2",
+      "bytes": 88302,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "em1-03-l1r11-lars-lemonade-r3.webp": {
+      "md5": "49c66d57810a2a1e62219b1c93863282",
+      "bytes": 33034,
+      "from": "public/assets/illustrations/characters/pairs/em1-03-l1r11-lars-lemonade-r3.webp"
+    },
+    "em1-04-l2r20-lars-mom-bike-note-r3.webp": {
+      "md5": "c0fc4576dbf8a941ba5658c166ebd8ae",
+      "bytes": 47112,
+      "from": "public/assets/illustrations/characters/pairs/em1-04-l2r20-lars-mom-bike-note-r3.webp"
+    },
+    "em1-07-l3r31-lars-mason-empty-wallet-r1.webp": {
+      "md5": "a4adf36baa5c589783a944e4d23bddfa",
+      "bytes": 39402,
+      "from": "public/assets/illustrations/characters/pairs/em1-07-l3r31-lars-mason-empty-wallet-r1.webp"
+    },
+    "em1-10-l5r50-lars-mia-gelato-r1.webp": {
+      "md5": "31095f38690935f4d25631fb6b3d5434",
+      "bytes": 42628,
+      "from": "public/assets/illustrations/characters/pairs/em1-10-l5r50-lars-mia-gelato-r1.webp"
+    },
+    "em1-11-l6r59-lars-movie-ticket-r1.webp": {
+      "md5": "c08d0fdc63092a47b79b1c6e63f3c300",
+      "bytes": 33414,
+      "from": "public/assets/illustrations/characters/pairs/em1-11-l6r59-lars-movie-ticket-r1.webp"
+    },
+    "em1-15-l7r72-lars-bike-dream-r1.webp": {
+      "md5": "9ba46d1ce9f8729bdc9e7bd0c994c464",
+      "bytes": 38592,
+      "from": "public/assets/illustrations/characters/pairs/em1-15-l7r72-lars-bike-dream-r1.webp"
+    },
+    "em1-16-l7r73-lars-wallet-mall-r1.webp": {
+      "md5": "442610a4cb73dec6e57e2411dd0a9fdd",
+      "bytes": 31248,
+      "from": "public/assets/illustrations/characters/pairs/em1-16-l7r73-lars-wallet-mall-r1.webp"
+    },
+    "em1-18-l9r103-lars-closer-to-bike-r1.webp": {
+      "md5": "c96d152860937f45e19b25f18ec6c029",
+      "bytes": 40438,
+      "from": "public/assets/illustrations/characters/pairs/em1-18-l9r103-lars-closer-to-bike-r1.webp"
+    },
+    "lars-celebrating-512.webp": {
+      "md5": "ec9eaaaf6c83801ae01b26b731572c78",
+      "bytes": 16522,
+      "from": "public/assets/illustrations/characters/lars/lars-celebrating-512.webp"
+    },
+    "lars-deciding-512.webp": {
+      "md5": "93aaef106c3bb43a8f0305e7c2091d6b",
+      "bytes": 14674,
+      "from": "public/assets/illustrations/characters/lars/lars-deciding-512.webp"
+    },
+    "lars-mason-chatting-512.webp": {
+      "md5": "091b97e625763e3f73d1c3a59b1d3a2e",
+      "bytes": 30352,
+      "from": "public/assets/illustrations/pairs/lars-mason-chatting-512.webp"
+    },
+    "lars-mason-chatting.webp": {
+      "md5": "a9acefe28e03100b785d57f73f8e7c6a",
+      "bytes": 88668,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "lars-mason-sidebyside-512.webp": {
+      "md5": "047f5bc1c0836b98c2973a3302b72f3a",
+      "bytes": 30370,
+      "from": "public/assets/illustrations/pairs/lars-mason-sidebyside-512.webp"
+    },
+    "lars-mason-sidebyside.webp": {
+      "md5": "178dcec6cb5a3d82c1e864823f1b82d3",
+      "bytes": 87348,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "lars-mia-chatting.webp": {
+      "md5": "e57472b1bfaa1afe23cd66ab754a989a",
+      "bytes": 87342,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "lars-mia-sidebyside.webp": {
+      "md5": "3b7532cc522d211d0d7cbbd1295d9f0b",
+      "bytes": 92046,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "lars-senna-chatting.webp": {
+      "md5": "7587ae0237079bd24ddd23da236be6aa",
+      "bytes": 91532,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "lars-senna-sidebyside.webp": {
+      "md5": "1341f733068b1147a02645da02253eff",
+      "bytes": 89730,
+      "from": "tools/academy-media-release/lars-31oct"
+    },
+    "lars-thinking-512.webp": {
+      "md5": "bd555102e08653555f8fde9db31456f3",
+      "bytes": 12340,
+      "from": "public/assets/illustrations/characters/lars/lars-thinking-512.webp"
+    },
+    "lars-waving-512.webp": {
+      "md5": "3d544fec9fcdf036782c973800da7a80",
+      "bytes": 15460,
+      "from": "public/assets/illustrations/characters/lars/lars-waving-512.webp"
+    }
+  }
+}

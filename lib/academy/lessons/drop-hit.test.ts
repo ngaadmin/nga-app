@@ -48,3 +48,24 @@ describe("bestDropZone", () => {
     ).toBe("right");
   });
 });
+
+describe("bestDropZone with blanks on neighboring lines", () => {
+  // Two word-drop blanks 36px apart: their padded zones overlap.
+  const upper = { id: 0, rect: { left: 460, top: 240, right: 576, bottom: 276 } };
+  const lower = { id: 1, rect: { left: 460, top: 282, right: 556, bottom: 312 } };
+
+  it("drops into the lower blank when the pointer is on it", () => {
+    const drag = { x: 450, y: 280, width: 116, height: 36 };
+    expect(bestDropZone([upper, lower], drag, 508, 297)).toBe(1);
+  });
+
+  it("drops into the upper blank when the pointer is on it", () => {
+    const drag = { x: 460, y: 240, width: 116, height: 36 };
+    expect(bestDropZone([upper, lower], drag, 518, 258)).toBe(0);
+  });
+
+  it("picks the nearer blank when the pointer is between them", () => {
+    expect(bestDropZone([upper, lower], null, 500, 280)).toBe(1);
+    expect(bestDropZone([upper, lower], null, 500, 277)).toBe(0);
+  });
+});

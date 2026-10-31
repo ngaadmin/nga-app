@@ -33,28 +33,38 @@ import { DASHBOARD_ACADEMY_PATH } from "@/lib/onboarding/guest-session";
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { cn } from "@/lib/utils/cn";
+import { AcademyMediaProvider } from "@/lib/academy/media/academy-media-context";
 
 type AcademyLessonPlayerProps = {
   milestoneId: number;
   /** When set, this lesson renders from the payload instead of a hard-coded file. */
   payload?: LessonPayload;
-  /** Explorer Module 1 proof of concept. Other cohorts keep `payload`. */
+  /** Explorer Module 1. Other cohorts keep `payload` unless `maverickPayload` is set. */
   explorerPayload?: LessonPayload;
+  /** Maverick Module 1 from the master workbook. */
+  maverickPayload?: LessonPayload;
+  /** academy-media bucket base. Set for lessons read from the database. */
+  mediaBase?: string;
 };
 
 export function AcademyLessonPlayer({
   milestoneId,
   payload,
   explorerPayload,
+  maverickPayload,
+  mediaBase = "",
 }: AcademyLessonPlayerProps) {
   return (
-    <SearchParamsBoundary>
-      <AcademyLessonPlayerGate
-        milestoneId={milestoneId}
-        payload={payload}
-        explorerPayload={explorerPayload}
-      />
-    </SearchParamsBoundary>
+    <AcademyMediaProvider base={mediaBase}>
+      <SearchParamsBoundary>
+        <AcademyLessonPlayerGate
+          milestoneId={milestoneId}
+          payload={payload}
+          explorerPayload={explorerPayload}
+          maverickPayload={maverickPayload}
+        />
+      </SearchParamsBoundary>
+    </AcademyMediaProvider>
   );
 }
 
@@ -62,6 +72,7 @@ function AcademyLessonPlayerGate({
   milestoneId,
   payload,
   explorerPayload,
+  maverickPayload,
 }: AcademyLessonPlayerProps) {
   const cohort = useLessonMasteryCohort();
   const { ready: progressReady } = useIntroRestoreGate();
@@ -89,6 +100,8 @@ function AcademyLessonPlayerGate({
     const node = readAcademyMilestones().find(
       (entry) => entry.id === milestoneId,
     );
+    // Preview and development deploys may open a locked lesson for any cohort.
+    // Production still requires the previous lesson to be finished.
     const allowed =
       node != null &&
       canLaunchAcademyLesson(milestoneId, node.status, cohort);
@@ -128,7 +141,7 @@ function AcademyLessonPlayerGate({
     <AcademyLessonPlayerInner
       milestoneId={milestoneId}
       isPreview={isPreview}
-      payload={selectLessonPayload(cohort, payload, explorerPayload)}
+      payload={selectLessonPayload(cohort, payload, explorerPayload, maverickPayload)}
     />
   );
 }

@@ -1,9 +1,11 @@
+import { celebratingPortraitSrc } from "@/lib/academy/lessons/celebrating-portrait";
 import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
 import { parseCashUpdate, type CashComparison, type CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
 import { screenLabelKey } from "@/lib/academy/lessons/payload/lesson-graph";
 import {
   characterPoseFilePath,
+  getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
 import {
@@ -281,9 +283,9 @@ function readEmojiAt(
   return { emoji: chars.slice(start, end).join(""), end };
 }
 
-/** `senna-celebrating` → Senna. `concept-gift-box` → Gift box. */
+/** `senna-celebrating` → Senna. `aiden19-celebrating` → Aiden. `concept-gift-box` → Gift box. */
 function labelFromIllustrationId(id: string): string {
-  const character = /^(lars|senna|mia|holly|aiden|dash|immi)(?:-|$)/i.exec(id);
+  const character = /^(lars|senna|mia|holly|aiden|dash|immi|max|pippa)\d*(?:-|$)/i.exec(id);
   const name = character?.[1];
   if (name) {
     const lower = name.toLowerCase();
@@ -483,11 +485,18 @@ type PayloadScreenContext = {
   leadCharacter?: string;
 };
 
-function medalIdFromImage(fileName: string): MedalIllustrationId | undefined {
+function medalFromFile(fileName: string): { medalId: MedalIllustrationId; src?: string } | undefined {
   const trimmed = fileName.trim();
   if (!trimmed || trimmed.toLowerCase() === "not allowed") return undefined;
   const base = trimmed.replace(/\.(webp|png|jpe?g)$/i, "");
-  return isMedalIllustrationId(base) ? base : undefined;
+  const appFile = /-app$/i.test(base);
+  const withoutApp = appFile ? base.replace(/-app$/i, "") : base;
+  const revised = /-r\d+$/i.test(withoutApp);
+  const idStem = withoutApp.replace(/-r\d+$/i, "");
+  if (!isMedalIllustrationId(idStem)) return undefined;
+  if (!appFile && !revised) return { medalId: idStem };
+  const src = getPairSheetImagePath(trimmed);
+  return src ? { medalId: idStem, src } : { medalId: idStem };
 }
 
 function medalSettingToken(value: string | undefined): string | undefined {
@@ -520,10 +529,10 @@ function medalTierFromId(medalId: MedalIllustrationId): PayloadMedalTier {
   return "unlocked";
 }
 
-function firstMedalId(
+function firstMedal(
   image: PayloadCohortCopy,
   cohort: MasteryCohort,
-): MedalIllustrationId | undefined {
+): { medalId: MedalIllustrationId; src?: string } | undefined {
   const ordered = [
     image[cohort],
     image.pathfinder,
@@ -531,8 +540,8 @@ function firstMedalId(
     image.maverick,
   ];
   for (const fileName of ordered) {
-    const medalId = medalIdFromImage(fileName);
-    if (medalId) return medalId;
+    const medal = medalFromFile(fileName);
+    if (medal) return medal;
   }
   return undefined;
 }
@@ -791,8 +800,7 @@ function budgetSelectFromSettings(raw: string, error: string): {
 
 /**
  * Turn one payload row into the existing screen config for that game template.
- * Completion medals stay on the lesson-number resolver — the sheet's medal
- * file is not applied here.
+ * A completion file ending in `-app` keeps the medal id and the pane renders that file.
  */
 export function mapPayloadScreen(
   row: PayloadScreenRow,
@@ -1481,28 +1489,36 @@ export function mapPayloadScreen(
         ...(credit ? { credit } : {}),
         ...(audio ? { audio } : {}),
         ...(follow ? { successMessage: follow } : {}),
-        ...(brief ? { illustration: { label: brief, alt: brief } } : {}),
-        ...picture,
+        // The image brief is alt text for a real picture. With no file it
+        // was rendering as the picture itself.
+        ...(brief && typeof image === "string"
+          ? { illustration: { label: brief, alt: brief } }
+          : {}),
+        ...(typeof image === "string" ? { pairImage: image } : { pairImage: false }),
       };
     }
     case "completion": {
       const medalSetting = settingValue(settings, "MEDAL");
       const leadCharacter = context.leadCharacter?.trim();
+      const portrait = leadCharacter
+        ? { leadCharacter, portraitSrc: celebratingPortraitSrc(leadCharacter, cohort) }
+        : {};
       if (medalSettingToken(medalSetting) === "none") {
         return {
           type: "completion",
           id,
           useStandardPane: true,
           suppressMedal: true,
-          ...(leadCharacter ? { leadCharacter } : {}),
+          ...portrait,
         };
       }
       const settingsTier = medalTierFromSettings(medalSetting);
       const skillNumber = context.skillId
         ? getSkillRegistryRecord(context.skillId)?.skillNumber
         : undefined;
+      const namedMedal = firstMedal(row.image, cohort);
       const medalId =
-        firstMedalId(row.image, cohort) ??
+        namedMedal?.medalId ??
         (settingsTier && skillNumber
           ? medalIdForSkillNumber(skillNumber, settingsTier)
           : undefined);
@@ -1513,9 +1529,10 @@ export function mapPayloadScreen(
         id,
         useStandardPane: true,
         ...(medalId ? { medalId, authoredMedal: true as const } : {}),
+        ...(namedMedal?.src ? { medalSrc: namedMedal.src } : {}),
         ...(medalTier ? { medalTier } : {}),
         ...(skillName ? { skillName } : {}),
-        ...(leadCharacter ? { leadCharacter } : {}),
+        ...portrait,
       };
     }
     default:

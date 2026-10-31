@@ -6,7 +6,6 @@ import { usePlaySeed } from "@/components/academy/lesson/hooks/use-play-seed";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
 import {
   itemsGroupedLikeZones,
-  needsWantsPortrait,
   orderPairedZones,
   pairedZoneEmoji,
   sortPromptLines,
@@ -36,8 +35,8 @@ type PairedZoneSortProps = {
   orderKey: string;
   /** Tap flies each item into its zone. Drag lets the learner choose. */
   mode: "tap" | "drag";
-  /** Thinking portrait beside the prompt. Needs/Wants only. */
-  showCharacter?: boolean;
+  /** Drop-zone min height. The pictured two-bucket sort uses a shorter zone so the picture fits. */
+  zoneMinClassName?: string;
   onComplete: () => void;
   onMismatch?: () => void;
 };
@@ -83,7 +82,7 @@ export function PairedZoneSort({
   buckets,
   orderKey,
   mode,
-  showCharacter = false,
+  zoneMinClassName = "min-h-[316px]",
   onComplete,
   onMismatch,
 }: PairedZoneSortProps) {
@@ -114,7 +113,6 @@ export function PairedZoneSort({
     );
   }, [itemSignature, mode, playSeed, zoneSignature]);
   const lines = sortPromptLines(intro);
-  const portrait = showCharacter ? needsWantsPortrait(intro) : null;
   const [placedIds, setPlacedIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
@@ -176,31 +174,21 @@ export function PairedZoneSort({
 
   return (
     <div className="flex min-h-0 flex-col">
-      <div className={cn("flex gap-3", portrait ? "items-end" : "items-start")}>
-        <div className="min-w-0 flex-1 space-y-2">
-          {lines.map((line, index) => {
-            const instruction = lines.length > 1 && index === lines.length - 1;
-            return (
-              <p
-                key={line}
-                className={cn(
-                  "sort-label font-heading text-[17px] leading-[1.35] text-[#031F82]",
-                  instruction ? "font-extrabold" : "font-bold",
-                )}
-              >
-                {line}
-              </p>
-            );
-          })}
-        </div>
-        {portrait ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={portrait.src}
-            alt={portrait.alt}
-            className="h-[150px] w-auto max-w-[108px] shrink-0 object-contain object-bottom"
-          />
-        ) : null}
+      <div className="min-w-0 space-y-2">
+        {lines.map((line, index) => {
+          const instruction = lines.length > 1 && index === lines.length - 1;
+          return (
+            <p
+              key={line}
+              className={cn(
+                "font-heading text-[17px] leading-[1.35] text-[#031F82]",
+                instruction ? "font-extrabold" : "font-bold",
+              )}
+            >
+              {line}
+            </p>
+          );
+        })}
       </div>
 
       <div className="mt-4 flex flex-wrap items-start gap-2">
@@ -297,7 +285,8 @@ export function PairedZoneSort({
                 if (selectedId) placeItem(selectedId, zone.id);
               }}
               className={cn(
-                "flex min-h-[316px] min-w-0 flex-1 basis-0 flex-col items-center rounded-[20px] px-2 py-[14px] text-center transition-transform duration-150",
+                "flex min-w-0 flex-1 basis-0 flex-col items-center rounded-[20px] px-2 py-[14px] text-center transition-transform duration-150",
+                zoneMinClassName,
                 active && "scale-[1.02]",
               )}
               style={{ backgroundColor: active ? activeTint : tint }}

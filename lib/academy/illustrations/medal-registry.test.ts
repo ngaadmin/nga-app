@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getMedalIllustrationPath,
   medalIdForModuleLesson,
   moduleCloserGoldMedals,
   resolveCompletionMedalId,
@@ -50,6 +51,24 @@ describe("lesson overview and screen 8 medals", () => {
       { skillSlug: "put-needs-first", medalId: "medal-skill2-gold" },
       { skillSlug: "smart-saving", medalId: "medal-skill3-gold" },
     ]);
+    expect(getMedalIllustrationPath("medal-skill1-gold")).toBe(
+      "/assets/illustrations/medal/medal-skill1-gold-r2.webp",
+    );
+    expect(getMedalIllustrationPath("medal-skill2-gold")).toBe(
+      "/assets/illustrations/medal/medal-skill2-gold-r2.webp",
+    );
+    expect(getMedalIllustrationPath("medal-skill3-gold")).toBe(
+      "/assets/illustrations/medal/medal-skill3-gold-r2.webp",
+    );
+    expect(getMedalIllustrationPath("medal-skill4-gold")).toBe(
+      "/assets/illustrations/medal/medal-skill4-gold.webp",
+    );
+    expect(getMedalIllustrationPath("medal-skill1-bronze")).toBe(
+      "/assets/illustrations/medal/medal-skill1-bronze.webp",
+    );
+    expect(getMedalIllustrationPath("medal-skill1-silver")).toBe(
+      "/assets/illustrations/medal/medal-skill1-silver.webp",
+    );
   });
 
   it("keeps silver on lessons 4–6 even if the sheet used a bronze file", () => {

@@ -1,6 +1,6 @@
 # Lesson authoring
 
-Module 1 copy lives in the checked-in sheets under `lib/academy/lessons/payload/source/`. Screen behaviour is in `docs/academy-screen-types.md`.
+Module 1 still plays from the checked-in sheets under `lib/academy/lessons/payload/source/`. The master workbook supersedes those sheets; the diff and the files kept until the reader exists are in `docs/stage2-unwind-report.md`. Screen behaviour is in `docs/academy-screen-types.md`.
 
 ## Coin meter
 

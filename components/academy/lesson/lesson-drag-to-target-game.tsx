@@ -1,5 +1,7 @@
 "use client";
 
+import { useAcademyMediaSrc } from "@/lib/academy/media/academy-media-context";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 import {
   useCallback,
   useEffect,
@@ -12,6 +14,7 @@ import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-scr
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { LessonAnswerTick, LessonImagePlaceholder } from "@/components/academy/lesson/lesson-ui";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { visibleDragSourceLabel } from "@/lib/academy/lessons/drag-source-column";
 import { dragPositionFromPointer } from "@/lib/academy/lessons/drag-position";
 import { dragHitsZone, domRectToDropRect } from "@/lib/academy/lessons/drop-hit";
 import { cn } from "@/lib/utils/cn";
@@ -69,6 +72,7 @@ const CHARACTER_EMOJI: Record<string, string> = {
   senna: "👦",
   dash: "👦",
   max: "👦",
+  pippa: "👧",
 };
 
 /** Person emoji for a target written as a name, including “Share with Mia”. */
@@ -85,22 +89,26 @@ export function personEmojiForTargetLabel(label: string): string | undefined {
 const LANDED_COIN_CLASS =
   "grid size-[22px] place-items-center rounded-full bg-[#FFA503]";
 const DRAG_ILLUSTRATION_FRAME_CLASS =
-  "relative flex h-[9rem] shrink-0 items-center justify-center sm:h-[11rem]";
+  "relative h-[9rem] w-[9rem] shrink-0 sm:h-[11rem] sm:w-[11rem]";
 const DRAG_ILLUSTRATION_IMAGE_CLASS =
-  "block h-[9rem] w-auto object-contain object-center sm:h-[11rem]";
-/** Square gift art beside a tall portrait. `lg` is the sheet size. */
+  "absolute inset-0 h-full w-full object-contain object-center";
+/**
+ * Square gift art beside a tall portrait. `lg` is the sheet size.
+ * Width is set on the frame. `w-auto` on the picture collapses to nothing
+ * in mobile Safari, which leaves only the column label and no hit target.
+ */
 const PAIRED_SOURCE_FRAME_CLASS = {
-  md: "relative flex h-[5rem] shrink-0 items-center justify-center",
-  lg: "relative flex h-[6rem] shrink-0 items-center justify-center",
+  md: "relative h-[5rem] w-[5rem] shrink-0",
+  lg: "relative h-[6rem] w-[6rem] shrink-0",
 } as const;
 const PAIRED_SOURCE_IMAGE_CLASS = {
-  md: "block h-[5rem] w-auto max-w-[5rem] object-contain object-center",
-  lg: "block h-[6rem] w-auto max-w-[6rem] object-contain object-center",
+  md: "absolute inset-0 h-full w-full object-contain object-center",
+  lg: "absolute inset-0 h-full w-full object-contain object-center",
 } as const;
 const PAIRED_TARGET_FRAME_CLASS =
-  "relative flex h-[11rem] shrink-0 items-center justify-center sm:h-[13rem]";
+  "relative h-[11rem] w-[6.5rem] shrink-0 sm:h-[13rem] sm:w-[7.75rem]";
 const PAIRED_TARGET_IMAGE_CLASS =
-  "block h-[11rem] w-auto object-contain object-center sm:h-[13rem]";
+  "absolute inset-0 h-full w-full object-contain object-center";
 const FITTED_IMAGE_CLASS = "block h-full w-full object-contain object-center";
 /** Target width on the swipe screen. The coin is one quarter of this. */
 const BANK_SIZE_CLASS = "[--bank-size:9rem] sm:[--bank-size:11rem]";
@@ -118,18 +126,19 @@ export function LessonDragToTargetGame({
   itemSize = "lg",
   coinCount = 1,
   targetEmoji,
-  sourceIllustrationSrc,
+  sourceIllustrationSrc: localSourceIllustrationSrc,
   sourceIllustrationAlt,
-  targetIllustrationSrc,
+  targetIllustrationSrc: localTargetIllustrationSrc,
   targetIllustrationAlt,
   targetImagePlaceholder,
-  sourceEmptyMessage = "",
   showZoneLabels = true,
   quarterSource = false,
   onComplete,
   onSuccess,
   onMiss,
 }: LessonDragToTargetGameProps) {
+  const sourceIllustrationSrc = useAcademyMediaSrc(localSourceIllustrationSrc);
+  const targetIllustrationSrc = useAcademyMediaSrc(localTargetIllustrationSrc);
   const totalCoins = Math.min(
     DRAG_TO_TARGET_MAX_COINS,
     Math.max(1, coinCount),
@@ -188,9 +197,8 @@ export function LessonDragToTargetGame({
     setSourceImageFailed(false);
   }, [sourceIllustrationSrc]);
 
-  const showSourceIllustration = Boolean(
-    sourceIllustrationSrc && !sourceImageFailed,
-  );
+  const hasSourceIllustration = Boolean(sourceIllustrationSrc);
+  const showSourceIllustration = hasSourceIllustration && !sourceImageFailed;
   const pairedIllustrations =
     Boolean(sourceIllustrationSrc) && Boolean(targetIllustrationSrc) && !quarterSource;
   const pairedSize = itemSize === "md" ? "md" : "lg";
@@ -354,16 +362,24 @@ export function LessonDragToTargetGame({
     dropSelectedCoin();
   };
 
-  const renderSourceIllustration = (alt: string, fitted = false) =>
+  const renderSourceIllustration = (fitted = false) =>
     sourceIllustrationSrc ? (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={sourceIllustrationSrc}
-        alt={alt}
-        className={fitted ? FITTED_IMAGE_CLASS : sourceImageClass}
+        alt=""
+        className={cn(
+          fitted ? FITTED_IMAGE_CLASS : sourceImageClass,
+          sourceImageFailed && "hidden",
+        )}
+        loading="eager"
+        fetchPriority="high"
         decoding="async"
         draggable={false}
-        onError={() => setSourceImageFailed(true)}
+        onError={() => {
+          setSourceImageFailed(true);
+          if (sourceIllustrationSrc) reportAcademyMediaFailed(sourceIllustrationSrc, "image");
+        }}
       />
     ) : null;
 
@@ -373,11 +389,11 @@ export function LessonDragToTargetGame({
       return (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
           {quarterSource ? (
-            <div className="h-1/4 w-1/4">{renderSourceIllustration("", true)}</div>
+            <div className="h-1/4 w-1/4">{renderSourceIllustration(true)}</div>
           ) : pairedIllustrations ? (
-            <div className="h-1/3 w-1/3">{renderSourceIllustration("", true)}</div>
+            <div className="h-1/3 w-1/3">{renderSourceIllustration(true)}</div>
           ) : (
-            renderSourceIllustration("")
+            renderSourceIllustration()
           )}
         </div>
       );
@@ -394,18 +410,28 @@ export function LessonDragToTargetGame({
   };
 
   const renderTargetVisual = () => {
-    if (targetIllustrationSrc && !targetImageFailed) {
+    if (targetIllustrationSrc) {
       return (
-        <div className={targetFrameClass}>
+        <div className={targetFrameClass} aria-label={targetIllustrationAlt ?? targetLabel}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={targetIllustrationSrc}
-            alt={targetIllustrationAlt ?? targetLabel}
-            className={targetImageClass}
+            alt=""
+            className={cn(targetImageClass, targetImageFailed && "hidden")}
+            loading="eager"
+            fetchPriority="high"
             decoding="async"
             draggable={false}
-            onError={() => setTargetImageFailed(true)}
+            onError={() => {
+              setTargetImageFailed(true);
+              if (targetIllustrationSrc) reportAcademyMediaFailed(targetIllustrationSrc, "image");
+            }}
           />
+          {targetImageFailed ? (
+            <span className="grid h-full w-full place-items-center text-6xl" aria-hidden>
+              <AnswerEmoji emoji={resolvedTargetEmoji} />
+            </span>
+          ) : null}
           {renderJarStack()}
         </div>
       );
@@ -437,14 +463,14 @@ export function LessonDragToTargetGame({
     );
   };
 
+  const sourceColumnLabel = visibleDragSourceLabel({
+    remaining,
+    showZoneLabels,
+    sourceLabel,
+  });
+
   const renderSourceCoins = () => {
-    if (remaining <= 0) {
-      const message = sourceEmptyMessage.trim();
-      if (!message) return null;
-      return (
-        <p className="font-sans text-sm text-[#1E3A5F]/60">{message}</p>
-      );
-    }
+    if (remaining <= 0) return null;
 
     return (
       <div className="flex gap-2">
@@ -457,16 +483,22 @@ export function LessonDragToTargetGame({
             aria-pressed={selectedCoinIndex === index}
             className={cn(
               "cursor-grab bg-transparent p-0 active:cursor-grabbing",
-              showSourceIllustration ? sourceFrameClass : sourceChipClass,
+              hasSourceIllustration ? sourceFrameClass : sourceChipClass,
               dragState?.coinIndex === index && "opacity-25",
               selectedCoinIndex === index && "opacity-80",
             )}
-            aria-label={`Select ${sourceLabel} ${index + 1} to drop on ${targetLabel}`}
+            aria-label={`Select ${sourceIllustrationAlt ?? sourceLabel} ${index + 1} to drop on ${targetLabel}`}
             style={{ touchAction: "none" }}
           >
-            {showSourceIllustration
-              ? renderSourceIllustration(sourceIllustrationAlt ?? sourceLabel)
-              : <AnswerEmoji emoji={itemEmoji} />}
+            {hasSourceIllustration ? renderSourceIllustration() : null}
+            {showSourceIllustration ? null : (
+              <span
+                className={cn(hasSourceIllustration && "grid h-full w-full place-items-center")}
+                aria-hidden={hasSourceIllustration}
+              >
+                <AnswerEmoji emoji={itemEmoji} />
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -492,9 +524,9 @@ export function LessonDragToTargetGame({
       >
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center">{renderSourceCoins()}</div>
-          {showZoneLabels ? (
+          {sourceColumnLabel ? (
             <p className="max-w-[9rem] text-center font-heading text-sm font-bold text-[#031F82]">
-              {sourceLabel}
+              {sourceColumnLabel}
             </p>
           ) : null}
         </div>
@@ -548,7 +580,7 @@ export function LessonDragToTargetGame({
             }}
           >
             {showSourceIllustration
-              ? renderSourceIllustration("", true)
+              ? renderSourceIllustration(true)
               : <AnswerEmoji emoji={itemEmoji} />}
           </div>
         </OverlayPortal>

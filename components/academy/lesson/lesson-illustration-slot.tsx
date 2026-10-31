@@ -1,5 +1,6 @@
 "use client";
 
+import { useAcademyMediaSrc } from "@/lib/academy/media/academy-media-context";
 import { useEffect, useState } from "react";
 import {
   lessonIllustrationEmojiClass,
@@ -9,11 +10,12 @@ import {
 } from "@/components/academy/lesson/lesson-shared-styles";
 import type { LessonIllustration } from "@/lib/academy/lessons/types/declarative";
 import { cn } from "@/lib/utils/cn";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 
 type LessonIllustrationSlotProps = LessonIllustration & {
   className?: string;
-  /** Match screens use a 160px frame. Poster is the 196px slider hero. */
-  frame?: "default" | "match" | "poster";
+  /** Match screens use a 160px frame. Poster is the 196px slider hero. Compact is a short portrait for long choice lists. Sort is the two-bucket picture, short enough to leave the chips and both buckets on screen. */
+  frame?: "default" | "match" | "poster" | "compact" | "sort";
 };
 
 function LessonIllustrationFallback({
@@ -42,7 +44,87 @@ function LessonIllustrationFallback({
   );
 }
 
-type ImageLoadStatus = "idle" | "loading" | "loaded" | "failed";
+/** Neutral frame shown in place of a picture that failed to load. */
+function MissingPicturePlaceholder() {
+  return (
+    <span
+      className="absolute inset-2 flex items-center justify-center rounded-2xl border-2 border-dashed border-[#B9C7EA] bg-[#F4F7FF]"
+      data-testid="academy-media-placeholder"
+      aria-hidden
+    >
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8FA3D6" strokeWidth="1.6">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <circle cx="9" cy="10" r="1.6" />
+        <path d="M4 17l5-5 4 4 3-3 4 4" />
+      </svg>
+    </span>
+  );
+}
+
+const PICTURE_STYLE = {
+  position: "absolute" as const,
+  inset: 0,
+  width: "100%",
+  height: "100%",
+  objectFit: "contain" as const,
+};
+
+/**
+ * Paint the file inside a frame that already has a width and a height.
+ * A detached Image() was marking real files as missing, then the slot
+ * printed the file name in place of the picture.
+ */
+function FramedPicture({
+  src: localSrc,
+  alt,
+  emoji,
+  className,
+  imgClassName,
+  imgStyle,
+}: {
+  src: string;
+  alt: string;
+  emoji?: string;
+  className?: string;
+  imgClassName: string;
+  imgStyle?: { transform: string; transformOrigin: string };
+}) {
+  const src = useAcademyMediaSrc(localSrc);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  return (
+    <div className={cn("relative", className)} role="img" aria-label={alt}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        className={cn(imgClassName, failed && "hidden")}
+        style={{ ...PICTURE_STYLE, ...imgStyle }}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
+        draggable={false}
+        onError={() => {
+          setFailed(true);
+          reportAcademyMediaFailed(src, "image");
+        }}
+      />
+      {failed ? (
+        emoji ? (
+          <span className={lessonIllustrationEmojiClass} aria-hidden>
+            {emoji}
+          </span>
+        ) : (
+          <MissingPicturePlaceholder />
+        )
+      ) : null}
+    </div>
+  );
+}
 
 export function LessonIllustrationSlot({
   emoji,
@@ -53,90 +135,47 @@ export function LessonIllustrationSlot({
   className,
   frame = "default",
 }: LessonIllustrationSlotProps) {
-  const [imageStatus, setImageStatus] = useState<ImageLoadStatus>("idle");
-
-  useEffect(() => {
-    if (!src) {
-      setImageStatus("idle");
-      return;
-    }
-
-    let cancelled = false;
-    setImageStatus("loading");
-
-    const probe = new Image();
-    probe.onload = () => {
-      if (cancelled) return;
-      setImageStatus(probe.naturalWidth > 0 ? "loaded" : "failed");
-    };
-    probe.onerror = () => {
-      if (!cancelled) setImageStatus("failed");
-    };
-    probe.src = src;
-
-    return () => {
-      cancelled = true;
-    };
-  }, [src]);
+  const ariaLabel = alt ?? label ?? "Lesson illustration";
 
   if (frame === "match" || frame === "poster") {
-    const ariaLabel = alt ?? label ?? "Lesson illustration";
-    if (!src || imageStatus !== "loaded") {
-      if (src) return <div className="mb-4 h-40 w-full" aria-hidden />;
-      return null;
-    }
+    if (!src) return null;
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <FramedPicture
         src={src}
         alt={ariaLabel}
+        emoji={emoji}
         className={
           frame === "poster"
-            ? "mx-auto mb-2 block h-[196px] w-auto max-w-full object-contain object-bottom"
-            : "mx-auto mb-4 block h-40 w-auto max-w-full object-contain object-bottom"
+            ? "mx-auto mb-2 h-[196px] w-full max-w-full"
+            : "mx-auto mb-4 h-40 w-full max-w-full"
         }
-        decoding="async"
-        loading="eager"
+        imgClassName="bg-transparent object-bottom"
       />
     );
   }
 
-  if (src && imageStatus === "loaded") {
-    const ariaLabel = alt ?? label ?? "Lesson illustration";
+  if (src) {
     const scaleValue = typeof scale === "number" && scale > 0 ? scale : 1;
-
     return (
-      <div
+      <FramedPicture
+        src={src}
+        alt={ariaLabel}
+        emoji={emoji}
         className={cn(
-          lessonIllustrationMediaFrameClass,
+          frame === "sort"
+            ? "relative mx-auto mb-1 h-[5.5rem] w-[8.5rem] max-w-full shrink-0 bg-transparent"
+            : frame === "compact"
+              ? "relative mx-auto mb-1 h-[clamp(5.5rem,_16vh,_7.5rem)] w-[clamp(8rem,_52vw,_12rem)] max-w-full shrink-0 bg-transparent"
+              : lessonIllustrationMediaFrameClass,
           "overflow-hidden bg-transparent",
           className,
         )}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={ariaLabel}
-          className="h-full w-full bg-transparent object-contain object-top"
-          style={scaleValue === 1 ? undefined : { transform: `scale(${scaleValue})` }}
-          decoding="async"
-          loading="eager"
-        />
-      </div>
-    );
-  }
-
-  if (src && imageStatus === "loading") {
-    return <LessonIllustrationSlotReserve className={className} />;
-  }
-
-  if (src && imageStatus === "failed") {
-    return (
-      <LessonIllustrationFallback
-        emoji={emoji}
-        label={label ?? alt}
-        alt={alt ?? label}
-        className={className}
+        imgClassName="bg-transparent object-top"
+        imgStyle={
+          scaleValue === 1
+            ? undefined
+            : { transform: `scale(${scaleValue})`, transformOrigin: "center" }
+        }
       />
     );
   }

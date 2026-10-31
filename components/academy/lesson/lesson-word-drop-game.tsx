@@ -3,7 +3,6 @@
 import {
   forwardRef,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -20,6 +19,7 @@ import {
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { AnswerEmojiLabel } from "@/components/academy/lesson/answer-emoji";
 import { OverlayPortal } from "@/components/ui/overlay-portal";
+import { bestDropZone, domRectToDropRect, type DragBounds } from "@/lib/academy/lessons/drop-hit";
 import { seededShuffle } from "@/lib/academy/lessons/seeded-shuffle";
 import {
   wordBankItems,
@@ -108,17 +108,13 @@ function resolveBlankIndexFromPointer(
   clientX: number,
   clientY: number,
   blankElements: readonly (HTMLElement | null)[],
+  drag: DragBounds | null,
 ): number | null {
-  for (let index = 0; index < blankElements.length; index += 1) {
-    const blank = blankElements[index];
-    if (!blank) continue;
-
-    const rect = blank.getBoundingClientRect();
-    if (isPointInRect(clientX, clientY, rect)) {
-      return index;
-    }
-  }
-  return null;
+  const zones = blankElements.flatMap((blank, index) => {
+    if (!blank) return [];
+    return [{ id: index, rect: domRectToDropRect(blank.getBoundingClientRect()) }];
+  });
+  return bestDropZone(zones, drag, clientX, clientY);
 }
 
 export const LessonWordDropGame = forwardRef<
@@ -190,8 +186,8 @@ export const LessonWordDropGame = forwardRef<
   };
 
   const poolRef = useRef<HTMLDivElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
   const blankRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const dragCleanupRef = useRef<(() => void) | null>(null);
 
   useImperativeHandle(ref, () => ({
     evaluate: () =>
@@ -224,6 +220,13 @@ export const LessonWordDropGame = forwardRef<
     setHoverPool(false);
   }, []);
 
+  const dragBounds = (press: PressSession, clientX: number, clientY: number): DragBounds => ({
+    x: clientX - press.offsetX,
+    y: clientY - press.offsetY,
+    width: press.width,
+    height: press.height,
+  });
+
   const beginPress = (
     event: ReactPointerEvent<HTMLElement>,
     itemId: string,
@@ -232,16 +235,16 @@ export const LessonWordDropGame = forwardRef<
     event.preventDefault();
     event.stopPropagation();
     setPressedChip({ itemId, fromBlankIndex });
+    const captureTarget = boardRef.current ?? event.currentTarget;
     try {
-      event.currentTarget.setPointerCapture(event.pointerId);
+      captureTarget.setPointerCapture(event.pointerId);
     } catch {
       // The pointer can end before the element captures it.
     }
 
     const rect = event.currentTarget.getBoundingClientRect();
-    const pointerId = event.pointerId;
     pressRef.current = {
-      pointerId,
+      pointerId: event.pointerId,
       itemId,
       fromBlankIndex,
       startX: event.clientX,
@@ -252,107 +255,84 @@ export const LessonWordDropGame = forwardRef<
       height: rect.height,
       dragging: false,
     };
-
-    const blockTouchScroll = (touchEvent: TouchEvent) => {
-      if (touchEvent.cancelable) touchEvent.preventDefault();
-    };
-
-    const move = (nativeEvent: PointerEvent) => {
-      const press = pressRef.current;
-      if (!press || nativeEvent.pointerId !== pointerId) return;
-      const distance = Math.hypot(
-        nativeEvent.clientX - press.startX,
-        nativeEvent.clientY - press.startY,
-      );
-      nativeEvent.preventDefault();
-      if (!press.dragging) {
-        if (distance < TAP_MOVE_PX) return;
-        press.dragging = true;
-        setPressedChip(null);
-        setDragState({
-          itemId: press.itemId,
-          fromBlankIndex: press.fromBlankIndex,
-          offsetX: press.offsetX,
-          offsetY: press.offsetY,
-          x: nativeEvent.clientX - press.offsetX,
-          y: nativeEvent.clientY - press.offsetY,
-          width: press.width,
-          height: press.height,
-        });
-      } else {
-        setDragState((current) =>
-          current
-            ? {
-                ...current,
-                x: nativeEvent.clientX - current.offsetX,
-                y: nativeEvent.clientY - current.offsetY,
-              }
-            : null,
-        );
-      }
-      setHoverBlankIndex(
-        resolveBlankIndexFromPointer(
-          nativeEvent.clientX,
-          nativeEvent.clientY,
-          blankRefs.current,
-        ),
-      );
-      setHoverPool(
-        isPointInRect(
-          nativeEvent.clientX,
-          nativeEvent.clientY,
-          poolRef.current?.getBoundingClientRect(),
-        ),
-      );
-    };
-
-    const up = (nativeEvent: PointerEvent) => {
-      if (nativeEvent.pointerId !== pointerId) return;
-      const press = pressRef.current;
-      dragCleanupRef.current?.();
-      dragCleanupRef.current = null;
-      pressRef.current = null;
-
-      if (!press || !press.dragging || nativeEvent.type === "pointercancel") {
-        endDrag();
-        return;
-      }
-
-      const slotIndex = resolveBlankIndexFromPointer(
-        nativeEvent.clientX,
-        nativeEvent.clientY,
-        blankRefs.current,
-      );
-
-      if (slotIndex !== null) {
-        placeWordInBlank(slotIndex, press.itemId, press.fromBlankIndex);
-      } else if (press.fromBlankIndex !== null) {
-        removeWordFromBlank(press.fromBlankIndex);
-      }
-      setArmedItem(null);
-
-      endDrag();
-    };
-
-    dragCleanupRef.current?.();
-    window.addEventListener("pointermove", move, { passive: false });
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
-    window.addEventListener("touchmove", blockTouchScroll, { passive: false });
-    dragCleanupRef.current = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-      window.removeEventListener("touchmove", blockTouchScroll);
-    };
   };
 
-  useEffect(
-    () => () => {
-      dragCleanupRef.current?.();
-    },
-    [],
-  );
+  const handleBoardPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
+    const press = pressRef.current;
+    if (!press || event.pointerId !== press.pointerId) return;
+    const distance = Math.hypot(event.clientX - press.startX, event.clientY - press.startY);
+    if (!press.dragging) {
+      if (distance < TAP_MOVE_PX) return;
+      press.dragging = true;
+      setPressedChip(null);
+      setDragState({
+        itemId: press.itemId,
+        fromBlankIndex: press.fromBlankIndex,
+        offsetX: press.offsetX,
+        offsetY: press.offsetY,
+        x: event.clientX - press.offsetX,
+        y: event.clientY - press.offsetY,
+        width: press.width,
+        height: press.height,
+      });
+    } else {
+      setDragState((current) =>
+        current
+          ? {
+              ...current,
+              x: event.clientX - current.offsetX,
+              y: event.clientY - current.offsetY,
+            }
+          : null,
+      );
+    }
+    const bounds = dragBounds(press, event.clientX, event.clientY);
+    setHoverBlankIndex(
+      resolveBlankIndexFromPointer(event.clientX, event.clientY, blankRefs.current, bounds),
+    );
+    setHoverPool(
+      isPointInRect(event.clientX, event.clientY, poolRef.current?.getBoundingClientRect()),
+    );
+  };
+
+  const finishPress = (event: ReactPointerEvent<HTMLElement>) => {
+    const press = pressRef.current;
+    if (!press || event.pointerId !== press.pointerId) return;
+    pressRef.current = null;
+    const bounds = dragBounds(press, event.clientX, event.clientY);
+    const slotIndex = resolveBlankIndexFromPointer(
+      event.clientX,
+      event.clientY,
+      blankRefs.current,
+      bounds,
+    );
+
+    if (!press.dragging) {
+      if (press.fromBlankIndex !== null) {
+        const armed = selectedItemIdRef.current;
+        if (armed && armed !== press.itemId) {
+          placeWordInBlank(press.fromBlankIndex, armed, null);
+          setArmedItem(null);
+        } else {
+          pendingBankFocusId.current = press.itemId;
+          removeWordFromBlank(press.fromBlankIndex);
+          setArmedItem(press.itemId);
+        }
+      } else {
+        setArmedItem(selectedItemIdRef.current === press.itemId ? null : press.itemId);
+      }
+      endDrag();
+      return;
+    }
+
+    if (slotIndex !== null) {
+      placeWordInBlank(slotIndex, press.itemId, press.fromBlankIndex);
+    } else if (press.fromBlankIndex !== null) {
+      removeWordFromBlank(press.fromBlankIndex);
+    }
+    setArmedItem(null);
+    endDrag();
+  };
 
   useLayoutEffect(() => {
     const itemId = pendingBankFocusId.current;
@@ -397,7 +377,14 @@ export const LessonWordDropGame = forwardRef<
   };
 
   return (
-    <div className="space-y-4">
+    <div
+      ref={boardRef}
+      className="space-y-4 touch-none"
+      style={{ touchAction: "none" }}
+      onPointerMove={handleBoardPointerMove}
+      onPointerUp={finishPress}
+      onPointerCancel={finishPress}
+    >
       <p className={cn(lessonNarrativeClass, "mb-5 text-[22px]")}>
         {parts.map((part, index) => {
           const attached = index > 0 ? splitLeadingPunctuation(part) : null;
@@ -426,7 +413,14 @@ export const LessonWordDropGame = forwardRef<
                     }}
                     onPointerDown={(event) => {
                       const itemId = choices[blankIndex];
-                      if (!itemId) return;
+                      if (!itemId) {
+                        const armed = selectedItemIdRef.current;
+                        if (!armed) return;
+                        event.preventDefault();
+                        placeWordInBlank(blankIndex, armed, null);
+                        setArmedItem(null);
+                        return;
+                      }
                       beginPress(event, itemId, blankIndex);
                     }}
                     className={cn(
@@ -510,6 +504,7 @@ export const LessonWordDropGame = forwardRef<
               "pointer-events-none fixed",
             )}
             style={{
+              position: "fixed",
               left: dragState.x,
               top: dragState.y,
               width: dragState.width,

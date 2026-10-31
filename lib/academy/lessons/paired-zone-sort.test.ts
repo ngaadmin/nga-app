@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   isPairedZoneSortScreen,
   itemsGroupedLikeZones,
-  needsWantsPortrait,
   orderPairedZones,
   pairedZoneEmoji,
   sortPromptLines,
@@ -49,15 +48,6 @@ describe("paired zone sort", () => {
     expect(pairedZoneEmoji("need")).toBe("🛠️");
     expect(pairedZoneEmoji("short")).toBe("⚡");
     expect(pairedZoneEmoji("long")).toBe("🌈");
-  });
-
-  it("uses the story's learner for the thinking portrait", () => {
-    expect(needsWantsPortrait("Help Holly identify which items")).toMatchObject({
-      alt: "Holly thinking",
-    });
-    expect(needsWantsPortrait("Help Lars identify which items").src).toContain(
-      "lars-thinking-512.webp",
-    );
   });
 
   it("treats tap-reveal and two-bucket drag sorts as the shared layout", () => {

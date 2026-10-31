@@ -1,16 +1,11 @@
 # Lesson content
 
-**Authors:** spreadsheet only → **[templates/lesson-authoring/INSTRUCTIONS.md](../../../templates/lesson-authoring/INSTRUCTIONS.md)**
+Shipped Module 1 lessons do not live in this folder.
 
-A scored screen may leave Error text blank. A miss still empties the header coin meter, and the player shows a line only when the cell has text. See **[docs/lesson-authoring.md](../../../docs/lesson-authoring.md)**.
+- Explorer plays `lib/academy/lessons/payload/source/explorer-m1/lessons.json`.
+- Pathfinder and Maverick play `lib/academy/lessons/payload/source/Screens1.csv` plus `Lesson-Details.csv`.
+- `design-shell.ts` is the dev screen gallery at `/dashboard/academy/lesson/shell`.
 
-**Developers:** screen type inventory → **[docs/academy-screen-types.md](../../../docs/academy-screen-types.md)**
+The baked `m1-l*.ts` files, the Explorer JSON import under `data/explorer/`, and `templates/lesson-authoring/` were removed in stage 2. Copies are in `archive/stage2-lesson-files/`. The master workbook diff is `docs/stage2-unwind-report.md`.
 
-Two files to fill: `Lesson-Details.csv` + `Screens.csv`
-
-```bash
-npm run lesson:import -- path/to/your-folder          # preview
-npm run lesson:import -- path/to/your-folder --install  # dev only
-```
-
-Reference: `Characters.csv` · `Game-Types.csv` · `example-m1-l1/`
+Those payload files stay until a reader for the master workbook exists. Do not add a new baked lesson file here.

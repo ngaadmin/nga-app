@@ -236,7 +236,11 @@ function readBundledTables(): BundledTables {
   return bundledTables;
 }
 
-/** Checked-in Screens1.csv + Lesson-Details.csv. The CSV is the source of truth. */
+/**
+ * Checked-in Screens1.csv + Lesson-Details.csv.
+ * Pathfinder and Maverick still play these files. Stage 3 replaces them
+ * with the master workbook. See docs/stage2-unwind-report.md.
+ */
 export function loadBundledLessonPayload(
   moduleNumber: number,
   lessonNumber: number,

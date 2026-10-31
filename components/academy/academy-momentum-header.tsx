@@ -7,7 +7,7 @@ import {
 } from "@/components/dashboard/status-banner-layout";
 import { StatusMetricPill } from "@/components/dashboard/status-metric-pill";
 import { UserHandleControl } from "@/components/dashboard/user-handle-control";
-import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
+import { ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
   COIN_COUNTER_ATTR,
@@ -22,7 +22,8 @@ type AcademyMomentumHeaderProps = {
   username: string;
   xp: number;
   dayStreak: number;
-  avatarId: ProfileAvatarId;
+  /** Null shows the first letter of the name instead of art (parents). */
+  avatarId: ProfileAvatarId | null;
   /** Track name (Explorer, Pathfinder, Maverick). Null hides the label. */
   trackLabel: string | null;
   /** Dot on the avatar when a new medal is waiting in the profile panel. */
@@ -75,9 +76,10 @@ export function AcademyMomentumHeader({
           className="relative z-raised flex h-full min-w-0 max-w-full items-center gap-1.5 rounded-full pr-1 transition-opacity hover:opacity-80 active:opacity-60"
         >
           <span className="relative shrink-0">
-            <ProfileAvatarImage
+            <ProfileAvatarOrInitial
               avatarId={avatarId}
-              className="size-8 ring-2 ring-[#FFA503]"
+              name={username}
+              className="size-8 text-sm ring-2 ring-[#FFA503]"
             />
             {profileHasAttention ? (
               <span

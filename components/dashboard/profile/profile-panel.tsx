@@ -2,7 +2,7 @@
 
 import { MedalsIntro } from "@/components/achievements/medals-intro";
 import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
-import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
+import { ProfileAvatarImage, ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
 import {
   PROFILE_AVATAR_OPTIONS,
   type ProfileAvatarId,
@@ -13,7 +13,8 @@ type ProfilePanelProps = {
   displayName: string;
   /** Track name (Explorer, Pathfinder, Maverick). Null for parents and teachers. */
   trackLabel: string | null;
-  avatarId: ProfileAvatarId;
+  /** Null shows the first letter of the name until a picture is picked. */
+  avatarId: ProfileAvatarId | null;
   onChooseAvatar: (id: ProfileAvatarId) => void;
 };
 
@@ -35,9 +36,10 @@ export function ProfilePanel({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <ProfileAvatarImage
+        <ProfileAvatarOrInitial
           avatarId={avatarId}
-          className="size-24 ring-4 ring-[#FFA503] shadow-md"
+          name={displayName}
+          className="size-24 text-4xl ring-4 ring-[#FFA503] shadow-md"
         />
         <p
           data-profile-name

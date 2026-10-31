@@ -15,7 +15,7 @@ import {
   hasAccountSeenProfileSwitcherTip,
   markAccountProfileSwitcherTipSeen,
 } from "@/lib/dashboard/page-intro-seen";
-import { useHouseholdProfiles } from "@/lib/profile-switcher/use-household-profiles";
+import { useHouseholdProfilesState } from "@/lib/profile-switcher/use-household-profiles";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useXpExchangeGate } from "@/lib/dashboard/use-xp-exchange-gate";
@@ -108,7 +108,7 @@ export function DashboardStatusHeader() {
     useProfileAvatar(profileKey, masteryCohort);
   // A parent is never shown as a track character: their own pick, or their initial.
   const avatarId = isParent ? chosenAvatarId : trackAvatarId;
-  const household = useHouseholdProfiles();
+  const { household, loading: householdLoading } = useHouseholdProfilesState();
   const switcherButtonRef = useRef<HTMLButtonElement>(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [tipVisible, setTipVisible] = useState(false);
@@ -172,18 +172,17 @@ export function DashboardStatusHeader() {
           trackLabelIsRole={isParent}
           profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
-          onProfileClick={household ? toggleSwitcher : openProfile}
-          profileSwitcher={
-            household
-              ? {
-                  open: switcherOpen,
-                  buttonRef: switcherButtonRef,
-                  tip: tipVisible ? (
-                    <ProfileSwitcherTip onDismiss={() => setTipVisible(false)} />
-                  ) : null,
-                }
-              : undefined
-          }
+          // The avatar always opens the dropdown (never the Profile page
+          // directly), even while the household is still loading.
+          onProfileClick={toggleSwitcher}
+          profileSwitcher={{
+            open: switcherOpen,
+            buttonRef: switcherButtonRef,
+            tip:
+              household && tipVisible ? (
+                <ProfileSwitcherTip onDismiss={() => setTipVisible(false)} />
+              ) : null,
+          }}
           onStreakClick={openStreaks}
           onXpClick={
             isParent || (xpExchange.ready && !xpExchange.blocked)
@@ -193,16 +192,15 @@ export function DashboardStatusHeader() {
         />
       </header>
 
-      {household ? (
-        <ProfileSwitcherMenu
-          open={switcherOpen}
-          anchorRef={switcherButtonRef}
-          household={household}
-          currentAvatarId={avatarId}
-          onClose={closeSwitcher}
-          onViewProfile={viewProfileFromSwitcher}
-        />
-      ) : null}
+      <ProfileSwitcherMenu
+        open={switcherOpen}
+        anchorRef={switcherButtonRef}
+        household={household}
+        loading={householdLoading}
+        currentAvatarId={avatarId}
+        onClose={closeSwitcher}
+        onViewProfile={viewProfileFromSwitcher}
+      />
 
       <FullHeightPanel
         isOpen={profileOpen}

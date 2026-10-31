@@ -165,19 +165,36 @@ function ChildCard({ child }: { child: ParentTabChildSummary }) {
     child.userId,
     child.cohort ?? "explorer",
   );
+  // Name gets the whole row next to the avatar (lessons sit at its right
+  // edge); the coins pill has its own line under the track tag, so names of
+  // ~14+ characters fit at 390px without truncating.
   return (
     <div
       data-parent-tab-child={child.username}
       className={cn(
-        "grid grid-cols-[56px_1fr_auto] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5",
+        "grid grid-cols-[56px_1fr] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5",
         CARD_SHADOW,
       )}
     >
       <ProfileAvatarImage avatarId={avatarId} className="size-14" />
       <div className="min-w-0">
-        <p className="truncate font-heading text-[17px] font-bold leading-tight text-[#031F82]">
-          {child.username}
-        </p>
+        <div className="flex items-baseline gap-2">
+          <p
+            data-parent-tab-child-name
+            className="min-w-0 flex-1 truncate font-heading text-[17px] font-bold leading-tight text-[#031F82]"
+          >
+            {child.username}
+          </p>
+          <span
+            data-parent-tab-child-summary
+            className="inline-flex shrink-0 items-center whitespace-nowrap font-sans text-[12.5px] font-medium text-[#1E3A5F]"
+          >
+            <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
+              {child.lessonsDone}
+            </b>
+            {summaryWord(child.lessonsDone, "lesson", "lessons")}
+          </span>
+        </div>
         {child.status === "waiting" ? (
           <span className="mt-1 inline-block rounded-full bg-[#FFE7B3] px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px] text-[#8A5300]">
             Waiting
@@ -193,27 +210,18 @@ function ChildCard({ child }: { child: ParentTabChildSummary }) {
             {masteryCohortLabel(child.cohort)}
           </span>
         ) : null}
-      </div>
-      <div
-        data-parent-tab-child-summary
-        className="flex flex-col items-end gap-1.5 text-right font-sans text-[12.5px] font-medium text-[#1E3A5F]"
-      >
-        <span className="inline-flex items-center whitespace-nowrap">
-          <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
-            {child.lessonsDone}
-          </b>
-          {summaryWord(child.lessonsDone, "lesson", "lessons")}
-        </span>
-        <span
-          data-parent-tab-child-coins
-          className="inline-flex items-center whitespace-nowrap rounded-full bg-[#FFF4DE] py-[3px] pl-1.5 pr-2.5"
-        >
-          <GoldCoinIcon className="mr-[5px] size-[15px]" />
-          <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
-            {child.coins}
-          </b>
-          {summaryWord(child.coins, "coin", "coins")} to cash in
-        </span>
+        <div className="mt-1.5">
+          <span
+            data-parent-tab-child-coins
+            className="inline-flex items-center whitespace-nowrap rounded-full bg-[#FFF4DE] py-[3px] pl-1.5 pr-2.5 font-sans text-[12.5px] font-medium text-[#1E3A5F]"
+          >
+            <GoldCoinIcon className="mr-[5px] size-[15px]" />
+            <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
+              {child.coins}
+            </b>
+            {summaryWord(child.coins, "coin", "coins")} to cash in
+          </span>
+        </div>
       </div>
     </div>
   );

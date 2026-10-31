@@ -16,11 +16,19 @@ function householdFor(userId: string): Promise<HouseholdProfiles | null> {
   return pending;
 }
 
+export type HouseholdProfilesState = {
+  /** True while the server lookup for this account is still in flight. */
+  loading: boolean;
+  /** Null when there is nothing to switch to (or still loading). */
+  household: HouseholdProfiles | null;
+};
+
 /**
- * Linked profiles for the switcher. Guests and teachers never ask the
- * server. Null until loaded, or when the account has no linked profiles.
+ * Linked profiles for the switcher, plus whether they are still loading so
+ * the dropdown can show a loading row instead of falling through to the
+ * Profile page. Guests and teachers never ask the server (never loading).
  */
-export function useHouseholdProfiles(): HouseholdProfiles | null {
+export function useHouseholdProfilesState(): HouseholdProfilesState {
   const session = useUserSession();
   const role = session?.accountRole;
   const userId =
@@ -44,7 +52,15 @@ export function useHouseholdProfiles(): HouseholdProfiles | null {
     };
   }, [userId]);
 
-  if (!userId || state.userId !== userId) return null;
-  if (state.value && state.value.currentUserId !== userId) return null;
-  return state.value;
+  if (!userId) return { loading: false, household: null };
+  if (state.userId !== userId) return { loading: true, household: null };
+  if (state.value && state.value.currentUserId !== userId) {
+    return { loading: false, household: null };
+  }
+  return { loading: false, household: state.value };
+}
+
+/** Linked profiles only. Null until loaded, or when there are none. */
+export function useHouseholdProfiles(): HouseholdProfiles | null {
+  return useHouseholdProfilesState().household;
 }

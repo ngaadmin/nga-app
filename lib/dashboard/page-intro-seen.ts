@@ -47,6 +47,7 @@ export function parsePageIntroSeenStore(
         vaultAddMoney: value.vaultAddMoney === true,
         skillsCup: value.skillsCup === true,
         medals: value.medals === true,
+        profileSwitcherTip: value.profileSwitcherTip === true,
       };
     }
     return store;
@@ -136,6 +137,7 @@ function patchAccountSeen(patch: AccountPageIntroSeen): void {
     vaultAddMoney: merged?.vaultAddMoney === true,
     skillsCup: merged?.skillsCup === true,
     medals: merged?.medals === true,
+    profileSwitcherTip: merged?.profileSwitcherTip === true,
   };
   writeStore(store);
   markAccountProgressDirty();
@@ -179,4 +181,12 @@ export function hasAccountSeenMedalsIntro(): boolean {
 
 export function markAccountMedalsIntroSeen(): void {
   patchAccountSeen({ medals: true });
+}
+
+export function hasAccountSeenProfileSwitcherTip(): boolean {
+  return readAccountSeen().profileSwitcherTip === true;
+}
+
+export function markAccountProfileSwitcherTipSeen(): void {
+  patchAccountSeen({ profileSwitcherTip: true });
 }

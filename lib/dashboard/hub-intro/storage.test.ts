@@ -41,6 +41,7 @@ describe("parsePageIntroSeenStore", () => {
         vaultAddMoney: true,
         skillsCup: false,
         medals: true,
+        profileSwitcherTip: false,
       },
     });
   });

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { lookupConsentRequestByToken } from "@/lib/onboarding/lookup-consent-request";
+import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 import {
   findAuthUserIdByEmail,
   findParentMasterByEmail,
@@ -711,4 +712,48 @@ async function markChildDeclined(input: {
     .eq("status", "pending");
 
   return { success: true, childUsername: input.childUsername };
+}
+
+const PARENT_TAB_LOCKED = "Enter your parent PIN to continue.";
+
+/** Parent session plus an open Parent tab gate, both checked here on the server. */
+async function parentTabGateOpen(pass: string): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("account_role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.account_role !== "parent_master") return false;
+  return parentTabGatePassValid(pass, user.id);
+}
+
+/**
+ * Parent tab approve. Same approval as Settings, but it also needs the
+ * Parent tab gate pass, so it fails while the tab is locked.
+ */
+export async function approveConsentRequestFromParentTab(
+  requestId: string,
+  pass: string,
+): Promise<ApproveConsentResult> {
+  if (!(await parentTabGateOpen(pass))) {
+    return { success: false, error: PARENT_TAB_LOCKED };
+  }
+  return approveConsentRequestInApp(requestId);
+}
+
+/** Parent tab decline. Needs the parent session and an open gate. */
+export async function declineConsentRequestFromParentTab(
+  requestId: string,
+  pass: string,
+): Promise<DeclineConsentResult> {
+  if (!(await parentTabGateOpen(pass))) {
+    return { success: false, error: PARENT_TAB_LOCKED };
+  }
+  return declineConsentRequestInApp(requestId);
 }

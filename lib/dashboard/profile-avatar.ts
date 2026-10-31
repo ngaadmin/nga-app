@@ -145,6 +145,14 @@ export function resolveProfileAvatarId(
   );
 }
 
+/** Saved choice for this profile only, or null when none was picked. */
+export function explicitProfileAvatarId(
+  raw: string | null,
+  profileKey: string,
+): ProfileAvatarId | null {
+  return parseStoredChoices(raw)[profileKey] ?? null;
+}
+
 /** Next stored JSON after picking an avatar for one profile on this device. */
 export function nextStoredProfileAvatars(
   raw: string | null,

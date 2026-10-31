@@ -5,6 +5,8 @@ import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
   DEFAULT_PROFILE_AVATAR_BY_COHORT,
   PROFILE_AVATAR_CHANGED_EVENT,
+  PROFILE_AVATAR_STORAGE_KEY,
+  explicitProfileAvatarId,
   profileAvatarOption,
   readStoredProfileAvatarId,
   saveProfileAvatarId,
@@ -53,9 +55,19 @@ export function useProfileAvatar(profileKey: string, cohort: MasteryCohort) {
   const [avatarId, setAvatarId] = useState<ProfileAvatarId>(
     DEFAULT_PROFILE_AVATAR_BY_COHORT[cohort],
   );
+  const [chosenAvatarId, setChosenAvatarId] = useState<ProfileAvatarId | null>(null);
 
   useEffect(() => {
-    const sync = () => setAvatarId(readStoredProfileAvatarId(profileKey, cohort));
+    const sync = () => {
+      setAvatarId(readStoredProfileAvatarId(profileKey, cohort));
+      let raw: string | null = null;
+      try {
+        raw = window.localStorage.getItem(PROFILE_AVATAR_STORAGE_KEY);
+      } catch {
+        raw = null;
+      }
+      setChosenAvatarId(explicitProfileAvatarId(raw, profileKey));
+    };
     sync();
     window.addEventListener(PROFILE_AVATAR_CHANGED_EVENT, sync);
     window.addEventListener("storage", sync);
@@ -68,10 +80,44 @@ export function useProfileAvatar(profileKey: string, cohort: MasteryCohort) {
   const chooseAvatar = useCallback(
     (id: ProfileAvatarId) => {
       setAvatarId(id);
+      setChosenAvatarId(id);
       saveProfileAvatarId(profileKey, id);
     },
     [profileKey],
   );
 
-  return { avatarId, chooseAvatar };
+  /** chosenAvatarId is null until this profile picks one (track default otherwise). */
+  return { avatarId, chosenAvatarId, chooseAvatar };
+}
+
+/**
+ * Avatar art, or the first letter of the name when there is no art to show.
+ * Parents get the letter until they pick a picture, so a parent never shows
+ * up as a child character such as Lars.
+ */
+export function ProfileAvatarOrInitial({
+  avatarId,
+  name,
+  className,
+}: {
+  avatarId: ProfileAvatarId | null;
+  name: string;
+  className?: string;
+}) {
+  if (avatarId) {
+    return <ProfileAvatarImage avatarId={avatarId} className={className} />;
+  }
+  const initial = name.trim().charAt(0).toUpperCase() || "P";
+  return (
+    <span
+      aria-hidden
+      data-profile-avatar="initial"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-full bg-[#031F82] font-heading font-extrabold leading-none text-white",
+        className,
+      )}
+    >
+      <span className="text-[0.95em]">{initial}</span>
+    </span>
+  );
 }

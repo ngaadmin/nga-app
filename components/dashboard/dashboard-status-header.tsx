@@ -95,7 +95,10 @@ export function DashboardStatusHeader() {
     session?.genericProfileId?.trim() ||
     session?.username?.trim() ||
     "device";
-  const { avatarId, chooseAvatar } = useProfileAvatar(profileKey, masteryCohort);
+  const { avatarId: trackAvatarId, chosenAvatarId, chooseAvatar } =
+    useProfileAvatar(profileKey, masteryCohort);
+  // A parent is never shown as a track character: their own pick, or their initial.
+  const avatarId = isParent ? chosenAvatarId : trackAvatarId;
   const openXpExchange = useCallback(() => {
     if (isParent) {
       router.push("/dashboard/settings");

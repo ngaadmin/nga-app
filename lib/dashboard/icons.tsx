@@ -413,6 +413,49 @@ export function ShieldIcon({ className }: IconProps) {
   );
 }
 
+/** Parent tab: shield with a check and a small lock badge (PIN-protected). */
+export function ParentTabIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <path
+        d="M11 3 3.5 6.3V11.5c0 4.3 3.2 8.2 7.5 9.3 1-.3 2-.7 2.9-1.3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11 3l7.5 3.3V9"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7.8 11.6l2.2 2.2 3.6-3.6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="15" y="15.5" width="7.5" height="6" rx="1.4" fill="currentColor" />
+      <path
+        d="M16.6 15.5v-1.3a2.15 2.15 0 0 1 4.3 0v1.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+
 /** Open book icon for Academy lesson nodes. */
 export function BookOpenIcon({ className }: IconProps) {
   return (

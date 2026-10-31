@@ -11,16 +11,53 @@ export const GUEST_DEVICE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const GUEST_SESSION_STORAGE_KEY = "nga_guest_session";
 
 /** Set once the first guest save banner has been shown. Wiped with guest progress. */
-export const GUEST_SAVE_PROMPT_FIRST_SEEN_KEY = "nga_guest_save_prompt_first_seen_v1";
+export const GUEST_SAVE_PROMPT_FIRST_SEEN_KEY =
+  "nga_guest_save_prompt_first_seen_v1";
 
 /**
  * Page-intro flags live in localStorage and are not part of the logout wipe.
- * They expire with the rest of the guest device copy.
+ * Only the guest entries expire with the guest device copy; registered
+ * accounts keep their own dismissals.
  */
+export const PAGE_INTRO_SEEN_STORE_KEY = "nga_page_intro_seen_by_account_v1";
+
+/** Legacy keys removed outright with the guest device copy. */
 export const GUEST_DEVICE_EXPIRE_EXTRA_KEYS = [
-  "nga_page_intro_seen_by_account_v1",
   "nga_hub_intro_seen_v2",
 ] as const;
+
+/** Drop guest intro entries; keep every registered account's entries. */
+export function pruneGuestPageIntroEntries(): void {
+  if (typeof window === "undefined") return;
+  const raw = window.localStorage.getItem(PAGE_INTRO_SEEN_STORE_KEY);
+  if (!raw) return;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    window.localStorage.removeItem(PAGE_INTRO_SEEN_STORE_KEY);
+    return;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    window.localStorage.removeItem(PAGE_INTRO_SEEN_STORE_KEY);
+    return;
+  }
+  const kept: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(
+    parsed as Record<string, unknown>,
+  )) {
+    if (key === "guest" || key.startsWith("guest:")) continue;
+    kept[key] = value;
+  }
+  if (Object.keys(kept).length === 0) {
+    window.localStorage.removeItem(PAGE_INTRO_SEEN_STORE_KEY);
+  } else {
+    window.localStorage.setItem(
+      PAGE_INTRO_SEEN_STORE_KEY,
+      JSON.stringify(kept),
+    );
+  }
+}
 
 const GUEST_DEVICE_KEYS = [
   GUEST_SESSION_STORAGE_KEY,
@@ -72,7 +109,9 @@ function readSessionHint(): SessionHint | null {
 }
 
 /** Guest play, or a child still waiting on parent approval. */
-export function sessionUsesGuestDeviceStore(session: SessionHint | null): boolean {
+export function sessionUsesGuestDeviceStore(
+  session: SessionHint | null,
+): boolean {
   if (!session) return false;
   if (session.accessMode === "guest" || session.accountStatus === "GUEST") {
     return true;
@@ -95,7 +134,10 @@ function readMeta(): GuestDeviceMeta | null {
   try {
     const parsed = JSON.parse(raw) as Partial<GuestDeviceMeta>;
     if (!parsed || typeof parsed !== "object") return null;
-    if (typeof parsed.expiresAt !== "number" || typeof parsed.guestId !== "string") {
+    if (
+      typeof parsed.expiresAt !== "number" ||
+      typeof parsed.guestId !== "string"
+    ) {
       return null;
     }
     return { guestId: parsed.guestId, expiresAt: parsed.expiresAt };
@@ -117,7 +159,8 @@ function touchGuestDeviceMeta(): void {
   if (typeof window === "undefined") return;
   const hint = readSessionHint();
   const guestId =
-    (typeof hint?.genericProfileId === "string" && hint.genericProfileId.trim()) ||
+    (typeof hint?.genericProfileId === "string" &&
+      hint.genericProfileId.trim()) ||
     (typeof hint?.username === "string" && hint.username.trim()) ||
     "guest";
   const meta: GuestDeviceMeta = {
@@ -136,6 +179,7 @@ export function releaseGuestDeviceLocalCopy(): void {
   for (const key of GUEST_DEVICE_EXPIRE_EXTRA_KEYS) {
     window.localStorage.removeItem(key);
   }
+  pruneGuestPageIntroEntries();
   window.localStorage.removeItem(GUEST_DEVICE_META_KEY);
 }
 
@@ -155,7 +199,9 @@ export function wipeGuestDeviceProgress(): void {
  * Returns undefined when this key should use the normal session store.
  * An expired device copy is wiped; the open tab can still read its session value.
  */
-export function readGuestDevicePersisted(key: string): string | null | undefined {
+export function readGuestDevicePersisted(
+  key: string,
+): string | null | undefined {
   if (typeof window === "undefined") return undefined;
   if (!isGuestDeviceStorageKey(key)) return undefined;
 

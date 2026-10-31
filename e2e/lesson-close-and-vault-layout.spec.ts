@@ -38,15 +38,6 @@ async function dismissHubIntro(page: Page): Promise<void> {
   }
 }
 
-function boxesOverlap(
-  a: { left: number; right: number; top: number; bottom: number },
-  b: { left: number; right: number; top: number; bottom: number },
-): boolean {
-  const width = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-  const height = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-  return width > 1 && height > 1;
-}
-
 test("close lesson returns to Academy", async ({ page }) => {
   await openAsExplorer(page, "/dashboard/academy/lesson/1?preview=1");
   const close = page.getByRole("link", { name: "Close lesson" });
@@ -133,75 +124,19 @@ test("vault intro leaves the bottom nav tappable and can close", async ({
   });
 });
 
-test("vault advanced money does not overlap the privacy policy", async ({
-  page,
-}) => {
+test("vault has no legal footer after sign-in", async ({ page }) => {
   await openAsExplorer(page, "/dashboard/vault");
   await dismissHubIntro(page);
   await expect(page.getByText("Advanced Money", { exact: true })).toBeVisible();
 
   for (const width of [320, 375, 414]) {
     await page.setViewportSize({ width, height: 667 });
-    const main = page.locator("main");
-    await main.evaluate((element) => {
+    await page.locator("main").evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
-
-    const fit = await page.evaluate(() => {
-      function box(element: Element | null) {
-        if (!element) return null;
-        const rect = element.getBoundingClientRect();
-        return {
-          left: rect.left,
-          right: rect.right,
-          top: rect.top,
-          bottom: rect.bottom,
-        };
-      }
-      const heading = box(
-        [...document.querySelectorAll("span,h1,h2,h3")].find(
-          (element) => element.textContent?.trim() === "Advanced Money",
-        ) ?? null,
-      );
-      const description = box(
-        [...document.querySelectorAll("span,p")].find(
-          (element) =>
-            element.childElementCount === 0 &&
-            element.textContent?.includes("Compound Growth, Ledger"),
-        ) ?? null,
-      );
-      const privacy = box(
-        [...document.querySelectorAll("a")].find(
-          (element) => element.textContent?.trim() === "Privacy Policy",
-        ) ?? null,
-      );
-      return { heading, description, privacy };
-    });
-
-    expect(fit.heading, `heading at ${width}`).not.toBeNull();
-    expect(fit.description, `description at ${width}`).not.toBeNull();
-    expect(fit.privacy, `privacy at ${width}`).not.toBeNull();
-    if (!fit.heading || !fit.description || !fit.privacy) continue;
-
-    expect(
-      boxesOverlap(fit.heading, fit.privacy),
-      `heading overlaps privacy at ${width}`,
-    ).toBe(false);
-    expect(
-      boxesOverlap(fit.description, fit.privacy),
-      `description overlaps privacy at ${width}`,
-    ).toBe(false);
-    expect(
-      boxesOverlap(fit.heading, fit.description),
-      `heading overlaps description at ${width}`,
-    ).toBe(false);
+    await expect(page.getByRole("navigation", { name: "Legal" })).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Privacy Policy", exact: true }),
+    ).toHaveCount(0);
   }
-
-  await page.setViewportSize({ width: 375, height: 667 });
-  await page.locator("main").evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
-  await page.screenshot({
-    path: "/opt/cursor/artifacts/vault-advanced-money-privacy.png",
-  });
 });

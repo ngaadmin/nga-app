@@ -1,12 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
 import { FullHeightPanel } from "@/components/dashboard/full-height-panel";
 import { LearningStreaksPanel } from "@/components/dashboard/learning-streaks-panel";
 import { useProfileAvatar } from "@/components/dashboard/profile/profile-avatar";
 import { ProfilePanel } from "@/components/dashboard/profile/profile-panel";
+import {
+  ProfileSwitcherMenu,
+  ProfileSwitcherTip,
+} from "@/components/dashboard/profile-switcher/profile-switcher";
+import {
+  hasAccountSeenProfileSwitcherTip,
+  markAccountProfileSwitcherTipSeen,
+} from "@/lib/dashboard/page-intro-seen";
+import { useHouseholdProfiles } from "@/lib/profile-switcher/use-household-profiles";
 import { XpExchangeModal } from "@/components/dashboard/points/xp-exchange-modal";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useXpExchangeGate } from "@/lib/dashboard/use-xp-exchange-gate";
@@ -99,6 +108,45 @@ export function DashboardStatusHeader() {
     useProfileAvatar(profileKey, masteryCohort);
   // A parent is never shown as a track character: their own pick, or their initial.
   const avatarId = isParent ? chosenAvatarId : trackAvatarId;
+  const household = useHouseholdProfiles();
+  const switcherButtonRef = useRef<HTMLButtonElement>(null);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [tipVisible, setTipVisible] = useState(false);
+
+  // One-time tip, stored with the per-account intro flags. Waits until no
+  // modal intro is covering the screen, then counts as seen once shown.
+  useEffect(() => {
+    if (!household) return;
+    if (hasAccountSeenProfileSwitcherTip()) return;
+    let shown = false;
+    const tryShow = () => {
+      if (shown) return;
+      if (document.querySelector('[aria-modal="true"]')) return;
+      shown = true;
+      setTipVisible(true);
+      markAccountProfileSwitcherTipSeen();
+    };
+    tryShow();
+    const timer = window.setInterval(tryShow, 600);
+    return () => window.clearInterval(timer);
+  }, [household]);
+
+  useEffect(() => {
+    if (!tipVisible) return;
+    const hide = window.setTimeout(() => setTipVisible(false), 8000);
+    return () => window.clearTimeout(hide);
+  }, [tipVisible]);
+
+  const toggleSwitcher = useCallback(() => {
+    setTipVisible(false);
+    setSwitcherOpen((open) => !open);
+  }, []);
+  const closeSwitcher = useCallback(() => setSwitcherOpen(false), []);
+  const viewProfileFromSwitcher = useCallback(() => {
+    setSwitcherOpen(false);
+    openProfile();
+  }, [openProfile]);
+
   const openXpExchange = useCallback(() => {
     if (isParent) {
       router.push("/dashboard/settings");
@@ -123,7 +171,18 @@ export function DashboardStatusHeader() {
           trackLabel={trackLabel}
           profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
-          onProfileClick={openProfile}
+          onProfileClick={household ? toggleSwitcher : openProfile}
+          profileSwitcher={
+            household
+              ? {
+                  open: switcherOpen,
+                  buttonRef: switcherButtonRef,
+                  tip: tipVisible ? (
+                    <ProfileSwitcherTip onDismiss={() => setTipVisible(false)} />
+                  ) : null,
+                }
+              : undefined
+          }
           onStreakClick={openStreaks}
           onXpClick={
             isParent || (xpExchange.ready && !xpExchange.blocked)
@@ -132,6 +191,17 @@ export function DashboardStatusHeader() {
           }
         />
       </header>
+
+      {household ? (
+        <ProfileSwitcherMenu
+          open={switcherOpen}
+          anchorRef={switcherButtonRef}
+          household={household}
+          currentAvatarId={avatarId}
+          onClose={closeSwitcher}
+          onViewProfile={viewProfileFromSwitcher}
+        />
+      ) : null}
 
       <FullHeightPanel
         isOpen={profileOpen}

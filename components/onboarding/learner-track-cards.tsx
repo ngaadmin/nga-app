@@ -1,6 +1,7 @@
 "use client";
 
-import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
+import Image from "next/image";
+import { cohortTrackPicture } from "@/lib/dashboard/cohort-track-pictures";
 import {
   MASTERY_COHORT_ORDER,
   masteryCohortAgeRangeLabel,
@@ -31,6 +32,7 @@ export function LearnerTrackCards({
           const selected = value === track;
           const label = masteryCohortLabel(track);
           const ageSupport = `For ages ${masteryCohortAgeRangeLabel(track)}`;
+          const picture = cohortTrackPicture(track);
           return (
             <button
               key={track}
@@ -48,9 +50,17 @@ export function LearnerTrackCards({
             >
               <span
                 aria-hidden
-                className="flex h-[100px] w-[100px] shrink-0 items-center justify-center text-[72px] leading-none"
+                className="flex h-[100px] w-[100px] shrink-0 items-end justify-center"
               >
-                {COHORT_EMOJI[track]}
+                <Image
+                  src={picture.src}
+                  alt=""
+                  width={picture.width}
+                  height={picture.height}
+                  className="h-[100px] w-auto max-w-full object-contain object-bottom"
+                  style={{ width: "auto" }}
+                  unoptimized
+                />
               </span>
               <span className="flex min-w-0 flex-1 flex-col justify-center">
                 <span className="font-heading text-[22px] font-extrabold leading-tight text-nga-primary">

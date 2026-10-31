@@ -8,6 +8,7 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { cohortTrackPicture } from "@/lib/dashboard/cohort-track-pictures";
 import { wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
@@ -17,28 +18,11 @@ import {
 } from "@/lib/onboarding/guest-session";
 import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 
-const TRACK_AVATAR_SRC: Record<
-  MasteryCohort,
-  { src: string; width: number; height: number; figureClassName: string }
-> = {
-  explorer: {
-    src: "/assets/illustrations/characters/lars/lars-waving-512.webp",
-    width: 191,
-    height: 391,
-    figureClassName: "h-[80px] min-[721px]:h-[200px]",
-  },
-  pathfinder: {
-    src: "/assets/illustrations/characters/holly/holly-waving-512.webp",
-    width: 199,
-    height: 391,
-    figureClassName: "h-[78px] min-[721px]:h-[194px]",
-  },
-  maverick: {
-    src: "/assets/illustrations/characters/aiden/aiden-waving-512.webp",
-    width: 207,
-    height: 391,
-    figureClassName: "h-[80px] min-[721px]:h-[200px]",
-  },
+/** Per-track figure height; the picture itself comes from the shared track list. */
+const TRACK_FIGURE_CLASS: Record<MasteryCohort, string> = {
+  explorer: "h-[80px] min-[721px]:h-[200px]",
+  pathfinder: "h-[78px] min-[721px]:h-[194px]",
+  maverick: "h-[80px] min-[721px]:h-[200px]",
 };
 
 const PENNY_AVATAR_SRC =
@@ -89,7 +73,7 @@ export function CohortTrackPicker() {
           {MASTERY_COHORT_ORDER.map((cohort) => {
             const label = masteryCohortLabel(cohort);
             const ageSupport = `For ages ${masteryCohortAgeRangeLabel(cohort)}`;
-            const avatar = TRACK_AVATAR_SRC[cohort];
+            const avatar = cohortTrackPicture(cohort);
 
             return (
               <button
@@ -104,7 +88,7 @@ export function CohortTrackPicker() {
                     alt=""
                     width={avatar.width}
                     height={avatar.height}
-                    className={`${avatar.figureClassName} w-auto max-w-full object-contain object-bottom`}
+                    className={`${TRACK_FIGURE_CLASS[cohort]} w-auto max-w-full object-contain object-bottom`}
                     style={{ width: "auto" }}
                     unoptimized
                   />

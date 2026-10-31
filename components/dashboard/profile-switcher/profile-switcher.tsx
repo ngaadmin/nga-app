@@ -34,8 +34,7 @@ export const PROFILE_SWITCHER_COPY = {
   parentTag: "Parent",
   here: "You're here",
   soon: "Coming soon",
-  soonNote:
-    "Switching profiles here is coming soon. For now, sign out and sign in as that profile.",
+  soonNote: "Switching profiles is coming soon.",
 } as const;
 
 function ChevronGlyph({ up, className }: { up: boolean; className?: string }) {
@@ -156,7 +155,10 @@ function ProfileRow({
         className="size-10 text-base"
       />
       <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-        <span className="max-w-full truncate font-heading text-[15px] font-bold leading-tight text-[#031F82]">
+        <span
+          data-profile-switcher-name
+          className="max-w-full truncate font-heading text-[15px] font-bold leading-tight text-[#031F82]"
+        >
           {profile.name}
         </span>
         {tag ? (

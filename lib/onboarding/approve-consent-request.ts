@@ -362,8 +362,9 @@ export async function listPendingConsentRequestsForParent(): Promise<
 /**
  * In-app approval for a pending consent row addressed to the signed-in parent.
  * Email approval links keep using {@link approveConsentRequest}.
+ * Not exported: every in-app path must pass the parent PIN gate first.
  */
-export async function approveConsentRequestInApp(
+async function approveConsentRequestInAppUngated(
   requestId: string,
 ): Promise<ApproveConsentResult> {
   const trimmedId = requestId.trim();
@@ -618,7 +619,7 @@ export async function declineConsentRequest(token: string): Promise<DeclineConse
   });
 }
 
-export async function declineConsentRequestInApp(
+async function declineConsentRequestInAppUngated(
   requestId: string,
 ): Promise<DeclineConsentResult> {
   const trimmedId = requestId.trim();
@@ -734,26 +735,42 @@ async function parentTabGateOpen(pass: string): Promise<boolean> {
 }
 
 /**
- * Parent tab approve. Same approval as Settings, but it also needs the
- * Parent tab gate pass, so it fails while the tab is locked.
+ * In-app approve (Settings or the Parent tab). Needs the parent session and
+ * a gate pass that only a correct parent PIN (checked on the server) signs.
  */
-export async function approveConsentRequestFromParentTab(
+export async function approveConsentRequestInApp(
   requestId: string,
   pass: string,
 ): Promise<ApproveConsentResult> {
   if (!(await parentTabGateOpen(pass))) {
     return { success: false, error: PARENT_TAB_LOCKED };
   }
-  return approveConsentRequestInApp(requestId);
+  return approveConsentRequestInAppUngated(requestId);
 }
 
-/** Parent tab decline. Needs the parent session and an open gate. */
-export async function declineConsentRequestFromParentTab(
+/** In-app decline. Same parent PIN gate as approve. */
+export async function declineConsentRequestInApp(
   requestId: string,
   pass: string,
 ): Promise<DeclineConsentResult> {
   if (!(await parentTabGateOpen(pass))) {
     return { success: false, error: PARENT_TAB_LOCKED };
   }
-  return declineConsentRequestInApp(requestId);
+  return declineConsentRequestInAppUngated(requestId);
+}
+
+/** Parent tab approve: the same PIN-gated approval. */
+export async function approveConsentRequestFromParentTab(
+  requestId: string,
+  pass: string,
+): Promise<ApproveConsentResult> {
+  return approveConsentRequestInApp(requestId, pass);
+}
+
+/** Parent tab decline: the same PIN-gated decline. */
+export async function declineConsentRequestFromParentTab(
+  requestId: string,
+  pass: string,
+): Promise<DeclineConsentResult> {
+  return declineConsentRequestInApp(requestId, pass);
 }

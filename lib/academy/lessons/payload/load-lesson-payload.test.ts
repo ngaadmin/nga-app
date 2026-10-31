@@ -115,6 +115,7 @@ describe("lesson payload loader", () => {
       type: "completion",
       id: "screen-8",
       leadCharacter: "Lars",
+      portraitSrc: "/assets/illustrations/characters/lars/lars-celebrating-512.webp",
       sourceLabel: "8",
       useStandardPane: true,
       medalId: "medal-skill1-bronze",

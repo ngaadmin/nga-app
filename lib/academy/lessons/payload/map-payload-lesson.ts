@@ -1,3 +1,4 @@
+import { celebratingPortraitSrc } from "@/lib/academy/lessons/celebrating-portrait";
 import { lessonCashInXp } from "@/lib/academy/lessons/completion-xp";
 import { parseCashUpdate, type CashComparison, type CashUpdate } from "@/lib/academy/lessons/payload/cash-placeholder";
 import { goToScreenLabel, parseDecisionScript } from "@/lib/academy/lessons/payload/decision-choices";
@@ -1499,13 +1500,16 @@ export function mapPayloadScreen(
     case "completion": {
       const medalSetting = settingValue(settings, "MEDAL");
       const leadCharacter = context.leadCharacter?.trim();
+      const portrait = leadCharacter
+        ? { leadCharacter, portraitSrc: celebratingPortraitSrc(leadCharacter, cohort) }
+        : {};
       if (medalSettingToken(medalSetting) === "none") {
         return {
           type: "completion",
           id,
           useStandardPane: true,
           suppressMedal: true,
-          ...(leadCharacter ? { leadCharacter } : {}),
+          ...portrait,
         };
       }
       const settingsTier = medalTierFromSettings(medalSetting);
@@ -1528,7 +1532,7 @@ export function mapPayloadScreen(
         ...(namedMedal?.src ? { medalSrc: namedMedal.src } : {}),
         ...(medalTier ? { medalTier } : {}),
         ...(skillName ? { skillName } : {}),
-        ...(leadCharacter ? { leadCharacter } : {}),
+        ...portrait,
       };
     }
     default:

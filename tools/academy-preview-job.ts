@@ -64,6 +64,7 @@ async function run(): Promise<void> {
       conflicts: outcomes.filter((item) => item.result === "conflict").map((item) => item.objectPath),
       failed: outcomes.filter((item) => item.result === "failed").map((item) => `${item.objectPath} ${item.status}`),
     });
+    const unpainted = new Set(plan.filter((item) => item.status === "no-source").map((item) => item.objectPath));
     const heads = await headPublicObjects(supabaseUrl, objects);
     const checked = readMasterWorkbookFile(MASTER_WORKBOOK_PATH, {
       moduleNumber,
@@ -73,7 +74,9 @@ async function run(): Promise<void> {
     const result = await publishMasterDraft(checked, {
       previous: previous?.payload ?? null,
       store: restVersionStore(credentials, moduleNumber),
-      allowPending: isHeldLarsMedia,
+      // Held Lars art and pictures with no file anywhere yet show the
+      // placeholder on the preview. Promote still refuses a version with any.
+      allowPending: (objectPath) => isHeldLarsMedia(objectPath) || unpainted.has(objectPath),
     });
     if (!result.ok) {
       log("ACADEMY_JOB_FAILED", { moduleNumber, blocked: result.blocked.slice(0, 40), issues: result.issues.slice(0, 20) });

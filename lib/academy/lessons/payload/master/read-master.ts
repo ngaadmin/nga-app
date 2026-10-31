@@ -19,7 +19,9 @@ import {
   resolveAcademyAudioUrl,
   resolveAcademyImageUrl,
 } from "@/lib/academy/lessons/payload/master/media-url";
-import { academyMediaBase } from "@/lib/academy/media/academy-media";
+import { academyMediaBase, mediaBaseName } from "@/lib/academy/media/academy-media";
+import { lessonImageSrcs } from "@/lib/academy/lessons/lesson-image-srcs";
+import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { payloadGameDropsNamedPicture } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 
 export const MASTER_WORKBOOK_PATH = path.join(
@@ -259,7 +261,12 @@ export function masterModuleFromSheets(
   }
 
   if (issues.length > 0) return empty();
-  const contentHash = createHash("sha256").update(JSON.stringify(byCohort)).digest("hex");
+  addPlayerPictures(byCohort, missing, context);
+  // The media list is part of the hash, so a reader change that names more
+  // pictures stores a fresh version even when no cell changed.
+  const contentHash = createHash("sha256")
+    .update(JSON.stringify({ byCohort, images: [...context.images].sort(), audio: [...context.audio].sort() }))
+    .digest("hex");
   return {
     moduleNumber,
     mediaBase,
@@ -272,6 +279,47 @@ export function masterModuleFromSheets(
     issues,
     contentHash,
   };
+}
+
+/**
+ * Pictures the player asks for that no Image cell names: drag-to-target art
+ * from SOURCE / TARGET / ITEM / IMAGE settings and the close-screen portrait.
+ * Uses the same mapper and preload list as the player, so the media list and
+ * the missing-media check match what a lesson requests.
+ */
+function addPlayerPictures(
+  byCohort: Record<MasteryCohort, LessonPayload[]>,
+  missing: MissingMasterAsset[],
+  context: ReadContext,
+): void {
+  for (const cohort of COHORTS) {
+    for (const lesson of byCohort[cohort]) {
+      let srcs: string[];
+      try {
+        const content = resolvePayloadLesson(lesson, cohort, lesson.lessonNumber);
+        srcs = lessonImageSrcs(content.screens, content.characterName);
+      } catch {
+        // A row the mapper refuses fails the page's own check. Nothing to add here.
+        continue;
+      }
+      for (const src of srcs) {
+        if (/^https?:\/\//i.test(src)) continue;
+        const name = mediaBaseName(src);
+        if (!name) continue;
+        const objectPath = `images/${name}`;
+        if (context.images.has(objectPath)) continue;
+        context.images.add(objectPath);
+        if (context.knownMedia && !context.knownMedia.has(objectPath)) {
+          missing.push({
+            sheet: moduleTabName(context.moduleNumber, cohort),
+            row: 0,
+            kind: "image",
+            name,
+          });
+        }
+      }
+    }
+  }
 }
 
 type DetailLesson = {

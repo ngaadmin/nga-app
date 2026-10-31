@@ -7,6 +7,8 @@ import {
   characterPoseFilePath,
   getPairSheetImagePath,
 } from "@/lib/academy/illustrations/illustration-registry";
+import { celebratingPortraitSrc } from "@/lib/academy/lessons/celebrating-portrait";
+import { lessonImageSrcs } from "@/lib/academy/lessons/lesson-image-srcs";
 import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import { assertLessonPayloadAssets } from "@/lib/academy/lessons/payload/validate-lesson-assets";
 import { publishMasterDraft } from "@/lib/academy/lessons/payload/master/publish-master";
@@ -16,6 +18,7 @@ import {
   readMasterModule,
 } from "@/lib/academy/lessons/payload/master/read-master";
 import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authoring-table";
+import { mediaBaseName } from "@/lib/academy/media/academy-media";
 import { isHeldLarsMedia } from "@/lib/academy/media/held-media";
 import { planMediaUploads } from "@/lib/academy/media/media-sync";
 
@@ -306,7 +309,8 @@ describe("master workbook reader", () => {
   it("has an upload source under the size cap for every picture and clip that isn't held", () => {
     const plan = planMediaUploads([...master.media.images, ...master.media.audio]);
     const problems = plan.filter((item) => item.status === "no-source" || item.status === "too-large");
-    expect(problems).toEqual([]);
+    // Not drawn yet: the Pathfinder Lesson 2 target. Stays pending, so promote refuses it.
+    expect(problems).toEqual([{ objectPath: "images/pippa-celebrating-512.webp", status: "no-source" }]);
     expect(plan.filter((item) => item.status === "held").every((item) => isHeldLarsMedia(item.objectPath))).toBe(true);
     expect(master.media.images.length).toBeGreaterThan(50);
     expect(master.media.audio.length).toBeGreaterThan(50);
@@ -430,5 +434,55 @@ describe("master workbook reader", () => {
       row: 1,
       reason: 'No sheet named "M1 Explorer".',
     });
+  });
+});
+
+describe("master media list matches what the player requests", () => {
+  const master = readMasterModule(readFileSync(MASTER_WORKBOOK_PATH));
+
+  it("names every picture a lesson loads, drag art and close portrait included", () => {
+    const names = new Set(master.media.images);
+    const cohorts = ["explorer", "pathfinder", "maverick"] as const;
+    for (const cohort of cohorts) {
+      for (const lesson of master.byCohort[cohort]) {
+        const content = resolvePayloadLesson(lesson, cohort, lesson.lessonNumber);
+        for (const src of lessonImageSrcs(content.screens, content.characterName)) {
+          expect(names.has(`images/${mediaBaseName(src)}`), `${cohort} L${lesson.lessonNumber} ${src}`).toBe(true);
+        }
+      }
+    }
+    for (const name of [
+      "images/concept-gift-box-r2.webp",
+      "images/money-coin.webp",
+      "images/piggy-bank.webp",
+      "images/senna-older-celebrating-r1-512.webp",
+    ]) {
+      expect(names.has(name), name).toBe(true);
+    }
+  });
+
+  it("lists a drag picture missing from storage, so publish is blocked", async () => {
+    const known = new Set(master.media.images.filter((name) => name !== "images/money-coin.webp"));
+    for (const name of master.media.audio) known.add(name);
+    const checked = readMasterModule(readFileSync(MASTER_WORKBOOK_PATH), { knownMedia: known });
+    expect(checked.missing.some((item) => item.name === "money-coin.webp")).toBe(true);
+    const result = await publishMasterDraft(checked, {
+      previous: null,
+      store: { findByHash: async () => null, saveDraft: async () => "x" },
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("shows the older Senna on the Maverick close screen", () => {
+    for (const lesson of master.byCohort.maverick) {
+      const content = resolvePayloadLesson(lesson, "maverick", lesson.lessonNumber);
+      const close = content.screens.find((screen) => screen.type === "completion");
+      if (close?.type === "completion" && close.leadCharacter?.toLowerCase() === "senna") {
+        expect(close.portraitSrc).toMatch(/senna-older-celebrating/);
+      }
+    }
+    expect(celebratingPortraitSrc("Senna", "explorer")).toMatch(/\/senna-celebrating/);
+    expect(celebratingPortraitSrc("Senna", "maverick")).toMatch(/senna-older-celebrating-r1-512\.webp$/);
+    expect(celebratingPortraitSrc(undefined, "maverick")).toMatch(/lars-celebrating/);
   });
 });

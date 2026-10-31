@@ -42,9 +42,10 @@ import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
-function celebratingPortrait(name?: string): { src: string; alt: string } {
+function celebratingPortrait(name?: string, src?: string): { src: string; alt: string } {
   const trimmed = name?.trim();
   const id = trimmed ? `${trimmed.toLowerCase()}-celebrating` : "";
+  if (src && trimmed) return { src, alt: `${trimmed} celebrating` };
   if (id && isIllustrationId(id)) {
     return {
       src: getIllustrationPath(id),
@@ -84,6 +85,8 @@ type LessonCompletionPaneProps = {
   skillName?: string;
   /** Cohort lead from Lesson-Details. Their celebrating pose replaces the default portrait. */
   leadCharacter?: string;
+  /** The lead's celebrating pose for this cohort. Wins over the name lookup. */
+  portraitSrc?: string;
   skillLearnedLabel?: string;
   onCashIn: () =>
     | void
@@ -124,6 +127,7 @@ export function LessonCompletionPane({
   suppressMedal = false,
   skillName: skillNameOverride,
   leadCharacter,
+  portraitSrc: portraitOverride,
   skillLearnedLabel,
   onCashIn,
   onContinue,
@@ -188,7 +192,7 @@ export function LessonCompletionPane({
     ? moduleCloserGoldSkillLine(moduleNumber ?? 1)
     : null;
   const skillLine = closerLine ?? quietLessonSkillLine(skillMedalTier, skillName);
-  const localPortrait = celebratingPortrait(leadCharacter);
+  const localPortrait = celebratingPortrait(leadCharacter, portraitOverride);
   const portraitSrc = useAcademyMediaSrc(localPortrait.src);
   const portrait = { ...localPortrait, src: portraitSrc };
   const medalList = medals.map((medal) => medal.medalId).join(" ");

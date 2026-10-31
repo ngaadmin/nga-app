@@ -4,6 +4,7 @@ import {
   getPairSheetImagePath,
   isIllustrationId,
 } from "@/lib/academy/illustrations/illustration-registry";
+import { celebratingPortraitSrc } from "@/lib/academy/lessons/celebrating-portrait";
 import { resolveLessonScreenIllustration } from "@/lib/academy/lessons/resolve-lesson-screen-illustration";
 import type { ScreenConfig } from "@/lib/academy/lessons/types";
 
@@ -19,13 +20,6 @@ function dragArtSrc(fileName?: string, illustrationId?: string): string | undefi
     return conceptPropPath(illustrationId) ?? getIllustrationPath(illustrationId);
   }
   return undefined;
-}
-
-function celebratingPortraitSrc(leadName?: string): string {
-  const trimmed = leadName?.trim();
-  const id = trimmed ? `${trimmed.toLowerCase()}-celebrating` : "";
-  if (id && isIllustrationId(id)) return getIllustrationPath(id);
-  return getIllustrationPath("lars-celebrating");
 }
 
 /**
@@ -49,7 +43,7 @@ export function lessonImageSrcs(
 
     if (screen.type === "completion") {
       addSrc(srcs, seen, screen.medalSrc);
-      addSrc(srcs, seen, celebratingPortraitSrc(leadName));
+      addSrc(srcs, seen, screen.portraitSrc ?? celebratingPortraitSrc(leadName));
     }
   }
 

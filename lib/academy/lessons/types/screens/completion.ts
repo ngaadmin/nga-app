@@ -33,4 +33,6 @@ export type CompletionScreenConfig = WithDeclarative<{
   skillName?: string;
   /** Lesson-Details character for this cohort. The close screen uses their celebrating pose. */
   leadCharacter?: string;
+  /** The lead's celebrating pose for this cohort, under /public. Set by the payload mapper. */
+  portraitSrc?: string;
 }>;

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { isParentTabEligible } from "@/lib/parent/parent-tab-eligibility";
 import {
   PARENT_TAB_GATE_PASS_TTL_MS,
@@ -6,14 +6,18 @@ import {
   signParentTabGatePass,
 } from "@/lib/parent/parent-tab-gate-pass";
 import {
+  PARENT_TAB_PIN_ITERATIONS,
   PARENT_TAB_PIN_LOCKOUT_MS,
-  PARENT_TAB_PIN_STORAGE_KEY,
-  checkParentTabPin,
-  clearParentTabPin,
-  hasParentTabPin,
-  parentTabPinLockedUntil,
-  setParentTabPin,
+  PARENT_TAB_PIN_MAX_TRIES,
+  isParentTabPin,
+  nextParentTabPinCounters,
+  parentTabPinLockActive,
 } from "@/lib/parent/parent-tab-pin";
+import {
+  hashParentTabPin,
+  newParentTabPinHash,
+  parentTabPinHashesMatch,
+} from "@/lib/parent/parent-tab-pin-hash";
 import { DASHBOARD_NAV_ITEMS } from "@/lib/dashboard/navigation";
 import {
   PARENT_TAB_NAV_ITEM,
@@ -103,78 +107,59 @@ describe("parent tab gate pass", () => {
   });
 });
 
-describe("parent tab PIN (device store)", () => {
-  let store: Map<string, string>;
+vi.mock("server-only", () => ({}));
 
-  beforeEach(() => {
-    store = new Map();
-    vi.stubGlobal("window", {
-      localStorage: {
-        getItem: (key: string) => store.get(key) ?? null,
-        setItem: (key: string, value: string) => store.set(key, value),
-        removeItem: (key: string) => store.delete(key),
-      },
-    });
-  });
+describe("parent tab PIN counters (server rules)", () => {
+  const now = 1_800_000_000_000;
+  const clean = { failedTries: 0, lockedUntil: null };
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("stores a salted hash, never the PIN, keyed by parent", async () => {
-    await setParentTabPin("parent-1", "4821");
-    const raw = store.get(PARENT_TAB_PIN_STORAGE_KEY) ?? "";
-    expect(raw).not.toContain("4821");
-    const parsed = JSON.parse(raw);
-    expect(Object.keys(parsed)).toEqual(["parent-1"]);
-    expect(parsed["parent-1"].salt).toBeTruthy();
-    expect(hasParentTabPin("parent-1")).toBe(true);
-    expect(hasParentTabPin("parent-2")).toBe(false);
-  });
-
-  it("unlocks with the right PIN only", async () => {
-    await setParentTabPin("parent-1", "4821");
-    expect(await checkParentTabPin("parent-1", "4821")).toEqual({ ok: true });
-    const wrong = await checkParentTabPin("parent-1", "1111");
-    expect(wrong).toMatchObject({ ok: false, reason: "wrong", triesLeft: 4 });
-  });
-
-  it("locks out for 5 minutes after 5 wrong tries, then lets the parent retry", async () => {
-    await setParentTabPin("parent-1", "4821");
-    const start = 10_000_000;
-    for (let index = 1; index <= 4; index += 1) {
-      const result = await checkParentTabPin("parent-1", "0000", start);
-      expect(result).toMatchObject({ reason: "wrong", triesLeft: 5 - index });
+  it("adds a try per miss and locks for 5 minutes on the 5th", () => {
+    let counters: { failedTries: number; lockedUntil: number | null } = clean;
+    for (let miss = 1; miss <= 4; miss += 1) {
+      counters = nextParentTabPinCounters(counters, false, now);
+      expect(counters).toEqual({ failedTries: miss, lockedUntil: null });
     }
-    const fifth = await checkParentTabPin("parent-1", "0000", start);
-    expect(fifth).toMatchObject({
-      reason: "locked",
-      lockedUntil: start + PARENT_TAB_PIN_LOCKOUT_MS,
-    });
-    // Even the right PIN is refused during the lockout.
+    counters = nextParentTabPinCounters(counters, false, now);
+    expect(counters.failedTries).toBe(PARENT_TAB_PIN_MAX_TRIES);
+    expect(counters.lockedUntil).toBe(now + PARENT_TAB_PIN_LOCKOUT_MS);
+    expect(parentTabPinLockActive(counters, now + 1000)).toBe(true);
     expect(
-      await checkParentTabPin("parent-1", "4821", start + 60_000),
-    ).toMatchObject({
-      reason: "locked",
-    });
-    expect(parentTabPinLockedUntil("parent-1", start + 60_000)).toBe(
-      start + PARENT_TAB_PIN_LOCKOUT_MS,
-    );
-    expect(
-      await checkParentTabPin(
-        "parent-1",
-        "4821",
-        start + PARENT_TAB_PIN_LOCKOUT_MS + 1,
-      ),
-    ).toEqual({ ok: true });
+      parentTabPinLockActive(counters, now + PARENT_TAB_PIN_LOCKOUT_MS),
+    ).toBe(false);
   });
 
-  it("clears only that parent's PIN", async () => {
-    await setParentTabPin("parent-1", "4821");
-    await setParentTabPin("parent-2", "1234");
-    clearParentTabPin("parent-1");
-    expect(hasParentTabPin("parent-1")).toBe(false);
-    expect(hasParentTabPin("parent-2")).toBe(true);
+  it("starts over after the lock runs out, and a match clears everything", () => {
+    const expired = { failedTries: 5, lockedUntil: now - 1 };
+    expect(nextParentTabPinCounters(expired, false, now)).toEqual({
+      failedTries: 1,
+      lockedUntil: null,
+    });
+    expect(
+      nextParentTabPinCounters({ failedTries: 3, lockedUntil: null }, true, now),
+    ).toEqual(clean);
+  });
+
+  it("only accepts 4 digits", () => {
+    expect(isParentTabPin("1234")).toBe(true);
+    for (const bad of ["123", "12345", "12a4", "", " 123"]) {
+      expect(isParentTabPin(bad)).toBe(false);
+    }
+  });
+});
+
+describe("parent tab PIN hash (server)", () => {
+  it("salts with PBKDF2 and compares in constant time", async () => {
+    const first = await newParentTabPinHash("4821");
+    const second = await newParentTabPinHash("4821");
+    expect(first.iterations).toBe(PARENT_TAB_PIN_ITERATIONS);
+    expect(first.hash).not.toContain("4821");
+    expect(first.salt).not.toBe(second.salt);
+    expect(first.hash).not.toBe(second.hash);
+    const again = await hashParentTabPin("4821", first.salt, first.iterations);
+    expect(parentTabPinHashesMatch(again, first.hash)).toBe(true);
+    const wrong = await hashParentTabPin("4822", first.salt, first.iterations);
+    expect(parentTabPinHashesMatch(wrong, first.hash)).toBe(false);
+    expect(parentTabPinHashesMatch("", first.hash)).toBe(false);
   });
 });
 

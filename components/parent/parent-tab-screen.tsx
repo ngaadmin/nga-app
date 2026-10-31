@@ -5,7 +5,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type FormEvent,
 } from "react";
 import Link from "next/link";
 import { ModalShell } from "@/components/ui/modal-shell";
@@ -21,25 +20,14 @@ import {
 } from "@/lib/onboarding/approve-consent-request";
 import { convertToRegisteredProfile } from "@/lib/onboarding/guest-session";
 import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
+import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import {
-  checkParentTabPin,
-  clearParentTabPin,
-  hasParentTabPin,
-  isParentTabPin,
-  parentTabPinLockedUntil,
-  setParentTabPin,
-} from "@/lib/parent/parent-tab-pin";
-import {
-  confirmParentPasswordForPinReset,
   loadParentTabData,
-  openParentTabGate,
   type ParentTabChildSummary,
   type ParentTabData,
   type ParentTabOkItem,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
-
-type GatePhase = "set" | "confirm" | "enter" | "forgot" | "unlocked";
 
 const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 
@@ -56,25 +44,23 @@ export function ParentTabScreen({
   parentUserId: string;
   parentName: string;
 }) {
-  const [phase, setPhase] = useState<GatePhase | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [gateKey, setGateKey] = useState(0);
   const [pass, setPass] = useState<string | null>(null);
   const [data, setData] = useState<ParentTabData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const lockGeneration = useRef(0);
-  /** First PIN typed while creating one. Memory only, cleared on lock. */
-  const pendingPin = useRef("");
 
   const lock = useCallback(() => {
     lockGeneration.current += 1;
-    pendingPin.current = "";
     setPass(null);
     setData(null);
     setLoadError(null);
-    setPhase(hasParentTabPin(parentUserId) ? "enter" : "set");
-  }, [parentUserId]);
+    setUnlocked(false);
+    setGateKey((key) => key + 1);
+  }, []);
 
   useEffect(() => {
-    lock();
     const onVisibility = () => {
       if (document.visibilityState === "hidden") lock();
     };
@@ -103,21 +89,20 @@ export function ParentTabScreen({
     [lock],
   );
 
-  const unlock = useCallback(async (): Promise<string | null> => {
-    const generation = lockGeneration.current;
-    const gate = await openParentTabGate();
-    if (generation !== lockGeneration.current) return null;
-    if (!gate.ok) return gate.error;
-    setPass(gate.pass);
-    setPhase("unlocked");
-    void refresh(gate.pass);
-    return null;
-  }, [refresh]);
+  /** The server checked the PIN and signed this pass. Memory only. */
+  const unlock = useCallback(
+    (gatePass: string) => {
+      setPass(gatePass);
+      setUnlocked(true);
+      void refresh(gatePass);
+    },
+    [refresh],
+  );
 
   return (
     <div
       data-parent-tab
-      data-parent-tab-state={phase === "unlocked" ? "unlocked" : "locked"}
+      data-parent-tab-state={unlocked ? "unlocked" : "locked"}
       className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col overflow-x-hidden bg-white px-1 py-2 pb-8"
     >
       <div className="px-1">
@@ -125,7 +110,7 @@ export function ParentTabScreen({
           <h1 className="font-heading text-[25px] font-extrabold leading-tight tracking-[-0.2px] text-[#031F82]">
             Parent dashboard
           </h1>
-          {phase === "unlocked" ? (
+          {unlocked ? (
             <button
               type="button"
               data-parent-tab-lock
@@ -142,291 +127,23 @@ export function ParentTabScreen({
         </p>
       </div>
 
-      {phase === null ? null : phase === "unlocked" ? (
+      {unlocked ? (
         pass ? (
           <UnlockedView
             data={data}
             loadError={loadError}
-            pass={pass}
             onChanged={() => void refresh(pass)}
-            onLocked={lock}
           />
         ) : null
       ) : (
-        <PinGate
-          key={phase}
-          phase={phase}
-          pendingPin={pendingPin}
-          parentUserId={parentUserId}
+        <ParentPinGate
+          key={`${parentUserId}:${gateKey}`}
           parentName={parentName}
-          setPhase={setPhase}
+          enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent tab.`}
           onUnlocked={unlock}
         />
       )}
     </div>
-  );
-}
-
-function PinBoxes({
-  value,
-  onChange,
-  disabled,
-  label,
-  autoFocus = true,
-}: {
-  value: string;
-  onChange: (next: string) => void;
-  disabled?: boolean;
-  label: string;
-  autoFocus?: boolean;
-}) {
-  return (
-    <div className="relative mx-auto mt-3 w-fit">
-      <div className="flex justify-center gap-2.5" aria-hidden>
-        {[0, 1, 2, 3].map((index) => (
-          <span
-            key={index}
-            className={cn(
-              "flex h-[46px] w-10 items-center justify-center rounded-xl border-2 bg-[#E8F6FC] font-heading text-xl font-extrabold text-[#031F82]",
-              index < value.length ? "border-[#031F82]" : "border-[#C9D6EA]",
-            )}
-          >
-            {index < value.length ? "•" : ""}
-          </span>
-        ))}
-      </div>
-      <input
-        data-parent-tab-pin-input
-        aria-label={label}
-        type="password"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        autoComplete="off"
-        maxLength={4}
-        autoFocus={autoFocus}
-        disabled={disabled}
-        value={value}
-        onChange={(event) =>
-          onChange(event.target.value.replace(/\D/g, "").slice(0, 4))
-        }
-        className="absolute inset-0 h-full w-full cursor-text opacity-0 disabled:cursor-not-allowed"
-      />
-    </div>
-  );
-}
-
-function formatCountdown(ms: number): string {
-  const seconds = Math.max(0, Math.ceil(ms / 1000));
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
-function PinGate({
-  phase,
-  pendingPin,
-  parentUserId,
-  parentName,
-  setPhase,
-  onUnlocked,
-}: {
-  phase: Exclude<GatePhase, "unlocked">;
-  pendingPin: { current: string };
-  parentUserId: string;
-  parentName: string;
-  setPhase: (phase: GatePhase) => void;
-  onUnlocked: () => Promise<string | null>;
-}) {
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [password, setPassword] = useState("");
-  const [lockedUntil, setLockedUntil] = useState<number | null>(() =>
-    phase === "enter" ? parentTabPinLockedUntil(parentUserId) : null,
-  );
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!lockedUntil) return;
-    const timer = window.setInterval(() => {
-      const current = Date.now();
-      setNow(current);
-      if (current >= lockedUntil) {
-        setLockedUntil(null);
-        setError(null);
-      }
-    }, 1000);
-    return () => window.clearInterval(timer);
-  }, [lockedUntil]);
-
-  const lockedOut = Boolean(lockedUntil && lockedUntil > now);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (busy) return;
-    setError(null);
-
-    if (phase === "forgot") {
-      setBusy(true);
-      const result = await confirmParentPasswordForPinReset(password);
-      setBusy(false);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      clearParentTabPin(parentUserId);
-      setPhase("set");
-      return;
-    }
-
-    if (!isParentTabPin(pin)) {
-      setError("Enter 4 numbers.");
-      return;
-    }
-
-    if (phase === "set") {
-      pendingPin.current = pin;
-      setPhase("confirm");
-      return;
-    }
-
-    setBusy(true);
-    try {
-      if (phase === "confirm") {
-        if (pin !== pendingPin.current) {
-          pendingPin.current = "";
-          setBusy(false);
-          setPhase("set");
-          return;
-        }
-        pendingPin.current = "";
-        await setParentTabPin(parentUserId, pin);
-      } else {
-        const result = await checkParentTabPin(parentUserId, pin);
-        if (!result.ok) {
-          setPin("");
-          if (result.reason === "locked") {
-            setLockedUntil(result.lockedUntil);
-            setNow(Date.now());
-            setError("Too many wrong tries.");
-          } else if (result.reason === "missing") {
-            setPhase("set");
-          } else {
-            setError(
-              `That PIN didn't match. ${result.triesLeft} ${result.triesLeft === 1 ? "try" : "tries"} left.`,
-            );
-          }
-          return;
-        }
-      }
-      const gateError = await onUnlocked();
-      if (gateError) setError(gateError);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const title =
-    phase === "set"
-      ? "Create your parent PIN"
-      : phase === "confirm"
-        ? "Enter your new PIN again"
-        : phase === "forgot"
-          ? "Reset your parent PIN"
-          : "Enter your parent PIN";
-  const body =
-    phase === "set"
-      ? "Pick 4 numbers. You'll need them every time you open this tab."
-      : phase === "confirm"
-        ? "Type the same 4 numbers to confirm."
-        : phase === "forgot"
-          ? "Confirm your account password, then pick a new PIN."
-          : `Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent tab.`;
-
-  return (
-    <form
-      data-parent-tab-gate={phase}
-      onSubmit={submit}
-      className={cn(
-        "mx-1 mt-4 rounded-2xl bg-white px-4 pb-4 pt-5 text-center",
-        CARD_SHADOW,
-      )}
-    >
-      <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-[#E8F6FC] text-[#031F82]">
-        <LockIcon className="size-5" />
-      </span>
-      <h2 className="mt-2 font-heading text-lg font-extrabold text-[#031F82]">
-        {title}
-      </h2>
-      <p className="mx-auto mt-1 max-w-[17rem] font-sans text-[13px] leading-snug text-[#1E3A5F]">
-        {body}
-      </p>
-
-      {phase === "forgot" ? (
-        <input
-          data-parent-tab-password
-          type="password"
-          autoComplete="current-password"
-          aria-label="Account password"
-          placeholder="Account password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="mx-auto mt-3 block w-full max-w-[15rem] rounded-xl border-2 border-[#C9D6EA] bg-[#E8F6FC] px-3 py-2.5 font-sans text-sm text-[#031F82] outline-none focus:border-[#031F82]"
-        />
-      ) : (
-        <PinBoxes
-          value={pin}
-          onChange={(next) => {
-            setPin(next);
-            if (error && !lockedOut) setError(null);
-          }}
-          disabled={busy || lockedOut}
-          label={phase === "confirm" ? "Confirm parent PIN" : "Parent PIN"}
-        />
-      )}
-
-      <p
-        data-parent-tab-gate-error
-        role="alert"
-        className="mt-2 min-h-[1.25rem] font-sans text-[12.5px] font-semibold text-[#B42318]"
-      >
-        {lockedOut && lockedUntil
-          ? `Too many wrong tries. Try again in ${formatCountdown(lockedUntil - now)}.`
-          : error}
-      </p>
-
-      <button
-        type="submit"
-        data-parent-tab-continue
-        disabled={
-          busy ||
-          lockedOut ||
-          (phase === "forgot" ? !password : pin.length !== 4)
-        }
-        className="mt-1 w-full max-w-[15rem] rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] transition-opacity disabled:opacity-50"
-      >
-        {busy ? "Checking…" : "Continue"}
-      </button>
-
-      {phase === "enter" ? (
-        <button
-          type="button"
-          data-parent-tab-forgot
-          onClick={() => setPhase("forgot")}
-          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
-        >
-          Forgot your PIN?
-        </button>
-      ) : phase === "forgot" || phase === "confirm" ? (
-        <button
-          type="button"
-          onClick={() =>
-            setPhase(hasParentTabPin(parentUserId) ? "enter" : "set")
-          }
-          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
-        >
-          Back
-        </button>
-      ) : null}
-    </form>
   );
 }
 
@@ -496,20 +213,12 @@ function ChildCard({
           <b className="font-heading text-xs font-bold text-[#031F82]">
             {child.lessonsDone}
           </b>{" "}
-          {summaryWord(child.lessonsDone, "lesson", "lessons")}
+          {summaryWord(child.lessonsDone, "lesson", "lessons")} done
         </span>
         <span
           className="flex items-center gap-0.5"
-          aria-label={`${child.dayStreak} day streak`}
-        >
-          <span aria-hidden>🔥</span>
-          <b className="font-heading text-xs font-bold text-[#031F82]">
-            {child.dayStreak}
-          </b>
-        </span>
-        <span
-          className="flex items-center gap-0.5"
-          aria-label={`${child.coins} coins`}
+          data-parent-tab-child-coins
+          aria-label={`${child.coins} coins to cash in`}
         >
           <GoldCoinIcon className="size-[13px]" />
           <b className="font-heading text-xs font-bold text-[#031F82]">
@@ -524,15 +233,11 @@ function ChildCard({
 function UnlockedView({
   data,
   loadError,
-  pass,
   onChanged,
-  onLocked,
 }: {
   data: ParentTabData | null;
   loadError: string | null;
-  pass: string;
   onChanged: () => void;
-  onLocked: () => void;
 }) {
   const { currencyCode } = useCurrency();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -542,6 +247,8 @@ function UnlockedView({
   > | null>(null);
   const [busy, setBusy] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  /** Approve/decline tapped: the PIN is asked again for this one action. */
+  const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
 
   if (loadError) {
     return (
@@ -563,7 +270,7 @@ function UnlockedView({
     data.children[0] ??
     null;
 
-  async function decide(approve: boolean) {
+  async function decide(approve: boolean, actionPass: string) {
     if (!review || busy) return;
     setBusy(true);
     setReviewError(null);
@@ -571,21 +278,19 @@ function UnlockedView({
       if (!approve) {
         const declined = await declineConsentRequestFromParentTab(
           review.requestId,
-          pass,
+          actionPass,
         );
         if (!declined.success) {
           setReviewError(declined.error);
-          if (/PIN/.test(declined.error)) onLocked();
           return;
         }
       } else {
         const result = await approveConsentRequestFromParentTab(
           review.requestId,
-          pass,
+          actionPass,
         );
         if (!result.success) {
           setReviewError(result.error);
-          if (/PIN/.test(result.error)) onLocked();
           return;
         }
         const now = new Date().toISOString();
@@ -744,7 +449,11 @@ function UnlockedView({
 
       <ModalShell
         isOpen={Boolean(review)}
-        onClose={() => (busy ? undefined : setReview(null))}
+        onClose={() => {
+          if (busy) return;
+          setDecision(null);
+          setReview(null);
+        }}
         layer="toast"
         labelledBy="parent-tab-review-title"
         backdropClassName="bg-[#031F82]/55"
@@ -774,33 +483,68 @@ function UnlockedView({
                 {reviewError}
               </p>
             ) : null}
-            <div className="mt-4 flex flex-col gap-2">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void decide(true)}
-                className="rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] disabled:opacity-50"
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void decide(false)}
-                className="rounded-full border-2 border-[#C9D6EA] py-2 font-heading text-sm font-bold text-[#031F82] disabled:opacity-50"
-              >
-                Decline
-              </button>
-              <button
-                type="button"
-                data-parent-tab-review-cancel
-                disabled={busy}
-                onClick={() => setReview(null)}
-                className="py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
-              >
-                Not now
-              </button>
-            </div>
+            {decision ? (
+              <div data-parent-tab-decision-pin={decision}>
+                <ParentPinGate
+                  parentName=""
+                  className="mx-0 mt-3 shadow-none ring-1 ring-[#E3EAF5]"
+                  enterBody={
+                    decision === "approve"
+                      ? `Enter your parent PIN to approve ${review.childUsername}.`
+                      : `Enter your parent PIN to decline ${review.childUsername}.`
+                  }
+                  onUnlocked={async (actionPass) => {
+                    const approve = decision === "approve";
+                    setDecision(null);
+                    await decide(approve, actionPass);
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setDecision(null)}
+                  className="mt-2 block w-full py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
+                >
+                  Back
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  data-parent-tab-approve
+                  disabled={busy}
+                  onClick={() => {
+                    setReviewError(null);
+                    setDecision("approve");
+                  }}
+                  className="rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  data-parent-tab-decline
+                  disabled={busy}
+                  onClick={() => {
+                    setReviewError(null);
+                    setDecision("decline");
+                  }}
+                  className="rounded-full border-2 border-[#C9D6EA] py-2 font-heading text-sm font-bold text-[#031F82] disabled:opacity-50"
+                >
+                  Decline
+                </button>
+                <button
+                  type="button"
+                  data-parent-tab-review-cancel
+                  disabled={busy}
+                  onClick={() => setReview(null)}
+                  className="py-1 font-sans text-xs font-semibold text-[#1E3A5F] underline underline-offset-2"
+                >
+                  Not now
+                </button>
+              </div>
+            )}
           </div>
         ) : null}
       </ModalShell>

@@ -27,6 +27,8 @@ type AcademyMomentumHeaderProps = {
   avatarId: ProfileAvatarId | null;
   /** Track name (Explorer, Pathfinder, Maverick). Null hides the label. */
   trackLabel: string | null;
+  /** The label names a role (Parent), not a track. */
+  trackLabelIsRole?: boolean;
   /** Dot on the avatar when a new medal is waiting in the profile panel. */
   profileHasAttention?: boolean;
   showCoins?: boolean;
@@ -55,6 +57,7 @@ export function AcademyMomentumHeader({
   dayStreak,
   avatarId,
   trackLabel,
+  trackLabelIsRole = false,
   profileHasAttention = false,
   showCoins = true,
   onProfileClick,
@@ -90,7 +93,11 @@ export function AcademyMomentumHeader({
               profileSwitcher
                 ? `Profiles for ${profileName}`
                 : `Open profile for ${profileName}`,
-              trackLabel ? `${trackLabel} track` : null,
+              trackLabel
+                ? trackLabelIsRole
+                  ? trackLabel
+                  : `${trackLabel} track`
+                : null,
               profileHasAttention ? "New medal earned" : null,
             ]
               .filter(Boolean)

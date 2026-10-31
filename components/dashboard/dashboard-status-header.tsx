@@ -168,7 +168,8 @@ export function DashboardStatusHeader() {
           xp={spendableXp}
           dayStreak={dayStreak}
           avatarId={avatarId}
-          trackLabel={trackLabel}
+          trackLabel={isParent ? "Parent" : trackLabel}
+          trackLabelIsRole={isParent}
           profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
           onProfileClick={household ? toggleSwitcher : openProfile}

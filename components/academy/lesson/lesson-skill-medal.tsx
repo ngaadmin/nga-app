@@ -10,6 +10,7 @@ import {
   lessonCompletionHeroMedalClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 
 type LessonSkillMedalProps = {
   skillSlug: string;
@@ -75,7 +76,10 @@ export function LessonSkillMedal({
           className={IMAGE_CLASS[size]}
           decoding="async"
           loading={size === "hero" ? "eager" : "lazy"}
-          onError={() => setHidden(true)}
+          onError={() => {
+            setHidden(true);
+            reportAcademyMediaFailed(medalSrc, "image");
+          }}
         />
       )}
       {label ? (

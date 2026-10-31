@@ -138,6 +138,7 @@ export function LessonCompletionPane({
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [flying, setFlying] = useState(false);
+  const [portraitFailed, setPortraitFailed] = useState(false);
   const [cashedIn, setCashedIn] = useState(false);
   const [moment, setMoment] = useState<GuestSaveBannerMoment | null>(null);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -282,16 +283,33 @@ export function LessonCompletionPane({
         )}
       >
         <div className="flex flex-col items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={portrait.src}
-            alt={portrait.alt}
-            className="h-[120px] w-auto object-contain"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            onError={() => reportAcademyMediaFailed(portrait.src, "image")}
-          />
+          {portraitFailed ? (
+            <span
+              className="flex h-[120px] w-[120px] items-center justify-center rounded-2xl border-2 border-dashed border-[#B9C7EA] bg-[#F4F7FF]"
+              data-testid="academy-media-placeholder"
+              aria-hidden
+            >
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8FA3D6" strokeWidth="1.6">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <circle cx="9" cy="10" r="1.6" />
+                <path d="M4 17l5-5 4 4 3-3 4 4" />
+              </svg>
+            </span>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={portrait.src}
+              alt={portrait.alt}
+              className="h-[120px] w-auto object-contain"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              onError={() => {
+                setPortraitFailed(true);
+                reportAcademyMediaFailed(portrait.src, "image");
+              }}
+            />
+          )}
           <h2 className="lesson-close-intro mt-3 text-center font-heading text-[26px] font-extrabold text-[#031F82]">
             You did it!
           </h2>

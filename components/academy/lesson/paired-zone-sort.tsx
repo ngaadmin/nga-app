@@ -87,7 +87,7 @@ export function PairedZoneSort({
   buckets,
   orderKey,
   mode,
-  zoneMinClassName = "min-h-[316px]",
+  zoneMinClassName,
   onComplete,
   onMismatch,
 }: PairedZoneSortProps) {
@@ -376,7 +376,10 @@ export function PairedZoneSort({
         )}
       </div>
 
-      <div className="mt-4 flex min-w-0 flex-wrap gap-2">
+      {/* The zone row is 316px tall when there is room and shrinks to fit a
+          shorter screen, so it never overflows the lesson pane (an overflow
+          made the pane scrollable and nudged the zones as items were placed). */}
+      <div className="mt-4 flex min-h-0 min-w-0 shrink grow-0 basis-[316px] flex-wrap gap-2">
         {zones.map((zone, index) => {
           const tint = ZONE_TINT[index] ?? ZONE_TINT[1];
           const activeTint = ZONE_TINT_ACTIVE[index] ?? ZONE_TINT_ACTIVE[1];

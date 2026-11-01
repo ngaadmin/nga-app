@@ -176,9 +176,9 @@ export function LearnerDataScreen({
             icon={<FlameIcon className="size-4" />}
             iconClass="bg-[#FFA503] text-[#031F82]"
             value={String(view.dayStreak)}
-            unit="days"
+            unit={view.dayStreak === 1 ? "day" : "days"}
             label="Day streak"
-            note={`Best ever: ${view.bestStreak} days`}
+            note={`Best ever: ${view.bestStreak} ${view.bestStreak === 1 ? "day" : "days"}`}
           />
         </div>
         <WideStat

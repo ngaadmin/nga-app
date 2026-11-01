@@ -43,7 +43,13 @@ beforeEach(() => {
 
 async function deleteOwnDeviceOnlyAccount(input: {
   householdEmail: string | null;
-  account: { parentEmail?: string | null; learnerEmail?: string | null; email?: string | null };
+  account: {
+    parentEmail?: string | null;
+    learnerEmail?: string | null;
+    email?: string | null;
+    parentApprovalRequired?: boolean | null;
+  };
+  learnerAge?: number | null;
 }) {
   const recipient = resolveSelfDeleteNoticeRecipient(input);
   if (recipient) {
@@ -53,34 +59,99 @@ async function deleteOwnDeviceOnlyAccount(input: {
 }
 
 describe("item 15: account deleted notice recipient", () => {
-  it("never emails the device-only learner's own address", async () => {
-    const recipient = await deleteOwnDeviceOnlyAccount({
-      householdEmail: null,
-      account: { learnerEmail: "kid@example.com", email: "kid@example.com" },
+  describe("parent email on file", () => {
+    it("emails the parent, never the learner, even when the learner is 16+", async () => {
+      const recipient = await deleteOwnDeviceOnlyAccount({
+        householdEmail: null,
+        account: {
+          parentEmail: "Parent@Example.com",
+          learnerEmail: "teen@example.com",
+          parentApprovalRequired: false,
+        },
+      });
+      expect(recipient).toBe("parent@example.com");
+      expect(sendOnboardingEmail).toHaveBeenCalledTimes(1);
+      expect(sendOnboardingEmail.mock.calls[0]?.[0]).toMatchObject({
+        type: "ACCOUNT_DELETED_CHILD",
+        recipientEmail: "parent@example.com",
+      });
     });
-    expect(recipient).toBeNull();
-    expect(sendOnboardingEmail).not.toHaveBeenCalled();
+
+    it("emails the parent of an under-13 learner", async () => {
+      const recipient = await deleteOwnDeviceOnlyAccount({
+        householdEmail: null,
+        account: { parentEmail: "parent@example.com", parentApprovalRequired: true },
+        learnerAge: 11,
+      });
+      expect(recipient).toBe("parent@example.com");
+      expect(sendOnboardingEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it("prefers the household (parent) email over the saved parent email", () => {
+      expect(
+        resolveSelfDeleteNoticeRecipient({
+          householdEmail: "home@example.com",
+          account: { parentEmail: "parent@example.com", learnerEmail: "kid@example.com" },
+        }),
+      ).toBe("home@example.com");
+    });
   });
 
-  it("emails the linked parent where one exists", async () => {
-    await deleteOwnDeviceOnlyAccount({
-      householdEmail: null,
-      account: { parentEmail: "Parent@Example.com", learnerEmail: "kid@example.com" },
+  describe("no parent email, learner 13 or older", () => {
+    it("falls back to the learner's own email when the 16+ check passed", async () => {
+      const recipient = await deleteOwnDeviceOnlyAccount({
+        householdEmail: null,
+        account: { learnerEmail: "Teen@Example.com", parentApprovalRequired: false },
+      });
+      expect(recipient).toBe("teen@example.com");
+      expect(sendOnboardingEmail).toHaveBeenCalledTimes(1);
+      expect(sendOnboardingEmail.mock.calls[0]?.[0]).toMatchObject({
+        type: "ACCOUNT_DELETED_CHILD",
+        recipientEmail: "teen@example.com",
+      });
     });
-    expect(sendOnboardingEmail).toHaveBeenCalledTimes(1);
-    expect(sendOnboardingEmail.mock.calls[0]?.[0]).toMatchObject({
-      type: "ACCOUNT_DELETED_CHILD",
-      recipientEmail: "parent@example.com",
+
+    it("uses the legacy email field when learnerEmail is missing", () => {
+      expect(
+        resolveSelfDeleteNoticeRecipient({
+          householdEmail: "  ",
+          account: { email: "legacy@example.com", parentApprovalRequired: false },
+        }),
+      ).toBe("legacy@example.com");
+    });
+
+    it("falls back to the learner's email when a known age is exactly 13", () => {
+      expect(
+        resolveSelfDeleteNoticeRecipient({
+          householdEmail: null,
+          account: { learnerEmail: "thirteen@example.com", parentApprovalRequired: true },
+          learnerAge: 13,
+        }),
+      ).toBe("thirteen@example.com");
     });
   });
 
-  it("prefers the household (parent) email", () => {
-    expect(
-      resolveSelfDeleteNoticeRecipient({
-        householdEmail: "home@example.com",
-        account: { parentEmail: "parent@example.com" },
-      }),
-    ).toBe("home@example.com");
+  describe("no parent email, learner under 13", () => {
+    it("sends nothing when a known age is under 13", async () => {
+      const recipient = await deleteOwnDeviceOnlyAccount({
+        householdEmail: null,
+        account: { learnerEmail: "kid@example.com", email: "kid@example.com" },
+        learnerAge: 12,
+      });
+      expect(recipient).toBeNull();
+      expect(sendOnboardingEmail).not.toHaveBeenCalled();
+    });
+
+    it("sends nothing when the age is unknown (under-16 flag or no flag)", async () => {
+      for (const parentApprovalRequired of [true, undefined, null]) {
+        const recipient = await deleteOwnDeviceOnlyAccount({
+          householdEmail: null,
+          account: { learnerEmail: "kid@example.com", parentApprovalRequired },
+        });
+        expect(recipient).toBeNull();
+      }
+      expect(sendOnboardingEmail).not.toHaveBeenCalled();
+    });
   });
 });
 

@@ -335,7 +335,7 @@ describe("account-deleted email contact", () => {
 describe("public email send policy", () => {
   it("only allows stored consent types", () => {
     expect(isPublicConsentEmailType("EXPLORER_PARENT")).toBe(true);
-    expect(isPublicConsentEmailType("EXPLORER_PARENT_RESEND")).toBe(false);
+    expect(isPublicConsentEmailType("NOT_A_CONSENT_TYPE")).toBe(false);
     expect(isPublicConsentEmailType("USERNAME_RECOVERY")).toBe(false);
     expect(isPublicConsentEmailType("PARENT_WELCOME")).toBe(false);
     expect(storedConsentMatchesEmailType("EXPLORER_PARENT", "vpc")).toBe(true);

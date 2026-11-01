@@ -268,6 +268,22 @@ export function countStoredMedals(
   return { bronze, silver, gold };
 }
 
+export type EarnedSkillTier = "bronze" | "silver" | "gold";
+
+/** Skills with a medal (bronze or better), best tier first. */
+export function listEarnedSkills(
+  skillProgress: Record<string, unknown> | null | undefined,
+): { slug: string; tier: EarnedSkillTier }[] {
+  const rank: Record<EarnedSkillTier, number> = { gold: 0, silver: 1, bronze: 2 };
+  return Object.entries(skillProgress ?? {})
+    .filter(
+      (entry): entry is [string, EarnedSkillTier] =>
+        entry[1] === "gold" || entry[1] === "silver" || entry[1] === "bronze",
+    )
+    .map(([slug, tier]) => ({ slug, tier }))
+    .sort((a, b) => rank[a.tier] - rank[b.tier]);
+}
+
 export type HistoryEntry = {
   at: string;
   title: string;
@@ -473,6 +489,8 @@ export type LearnerDataView = {
   coins: number;
   lifetimeXp: number;
   medals: { bronze: number; silver: number; gold: number };
+  /** Skills with a medal, for the medal art in the Achievements section. */
+  earnedSkills: { slug: string; tier: EarnedSkillTier }[];
   jars: { name: string; emoji: string; amount: number }[];
   goals: { name: string; emoji: string; balance: number; target: number }[];
   activity: { emoji: string; title: string; detail: string; when: string }[];
@@ -522,6 +540,9 @@ export function assembleLearnerView(input: {
     coins: finiteCount(wallet?.totalPoints),
     lifetimeXp: finiteCount(wallet?.lifetimePointsEarned),
     medals: countStoredMedals(
+      asRecord(progress.skillProgress) as Record<string, unknown> | null,
+    ),
+    earnedSkills: listEarnedSkills(
       asRecord(progress.skillProgress) as Record<string, unknown> | null,
     ),
     jars: JAR_ORDER.map((jar) => ({

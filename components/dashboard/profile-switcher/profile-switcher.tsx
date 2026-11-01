@@ -29,19 +29,27 @@ import {
   type HouseholdProfiles,
 } from "@/lib/profile-switcher/household-profiles";
 import { zLayerStyle } from "@/lib/ui/layers";
+import {
+  PARENT_ROLE_PILL_CLASS,
+  TRACK_PILL_CLASS,
+} from "@/lib/dashboard/track-pill";
 import { cn } from "@/lib/utils/cn";
 
 export const PROFILE_SWITCHER_COPY = {
   tip: "Tap your avatar to switch profiles",
   viewProfile: "View my profile",
-  viewProfileSub: "Achievements & badges",
+  viewProfileSub: "Achievements & medals",
   settings: "Settings",
-  settingsSub: "PINs, account and preferences",
+  /** Parent menu: their Settings holds both PINs. */
+  settingsSubParent: "PINs, account and preferences",
+  /** Child and guest menus: no PINs there. */
+  settingsSub: "Account and preferences",
   parentHub: "Parent Hub",
   parentHubSub: "Approvals and your child's progress",
   switchHeading: "Switch profile",
   parentTag: "Parent",
-  here: "You're here",
+  /** Screen-reader label for the check on the current profile. */
+  here: "Current profile",
   soon: "Coming soon",
   soonNote: "Switching profiles is coming soon.",
   loading: "Loading profiles…",
@@ -127,7 +135,7 @@ function useAvatarFor(profile: HouseholdProfile): ProfileAvatarId | null {
   return avatarId;
 }
 
-function ProfileRow({
+export function ProfileRow({
   profile,
   currentAvatarId,
 }: {
@@ -167,7 +175,7 @@ function ProfileRow({
       <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
         <span
           data-profile-switcher-name
-          className="max-w-full truncate font-heading text-[15px] font-bold leading-tight text-[#031F82]"
+          className="line-clamp-2 max-w-full break-words font-heading text-[15px] font-bold leading-tight text-[#031F82]"
         >
           {profile.name}
         </span>
@@ -175,9 +183,7 @@ function ProfileRow({
           <span
             className={cn(
               "rounded-full px-1.5 py-px font-heading text-[9.5px] font-bold uppercase tracking-[0.4px]",
-              profile.role === "parent"
-                ? "bg-[#EEF0FA] text-[#031F82]"
-                : "bg-[#E8F6FC] text-[#0288A3]",
+              profile.role === "parent" ? PARENT_ROLE_PILL_CLASS : TRACK_PILL_CLASS,
             )}
           >
             {tag}
@@ -185,13 +191,12 @@ function ProfileRow({
         ) : null}
       </span>
       {profile.isCurrent ? (
-        <span className="flex shrink-0 items-center gap-1.5">
-          <span className="text-[11px] font-semibold text-[#8A5300]">
-            {PROFILE_SWITCHER_COPY.here}
-          </span>
-          <span className="flex size-6 items-center justify-center rounded-full bg-[#FFA503] text-white">
-            <CheckIcon className="size-4" />
-          </span>
+        <span
+          data-profile-switcher-current-check
+          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-white"
+        >
+          <CheckIcon className="size-4" />
+          <span className="sr-only">{PROFILE_SWITCHER_COPY.here}</span>
         </span>
       ) : disabled ? (
         <span className="shrink-0 text-[11px] font-semibold text-[#64748b]">
@@ -260,6 +265,7 @@ export function ProfileSwitcherMenu({
   onViewProfile,
   onOpenSettings,
   onOpenParentHub,
+  isParent = false,
 }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
@@ -272,6 +278,8 @@ export function ProfileSwitcherMenu({
   onOpenSettings: () => void;
   /** Only for a parent who can open the Parent Hub. */
   onOpenParentHub?: () => void;
+  /** Parents get the PINs subtitle on Settings; children and guests do not. */
+  isParent?: boolean;
 }) {
   const [box, setBox] = useState<MenuBox | null>(null);
   const [scrimTop, setScrimTop] = useState(0);
@@ -376,7 +384,11 @@ export function ProfileSwitcherMenu({
           data-attr="settings"
           icon={<SettingsTabIconA className="size-5" />}
           title={PROFILE_SWITCHER_COPY.settings}
-          sub={PROFILE_SWITCHER_COPY.settingsSub}
+          sub={
+            isParent
+              ? PROFILE_SWITCHER_COPY.settingsSubParent
+              : PROFILE_SWITCHER_COPY.settingsSub
+          }
           onClick={onOpenSettings}
         />
         {onOpenParentHub ? (

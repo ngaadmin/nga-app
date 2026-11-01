@@ -38,8 +38,8 @@ function asCohort(value: string | null): MasteryCohort | null {
 }
 
 /**
- * Parent first, then active linked children by name. The signed-in profile
- * is always listed (marked current). A signed-in child sees only themselves
+ * The signed-in profile first (marked current), then the parent, then active
+ * linked children by name. A signed-in child sees only themselves
  * and their parent, never their siblings. Returns null unless there is at
  * least one other profile to show, so single-profile accounts keep the plain
  * avatar.
@@ -99,5 +99,10 @@ export function buildHouseholdProfiles(input: {
 
   if (!profiles.some((profile) => profile.isCurrent)) return null;
   if (profiles.length < 2) return null;
-  return { currentUserId, profiles };
+  // Current profile on top in every switcher and menu.
+  const ordered = [
+    ...profiles.filter((profile) => profile.isCurrent),
+    ...profiles.filter((profile) => !profile.isCurrent),
+  ];
+  return { currentUserId, profiles: ordered };
 }

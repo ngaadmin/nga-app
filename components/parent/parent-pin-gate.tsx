@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { PIN_DIFFERENCE_LINE } from "@/lib/parent/pin-copy";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { isParentTabPin } from "@/lib/parent/parent-tab-pin";
 import {
@@ -79,7 +80,7 @@ export function ParentPinGate({
   className,
 }: {
   parentName: string;
-  /** Line under "Enter your parent PIN". */
+  /** Line under "Enter your Parent Hub PIN". */
   enterBody?: string;
   onUnlocked: (pass: string) => void | Promise<void>;
   className?: string;
@@ -229,12 +230,12 @@ export function ParentPinGate({
 
   const title =
     phase === "set"
-      ? "Create your parent PIN"
+      ? "Create your Parent Hub PIN"
       : phase === "confirm"
         ? "Enter your new PIN again"
         : phase === "forgot"
-          ? "Reset your parent PIN"
-          : "Enter your parent PIN";
+          ? "Reset your Parent Hub PIN"
+          : "Enter your Parent Hub PIN";
   const body =
     phase === "set"
       ? "Pick 4 numbers. You'll need them for the Parent Hub and for every approval."
@@ -243,7 +244,7 @@ export function ParentPinGate({
         : phase === "forgot"
           ? "Confirm your account password, then pick a new PIN."
           : (enterBody ??
-            `Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to continue.`);
+            `Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent Hub PIN to continue.`);
 
   return (
     <form
@@ -263,6 +264,12 @@ export function ParentPinGate({
       </h2>
       <p className="mx-auto mt-1 max-w-[17rem] font-sans text-[13px] leading-snug text-[#1E3A5F]">
         {body}
+      </p>
+      <p
+        data-pin-difference
+        className="mx-auto mt-1.5 max-w-[17rem] font-sans text-[11.5px] leading-snug text-[#4A5675]"
+      >
+        {PIN_DIFFERENCE_LINE}
       </p>
 
       {phase === "forgot" ? (
@@ -285,7 +292,7 @@ export function ParentPinGate({
             if (error && !lockedOut) setError(null);
           }}
           disabled={busy || lockedOut}
-          label={phase === "confirm" ? "Confirm parent PIN" : "Parent PIN"}
+          label={phase === "confirm" ? "Confirm Parent Hub PIN" : "Parent Hub PIN"}
         />
       )}
 

@@ -59,7 +59,8 @@ function trackLabel(cohort: string | null | undefined): string | null {
   if (cohort !== "explorer" && cohort !== "pathfinder" && cohort !== "maverick") {
     return null;
   }
-  return `${masteryCohortLabel(cohort)} · Ages ${masteryCohortAgeRangeLabel(cohort)}`;
+  // Non-breaking space and hyphen keep "Ages 10-13" on one line.
+  return `${masteryCohortLabel(cohort)} · Ages\u00A0${masteryCohortAgeRangeLabel(cohort).replace("-", "\u2011")}`;
 }
 
 function trackName(cohort: string | null | undefined): string | null {

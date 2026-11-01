@@ -34,6 +34,7 @@ import {
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
 import { LearnerDataScreen } from "@/components/privacy/learner-data-screen";
+import { TRACK_PILL_CLASS } from "@/lib/dashboard/track-pill";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 
@@ -59,6 +60,8 @@ export function ParentTabScreen({
   const [pass, setPass] = useState<string | null>(null);
   const [data, setData] = useState<ParentTabData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  /** A child's progress is open: it has its own back button and title. */
+  const [subpageOpen, setSubpageOpen] = useState(false);
   const lockGeneration = useRef(0);
 
   const lock = useCallback(() => {
@@ -67,6 +70,7 @@ export function ParentTabScreen({
     setData(null);
     setLoadError(null);
     setUnlocked(false);
+    setSubpageOpen(false);
     setGateKey((key) => key + 1);
   }, []);
 
@@ -116,16 +120,23 @@ export function ParentTabScreen({
       className={cn(
         // Full-bleed light blue page, as in the r6 design. Cancels the
         // dashboard main padding so the color reaches the edges.
-        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex min-h-0 flex-1 flex-col bg-[#E8F6FC] px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
+        // shrink-0: the page grows with its content so <main> scrolls it.
+        // (A shrinking flex child with its own overflow clipped the bottom
+        // and left an empty band above the tab bar.)
+        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex flex-1 shrink-0 flex-col bg-[#E8F6FC] px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
       )}
     >
-      <div className="mx-auto flex w-full max-w-md flex-col overflow-x-hidden">
-        <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
-          Parent Hub
-        </h1>
-        <p className="mt-px font-sans text-[13px] text-[#1E3A5F]">
-          Only you can see this. It&apos;s PIN-protected.
-        </p>
+      <div className="mx-auto flex w-full max-w-md flex-col overflow-x-clip">
+        {subpageOpen ? null : (
+          <>
+            <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
+              Parent Hub
+            </h1>
+            <p className="mt-px font-sans text-[13px] text-[#1E3A5F]">
+              Only you can see this. It&apos;s PIN-protected.
+            </p>
+          </>
+        )}
 
         {unlocked ? (
           pass ? (
@@ -134,6 +145,7 @@ export function ParentTabScreen({
               data={data}
               loadError={loadError}
               onChanged={() => void refresh(pass)}
+              onSubpageChange={setSubpageOpen}
             />
           ) : null
         ) : (
@@ -141,7 +153,7 @@ export function ParentTabScreen({
             key={`${parentUserId}:${gateKey}`}
             parentName={parentName}
             className="mx-0"
-            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent Hub.`}
+            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent Hub PIN to open the Parent Hub.`}
             onUnlocked={unlock}
           />
         )}
@@ -160,11 +172,6 @@ function shortDate(iso: string): string | null {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const TRACK_CHIP: Record<MasteryCohort, string> = {
-  explorer: "bg-[#EDE7FE] text-[#6D3FE0]",
-  pathfinder: "bg-[#E0F7FB] text-[#0288A3]",
-  maverick: "bg-[#FFE9D6] text-[#B45309]",
-};
 
 /**
  * One child: avatar, name, track, lifetime lessons, coins to cash in. An
@@ -230,7 +237,7 @@ function ChildCard({
             data-parent-tab-child-track
             className={cn(
               "mt-1 inline-block rounded-full px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px]",
-              TRACK_CHIP[child.cohort],
+              TRACK_PILL_CLASS,
             )}
           >
             {masteryCohortLabel(child.cohort)}
@@ -332,11 +339,13 @@ function UnlockedView({
   data,
   loadError,
   onChanged,
+  onSubpageChange,
 }: {
   pass: string;
   data: ParentTabData | null;
   loadError: string | null;
   onChanged: () => void;
+  onSubpageChange?: (open: boolean) => void;
 }) {
   const { currencyCode } = useCurrency();
   const [review, setReview] = useState<Extract<
@@ -359,11 +368,16 @@ function UnlockedView({
   /** A child's progress, opened from their card. */
   const [progress, setProgress] = useState<
     | { state: "loading"; username: string }
-    | { state: "ready"; view: LearnerDataView }
+    | { state: "ready"; view: LearnerDataView; cohort: MasteryCohort | null }
     | { state: "error"; username: string; error: string }
     | null
   >(null);
   const hasData = data !== null;
+  const subpageOpen = progress !== null;
+
+  useEffect(() => {
+    onSubpageChange?.(subpageOpen);
+  }, [onSubpageChange, subpageOpen]);
 
   /** Coins tap from the header lands on #to-settle once the Hub loads. */
   useEffect(() => {
@@ -385,7 +399,7 @@ function UnlockedView({
         });
         return;
       }
-      setProgress({ state: "ready", view: result.view });
+      setProgress({ state: "ready", view: result.view, cohort: child.cohort });
     },
     [pass],
   );
@@ -412,6 +426,10 @@ function UnlockedView({
           <LearnerDataScreen
             view={progress.view}
             mode="progress"
+            avatarId={readStoredProfileAvatarId(
+              progress.view.userId,
+              progress.cohort ?? "explorer",
+            )}
             title={`${progress.view.username}'s progress`}
             subtitle="What they've learned and done in the app."
             onBack={() => setProgress(null)}
@@ -732,8 +750,8 @@ function UnlockedView({
                   className="mx-0 mt-3 shadow-none ring-1 ring-[#E3EAF5]"
                   enterBody={
                     decision === "approve"
-                      ? `Enter your parent PIN to approve ${review.childUsername}.`
-                      : `Enter your parent PIN to decline ${review.childUsername}.`
+                      ? `Enter your Parent Hub PIN to approve ${review.childUsername}.`
+                      : `Enter your Parent Hub PIN to decline ${review.childUsername}.`
                   }
                   onUnlocked={async (actionPass) => {
                     const approve = decision === "approve";

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   BookOpenIcon,
@@ -14,6 +14,12 @@ import { useCurrency } from "@/lib/dashboard/currency-context";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
 import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
+import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
+import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
+import { MedalCountChip } from "@/components/achievements/skills-collection-panel";
+import { SkillMedalVisual } from "@/components/academy/skill-medal-visual";
+import { getVaultSkillTrophyById } from "@/lib/dashboard/skill-trophies";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * "full": everything (teacher's student record).
@@ -45,6 +51,8 @@ type LearnerDataScreenProps = {
   deleteLabel?: string;
   downloading?: boolean;
   vaultNote?: string;
+  /** The learner's chosen avatar. Without it, the first letter shows. */
+  avatarId?: ProfileAvatarId;
 };
 
 export function LearnerDataScreen({
@@ -66,6 +74,7 @@ export function LearnerDataScreen({
   deleteLabel = "Delete account",
   downloading = false,
   vaultNote = "Vault amounts are what you and your child track in the app. The app doesn't hold or move money.",
+  avatarId,
 }: LearnerDataScreenProps) {
   const { formatMoney } = useCurrency();
   const initial = view.username.trim().charAt(0).toUpperCase() || "?";
@@ -123,11 +132,18 @@ export function LearnerDataScreen({
 
       <section className="mt-3.5 rounded-2xl bg-white p-4 shadow-md">
         <div className="flex items-center gap-3.5">
-          <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-[22px] font-extrabold text-white shadow-md">
-            {initial}
-          </div>
+          {avatarId ? (
+            <ProfileAvatarImage
+              avatarId={avatarId}
+              className="size-[52px] shadow-md"
+            />
+          ) : (
+            <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-[22px] font-extrabold text-white shadow-md">
+              {initial}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
-            <p className="font-heading text-xl font-extrabold leading-tight text-[#031F82]">
+            <p className="break-words font-heading text-xl font-extrabold leading-tight text-[#031F82]">
               {view.username}
             </p>
             {view.trackLabel ? (
@@ -135,11 +151,15 @@ export function LearnerDataScreen({
                 {view.trackLabel}
               </p>
             ) : null}
+            {/* Below the name, so a long name gets the whole row. */}
+            <span
+              data-learner-data-view-only
+              className="mt-1.5 inline-flex h-[26px] items-center gap-1 rounded-full bg-[#EAF0FF] px-2.5 font-heading text-xs font-bold text-[#031F82]"
+            >
+              <LockIcon className="size-3.5" />
+              View only
+            </span>
           </div>
-          <span className="inline-flex h-[26px] shrink-0 items-center gap-1 rounded-full bg-[#EAF0FF] px-2.5 font-heading text-xs font-bold text-[#031F82]">
-            <LockIcon className="size-3.5" />
-            View only
-          </span>
         </div>
         {view.accountLine ? (
           <div className="mt-3.5 border-t border-[#BDE9FB]/60 pt-3">
@@ -168,6 +188,7 @@ export function LearnerDataScreen({
         <div className="mt-2.5 grid grid-cols-2 gap-2.5">
           <StatTile
             icon={<BookOpenIcon className="size-4" />}
+            iconClass="bg-[#FFA503] text-[#031F82]"
             value={String(view.lessonsDone)}
             label="Lessons done"
             note="Finished in the Academy"
@@ -189,25 +210,13 @@ export function LearnerDataScreen({
         />
         <WideStat
           icon={<GoldCoinIcon className="size-5" />}
-          label="Coins earned"
+          label="Lifetime coins"
           note="The total coins this account has earned."
           value={`${view.lifetimeXp.toLocaleString()} coins`}
         />
       </section>
 
-      <section className="mt-5">
-        <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
-          Medals
-        </h2>
-        <div className="mt-2.5 grid grid-cols-3 gap-2.5">
-          <MedalTile emoji="🥉" count={view.medals.bronze} label="Bronze" />
-          <MedalTile emoji="🥈" count={view.medals.silver} label="Silver" />
-          <MedalTile emoji="🥇" count={view.medals.gold} label="Gold" />
-        </div>
-        <p className="mt-1.5 font-sans text-xs font-medium text-[#4A5675]">
-          Total ever earned, across all modules.
-        </p>
-      </section>
+      <AchievementsSection view={view} />
 
       <section className="mt-5">
         <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
@@ -408,12 +417,104 @@ function WideStat({
   );
 }
 
-function MedalTile({ emoji, count, label }: { emoji: string; count: number; label: string }) {
+/**
+ * Medals, collapsed by default like the profile's Achievements section:
+ * the total in the header row; counts and the flat medal art when opened.
+ */
+function AchievementsSection({ view }: { view: LearnerDataView }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const total = view.medals.bronze + view.medals.silver + view.medals.gold;
+  const skills = view.earnedSkills
+    .map((entry) => {
+      const trophy = getVaultSkillTrophyById(entry.slug);
+      return trophy ? { ...trophy, tier: entry.tier } : null;
+    })
+    .filter((skill): skill is NonNullable<typeof skill> => skill !== null);
+
   return (
-    <div className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF] px-1.5 py-2.5 text-center">
-      <div className="text-[26px] leading-none">{emoji}</div>
-      <p className="mt-1 font-heading text-xl font-extrabold tabular-nums text-[#031F82]">{count}</p>
-      <p className="font-sans text-xs font-semibold text-[#4A5675]">{label}</p>
-    </div>
+    <section
+      data-learner-data-achievements
+      data-learner-data-achievements-state={open ? "open" : "closed"}
+      className="mt-5 rounded-2xl bg-white px-3.5 shadow-md"
+    >
+      <button
+        type="button"
+        data-learner-data-achievements-toggle
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center gap-2 py-3.5 text-left"
+      >
+        <h2 className="flex-1 font-heading text-[15px] font-bold text-[#031F82]">
+          Achievements
+        </h2>
+        <span className="font-sans text-[12.5px] font-semibold text-[#4A5675]">
+          {total} {total === 1 ? "medal" : "medals"}
+        </span>
+        <svg
+          viewBox="0 0 12 12"
+          width="14"
+          height="14"
+          aria-hidden
+          className={cn(
+            "shrink-0 text-[#0288A3] transition-transform",
+            open && "rotate-180",
+          )}
+        >
+          <path
+            d="M3 4.5 6 7.5 9 4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open ? (
+        <div id={panelId} className="border-t border-[#BDE9FB]/60 pb-3.5 pt-3">
+          <div aria-label="Medal counts" className="flex w-full items-stretch gap-2">
+            <MedalCountChip
+              label="Bronze"
+              value={view.medals.bronze}
+              toneClassName="text-[#CD7F32]"
+            />
+            <MedalCountChip
+              label="Silver"
+              value={view.medals.silver}
+              toneClassName="text-[#8FA3B0]"
+            />
+            <MedalCountChip
+              label="Gold"
+              value={view.medals.gold}
+              toneClassName="text-[#FFA503]"
+            />
+          </div>
+          {skills.length > 0 ? (
+            <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-4">
+              {skills.map((skill) => (
+                <div key={skill.id} className="flex flex-col items-center text-center">
+                  <SkillMedalVisual
+                    skillNumber={skill.skillNumber}
+                    skillName={skill.label}
+                    tier={skill.tier}
+                    size="md"
+                  />
+                  <p className="mt-1.5 line-clamp-2 font-heading text-[11px] font-bold leading-tight text-[#031F82]">
+                    {skill.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 font-sans text-[13px] text-[#4A5675]">No medals yet.</p>
+          )}
+          <p className="mt-3 font-sans text-xs font-medium text-[#4A5675]">
+            Total ever earned, across all modules.
+          </p>
+        </div>
+      ) : null}
+    </section>
   );
 }

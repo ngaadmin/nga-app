@@ -51,6 +51,8 @@ describe("buildHouseholdProfiles", () => {
     expect(result?.profiles.filter((p) => p.isCurrent).map((p) => p.userId)).toEqual([
       "c1",
     ]);
+    // The current profile is listed first.
+    expect(result?.profiles.map((p) => p.userId)).toEqual(["c1", "p1"]);
   });
 
   it("hides siblings from a child: only the child and their parent show", () => {
@@ -60,8 +62,8 @@ describe("buildHouseholdProfiles", () => {
       children: [kid("c1", "amy", "explorer"), kid("c2", "zed", "maverick")],
     });
     expect(result?.profiles.map((p) => [p.userId, p.role])).toEqual([
-      ["p1", "parent"],
       ["c2", "child"],
+      ["p1", "parent"],
     ]);
   });
 

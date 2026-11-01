@@ -248,6 +248,7 @@ describe("learner view numbers", () => {
     expect(view.jars.map((jar) => jar.name)).toEqual(["Save", "Spend", "Give", "Emergency"]);
     expect(view.goals[0]).toMatchObject({ name: "New bike", balance: 40, target: 120 });
     expect(view.leaderboardEnabled).toBe(false);
+    expect(view.earnedSkills).toEqual([{ slug: "a", tier: "bronze" }]);
   });
 });
 

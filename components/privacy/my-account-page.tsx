@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { PIN_DIFFERENCE_LINE } from "@/lib/parent/pin-copy";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { signOutApp, redirectToHomeAfterSignOut } from "@/lib/onboarding/sign-out";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
@@ -120,8 +121,11 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
   if (isParent && !ready) {
     return (
       <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
-        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your parent PIN</h1>
-        <p className="font-sans text-sm text-[#1E3A5F]">Your account record stays behind your parent PIN.</p>
+        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your Parent PIN</h1>
+        <p className="font-sans text-sm text-[#1E3A5F]">Your account record stays behind your Parent PIN.</p>
+        <p data-pin-difference className="font-sans text-xs leading-snug text-[#4A5675]">
+          {PIN_DIFFERENCE_LINE}
+        </p>
         <input
           value={gatePin}
           onChange={(event) => setGatePin(event.target.value.replace(/\D/g, "").slice(0, 4))}

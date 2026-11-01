@@ -63,16 +63,18 @@ export function MedalsIntro() {
 
   return (
     <>
-      {seen ? (
-        <button
-          type="button"
-          onClick={reopen}
-          aria-label={medalsIntroCopy.infoButtonAriaLabel}
-          className="flex size-6 shrink-0 items-center justify-center rounded-full border border-[#0CC1E0] font-heading text-xs font-extrabold text-[#031F82] transition-colors hover:bg-[#F0FBFF]"
-        >
-          i
-        </button>
-      ) : null}
+      {/* Same info button for every profile (parent, child and guest), even
+          before the first-visit card has been seen. */}
+      <button
+        type="button"
+        data-medals-info
+        data-medals-intro-seen={seen ? "true" : "false"}
+        onClick={reopen}
+        aria-label={medalsIntroCopy.infoButtonAriaLabel}
+        className="flex size-6 shrink-0 items-center justify-center rounded-full border border-[#0CC1E0] font-heading text-xs font-extrabold text-[#031F82] transition-colors hover:bg-[#F0FBFF]"
+      >
+        i
+      </button>
       {open ? (
         <PageIntroCard
           idPrefix="medals-intro"

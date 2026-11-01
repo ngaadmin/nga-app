@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { PIN_DIFFERENCE_LINE } from "@/lib/parent/pin-copy";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   loadParentChildBundle,
@@ -84,9 +85,12 @@ export function ParentChildPage() {
   if (!ready) {
     return (
       <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
-        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your parent PIN</h1>
+        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your Parent PIN</h1>
         <p className="font-sans text-sm text-[#1E3A5F]">
           This page holds your child&apos;s data and privacy controls. Nothing changes until you confirm.
+        </p>
+        <p data-pin-difference className="font-sans text-xs leading-snug text-[#4A5675]">
+          {PIN_DIFFERENCE_LINE}
         </p>
         <input
           value={gatePin}
@@ -124,7 +128,11 @@ export function ParentChildPage() {
       <LearnerDataScreen
         view={view}
         mode="privacy"
-        title="Your child's data and privacy"
+        title={
+          children.length > 1
+            ? "Your children's data and privacy"
+            : "Your child's data and privacy"
+        }
         subtitle="Leaderboard visibility, their data file and deleting their account. Their progress is in the Parent Hub."
         backHref="/dashboard/settings"
         backLabel="Back to Settings"

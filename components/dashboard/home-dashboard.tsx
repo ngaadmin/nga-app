@@ -24,14 +24,18 @@ import {
   resolveHouseholdEmail,
 } from "@/lib/onboarding/registered-accounts";
 import {
-  BillingCardIcon,
-  ClassIcon,
-  CommunityIcon,
-  GoldCoinIcon,
-  KeyIcon,
-  LockIcon,
-  LogOutIcon,
-} from "@/lib/dashboard/icons";
+  CardIconA,
+  ClassIconA,
+  CoinIconA,
+  FamilyIconA,
+  KeyIconA,
+  LogOutIconA,
+  PadlockIconA,
+  PersonIconA,
+  PrivacyIconA,
+  ShieldLockIconA,
+} from "@/lib/dashboard/settings-icons-a";
+import { useHouseholdProfilesState } from "@/lib/profile-switcher/use-household-profiles";
 import {
   parentPinConfigured,
   persistParentPin,
@@ -50,6 +54,10 @@ import { DASHBOARD_CLASS_PATH } from "@/lib/school/paths";
 import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
+
+/** Direction A icon tile, the same duotone style as the tab icons. */
+const settingsIconTileClass =
+  "flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]";
 
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
@@ -80,8 +88,8 @@ function ClassSettingsLinkRow({ label }: { label: string }) {
           : "hover:bg-[#BDE9FB]/15 active:bg-[#BDE9FB]/25",
       )}
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
-        <ClassIcon className="size-4" />
+      <span className={settingsIconTileClass}>
+        <ClassIconA className="size-5" />
       </span>
       <span
         className="font-heading text-[16px] font-bold text-[#031F82]"
@@ -123,8 +131,8 @@ function SettingsRow({
           : "hover:bg-[#BDE9FB]/15 active:bg-[#BDE9FB]/25",
       )}
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
-        <Icon className="size-4" />
+      <span className={settingsIconTileClass}>
+        <Icon className="size-5" />
       </span>
       <span className="font-heading text-[16px] font-bold text-[#031F82]">
         {label}
@@ -139,8 +147,8 @@ function SettingsCurrencyRow() {
 
   return (
     <div className="flex w-full items-center gap-3 py-3.5">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
-        <GoldCoinIcon className="size-4" />
+      <span className={settingsIconTileClass}>
+        <CoinIconA className="size-5" />
       </span>
       <label
         htmlFor="display-currency"
@@ -597,6 +605,13 @@ export function HomeDashboard() {
   const canSelfManageRate =
     isChildAccount && session?.parentApprovalRequired === false && !session.parentEmail;
   const copy = copyMatrix.dashboard.settings;
+  const { household } = useHouseholdProfilesState();
+  const childCount =
+    household?.profiles.filter((profile) => profile.role === "child").length ?? 0;
+  const childDataLabel =
+    childCount > 1
+      ? "Your children's data and privacy"
+      : "Your child's data and privacy";
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [changeHubPinOpen, setChangeHubPinOpen] = useState(false);
@@ -643,67 +658,76 @@ export function HomeDashboard() {
           {waitingForApproval ? null : isTeacher ? <ClassSettingsLink /> : null}
           {waitingForApproval ? null : (
             <>
-          <SettingsRow
-            icon={KeyIcon}
-            label={copy.account.passwordReset}
-            onClick={() => setPasswordResetOpen(true)}
-          />
+          {/* Guests have no login yet: no password, accounts, plan or log out. */}
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={KeyIconA}
+              label={copy.account.passwordReset}
+              onClick={() => setPasswordResetOpen(true)}
+            />
+          )}
           {isParent ? (
             <SettingsRow
-              icon={LockIcon}
+              icon={PadlockIconA}
               label={copy.account.changeParentPin}
               onClick={() => setChangePinModalOpen(true)}
             />
           ) : null}
           {isParent ? (
             <SettingsRow
-              icon={LockIcon}
+              icon={ShieldLockIconA}
               label={PARENT_HUB_PIN_COPY.rowLabel}
               onClick={() => setChangeHubPinOpen(true)}
             />
           ) : null}
-          <SettingsRow
-            icon={CommunityIcon}
-            label={copy.account.accounts}
-            onClick={() => router.push("/dashboard/settings/account")}
-          />
-          <SettingsRow
-            icon={BillingCardIcon}
-            label={copy.account.subscription}
-            onClick={() => router.push("/dashboard/settings/subscription")}
-          />
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={FamilyIconA}
+              label={copy.account.accounts}
+              onClick={() => router.push("/dashboard/settings/account")}
+            />
+          )}
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={CardIconA}
+              label={copy.account.subscription}
+              onClick={() => router.push("/dashboard/settings/subscription")}
+            />
+          )}
           <SettingsCurrencyRow />
           {isParent ? (
             <SettingsRow
-              icon={CommunityIcon}
-              label="Your child's data and privacy"
+              icon={PrivacyIconA}
+              label={childDataLabel}
               onClick={() => router.push("/dashboard/settings/child-data")}
             />
           ) : null}
           {isParent || isTeacher ? (
             <SettingsRow
-              icon={CommunityIcon}
+              icon={PersonIconA}
               label="My account"
               onClick={() => router.push("/dashboard/settings/my-account")}
             />
           ) : null}
           {isChildAccount ? (
             <SettingsRow
-              icon={CommunityIcon}
-              label="My info"
+              icon={PersonIconA}
+              label="My account"
               onClick={() => router.push("/dashboard/settings/my-info")}
             />
           ) : null}
             </>
           )}
-          <SettingsRow
-            icon={LogOutIcon}
-            label={isLoggingOut ? "Signing out…" : copy.account.logOut}
-            onClick={() => {
-              void handleLogOut();
-            }}
-            busy={isLoggingOut}
-          />
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={LogOutIconA}
+              label={isLoggingOut ? "Signing out…" : copy.account.logOut}
+              onClick={() => {
+                void handleLogOut();
+              }}
+              busy={isLoggingOut}
+            />
+          )}
         </nav>
 
         {isGuestMode ? <GuestDeviceCard /> : null}

@@ -34,6 +34,7 @@ const DELTA4: LearnerDataView = {
   coins: 480,
   lifetimeXp: 1250,
   medals: { bronze: 5, silver: 2, gold: 1 },
+  earnedSkills: [],
   jars: [
     { name: "Save", emoji: "🏦", amount: 20 },
     { name: "Spend", emoji: "🛒", amount: 8.5 },
@@ -65,6 +66,7 @@ const RAVEN3: LearnerDataView = {
   coins: 210,
   lifetimeXp: 980,
   medals: { bronze: 4, silver: 1, gold: 0 },
+  earnedSkills: [],
   jars: [
     { name: "Save", emoji: "🏦", amount: 0 },
     { name: "Spend", emoji: "🛒", amount: 0 },

@@ -38,6 +38,13 @@ import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { zLayerStyle } from "@/lib/ui/layers";
 import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
+import {
+  wantsProfileAchievements,
+  withoutProfileQuery,
+} from "@/lib/dashboard/profile-deep-link";
+
+const GUEST_STATUS_ROW_CLASS =
+  "grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto]";
 
 /**
  * Shell-level status strip. Avatar (profile and medals), username, streak,
@@ -95,6 +102,20 @@ export function DashboardStatusHeader() {
     markSkillsPanelSeen(cohortSkills);
     setSkillsAttentionTick((tick) => tick + 1);
   }, [cohortSkills]);
+
+  // Old /dashboard/achievements links redirect here with ?profile=achievements:
+  // open the profile at its Achievements section, then drop the query.
+  const [achievementsDeepLink, setAchievementsDeepLink] = useState(false);
+  useEffect(() => {
+    if (!wantsProfileAchievements(window.location.search)) return;
+    setAchievementsDeepLink(true);
+    openProfile();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      withoutProfileQuery(window.location.href),
+    );
+  }, [openProfile]);
 
   const openStreaks = useCallback(() => {
     setStreaksOpen(true);
@@ -159,6 +180,11 @@ export function DashboardStatusHeader() {
     setSwitcherOpen(false);
     router.push(PARENT_TAB_HREF);
   }, [router]);
+  const openParentHubFromProfile = useCallback(() => {
+    setProfileOpen(false);
+    router.push(PARENT_TAB_HREF);
+  }, [router]);
+  const canOpenParentHub = isParent && parentHubAccess.eligible;
 
   const openXpExchange = useCallback(() => {
     if (isParent) {
@@ -192,6 +218,9 @@ export function DashboardStatusHeader() {
           // center empty so the name is not shown twice.
           showUsernameLabel={!userLoading}
           center={userLoading || isGuestMode ? undefined : null}
+          // Guests: avatar and name take what they need, the one-line save
+          // button gets the rest, so the name is not cut off.
+          rowClassName={isGuestMode ? GUEST_STATUS_ROW_CLASS : undefined}
           profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
           // The avatar always opens the dropdown (never the Profile page
@@ -223,22 +252,28 @@ export function DashboardStatusHeader() {
         onClose={closeSwitcher}
         onViewProfile={viewProfileFromSwitcher}
         onOpenSettings={openSettingsFromSwitcher}
-        onOpenParentHub={
-          isParent && parentHubAccess.eligible ? openParentHubFromSwitcher : undefined
-        }
+        onOpenParentHub={canOpenParentHub ? openParentHubFromSwitcher : undefined}
+        isParent={isParent}
       />
 
       <FullHeightPanel
         isOpen={profileOpen}
         title="Profile"
         titleId="profile-panel-title"
-        onClose={() => setProfileOpen(false)}
+        onClose={() => {
+          setProfileOpen(false);
+          setAchievementsDeepLink(false);
+        }}
       >
         <ProfilePanel
           displayName={username}
           trackLabel={trackLabel}
+          roleLabel={isParent ? "Parent" : null}
           avatarId={avatarId}
           onChooseAvatar={chooseAvatar}
+          household={household}
+          onOpenParentHub={canOpenParentHub ? openParentHubFromProfile : undefined}
+          achievementsInitiallyOpen={achievementsDeepLink}
         />
       </FullHeightPanel>
 

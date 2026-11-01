@@ -14,7 +14,7 @@ import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { cn } from "@/lib/utils/cn";
 
-function MedalCountChip({
+export function MedalCountChip({
   label,
   value,
   toneClassName,

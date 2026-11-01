@@ -17,7 +17,7 @@ import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view"
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 /**
- * Settings: the coins cash rate. For a parent it sits behind the parent PIN
+ * Settings: the coins cash rate. For a parent it sits behind the Parent Hub PIN
  * (checked on the server, asked each time the section opens). Paying out
  * ("Mark as paid") lives only in the Parent Hub.
  */
@@ -61,8 +61,8 @@ export function ParentHubSection() {
           <div data-cash-rate-pin-gate>
             <ParentPinGate
               parentName=""
-              className="mx-0 mt-1 shadow-none ring-1 ring-[#E3EAF5]"
-              enterBody="Enter your parent PIN to see or change the cash rate."
+              className="mx-0 mt-1 px-0 pb-1 pt-2 shadow-none"
+              enterBody="Enter your Parent Hub PIN to see or change the cash rate."
               onUnlocked={(pass) => setPinPass(pass)}
             />
           </div>

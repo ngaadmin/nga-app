@@ -22,7 +22,7 @@ export function MyInfoScreen({ username, trackLabel, cohort, managedBy }: MyInfo
       <Link href="/dashboard/settings" className="font-heading text-sm font-bold text-[#0CC1E0]">
         ← Back to Settings
       </Link>
-      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My info</h1>
+      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My account</h1>
       <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]">This is what the app knows about you.</p>
 
       <section className="mt-4 rounded-2xl bg-white px-4 shadow-md">

@@ -333,7 +333,7 @@ export function AccountSubscriptionStatusPanel() {
           return;
         }
         if (!isFourDigitPin(deletePin)) {
-          setDeleteError("Enter the parent PIN to delete this account.");
+          setDeleteError("Enter your Parent PIN to delete this account.");
           return;
         }
 

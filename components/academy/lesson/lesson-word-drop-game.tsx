@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -334,6 +335,21 @@ export const LessonWordDropGame = forwardRef<
     endDrag();
   };
 
+  // iOS starts text selection, the long-press callout or a pane scroll on a
+  // held chip and then cancels the pointer mid-drag. A non-passive
+  // touchstart that calls preventDefault stops that; pointer events still fire.
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const onTouchStart = (event: TouchEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest("#word-drop-bank button, [data-word-drop-slot]")) return;
+      if (event.cancelable) event.preventDefault();
+    };
+    board.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => board.removeEventListener("touchstart", onTouchStart);
+  }, []);
+
   useLayoutEffect(() => {
     const itemId = pendingBankFocusId.current;
     if (!itemId || choices.includes(itemId)) return;
@@ -379,8 +395,9 @@ export const LessonWordDropGame = forwardRef<
   return (
     <div
       ref={boardRef}
-      className="space-y-4 touch-none"
+      className="lesson-touch-target space-y-4"
       style={{ touchAction: "none" }}
+      onContextMenu={(event) => event.preventDefault()}
       onPointerMove={handleBoardPointerMove}
       onPointerUp={finishPress}
       onPointerCancel={finishPress}
@@ -476,7 +493,7 @@ export const LessonWordDropGame = forwardRef<
               }}
               className={cn(
                 lessonSortPoolChipClass,
-                "text-[20px]",
+                "lesson-touch-target text-[20px]",
                 selectedItemId === item.id &&
                   "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
                 pressedChip?.itemId === item.id &&

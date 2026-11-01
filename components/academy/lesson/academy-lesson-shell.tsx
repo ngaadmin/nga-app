@@ -168,7 +168,7 @@ export function AcademyLessonShell({
       </div>
 
       {hideFooter ? null : (
-        <footer className="flex shrink-0 flex-col items-center bg-transparent px-5 pb-7 pt-2">
+        <footer className="lesson-footer-inset flex shrink-0 flex-col items-center bg-transparent px-5 pt-2">
           <div ref={setCreditSlot} className="w-full" />
           {footerSlot !== undefined ? (
             footerSlot

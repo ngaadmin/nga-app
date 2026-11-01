@@ -437,8 +437,9 @@ export const lessonCompletionHeroMedalClass =
 export const lessonHoldButtonClass =
   "relative min-w-[148px] h-12 select-none overflow-hidden rounded-full border-0 bg-[#0CC1E0] px-6 text-center font-heading text-base font-bold text-white shadow-[0_5px_0_#099FB8] disabled:cursor-not-allowed disabled:opacity-40";
 
+/** Done stays bright: the frozen button is the win, not a disabled control. */
 export const lessonHoldButtonCompleteClass =
-  "bg-[#0CC1E0] text-white opacity-90";
+  "bg-[#0CC1E0] text-white";
 
 export const LESSON_CASH_IN_LABEL = "Cash in coins";
 

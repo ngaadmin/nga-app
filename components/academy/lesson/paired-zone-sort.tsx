@@ -46,28 +46,22 @@ const ZONE_TINT_ACTIVE = ["#FFEBB8", "#CFEDF8"] as const;
 
 function SortGlyph({
   item,
-  placed = false,
   shaking = false,
+  selected = false,
 }: {
   item: PairedItem;
-  placed?: boolean;
   shaking?: boolean;
+  selected?: boolean;
 }) {
+  // No tick on placed items: landing in the right zone is the feedback.
   return (
     <div
       className={cn(
-        "sort-item relative flex min-h-24 w-[82px] flex-none flex-col items-center text-center",
+        "sort-item relative flex min-h-24 w-[82px] flex-none flex-col items-center rounded-2xl text-center",
         shaking && "lesson-tile-shake",
+        selected && "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
       )}
     >
-      {placed ? (
-        <span
-          className="lesson-tick-pop absolute top-[-4px] left-[calc(50%+14px)] grid size-[22px] place-items-center rounded-full bg-[#FFB822] font-heading text-[11px] font-extrabold leading-none text-[#031F82]"
-          aria-hidden
-        >
-          ✓
-        </span>
-      ) : null}
       <AnswerEmoji emoji={item.emoji ?? "•"} />
       <span className="sort-label mt-1 w-full font-heading text-xs font-semibold leading-[1.25] text-[#031F82]">
         {item.label}
@@ -75,6 +69,17 @@ function SortGlyph({
     </div>
   );
 }
+
+const DRAG_START_PX = 8;
+
+type DragState = {
+  id: string;
+  x: number;
+  y: number;
+  moved: boolean;
+  /** Touch identifier for touch drags, pointer id for mouse and pen. */
+  source: { kind: "touch"; id: number } | { kind: "pointer"; id: number };
+};
 
 export function PairedZoneSort({
   intro,
@@ -119,8 +124,9 @@ export function PairedZoneSort({
   const [ghost, setGhost] = useState<{ id: string; x: number; y: number } | null>(null);
   const { shakingKey, shake } = useLessonShake();
   const zoneRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const dragRef = useRef<{ id: string; x: number; y: number; moved: boolean } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
   const handledPointerRef = useRef(false);
+  const poolRef = useRef<HTMLDivElement | null>(null);
   const reportedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -172,6 +178,115 @@ export function PairedZoneSort({
     setSelectedId(itemId);
   };
 
+  const moveDrag = (x: number, y: number) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(x - drag.x, y - drag.y) > DRAG_START_PX) {
+      drag.moved = true;
+    }
+    if (!drag.moved) return;
+    setGhost({ id: drag.id, x, y });
+    setActiveZoneId(zoneAt(x, y));
+  };
+
+  const endDrag = (x: number, y: number, cancelled: boolean) => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    setGhost(null);
+    setActiveZoneId(null);
+    if (!drag || cancelled) return;
+    // A mouse release is followed by a click; a handled touch never is.
+    handledPointerRef.current = drag.source.kind === "pointer";
+    if (!drag.moved) {
+      activateItem(drag.id);
+      return;
+    }
+    const zoneId = zoneAt(x, y);
+    if (zoneId) placeItem(drag.id, zoneId);
+  };
+
+  // Handlers change every render; the native listeners read the latest ones.
+  const dragApiRef = useRef({ moveDrag, endDrag });
+  dragApiRef.current = { moveDrag, endDrag };
+  const completeRef = useRef(complete);
+  completeRef.current = complete;
+
+  // Touch drag runs on native touch events. iOS Safari can drop pointer
+  // capture or cancel the pointer inside a scrolling lesson pane, which left
+  // items stuck in place; non-passive touch listeners keep the gesture ours.
+  useEffect(() => {
+    const pool = poolRef.current;
+    if (!pool) return;
+
+    const findTouch = (list: TouchList, id: number): Touch | null => {
+      for (let index = 0; index < list.length; index += 1) {
+        const touch = list[index];
+        if (touch && touch.identifier === id) return touch;
+      }
+      return null;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      const drag = dragRef.current;
+      if (!drag || drag.source.kind !== "touch") return;
+      const touch = findTouch(event.changedTouches, drag.source.id);
+      if (!touch) return;
+      if (event.cancelable) event.preventDefault();
+      dragApiRef.current.moveDrag(touch.clientX, touch.clientY);
+    };
+
+    const finish = (event: TouchEvent, cancelled: boolean) => {
+      const drag = dragRef.current;
+      if (!drag || drag.source.kind !== "touch") return;
+      const touch = findTouch(event.changedTouches, drag.source.id);
+      if (!touch) return;
+      if (event.cancelable) event.preventDefault();
+      detach();
+      // A cancelled touch that was already dragging still drops where it is.
+      dragApiRef.current.endDrag(
+        touch.clientX,
+        touch.clientY,
+        cancelled && !drag.moved,
+      );
+    };
+    const onTouchEnd = (event: TouchEvent) => finish(event, false);
+    const onTouchCancel = (event: TouchEvent) => finish(event, true);
+
+    const detach = () => {
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchCancel);
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (completeRef.current || dragRef.current) return;
+      const target = event.target instanceof Element ? event.target : null;
+      const button = target?.closest<HTMLElement>("[data-sort-item-id]");
+      const id = button?.dataset.sortItemId;
+      const touch = event.changedTouches[0];
+      if (!button || !id || !touch) return;
+      // Stops the long-press callout, text selection and page scroll.
+      if (event.cancelable) event.preventDefault();
+      handledPointerRef.current = false;
+      dragRef.current = {
+        id,
+        x: touch.clientX,
+        y: touch.clientY,
+        moved: false,
+        source: { kind: "touch", id: touch.identifier },
+      };
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("touchend", onTouchEnd, { passive: false });
+      window.addEventListener("touchcancel", onTouchCancel, { passive: false });
+    };
+
+    pool.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => {
+      pool.removeEventListener("touchstart", onTouchStart);
+      detach();
+    };
+  }, []);
+
   return (
     <div className="flex min-h-0 flex-col">
       <div className="min-w-0 space-y-2">
@@ -191,17 +306,28 @@ export function PairedZoneSort({
         })}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-start gap-2">
+      <div ref={poolRef} className="mt-4 flex flex-wrap items-start gap-2">
         {orderedItems.map((item) =>
           placed.has(item.id) ? (
-            <span key={item.id} className="invisible h-24 w-[82px] flex-none" aria-hidden />
+            // Same glyph, hidden, so the pool keeps its exact size and the
+            // zones below never move as items leave it.
+            <div key={item.id} className="invisible flex-none" aria-hidden>
+              <SortGlyph item={item} />
+            </div>
           ) : (
             <button
               key={item.id}
               type="button"
+              data-sort-item-id={item.id}
               aria-pressed={selectedId === item.id}
-              className="flex-none touch-none border-0 bg-transparent p-0"
+              className={cn(
+                "lesson-touch-target flex-none border-0 bg-transparent p-0",
+                ghost?.id === item.id && "opacity-30",
+              )}
+              onContextMenu={(event) => event.preventDefault()}
               onPointerDown={(event) => {
+                // Touch runs on the native touch listeners above.
+                if (event.pointerType === "touch") return;
                 handledPointerRef.current = false;
                 event.currentTarget.setPointerCapture(event.pointerId);
                 dragRef.current = {
@@ -209,40 +335,28 @@ export function PairedZoneSort({
                   x: event.clientX,
                   y: event.clientY,
                   moved: false,
+                  source: { kind: "pointer", id: event.pointerId },
                 };
               }}
               onPointerMove={(event) => {
                 const drag = dragRef.current;
-                if (!drag || drag.id !== item.id) return;
-                if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-                if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) > 8) {
-                  drag.moved = true;
-                }
-                if (!drag.moved) return;
-                setGhost({ id: item.id, x: event.clientX, y: event.clientY });
-                setActiveZoneId(zoneAt(event.clientX, event.clientY));
+                if (!drag || drag.source.kind !== "pointer") return;
+                if (drag.source.id !== event.pointerId) return;
+                moveDrag(event.clientX, event.clientY);
               }}
               onPointerUp={(event) => {
                 const drag = dragRef.current;
-                dragRef.current = null;
-                setGhost(null);
-                setActiveZoneId(null);
+                if (!drag || drag.source.kind !== "pointer") return;
+                if (drag.source.id !== event.pointerId) return;
                 if (event.currentTarget.hasPointerCapture(event.pointerId)) {
                   event.currentTarget.releasePointerCapture(event.pointerId);
                 }
-                if (!drag) return;
-                handledPointerRef.current = true;
-                if (!drag.moved) {
-                  activateItem(drag.id);
-                  return;
-                }
-                const zoneId = zoneAt(event.clientX, event.clientY);
-                if (zoneId) placeItem(drag.id, zoneId);
+                endDrag(event.clientX, event.clientY, false);
               }}
-              onPointerCancel={() => {
-                dragRef.current = null;
-                setGhost(null);
-                setActiveZoneId(null);
+              onPointerCancel={(event) => {
+                const drag = dragRef.current;
+                if (!drag || drag.source.kind !== "pointer") return;
+                endDrag(event.clientX, event.clientY, true);
               }}
               onClick={() => {
                 if (handledPointerRef.current) {
@@ -252,7 +366,11 @@ export function PairedZoneSort({
                 activateItem(item.id);
               }}
             >
-              <SortGlyph item={item} shaking={shakingKey === item.id} />
+              <SortGlyph
+                item={item}
+                shaking={shakingKey === item.id}
+                selected={mode === "drag" && selectedId === item.id}
+              />
             </button>
           ),
         )}
@@ -297,7 +415,7 @@ export function PairedZoneSort({
               </h3>
               <div className="mt-3 flex flex-col items-center gap-1">
                 {zoneItems.map((item) => (
-                  <SortGlyph key={item.id} item={item} placed />
+                  <SortGlyph key={item.id} item={item} />
                 ))}
               </div>
             </div>

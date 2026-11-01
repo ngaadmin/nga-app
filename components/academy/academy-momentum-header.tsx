@@ -85,6 +85,9 @@ export function AcademyMomentumHeader({
   return (
     <StatusBannerLayout
       aria-label="App stats"
+      // An explicit null center means nothing sits in the middle, so the
+      // username can use that space before it truncates.
+      wideLeft={center === null}
       left={
         <div className="relative flex h-full min-w-0 max-w-full items-center">
           <button

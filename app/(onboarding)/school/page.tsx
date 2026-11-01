@@ -18,7 +18,7 @@ export const revalidate = 0;
 const share = landingShareMetadata();
 
 export const metadata: Metadata = {
-  title: "NextGenAchievers",
+  title: { absolute: "NextGenAchievers" },
   description: "Finally. A fun way to learn money skills.",
   openGraph: share.openGraph,
   twitter: share.twitter,

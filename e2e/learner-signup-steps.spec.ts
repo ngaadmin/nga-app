@@ -56,7 +56,7 @@ test("learner sign-up steps keep the guest track and guest progress", async ({ p
   await expect(pathfinder).toHaveAttribute("aria-checked", "true");
   const next = page.getByRole("button", { name: "Next", exact: true });
   await expect(next).toBeDisabled();
-  await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveCount(0);
   await expect(page.getByText("You can switch this later.")).toHaveCount(0);
   await expect(page.getByText("This track is already chosen")).toHaveCount(0);
 
@@ -88,7 +88,7 @@ test("learner sign-up screenshots at phone and desktop widths", async ({ page })
     timeout: 15_000,
   });
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
-  await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "Privacy Policy" })).toHaveCount(0);
 
   for (const viewport of WIDTHS) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });

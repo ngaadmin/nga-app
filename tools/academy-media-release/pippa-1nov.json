@@ -1,0 +1,12 @@
+{
+  "approvedBy": "Jasper (image placement), Cath-approved swap",
+  "approvedOn": "2026-11-01",
+  "note": "Pathfinder M1 L2 S7 (M1 Pathfinder row 21) picture: F21 holly-senna-sidebyside-r1-512.webp -> pippa-standing-512.webp. Upload releases only this name, only if its md5 matches and the name is not in the bucket yet with other bytes. Never overwrites.",
+  "files": {
+    "pippa-standing-512.webp": {
+      "md5": "fca1af1a6950ab4bdaa6bdf1ad31664c",
+      "bytes": 16376,
+      "from": "tools/academy-media-release/pippa-1nov"
+    }
+  }
+}

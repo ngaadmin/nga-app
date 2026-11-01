@@ -1,6 +1,6 @@
 /**
  * Preview-only build step. Uploads the lesson media a module names (held Lars
- * art only from the approved release manifest) and stores the workbook as a draft version, so a preview can
+ * art and other approved pictures only from committed release manifests) and stores the workbook as a draft version, so a preview can
  * be reviewed with no secret leaving Vercel.
  *
  * Runs only when all of these hold, and does nothing otherwise:
@@ -21,6 +21,7 @@ import {
   planLarsRelease,
   readLarsReleaseManifest,
 } from "@/lib/academy/media/lars-release";
+import { applyManifestReleases, holdReleased, readMediaReleases } from "@/lib/academy/media/manifest-release";
 import {
   headPublicObjects,
   publicObjectUrl,
@@ -110,7 +111,45 @@ async function run(): Promise<void> {
         larsReleased = release.released;
       }
     }
+    // Approved non-Lars pictures from a committed manifest (same rules as Lars).
+    const releases = readMediaReleases();
+    let mediaReleased: { objectPath: string; md5: string }[] = [];
+    if (releases.length > 0) {
+      const release = applyManifestReleases(plan, releases);
+      const problems = [...release.problems];
+      for (const item of release.released) {
+        const found = await getPublic(supabaseUrl, item.objectPath);
+        if (found.status === 0) problems.push(`${item.objectPath}: could not check the bucket`);
+        else if (found.status === 200 && found.md5 !== item.md5)
+          problems.push(`${item.objectPath}: name already used by other bytes`);
+      }
+      if (problems.length > 0) {
+        plan = releases.reduce((current, loaded) => holdReleased(current, loaded.files, "Media release stopped."), release.plan);
+        log("ACADEMY_MEDIA_RELEASE_ABORTED", { moduleNumber, problems: problems.slice(0, 40) });
+      } else {
+        plan = release.plan;
+        mediaReleased = release.released;
+      }
+    }
     const outcomes = await uploadPlannedMedia(plan, credentials);
+    if (mediaReleased.length > 0) {
+      const releaseOutcomes = outcomes.filter((item) => mediaReleased.some((entry) => entry.objectPath === item.objectPath));
+      const checks = await Promise.all(mediaReleased.map((entry) => getPublic(supabaseUrl, entry.objectPath)));
+      const bad = checks.filter(
+        (check, index) =>
+          check.status !== 200 || check.md5 !== mediaReleased[index]?.md5 || !/immutable/.test(check.cacheControl ?? ""),
+      );
+      log("academy_preview_media_release", {
+        moduleNumber,
+        released: mediaReleased.map((entry) => entry.objectPath),
+        uploaded: releaseOutcomes.filter((item) => item.result === "uploaded").length,
+        alreadyThere: releaseOutcomes.filter((item) => item.result === "skipped-same").length,
+        conflicts: releaseOutcomes.filter((item) => item.result === "conflict").map((item) => item.objectPath),
+        failed: releaseOutcomes.filter((item) => item.result === "failed").map((item) => `${item.objectPath} ${item.status}`),
+        verifyFailed: bad.map((check) => `${check.objectPath} ${check.status}`),
+        verified: bad.length === 0 && !releaseOutcomes.some((item) => item.result === "conflict" || item.result === "failed"),
+      });
+    }
     log("academy_preview_media", {
       moduleNumber,
       objects: objects.length,

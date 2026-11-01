@@ -11,7 +11,8 @@ import {
 import { currentAccountLocalKey } from "@/lib/onboarding/account-local-key";
 
 /** Durable per-account first-visit flags. Survives logout; not shared across accounts. */
-export const PAGE_INTRO_SEEN_BY_ACCOUNT_KEY = "nga_page_intro_seen_by_account_v1";
+export const PAGE_INTRO_SEEN_BY_ACCOUNT_KEY =
+  "nga_page_intro_seen_by_account_v1";
 
 export type AccountPageIntroSeen = AccountPageIntroFlags;
 
@@ -30,7 +31,9 @@ function parseHubs(value: unknown): HubIntroSeenMap {
   return next;
 }
 
-export function parsePageIntroSeenStore(raw: string | null): PageIntroSeenStore {
+export function parsePageIntroSeenStore(
+  raw: string | null,
+): PageIntroSeenStore {
   if (!raw) return {};
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -44,6 +47,7 @@ export function parsePageIntroSeenStore(raw: string | null): PageIntroSeenStore 
         vaultAddMoney: value.vaultAddMoney === true,
         skillsCup: value.skillsCup === true,
         medals: value.medals === true,
+        profileSwitcherTip: value.profileSwitcherTip === true,
       };
     }
     return store;
@@ -67,10 +71,54 @@ function writeStore(store: PageIntroSeenStore): void {
   );
 }
 
+/**
+ * One intro bucket shared by every guest pick on this device. Each guest pick
+ * gets a fresh genericProfileId, so keying guests by that id made every intro
+ * show again after picking a track. Registered accounts stay keyed by Auth uid.
+ */
+export const GUEST_DEVICE_INTRO_ACCOUNT_KEY = "guest:device";
+
+export function isGuestIntroAccountKey(accountKey: string): boolean {
+  return accountKey === "guest" || accountKey.startsWith("guest:");
+}
+
+function introStoreKey(accountKey: string): string {
+  return isGuestIntroAccountKey(accountKey)
+    ? GUEST_DEVICE_INTRO_ACCOUNT_KEY
+    : accountKey;
+}
+
+function seenForAccount(
+  store: PageIntroSeenStore,
+  accountKey: string,
+): AccountPageIntroSeen {
+  const bucket = store[introStoreKey(accountKey)] ?? {};
+  if (
+    !isGuestIntroAccountKey(accountKey) ||
+    accountKey === GUEST_DEVICE_INTRO_ACCOUNT_KEY
+  ) {
+    return bucket;
+  }
+  // Older builds wrote guest:<id>; keep honoring those dismissals.
+  return mergePageIntroFlags(bucket, store[accountKey] ?? null) ?? {};
+}
+
 function readAccountSeen(): AccountPageIntroSeen {
   const accountKey = currentAccountLocalKey();
   if (!accountKey) return {};
-  return readStore()[accountKey] ?? {};
+  return seenForAccount(readStore(), accountKey);
+}
+
+/** Guest dismissals on this device, so a guest who signs up keeps them. */
+export function readGuestDevicePageIntroFlags():
+  AccountPageIntroSeen | undefined {
+  const store = readStore();
+  let merged: AccountPageIntroSeen | undefined;
+  for (const [key, flags] of Object.entries(store)) {
+    if (!isGuestIntroAccountKey(key)) continue;
+    merged = mergePageIntroFlags(merged ?? {}, flags);
+  }
+  return merged;
 }
 
 /** Compact seen flags for the signed-in or guest account on this device. */
@@ -82,13 +130,14 @@ function patchAccountSeen(patch: AccountPageIntroSeen): void {
   const accountKey = currentAccountLocalKey();
   if (!accountKey) return;
   const store = readStore();
-  const current = store[accountKey] ?? {};
+  const current = seenForAccount(store, accountKey);
   const merged = mergePageIntroFlags(current, patch);
-  store[accountKey] = {
+  store[introStoreKey(accountKey)] = {
     hubs: merged?.hubs ?? {},
     vaultAddMoney: merged?.vaultAddMoney === true,
     skillsCup: merged?.skillsCup === true,
     medals: merged?.medals === true,
+    profileSwitcherTip: merged?.profileSwitcherTip === true,
   };
   writeStore(store);
   markAccountProgressDirty();
@@ -132,4 +181,12 @@ export function hasAccountSeenMedalsIntro(): boolean {
 
 export function markAccountMedalsIntroSeen(): void {
   patchAccountSeen({ medals: true });
+}
+
+export function hasAccountSeenProfileSwitcherTip(): boolean {
+  return readAccountSeen().profileSwitcherTip === true;
+}
+
+export function markAccountProfileSwitcherTipSeen(): void {
+  patchAccountSeen({ profileSwitcherTip: true });
 }

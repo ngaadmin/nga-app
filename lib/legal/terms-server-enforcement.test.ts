@@ -160,6 +160,10 @@ vi.mock("@/lib/school/class-open-token", () => ({
   signClassOpenToken: () => "signed-token",
 }));
 
+vi.mock("@/lib/parent/parent-tab-gate-pass", () => ({
+  parentTabGatePassValid: vi.fn(() => true),
+}));
+
 vi.mock("next/headers", () => ({
   headers: async () => new Headers(),
 }));
@@ -414,13 +418,16 @@ describe("parent approval path", () => {
   });
 
   it("approveConsentRequestInApp rejects without the tick", async () => {
-    const result = await approveConsentRequestInApp("req-1");
+    const result = await approveConsentRequestInApp("req-1", "pin-pass");
     expect(result).toEqual({ success: false, error: TERMS_REQUIRED_ERROR });
-    expect(state.createAdminClient).not.toHaveBeenCalled();
+    expect(historyInserts()).toEqual([]);
+    expect(consentApproved()).toBe(false);
   });
 
   it("approveConsentRequestInApp records acceptance for the signed-in parent", async () => {
-    const result = await approveConsentRequestInApp("req-1", { termsAccepted: true });
+    const result = await approveConsentRequestInApp("req-1", "pin-pass", {
+      termsAccepted: true,
+    });
     expect(result.success).toBe(true);
     expect(historyInserts()).toEqual([
       expect.objectContaining({ profile_id: "parent-1", title: TERMS_ACCEPTANCE_TITLE }),

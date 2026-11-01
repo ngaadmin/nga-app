@@ -3,12 +3,11 @@ import {
   LESSON_COMPLETION_XP,
   LESSON_PERFECT_STREAK_BONUS,
 } from "@/lib/academy/lessons/completion-xp";
-import { M1_L1_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l1";
-import { M1_L2_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l2";
-import { M1_L3_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l3";
-import { M1_L4_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l4";
-import { M1_L5_LESSON_DEFINITION } from "@/lib/academy/lessons/content/m1-l5";
 import { DESIGN_SHELL_LESSON_DEFINITION } from "@/lib/academy/lessons/content/design-shell";
+import { loadExplorerM1Payload } from "@/lib/academy/lessons/payload/explorer-m1/load-explorer-m1-payload";
+import { selectLessonPayload } from "@/lib/academy/lessons/payload/explorer-m1/select-payload";
+import { loadBundledLessonPayload } from "@/lib/academy/lessons/payload/load-lesson-payload";
+import { resolvePayloadLesson } from "@/lib/academy/lessons/payload/map-payload-lesson";
 import type { CohortLessonDefinition } from "@/lib/academy/lessons/types";
 import { resolveLessonDefinition } from "@/lib/academy/lessons/types/resolve";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
@@ -48,6 +47,24 @@ describe("resolveLessonDefinition rewards", () => {
     }
   });
 
+  it("awards the same cash-in on every playable Module 1 lesson", () => {
+    for (let lessonNumber = 1; lessonNumber <= 9; lessonNumber += 1) {
+      for (const cohort of COHORTS) {
+        const label = `${cohort} lesson ${lessonNumber}`;
+        const bundled = loadBundledLessonPayload(1, lessonNumber);
+        const explorer = loadExplorerM1Payload(lessonNumber);
+        const payload = selectLessonPayload(cohort, bundled, explorer);
+        expect(payload, label).toBeTruthy();
+        if (!payload) continue;
+        const resolved = resolvePayloadLesson(payload, cohort, lessonNumber);
+        expect(resolved.rewards.xpReward, label).toBe(LESSON_COMPLETION_XP);
+        expect(resolved.rewards.perfectStreakBonus, label).toBe(
+          LESSON_PERFECT_STREAK_BONUS,
+        );
+      }
+    }
+  });
+
   it("keeps the design shell at 0 XP", () => {
     const resolved = resolveLessonDefinition(
       DESIGN_SHELL_LESSON_DEFINITION,
@@ -55,25 +72,5 @@ describe("resolveLessonDefinition rewards", () => {
     );
     expect(resolved.rewards.xpReward).toBe(0);
     expect(resolved.rewards.perfectStreakBonus).toBe(0);
-  });
-
-  it("applies the same cash-in amounts to shipped lessons 1–5", () => {
-    const lessons = [
-      M1_L1_LESSON_DEFINITION,
-      M1_L2_LESSON_DEFINITION,
-      M1_L3_LESSON_DEFINITION,
-      M1_L4_LESSON_DEFINITION,
-      M1_L5_LESSON_DEFINITION,
-    ];
-    for (const definition of lessons) {
-      expect("xpReward" in definition.rewards).toBe(false);
-      for (const cohort of COHORTS) {
-        const resolved = resolveLessonDefinition(definition, cohort);
-        expect(resolved.rewards.xpReward).toBe(LESSON_COMPLETION_XP);
-        expect(resolved.rewards.perfectStreakBonus).toBe(
-          LESSON_PERFECT_STREAK_BONUS,
-        );
-      }
-    }
   });
 });

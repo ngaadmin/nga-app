@@ -22,7 +22,7 @@ export {
   listPlayableLessonMilestoneIds,
 } from "@/lib/academy/lessons/lesson-availability";
 
-/** Hard-coded lessons the player still opens. Module 1 files stay on disk and are not registered. */
+/** Hard-coded lessons the player still opens. Module 1 plays from the payload sheets, not from baked content files. */
 export const LESSON_DEFINITIONS: Record<number, CohortLessonDefinition> = {};
 
 export const SHIPPED_ACADEMY_LESSON_IDS = new Set<number>(

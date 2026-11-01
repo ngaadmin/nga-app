@@ -31,7 +31,7 @@ export default defineConfig({
   plugins: [compileTsxForTests()],
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts", "scripts/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "scripts/**/*.test.ts", "tools/**/*.test.ts"],
   },
   resolve: {
     alias: {

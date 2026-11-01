@@ -10,10 +10,13 @@ import {
   lessonCompletionHeroMedalClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { cn } from "@/lib/utils/cn";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 
 type LessonSkillMedalProps = {
   skillSlug: string;
   medalId: MedalIllustrationId;
+  /** Sheet file for this medal. Wins over the registry picture for the same id. */
+  src?: string;
   /** Sheet skill name. Wins over the registry label in the image alt text. */
   skillName?: string;
   label?: string;
@@ -40,6 +43,7 @@ function medalStatusLabel(medalId: MedalIllustrationId): string {
 export function LessonSkillMedal({
   skillSlug,
   medalId,
+  src,
   skillName: skillNameOverride,
   label,
   className,
@@ -48,7 +52,7 @@ export function LessonSkillMedal({
   const skill = getSkillRegistryRecord(skillSlug);
   const skillName = skillNameOverride?.trim() || skill?.skillName || "Skill medal";
   const statusLabel = medalStatusLabel(medalId);
-  const medalSrc = getMedalIllustrationPath(medalId);
+  const medalSrc = src ?? getMedalIllustrationPath(medalId);
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -72,7 +76,10 @@ export function LessonSkillMedal({
           className={IMAGE_CLASS[size]}
           decoding="async"
           loading={size === "hero" ? "eager" : "lazy"}
-          onError={() => setHidden(true)}
+          onError={() => {
+            setHidden(true);
+            reportAcademyMediaFailed(medalSrc, "image");
+          }}
         />
       )}
       {label ? (

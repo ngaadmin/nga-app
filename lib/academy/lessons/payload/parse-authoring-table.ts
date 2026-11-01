@@ -157,7 +157,10 @@ function columnIndex(ref: string): number {
   return index - 1;
 }
 
-function parseSheet(xml: string, strings: readonly string[]): string[][] {
+function parseSheetCells(
+  xml: string,
+  strings: readonly string[],
+): { row: number; values: string[] }[] {
   const cells = new Map<number, Map<number, string>>();
   const pattern = /<c\b([^>/]*)\/>|<c\b([^>]*)>([\s\S]*?)<\/c>/g;
   let match = pattern.exec(xml);
@@ -193,8 +196,57 @@ function parseSheet(xml: string, strings: readonly string[]): string[][] {
   return rowNumbers.map((rowNumber) => {
     const row = cells.get(rowNumber) ?? new Map<number, string>();
     const width = Math.max(0, ...row.keys()) + 1;
-    return Array.from({ length: width }, (_, index) => row.get(index) ?? "");
+    return {
+      row: rowNumber,
+      values: Array.from({ length: width }, (_, index) => row.get(index) ?? ""),
+    };
   });
+}
+
+function parseSheet(xml: string, strings: readonly string[]): string[][] {
+  return parseSheetCells(xml, strings).map((entry) => entry.values);
+}
+
+export type WorkbookSheet = {
+  name: string;
+  rows: { row: number; values: string[] }[];
+};
+
+/** Every worksheet, by the name on its tab. Sheet order is not the lookup. */
+export function readWorkbookSheets(bytes: Uint8Array): WorkbookSheet[] {
+  const files = unzip(bytes);
+  const workbook = files.get("xl/workbook.xml");
+  const rels = files.get("xl/_rels/workbook.xml.rels");
+  if (!workbook || !rels) {
+    throw new Error("XLSX workbook is missing its sheet list.");
+  }
+  const workbookXml = new TextDecoder().decode(workbook);
+  const relsXml = new TextDecoder().decode(rels);
+  const targets = new Map<string, string>();
+  for (const match of relsXml.matchAll(/<Relationship\b([^>]*?)\/>/g)) {
+    const attrs = match[1] ?? "";
+    const id = /Id="([^"]+)"/.exec(attrs)?.[1] ?? "";
+    const target = /Target="([^"]+)"/.exec(attrs)?.[1] ?? "";
+    if (id && target) targets.set(id, target);
+  }
+  const shared = files.get("xl/sharedStrings.xml");
+  const strings = shared ? sharedStrings(new TextDecoder().decode(shared)) : [];
+  const sheets: WorkbookSheet[] = [];
+  for (const match of workbookXml.matchAll(
+    /<sheet\b[^>]*name="([^"]+)"[^>]*r:id="([^"]+)"[^>]*\/>/g,
+  )) {
+    const name = decodeXml(match[1] ?? "");
+    const target = (targets.get(match[2] ?? "") ?? "").replace(/^\/+/, "");
+    const path = target.startsWith("xl/") ? target : `xl/${target}`;
+    const sheet = files.get(path);
+    if (!sheet) throw new Error(`XLSX sheet "${name}" is missing ${path}.`);
+    sheets.push({
+      name,
+      rows: parseSheetCells(new TextDecoder().decode(sheet), strings),
+    });
+  }
+  if (sheets.length === 0) throw new Error("XLSX workbook has no worksheets.");
+  return sheets;
 }
 
 function parseXlsx(bytes: Uint8Array): string[][] {

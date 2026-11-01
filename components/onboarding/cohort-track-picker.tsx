@@ -9,6 +9,7 @@ import {
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
 import { wipeGuestDeviceProgress } from "@/lib/dev/guest-device-store";
+import { COHORT_AVATAR } from "@/lib/onboarding/cohort-avatars";
 import { reserveGenericProfileId } from "@/lib/onboarding/generic-profile-id";
 import {
   createGuestAccessSession,
@@ -19,25 +20,27 @@ import { recordUsageEvent } from "@/lib/usage/record-usage-event";
 
 const TRACK_AVATAR_SRC: Record<
   MasteryCohort,
-  { src: string; width: number; height: number; figureClassName: string }
+  {
+    src: string;
+    width: number;
+    height: number;
+    figureClassName: string;
+    /** Square canvas with transparent padding. Frame the figure so she matches Lars and Holly. */
+    frameFigure?: boolean;
+  }
 > = {
   explorer: {
-    src: "/assets/illustrations/characters/lars/lars-waving-512.webp",
-    width: 191,
-    height: 391,
+    ...COHORT_AVATAR.explorer,
     figureClassName: "h-[80px] min-[721px]:h-[200px]",
   },
   pathfinder: {
-    src: "/assets/illustrations/characters/holly/holly-waving-512.webp",
-    width: 199,
-    height: 391,
+    ...COHORT_AVATAR.pathfinder,
     figureClassName: "h-[78px] min-[721px]:h-[194px]",
   },
   maverick: {
-    src: "/assets/illustrations/characters/aiden/aiden-waving-512.webp",
-    width: 207,
-    height: 391,
+    ...COHORT_AVATAR.maverick,
     figureClassName: "h-[80px] min-[721px]:h-[200px]",
+    frameFigure: true,
   },
 };
 
@@ -67,6 +70,22 @@ export function CohortTrackPicker() {
         body:has(.nga-preapp-screen) footer {
           margin-top: 36px;
           text-align: center;
+        }
+        .nga-cohort-senna {
+          position: absolute !important;
+          left: -24px !important;
+          top: -26px !important;
+          width: 108px !important;
+          height: 108px !important;
+          max-width: none !important;
+        }
+        @media (min-width: 721px) {
+          .nga-cohort-senna {
+            left: calc(50% - 126px) !important;
+            top: -66px !important;
+            width: 271px !important;
+            height: 271px !important;
+          }
         }
       `}</style>
       <div className="mx-auto flex w-full max-w-[960px] flex-col min-[721px]:translate-y-6">
@@ -98,16 +117,27 @@ export function CohortTrackPicker() {
                 onClick={() => handleSelect(cohort)}
                 className="flex min-h-[104px] w-full flex-row items-center gap-[18px] rounded-[16px] border-0 bg-[#FFF8EC] py-3 pl-5 pr-4 text-left shadow-none hover:shadow-[0_0_0_2px_#031F82] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-[#031F82] active:shadow-[0_0_0_2px_#031F82] min-[721px]:flex-col min-[721px]:items-center min-[721px]:gap-0 min-[721px]:rounded-[20px] min-[721px]:px-5 min-[721px]:pb-[26px] min-[721px]:pt-7 min-[721px]:text-center"
               >
-                <span className="flex h-[80px] w-[52px] shrink-0 items-end justify-center min-[721px]:h-[200px] min-[721px]:w-full">
-                  <Image
-                    src={avatar.src}
-                    alt=""
-                    width={avatar.width}
-                    height={avatar.height}
-                    className={`${avatar.figureClassName} w-auto max-w-full object-contain object-bottom`}
-                    style={{ width: "auto" }}
-                    unoptimized
-                  />
+                <span className="relative flex h-[80px] w-[52px] shrink-0 items-end justify-center overflow-hidden min-[721px]:h-[200px] min-[721px]:w-full">
+                  {avatar.frameFigure ? (
+                    <Image
+                      src={avatar.src}
+                      alt=""
+                      width={avatar.width}
+                      height={avatar.height}
+                      className="nga-cohort-senna"
+                      unoptimized
+                    />
+                  ) : (
+                    <Image
+                      src={avatar.src}
+                      alt=""
+                      width={avatar.width}
+                      height={avatar.height}
+                      className={`${avatar.figureClassName} w-auto max-w-full object-contain object-bottom`}
+                      style={{ width: "auto" }}
+                      unoptimized
+                    />
+                  )}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col justify-center min-[721px]:mt-[18px] min-[721px]:w-full min-[721px]:items-center">
                   <span className="font-heading text-[20px] font-bold leading-tight tracking-[-0.01em] text-[#031F82] min-[721px]:text-[22px]">

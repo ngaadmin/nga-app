@@ -1,8 +1,11 @@
 "use client";
 
+import { useAcademyMediaSrc } from "@/lib/academy/media/academy-media-context";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LessonCloseCoinCounter } from "@/components/academy/lesson/lesson-close-coin-counter";
+import { LessonSkillMedal } from "@/components/academy/lesson/lesson-skill-medal";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import { LessonCompletionRewardsCard } from "@/components/academy/lesson/lesson-completion-rewards-card";
 import { GuestModeSaveModal } from "@/components/dashboard/guest-mode-save-modal";
@@ -39,9 +42,10 @@ import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 
-function celebratingPortrait(name?: string): { src: string; alt: string } {
+function celebratingPortrait(name?: string, src?: string): { src: string; alt: string } {
   const trimmed = name?.trim();
   const id = trimmed ? `${trimmed.toLowerCase()}-celebrating` : "";
+  if (src && trimmed) return { src, alt: `${trimmed} celebrating` };
   if (id && isIllustrationId(id)) {
     return {
       src: getIllustrationPath(id),
@@ -71,6 +75,8 @@ type LessonCompletionPaneProps = {
     "unlocked" | "bronze" | "silver" | "gold"
   > | null;
   medalId?: MedalIllustrationId;
+  /** `-app` file named on the sheet. The medal id stays without that suffix. */
+  medalSrc?: string;
   /** Show `medalId` as authored. Lesson-number medal rules do not replace it. */
   authoredMedal?: boolean;
   /** `MEDAL: none`. Do not fill in a lesson-number medal. */
@@ -79,6 +85,8 @@ type LessonCompletionPaneProps = {
   skillName?: string;
   /** Cohort lead from Lesson-Details. Their celebrating pose replaces the default portrait. */
   leadCharacter?: string;
+  /** The lead's celebrating pose for this cohort. Wins over the name lookup. */
+  portraitSrc?: string;
   skillLearnedLabel?: string;
   onCashIn: () =>
     | void
@@ -114,10 +122,12 @@ export function LessonCompletionPane({
   moduleNumber,
   skillMedalTier,
   medalId,
+  medalSrc,
   authoredMedal = false,
   suppressMedal = false,
   skillName: skillNameOverride,
   leadCharacter,
+  portraitSrc: portraitOverride,
   skillLearnedLabel,
   onCashIn,
   onContinue,
@@ -132,6 +142,7 @@ export function LessonCompletionPane({
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [flying, setFlying] = useState(false);
+  const [portraitFailed, setPortraitFailed] = useState(false);
   const [cashedIn, setCashedIn] = useState(false);
   const [moment, setMoment] = useState<GuestSaveBannerMoment | null>(null);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -181,7 +192,9 @@ export function LessonCompletionPane({
     ? moduleCloserGoldSkillLine(moduleNumber ?? 1)
     : null;
   const skillLine = closerLine ?? quietLessonSkillLine(skillMedalTier, skillName);
-  const portrait = celebratingPortrait(leadCharacter);
+  const localPortrait = celebratingPortrait(leadCharacter, portraitOverride);
+  const portraitSrc = useAcademyMediaSrc(localPortrait.src);
+  const portrait = { ...localPortrait, src: portraitSrc };
   const medalList = medals.map((medal) => medal.medalId).join(" ");
 
   const runAfterFlight = (action: () => void) => {
@@ -274,13 +287,33 @@ export function LessonCompletionPane({
         )}
       >
         <div className="flex flex-col items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={portrait.src}
-            alt={portrait.alt}
-            className="h-[120px] w-auto object-contain"
-            decoding="async"
-          />
+          {portraitFailed ? (
+            <span
+              className="flex h-[120px] w-[120px] items-center justify-center rounded-2xl border-2 border-dashed border-[#B9C7EA] bg-[#F4F7FF]"
+              data-testid="academy-media-placeholder"
+              aria-hidden
+            >
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8FA3D6" strokeWidth="1.6">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <circle cx="9" cy="10" r="1.6" />
+                <path d="M4 17l5-5 4 4 3-3 4 4" />
+              </svg>
+            </span>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={portrait.src}
+              alt={portrait.alt}
+              className="h-[120px] w-auto object-contain"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              onError={() => {
+                setPortraitFailed(true);
+                reportAcademyMediaFailed(portrait.src, "image");
+              }}
+            />
+          )}
           <h2 className="lesson-close-intro mt-3 text-center font-heading text-[26px] font-extrabold text-[#031F82]">
             You did it!
           </h2>
@@ -291,6 +324,16 @@ export function LessonCompletionPane({
                 {skillLine.text}
               </span>
             </p>
+          ) : null}
+          {medals[0] ? (
+            <LessonSkillMedal
+              className="mt-3"
+              skillSlug={medals[0].skillSlug ?? achievementSkillId}
+              medalId={medals[0].medalId}
+              src={medalId === medals[0].medalId ? medalSrc : undefined}
+              skillName={skillName}
+              size="hero"
+            />
           ) : null}
         </div>
 

@@ -71,3 +71,10 @@ export function fillCashPlaceholder(text: string, cash: number | null): string {
   if (cash === null || !text.includes("{cash}")) return text;
   return text.split("{cash}").join(`$${cash}`);
 }
+
+/** `{cash}`, `{amount}`, `$cash`. A real amount like `$10` is not a token. */
+const UNRESOLVED_PLACEHOLDER = /\{[a-zA-Z_][a-zA-Z0-9_]*\}|\$[a-zA-Z_][a-zA-Z0-9_]*/g;
+
+export function unresolvedPlaceholders(text: string): string[] {
+  return text.match(UNRESOLVED_PLACEHOLDER) ?? [];
+}

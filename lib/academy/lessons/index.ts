@@ -2,13 +2,6 @@ export {
   explorerCompletionScreen,
   teenCompletionScreen,
 } from "@/lib/academy/lessons/completion-screen";
-export type { ExplorerSpreadsheetRow, LessonScaffoldRow } from "@/lib/academy/lessons/spreadsheet-schema";
-export {
-  EXPLORER_SHEET_COLUMNS,
-  GAME_ARCHETYPE_TO_TYPE,
-  pedagogicalStageForScreen,
-  SCREEN_INDEX_TO_STAGE,
-} from "@/lib/academy/lessons/spreadsheet-schema";
 export type {
   AdvancePolicy,
   CharacterTokenMap,

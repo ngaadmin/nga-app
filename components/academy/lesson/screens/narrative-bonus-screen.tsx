@@ -3,7 +3,9 @@
 import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StoryCreditSlotContext } from "@/components/academy/lesson/academy-lesson-shell";
+import { useLessonCash } from "@/components/academy/lesson/lesson-cash";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
+import { displayCashText } from "@/lib/academy/lessons/payload/cash-placeholder";
 import {
   lessonGoldClaimClass,
   lessonNarrativeClass,
@@ -35,10 +37,15 @@ export function NarrativeBonusScreen({
 }: StandardScreenProps<NarrativeBonusScreenConfig> & {
   awardBonusXp?: (amount: number) => void;
 }) {
+  const { cash } = useLessonCash();
   const [claimed, setClaimed] = useState(false);
   const hasBonus = screen.bonusXp > 0;
   const resolution = screen.resolution === true;
-  const resolutionCopy = resolution ? splitResolutionCopy(screen.narrative) : null;
+  const narrative = displayCashText(screen.narrative, cash);
+  const successMessage = screen.successMessage
+    ? displayCashText(screen.successMessage, cash)
+    : "";
+  const resolutionCopy = resolution ? splitResolutionCopy(narrative) : null;
 
   useEffect(() => {
     if (!hasBonus && screen.autoReadyWhenNoBonus !== false) {
@@ -76,11 +83,11 @@ export function NarrativeBonusScreen({
           ) : null}
         </>
       ) : (
-        <p className={lessonNarrativeClass}>{screen.narrative}</p>
+        <p className={lessonNarrativeClass}>{narrative}</p>
       )}
-      {screen.successMessage ? (
+      {successMessage ? (
         <p className={cn("mt-4", lessonNarrativeClass)}>
-          {screen.successMessage}
+          {successMessage}
         </p>
       ) : null}
       {screen.credit ? <StoryBeatCredit credit={screen.credit} /> : null}

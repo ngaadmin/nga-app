@@ -58,7 +58,18 @@ export function dragHitsZone(
   return overlapRatio(drag, expanded) >= DROP_OVERLAP_RATIO;
 }
 
-/** Pick the destination the pointer or the dragged item covers most. */
+function distanceToRect(x: number, y: number, rect: DropRect): number {
+  const dx = Math.max(rect.left - x, 0, x - rect.right);
+  const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+  return Math.hypot(dx, dy);
+}
+
+/**
+ * Pick the destination the pointer or the dragged item covers most.
+ * Padded zones can overlap when blanks sit close together (two blanks on
+ * neighboring lines), so the zone the pointer is really over wins, then
+ * the zone nearest the pointer.
+ */
 export function bestDropZone<T>(
   zones: readonly { id: T; rect: DropRect }[],
   drag: DragBounds | null,
@@ -66,14 +77,20 @@ export function bestDropZone<T>(
   pointerY: number,
   pad = GENEROUS_DROP_PAD_PX,
 ): T | null {
-  let best: { id: T; score: number } | null = null;
+  let best: { id: T; score: number; distance: number } | null = null;
   for (const zone of zones) {
     const expanded = expandRect(zone.rect, pad);
     const pointerHit = pointerInRect(pointerX, pointerY, expanded);
     const overlap = drag ? overlapRatio(drag, expanded) : 0;
     if (!pointerHit && overlap < DROP_OVERLAP_RATIO) continue;
-    const score = (pointerHit ? 2 : 0) + overlap;
-    if (!best || score > best.score) best = { id: zone.id, score };
+    const direct = pointerInRect(pointerX, pointerY, zone.rect);
+    const distance = distanceToRect(pointerX, pointerY, zone.rect);
+    const score = (direct ? 4 : 0) + (pointerHit ? 2 : 0) + overlap;
+    const better =
+      !best ||
+      score > best.score + 1e-9 ||
+      (Math.abs(score - best.score) <= 1e-9 && distance < best.distance);
+    if (better) best = { id: zone.id, score, distance };
   }
   return best?.id ?? null;
 }

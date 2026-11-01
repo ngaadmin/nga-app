@@ -1,4 +1,6 @@
-import { STORY_AUDIO_MUTED_KEY } from "@/lib/academy/lessons/story-audio/audio-base";
+import { reportAcademyMediaFailed } from "@/lib/academy/media/media-failure-client";
+import { readMasterMuted, writeMasterMuted } from "@/lib/academy/lessons/story-audio/master-mute";
+import { silenceLessonFeedback } from "@/lib/academy/lessons/utils";
 
 /** Next stays inactive for this long after a story beat appears. */
 export const STORY_BEAT_NEXT_LOCK_MS = 2000;
@@ -172,6 +174,17 @@ export function createStoryPlayback(sink: StoryAudioSink) {
       if (muted) return silence(activeSrc);
       return beginPlay(activeSrc, false, false);
     },
+    /** Pause the clip in place. Unmute must not resume it. */
+    holdMute() {
+      playGeneration += 1;
+      releaseStalePlay = true;
+      sink.muted = true;
+      sink.pause();
+    },
+    /** Open the element again without starting playback. */
+    releaseMute() {
+      sink.muted = false;
+    },
     stop,
   };
 }
@@ -194,20 +207,16 @@ function installStoryAudioLifecycle(): void {
   });
 }
 
-export function readStoryMuted(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(STORY_AUDIO_MUTED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 export function storyAudioElement(): HTMLAudioElement | null {
   if (typeof window === "undefined" || typeof Audio === "undefined") return null;
   if (!element) {
     element = new Audio();
     element.preload = "auto";
+    const audio = element;
+    audio.addEventListener("error", () => {
+      const src = audio.currentSrc || audio.src;
+      if (src) reportAcademyMediaFailed(src, "audio");
+    });
     installStoryAudioLifecycle();
   }
   return element;
@@ -263,7 +272,22 @@ export function primeStoryAudioFromGesture(): void {
 export function playStoryClipFromGesture(src: string): void {
   const active = session();
   if (!active) return;
-  void active.playFromGesture(src, readStoryMuted());
+  void active.playFromGesture(src, readMasterMuted());
+}
+
+/**
+ * Master switch. Muting pauses narration and answer sounds immediately.
+ * Opening the switch does not start playback again.
+ */
+export function applyMasterMute(muted: boolean): void {
+  writeMasterMuted(muted);
+  const active = session();
+  if (muted) {
+    active?.holdMute();
+    silenceLessonFeedback();
+    return;
+  }
+  active?.releaseMute();
 }
 
 /** Pause, rewind, and drop the shared clip. Safe to call when no lesson is open. */
@@ -275,7 +299,7 @@ export function stopStoryAudio(): void {
 export function playStoryClipOnScreen(src: string | undefined): Promise<boolean> {
   const active = session();
   if (!active) return Promise.resolve(false);
-  return active.playOnScreen(src, readStoryMuted());
+  return active.playOnScreen(src, readMasterMuted());
 }
 
 export function isStoryAudioUnlocked(): boolean {
@@ -289,7 +313,7 @@ export function installStoryAudioFallback(): () => void {
     const active = session();
     if (!active) return;
     if (active.isBlocked()) {
-      void active.resumeBlocked(readStoryMuted());
+      void active.resumeBlocked(readMasterMuted());
       return;
     }
     if (!active.isUnlocked()) {

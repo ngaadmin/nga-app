@@ -7,7 +7,6 @@ import {
   DashboardNavPendingProvider,
   DashboardPendingScreen,
 } from "@/components/dashboard/dashboard-nav-pending";
-import { AppFooter } from "@/components/legal/app-footer";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import { HubIntro } from "@/components/dashboard/hub-intro/hub-intro";
 import { hubIntroIdFromPathname } from "@/lib/dashboard/hub-intro/resolve-hub";
@@ -28,7 +27,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const isLessonRoute = pathname.startsWith("/dashboard/academy/lesson/");
-  const isSettingsRoute = pathname.startsWith("/dashboard/settings");
   const hubIntroId = isLessonRoute ? null : hubIntroIdFromPathname(pathname);
   const skipOnboardingGate = isDevAcademyDesignShellPath(pathname);
 
@@ -84,9 +82,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <DashboardPendingScreen>
             {hubIntroId ? <HubIntro hubId={hubIntroId} /> : null}
             {children}
-            {isLessonRoute || isSettingsRoute ? null : (
-              <AppFooter className="mt-8 print:hidden" />
-            )}
           </DashboardPendingScreen>
         </main>
       </div>

@@ -65,12 +65,3 @@ export function sortPromptLines(text: string): string[] {
     .filter(Boolean);
 }
 
-/** Needs/Wants portrait. Short Fun does not use one. Lars is the fallback. */
-export function needsWantsPortrait(intro: string): { src: string; alt: string } {
-  const name = /\b(Holly|Aiden)\b/.exec(intro)?.[1] ?? "Lars";
-  const file = name.toLowerCase();
-  return {
-    src: `/assets/illustrations/characters/${file}/${file}-thinking-512.webp`,
-    alt: `${name} thinking`,
-  };
-}

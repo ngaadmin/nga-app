@@ -5,6 +5,10 @@ import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
+import {
+  ChangeParentHubPinModal,
+  PARENT_HUB_PIN_COPY,
+} from "@/components/dashboard/settings/change-parent-hub-pin-modal";
 import { SelfManagedRatePanel } from "@/components/dashboard/settings/self-managed-rate-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -52,17 +56,6 @@ const orangeCtaClass =
 
 const pinInputClass =
   "w-full rounded-xl border-2 border-[#BDE9FB] bg-[#F7FBFF] px-4 py-2.5 text-center font-heading text-lg font-bold tracking-[0.35em] text-[#031F82] outline-none focus:border-[#0CC1E0]";
-
-function formatJoinDate(isoDate: string | null): string {
-  if (!isoDate) return "Recently";
-  const parsed = new Date(isoDate);
-  if (Number.isNaN(parsed.getTime())) return "Recently";
-  return parsed.toLocaleDateString("en-AU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function ClassSettingsLink() {
   const label = copyMatrix.dashboard.settings.account.class;
@@ -171,54 +164,6 @@ function SettingsCurrencyRow() {
         ))}
       </select>
     </div>
-  );
-}
-
-type ProfileHeaderProps = {
-  username: string;
-  email?: string | null;
-  joinDateLabel: string;
-  joinDate: string | null;
-  isLoading: boolean;
-  isGuest?: boolean;
-};
-
-function ProfileHeader({
-  username,
-  email,
-  joinDateLabel,
-  joinDate,
-  isLoading,
-  isGuest = false,
-}: ProfileHeaderProps) {
-  const initial = username.trim().charAt(0).toUpperCase() || "?";
-  const showEmail =
-    Boolean(email?.trim()) &&
-    email!.trim().toLowerCase() !== username.trim().toLowerCase();
-
-  return (
-    <header className="flex items-center gap-4">
-      <div
-        className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-2xl font-extrabold text-white shadow-md"
-        aria-hidden
-      >
-        {isLoading ? "…" : initial}
-      </div>
-      <div className="min-w-0">
-        <h1 className="truncate font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
-          {isLoading ? "Loading…" : username}
-        </h1>
-        {showEmail ? (
-          <p className="mt-0.5 truncate font-sans text-[14px] text-[#1E3A5F]">
-            {email}
-          </p>
-        ) : null}
-        <p className="mt-1 font-sans text-[14px] text-[#1E3A5F]/75">
-          {isGuest ? "Guest · " : ""}
-          {joinDateLabel} {formatJoinDate(joinDate)}
-        </p>
-      </div>
-    </header>
   );
 }
 
@@ -643,7 +588,7 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
 
 export function HomeDashboard() {
   const router = useRouter();
-  const { username, email, joinDate, isLoading, isTeacher, isGuestMode } = useDashboardUser();
+  const { isTeacher, isGuestMode } = useDashboardUser();
   const session = useUserSession();
   const isParent = session?.accountRole === "parent_master";
   const isChildAccount =
@@ -654,6 +599,7 @@ export function HomeDashboard() {
   const copy = copyMatrix.dashboard.settings;
 
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
+  const [changeHubPinOpen, setChangeHubPinOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const loggingOutRef = useRef(false);
@@ -679,14 +625,10 @@ export function HomeDashboard() {
   return (
     <>
       <div className="mx-auto flex w-full max-w-md shrink-0 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
-        <ProfileHeader
-          username={username}
-          email={email}
-          joinDateLabel={copy.profile.joinDateLabel}
-          joinDate={joinDate}
-          isLoading={isLoading}
-          isGuest={isGuestMode}
-        />
+        {/* Name and avatar live on the profile; email and Joined in My account. */}
+        <h1 className="font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
+          {copy.title}
+        </h1>
 
         {waitingForApproval ? (
           <p className="rounded-2xl bg-[#FFF7ED] px-4 py-3 font-sans text-sm font-semibold text-[#031F82]" role="status">
@@ -713,6 +655,13 @@ export function HomeDashboard() {
               onClick={() => setChangePinModalOpen(true)}
             />
           ) : null}
+          {isParent ? (
+            <SettingsRow
+              icon={LockIcon}
+              label={PARENT_HUB_PIN_COPY.rowLabel}
+              onClick={() => setChangeHubPinOpen(true)}
+            />
+          ) : null}
           <SettingsRow
             icon={CommunityIcon}
             label={copy.account.accounts}
@@ -727,7 +676,7 @@ export function HomeDashboard() {
           {isParent ? (
             <SettingsRow
               icon={CommunityIcon}
-              label="My child's data"
+              label="Your child's data and privacy"
               onClick={() => router.push("/dashboard/settings/child-data")}
             />
           ) : null}
@@ -772,6 +721,11 @@ export function HomeDashboard() {
         isOpen={changePinModalOpen}
         copy={copy.changePin}
         onClose={() => setChangePinModalOpen(false)}
+      />
+
+      <ChangeParentHubPinModal
+        isOpen={changeHubPinOpen}
+        onClose={() => setChangeHubPinOpen(false)}
       />
     </>
   );

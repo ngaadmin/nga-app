@@ -93,7 +93,7 @@ function studentRemovalItems(username: string): RemovalItem[] {
   return [
     { emoji: "🔑", title: "Login", detail: `The username ${username} and its class seat` },
     { emoji: "🎓", title: "Progress", detail: "Lessons and day streak" },
-    { emoji: "⭐", title: "Lifetime XP", detail: "The Lifetime XP total" },
+    { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
     { emoji: "🪙", title: "Coins", detail: "The coins balance" },
     { emoji: "🏅", title: "Medals", detail: "Every bronze, silver and gold medal" },
     { emoji: "🏦", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },

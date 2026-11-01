@@ -7,11 +7,11 @@ import { loadParentTabAccess } from "@/lib/parent/parent-tab-server";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Parent dashboard",
+  title: "Parent Hub",
   description: "Only the parent can see this. It's PIN-protected.",
 };
 
-/** Learners, guests and parents without an active linked child are sent away. */
+/** Learners, guests and parents with no child or approval waiting are sent away. */
 export default async function ParentTabPage() {
   const access = await loadParentTabAccess();
   if (!access.eligible) redirect(DASHBOARD_DEFAULT_HREF);

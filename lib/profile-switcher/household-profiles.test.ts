@@ -53,6 +53,27 @@ describe("buildHouseholdProfiles", () => {
     ]);
   });
 
+  it("hides siblings from a child: only the child and their parent show", () => {
+    const result = buildHouseholdProfiles({
+      currentUserId: "c2",
+      parent,
+      children: [kid("c1", "amy", "explorer"), kid("c2", "zed", "maverick")],
+    });
+    expect(result?.profiles.map((p) => [p.userId, p.role])).toEqual([
+      ["p1", "parent"],
+      ["c2", "child"],
+    ]);
+  });
+
+  it("still lists every active child for the parent", () => {
+    const result = buildHouseholdProfiles({
+      currentUserId: "p1",
+      parent,
+      children: [kid("c1", "amy", "explorer"), kid("c2", "zed", "maverick")],
+    });
+    expect(result?.profiles.map((p) => p.userId)).toEqual(["p1", "c1", "c2"]);
+  });
+
   it("leaves out children still waiting for approval, unless that is the caller", () => {
     const result = buildHouseholdProfiles({
       currentUserId: "p1",

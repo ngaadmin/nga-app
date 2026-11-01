@@ -8,7 +8,7 @@ import { RemovalConfirmSheet } from "@/components/privacy/removal-confirm-sheet"
 const ITEMS = [
   { emoji: "🎓", title: "Lessons", detail: "Every lesson done on this device" },
   { emoji: "🪙", title: "Coins", detail: "The coins balance" },
-  { emoji: "⭐", title: "Lifetime XP", detail: "The Lifetime XP total" },
+  { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
   { emoji: "🏅", title: "Medals", detail: "Every medal earned" },
   { emoji: "🏦", title: "Vault", detail: "Jars, amounts and savings goals" },
 ];

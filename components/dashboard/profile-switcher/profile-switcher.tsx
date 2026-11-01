@@ -5,6 +5,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +20,10 @@ import {
 } from "@/lib/dashboard/profile-avatar";
 import { CheckIcon, TrophyIcon } from "@/lib/dashboard/icons";
 import {
+  ParentHubTabIconA,
+  SettingsTabIconA,
+} from "@/lib/dashboard/tab-icons-a";
+import {
   PROFILE_SWITCHING_AVAILABLE,
   type HouseholdProfile,
   type HouseholdProfiles,
@@ -30,6 +35,10 @@ export const PROFILE_SWITCHER_COPY = {
   tip: "Tap your avatar to switch profiles",
   viewProfile: "View my profile",
   viewProfileSub: "Achievements & badges",
+  settings: "Settings",
+  settingsSub: "PINs, account and preferences",
+  parentHub: "Parent Hub",
+  parentHubSub: "Approvals and your child's progress",
   switchHeading: "Switch profile",
   parentTag: "Parent",
   here: "You're here",
@@ -249,6 +258,8 @@ export function ProfileSwitcherMenu({
   currentAvatarId,
   onClose,
   onViewProfile,
+  onOpenSettings,
+  onOpenParentHub,
 }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
@@ -257,6 +268,10 @@ export function ProfileSwitcherMenu({
   currentAvatarId: ProfileAvatarId | null;
   onClose: () => void;
   onViewProfile: () => void;
+  /** Opens Settings. Every profile gets this row. */
+  onOpenSettings: () => void;
+  /** Only for a parent who can open the Parent Hub. */
+  onOpenParentHub?: () => void;
 }) {
   const [box, setBox] = useState<MenuBox | null>(null);
   const [scrimTop, setScrimTop] = useState(0);
@@ -357,6 +372,22 @@ export function ProfileSwitcherMenu({
             />
           </svg>
         </button>
+        <MenuLinkRow
+          data-attr="settings"
+          icon={<SettingsTabIconA className="size-5" />}
+          title={PROFILE_SWITCHER_COPY.settings}
+          sub={PROFILE_SWITCHER_COPY.settingsSub}
+          onClick={onOpenSettings}
+        />
+        {onOpenParentHub ? (
+          <MenuLinkRow
+            data-attr="parent-hub"
+            icon={<ParentHubTabIconA className="size-5" />}
+            title={PROFILE_SWITCHER_COPY.parentHub}
+            sub={PROFILE_SWITCHER_COPY.parentHubSub}
+            onClick={onOpenParentHub}
+          />
+        ) : null}
         {showList ? (
           <>
             <p className="px-2.5 pb-1.5 pt-3 font-heading text-[11px] font-bold uppercase tracking-[0.6px] text-[#64748b]">
@@ -393,5 +424,46 @@ export function ProfileSwitcherMenu({
       </div>
     </>,
     document.body,
+  );
+}
+
+/** Plain menu row under "View my profile": Settings, and the Parent Hub for parents. */
+function MenuLinkRow({
+  "data-attr": attr,
+  icon,
+  title,
+  sub,
+  onClick,
+}: {
+  "data-attr": "settings" | "parent-hub";
+  icon: ReactNode;
+  title: string;
+  sub: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-profile-switcher-link={attr}
+      onClick={onClick}
+      className="mt-1 flex w-full items-center gap-2.5 rounded-xl p-2.5 text-left transition-colors hover:bg-[#F2F8FF] active:bg-[#E8F6FC]"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]">
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="font-heading text-sm font-bold text-[#031F82]">{title}</span>
+        <span className="text-[11.5px] font-medium text-[#1E3A5F]">{sub}</span>
+      </span>
+      <svg viewBox="0 0 12 12" fill="none" aria-hidden className="size-3.5 shrink-0 text-[#0288A3]">
+        <path
+          d="M4.5 3 7.5 6 4.5 9"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
   );
 }

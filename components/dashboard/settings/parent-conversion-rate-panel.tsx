@@ -6,7 +6,6 @@ import { useCurrency } from "@/lib/dashboard/currency-context";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import {
   loadLinkedChildrenCashRates,
-  markLinkedChildCashInPaid,
   saveLinkedChildExchangeRate,
   type LinkedChildCashRate,
 } from "@/lib/dashboard/linked-child-exchange-rate";
@@ -20,11 +19,14 @@ import { cn } from "@/lib/utils/cn";
 
 type ParentConversionRatePanelProps = {
   isEditable: boolean;
+  /** Parent PIN gate pass; the server refuses a save without it. */
+  parentPinPass?: string | null;
   className?: string;
 };
 
 export function ParentConversionRatePanel({
   isEditable,
+  parentPinPass = null,
   className,
 }: ParentConversionRatePanelProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
@@ -38,9 +40,7 @@ export function ParentConversionRatePanel({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadingChildren, setLoadingChildren] = useState(false);
-  const [confirmingChildId, setConfirmingChildId] = useState<string | null>(null);
   const [confirmingLargeRate, setConfirmingLargeRate] = useState(false);
-  const [payingChildId, setPayingChildId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isParentMaster) return;
@@ -92,7 +92,6 @@ export function ParentConversionRatePanel({
   function selectChild(childId: string) {
     setSelectedChildId(childId);
     setStatus(null);
-    setConfirmingChildId(null);
     const child = children.find((entry) => entry.userId === childId);
     setAmountInput(
       child?.centsPer100Xp != null ? formatExchangeRateInput(child.centsPer100Xp) : "",
@@ -122,6 +121,7 @@ export function ParentConversionRatePanel({
       const result = await saveLinkedChildExchangeRate({
         centsPer100Xp: cents,
         childId: selectedChildId,
+        parentPinPass: parentPinPass ?? "",
       });
       if (!result.ok) {
         setError(result.error);
@@ -139,27 +139,6 @@ export function ParentConversionRatePanel({
       );
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleMarkPaid(childId: string) {
-    setError(null);
-    setStatus(null);
-    setPayingChildId(childId);
-    try {
-      const result = await markLinkedChildCashInPaid({ childId });
-      if (!result.ok) {
-        setError(result.error || conversionCopy.markAsPaidError);
-        return;
-      }
-      setChildren((current) =>
-        current.map((child) =>
-          child.userId === childId ? { ...child, owedCents: 0 } : child,
-        ),
-      );
-      setConfirmingChildId(null);
-    } finally {
-      setPayingChildId(null);
     }
   }
 
@@ -202,7 +181,6 @@ export function ParentConversionRatePanel({
         <ul className="mt-4 space-y-3">
           {children.map((child) => {
             const selected = child.userId === selectedChildId;
-            const owedLabel = conversionCopy.owedToTemplate.replace("{name}", child.username);
             return (
               <li
                 key={child.userId}
@@ -223,48 +201,16 @@ export function ParentConversionRatePanel({
                     {rateLabel(child.centsPer100Xp)}
                   </span>
                 </button>
-                <p className="mt-2 font-heading text-sm font-extrabold text-[#031F82]">
-                  {owedLabel}: {formatMoney(child.owedCents / 100, currencyCode)}
-                </p>
-                {confirmingChildId === child.userId ? (
-                  <div className="mt-2">
-                    <p className="font-sans text-sm leading-relaxed text-[#1E3A5F]">
-                      {conversionCopy.markAsPaidConfirm}
-                    </p>
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        type="button"
-                        disabled={payingChildId === child.userId}
-                        onClick={() => {
-                          void handleMarkPaid(child.userId);
-                        }}
-                        className="h-touch flex-1 rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-3 font-heading text-xs font-bold uppercase tracking-wide text-[#031F82] disabled:opacity-40"
-                      >
-                        {conversionCopy.markAsPaidYes}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmingChildId(null)}
-                        className="h-touch flex-1 rounded-nga-lg px-3 font-heading text-xs font-bold text-[#0CC1E0]"
-                      >
-                        {conversionCopy.markAsPaidCancel}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={child.owedCents <= 0 || payingChildId != null}
-                    onClick={() => setConfirmingChildId(child.userId)}
-                    className="mt-2 font-heading text-sm font-bold text-[#0CC1E0] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
-                  >
-                    {conversionCopy.markAsPaid}
-                  </button>
-                )}
               </li>
             );
           })}
         </ul>
+      ) : null}
+
+      {children.length > 0 ? (
+        <p className="mt-2 font-sans text-xs leading-relaxed text-[#4A5675]">
+          To pay out what&apos;s owed, open the Parent Hub.
+        </p>
       ) : null}
 
       {children.length > 0 ? (

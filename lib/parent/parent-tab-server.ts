@@ -50,7 +50,7 @@ function asCohort(value: string | null): MasteryCohort | null {
     : null;
 }
 
-/** Server-side source of truth for the Parent tab. Reads only. */
+/** Server-side source of truth for the Parent tab (Parent Hub). Reads only. */
 async function resolveParentContext(): Promise<ParentContext | null> {
   const supabase = await createClient();
   const {
@@ -90,17 +90,29 @@ async function resolveParentContext(): Promise<ParentContext | null> {
     (row) => row.account_role === "child" && Boolean(row.username?.trim()),
   );
 
+  const linkedChildren = children.map((row) => ({
+    accountRole: row.account_role,
+    accountStatus: row.account_status,
+  }));
+  let eligible = isParentTabEligible({
+    accountRole: profile.account_role,
+    linkedChildren,
+  });
+  if (!eligible) {
+    // Approvals live only in the Parent Hub, so a waiting request opens it.
+    const pending = await listPendingConsentRequestsForParent();
+    eligible = isParentTabEligible({
+      accountRole: profile.account_role,
+      linkedChildren,
+      pendingApprovals: pending.ok ? pending.requests.length : 0,
+    });
+  }
+
   return {
     userId: user.id,
     parentName: String(profile.username ?? "").trim(),
     children,
-    eligible: isParentTabEligible({
-      accountRole: profile.account_role,
-      linkedChildren: children.map((row) => ({
-        accountRole: row.account_role,
-        accountStatus: row.account_status,
-      })),
-    }),
+    eligible,
   };
 }
 
@@ -311,6 +323,46 @@ export async function openParentTabGate(
   }
 }
 
+/**
+ * Changes the Parent Hub PIN from Settings. Needs a gate pass from entering
+ * the current PIN (or from "Forgot your PIN?" then creating a new one) in
+ * this visit, checked here on the server. Writes the existing
+ * parent_tab_pins row only, so no schema change is needed.
+ */
+export async function changeParentHubPin(
+  pass: string,
+  newPin: string,
+): Promise<{ ok: true; pass: string } | { ok: false; error: string }> {
+  try {
+    const parent = await resolveSignedInParent();
+    if (!parent) return { ok: false, error: PIN_COPY.notParent };
+    if (typeof pass !== "string" || !parentTabGatePassValid(pass, parent.userId)) {
+      return { ok: false, error: "Enter your current Parent Hub PIN first." };
+    }
+    if (typeof newPin !== "string" || !isParentTabPin(newPin)) {
+      return { ok: false, error: PIN_COPY.format };
+    }
+    const hashed = await newParentTabPinHash(newPin);
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("parent_tab_pins")
+      .update({
+        pin_hash: hashed.hash,
+        pin_salt: hashed.salt,
+        pin_iterations: hashed.iterations,
+        failed_tries: 0,
+        locked_until: null,
+      })
+      .eq("parent_id", parent.userId)
+      .select("parent_id");
+    if (error) return { ok: false, error: PIN_COPY.error };
+    if (!data || data.length === 0) return { ok: false, error: PIN_COPY.missing };
+    return { ok: true, pass: signParentTabGatePass(parent.userId) };
+  } catch {
+    return { ok: false, error: PIN_COPY.error };
+  }
+}
+
 export type ParentTabChildSummary = {
   userId: string;
   username: string;
@@ -394,7 +446,7 @@ export async function loadParentTabData(
   if (!context?.eligible) {
     return {
       ok: false,
-      error: "Only a parent with a linked child can open this.",
+      error: "Only a parent with a linked child can open the Parent Hub.",
     };
   }
   if (!parentTabGatePassValid(pass, context.userId)) {

@@ -40,6 +40,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
   const session = useUserSession();
   const isTeacher = session?.accountRole === "teacher" || session?.isTeacher === true;
   const isParent = session?.accountRole === "parent_master";
+  const joinDate = session?.createdAt ?? null;
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const [pin, setPin] = useState("");
@@ -150,6 +151,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
           kind="teacher"
           backHref="/dashboard/settings"
           email={teacherRecord.email}
+          joined={joinDate}
           username={teacherRecord.username}
           classLabel={teacherRecord.classLabel}
           studentCount={count}
@@ -243,6 +245,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         kind="parent"
         backHref="/dashboard/settings"
         email={parentRecord.email}
+        joined={joinDate}
         linkedChildren={parentRecord.children}
         history={parentRecord.history}
         historyTitle={parentRecord.historyTitle}

@@ -160,7 +160,7 @@ const SECRET_CHILD_FILE = {
 const CHILD_REMOVAL: RemovalItem[] = [
   { emoji: "👤", title: "Profile", detail: "Username, track and settings" },
   { emoji: "🎓", title: "Progress", detail: "Lessons and day streak" },
-  { emoji: "⭐", title: "Lifetime XP", detail: "The Lifetime XP total" },
+  { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
   { emoji: "🪙", title: "Coins", detail: "The coins balance" },
   { emoji: "🏅", title: "Medals", detail: "Every bronze, silver and gold medal" },
   { emoji: "🏦", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
@@ -241,8 +241,10 @@ function ParentFlowPreview() {
     <>
       <LearnerDataScreen
         view={DELTA4}
+        mode="privacy"
+        title="Your child's data and privacy"
         backHref="/dashboard/settings"
-        backLabel="Parent Hub"
+        backLabel="Back to Settings"
         siblings={[
           { userId: "child-delta4", username: "delta4" },
           { userId: "child-sky7", username: "sky7" },
@@ -286,8 +288,10 @@ export function DataPreview({ screen }: { screen: string }) {
       <>
         <LearnerDataScreen
           view={DELTA4}
+          mode="privacy"
+          title="Your child's data and privacy"
           backHref="/dashboard/settings"
-          backLabel="Parent Hub"
+          backLabel="Back to Settings"
           siblings={[
             { userId: "child-delta4", username: "delta4" },
             { userId: "child-sky7", username: "sky7" },

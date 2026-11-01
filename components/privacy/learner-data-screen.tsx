@@ -15,10 +15,24 @@ import type { LearnerDataView } from "@/lib/privacy/data-controls";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
 import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
 
+/**
+ * "full": everything (teacher's student record).
+ * "progress": the Parent Hub's read-only view (progress, medals, Vault,
+ *   recent activity). No privacy controls.
+ * "privacy": Settings' child data and privacy section (leaderboard switch,
+ *   download, delete). Progress lives in the Parent Hub.
+ */
+export type LearnerDataScreenMode = "full" | "progress" | "privacy";
+
 type LearnerDataScreenProps = {
   view: LearnerDataView;
+  mode?: LearnerDataScreenMode;
   title?: string;
-  backHref: string;
+  subtitle?: string;
+  /** Link back. Ignored when onBack is set. */
+  backHref?: string;
+  /** In-page back (e.g. the Parent Hub, which must stay unlocked). */
+  onBack?: () => void;
   backLabel: string;
   siblings?: { userId: string; username: string }[];
   activeChildId?: string;
@@ -26,17 +40,20 @@ type LearnerDataScreenProps = {
   showLeaderboardSwitch?: boolean;
   onLeaderboardChange?: (enabled: boolean) => void;
   leaderboardBusy?: boolean;
-  onDownload: () => void;
-  onDelete: () => void;
-  deleteLabel: string;
+  onDownload?: () => void;
+  onDelete?: () => void;
+  deleteLabel?: string;
   downloading?: boolean;
   vaultNote?: string;
 };
 
 export function LearnerDataScreen({
   view,
-  title = "My child's data",
-  backHref,
+  mode = "full",
+  title = "Your child's data",
+  subtitle = "Everything NextGenAchievers keeps about this account.",
+  backHref = "/dashboard/settings",
+  onBack,
   backLabel,
   siblings = [],
   activeChildId,
@@ -46,23 +63,40 @@ export function LearnerDataScreen({
   leaderboardBusy = false,
   onDownload,
   onDelete,
-  deleteLabel,
+  deleteLabel = "Delete account",
   downloading = false,
   vaultNote = "Vault amounts are what you and your child track in the app. The app doesn't hold or move money.",
 }: LearnerDataScreenProps) {
   const { formatMoney } = useCurrency();
   const initial = view.username.trim().charAt(0).toUpperCase() || "?";
+  const showProgress = mode !== "privacy";
+  const showControls = mode !== "progress";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
-      <Link href={backHref} className="font-heading text-sm font-bold text-[#0CC1E0]">
-        ← {backLabel}
-      </Link>
+      {onBack ? (
+        <button
+          type="button"
+          data-learner-data-back
+          onClick={onBack}
+          className="self-start font-heading text-sm font-bold text-[#0CC1E0]"
+        >
+          ← {backLabel}
+        </button>
+      ) : (
+        <Link
+          href={backHref}
+          data-learner-data-back
+          className="font-heading text-sm font-bold text-[#0CC1E0]"
+        >
+          ← {backLabel}
+        </Link>
+      )}
       <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">
         {title}
       </h1>
       <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Everything NextGenAchievers keeps about this account.
+        {subtitle}
       </p>
 
       {siblings.length > 1 ? (
@@ -125,6 +159,8 @@ export function LearnerDataScreen({
         ) : null}
       </section>
 
+      {showProgress ? (
+        <div data-learner-data-progress>
       <section className="mt-5">
         <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
           Progress
@@ -259,7 +295,10 @@ export function LearnerDataScreen({
         </div>
       </section>
 
-      {showLeaderboardSwitch && onLeaderboardChange ? (
+        </div>
+      ) : null}
+
+      {showControls && showLeaderboardSwitch && onLeaderboardChange ? (
         <div className="mt-5">
           <LeaderboardSwitch
             enabled={view.leaderboardEnabled}
@@ -270,20 +309,34 @@ export function LearnerDataScreen({
         </div>
       ) : null}
 
-      <div className="mt-6">
-        <NavyButton onClick={onDownload} disabled={downloading}>
-          <DownloadIcon className="size-5" />
-          Download data
-        </NavyButton>
-        <p className={`mt-1.5 ${noteClass()}`}>One plain data file with everything on this page.</p>
-        <div className="mt-4">
-          <NavyOutlineButton onClick={onDelete}>
-            <TrashIcon className="size-5" />
-            {deleteLabel}
-          </NavyOutlineButton>
+      {showControls && (onDownload || onDelete) ? (
+        <div className="mt-6" data-learner-data-controls>
+          {onDownload ? (
+            <>
+              <NavyButton onClick={onDownload} disabled={downloading}>
+                <DownloadIcon className="size-5" />
+                Download data
+              </NavyButton>
+              <p className={`mt-1.5 ${noteClass()}`}>
+                {mode === "privacy"
+                  ? "One plain data file with everything kept about this account, progress included."
+                  : "One plain data file with everything on this page."}
+              </p>
+            </>
+          ) : null}
+          {onDelete ? (
+            <>
+              <div className="mt-4">
+                <NavyOutlineButton onClick={onDelete}>
+                  <TrashIcon className="size-5" />
+                  {deleteLabel}
+                </NavyOutlineButton>
+              </div>
+              <p className={`mt-1.5 ${noteClass()}`}>You&apos;ll be asked to confirm first.</p>
+            </>
+          ) : null}
         </div>
-        <p className={`mt-1.5 ${noteClass()}`}>You&apos;ll be asked to confirm first.</p>
-      </div>
+      ) : null}
     </div>
   );
 }

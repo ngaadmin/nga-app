@@ -39,8 +39,10 @@ function asCohort(value: string | null): MasteryCohort | null {
 
 /**
  * Parent first, then active linked children by name. The signed-in profile
- * is always listed (marked current). Returns null unless there is at least
- * one other profile to show, so single-profile accounts keep the plain avatar.
+ * is always listed (marked current). A signed-in child sees only themselves
+ * and their parent, never their siblings. Returns null unless there is at
+ * least one other profile to show, so single-profile accounts keep the plain
+ * avatar.
  */
 export function buildHouseholdProfiles(input: {
   currentUserId: string;
@@ -67,7 +69,11 @@ export function buildHouseholdProfiles(input: {
   }
 
   const seen = new Set(profiles.map((profile) => profile.userId));
+  const callerIsChild = input.children.some(
+    (row) => row.id === currentUserId && row.account_role === "child",
+  );
   const children = input.children
+    .filter((row) => !callerIsChild || row.id === currentUserId)
     .filter(
       (row) =>
         row.account_role === "child" &&

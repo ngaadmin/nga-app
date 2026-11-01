@@ -86,7 +86,7 @@ export function ParentChildPage() {
       <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
         <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your parent PIN</h1>
         <p className="font-sans text-sm text-[#1E3A5F]">
-          This page shows your child&apos;s data. It is view only until you confirm a delete.
+          This page holds your child&apos;s data and privacy controls. Nothing changes until you confirm.
         </p>
         <input
           value={gatePin}
@@ -123,8 +123,11 @@ export function ParentChildPage() {
     <>
       <LearnerDataScreen
         view={view}
+        mode="privacy"
+        title="Your child's data and privacy"
+        subtitle="Leaderboard visibility, their data file and deleting their account. Their progress is in the Parent Hub."
         backHref="/dashboard/settings"
-        backLabel="Parent Hub"
+        backLabel="Back to Settings"
         siblings={children}
         activeChildId={view.userId}
         onSelectChild={(childId) => {
@@ -218,7 +221,7 @@ function childRemovalItems(): RemovalItem[] {
   return [
     { emoji: "👤", title: "Profile", detail: "Username, track and settings" },
     { emoji: "🎓", title: "Progress", detail: "Lessons and day streak" },
-    { emoji: "⭐", title: "Lifetime XP", detail: "The Lifetime XP total" },
+    { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
     { emoji: "🪙", title: "Coins", detail: "The coins balance" },
     { emoji: "🏅", title: "Medals", detail: "Every bronze, silver and gold medal" },
     { emoji: "🏦", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },

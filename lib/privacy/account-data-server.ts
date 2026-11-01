@@ -46,6 +46,7 @@ import {
 } from "@/lib/privacy/data-controls";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -339,6 +340,43 @@ export async function loadParentChildBundle(childId: string): Promise<
     { linkedParentEmail: actorResult.email },
   );
   return { ok: true, parentEmail: actorResult.email, children, view };
+}
+
+/**
+ * A linked child's progress for the Parent Hub (lessons, streak, coins,
+ * medals, Vault and recent activity). Read only. Needs the Parent Hub gate
+ * pass from this visit, checked here on the server, so the Hub never asks
+ * for a second PIN.
+ */
+export async function loadParentHubChildProgress(
+  pass: string,
+  childId: string,
+): Promise<{ ok: true; view: LearnerDataView } | Fail> {
+  const user = await signedInUser();
+  if (!user) return { ok: false, error: "Sign in as a parent to see this." };
+  if (typeof pass !== "string" || !parentTabGatePassValid(pass, user.id)) {
+    return { ok: false, error: "Enter your parent PIN first." };
+  }
+  const opened = openAdmin();
+  if (!opened.ok) return opened;
+  const actorResult = await parentActor(opened.admin, user.id);
+  if (!actorResult.ok) return actorResult;
+  const listed = await listLinkedChildrenForCurrentParent();
+  if (!listed.ok) return listed;
+  const match = listed.children.find(
+    (child) => child.userId === String(childId ?? "").trim(),
+  );
+  if (!match || !authorizeLearnerRead(actorResult.actor, match.userId)) {
+    return { ok: false, error: "That learner is not linked to this parent account." };
+  }
+  const view = await viewForChild(
+    opened.admin,
+    match.userId,
+    match.username,
+    match.curriculumCohort ?? null,
+    {},
+  );
+  return { ok: true, view };
 }
 
 export async function loadParentOwnRecord(): Promise<

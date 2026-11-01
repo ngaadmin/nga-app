@@ -33,11 +33,16 @@ import {
   type ParentTabOkItem,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
+import { LearnerDataScreen } from "@/components/privacy/learner-data-screen";
+import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
+import type { LearnerDataView } from "@/lib/privacy/data-controls";
 
 const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 
 /**
- * Parent tab. Asks for the parent PIN every time it opens: the unlocked
+ * Parent Hub (the "Parent" tab). Insights and approvals: each child's
+ * progress, account approvals and paying out coins. Asks for the Parent Hub
+ * PIN every time it opens: the unlocked
  * state lives only in this component, so leaving the tab (unmount),
  * reloading, or backgrounding the app (visibilitychange / pagehide) locks
  * it again. Nothing here runs when switching into the parent profile.
@@ -116,7 +121,7 @@ export function ParentTabScreen({
     >
       <div className="mx-auto flex w-full max-w-md flex-col overflow-x-hidden">
         <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
-          Parent dashboard
+          Parent Hub
         </h1>
         <p className="mt-px font-sans text-[13px] text-[#1E3A5F]">
           Only you can see this. It&apos;s PIN-protected.
@@ -125,6 +130,7 @@ export function ParentTabScreen({
         {unlocked ? (
           pass ? (
             <UnlockedView
+              pass={pass}
               data={data}
               loadError={loadError}
               onChanged={() => void refresh(pass)}
@@ -135,7 +141,7 @@ export function ParentTabScreen({
             key={`${parentUserId}:${gateKey}`}
             parentName={parentName}
             className="mx-0"
-            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent tab.`}
+            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent Hub.`}
             onUnlocked={unlock}
           />
         )}
@@ -160,8 +166,17 @@ const TRACK_CHIP: Record<MasteryCohort, string> = {
   maverick: "bg-[#FFE9D6] text-[#B45309]",
 };
 
-/** One child: avatar, name, track, lifetime lessons, coins to cash in. */
-function ChildCard({ child }: { child: ParentTabChildSummary }) {
+/**
+ * One child: avatar, name, track, lifetime lessons, coins to cash in. An
+ * active child's card opens their progress in the Hub.
+ */
+function ChildCard({
+  child,
+  onOpen,
+}: {
+  child: ParentTabChildSummary;
+  onOpen?: () => void;
+}) {
   const avatarId = readStoredProfileAvatarId(
     child.userId,
     child.cohort ?? "explorer",
@@ -169,11 +184,21 @@ function ChildCard({ child }: { child: ParentTabChildSummary }) {
   // Name gets the whole row next to the avatar (lessons sit at its right
   // edge); the coins pill has its own line under the track tag, so names of
   // ~14+ characters fit at 390px without truncating.
+  const Wrapper = onOpen ? "button" : "div";
   return (
-    <div
+    <Wrapper
+      {...(onOpen
+        ? {
+            type: "button" as const,
+            onClick: onOpen,
+            "aria-label": `See ${child.username}'s progress`,
+            "data-parent-tab-child-open": "",
+          }
+        : {})}
       data-parent-tab-child={child.username}
       className={cn(
-        "grid grid-cols-[56px_1fr] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5",
+        "grid w-full grid-cols-[56px_1fr] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5 text-left",
+        onOpen && "transition-colors hover:bg-[#F7FBFF] active:bg-[#EEF7FD]",
         CARD_SHADOW,
       )}
     >
@@ -224,7 +249,7 @@ function ChildCard({ child }: { child: ParentTabChildSummary }) {
           </span>
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 }
 
@@ -253,8 +278,8 @@ function ChevronIcon({ open }: { open: boolean }) {
 }
 
 /**
- * Messages log, collapsed by default. No messages table exists yet, so the
- * open log says so; the unread badge counts unread rows (0 for now).
+ * Messages log, collapsed by default. Only rendered once messages exist
+ * (no messages table yet, so it stays hidden for now).
  */
 function MessagesLog({ messages }: { messages: readonly never[] }) {
   const [open, setOpen] = useState(false);
@@ -303,10 +328,12 @@ function MessagesLog({ messages }: { messages: readonly never[] }) {
 }
 
 function UnlockedView({
+  pass,
   data,
   loadError,
   onChanged,
 }: {
+  pass: string;
   data: ParentTabData | null;
   loadError: string | null;
   onChanged: () => void;
@@ -329,6 +356,39 @@ function UnlockedView({
   > | null>(null);
   const [settleBusy, setSettleBusy] = useState(false);
   const [settleError, setSettleError] = useState<string | null>(null);
+  /** A child's progress, opened from their card. */
+  const [progress, setProgress] = useState<
+    | { state: "loading"; username: string }
+    | { state: "ready"; view: LearnerDataView }
+    | { state: "error"; username: string; error: string }
+    | null
+  >(null);
+  const hasData = data !== null;
+
+  /** Coins tap from the header lands on #to-settle once the Hub loads. */
+  useEffect(() => {
+    if (!hasData || typeof window === "undefined") return;
+    if (window.location.hash !== "#to-settle") return;
+    const target = document.getElementById("to-settle");
+    target?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [hasData]);
+
+  const openProgress = useCallback(
+    async (child: ParentTabChildSummary) => {
+      setProgress({ state: "loading", username: child.username });
+      const result = await loadParentHubChildProgress(pass, child.userId);
+      if (!result.ok) {
+        setProgress({
+          state: "error",
+          username: child.username,
+          error: result.error,
+        });
+        return;
+      }
+      setProgress({ state: "ready", view: result.view });
+    },
+    [pass],
+  );
 
   if (loadError) {
     return (
@@ -342,6 +402,43 @@ function UnlockedView({
       <p className="mx-1 mt-4 font-sans text-sm text-[#1E3A5F]" role="status">
         Loading…
       </p>
+    );
+  }
+
+  if (progress) {
+    if (progress.state === "ready") {
+      return (
+        <div data-parent-hub-progress className="-mx-1 mt-2">
+          <LearnerDataScreen
+            view={progress.view}
+            mode="progress"
+            title={`${progress.view.username}'s progress`}
+            subtitle="What they've learned and done in the app."
+            onBack={() => setProgress(null)}
+            backLabel="Back to Parent Hub"
+          />
+        </div>
+      );
+    }
+    return (
+      <div data-parent-hub-progress className="mt-3">
+        <button
+          type="button"
+          data-learner-data-back
+          onClick={() => setProgress(null)}
+          className="font-heading text-sm font-bold text-[#0CC1E0]"
+        >
+          ← Back to Parent Hub
+        </button>
+        <p
+          className="mt-3 font-sans text-sm text-[#1E3A5F]"
+          role={progress.state === "error" ? "alert" : "status"}
+        >
+          {progress.state === "error"
+            ? progress.error
+            : `Loading ${progress.username}'s progress…`}
+        </p>
+      </div>
     );
   }
 
@@ -421,13 +518,23 @@ function UnlockedView({
         aria-label="Your children"
       >
         {data.children.map((child) => (
-          <ChildCard key={child.userId} child={child} />
+          <ChildCard
+            key={child.userId}
+            child={child}
+            onOpen={
+              child.status === "waiting"
+                ? undefined
+                : () => void openProgress(child)
+            }
+          />
         ))}
       </div>
 
       <section
+        id="to-settle"
         data-parent-tab-needs-ok
         className={cn(
+          "scroll-mt-4",
           "mt-3 rounded-2xl border-2 border-[#FFA503] bg-[#FFF8EA] px-3.5 pb-1 pt-[13px]",
           CARD_SHADOW,
         )}
@@ -521,7 +628,9 @@ function UnlockedView({
         )}
       </section>
 
-      <MessagesLog messages={data.messages} />
+      {data.messages.length > 0 ? (
+        <MessagesLog messages={data.messages} />
+      ) : null}
 
       <ModalShell
         isOpen={Boolean(settle)}

@@ -237,7 +237,7 @@ export function ParentPinGate({
           : "Enter your parent PIN";
   const body =
     phase === "set"
-      ? "Pick 4 numbers. You'll need them for the Parent tab and for every approval."
+      ? "Pick 4 numbers. You'll need them for the Parent Hub and for every approval."
       : phase === "confirm"
         ? "Type the same 4 numbers to confirm."
         : phase === "forgot"

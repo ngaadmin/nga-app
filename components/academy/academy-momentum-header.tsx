@@ -17,7 +17,7 @@ import {
 } from "@/lib/academy/lessons/coin-counter-flight";
 import { coinWord } from "@/lib/copy/coin-word";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
-import { FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
+import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
 
 type AcademyMomentumHeaderProps = {
   username: string;
@@ -171,7 +171,7 @@ export function AcademyMomentumHeader({
             className="shrink-0"
             icon={
               <TopBarRoundIcon>
-                <FlameIcon className="size-[18px]" />
+                <StreakIconA className="size-[18px]" />
               </TopBarRoundIcon>
             }
             value={dayStreak}
@@ -190,7 +190,7 @@ export function AcademyMomentumHeader({
               onClick={showCoins ? onXpClick : undefined}
               icon={
                 <TopBarRoundIcon>
-                  <GoldCoinIcon className="size-[18px]" />
+                  <CoinsIconA className="size-[18px]" />
                 </TopBarRoundIcon>
               }
               value={xp}

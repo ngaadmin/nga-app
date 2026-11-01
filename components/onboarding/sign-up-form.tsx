@@ -282,7 +282,7 @@ export function SignUpForm() {
         setParentMasterFlow(null);
         setParentConsentLoading(false);
         setErrors({
-          form: "A master account already exists for this email. Sign in to open your parent dashboard - this Pathfinder is already linked.",
+          form: "A master account already exists for this email. Sign in to open your Parent Hub - this Pathfinder is already linked.",
         });
         return;
       }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useId, useState } from "react";
 import { MedalsIntro } from "@/components/achievements/medals-intro";
 import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
 import { ProfileAvatarImage, ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
@@ -26,7 +27,11 @@ function SectionLabel({ id, children }: { id: string; children: string }) {
   );
 }
 
-/** Body of the profile panel opened from the top-bar avatar. */
+/**
+ * Body of the profile panel opened from the top-bar avatar. Every profile
+ * (child, parent, teacher, guest) uses this same template: who you are,
+ * your avatar, and your Achievements (medals), collapsed by default.
+ */
 export function ProfilePanel({
   displayName,
   trackLabel,
@@ -103,15 +108,54 @@ export function ProfilePanel({
         </p>
       </section>
 
-      <section aria-labelledby="medals-collection-title">
-        <div className="flex items-center gap-2">
-          <SectionLabel id="medals-collection-title">Medals</SectionLabel>
-          <MedalsIntro />
-        </div>
-        <div className="mt-2">
-          <SkillsCollectionPanel />
-        </div>
-      </section>
+      <AchievementsSection />
     </div>
+  );
+}
+
+/** Medals live in a collapsible Achievements section, closed by default. */
+function AchievementsSection() {
+  const [open, setOpen] = useState(false);
+  const bodyId = useId();
+  return (
+    <section
+      aria-labelledby="medals-collection-title"
+      data-profile-achievements={open ? "open" : "closed"}
+      className="rounded-2xl bg-[#F7FBFF] p-3"
+    >
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={bodyId}
+          data-profile-achievements-toggle
+          onClick={() => setOpen((value) => !value)}
+          className="flex min-h-11 flex-1 items-center justify-between gap-2 text-left"
+        >
+          <SectionLabel id="medals-collection-title">Achievements</SectionLabel>
+          <svg
+            viewBox="0 0 12 12"
+            fill="none"
+            aria-hidden
+            className={cn(
+              "size-4 shrink-0 text-[#0288A3] transition-transform",
+              open && "rotate-180",
+            )}
+          >
+            <path
+              d="M3 4.5 6 7.5 9 4.5"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <MedalsIntro />
+      </div>
+      <div id={bodyId} hidden={!open} className="mt-2">
+        {open ? <SkillsCollectionPanel /> : null}
+      </div>
+    </section>
   );
 }

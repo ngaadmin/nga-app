@@ -343,7 +343,7 @@ export const copyMatrix = {
         cashInRateHint: "Rate: {rate}",
         rateNotSetHint: "Rate: not set yet",
         xpAvailableTemplate: "{points} {unit} to cash in",
-        lifetimeXpTemplate: "Lifetime XP: {points}. Cashing in does not change this.",
+        lifetimeXpTemplate: "Lifetime coins: {points}. Cashing in does not change this.",
         noPointsError: "No coins to cash in yet. Keep learning!",
         claimingLabel: "Cashing in…",
         childPayoutReadoutTemplate: "{points} {unit} = {amount}",

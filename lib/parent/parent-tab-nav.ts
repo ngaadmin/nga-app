@@ -1,13 +1,16 @@
 import type { DashboardNavLinkItem } from "@/lib/dashboard/navigation";
-import { ParentTabIcon } from "@/lib/dashboard/icons";
+import { ParentHubTabIconA } from "@/lib/dashboard/tab-icons-a";
 import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
 
-/** Sixth bottom tab. Only added when the server says the parent is eligible. */
+/**
+ * Sixth bottom tab, labeled "Parent", that opens the Parent Hub. Only added
+ * when the server says the parent is eligible.
+ */
 export const PARENT_TAB_NAV_ITEM: DashboardNavLinkItem = {
   id: "parent",
   label: "Parent",
   href: PARENT_TAB_HREF,
-  Icon: ParentTabIcon,
+  Icon: ParentHubTabIconA,
   matchesPath: (pathname) =>
     pathname === PARENT_TAB_HREF || pathname.startsWith(`${PARENT_TAB_HREF}/`),
 };

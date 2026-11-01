@@ -4,12 +4,12 @@ import {
   isTestingVisibleNavId,
 } from "@/lib/dashboard/feature-flags";
 import {
-  AcademyIcon,
-  CommunityIcon,
-  LaunchpadIcon,
-  SettingsIcon,
-  VaultIcon,
-} from "@/lib/dashboard/icons";
+  AcademyTabIconA as AcademyIcon,
+  CommunityTabIconA as CommunityIcon,
+  LaunchpadTabIconA as LaunchpadIcon,
+  SettingsTabIconA as SettingsIcon,
+  VaultTabIconA as VaultIcon,
+} from "@/lib/dashboard/tab-icons-a";
 
 export type DashboardPillar =
   | "academy"

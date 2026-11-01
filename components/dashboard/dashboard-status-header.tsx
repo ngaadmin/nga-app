@@ -36,6 +36,8 @@ import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { zLayerStyle } from "@/lib/ui/layers";
+import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
+import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
 
 /**
  * Shell-level status strip. Avatar (profile and medals), username, streak,
@@ -49,6 +51,7 @@ export function DashboardStatusHeader() {
   const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
   const xpExchange = useXpExchangeGate();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
+  const parentHubAccess = useParentTabAccess();
   const [dayStreak, setDayStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
 
@@ -148,14 +151,27 @@ export function DashboardStatusHeader() {
     openProfile();
   }, [openProfile]);
 
+  const openSettingsFromSwitcher = useCallback(() => {
+    setSwitcherOpen(false);
+    router.push("/dashboard/settings");
+  }, [router]);
+  const openParentHubFromSwitcher = useCallback(() => {
+    setSwitcherOpen(false);
+    router.push(PARENT_TAB_HREF);
+  }, [router]);
+
   const openXpExchange = useCallback(() => {
     if (isParent) {
-      router.push("/dashboard/settings");
+      // Coins open the Parent Hub's "to settle" list. Without a Parent tab
+      // (no active child yet) they open Settings instead.
+      router.push(
+        parentHubAccess.eligible ? `${PARENT_TAB_HREF}#to-settle` : "/dashboard/settings",
+      );
       return;
     }
     if (!xpExchange.ready || xpExchange.blocked) return;
     setXpExchangeOpen(true);
-  }, [isParent, router, xpExchange.blocked, xpExchange.ready]);
+  }, [isParent, parentHubAccess.eligible, router, xpExchange.blocked, xpExchange.ready]);
 
   return (
     <>
@@ -206,6 +222,10 @@ export function DashboardStatusHeader() {
         currentAvatarId={avatarId}
         onClose={closeSwitcher}
         onViewProfile={viewProfileFromSwitcher}
+        onOpenSettings={openSettingsFromSwitcher}
+        onOpenParentHub={
+          isParent && parentHubAccess.eligible ? openParentHubFromSwitcher : undefined
+        }
       />
 
       <FullHeightPanel

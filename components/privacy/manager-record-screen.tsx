@@ -17,6 +17,8 @@ type ManagerRecordScreenProps = {
   kind: "parent" | "teacher";
   backHref: string;
   email: string;
+  /** Account creation date (ISO). Shown as "Joined" under the email. */
+  joined?: string | null;
   username?: string;
   classLabel?: string;
   studentCount?: number;
@@ -34,6 +36,7 @@ export function ManagerRecordScreen({
   kind,
   backHref,
   email,
+  joined = null,
   username,
   classLabel,
   studentCount = 0,
@@ -57,7 +60,7 @@ export function ManagerRecordScreen({
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
       <Link href={backHref} className="font-heading text-sm font-bold text-[#0CC1E0]">
-        ← {kind === "parent" ? "Parent Hub" : "Back to Settings"}
+        ← Back to Settings
       </Link>
       <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My account</h1>
       <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">
@@ -80,6 +83,11 @@ export function ManagerRecordScreen({
           <DetailRow icon={<UserIcon className="size-5" />} label="Username" value={username || ""} />
         ) : null}
         <DetailRow icon={<MailIcon className="size-5" />} label={kind === "parent" ? "Parent email" : "Email"} value={email} />
+        <DetailRow
+          icon={<span className="text-lg">📅</span>}
+          label="Joined"
+          value={formatJoined(joined)}
+        />
         {kind === "teacher" ? (
           <DetailRow
             icon={<span className="text-lg">🏫</span>}
@@ -191,4 +199,15 @@ function DetailRow({
       </span>
     </div>
   );
+}
+
+function formatJoined(iso: string | null): string {
+  if (!iso) return "Recently";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "Recently";
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }

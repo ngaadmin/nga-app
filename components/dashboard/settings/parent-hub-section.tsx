@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { cn } from "@/lib/utils/cn";
 import { ParentHubFeatureItem } from "@/components/dashboard/settings/parent-hub-feature-item";
@@ -15,6 +16,11 @@ import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view"
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
+/**
+ * Settings: the coins cash rate. For a parent it sits behind the parent PIN
+ * (checked on the server, asked each time the section opens). Paying out
+ * ("Mark as paid") lives only in the Parent Hub.
+ */
 export function ParentHubSection() {
   const featuresCopy = copyMatrix.dashboard.settings.parentHubFeatures;
   const { currencyCode } = useCurrency();
@@ -29,6 +35,8 @@ export function ParentHubSection() {
       ? conversionRateLabel
       : featuresCopy.pointsConversionNotSet;
   const [expanded, setExpanded] = useState(false);
+  /** Parent PIN pass for this open section only. Dropped when it closes. */
+  const [pinPass, setPinPass] = useState<string | null>(null);
 
   if (!isParentSettingsView) {
     return null;
@@ -44,9 +52,23 @@ export function ParentHubSection() {
         title={featuresCopy.pointsConversion}
         summary={summary}
         isExpanded={expanded}
-        onToggle={() => setExpanded((current) => !current)}
+        onToggle={() => {
+          setPinPass(null);
+          setExpanded((current) => !current);
+        }}
       >
-        <ParentConversionRatePanel isEditable />
+        {isParentMaster && !pinPass ? (
+          <div data-cash-rate-pin-gate>
+            <ParentPinGate
+              parentName=""
+              className="mx-0 mt-1 shadow-none ring-1 ring-[#E3EAF5]"
+              enterBody="Enter your parent PIN to see or change the cash rate."
+              onUnlocked={(pass) => setPinPass(pass)}
+            />
+          </div>
+        ) : (
+          <ParentConversionRatePanel isEditable parentPinPass={pinPass} />
+        )}
       </ParentHubFeatureItem>
     </section>
   );

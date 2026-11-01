@@ -683,7 +683,7 @@ export function buildPathfinderParentLinkedEmail(
     ? emailPlain(data.masterUsername).trim()
     : undefined;
 
-  const subject = `${username} was added to your NextGenAchiever$ parent dashboard`;
+  const subject = `${username} was added to your NextGenAchiever$ Parent Hub`;
   const preheader = "A new Pathfinder profile is linked to your parent account.";
   const header = "New profile linked";
 

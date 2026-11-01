@@ -36,10 +36,10 @@ test("parent PIN opens the child record, download strips secrets, delete lists w
 
   await page.getByLabel("Parent PIN").fill("2580");
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByRole("heading", { name: "My child's data" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your child's data and privacy" })).toBeVisible();
   await expect(page.getByText("sam.parent@example.com")).toBeVisible();
-  await expect(page.getByText("480 coins")).toBeVisible();
-  await expect(page.getByText("1,250 XP")).toBeVisible();
+  // Progress (coins, lessons) now lives in the Parent Hub, not here.
+  await expect(page.locator("[data-learner-data-progress]")).toHaveCount(0);
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download data" }).click();
@@ -61,7 +61,7 @@ test("parent PIN opens the child record, download strips secrets, delete lists w
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByRole("heading", { name: "Delete delta4's account?" })).toBeVisible();
   await expect(dialog.getByText("Profile", { exact: true })).toBeVisible();
-  await expect(dialog.getByText("Lifetime XP", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Lifetime coins", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Vault jars and goals")).toBeVisible();
   await expect(dialog.getByText("The recent activity history")).toBeVisible();
   const confirm = dialog.getByRole("button", { name: "Delete delta4's account" });
@@ -102,7 +102,7 @@ test("guest clear removes device progress and keeps the guest session", async ({
   await expect(dialog.getByRole("heading", { name: "Clear this device's progress?" })).toBeVisible();
   await expect(dialog.getByText("Lessons", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Coins", { exact: true })).toBeVisible();
-  await expect(dialog.getByText("Lifetime XP", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Lifetime coins", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Medals", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Jars, amounts and savings goals")).toBeVisible();
   const confirm = dialog.getByRole("button", { name: "Clear progress" });

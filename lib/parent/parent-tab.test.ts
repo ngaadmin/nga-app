@@ -43,14 +43,32 @@ describe("isParentTabEligible", () => {
     ).toBe(false);
   });
 
-  it("hides it when no linked child is active yet", () => {
+  it("shows it while a linked child waits for the parent's OK", () => {
     expect(
       isParentTabEligible({
         accountRole: "parent_master",
         linkedChildren: [
           { accountRole: "child", accountStatus: "pending_consent" },
-          { accountRole: "child", accountStatus: "declined" },
         ],
+      }),
+    ).toBe(true);
+  });
+
+  it("shows it when a consent request is waiting, even before linking", () => {
+    expect(
+      isParentTabEligible({
+        accountRole: "parent_master",
+        linkedChildren: [],
+        pendingApprovals: 1,
+      }),
+    ).toBe(true);
+  });
+
+  it("hides it when the only linked child was declined", () => {
+    expect(
+      isParentTabEligible({
+        accountRole: "parent_master",
+        linkedChildren: [{ accountRole: "child", accountStatus: "declined" }],
       }),
     ).toBe(false);
   });

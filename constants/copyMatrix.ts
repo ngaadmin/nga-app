@@ -60,6 +60,18 @@ export const copyMatrix = {
       body: "You can follow their progress in your parent account.",
       logIn: "Log in",
     },
+    /** Draft copy for Cath's review (30 Oct 2026). Shared by every decline screen. */
+    parentDecline: {
+      confirmTitle: "Are you sure?",
+      confirmBody:
+        "We'll delete all the data linked to your child's profile. This can't be undone.",
+      confirmAction: "Yes, decline and delete",
+      confirmBusy: "Declining…",
+      cancelAction: "Go back",
+      declinedTitle: "Request declined",
+      declinedBody: "We'll delete this account's details.",
+      declinedClose: "Close",
+    },
     parentFirstWelcome: {
       heading: "Your parent account is ready",
       intro: "Here is what you can do from here:",
@@ -151,9 +163,6 @@ export const copyMatrix = {
           "You're in a temporary session. Create an account to keep this progress.",
         guestCreateParent: "Create parent account",
         guestSaveLearner: "Save learner progress",
-        pendingHeading: "Waiting to link",
-        pendingHint:
-          "These learners asked for approval with your email. Link them here, or use the email approval link.",
         linkingProfile: "Approving…",
         deleteChild: "Delete account",
         deleteChildNamed: "Delete {username} account",

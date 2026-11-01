@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { lookupConsentRequestByToken } from "@/lib/onboarding/lookup-consent-request";
+import { deleteDeclinedLearner } from "@/lib/privacy/delete-declined-learner";
 import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 import {
   findAuthUserIdByEmail,
@@ -16,6 +17,8 @@ import {
   isReservedGuestUsername,
   RESERVED_GUEST_USERNAME_ERROR,
 } from "@/lib/onboarding/reserved-guest-username";
+import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
+import { checkTermsAcceptance } from "@/lib/legal/terms-consent";
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -45,7 +48,16 @@ export type ApproveConsentResult =
  */
 export async function approveConsentRequest(
   token: string,
+  options: { termsAccepted?: boolean } = {},
 ): Promise<ApproveConsentResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: options.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const lookup = await lookupConsentRequestByToken(token);
   if (lookup.status === "expired") {
     return {
@@ -77,6 +89,7 @@ export async function approveConsentRequest(
     parentId: master.id,
     parentUsername: master.username,
     parentEmail: lookup.request.parentEmail,
+    termsAccepted: options.termsAccepted,
   });
 }
 
@@ -85,6 +98,8 @@ export type CreateParentMasterAndApproveInput = {
   username: string;
   password: string;
   marketingOptIn?: boolean;
+  /** Terms tick box. Must be `true`. */
+  termsAccepted?: boolean;
 };
 
 /**
@@ -94,6 +109,14 @@ export type CreateParentMasterAndApproveInput = {
 export async function createParentMasterAndApprove(
   input: CreateParentMasterAndApproveInput,
 ): Promise<ApproveConsentResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const username = input.username.trim();
   if (!username || !USERNAME_PATTERN.test(username)) {
     return {
@@ -136,6 +159,7 @@ export async function createParentMasterAndApprove(
       parentId: existingMaster.id,
       parentUsername: existingMaster.username,
       parentEmail,
+      termsAccepted: input.termsAccepted,
     });
   }
 
@@ -209,6 +233,7 @@ export async function createParentMasterAndApprove(
     parentId,
     parentUsername: username,
     parentEmail,
+    termsAccepted: input.termsAccepted,
   });
 
   if (!approved.success) {
@@ -366,7 +391,16 @@ export async function listPendingConsentRequestsForParent(): Promise<
  */
 async function approveConsentRequestInAppUngated(
   requestId: string,
+  options: { termsAccepted?: boolean } = {},
 ): Promise<ApproveConsentResult> {
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: options.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const trimmedId = requestId.trim();
   if (!trimmedId) {
     return { success: false, error: "This approval request is missing." };
@@ -441,6 +475,7 @@ async function approveConsentRequestInAppUngated(
     parentId: user.id,
     parentUsername: profile.username,
     parentEmail: parentEmail || userEmail,
+    termsAccepted: options.termsAccepted,
   });
 }
 
@@ -452,7 +487,18 @@ async function completeConsentApproval(input: {
   parentId: string;
   parentUsername: string;
   parentEmail: string;
+  /** The approving parent ticked the Terms box. Must be `true`. */
+  termsAccepted: boolean | undefined;
 }): Promise<ApproveConsentResult> {
+  // Every approval route ends here, so the Terms rule is enforced here too.
+  const terms = checkTermsAcceptance({
+    audience: "can_agree",
+    termsAccepted: input.termsAccepted,
+  });
+  if (!terms.ok) {
+    return { success: false, error: terms.error };
+  }
+
   const admin = createAdminClient();
   const approvedAt = new Date().toISOString();
 
@@ -508,6 +554,12 @@ async function completeConsentApproval(input: {
       success: false,
       error: "This approval link cannot activate this profile.",
     };
+  }
+
+  // Record the parent's Terms agreement before anything is approved.
+  const recorded = await recordTermsAcceptance(admin, input.parentId, approvedAt);
+  if (!recorded.ok) {
+    return { success: false, error: recorded.error };
   }
 
   if (!alreadyActive) {
@@ -590,13 +642,23 @@ function isUniqueViolation(error: { code?: string; message?: string }): boolean 
 }
 
 export type DeclineConsentResult =
-  | { success: true; childUsername: string }
+  | {
+      success: true;
+      childUsername: string;
+      /**
+       * True when the learner's records were deleted straight away. False
+       * when that step failed: the profile stays declined and the 30-day
+       * unapproved-account job removes it later.
+       */
+      deleted: boolean;
+    }
   | { success: false; error: string };
 
 /**
- * Parent declines a pending learner. The profile stays, marked declined, and
- * the existing 30-day unapproved-account job removes it later. Nothing is
- * deleted here.
+ * Parent declines a pending learner, after confirming on screen. The profile
+ * is marked declined, then deleted with the same steps the 30-day
+ * unapproved-account job uses (only that learner's own records). If the
+ * delete step fails, the 30-day job still removes it.
  */
 export async function declineConsentRequest(token: string): Promise<DeclineConsentResult> {
   const lookup = await lookupConsentRequestByToken(token);
@@ -678,6 +740,22 @@ async function markChildDeclined(input: {
   childId: string;
   childUsername: string;
 }): Promise<DeclineConsentResult> {
+  const marked = await markChildDeclinedOnly(input);
+  if (!marked.success) return marked;
+  const deletion = await deleteDeclinedLearner(input.childId);
+  if (!deletion.deleted) {
+    console.error("[decline] immediate delete did not run", {
+      reason: deletion.reason,
+    });
+  }
+  return { ...marked, deleted: deletion.deleted };
+}
+
+async function markChildDeclinedOnly(input: {
+  requestId: string;
+  childId: string;
+  childUsername: string;
+}): Promise<{ success: true; childUsername: string } | { success: false; error: string }> {
   const admin = createAdminClient();
   const { data: child } = await admin
     .from("profiles")
@@ -741,11 +819,12 @@ async function parentTabGateOpen(pass: string): Promise<boolean> {
 export async function approveConsentRequestInApp(
   requestId: string,
   pass: string,
+  options: { termsAccepted?: boolean } = {},
 ): Promise<ApproveConsentResult> {
   if (!(await parentTabGateOpen(pass))) {
     return { success: false, error: PARENT_TAB_LOCKED };
   }
-  return approveConsentRequestInAppUngated(requestId);
+  return approveConsentRequestInAppUngated(requestId, options);
 }
 
 /** In-app decline. Same parent PIN gate as approve. */
@@ -763,8 +842,9 @@ export async function declineConsentRequestInApp(
 export async function approveConsentRequestFromParentTab(
   requestId: string,
   pass: string,
+  options: { termsAccepted?: boolean } = {},
 ): Promise<ApproveConsentResult> {
-  return approveConsentRequestInApp(requestId, pass);
+  return approveConsentRequestInApp(requestId, pass, options);
 }
 
 /** Parent tab decline: the same PIN-gated decline. */

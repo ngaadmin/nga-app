@@ -1,19 +1,21 @@
+import { MASTERY_COHORT, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { displayUsernameOrEmpty } from "@/lib/onboarding/placeholder-username";
+
 export type OnboardingEmailType =
   | "EXPLORER_PARENT"
-  | "EXPLORER_PARENT_RESEND"
   | "PATHFINDER_PARENT"
   | "PATHFINDER_PARENT_LINKED"
   | "PATHFINDER_WELCOME"
   | "MAVERICK_WELCOME"
   | "PARENT_WELCOME"
   | "USERNAME_RECOVERY"
-  | "FRIEND_INVITE"
   | "CREDENTIAL_RECOVERY"
   | "ACCOUNT_DELETED_MASTER"
   | "ACCOUNT_DELETED_CHILD"
   | "INACTIVITY_WARNING"
   | "TEACHER_CLASS_CONFIRM"
-  | "PARENT_PIN_RESET";
+  | "PARENT_PIN_RESET"
+  | "LEARNER_WELCOME";
 
 export type ExplorerParentEmailData = {
   username: string;
@@ -24,9 +26,6 @@ export type ExplorerParentEmailData = {
    */
   track?: "explorer" | "pathfinder" | "maverick";
 };
-
-/** Same payload shape as the initial Explorer parent approval email. */
-export type ExplorerParentResendEmailData = ExplorerParentEmailData;
 
 /** FYI / claim-dashboard email when no master account exists yet. */
 export type PathfinderParentEmailData = {
@@ -41,11 +40,32 @@ export type PathfinderParentLinkedEmailData = {
   masterUsername?: string;
 };
 
-/** Welcome email to the Pathfinder learner after signup. */
+/** Learner tracks that get a welcome email (Explorers never do). */
+export type LearnerWelcomeCohort = Exclude<MasteryCohort, "explorer">;
+
+export const LEARNER_WELCOME_COHORTS: readonly LearnerWelcomeCohort[] = [
+  "pathfinder",
+  "maverick",
+];
+
+/** Welcome email to a Pathfinder or Maverick learner after signup. */
+export type LearnerWelcomeEmailData = {
+  username: string;
+  cohort: LearnerWelcomeCohort;
+};
+
+/**
+ * Alias payload for `PATHFINDER_WELCOME`. Routes to
+ * {@link buildLearnerWelcomeEmail} with cohort "pathfinder".
+ */
 export type PathfinderWelcomeEmailData = {
   username: string;
 };
 
+/**
+ * Alias payload for `MAVERICK_WELCOME`. Routes to
+ * {@link buildLearnerWelcomeEmail} with cohort "maverick".
+ */
 export type MaverickWelcomeEmailData = {
   username: string;
 };
@@ -57,10 +77,7 @@ export type ParentWelcomeEmailData = {
 
 export type UsernameRecoveryEmailData = {
   username: string;
-  cohort?: "explorer" | "pathfinder" | "maverick";
-  /** Parent master username (Explorer recovery). */
-  masterUsername?: string;
-  /** Linked Explorer usernames (Explorer recovery). */
+  /** Learner usernames linked to a parent email. */
   linkedUsernames?: string[];
 };
 
@@ -99,25 +116,21 @@ export type ParentPinResetEmailData = {
   token: string;
 };
 
-/** v1 friend invite: landing URL only, no codes or personalization. */
-export type FriendInviteEmailData = Record<string, never>;
-
 export type OnboardingEmailDataMap = {
   EXPLORER_PARENT: ExplorerParentEmailData;
-  EXPLORER_PARENT_RESEND: ExplorerParentResendEmailData;
   PATHFINDER_PARENT: PathfinderParentEmailData;
   PATHFINDER_PARENT_LINKED: PathfinderParentLinkedEmailData;
   PATHFINDER_WELCOME: PathfinderWelcomeEmailData;
   MAVERICK_WELCOME: MaverickWelcomeEmailData;
   PARENT_WELCOME: ParentWelcomeEmailData;
   USERNAME_RECOVERY: UsernameRecoveryEmailData;
-  FRIEND_INVITE: FriendInviteEmailData;
   CREDENTIAL_RECOVERY: CredentialRecoveryEmailData;
   ACCOUNT_DELETED_MASTER: AccountDeletedMasterEmailData;
   ACCOUNT_DELETED_CHILD: AccountDeletedChildEmailData;
   INACTIVITY_WARNING: InactivityWarningEmailData;
   TEACHER_CLASS_CONFIRM: TeacherClassConfirmEmailData;
   PARENT_PIN_RESET: ParentPinResetEmailData;
+  LEARNER_WELCOME: LearnerWelcomeEmailData;
 };
 
 export type BuiltEmail = {
@@ -433,7 +446,9 @@ export function buildExplorerParentEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const safeName = escapeHtml(username);
-  const trackPhrase = "the Explorer track, for kids aged 10-13";
+  // No age band: the track is the learner's choice, so a 14- or 15-year-old
+  // can be an Explorer. The birth year is not stored, so the real age is unknown.
+  const trackPhrase = "the Explorer track";
   const trackSentence = `Your child has chosen ${trackPhrase}. And to make their profile official, we need a parent/guardian's approval.`;
 
   const subject = `Your child ${username} wants to build money skills - approval needed`;
@@ -509,6 +524,9 @@ export function buildExplorerParentEmail(
 /**
  * Under-16 Pathfinder and Maverick parent approval email.
  * Explorer keeps the email above. Copy locked by Cath 21 Oct 2026.
+ * "Your teen" became "your child" (draft, 30 Oct 2026): the track is the
+ * learner's choice and the birth year is not stored, so an under-13 can be on
+ * this track. The copy must not assume an age.
  */
 function buildTeenParentApprovalEmail(
   data: ExplorerParentEmailData,
@@ -519,22 +537,22 @@ function buildTeenParentApprovalEmail(
   const base = resolveAppUrl(appUrl);
   const approveUrl = `${base}/onboarding/sign-up?role=parent_master&token=${encodeURIComponent(data.token)}`;
   const privacyPolicyUrl = "https://nextgenachievers.com/privacy";
-  const subject = "Your teen wants to start NextGenAchiever$";
-  const preheader = "Please approve your teen's account";
-  const header = "Please approve your teen's account";
+  const subject = "Your child wants to start NextGenAchiever$";
+  const preheader = "Please approve your child's account";
+  const header = "Please approve your child's account";
   const footer =
     "Privacy policy: nextgenachievers.com/privacy · Next Gen Achievers Pty Ltd, ABN 49 685 561 344, Queensland, Australia";
 
   const text = [
     "Hi,",
     "",
-    `Your teen has just signed up to NextGenAchiever$ with the username ${username}. Because your teen is under 16, the account stays on hold until a parent approves it.`,
+    `Your child has just signed up to NextGenAchiever$ with the username ${username}. Because your child is under 16, the account stays on hold until a parent approves it.`,
     "",
-    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
+    "NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your child learns how money works, puts it into practice and manages it with confidence, building money habits for life.",
     "",
     `Approve the account: ${approveUrl}`,
     "",
-    "Once you approve, you'll be your teen's account manager, and you can set a parent PIN in Preferences.",
+    "Once you approve, you'll be your child's account manager, and you can set a parent PIN in Preferences.",
     "",
     "Didn't expect this email? Just ignore it. This link only works for 24 hours.",
     "",
@@ -555,14 +573,14 @@ function buildTeenParentApprovalEmail(
     bodyInner: `
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 16px;font-size:16px;">
-        Your teen has just signed up to NextGenAchiever$ with the username ${safeName}. Because your teen is under 16, the account stays on hold until a parent approves it.
+        Your child has just signed up to NextGenAchiever$ with the username ${safeName}. Because your child is under 16, the account stays on hold until a parent approves it.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
-        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your teen learns how money works, puts it into practice and manages it with confidence, building money habits for life.
+        NextGenAchiever$ is the app where kids learn money skills by playing, through short game-based lessons and practical challenges. Your child learns how money works, puts it into practice and manages it with confidence, building money habits for life.
       </p>
       ${ctaButton("Approve the account", approveUrl, "#FFC93C")}
       <p style="margin:0 0 16px;font-size:16px;">
-        Once you approve, you&#39;ll be your teen&#39;s account manager, and you can set a parent PIN in Preferences.
+        Once you approve, you&#39;ll be your child&#39;s account manager, and you can set a parent PIN in Preferences.
       </p>
       <p style="margin:0 0 16px;font-size:16px;">
         Didn&#39;t expect this email? Just ignore it. This link only works for 24 hours.
@@ -711,80 +729,27 @@ export function buildPathfinderParentLinkedEmail(
   return { subject, preheader, html, text };
 }
 
-export function buildPathfinderWelcomeEmail(
-  data: PathfinderWelcomeEmailData,
+/**
+ * Welcome email to a Pathfinder or Maverick learner after signup.
+ * One template for both tracks. `{cohortName}` comes from the track label in
+ * `MASTERY_COHORT` (pathfinder -> "Pathfinder", maverick -> "Maverick") and is
+ * used in the preheader and as the username fallback. Output is byte-identical
+ * to the former buildPathfinderWelcomeEmail / buildMaverickWelcomeEmail.
+ */
+export function buildLearnerWelcomeEmail(
+  data: LearnerWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = emailPlain(data.username).trim() || "Pathfinder";
+  if (!LEARNER_WELCOME_COHORTS.includes(data.cohort)) {
+    throw new Error(`Unsupported learner welcome cohort: ${String(data.cohort)}`);
+  }
+  const cohortName = MASTERY_COHORT[data.cohort].label;
+  const username = emailPlain(data.username).trim() || cohortName;
   const base = resolveAppUrl(appUrl);
   const academyUrl = `${base}/dashboard/academy`;
 
   const subject = `Welcome to NextGenAchiever$, ${username}`;
-  const preheader = "Your Pathfinder account is ready. Jump into Academy.";
-  const header = "You're in";
-
-  const text = [
-    `Hi ${username},`,
-    "",
-    "Congratulations! You're officially on your way to financial independence.",
-    "",
-    "Did you know? Teens who build money skills early can end up $100,000s ahead of peers who start later.",
-    "",
-    "Get smart with money in the Academy, start your own business in days with Launchpad, or beat your friends in the monthly challenges.",
-    "",
-    "And yes, you can even negotiate with your parents to get paid for the points you earn in the app.",
-    "",
-    "Let's go!",
-    "",
-    `Launch Academy: ${academyUrl}`,
-    "",
-    "The Team at NextGenAchiever$",
-  ].join("\n");
-
-  const html = wrapHtml({
-    header,
-    preheader,
-    bodyInner: `
-      <p style="margin:0 0 16px;font-size:16px;">
-        Hi ${escapeHtml(username)},
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        Congratulations! You&apos;re officially on your way to financial independence.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        Did you know? Teens who build money skills early can end up $100,000s ahead of
-        peers who start later.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        Get smart with money in the Academy, start your own business in days with Launchpad,
-        or beat your friends in the monthly challenges.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        And yes, you can even negotiate with your parents to get paid for the points you
-        earn in the app.
-      </p>
-      <p style="margin:0 0 16px;font-size:16px;">Let&apos;s go!</p>
-      ${ctaButton("Launch Academy", academyUrl)}
-      ${pennyIllustration()}
-      <p style="margin:24px 0 0;font-size:16px;">
-        The Team at NextGenAchiever$
-      </p>
-    `,
-  });
-
-  return { subject, preheader, html, text };
-}
-
-export function buildMaverickWelcomeEmail(
-  data: MaverickWelcomeEmailData,
-  appUrl?: string,
-): BuiltEmail {
-  const username = emailPlain(data.username).trim() || "Maverick";
-  const base = resolveAppUrl(appUrl);
-  const academyUrl = `${base}/dashboard/academy`;
-
-  const subject = `Welcome to NextGenAchiever$, ${username}`;
-  const preheader = "Your Maverick account is ready. Jump into Academy.";
+  const preheader = `Your ${cohortName} account is ready. Jump into Academy.`;
   const header = "You're in";
 
   const text = [
@@ -843,7 +808,8 @@ export function buildParentWelcomeEmail(
   data: ParentWelcomeEmailData,
   appUrl?: string,
 ): BuiltEmail {
-  const username = emailPlain(data.username).trim();
+  // Never greet with an internal `p…` / `u…` stub. Fall back to "Hi there,".
+  const username = displayUsernameOrEmpty(emailPlain(data.username));
   const greeting = username ? `Hi ${username},` : "Hi there,";
   const base = resolveAppUrl(appUrl);
   const accountUrl = `${base}/dashboard/settings/account`;
@@ -943,75 +909,6 @@ export function buildUsernameRecoveryEmail(
   }
 
   const username = emailPlain(data.username).trim() || "learner";
-  const isExplorer = data.cohort === "explorer";
-
-  if (isExplorer) {
-    const masterUsername = data.masterUsername
-      ? emailPlain(data.masterUsername).trim()
-      : "";
-    const linked = (data.linkedUsernames ?? [])
-      .map((name) => emailPlain(name).trim())
-      .filter(Boolean);
-    // Fallback when callers omit household fields: treat `username` as an Explorer.
-    const explorerNames =
-      linked.length > 0 ? linked : masterUsername ? [] : [username];
-
-    const subject = "Your NextGenAchiever$ usernames";
-    const preheader = "Your Master and Explorer usernames are inside";
-
-    const textLines = [
-      "Here are the usernames linked to this email:",
-      "",
-      masterUsername ? `Master: ${masterUsername}` : "Master: (not set up yet)",
-      "Explorer accounts:",
-      ...(explorerNames.length > 0
-        ? explorerNames.map((name) => `- ${name}`)
-        : ["- (none on file)"]),
-      "",
-      `Log back in: ${signInUrl}`,
-      "",
-      "The Team at NextGenAchiever$",
-    ];
-
-    const linkedHtml =
-      explorerNames.length > 0
-        ? explorerNames
-            .map(
-              (name) =>
-                `<li style="margin:0 0 6px;font-size:16px;font-weight:700;color:#031F82;">${escapeHtml(name)}</li>`,
-            )
-            .join("")
-        : `<li style="margin:0 0 6px;font-size:16px;color:#5B6B7C;">(none on file)</li>`;
-
-    const html = wrapHtml({
-      header: subject,
-      preheader,
-      bodyInner: `
-        <p style="margin:0 0 16px;font-size:16px;">
-          Here are the usernames linked to this email:
-        </p>
-        <p style="margin:0 0 8px;font-size:16px;">
-          <strong>Master:</strong>
-          <span style="font-size:18px;font-weight:700;color:#031F82;">
-            ${escapeHtml(masterUsername || "(not set up yet)")}
-          </span>
-        </p>
-        <p style="margin:0 0 8px;font-size:16px;">
-          <strong>Explorer accounts:</strong>
-        </p>
-        <ul style="margin:0 0 16px;padding-left:20px;">
-          ${linkedHtml}
-        </ul>
-        ${ctaButton("Log Back In", signInUrl)}
-        ${pennyIllustration()}
-        <p style="margin:24px 0 0;font-size:16px;">
-          The Team at NextGenAchiever$
-        </p>
-      `,
-    });
-
-    return { subject, html, text: textLines.join("\n"), preheader };
-  }
 
   const subject = "Your NextGenAchiever$ username";
   const preheader = `Username reminder for ${username}`;
@@ -1262,52 +1159,6 @@ export function buildInactivityWarningEmail(
   return { subject, preheader, html, text };
 }
 
-export function buildFriendInviteEmail(
-  _data: FriendInviteEmailData,
-  _appUrl?: string,
-): BuiltEmail {
-  const landingUrl = `${getDefaultAppUrl()}/`;
-  const subject = "Your friends are inviting you to NextGenAchiever$";
-  const preheader = "What rich families teach early, but schools don't";
-  const header = "They're already building money skills";
-
-  const text = [
-    "Hi there,",
-    "",
-    "A friend invited you in.",
-    "",
-    "This is where kids and teens learn the money skills most people never get taught, practice them through games, and can start their first small business if they're keen.",
-    "",
-    `Try the free app: ${landingUrl}`,
-    "",
-    "The Team at NextGenAchiever$",
-    "",
-    "NextGenAchiever$ is a learning app with games. No real money involved.",
-  ].join("\n");
-
-  const html = wrapHtml({
-    header,
-    preheader,
-    footer: "NextGenAchiever$ is a learning app with games. No real money involved.",
-    bodyInner: `
-      <p style="margin:0 0 16px;font-size:16px;">Hi there,</p>
-      <p style="margin:0 0 16px;font-size:16px;">A friend invited you in.</p>
-      <p style="margin:0 0 16px;font-size:16px;">
-        This is where kids and teens learn the money skills most people never get
-        taught, practice them through games, and can start their first small
-        business if they&apos;re keen.
-      </p>
-      ${ctaButton("Try the free app", landingUrl)}
-      ${pennyIllustration()}
-      <p style="margin:24px 0 0;font-size:16px;">
-        The Team at NextGenAchiever$
-      </p>
-    `,
-  });
-
-  return { subject, preheader, html, text };
-}
-
 export function buildTeacherClassConfirmEmail(
   data: TeacherClassConfirmEmailData,
   appUrl?: string,
@@ -1380,7 +1231,6 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
 ): BuiltEmail {
   switch (type) {
     case "EXPLORER_PARENT":
-    case "EXPLORER_PARENT_RESEND":
       return buildExplorerParentEmail(
         data as ExplorerParentEmailData,
         appUrl,
@@ -1396,13 +1246,13 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
         appUrl,
       );
     case "PATHFINDER_WELCOME":
-      return buildPathfinderWelcomeEmail(
-        data as PathfinderWelcomeEmailData,
+      return buildLearnerWelcomeEmail(
+        { ...(data as PathfinderWelcomeEmailData), cohort: "pathfinder" },
         appUrl,
       );
     case "MAVERICK_WELCOME":
-      return buildMaverickWelcomeEmail(
-        data as MaverickWelcomeEmailData,
+      return buildLearnerWelcomeEmail(
+        { ...(data as MaverickWelcomeEmailData), cohort: "maverick" },
         appUrl,
       );
     case "PARENT_WELCOME":
@@ -1413,11 +1263,6 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "USERNAME_RECOVERY":
       return buildUsernameRecoveryEmail(
         data as UsernameRecoveryEmailData,
-        appUrl,
-      );
-    case "FRIEND_INVITE":
-      return buildFriendInviteEmail(
-        data as FriendInviteEmailData,
         appUrl,
       );
     case "CREDENTIAL_RECOVERY":
@@ -1448,6 +1293,11 @@ export function buildOnboardingEmail<T extends OnboardingEmailType>(
     case "PARENT_PIN_RESET":
       return buildParentPinResetEmail(
         data as ParentPinResetEmailData,
+        appUrl,
+      );
+    case "LEARNER_WELCOME":
+      return buildLearnerWelcomeEmail(
+        data as LearnerWelcomeEmailData,
         appUrl,
       );
     default: {

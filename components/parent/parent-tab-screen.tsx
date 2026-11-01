@@ -24,6 +24,7 @@ import {
 import { convertToRegisteredProfile } from "@/lib/onboarding/guest-session";
 import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
+import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
 import {
   loadParentTabData,
@@ -319,6 +320,8 @@ function UnlockedView({
   const [reviewError, setReviewError] = useState<string | null>(null);
   /** Approve/decline tapped: the PIN is asked again for this one action. */
   const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
+  /** Parent ticks the Terms box before approving a child in the app. */
+  const [reviewTermsAccepted, setReviewTermsAccepted] = useState(false);
   /** To settle: the parent confirms they paid this amount outside the app. */
   const [settle, setSettle] = useState<Extract<
     ParentTabOkItem,
@@ -360,6 +363,7 @@ function UnlockedView({
         const result = await approveConsentRequestFromParentTab(
           review.requestId,
           actionPass,
+          { termsAccepted: reviewTermsAccepted },
         );
         if (!result.success) {
           setReviewError(result.error);
@@ -491,6 +495,7 @@ function UnlockedView({
                   data-parent-ok-pill
                   onClick={() => {
                     setReviewError(null);
+                    setReviewTermsAccepted(false);
                     setReview(item);
                   }}
                   className="parent-ok-pill"
@@ -638,11 +643,19 @@ function UnlockedView({
               </div>
             ) : (
               <div className="mt-4 flex flex-col gap-2">
+                <TermsConsentCheckbox
+                  id="parent-tab-approve-terms-consent"
+                  className="mb-1"
+                  checked={reviewTermsAccepted}
+                  onChange={setReviewTermsAccepted}
+                  disabled={busy}
+                />
                 <button
                   type="button"
                   data-parent-tab-approve
-                  disabled={busy}
+                  disabled={busy || !reviewTermsAccepted}
                   onClick={() => {
+                    if (!reviewTermsAccepted) return;
                     setReviewError(null);
                     setDecision("approve");
                   }}

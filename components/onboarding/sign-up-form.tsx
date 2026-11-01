@@ -6,8 +6,14 @@ import Link from "next/link";
 import { LearnerBirthYearField, learnerFieldClass } from "@/components/onboarding/learner-birth-year-field";
 import { LEARNER_SIGNUP_BAR_CLASS } from "@/components/onboarding/learner-signup-bar";
 import { LearnerTrackCards } from "@/components/onboarding/learner-track-cards";
+import { LearnerTermsArea } from "@/components/onboarding/learner-terms-area";
+import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import { Button, ButtonLink } from "@/components/ui/button";
+import {
+  DeclinedNoticeDialog,
+  ParentDeclineConfirmDialog,
+} from "@/components/onboarding/parent-decline-dialogs";
 import { CreateParentProfilePanel } from "@/components/dashboard/settings/create-parent-profile-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import {
@@ -33,6 +39,7 @@ import {
   DASHBOARD_ACADEMY_PATH,
   DASHBOARD_SETTINGS_ACCOUNT_PATH,
   isGuestSession,
+  ONBOARDING_ENTRY_PATH,
   ONBOARDING_PARENT_CONSENT_PATH,
   ONBOARDING_SIGN_IN_PATH,
   ONBOARDING_SIGN_UP_LEARNER_PATH,
@@ -58,9 +65,17 @@ import {
 } from "@/lib/onboarding/parent-consent-pending";
 import { parentLinkResultHeading } from "@/lib/onboarding/parent-link-result";
 import {
+  useParentDeclineFlow,
+  type ParentDeclineOutcome,
+} from "@/lib/onboarding/use-parent-decline-flow";
+import {
   findActiveParentMasterByEmail,
   findRegisteredAccountByUsername,
 } from "@/lib/onboarding/registered-accounts";
+import {
+  resolveSignupFailureMessage,
+  USERNAME_TAKEN_ERROR,
+} from "@/lib/onboarding/signup-failure-message";
 import { LAYER_CLASS } from "@/lib/ui/layers";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
@@ -71,50 +86,6 @@ const INVALID_EMAIL_ERROR =
   "Please enter a valid email address (e.g. name@example.com).";
 const SAME_EMAIL_ERROR =
   "Please enter a parent or guardian's email address that is different from your own.";
-const USERNAME_TAKEN_ERROR =
-  "That username is already taken. Try adding a favorite number!";
-
-function resolveSignupFailureMessage(error: unknown, isExplorer: boolean): string {
-  const message = error instanceof Error ? error.message.trim() : "";
-
-  if (message) {
-    if (/username is already taken/i.test(message)) {
-      return USERNAME_TAKEN_ERROR;
-    }
-    if (/too many approval|too many email|try again shortly|wait about a minute/i.test(message)) {
-      return message;
-    }
-    if (
-      /parent approval email|parent or guardian email|valid parent|approval link|approval-link/i.test(
-        message,
-      )
-    ) {
-      return message;
-    }
-    if (/consent token signature|consent token email|consent token username/i.test(message)) {
-      return "We could not verify the approval link for this Explorer. Please try sending again.";
-    }
-    if (/password must be at least 6|password \(at least 6\)/i.test(message)) {
-      return "Use at least 6 characters for your password.";
-    }
-    if (/learner email/i.test(message)) {
-      return message;
-    }
-    if (/Username is required|Pick a username/i.test(message)) {
-      return isExplorer
-        ? "Pick a username for your Explorer profile."
-        : "Pick a username for your account.";
-    }
-    // Prefer the thrown message when it is already user-facing.
-    if (message.length <= 180 && !/finalizeRegisteredSignup|requires a registered/i.test(message)) {
-      return message;
-    }
-  }
-
-  return isExplorer
-    ? "We could not start parent approval for this Explorer profile. Check your details and try again."
-    : "We could not create your profile. Check your details and try again.";
-}
 
 const fieldBase =
   "w-full rounded-nga-lg border-2 border-[#E5E5E5] bg-[#F7F7F7] px-4 py-3 font-sans text-base text-nga-ink transition-colors placeholder:text-nga-slate/60 focus:border-nga-secondary focus:bg-white focus:outline-none";
@@ -186,6 +157,7 @@ export function SignUpForm() {
     birthYear,
     under16PathReached,
   });
+  const signupFailureContext = { isExplorer, needsParentApproval };
   const needsLearnerEmail =
     isPathfinder ||
     isMaverick ||
@@ -198,6 +170,8 @@ export function SignUpForm() {
   const [parentEmail, setParentEmail] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [parentalConsentGiven, setParentalConsentGiven] = useState(false);
+  // Terms tick box: adults and approving parents only, never under-16s.
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [pendingConsent, setPendingConsent] =
     useState<PendingParentConsent | null>(null);
@@ -218,6 +192,7 @@ export function SignUpForm() {
   const explicitApprovalInFlightRef = useRef(false);
   const parentMasterInFlightRef = useRef(false);
   const skipSubmitRef = useRef(false);
+  const declineFlow = useParentDeclineFlow<string>(handleExplicitDecline);
   const isExplorerConsentFlow = parentMasterFlow === "explorer_consent";
   const isPathfinderClaimFlow = parentMasterFlow === "pathfinder_claim";
 
@@ -538,26 +513,32 @@ export function SignUpForm() {
     return Object.keys(next).length === 0;
   }
 
-  async function handleExplicitDecline() {
-    if (!consentToken || explicitApprovalInFlightRef.current) return;
+  /**
+   * Runs only after the parent confirms in the "Are you sure?" dialog.
+   * The server marks the learner declined and deletes their records.
+   */
+  async function handleExplicitDecline(token: string): Promise<ParentDeclineOutcome> {
+    if (!token || explicitApprovalInFlightRef.current) {
+      return { ok: false, error: "We could not decline this learner. Try again." };
+    }
     explicitApprovalInFlightRef.current = true;
     setIsCreatingParentMaster(true);
     setErrors((prev) => ({ ...prev, form: undefined }));
     try {
-      const declined = await declineConsentRequest(consentToken);
+      const declined = await declineConsentRequest(token);
       if (!declined.success) {
-        setErrors({
-          form: declined.error || "We could not decline this learner. Try again.",
-        });
-        return;
+        return {
+          ok: false,
+          error: declined.error || "We could not decline this learner. Try again.",
+        };
       }
       setNeedsExplicitApproval(false);
+      setConfirmExplicitApproval(false);
       setPendingConsent(null);
       setParentMasterFlow(null);
       setAccountDeclined(true);
-      setErrors({
-        form: `${declined.childUsername}'s account wasn't approved. It stays closed.`,
-      });
+      setErrors({ form: copyMatrix.onboarding.parentDecline.declinedBody });
+      return { ok: true };
     } finally {
       explicitApprovalInFlightRef.current = false;
       setIsCreatingParentMaster(false);
@@ -566,12 +547,15 @@ export function SignUpForm() {
 
   async function handleExplicitApprove() {
     if (!consentToken || explicitApprovalInFlightRef.current) return;
+    if (!termsAccepted) return;
     explicitApprovalInFlightRef.current = true;
     setIsCreatingParentMaster(true);
     setErrors((prev) => ({ ...prev, form: undefined }));
 
     try {
-      const approved = await approveConsentRequest(consentToken);
+      const approved = await approveConsentRequest(consentToken, {
+        termsAccepted: true,
+      });
       if (approved.success) {
         setApprovalSavedUsername(approved.childUsername);
         setNeedsExplicitApproval(false);
@@ -594,6 +578,7 @@ export function SignUpForm() {
     if (!consentToken || !pendingConsent || !parentMasterFlow || !validate()) {
       return;
     }
+    if (!termsAccepted) return;
     if (parentMasterInFlightRef.current) return;
     parentMasterInFlightRef.current = true;
     setIsCreatingParentMaster(true);
@@ -606,6 +591,7 @@ export function SignUpForm() {
         username: username.trim(),
         password: password.trim(),
         marketingOptIn,
+        termsAccepted: true,
       });
 
       if (!result.success) {
@@ -635,7 +621,10 @@ export function SignUpForm() {
       succeeded = true;
       router.push(DASHBOARD_ACADEMY_PATH);
     } catch (error) {
-      const message = resolveSignupFailureMessage(error, false);
+      const message = resolveSignupFailureMessage(error, {
+        isExplorer: false,
+        needsParentApproval: false,
+      });
       setErrors({
         form: /could not create your profile/i.test(message)
           ? "We could not create your parent master profile. Check your details and try again."
@@ -667,13 +656,14 @@ export function SignUpForm() {
     }
 
     if (approvalEmailInFlightRef.current) return;
+    if (!needsParentApproval && !termsAccepted) return;
 
     let nextErrors: FormErrors = {};
     try {
       nextErrors = collectValidationErrors();
     } catch {
       setErrors({
-        form: resolveSignupFailureMessage(new Error(""), isExplorer),
+        form: resolveSignupFailureMessage(new Error(""), signupFailureContext),
       });
       return;
     }
@@ -714,6 +704,8 @@ export function SignUpForm() {
         learnerEmail: needsLearnerEmail ? learnerEmail.trim() : undefined,
         parentEmail: needsParentApproval ? parentEmail.trim() : undefined,
         marketingOptIn: false,
+        // Under 16: no Terms value at all. The parent agrees when approving.
+        ...(needsParentApproval ? {} : { termsAccepted: true }),
       });
 
       if (!result.success) {
@@ -746,7 +738,7 @@ export function SignUpForm() {
         }
         setErrors((prev) => ({
           ...prev,
-          form: resolveSignupFailureMessage(new Error(result.error), isExplorer),
+          form: resolveSignupFailureMessage(new Error(result.error), signupFailureContext),
         }));
         return;
       }
@@ -765,7 +757,7 @@ export function SignUpForm() {
         supabaseUserId: result.userId,
         curriculumCohort: savedCohort,
       });
-      await finalizeRegisteredSignup(childSession, { skipEmail: true });
+      await finalizeRegisteredSignup(childSession);
       succeeded = true;
 
       if (isPendingConsent) {
@@ -778,7 +770,7 @@ export function SignUpForm() {
     } catch (error) {
       setErrors((prev) => ({
         ...prev,
-        form: resolveSignupFailureMessage(error, isExplorer),
+        form: resolveSignupFailureMessage(error, signupFailureContext),
       }));
     } finally {
       if (!succeeded) {
@@ -842,6 +834,13 @@ export function SignUpForm() {
                 Approve {childName}&apos;s account?
               </p>
             ) : null}
+            <TermsConsentCheckbox
+              id="approve-terms-consent"
+              className="text-left"
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              disabled={isCreatingParentMaster}
+            />
             {errors.form ? (
               <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
                 {errors.form}
@@ -865,7 +864,7 @@ export function SignUpForm() {
                   onClick={() => {
                     void handleExplicitApprove();
                   }}
-                  disabled={isCreatingParentMaster}
+                  disabled={isCreatingParentMaster || !termsAccepted}
                   aria-busy={isCreatingParentMaster || undefined}
                 >
                   {isCreatingParentMaster ? "Approving…" : "Confirm"}
@@ -878,7 +877,7 @@ export function SignUpForm() {
                   variant="ghost"
                   fullWidth
                   onClick={() => {
-                    void handleExplicitDecline();
+                    if (consentToken) declineFlow.requestDecline(consentToken);
                   }}
                   disabled={isCreatingParentMaster}
                 >
@@ -889,13 +888,14 @@ export function SignUpForm() {
                   variant="cta"
                   fullWidth
                   onClick={() => setConfirmExplicitApproval(true)}
-                  disabled={isCreatingParentMaster}
+                  disabled={isCreatingParentMaster || !termsAccepted}
                 >
                   Approve
                 </Button>
               </div>
             )}
           </div>
+          <ParentDeclineConfirmDialog flow={declineFlow} />
         </section>
       );
     }
@@ -924,6 +924,13 @@ export function SignUpForm() {
               </ButtonLink>
             </div>
           </div>
+          <DeclinedNoticeDialog
+            isOpen={accountDeclined && declineFlow.isDeclinedOpen}
+            onClose={() => {
+              declineFlow.closeDeclined();
+              router.replace(ONBOARDING_ENTRY_PATH);
+            }}
+          />
         </section>
       );
     }
@@ -1154,12 +1161,20 @@ export function SignUpForm() {
               </span>
             </label>
 
+            <TermsConsentCheckbox
+              id="parent-master-terms-consent"
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              disabled={isCreatingParentMaster}
+            />
+
             <Button
               type="submit"
               variant="cta"
               fullWidth
               disabled={
                 isCreatingParentMaster ||
+                !termsAccepted ||
                 (isExplorerConsentFlow && !parentalConsentGiven)
               }
               aria-busy={isCreatingParentMaster || undefined}
@@ -1453,6 +1468,15 @@ export function SignUpForm() {
             </>
           ) : null}
 
+          {learnerStep === "emails" ? (
+            <LearnerTermsArea
+              needsParentApproval={needsParentApproval}
+              termsAccepted={termsAccepted}
+              onTermsAcceptedChange={setTermsAccepted}
+              disabled={isSendingApprovalEmail}
+            />
+          ) : null}
+
           {errors.form ? (
             <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {errors.form}
@@ -1470,7 +1494,10 @@ export function SignUpForm() {
                   type="submit"
                   variant="cta"
                   fullWidth
-                  disabled={isSendingApprovalEmail}
+                  disabled={
+                    isSendingApprovalEmail ||
+                    (!needsParentApproval && !termsAccepted)
+                  }
                   aria-busy={isSendingApprovalEmail || undefined}
                 >
                   {needsParentApproval

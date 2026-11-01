@@ -16,7 +16,6 @@ import {
   lessonSortBucketActiveClass,
   lessonSortStatementCardClass,
   lessonSortStatementPlacedClass,
-  lessonSortPoolSlotPlaceholderClass,
   lessonGameHintClass,
 } from "@/components/academy/lesson/lesson-shared-styles";
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
@@ -811,11 +810,11 @@ export function LessonBucketSortGame<TBucket extends string>({
         <LessonSortPool isEmpty={isComplete} className="shrink-0">
           {poolIds.map((itemId) =>
             placedIdSet.has(itemId) ? (
-              <div
-                key={itemId}
-                className={lessonSortPoolSlotPlaceholderClass}
-                aria-hidden
-              />
+              // An invisible copy of the card holds its exact height, so a
+              // card that wraps to two lines leaves no gap and nothing moves.
+              <div key={itemId} className="invisible" aria-hidden>
+                {renderPoolChip(itemId, false, false)}
+              </div>
             ) : (
               renderPoolChip(itemId)
             ),

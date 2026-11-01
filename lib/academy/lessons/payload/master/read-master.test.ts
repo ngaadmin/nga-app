@@ -21,6 +21,7 @@ import { readWorkbookSheets } from "@/lib/academy/lessons/payload/parse-authorin
 import { mediaBaseName } from "@/lib/academy/media/academy-media";
 import { isHeldLarsMedia } from "@/lib/academy/media/held-media";
 import { planMediaUploads } from "@/lib/academy/media/media-sync";
+import { applyManifestReleases, readMediaReleases } from "@/lib/academy/media/manifest-release";
 
 vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://test-project.supabase.co");
 
@@ -307,7 +308,11 @@ describe("master workbook reader", () => {
   });
 
   it("has an upload source under the size cap for every picture and clip that isn't held", () => {
-    const plan = planMediaUploads([...master.media.images, ...master.media.audio]);
+    // Approved pictures released from a committed manifest (pippa-standing) count as having a source.
+    const plan = applyManifestReleases(
+      planMediaUploads([...master.media.images, ...master.media.audio]),
+      readMediaReleases(),
+    ).plan;
     const problems = plan.filter((item) => item.status === "no-source" || item.status === "too-large");
     // Not drawn yet: the Pathfinder Lesson 2 target. Stays pending, so promote refuses it.
     expect(problems).toEqual([{ objectPath: "images/pippa-celebrating-512.webp", status: "no-source" }]);

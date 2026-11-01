@@ -7,6 +7,7 @@ import {
   DashboardNavPendingProvider,
   DashboardPendingScreen,
 } from "@/components/dashboard/dashboard-nav-pending";
+import { LessonViewportGuard } from "@/components/academy/lesson/lesson-viewport-guard";
 import { DashboardStatusHeader } from "@/components/dashboard/dashboard-status-header";
 import { HubIntro } from "@/components/dashboard/hub-intro/hub-intro";
 import { hubIntroIdFromPathname } from "@/lib/dashboard/hub-intro/resolve-hub";
@@ -57,11 +58,18 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <DashboardNavPendingProvider>
       <div
         className={cn(
-          "flex h-dvh max-h-dvh w-full max-w-full flex-col overflow-hidden bg-white",
-          "print:h-auto print:max-h-none print:overflow-visible",
+          "flex w-full max-w-full flex-col overflow-hidden bg-white",
+          // Lessons pin to the viewport edges and pad by the safe areas only.
+          // A flow box sized to 100dvh sat below whatever space the phone
+          // reserved at the top and ran off the bottom, cutting Next in half.
+          isLessonRoute
+            ? "lesson-viewport fixed inset-0"
+            : "h-dvh max-h-dvh",
+          "print:static print:h-auto print:max-h-none print:overflow-visible",
         )}
+        {...(isLessonRoute ? { "data-lesson-viewport": true } : {})}
       >
-      {isLessonRoute ? null : <DashboardNavigation />}
+      {isLessonRoute ? <LessonViewportGuard /> : <DashboardNavigation />}
 
       <div
         className={cn(

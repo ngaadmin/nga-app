@@ -22,6 +22,14 @@ export const STATUS_BANNER_ROW_CLASS =
   "relative mx-auto grid h-9 w-full max-w-md grid-cols-[minmax(7.25rem,1fr)_minmax(0,auto)_minmax(7.25rem,1fr)] items-center gap-2";
 
 /**
+ * Row used when the center slot is empty: the left cluster (avatar and
+ * username) takes the free space and the right cluster keeps its own width,
+ * so a longer username only truncates when it would reach the stats.
+ */
+export const STATUS_BANNER_ROW_WIDE_LEFT_CLASS =
+  "relative mx-auto grid h-9 w-full max-w-md grid-cols-[minmax(0,1fr)_auto] items-center gap-2";
+
+/**
  * Frameless inline stat / handle text — one size for every banner item.
  * Shared `leading-tight` keeps XP, hearts, and username on the same vertical centre
  * without clipping descenders (g/y/p).
@@ -65,6 +73,8 @@ type StatusBannerLayoutProps = {
   clusterGapClassName?: string;
   "aria-label"?: string;
   style?: CSSProperties;
+  /** Drop the center slot and let the left cluster take the free width. */
+  wideLeft?: boolean;
 };
 
 export function StatusBannerLayout({
@@ -77,12 +87,16 @@ export function StatusBannerLayout({
   clusterGapClassName = "gap-2",
   "aria-label": ariaLabel,
   style,
+  wideLeft = false,
 }: StatusBannerLayoutProps) {
   return (
     <div className={cn(STATUS_BANNER_SHELL_CLASS, className)} style={style}>
       <div className={insetClassName}>
         <div
-          className={cn(STATUS_BANNER_ROW_CLASS, rowClassName)}
+          className={cn(
+            wideLeft ? STATUS_BANNER_ROW_WIDE_LEFT_CLASS : STATUS_BANNER_ROW_CLASS,
+            rowClassName,
+          )}
           aria-label={ariaLabel}
         >
           <div
@@ -94,12 +108,14 @@ export function StatusBannerLayout({
             {left}
           </div>
 
-          <div
-            data-status-banner-center
-            className="flex h-full min-w-0 items-center justify-center"
-          >
-            {center}
-          </div>
+          {wideLeft ? null : (
+            <div
+              data-status-banner-center
+              className="flex h-full min-w-0 items-center justify-center"
+            >
+              {center}
+            </div>
+          )}
 
           <div
             className={cn(

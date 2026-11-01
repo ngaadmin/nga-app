@@ -3,6 +3,7 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
@@ -110,9 +111,15 @@ function resolveBlankIndexFromPointer(
   blankElements: readonly (HTMLElement | null)[],
   drag: DragBounds | null,
 ): number | null {
+  // A blank can break across lines in a wrapped sentence. Use each line box
+  // so the empty space beside a wrapped blank never counts as that blank.
   const zones = blankElements.flatMap((blank, index) => {
     if (!blank) return [];
-    return [{ id: index, rect: domRectToDropRect(blank.getBoundingClientRect()) }];
+    const lineRects = Array.from(blank.getClientRects()).filter(
+      (rect) => rect.width > 0 && rect.height > 0,
+    );
+    const rects = lineRects.length > 0 ? lineRects : [blank.getBoundingClientRect()];
+    return rects.map((rect) => ({ id: index, rect: domRectToDropRect(rect) }));
   });
   return bestDropZone(zones, drag, clientX, clientY);
 }
@@ -128,6 +135,14 @@ export const LessonWordDropGame = forwardRef<
 
   const authoredBank = useMemo(() => wordBankItems(blanks), [blanks]);
   const [bankItems, setBankItems] = useState<WordBankItem[]>(authoredBank);
+  const longestBankLabel = useMemo(
+    () =>
+      authoredBank.reduce(
+        (longest, item) => (item.label.length > longest.length ? item.label : longest),
+        "",
+      ),
+    [authoredBank],
+  );
   const bankSignature = authoredBank.map((item) => item.id).join("\u0001");
   const authoredBankRef = useRef(authoredBank);
   authoredBankRef.current = authoredBank;
@@ -334,6 +349,21 @@ export const LessonWordDropGame = forwardRef<
     endDrag();
   };
 
+  // iOS starts text selection, the long-press callout or a pane scroll on a
+  // held chip and then cancels the pointer mid-drag. A non-passive
+  // touchstart that calls preventDefault stops that; pointer events still fire.
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    const onTouchStart = (event: TouchEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target?.closest("#word-drop-bank button, [data-word-drop-slot]")) return;
+      if (event.cancelable) event.preventDefault();
+    };
+    board.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => board.removeEventListener("touchstart", onTouchStart);
+  }, []);
+
   useLayoutEffect(() => {
     const itemId = pendingBankFocusId.current;
     if (!itemId || choices.includes(itemId)) return;
@@ -376,75 +406,100 @@ export const LessonWordDropGame = forwardRef<
     return labelFor(itemId);
   };
 
+  // The sentence re-wraps as words go into its blanks, which pushed the word
+  // bank up or down under the learner's finger on narrow phones. An invisible
+  // copy with the longest word in every blank shares the same grid cell, so
+  // the sentence keeps its tallest height from the start and the bank stays put.
+  const renderSentence = (reserve: boolean) => {
+    const wordIn = (blankIndex: number) =>
+      reserve ? longestBankLabel : visibleBlankWord(blankIndex);
+    return (
+        <p
+          className={cn(lessonNarrativeClass, "mb-5 text-[22px] [grid-area:1/1]", reserve && "invisible")}
+          aria-hidden={reserve || undefined}
+        >
+          {parts.map((part, index) => {
+            const attached = index > 0 ? splitLeadingPunctuation(part) : null;
+            const text = attached ? attached.rest : part;
+            const blankIndex = index - 1;
+            return (
+              <span key={`${part}-${index}`}>
+                {attached ? (
+                  <span className="inline-flex items-baseline whitespace-nowrap align-middle">
+                    <button
+                      type="button"
+                      ref={
+                        reserve
+                          ? undefined
+                          : (node) => {
+                              blankRefs.current[blankIndex] = node;
+                            }
+                      }
+                      tabIndex={reserve ? -1 : undefined}
+                      data-word-drop-slot={reserve ? undefined : blankIndex}
+                      aria-label={
+                        visibleBlankWord(blankIndex)
+                          ? `Blank, ${visibleBlankWord(blankIndex)}. Return to the word bank.`
+                          : "Blank. Drag a word here."
+                      }
+                      onKeyDown={(event) => {
+                        if (event.repeat) return;
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        activateBlankFromKeyboard(blankIndex);
+                      }}
+                      onPointerDown={(event) => {
+                        if (reserve) return;
+                        const itemId = choices[blankIndex];
+                        if (!itemId) {
+                          const armed = selectedItemIdRef.current;
+                          if (!armed) return;
+                          event.preventDefault();
+                          placeWordInBlank(blankIndex, armed, null);
+                          setArmedItem(null);
+                          return;
+                        }
+                        beginPress(event, itemId, blankIndex);
+                      }}
+                      className={cn(
+                        blankSlotClass(blankIndex, Boolean(wordIn(blankIndex))),
+                        "select-none text-[22px]",
+                        choices[blankIndex] && "cursor-grab touch-none",
+                      )}
+                    >
+                      {wordIn(blankIndex) ? (
+                        <span className={cn(lessonSortPoolChipClass, "text-[20px]")}>
+                          <AnswerEmojiLabel label={wordIn(blankIndex)} />
+                        </span>
+                      ) : null}
+                    </button>
+                    {attached.punctuation ? (
+                      <span className="ml-0.5">{attached.punctuation}</span>
+                    ) : null}
+                  </span>
+                ) : null}
+                {text}
+              </span>
+            );
+          })}
+        </p>
+    );
+  };
+
   return (
     <div
       ref={boardRef}
-      className="space-y-4 touch-none"
+      className="lesson-touch-target space-y-4"
       style={{ touchAction: "none" }}
+      onContextMenu={(event) => event.preventDefault()}
       onPointerMove={handleBoardPointerMove}
       onPointerUp={finishPress}
       onPointerCancel={finishPress}
     >
-      <p className={cn(lessonNarrativeClass, "mb-5 text-[22px]")}>
-        {parts.map((part, index) => {
-          const attached = index > 0 ? splitLeadingPunctuation(part) : null;
-          const text = attached ? attached.rest : part;
-          const blankIndex = index - 1;
-          return (
-            <span key={`${part}-${index}`}>
-              {attached ? (
-                <span className="inline-flex items-baseline whitespace-nowrap align-middle">
-                  <button
-                    type="button"
-                    ref={(node) => {
-                      blankRefs.current[blankIndex] = node;
-                    }}
-                    data-word-drop-slot={blankIndex}
-                    aria-label={
-                      visibleBlankWord(blankIndex)
-                        ? `Blank, ${visibleBlankWord(blankIndex)}. Return to the word bank.`
-                        : "Blank. Drag a word here."
-                    }
-                    onKeyDown={(event) => {
-                      if (event.repeat) return;
-                      if (event.key !== "Enter" && event.key !== " ") return;
-                      event.preventDefault();
-                      activateBlankFromKeyboard(blankIndex);
-                    }}
-                    onPointerDown={(event) => {
-                      const itemId = choices[blankIndex];
-                      if (!itemId) {
-                        const armed = selectedItemIdRef.current;
-                        if (!armed) return;
-                        event.preventDefault();
-                        placeWordInBlank(blankIndex, armed, null);
-                        setArmedItem(null);
-                        return;
-                      }
-                      beginPress(event, itemId, blankIndex);
-                    }}
-                    className={cn(
-                      blankSlotClass(blankIndex, Boolean(visibleBlankWord(blankIndex))),
-                      "select-none text-[22px]",
-                      choices[blankIndex] && "cursor-grab touch-none",
-                    )}
-                  >
-                    {visibleBlankWord(blankIndex) ? (
-                      <span className={cn(lessonSortPoolChipClass, "text-[20px]")}>
-                        <AnswerEmojiLabel label={visibleBlankWord(blankIndex)} />
-                      </span>
-                    ) : null}
-                  </button>
-                  {attached.punctuation ? (
-                    <span className="ml-0.5">{attached.punctuation}</span>
-                  ) : null}
-                </span>
-              ) : null}
-              {text}
-            </span>
-          );
-        })}
-      </p>
+      <div className="grid">
+        {renderSentence(false)}
+        {renderSentence(true)}
+      </div>
 
       <div
         ref={poolRef}
@@ -455,7 +510,20 @@ export const LessonWordDropGame = forwardRef<
         )}
       >
         {bankItems.map((item) => {
-          if (choices.includes(item.id)) return null;
+          if (choices.includes(item.id)) {
+            // Keep the word's spot so the other chips never reflow under the
+            // learner's finger when a word moves into a blank.
+            return (
+              <span
+                key={item.id}
+                aria-hidden
+                data-word-drop-placeholder
+                className={cn(lessonSortPoolChipClass, "invisible text-[20px]")}
+              >
+                <AnswerEmojiLabel label={item.label} />
+              </span>
+            );
+          }
           return (
             <button
               key={item.id}
@@ -476,7 +544,7 @@ export const LessonWordDropGame = forwardRef<
               }}
               className={cn(
                 lessonSortPoolChipClass,
-                "text-[20px]",
+                "lesson-touch-target text-[20px]",
                 selectedItemId === item.id &&
                   "bg-[#EAF0FF] shadow-[inset_0_0_0_2px_#031F82]",
                 pressedChip?.itemId === item.id &&

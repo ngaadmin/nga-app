@@ -53,18 +53,49 @@ export function ModalShell({
   useLayoutEffect(() => {
     if (!isOpen || !clearBottomNav) return;
 
+    // Clear everything from the nav's top edge down. The nav can grow after
+    // the first measure without a window resize: iOS fills in
+    // env(safe-area-inset-bottom) late on a fresh load, fonts swap, a tab is
+    // added. A stale height let the backdrop cover the top of every tab, so a
+    // tap there only closed the intro. Re-measure whenever the nav changes.
+    let nav: HTMLElement | null = null;
+    let observer: ResizeObserver | null = null;
     const sync = () => {
-      const nav = document.querySelector("[data-dashboard-nav]");
-      const next =
-        nav instanceof HTMLElement
-          ? Math.ceil(nav.getBoundingClientRect().height)
-          : 0;
-      setNavClearance((current) => (current === next ? current : next));
+      const found = document.querySelector("[data-dashboard-nav]");
+      const current = found instanceof HTMLElement ? found : null;
+      if (current !== nav) {
+        observer?.disconnect();
+        nav = current;
+        if (nav && typeof ResizeObserver !== "undefined") {
+          observer = new ResizeObserver(sync);
+          observer.observe(nav, { box: "border-box" });
+        }
+      }
+      const next = nav
+        ? Math.max(
+            0,
+            Math.ceil(window.innerHeight - nav.getBoundingClientRect().top),
+          )
+        : 0;
+      setNavClearance((value) => (value === next ? value : next));
     };
 
     sync();
+    const frame = window.requestAnimationFrame(sync);
+    const settle = window.setTimeout(sync, 400);
+    const viewport = window.visualViewport;
     window.addEventListener("resize", sync);
-    return () => window.removeEventListener("resize", sync);
+    window.addEventListener("orientationchange", sync);
+    viewport?.addEventListener("resize", sync);
+    void document.fonts?.ready.then(sync);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
+      window.removeEventListener("resize", sync);
+      window.removeEventListener("orientationchange", sync);
+      viewport?.removeEventListener("resize", sync);
+      observer?.disconnect();
+    };
   }, [clearBottomNav, isOpen]);
 
   if (!isOpen) return null;

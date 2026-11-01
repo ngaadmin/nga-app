@@ -44,7 +44,8 @@ import { zLayerStyle } from "@/lib/ui/layers";
 export function DashboardStatusHeader() {
   const router = useRouter();
   const session = useUserSession();
-  const { username, isTeacher } = useDashboardUser();
+  const { username, isTeacher, isGuestMode, isLoading: userLoading } =
+    useDashboardUser();
   const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
   const xpExchange = useXpExchangeGate();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
@@ -170,6 +171,11 @@ export function DashboardStatusHeader() {
           avatarId={avatarId}
           trackLabel={isParent ? "Parent" : trackLabel}
           trackLabelIsRole={isParent}
+          // Username sits beside the avatar for every account. Guests keep the
+          // save-progress control in the center; signed-in accounts leave the
+          // center empty so the name is not shown twice.
+          showUsernameLabel={!userLoading}
+          center={userLoading || isGuestMode ? undefined : null}
           profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
           // The avatar always opens the dropdown (never the Profile page

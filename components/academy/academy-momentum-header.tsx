@@ -25,7 +25,7 @@ type AcademyMomentumHeaderProps = {
   dayStreak: number;
   /** Null shows the first letter of the name instead of art (parents). */
   avatarId: ProfileAvatarId | null;
-  /** Track name (Explorer, Pathfinder, Maverick). Null hides the label. */
+  /** Track name (Explorer, Pathfinder, Maverick), read out with the avatar. */
   trackLabel: string | null;
   /** The label names a role (Parent), not a track. */
   trackLabelIsRole?: boolean;
@@ -45,11 +45,15 @@ type AcademyMomentumHeaderProps = {
     /** One-time tip under the avatar, or null. */
     tip: ReactNode;
   };
+  /** Username beside the avatar. Off while the session is still loading. */
+  showUsernameLabel?: boolean;
+  /** Center slot. Undefined keeps the default handle control; null leaves it empty. */
+  center?: ReactNode;
 };
 
 /**
- * Top bar: avatar and track on the left, username in the true center,
- * streak and coins on the right.
+ * Top bar: avatar and username on the left, the guest save control in the
+ * center, streak and coins on the right.
  */
 export function AcademyMomentumHeader({
   username,
@@ -64,10 +68,15 @@ export function AcademyMomentumHeader({
   onStreakClick,
   onXpClick,
   profileSwitcher,
+  showUsernameLabel = true,
+  center,
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const coinUnit = coinWord(xp);
   const profileName = username.trim() || "your profile";
+  // The label beside the avatar is the account's own username (guests get
+  // their Penny handle). The track stays in the accessible name only.
+  const nameLabel = showUsernameLabel ? username.trim() : "";
 
   useLayoutEffect(() => {
     if (readCoinCounterTick() > 0) clearCoinCounterTick();
@@ -76,6 +85,9 @@ export function AcademyMomentumHeader({
   return (
     <StatusBannerLayout
       aria-label="App stats"
+      // An explicit null center means nothing sits in the middle, so the
+      // username can use that space before it truncates.
+      wideLeft={center === null}
       left={
         <div className="relative flex h-full min-w-0 max-w-full items-center">
           <button
@@ -126,12 +138,13 @@ export function AcademyMomentumHeader({
                 <ProfileSwitcherBadge open={profileSwitcher.open} />
               ) : null}
             </span>
-            {trackLabel ? (
+            {nameLabel ? (
               <span
-                data-top-bar-track
-                className="min-w-0 truncate font-heading text-[10px] font-bold uppercase tracking-normal text-[#0288A3]"
+                data-top-bar-username
+                title={nameLabel}
+                className="min-w-0 truncate font-heading text-[12px] font-bold leading-tight tracking-normal text-[#031F82]"
               >
-                {trackLabel}
+                {nameLabel}
               </span>
             ) : null}
           </button>
@@ -139,12 +152,16 @@ export function AcademyMomentumHeader({
         </div>
       }
       center={
-        <UserHandleControl
-          username={username}
-          size="sm"
-          className="min-w-0 max-w-full"
-          showGuestHandle={false}
-        />
+        center === undefined ? (
+          <UserHandleControl
+            username={username}
+            size="sm"
+            className="min-w-0 max-w-full"
+            showGuestHandle={false}
+          />
+        ) : (
+          center
+        )
       }
       right={
         <>

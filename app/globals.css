@@ -599,6 +599,43 @@
   text-align: center;
 }
 
+/*
+ * Parent dashboard "Needs your OK" call to action. Every pill (Review, Mark
+ * as paid and any later ones) is the same fixed box, sized for two lines of
+ * text. Content never changes the size: width and height are pinned with
+ * min = max, and long labels wrap inside the box instead.
+ */
+.parent-ok-pill {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  min-width: 112px;
+  max-width: 112px;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #ffa503;
+  box-shadow: 0 3px 0 #c88202;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.parent-ok-pill:disabled {
+  opacity: 0.5;
+}
+
 /* Hold buttons must not open the touch callout or select their label. */
 .lesson-hold-button {
   touch-action: none;

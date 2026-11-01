@@ -16,6 +16,7 @@ import {
   resolveExchangeRateCents,
   spendSpendableXp,
   sumOwedCashInCents,
+  countOwedCashIns,
   validateCashInPoints,
   withCashInPaidReset,
   withExchangeRate,
@@ -263,6 +264,8 @@ describe("owed cash-in total", () => {
 
     const paid = withCashInPaidReset(second.wallet, "2026-10-04T00:00:00.000Z");
     expect(sumOwedCashInCents(paid)).toBe(0);
+    expect(countOwedCashIns(second.wallet)).toBe(2);
+    expect(countOwedCashIns(paid)).toBe(0);
     expect(readSpendableXp(paid)).toBe(readSpendableXp(second.wallet));
 
     const later = spendSpendableXp(paid, 100, {
@@ -272,6 +275,7 @@ describe("owed cash-in total", () => {
     expect(later.ok).toBe(true);
     if (!later.ok) return;
     expect(sumOwedCashInCents(later.wallet)).toBe(200);
+    expect(countOwedCashIns(later.wallet)).toBe(1);
     expect(readLifetimeXp(later.wallet)).toBe(300);
   });
 });

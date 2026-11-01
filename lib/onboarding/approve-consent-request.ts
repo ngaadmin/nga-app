@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
 import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { lookupConsentRequestByToken } from "@/lib/onboarding/lookup-consent-request";
+import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 import {
   findAuthUserIdByEmail,
   findParentMasterByEmail,
@@ -361,8 +362,9 @@ export async function listPendingConsentRequestsForParent(): Promise<
 /**
  * In-app approval for a pending consent row addressed to the signed-in parent.
  * Email approval links keep using {@link approveConsentRequest}.
+ * Not exported: every in-app path must pass the parent PIN gate first.
  */
-export async function approveConsentRequestInApp(
+async function approveConsentRequestInAppUngated(
   requestId: string,
 ): Promise<ApproveConsentResult> {
   const trimmedId = requestId.trim();
@@ -617,7 +619,7 @@ export async function declineConsentRequest(token: string): Promise<DeclineConse
   });
 }
 
-export async function declineConsentRequestInApp(
+async function declineConsentRequestInAppUngated(
   requestId: string,
 ): Promise<DeclineConsentResult> {
   const trimmedId = requestId.trim();
@@ -711,4 +713,64 @@ async function markChildDeclined(input: {
     .eq("status", "pending");
 
   return { success: true, childUsername: input.childUsername };
+}
+
+const PARENT_TAB_LOCKED = "Enter your parent PIN to continue.";
+
+/** Parent session plus an open Parent tab gate, both checked here on the server. */
+async function parentTabGateOpen(pass: string): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("account_role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.account_role !== "parent_master") return false;
+  return parentTabGatePassValid(pass, user.id);
+}
+
+/**
+ * In-app approve (Settings or the Parent tab). Needs the parent session and
+ * a gate pass that only a correct parent PIN (checked on the server) signs.
+ */
+export async function approveConsentRequestInApp(
+  requestId: string,
+  pass: string,
+): Promise<ApproveConsentResult> {
+  if (!(await parentTabGateOpen(pass))) {
+    return { success: false, error: PARENT_TAB_LOCKED };
+  }
+  return approveConsentRequestInAppUngated(requestId);
+}
+
+/** In-app decline. Same parent PIN gate as approve. */
+export async function declineConsentRequestInApp(
+  requestId: string,
+  pass: string,
+): Promise<DeclineConsentResult> {
+  if (!(await parentTabGateOpen(pass))) {
+    return { success: false, error: PARENT_TAB_LOCKED };
+  }
+  return declineConsentRequestInAppUngated(requestId);
+}
+
+/** Parent tab approve: the same PIN-gated approval. */
+export async function approveConsentRequestFromParentTab(
+  requestId: string,
+  pass: string,
+): Promise<ApproveConsentResult> {
+  return approveConsentRequestInApp(requestId, pass);
+}
+
+/** Parent tab decline: the same PIN-gated decline. */
+export async function declineConsentRequestFromParentTab(
+  requestId: string,
+  pass: string,
+): Promise<DeclineConsentResult> {
+  return declineConsentRequestInApp(requestId, pass);
 }

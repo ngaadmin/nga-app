@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { restoreAccountProgressForUser } from "@/lib/dashboard/account-progress-local";
-import { hasSeenHubIntro, markHubIntroSeen } from "@/lib/dashboard/hub-intro/storage";
+import {
+  hasSeenHubIntro,
+  markHubIntroSeen,
+} from "@/lib/dashboard/hub-intro/storage";
 import {
   hasAccountSeenMedalsIntro,
   PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
 } from "@/lib/dashboard/page-intro-seen";
+import { releaseGuestDeviceLocalCopy } from "@/lib/dev/guest-device-store";
 import { clearAllAppSessionState } from "@/lib/onboarding/clear-app-session-state";
 import {
   GUEST_SESSION_STORAGE_KEY,
@@ -74,7 +78,48 @@ afterEach(() => {
   Reflect.deleteProperty(globalThis, "window");
 });
 
+function guestSession(genericProfileId: string): UserSession {
+  return {
+    accessMode: "guest",
+    username: `Penny${genericProfileId}`,
+    genericProfileId,
+    ageTier: "explorer",
+    curriculumCohort: "explorer",
+    accountStatus: "GUEST",
+    createdAt: "2026-10-31T00:00:00.000Z",
+  } as UserSession;
+}
+
 describe("page intro persistence", () => {
+  it("keeps guest dismissals when the same device picks a new guest profile", () => {
+    saveUserSession(guestSession("1722"));
+    markHubIntroSeen("academy");
+    expect(hasSeenHubIntro("academy")).toBe(true);
+
+    saveUserSession(guestSession("8841"));
+    expect(hasSeenHubIntro("academy")).toBe(true);
+    expect(hasSeenHubIntro("vault")).toBe(false);
+  });
+
+  it("honors older per-guest-id dismissals", () => {
+    window.localStorage.setItem(
+      PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+      JSON.stringify({
+        "guest:1722": { hubs: { launchpad: true }, medals: true },
+      }),
+    );
+    saveUserSession(guestSession("1722"));
+    expect(hasSeenHubIntro("launchpad")).toBe(true);
+    expect(hasAccountSeenMedalsIntro()).toBe(true);
+  });
+
+  it("releasing the guest device copy keeps registered dismissals", () => {
+    saveUserSession(seatSession);
+    markHubIntroSeen("academy");
+    releaseGuestDeviceLocalCopy();
+    expect(hasSeenHubIntro("academy")).toBe(true);
+  });
+
   it("keeps a dismissed intro after sign-out and the next sign-in", () => {
     saveUserSession(seatSession);
     markHubIntroSeen("academy");
@@ -86,7 +131,9 @@ describe("page intro persistence", () => {
     const stored = JSON.parse(
       window.localStorage.getItem(PAGE_INTRO_SEEN_BY_ACCOUNT_KEY) ?? "{}",
     ) as Record<string, { hubs?: { academy?: boolean } }>;
-    expect(stored[`user:${seatSession.supabaseUserId}`]?.hubs?.academy).toBe(true);
+    expect(stored[`user:${seatSession.supabaseUserId}`]?.hubs?.academy).toBe(
+      true,
+    );
     expect(window.sessionStorage.getItem(GUEST_SESSION_STORAGE_KEY)).toBeNull();
 
     saveUserSession(seatSession);

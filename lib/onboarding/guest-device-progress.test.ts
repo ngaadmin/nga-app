@@ -196,11 +196,15 @@ describe("guest device progress", () => {
     expect(meta.expiresAt).toBeGreaterThan(Date.now() + GUEST_DEVICE_TTL_MS - 60_000);
   });
 
-  it("drops an expired guest copy, including page-intro flags", () => {
+  it("drops an expired guest copy, including guest page-intro flags only", () => {
     seedGuestPlay();
     window.localStorage.setItem(
       PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
-      JSON.stringify({ "guest:guest-penny": { hubs: { academy: true } } }),
+      JSON.stringify({
+        "guest:guest-penny": { hubs: { academy: true } },
+        "guest:device": { hubs: { vault: true } },
+        "user:abc": { hubs: { academy: true } },
+      }),
     );
     window.localStorage.setItem(
       HUB_INTRO_SEEN_STORAGE_KEY,
@@ -212,17 +216,16 @@ describe("guest device progress", () => {
     );
     window.sessionStorage.clear();
 
-    expect(GUEST_DEVICE_EXPIRE_EXTRA_KEYS).toEqual([
-      PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
-      HUB_INTRO_SEEN_STORAGE_KEY,
-    ]);
+    expect(GUEST_DEVICE_EXPIRE_EXTRA_KEYS).toEqual([HUB_INTRO_SEEN_STORAGE_KEY]);
     expect(readPersisted(ACADEMY_PROGRESS_STORAGE_KEY)).toBeNull();
     expect(readPersisted(DASHBOARD_WALLET_STORAGE_KEY)).toBeNull();
     expect(readUserSession()).toBeNull();
     expect(window.localStorage.getItem(ACADEMY_PROGRESS_STORAGE_KEY)).toBeNull();
     expect(window.localStorage.getItem(GUEST_DEVICE_META_KEY)).toBeNull();
     expect(window.localStorage.getItem(GUEST_SESSION_STORAGE_KEY)).toBeNull();
-    expect(window.localStorage.getItem(PAGE_INTRO_SEEN_BY_ACCOUNT_KEY)).toBeNull();
+    expect(
+      JSON.parse(window.localStorage.getItem(PAGE_INTRO_SEEN_BY_ACCOUNT_KEY) ?? "{}"),
+    ).toEqual({ "user:abc": { hubs: { academy: true } } });
     expect(window.localStorage.getItem(HUB_INTRO_SEEN_STORAGE_KEY)).toBeNull();
   });
 

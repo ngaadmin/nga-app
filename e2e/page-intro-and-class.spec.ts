@@ -69,7 +69,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await expect(letsGo).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("#hub-intro-academy-title")).toHaveText("Academy");
   await expect(
-    page.getByText("Your medals live in the cup. Tap it anytime."),
+    page.getByText("Your medals live in your profile. Tap your avatar anytime."),
   ).toHaveCount(0);
   await page.screenshot({
     path: "/opt/cursor/artifacts/intro-academy-first.png",
@@ -146,7 +146,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await page.waitForTimeout(2500);
   await expect(page.locator("button", { hasText: "Let's go" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Open medals" }).click();
+  await page.getByRole("button", { name: /^Open profile/ }).click();
   await expect(page.locator("#medals-intro-title")).toHaveCount(0);
   await expect(page.locator('button[aria-label="About medals"]')).toBeVisible();
   await page.screenshot({
@@ -164,10 +164,10 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
     }
     window.localStorage.setItem(introKey, JSON.stringify(store));
   }, PAGE_INTRO_KEY);
-  await page.getByRole("button", { name: "Open medals" }).click();
+  await page.getByRole("button", { name: /^Open profile/ }).click();
   await expect(page.locator("#medals-intro-title")).toBeVisible({ timeout: 10_000 });
   await expect(
-    page.getByText("Your medals live in the cup. Tap it anytime."),
+    page.getByText("Your medals live in your profile. Tap your avatar anytime."),
   ).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/medals-intro-first.png",
@@ -185,7 +185,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   });
   await page.locator("button", { hasText: "Got it" }).click({ force: true });
   await page.locator('button[aria-label="Close"]').click({ force: true });
-  await page.getByRole("button", { name: "Open medals" }).click();
+  await page.getByRole("button", { name: /^Open profile/ }).click();
   await page.waitForTimeout(500);
   await expect(page.locator("#medals-intro-title")).toHaveCount(0);
   await expect(aboutMedals).toBeVisible();

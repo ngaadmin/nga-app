@@ -22,7 +22,6 @@ import {
 import { AnswerEmoji } from "@/components/academy/lesson/answer-emoji";
 import { useLessonShake } from "@/components/academy/lesson/hooks/use-lesson-screen-flow";
 import {
-  LessonAnswerTick,
   LessonColumnLabel,
   LessonSortBucket,
   LessonSortBucketRow,
@@ -262,12 +261,6 @@ export function LessonBucketSortGame<TBucket extends string>({
           0,
         ) + 1;
 
-      if (isSpentTotalLayout) {
-        const nextPool = poolIdsRef.current.filter((id) => id !== itemId);
-        poolIdsRef.current = nextPool;
-        setPoolIds(nextPool);
-      }
-
       setBucketItems((bucketCurrent) => {
         const placed = bucketCurrent[bucketId] ?? [];
         if (placed.includes(itemId)) return bucketCurrent;
@@ -282,7 +275,7 @@ export function LessonBucketSortGame<TBucket extends string>({
         willComplete: nextPlacedCount === items.length,
       });
     },
-    [isSpentTotalLayout, itemById, items.length, queueSideEffect, shake],
+    [itemById, items.length, queueSideEffect, shake],
   );
 
   const assignToBucketRef = useRef(assignToBucket);
@@ -342,48 +335,130 @@ export function LessonBucketSortGame<TBucket extends string>({
     },
   });
 
+  const beginDrag = (itemId: string, clientX: number, clientY: number) => {
+    const chip = chipRefs.current[itemId];
+    if (!chip) return false;
+    const rect = chip.getBoundingClientRect();
+    const nextDrag: DragState = {
+      itemId,
+      offsetX: clientX - rect.left,
+      offsetY: clientY - rect.top,
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height,
+      originX: clientX,
+      originY: clientY,
+    };
+    dragStateRef.current = nextDrag;
+    return true;
+  };
+
+  const moveDragTo = (clientX: number, clientY: number) => {
+    const current = dragStateRef.current;
+    if (!current) return;
+    const moved: DragState = {
+      ...current,
+      x: clientX - current.offsetX,
+      y: clientY - current.offsetY,
+    };
+    dragStateRef.current = moved;
+    setDragState(moved);
+    setActiveBucketId(resolveBucketAtPointRef.current(clientX, clientY));
+  };
+
+  // Native touch listeners read the latest handlers through this ref.
+  const touchApiRef = useRef({ beginDrag, moveDragTo, finishPointer, endDrag });
+  touchApiRef.current = { beginDrag, moveDragTo, finishPointer, endDrag };
+  const isCompleteRef = useRef(isComplete);
+  isCompleteRef.current = isComplete;
+
+  // Touch drags run on native, non-passive touch events. iOS Safari can
+  // cancel a pointer (long-press, scroll) or drop pointer capture mid-drag,
+  // which left items stuck; owning the touch avoids both.
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+    let touchId: number | null = null;
+
+    const findTouch = (list: TouchList, id: number): Touch | null => {
+      for (let index = 0; index < list.length; index += 1) {
+        const touch = list[index];
+        if (touch && touch.identifier === id) return touch;
+      }
+      return null;
+    };
+    const detach = () => {
+      touchId = null;
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchCancel);
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      if (touchId === null) return;
+      const touch = findTouch(event.changedTouches, touchId);
+      if (!touch) return;
+      if (event.cancelable) event.preventDefault();
+      touchApiRef.current.moveDragTo(touch.clientX, touch.clientY);
+    };
+    const onTouchEnd = (event: TouchEvent) => {
+      if (touchId === null) return;
+      const touch = findTouch(event.changedTouches, touchId);
+      if (!touch) return;
+      if (event.cancelable) event.preventDefault();
+      detach();
+      touchApiRef.current.finishPointer(touch.clientX, touch.clientY);
+    };
+    const onTouchCancel = (event: TouchEvent) => {
+      if (touchId === null) return;
+      const touch = findTouch(event.changedTouches, touchId);
+      detach();
+      // A system cancel still drops a drag that was under way.
+      if (touch) touchApiRef.current.finishPointer(touch.clientX, touch.clientY);
+      else touchApiRef.current.endDrag();
+    };
+    const onTouchStart = (event: TouchEvent) => {
+      if (isCompleteRef.current || touchId !== null) return;
+      const target = event.target instanceof Element ? event.target : null;
+      const chip = target?.closest<HTMLElement>("[data-bucket-item-id]");
+      const itemId = chip?.dataset.bucketItemId;
+      const touch = event.changedTouches[0];
+      if (!chip || !itemId || !touch) return;
+      // Stops the long-press callout, text selection and page scroll.
+      if (event.cancelable) event.preventDefault();
+      if (!touchApiRef.current.beginDrag(itemId, touch.clientX, touch.clientY)) return;
+      touchId = touch.identifier;
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("touchend", onTouchEnd, { passive: false });
+      window.addEventListener("touchcancel", onTouchCancel, { passive: false });
+    };
+    board.addEventListener("touchstart", onTouchStart, { passive: false });
+    return () => {
+      board.removeEventListener("touchstart", onTouchStart);
+      detach();
+    };
+  }, []);
+
   const handleChipPointerDown = (
     itemId: string,
     event: ReactPointerEvent<HTMLButtonElement>,
   ) => {
     if (isComplete) return;
-    const chip = chipRefs.current[itemId];
-    if (!chip) return;
+    // Touch is handled by the native touch listeners above.
+    if (event.pointerType === "touch") return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    const rect = chip.getBoundingClientRect();
-    const nextDrag: DragState = {
-      itemId,
-      offsetX: event.clientX - rect.left,
-      offsetY: event.clientY - rect.top,
-      x: rect.left,
-      y: rect.top,
-      width: rect.width,
-      height: rect.height,
-      originX: event.clientX,
-      originY: event.clientY,
-    };
-    dragStateRef.current = nextDrag;
+    if (!beginDrag(itemId, event.clientX, event.clientY)) return;
     activePointerIdRef.current = event.pointerId;
 
     const pointerId = event.pointerId;
     const onMove = (native: PointerEvent) => {
       if (native.pointerId !== pointerId) return;
-      const current = dragStateRef.current;
-      if (!current) return;
+      if (!dragStateRef.current) return;
       native.preventDefault();
-      const moved: DragState = {
-        ...current,
-        x: native.clientX - current.offsetX,
-        y: native.clientY - current.offsetY,
-      };
-      dragStateRef.current = moved;
-      setDragState(moved);
-      setActiveBucketId(
-        resolveBucketAtPointRef.current(native.clientX, native.clientY),
-      );
+      moveDragTo(native.clientX, native.clientY);
     };
     const onUp = (native: PointerEvent) => {
       if (native.pointerId !== pointerId) return;
@@ -440,18 +515,22 @@ export function LessonBucketSortGame<TBucket extends string>({
 
   const draggedItem = dragState ? itemById.get(dragState.itemId) : null;
 
-  const renderPoolChip = (itemId: string, stacked = false) => {
+  const renderPoolChip = (itemId: string, stacked = false, interactive = true) => {
     const item = itemById.get(itemId);
     if (!item) return null;
-    const isDragging = dragState?.itemId === itemId;
+    const isDragging = interactive && dragState?.itemId === itemId;
+    const setChipRef = (node: HTMLButtonElement | null) => {
+      if (interactive) chipRefs.current[itemId] = node;
+    };
 
     if ((isStatementSortLayout && !stacked) || isSpentTotalLayout) {
       return (
         <LessonSortStatementCard
           key={itemId}
-          ref={(node) => {
-            chipRefs.current[itemId] = node;
-          }}
+          ref={setChipRef}
+          tabIndex={interactive ? undefined : -1}
+          data-bucket-item-id={interactive ? itemId : undefined}
+          onContextMenu={(event) => event.preventDefault()}
           label={item.label}
           emoji={item.emoji}
           price={item.price}
@@ -460,6 +539,7 @@ export function LessonBucketSortGame<TBucket extends string>({
           onKeyDown={(event) => selectItemFromKeyboard(event, itemId)}
           onPointerDown={(event) => handleChipPointerDown(itemId, event)}
           className={cn(
+            "lesson-touch-target",
             flyHomeId === itemId &&
               "transition-transform duration-300 ease-out -translate-y-2.5",
             shakingKey === itemId && "lesson-tile-shake",
@@ -471,15 +551,17 @@ export function LessonBucketSortGame<TBucket extends string>({
     return (
       <button
         key={itemId}
-        ref={(node) => {
-          chipRefs.current[itemId] = node;
-        }}
+        ref={setChipRef}
+        tabIndex={interactive ? undefined : -1}
+        data-bucket-item-id={interactive ? itemId : undefined}
+        onContextMenu={(event) => event.preventDefault()}
         type="button"
         aria-label={item.label}
         aria-pressed={selectedItemId === itemId}
         onKeyDown={(event) => selectItemFromKeyboard(event, itemId)}
         onPointerDown={(event) => handleChipPointerDown(itemId, event)}
         className={cn(
+          "lesson-touch-target",
           stacked ? "w-full" : "w-full min-w-[8rem] max-w-full",
           lessonSortStatementCardClass,
           isDragging && "opacity-40",
@@ -605,7 +687,7 @@ export function LessonBucketSortGame<TBucket extends string>({
     const primaryBucket = buckets[0];
     if (!primaryBucket) return null;
     const isSpentTotalComplete =
-      poolIds.length === 0 &&
+      isComplete &&
       (targetTotal === undefined || totalSpent >= targetTotal);
 
     const spentIds = bucketItems[primaryBucket.id] ?? [];
@@ -619,7 +701,17 @@ export function LessonBucketSortGame<TBucket extends string>({
         onPointerCancel={handlePointerUp}
       >
         <div className="flex shrink-0 flex-col gap-4 py-1">
-          {poolIds.map((itemId) => renderPoolChip(itemId, true))}
+          {/* Placed items keep an invisible copy in the pool so the pool
+              height never changes and the Spent bucket stays anchored. */}
+          {poolIds.map((itemId) =>
+            placedIdSet.has(itemId) ? (
+              <div key={itemId} className="invisible" aria-hidden>
+                {renderPoolChip(itemId, true, false)}
+              </div>
+            ) : (
+              renderPoolChip(itemId, true)
+            ),
+          )}
         </div>
         <div className="mb-2.5 h-px shrink-0 bg-[#C5D8E6]" />
         <div
@@ -641,11 +733,6 @@ export function LessonBucketSortGame<TBucket extends string>({
             complete={isSpentTotalComplete}
             className="mt-auto shrink-0 pt-[18px]"
           />
-          {isSpentTotalComplete ? (
-            <div className="mt-3 flex justify-center">
-              <LessonAnswerTick />
-            </div>
-          ) : null}
         </div>
 
         {draggedItem && dragState ? (
@@ -738,11 +825,6 @@ export function LessonBucketSortGame<TBucket extends string>({
         <LessonSortBucketRow className="min-h-0 flex-1">
           {buckets.map((bucket) => renderBucket(bucket))}
         </LessonSortBucketRow>
-        {isComplete ? (
-          <div className="mt-3 flex justify-center">
-            <LessonAnswerTick />
-          </div>
-        ) : null}
 
         {renderDragGhost()}
       </div>

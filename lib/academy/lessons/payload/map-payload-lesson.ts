@@ -1574,6 +1574,29 @@ function requireScreenIndex(
   return index;
 }
 
+/**
+ * A GO that lands on the completion screen first plays the closing story
+ * beats placed directly before it. Story beats are rows with no screen number
+ * (label such as `maverick-m1-l9-beat1`), so `GO Screen 8` still names the
+ * numbered completion row while the learner sees the closing beat on the way.
+ */
+export function enterThroughClosingBeats(
+  screens: readonly Pick<ScreenConfig, "type">[],
+  labels: readonly string[],
+  target: number,
+  fromIndex: number,
+): number {
+  if (screens[target]?.type !== "completion") return target;
+  let entry = target;
+  while (entry - 1 >= 0 && entry - 1 !== fromIndex) {
+    const before = entry - 1;
+    if (screens[before]?.type !== "narrative-bonus") break;
+    if (/^\d/.test((labels[before] ?? "").trim())) break;
+    entry = before;
+  }
+  return entry;
+}
+
 /** Point each GO / CONTINUE action at a real screen. A missing label is an error. */
 function linkContinueTargets(
   screens: ScreenConfig[],
@@ -1587,16 +1610,18 @@ function linkContinueTargets(
   });
   return screens.map((screen, screenIndex) => {
     const fromLabel = labels[screenIndex] ?? String(screenIndex + 1);
+    const resolve = (label: string) =>
+      enterThroughClosingBeats(
+        screens,
+        labels,
+        requireScreenIndex(indexByLabel, label, fromLabel, lesson),
+        screenIndex,
+      );
     let next = screen;
     if (next.continueToLabel) {
       next = {
         ...next,
-        continueToIndex: requireScreenIndex(
-          indexByLabel,
-          next.continueToLabel,
-          fromLabel,
-          lesson,
-        ),
+        continueToIndex: resolve(next.continueToLabel),
       };
     }
     if (!("options" in next) || !Array.isArray(next.options)) return next;
@@ -1611,7 +1636,7 @@ function linkContinueTargets(
       }
       return {
         ...option,
-        goToIndex: requireScreenIndex(indexByLabel, option.goToLabel, fromLabel, lesson),
+        goToIndex: resolve(option.goToLabel),
       };
     });
     if (next.type === "skill-hub") {
@@ -1643,7 +1668,7 @@ function linkContinueTargets(
             match && "goToIndex" in match && typeof match.goToIndex === "number"
               ? match.goToIndex
               : skill.goToLabel
-                ? requireScreenIndex(indexByLabel, skill.goToLabel, fromLabel, lesson)
+                ? resolve(skill.goToLabel)
                 : undefined;
           return {
             ...skill,

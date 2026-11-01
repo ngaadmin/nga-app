@@ -55,6 +55,8 @@ export function HoldToFillScreen({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const [pressed, setPressed] = useState(false);
+  /** A system cancel (call, scroll, gesture) stopped the hold, not the learner. */
+  const [interrupted, setInterrupted] = useState(false);
 
   const startHold = () => {
     if (complete || holdStartRef.current !== null) return;
@@ -62,6 +64,7 @@ export function HoldToFillScreen({
     setPressed(true);
     setProgress(0);
     setReleaseError(null);
+    setInterrupted(false);
 
     const tick = (now: number) => {
       const start = holdStartRef.current;
@@ -94,7 +97,11 @@ export function HoldToFillScreen({
     holdStartRef.current = null;
     if (start !== null && performance.now() - start < holdMs) {
       setProgress(0);
-      if (!countMistake) return;
+      if (!countMistake) {
+        // Say why the bar emptied instead of resetting it silently.
+        setInterrupted(true);
+        return;
+      }
       handleMistake();
       setReleaseError(lessonFeedbackCopy(screen.releaseHint) ?? null);
       if (shakeTimerRef.current !== null) window.clearTimeout(shakeTimerRef.current);
@@ -262,11 +269,11 @@ export function HoldToFillScreen({
         <p
           className={cn(
             "m-0 min-h-5 font-heading text-sm font-bold text-[#031F82] transition-opacity duration-150",
-            pressed ? "opacity-100" : "opacity-0",
+            pressed || interrupted ? "opacity-100" : "opacity-0",
           )}
           aria-live="polite"
         >
-          {pressed ? "Keep holding…" : ""}
+          {pressed ? "Keep holding…" : interrupted ? "Hold again to finish." : ""}
         </p>
       </div>
     </div>

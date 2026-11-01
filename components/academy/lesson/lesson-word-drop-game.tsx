@@ -111,9 +111,15 @@ function resolveBlankIndexFromPointer(
   blankElements: readonly (HTMLElement | null)[],
   drag: DragBounds | null,
 ): number | null {
+  // A blank can break across lines in a wrapped sentence. Use each line box
+  // so the empty space beside a wrapped blank never counts as that blank.
   const zones = blankElements.flatMap((blank, index) => {
     if (!blank) return [];
-    return [{ id: index, rect: domRectToDropRect(blank.getBoundingClientRect()) }];
+    const lineRects = Array.from(blank.getClientRects()).filter(
+      (rect) => rect.width > 0 && rect.height > 0,
+    );
+    const rects = lineRects.length > 0 ? lineRects : [blank.getBoundingClientRect()];
+    return rects.map((rect) => ({ id: index, rect: domRectToDropRect(rect) }));
   });
   return bestDropZone(zones, drag, clientX, clientY);
 }
@@ -472,7 +478,20 @@ export const LessonWordDropGame = forwardRef<
         )}
       >
         {bankItems.map((item) => {
-          if (choices.includes(item.id)) return null;
+          if (choices.includes(item.id)) {
+            // Keep the word's spot so the other chips never reflow under the
+            // learner's finger when a word moves into a blank.
+            return (
+              <span
+                key={item.id}
+                aria-hidden
+                data-word-drop-placeholder
+                className={cn(lessonSortPoolChipClass, "invisible text-[20px]")}
+              >
+                <AnswerEmojiLabel label={item.label} />
+              </span>
+            );
+          }
           return (
             <button
               key={item.id}

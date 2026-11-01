@@ -11,6 +11,7 @@ import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
+import { COHORT_AVATAR, type CohortAvatar } from "@/lib/onboarding/cohort-avatars";
 import { createSupabaseAccount } from "@/lib/onboarding/create-supabase-account";
 import {
   convertToRegisteredProfile,
@@ -34,11 +35,27 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{2,20}$/;
 const USERNAME_TAKEN_ERROR =
   "That username is already taken. Try adding a favorite number!";
 
-const TRACK_AVATAR_SRC: Record<MasteryCohort, string> = {
-  explorer: "/assets/illustrations/website/Avatars/Lars-onboarding.webp",
-  pathfinder: "/assets/illustrations/website/Avatars/Aiden-onboarding.webp",
-  maverick: "/assets/illustrations/website/Avatars/Saskia-onboarding.webp",
-};
+const LINKED_AVATAR_BOX = 80;
+const LINKED_AVATAR_PAD = 2;
+
+/** Place every cohort figure at the same height inside the 80px square. */
+function linkedAvatarFrame(avatar: CohortAvatar): {
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+} {
+  const scale =
+    (LINKED_AVATAR_BOX - LINKED_AVATAR_PAD * 2) / avatar.figure.height;
+  return {
+    width: avatar.width * scale,
+    height: avatar.height * scale,
+    left:
+      (LINKED_AVATAR_BOX - avatar.figure.width * scale) / 2 -
+      avatar.figure.x * scale,
+    top: LINKED_AVATAR_PAD - avatar.figure.y * scale,
+  };
+}
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 const fieldBase =
@@ -258,15 +275,20 @@ export function AddLinkedProfilePanel() {
                       : "border-[#BDE9FB]/70 bg-white hover:border-[#0CC1E0]/50",
                   )}
                 >
-                  <span className="relative h-20 w-20">
-                    <Image
-                      src={TRACK_AVATAR_SRC[track]}
-                      alt=""
-                      fill
-                      sizes="80px"
-                      className="object-contain"
-                      unoptimized
-                    />
+                  <span className="relative h-20 w-20 overflow-hidden">
+                    <span
+                      className="absolute block"
+                      style={linkedAvatarFrame(COHORT_AVATAR[track])}
+                    >
+                      <Image
+                        src={COHORT_AVATAR[track].src}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-fill"
+                        unoptimized
+                      />
+                    </span>
                   </span>
                   <span className="mt-2 font-heading text-sm font-extrabold text-[#031F82]">
                     {masteryCohortLabel(track)}

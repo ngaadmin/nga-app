@@ -35,7 +35,7 @@ describe("story credit", () => {
       "explorer-m1-l7-beat1",
       "explorer-m1-l7-beat2",
       "explorer-m1-l9-beat1",
-      "explorer-m1-l9-beat2",
+      "explorer-m1-l9-beat9",
     ].map((beatId) => ({ beatId, voiced: true }));
     const credited = storyCreditBeatIds(beats);
     expect(credited.has("explorer-m1-intro-beat1")).toBe(true);
@@ -46,7 +46,7 @@ describe("story credit", () => {
     expect(credited.has("explorer-m1-l7-beat1")).toBe(true);
     expect(credited.has("explorer-m1-l7-beat2")).toBe(false);
     expect(credited.has("explorer-m1-l9-beat1")).toBe(true);
-    expect(credited.has("explorer-m1-l9-beat2")).toBe(false);
+    expect(credited.has("explorer-m1-l9-beat9")).toBe(false);
     expect(STORY_CREDIT).toBe("Voice created with Grok");
   });
 

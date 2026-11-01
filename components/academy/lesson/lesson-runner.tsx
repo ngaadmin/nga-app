@@ -30,9 +30,11 @@ import {
 } from "@/lib/academy/lessons/types";
 import { bonusRunUnitForScreen } from "@/lib/academy/lessons/bonus-run";
 import { cn } from "@/lib/utils/cn";
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { LessonShuffleScope } from "@/components/academy/lesson/hooks/use-play-seed";
+import { LessonImagePreload } from "@/components/academy/lesson/lesson-image-preload";
 import { StoryAudioPlayer } from "@/components/academy/lesson/story-audio-player";
+import { lessonImageSrcs } from "@/lib/academy/lessons/lesson-image-srcs";
 import { nextStoryAudioSrc } from "@/lib/academy/lessons/story-audio/next-clip";
 import {
   STORY_BEAT_NEXT_LOCK_MS,
@@ -81,6 +83,13 @@ export function LessonRunner({
   const storyCredit =
     activeScreen?.type === "narrative-bonus" ? activeScreen.credit : undefined;
   const storyPreload = nextStoryAudioSrc(content.screens, screenIndex);
+  const imageSrcs = useMemo(
+    () => lessonImageSrcs(content.screens, content.characterName),
+    [content.screens, content.characterName],
+  );
+  const priorityImage = activeScreen
+    ? resolveLessonScreenIllustration(activeScreen)?.src
+    : undefined;
   const storyBeat = isStoryBeatScreen(activeScreen);
   const beatKey = storyBeat ? activeScreen?.id ?? "" : "";
   const [lockKey, setLockKey] = useState(beatKey);
@@ -131,6 +140,7 @@ export function LessonRunner({
     <LessonShuffleScope milestoneId={content.meta.milestoneId}>
     <LessonHintProvider>
     <div className="relative flex min-h-0 flex-1 flex-col">
+      <LessonImagePreload srcs={imageSrcs} prioritySrc={priorityImage} />
       <StoryAudioPlayer
         clip={storyClip}
         preloadSrc={storyPreload}
@@ -194,7 +204,12 @@ export function LessonRunner({
                     ? "match"
                     : screen.type === "allocation-slider"
                       ? "poster"
-                      : "default"
+                      : screen.type === "savings-goal"
+                        ? "compact"
+                        : screen.type === "multiple-choice" &&
+                            (screen.options?.length ?? 0) >= 3
+                          ? "compact"
+                          : "default"
                 }
               >
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

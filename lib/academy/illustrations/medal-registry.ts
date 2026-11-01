@@ -60,9 +60,21 @@ export const MEDAL_ILLUSTRATION_IDS = SKILL_NUMBERS_WITH_MEDAL_ASSETS.flatMap(
     TIER_STATUSES.map((status) => medalIllustrationId(skillNumber, status)),
 ) as readonly MedalIllustrationId[];
 
+/** Module 1 closer gold. Bronze and silver stay on the sheet's column F file. */
+const MODULE_ONE_GOLD_R2 = new Set<MedalIllustrationId>([
+  "medal-skill1-gold",
+  "medal-skill2-gold",
+  "medal-skill3-gold",
+]);
+
+function medalAssetPath(id: MedalIllustrationId): string {
+  if (MODULE_ONE_GOLD_R2.has(id)) return `${MEDALS_BASE}/${id}-r2.webp`;
+  return `${MEDALS_BASE}/${id}.webp`;
+}
+
 export const MEDAL_ILLUSTRATION_REGISTRY: Record<MedalIllustrationId, string> =
   Object.fromEntries(
-    MEDAL_ILLUSTRATION_IDS.map((id) => [id, `${MEDALS_BASE}/${id}.webp`]),
+    MEDAL_ILLUSTRATION_IDS.map((id) => [id, medalAssetPath(id)]),
   ) as Record<MedalIllustrationId, string>;
 
 const MEDAL_ID_BY_SKILL: Record<

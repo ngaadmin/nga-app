@@ -6,6 +6,4 @@
  */
 export const ACADEMY_AUDIO_BASE_URL = "/academy-audio/explorer-m1";
 
-export const STORY_AUDIO_MUTED_KEY = "nga_story_audio_muted";
-
 export const STORY_CREDIT = "Voice created with Grok";

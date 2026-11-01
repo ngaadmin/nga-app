@@ -36,8 +36,6 @@ export function BucketSortScreen({
     handleComplete();
   }, [handleComplete, handleSuccess]);
 
-  const sortLayout = screen.layout ?? "statement-sort";
-  const illustration = resolveLessonScreenIllustration(screen);
   const pairedZones = isPairedZoneSortScreen(screen);
 
   if (pairedZones) {
@@ -50,15 +48,15 @@ export function BucketSortScreen({
           buckets={screen.buckets}
           orderKey={screen.id}
           mode="drag"
-          showCharacter={screen.buckets.some(
-            (bucket) => bucket.id === "want" || bucket.id === "need",
-          )}
           onComplete={handleSolved}
           onMismatch={reportWrongDrop}
         />
       </LessonScreenLayout>
     );
   }
+
+  const sortLayout = screen.layout ?? "statement-sort";
+  const illustration = resolveLessonScreenIllustration(screen);
 
   const game =
     sortLayout === "steps-row" ? (

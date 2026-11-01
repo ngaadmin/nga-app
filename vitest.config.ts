@@ -36,6 +36,7 @@ export default defineConfig({
       "lib/**/*.test.tsx",
       "components/**/*.test.tsx",
       "scripts/**/*.test.ts",
+      "tools/**/*.test.ts",
     ],
   },
   resolve: {

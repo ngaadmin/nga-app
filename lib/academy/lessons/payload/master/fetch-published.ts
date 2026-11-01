@@ -154,15 +154,30 @@ async function fetchLessonTrio(
   const columns = lessonColumns(lessonNumber);
   let row: Record<string, unknown> | undefined;
   if (selector.kind === "current") {
+    // Two reads on purpose. PostgREST 14.5 (Supabase prod, 1 Nov 2026) turns
+    // the last `->0` inside an embedded select, the one just before `)`, into
+    // a text key, so `payload->maverick->'0'` came back null and every lesson
+    // failed with "maverick lesson N is missing or malformed". Read the pointer
+    // first, then the version by id with the same top-level select that drafts
+    // use, where every array index is cast to int.
+    const pointers = await restGet(
+      url,
+      key,
+      `academy_lesson_current?module_number=eq.${moduleNumber}&select=version_id`,
+      "cached",
+    );
+    const versionId = pointers[0]?.version_id;
+    if (typeof versionId !== "string" || !UUID_RE.test(versionId)) {
+      return { ok: false, reason: `No current version for module ${moduleNumber}.` };
+    }
     const rows = await restGet(
       url,
       key,
-      `academy_lesson_current?module_number=eq.${moduleNumber}&select=version:academy_lesson_versions(${columns})`,
+      `academy_lesson_versions?id=eq.${versionId}&module_number=eq.${moduleNumber}&select=${columns}`,
       "cached",
     );
-    const joined = rows[0]?.version;
-    row = (Array.isArray(joined) ? joined[0] : joined) as Record<string, unknown> | undefined;
-    if (!row) return { ok: false, reason: `No current version for module ${moduleNumber}.` };
+    row = rows[0];
+    if (!row) return { ok: false, reason: `Current version ${versionId} not found.` };
   } else {
     const filter =
       selector.id === "latest"

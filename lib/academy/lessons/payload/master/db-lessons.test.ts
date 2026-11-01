@@ -50,6 +50,30 @@ function row(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   };
 }
 
+/**
+ * Stand-in for Supabase PostgREST 14.5 as seen in prod on 1 Nov 2026.
+ * The pointer read returns `[{ version_id }]`; a version read by id returns the
+ * selected columns. The old embedded read
+ * (`academy_lesson_current?select=version:academy_lesson_versions(...)`) gets
+ * the real prod shape: the last JSON index before `)` was sent as a text key,
+ * so `maverick` came back null while explorer and pathfinder were objects.
+ */
+function postgrest14(versionRow: Record<string, unknown> = row()) {
+  return vi.fn(async (input: string | URL) => {
+    const url = decodeURIComponent(String(input));
+    if (url.includes("academy_lesson_current") && url.includes("academy_lesson_versions(")) {
+      return new Response(JSON.stringify([{ version: { ...versionRow, maverick: null } }]), { status: 200 });
+    }
+    if (url.includes("academy_lesson_current")) {
+      return new Response(JSON.stringify([{ version_id: versionRow.id }]), { status: 200 });
+    }
+    if (url.includes("academy_lesson_versions") && url.includes(`id=eq.${String(versionRow.id)}`)) {
+      return new Response(JSON.stringify([versionRow]), { status: 200 });
+    }
+    return new Response("[]", { status: 200 });
+  });
+}
+
 describe("draft gating", () => {
   it("never reads a draft outside a Vercel preview", () => {
     expect(previewDraftSelector("latest", { VERCEL_ENV: "production" })).toEqual({ kind: "current" });
@@ -95,7 +119,7 @@ describe("loadMasterLessonTrio fallbacks", () => {
   }
 
   it("serves current, then the last good copy when the database is down, then the error screen", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{ version: row() }]), { status: 200 })));
+    vi.stubGlobal("fetch", postgrest14());
     const first = await loadMasterLessonTrio(1, 3);
     expect(first).toMatchObject({ ok: true, source: "current" });
 
@@ -110,9 +134,36 @@ describe("loadMasterLessonTrio fallbacks", () => {
     expect(events()).toEqual(["academy_lesson_fetch_failed", "academy_lesson_error_screen"]);
   });
 
+  it("reads the current pointer, then the version by id, so the PostgREST 14.5 embed bug cannot null a cohort", async () => {
+    const fetchMock = postgrest14();
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await loadMasterLessonTrio(1, 3);
+    expect(result).toMatchObject({ ok: true, source: "current", versionId: DRAFT_ID });
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.trio.maverick.lessonNumber).toBe(3);
+    const urls = fetchMock.mock.calls.map((call) => decodeURIComponent(String(call[0])));
+    expect(urls).toHaveLength(2);
+    expect(urls[0]).toContain("academy_lesson_current?module_number=eq.1&select=version_id");
+    expect(urls[1]).toContain(`academy_lesson_versions?id=eq.${DRAFT_ID}&module_number=eq.1&select=`);
+    expect(urls[1]).toContain("maverick:payload->maverick->2");
+    expect(urls.some((url) => url.includes("academy_lesson_versions("))).toBe(false);
+    expect(events()).toEqual([]);
+  });
+
+  it("the old embedded response shape (maverick null) is rejected, which is what prod showed", () => {
+    const result = trioFromRow({ ...row(), maverick: null }, 1, 3, "current");
+    expect(result).toEqual({ ok: false, reason: "maverick lesson 3 is missing or malformed." });
+  });
+
+  it("shows the error screen when there is no pointer row", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("[]", { status: 200 })));
+    const result = await loadMasterLessonTrio(1, 3);
+    expect(result).toEqual({ ok: false, reason: "No current version for module 1." });
+  });
+
   it("does not ask for a draft in a production build", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    const fetchMock = vi.fn(async (_url: string) => new Response(JSON.stringify([{ version: row() }]), { status: 200 }));
+    const fetchMock = postgrest14();
     vi.stubGlobal("fetch", fetchMock);
     const result = await loadMasterLessonTrio(1, 3, { draft: "latest" });
     expect(result).toMatchObject({ ok: true, source: "current" });

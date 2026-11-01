@@ -10,7 +10,8 @@
  *
  * --check-bucket asks the public bucket for every picture and clip. A missing
  * object blocks the draft. --allow-held-pending lets only held Lars art be
- * missing; it's listed in media.pending and the version can't be promoted.
+ * missing; it's listed in media.pending and the version can't be promoted
+ * (except the accepted missing Pippa target, see ACCEPTED_MISSING_MEDIA).
  *
  * --promote only checks the version and prints the statement to run. It never
  * runs it. After the pointer moves, POST /api/academy/revalidate.

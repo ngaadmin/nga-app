@@ -145,13 +145,25 @@ export type MasterPublishResult = {
 };
 
 /**
+ * Missing pictures Cath has accepted for launch. The Pathfinder M1 L2 drag
+ * target (G21 `TARGET: pippa-celebrating`) shows its placeholder; the row 21
+ * picture is the standing Pippa (Cath, 31 Oct 4:13pm and 1 Nov 3:16pm).
+ * Every other pending object still blocks promote.
+ */
+export const ACCEPTED_MISSING_MEDIA: ReadonlySet<string> = new Set([
+  "images/pippa-celebrating-512.webp",
+]);
+
+/**
  * Reasons a stored version can't become current. Anything listed here means
  * learners would see a placeholder, so promote refuses.
  */
 export function promotionBlockers(value: unknown, expectedModule?: number): string[] {
   const check = checkMasterPublishPayload(value, expectedModule);
   if (!check.ok) return [check.reason];
-  const pending = check.payload.media.pending ?? [];
+  const pending = (check.payload.media.pending ?? []).filter(
+    (object) => !ACCEPTED_MISSING_MEDIA.has(object),
+  );
   return pending.map((object) => `Not in the bucket yet: ${object}`);
 }
 

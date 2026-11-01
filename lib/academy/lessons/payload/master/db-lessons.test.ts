@@ -157,6 +157,24 @@ describe("publishing drafts", () => {
     expect(saveDraft).toHaveBeenCalledTimes(1);
   });
 
+  it("lets only the accepted missing Pippa target through promote", async () => {
+    const all = new Set([...workbook.media.images, ...workbook.media.audio].filter((name) => !isHeldLarsMedia(name)));
+    const ready = readMasterWorkbookFile(MASTER_WORKBOOK_PATH, { moduleNumber: 1, knownMedia: all });
+    const saveDraft = vi.fn(async (_hash: string, _payload: MasterPublishPayload) => DRAFT_ID);
+    await publishMasterDraft(ready, {
+      store: { findByHash: async () => null, saveDraft },
+      allowPending: isHeldLarsMedia,
+    });
+    const payload = saveDraft.mock.calls[0]![1];
+    const accepted = { ...payload, media: { ...payload.media, pending: ["images/pippa-celebrating-512.webp"] } };
+    expect(promotionBlockers(accepted, 1)).toEqual([]);
+    const other = {
+      ...payload,
+      media: { ...payload.media, pending: ["images/pippa-celebrating-512.webp", "images/other-missing.webp"] },
+    };
+    expect(promotionBlockers(other, 1)).toEqual(["Not in the bucket yet: images/other-missing.webp"]);
+  });
+
   it("refuses a lesson that moved to another number", async () => {
     const all = new Set([...workbook.media.images, ...workbook.media.audio]);
     const ready = readMasterWorkbookFile(MASTER_WORKBOOK_PATH, { moduleNumber: 1, knownMedia: all });

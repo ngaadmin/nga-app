@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { pinDifferenceLine } from "@/lib/parent/pin-copy";
+import { PIN_DIFFERENCE_LINE_NEUTRAL, pinDifferenceLine } from "@/lib/parent/pin-copy";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { isParentTabPin } from "@/lib/parent/parent-tab-pin";
 import {
@@ -84,10 +84,13 @@ export function ParentPinGate({
   onUnlocked,
   className,
   childCount,
+  childCountLoading = false,
 }: {
   parentName: string;
   /** Linked children, for "your child's" vs "your children's" copy. */
   childCount?: number;
+  /** True while the count loads: show the neutral line, not "child's". */
+  childCountLoading?: boolean;
   /** Line under "Enter your Parent Hub PIN". */
   enterBody?: string;
   onUnlocked: (pass: string) => void | Promise<void>;
@@ -275,9 +278,10 @@ export function ParentPinGate({
       </p>
       <p
         data-pin-difference
+        data-pin-difference-state={childCountLoading ? "loading" : "ready"}
         className="mx-auto mt-1.5 max-w-[17rem] font-sans text-[11.5px] leading-snug text-[#4A5675]"
       >
-        {pinDifferenceLine(childCount)}
+        {childCountLoading ? PIN_DIFFERENCE_LINE_NEUTRAL : pinDifferenceLine(childCount)}
       </p>
 
       {phase === "forgot" ? (

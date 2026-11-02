@@ -11,6 +11,14 @@ describe("Parent PIN copy", () => {
   });
 });
 
+describe("PIN_DIFFERENCE_LINE_NEUTRAL", () => {
+  it("has no child or children wording", async () => {
+    const { PIN_DIFFERENCE_LINE_NEUTRAL } = await import("@/lib/parent/pin-copy");
+    expect(PIN_DIFFERENCE_LINE_NEUTRAL).not.toMatch(/child/i);
+    expect(PIN_DIFFERENCE_LINE_NEUTRAL).toContain("Parent Hub PIN");
+  });
+});
+
 describe("parentHubSubtitle", () => {
   it("uses children's with 2+ children, child's otherwise", async () => {
     const { parentHubSubtitle } = await import("@/lib/parent/pin-copy");

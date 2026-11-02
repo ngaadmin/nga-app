@@ -78,6 +78,7 @@ export function ParentHubSection() {
               className="mx-0 mt-1 px-0 pb-1 pt-2 shadow-none"
               enterBody="Enter your Parent Hub PIN to see or change the cash rate."
               childCount={childCount ?? undefined}
+              childCountLoading={childCount === null}
               onUnlocked={(pass) => setPinPass(pass)}
             />
           </div>

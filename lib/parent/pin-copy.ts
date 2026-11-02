@@ -25,4 +25,8 @@ export function pinDifferenceLine(childCount?: number | null): string {
   return `Your Parent Hub PIN opens the Parent Hub and the cash rate. Your Parent PIN is a separate code for ${childDataPhrase(childCount)} and your account.`;
 }
 
+/** Shown while the child count is still loading: no child/children wording. */
+export const PIN_DIFFERENCE_LINE_NEUTRAL =
+  "Your Parent Hub PIN opens the Parent Hub and the cash rate. Your Parent PIN is a separate code.";
+
 export const PIN_DIFFERENCE_LINE = pinDifferenceLine(1);

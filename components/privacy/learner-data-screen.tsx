@@ -1,12 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
-  BookOpenIcon,
   DownloadIcon,
-  FlameIcon,
-  GoldCoinIcon,
   LockIcon,
   TrashIcon,
 } from "@/lib/dashboard/icons";
@@ -14,11 +11,39 @@ import { useCurrency } from "@/lib/dashboard/currency-context";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
 import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
+import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
+import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
+import { MedalCountChip, SkillTile } from "@/components/achievements/skills-collection-panel";
+import { ACTIVITY_ICONS, GradCapIconA, JAR_ICONS } from "@/lib/dashboard/progress-icons-a";
+import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
+
+/** Soft peach discs with orange duotone, same as the top bar's coin and streak. */
+const STAT_DISC = "bg-[#FFE7B8] text-[#031F82] [--tab-icon-fill:#FFA503]";
+import { getVaultSkillTrophyById } from "@/lib/dashboard/skill-trophies";
+import { cn } from "@/lib/utils/cn";
+import { coinsCashWorth } from "@/lib/parent/coins-cash-worth";
+
+/**
+ * "full": everything (teacher's student record).
+ * "progress": the Parent Hub's read-only view (progress, medals, Vault,
+ *   recent activity). No privacy controls.
+ * "privacy": the child's privacy controls only (leaderboard switch,
+ *   download, delete).
+ * "hub": the Parent Hub child page, kept slim: the header card, Lessons done
+ *   and Day streak, then a "Data & privacy" section (leaderboard switch, data
+ *   file, delete). No coins, achievements, Vault or recent activity.
+ */
+export type LearnerDataScreenMode = "full" | "progress" | "privacy" | "hub";
 
 type LearnerDataScreenProps = {
   view: LearnerDataView;
+  mode?: LearnerDataScreenMode;
   title?: string;
-  backHref: string;
+  subtitle?: string;
+  /** Link back. Ignored when onBack is set. */
+  backHref?: string;
+  /** In-page back (e.g. the Parent Hub, which must stay unlocked). */
+  onBack?: () => void;
   backLabel: string;
   siblings?: { userId: string; username: string }[];
   activeChildId?: string;
@@ -26,17 +51,24 @@ type LearnerDataScreenProps = {
   showLeaderboardSwitch?: boolean;
   onLeaderboardChange?: (enabled: boolean) => void;
   leaderboardBusy?: boolean;
-  onDownload: () => void;
-  onDelete: () => void;
-  deleteLabel: string;
+  onDownload?: () => void;
+  onDelete?: () => void;
+  deleteLabel?: string;
   downloading?: boolean;
   vaultNote?: string;
+  /** Parent Hub child page: "Set cash rate" when no rate is set yet. */
+  onSetCashRate?: () => void;
+  /** The learner's chosen avatar. Without it, the first letter shows. */
+  avatarId?: ProfileAvatarId;
 };
 
 export function LearnerDataScreen({
   view,
-  title = "My child's data",
-  backHref,
+  mode = "full",
+  title = "Your child's data",
+  subtitle = "Everything NextGenAchievers keeps about this account.",
+  backHref = "/dashboard/settings",
+  onBack,
   backLabel,
   siblings = [],
   activeChildId,
@@ -46,23 +78,45 @@ export function LearnerDataScreen({
   leaderboardBusy = false,
   onDownload,
   onDelete,
-  deleteLabel,
+  deleteLabel = "Delete account",
   downloading = false,
   vaultNote = "Vault amounts are what you and your child track in the app. The app doesn't hold or move money.",
+  avatarId,
+  onSetCashRate,
 }: LearnerDataScreenProps) {
   const { formatMoney } = useCurrency();
   const initial = view.username.trim().charAt(0).toUpperCase() || "?";
+  const showProgress = mode !== "privacy";
+  const showControls = mode !== "progress";
+  const hubPrivacy = mode === "hub";
+  /** The Hub child page is slim: header, lessons, streak, then Data & privacy. */
+  const fullDetail = mode !== "hub";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
-      <Link href={backHref} className="font-heading text-sm font-bold text-[#0CC1E0]">
-        ← {backLabel}
-      </Link>
+      {onBack ? (
+        <button
+          type="button"
+          data-learner-data-back
+          onClick={onBack}
+          className="self-start font-heading text-sm font-bold text-[#0CC1E0]"
+        >
+          ← {backLabel}
+        </button>
+      ) : (
+        <Link
+          href={backHref}
+          data-learner-data-back
+          className="font-heading text-sm font-bold text-[#0CC1E0]"
+        >
+          ← {backLabel}
+        </Link>
+      )}
       <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">
         {title}
       </h1>
       <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        Everything NextGenAchievers keeps about this account.
+        {subtitle}
       </p>
 
       {siblings.length > 1 ? (
@@ -89,11 +143,18 @@ export function LearnerDataScreen({
 
       <section className="mt-3.5 rounded-2xl bg-white p-4 shadow-md">
         <div className="flex items-center gap-3.5">
-          <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-[22px] font-extrabold text-white shadow-md">
-            {initial}
-          </div>
+          {avatarId ? (
+            <ProfileAvatarImage
+              avatarId={avatarId}
+              className="size-[52px] shadow-md"
+            />
+          ) : (
+            <div className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-[22px] font-extrabold text-white shadow-md">
+              {initial}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
-            <p className="font-heading text-xl font-extrabold leading-tight text-[#031F82]">
+            <p className="break-words font-heading text-xl font-extrabold leading-tight text-[#031F82]">
               {view.username}
             </p>
             {view.trackLabel ? (
@@ -101,11 +162,15 @@ export function LearnerDataScreen({
                 {view.trackLabel}
               </p>
             ) : null}
+            {/* Below the name, so a long name gets the whole row. */}
+            <span
+              data-learner-data-view-only
+              className="mt-1.5 inline-flex h-[26px] items-center gap-1 rounded-full bg-[#EAF0FF] px-2.5 font-heading text-xs font-bold text-[#031F82]"
+            >
+              <LockIcon className="size-3.5" />
+              View only
+            </span>
           </div>
-          <span className="inline-flex h-[26px] shrink-0 items-center gap-1 rounded-full bg-[#EAF0FF] px-2.5 font-heading text-xs font-bold text-[#031F82]">
-            <LockIcon className="size-3.5" />
-            View only
-          </span>
         </div>
         {view.accountLine ? (
           <div className="mt-3.5 border-t border-[#BDE9FB]/60 pt-3">
@@ -125,53 +190,57 @@ export function LearnerDataScreen({
         ) : null}
       </section>
 
+      {showProgress ? (
+        <div data-learner-data-progress>
       <section className="mt-5">
         <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
           Progress
         </h2>
         <div className="mt-2.5 grid grid-cols-2 gap-2.5">
           <StatTile
-            icon={<BookOpenIcon className="size-4" />}
+            icon={<GradCapIconA className="size-[18px]" />}
+            iconClass={STAT_DISC}
             value={String(view.lessonsDone)}
             label="Lessons done"
             note="Finished in the Academy"
           />
           <StatTile
-            icon={<FlameIcon className="size-4" />}
-            iconClass="bg-[#FFA503] text-[#031F82]"
+            icon={<StreakIconA className="size-[18px]" />}
+            iconClass={STAT_DISC}
             value={String(view.dayStreak)}
-            unit="days"
+            unit={view.dayStreak === 1 ? "day" : "days"}
             label="Day streak"
-            note={`Best ever: ${view.bestStreak} days`}
+            note={`Best ever: ${view.bestStreak} ${view.bestStreak === 1 ? "day" : "days"}`}
           />
         </div>
+        {fullDetail ? (
+          <>
         <WideStat
-          icon={<GoldCoinIcon className="size-5" />}
+          icon={<CoinsIconA className="size-5" />}
           label="Coins balance"
           note="Ready to cash in."
           value={`${view.coins.toLocaleString()} coins`}
         />
         <WideStat
-          icon={<GoldCoinIcon className="size-5" />}
-          label="Coins earned"
+          icon={<CoinsIconA className="size-5" />}
+          label="Lifetime coins"
           note="The total coins this account has earned."
           value={`${view.lifetimeXp.toLocaleString()} coins`}
         />
+          </>
+        ) : (
+          <CoinsCashCard
+            coins={view.coins}
+            centsPer100Coins={view.cashRateCentsPer100Coins ?? null}
+            formatMoney={formatMoney}
+            onSetCashRate={onSetCashRate}
+          />
+        )}
       </section>
 
-      <section className="mt-5">
-        <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
-          Medals
-        </h2>
-        <div className="mt-2.5 grid grid-cols-3 gap-2.5">
-          <MedalTile emoji="🥉" count={view.medals.bronze} label="Bronze" />
-          <MedalTile emoji="🥈" count={view.medals.silver} label="Silver" />
-          <MedalTile emoji="🥇" count={view.medals.gold} label="Gold" />
-        </div>
-        <p className="mt-1.5 font-sans text-xs font-medium text-[#4A5675]">
-          Total ever earned, across all modules.
-        </p>
-      </section>
+      {fullDetail ? (
+        <>
+      <AchievementsSection view={view} />
 
       <section className="mt-5">
         <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
@@ -180,10 +249,17 @@ export function LearnerDataScreen({
         <div className="mt-2.5 rounded-2xl bg-white px-3.5 pb-1 pt-3.5 shadow-md">
           <p className="font-heading text-[13px] font-bold text-[#4A5675]">Jars</p>
           <div className="mt-2.5 grid grid-cols-4 gap-1 pb-3">
-            {view.jars.map((jar) => (
-              <div key={jar.name} className="min-w-0 text-center">
-                <div className="mx-auto flex size-[52px] items-center justify-center rounded-full bg-[#E8F6FC] text-[26px]">
-                  {jar.emoji}
+            {view.jars.map((jar) => {
+              const { Icon, toneClassName } = JAR_ICONS[jar.id];
+              return (
+              <div key={jar.id} data-learner-data-jar={jar.id} className="min-w-0 text-center">
+                <div
+                  className={cn(
+                    "mx-auto flex size-[52px] items-center justify-center rounded-full",
+                    toneClassName,
+                  )}
+                >
+                  <Icon className="size-7" />
                 </div>
                 <p className="mt-1.5 whitespace-nowrap font-heading text-[12.5px] font-bold text-[#031F82]">
                   {jar.name}
@@ -192,7 +268,8 @@ export function LearnerDataScreen({
                   {formatMoney(jar.amount)}
                 </p>
               </div>
-            ))}
+              );
+            })}
           </div>
           {view.goals.length > 0 ? (
             <>
@@ -238,13 +315,21 @@ export function LearnerDataScreen({
           {view.activity.length === 0 ? (
             <p className="py-3 font-sans text-sm text-[#4A5675]">No activity yet.</p>
           ) : (
-            view.activity.map((item, index) => (
+            view.activity.map((item, index) => {
+              const { Icon, toneClassName } = ACTIVITY_ICONS[item.icon];
+              return (
               <div
                 key={`${item.title}-${index}`}
+                data-learner-data-activity={item.icon}
                 className={`flex items-center gap-3 py-2.5 ${index > 0 ? "border-t border-[#E1E8F6]" : ""}`}
               >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0FF] text-lg">
-                  {item.emoji}
+                <span
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-full",
+                    toneClassName,
+                  )}
+                >
+                  <Icon className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-heading text-sm font-bold text-[#031F82]">{item.title}</p>
@@ -254,13 +339,29 @@ export function LearnerDataScreen({
                   {item.when}
                 </p>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
+        </>
+      ) : null}
+        </div>
+      ) : null}
 
-      {showLeaderboardSwitch && onLeaderboardChange ? (
-        <div className="mt-5">
+      {hubPrivacy ? (
+        <section data-child-data-privacy className="mt-6">
+          <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
+            Data &amp; privacy
+          </h2>
+          <p className="mt-1 font-sans text-[13px] leading-snug text-[#4A5675]">
+            Leaderboard visibility, {view.username}&apos;s data file and deleting their account.
+          </p>
+        </section>
+      ) : null}
+
+      {showControls && showLeaderboardSwitch && onLeaderboardChange ? (
+        <div className={hubPrivacy ? "mt-3" : "mt-5"}>
           <LeaderboardSwitch
             enabled={view.leaderboardEnabled}
             scope="child"
@@ -270,20 +371,34 @@ export function LearnerDataScreen({
         </div>
       ) : null}
 
-      <div className="mt-6">
-        <NavyButton onClick={onDownload} disabled={downloading}>
-          <DownloadIcon className="size-5" />
-          Download data
-        </NavyButton>
-        <p className={`mt-1.5 ${noteClass()}`}>One plain data file with everything on this page.</p>
-        <div className="mt-4">
-          <NavyOutlineButton onClick={onDelete}>
-            <TrashIcon className="size-5" />
-            {deleteLabel}
-          </NavyOutlineButton>
+      {showControls && (onDownload || onDelete) ? (
+        <div className={hubPrivacy ? "mt-4" : "mt-6"} data-learner-data-controls>
+          {onDownload ? (
+            <>
+              <NavyButton onClick={onDownload} disabled={downloading}>
+                <DownloadIcon className="size-5" />
+                Download data
+              </NavyButton>
+              <p className={`mt-1.5 ${noteClass()}`}>
+                {mode === "privacy" || mode === "hub"
+                  ? "One plain data file with everything kept about this account, progress included."
+                  : "One plain data file with everything on this page."}
+              </p>
+            </>
+          ) : null}
+          {onDelete ? (
+            <>
+              <div className="mt-4">
+                <NavyOutlineButton onClick={onDelete}>
+                  <TrashIcon className="size-5" />
+                  {deleteLabel}
+                </NavyOutlineButton>
+              </div>
+              <p className={`mt-1.5 ${noteClass()}`}>You&apos;ll be asked to confirm first.</p>
+            </>
+          ) : null}
         </div>
-        <p className={`mt-1.5 ${noteClass()}`}>You&apos;ll be asked to confirm first.</p>
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -304,7 +419,7 @@ function StatTile({
   note: string;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF] px-3 py-2.5">
+    <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#BDE9FB]/70 bg-white px-3 py-2.5">
       <div className="flex items-center gap-2">
         <span className={`flex size-7 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
           {icon}
@@ -320,9 +435,65 @@ function StatTile({
   );
 }
 
+/**
+ * Parent Hub child page: the cashable coins balance and what it is worth at
+ * the parent's cash rate, in the parent's display currency. With no rate set,
+ * a small "Set cash rate" pill takes the parent to the rate setting.
+ */
+export function CoinsCashCard({
+  coins,
+  centsPer100Coins,
+  formatMoney,
+  onSetCashRate,
+}: {
+  coins: number;
+  centsPer100Coins: number | null;
+  formatMoney: (amount: number) => string;
+  onSetCashRate?: () => void;
+}) {
+  const worth = coinsCashWorth(coins, centsPer100Coins);
+  const hasRate = worth !== null;
+  return (
+    <div
+      data-learner-data-coins
+      data-cash-state={hasRate ? "rate" : "no-rate"}
+      className="mt-2.5 flex items-center gap-3 rounded-xl border-2 border-[#BDE9FB]/70 bg-white px-3 py-2.5"
+    >
+      <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${STAT_DISC}`}>
+        <CoinsIconA className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-heading text-[13px] font-bold text-[#031F82]">Coins balance</p>
+        <p className="font-heading text-[22px] font-extrabold leading-tight tabular-nums text-[#031F82]">
+          {coins.toLocaleString("en-US")} {coins === 1 ? "coin" : "coins"}
+        </p>
+      </div>
+      {hasRate ? (
+        <p
+          data-learner-data-coins-worth
+          className="max-w-[46%] text-right font-sans text-xs font-semibold leading-snug text-[#4A5675]"
+        >
+          Worth <span className="font-bold text-[#031F82]">{formatMoney(worth ?? 0)}</span> at your rate
+        </p>
+      ) : onSetCashRate ? (
+        <button
+          type="button"
+          data-learner-data-set-rate
+          onClick={onSetCashRate}
+          className="h-8 w-[112px] shrink-0 whitespace-nowrap rounded-full bg-[#031F82] font-heading text-xs font-bold text-white"
+        >
+          Set cash rate
+        </button>
+      ) : (
+        <p className="shrink-0 font-sans text-xs font-semibold text-[#4A5675]">No cash rate yet</p>
+      )}
+    </div>
+  );
+}
+
 function WideStat({
   icon,
-  iconClass = "bg-[#FFA503] text-[#031F82]",
+  iconClass = STAT_DISC,
   label,
   note,
   value,
@@ -338,7 +509,7 @@ function WideStat({
   return (
     <div
       className={`mt-2.5 flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 ${
-        accent ? "border-[#0CC1E0]/35 bg-[#F2FBFD]" : "border-[#BDE9FB]/70 bg-[#F7FBFF]"
+        accent ? "border-[#0CC1E0]/35 bg-white" : "border-[#BDE9FB]/70 bg-white"
       }`}
     >
       <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
@@ -355,12 +526,94 @@ function WideStat({
   );
 }
 
-function MedalTile({ emoji, count, label }: { emoji: string; count: number; label: string }) {
+/**
+ * Medals, collapsed by default like the profile's Achievements section:
+ * the total in the header row; counts and the flat medal art when opened.
+ */
+function AchievementsSection({ view }: { view: LearnerDataView }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const total = view.medals.bronze + view.medals.silver + view.medals.gold;
+  const skills = view.earnedSkills
+    .map((entry) => {
+      const trophy = getVaultSkillTrophyById(entry.slug);
+      return trophy ? { ...trophy, tier: entry.tier } : null;
+    })
+    .filter((skill): skill is NonNullable<typeof skill> => skill !== null);
+
   return (
-    <div className="rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF] px-1.5 py-2.5 text-center">
-      <div className="text-[26px] leading-none">{emoji}</div>
-      <p className="mt-1 font-heading text-xl font-extrabold tabular-nums text-[#031F82]">{count}</p>
-      <p className="font-sans text-xs font-semibold text-[#4A5675]">{label}</p>
-    </div>
+    <section
+      data-learner-data-achievements
+      data-learner-data-achievements-state={open ? "open" : "closed"}
+      className="mt-5 rounded-2xl bg-white px-3.5 shadow-md"
+    >
+      <button
+        type="button"
+        data-learner-data-achievements-toggle
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center gap-2 py-3.5 text-left"
+      >
+        <h2 className="flex-1 font-heading text-[15px] font-bold text-[#031F82]">
+          Achievements
+        </h2>
+        <span className="font-sans text-[12.5px] font-semibold text-[#4A5675]">
+          {total} {total === 1 ? "medal" : "medals"}
+        </span>
+        <svg
+          viewBox="0 0 12 12"
+          width="14"
+          height="14"
+          aria-hidden
+          className={cn(
+            "shrink-0 text-[#0288A3] transition-transform",
+            open && "rotate-180",
+          )}
+        >
+          <path
+            d="M3 4.5 6 7.5 9 4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open ? (
+        <div id={panelId} className="border-t border-[#BDE9FB]/60 pb-3.5 pt-3">
+          <div aria-label="Medal counts" className="flex w-full items-stretch gap-2">
+            <MedalCountChip
+              label="Bronze"
+              value={view.medals.bronze}
+              toneClassName="text-[#CD7F32]"
+            />
+            <MedalCountChip
+              label="Silver"
+              value={view.medals.silver}
+              toneClassName="text-[#8FA3B0]"
+            />
+            <MedalCountChip
+              label="Gold"
+              value={view.medals.gold}
+              toneClassName="text-[#FFA503]"
+            />
+          </div>
+          {skills.length > 0 ? (
+            <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-4">
+              {skills.map((skill) => (
+                <SkillTile key={skill.id} skill={skill} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 font-sans text-[13px] text-[#4A5675]">No medals yet.</p>
+          )}
+          <p className="mt-3 font-sans text-xs font-medium text-[#4A5675]">
+            Total ever earned, across all modules.
+          </p>
+        </div>
+      ) : null}
+    </section>
   );
 }

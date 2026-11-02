@@ -6,7 +6,7 @@ const VAULT_FOUNDATION_DISPLAY_NAMES: Partial<Record<VaultBucketId, string>> = {
   "save-jar": "Save",
   "spend-jar": "Spend",
   "give-jar": "Give",
-  "emergencies-jar": "Emergencies",
+  "emergencies-jar": "Emergency",
 };
 
 const DEFAULT_FOUNDATION_JAR_NAMES = Object.fromEntries(

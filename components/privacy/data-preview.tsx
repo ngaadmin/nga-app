@@ -34,21 +34,22 @@ const DELTA4: LearnerDataView = {
   coins: 480,
   lifetimeXp: 1250,
   medals: { bronze: 5, silver: 2, gold: 1 },
+  earnedSkills: [],
   jars: [
-    { name: "Save", emoji: "🏦", amount: 20 },
-    { name: "Spend", emoji: "🛒", amount: 8.5 },
-    { name: "Give", emoji: "🎁", amount: 4 },
-    { name: "Emergency", emoji: "🚨", amount: 0 },
+    { id: "save-jar", name: "Save", amount: 20 },
+    { id: "spend-jar", name: "Spend", amount: 8.5 },
+    { id: "give-jar", name: "Give", amount: 4 },
+    { id: "emergencies-jar", name: "Emergency", amount: 0 },
   ],
   goals: [
     { name: "New bike", emoji: "🚲", balance: 40, target: 120 },
     { name: "Gift for Nan", emoji: "🎂", balance: 15, target: 25 },
   ],
   activity: [
-    { emoji: "🎓", title: "Finished a lesson", detail: "Catch Impulse Spending", when: "Today" },
-    { emoji: "🪙", title: "Cashed in 150 coins", detail: "Went to Cash in the Vault", when: "Yesterday" },
-    { emoji: "🏦", title: "Moved $5.00 to Save", detail: "Vault", when: "18 Oct" },
-    { emoji: "🥉", title: "Bronze medal", detail: "Choose Needs Over Wants", when: "17 Oct" },
+    { icon: "lesson", title: "Finished a lesson", detail: "Catch Impulse Spending", when: "Today" },
+    { icon: "coins", title: "Cashed in 150 coins", detail: "Went to Cash in the Vault", when: "Yesterday" },
+    { icon: "vault", title: "Moved $5.00 to Save", detail: "Vault", when: "Oct 18" },
+    { icon: "medal-bronze", title: "Bronze medal", detail: "Choose Needs Over Wants", when: "Oct 17" },
   ],
   leaderboardEnabled: false,
 };
@@ -65,17 +66,18 @@ const RAVEN3: LearnerDataView = {
   coins: 210,
   lifetimeXp: 980,
   medals: { bronze: 4, silver: 1, gold: 0 },
+  earnedSkills: [],
   jars: [
-    { name: "Save", emoji: "🏦", amount: 0 },
-    { name: "Spend", emoji: "🛒", amount: 0 },
-    { name: "Give", emoji: "🎁", amount: 0 },
-    { name: "Emergency", emoji: "🚨", amount: 0 },
+    { id: "save-jar", name: "Save", amount: 0 },
+    { id: "spend-jar", name: "Spend", amount: 0 },
+    { id: "give-jar", name: "Give", amount: 0 },
+    { id: "emergencies-jar", name: "Emergency", amount: 0 },
   ],
   goals: [],
   activity: [
-    { emoji: "🎓", title: "Finished a lesson", detail: "Choose Needs Over Wants", when: "Today" },
-    { emoji: "🥉", title: "Bronze medal", detail: "Catch Impulse Spending", when: "16 Oct" },
-    { emoji: "🎓", title: "Finished a lesson", detail: "Catch Impulse Spending", when: "15 Oct" },
+    { icon: "lesson", title: "Finished a lesson", detail: "Choose Needs Over Wants", when: "Today" },
+    { icon: "medal-bronze", title: "Bronze medal", detail: "Catch Impulse Spending", when: "Oct 16" },
+    { icon: "lesson", title: "Finished a lesson", detail: "Catch Impulse Spending", when: "Oct 15" },
   ],
   leaderboardEnabled: false,
 };
@@ -158,18 +160,18 @@ const SECRET_CHILD_FILE = {
 };
 
 const CHILD_REMOVAL: RemovalItem[] = [
-  { emoji: "👤", title: "Profile", detail: "Username, track and settings" },
-  { emoji: "🎓", title: "Progress", detail: "Lessons and day streak" },
-  { emoji: "⭐", title: "Lifetime XP", detail: "The Lifetime XP total" },
-  { emoji: "🪙", title: "Coins", detail: "The coins balance" },
-  { emoji: "🏅", title: "Medals", detail: "Every bronze, silver and gold medal" },
-  { emoji: "🏦", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
-  { emoji: "🕐", title: "Activity", detail: "The recent activity history" },
+  { icon: "profile", title: "Profile", detail: "Username, track and settings" },
+  { icon: "lessons", title: "Progress", detail: "Lessons and day streak" },
+  { icon: "lifetime-coins", title: "Lifetime coins", detail: "The Lifetime coins total" },
+  { icon: "coins", title: "Coins", detail: "The coins balance" },
+  { icon: "medals", title: "Medals", detail: "Every bronze, silver and gold medal" },
+  { icon: "vault", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
+  { icon: "activity", title: "Activity", detail: "The recent activity history" },
 ];
 
 function studentRemoval(username: string): RemovalItem[] {
   return [
-    { emoji: "🔑", title: "Login", detail: `The username ${username} and its class seat` },
+    { icon: "login", title: "Login", detail: `The username ${username} and its class seat` },
     ...CHILD_REMOVAL.slice(1),
   ];
 }
@@ -241,8 +243,10 @@ function ParentFlowPreview() {
     <>
       <LearnerDataScreen
         view={DELTA4}
+        mode="privacy"
+        title="Data & privacy"
         backHref="/dashboard/settings"
-        backLabel="Parent Hub"
+        backLabel="Back to Settings"
         siblings={[
           { userId: "child-delta4", username: "delta4" },
           { userId: "child-sky7", username: "sky7" },
@@ -286,8 +290,10 @@ export function DataPreview({ screen }: { screen: string }) {
       <>
         <LearnerDataScreen
           view={DELTA4}
+          mode="privacy"
+          title="Data & privacy"
           backHref="/dashboard/settings"
-          backLabel="Parent Hub"
+          backLabel="Back to Settings"
           siblings={[
             { userId: "child-delta4", username: "delta4" },
             { userId: "child-sky7", username: "sky7" },
@@ -433,17 +439,17 @@ function DeleteTeacherPreview() {
         body="This deletes your classes and all 6 student logins in them. Students can't log in again and their progress is gone for good."
         items={[
           {
-            emoji: "👤",
+            icon: "profile",
             title: "Your teacher account",
             detail: "Username ms_rivera, email and history",
           },
           {
-            emoji: "🏫",
+            icon: "class",
             title: "Your class",
             detail: "Explorer class and its class password",
           },
           {
-            emoji: "👥",
+            icon: "students",
             title: "All 6 student logins",
             detail: `${names}, and everything in their accounts`,
           },

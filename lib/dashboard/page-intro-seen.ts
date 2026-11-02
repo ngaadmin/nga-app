@@ -175,12 +175,40 @@ export function markAccountSkillsCupIntroSeen(): void {
   patchAccountSeen({ skillsCup: true });
 }
 
+/**
+ * Guest-only, device-wide "Achievements tip dismissed" flag. Kept apart from
+ * the per-account store so no guest reset, new guest pick or session restore
+ * brings the tip back on the next visit.
+ */
+export const GUEST_MEDALS_TIP_DISMISSED_KEY = "nga_guest_medals_tip_dismissed_v1";
+
+function isGuestNow(): boolean {
+  const accountKey = currentAccountLocalKey();
+  return accountKey !== null && isGuestIntroAccountKey(accountKey);
+}
+
+function guestMedalsTipDismissed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(GUEST_MEDALS_TIP_DISMISSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function hasAccountSeenMedalsIntro(): boolean {
-  return readAccountSeen().medals === true;
+  if (readAccountSeen().medals === true) return true;
+  return isGuestNow() && guestMedalsTipDismissed();
 }
 
 export function markAccountMedalsIntroSeen(): void {
   patchAccountSeen({ medals: true });
+  if (typeof window === "undefined" || !isGuestNow()) return;
+  try {
+    window.localStorage.setItem(GUEST_MEDALS_TIP_DISMISSED_KEY, "1");
+  } catch {
+    // Private mode: the per-account flag above still applies this visit.
+  }
 }
 
 export function hasAccountSeenProfileSwitcherTip(): boolean {

@@ -8,6 +8,7 @@ import {
   isTermsAcceptanceEntry,
   TERMS_ACCEPTANCE_TITLE,
 } from "@/lib/legal/terms-consent";
+import { getSkillRegistryRecord } from "@/lib/skills/skills-registry";
 
 export type DataActor =
   | { role: "parent_master"; userId: string; linkedChildIds: readonly string[] }
@@ -268,6 +269,22 @@ export function countStoredMedals(
   return { bronze, silver, gold };
 }
 
+export type EarnedSkillTier = "bronze" | "silver" | "gold";
+
+/** Skills with a medal (bronze or better), best tier first. */
+export function listEarnedSkills(
+  skillProgress: Record<string, unknown> | null | undefined,
+): { slug: string; tier: EarnedSkillTier }[] {
+  const rank: Record<EarnedSkillTier, number> = { gold: 0, silver: 1, bronze: 2 };
+  return Object.entries(skillProgress ?? {})
+    .filter(
+      (entry): entry is [string, EarnedSkillTier] =>
+        entry[1] === "gold" || entry[1] === "silver" || entry[1] === "bronze",
+    )
+    .map(([slug, tier]) => ({ slug, tier }))
+    .sort((a, b) => rank[a.tier] - rank[b.tier]);
+}
+
 export type HistoryEntry = {
   at: string;
   title: string;
@@ -292,7 +309,7 @@ const MONTHS = [
 export function formatHistoryDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 }
 
 export function historySummary(entries: readonly HistoryEntry[]): string {
@@ -355,9 +372,31 @@ export function buildTeacherHistory(input: {
   return entries.sort((left, right) => Date.parse(left.at) - Date.parse(right.at));
 }
 
+/** Which direction A line icon a Recent activity row shows. */
+export type ActivityIconKind =
+  | "lesson"
+  | "medal-bronze"
+  | "medal-silver"
+  | "medal-gold"
+  | "coins"
+  | "vault";
+
+export type ActivityItem = {
+  icon: ActivityIconKind;
+  title: string;
+  detail: string;
+  when: string;
+};
+
+/** Looks up a lesson title from its number (and skill slug, when known). */
+export type LessonTitleLookup = (
+  lessonNumber: number | null | undefined,
+  skillSlug: string | undefined,
+) => string | null;
+
 type ActivitySource = {
   at: string;
-  emoji: string;
+  icon: ActivityIconKind;
   title: string;
   detail: string;
 };
@@ -373,29 +412,36 @@ export function buildRecentActivity(input: {
   vaultMoves: readonly { at: string; title: string }[];
   now: Date;
   limit?: number;
-}): { emoji: string; title: string; detail: string; when: string }[] {
+  /** Server-side lesson title lookup. Without it, rows fall back to skill names. */
+  lessonTitle?: LessonTitleLookup;
+}): ActivityItem[] {
   const items: ActivitySource[] = [];
   for (const event of input.usageEvents) {
+    const skill = event.metadata?.skill?.trim() || undefined;
+    const detail =
+      input.lessonTitle?.(event.lessonNumber, skill)?.trim() ||
+      skillName(skill) ||
+      lessonDetail(event.lessonNumber);
     if (event.eventType === "lesson_completed") {
       items.push({
         at: event.createdAt,
-        emoji: "🎓",
+        icon: "lesson",
         title: "Finished a lesson",
-        detail: event.metadata?.skill?.trim() || lessonDetail(event.lessonNumber),
+        detail,
       });
     } else if (event.eventType === "medal_earned") {
       items.push({
         at: event.createdAt,
-        emoji: medalEmoji(event.metadata?.tier),
+        icon: medalIcon(event.metadata?.tier),
         title: medalTitle(event.metadata?.tier),
-        detail: event.metadata?.skill?.trim() || "Medal",
+        detail,
       });
     }
   }
   for (const spend of input.walletSpends) {
     items.push({
       at: spend.at,
-      emoji: "🪙",
+      icon: "coins",
       title: `Cashed in ${spend.points} coins`,
       detail: "Went to Cash in the Vault",
     });
@@ -403,7 +449,7 @@ export function buildRecentActivity(input: {
   for (const move of input.vaultMoves) {
     items.push({
       at: move.at,
-      emoji: "🏦",
+      icon: "vault",
       title: move.title,
       detail: "Vault",
     });
@@ -413,7 +459,7 @@ export function buildRecentActivity(input: {
     .sort((left, right) => Date.parse(right.at) - Date.parse(left.at))
     .slice(0, input.limit ?? 4)
     .map((item) => ({
-      emoji: item.emoji,
+      icon: item.icon,
       title: item.title,
       detail: item.detail,
       when: formatActivityWhen(item.at, input.now),
@@ -433,10 +479,16 @@ function medalTitle(tier: string | undefined): string {
   return "Bronze medal";
 }
 
-function medalEmoji(tier: string | undefined): string {
-  if (tier === "gold") return "🥇";
-  if (tier === "silver") return "🥈";
-  return "🥉";
+function medalIcon(tier: string | undefined): ActivityIconKind {
+  if (tier === "gold") return "medal-gold";
+  if (tier === "silver") return "medal-silver";
+  return "medal-bronze";
+}
+
+/** Readable skill name for a slug (never the raw slug). */
+function skillName(slug: string | undefined): string | null {
+  if (!slug) return null;
+  return getSkillRegistryRecord(slug)?.skillName ?? null;
 }
 
 export function formatActivityWhen(iso: string, now: Date): string {
@@ -447,7 +499,7 @@ export function formatActivityWhen(iso: string, now: Date): string {
   const diff = Math.round((today - day) / 86_400_000);
   if (diff === 0) return "Today";
   if (diff === 1) return "Yesterday";
-  return `${date.getDate()} ${MONTHS[date.getMonth()]}`;
+  return `${MONTHS[date.getMonth()]} ${date.getDate()}`;
 }
 
 function startOfLocalDay(date: Date): Date {
@@ -455,14 +507,21 @@ function startOfLocalDay(date: Date): Date {
 }
 
 const JAR_ORDER = [
-  { id: "save-jar", name: "Save", emoji: "🏦" },
-  { id: "spend-jar", name: "Spend", emoji: "🛒" },
-  { id: "give-jar", name: "Give", emoji: "🎁" },
-  { id: "emergencies-jar", name: "Emergency", emoji: "🚨" },
+  { id: "save-jar", name: "Save" },
+  { id: "spend-jar", name: "Spend" },
+  { id: "give-jar", name: "Give" },
+  { id: "emergencies-jar", name: "Emergency" },
 ] as const;
+
+export type JarId = (typeof JAR_ORDER)[number]["id"];
 
 export type LearnerDataView = {
   userId: string;
+  /**
+   * Parent Hub child page only: the child's coins cash rate in whole cents per
+   * 100 coins, or null when no rate is set. Undefined elsewhere.
+   */
+  cashRateCentsPer100Coins?: number | null;
   username: string;
   trackLabel: string | null;
   accountLine: string | null;
@@ -473,9 +532,11 @@ export type LearnerDataView = {
   coins: number;
   lifetimeXp: number;
   medals: { bronze: number; silver: number; gold: number };
-  jars: { name: string; emoji: string; amount: number }[];
+  /** Skills with a medal, for the medal art in the Achievements section. */
+  earnedSkills: { slug: string; tier: EarnedSkillTier }[];
+  jars: { id: JarId; name: string; amount: number }[];
   goals: { name: string; emoji: string; balance: number; target: number }[];
-  activity: { emoji: string; title: string; detail: string; when: string }[];
+  activity: ActivityItem[];
   leaderboardEnabled: boolean;
 };
 
@@ -524,9 +585,12 @@ export function assembleLearnerView(input: {
     medals: countStoredMedals(
       asRecord(progress.skillProgress) as Record<string, unknown> | null,
     ),
+    earnedSkills: listEarnedSkills(
+      asRecord(progress.skillProgress) as Record<string, unknown> | null,
+    ),
     jars: JAR_ORDER.map((jar) => ({
+      id: jar.id,
       name: jar.name,
-      emoji: jar.emoji,
       amount: finiteAmount(jarBalances[jar.id]),
     })),
     goals: goalsRaw

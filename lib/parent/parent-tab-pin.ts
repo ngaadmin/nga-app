@@ -1,12 +1,9 @@
 /**
- * Parent tab PIN: shared rules. The PIN itself lives on the server in
- * public.parent_tab_pins (service role only) and is checked by the server
- * actions in parent-tab-pin-server.ts. Nothing about it is kept on the
- * device, so clearing site data never resets the PIN or the lockout.
- *
- * This PIN is separate from profiles.parent_pin_hash (the "My child's data"
- * PIN). It never gates switching into the parent profile; it gates the
- * Parent tab and every approval or decline.
+ * Parent PIN: shared rules for the 4-digit format and the gate result.
+ * There is one Parent PIN, stored as profiles.parent_pin_hash and checked on
+ * the server (lib/parent/parent-tab-server.ts). The old Hub-only table,
+ * public.parent_tab_pins, is no longer read or written by the app. See
+ * docs/parent-pins-proposal.md for the unapplied clean-up plan.
  */
 
 export const PARENT_TAB_PIN_ITERATIONS = 150_000;

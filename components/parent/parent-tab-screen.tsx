@@ -7,16 +7,13 @@ import {
   useState,
 } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import { markLinkedChildCashInPaid } from "@/lib/dashboard/linked-child-exchange-rate";
 import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import {
   approveConsentRequestFromParentTab,
   declineConsentRequestFromParentTab,
@@ -24,20 +21,32 @@ import {
 import { convertToRegisteredProfile } from "@/lib/onboarding/guest-session";
 import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
+import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
 import {
   loadParentTabData,
+  renewParentTabGatePass,
   type ParentTabChildSummary,
   type ParentTabData,
   type ParentTabOkItem,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
+import { HUB_CHILD_PARAM } from "@/lib/parent/cash-rate-return";
+import { HubChildPage } from "@/components/parent/hub-child-page";
+import { ParentHubChildCard } from "@/components/parent/parent-hub-child-card";
+import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
+import type { LearnerDataView } from "@/lib/privacy/data-controls";
+
+/** Under the 10-minute gate pass, so an open Hub never lapses. */
+const PARENT_HUB_RENEW_MS = 4 * 60 * 1000;
 
 const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 
 /**
- * Parent tab. Asks for the parent PIN every time it opens: the unlocked
+ * Parent Hub (the "Parent" tab). Insights and approvals: each child's
+ * progress, account approvals and paying out coins. Asks for the Parent Hub
+ * PIN every time it opens: the unlocked
  * state lives only in this component, so leaving the tab (unmount),
  * reloading, or backgrounding the app (visibilitychange / pagehide) locks
  * it again. Nothing here runs when switching into the parent profile.
@@ -48,12 +57,16 @@ export function ParentTabScreen({
 }: {
   parentUserId: string;
   parentName: string;
+  /** Linked children. Kept for callers; the one Parent PIN gate has no count copy. */
+  childCount?: number;
 }) {
   const [unlocked, setUnlocked] = useState(false);
   const [gateKey, setGateKey] = useState(0);
   const [pass, setPass] = useState<string | null>(null);
   const [data, setData] = useState<ParentTabData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  /** A child's progress is open: it has its own back button and title. */
+  const [subpageOpen, setSubpageOpen] = useState(false);
   const lockGeneration = useRef(0);
 
   const lock = useCallback(() => {
@@ -62,6 +75,7 @@ export function ParentTabScreen({
     setData(null);
     setLoadError(null);
     setUnlocked(false);
+    setSubpageOpen(false);
     setGateKey((key) => key + 1);
   }, []);
 
@@ -104,30 +118,56 @@ export function ParentTabScreen({
     [refresh],
   );
 
+  /**
+   * Gated at entry only: while the Hub stays open, renew the pass (and the
+   * data grant) before it runs out, so child pages, Data & privacy, the data
+   * file and the leaderboard switch never ask for the PIN again.
+   */
+  useEffect(() => {
+    if (!unlocked || !pass) return;
+    const generation = lockGeneration.current;
+    const timer = window.setInterval(() => {
+      void renewParentTabGatePass(pass).then((result) => {
+        if (generation !== lockGeneration.current) return;
+        if (result.ok) setPass(result.pass);
+      });
+    }, PARENT_HUB_RENEW_MS);
+    return () => window.clearInterval(timer);
+  }, [unlocked, pass]);
+
   return (
     <div
       data-parent-tab
       data-parent-tab-state={unlocked ? "unlocked" : "locked"}
       className={cn(
-        // Full-bleed light blue page, as in the r6 design. Cancels the
-        // dashboard main padding so the color reaches the edges.
-        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex min-h-0 flex-1 flex-col bg-[#E8F6FC] px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
+        // Full-bleed white page (app screens are always white; color goes
+        // on cards and accents only). Cancels the dashboard main padding.
+        // shrink-0: the page grows with its content so <main> scrolls it.
+        // (A shrinking flex child with its own overflow clipped the bottom
+        // and left an empty band above the tab bar.)
+        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex flex-1 shrink-0 flex-col bg-white px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
       )}
     >
-      <div className="mx-auto flex w-full max-w-md flex-col overflow-x-hidden">
-        <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
-          Parent dashboard
-        </h1>
-        <p className="mt-px font-sans text-[13px] text-[#1E3A5F]">
-          Only you can see this. It&apos;s PIN-protected.
-        </p>
+      <div className="mx-auto flex w-full max-w-md flex-col overflow-x-clip">
+        {subpageOpen ? null : (
+          <>
+            <h1 className="font-heading text-2xl font-extrabold leading-tight text-[#031F82]">
+              Parent Hub
+            </h1>
+            <p className="mt-px font-sans text-[13px] text-[#1E3A5F]">
+              Only you can see this. It&apos;s PIN-protected.
+            </p>
+          </>
+        )}
 
         {unlocked ? (
           pass ? (
             <UnlockedView
+              pass={pass}
               data={data}
               loadError={loadError}
               onChanged={() => void refresh(pass)}
+              onSubpageChange={setSubpageOpen}
             />
           ) : null
         ) : (
@@ -135,7 +175,7 @@ export function ParentTabScreen({
             key={`${parentUserId}:${gateKey}`}
             parentName={parentName}
             className="mx-0"
-            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your PIN to open the Parent tab.`}
+            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent PIN to open the Parent Hub.`}
             onUnlocked={unlock}
           />
         )}
@@ -144,9 +184,6 @@ export function ParentTabScreen({
   );
 }
 
-function summaryWord(count: number, one: string, many: string) {
-  return count === 1 ? one : many;
-}
 
 function shortDate(iso: string): string | null {
   const date = new Date(iso);
@@ -154,79 +191,6 @@ function shortDate(iso: string): string | null {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-const TRACK_CHIP: Record<MasteryCohort, string> = {
-  explorer: "bg-[#EDE7FE] text-[#6D3FE0]",
-  pathfinder: "bg-[#E0F7FB] text-[#0288A3]",
-  maverick: "bg-[#FFE9D6] text-[#B45309]",
-};
-
-/** One child: avatar, name, track, lifetime lessons, coins to cash in. */
-function ChildCard({ child }: { child: ParentTabChildSummary }) {
-  const avatarId = readStoredProfileAvatarId(
-    child.userId,
-    child.cohort ?? "explorer",
-  );
-  // Name gets the whole row next to the avatar (lessons sit at its right
-  // edge); the coins pill has its own line under the track tag, so names of
-  // ~14+ characters fit at 390px without truncating.
-  return (
-    <div
-      data-parent-tab-child={child.username}
-      className={cn(
-        "grid grid-cols-[56px_1fr] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5",
-        CARD_SHADOW,
-      )}
-    >
-      <ProfileAvatarImage avatarId={avatarId} className="size-14" />
-      <div className="min-w-0">
-        <div className="flex items-baseline gap-2">
-          <p
-            data-parent-tab-child-name
-            className="min-w-0 flex-1 truncate font-heading text-[17px] font-bold leading-tight text-[#031F82]"
-          >
-            {child.username}
-          </p>
-          <span
-            data-parent-tab-child-summary
-            className="inline-flex shrink-0 items-center whitespace-nowrap font-sans text-[12.5px] font-medium text-[#1E3A5F]"
-          >
-            <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
-              {child.lessonsDone}
-            </b>
-            {summaryWord(child.lessonsDone, "lesson", "lessons")}
-          </span>
-        </div>
-        {child.status === "waiting" ? (
-          <span className="mt-1 inline-block rounded-full bg-[#FFE7B3] px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px] text-[#8A5300]">
-            Waiting
-          </span>
-        ) : child.cohort ? (
-          <span
-            data-parent-tab-child-track
-            className={cn(
-              "mt-1 inline-block rounded-full px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px]",
-              TRACK_CHIP[child.cohort],
-            )}
-          >
-            {masteryCohortLabel(child.cohort)}
-          </span>
-        ) : null}
-        <div className="mt-1.5">
-          <span
-            data-parent-tab-child-coins
-            className="inline-flex items-center whitespace-nowrap rounded-full bg-[#FFF4DE] py-[3px] pl-1.5 pr-2.5 font-sans text-[12.5px] font-medium text-[#1E3A5F]"
-          >
-            <GoldCoinIcon className="mr-[5px] size-[15px]" />
-            <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
-              {child.coins}
-            </b>
-            {summaryWord(child.coins, "coin", "coins")} to cash in
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
@@ -253,8 +217,8 @@ function ChevronIcon({ open }: { open: boolean }) {
 }
 
 /**
- * Messages log, collapsed by default. No messages table exists yet, so the
- * open log says so; the unread badge counts unread rows (0 for now).
+ * Messages log, collapsed by default. Only rendered once messages exist
+ * (no messages table yet, so it stays hidden for now).
  */
 function MessagesLog({ messages }: { messages: readonly never[] }) {
   const [open, setOpen] = useState(false);
@@ -303,13 +267,17 @@ function MessagesLog({ messages }: { messages: readonly never[] }) {
 }
 
 function UnlockedView({
+  pass,
   data,
   loadError,
   onChanged,
+  onSubpageChange,
 }: {
+  pass: string;
   data: ParentTabData | null;
   loadError: string | null;
   onChanged: () => void;
+  onSubpageChange?: (open: boolean) => void;
 }) {
   const { currencyCode } = useCurrency();
   const [review, setReview] = useState<Extract<
@@ -329,6 +297,80 @@ function UnlockedView({
   > | null>(null);
   const [settleBusy, setSettleBusy] = useState(false);
   const [settleError, setSettleError] = useState<string | null>(null);
+  /** A child's progress, opened from their card. */
+  const [progress, setProgress] = useState<
+    | { state: "loading"; username: string }
+    | { state: "ready"; view: LearnerDataView; cohort: MasteryCohort | null }
+    | { state: "error"; username: string; error: string }
+    | null
+  >(null);
+  const hasData = data !== null;
+  const subpageOpen = progress !== null;
+
+  useEffect(() => {
+    onSubpageChange?.(subpageOpen);
+  }, [onSubpageChange, subpageOpen]);
+
+  /**
+   * Coins tap from the header lands on #to-settle once the Hub loads: scroll
+   * there and briefly highlight it, so it reads as the answer to the tap even
+   * when the page is too short to scroll. A tap while already here does too.
+   */
+  const [settleFlash, setSettleFlash] = useState(false);
+  useEffect(() => {
+    if (!hasData || typeof window === "undefined") return;
+    let timer: number | undefined;
+    const focusSettle = () => {
+      const target = document.getElementById("to-settle");
+      if (!target) return;
+      target.scrollIntoView({ block: "start", behavior: "smooth" });
+      setSettleFlash(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setSettleFlash(false), 1800);
+    };
+    if (window.location.hash === "#to-settle") focusSettle();
+    window.addEventListener(PARENT_HUB_TO_SETTLE_EVENT, focusSettle);
+    return () => {
+      window.removeEventListener(PARENT_HUB_TO_SETTLE_EVENT, focusSettle);
+      window.clearTimeout(timer);
+    };
+  }, [hasData]);
+
+  const openProgress = useCallback(
+    async (child: ParentTabChildSummary) => {
+      setProgress({ state: "loading", username: child.username });
+      const result = await loadParentHubChildProgress(pass, child.userId);
+      if (!result.ok) {
+        setProgress({
+          state: "error",
+          username: child.username,
+          error: result.error,
+        });
+        return;
+      }
+      setProgress({ state: "ready", view: result.view, cohort: child.cohort });
+    },
+    [pass],
+  );
+
+  /**
+   * Back from "Set cash rate" (Settings) with ?child=<id>: reopen that
+   * child's page once the Hub has loaded, then drop the param.
+   */
+  const reopenedChild = useRef(false);
+  useEffect(() => {
+    if (!data || reopenedChild.current || typeof window === "undefined") return;
+    reopenedChild.current = true;
+    const url = new URL(window.location.href);
+    const childId = url.searchParams.get(HUB_CHILD_PARAM);
+    if (!childId) return;
+    url.searchParams.delete(HUB_CHILD_PARAM);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    const child = data.children.find(
+      (entry) => entry.userId === childId && entry.status === "active",
+    );
+    if (child) void openProgress(child);
+  }, [data, openProgress]);
 
   if (loadError) {
     return (
@@ -342,6 +384,45 @@ function UnlockedView({
       <p className="mx-1 mt-4 font-sans text-sm text-[#1E3A5F]" role="status">
         Loading…
       </p>
+    );
+  }
+
+  if (progress) {
+    if (progress.state === "ready") {
+      return (
+        <div data-parent-hub-progress className="-mx-1 mt-2">
+          <HubChildPage
+            key={progress.view.userId}
+            initialView={progress.view}
+            cohort={progress.cohort ?? null}
+            onBack={() => setProgress(null)}
+            onDeleted={() => {
+              setProgress(null);
+              onChanged();
+            }}
+          />
+        </div>
+      );
+    }
+    return (
+      <div data-parent-hub-progress className="mt-3">
+        <button
+          type="button"
+          data-learner-data-back
+          onClick={() => setProgress(null)}
+          className="font-heading text-sm font-bold text-[#0CC1E0]"
+        >
+          ← Back to Parent Hub
+        </button>
+        <p
+          className="mt-3 font-sans text-sm text-[#1E3A5F]"
+          role={progress.state === "error" ? "alert" : "status"}
+        >
+          {progress.state === "error"
+            ? progress.error
+            : `Loading ${progress.username}'s progress…`}
+        </p>
+      </div>
     );
   }
 
@@ -420,14 +501,47 @@ function UnlockedView({
         role="group"
         aria-label="Your children"
       >
-        {data.children.map((child) => (
-          <ChildCard key={child.userId} child={child} />
-        ))}
+        {data.children.map((child) => {
+          if (child.status === "active") {
+            return (
+              <ParentHubChildCard
+                key={child.userId}
+                child={child}
+                onOpen={() => void openProgress(child)}
+              />
+            );
+          }
+          // Waiting for consent: never opens progress. With an open request
+          // the card opens that approval (same sheet as Review).
+          const approval = data.needsOk.find(
+            (item): item is Extract<ParentTabOkItem, { kind: "approval" }> =>
+              item.kind === "approval" && item.requestId === child.requestId,
+          );
+          return (
+            <ParentHubChildCard
+              key={child.userId}
+              child={child}
+              onReview={
+                approval
+                  ? () => {
+                      setReviewError(null);
+                      setReviewTermsAccepted(false);
+                      setReview(approval);
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
       </div>
 
       <section
+        id="to-settle"
         data-parent-tab-needs-ok
+        data-to-settle-highlight={settleFlash ? "" : undefined}
         className={cn(
+          "scroll-mt-4 transition-[box-shadow,background-color] duration-500",
+          settleFlash && "!bg-[#FFEBC2] ring-4 ring-[#FFA503]/45",
           "mt-3 rounded-2xl border-2 border-[#FFA503] bg-[#FFF8EA] px-3.5 pb-1 pt-[13px]",
           CARD_SHADOW,
         )}
@@ -521,7 +635,9 @@ function UnlockedView({
         )}
       </section>
 
-      <MessagesLog messages={data.messages} />
+      {data.messages.length > 0 ? (
+        <MessagesLog messages={data.messages} />
+      ) : null}
 
       <ModalShell
         isOpen={Boolean(settle)}
@@ -530,9 +646,10 @@ function UnlockedView({
           setSettle(null);
         }}
         layer="toast"
+        liftAboveBottomNav
         labelledBy="parent-tab-settle-title"
         backdropClassName="bg-[#031F82]/55"
-        panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
+        panelClassName="max-h-full overflow-y-auto rounded-2xl border-0 bg-white p-5 shadow-md"
       >
         {settle ? (
           <div data-parent-tab-settle-sheet>
@@ -588,9 +705,10 @@ function UnlockedView({
           setReview(null);
         }}
         layer="toast"
+        liftAboveBottomNav
         labelledBy="parent-tab-review-title"
         backdropClassName="bg-[#031F82]/55"
-        panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
+        panelClassName="max-h-full overflow-y-auto rounded-2xl border-0 bg-white p-5 shadow-md"
       >
         {review ? (
           <div data-parent-tab-review-sheet>
@@ -623,8 +741,8 @@ function UnlockedView({
                   className="mx-0 mt-3 shadow-none ring-1 ring-[#E3EAF5]"
                   enterBody={
                     decision === "approve"
-                      ? `Enter your parent PIN to approve ${review.childUsername}.`
-                      : `Enter your parent PIN to decline ${review.childUsername}.`
+                      ? `Enter your Parent PIN to approve ${review.childUsername}.`
+                      : `Enter your Parent PIN to decline ${review.childUsername}.`
                   }
                   onUnlocked={async (actionPass) => {
                     const approve = decision === "approve";

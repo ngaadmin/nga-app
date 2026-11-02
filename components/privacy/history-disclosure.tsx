@@ -20,7 +20,7 @@ export function HistoryDisclosure({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40">
+    <div className="overflow-hidden rounded-xl border-2 border-[#BDE9FB]/70 bg-white">
       <button
         type="button"
         aria-expanded={open}
@@ -31,14 +31,23 @@ export function HistoryDisclosure({
           <span className="block font-heading text-sm font-extrabold text-[#031F82]">{title}</span>
           <span className="mt-0.5 block font-sans text-sm leading-snug text-[#1E3A5F]">{summary}</span>
         </span>
-        <span
-          className={`shrink-0 font-heading text-lg font-bold text-[#0CC1E0] transition-transform ${
-            open ? "rotate-180" : ""
+        <svg
+          viewBox="0 0 12 12"
+          data-history-chevron
+          className={`size-3.5 shrink-0 text-[#0288A3] transition-transform ${
+            open ? "-rotate-90" : "rotate-90"
           }`}
+          fill="none"
           aria-hidden
         >
-          ▾
-        </span>
+          <path
+            d="M4.5 3 7.5 6 4.5 9"
+            stroke="currentColor"
+            strokeWidth={1.9}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
       {open ? (
         <ul className="border-t border-[#BDE9FB]/60 px-3 py-2">

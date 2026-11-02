@@ -668,7 +668,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
                 CLASS TOTAL
               </p>
               <p className="font-heading text-2xl font-extrabold leading-none text-[#031F82]">
-                {totalXp.toLocaleString()} XP
+                {totalXp.toLocaleString()} {totalXp === 1 ? "coin" : "coins"}
               </p>
             </div>
           </div>
@@ -728,7 +728,7 @@ export function ClassPage({ roster, passwordSaved = false }: ClassPageProps) {
                       {username}
                     </span>
                     <span className="shrink-0 font-heading text-[15px] font-bold text-[#031F82]">
-                      {`${lifetimeXp.toLocaleString()} XP`}
+                      {`${lifetimeXp.toLocaleString()} ${lifetimeXp === 1 ? "coin" : "coins"}`}
                     </span>
                     <Link
                       href={`/dashboard/class/student/${encodeURIComponent(username)}`}

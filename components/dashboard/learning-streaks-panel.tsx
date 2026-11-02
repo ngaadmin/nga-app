@@ -10,6 +10,10 @@ import {
   type PracticeCalendarDay,
 } from "@/lib/dashboard/streak-practice";
 import { cn } from "@/lib/utils/cn";
+import {
+  STREAK_CHALLENGES_TRACKED,
+  STREAK_FREEZES_TRACKED,
+} from "@/lib/dashboard/feature-flags";
 
 const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 const MIN_FREEZE_SLOTS = 2;
@@ -155,7 +159,10 @@ function PracticeCalendar({ dayStreak }: { dayStreak: number }) {
   );
 }
 
-/** Full-height Learning Streaks body: counter, freezes, calendar, badges, then challenges. */
+/**
+ * Full-height Learning Streaks body: counter, calendar and milestones.
+ * Freezes and challenges stay hidden until they are tracked (feature flags).
+ */
 export function LearningStreaksPanel({
   dayStreak,
   bestStreak,
@@ -172,10 +179,12 @@ export function LearningStreaksPanel({
         </span>
       </p>
 
-      <section aria-labelledby="streak-freezes-heading">
-        <SectionLabel id="streak-freezes-heading">Streak Freezes</SectionLabel>
-        <StreakFreezesGlance count={streakFreezes} />
-      </section>
+      {STREAK_FREEZES_TRACKED ? (
+        <section aria-labelledby="streak-freezes-heading">
+          <SectionLabel id="streak-freezes-heading">Streak Freezes</SectionLabel>
+          <StreakFreezesGlance count={streakFreezes} />
+        </section>
+      ) : null}
 
       <section aria-labelledby="practice-calendar-heading">
         <SectionLabel id="practice-calendar-heading">
@@ -195,10 +204,12 @@ export function LearningStreaksPanel({
         />
       </section>
 
-      <section aria-labelledby="streak-challenges-heading" data-streak-challenges>
-        <SectionLabel id="streak-challenges-heading">Challenges</SectionLabel>
-        <StreakChallengesSection />
-      </section>
+      {STREAK_CHALLENGES_TRACKED ? (
+        <section aria-labelledby="streak-challenges-heading" data-streak-challenges>
+          <SectionLabel id="streak-challenges-heading">Challenges</SectionLabel>
+          <StreakChallengesSection />
+        </section>
+      ) : null}
     </div>
   );
 }

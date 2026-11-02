@@ -2,6 +2,12 @@
 
 import "server-only";
 
+import { cookies } from "next/headers";
+import {
+  mergeParentHubChildren,
+  type ParentHubChild,
+} from "@/lib/parent/parent-hub-children";
+
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { countOwedCashIns, sumOwedCashInCents } from "@/lib/dashboard/xp-cash";
 import { readLearnerProgressPayloads } from "@/lib/onboarding/learner-progress-store";
@@ -11,22 +17,17 @@ import {
   parentTabGatePassValid,
   signParentTabGatePass,
 } from "@/lib/parent/parent-tab-gate-pass";
+import { isParentTabPin, type ParentTabPinCheck } from "@/lib/parent/parent-tab-pin";
+import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { assessParentPin } from "@/lib/dashboard/parent-pin-gate";
+import { persistParentPin } from "@/lib/dashboard/persist-parent-pin";
 import {
-  PARENT_TAB_PIN_MAX_TRIES,
-  isParentTabPin,
-  nextParentTabPinCounters,
-  parentTabPinLockActive,
-  type ParentTabPinCheck,
-} from "@/lib/parent/parent-tab-pin";
-import {
-  hashParentTabPin,
-  newParentTabPinHash,
-  parentTabPinHashesMatch,
-} from "@/lib/parent/parent-tab-pin-hash";
+  PARENT_DATA_GRANT_COOKIE,
+  PARENT_DATA_GRANT_TTL_MS,
+  signParentDataGrant,
+} from "@/lib/privacy/parent-data-grant";
 import { assembleLearnerView } from "@/lib/privacy/data-controls";
-import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
 import { createClient } from "@/lib/supabase/server";
 
 type ChildProfileRow = {
@@ -50,7 +51,7 @@ function asCohort(value: string | null): MasteryCohort | null {
     : null;
 }
 
-/** Server-side source of truth for the Parent tab. Reads only. */
+/** Server-side source of truth for the Parent tab (Parent Hub). Reads only. */
 async function resolveParentContext(): Promise<ParentContext | null> {
   const supabase = await createClient();
   const {
@@ -90,22 +91,40 @@ async function resolveParentContext(): Promise<ParentContext | null> {
     (row) => row.account_role === "child" && Boolean(row.username?.trim()),
   );
 
+  const linkedChildren = children.map((row) => ({
+    accountRole: row.account_role,
+    accountStatus: row.account_status,
+  }));
+  let eligible = isParentTabEligible({
+    accountRole: profile.account_role,
+    linkedChildren,
+  });
+  if (!eligible) {
+    // Approvals live only in the Parent Hub, so a waiting request opens it.
+    const pending = await listPendingConsentRequestsForParent();
+    eligible = isParentTabEligible({
+      accountRole: profile.account_role,
+      linkedChildren,
+      pendingApprovals: pending.ok ? pending.requests.length : 0,
+    });
+  }
+
   return {
     userId: user.id,
     parentName: String(profile.username ?? "").trim(),
     children,
-    eligible: isParentTabEligible({
-      accountRole: profile.account_role,
-      linkedChildren: children.map((row) => ({
-        accountRole: row.account_role,
-        accountStatus: row.account_status,
-      })),
-    }),
+    eligible,
   };
 }
 
 export type ParentTabAccess =
-  | { eligible: true; parentUserId: string; parentName: string }
+  | {
+      eligible: true;
+      parentUserId: string;
+      parentName: string;
+      /** Linked children, for "your child's" vs "your children's" copy. */
+      childCount: number;
+    }
   | { eligible: false };
 
 export async function loadParentTabAccess(): Promise<ParentTabAccess> {
@@ -116,34 +135,35 @@ export async function loadParentTabAccess(): Promise<ParentTabAccess> {
       eligible: true,
       parentUserId: context.userId,
       parentName: context.parentName,
+      childCount: context.children.length,
     };
   } catch {
     return { eligible: false };
   }
 }
 
-type ParentPinRow = {
-  pin_hash: string;
-  pin_salt: string;
-  pin_iterations: number;
-  failed_tries: number;
-  locked_until: string | null;
-};
-
 const PIN_COPY = {
-  notParent: "Only the parent account can use the parent PIN.",
-  missing: "Create your parent PIN first.",
-  wrong: "That PIN didn't match.",
+  notParent: "Only the parent account can use the Parent PIN.",
+  missing: "Create your Parent PIN first.",
+  wrong: "That PIN didn't match. Try again.",
   locked: "Too many wrong tries.",
   error: "Couldn't check your PIN. Try again.",
-  exists: "A parent PIN is already set. Enter it instead.",
+  exists: "A Parent PIN is already set. Enter it instead.",
   format: "Enter 4 numbers.",
 } as const;
 
-/** Signed-in parent (any parent_master, linked child or not). Server-checked. */
+/** Same in-memory bucket as the Parent PIN checks for account and child data. */
+const PARENT_PIN_TRIES = 8;
+const PARENT_PIN_WINDOW_MS = 15 * 60 * 1000;
+
+/**
+ * Signed-in parent (any parent_master, linked child or not). Server-checked.
+ * Also returns the one Parent PIN hash (profiles.parent_pin_hash).
+ */
 async function resolveSignedInParent(): Promise<{
   userId: string;
   email: string | null;
+  parentPinHash: string;
 } | null> {
   const supabase = await createClient();
   const {
@@ -153,31 +173,31 @@ async function resolveSignedInParent(): Promise<{
   const admin = createAdminClient();
   const { data: profile } = await admin
     .from("profiles")
-    .select("account_role")
+    .select("account_role, parent_pin_hash")
     .eq("id", user.id)
     .maybeSingle();
   if (profile?.account_role !== "parent_master") return null;
-  return { userId: user.id, email: user.email ?? null };
+  const hash =
+    typeof profile.parent_pin_hash === "string" ? profile.parent_pin_hash.trim() : "";
+  return { userId: user.id, email: user.email ?? null, parentPinHash: hash };
 }
 
-async function readPinRow(parentId: string): Promise<ParentPinRow | null> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("parent_tab_pins")
-    .select("pin_hash, pin_salt, pin_iterations, failed_tries, locked_until")
-    .eq("parent_id", parentId)
-    .maybeSingle();
-  if (error) throw new Error("parent_tab_pins read failed");
-  return (data as ParentPinRow | null) ?? null;
+/** A correct Parent PIN also opens account and child data for 15 minutes. */
+async function grantParentData(userId: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(PARENT_DATA_GRANT_COOKIE, signParentDataGrant(userId), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: PARENT_DATA_GRANT_TTL_MS / 1000,
+  });
 }
 
-function lockedUntilMs(row: ParentPinRow): number | null {
-  if (!row.locked_until) return null;
-  const ms = Date.parse(row.locked_until);
-  return Number.isFinite(ms) ? ms : null;
-}
-
-/** Whether this parent has a PIN yet, and any lock still running. */
+/**
+ * Whether this parent has a Parent PIN yet. There is one PIN: the Parent PIN
+ * on profiles.parent_pin_hash. The old Parent Hub PIN table is not read.
+ */
 export async function getParentPinState(): Promise<
   | { ok: true; hasPin: boolean; lockedUntil: number | null }
   | { ok: false; error: string }
@@ -185,21 +205,14 @@ export async function getParentPinState(): Promise<
   try {
     const parent = await resolveSignedInParent();
     if (!parent) return { ok: false, error: PIN_COPY.notParent };
-    const row = await readPinRow(parent.userId);
-    if (!row) return { ok: true, hasPin: false, lockedUntil: null };
-    const until = lockedUntilMs(row);
-    return {
-      ok: true,
-      hasPin: true,
-      lockedUntil: until && until > Date.now() ? until : null,
-    };
+    return { ok: true, hasPin: Boolean(parent.parentPinHash), lockedUntil: null };
   } catch {
     return { ok: false, error: PIN_COPY.error };
   }
 }
 
 /**
- * First-time PIN. Only when none exists, so it can't overwrite a PIN a
+ * First-time Parent PIN. Only when none exists, so it can't overwrite a PIN a
  * parent already set. Returns an in-memory gate pass.
  */
 export async function createParentPin(
@@ -211,24 +224,10 @@ export async function createParentPin(
     if (typeof pin !== "string" || !isParentTabPin(pin)) {
       return { ok: false, error: PIN_COPY.format };
     }
-    const hashed = await newParentTabPinHash(pin);
-    const admin = createAdminClient();
-    const { data, error } = await admin
-      .from("parent_tab_pins")
-      .upsert(
-        {
-          parent_id: parent.userId,
-          pin_hash: hashed.hash,
-          pin_salt: hashed.salt,
-          pin_iterations: hashed.iterations,
-          failed_tries: 0,
-          locked_until: null,
-        },
-        { onConflict: "parent_id", ignoreDuplicates: true },
-      )
-      .select("parent_id");
-    if (error) return { ok: false, error: PIN_COPY.error };
-    if (!data || data.length === 0) return { ok: false, error: PIN_COPY.exists };
+    if (parent.parentPinHash) return { ok: false, error: PIN_COPY.exists };
+    const saved = await persistParentPin({ pin });
+    if (!saved.ok) return { ok: false, error: saved.error };
+    await grantParentData(parent.userId);
     return { ok: true, pass: signParentTabGatePass(parent.userId) };
   } catch {
     return { ok: false, error: PIN_COPY.error };
@@ -236,10 +235,11 @@ export async function createParentPin(
 }
 
 /**
- * Checks the parent PIN on the server (PBKDF2 with the stored salt and
- * iterations, constant-time compare). Counts misses in the table: 5 misses
- * lock it for 5 minutes. Only a match signs the short-lived gate pass, which
- * the client keeps in memory. Used by the Parent tab and every approval.
+ * Checks the Parent PIN (profiles.parent_pin_hash) on the server. Nothing is
+ * written to the database on a check: misses count in the same in-memory
+ * bucket as the account and child data gates. A match signs the short-lived
+ * gate pass (kept in memory by the client) and opens the data views.
+ * Used by the Parent Hub, the cash rate and every approval.
  */
 export async function openParentTabGate(
   pin: string,
@@ -247,84 +247,56 @@ export async function openParentTabGate(
   const fail = (
     reason: "missing" | "wrong" | "locked" | "error",
     error: string,
-    triesLeft = 0,
     lockedUntil: number | null = null,
-  ): ParentTabPinCheck => ({ ok: false, reason, error, triesLeft, lockedUntil });
+  ): ParentTabPinCheck => ({ ok: false, reason, error, triesLeft: 0, lockedUntil });
   try {
     const parent = await resolveSignedInParent();
     if (!parent) return fail("error", PIN_COPY.notParent);
-    const row = await readPinRow(parent.userId);
-    if (!row) return fail("missing", PIN_COPY.missing);
+    if (!parent.parentPinHash) return fail("missing", PIN_COPY.missing);
 
-    const now = Date.now();
-    const counters = {
-      failedTries: Number(row.failed_tries) || 0,
-      lockedUntil: lockedUntilMs(row),
-    };
-    if (parentTabPinLockActive(counters, now)) {
-      return fail("locked", PIN_COPY.locked, 0, counters.lockedUntil);
-    }
-
-    const matched =
-      typeof pin === "string" &&
-      isParentTabPin(pin) &&
-      parentTabPinHashesMatch(
-        await hashParentTabPin(pin, row.pin_salt, row.pin_iterations),
-        row.pin_hash,
-      );
-    const next = nextParentTabPinCounters(counters, matched, now);
-
-    const admin = createAdminClient();
-    let update = admin
-      .from("parent_tab_pins")
-      .update({
-        failed_tries: next.failedTries,
-        locked_until: next.lockedUntil
-          ? new Date(next.lockedUntil).toISOString()
-          : null,
-      })
-      .eq("parent_id", parent.userId)
-      .eq("failed_tries", row.failed_tries);
-    update = row.locked_until
-      ? update.eq("locked_until", row.locked_until)
-      : update.is("locked_until", null);
-    const { data: saved, error } = await update.select("parent_id");
-    if (error) return fail("error", PIN_COPY.error);
-    if (!saved || saved.length === 0) {
-      // Another check landed first. Don't sign a pass on a stale read.
-      return fail("error", PIN_COPY.error);
-    }
-
-    if (matched) {
-      return { ok: true, pass: signParentTabGatePass(parent.userId) };
-    }
-    if (next.lockedUntil) {
-      return fail("locked", PIN_COPY.locked, 0, next.lockedUntil);
-    }
-    return fail(
-      "wrong",
-      PIN_COPY.wrong,
-      PARENT_TAB_PIN_MAX_TRIES - next.failedTries,
+    const limit = consumeRateLimit(
+      `parent-pin:${parent.userId}`,
+      PARENT_PIN_TRIES,
+      PARENT_PIN_WINDOW_MS,
     );
+    if (!limit.allowed) {
+      return fail("locked", PIN_COPY.locked, Date.now() + limit.retryAfterMs);
+    }
+    const checked = assessParentPin(pin, parent.parentPinHash);
+    if (!checked.ok) {
+      return isParentTabPin(String(pin ?? ""))
+        ? fail("wrong", PIN_COPY.wrong)
+        : fail("wrong", PIN_COPY.format);
+    }
+    await grantParentData(parent.userId);
+    return { ok: true, pass: signParentTabGatePass(parent.userId) };
   } catch {
     return fail("error", PIN_COPY.error);
   }
 }
 
-export type ParentTabChildSummary = {
-  userId: string;
-  username: string;
-  cohort: MasteryCohort | null;
-  status: "active" | "waiting";
-  /** Lifetime lessons completed (survives a track change). */
-  lessonsDone: number;
-  /**
-   * Coins the child can still cash in: learner_progress.payload.wallet
-   * .totalPoints, the same number as the child's header and Vault. Cashing
-   * in lowers it; lifetime earned coins are not shown here.
-   */
-  coins: number;
-};
+/**
+ * Keeps an open Parent Hub open: a still-valid pass gets a fresh pass and a
+ * fresh data grant, so nothing inside the Hub asks for the PIN again. Only
+ * works before the current pass expires; leaving or backgrounding the Hub
+ * drops the pass and the entry gate asks again.
+ */
+export async function renewParentTabGatePass(
+  pass: string,
+): Promise<{ ok: true; pass: string } | { ok: false }> {
+  try {
+    const parent = await resolveSignedInParent();
+    if (!parent || !parentTabGatePassValid(pass, parent.userId)) {
+      return { ok: false };
+    }
+    await grantParentData(parent.userId);
+    return { ok: true, pass: signParentTabGatePass(parent.userId) };
+  } catch {
+    return { ok: false };
+  }
+}
+
+export type ParentTabChildSummary = ParentHubChild;
 
 /**
  * Distinct lessons each child has ever finished, from usage_events
@@ -394,7 +366,7 @@ export async function loadParentTabData(
   if (!context?.eligible) {
     return {
       ok: false,
-      error: "Only a parent with a linked child can open this.",
+      error: "Only a parent with a linked child can open the Parent Hub.",
     };
   }
   if (!parentTabGatePassValid(pass, context.userId)) {
@@ -406,60 +378,62 @@ export async function loadParentTabData(
       row.account_status === "active" ||
       row.account_status === "pending_consent",
   );
-  const [payloads, lifetimeLessons] = await Promise.all([
-    readLearnerProgressPayloads(shown.map((row) => row.id)),
-    readLifetimeLessonCounts(shown.map((row) => String(row.username).trim())),
+  // Progress is read for active children only: a waiting child's parent
+  // hasn't consented, so none of their data reaches the Hub.
+  const active = shown.filter((row) => row.account_status === "active");
+  const [payloads, lifetimeLessons, pending] = await Promise.all([
+    readLearnerProgressPayloads(active.map((row) => row.id)),
+    readLifetimeLessonCounts(active.map((row) => String(row.username).trim())),
+    listPendingConsentRequestsForParent(),
   ]);
 
-  const children: ParentTabChildSummary[] = shown
-    .map((row) => {
-      const progress = payloads.get(row.id) ?? {};
-      const view = assembleLearnerView({
-        userId: row.id,
-        username: String(row.username).trim(),
-        trackLabel: null,
-        progress,
-        activity: [],
-        leaderboardEnabled: false,
-      });
+  const linked: ParentTabChildSummary[] = shown.map((row) => {
+    const username = String(row.username).trim();
+    if (row.account_status !== "active") {
       return {
         userId: row.id,
-        username: view.username,
+        username,
         cohort: asCohort(row.curriculum_cohort),
-        status:
-          row.account_status === "active"
-            ? ("active" as const)
-            : ("waiting" as const),
-        lessonsDone: Math.max(
-          view.lessonsDone,
-          lifetimeLessons.get(view.username.toLowerCase()) ?? 0,
-        ),
-        coins: view.coins,
+        status: "waiting" as const,
+        lessonsDone: 0,
+        coins: 0,
       };
-    })
-    .sort((a, b) =>
-      a.status === b.status
-        ? a.username.localeCompare(b.username)
-        : a.status === "active"
-          ? -1
-          : 1,
-    );
+    }
+    const progress = payloads.get(row.id) ?? {};
+    const view = assembleLearnerView({
+      userId: row.id,
+      username,
+      trackLabel: null,
+      progress,
+      activity: [],
+      leaderboardEnabled: false,
+    });
+    return {
+      userId: row.id,
+      username: view.username,
+      cohort: asCohort(row.curriculum_cohort),
+      status: "active" as const,
+      lessonsDone: Math.max(
+        view.lessonsDone,
+        lifetimeLessons.get(view.username.toLowerCase()) ?? 0,
+      ),
+      coins: view.coins,
+    };
+  });
+  const pendingRequests = pending.ok ? pending.requests : [];
+  const children = mergeParentHubChildren(linked, pendingRequests);
 
   const needsOk: ParentTabOkItem[] = [];
-  const pending = await listPendingConsentRequestsForParent();
-  if (pending.ok) {
-    for (const request of pending.requests) {
-      needsOk.push({
-        kind: "approval",
-        requestId: request.requestId,
-        childUsername: request.childUsername,
-        childCohort: request.childCohort,
-        expiresAt: request.expiresAt,
-      });
-    }
+  for (const request of pendingRequests) {
+    needsOk.push({
+      kind: "approval",
+      requestId: request.requestId,
+      childUsername: request.childUsername,
+      childCohort: request.childCohort,
+      expiresAt: request.expiresAt,
+    });
   }
-  for (const row of shown) {
-    if (row.account_status !== "active") continue;
+  for (const row of active) {
     const progress = payloads.get(row.id) as { wallet?: unknown } | undefined;
     const wallet = (progress?.wallet ?? null) as Parameters<
       typeof sumOwedCashInCents
@@ -482,44 +456,3 @@ export async function loadParentTabData(
   };
 }
 
-/**
- * "Forgot your PIN?": the parent re-confirms their account password, then
- * the server deletes their PIN row (and any lockout) so they can pick a new
- * one. Uses a throwaway client so the current
- * session cookies are never touched.
- */
-export async function confirmParentPasswordForPinReset(
-  password: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const parent = await resolveSignedInParent();
-  if (!user?.email || !parent || parent.userId !== user.id) {
-    return { ok: false, error: "Only the parent account can reset this PIN." };
-  }
-  if (typeof password !== "string" || password.length === 0) {
-    return { ok: false, error: "Enter your account password." };
-  }
-  const probe = createSupabaseJsClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data, error } = await probe.auth.signInWithPassword({
-    email: user.email,
-    password,
-  });
-  if (error || data.user?.id !== user.id) {
-    return { ok: false, error: "That password didn't match. Try again." };
-  }
-  await probe.auth.signOut({ scope: "local" }).catch(() => undefined);
-  const admin = createAdminClient();
-  const { error: deleteError } = await admin
-    .from("parent_tab_pins")
-    .delete()
-    .eq("parent_id", user.id);
-  if (deleteError) {
-    return { ok: false, error: "Couldn't reset your PIN. Try again." };
-  }
-  return { ok: true };
-}

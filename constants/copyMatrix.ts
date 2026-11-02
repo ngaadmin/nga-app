@@ -94,7 +94,7 @@ export const copyMatrix = {
         "Your account cockpit - manage settings, parent tools, and point conversion.",
       account: {
         class: "Class",
-        passwordReset: "Password Reset",
+        passwordReset: "Password reset",
         passwordResetTitle: "Reset a password",
         passwordResetParentHint:
           "We'll email one reset link for this login.",
@@ -108,9 +108,9 @@ export const copyMatrix = {
           "This profile needs a parent email on file before we can send a reset.",
         passwordResetCancel: "Cancel",
         changeParentPin: "Change Parent PIN",
-        accounts: "Accounts",
+        accounts: "Family accounts",
         subscription: "Subscription",
-        logOut: "Log Out",
+        logOut: "Log out",
       },
       accountSubscription: {
         title: "Family accounts",
@@ -343,7 +343,7 @@ export const copyMatrix = {
         cashInRateHint: "Rate: {rate}",
         rateNotSetHint: "Rate: not set yet",
         xpAvailableTemplate: "{points} {unit} to cash in",
-        lifetimeXpTemplate: "Lifetime XP: {points}. Cashing in does not change this.",
+        lifetimeXpTemplate: "Lifetime coins: {points}. Cashing in does not change this.",
         noPointsError: "No coins to cash in yet. Keep learning!",
         claimingLabel: "Cashing in…",
         childPayoutReadoutTemplate: "{points} {unit} = {amount}",
@@ -379,8 +379,8 @@ export const copyMatrix = {
         heading: "Your Mission Map",
         xpLabel: "coins",
         lockedLabel: "Locked",
-        skillsCupLabel: "Medals",
-        skillsCupTip: "Your medals live in your profile. Tap your avatar anytime.",
+        skillsCupLabel: "Achievements",
+        skillsCupTip: "Your medals live in Achievements on your profile. Tap your avatar anytime.",
         nodes: [
           {
             id: "cash-stash",

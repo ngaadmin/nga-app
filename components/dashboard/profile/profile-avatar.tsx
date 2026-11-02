@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { preload } from "react-dom";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import {
   DEFAULT_PROFILE_AVATAR_BY_COHORT,
@@ -23,6 +24,9 @@ export function ProfileAvatarImage({
   className?: string;
 }) {
   const option = profileAvatarOption(avatarId);
+  // A CSS background starts loading late (after layout), so a card could
+  // paint as a blank circle for a moment. Ask the browser for it right away.
+  preload(option.src, { as: "image", fetchPriority: "high" });
   const scale = (option.width / option.cropSize) * 100;
   const posX =
     option.width === option.cropSize

@@ -3,16 +3,20 @@
 import { useRouter } from "next/navigation";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { cn } from "@/lib/utils/cn";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 export function SubscriptionPlaceholderPanel() {
   const router = useRouter();
   const copy = copyMatrix.dashboard.settings.subscription;
+  /** A parent opens this from its own tab, so there is no Settings to go back to. */
+  const isParent = useUserSession()?.accountRole === "parent_master";
 
   return (
     <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
       <div className="space-y-3">
+        {isParent ? null : (
         <button
           type="button"
           onClick={() => router.push("/dashboard/settings")}
@@ -20,6 +24,7 @@ export function SubscriptionPlaceholderPanel() {
         >
           ← {copy.backLabel}
         </button>
+        )}
         <div className="space-y-1">
           <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">
             {copy.title}

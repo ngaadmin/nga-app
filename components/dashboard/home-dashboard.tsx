@@ -20,14 +20,16 @@ import {
   resolveHouseholdEmail,
 } from "@/lib/onboarding/registered-accounts";
 import {
-  BillingCardIcon,
-  ClassIcon,
-  CommunityIcon,
-  GoldCoinIcon,
-  KeyIcon,
-  LockIcon,
-  LogOutIcon,
-} from "@/lib/dashboard/icons";
+  CardIconA,
+  ClassIconA,
+  CoinIconA,
+  FamilyIconA,
+  KeyIconA,
+  LogOutIconA,
+  PadlockIconA,
+  PersonIconA,
+  PrivacyIconA,
+} from "@/lib/dashboard/settings-icons-a";
 import {
   parentPinConfigured,
   persistParentPin,
@@ -47,22 +49,15 @@ import { cn } from "@/lib/utils/cn";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
+/** Direction A icon tile, the same duotone style as the tab icons. */
+const settingsIconTileClass =
+  "flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]";
+
 const orangeCtaClass =
   "rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
 
 const pinInputClass =
   "w-full rounded-xl border-2 border-[#BDE9FB] bg-[#F7FBFF] px-4 py-2.5 text-center font-heading text-lg font-bold tracking-[0.35em] text-[#031F82] outline-none focus:border-[#0CC1E0]";
-
-function formatJoinDate(isoDate: string | null): string {
-  if (!isoDate) return "Recently";
-  const parsed = new Date(isoDate);
-  if (Number.isNaN(parsed.getTime())) return "Recently";
-  return parsed.toLocaleDateString("en-AU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 function ClassSettingsLink() {
   const label = copyMatrix.dashboard.settings.account.class;
@@ -87,8 +82,8 @@ function ClassSettingsLinkRow({ label }: { label: string }) {
           : "hover:bg-[#BDE9FB]/15 active:bg-[#BDE9FB]/25",
       )}
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
-        <ClassIcon className="size-4" />
+      <span className={settingsIconTileClass}>
+        <ClassIconA className="size-5" />
       </span>
       <span
         className="font-heading text-[16px] font-bold text-[#031F82]"
@@ -130,8 +125,8 @@ function SettingsRow({
           : "hover:bg-[#BDE9FB]/15 active:bg-[#BDE9FB]/25",
       )}
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
-        <Icon className="size-4" />
+      <span className={settingsIconTileClass}>
+        <Icon className="size-5" />
       </span>
       <span className="font-heading text-[16px] font-bold text-[#031F82]">
         {label}
@@ -146,8 +141,8 @@ function SettingsCurrencyRow() {
 
   return (
     <div className="flex w-full items-center gap-3 py-3.5">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
-        <GoldCoinIcon className="size-4" />
+      <span className={settingsIconTileClass}>
+        <CoinIconA className="size-5" />
       </span>
       <label
         htmlFor="display-currency"
@@ -171,54 +166,6 @@ function SettingsCurrencyRow() {
         ))}
       </select>
     </div>
-  );
-}
-
-type ProfileHeaderProps = {
-  username: string;
-  email?: string | null;
-  joinDateLabel: string;
-  joinDate: string | null;
-  isLoading: boolean;
-  isGuest?: boolean;
-};
-
-function ProfileHeader({
-  username,
-  email,
-  joinDateLabel,
-  joinDate,
-  isLoading,
-  isGuest = false,
-}: ProfileHeaderProps) {
-  const initial = username.trim().charAt(0).toUpperCase() || "?";
-  const showEmail =
-    Boolean(email?.trim()) &&
-    email!.trim().toLowerCase() !== username.trim().toLowerCase();
-
-  return (
-    <header className="flex items-center gap-4">
-      <div
-        className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-2xl font-extrabold text-white shadow-md"
-        aria-hidden
-      >
-        {isLoading ? "…" : initial}
-      </div>
-      <div className="min-w-0">
-        <h1 className="truncate font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
-          {isLoading ? "Loading…" : username}
-        </h1>
-        {showEmail ? (
-          <p className="mt-0.5 truncate font-sans text-[14px] text-[#1E3A5F]">
-            {email}
-          </p>
-        ) : null}
-        <p className="mt-1 font-sans text-[14px] text-[#1E3A5F]/75">
-          {isGuest ? "Guest · " : ""}
-          {joinDateLabel} {formatJoinDate(joinDate)}
-        </p>
-      </div>
-    </header>
   );
 }
 
@@ -643,7 +590,7 @@ function PasswordResetModal({ isOpen, copy, onClose }: PasswordResetModalProps) 
 
 export function HomeDashboard() {
   const router = useRouter();
-  const { username, email, joinDate, isLoading, isTeacher, isGuestMode } = useDashboardUser();
+  const { isTeacher, isGuestMode } = useDashboardUser();
   const session = useUserSession();
   const isParent = session?.accountRole === "parent_master";
   const isChildAccount =
@@ -652,7 +599,6 @@ export function HomeDashboard() {
   const canSelfManageRate =
     isChildAccount && session?.parentApprovalRequired === false && !session.parentEmail;
   const copy = copyMatrix.dashboard.settings;
-
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -679,14 +625,10 @@ export function HomeDashboard() {
   return (
     <>
       <div className="mx-auto flex w-full max-w-md shrink-0 flex-col gap-6 overflow-x-hidden bg-white px-2 py-4 pb-8">
-        <ProfileHeader
-          username={username}
-          email={email}
-          joinDateLabel={copy.profile.joinDateLabel}
-          joinDate={joinDate}
-          isLoading={isLoading}
-          isGuest={isGuestMode}
-        />
+        {/* Name and avatar live on the profile; email and Joined in My account. */}
+        <h1 className="font-heading text-xl font-extrabold text-[#031F82] sm:text-2xl">
+          {copy.title}
+        </h1>
 
         {waitingForApproval ? (
           <p className="rounded-2xl bg-[#FFF7ED] px-4 py-3 font-sans text-sm font-semibold text-[#031F82]" role="status">
@@ -701,60 +643,70 @@ export function HomeDashboard() {
           {waitingForApproval ? null : isTeacher ? <ClassSettingsLink /> : null}
           {waitingForApproval ? null : (
             <>
-          <SettingsRow
-            icon={KeyIcon}
-            label={copy.account.passwordReset}
-            onClick={() => setPasswordResetOpen(true)}
-          />
+          {/* Guests have no login yet: no password, accounts, plan or log out. */}
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={KeyIconA}
+              label={copy.account.passwordReset}
+              onClick={() => setPasswordResetOpen(true)}
+            />
+          )}
           {isParent ? (
             <SettingsRow
-              icon={LockIcon}
+              icon={PadlockIconA}
               label={copy.account.changeParentPin}
               onClick={() => setChangePinModalOpen(true)}
             />
           ) : null}
-          <SettingsRow
-            icon={CommunityIcon}
-            label={copy.account.accounts}
-            onClick={() => router.push("/dashboard/settings/account")}
-          />
-          <SettingsRow
-            icon={BillingCardIcon}
-            label={copy.account.subscription}
-            onClick={() => router.push("/dashboard/settings/subscription")}
-          />
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={FamilyIconA}
+              label={copy.account.accounts}
+              onClick={() => router.push("/dashboard/settings/account")}
+            />
+          )}
+          {/* Parents open Subscription from its own tab, not here. */}
+          {isGuestMode || isParent ? null : (
+            <SettingsRow
+              icon={CardIconA}
+              label={copy.account.subscription}
+              onClick={() => router.push("/dashboard/settings/subscription")}
+            />
+          )}
           <SettingsCurrencyRow />
           {isParent ? (
             <SettingsRow
-              icon={CommunityIcon}
-              label="My child's data"
-              onClick={() => router.push("/dashboard/settings/child-data")}
+              icon={PrivacyIconA}
+              label="Your data & privacy"
+              onClick={() => router.push("/dashboard/settings/data-privacy")}
             />
           ) : null}
           {isParent || isTeacher ? (
             <SettingsRow
-              icon={CommunityIcon}
+              icon={PersonIconA}
               label="My account"
               onClick={() => router.push("/dashboard/settings/my-account")}
             />
           ) : null}
           {isChildAccount ? (
             <SettingsRow
-              icon={CommunityIcon}
-              label="My info"
+              icon={PersonIconA}
+              label="My account"
               onClick={() => router.push("/dashboard/settings/my-info")}
             />
           ) : null}
             </>
           )}
-          <SettingsRow
-            icon={LogOutIcon}
-            label={isLoggingOut ? "Signing out…" : copy.account.logOut}
-            onClick={() => {
-              void handleLogOut();
-            }}
-            busy={isLoggingOut}
-          />
+          {isGuestMode ? null : (
+            <SettingsRow
+              icon={LogOutIconA}
+              label={isLoggingOut ? "Signing out…" : copy.account.logOut}
+              onClick={() => {
+                void handleLogOut();
+              }}
+              busy={isLoggingOut}
+            />
+          )}
         </nav>
 
         {isGuestMode ? <GuestDeviceCard /> : null}

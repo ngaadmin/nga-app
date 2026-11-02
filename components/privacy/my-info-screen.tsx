@@ -4,16 +4,19 @@ import Link from "next/link";
 import { COHORT_EMOJI } from "@/lib/dashboard/cohort-emoji";
 import { ShieldIcon } from "@/lib/dashboard/icons";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { ProfileAvatarImage, useProfileAvatar } from "@/components/dashboard/profile/profile-avatar";
 
 type MyInfoScreenProps = {
+  /** Same key the top bar uses, so the avatar matches the menu. */
+  userId?: string;
   username: string;
   trackLabel: string | null;
   cohort?: MasteryCohort | null;
   managedBy: "teacher" | "account_manager";
 };
 
-export function MyInfoScreen({ username, trackLabel, cohort, managedBy }: MyInfoScreenProps) {
-  const initial = username.trim().charAt(0).toUpperCase() || "?";
+export function MyInfoScreen({ userId, username, trackLabel, cohort, managedBy }: MyInfoScreenProps) {
+  const { avatarId } = useProfileAvatar(userId?.trim() || username.trim() || "device", cohort ?? "explorer");
   const teacher = managedBy === "teacher";
   const [trackName, ages] = splitTrack(trackLabel);
 
@@ -22,14 +25,12 @@ export function MyInfoScreen({ username, trackLabel, cohort, managedBy }: MyInfo
       <Link href="/dashboard/settings" className="font-heading text-sm font-bold text-[#0CC1E0]">
         ← Back to Settings
       </Link>
-      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My info</h1>
+      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My account</h1>
       <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]">This is what the app knows about you.</p>
 
       <section className="mt-4 rounded-2xl bg-white px-4 shadow-md">
         <div className="flex items-center gap-3 border-b border-[#BDE9FB]/60 py-3.5">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#0CC1E0] font-heading text-lg font-extrabold text-white">
-            {initial}
-          </span>
+          <ProfileAvatarImage avatarId={avatarId} className="size-11" />
           <span>
             <span className="block font-sans text-[13px] font-medium text-[#4A5675]">Username</span>
             <span className="block font-heading text-lg font-extrabold text-[#031F82]">{username}</span>

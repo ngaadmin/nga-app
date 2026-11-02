@@ -22,6 +22,8 @@ import { DASHBOARD_NAV_ITEMS } from "@/lib/dashboard/navigation";
 import {
   PARENT_TAB_NAV_ITEM,
   withParentTabNavItem,
+  parentBottomBarItems,
+  SUBSCRIPTION_TAB_NAV_ITEM,
 } from "@/lib/parent/parent-tab-nav";
 import { explicitProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 
@@ -43,14 +45,32 @@ describe("isParentTabEligible", () => {
     ).toBe(false);
   });
 
-  it("hides it when no linked child is active yet", () => {
+  it("shows it while a linked child waits for the parent's OK", () => {
     expect(
       isParentTabEligible({
         accountRole: "parent_master",
         linkedChildren: [
           { accountRole: "child", accountStatus: "pending_consent" },
-          { accountRole: "child", accountStatus: "declined" },
         ],
+      }),
+    ).toBe(true);
+  });
+
+  it("shows it when a consent request is waiting, even before linking", () => {
+    expect(
+      isParentTabEligible({
+        accountRole: "parent_master",
+        linkedChildren: [],
+        pendingApprovals: 1,
+      }),
+    ).toBe(true);
+  });
+
+  it("hides it when the only linked child was declined", () => {
+    expect(
+      isParentTabEligible({
+        accountRole: "parent_master",
+        linkedChildren: [{ accountRole: "child", accountStatus: "declined" }],
       }),
     ).toBe(false);
   });
@@ -172,6 +192,25 @@ describe("parent tab nav item", () => {
     expect(items.at(-1)?.id).toBe("parent");
     expect(items).toHaveLength(DASHBOARD_NAV_ITEMS.length + 1);
     expect(withParentTabNavItem(items, true)).toHaveLength(items.length);
+  });
+
+  it("builds the parent bottom bar; child and guest bars are unchanged", () => {
+    const withParent = withParentTabNavItem(DASHBOARD_NAV_ITEMS, true);
+    expect(parentBottomBarItems(withParent, true).map((item) => item.id)).toEqual([
+      "academy",
+      "launchpad",
+      "vault",
+      "community",
+      "subscription",
+    ]);
+    const childBar = parentBottomBarItems(DASHBOARD_NAV_ITEMS, false).map((item) => item.id);
+    expect(childBar).toEqual(DASHBOARD_NAV_ITEMS.map((item) => item.id));
+    expect(childBar).toEqual(["academy", "launchpad", "vault", "community", "settings"]);
+  });
+
+  it("selects Subscription on its screen only", () => {
+    expect(SUBSCRIPTION_TAB_NAV_ITEM.matchesPath?.("/dashboard/settings/subscription")).toBe(true);
+    expect(SUBSCRIPTION_TAB_NAV_ITEM.matchesPath?.("/dashboard/settings")).toBe(false);
   });
 
   it("matches the Parent route only", () => {

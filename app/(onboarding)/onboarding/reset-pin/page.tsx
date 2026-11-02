@@ -3,8 +3,8 @@ import { ResetParentPinPanel } from "@/components/onboarding/reset-parent-pin-pa
 import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
-  title: "Reset parent PIN",
-  description: "Set a new parent PIN from the email link.",
+  title: "Reset Parent PIN",
+  description: "Set a new Parent PIN from the email link.",
 };
 
 export default function ResetParentPinPage() {

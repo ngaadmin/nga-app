@@ -2,8 +2,13 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { DownloadIcon, LockIcon, MailIcon, TrashIcon, UserIcon } from "@/lib/dashboard/icons";
+import { DownloadIcon, LockIcon, TrashIcon } from "@/lib/dashboard/icons";
+import { CalendarIconA, MailIconA } from "@/lib/dashboard/progress-icons-a";
+import { ClassIconA, PersonIconA } from "@/lib/dashboard/settings-icons-a";
 import type { HistoryEntry } from "@/lib/privacy/data-controls";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
+import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
 import { HistoryDisclosure } from "@/components/privacy/history-disclosure";
 
@@ -11,12 +16,21 @@ type ChildLink = {
   userId: string;
   username: string;
   trackLabel: string | null;
+  cohort?: MasteryCohort | null;
 };
 
 type ManagerRecordScreenProps = {
   kind: "parent" | "teacher";
+  /**
+   * Parents split their record over two pages: "account" (My account: email
+   * and Joined) and "privacy" (Your data & privacy: linked children, consent
+   * history, data file, delete). Teachers keep everything on one page.
+   */
+  section?: "all" | "account" | "privacy";
   backHref: string;
   email: string;
+  /** Account creation date (ISO). Shown as "Joined" under the email. */
+  joined?: string | null;
   username?: string;
   classLabel?: string;
   studentCount?: number;
@@ -32,8 +46,10 @@ type ManagerRecordScreenProps = {
 
 export function ManagerRecordScreen({
   kind,
+  section = "all",
   backHref,
   email,
+  joined = null,
   username,
   classLabel,
   studentCount = 0,
@@ -54,18 +70,29 @@ export function ManagerRecordScreen({
         ? childNames[0]
         : `${childNames.slice(0, -1).join(", ")} and ${childNames[childNames.length - 1]}`;
 
+  const showDetails = section !== "privacy";
+  const showData = section !== "account";
+
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
+    <div
+      data-manager-record={section}
+      className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8"
+    >
       <Link href={backHref} className="font-heading text-sm font-bold text-[#0CC1E0]">
-        ← {kind === "parent" ? "Parent Hub" : "Back to Settings"}
+        ← Back to Settings
       </Link>
-      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My account</h1>
+      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">
+        {section === "privacy" ? "Your data & privacy" : "My account"}
+      </h1>
       <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        {kind === "parent"
-          ? "What NextGenAchiever$ keeps about you, the account manager."
-          : "What NextGenAchiever$ keeps about you, the teacher."}
+        {section === "privacy"
+          ? "Your own data: your data file, consent history and your account."
+          : kind === "parent"
+            ? "What NextGenAchiever$ keeps about you, the account manager."
+            : "What NextGenAchiever$ keeps about you, the teacher."}
       </p>
 
+      {showDetails ? (
       <section className="mt-3.5 rounded-2xl bg-white px-4 py-3.5 shadow-md">
         <div className="flex items-center justify-between">
           <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#4A5675]">
@@ -77,23 +104,32 @@ export function ManagerRecordScreen({
           </span>
         </div>
         {kind === "teacher" ? (
-          <DetailRow icon={<UserIcon className="size-5" />} label="Username" value={username || ""} />
+          <DetailRow icon={<PersonIconA className="size-5" />} label="Username" value={username || ""} />
         ) : null}
-        <DetailRow icon={<MailIcon className="size-5" />} label={kind === "parent" ? "Parent email" : "Email"} value={email} />
+        <DetailRow icon={<MailIconA className="size-5" />} label={kind === "parent" ? "Parent email" : "Email"} value={email} />
+        <DetailRow
+          icon={<CalendarIconA className="size-5" />}
+          label="Joined"
+          value={formatJoined(joined)}
+        />
         {kind === "teacher" ? (
           <DetailRow
-            icon={<span className="text-lg">🏫</span>}
+            icon={<ClassIconA className="size-5" />}
             label="Classes"
             value={`${classLabel || "Class"} · ${studentCount} ${studentCount === 1 ? "student" : "students"}`}
           />
         ) : null}
       </section>
+      ) : null}
 
-      {kind === "parent" ? (
+      {kind === "parent" && showData ? (
         <section className="mt-5">
           <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
             Linked children
           </h2>
+          <p className="mt-1 font-sans text-[13px] leading-snug text-[#4A5675]">
+            Each child&apos;s data and privacy is in the Parent Hub, on their page.
+          </p>
           <div className="mt-2.5 rounded-2xl bg-white px-3.5 shadow-md">
             {linkedChildren.length === 0 ? (
               <p className="py-3 font-sans text-sm text-[#4A5675]">No linked children yet.</p>
@@ -101,16 +137,13 @@ export function ManagerRecordScreen({
               linkedChildren.map((child, index) => (
                 <Link
                   key={child.userId}
-                  href={`/dashboard/settings/child-data?child=${child.userId}`}
+                  href="/dashboard/parent"
                   className={`flex items-center gap-3 py-2.5 ${index > 0 ? "border-t border-[#BDE9FB]/60" : ""}`}
                 >
-                  <span
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-full font-heading text-[15px] font-extrabold text-white ${
-                      index % 2 === 0 ? "bg-[#0CC1E0]" : "bg-[#7C8CF0]"
-                    }`}
-                  >
-                    {child.username.charAt(0).toUpperCase()}
-                  </span>
+                  <ProfileAvatarImage
+                    avatarId={readStoredProfileAvatarId(child.userId, child.cohort ?? "explorer")}
+                    className="size-9"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block font-heading text-[15px] font-bold text-[#031F82]">
                       {child.username}
@@ -129,6 +162,8 @@ export function ManagerRecordScreen({
         </section>
       ) : null}
 
+      {showData ? (
+      <>
       <div className="mt-5 rounded-2xl bg-white p-3 shadow-md">
         <HistoryDisclosure
           title={historyTitle}
@@ -167,6 +202,8 @@ export function ManagerRecordScreen({
           <p className={`mt-1.5 ${noteClass()}`}>This also removes your class and its student logins.</p>
         )}
       </div>
+      </>
+      ) : null}
     </div>
   );
 }
@@ -182,13 +219,35 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center gap-3 border-t border-[#BDE9FB]/60 py-3 first:border-t-0">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]">
         {icon}
       </span>
       <span className="min-w-0">
         <span className="block font-sans text-[13px] font-medium text-[#4A5675]">{label}</span>
-        <span className="block break-all font-sans text-[15px] font-semibold text-[#031F82]">{value}</span>
+        <span className="block font-sans text-[15px] font-semibold text-[#031F82] [overflow-wrap:anywhere]">
+          {/* Long emails wrap after the "@" instead of mid-word. */}
+          {value.includes("@") ? (
+            <>
+              {value.slice(0, value.indexOf("@") + 1)}
+              <wbr />
+              {value.slice(value.indexOf("@") + 1)}
+            </>
+          ) : (
+            value
+          )}
+        </span>
       </span>
     </div>
   );
+}
+
+function formatJoined(iso: string | null): string {
+  if (!iso) return "Recently";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "Recently";
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }

@@ -31,7 +31,7 @@ export function VaultCashBucket({ amount, onAssign }: VaultCashBucketProps) {
       <button
         type="button"
         onClick={onAssign}
-        className="mt-3 h-touch w-full rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2"
+        className="mt-3 h-touch w-full rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-4 font-heading text-sm font-bold text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2"
       >
         {vaultCopy.cashBucketAssign}
       </button>

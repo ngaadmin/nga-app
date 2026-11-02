@@ -1,5 +1,6 @@
 "use client";
 
+import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
@@ -36,6 +37,15 @@ import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import { zLayerStyle } from "@/lib/ui/layers";
+import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
+import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
+import {
+  wantsProfileAchievements,
+  withoutProfileQuery,
+} from "@/lib/dashboard/profile-deep-link";
+
+const GUEST_STATUS_ROW_CLASS =
+  "!grid-cols-[max-content_minmax(0,1fr)_auto]";
 
 /**
  * Shell-level status strip. Avatar (profile and medals), username, streak,
@@ -49,6 +59,7 @@ export function DashboardStatusHeader() {
   const { spendableXp, reloadWalletFromStorage } = useDashboardWallet();
   const xpExchange = useXpExchangeGate();
   const { streakFreezes } = DASHBOARD_HOME_PLACEHOLDER_STATE;
+  const parentHubAccess = useParentTabAccess();
   const [dayStreak, setDayStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
 
@@ -92,6 +103,20 @@ export function DashboardStatusHeader() {
     markSkillsPanelSeen(cohortSkills);
     setSkillsAttentionTick((tick) => tick + 1);
   }, [cohortSkills]);
+
+  // Old /dashboard/achievements links redirect here with ?profile=achievements:
+  // open the profile at its Achievements section, then drop the query.
+  const [achievementsDeepLink, setAchievementsDeepLink] = useState(false);
+  useEffect(() => {
+    if (!wantsProfileAchievements(window.location.search)) return;
+    setAchievementsDeepLink(true);
+    openProfile();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      withoutProfileQuery(window.location.href),
+    );
+  }, [openProfile]);
 
   const openStreaks = useCallback(() => {
     setStreaksOpen(true);
@@ -148,14 +173,36 @@ export function DashboardStatusHeader() {
     openProfile();
   }, [openProfile]);
 
+  const openSettingsFromSwitcher = useCallback(() => {
+    setSwitcherOpen(false);
+    router.push("/dashboard/settings");
+  }, [router]);
+  const openParentHubFromSwitcher = useCallback(() => {
+    setSwitcherOpen(false);
+    router.push(PARENT_TAB_HREF);
+  }, [router]);
+  const openParentHubFromProfile = useCallback(() => {
+    setProfileOpen(false);
+    router.push(PARENT_TAB_HREF);
+  }, [router]);
+  const canOpenParentHub = isParent && parentHubAccess.eligible;
+
   const openXpExchange = useCallback(() => {
     if (isParent) {
-      router.push("/dashboard/settings");
+      // Coins open the Parent Hub's "to settle" list. Without a Parent tab
+      // (no active child yet) they open Settings instead.
+      router.push(
+        parentHubAccess.eligible ? `${PARENT_TAB_HREF}#to-settle` : "/dashboard/settings",
+      );
+      // Already on the Hub: a same-page hash push doesn't reload it.
+      if (parentHubAccess.eligible) {
+        window.dispatchEvent(new Event(PARENT_HUB_TO_SETTLE_EVENT));
+      }
       return;
     }
     if (!xpExchange.ready || xpExchange.blocked) return;
     setXpExchangeOpen(true);
-  }, [isParent, router, xpExchange.blocked, xpExchange.ready]);
+  }, [isParent, parentHubAccess.eligible, router, xpExchange.blocked, xpExchange.ready]);
 
   return (
     <>
@@ -176,6 +223,9 @@ export function DashboardStatusHeader() {
           // center empty so the name is not shown twice.
           showUsernameLabel={!userLoading}
           center={userLoading || isGuestMode ? undefined : null}
+          // Guests: avatar and name take what they need, the one-line save
+          // button gets the rest, so the name is not cut off.
+          rowClassName={isGuestMode ? GUEST_STATUS_ROW_CLASS : undefined}
           profileHasAttention={skillsHasAttention}
           showCoins={!isTeacher}
           // The avatar always opens the dropdown (never the Profile page
@@ -206,19 +256,30 @@ export function DashboardStatusHeader() {
         currentAvatarId={avatarId}
         onClose={closeSwitcher}
         onViewProfile={viewProfileFromSwitcher}
+        onOpenSettings={openSettingsFromSwitcher}
+        onOpenParentHub={canOpenParentHub ? openParentHubFromSwitcher : undefined}
+        isParent={isParent}
+        isGuest={isGuestMode}
       />
 
       <FullHeightPanel
         isOpen={profileOpen}
         title="Profile"
         titleId="profile-panel-title"
-        onClose={() => setProfileOpen(false)}
+        onClose={() => {
+          setProfileOpen(false);
+          setAchievementsDeepLink(false);
+        }}
       >
         <ProfilePanel
           displayName={username}
           trackLabel={trackLabel}
+          roleLabel={isParent ? "Parent" : null}
           avatarId={avatarId}
           onChooseAvatar={chooseAvatar}
+          household={household}
+          onOpenParentHub={canOpenParentHub ? openParentHubFromProfile : undefined}
+          achievementsInitiallyOpen={achievementsDeepLink}
         />
       </FullHeightPanel>
 

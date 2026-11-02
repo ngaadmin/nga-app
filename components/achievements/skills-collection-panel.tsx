@@ -14,7 +14,7 @@ import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useMasteryCohort } from "@/lib/dashboard/use-user-session";
 import { cn } from "@/lib/utils/cn";
 
-function MedalCountChip({
+export function MedalCountChip({
   label,
   value,
   toneClassName,
@@ -60,7 +60,8 @@ function tierDisplayLabel(tier: SkillTrophyTier): string {
   }
 }
 
-function SkillTile({ skill }: { skill: VaultSkillTrophy }) {
+/** One medal tile. Shared with the Parent Hub so both show the same flat medal art. */
+export function SkillTile({ skill }: { skill: VaultSkillTrophy }) {
   const isLocked = skill.tier === "locked";
 
   return (

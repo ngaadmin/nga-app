@@ -25,6 +25,11 @@ type ModalShellProps = {
    * The nav is outside the dialog, so it is not marked aria-modal.
    */
   clearBottomNav?: boolean;
+  /**
+   * Keep the backdrop over the whole screen (bottom nav dimmed too) but sit
+   * the card above the bottom nav, so a bottom sheet never collides with it.
+   */
+  liftAboveBottomNav?: boolean;
   children: ReactNode;
 };
 
@@ -46,12 +51,14 @@ export function ModalShell({
   panelClassName,
   stretch = false,
   clearBottomNav = false,
+  liftAboveBottomNav = false,
   children,
 }: ModalShellProps) {
+  const measureNav = clearBottomNav || liftAboveBottomNav;
   const [navClearance, setNavClearance] = useState(0);
 
   useLayoutEffect(() => {
-    if (!isOpen || !clearBottomNav) return;
+    if (!isOpen || !measureNav) return;
 
     // Clear everything from the nav's top edge down. The nav can grow after
     // the first measure without a window resize: iOS fills in
@@ -71,7 +78,11 @@ export function ModalShell({
           observer.observe(nav, { box: "border-box" });
         }
       }
-      const next = nav
+      // A full-screen dialog (e.g. the Profile panel) already covers the nav:
+      // dim the whole screen (inset 0) so no bright strip is left at the bottom.
+      const navCovered =
+        clearBottomNav && document.querySelector('[aria-modal="true"]') !== null;
+      const next = nav && !navCovered
         ? Math.max(
             0,
             Math.ceil(window.innerHeight - nav.getBoundingClientRect().top),
@@ -81,6 +92,15 @@ export function ModalShell({
     };
 
     sync();
+    let mutationFrame = 0;
+    const mutations =
+      clearBottomNav && typeof MutationObserver !== "undefined"
+        ? new MutationObserver(() => {
+            window.cancelAnimationFrame(mutationFrame);
+            mutationFrame = window.requestAnimationFrame(sync);
+          })
+        : null;
+    mutations?.observe(document.body, { childList: true, subtree: true });
     const frame = window.requestAnimationFrame(sync);
     const settle = window.setTimeout(sync, 400);
     const viewport = window.visualViewport;
@@ -95,8 +115,10 @@ export function ModalShell({
       window.removeEventListener("orientationchange", sync);
       viewport?.removeEventListener("resize", sync);
       observer?.disconnect();
+      mutations?.disconnect();
+      window.cancelAnimationFrame(mutationFrame);
     };
-  }, [clearBottomNav, isOpen]);
+  }, [measureNav, isOpen, clearBottomNav]);
 
   if (!isOpen) return null;
 
@@ -123,7 +145,9 @@ export function ModalShell({
         style={
           clearBottomNav && navClearance > 0
             ? { bottom: navClearance }
-            : undefined
+            : liftAboveBottomNav && navClearance > 0
+              ? { paddingBottom: navClearance + 12 }
+              : undefined
         }
         onClick={handleBackdropClick}
       >

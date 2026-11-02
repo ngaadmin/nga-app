@@ -16,8 +16,8 @@ const PROFILE_COLUMNS =
 /**
  * Profiles in the signed-in user's household, for the top-bar switcher.
  * Reads only. The caller is taken from the Auth session, never from input:
- * a parent sees themselves and their linked children; a child sees their
- * parent and siblings. Usernames, roles and tracks only (no emails).
+ * a parent sees themselves and their linked children; a child sees only
+ * themselves and their parent (siblings are never sent to a child). Usernames, roles and tracks only (no emails).
  */
 export async function loadHouseholdProfiles(): Promise<HouseholdProfiles | null> {
   try {
@@ -58,6 +58,14 @@ export async function loadHouseholdProfiles(): Promise<HouseholdProfiles | null>
             .select(PROFILE_COLUMNS)
             .eq("id", parentId)
             .maybeSingle();
+
+    if (me.account_role === "child") {
+      return buildHouseholdProfiles({
+        currentUserId: user.id,
+        parent: (parent as HouseholdProfileRow | null) ?? null,
+        children: [me as HouseholdProfileRow],
+      });
+    }
 
     const { data: links } = await admin
       .from("parent_child")

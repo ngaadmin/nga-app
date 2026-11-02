@@ -23,7 +23,8 @@ export function ParentHubFeatureItem({
   children,
 }: ParentHubFeatureItemProps) {
   return (
-    <div className="overflow-hidden rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40">
+    // Flat: the Settings card around it is the only card (no card in a card).
+    <div data-parent-hub-feature={id}>
       <button
         type="button"
         id={`${id}-trigger`}
@@ -32,25 +33,37 @@ export function ParentHubFeatureItem({
         disabled={disabled}
         onClick={onToggle}
         className={cn(
-          "flex w-full items-center gap-3 px-3 py-3 text-left transition-colors",
+          "flex w-full items-center gap-3 py-3.5 text-left transition-colors",
           disabled
             ? "cursor-not-allowed opacity-60"
             : "hover:bg-[#BDE9FB]/20 active:bg-[#BDE9FB]/30",
         )}
       >
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-sm font-extrabold text-[#031F82]">{title}</p>
+          <p className="font-heading text-[16px] font-bold text-[#031F82]">{title}</p>
           <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">{summary}</p>
         </div>
-        <span
+        {/* The standard chevron toggle, as on the profile sections. */}
+        <svg
+          viewBox="0 0 12 12"
+          width="14"
+          height="14"
+          aria-hidden
+          data-parent-hub-feature-chevron
           className={cn(
-            "shrink-0 font-heading text-lg font-bold text-[#0CC1E0] transition-transform",
+            "shrink-0 text-[#0288A3] transition-transform",
             isExpanded && "rotate-180",
           )}
-          aria-hidden
         >
-          ▾
-        </span>
+          <path
+            d="M3 4.5 6 7.5 9 4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
 
       {isExpanded && !disabled ? (
@@ -58,7 +71,7 @@ export function ParentHubFeatureItem({
           id={`${id}-panel`}
           role="region"
           aria-labelledby={`${id}-trigger`}
-          className="border-t border-[#BDE9FB]/60 px-3 pb-3 pt-2"
+          className="border-t border-[#BDE9FB]/60 pb-3 pt-2"
         >
           {children}
         </div>

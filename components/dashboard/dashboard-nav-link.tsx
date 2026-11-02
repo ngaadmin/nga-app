@@ -61,7 +61,11 @@ function NavLinkFace({
         <span
           className={cn(
             "flex h-[30px] w-[52px] items-center justify-center rounded-full",
-            highlighted ? "bg-nga-cta text-nga-primary" : "text-nga-slate",
+            // Direction A: bold orange pill on the selected tab; the icon's
+            // duotone fill turns soft peach so it still reads on orange.
+            highlighted
+              ? "bg-nga-cta text-nga-primary [--tab-icon-fill:#FFE7B8]"
+              : "text-nga-slate [--tab-icon-fill:#BDE9FB]",
           )}
         >
           <Icon className="size-6 shrink-0" />
@@ -90,7 +94,14 @@ function NavLinkFace({
           : "border-transparent border-b-transparent text-nga-slate hover:bg-nga-mist/60",
       )}
     >
-      <Icon className="size-6 shrink-0" />
+      <span
+        className={cn(
+          "flex shrink-0",
+          highlighted ? "[--tab-icon-fill:#FFE7B8]" : "[--tab-icon-fill:#BDE9FB]",
+        )}
+      >
+        <Icon className="size-6 shrink-0" />
+      </span>
       <span className="min-w-0 leading-tight">{item.label}</span>
     </span>
   );

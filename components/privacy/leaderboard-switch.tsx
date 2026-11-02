@@ -23,7 +23,7 @@ export function LeaderboardSwitch({
       : "Off until you switch it on.";
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40 px-3 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border-2 border-[#BDE9FB]/70 bg-white px-3 py-3">
       <div className="min-w-0 flex-1">
         <p className="font-heading text-sm font-extrabold text-[#031F82]">Community leaderboard</p>
         <p className="mt-0.5 font-sans text-sm text-[#1E3A5F]">{detail}</p>

@@ -14,7 +14,7 @@ export const hubIntroCopy: Record<HubIntroId, HubIntroCopy> = {
   academy: {
     title: "Academy",
     firstVisitBody:
-      "Learn money skills you can use in real life. Keep practising to unlock Silver and Gold.",
+      "Learn money skills you can use in real life. Keep practicing to unlock Silver and Gold.",
     infoPanelBody:
       "Learn real money skills. Practise daily to unlock Silver and Gold medals.",
     firstVisitCta: "Let's go",

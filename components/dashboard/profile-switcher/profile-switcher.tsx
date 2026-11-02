@@ -5,9 +5,11 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { parentHubSubtitle } from "@/lib/parent/pin-copy";
 import { ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -19,20 +21,39 @@ import {
 } from "@/lib/dashboard/profile-avatar";
 import { CheckIcon, TrophyIcon } from "@/lib/dashboard/icons";
 import {
+  ParentHubTabIconA,
+  SettingsTabIconA,
+} from "@/lib/dashboard/tab-icons-a";
+import {
   PROFILE_SWITCHING_AVAILABLE,
   type HouseholdProfile,
   type HouseholdProfiles,
 } from "@/lib/profile-switcher/household-profiles";
 import { zLayerStyle } from "@/lib/ui/layers";
+import {
+  PARENT_ROLE_PILL_CLASS,
+  TRACK_PILL_CLASS,
+} from "@/lib/dashboard/track-pill";
 import { cn } from "@/lib/utils/cn";
 
 export const PROFILE_SWITCHER_COPY = {
   tip: "Tap your avatar to switch profiles",
   viewProfile: "View my profile",
-  viewProfileSub: "Achievements & badges",
+  viewProfileSub: "Achievements & medals",
+  settings: "Settings",
+  /** Parent menu: their Settings holds the Parent PIN. */
+  settingsSubParent: "PIN, account and preferences",
+  /** Child menu: no PINs there. */
+  settingsSub: "Account and preferences",
+  /** Guest menu: no account yet, so only preferences. */
+  settingsSubGuest: "Preferences",
+  parentHub: "Parent Hub",
+  /** One child; see parentHubSubtitle() for the plural and loading rules. */
+  parentHubSub: parentHubSubtitle(1),
   switchHeading: "Switch profile",
   parentTag: "Parent",
-  here: "You're here",
+  /** Screen-reader label for the check on the current profile. */
+  here: "Current profile",
   soon: "Coming soon",
   soonNote: "Switching profiles is coming soon.",
   loading: "Loading profiles…",
@@ -118,7 +139,7 @@ function useAvatarFor(profile: HouseholdProfile): ProfileAvatarId | null {
   return avatarId;
 }
 
-function ProfileRow({
+export function ProfileRow({
   profile,
   currentAvatarId,
 }: {
@@ -155,38 +176,47 @@ function ProfileRow({
         name={profile.name}
         className="size-10 text-base"
       />
+      {/* The name gets the full row width on its own line and ellipsis-
+          truncates; it never breaks mid-word. Tag and "Coming soon" sit
+          on the line beneath. */}
       <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
         <span
           data-profile-switcher-name
-          className="max-w-full truncate font-heading text-[15px] font-bold leading-tight text-[#031F82]"
+          title={profile.name}
+          className="block w-full truncate font-heading text-[15px] font-bold leading-tight text-[#031F82]"
         >
           {profile.name}
         </span>
-        {tag ? (
-          <span
-            className={cn(
-              "rounded-full px-1.5 py-px font-heading text-[9.5px] font-bold uppercase tracking-[0.4px]",
-              profile.role === "parent"
-                ? "bg-[#EEF0FA] text-[#031F82]"
-                : "bg-[#E8F6FC] text-[#0288A3]",
-            )}
-          >
-            {tag}
+        {tag || (disabled && !profile.isCurrent) ? (
+          <span className="flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            {tag ? (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-px font-heading text-[9.5px] font-bold uppercase tracking-[0.4px]",
+                  profile.role === "parent" ? PARENT_ROLE_PILL_CLASS : TRACK_PILL_CLASS,
+                )}
+              >
+                {tag}
+              </span>
+            ) : null}
+            {disabled && !profile.isCurrent ? (
+              <span
+                data-profile-switcher-soon
+                className="whitespace-nowrap text-[11px] font-semibold text-[#64748b]"
+              >
+                {PROFILE_SWITCHER_COPY.soon}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </span>
       {profile.isCurrent ? (
-        <span className="flex shrink-0 items-center gap-1.5">
-          <span className="text-[11px] font-semibold text-[#8A5300]">
-            {PROFILE_SWITCHER_COPY.here}
-          </span>
-          <span className="flex size-6 items-center justify-center rounded-full bg-[#FFA503] text-white">
-            <CheckIcon className="size-4" />
-          </span>
-        </span>
-      ) : disabled ? (
-        <span className="shrink-0 text-[11px] font-semibold text-[#64748b]">
-          {PROFILE_SWITCHER_COPY.soon}
+        <span
+          data-profile-switcher-current-check
+          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-white"
+        >
+          <CheckIcon className="size-4" />
+          <span className="sr-only">{PROFILE_SWITCHER_COPY.here}</span>
         </span>
       ) : null}
     </li>
@@ -249,6 +279,10 @@ export function ProfileSwitcherMenu({
   currentAvatarId,
   onClose,
   onViewProfile,
+  onOpenSettings,
+  onOpenParentHub,
+  isParent = false,
+  isGuest = false,
 }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
@@ -257,6 +291,14 @@ export function ProfileSwitcherMenu({
   currentAvatarId: ProfileAvatarId | null;
   onClose: () => void;
   onViewProfile: () => void;
+  /** Opens Settings. Every profile gets this row. */
+  onOpenSettings: () => void;
+  /** Only for a parent who can open the Parent Hub. */
+  onOpenParentHub?: () => void;
+  /** Parents get the PINs subtitle on Settings; children and guests do not. */
+  isParent?: boolean;
+  /** Guests have no account yet: Settings reads "Preferences". */
+  isGuest?: boolean;
 }) {
   const [box, setBox] = useState<MenuBox | null>(null);
   const [scrimTop, setScrimTop] = useState(0);
@@ -329,9 +371,9 @@ export function ProfileSwitcherMenu({
           type="button"
           data-profile-switcher-view-profile
           onClick={onViewProfile}
-          className="relative flex w-full items-center gap-2.5 rounded-xl bg-[#E8F6FC] p-2.5 text-left transition-opacity hover:opacity-90 active:opacity-75"
+          className="relative flex w-full items-center gap-2.5 rounded-xl bg-white p-2.5 text-left transition-colors hover:bg-[#F2F8FF] active:bg-[#E8F6FC]"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-[#FFA503]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-[#FFA503]">
             <TrophyIcon className="size-5" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
@@ -357,6 +399,32 @@ export function ProfileSwitcherMenu({
             />
           </svg>
         </button>
+        <MenuLinkRow
+          data-attr="settings"
+          icon={<SettingsTabIconA className="size-5" />}
+          title={PROFILE_SWITCHER_COPY.settings}
+          sub={
+            isParent
+              ? PROFILE_SWITCHER_COPY.settingsSubParent
+              : isGuest
+                ? PROFILE_SWITCHER_COPY.settingsSubGuest
+                : PROFILE_SWITCHER_COPY.settingsSub
+          }
+          onClick={onOpenSettings}
+        />
+        {onOpenParentHub ? (
+          <MenuLinkRow
+            data-attr="parent-hub"
+            icon={<ParentHubTabIconA className="size-5" />}
+            title={PROFILE_SWITCHER_COPY.parentHub}
+            sub={parentHubSubtitle(
+              household
+                ? household.profiles.filter((p) => p.role === "child").length
+                : null,
+            )}
+            onClick={onOpenParentHub}
+          />
+        ) : null}
         {showList ? (
           <>
             <p className="px-2.5 pb-1.5 pt-3 font-heading text-[11px] font-bold uppercase tracking-[0.6px] text-[#64748b]">
@@ -393,5 +461,46 @@ export function ProfileSwitcherMenu({
       </div>
     </>,
     document.body,
+  );
+}
+
+/** Plain menu row under "View my profile": Settings, and the Parent Hub for parents. */
+function MenuLinkRow({
+  "data-attr": attr,
+  icon,
+  title,
+  sub,
+  onClick,
+}: {
+  "data-attr": "settings" | "parent-hub";
+  icon: ReactNode;
+  title: string;
+  sub: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-profile-switcher-link={attr}
+      onClick={onClick}
+      className="mt-1 flex w-full items-center gap-2.5 rounded-xl p-2.5 text-left transition-colors hover:bg-[#F2F8FF] active:bg-[#E8F6FC]"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]">
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="font-heading text-sm font-bold text-[#031F82]">{title}</span>
+        <span className="text-[11.5px] font-medium text-[#1E3A5F]">{sub}</span>
+      </span>
+      <svg viewBox="0 0 12 12" fill="none" aria-hidden className="size-3.5 shrink-0 text-[#0288A3]">
+        <path
+          d="M4.5 3 7.5 6 4.5 9"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
   );
 }

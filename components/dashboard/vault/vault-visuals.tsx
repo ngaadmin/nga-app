@@ -3,6 +3,7 @@
 import type { VaultBucket } from "@/lib/dashboard/vault-buckets";
 import { isSavingsBucket } from "@/lib/dashboard/vault-buckets";
 import { cn } from "@/lib/utils/cn";
+import { foundationJarIcon } from "@/lib/dashboard/vault/jar-icon";
 
 export type BucketTheme = {
   accent: string;
@@ -62,13 +63,32 @@ export function BucketEmojiIcon({
   emoji,
   theme,
   size = "md",
+  bucketId,
 }: {
   emoji: string;
   theme: BucketTheme;
   size?: "sm" | "md" | "lg";
+  /** Starter jars with their default emoji show the Hub's line icon. */
+  bucketId?: string;
 }) {
   const dimensions =
     size === "lg" ? "size-16 text-4xl" : size === "md" ? "size-12 text-2xl" : "size-10 text-xl";
+  const jarIcon = bucketId ? foundationJarIcon({ id: bucketId, emoji }) : null;
+  if (jarIcon) {
+    const iconSize = size === "lg" ? "size-9" : size === "md" ? "size-7" : "size-6";
+    return (
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full",
+          dimensions,
+          jarIcon.toneClassName,
+        )}
+        aria-hidden
+      >
+        <jarIcon.Icon className={iconSize} />
+      </span>
+    );
+  }
 
   return (
     <span

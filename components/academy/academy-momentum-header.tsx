@@ -17,7 +17,7 @@ import {
 } from "@/lib/academy/lessons/coin-counter-flight";
 import { coinWord } from "@/lib/copy/coin-word";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
-import { FlameIcon, GoldCoinIcon } from "@/lib/dashboard/icons";
+import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
 
 type AcademyMomentumHeaderProps = {
   username: string;
@@ -49,6 +49,8 @@ type AcademyMomentumHeaderProps = {
   showUsernameLabel?: boolean;
   /** Center slot. Undefined keeps the default handle control; null leaves it empty. */
   center?: ReactNode;
+  /** Optional grid override for the row (guests use their own columns). */
+  rowClassName?: string;
 };
 
 /**
@@ -70,6 +72,7 @@ export function AcademyMomentumHeader({
   profileSwitcher,
   showUsernameLabel = true,
   center,
+  rowClassName,
 }: AcademyMomentumHeaderProps) {
   const streakCopy = copyMatrix.home.streak;
   const coinUnit = coinWord(xp);
@@ -88,6 +91,7 @@ export function AcademyMomentumHeader({
       // An explicit null center means nothing sits in the middle, so the
       // username can use that space before it truncates.
       wideLeft={center === null}
+      rowClassName={rowClassName}
       left={
         <div className="relative flex h-full min-w-0 max-w-full items-center">
           <button
@@ -171,7 +175,7 @@ export function AcademyMomentumHeader({
             className="shrink-0"
             icon={
               <TopBarRoundIcon>
-                <FlameIcon className="size-[18px]" />
+                <StreakIconA className="size-[18px]" />
               </TopBarRoundIcon>
             }
             value={dayStreak}
@@ -190,7 +194,7 @@ export function AcademyMomentumHeader({
               onClick={showCoins ? onXpClick : undefined}
               icon={
                 <TopBarRoundIcon>
-                  <GoldCoinIcon className="size-[18px]" />
+                  <CoinsIconA className="size-[18px]" />
                 </TopBarRoundIcon>
               }
               value={xp}

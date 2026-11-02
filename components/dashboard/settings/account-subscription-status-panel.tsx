@@ -4,22 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
-import {
-  DeclinedNoticeDialog,
-  ParentDeclineConfirmDialog,
-} from "@/components/onboarding/parent-decline-dialogs";
-import {
-  useParentDeclineFlow,
-  type ParentDeclineOutcome,
-} from "@/lib/onboarding/use-parent-decline-flow";
-import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
-import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { type MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { signOutApp } from "@/lib/onboarding/sign-out";
 import {
-  approveConsentRequestInApp,
-  declineConsentRequestInApp,
   listPendingConsentRequestsForParent,
   type PendingConsentRequestView,
 } from "@/lib/onboarding/approve-consent-request";
@@ -28,7 +16,6 @@ import {
   type LinkedHouseholdChild,
 } from "@/lib/onboarding/list-linked-children";
 import {
-  convertToRegisteredProfile,
   DASHBOARD_ADD_PROFILE_PATH,
   ONBOARDING_ENTRY_PATH,
   ONBOARDING_SIGN_IN_PATH,
@@ -41,14 +28,12 @@ import {
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { notifyAccountDeletedChild } from "@/lib/onboarding/issue-account-deleted-email";
 import { resolveSelfDeleteNoticeRecipient } from "@/lib/onboarding/self-delete-notice-recipient";
-import { approvePendingLearnerAccount } from "@/lib/onboarding/parent-consent-pending";
 import {
   deleteMasterAccountCascade,
   displayAccountIdentity,
   findRegisteredAccountByUsername,
   removeRegisteredAccountByUsername,
   resolveHouseholdEmail,
-  upsertRegisteredAccount,
 } from "@/lib/onboarding/registered-accounts";
 import { USER_SESSION_UPDATED_EVENT } from "@/lib/onboarding/user-session-events";
 import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view";
@@ -59,14 +44,12 @@ import { PRIVACY_POLICY_PATH } from "@/lib/legal/paths";
 import { DeleteLearnerConfirmSheet } from "@/components/dashboard/settings/delete-learner-confirm-sheet";
 import { isFourDigitPin } from "@/lib/validation/pin";
 import { cn } from "@/lib/utils/cn";
+import { PARENT_TAB_HREF } from "@/lib/parent/parent-tab-eligibility";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
 const quietDeleteClass =
   "font-sans text-sm font-medium text-[#5B6B7C] underline underline-offset-2 transition-colors hover:text-[#031F82] disabled:cursor-not-allowed disabled:opacity-40";
-
-const approveButtonClass =
-  "shrink-0 rounded-nga-lg border-b-4 border-[#C88202] bg-[#FFA503] px-3 py-2 font-heading text-sm font-bold uppercase tracking-wide text-[#031F82] shadow-md transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
 
 const destructiveCtaClass =
   "rounded-nga-lg border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white transition-all hover:brightness-[1.02] active:translate-y-[2px] active:border-b-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:translate-y-0";
@@ -164,10 +147,6 @@ export function AccountSubscriptionStatusPanel() {
   const [isDeletingHousehold, setIsDeletingHousehold] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletePin, setDeletePin] = useState("");
-  const [approvingUsername, setApprovingUsername] = useState<string | null>(
-    null,
-  );
-  const [approveError, setApproveError] = useState<string | null>(null);
   const [remotePending, setRemotePending] = useState<
     PendingConsentRequestView[]
   >([]);
@@ -335,207 +314,6 @@ export function AccountSubscriptionStatusPanel() {
     setPendingDelete({ kind: "master", username });
   }
 
-  function pendingItemForUsername(username: string): PendingLinkItem {
-    const extra = extraPending.find(
-      (item) => usernameKey(item.username) === usernameKey(username),
-    );
-    if (extra) return extra;
-
-    const remote = remotePending.find(
-      (item) => usernameKey(item.childUsername) === usernameKey(username),
-    );
-    const child = household.children.find(
-      (item) => usernameKey(item.username) === usernameKey(username),
-    );
-    return {
-      username,
-      requestId: remote?.requestId,
-      childCohort: child?.curriculumCohort ?? remote?.childCohort,
-      kind: remote?.kind,
-    };
-  }
-
-  const [confirmApproveUsername, setConfirmApproveUsername] = useState<string | null>(null);
-  const declineFlow = useParentDeclineFlow<string>(declineChildConfirmed);
-  // Parent ticks the Terms box before approving a child in the app.
-  const [approveTermsAccepted, setApproveTermsAccepted] = useState(false);
-
-  function handleApproveChild(username: string) {
-    setApproveTermsAccepted(false);
-    setConfirmApproveUsername(username);
-  }
-
-  /**
-   * Every approve or decline asks for the parent PIN. The server checks the
-   * PIN and signs a short-lived pass; the approve/decline action re-checks
-   * that pass. The pass is used for this one action and then dropped.
-   */
-  const [pinGateFor, setPinGateFor] = useState<
-    | { action: "approve"; item: PendingLinkItem }
-    | { action: "decline"; username: string }
-    | null
-  >(null);
-  /** PIN pass held only between the PIN gate and the "Are you sure?" answer. */
-  const declinePassRef = useRef<string | null>(null);
-
-  /**
-   * Decline tapped: first the parent PIN, then the "Are you sure?" dialog.
-   * Nothing is declined until the parent confirms.
-   */
-  function handleDeclineChild(username: string, pass?: string) {
-    const item = pendingItemForUsername(username);
-    if (!item.requestId) {
-      setApproveError("This profile can't be declined from here.");
-      return;
-    }
-    if (!pass) {
-      declinePassRef.current = null;
-      setApproveError(null);
-      setPinGateFor({ action: "decline", username });
-      return;
-    }
-    declinePassRef.current = pass;
-    setApproveError(null);
-    declineFlow.requestDecline(username);
-  }
-
-  /** Runs only after the parent confirms. The server declines and deletes. */
-  async function declineChildConfirmed(username: string): Promise<ParentDeclineOutcome> {
-    const item = pendingItemForUsername(username);
-    if (!item.requestId) {
-      return { ok: false, error: "This profile can't be declined from here." };
-    }
-    const pass = declinePassRef.current;
-    if (!pass) {
-      return { ok: false, error: "Enter your parent PIN to continue." };
-    }
-    setApprovingUsername(username);
-    try {
-      const declined = await declineConsentRequestInApp(item.requestId, pass);
-      declinePassRef.current = null;
-      if (!declined.success) {
-        return { ok: false, error: declined.error };
-      }
-      const key = usernameKey(username);
-      setRemotePending((current) =>
-        current.filter((request) => usernameKey(request.childUsername) !== key),
-      );
-      setHousehold((current) => ({
-        ...current,
-        children: declined.deleted
-          ? current.children.filter((child) => usernameKey(child.username) !== key)
-          : current.children.map((child) =>
-              usernameKey(child.username) === key
-                ? { ...child, accountStatus: "DECLINED" }
-                : child,
-            ),
-      }));
-      setConfirmApproveUsername(null);
-      return { ok: true };
-    } finally {
-      setApprovingUsername(null);
-    }
-  }
-
-  function markChildApprovedInList(
-    username: string,
-    nextChild?: UserSession | null,
-  ) {
-    const key = usernameKey(username);
-    setRemotePending((current) =>
-      current.filter((request) => usernameKey(request.childUsername) !== key),
-    );
-    setHousehold((current) => {
-      const exists = current.children.some(
-        (child) => usernameKey(child.username) === key,
-      );
-      if (exists) {
-        return {
-          ...current,
-          children: current.children.map((child) =>
-            usernameKey(child.username) === key
-              ? {
-                  ...child,
-                  accountStatus: "ACTIVE",
-                  consentApprovedAt: new Date().toISOString(),
-                }
-              : child,
-          ),
-        };
-      }
-      if (nextChild) {
-        return { ...current, children: [...current.children, nextChild] };
-      }
-      return current;
-    });
-  }
-
-  async function handleLinkProfile(item: PendingLinkItem, pass?: string) {
-    if ((!isMasterViewer && !isParentSettingsView) || approvingUsername) return;
-    if (!pass) {
-      setApproveError(null);
-      setPinGateFor({ action: "approve", item });
-      return;
-    }
-    const masterEmail =
-      household.householdEmail ??
-      (readUserSession() ? resolveHouseholdEmail(readUserSession()!) : null);
-    if (!masterEmail) {
-      setApproveError(copy.approveChildError);
-      return;
-    }
-
-    setApprovingUsername(item.username);
-    setApproveError(null);
-
-    try {
-      let linkedRemotely = false;
-      let approvedChild: UserSession | null = null;
-      if (item.requestId && isMasterViewer) {
-        // The parent ticked the Terms box in the approve dialog first.
-        const remote = await approveConsentRequestInApp(item.requestId, pass, {
-          termsAccepted: true,
-        });
-        if (!remote.success) {
-          setApproveError(remote.error || copy.approveChildError);
-          return;
-        }
-        linkedRemotely = true;
-        const curriculumCohort =
-          remote.childCohort ??
-          item.childCohort ??
-          (remote.kind === "vpc" ? "explorer" : "pathfinder");
-        const now = new Date().toISOString();
-        const childSession = convertToRegisteredProfile({
-          username: remote.childUsername,
-          curriculumCohort,
-          accountRole: "child",
-          parentEmail: remote.parentEmail || masterEmail,
-          accountStatus: "ACTIVE",
-          consentApprovedAt: now,
-          supabaseUserId: remote.childId,
-        });
-        upsertRegisteredAccount({ ...childSession, createdAt: now });
-        approvedChild = childSession;
-      }
-
-      const localActivated = approvePendingLearnerAccount({
-        childUsername: item.username,
-        masterEmail,
-      });
-      if (!linkedRemotely && !localActivated) {
-        setApproveError(copy.approveChildError);
-        return;
-      }
-      markChildApprovedInList(item.username, localActivated ?? approvedChild);
-      refresh();
-    } catch {
-      setApproveError(copy.approveChildError);
-    } finally {
-      setApprovingUsername(null);
-    }
-  }
-
   async function confirmPendingDelete() {
     if (!pendingDelete || isDeletingHousehold) return;
 
@@ -555,7 +333,7 @@ export function AccountSubscriptionStatusPanel() {
           return;
         }
         if (!isFourDigitPin(deletePin)) {
-          setDeleteError("Enter the parent PIN to delete this account.");
+          setDeleteError("Enter your Parent PIN to delete this account.");
           return;
         }
 
@@ -759,26 +537,13 @@ export function AccountSubscriptionStatusPanel() {
                       </div>
                       <div className="flex shrink-0 items-start gap-2">
                         {canApproveChild ? (
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
-                              disabled={approvingUsername === child.username}
-                              onClick={() => handleDeclineChild(child.username)}
-                            >
-                              Decline
-                            </button>
-                            <button
-                              type="button"
-                              className={approveButtonClass}
-                              disabled={approvingUsername === child.username}
-                              onClick={() => handleApproveChild(child.username)}
-                            >
-                              {approvingUsername === child.username
-                                ? copy.linkingProfile
-                                : copy.linkProfile}
-                            </button>
-                          </div>
+                          <Link
+                            href={PARENT_TAB_HREF}
+                            data-settings-review-in-hub
+                            className="shrink-0 font-heading text-xs font-bold text-[#0CC1E0] underline underline-offset-2"
+                          >
+                            Review in Parent Hub
+                          </Link>
                         ) : null}
                         {canDeleteChild ? (
                           <div
@@ -858,26 +623,13 @@ export function AccountSubscriptionStatusPanel() {
                           {` · ${copy.pendingApprovalBadge}`}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className="font-heading text-xs font-bold text-[#031F82] underline-offset-2 hover:underline"
-                          disabled={approvingUsername === item.username}
-                          onClick={() => handleDeclineChild(item.username)}
-                        >
-                          Decline
-                        </button>
-                        <button
-                          type="button"
-                          className={approveButtonClass}
-                          disabled={approvingUsername === item.username}
-                          onClick={() => handleApproveChild(item.username)}
-                        >
-                          {approvingUsername === item.username
-                            ? copy.linkingProfile
-                            : copy.linkProfile}
-                        </button>
-                      </div>
+                      <Link
+                        href={PARENT_TAB_HREF}
+                        data-settings-review-in-hub
+                        className="shrink-0 font-heading text-xs font-bold text-[#0CC1E0] underline underline-offset-2"
+                      >
+                        Review in Parent Hub
+                      </Link>
                     </div>
                   </li>
                 ))
@@ -887,48 +639,6 @@ export function AccountSubscriptionStatusPanel() {
           {householdLoadError ? (
             <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
               {householdLoadError}
-            </p>
-          ) : null}
-
-          {confirmApproveUsername ? (
-            <div className="rounded-xl bg-[#FFF7ED] px-3 py-3">
-              <p className="font-sans text-sm font-semibold text-[#031F82]">
-                Approve {confirmApproveUsername}&apos;s account?
-              </p>
-              <TermsConsentCheckbox
-                id="in-app-approve-terms-consent"
-                className="mt-2"
-                checked={approveTermsAccepted}
-                onChange={setApproveTermsAccepted}
-              />
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  className="h-touch flex-1 rounded-nga-lg font-heading text-xs font-bold text-[#0CC1E0]"
-                  onClick={() => setConfirmApproveUsername(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className={approveButtonClass}
-                  disabled={!approveTermsAccepted}
-                  onClick={() => {
-                    if (!approveTermsAccepted) return;
-                    const username = confirmApproveUsername;
-                    setConfirmApproveUsername(null);
-                    void handleLinkProfile(pendingItemForUsername(username));
-                  }}
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {approveError ? (
-            <p className="font-sans text-sm font-medium text-[#031F82]" role="alert">
-              {approveError}
             </p>
           ) : null}
 
@@ -1028,12 +738,6 @@ export function AccountSubscriptionStatusPanel() {
         )}
       </div>
 
-      <ParentDeclineConfirmDialog flow={declineFlow} />
-      <DeclinedNoticeDialog
-        isOpen={declineFlow.isDeclinedOpen}
-        onClose={declineFlow.closeDeclined}
-      />
-
       <DeleteLearnerConfirmSheet
         isOpen={pendingDelete?.kind === "child"}
         title={copy.deleteChildTitle}
@@ -1056,45 +760,6 @@ export function AccountSubscriptionStatusPanel() {
         onClose={closeDeleteDialog}
         onConfirm={() => void confirmPendingDelete()}
       />
-
-      <ModalShell
-        isOpen={pinGateFor !== null}
-        onClose={() => setPinGateFor(null)}
-        align="center"
-        backdropClassName="bg-[#031F82]/55"
-        panelClassName="max-w-sm rounded-2xl border-0 bg-white p-0 shadow-md"
-      >
-        {pinGateFor ? (
-          <div data-settings-parent-pin-gate={pinGateFor.action}>
-            <ParentPinGate
-              parentName=""
-              className="mt-0 shadow-none"
-              enterBody={
-                pinGateFor.action === "approve"
-                  ? `Enter your parent PIN to approve ${pinGateFor.item.username}.`
-                  : `Enter your parent PIN to decline ${pinGateFor.username}.`
-              }
-              onUnlocked={(pass) => {
-                const pending = pinGateFor;
-                setPinGateFor(null);
-                if (pending.action === "approve") {
-                  void handleLinkProfile(pending.item, pass);
-                } else {
-                  void handleDeclineChild(pending.username, pass);
-                }
-              }}
-            />
-            <button
-              type="button"
-              data-settings-parent-pin-cancel
-              onClick={() => setPinGateFor(null)}
-              className="mb-4 block w-full font-sans text-xs font-semibold text-[#1E3A5F]"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : null}
-      </ModalShell>
 
       <ModalShell
         isOpen={pendingDelete?.kind === "master"}

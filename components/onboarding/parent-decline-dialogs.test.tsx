@@ -133,21 +133,15 @@ describe("every parent Decline button goes through the confirm dialog", () => {
     expect(form.match(/declineConsentRequest\(/g)?.length).toBe(1);
   });
 
-  it("Settings (both Decline buttons)", () => {
+  it("Settings has no Approve or Decline: approvals live only in the Parent Hub", () => {
     const panel = readFileSync(
       "components/dashboard/settings/account-subscription-status-panel.tsx",
       "utf8",
     );
-    expect(panel).toContain("useParentDeclineFlow<string>(declineChildConfirmed)");
-    expect(panel.match(/onClick=\{\(\) => handleDeclineChild\(/g)?.length).toBe(2);
-    expect(panel).toContain("<ParentDeclineConfirmDialog flow={declineFlow} />");
-    const opener = panel.slice(
-      panel.indexOf("function handleDeclineChild"),
-      panel.indexOf("async function declineChildConfirmed"),
-    );
-    expect(opener).toContain("declineFlow.requestDecline(username)");
-    expect(opener).not.toContain("declineConsentRequestInApp");
-    expect(panel.match(/declineConsentRequestInApp\(/g)?.length).toBe(1);
+    expect(panel).not.toContain("handleDeclineChild");
+    expect(panel).not.toContain("declineConsentRequestInApp");
+    expect(panel).not.toContain("approveConsentRequestInApp");
+    expect(panel).toContain("Review in Parent Hub");
   });
 
   it("learner declined pop-up has a Close that leads to a fresh start", () => {

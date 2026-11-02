@@ -3,10 +3,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { TrashIcon } from "@/lib/dashboard/icons";
+import { KEEP_ICONS, type KeepIconKind } from "@/lib/dashboard/progress-icons-a";
 import { zLayerStyle } from "@/lib/ui/layers";
 
 export type RemovalItem = {
-  emoji: string;
+  icon: KeepIconKind;
   title: string;
   detail: string;
 };
@@ -90,10 +91,12 @@ export function RemovalConfirmSheet({
             {body}
           </p>
           <ul className="mt-4 space-y-3">
-            {items.map((item) => (
-              <li key={item.title} className="flex items-center gap-3 text-left">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#EAF0FF] text-lg">
-                  {item.emoji}
+            {items.map((item) => {
+              const { Icon, toneClassName } = KEEP_ICONS[item.icon];
+              return (
+              <li key={item.title} data-removal-item={item.icon} className="flex items-center gap-3 text-left">
+                <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${toneClassName}`}>
+                  <Icon className="size-5" />
                 </span>
                 <span className="min-w-0">
                   <span className="block font-heading text-[15px] font-extrabold text-[#031F82]">
@@ -104,7 +107,8 @@ export function RemovalConfirmSheet({
                   </span>
                 </span>
               </li>
-            ))}
+              );
+            })}
           </ul>
           {footnote ? (
             <p className="mt-4 text-center font-sans text-[13px] leading-snug text-[#4A5675]">

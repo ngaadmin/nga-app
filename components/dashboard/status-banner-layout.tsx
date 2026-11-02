@@ -40,9 +40,12 @@ export const STATUS_BANNER_ITEM_CLASS =
 /** Uniform icon box aligned to banner text. */
 export const STATUS_BANNER_ICON_CLASS = "size-3.5 shrink-0";
 
-/** Round orange treatment for top-bar coin and streak icons. */
+/**
+ * Direction A: top-bar coin and streak icons sit on soft peach circles, with
+ * the line icon's duotone fill in brand orange.
+ */
 export const TOP_BAR_ROUND_ICON_CLASS =
-  "inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#FFA503] text-[#031F82] shadow-md";
+  "inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[#FFE7B8] text-[#031F82] [--tab-icon-fill:#FFA503]";
 
 export function TopBarRoundIcon({
   children,

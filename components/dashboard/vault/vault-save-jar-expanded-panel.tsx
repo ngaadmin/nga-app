@@ -116,6 +116,7 @@ export function VaultSaveJarExpandedPanel({
           <BucketEmojiIcon
             size="sm"
             emoji={bucket.emoji}
+            bucketId={bucket.id}
             theme={bucketTheme(bucket)}
           />
           <p className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]">

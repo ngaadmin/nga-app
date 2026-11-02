@@ -17,7 +17,10 @@ import {
   ACCOUNT_PROGRESS_CACHE_KEY,
   persistAccountProgressCacheFromLive,
 } from "@/lib/dashboard/account-progress-local";
-import { PAGE_INTRO_SEEN_BY_ACCOUNT_KEY } from "@/lib/dashboard/page-intro-seen";
+import {
+  GUEST_MEDALS_TIP_DISMISSED_KEY,
+  PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+} from "@/lib/dashboard/page-intro-seen";
 import {
   EXPLORER_PENDING_PLAY_OK_KEY,
   isExplorerPendingConsent,
@@ -57,6 +60,7 @@ const PRESERVED_ON_LOGOUT_KEYS = [
   ACCOUNT_PROGRESS_CACHE_KEY,
   PARENT_FIRST_WELCOME_KEY,
   PAGE_INTRO_SEEN_BY_ACCOUNT_KEY,
+  GUEST_MEDALS_TIP_DISMISSED_KEY,
   // TODO: remove after recordings — keep ?recording=1 for the rest of this tab.
   RECORDING_SUPPRESS_INTRO_FLAG_KEY,
 ] as const;

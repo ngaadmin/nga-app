@@ -8,6 +8,7 @@ import {
 } from "@/lib/dashboard/account-progress";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
 import { WALLET_SCHEMA_VERSION, type PersistedDashboardWallet } from "@/lib/dashboard/dashboard-wallet-storage";
 import { listLinkedChildrenForCurrentParent } from "@/lib/onboarding/list-linked-children";
 import {
@@ -81,12 +82,29 @@ export async function loadLinkedChildrenCashRates(): Promise<
  * Save one cent rate onto a linked child's learner_progress wallet.
  * Pass no childId to update every linked child. Does not change their XP.
  */
+/**
+ * Sets the coins cash rate for linked children. Behind the parent PIN: the
+ * caller passes the gate pass from entering the Parent PIN in Settings,
+ * checked here on the server.
+ */
 export async function saveLinkedChildExchangeRate(input: {
   centsPer100Xp: number;
   childId?: string | null;
+  parentPinPass: string;
 }): Promise<{ ok: true; usernames: string[] } | { ok: false; error: string }> {
   if (!isAllowedRateCents(input.centsPer100Xp)) {
     return { ok: false, error: EXCHANGE_RATE_LIMIT_ERROR };
+  }
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (
+    !user ||
+    typeof input.parentPinPass !== "string" ||
+    !parentTabGatePassValid(input.parentPinPass, user.id)
+  ) {
+    return { ok: false, error: "Enter your parent PIN to change the cash rate." };
   }
 
   const linked = await linkedChildren();

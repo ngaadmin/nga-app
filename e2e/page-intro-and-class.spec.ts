@@ -69,7 +69,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await expect(letsGo).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("#hub-intro-academy-title")).toHaveText("Academy");
   await expect(
-    page.getByText("Your medals live in your profile. Tap your avatar anytime."),
+    page.getByText("Your medals live in Achievements on your profile. Tap your avatar anytime."),
   ).toHaveCount(0);
   await page.screenshot({
     path: "/opt/cursor/artifacts/intro-academy-first.png",
@@ -97,7 +97,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await expect(page.locator("#hub-intro-academy-title")).toHaveCount(0);
 
   await page.getByRole("link", { name: "Settings" }).click();
-  await page.getByRole("button", { name: "Log Out" }).click();
+  await page.getByRole("button", { name: "Log out" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/dashboard"), {
     timeout: 15_000,
   });
@@ -148,7 +148,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
 
   await page.getByRole("button", { name: /^Open profile/ }).click();
   await expect(page.locator("#medals-intro-title")).toHaveCount(0);
-  await expect(page.locator('button[aria-label="About medals"]')).toBeVisible();
+  await expect(page.locator('button[aria-label="About achievements"]')).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/medals-already-seen.png",
     fullPage: false,
@@ -167,7 +167,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   await page.getByRole("button", { name: /^Open profile/ }).click();
   await expect(page.locator("#medals-intro-title")).toBeVisible({ timeout: 10_000 });
   await expect(
-    page.getByText("Your medals live in your profile. Tap your avatar anytime."),
+    page.getByText("Your medals live in Achievements on your profile. Tap your avatar anytime."),
   ).toBeVisible();
   await page.screenshot({
     path: "/opt/cursor/artifacts/medals-intro-first.png",
@@ -175,7 +175,7 @@ test("intro is one-time across sign-out and medals reopen from help", async ({
   });
   await page.locator("#medals-intro-body ~ button").click({ force: true });
   await expect(page.locator("#medals-intro-title")).toHaveCount(0);
-  const aboutMedals = page.locator('button[aria-label="About medals"]');
+  const aboutMedals = page.locator('button[aria-label="About achievements"]');
   await expect(aboutMedals).toBeVisible();
   await aboutMedals.click({ force: true });
   await expect(page.locator("#medals-intro-title")).toBeVisible();

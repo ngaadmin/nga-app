@@ -4,13 +4,10 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { NextGenAchieversWordmark } from "@/components/brand/nextgen-achievers-wordmark";
 import { DashboardNavLink } from "@/components/dashboard/dashboard-nav-link";
-import {
-  DASHBOARD_DEFAULT_HREF,
-  DASHBOARD_NAV_ITEMS,
-} from "@/lib/dashboard/navigation";
-import { withDashboardNavExtensions } from "@/lib/dashboard/dashboard-nav-extensions";
+import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
+import { dashboardNavItemsFor } from "@/lib/dashboard/dashboard-nav-items";
 import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
-import { withParentTabNavItem } from "@/lib/parent/parent-tab-nav";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { zLayerStyle } from "@/lib/ui/layers";
 
@@ -42,12 +39,13 @@ export function DashboardNavigation() {
   const isDesktop = useIsDesktopNav();
   const advancedMoneyUnlocked = useTestingPremiumUnlocked();
   const parentTab = useParentTabAccess();
-  const navItems = withParentTabNavItem(
-    withDashboardNavExtensions(DASHBOARD_NAV_ITEMS, {
-      advancedMoneyUnlocked,
-    }),
-    parentTab.eligible,
-  );
+  const session = useUserSession();
+  /** Same list for the phone bar and the desktop sidebar (see dashboardNavItemsFor). */
+  const navItems = dashboardNavItemsFor({
+    advancedMoneyUnlocked,
+    parentTabEligible: parentTab.eligible,
+    isParentProfile: session?.accountRole === "parent_master",
+  });
 
   if (isDesktop) {
     return (

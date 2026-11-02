@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { ParentDataPinGate } from "@/components/privacy/parent-data-pin-gate";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { signOutApp, redirectToHomeAfterSignOut } from "@/lib/onboarding/sign-out";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
@@ -8,7 +10,6 @@ import {
   loadParentOwnRecord,
   loadTeacherOwnRecord,
   parentDataGrantActive,
-  unlockParentDataView,
 } from "@/lib/privacy/account-data-server";
 import type { HistoryEntry } from "@/lib/privacy/data-controls";
 import { deleteTeacherPhraseAccepted, formatStudentLoginSummary } from "@/lib/privacy/data-controls";
@@ -19,7 +20,12 @@ import { isFourDigitPin } from "@/lib/validation/pin";
 
 type ParentRecord = {
   email: string;
-  children: { userId: string; username: string; trackLabel: string | null }[];
+  children: {
+    userId: string;
+    username: string;
+    trackLabel: string | null;
+    cohort?: MasteryCohort | null;
+  }[];
   history: HistoryEntry[];
   historyTitle: string;
   historySummary: string;
@@ -36,15 +42,25 @@ type TeacherRecord = {
   historySummary: string;
 };
 
-export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }) {
+/**
+ * Parent account pages. "account" is My account (email and Joined only).
+ * "privacy" is Your data & privacy: the parent's own data file, consent
+ * history, linked children and deleting their own account. Teachers keep
+ * their one combined page.
+ */
+export function MyAccountPage({
+  historyOpen = false,
+  section = "account",
+}: {
+  historyOpen?: boolean;
+  section?: "account" | "privacy";
+}) {
   const session = useUserSession();
   const isTeacher = session?.accountRole === "teacher" || session?.isTeacher === true;
   const isParent = session?.accountRole === "parent_master";
+  const joinDate = session?.createdAt ?? null;
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [pin, setPin] = useState("");
-  const [gatePin, setGatePin] = useState("");
-  const [gateError, setGateError] = useState<string | null>(null);
   const [parentRecord, setParentRecord] = useState<ParentRecord | null>(null);
   const [teacherRecord, setTeacherRecord] = useState<TeacherRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,19 +101,11 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
     });
   }, [session, isTeacher, isParent]);
 
-  async function unlock(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    const unlocked = await unlockParentDataView(gatePin);
-    setBusy(false);
-    if (!unlocked.ok) {
-      setGateError(unlocked.error);
-      return;
-    }
-    setPin(gatePin);
+  async function unlock(): Promise<void> {
     const result = await loadParentOwnRecord();
     if (!result.ok) {
       setError(result.error);
+      setReady(true);
       return;
     }
     setParentRecord(result);
@@ -118,26 +126,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
 
   if (isParent && !ready) {
     return (
-      <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
-        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your parent PIN</h1>
-        <p className="font-sans text-sm text-[#1E3A5F]">Your account record stays behind your parent PIN.</p>
-        <input
-          value={gatePin}
-          onChange={(event) => setGatePin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-          inputMode="numeric"
-          autoComplete="off"
-          aria-label="Parent PIN"
-          className="h-12 rounded-2xl border-2 border-[#BDE9FB] px-3 font-heading text-lg tracking-[0.3em] text-[#031F82] outline-none"
-        />
-        {gateError ? <p role="alert" className="font-sans text-sm text-[#031F82]">{gateError}</p> : null}
-        <button
-          type="submit"
-          disabled={busy || !isFourDigitPin(gatePin)}
-          className="h-12 rounded-2xl border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white disabled:opacity-40"
-        >
-          Continue
-        </button>
-      </form>
+      <ParentDataPinGate kind={section} onUnlocked={unlock} />
     );
   }
 
@@ -150,6 +139,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
           kind="teacher"
           backHref="/dashboard/settings"
           email={teacherRecord.email}
+          joined={joinDate}
           username={teacherRecord.username}
           classLabel={teacherRecord.classLabel}
           studentCount={count}
@@ -175,17 +165,17 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
           body={`This deletes your classes and all ${count} student logins in them. Students can't log in again and their progress is gone for good.`}
           items={[
             {
-              emoji: "👤",
+              icon: "profile",
               title: "Your teacher account",
               detail: `Username ${teacherRecord.username}, email and history`,
             },
             {
-              emoji: "🏫",
+              icon: "class",
               title: "Your class",
               detail: `${teacherRecord.classLabel} and its class password`,
             },
             {
-              emoji: "👥",
+              icon: "students",
               title: `All ${count} student logins`,
               detail: names ? `${names}, and everything in their accounts` : "No student logins",
             },
@@ -235,14 +225,15 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
     return <p className="px-2 py-6 font-sans text-sm text-[#1E3A5F]">{error || "Loading…"}</p>;
   }
 
-  const activePin = pin || confirmPin;
 
   return (
     <>
       <ManagerRecordScreen
         kind="parent"
+        section={section}
         backHref="/dashboard/settings"
         email={parentRecord.email}
+        joined={joinDate}
         linkedChildren={parentRecord.children}
         history={parentRecord.history}
         historyTitle={parentRecord.historyTitle}
@@ -255,6 +246,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         }}
         onDelete={() => {
           setConfirmError(null);
+          setConfirmPin("");
           setConfirmOpen(true);
         }}
       />
@@ -264,16 +256,16 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         title="Delete your account?"
         body="This deletes your account and your children's accounts. It can't be undone."
         items={[
-          { emoji: "✉️", title: "Your account", detail: "Your email and consent history" },
+          { icon: "email", title: "Your account", detail: "Your email and consent history" },
           {
-            emoji: "👥",
+            icon: "children",
             title: "Linked children",
             detail: parentRecord.children.map((child) => child.username).join(", ") || "None linked",
           },
         ]}
         confirmLabel="Delete my account"
-        confirmDisabled={!pin && !isFourDigitPin(confirmPin)}
-        pinLabel={pin ? undefined : "Parent PIN"}
+        confirmDisabled={!isFourDigitPin(confirmPin)}
+        pinLabel="Parent PIN"
         pinValue={confirmPin}
         onPinChange={setConfirmPin}
         error={confirmError}
@@ -283,7 +275,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         }}
         onConfirm={() => {
           setBusy(true);
-          void deleteHouseholdMasterAccount(activePin).then(async (result) => {
+          void deleteHouseholdMasterAccount(confirmPin).then(async (result) => {
             if (!result.success) {
               setConfirmError(result.error);
               setBusy(false);

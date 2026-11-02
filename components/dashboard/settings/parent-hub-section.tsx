@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { cn } from "@/lib/utils/cn";
@@ -13,6 +13,7 @@ import { useCurrency } from "@/lib/dashboard/currency-context";
 import { useDashboardWallet } from "@/lib/dashboard/dashboard-wallet-context";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useSettingsParentView } from "@/lib/dashboard/use-settings-parent-view";
+import { loadParentLinkedChildCount } from "@/lib/privacy/account-data-server";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 
@@ -37,6 +38,19 @@ export function ParentHubSection() {
   const [expanded, setExpanded] = useState(false);
   /** Parent PIN pass for this open section only. Dropped when it closes. */
   const [pinPass, setPinPass] = useState<string | null>(null);
+  /** Linked children, so the gate says "child's" or "children's". */
+  const [childCount, setChildCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isParentMaster || !expanded || childCount !== null) return;
+    let cancelled = false;
+    void loadParentLinkedChildCount().then((count) => {
+      if (!cancelled) setChildCount(count);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isParentMaster, expanded, childCount]);
 
   if (!isParentSettingsView) {
     return null;
@@ -63,6 +77,7 @@ export function ParentHubSection() {
               parentName=""
               className="mx-0 mt-1 px-0 pb-1 pt-2 shadow-none"
               enterBody="Enter your Parent Hub PIN to see or change the cash rate."
+              childCount={childCount ?? undefined}
               onUnlocked={(pass) => setPinPass(pass)}
             />
           </div>

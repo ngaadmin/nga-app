@@ -6,6 +6,9 @@ import { DownloadIcon, LockIcon, TrashIcon } from "@/lib/dashboard/icons";
 import { CalendarIconA, MailIconA } from "@/lib/dashboard/progress-icons-a";
 import { ClassIconA, PersonIconA } from "@/lib/dashboard/settings-icons-a";
 import type { HistoryEntry } from "@/lib/privacy/data-controls";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
+import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
 import { HistoryDisclosure } from "@/components/privacy/history-disclosure";
 
@@ -13,6 +16,7 @@ type ChildLink = {
   userId: string;
   username: string;
   trackLabel: string | null;
+  cohort?: MasteryCohort | null;
 };
 
 type ManagerRecordScreenProps = {
@@ -114,13 +118,10 @@ export function ManagerRecordScreen({
                   href={`/dashboard/settings/child-data?child=${child.userId}`}
                   className={`flex items-center gap-3 py-2.5 ${index > 0 ? "border-t border-[#BDE9FB]/60" : ""}`}
                 >
-                  <span
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-full font-heading text-[15px] font-extrabold text-white ${
-                      index % 2 === 0 ? "bg-[#0CC1E0]" : "bg-[#7C8CF0]"
-                    }`}
-                  >
-                    {child.username.charAt(0).toUpperCase()}
-                  </span>
+                  <ProfileAvatarImage
+                    avatarId={readStoredProfileAvatarId(child.userId, child.cohort ?? "explorer")}
+                    className="size-9"
+                  />
                   <span className="min-w-0 flex-1">
                     <span className="block font-heading text-[15px] font-bold text-[#031F82]">
                       {child.username}

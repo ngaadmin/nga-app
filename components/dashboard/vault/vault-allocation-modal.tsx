@@ -96,7 +96,7 @@ function AllocationInputRow({
   return (
     <div className={cn(allocationRowClass, wideFigures && "flex-col items-stretch")}>
       <div className={cn(allocationJarInfoClass, wideFigures && "w-full flex-none basis-auto")}>
-        <BucketEmojiIcon size="sm" emoji={bucket.emoji} theme={theme} />
+        <BucketEmojiIcon size="sm" emoji={bucket.emoji} bucketId={bucket.id} theme={theme} />
         <div className="min-w-0 flex-1">
           <p
             className={cn(

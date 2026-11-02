@@ -318,7 +318,12 @@ export async function loadParentChildBundle(childId: string): Promise<
   | {
       ok: true;
       parentEmail: string;
-      children: { userId: string; username: string; trackLabel: string | null }[];
+      children: {
+        userId: string;
+        username: string;
+        trackLabel: string | null;
+        cohort: MasteryCohort | null;
+      }[];
       view: LearnerDataView;
     }
   | Fail
@@ -338,6 +343,7 @@ export async function loadParentChildBundle(childId: string): Promise<
     userId: child.userId,
     username: child.username,
     trackLabel: trackLabel(child.curriculumCohort),
+    cohort: asCohort(child.curriculumCohort),
   }));
   const selected =
     children.find((child) => child.userId === childId.trim()) ?? children[0];
@@ -399,7 +405,12 @@ export async function loadParentOwnRecord(): Promise<
   | {
       ok: true;
       email: string;
-      children: { userId: string; username: string; trackLabel: string | null }[];
+      children: {
+        userId: string;
+        username: string;
+        trackLabel: string | null;
+        cohort: MasteryCohort | null;
+      }[];
       history: HistoryEntry[];
       historyTitle: string;
       historySummary: string;
@@ -449,6 +460,7 @@ export async function loadParentOwnRecord(): Promise<
       userId: child.userId,
       username: child.username,
       trackLabel: trackLabel(child.curriculumCohort),
+      cohort: asCohort(child.curriculumCohort),
     })),
     history,
     historyTitle: `Consent history · ${history.length} ${history.length === 1 ? "entry" : "entries"}`,
@@ -580,6 +592,7 @@ export async function loadTeacherOwnRecord(): Promise<
 export async function loadMyInfo(): Promise<
   | {
       ok: true;
+      userId: string;
       username: string;
       trackLabel: string | null;
       cohort: "explorer" | "pathfinder" | "maverick" | null;
@@ -606,6 +619,7 @@ export async function loadMyInfo(): Promise<
   }
   return {
     ok: true,
+    userId: user.id,
     username: text(profile.username),
     trackLabel: trackLabel(text(profile.curriculum_cohort)),
     cohort: asCohort(profile.curriculum_cohort),

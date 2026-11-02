@@ -78,7 +78,11 @@ export function ModalShell({
           observer.observe(nav, { box: "border-box" });
         }
       }
-      const next = nav
+      // A full-screen dialog (e.g. the Profile panel) already covers the nav:
+      // dim the whole screen (inset 0) so no bright strip is left at the bottom.
+      const navCovered =
+        clearBottomNav && document.querySelector('[aria-modal="true"]') !== null;
+      const next = nav && !navCovered
         ? Math.max(
             0,
             Math.ceil(window.innerHeight - nav.getBoundingClientRect().top),
@@ -88,6 +92,15 @@ export function ModalShell({
     };
 
     sync();
+    let mutationFrame = 0;
+    const mutations =
+      clearBottomNav && typeof MutationObserver !== "undefined"
+        ? new MutationObserver(() => {
+            window.cancelAnimationFrame(mutationFrame);
+            mutationFrame = window.requestAnimationFrame(sync);
+          })
+        : null;
+    mutations?.observe(document.body, { childList: true, subtree: true });
     const frame = window.requestAnimationFrame(sync);
     const settle = window.setTimeout(sync, 400);
     const viewport = window.visualViewport;
@@ -102,8 +115,10 @@ export function ModalShell({
       window.removeEventListener("orientationchange", sync);
       viewport?.removeEventListener("resize", sync);
       observer?.disconnect();
+      mutations?.disconnect();
+      window.cancelAnimationFrame(mutationFrame);
     };
-  }, [measureNav, isOpen]);
+  }, [measureNav, isOpen, clearBottomNav]);
 
   if (!isOpen) return null;
 

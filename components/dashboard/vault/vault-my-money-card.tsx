@@ -12,6 +12,7 @@ import {
 } from "@/lib/dashboard/vault-buckets";
 import { vaultBucketDisplayName } from "@/lib/dashboard/vault/bucket-display-name";
 import { vaultCopy } from "@/lib/dashboard/vault/copy";
+import { foundationJarIcon } from "@/lib/dashboard/vault/jar-icon";
 import {
   vaultCardBalanceClass,
   vaultJarsGridTrackClass,
@@ -98,6 +99,7 @@ export function VaultMyMoneyCard({
               totalSavings,
             );
             const isMuted = shownBalance === 0 && !isActive;
+            const jarIcon = foundationJarIcon(bucket);
 
             return (
               <button
@@ -113,10 +115,14 @@ export function VaultMyMoneyCard({
                 )}
               >
                 <span
-                  className={cn(pickableCircleClass, pickableCircleActiveClass)}
+                  data-vault-jar-icon={jarIcon ? "a" : "emoji"}
+                  className={cn(
+                    pickableCircleClass,
+                    jarIcon ? jarIcon.toneClassName : pickableCircleActiveClass,
+                  )}
                   aria-hidden
                 >
-                  {bucket.emoji}
+                  {jarIcon ? <jarIcon.Icon className="size-8" /> : bucket.emoji}
                 </span>
                 <p
                   className={cn(

@@ -9,6 +9,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { parentHubSubtitle } from "@/lib/parent/pin-copy";
 import { ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
 import { masteryCohortLabel } from "@/lib/dashboard/mastery-cohort";
 import {
@@ -47,7 +48,8 @@ export const PROFILE_SWITCHER_COPY = {
   /** Guest menu: no account yet, so only preferences. */
   settingsSubGuest: "Preferences",
   parentHub: "Parent Hub",
-  parentHubSub: "Approvals and your child's progress",
+  /** One child; see parentHubSubtitle() for the plural rule. */
+  parentHubSub: parentHubSubtitle(1),
   switchHeading: "Switch profile",
   parentTag: "Parent",
   /** Screen-reader label for the check on the current profile. */
@@ -415,7 +417,11 @@ export function ProfileSwitcherMenu({
             data-attr="parent-hub"
             icon={<ParentHubTabIconA className="size-5" />}
             title={PROFILE_SWITCHER_COPY.parentHub}
-            sub={PROFILE_SWITCHER_COPY.parentHubSub}
+            sub={parentHubSubtitle(
+              household
+                ? household.profiles.filter((p) => p.role === "child").length
+                : null,
+            )}
             onClick={onOpenParentHub}
           />
         ) : null}

@@ -12,10 +12,17 @@ import {
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 import { downloadAccountFile } from "@/lib/privacy/download-account-file";
 import { LearnerDataScreen } from "@/components/privacy/learner-data-screen";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import { RemovalConfirmSheet, type RemovalItem } from "@/components/privacy/removal-confirm-sheet";
 import { isFourDigitPin } from "@/lib/validation/pin";
 
-type ChildChip = { userId: string; username: string; trackLabel: string | null };
+type ChildChip = {
+  userId: string;
+  username: string;
+  trackLabel: string | null;
+  cohort?: MasteryCohort | null;
+};
 
 export function ParentChildPage() {
   const router = useRouter();
@@ -91,6 +98,10 @@ export function ParentChildPage() {
       <LearnerDataScreen
         view={view}
         mode="privacy"
+        avatarId={readStoredProfileAvatarId(
+          view.userId,
+          children.find((child) => child.userId === view.userId)?.cohort ?? "explorer",
+        )}
         title={
           children.length > 1
             ? "Your children's data and privacy"

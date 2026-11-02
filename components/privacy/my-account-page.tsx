@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { ParentDataPinGate } from "@/components/privacy/parent-data-pin-gate";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { signOutApp, redirectToHomeAfterSignOut } from "@/lib/onboarding/sign-out";
@@ -20,7 +21,12 @@ import { isFourDigitPin } from "@/lib/validation/pin";
 
 type ParentRecord = {
   email: string;
-  children: { userId: string; username: string; trackLabel: string | null }[];
+  children: {
+    userId: string;
+    username: string;
+    trackLabel: string | null;
+    cohort?: MasteryCohort | null;
+  }[];
   history: HistoryEntry[];
   historyTitle: string;
   historySummary: string;

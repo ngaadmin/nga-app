@@ -14,6 +14,13 @@ export function childDataPhrase(childCount?: number | null): string {
     : "your child's data";
 }
 
+/** Parent Hub menu subtitle with the same plural rule. */
+export function parentHubSubtitle(childCount?: number | null): string {
+  return typeof childCount === "number" && childCount >= 2
+    ? "Approvals and your children's progress"
+    : "Approvals and your child's progress";
+}
+
 export function pinDifferenceLine(childCount?: number | null): string {
   return `Your Parent Hub PIN opens the Parent Hub and the cash rate. Your Parent PIN is a separate code for ${childDataPhrase(childCount)} and your account.`;
 }

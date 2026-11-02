@@ -10,6 +10,7 @@ import {
   PROFILE_SWITCHING_AVAILABLE,
   type HouseholdProfiles,
 } from "@/lib/profile-switcher/household-profiles";
+import { parentHubSubtitle } from "@/lib/parent/pin-copy";
 import { MedalsIntro } from "@/components/achievements/medals-intro";
 import { SkillsCollectionPanel } from "@/components/achievements/skills-collection-panel";
 import { ProfileAvatarImage, ProfileAvatarOrInitial } from "@/components/dashboard/profile/profile-avatar";
@@ -118,7 +119,9 @@ export function ProfilePanel({
               {PROFILE_SWITCHER_COPY.parentHub}
             </span>
             <span className="text-[11.5px] font-medium text-[#1E3A5F]">
-              {PROFILE_SWITCHER_COPY.parentHubSub}
+              {parentHubSubtitle(
+                household ? profiles.filter((p) => p.role === "child").length : null,
+              )}
             </span>
           </span>
           <svg viewBox="0 0 12 12" fill="none" aria-hidden className="size-3.5 shrink-0 text-[#0288A3]">

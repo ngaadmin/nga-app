@@ -10,3 +10,12 @@ describe("Parent PIN copy", () => {
     expect(PIN_DIFFERENCE_LINE).toContain("your child's data and your account");
   });
 });
+
+describe("parentHubSubtitle", () => {
+  it("uses children's with 2+ children, child's otherwise", async () => {
+    const { parentHubSubtitle } = await import("@/lib/parent/pin-copy");
+    expect(parentHubSubtitle(2)).toBe("Approvals and your children's progress");
+    expect(parentHubSubtitle(1)).toBe("Approvals and your child's progress");
+    expect(parentHubSubtitle(null)).toBe("Approvals and your child's progress");
+  });
+});

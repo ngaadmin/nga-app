@@ -76,6 +76,7 @@ export function VaultBucketExpandedPanel({
           <BucketEmojiIcon
             size="sm"
             emoji={bucket.emoji}
+            bucketId={bucket.id}
             theme={bucketTheme(bucket)}
           />
           <h2 className="min-w-0 truncate font-heading text-lg font-extrabold text-[#031F82]">

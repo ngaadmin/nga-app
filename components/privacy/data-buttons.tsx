@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 const base =
-  "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl px-4 font-heading text-sm font-bold uppercase tracking-wide transition-all disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl px-4 font-heading text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-40";
 
 export function NavyButton({
   children,

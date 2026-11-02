@@ -10,6 +10,7 @@ export function MyInfoPage() {
     | { status: "error"; message: string }
     | {
         status: "ready";
+        userId: string;
         username: string;
         trackLabel: string | null;
         cohort: "explorer" | "pathfinder" | "maverick" | null;
@@ -25,6 +26,7 @@ export function MyInfoPage() {
       }
       setState({
         status: "ready",
+        userId: result.userId,
         username: result.username,
         trackLabel: result.trackLabel,
         cohort: result.cohort,
@@ -41,6 +43,7 @@ export function MyInfoPage() {
   }
   return (
     <MyInfoScreen
+      userId={state.userId}
       username={state.username}
       trackLabel={state.trackLabel}
       cohort={state.cohort}

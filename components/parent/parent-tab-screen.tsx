@@ -7,16 +7,13 @@ import {
   useState,
 } from "react";
 import { ModalShell } from "@/components/ui/modal-shell";
-import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useCurrency } from "@/lib/dashboard/currency-context";
-import { GoldCoinIcon } from "@/lib/dashboard/icons";
 import { markLinkedChildCashInPaid } from "@/lib/dashboard/linked-child-exchange-rate";
 import {
   masteryCohortLabel,
   type MasteryCohort,
 } from "@/lib/dashboard/mastery-cohort";
-import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import {
   approveConsentRequestFromParentTab,
   declineConsentRequestFromParentTab,
@@ -36,7 +33,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { HUB_CHILD_PARAM } from "@/lib/parent/cash-rate-return";
 import { HubChildPage } from "@/components/parent/hub-child-page";
-import { TRACK_PILL_CLASS } from "@/lib/dashboard/track-pill";
+import { ParentHubChildCard } from "@/components/parent/parent-hub-child-card";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
 
@@ -166,9 +163,6 @@ export function ParentTabScreen({
   );
 }
 
-function summaryWord(count: number, one: string, many: string) {
-  return count === 1 ? one : many;
-}
 
 function shortDate(iso: string): string | null {
   const date = new Date(iso);
@@ -176,93 +170,6 @@ function shortDate(iso: string): string | null {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-
-/**
- * One child: avatar, name, track, lifetime lessons, coins to cash in. An
- * active child's card opens their progress in the Hub.
- */
-function ChildCard({
-  child,
-  onOpen,
-}: {
-  child: ParentTabChildSummary;
-  onOpen?: () => void;
-}) {
-  const avatarId = readStoredProfileAvatarId(
-    child.userId,
-    child.cohort ?? "explorer",
-  );
-  // Name gets the whole row next to the avatar (lessons sit at its right
-  // edge); the coins pill has its own line under the track tag, so names of
-  // ~14+ characters fit at 390px without truncating.
-  const Wrapper = onOpen ? "button" : "div";
-  return (
-    <Wrapper
-      {...(onOpen
-        ? {
-            type: "button" as const,
-            onClick: onOpen,
-            "aria-label": `See ${child.username}'s progress`,
-            "data-parent-tab-child-open": "",
-          }
-        : {})}
-      data-parent-tab-child={child.username}
-      className={cn(
-        "grid w-full grid-cols-[56px_1fr] items-center gap-3 rounded-2xl bg-white py-3 pl-3 pr-3.5 text-left",
-        onOpen && "transition-colors hover:bg-[#F7FBFF] active:bg-[#EEF7FD]",
-        CARD_SHADOW,
-      )}
-    >
-      <ProfileAvatarImage avatarId={avatarId} className="size-14" />
-      <div className="min-w-0">
-        <div className="flex items-baseline gap-2">
-          <p
-            data-parent-tab-child-name
-            className="min-w-0 flex-1 truncate font-heading text-[17px] font-bold leading-tight text-[#031F82]"
-          >
-            {child.username}
-          </p>
-          <span
-            data-parent-tab-child-summary
-            className="inline-flex shrink-0 items-center whitespace-nowrap font-sans text-[12.5px] font-medium text-[#1E3A5F]"
-          >
-            <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
-              {child.lessonsDone}
-            </b>
-            {summaryWord(child.lessonsDone, "lesson", "lessons")}
-          </span>
-        </div>
-        {child.status === "waiting" ? (
-          <span className="mt-1 inline-block rounded-full bg-[#FFE7B3] px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px] text-[#8A5300]">
-            Waiting
-          </span>
-        ) : child.cohort ? (
-          <span
-            data-parent-tab-child-track
-            className={cn(
-              "mt-1 inline-block rounded-full px-[9px] py-0.5 font-heading text-[10px] font-bold uppercase tracking-[0.3px]",
-              TRACK_PILL_CLASS,
-            )}
-          >
-            {masteryCohortLabel(child.cohort)}
-          </span>
-        ) : null}
-        <div className="mt-1.5">
-          <span
-            data-parent-tab-child-coins
-            className="inline-flex items-center whitespace-nowrap rounded-full bg-[#FFF4DE] py-[3px] pl-1.5 pr-2.5 font-sans text-[12.5px] font-medium text-[#1E3A5F]"
-          >
-            <GoldCoinIcon className="mr-[5px] size-[15px]" />
-            <b className="mr-[3px] font-heading text-sm font-bold text-[#031F82]">
-              {child.coins}
-            </b>
-            {summaryWord(child.coins, "coin", "coins")} to cash in
-          </span>
-        </div>
-      </div>
-    </Wrapper>
-  );
-}
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
@@ -438,7 +345,9 @@ function UnlockedView({
     if (!childId) return;
     url.searchParams.delete(HUB_CHILD_PARAM);
     window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
-    const child = data.children.find((entry) => entry.userId === childId);
+    const child = data.children.find(
+      (entry) => entry.userId === childId && entry.status === "active",
+    );
     if (child) void openProgress(child);
   }, [data, openProgress]);
 
@@ -571,17 +480,38 @@ function UnlockedView({
         role="group"
         aria-label="Your children"
       >
-        {data.children.map((child) => (
-          <ChildCard
-            key={child.userId}
-            child={child}
-            onOpen={
-              child.status === "waiting"
-                ? undefined
-                : () => void openProgress(child)
-            }
-          />
-        ))}
+        {data.children.map((child) => {
+          if (child.status === "active") {
+            return (
+              <ParentHubChildCard
+                key={child.userId}
+                child={child}
+                onOpen={() => void openProgress(child)}
+              />
+            );
+          }
+          // Waiting for consent: never opens progress. With an open request
+          // the card opens that approval (same sheet as Review).
+          const approval = data.needsOk.find(
+            (item): item is Extract<ParentTabOkItem, { kind: "approval" }> =>
+              item.kind === "approval" && item.requestId === child.requestId,
+          );
+          return (
+            <ParentHubChildCard
+              key={child.userId}
+              child={child}
+              onReview={
+                approval
+                  ? () => {
+                      setReviewError(null);
+                      setReviewTermsAccepted(false);
+                      setReview(approval);
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
       </div>
 
       <section

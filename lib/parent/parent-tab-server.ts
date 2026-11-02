@@ -3,6 +3,10 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import {
+  mergeParentHubChildren,
+  type ParentHubChild,
+} from "@/lib/parent/parent-hub-children";
 
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { countOwedCashIns, sumOwedCashInCents } from "@/lib/dashboard/xp-cash";
@@ -271,20 +275,7 @@ export async function openParentTabGate(
   }
 }
 
-export type ParentTabChildSummary = {
-  userId: string;
-  username: string;
-  cohort: MasteryCohort | null;
-  status: "active" | "waiting";
-  /** Lifetime lessons completed (survives a track change). */
-  lessonsDone: number;
-  /**
-   * Coins the child can still cash in: learner_progress.payload.wallet
-   * .totalPoints, the same number as the child's header and Vault. Cashing
-   * in lowers it; lifetime earned coins are not shown here.
-   */
-  coins: number;
-};
+export type ParentTabChildSummary = ParentHubChild;
 
 /**
  * Distinct lessons each child has ever finished, from usage_events
@@ -366,60 +357,62 @@ export async function loadParentTabData(
       row.account_status === "active" ||
       row.account_status === "pending_consent",
   );
-  const [payloads, lifetimeLessons] = await Promise.all([
-    readLearnerProgressPayloads(shown.map((row) => row.id)),
-    readLifetimeLessonCounts(shown.map((row) => String(row.username).trim())),
+  // Progress is read for active children only: a waiting child's parent
+  // hasn't consented, so none of their data reaches the Hub.
+  const active = shown.filter((row) => row.account_status === "active");
+  const [payloads, lifetimeLessons, pending] = await Promise.all([
+    readLearnerProgressPayloads(active.map((row) => row.id)),
+    readLifetimeLessonCounts(active.map((row) => String(row.username).trim())),
+    listPendingConsentRequestsForParent(),
   ]);
 
-  const children: ParentTabChildSummary[] = shown
-    .map((row) => {
-      const progress = payloads.get(row.id) ?? {};
-      const view = assembleLearnerView({
-        userId: row.id,
-        username: String(row.username).trim(),
-        trackLabel: null,
-        progress,
-        activity: [],
-        leaderboardEnabled: false,
-      });
+  const linked: ParentTabChildSummary[] = shown.map((row) => {
+    const username = String(row.username).trim();
+    if (row.account_status !== "active") {
       return {
         userId: row.id,
-        username: view.username,
+        username,
         cohort: asCohort(row.curriculum_cohort),
-        status:
-          row.account_status === "active"
-            ? ("active" as const)
-            : ("waiting" as const),
-        lessonsDone: Math.max(
-          view.lessonsDone,
-          lifetimeLessons.get(view.username.toLowerCase()) ?? 0,
-        ),
-        coins: view.coins,
+        status: "waiting" as const,
+        lessonsDone: 0,
+        coins: 0,
       };
-    })
-    .sort((a, b) =>
-      a.status === b.status
-        ? a.username.localeCompare(b.username)
-        : a.status === "active"
-          ? -1
-          : 1,
-    );
+    }
+    const progress = payloads.get(row.id) ?? {};
+    const view = assembleLearnerView({
+      userId: row.id,
+      username,
+      trackLabel: null,
+      progress,
+      activity: [],
+      leaderboardEnabled: false,
+    });
+    return {
+      userId: row.id,
+      username: view.username,
+      cohort: asCohort(row.curriculum_cohort),
+      status: "active" as const,
+      lessonsDone: Math.max(
+        view.lessonsDone,
+        lifetimeLessons.get(view.username.toLowerCase()) ?? 0,
+      ),
+      coins: view.coins,
+    };
+  });
+  const pendingRequests = pending.ok ? pending.requests : [];
+  const children = mergeParentHubChildren(linked, pendingRequests);
 
   const needsOk: ParentTabOkItem[] = [];
-  const pending = await listPendingConsentRequestsForParent();
-  if (pending.ok) {
-    for (const request of pending.requests) {
-      needsOk.push({
-        kind: "approval",
-        requestId: request.requestId,
-        childUsername: request.childUsername,
-        childCohort: request.childCohort,
-        expiresAt: request.expiresAt,
-      });
-    }
+  for (const request of pendingRequests) {
+    needsOk.push({
+      kind: "approval",
+      requestId: request.requestId,
+      childUsername: request.childUsername,
+      childCohort: request.childCohort,
+      expiresAt: request.expiresAt,
+    });
   }
-  for (const row of shown) {
-    if (row.account_status !== "active") continue;
+  for (const row of active) {
     const progress = payloads.get(row.id) as { wallet?: unknown } | undefined;
     const wallet = (progress?.wallet ?? null) as Parameters<
       typeof sumOwedCashInCents

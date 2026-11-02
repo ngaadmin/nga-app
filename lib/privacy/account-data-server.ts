@@ -299,6 +299,10 @@ export async function loadParentHubChildProgress(
   if (!match || !authorizeLearnerRead(actorResult.actor, match.userId)) {
     return { ok: false, error: "That learner is not linked to this parent account." };
   }
+  if (match.accountStatus === "pending_consent") {
+    // No consent yet: no progress leaves the server.
+    return { ok: false, error: "Approve this account first to see progress." };
+  }
   const view = await viewForChild(
     opened.admin,
     match.userId,

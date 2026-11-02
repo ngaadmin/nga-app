@@ -84,7 +84,7 @@ export async function loadLinkedChildrenCashRates(): Promise<
  */
 /**
  * Sets the coins cash rate for linked children. Behind the parent PIN: the
- * caller passes the gate pass from entering the Parent Hub PIN in Settings,
+ * caller passes the gate pass from entering the Parent PIN in Settings,
  * checked here on the server.
  */
 export async function saveLinkedChildExchangeRate(input: {

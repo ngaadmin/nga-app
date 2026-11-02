@@ -21,6 +21,12 @@ type ChildLink = {
 
 type ManagerRecordScreenProps = {
   kind: "parent" | "teacher";
+  /**
+   * Parents split their record over two pages: "account" (My account: email
+   * and Joined) and "privacy" (Your data & privacy: linked children, consent
+   * history, data file, delete). Teachers keep everything on one page.
+   */
+  section?: "all" | "account" | "privacy";
   backHref: string;
   email: string;
   /** Account creation date (ISO). Shown as "Joined" under the email. */
@@ -40,6 +46,7 @@ type ManagerRecordScreenProps = {
 
 export function ManagerRecordScreen({
   kind,
+  section = "all",
   backHref,
   email,
   joined = null,
@@ -63,18 +70,29 @@ export function ManagerRecordScreen({
         ? childNames[0]
         : `${childNames.slice(0, -1).join(", ")} and ${childNames[childNames.length - 1]}`;
 
+  const showDetails = section !== "privacy";
+  const showData = section !== "account";
+
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
+    <div
+      data-manager-record={section}
+      className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8"
+    >
       <Link href={backHref} className="font-heading text-sm font-bold text-[#0CC1E0]">
         ← Back to Settings
       </Link>
-      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">My account</h1>
+      <h1 className="mt-2.5 font-heading text-2xl font-extrabold text-[#031F82]">
+        {section === "privacy" ? "Your data & privacy" : "My account"}
+      </h1>
       <p className="mt-0.5 font-sans text-sm leading-relaxed text-[#1E3A5F]">
-        {kind === "parent"
-          ? "What NextGenAchiever$ keeps about you, the account manager."
-          : "What NextGenAchiever$ keeps about you, the teacher."}
+        {section === "privacy"
+          ? "Your own data: your data file, consent history and your account."
+          : kind === "parent"
+            ? "What NextGenAchiever$ keeps about you, the account manager."
+            : "What NextGenAchiever$ keeps about you, the teacher."}
       </p>
 
+      {showDetails ? (
       <section className="mt-3.5 rounded-2xl bg-white px-4 py-3.5 shadow-md">
         <div className="flex items-center justify-between">
           <p className="font-heading text-xs font-extrabold uppercase tracking-wide text-[#4A5675]">
@@ -102,12 +120,16 @@ export function ManagerRecordScreen({
           />
         ) : null}
       </section>
+      ) : null}
 
-      {kind === "parent" ? (
+      {kind === "parent" && showData ? (
         <section className="mt-5">
           <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
             Linked children
           </h2>
+          <p className="mt-1 font-sans text-[13px] leading-snug text-[#4A5675]">
+            Each child&apos;s data and privacy is in the Parent Hub, on their page.
+          </p>
           <div className="mt-2.5 rounded-2xl bg-white px-3.5 shadow-md">
             {linkedChildren.length === 0 ? (
               <p className="py-3 font-sans text-sm text-[#4A5675]">No linked children yet.</p>
@@ -115,7 +137,7 @@ export function ManagerRecordScreen({
               linkedChildren.map((child, index) => (
                 <Link
                   key={child.userId}
-                  href={`/dashboard/settings/child-data?child=${child.userId}`}
+                  href="/dashboard/parent"
                   className={`flex items-center gap-3 py-2.5 ${index > 0 ? "border-t border-[#BDE9FB]/60" : ""}`}
                 >
                   <ProfileAvatarImage
@@ -140,6 +162,8 @@ export function ManagerRecordScreen({
         </section>
       ) : null}
 
+      {showData ? (
+      <>
       <div className="mt-5 rounded-2xl bg-white p-3 shadow-md">
         <HistoryDisclosure
           title={historyTitle}
@@ -178,6 +202,8 @@ export function ManagerRecordScreen({
           <p className={`mt-1.5 ${noteClass()}`}>This also removes your class and its student logins.</p>
         )}
       </div>
+      </>
+      ) : null}
     </div>
   );
 }

@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { PIN_DIFFERENCE_LINE_NEUTRAL, pinDifferenceLine } from "@/lib/parent/pin-copy";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { isParentTabPin } from "@/lib/parent/parent-tab-pin";
+import { requestParentPinReset } from "@/lib/dashboard/parent-pin-reset";
 import {
-  confirmParentPasswordForPinReset,
   createParentPin,
   getParentPinState,
   openParentTabGate,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
 
-type Phase = "loading" | "set" | "confirm" | "enter" | "forgot";
+type Phase = "loading" | "set" | "confirm" | "enter";
 
 export const PIN_GATE_CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 const CARD_SHADOW = PIN_GATE_CARD_SHADOW;
@@ -73,33 +72,32 @@ function formatCountdown(ms: number): string {
 }
 
 /**
- * Parent PIN prompt. Everything is checked on the server: whether a PIN
- * exists, the PIN itself, failed tries and the 5-minute lockout. A correct
- * PIN returns a short-lived pass that the caller keeps in memory only.
- * Used by the Parent tab and by every approve or decline in Settings.
+ * The one Parent PIN prompt. Everything is checked on the server: whether a
+ * PIN exists, the PIN itself and the try limit. A correct PIN returns a
+ * short-lived pass that the caller keeps in memory only, and opens account
+ * and child data for 15 minutes. Used by the Parent Hub, the cash rate,
+ * every approve or decline, My account and Your data & privacy.
  */
 export function ParentPinGate({
   parentName,
   enterBody,
   onUnlocked,
   className,
-  childCount,
-  childCountLoading = false,
+  headingLevel = "h2",
 }: {
   parentName: string;
-  /** Linked children, for "your child's" vs "your children's" copy. */
-  childCount?: number;
-  /** True while the count loads: show the neutral line, not "child's". */
-  childCountLoading?: boolean;
-  /** Line under "Enter your Parent Hub PIN". */
+  /** Line under "Enter your Parent PIN". */
   enterBody?: string;
+  /** h1 when the gate is the whole page. */
+  headingLevel?: "h1" | "h2";
   onUnlocked: (pass: string) => void | Promise<void>;
   className?: string;
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [pin, setPin] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -143,29 +141,32 @@ export function ParentPinGate({
 
   function go(next: Phase) {
     setPin("");
-    setPassword("");
     setError(null);
+    setNotice(null);
     setPhase(next);
+  }
+
+  /** "Forgot your PIN?" emails a reset link. It never changes the PIN here. */
+  async function forgot() {
+    if (sending) return;
+    setSending(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const sent = await requestParentPinReset();
+      if (sent.ok) setNotice(sent.message);
+      else setError(sent.error);
+    } catch {
+      setError("We could not email a PIN reset link. Try again.");
+    } finally {
+      setSending(false);
+    }
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy || phase === "loading") return;
     setError(null);
-
-    if (phase === "forgot") {
-      setBusy(true);
-      const result = await confirmParentPasswordForPinReset(password);
-      setBusy(false);
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      hasPin.current = false;
-      setLockedUntil(null);
-      go("set");
-      return;
-    }
 
     if (!isParentTabPin(pin)) {
       setError("Enter 4 numbers.");
@@ -212,10 +213,6 @@ export function ParentPinGate({
       } else if (result.reason === "missing") {
         hasPin.current = false;
         go("set");
-      } else if (result.reason === "wrong") {
-        setError(
-          `That PIN didn't match. ${result.triesLeft} ${result.triesLeft === 1 ? "try" : "tries"} left.`,
-        );
       } else {
         setError(result.error);
       }
@@ -241,21 +238,18 @@ export function ParentPinGate({
 
   const title =
     phase === "set"
-      ? "Create your Parent Hub PIN"
+      ? "Create your Parent PIN"
       : phase === "confirm"
         ? "Enter your new PIN again"
-        : phase === "forgot"
-          ? "Reset your Parent Hub PIN"
-          : "Enter your Parent Hub PIN";
+        : "Enter your Parent PIN";
   const body =
     phase === "set"
-      ? "Pick 4 numbers. You'll need them for the Parent Hub and for every approval."
+      ? "Pick 4 numbers. You'll use them for the Parent Hub, approvals and your account."
       : phase === "confirm"
         ? "Type the same 4 numbers to confirm."
-        : phase === "forgot"
-          ? "Confirm your account password, then pick a new PIN."
-          : (enterBody ??
-            `Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent Hub PIN to continue.`);
+        : (enterBody ??
+          `Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent PIN to continue.`);
+  const Heading = headingLevel;
 
   return (
     <form
@@ -270,43 +264,22 @@ export function ParentPinGate({
       <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-[#E8F6FC] text-[#031F82]">
         <LockIcon className="size-5" />
       </span>
-      <h2 className="mt-2 font-heading text-lg font-extrabold text-[#031F82]">
+      <Heading className="mt-2 font-heading text-lg font-extrabold text-[#031F82]">
         {title}
-      </h2>
+      </Heading>
       <p className="mx-auto mt-1 max-w-[17rem] font-sans text-[13px] leading-snug text-[#1E3A5F]">
         {body}
       </p>
-      <p
-        data-pin-difference
-        data-pin-difference-state={childCountLoading ? "loading" : "ready"}
-        className="mx-auto mt-1.5 max-w-[17rem] font-sans text-[11.5px] leading-snug text-[#4A5675]"
-      >
-        {childCountLoading ? PIN_DIFFERENCE_LINE_NEUTRAL : pinDifferenceLine(childCount)}
-      </p>
-
-      {phase === "forgot" ? (
-        <input
-          data-parent-tab-password
-          type="password"
-          autoComplete="current-password"
-          aria-label="Account password"
-          placeholder="Account password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="mx-auto mt-3 block w-full max-w-[15rem] rounded-xl border-2 border-[#C9D6EA] bg-[#E8F6FC] px-3 py-2.5 font-sans text-sm text-[#031F82] outline-none focus:border-[#031F82]"
-        />
-      ) : (
-        <PinBoxes
-          key={phase}
-          value={pin}
-          onChange={(next) => {
-            setPin(next);
-            if (error && !lockedOut) setError(null);
-          }}
-          disabled={busy || lockedOut}
-          label={phase === "confirm" ? "Confirm Parent Hub PIN" : "Parent Hub PIN"}
-        />
-      )}
+      <PinBoxes
+        key={phase}
+        value={pin}
+        onChange={(next) => {
+          setPin(next);
+          if (error && !lockedOut) setError(null);
+        }}
+        disabled={busy || lockedOut}
+        label={phase === "confirm" ? "Confirm Parent PIN" : "Parent PIN"}
+      />
 
       <p
         data-parent-tab-gate-error
@@ -324,7 +297,7 @@ export function ParentPinGate({
         disabled={
           busy ||
           lockedOut ||
-          (phase === "forgot" ? !password : pin.length !== 4)
+          pin.length !== 4
         }
         className="mt-1 w-full max-w-[15rem] rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] transition-opacity disabled:opacity-50"
       >
@@ -335,12 +308,13 @@ export function ParentPinGate({
         <button
           type="button"
           data-parent-tab-forgot
-          onClick={() => go("forgot")}
-          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
+          onClick={() => void forgot()}
+          disabled={sending}
+          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2 disabled:opacity-50"
         >
-          Forgot your PIN?
+          {sending ? "Sending…" : "Forgot your PIN?"}
         </button>
-      ) : phase === "forgot" || phase === "confirm" ? (
+      ) : phase === "confirm" ? (
         <button
           type="button"
           onClick={() => go(hasPin.current ? "enter" : "set")}
@@ -348,6 +322,15 @@ export function ParentPinGate({
         >
           Back
         </button>
+      ) : null}
+      {notice ? (
+        <p
+          data-parent-tab-gate-notice
+          role="status"
+          className="mt-2 font-sans text-[12.5px] font-semibold text-[#1E3A5F]"
+        >
+          {notice}
+        </p>
       ) : null}
     </form>
   );

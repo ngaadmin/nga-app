@@ -10,7 +10,6 @@ import {
   loadParentOwnRecord,
   loadTeacherOwnRecord,
   parentDataGrantActive,
-  unlockParentDataView,
 } from "@/lib/privacy/account-data-server";
 import type { HistoryEntry } from "@/lib/privacy/data-controls";
 import { deleteTeacherPhraseAccepted, formatStudentLoginSummary } from "@/lib/privacy/data-controls";
@@ -43,14 +42,25 @@ type TeacherRecord = {
   historySummary: string;
 };
 
-export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }) {
+/**
+ * Parent account pages. "account" is My account (email and Joined only).
+ * "privacy" is Your data & privacy: the parent's own data file, consent
+ * history, linked children and deleting their own account. Teachers keep
+ * their one combined page.
+ */
+export function MyAccountPage({
+  historyOpen = false,
+  section = "account",
+}: {
+  historyOpen?: boolean;
+  section?: "account" | "privacy";
+}) {
   const session = useUserSession();
   const isTeacher = session?.accountRole === "teacher" || session?.isTeacher === true;
   const isParent = session?.accountRole === "parent_master";
   const joinDate = session?.createdAt ?? null;
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [pin, setPin] = useState("");
   const [parentRecord, setParentRecord] = useState<ParentRecord | null>(null);
   const [teacherRecord, setTeacherRecord] = useState<TeacherRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,18 +101,15 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
     });
   }, [session, isTeacher, isParent]);
 
-  async function unlock(enteredPin: string): Promise<string | null> {
-    const unlocked = await unlockParentDataView(enteredPin);
-    if (!unlocked.ok) return unlocked.error;
-    setPin(enteredPin);
+  async function unlock(): Promise<void> {
     const result = await loadParentOwnRecord();
     if (!result.ok) {
       setError(result.error);
-      return result.error;
+      setReady(true);
+      return;
     }
     setParentRecord(result);
     setReady(true);
-    return null;
   }
 
   if (!session || checking) {
@@ -119,7 +126,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
 
   if (isParent && !ready) {
     return (
-      <ParentDataPinGate kind="account" onUnlock={unlock} />
+      <ParentDataPinGate kind={section} onUnlocked={unlock} />
     );
   }
 
@@ -218,12 +225,12 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
     return <p className="px-2 py-6 font-sans text-sm text-[#1E3A5F]">{error || "Loading…"}</p>;
   }
 
-  const activePin = pin || confirmPin;
 
   return (
     <>
       <ManagerRecordScreen
         kind="parent"
+        section={section}
         backHref="/dashboard/settings"
         email={parentRecord.email}
         joined={joinDate}
@@ -239,6 +246,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         }}
         onDelete={() => {
           setConfirmError(null);
+          setConfirmPin("");
           setConfirmOpen(true);
         }}
       />
@@ -256,8 +264,8 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
           },
         ]}
         confirmLabel="Delete my account"
-        confirmDisabled={!pin && !isFourDigitPin(confirmPin)}
-        pinLabel={pin ? undefined : "Parent PIN"}
+        confirmDisabled={!isFourDigitPin(confirmPin)}
+        pinLabel="Parent PIN"
         pinValue={confirmPin}
         onPinChange={setConfirmPin}
         error={confirmError}
@@ -267,7 +275,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         }}
         onConfirm={() => {
           setBusy(true);
-          void deleteHouseholdMasterAccount(activePin).then(async (result) => {
+          void deleteHouseholdMasterAccount(confirmPin).then(async (result) => {
             if (!result.success) {
               setConfirmError(result.error);
               setBusy(false);

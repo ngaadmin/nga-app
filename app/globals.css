@@ -774,7 +774,10 @@ html:has([data-lesson-viewport]) body {
   }
 
   body {
-    @apply bg-nga-panel text-nga-ink font-sans min-h-dvh;
+    /* App screens are always white. Color goes on accents and cards only.
+       The light-blue panel color here showed through as a band at the top
+       of Academy screens on iPhone (safe area and overscroll). */
+    @apply bg-white text-nga-ink font-sans min-h-dvh;
     font-size: 16px;
     overflow-x: hidden;
     max-width: 100%;

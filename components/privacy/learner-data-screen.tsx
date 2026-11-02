@@ -26,10 +26,12 @@ import { cn } from "@/lib/utils/cn";
  * "full": everything (teacher's student record).
  * "progress": the Parent Hub's read-only view (progress, medals, Vault,
  *   recent activity). No privacy controls.
- * "privacy": Settings' child data and privacy section (leaderboard switch,
- *   download, delete). Progress lives in the Parent Hub.
+ * "privacy": the child's privacy controls only (leaderboard switch,
+ *   download, delete).
+ * "hub": the Parent Hub child page. Progress first, then a "Data & privacy"
+ *   section with the leaderboard switch, the data file and delete.
  */
-export type LearnerDataScreenMode = "full" | "progress" | "privacy";
+export type LearnerDataScreenMode = "full" | "progress" | "privacy" | "hub";
 
 type LearnerDataScreenProps = {
   view: LearnerDataView;
@@ -81,6 +83,7 @@ export function LearnerDataScreen({
   const initial = view.username.trim().charAt(0).toUpperCase() || "?";
   const showProgress = mode !== "privacy";
   const showControls = mode !== "progress";
+  const hubPrivacy = mode === "hub";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
@@ -325,8 +328,19 @@ export function LearnerDataScreen({
         </div>
       ) : null}
 
+      {hubPrivacy ? (
+        <section data-child-data-privacy className="mt-6">
+          <h2 className="font-heading text-[13px] font-extrabold uppercase tracking-wide text-[#031F82]">
+            Data &amp; privacy
+          </h2>
+          <p className="mt-1 font-sans text-[13px] leading-snug text-[#4A5675]">
+            Leaderboard visibility, {view.username}&apos;s data file and deleting their account.
+          </p>
+        </section>
+      ) : null}
+
       {showControls && showLeaderboardSwitch && onLeaderboardChange ? (
-        <div className="mt-5">
+        <div className={hubPrivacy ? "mt-3" : "mt-5"}>
           <LeaderboardSwitch
             enabled={view.leaderboardEnabled}
             scope="child"
@@ -337,7 +351,7 @@ export function LearnerDataScreen({
       ) : null}
 
       {showControls && (onDownload || onDelete) ? (
-        <div className="mt-6" data-learner-data-controls>
+        <div className={hubPrivacy ? "mt-4" : "mt-6"} data-learner-data-controls>
           {onDownload ? (
             <>
               <NavyButton onClick={onDownload} disabled={downloading}>
@@ -345,7 +359,7 @@ export function LearnerDataScreen({
                 Download data
               </NavyButton>
               <p className={`mt-1.5 ${noteClass()}`}>
-                {mode === "privacy"
+                {mode === "privacy" || mode === "hub"
                   ? "One plain data file with everything kept about this account, progress included."
                   : "One plain data file with everything on this page."}
               </p>

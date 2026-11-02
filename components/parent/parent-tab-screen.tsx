@@ -34,7 +34,7 @@ import {
   type ParentTabOkItem,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
-import { LearnerDataScreen } from "@/components/privacy/learner-data-screen";
+import { HubChildPage } from "@/components/parent/hub-child-page";
 import { TRACK_PILL_CLASS } from "@/lib/dashboard/track-pill";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
@@ -52,10 +52,10 @@ const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 export function ParentTabScreen({
   parentUserId,
   parentName,
-  childCount,
 }: {
   parentUserId: string;
   parentName: string;
+  /** Linked children. Kept for callers; the one Parent PIN gate has no count copy. */
   childCount?: number;
 }) {
   const [unlocked, setUnlocked] = useState(false);
@@ -121,12 +121,12 @@ export function ParentTabScreen({
       data-parent-tab
       data-parent-tab-state={unlocked ? "unlocked" : "locked"}
       className={cn(
-        // Full-bleed light blue page, as in the r6 design. Cancels the
-        // dashboard main padding so the color reaches the edges.
+        // Full-bleed white page (app screens are always white; color goes
+        // on cards and accents only). Cancels the dashboard main padding.
         // shrink-0: the page grows with its content so <main> scrolls it.
         // (A shrinking flex child with its own overflow clipped the bottom
         // and left an empty band above the tab bar.)
-        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex flex-1 shrink-0 flex-col bg-[#E8F6FC] px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
+        "-mx-4 -mt-6 -mb-[calc(112px+env(safe-area-inset-bottom))] flex flex-1 shrink-0 flex-col bg-white px-3.5 pb-[calc(112px+env(safe-area-inset-bottom))] pt-3.5 sm:-mx-6 md:-mb-8 md:pb-8",
       )}
     >
       <div className="mx-auto flex w-full max-w-md flex-col overflow-x-clip">
@@ -155,9 +155,8 @@ export function ParentTabScreen({
           <ParentPinGate
             key={`${parentUserId}:${gateKey}`}
             parentName={parentName}
-            childCount={childCount}
             className="mx-0"
-            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent Hub PIN to open the Parent Hub.`}
+            enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent PIN to open the Parent Hub.`}
             onUnlocked={unlock}
           />
         )}
@@ -444,17 +443,15 @@ function UnlockedView({
     if (progress.state === "ready") {
       return (
         <div data-parent-hub-progress className="-mx-1 mt-2">
-          <LearnerDataScreen
-            view={progress.view}
-            mode="progress"
-            avatarId={readStoredProfileAvatarId(
-              progress.view.userId,
-              progress.cohort ?? "explorer",
-            )}
-            title={`${progress.view.username}'s progress`}
-            subtitle="What they've learned and done in the app."
+          <HubChildPage
+            key={progress.view.userId}
+            initialView={progress.view}
+            cohort={progress.cohort ?? null}
             onBack={() => setProgress(null)}
-            backLabel="Back to Parent Hub"
+            onDeleted={() => {
+              setProgress(null);
+              onChanged();
+            }}
           />
         </div>
       );
@@ -775,8 +772,8 @@ function UnlockedView({
                   className="mx-0 mt-3 shadow-none ring-1 ring-[#E3EAF5]"
                   enterBody={
                     decision === "approve"
-                      ? `Enter your Parent Hub PIN to approve ${review.childUsername}.`
-                      : `Enter your Parent Hub PIN to decline ${review.childUsername}.`
+                      ? `Enter your Parent PIN to approve ${review.childUsername}.`
+                      : `Enter your Parent PIN to decline ${review.childUsername}.`
                   }
                   onUnlocked={async (actionPass) => {
                     const approve = decision === "approve";

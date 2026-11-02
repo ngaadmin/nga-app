@@ -5,10 +5,6 @@ import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 import { ModalShell } from "@/components/ui/modal-shell";
 import { ParentHubSection } from "@/components/dashboard/settings/parent-hub-section";
-import {
-  ChangeParentHubPinModal,
-  PARENT_HUB_PIN_COPY,
-} from "@/components/dashboard/settings/change-parent-hub-pin-modal";
 import { SelfManagedRatePanel } from "@/components/dashboard/settings/self-managed-rate-panel";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { useCurrency } from "@/lib/dashboard/currency-context";
@@ -33,9 +29,7 @@ import {
   PadlockIconA,
   PersonIconA,
   PrivacyIconA,
-  ShieldLockIconA,
 } from "@/lib/dashboard/settings-icons-a";
-import { useHouseholdProfilesState } from "@/lib/profile-switcher/use-household-profiles";
 import {
   parentPinConfigured,
   persistParentPin,
@@ -605,16 +599,7 @@ export function HomeDashboard() {
   const canSelfManageRate =
     isChildAccount && session?.parentApprovalRequired === false && !session.parentEmail;
   const copy = copyMatrix.dashboard.settings;
-  const { household } = useHouseholdProfilesState();
-  const childCount =
-    household?.profiles.filter((profile) => profile.role === "child").length ?? 0;
-  const childDataLabel =
-    childCount > 1
-      ? "Your children's data and privacy"
-      : "Your child's data and privacy";
-
   const [changePinModalOpen, setChangePinModalOpen] = useState(false);
-  const [changeHubPinOpen, setChangeHubPinOpen] = useState(false);
   const [passwordResetOpen, setPasswordResetOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const loggingOutRef = useRef(false);
@@ -673,13 +658,6 @@ export function HomeDashboard() {
               onClick={() => setChangePinModalOpen(true)}
             />
           ) : null}
-          {isParent ? (
-            <SettingsRow
-              icon={ShieldLockIconA}
-              label={PARENT_HUB_PIN_COPY.rowLabel}
-              onClick={() => setChangeHubPinOpen(true)}
-            />
-          ) : null}
           {isGuestMode ? null : (
             <SettingsRow
               icon={FamilyIconA}
@@ -698,8 +676,8 @@ export function HomeDashboard() {
           {isParent ? (
             <SettingsRow
               icon={PrivacyIconA}
-              label={childDataLabel}
-              onClick={() => router.push("/dashboard/settings/child-data")}
+              label="Your data & privacy"
+              onClick={() => router.push("/dashboard/settings/data-privacy")}
             />
           ) : null}
           {isParent || isTeacher ? (
@@ -745,11 +723,6 @@ export function HomeDashboard() {
         isOpen={changePinModalOpen}
         copy={copy.changePin}
         onClose={() => setChangePinModalOpen(false)}
-      />
-
-      <ChangeParentHubPinModal
-        isOpen={changeHubPinOpen}
-        onClose={() => setChangeHubPinOpen(false)}
       />
     </>
   );

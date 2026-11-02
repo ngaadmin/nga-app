@@ -36,7 +36,7 @@ export function PadlockIconA({ className }: IconProps) {
   );
 }
 
-/** Parent Hub PIN: the Hub shield with a padlock inside. */
+/** Hub shield with a padlock inside (no longer used in Settings). */
 export function ShieldLockIconA({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>

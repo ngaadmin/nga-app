@@ -244,7 +244,7 @@ function ParentFlowPreview() {
       <LearnerDataScreen
         view={DELTA4}
         mode="privacy"
-        title="Your child's data and privacy"
+        title="Data & privacy"
         backHref="/dashboard/settings"
         backLabel="Back to Settings"
         siblings={[
@@ -291,7 +291,7 @@ export function DataPreview({ screen }: { screen: string }) {
         <LearnerDataScreen
           view={DELTA4}
           mode="privacy"
-          title="Your child's data and privacy"
+          title="Data & privacy"
           backHref="/dashboard/settings"
           backLabel="Back to Settings"
           siblings={[

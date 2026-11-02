@@ -14,7 +14,14 @@ import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
 import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import { MedalCountChip, SkillTile } from "@/components/achievements/skills-collection-panel";
-import { ACTIVITY_ICONS, GradCapIconA, JAR_ICONS } from "@/lib/dashboard/progress-icons-a";
+import {
+  ACTIVITY_ICONS,
+  GOAL_ICON_TONE,
+  GradCapIconA,
+  JAR_ICONS,
+  TargetIconA,
+} from "@/lib/dashboard/progress-icons-a";
+import { formatCompactMoney } from "@/lib/dashboard/currency/format-money";
 import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
 
 /** Soft peach discs with orange duotone, same as the top bar's coin and streak. */
@@ -76,10 +83,11 @@ export function LearnerDataScreen({
   onDelete,
   deleteLabel = "Delete account",
   downloading = false,
-  vaultNote = "Vault amounts are what you and your child track in the app. The app doesn't hold or move money.",
+  vaultNote = "Vault amounts are what your family tracks in the app. The app doesn't hold or move money.",
   avatarId,
 }: LearnerDataScreenProps) {
-  const { formatMoney } = useCurrency();
+  const { formatMoney, currencyCode } = useCurrency();
+  const compactMoney = (amount: number) => formatCompactMoney(amount, currencyCode);
   const initial = view.username.trim().charAt(0).toUpperCase() || "?";
   const showProgress = mode !== "privacy";
   const showControls = mode !== "progress";
@@ -228,7 +236,7 @@ export function LearnerDataScreen({
         </h2>
         <div className="mt-2.5 rounded-2xl bg-white px-3.5 pb-1 pt-3.5 shadow-md">
           <p className="font-heading text-[13px] font-bold text-[#4A5675]">Jars</p>
-          <div className="mt-2.5 grid grid-cols-4 gap-1 pb-3">
+          <div className="mt-2.5 grid grid-cols-4 gap-1.5 pb-3">
             {view.jars.map((jar) => {
               const { Icon, toneClassName } = JAR_ICONS[jar.id];
               return (
@@ -244,8 +252,12 @@ export function LearnerDataScreen({
                 <p className="mt-1.5 whitespace-nowrap font-heading text-[12.5px] font-bold text-[#031F82]">
                   {jar.name}
                 </p>
-                <p className="font-sans text-[12.5px] font-semibold tabular-nums text-[#4A5675]">
-                  {formatMoney(jar.amount)}
+                <p
+                  data-learner-data-jar-amount
+                  title={formatMoney(jar.amount)}
+                  className="truncate whitespace-nowrap text-center font-sans text-[12.5px] font-semibold tabular-nums text-[#4A5675]"
+                >
+                  {compactMoney(jar.amount)}
                 </p>
               </div>
               );
@@ -258,14 +270,23 @@ export function LearnerDataScreen({
                 const width = goal.target > 0 ? Math.min(100, (goal.balance / goal.target) * 100) : 0;
                 return (
                   <div key={goal.name} className="flex items-center gap-3 border-t border-[#BDE9FB]/60 py-2.5">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-lg">
-                      {goal.emoji}
+                    <span
+                      data-learner-data-goal-icon
+                      className={cn(
+                        "flex size-9 shrink-0 items-center justify-center rounded-full",
+                        GOAL_ICON_TONE,
+                      )}
+                    >
+                      <TargetIconA className="size-5" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-heading text-sm font-bold text-[#031F82]">{goal.name}</p>
-                        <p className="whitespace-nowrap font-sans text-[13px] font-semibold tabular-nums text-[#4A5675]">
-                          {formatMoney(goal.balance)} of {formatMoney(goal.target)}
+                        <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">{goal.name}</p>
+                        <p
+                          title={`${formatMoney(goal.balance)} of ${formatMoney(goal.target)}`}
+                          className="shrink-0 whitespace-nowrap font-sans text-[13px] font-semibold tabular-nums text-[#4A5675]"
+                        >
+                          {compactMoney(goal.balance)} of {compactMoney(goal.target)}
                         </p>
                       </div>
                       <div className="mt-1.5 h-2 rounded-full bg-[#E8F6FC]">

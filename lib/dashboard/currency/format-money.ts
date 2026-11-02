@@ -42,3 +42,24 @@ export function currencySymbol(
   }).formatToParts(0);
   return parts.find((part) => part.type === "currency")?.value ?? "$";
 }
+
+/**
+ * Tight spaces such as the four Vault jar columns. Below 1,000 it shows full
+ * cents ($12.50); from 1,000 up it is compact with at most one decimal
+ * ($1.2K, $300M), so large amounts never run into the next column.
+ */
+export function formatCompactMoney(
+  amount: number,
+  currencyCode: SupportedCurrencyCode = DEFAULT_CURRENCY_CODE,
+): string {
+  const value = Math.max(0, Number.isFinite(amount) ? amount : 0);
+  if (Math.round(value * 100) / 100 < 1000) return formatMoney(value, currencyCode);
+  const currency = resolveCurrency(currencyCode);
+  return new Intl.NumberFormat(currency.locale, {
+    style: "currency",
+    currency: currency.code,
+    notation: "compact",
+    compactDisplay: "short",
+    maximumFractionDigits: 1,
+  }).format(value);
+}

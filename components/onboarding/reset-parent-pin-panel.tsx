@@ -41,7 +41,7 @@ export function ResetParentPinPanel() {
 
   return (
     <section className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
-      <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Set a new parent PIN</h1>
+      <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Set a new Parent PIN</h1>
       <p className="mt-2 font-sans text-sm leading-relaxed text-[#1E3A5F]">
         This link works once and expires in 30 minutes.
       </p>

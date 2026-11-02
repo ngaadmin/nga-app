@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { DeviceIcon, TrashIcon } from "@/lib/dashboard/icons";
 import { clearGuestDeviceProgress } from "@/lib/privacy/clear-guest-progress-browser";
-import { RemovalConfirmSheet } from "@/components/privacy/removal-confirm-sheet";
+import { RemovalConfirmSheet, type RemovalItem } from "@/components/privacy/removal-confirm-sheet";
 
-const ITEMS = [
-  { emoji: "🎓", title: "Lessons", detail: "Every lesson done on this device" },
-  { emoji: "🪙", title: "Coins", detail: "The coins balance" },
-  { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
-  { emoji: "🏅", title: "Medals", detail: "Every medal earned" },
-  { emoji: "🏦", title: "Vault", detail: "Jars, amounts and savings goals" },
+const ITEMS: RemovalItem[] = [
+  { icon: "lessons", title: "Lessons", detail: "Every lesson done on this device" },
+  { icon: "coins", title: "Coins", detail: "The coins balance" },
+  { icon: "lifetime-coins", title: "Lifetime coins", detail: "The Lifetime coins total" },
+  { icon: "medals", title: "Medals", detail: "Every medal earned" },
+  { icon: "vault", title: "Vault", detail: "Jars, amounts and savings goals" },
 ];
 
 export function GuestDeviceCard() {

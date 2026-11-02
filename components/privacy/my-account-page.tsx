@@ -152,17 +152,17 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
           body={`This deletes your classes and all ${count} student logins in them. Students can't log in again and their progress is gone for good.`}
           items={[
             {
-              emoji: "👤",
+              icon: "profile",
               title: "Your teacher account",
               detail: `Username ${teacherRecord.username}, email and history`,
             },
             {
-              emoji: "🏫",
+              icon: "class",
               title: "Your class",
               detail: `${teacherRecord.classLabel} and its class password`,
             },
             {
-              emoji: "👥",
+              icon: "students",
               title: `All ${count} student logins`,
               detail: names ? `${names}, and everything in their accounts` : "No student logins",
             },
@@ -242,9 +242,9 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
         title="Delete your account?"
         body="This deletes your account and your children's accounts. It can't be undone."
         items={[
-          { emoji: "✉️", title: "Your account", detail: "Your email and consent history" },
+          { icon: "email", title: "Your account", detail: "Your email and consent history" },
           {
-            emoji: "👥",
+            icon: "children",
             title: "Linked children",
             detail: parentRecord.children.map((child) => child.username).join(", ") || "None linked",
           },

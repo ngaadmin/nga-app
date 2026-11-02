@@ -3,10 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
-  BookOpenIcon,
   DownloadIcon,
-  FlameIcon,
-  GoldCoinIcon,
   LockIcon,
   TrashIcon,
 } from "@/lib/dashboard/icons";
@@ -17,7 +14,11 @@ import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
 import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import { MedalCountChip, SkillTile } from "@/components/achievements/skills-collection-panel";
-import { ACTIVITY_ICONS, JAR_ICONS } from "@/lib/dashboard/progress-icons-a";
+import { ACTIVITY_ICONS, GradCapIconA, JAR_ICONS } from "@/lib/dashboard/progress-icons-a";
+import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
+
+/** Soft peach discs with orange duotone, same as the top bar's coin and streak. */
+const STAT_DISC = "bg-[#FFE7B8] text-[#031F82] [--tab-icon-fill:#FFA503]";
 import { getVaultSkillTrophyById } from "@/lib/dashboard/skill-trophies";
 import { cn } from "@/lib/utils/cn";
 
@@ -187,15 +188,15 @@ export function LearnerDataScreen({
         </h2>
         <div className="mt-2.5 grid grid-cols-2 gap-2.5">
           <StatTile
-            icon={<BookOpenIcon className="size-4" />}
-            iconClass="bg-[#FFA503] text-[#031F82]"
+            icon={<GradCapIconA className="size-[18px]" />}
+            iconClass={STAT_DISC}
             value={String(view.lessonsDone)}
             label="Lessons done"
             note="Finished in the Academy"
           />
           <StatTile
-            icon={<FlameIcon className="size-4" />}
-            iconClass="bg-[#FFA503] text-[#031F82]"
+            icon={<StreakIconA className="size-[18px]" />}
+            iconClass={STAT_DISC}
             value={String(view.dayStreak)}
             unit={view.dayStreak === 1 ? "day" : "days"}
             label="Day streak"
@@ -203,13 +204,13 @@ export function LearnerDataScreen({
           />
         </div>
         <WideStat
-          icon={<GoldCoinIcon className="size-5" />}
+          icon={<CoinsIconA className="size-5" />}
           label="Coins balance"
           note="Ready to cash in."
           value={`${view.coins.toLocaleString()} coins`}
         />
         <WideStat
-          icon={<GoldCoinIcon className="size-5" />}
+          icon={<CoinsIconA className="size-5" />}
           label="Lifetime coins"
           note="The total coins this account has earned."
           value={`${view.lifetimeXp.toLocaleString()} coins`}
@@ -401,7 +402,7 @@ function StatTile({
 
 function WideStat({
   icon,
-  iconClass = "bg-[#FFA503] text-[#031F82]",
+  iconClass = STAT_DISC,
   label,
   note,
   value,

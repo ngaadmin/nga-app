@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { DownloadIcon, LockIcon, MailIcon, TrashIcon, UserIcon } from "@/lib/dashboard/icons";
+import { DownloadIcon, LockIcon, TrashIcon } from "@/lib/dashboard/icons";
+import { CalendarIconA, MailIconA } from "@/lib/dashboard/progress-icons-a";
+import { ClassIconA, PersonIconA } from "@/lib/dashboard/settings-icons-a";
 import type { HistoryEntry } from "@/lib/privacy/data-controls";
 import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/data-buttons";
 import { HistoryDisclosure } from "@/components/privacy/history-disclosure";
@@ -80,17 +82,17 @@ export function ManagerRecordScreen({
           </span>
         </div>
         {kind === "teacher" ? (
-          <DetailRow icon={<UserIcon className="size-5" />} label="Username" value={username || ""} />
+          <DetailRow icon={<PersonIconA className="size-5" />} label="Username" value={username || ""} />
         ) : null}
-        <DetailRow icon={<MailIcon className="size-5" />} label={kind === "parent" ? "Parent email" : "Email"} value={email} />
+        <DetailRow icon={<MailIconA className="size-5" />} label={kind === "parent" ? "Parent email" : "Email"} value={email} />
         <DetailRow
-          icon={<span className="text-lg">📅</span>}
+          icon={<CalendarIconA className="size-5" />}
           label="Joined"
           value={formatJoined(joined)}
         />
         {kind === "teacher" ? (
           <DetailRow
-            icon={<span className="text-lg">🏫</span>}
+            icon={<ClassIconA className="size-5" />}
             label="Classes"
             value={`${classLabel || "Class"} · ${studentCount} ${studentCount === 1 ? "student" : "students"}`}
           />
@@ -190,7 +192,7 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center gap-3 border-t border-[#BDE9FB]/60 py-3 first:border-t-0">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#BDE9FB]/35 text-[#0CC1E0]">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]">
         {icon}
       </span>
       <span className="min-w-0">

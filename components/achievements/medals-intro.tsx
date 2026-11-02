@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageIntroCard } from "@/components/dashboard/hub-intro/page-intro-card";
 import { useIntroRestoreGate } from "@/components/dashboard/hub-intro/use-intro-restore-gate";
+import {
+  hasPendingHubIntro,
+  subscribeHubIntroQueue,
+} from "@/lib/dashboard/intro-queue";
 import { medalsIntroCopy } from "@/lib/dashboard/medals-intro-copy";
 import {
   hasAccountSeenMedalsIntro,
@@ -18,6 +22,9 @@ export function MedalsIntro() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"first" | "info">("info");
   const dismissedRef = useRef(false);
+  // Bumps when a hub intro (e.g. Academy) is dismissed, so this tip can follow it.
+  const [queueTick, setQueueTick] = useState(0);
+  useEffect(() => subscribeHubIntroQueue(() => setQueueTick((n) => n + 1)), []);
 
   useEffect(() => {
     const alreadySeen = hasAccountSeenMedalsIntro();
@@ -35,13 +42,16 @@ export function MedalsIntro() {
       return;
     }
 
+    // One card at a time: wait while a hub intro is waiting or showing.
+    if (hasPendingHubIntro()) return;
+
     setMode("first");
     const timeoutId = window.setTimeout(() => {
-      if (dismissedRef.current || hasAccountSeenMedalsIntro()) return;
+      if (dismissedRef.current || hasAccountSeenMedalsIntro() || hasPendingHubIntro()) return;
       setOpen(true);
-    }, 80);
+    }, 250);
     return () => window.clearTimeout(timeoutId);
-  }, [ready, sessionTick, recording.ready, recording.suppress]);
+  }, [ready, sessionTick, recording.ready, recording.suppress, queueTick]);
 
   const dismiss = useCallback(() => {
     dismissedRef.current = true;

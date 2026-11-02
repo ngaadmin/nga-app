@@ -4,7 +4,7 @@ import { SearchParamsBoundary } from "@/components/ui/search-params-boundary";
 
 export const metadata: Metadata = {
   title: "Reset parent PIN",
-  description: "Set a new parent PIN from the email link.",
+  description: "Set a new Parent PIN from the email link.",
 };
 
 export default function ResetParentPinPage() {

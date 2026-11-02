@@ -160,18 +160,18 @@ const SECRET_CHILD_FILE = {
 };
 
 const CHILD_REMOVAL: RemovalItem[] = [
-  { emoji: "👤", title: "Profile", detail: "Username, track and settings" },
-  { emoji: "🎓", title: "Progress", detail: "Lessons and day streak" },
-  { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
-  { emoji: "🪙", title: "Coins", detail: "The coins balance" },
-  { emoji: "🏅", title: "Medals", detail: "Every bronze, silver and gold medal" },
-  { emoji: "🏦", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
-  { emoji: "🕐", title: "Activity", detail: "The recent activity history" },
+  { icon: "profile", title: "Profile", detail: "Username, track and settings" },
+  { icon: "lessons", title: "Progress", detail: "Lessons and day streak" },
+  { icon: "lifetime-coins", title: "Lifetime coins", detail: "The Lifetime coins total" },
+  { icon: "coins", title: "Coins", detail: "The coins balance" },
+  { icon: "medals", title: "Medals", detail: "Every bronze, silver and gold medal" },
+  { icon: "vault", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
+  { icon: "activity", title: "Activity", detail: "The recent activity history" },
 ];
 
 function studentRemoval(username: string): RemovalItem[] {
   return [
-    { emoji: "🔑", title: "Login", detail: `The username ${username} and its class seat` },
+    { icon: "login", title: "Login", detail: `The username ${username} and its class seat` },
     ...CHILD_REMOVAL.slice(1),
   ];
 }
@@ -439,17 +439,17 @@ function DeleteTeacherPreview() {
         body="This deletes your classes and all 6 student logins in them. Students can't log in again and their progress is gone for good."
         items={[
           {
-            emoji: "👤",
+            icon: "profile",
             title: "Your teacher account",
             detail: "Username ms_rivera, email and history",
           },
           {
-            emoji: "🏫",
+            icon: "class",
             title: "Your class",
             detail: "Explorer class and its class password",
           },
           {
-            emoji: "👥",
+            icon: "students",
             title: "All 6 student logins",
             detail: `${names}, and everything in their accounts`,
           },

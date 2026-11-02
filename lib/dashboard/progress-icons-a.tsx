@@ -6,7 +6,13 @@
  */
 
 import type { ComponentType } from "react";
-import { CoinIconA } from "@/lib/dashboard/settings-icons-a";
+import {
+  ClassIconA,
+  CoinIconA,
+  FamilyIconA,
+  KeyIconA,
+  PersonIconA,
+} from "@/lib/dashboard/settings-icons-a";
 
 type IconProps = { className?: string };
 
@@ -96,6 +102,69 @@ export function SafeIconA({ className }: IconProps) {
   );
 }
 
+/** Joined date: a calendar page. */
+export function CalendarIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <rect x="3.4" y="5" width="17.2" height="15.6" rx="2.6" fill={FILL} {...LINE} />
+      <path d="M3.4 10h17.2" {...LINE} />
+      <path d="M8 3v4M16 3v4" {...LINE} />
+      <circle cx="8.4" cy="14.6" r="1.1" fill="currentColor" />
+      <circle cx="12" cy="14.6" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** Email: an envelope. */
+export function MailIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <rect x="2.8" y="5" width="18.4" height="14" rx="2.6" fill={FILL} {...LINE} />
+      <path d="m3.6 6.4 8.4 6.4 8.4-6.4" {...LINE} />
+    </svg>
+  );
+}
+
+/** Lifetime coins: a star. */
+export function StarIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8Z" fill={FILL} {...LINE} />
+    </svg>
+  );
+}
+
+/** Activity history: a clock. */
+export function ClockIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <circle cx="12" cy="12" r="8.8" fill={FILL} {...LINE} />
+      <path d="M12 7.4V12l3 2" {...LINE} />
+    </svg>
+  );
+}
+
+/** Student logins: a group of three. */
+export function GroupIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <circle cx="12" cy="8.4" r="3" fill={FILL} {...LINE} />
+      <path d="M6.6 19.6c0-3.2 2.4-5.4 5.4-5.4s5.4 2.2 5.4 5.4Z" fill={FILL} {...LINE} />
+      <path d="M6.4 10.6a2.3 2.3 0 1 1 .2-4.4M17.6 10.6a2.3 2.3 0 1 0-.2-4.4M2.6 17.4c0-2 1.2-3.6 3-4.2M21.4 17.4c0-2-1.2-3.6-3-4.2" {...LINE} />
+    </svg>
+  );
+}
+
+/** This device: a phone. */
+export function DeviceIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <rect x="6.4" y="2.8" width="11.2" height="18.4" rx="2.6" fill={FILL} {...LINE} />
+      <path d="M10.6 18h2.8" {...LINE} />
+    </svg>
+  );
+}
+
 export type JarIconId = "save-jar" | "spend-jar" | "give-jar" | "emergencies-jar";
 
 export type ActivityIconKind =
@@ -156,4 +225,42 @@ export const ACTIVITY_ICONS: Record<ActivityIconKind, IconSpec> = {
     Icon: SafeIconA,
     toneClassName: "bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]",
   },
+};
+
+/** Rows in the "what we keep / what gets removed" lists. */
+export type KeepIconKind =
+  | "profile"
+  | "login"
+  | "email"
+  | "children"
+  | "class"
+  | "students"
+  | "lessons"
+  | "lifetime-coins"
+  | "coins"
+  | "medals"
+  | "vault"
+  | "activity"
+  | "device";
+
+const SKY = "bg-[#E8F6FC] text-[#031F82] [--tab-icon-fill:#BDE9FB]";
+const BUTTER = "bg-[#FFF3DC] text-[#031F82] [--tab-icon-fill:#FFD98A]";
+const BLUSH = "bg-[#FDEBF3] text-[#031F82] [--tab-icon-fill:#F8C4DB]";
+const MINT = "bg-[#E6F7F0] text-[#031F82] [--tab-icon-fill:#B5E8D2]";
+const LILAC = "bg-[#EFEBFB] text-[#031F82] [--tab-icon-fill:#D3C8F5]";
+
+export const KEEP_ICONS: Record<KeepIconKind, IconSpec> = {
+  profile: { Icon: PersonIconA, toneClassName: SKY },
+  login: { Icon: KeyIconA, toneClassName: LILAC },
+  email: { Icon: MailIconA, toneClassName: SKY },
+  children: { Icon: FamilyIconA, toneClassName: BLUSH },
+  class: { Icon: ClassIconA, toneClassName: MINT },
+  students: { Icon: GroupIconA, toneClassName: BLUSH },
+  lessons: { Icon: GradCapIconA, toneClassName: SKY },
+  "lifetime-coins": { Icon: StarIconA, toneClassName: BUTTER },
+  coins: { Icon: CoinIconA, toneClassName: BUTTER },
+  medals: { Icon: MedalIconA, toneClassName: BUTTER },
+  vault: { Icon: SafeIconA, toneClassName: MINT },
+  activity: { Icon: ClockIconA, toneClassName: LILAC },
+  device: { Icon: DeviceIconA, toneClassName: SKY },
 };

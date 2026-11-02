@@ -91,12 +91,12 @@ export function TeacherStudentPage({ username }: { username: string }) {
 
 function studentRemovalItems(username: string): RemovalItem[] {
   return [
-    { emoji: "🔑", title: "Login", detail: `The username ${username} and its class seat` },
-    { emoji: "🎓", title: "Progress", detail: "Lessons and day streak" },
-    { emoji: "⭐", title: "Lifetime coins", detail: "The Lifetime coins total" },
-    { emoji: "🪙", title: "Coins", detail: "The coins balance" },
-    { emoji: "🏅", title: "Medals", detail: "Every bronze, silver and gold medal" },
-    { emoji: "🏦", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
-    { emoji: "🕐", title: "Activity", detail: "The recent activity history" },
+    { icon: "login", title: "Login", detail: `The username ${username} and its class seat` },
+    { icon: "lessons", title: "Progress", detail: "Lessons and day streak" },
+    { icon: "lifetime-coins", title: "Lifetime coins", detail: "The Lifetime coins total" },
+    { icon: "coins", title: "Coins", detail: "The coins balance" },
+    { icon: "medals", title: "Medals", detail: "Every bronze, silver and gold medal" },
+    { icon: "vault", title: "Vault jars and goals", detail: "All jars, amounts and savings goals" },
+    { icon: "activity", title: "Activity", detail: "The recent activity history" },
   ];
 }

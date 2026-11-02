@@ -7,6 +7,7 @@ import {
   markHubIntroSeen,
 } from "@/lib/dashboard/hub-intro/storage";
 import type { HubIntroId } from "@/lib/dashboard/hub-intro/types";
+import { setHubIntroPending } from "@/lib/dashboard/intro-queue";
 import { currentAccountLocalKey } from "@/lib/onboarding/account-local-key";
 import { useRecordingSuppressIntro } from "@/lib/recording/use-recording-suppress-intro";
 
@@ -31,12 +32,22 @@ export function useHubIntro(hubId: HubIntroId) {
     setHydrated(true);
 
     if (!accountKey || alreadySeen) {
+      setHubIntroPending(hubId, false);
       setOpen(false);
       return;
     }
 
+    // Unseen: hold the queue so the Achievements tip waits for this card.
+    // TODO: remove after recordings — a suppressed intro never holds the queue.
+    if (recording.ready && recording.suppress) {
+      setHubIntroPending(hubId, false);
+      setOpen(false);
+      return;
+    }
+    setHubIntroPending(hubId, true);
+
     // TODO: remove after recordings — wait for the check, and do not mark seen.
-    if (!ready || !recording.ready || recording.suppress) {
+    if (!ready || !recording.ready) {
       setOpen(false);
       return;
     }
@@ -60,10 +71,14 @@ export function useHubIntro(hubId: HubIntroId) {
     };
   }, [hubId, ready, sessionTick, recording.ready, recording.suppress]);
 
+  // Leaving the page releases the queue.
+  useEffect(() => () => setHubIntroPending(hubId, false), [hubId]);
+
   const dismiss = useCallback(() => {
     dismissedHubsRef.current.add(hubId);
     dismissedRef.current = true;
     markHubIntroSeen(hubId);
+    setHubIntroPending(hubId, false);
     setSeen(true);
     setOpen(false);
   }, [hubId]);

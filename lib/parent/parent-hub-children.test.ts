@@ -46,8 +46,8 @@ describe("mergeParentHubChildren", () => {
       [{ ...active, userId: "p2", username: "Bo", status: "waiting" }],
       [],
     );
-    expect(merged[0].requestId).toBeUndefined();
-    expect(merged[0].coins).toBe(0);
+    expect(merged[0]!.requestId).toBeUndefined();
+    expect(merged[0]!.coins).toBe(0);
   });
 
   it("does not duplicate an active child and leaves its data alone", () => {

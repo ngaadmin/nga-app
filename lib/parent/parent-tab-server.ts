@@ -275,6 +275,27 @@ export async function openParentTabGate(
   }
 }
 
+/**
+ * Keeps an open Parent Hub open: a still-valid pass gets a fresh pass and a
+ * fresh data grant, so nothing inside the Hub asks for the PIN again. Only
+ * works before the current pass expires; leaving or backgrounding the Hub
+ * drops the pass and the entry gate asks again.
+ */
+export async function renewParentTabGatePass(
+  pass: string,
+): Promise<{ ok: true; pass: string } | { ok: false }> {
+  try {
+    const parent = await resolveSignedInParent();
+    if (!parent || !parentTabGatePassValid(pass, parent.userId)) {
+      return { ok: false };
+    }
+    await grantParentData(parent.userId);
+    return { ok: true, pass: signParentTabGatePass(parent.userId) };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export type ParentTabChildSummary = ParentHubChild;
 
 /**

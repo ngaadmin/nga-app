@@ -21,6 +21,8 @@ describe("class account cash-in", () => {
         askParentIfParentBody,
       }),
     ).toBe(CLASS_ACCOUNT_XP_MESSAGE);
+    expect(CLASS_ACCOUNT_XP_MESSAGE).toBe("Your coins count towards your class total!");
+    expect(CLASS_ACCOUNT_XP_MESSAGE).not.toMatch(/\bXP\b/);
 
     expect(
       cashInClaimAllowed({

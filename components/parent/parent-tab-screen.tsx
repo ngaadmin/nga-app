@@ -26,6 +26,7 @@ import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox"
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
 import {
   loadParentTabData,
+  renewParentTabGatePass,
   type ParentTabChildSummary,
   type ParentTabData,
   type ParentTabOkItem,
@@ -36,6 +37,9 @@ import { HubChildPage } from "@/components/parent/hub-child-page";
 import { ParentHubChildCard } from "@/components/parent/parent-hub-child-card";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
 import type { LearnerDataView } from "@/lib/privacy/data-controls";
+
+/** Under the 10-minute gate pass, so an open Hub never lapses. */
+const PARENT_HUB_RENEW_MS = 4 * 60 * 1000;
 
 const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 
@@ -113,6 +117,23 @@ export function ParentTabScreen({
     },
     [refresh],
   );
+
+  /**
+   * Gated at entry only: while the Hub stays open, renew the pass (and the
+   * data grant) before it runs out, so child pages, Data & privacy, the data
+   * file and the leaderboard switch never ask for the PIN again.
+   */
+  useEffect(() => {
+    if (!unlocked || !pass) return;
+    const generation = lockGeneration.current;
+    const timer = window.setInterval(() => {
+      void renewParentTabGatePass(pass).then((result) => {
+        if (generation !== lockGeneration.current) return;
+        if (result.ok) setPass(result.pass);
+      });
+    }, PARENT_HUB_RENEW_MS);
+    return () => window.clearInterval(timer);
+  }, [unlocked, pass]);
 
   return (
     <div

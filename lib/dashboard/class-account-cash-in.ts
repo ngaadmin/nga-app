@@ -1,6 +1,6 @@
 /** Shown instead of the ask-a-parent line for a class seat with no linked parent. */
 export const CLASS_ACCOUNT_XP_MESSAGE =
-  "Your XP counts towards your class total! 🏆";
+  "Your coins count towards your class total!";
 
 export function cashInRateMissingMessage(input: {
   classAccountWithoutParent: boolean;

@@ -72,6 +72,17 @@ export function ParentHubTabIconA({ className }: IconProps) {
   );
 }
 
+/** Subscription (parent bar): a card with a stripe. */
+export function SubscriptionTabIconA({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <rect x="2.8" y="5" width="18.4" height="14" rx="3" fill={FILL} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M2.8 9.6h18.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M6.6 15h3.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 export function StreakIconA({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>

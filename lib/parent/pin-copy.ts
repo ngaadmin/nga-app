@@ -14,9 +14,16 @@ export function childDataPhrase(childCount?: number | null): string {
     : "your child's data";
 }
 
-/** Parent Hub menu subtitle with the same plural rule. */
+/**
+ * Parent Hub menu subtitle with the same plural rule. While the child count
+ * is still loading (null/undefined) a neutral line shows, with no child or
+ * children wording.
+ */
 export function parentHubSubtitle(childCount?: number | null): string {
-  return typeof childCount === "number" && childCount >= 2
+  if (typeof childCount !== "number") return PARENT_HUB_SUBTITLE_NEUTRAL;
+  return childCount >= 2
     ? "Approvals and your children's progress"
     : "Approvals and your child's progress";
 }
+
+export const PARENT_HUB_SUBTITLE_NEUTRAL = "Approvals and progress";

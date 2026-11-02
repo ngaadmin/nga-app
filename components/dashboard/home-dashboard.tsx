@@ -665,7 +665,8 @@ export function HomeDashboard() {
               onClick={() => router.push("/dashboard/settings/account")}
             />
           )}
-          {isGuestMode ? null : (
+          {/* Parents open Subscription from its own tab, not here. */}
+          {isGuestMode || isParent ? null : (
             <SettingsRow
               icon={CardIconA}
               label={copy.account.subscription}

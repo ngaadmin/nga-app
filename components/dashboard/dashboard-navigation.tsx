@@ -10,7 +10,11 @@ import {
 } from "@/lib/dashboard/navigation";
 import { withDashboardNavExtensions } from "@/lib/dashboard/dashboard-nav-extensions";
 import { useTestingPremiumUnlocked } from "@/lib/dashboard/testing-premium";
-import { withParentTabNavItem } from "@/lib/parent/parent-tab-nav";
+import {
+  withParentTabNavItem,
+  parentBottomBarItems,
+} from "@/lib/parent/parent-tab-nav";
+import { useUserSession } from "@/lib/dashboard/use-user-session";
 import { useParentTabAccess } from "@/lib/parent/use-parent-tab-access";
 import { zLayerStyle } from "@/lib/ui/layers";
 
@@ -48,6 +52,16 @@ export function DashboardNavigation() {
     }),
     parentTab.eligible,
   );
+  const session = useUserSession();
+  /**
+   * Bottom bar only. Parent: Academy, Launchpad, Vault, Community,
+   * Subscription; Settings and the Parent Hub open from the avatar menu.
+   * Child and guest bars are unchanged.
+   */
+  const bottomItems = parentBottomBarItems(
+    navItems,
+    session?.accountRole === "parent_master",
+  );
 
   if (isDesktop) {
     return (
@@ -84,12 +98,12 @@ export function DashboardNavigation() {
       className="fixed inset-x-0 bottom-0 grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] bg-white pb-[max(6px,env(safe-area-inset-bottom))] shadow-[0_-6px_16px_rgba(3,31,130,0.06)] print:hidden"
       aria-label="Main navigation"
     >
-      {navItems.map((item) => (
+      {bottomItems.map((item) => (
         <DashboardNavLink
           key={item.id}
           item={item}
           variant="bottom"
-          denseLabel={navItems.length > 5}
+          denseLabel={bottomItems.length > 5}
         />
       ))}
     </nav>

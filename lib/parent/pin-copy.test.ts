@@ -14,4 +14,10 @@ describe("pin copy", () => {
     expect(parentHubSubtitle(3)).toBe("Approvals and your children's progress");
     expect(parentHubSubtitle(1)).toBe("Approvals and your child's progress");
   });
+
+  it("shows a neutral Hub line while the count loads", () => {
+    expect(parentHubSubtitle(null)).toBe("Approvals and progress");
+    expect(parentHubSubtitle(undefined)).toBe("Approvals and progress");
+    expect(parentHubSubtitle(null)).not.toMatch(/child/);
+  });
 });

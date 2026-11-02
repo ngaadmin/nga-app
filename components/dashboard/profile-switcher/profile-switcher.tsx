@@ -41,14 +41,14 @@ export const PROFILE_SWITCHER_COPY = {
   viewProfile: "View my profile",
   viewProfileSub: "Achievements & medals",
   settings: "Settings",
-  /** Parent menu: their Settings holds both PINs. */
-  settingsSubParent: "PINs, account and preferences",
+  /** Parent menu: their Settings holds the Parent PIN. */
+  settingsSubParent: "PIN, account and preferences",
   /** Child menu: no PINs there. */
   settingsSub: "Account and preferences",
   /** Guest menu: no account yet, so only preferences. */
   settingsSubGuest: "Preferences",
   parentHub: "Parent Hub",
-  /** One child; see parentHubSubtitle() for the plural rule. */
+  /** One child; see parentHubSubtitle() for the plural and loading rules. */
   parentHubSub: parentHubSubtitle(1),
   switchHeading: "Switch profile",
   parentTag: "Parent",
@@ -371,9 +371,9 @@ export function ProfileSwitcherMenu({
           type="button"
           data-profile-switcher-view-profile
           onClick={onViewProfile}
-          className="relative flex w-full items-center gap-2.5 rounded-xl bg-[#E8F6FC] p-2.5 text-left transition-opacity hover:opacity-90 active:opacity-75"
+          className="relative flex w-full items-center gap-2.5 rounded-xl bg-white p-2.5 text-left transition-colors hover:bg-[#F2F8FF] active:bg-[#E8F6FC]"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-[#FFA503]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-[#FFA503]">
             <TrophyIcon className="size-5" />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">

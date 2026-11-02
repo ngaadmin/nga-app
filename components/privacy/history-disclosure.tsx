@@ -20,7 +20,7 @@ export function HistoryDisclosure({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF]/40">
+    <div className="overflow-hidden rounded-xl border-2 border-[#BDE9FB]/70 bg-white">
       <button
         type="button"
         aria-expanded={open}

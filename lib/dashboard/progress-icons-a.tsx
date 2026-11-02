@@ -165,21 +165,6 @@ export function DeviceIconA({ className }: IconProps) {
   );
 }
 
-/** Savings goal: a target with an arrow in the bullseye. */
-export function TargetIconA({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
-      <circle cx="11" cy="13" r="8" fill={FILL} {...LINE} />
-      <circle cx="11" cy="13" r="4.4" {...LINE} />
-      <circle cx="11" cy="13" r="1.2" fill="currentColor" />
-      <path d="M11 13l8.4-8.4M16.4 4.6l3 0 0 3" {...LINE} />
-    </svg>
-  );
-}
-
-/** Savings goal disc: mint pastel, same family as the jar discs. */
-export const GOAL_ICON_TONE = "bg-[#E6F7F0] text-[#031F82] [--tab-icon-fill:#B5E8D2]";
-
 export type JarIconId = "save-jar" | "spend-jar" | "give-jar" | "emergencies-jar";
 
 export type ActivityIconKind =

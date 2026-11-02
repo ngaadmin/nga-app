@@ -14,20 +14,14 @@ import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
 import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import { MedalCountChip, SkillTile } from "@/components/achievements/skills-collection-panel";
-import {
-  ACTIVITY_ICONS,
-  GOAL_ICON_TONE,
-  GradCapIconA,
-  JAR_ICONS,
-  TargetIconA,
-} from "@/lib/dashboard/progress-icons-a";
-import { formatCompactMoney } from "@/lib/dashboard/currency/format-money";
+import { ACTIVITY_ICONS, GradCapIconA, JAR_ICONS } from "@/lib/dashboard/progress-icons-a";
 import { CoinsIconA, StreakIconA } from "@/lib/dashboard/tab-icons-a";
 
 /** Soft peach discs with orange duotone, same as the top bar's coin and streak. */
 const STAT_DISC = "bg-[#FFE7B8] text-[#031F82] [--tab-icon-fill:#FFA503]";
 import { getVaultSkillTrophyById } from "@/lib/dashboard/skill-trophies";
 import { cn } from "@/lib/utils/cn";
+import { coinsCashWorth } from "@/lib/parent/coins-cash-worth";
 
 /**
  * "full": everything (teacher's student record).
@@ -35,8 +29,9 @@ import { cn } from "@/lib/utils/cn";
  *   recent activity). No privacy controls.
  * "privacy": the child's privacy controls only (leaderboard switch,
  *   download, delete).
- * "hub": the Parent Hub child page. Progress first, then a "Data & privacy"
- *   section with the leaderboard switch, the data file and delete.
+ * "hub": the Parent Hub child page, kept slim: the header card, Lessons done
+ *   and Day streak, then a "Data & privacy" section (leaderboard switch, data
+ *   file, delete). No coins, achievements, Vault or recent activity.
  */
 export type LearnerDataScreenMode = "full" | "progress" | "privacy" | "hub";
 
@@ -61,6 +56,8 @@ type LearnerDataScreenProps = {
   deleteLabel?: string;
   downloading?: boolean;
   vaultNote?: string;
+  /** Parent Hub child page: "Set cash rate" when no rate is set yet. */
+  onSetCashRate?: () => void;
   /** The learner's chosen avatar. Without it, the first letter shows. */
   avatarId?: ProfileAvatarId;
 };
@@ -83,15 +80,17 @@ export function LearnerDataScreen({
   onDelete,
   deleteLabel = "Delete account",
   downloading = false,
-  vaultNote = "Vault amounts are what your family tracks in the app. The app doesn't hold or move money.",
+  vaultNote = "Vault amounts are what you and your child track in the app. The app doesn't hold or move money.",
   avatarId,
+  onSetCashRate,
 }: LearnerDataScreenProps) {
-  const { formatMoney, currencyCode } = useCurrency();
-  const compactMoney = (amount: number) => formatCompactMoney(amount, currencyCode);
+  const { formatMoney } = useCurrency();
   const initial = view.username.trim().charAt(0).toUpperCase() || "?";
   const showProgress = mode !== "privacy";
   const showControls = mode !== "progress";
   const hubPrivacy = mode === "hub";
+  /** The Hub child page is slim: header, lessons, streak, then Data & privacy. */
+  const fullDetail = mode !== "hub";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col px-1 py-2 pb-8">
@@ -214,6 +213,8 @@ export function LearnerDataScreen({
             note={`Best ever: ${view.bestStreak} ${view.bestStreak === 1 ? "day" : "days"}`}
           />
         </div>
+        {fullDetail ? (
+          <>
         <WideStat
           icon={<CoinsIconA className="size-5" />}
           label="Coins balance"
@@ -226,8 +227,19 @@ export function LearnerDataScreen({
           note="The total coins this account has earned."
           value={`${view.lifetimeXp.toLocaleString()} coins`}
         />
+          </>
+        ) : (
+          <CoinsCashCard
+            coins={view.coins}
+            centsPer100Coins={view.cashRateCentsPer100Coins ?? null}
+            formatMoney={formatMoney}
+            onSetCashRate={onSetCashRate}
+          />
+        )}
       </section>
 
+      {fullDetail ? (
+        <>
       <AchievementsSection view={view} />
 
       <section className="mt-5">
@@ -236,7 +248,7 @@ export function LearnerDataScreen({
         </h2>
         <div className="mt-2.5 rounded-2xl bg-white px-3.5 pb-1 pt-3.5 shadow-md">
           <p className="font-heading text-[13px] font-bold text-[#4A5675]">Jars</p>
-          <div className="mt-2.5 grid grid-cols-4 gap-1.5 pb-3">
+          <div className="mt-2.5 grid grid-cols-4 gap-1 pb-3">
             {view.jars.map((jar) => {
               const { Icon, toneClassName } = JAR_ICONS[jar.id];
               return (
@@ -252,12 +264,8 @@ export function LearnerDataScreen({
                 <p className="mt-1.5 whitespace-nowrap font-heading text-[12.5px] font-bold text-[#031F82]">
                   {jar.name}
                 </p>
-                <p
-                  data-learner-data-jar-amount
-                  title={formatMoney(jar.amount)}
-                  className="truncate whitespace-nowrap text-center font-sans text-[12.5px] font-semibold tabular-nums text-[#4A5675]"
-                >
-                  {compactMoney(jar.amount)}
+                <p className="font-sans text-[12.5px] font-semibold tabular-nums text-[#4A5675]">
+                  {formatMoney(jar.amount)}
                 </p>
               </div>
               );
@@ -270,23 +278,14 @@ export function LearnerDataScreen({
                 const width = goal.target > 0 ? Math.min(100, (goal.balance / goal.target) * 100) : 0;
                 return (
                   <div key={goal.name} className="flex items-center gap-3 border-t border-[#BDE9FB]/60 py-2.5">
-                    <span
-                      data-learner-data-goal-icon
-                      className={cn(
-                        "flex size-9 shrink-0 items-center justify-center rounded-full",
-                        GOAL_ICON_TONE,
-                      )}
-                    >
-                      <TargetIconA className="size-5" />
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#E8F6FC] text-lg">
+                      {goal.emoji}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="min-w-0 truncate font-heading text-sm font-bold text-[#031F82]">{goal.name}</p>
-                        <p
-                          title={`${formatMoney(goal.balance)} of ${formatMoney(goal.target)}`}
-                          className="shrink-0 whitespace-nowrap font-sans text-[13px] font-semibold tabular-nums text-[#4A5675]"
-                        >
-                          {compactMoney(goal.balance)} of {compactMoney(goal.target)}
+                        <p className="font-heading text-sm font-bold text-[#031F82]">{goal.name}</p>
+                        <p className="whitespace-nowrap font-sans text-[13px] font-semibold tabular-nums text-[#4A5675]">
+                          {formatMoney(goal.balance)} of {formatMoney(goal.target)}
                         </p>
                       </div>
                       <div className="mt-1.5 h-2 rounded-full bg-[#E8F6FC]">
@@ -345,7 +344,8 @@ export function LearnerDataScreen({
           )}
         </div>
       </section>
-
+        </>
+      ) : null}
         </div>
       ) : null}
 
@@ -419,7 +419,7 @@ function StatTile({
   note: string;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#BDE9FB]/70 bg-[#F7FBFF] px-3 py-2.5">
+    <div className="flex flex-col gap-1.5 rounded-xl border-2 border-[#BDE9FB]/70 bg-white px-3 py-2.5">
       <div className="flex items-center gap-2">
         <span className={`flex size-7 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
           {icon}
@@ -431,6 +431,62 @@ function StatTile({
       </div>
       <p className="font-heading text-[13px] font-bold leading-tight text-[#031F82]">{label}</p>
       <p className="font-sans text-xs font-medium text-[#4A5675]">{note}</p>
+    </div>
+  );
+}
+
+/**
+ * Parent Hub child page: the cashable coins balance and what it is worth at
+ * the parent's cash rate, in the parent's display currency. With no rate set,
+ * a small "Set cash rate" pill takes the parent to the rate setting.
+ */
+export function CoinsCashCard({
+  coins,
+  centsPer100Coins,
+  formatMoney,
+  onSetCashRate,
+}: {
+  coins: number;
+  centsPer100Coins: number | null;
+  formatMoney: (amount: number) => string;
+  onSetCashRate?: () => void;
+}) {
+  const worth = coinsCashWorth(coins, centsPer100Coins);
+  const hasRate = worth !== null;
+  return (
+    <div
+      data-learner-data-coins
+      data-cash-state={hasRate ? "rate" : "no-rate"}
+      className="mt-2.5 flex items-center gap-3 rounded-xl border-2 border-[#BDE9FB]/70 bg-white px-3 py-2.5"
+    >
+      <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${STAT_DISC}`}>
+        <CoinsIconA className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-heading text-[13px] font-bold text-[#031F82]">Coins balance</p>
+        <p className="font-heading text-[22px] font-extrabold leading-tight tabular-nums text-[#031F82]">
+          {coins.toLocaleString("en-US")} {coins === 1 ? "coin" : "coins"}
+        </p>
+      </div>
+      {hasRate ? (
+        <p
+          data-learner-data-coins-worth
+          className="max-w-[46%] text-right font-sans text-xs font-semibold leading-snug text-[#4A5675]"
+        >
+          Worth <span className="font-bold text-[#031F82]">{formatMoney(worth ?? 0)}</span> at your rate
+        </p>
+      ) : onSetCashRate ? (
+        <button
+          type="button"
+          data-learner-data-set-rate
+          onClick={onSetCashRate}
+          className="h-8 w-[112px] shrink-0 whitespace-nowrap rounded-full bg-[#031F82] font-heading text-xs font-bold text-white"
+        >
+          Set cash rate
+        </button>
+      ) : (
+        <p className="shrink-0 font-sans text-xs font-semibold text-[#4A5675]">No cash rate yet</p>
+      )}
     </div>
   );
 }
@@ -453,7 +509,7 @@ function WideStat({
   return (
     <div
       className={`mt-2.5 flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 ${
-        accent ? "border-[#0CC1E0]/35 bg-[#F2FBFD]" : "border-[#BDE9FB]/70 bg-[#F7FBFF]"
+        accent ? "border-[#0CC1E0]/35 bg-white" : "border-[#BDE9FB]/70 bg-white"
       }`}
     >
       <span className={`flex size-9 shrink-0 items-center justify-center rounded-full ${iconClass}`}>

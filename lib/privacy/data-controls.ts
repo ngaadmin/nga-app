@@ -517,6 +517,11 @@ export type JarId = (typeof JAR_ORDER)[number]["id"];
 
 export type LearnerDataView = {
   userId: string;
+  /**
+   * Parent Hub child page only: the child's coins cash rate in whole cents per
+   * 100 coins, or null when no rate is set. Undefined elsewhere.
+   */
+  cashRateCentsPer100Coins?: number | null;
   username: string;
   trackLabel: string | null;
   accountLine: string | null;

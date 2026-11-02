@@ -22,12 +22,18 @@ type ParentConversionRatePanelProps = {
   /** Parent PIN gate pass; the server refuses a save without it. */
   parentPinPass?: string | null;
   className?: string;
+  /** Pick this child first (from "Set cash rate" on their Hub page). */
+  initialChildId?: string | null;
+  /** Called after a rate saves. */
+  onSaved?: () => void;
 };
 
 export function ParentConversionRatePanel({
   isEditable,
   parentPinPass = null,
   className,
+  initialChildId = null,
+  onSaved,
 }: ParentConversionRatePanelProps) {
   const conversionCopy = copyMatrix.dashboard.settings.conversion;
   const { currencyCode } = useCurrency();
@@ -56,7 +62,9 @@ export function ParentConversionRatePanel({
           return;
         }
         setChildren(result.children);
-        const first = result.children[0];
+        const first =
+          result.children.find((child) => child.userId === initialChildId) ??
+          result.children[0];
         if (!first) return;
         setSelectedChildId(first.userId);
         if (first.centsPer100Xp != null) {
@@ -72,7 +80,7 @@ export function ParentConversionRatePanel({
     return () => {
       cancelled = true;
     };
-  }, [conversionCopy.noLinkedChild, isParentMaster]);
+  }, [conversionCopy.noLinkedChild, initialChildId, isParentMaster]);
 
   if (!isParentMaster) return null;
 
@@ -137,6 +145,7 @@ export function ParentConversionRatePanel({
       setStatus(
         `${conversionCopy.rateSavedTemplate.replace("{amount}", formatMoney(cents / 100, currencyCode))} (${result.usernames.join(", ")})`,
       );
+      onSaved?.();
     } finally {
       setSaving(false);
     }
@@ -186,7 +195,7 @@ export function ParentConversionRatePanel({
                 key={child.userId}
                 className={cn(
                   "rounded-xl border-2 px-3 py-3",
-                  selected ? "border-[#0CC1E0] bg-[#F7FBFF]" : "border-[#BDE9FB] bg-white",
+                  selected ? "border-[#0CC1E0] bg-white" : "border-[#BDE9FB] bg-white",
                 )}
               >
                 <button

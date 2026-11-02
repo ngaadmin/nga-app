@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { cashRateSettingsHref } from "@/lib/parent/cash-rate-return";
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 import { readStoredProfileAvatarId } from "@/lib/dashboard/profile-avatar";
 import { setChildLeaderboard } from "@/lib/privacy/account-data-server";
@@ -24,7 +26,8 @@ export function childRemovalItems(): RemovalItem[] {
 }
 
 /**
- * A child's page in the Parent Hub: their progress, then "Data & privacy"
+ * A child's page in the Parent Hub: lessons, streak and the cashable coins
+ * balance, then "Data & privacy"
  * (leaderboard switch, data file, delete). Opening the Hub with the Parent
  * PIN also opened the data grant, so no second PIN is asked here. Deleting
  * still goes through the confirm sheet and asks for the Parent PIN again.
@@ -40,6 +43,7 @@ export function HubChildPage({
   onBack: () => void;
   onDeleted: () => void;
 }) {
+  const router = useRouter();
   const [view, setView] = useState(initialView);
   const [error, setError] = useState<string | null>(null);
   const [switchBusy, setSwitchBusy] = useState(false);
@@ -59,6 +63,7 @@ export function HubChildPage({
         subtitle="What they've learned and done in the app."
         onBack={onBack}
         backLabel="Back to Parent Hub"
+        onSetCashRate={() => router.push(cashRateSettingsHref(view.userId))}
         showLeaderboardSwitch
         leaderboardBusy={switchBusy}
         onLeaderboardChange={(enabled) => {

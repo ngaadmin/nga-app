@@ -1,6 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  CASH_RATE_OPEN_PARAM,
+  HUB_CHILD_PARAM,
+  RETURN_TO_PARAM,
+  safeHubReturnTo,
+} from "@/lib/parent/cash-rate-return";
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
 import { copyMatrix } from "@/constants/copyMatrix";
 import { cn } from "@/lib/utils/cn";
@@ -37,6 +45,24 @@ export function ParentHubSection() {
   const [expanded, setExpanded] = useState(false);
   /** Parent PIN pass for this open section only. Dropped when it closes. */
   const [pinPass, setPinPass] = useState<string | null>(null);
+  const router = useRouter();
+  const sectionRef = useRef<HTMLElement>(null);
+  /** From "Set cash rate" on a child's Hub page: where to go after saving. */
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+  const returnChildId = returnTo
+    ? new URL(returnTo, "https://app.invalid").searchParams.get(HUB_CHILD_PARAM)
+    : null;
+
+  useEffect(() => {
+    if (!isParentSettingsView) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get(CASH_RATE_OPEN_PARAM) !== "open") return;
+    setReturnTo(safeHubReturnTo(params.get(RETURN_TO_PARAM)));
+    setExpanded(true);
+    window.requestAnimationFrame(() =>
+      sectionRef.current?.scrollIntoView({ block: "start" }),
+    );
+  }, [isParentSettingsView]);
 
   if (!isParentSettingsView) {
     return null;
@@ -44,6 +70,7 @@ export function ParentHubSection() {
 
   return (
     <section
+      ref={sectionRef}
       aria-label={featuresCopy.pointsConversion}
       className={cn(floatingPanelClass, "shrink-0 overflow-hidden px-3")}
     >
@@ -57,6 +84,15 @@ export function ParentHubSection() {
           setExpanded((current) => !current);
         }}
       >
+        {returnTo ? (
+          <Link
+            href={returnTo}
+            data-cash-rate-return
+            className="mt-1 inline-block font-heading text-sm font-bold text-[#0CC1E0]"
+          >
+            ← Back to Parent Hub
+          </Link>
+        ) : null}
         {isParentMaster && !pinPass ? (
           <div data-cash-rate-pin-gate>
             <ParentPinGate
@@ -67,7 +103,16 @@ export function ParentHubSection() {
             />
           </div>
         ) : (
-          <ParentConversionRatePanel isEditable parentPinPass={pinPass} />
+          <ParentConversionRatePanel
+            isEditable
+            parentPinPass={pinPass}
+            initialChildId={returnChildId}
+            onSaved={
+              returnTo
+                ? () => window.setTimeout(() => router.push(returnTo), 1200)
+                : undefined
+            }
+          />
         )}
       </ParentHubFeatureItem>
     </section>

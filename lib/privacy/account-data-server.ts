@@ -5,11 +5,6 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { lessonTitleFor } from "@/lib/academy/lessons/payload/lesson-titles";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import {
-  assessParentPin,
-  PARENT_PIN_GATE_COPY,
-} from "@/lib/dashboard/parent-pin-gate";
 import {
   masteryCohortAgeRangeLabel,
   masteryCohortLabel,
@@ -21,9 +16,7 @@ import { deleteUsageEventsForUsername } from "@/lib/privacy/delete-usage-events"
 import { deleteTeacherAccount } from "@/lib/privacy/delete-teacher-account";
 import {
   PARENT_DATA_GRANT_COOKIE,
-  PARENT_DATA_GRANT_TTL_MS,
   readParentDataGrant,
-  signParentDataGrant,
 } from "@/lib/privacy/parent-data-grant";
 import {
   assembleLearnerView,
@@ -46,6 +39,7 @@ import {
   type LeaderboardAudience,
   type LearnerDataView,
 } from "@/lib/privacy/data-controls";
+import { resolveExchangeRateCents } from "@/lib/dashboard/xp-cash";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { parentTabGatePassValid } from "@/lib/parent/parent-tab-gate-pass";
@@ -246,12 +240,17 @@ async function viewForChild(
   childId: string,
   username: string,
   cohort: string | null,
-  extras: { accountLine?: string | null; linkedParentEmail?: string | null },
+  extras: {
+    accountLine?: string | null;
+    linkedParentEmail?: string | null;
+    /** Parent Hub child page: no recent activity is shown, so skip building it. */
+    slim?: boolean;
+  },
 ): Promise<LearnerDataView> {
   const payloads = await readLearnerProgressPayloads([childId]);
   const payload = payloads.get(childId) ?? {};
   const events = (await usageRows(admin, username)) as Record<string, unknown>[];
-  return assembleLearnerView({
+  const view = assembleLearnerView({
     userId: childId,
     username,
     trackLabel: trackLabel(cohort),
@@ -259,109 +258,18 @@ async function viewForChild(
     linkedParentEmail: extras.linkedParentEmail,
     progress: payload,
     bestStreakFromEvents: bestStreakFrom(events),
-    activity: activityFor(payload, events),
+    activity: extras.slim ? [] : activityFor(payload, events),
     leaderboardEnabled: await readPref(admin, childId),
   });
+  if (!extras.slim) return view;
+  const wallet = (payload as { wallet?: Parameters<typeof resolveExchangeRateCents>[0] }).wallet;
+  return { ...view, cashRateCentsPer100Coins: resolveExchangeRateCents(wallet) };
 }
 
 export async function parentDataGrantActive(): Promise<boolean> {
   const user = await signedInUser();
   if (!user) return false;
   return grantMatches(user.id);
-}
-
-/** Linked child count for the Parent PIN gate copy. No PIN needed: count only. */
-export async function loadParentLinkedChildCount(): Promise<number | null> {
-  const user = await signedInUser();
-  if (!user) return null;
-  try {
-    const listed = await listLinkedChildrenForCurrentParent();
-    return listed.ok ? listed.children.length : null;
-  } catch {
-    return null;
-  }
-}
-
-export async function unlockParentDataView(
-  pin: string,
-): Promise<{ ok: true } | Fail> {
-  const user = await signedInUser();
-  if (!user) return { ok: false, error: "Sign in as a parent to see this." };
-  const opened = openAdmin();
-  if (!opened.ok) return opened;
-  const { data: profile } = await opened.admin
-    .from("profiles")
-    .select("account_role, parent_pin_hash")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.account_role !== "parent_master") {
-    return { ok: false, error: "Sign in as a parent to see this." };
-  }
-  const limit = consumeRateLimit(`parent-pin:${user.id}`, 8, 15 * 60 * 1000);
-  if (!limit.allowed) {
-    return { ok: false, error: PARENT_PIN_GATE_COPY.limited };
-  }
-  const pinResult = assessParentPin(pin, profile.parent_pin_hash);
-  if (!pinResult.ok) return pinResult;
-  const cookieStore = await cookies();
-  cookieStore.set(PARENT_DATA_GRANT_COOKIE, signParentDataGrant(user.id), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: PARENT_DATA_GRANT_TTL_MS / 1000,
-  });
-  return { ok: true };
-}
-
-export async function loadParentChildBundle(childId: string): Promise<
-  | {
-      ok: true;
-      parentEmail: string;
-      children: {
-        userId: string;
-        username: string;
-        trackLabel: string | null;
-        cohort: MasteryCohort | null;
-      }[];
-      view: LearnerDataView;
-    }
-  | Fail
-> {
-  const user = await signedInUser();
-  if (!user) return { ok: false, error: "Sign in as a parent to see this." };
-  if (!(await grantMatches(user.id))) {
-    return { ok: false, error: "Enter your parent PIN first." };
-  }
-  const opened = openAdmin();
-  if (!opened.ok) return opened;
-  const actorResult = await parentActor(opened.admin, user.id);
-  if (!actorResult.ok) return actorResult;
-  const listed = await listLinkedChildrenForCurrentParent();
-  if (!listed.ok) return listed;
-  const children = listed.children.map((child) => ({
-    userId: child.userId,
-    username: child.username,
-    trackLabel: trackLabel(child.curriculumCohort),
-    cohort: asCohort(child.curriculumCohort),
-  }));
-  const selected =
-    children.find((child) => child.userId === childId.trim()) ?? children[0];
-  if (!selected) {
-    return { ok: false, error: "No linked children yet." };
-  }
-  if (!authorizeLearnerRead(actorResult.actor, selected.userId)) {
-    return { ok: false, error: "That learner is not linked to this parent account." };
-  }
-  const match = listed.children.find((child) => child.userId === selected.userId);
-  const view = await viewForChild(
-    opened.admin,
-    selected.userId,
-    selected.username,
-    match?.curriculumCohort ?? null,
-    { linkedParentEmail: actorResult.email },
-  );
-  return { ok: true, parentEmail: actorResult.email, children, view };
 }
 
 /**
@@ -396,7 +304,7 @@ export async function loadParentHubChildProgress(
     match.userId,
     match.username,
     match.curriculumCohort ?? null,
-    {},
+    { slim: true },
   );
   return { ok: true, view };
 }

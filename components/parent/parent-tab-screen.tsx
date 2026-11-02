@@ -34,6 +34,7 @@ import {
   type ParentTabOkItem,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
+import { HUB_CHILD_PARAM } from "@/lib/parent/cash-rate-return";
 import { HubChildPage } from "@/components/parent/hub-child-page";
 import { TRACK_PILL_CLASS } from "@/lib/dashboard/track-pill";
 import { loadParentHubChildProgress } from "@/lib/privacy/account-data-server";
@@ -423,6 +424,23 @@ function UnlockedView({
     },
     [pass],
   );
+
+  /**
+   * Back from "Set cash rate" (Settings) with ?child=<id>: reopen that
+   * child's page once the Hub has loaded, then drop the param.
+   */
+  const reopenedChild = useRef(false);
+  useEffect(() => {
+    if (!data || reopenedChild.current || typeof window === "undefined") return;
+    reopenedChild.current = true;
+    const url = new URL(window.location.href);
+    const childId = url.searchParams.get(HUB_CHILD_PARAM);
+    if (!childId) return;
+    url.searchParams.delete(HUB_CHILD_PARAM);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    const child = data.children.find((entry) => entry.userId === childId);
+    if (child) void openProgress(child);
+  }, [data, openProgress]);
 
   if (loadError) {
     return (

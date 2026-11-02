@@ -19,6 +19,7 @@ export default async function ParentTabPage() {
     <ParentTabScreen
       parentUserId={access.parentUserId}
       parentName={access.parentName}
+      childCount={access.childCount}
     />
   );
 }

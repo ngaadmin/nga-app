@@ -117,7 +117,13 @@ async function resolveParentContext(): Promise<ParentContext | null> {
 }
 
 export type ParentTabAccess =
-  | { eligible: true; parentUserId: string; parentName: string }
+  | {
+      eligible: true;
+      parentUserId: string;
+      parentName: string;
+      /** Linked children, for "your child's" vs "your children's" copy. */
+      childCount: number;
+    }
   | { eligible: false };
 
 export async function loadParentTabAccess(): Promise<ParentTabAccess> {
@@ -128,6 +134,7 @@ export async function loadParentTabAccess(): Promise<ParentTabAccess> {
       eligible: true,
       parentUserId: context.userId,
       parentName: context.parentName,
+      childCount: context.children.length,
     };
   } catch {
     return { eligible: false };

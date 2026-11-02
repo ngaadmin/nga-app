@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { PIN_DIFFERENCE_LINE } from "@/lib/parent/pin-copy";
+import { useEffect, useState } from "react";
+import { ParentDataPinGate } from "@/components/privacy/parent-data-pin-gate";
 import { deleteHouseholdMasterAccount } from "@/lib/onboarding/delete-household-master";
 import { signOutApp, redirectToHomeAfterSignOut } from "@/lib/onboarding/sign-out";
 import { useUserSession } from "@/lib/dashboard/use-user-session";
@@ -45,8 +45,6 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const [pin, setPin] = useState("");
-  const [gatePin, setGatePin] = useState("");
-  const [gateError, setGateError] = useState<string | null>(null);
   const [parentRecord, setParentRecord] = useState<ParentRecord | null>(null);
   const [teacherRecord, setTeacherRecord] = useState<TeacherRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -87,23 +85,18 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
     });
   }, [session, isTeacher, isParent]);
 
-  async function unlock(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    const unlocked = await unlockParentDataView(gatePin);
-    setBusy(false);
-    if (!unlocked.ok) {
-      setGateError(unlocked.error);
-      return;
-    }
-    setPin(gatePin);
+  async function unlock(enteredPin: string): Promise<string | null> {
+    const unlocked = await unlockParentDataView(enteredPin);
+    if (!unlocked.ok) return unlocked.error;
+    setPin(enteredPin);
     const result = await loadParentOwnRecord();
     if (!result.ok) {
       setError(result.error);
-      return;
+      return result.error;
     }
     setParentRecord(result);
     setReady(true);
+    return null;
   }
 
   if (!session || checking) {
@@ -120,29 +113,7 @@ export function MyAccountPage({ historyOpen = false }: { historyOpen?: boolean }
 
   if (isParent && !ready) {
     return (
-      <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
-        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your Parent PIN</h1>
-        <p className="font-sans text-sm text-[#1E3A5F]">Your account record stays behind your Parent PIN.</p>
-        <p data-pin-difference className="font-sans text-xs leading-snug text-[#4A5675]">
-          {PIN_DIFFERENCE_LINE}
-        </p>
-        <input
-          value={gatePin}
-          onChange={(event) => setGatePin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-          inputMode="numeric"
-          autoComplete="off"
-          aria-label="Parent PIN"
-          className="h-12 rounded-2xl border-2 border-[#BDE9FB] px-3 font-heading text-lg tracking-[0.3em] text-[#031F82] outline-none"
-        />
-        {gateError ? <p role="alert" className="font-sans text-sm text-[#031F82]">{gateError}</p> : null}
-        <button
-          type="submit"
-          disabled={busy || !isFourDigitPin(gatePin)}
-          className="h-12 rounded-2xl border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white disabled:opacity-40"
-        >
-          Continue
-        </button>
-      </form>
+      <ParentDataPinGate kind="account" onUnlock={unlock} />
     );
   }
 

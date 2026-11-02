@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
-import { PIN_DIFFERENCE_LINE } from "@/lib/parent/pin-copy";
+import { useEffect, useState } from "react";
+import { ParentDataPinGate } from "@/components/privacy/parent-data-pin-gate";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   loadParentChildBundle,
@@ -22,9 +22,6 @@ export function ParentChildPage() {
   const search = useSearchParams();
   const requested = search.get("child") ?? "";
   const [pin, setPin] = useState("");
-  const [gatePin, setGatePin] = useState("");
-  const [gateError, setGateError] = useState<string | null>(null);
-  const [gateBusy, setGateBusy] = useState(false);
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,18 +61,13 @@ export function ParentChildPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function unlock(event: FormEvent) {
-    event.preventDefault();
-    setGateBusy(true);
-    const result = await unlockParentDataView(gatePin);
-    setGateBusy(false);
-    if (!result.ok) {
-      setGateError(result.error);
-      return;
-    }
-    setPin(gatePin);
+  async function unlock(enteredPin: string): Promise<string | null> {
+    const result = await unlockParentDataView(enteredPin);
+    if (!result.ok) return result.error;
+    setPin(enteredPin);
     setReady(true);
     await load(requested);
+    return null;
   }
 
   if (checking) {
@@ -84,36 +76,7 @@ export function ParentChildPage() {
 
   if (!ready) {
     return (
-      <form onSubmit={unlock} className="mx-auto flex w-full max-w-md flex-col gap-3 px-1 py-6">
-        <h1 className="font-heading text-2xl font-extrabold text-[#031F82]">Enter your Parent PIN</h1>
-        <p className="font-sans text-sm text-[#1E3A5F]">
-          This page holds your child&apos;s data and privacy controls. Nothing changes until you confirm.
-        </p>
-        <p data-pin-difference className="font-sans text-xs leading-snug text-[#4A5675]">
-          {PIN_DIFFERENCE_LINE}
-        </p>
-        <input
-          value={gatePin}
-          onChange={(event) => setGatePin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-          inputMode="numeric"
-          autoComplete="off"
-          maxLength={4}
-          aria-label="Parent PIN"
-          className="h-12 rounded-2xl border-2 border-[#BDE9FB] px-3 font-heading text-lg tracking-[0.3em] text-[#031F82] outline-none"
-        />
-        {gateError ? (
-          <p role="alert" className="font-sans text-sm text-[#031F82]">
-            {gateError}
-          </p>
-        ) : null}
-        <button
-          type="submit"
-          disabled={gateBusy || !isFourDigitPin(gatePin)}
-          className="h-12 rounded-2xl border-b-4 border-[#021558] bg-[#031F82] font-heading text-sm font-bold uppercase tracking-wide text-white disabled:opacity-40"
-        >
-          Continue
-        </button>
-      </form>
+      <ParentDataPinGate kind="child" onUnlock={unlock} />
     );
   }
 

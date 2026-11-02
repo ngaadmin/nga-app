@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { PIN_DIFFERENCE_LINE } from "@/lib/parent/pin-copy";
+import { pinDifferenceLine } from "@/lib/parent/pin-copy";
 import { LockIcon } from "@/lib/dashboard/icons";
 import { isParentTabPin } from "@/lib/parent/parent-tab-pin";
 import {
@@ -14,18 +14,23 @@ import { cn } from "@/lib/utils/cn";
 
 type Phase = "loading" | "set" | "confirm" | "enter" | "forgot";
 
-const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
+export const PIN_GATE_CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
+const CARD_SHADOW = PIN_GATE_CARD_SHADOW;
 
-function PinBoxes({
+/** Four PIN boxes over one hidden numeric input. Shared by both PIN gates. */
+export function PinBoxes({
   value,
   onChange,
   disabled,
   label,
+  inputDataAttr = "data-parent-tab-pin-input",
 }: {
   value: string;
   onChange: (next: string) => void;
   disabled?: boolean;
   label: string;
+  /** Test hook on the hidden input. */
+  inputDataAttr?: string;
 }) {
   return (
     <div className="relative mx-auto mt-3 w-fit">
@@ -43,7 +48,7 @@ function PinBoxes({
         ))}
       </div>
       <input
-        data-parent-tab-pin-input
+        {...{ [inputDataAttr]: "" }}
         aria-label={label}
         type="password"
         inputMode="numeric"
@@ -78,8 +83,11 @@ export function ParentPinGate({
   enterBody,
   onUnlocked,
   className,
+  childCount,
 }: {
   parentName: string;
+  /** Linked children, for "your child's" vs "your children's" copy. */
+  childCount?: number;
   /** Line under "Enter your Parent Hub PIN". */
   enterBody?: string;
   onUnlocked: (pass: string) => void | Promise<void>;
@@ -269,7 +277,7 @@ export function ParentPinGate({
         data-pin-difference
         className="mx-auto mt-1.5 max-w-[17rem] font-sans text-[11.5px] leading-snug text-[#4A5675]"
       >
-        {PIN_DIFFERENCE_LINE}
+        {pinDifferenceLine(childCount)}
       </p>
 
       {phase === "forgot" ? (

@@ -276,7 +276,7 @@ describe("history and activity copy", () => {
       "Gave consent for delta4",
       "Leaderboard kept off",
     ]);
-    expect(historySummary(entries)).toBe("Latest: 12 Oct 2026, Leaderboard kept off");
+    expect(historySummary(entries)).toBe("Latest: Oct 12, 2026, Leaderboard kept off");
     expect(entries[0]?.detail).toBe("");
   });
 
@@ -317,16 +317,19 @@ describe("history and activity copy", () => {
         {
           createdAt: "2026-10-20T09:00:00",
           eventType: "lesson_completed",
-          metadata: { skill: "Catch Impulse Spending" },
+          lessonNumber: 1,
         },
         {
           createdAt: "2026-10-17T09:00:00",
           eventType: "medal_earned",
-          metadata: { tier: "bronze", skill: "Choose Needs Over Wants" },
+          lessonNumber: 2,
+          metadata: { tier: "bronze", skill: "put-needs-first" },
         },
       ],
       walletSpends: [{ at: "2026-10-19T09:00:00", points: 150 }],
       vaultMoves: [{ at: "2026-10-18T09:00:00", title: "Moved $5.00 to Save" }],
+      lessonTitle: (lessonNumber) =>
+        lessonNumber === 1 ? "The spending spree" : null,
     });
     expect(rows.map((row) => row.title)).toEqual([
       "Finished a lesson",
@@ -334,8 +337,51 @@ describe("history and activity copy", () => {
       "Moved $5.00 to Save",
       "Bronze medal",
     ]);
-    expect(rows.map((row) => row.when)).toEqual(["Today", "Yesterday", "18 Oct", "17 Oct"]);
+    expect(rows.map((row) => row.icon)).toEqual([
+      "lesson",
+      "coins",
+      "vault",
+      "medal-bronze",
+    ]);
+    // US dates ("Oct 18"), never day-first.
+    expect(rows.map((row) => row.when)).toEqual(["Today", "Yesterday", "Oct 18", "Oct 17"]);
     expect(rows.some((row) => /xp/i.test(row.title) && /coin/i.test(row.title))).toBe(false);
+  });
+
+  it("shows a lesson title or skill name, never a raw slug", () => {
+    const rows = buildRecentActivity({
+      now: new Date("2026-10-20T12:00:00"),
+      usageEvents: [
+        {
+          createdAt: "2026-10-20T09:00:00",
+          eventType: "medal_earned",
+          lessonNumber: 4,
+          metadata: { tier: "silver", skill: "stop-and-think" },
+        },
+        {
+          createdAt: "2026-10-19T09:00:00",
+          eventType: "medal_earned",
+          lessonNumber: 9,
+          metadata: { tier: "gold", skill: "stop-and-think" },
+        },
+        {
+          createdAt: "2026-10-18T09:00:00",
+          eventType: "lesson_completed",
+          lessonNumber: 3,
+        },
+      ],
+      walletSpends: [],
+      vaultMoves: [],
+      lessonTitle: (lessonNumber) =>
+        lessonNumber === 4 ? "The countdown trap" : null,
+    });
+    expect(rows.map((row) => row.detail)).toEqual([
+      "The countdown trap",
+      "Catch Impulse Spending",
+      "Lesson 3",
+    ]);
+    expect(rows.map((row) => row.icon)).toEqual(["medal-silver", "medal-gold", "lesson"]);
+    expect(rows.some((row) => row.detail.includes("-"))).toBe(false);
   });
 
   it("shows the first six student names and the rest as a count", () => {

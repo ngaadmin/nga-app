@@ -3,6 +3,8 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+
+import { lessonTitleFor } from "@/lib/academy/lessons/payload/lesson-titles";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import {
   assessParentPin,
@@ -188,6 +190,7 @@ function activityFor(payload: unknown, events: readonly Record<string, unknown>[
   const moves = Array.isArray(vault?.ledger) ? vault.ledger : [];
   return buildRecentActivity({
     now: new Date(),
+    lessonTitle: lessonTitleFor,
     usageEvents: events.map((event) => {
       const metadata = asRecord(event.metadata);
       return {
@@ -265,6 +268,18 @@ export async function parentDataGrantActive(): Promise<boolean> {
   const user = await signedInUser();
   if (!user) return false;
   return grantMatches(user.id);
+}
+
+/** Linked child count for the Parent PIN gate copy. No PIN needed: count only. */
+export async function loadParentLinkedChildCount(): Promise<number | null> {
+  const user = await signedInUser();
+  if (!user) return null;
+  try {
+    const listed = await listLinkedChildrenForCurrentParent();
+    return listed.ok ? listed.children.length : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function unlockParentDataView(

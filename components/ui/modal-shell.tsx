@@ -25,6 +25,11 @@ type ModalShellProps = {
    * The nav is outside the dialog, so it is not marked aria-modal.
    */
   clearBottomNav?: boolean;
+  /**
+   * Keep the backdrop over the whole screen (bottom nav dimmed too) but sit
+   * the card above the bottom nav, so a bottom sheet never collides with it.
+   */
+  liftAboveBottomNav?: boolean;
   children: ReactNode;
 };
 
@@ -46,12 +51,14 @@ export function ModalShell({
   panelClassName,
   stretch = false,
   clearBottomNav = false,
+  liftAboveBottomNav = false,
   children,
 }: ModalShellProps) {
+  const measureNav = clearBottomNav || liftAboveBottomNav;
   const [navClearance, setNavClearance] = useState(0);
 
   useLayoutEffect(() => {
-    if (!isOpen || !clearBottomNav) return;
+    if (!isOpen || !measureNav) return;
 
     // Clear everything from the nav's top edge down. The nav can grow after
     // the first measure without a window resize: iOS fills in
@@ -96,7 +103,7 @@ export function ModalShell({
       viewport?.removeEventListener("resize", sync);
       observer?.disconnect();
     };
-  }, [clearBottomNav, isOpen]);
+  }, [measureNav, isOpen]);
 
   if (!isOpen) return null;
 
@@ -123,7 +130,9 @@ export function ModalShell({
         style={
           clearBottomNav && navClearance > 0
             ? { bottom: navClearance }
-            : undefined
+            : liftAboveBottomNav && navClearance > 0
+              ? { paddingBottom: navClearance + 12 }
+              : undefined
         }
         onClick={handleBackdropClick}
       >

@@ -16,8 +16,8 @@ import { NavyButton, NavyOutlineButton, noteClass } from "@/components/privacy/d
 import { LeaderboardSwitch } from "@/components/privacy/leaderboard-switch";
 import { ProfileAvatarImage } from "@/components/dashboard/profile/profile-avatar";
 import type { ProfileAvatarId } from "@/lib/dashboard/profile-avatar";
-import { MedalCountChip } from "@/components/achievements/skills-collection-panel";
-import { SkillMedalVisual } from "@/components/academy/skill-medal-visual";
+import { MedalCountChip, SkillTile } from "@/components/achievements/skills-collection-panel";
+import { ACTIVITY_ICONS, JAR_ICONS } from "@/lib/dashboard/progress-icons-a";
 import { getVaultSkillTrophyById } from "@/lib/dashboard/skill-trophies";
 import { cn } from "@/lib/utils/cn";
 
@@ -225,10 +225,17 @@ export function LearnerDataScreen({
         <div className="mt-2.5 rounded-2xl bg-white px-3.5 pb-1 pt-3.5 shadow-md">
           <p className="font-heading text-[13px] font-bold text-[#4A5675]">Jars</p>
           <div className="mt-2.5 grid grid-cols-4 gap-1 pb-3">
-            {view.jars.map((jar) => (
-              <div key={jar.name} className="min-w-0 text-center">
-                <div className="mx-auto flex size-[52px] items-center justify-center rounded-full bg-[#E8F6FC] text-[26px]">
-                  {jar.emoji}
+            {view.jars.map((jar) => {
+              const { Icon, toneClassName } = JAR_ICONS[jar.id];
+              return (
+              <div key={jar.id} data-learner-data-jar={jar.id} className="min-w-0 text-center">
+                <div
+                  className={cn(
+                    "mx-auto flex size-[52px] items-center justify-center rounded-full",
+                    toneClassName,
+                  )}
+                >
+                  <Icon className="size-7" />
                 </div>
                 <p className="mt-1.5 whitespace-nowrap font-heading text-[12.5px] font-bold text-[#031F82]">
                   {jar.name}
@@ -237,7 +244,8 @@ export function LearnerDataScreen({
                   {formatMoney(jar.amount)}
                 </p>
               </div>
-            ))}
+              );
+            })}
           </div>
           {view.goals.length > 0 ? (
             <>
@@ -283,13 +291,21 @@ export function LearnerDataScreen({
           {view.activity.length === 0 ? (
             <p className="py-3 font-sans text-sm text-[#4A5675]">No activity yet.</p>
           ) : (
-            view.activity.map((item, index) => (
+            view.activity.map((item, index) => {
+              const { Icon, toneClassName } = ACTIVITY_ICONS[item.icon];
+              return (
               <div
                 key={`${item.title}-${index}`}
+                data-learner-data-activity={item.icon}
                 className={`flex items-center gap-3 py-2.5 ${index > 0 ? "border-t border-[#E1E8F6]" : ""}`}
               >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0FF] text-lg">
-                  {item.emoji}
+                <span
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-full",
+                    toneClassName,
+                  )}
+                >
+                  <Icon className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-heading text-sm font-bold text-[#031F82]">{item.title}</p>
@@ -299,7 +315,8 @@ export function LearnerDataScreen({
                   {item.when}
                 </p>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </section>
@@ -494,17 +511,7 @@ function AchievementsSection({ view }: { view: LearnerDataView }) {
           {skills.length > 0 ? (
             <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-4">
               {skills.map((skill) => (
-                <div key={skill.id} className="flex flex-col items-center text-center">
-                  <SkillMedalVisual
-                    skillNumber={skill.skillNumber}
-                    skillName={skill.label}
-                    tier={skill.tier}
-                    size="md"
-                  />
-                  <p className="mt-1.5 line-clamp-2 font-heading text-[11px] font-bold leading-tight text-[#031F82]">
-                    {skill.label}
-                  </p>
-                </div>
+                <SkillTile key={skill.id} skill={skill} />
               ))}
             </div>
           ) : (

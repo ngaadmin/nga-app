@@ -1,5 +1,6 @@
 "use client";
 
+import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AcademyMomentumHeader } from "@/components/academy/academy-momentum-header";
@@ -193,6 +194,10 @@ export function DashboardStatusHeader() {
       router.push(
         parentHubAccess.eligible ? `${PARENT_TAB_HREF}#to-settle` : "/dashboard/settings",
       );
+      // Already on the Hub: a same-page hash push doesn't reload it.
+      if (parentHubAccess.eligible) {
+        window.dispatchEvent(new Event(PARENT_HUB_TO_SETTLE_EVENT));
+      }
       return;
     }
     if (!xpExchange.ready || xpExchange.blocked) return;
@@ -254,6 +259,7 @@ export function DashboardStatusHeader() {
         onOpenSettings={openSettingsFromSwitcher}
         onOpenParentHub={canOpenParentHub ? openParentHubFromSwitcher : undefined}
         isParent={isParent}
+        isGuest={isGuestMode}
       />
 
       <FullHeightPanel

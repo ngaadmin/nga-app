@@ -42,8 +42,10 @@ export const PROFILE_SWITCHER_COPY = {
   settings: "Settings",
   /** Parent menu: their Settings holds both PINs. */
   settingsSubParent: "PINs, account and preferences",
-  /** Child and guest menus: no PINs there. */
+  /** Child menu: no PINs there. */
   settingsSub: "Account and preferences",
+  /** Guest menu: no account yet, so only preferences. */
+  settingsSubGuest: "Preferences",
   parentHub: "Parent Hub",
   parentHubSub: "Approvals and your child's progress",
   switchHeading: "Switch profile",
@@ -172,21 +174,37 @@ export function ProfileRow({
         name={profile.name}
         className="size-10 text-base"
       />
+      {/* The name gets the full row width on its own line and ellipsis-
+          truncates; it never breaks mid-word. Tag and "Coming soon" sit
+          on the line beneath. */}
       <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
         <span
           data-profile-switcher-name
-          className="line-clamp-2 max-w-full break-words font-heading text-[15px] font-bold leading-tight text-[#031F82]"
+          title={profile.name}
+          className="block w-full truncate font-heading text-[15px] font-bold leading-tight text-[#031F82]"
         >
           {profile.name}
         </span>
-        {tag ? (
-          <span
-            className={cn(
-              "rounded-full px-1.5 py-px font-heading text-[9.5px] font-bold uppercase tracking-[0.4px]",
-              profile.role === "parent" ? PARENT_ROLE_PILL_CLASS : TRACK_PILL_CLASS,
-            )}
-          >
-            {tag}
+        {tag || (disabled && !profile.isCurrent) ? (
+          <span className="flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            {tag ? (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-px font-heading text-[9.5px] font-bold uppercase tracking-[0.4px]",
+                  profile.role === "parent" ? PARENT_ROLE_PILL_CLASS : TRACK_PILL_CLASS,
+                )}
+              >
+                {tag}
+              </span>
+            ) : null}
+            {disabled && !profile.isCurrent ? (
+              <span
+                data-profile-switcher-soon
+                className="whitespace-nowrap text-[11px] font-semibold text-[#64748b]"
+              >
+                {PROFILE_SWITCHER_COPY.soon}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </span>
@@ -197,10 +215,6 @@ export function ProfileRow({
         >
           <CheckIcon className="size-4" />
           <span className="sr-only">{PROFILE_SWITCHER_COPY.here}</span>
-        </span>
-      ) : disabled ? (
-        <span className="shrink-0 text-[11px] font-semibold text-[#64748b]">
-          {PROFILE_SWITCHER_COPY.soon}
         </span>
       ) : null}
     </li>
@@ -266,6 +280,7 @@ export function ProfileSwitcherMenu({
   onOpenSettings,
   onOpenParentHub,
   isParent = false,
+  isGuest = false,
 }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
@@ -280,6 +295,8 @@ export function ProfileSwitcherMenu({
   onOpenParentHub?: () => void;
   /** Parents get the PINs subtitle on Settings; children and guests do not. */
   isParent?: boolean;
+  /** Guests have no account yet: Settings reads "Preferences". */
+  isGuest?: boolean;
 }) {
   const [box, setBox] = useState<MenuBox | null>(null);
   const [scrimTop, setScrimTop] = useState(0);
@@ -387,7 +404,9 @@ export function ProfileSwitcherMenu({
           sub={
             isParent
               ? PROFILE_SWITCHER_COPY.settingsSubParent
-              : PROFILE_SWITCHER_COPY.settingsSub
+              : isGuest
+                ? PROFILE_SWITCHER_COPY.settingsSubGuest
+                : PROFILE_SWITCHER_COPY.settingsSub
           }
           onClick={onOpenSettings}
         />

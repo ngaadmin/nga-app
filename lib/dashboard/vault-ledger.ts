@@ -109,7 +109,7 @@ export function partitionLedgerEntries(entries: readonly LedgerEntry[]): {
 }
 
 export function formatLedgerRowDate(timestamp: number): string {
-  return new Intl.DateTimeFormat("en-AU", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",

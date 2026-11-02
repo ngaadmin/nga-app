@@ -24,6 +24,7 @@ import {
 import { convertToRegisteredProfile } from "@/lib/onboarding/guest-session";
 import { upsertRegisteredAccount } from "@/lib/onboarding/registered-accounts";
 import { ParentPinGate } from "@/components/parent/parent-pin-gate";
+import { PARENT_HUB_TO_SETTLE_EVENT } from "@/lib/parent/parent-hub-events";
 import { TermsConsentCheckbox } from "@/components/legal/terms-consent-checkbox";
 import { settleHelpLine } from "@/lib/parent/parent-tab-copy";
 import {
@@ -51,9 +52,11 @@ const CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 export function ParentTabScreen({
   parentUserId,
   parentName,
+  childCount,
 }: {
   parentUserId: string;
   parentName: string;
+  childCount?: number;
 }) {
   const [unlocked, setUnlocked] = useState(false);
   const [gateKey, setGateKey] = useState(0);
@@ -152,6 +155,7 @@ export function ParentTabScreen({
           <ParentPinGate
             key={`${parentUserId}:${gateKey}`}
             parentName={parentName}
+            childCount={childCount}
             className="mx-0"
             enterBody={`Hi${parentName ? ` ${parentName}` : ""}. Enter your Parent Hub PIN to open the Parent Hub.`}
             onUnlocked={unlock}
@@ -379,12 +383,29 @@ function UnlockedView({
     onSubpageChange?.(subpageOpen);
   }, [onSubpageChange, subpageOpen]);
 
-  /** Coins tap from the header lands on #to-settle once the Hub loads. */
+  /**
+   * Coins tap from the header lands on #to-settle once the Hub loads: scroll
+   * there and briefly highlight it, so it reads as the answer to the tap even
+   * when the page is too short to scroll. A tap while already here does too.
+   */
+  const [settleFlash, setSettleFlash] = useState(false);
   useEffect(() => {
     if (!hasData || typeof window === "undefined") return;
-    if (window.location.hash !== "#to-settle") return;
-    const target = document.getElementById("to-settle");
-    target?.scrollIntoView({ block: "start", behavior: "smooth" });
+    let timer: number | undefined;
+    const focusSettle = () => {
+      const target = document.getElementById("to-settle");
+      if (!target) return;
+      target.scrollIntoView({ block: "start", behavior: "smooth" });
+      setSettleFlash(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setSettleFlash(false), 1800);
+    };
+    if (window.location.hash === "#to-settle") focusSettle();
+    window.addEventListener(PARENT_HUB_TO_SETTLE_EVENT, focusSettle);
+    return () => {
+      window.removeEventListener(PARENT_HUB_TO_SETTLE_EVENT, focusSettle);
+      window.clearTimeout(timer);
+    };
   }, [hasData]);
 
   const openProgress = useCallback(
@@ -551,8 +572,10 @@ function UnlockedView({
       <section
         id="to-settle"
         data-parent-tab-needs-ok
+        data-to-settle-highlight={settleFlash ? "" : undefined}
         className={cn(
-          "scroll-mt-4",
+          "scroll-mt-4 transition-[box-shadow,background-color] duration-500",
+          settleFlash && "!bg-[#FFEBC2] ring-4 ring-[#FFA503]/45",
           "mt-3 rounded-2xl border-2 border-[#FFA503] bg-[#FFF8EA] px-3.5 pb-1 pt-[13px]",
           CARD_SHADOW,
         )}
@@ -657,9 +680,10 @@ function UnlockedView({
           setSettle(null);
         }}
         layer="toast"
+        liftAboveBottomNav
         labelledBy="parent-tab-settle-title"
         backdropClassName="bg-[#031F82]/55"
-        panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
+        panelClassName="max-h-full overflow-y-auto rounded-2xl border-0 bg-white p-5 shadow-md"
       >
         {settle ? (
           <div data-parent-tab-settle-sheet>
@@ -715,9 +739,10 @@ function UnlockedView({
           setReview(null);
         }}
         layer="toast"
+        liftAboveBottomNav
         labelledBy="parent-tab-review-title"
         backdropClassName="bg-[#031F82]/55"
-        panelClassName="rounded-2xl border-0 bg-white p-5 shadow-md"
+        panelClassName="max-h-full overflow-y-auto rounded-2xl border-0 bg-white p-5 shadow-md"
       >
         {review ? (
           <div data-parent-tab-review-sheet>

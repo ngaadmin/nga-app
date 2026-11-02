@@ -44,7 +44,7 @@ import {
 } from "@/lib/dashboard/profile-deep-link";
 
 const GUEST_STATUS_ROW_CLASS =
-  "grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto]";
+  "grid-cols-[max-content_minmax(0,1fr)_auto]";
 
 /**
  * Shell-level status strip. Avatar (profile and medals), username, streak,

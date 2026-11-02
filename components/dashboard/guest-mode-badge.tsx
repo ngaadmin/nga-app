@@ -67,7 +67,7 @@ export function GuestModeBadge({
           className={cn(
             "font-bold leading-tight text-[#031F82]",
             // Top bar: one line, so the guest name keeps its room.
-            !showHandle && "whitespace-nowrap text-[12px]",
+            !showHandle && "whitespace-nowrap text-[11px]",
           )}
         >
           {saveProgressText}

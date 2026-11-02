@@ -195,7 +195,18 @@ function DetailRow({
       </span>
       <span className="min-w-0">
         <span className="block font-sans text-[13px] font-medium text-[#4A5675]">{label}</span>
-        <span className="block break-all font-sans text-[15px] font-semibold text-[#031F82]">{value}</span>
+        <span className="block font-sans text-[15px] font-semibold text-[#031F82] [overflow-wrap:anywhere]">
+          {/* Long emails wrap after the "@" instead of mid-word. */}
+          {value.includes("@") ? (
+            <>
+              {value.slice(0, value.indexOf("@") + 1)}
+              <wbr />
+              {value.slice(value.indexOf("@") + 1)}
+            </>
+          ) : (
+            value
+          )}
+        </span>
       </span>
     </div>
   );

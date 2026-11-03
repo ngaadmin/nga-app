@@ -1,11 +1,15 @@
 import type { ReactElement } from "react";
-import { VentureBuildingArt, type BuildingFloorView } from "@/components/launchpad/venture-test/venture-building";
+import { VentureBuildingSmall, type BuildingFloorView } from "@/components/launchpad/venture-test/venture-building";
 import { SVG_HEADING_FONT, VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_ORANGE } from "@/components/launchpad/venture-test/venture-test-ui";
 
-/** Onboarding art always shows the starting building: L1 open, L2 to L5 locked. */
+/** Onboarding art always shows the starting building: L1 open, the rest locked, no window lit. */
 function onboardingFloors(floors: readonly BuildingFloorView[]): BuildingFloorView[] {
-  return floors.map((f) => ({ ...f, state: f.level === 1 ? "current" : "locked" }));
+  return floors.map((f) => ({
+    ...f,
+    state: f.level === 1 ? "current" : "locked",
+    windows: f.windows.map((w) => ({ ...w, lit: false })),
+  }));
 }
 
 function Kit() {
@@ -86,9 +90,7 @@ export function VentureOnboarding({
       >
         <Kit />
         <Stack />
-        <svg x={226} y={57.08} width={150} height={232.3} viewBox="0 -44 390 604" overflow="visible">
-          <VentureBuildingArt floors={onboardingFloors(floors)} />
-        </svg>
+        <VentureBuildingSmall floors={onboardingFloors(floors)} />
         <path d="M382 270 V140 M375 150 l7 -10 7 10" stroke={VT.cta} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         {(
           [

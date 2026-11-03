@@ -1,6 +1,6 @@
 import { BTN_ORANGE, CheckIcon, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
-export function VentureTaskList(props: {
+export function BronzeTaskList(props: {
   level: number;
   bronzeTitle: string;
   tasks: readonly { id: string; title: string; done: boolean }[];

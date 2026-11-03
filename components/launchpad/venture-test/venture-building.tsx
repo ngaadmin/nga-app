@@ -5,11 +5,17 @@ import {
   VT,
 } from "@/components/launchpad/venture-test/venture-test-colors";
 
+export type BuildingWindowView = {
+  silverId: string;
+  /** A window lights up once its silver is done. */
+  lit: boolean;
+};
+
 export type BuildingFloorView = {
   level: number;
   name: string;
-  /** One window per silver on that floor. */
-  windows: number;
+  /** One window per silver on that floor, in plaque order. */
+  windows: readonly BuildingWindowView[];
   state: "done" | "current" | "locked";
 };
 
@@ -29,15 +35,28 @@ function Lock({ x, y }: { x: number; y: number }) {
 
 const BX = 55;
 const BW = 280;
-/** r3 draws the ground-floor shop front with three windows whatever L1's silver count. */
-export const GROUND_FLOOR_WINDOWS = 3;
+/** Upper-floor height in the art (unchanged from r3). */
+const FH = 92;
+/**
+ * Unscaled art box height (viewBox from y -44): 92 for the rooftop, 92 per
+ * upper floor, 144 for the ground floor and pavement. 5 floors = 604 (r3),
+ * 6 floors = 696 (r4-tall).
+ */
+export function buildingArtHeight(floorCount: number): number {
+  return 92 + Math.max(0, floorCount - 1) * FH + 144;
+}
+
+function windowFill(w: BuildingWindowView): string {
+  return w.lit ? VT.secondary : VT.windowOff;
+}
 
 /**
- * The venture building (design r3), drawn in a 390 x 604 box (viewBox y from
- * -44), matching Jasper's handoff-onboarding-A/building-r3.svg. Floors L2 to
- * L5 stack above the L1 ground floor; each upper floor has one window per
- * silver (r3 counts: L2 3, L3 6, L4 4, L5 4). The ground floor is the shop
- * front from r3 with its fixed three windows, awning and door.
+ * The venture building (design r4), matching Jasper's
+ * handoff-onboarding-A/building-r4-tall.svg at 1:1 (viewBox 0 -44 390 696 for
+ * six floors). Floors from the data stack above the L1 ground floor, the top
+ * level directly under the rooftop. Every floor, the ground floor included,
+ * has one window per silver, spaced evenly (r4: L1 2, L2 2, L3 4, L4 3, L5 2,
+ * L6 3). Windows carry class "win" and data-floor="Lx" as in the r4 SVG.
  */
 export function VentureBuildingArt({
   floors,
@@ -48,16 +67,15 @@ export function VentureBuildingArt({
   let k = 0;
   const key = () => `b${k++}`;
 
-  // Roof: parapet and the full r3 rooftop terrace (generated from building-r3.svg).
+  // Roof: parapet and the rooftop terrace (generated from building-r4-tall.svg).
   g.push(<VentureRooftopArt key={key()} />);
 
-  // Upper floors, L5 at the top down to L2.
+  // Upper floors, the top level first, down to L2.
   const upper = floors
     .filter((f) => f.level > 1)
     .sort((a, b) => b.level - a.level);
   upper.forEach((f, idx) => {
-    const y = 48 + idx * 92;
-    const lit = f.state !== "locked";
+    const y = 48 + idx * FH;
     const pillOn = f.state === "current";
     g.push(
       <rect key={key()} x={BX} y={y} width={BW} height={92} fill={VT.facade} />,
@@ -100,12 +118,17 @@ export function VentureBuildingArt({
     if (f.state === "locked")
       g.push(<Lock key={key()} x={BX + BW - 32} y={y + 14} />);
     const ww = 30;
-    const gap = (BW - 24 - f.windows * ww) / (f.windows + 1);
-    for (let i = 0; i < f.windows; i++) {
-      const x = BX + 12 + gap + i * (ww + gap);
+    const n = f.windows.length;
+    const gap = (BW - 24 - n * ww) / (n + 1);
+    f.windows.forEach((w, i) => {
+      const x = Math.round((BX + 12 + gap + i * (ww + gap)) * 100) / 100;
       g.push(
         <rect
           key={key()}
+          className="win"
+          data-floor={`L${f.level}`}
+          data-silver={w.silverId}
+          data-lit={w.lit ? "1" : "0"}
           x={x - 3}
           y={y + 38}
           width={ww + 6}
@@ -122,7 +145,7 @@ export function VentureBuildingArt({
           width={ww}
           height={30}
           rx={2}
-          fill={lit ? VT.secondary : VT.windowOff}
+          fill={windowFill(w)}
         />,
       );
       g.push(
@@ -146,12 +169,12 @@ export function VentureBuildingArt({
           fill={VT.ledge}
         />,
       );
-    }
+    });
   });
 
   // Ground floor (L1).
   const l1 = floors.find((f) => f.level === 1);
-  const y = 48 + upper.length * 92;
+  const y = 48 + upper.length * FH;
   const l1PillOn = l1?.state === "current";
   g.push(
     <rect key={key()} x={BX} y={y} width={BW} height={120} fill={VT.mist} />,
@@ -180,11 +203,21 @@ export function VentureBuildingArt({
       {`L1 · ${l1?.name ?? ""}`}
     </text>,
   );
-  for (let i = 0; i < GROUND_FLOOR_WINDOWS; i++) {
-    const x = BX + 22 + i * 48;
+  const dx = BX + 192;
+  // Window zone: pill inset to the awning's left edge (r4 rule).
+  const zl = BX + 12;
+  const zr = dx - 16;
+  const groundWindows = l1?.windows ?? [];
+  const gGap = (zr - zl - groundWindows.length * 30) / (groundWindows.length + 1);
+  groundWindows.forEach((w, i) => {
+    const x = Math.round((zl + gGap + i * (30 + gGap)) * 100) / 100;
     g.push(
       <rect
         key={key()}
+        className="win"
+        data-floor="L1"
+        data-silver={w.silverId}
+        data-lit={w.lit ? "1" : "0"}
         x={x - 3}
         y={y + 48}
         width={36}
@@ -201,7 +234,7 @@ export function VentureBuildingArt({
         width={30}
         height={34}
         rx={2}
-        fill={VT.secondary}
+        fill={windowFill(w)}
       />,
     );
     g.push(
@@ -225,8 +258,7 @@ export function VentureBuildingArt({
         fill={VT.ledge}
       />,
     );
-  }
-  const dx = BX + 192;
+  });
   g.push(
     <rect
       key={key()}
@@ -307,7 +339,10 @@ export function VentureBuildingArt({
   return <>{g}</>;
 }
 
-/** Full-size building for screen 1. */
+/** r4 frame: the r3 390 x 604 box. Taller art is scaled to fit, centered, top-anchored. */
+const FRAME_H = 604;
+
+/** Full-size building for screen 1 (building-r4.svg framing). */
 export function VentureBuilding({
   floors,
   label,
@@ -315,15 +350,34 @@ export function VentureBuilding({
   floors: readonly BuildingFloorView[];
   label: string;
 }) {
+  const scale = Math.min(1, FRAME_H / buildingArtHeight(floors.length));
   return (
     <svg
       role="img"
       aria-label={label}
       width="390"
       height="573"
-      viewBox="0 -44 390 604"
+      viewBox={`0 -44 390 ${FRAME_H}`}
       className="mx-auto mt-1 block shrink-0"
     >
+      <g transform={`translate(195 -44) scale(${scale.toFixed(6)}) translate(-195 44)`}>
+        <VentureBuildingArt floors={floors} />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Small building for the first-time intro (building-r4-small.svg framing):
+ * the unscaled art in a box 232.3 high, centered in the 150 wide slot at x 226.
+ */
+export function VentureBuildingSmall({ floors }: { floors: readonly BuildingFloorView[] }) {
+  const artH = buildingArtHeight(floors.length);
+  const h = 232.3;
+  const w = (h * 390) / artH;
+  const x = 226 + (150 - w) / 2;
+  return (
+    <svg x={x.toFixed(2)} y={57.08} width={w.toFixed(2)} height={h} viewBox={`0 -44 390 ${artH}`} overflow="visible">
       <VentureBuildingArt floors={floors} />
     </svg>
   );

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { VENTURE_TEST_FLOORS, getVentureTestFloor } from "@/lib/launchpad/venture-test/venture-test-structure";
+import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
   advanceAfterTask,
@@ -20,7 +20,8 @@ import {
 } from "@/lib/launchpad/venture-test/venture-test-storage";
 import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-gate";
 
-const L1 = getVentureTestFloor(1);
+const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
+const L1 = FLOORS[0]!;
 
 function at<T>(list: readonly T[], i: number): T {
   const v = list[i];
@@ -33,9 +34,17 @@ function doneThrough(progress: VentureTestProgress, ids: string[]): VentureTestP
 }
 
 describe("venture test structure", () => {
-  it("has five floors with the design window counts", () => {
-    expect(VENTURE_TEST_FLOORS.map((f) => f.silvers.length)).toEqual([2, 3, 6, 4, 4]);
-    expect(L1.goal).toBe("Know what type of business to start, why it matters to you, and the goals you'll aim for.");
+  it("has the six r4 floors with the design window counts", () => {
+    expect(FLOORS.map((f) => [f.level, f.name, f.silvers.length])).toEqual([
+      [1, "Vision and Goals", 2],
+      [2, "Planning", 2],
+      [3, "Making", 4],
+      [4, "Selling", 3],
+      [5, "Growing", 2],
+      [6, "Budgeting", 3],
+    ]);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(16);
+    expect(L1.gold.title).toBe("Know what type of business to start, why it matters to you, and the goals you'll aim for.");
     expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Set your goals"]);
     expect(at(L1.silvers, 0).bronzes.map((b) => b.title)).toEqual(["Pick a business type", "Find the why", "Pick a cause"]);
     expect(at(L1.silvers, 1).bronzes.map((b) => b.title)).toEqual(["Set goals"]);
@@ -45,15 +54,15 @@ describe("venture test structure", () => {
 describe("venture test progress", () => {
   it("starts on level 1 with only the first plaque and door open", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
-    expect(currentLevel(p)).toBe(1);
-    expect(floorState(p, 2)).toBe("locked");
-    expect(silverStates(p, L1)).toEqual(["current", "locked"]);
+    expect(currentLevel(p, FLOORS)).toBe(1);
+    expect(floorState(p, FLOORS, 2)).toBe("locked");
+    expect(silverStates(p, FLOORS, L1)).toEqual(["current", "locked"]);
     expect(bronzeStates(p, at(L1.silvers, 0))).toEqual(["current", "locked", "locked"]);
   });
 
   it("shows a locked plaque's doors all locked", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
-    expect(bronzeStates(p, at(L1.silvers, 1), silverStates(p, L1)[1] !== "locked")).toEqual(["locked"]);
+    expect(bronzeStates(p, at(L1.silvers, 1), silverStates(p, FLOORS, L1)[1] !== "locked")).toEqual(["locked"]);
   });
 
   it("goes back to the doors after the last task of a bronze", () => {
@@ -77,15 +86,26 @@ describe("venture test progress", () => {
     let p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, all1);
     const lastB = at(s.bronzes, s.bronzes.length - 1);
     expect(advanceAfterTask(p, L1, s, lastB, lastB.tasks.length - 1)).toEqual({ kind: "silver-done" });
-    expect(silverStates(p, L1)).toEqual(["done", "current"]);
+    expect(silverStates(p, FLOORS, L1)).toEqual(["done", "current"]);
     expect(bronzeStates(p, at(L1.silvers, 1), true)).toEqual(["current"]);
     p = doneThrough(p, L1.silvers.flatMap((x) => x.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
     const s3 = at(L1.silvers, 1);
     const b3 = at(s3.bronzes, s3.bronzes.length - 1);
     expect(advanceAfterTask(p, L1, s3, b3, b3.tasks.length - 1)).toEqual({ kind: "floor-done" });
-    expect(floorState(p, 1)).toBe("done");
-    expect(currentLevel(p)).toBe(2);
-    expect(floorState(p, 2)).toBe("current");
+    expect(floorState(p, FLOORS, 1)).toBe("done");
+    expect(currentLevel(p, FLOORS)).toBe(2);
+    expect(floorState(p, FLOORS, 2)).toBe("current");
+  });
+
+  it("walks all six levels and ends on the top floor", () => {
+    let p = EMPTY_VENTURE_TEST_PROGRESS;
+    for (const floor of FLOORS) {
+      expect(currentLevel(p, FLOORS)).toBe(floor.level);
+      expect(floorState(p, FLOORS, floor.level)).toBe("current");
+      p = doneThrough(p, floor.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
+      expect(floorState(p, FLOORS, floor.level)).toBe("done");
+    }
+    expect(currentLevel(p, FLOORS)).toBe(6);
   });
 });
 

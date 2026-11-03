@@ -1,23 +1,15 @@
+import type { LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
+import { TaskScreen } from "@/components/launchpad/venture/task-screen-renderer";
 import { BTN_CYAN, BTN_WHITE, Heading, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
-
-function Block({ height, label }: { height: number; label: string }) {
-  return (
-    <div
-      className="mx-5 mb-3 flex items-center justify-center rounded-2xl bg-nga-mist font-heading text-[13px] font-semibold text-nga-slate"
-      style={{ height }}
-    >
-      {label}
-    </div>
-  );
-}
 
 /**
  * Workbook page. Previous and Next move freely between tasks; the learner
- * stays here until every task in the bronze is done.
+ * stays here until every task in the bronze is done. The task body is its
+ * typed screens from the content payload, drawn by the task screen registry.
  */
-export function VentureWorkbook(props: {
+export function TaskWorkbook(props: {
   level: number;
-  tasks: readonly { id: string; title: string; done: boolean }[];
+  tasks: readonly { id: string; title: string; done: boolean; screens: readonly LaunchpadTaskScreen[] }[];
   index: number;
   onBuilding: () => void;
   onCorridor: () => void;
@@ -62,10 +54,9 @@ export function VentureWorkbook(props: {
         })}
       </div>
       <Heading className="mb-2.5 mt-1.5">{task.title}</Heading>
-      {/* Workbook content is TBC: labelled placeholders only. */}
-      <Block height={90} label="Text block (placeholder)" />
-      <Block height={130} label="Illustration (placeholder)" />
-      <Block height={130} label="Interactive element (placeholder)" />
+      {task.screens.map((screen) => (
+        <TaskScreen key={screen.id} screen={screen} />
+      ))}
       <div className="mx-5 flex gap-3 pb-4">
         <button type="button" onClick={props.onPrevious} disabled={index === 0} className={`${BTN_WHITE} flex-1`}>
           ‹ Previous

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
 import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-gate";
 import { VENTURE_BLUEPRINTS } from "@/lib/launchpad/venture-blueprints";
+import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
+import { loadLaunchpadVenture } from "@/lib/launchpad/content/fetch-published";
+import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 
 export const dynamic = "force-dynamic";
 
@@ -17,16 +20,38 @@ export const metadata: Metadata = {
  * deployments and local dev; 404 in production. Progress is a local stub.
  * The landing page is the Launchpad home (Business Ideas carousel);
  * `?venture=<id>` deep-links into a venture, `?reset=1` clears local progress.
+ * Venture content (floors, plaques, doors, tasks, task screens) is loaded per
+ * venture by loadLaunchpadVenture: the database when LAUNCHPAD_CONTENT_DB is
+ * on for that venture, otherwise the bundled seed. `?draft=<id|latest>` reads
+ * a draft version on preview only.
  */
 export default async function TestLaunchpadVenturePage({
   searchParams,
 }: {
-  searchParams: Promise<{ venture?: string; reset?: string }>;
+  searchParams: Promise<{ venture?: string; reset?: string; draft?: string }>;
 }) {
   if (!isVentureTestEnabled()) notFound();
   const params = await searchParams;
   const ventureId = params.venture ?? null;
   if (ventureId && !VENTURE_BLUEPRINTS.some((v) => v.id === ventureId)) notFound();
   const ventureTitles = Object.fromEntries(VENTURE_BLUEPRINTS.map((v) => [v.id, v.title]));
-  return <VentureFlow initialVentureId={ventureId} ventureTitles={ventureTitles} reset={params.reset === "1"} />;
+  const ids = [...new Set([...liveVentureIds(), ...(ventureId ? [ventureId] : [])])];
+  const loads = await Promise.all(ids.map((id) => loadLaunchpadVenture(id, { draft: params.draft })));
+  const ventures: Record<string, LaunchpadVentureView> = Object.fromEntries(
+    ids.map((id, i) => {
+      const load = loads[i]!;
+      const view: LaunchpadVentureView = load.ok
+        ? { ok: true, payload: load.venture, versionId: load.versionId, source: load.source }
+        : { ok: false };
+      return [id, view];
+    }),
+  );
+  return (
+    <VentureFlow
+      initialVentureId={ventureId}
+      ventureTitles={ventureTitles}
+      ventures={ventures}
+      reset={params.reset === "1"}
+    />
+  );
 }

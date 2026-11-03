@@ -5,14 +5,15 @@
  * door, silver plaque and floor is done or current) is derived from it, so
  * a real backend only has to persist completed task ids per learner and
  * venture. See `venture-test-storage.ts` for the client-side stub.
+ *
+ * The floors come from the venture's content payload (database or bundled
+ * seed), so any number of levels works (the r4 building has six).
  */
-import {
-  VENTURE_TEST_FLOORS,
-  getVentureTestFloor,
-  type VentureTestBronze,
-  type VentureTestFloor,
-  type VentureTestSilver,
-} from "@/lib/launchpad/venture-test/venture-test-structure";
+import type {
+  LaunchpadBronze as VentureTestBronze,
+  LaunchpadFloor as VentureTestFloor,
+  LaunchpadSilver as VentureTestSilver,
+} from "@/lib/launchpad/content/types";
 
 export type VentureTestProgress = {
   completedTaskIds: readonly string[];
@@ -37,20 +38,29 @@ export function isFloorDone(progress: VentureTestProgress, floor: VentureTestFlo
 }
 
 /** The first floor that is not done (the top floor once everything is done). */
-export function currentLevel(progress: VentureTestProgress): number {
-  const open = VENTURE_TEST_FLOORS.find((f) => !isFloorDone(progress, f));
-  return open ? open.level : VENTURE_TEST_FLOORS.length;
+export function currentLevel(progress: VentureTestProgress, floors: readonly VentureTestFloor[]): number {
+  const open = floors.find((f) => !isFloorDone(progress, f));
+  return open ? open.level : floors.length;
 }
 
-export function floorState(progress: VentureTestProgress, level: number): NodeState {
-  const floor = getVentureTestFloor(level);
+export function floorState(
+  progress: VentureTestProgress,
+  floors: readonly VentureTestFloor[],
+  level: number,
+): NodeState {
+  const floor = floors.find((f) => f.level === level);
+  if (!floor) throw new Error(`Unknown venture floor: ${level}`);
   if (isFloorDone(progress, floor)) return "done";
-  return level === currentLevel(progress) ? "current" : "locked";
+  return level === currentLevel(progress, floors) ? "current" : "locked";
 }
 
 /** Plaque states on a floor: done ones first, one current, the rest locked. */
-export function silverStates(progress: VentureTestProgress, floor: VentureTestFloor): NodeState[] {
-  const open = floorState(progress, floor.level) !== "locked";
+export function silverStates(
+  progress: VentureTestProgress,
+  floors: readonly VentureTestFloor[],
+  floor: VentureTestFloor,
+): NodeState[] {
+  const open = floorState(progress, floors, floor.level) !== "locked";
   let seenCurrent = false;
   return floor.silvers.map((s) => {
     if (isSilverDone(progress, s)) return "done";

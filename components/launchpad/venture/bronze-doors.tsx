@@ -54,7 +54,8 @@ function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: st
   );
 }
 
-export function VentureDoors(props: {
+/** One door per bronze in the silver, stacked from the top. */
+export function BronzeDoors(props: {
   level: number;
   silverTitle: string;
   bronzes: readonly { id: string; title: string; subtitle?: string; state: NodeState }[];

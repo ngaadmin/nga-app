@@ -65,18 +65,14 @@ describe("Launchpad home data (r12)", () => {
   });
 });
 
-describe("r3 building window counts", () => {
-  it("upper floors match Jasper's r3 art (one window per silver)", async () => {
-    const { VENTURE_TEST_FLOORS } =
-      await import("@/lib/launchpad/venture-test/venture-test-structure");
-    const counts = Object.fromEntries(
-      VENTURE_TEST_FLOORS.map((f) => [f.level, f.silvers.length]),
+describe("r4 building window counts", () => {
+  it("every floor matches Jasper's r4 art (one window per silver)", async () => {
+    const { launchpadTestVentureSeed } = await import(
+      "@/lib/launchpad/content/seed/launchpad-test-venture-seed"
     );
-    expect({ 2: counts[2], 3: counts[3], 4: counts[4], 5: counts[5] }).toEqual({
-      2: 3,
-      3: 6,
-      4: 4,
-      5: 4,
-    });
+    const counts = Object.fromEntries(
+      launchpadTestVentureSeed("dog-walking").floors.map((f) => [f.level, f.silvers.length]),
+    );
+    expect(counts).toEqual({ 1: 2, 2: 2, 3: 4, 4: 3, 5: 2, 6: 3 });
   });
 });

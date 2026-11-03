@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { VENTURE_TEST_FLOORS, getVentureTestFloor } from "@/lib/launchpad/venture-test/venture-test-structure";
+import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
+import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import {
   advanceAfterTask,
   bronzeStates,
@@ -10,6 +11,7 @@ import {
   firstOpenTaskIndex,
   floorState,
   isFloorDone,
+  isSilverDone,
   silverStates,
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -23,10 +25,11 @@ import {
 import { VentureTestShell } from "@/components/launchpad/venture-test/venture-test-shell";
 import { VentureBuilding, type BuildingFloorView } from "@/components/launchpad/venture-test/venture-building";
 import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
-import { VentureCorridor } from "@/components/launchpad/venture-test/venture-corridor";
-import { VentureDoors } from "@/components/launchpad/venture-test/venture-doors";
-import { VentureTaskList } from "@/components/launchpad/venture-test/venture-tasks";
-import { VentureWorkbook } from "@/components/launchpad/venture-test/venture-workbook";
+import { FloorTemplate } from "@/components/launchpad/venture/floor-templates";
+import { BronzeDoors } from "@/components/launchpad/venture/bronze-doors";
+import { BronzeTaskList } from "@/components/launchpad/venture/bronze-task-list";
+import { TaskWorkbook } from "@/components/launchpad/venture/task-workbook";
+import { VentureUnavailable } from "@/components/launchpad/venture/venture-unavailable";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
@@ -45,13 +48,20 @@ type View =
 /** Doors close, the indicator moves, then the next corridor opens. */
 const LIFT_MS = 2400;
 
-function buildingFloors(progress: VentureTestProgress): BuildingFloorView[] {
-  return VENTURE_TEST_FLOORS.map((f) => ({
+/** Building view from the content: one window per silver, lit once that silver is done. */
+export function buildingFloors(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): BuildingFloorView[] {
+  return floors.map((f) => ({
     level: f.level,
     name: f.name,
-    windows: f.silvers.length,
-    state: floorState(progress, f.level),
+    windows: f.silvers.map((s) => ({ silverId: s.id, lit: isSilverDone(progress, s) })),
+    state: floorState(progress, floors, f.level),
   }));
+}
+
+function floorAt(floors: readonly LaunchpadFloor[], level: number): LaunchpadFloor {
+  const floor = floors.find((f) => f.level === level);
+  if (!floor) throw new Error(`Unknown venture floor: ${level}`);
+  return floor;
 }
 
 /** Display name on the landing page tile (for the In Progress card). */
@@ -62,12 +72,19 @@ function tileName(ventureId: string): string | null {
 }
 
 /** Ventures underway in this browser: intro seen or any task done. */
-function loadInProgress(ids: string[], titles: Record<string, string>): InProgressVenture[] {
+function loadInProgress(
+  ids: string[],
+  titles: Record<string, string>,
+  ventures: Record<string, LaunchpadVentureView>,
+): InProgressVenture[] {
   return ids.flatMap((id) => {
+    const content = ventures[id];
+    if (!content?.ok) return [];
+    const floors = content.payload.floors;
     const p = loadVentureTestProgress(id);
     if (!hasSeenVentureTestOnboarding(id) && p.completedTaskIds.length === 0) return [];
-    const floor = getVentureTestFloor(currentLevel(p));
-    const states = silverStates(p, floor);
+    const floor = floorAt(floors, currentLevel(p, floors));
+    const states = silverStates(p, floors, floor);
     return [
       {
         ventureId: id,
@@ -86,14 +103,18 @@ function loadInProgress(ids: string[], titles: Record<string, string>): InProgre
  * tapping a live tile opens that venture. The building intro shows only the
  * first time a venture is opened, then the learner lands on its building.
  * `?venture=<id>` deep-links straight into a venture (test convenience).
+ * Floors, plaques, doors, tasks and task screens all come from `ventures`
+ * (one loaded content payload per venture, database or bundled seed).
  */
 export function VentureFlow({
   initialVentureId,
   ventureTitles,
+  ventures,
   reset,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
+  ventures: Record<string, LaunchpadVentureView>;
   reset: boolean;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
@@ -117,15 +138,15 @@ export function VentureFlow({
   );
 
   const toHome = useCallback(() => {
-    setInProgress(loadInProgress(liveVentureIds(), ventureTitles));
+    setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
     go({ screen: "home" });
-  }, [go, ventureTitles]);
+  }, [go, ventureTitles, ventures]);
 
   useEffect(() => {
     if (reset) {
       for (const id of new Set([...liveVentureIds(), ...(initialVentureId ? [initialVentureId] : [])])) clearVentureTestProgress(id);
     }
-    setInProgress(loadInProgress(liveVentureIds(), ventureTitles));
+    setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
     if (initialVentureId) openVenture(initialVentureId);
     // Run once per load; reset and the deep link come from the URL.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,10 +166,20 @@ export function VentureFlow({
     );
   }
 
-  if (!progress || !ventureId) {
+  const content = ventureId ? ventures[ventureId] : undefined;
+  if (ventureId && !content?.ok) {
+    return (
+      <VentureTestShell>
+        <VentureUnavailable onBack={toHome} />
+      </VentureTestShell>
+    );
+  }
+
+  if (!progress || !ventureId || !content?.ok) {
     // White frame while the local progress stub loads.
     return <VentureTestShell>{null}</VentureTestShell>;
   }
+  const floors = content.payload.floors;
 
   const save = (next: VentureTestProgress) => {
     setProgress(next);
@@ -163,7 +194,7 @@ export function VentureFlow({
     case "onboarding":
       body = (
         <VentureOnboarding
-          floors={buildingFloors(progress)}
+          floors={buildingFloors(progress, floors)}
           onStart={() => {
             markVentureTestOnboardingSeen(ventureId);
             toBuilding();
@@ -172,14 +203,14 @@ export function VentureFlow({
       );
       break;
     case "building": {
-      const level = currentLevel(progress);
-      const allDone = isFloorDone(progress, getVentureTestFloor(VENTURE_TEST_FLOORS.length));
+      const level = currentLevel(progress, floors);
+      const allDone = isFloorDone(progress, floorAt(floors, floors.length));
       body = (
         <section className="flex flex-1 flex-col">
           <BackCrumb label="Launchpad" onClick={toHome} />
           <Heading>{ventureTitle}</Heading>
           <VentureBuilding
-            floors={buildingFloors(progress)}
+            floors={buildingFloors(progress, floors)}
             label={`${ventureTitle} building. Level ${level} is open.`}
           />
           <div className="mx-5 -mt-1.5 pb-4">
@@ -192,16 +223,17 @@ export function VentureFlow({
       break;
     }
     case "corridor": {
-      const floor = getVentureTestFloor(view.level);
-      const states = silverStates(progress, floor);
+      const floor = floorAt(floors, view.level);
+      const states = silverStates(progress, floors, floor);
       const done = isFloorDone(progress, floor);
-      const next = view.level < VENTURE_TEST_FLOORS.length ? getVentureTestFloor(view.level + 1) : null;
+      const next = view.level < floors.length ? floorAt(floors, view.level + 1) : null;
       body = (
-        <VentureCorridor
+        <FloorTemplate
           key={`${view.level}-${view.entering}`}
+          floorType={floor.floorType}
           level={floor.level}
           floorName={floor.name}
-          goal={floor.goal}
+          goal={floor.gold.title}
           entering={view.entering}
           silvers={floor.silvers.map((s, i) => ({ id: s.id, title: s.title, state: states[i] ?? "locked" }))}
           note={!done && floor.silvers.some((s) => s.placeholder) ? "Plaque titles TBC" : undefined}
@@ -220,14 +252,14 @@ export function VentureFlow({
       break;
     }
     case "doors": {
-      const floor = getVentureTestFloor(view.level);
+      const floor = floorAt(floors, view.level);
       const silverIndex = floor.silvers.findIndex((s) => s.id === view.silverId);
       const silver = floor.silvers[silverIndex]!;
-      const open = silverStates(progress, floor)[silverIndex] !== "locked";
+      const open = silverStates(progress, floors, floor)[silverIndex] !== "locked";
       const states = bronzeStates(progress, silver, open);
       const prevTitle = floor.silvers[silverIndex - 1]?.title;
       body = (
-        <VentureDoors
+        <BronzeDoors
           level={floor.level}
           silverTitle={silver.title}
           bronzes={silver.bronzes.map((b, i) => ({ id: b.id, title: b.title, subtitle: b.subtitle, state: states[i] ?? "locked" }))}
@@ -243,14 +275,19 @@ export function VentureFlow({
     }
     case "tasks":
     case "workbook": {
-      const floor = getVentureTestFloor(view.level);
+      const floor = floorAt(floors, view.level);
       const silver = floor.silvers.find((s) => s.id === view.silverId)!;
       const bronze = silver.bronzes.find((b) => b.id === view.bronzeId)!;
-      const tasks = bronze.tasks.map((t) => ({ id: t.id, title: t.title, done: progress.completedTaskIds.includes(t.id) }));
+      const tasks = bronze.tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        done: progress.completedTaskIds.includes(t.id),
+        screens: t.screens,
+      }));
       const where = { level: floor.level, silverId: silver.id, bronzeId: bronze.id };
       if (view.screen === "tasks") {
         body = (
-          <VentureTaskList
+          <BronzeTaskList
             level={floor.level}
             bronzeTitle={bronze.title}
             tasks={tasks}
@@ -263,7 +300,7 @@ export function VentureFlow({
       } else {
         const index = view.index;
         body = (
-          <VentureWorkbook
+          <TaskWorkbook
             level={floor.level}
             tasks={tasks}
             index={index}
@@ -293,7 +330,7 @@ export function VentureFlow({
       break;
     }
     case "lift": {
-      const to = getVentureTestFloor(view.from + 1);
+      const to = floorAt(floors, view.from + 1);
       body = <VentureLift from={view.from} to={to.level} toName={to.name} />;
       break;
     }
@@ -301,7 +338,9 @@ export function VentureFlow({
 
   return (
     <VentureTestShell>
-      {body}
+      <div className="flex flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
+        {body}
+      </div>
     </VentureTestShell>
   );
 }

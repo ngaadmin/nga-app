@@ -57,6 +57,11 @@ function Plaque({ label, state, onOpen }: { label: string; state: NodeState; onO
   );
 }
 
+/**
+ * Floor template "corridor": the gold milestone on the wall, then one plaque
+ * per silver (1 to 6, centered in the wall), lift doors on entry, and the
+ * level-complete state. Registered in floor-templates.tsx.
+ */
 export type CorridorProps = {
   level: number;
   floorName: string;
@@ -70,7 +75,7 @@ export type CorridorProps = {
   onOpenSilver: (silverId: string) => void;
 };
 
-export function VentureCorridor(props: CorridorProps) {
+export function CorridorFloor(props: CorridorProps) {
   const { level, floorName, goal, silvers, entering, note, complete, onBack, onOpenSilver } = props;
   const plaques: ReactNode = silvers.map((s) => (
     <Plaque key={s.id} label={s.title} state={s.state} onOpen={() => onOpenSilver(s.id)} />

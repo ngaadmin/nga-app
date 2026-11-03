@@ -57,7 +57,7 @@ describe("privacy policy source", () => {
       "Deleting an account doesn't cancel a subscription, whether you bought it on our website or through an app store.",
     );
     expect(text).toContain(
-      "After a parent enters the parent PIN, a cookie keeps \"My child's data\" open for 15 minutes.",
+      "After a parent enters the Parent PIN to open the Parent Hub, a cookie keeps their children's data and \"Your data & privacy\" open for 15 minutes, renewed while the Parent Hub stays open.",
     );
     expect(text).toContain(
       "please contact our Privacy Officer at info@nextgenachievers.com.",

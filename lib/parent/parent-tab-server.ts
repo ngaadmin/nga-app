@@ -390,13 +390,12 @@ export async function loadParentTabData(
   const linked: ParentTabChildSummary[] = shown.map((row) => {
     const username = String(row.username).trim();
     if (row.account_status !== "active") {
+      // Identity only: no progress, usage or wallet field for a waiting child.
       return {
         userId: row.id,
         username,
         cohort: asCohort(row.curriculum_cohort),
         status: "waiting" as const,
-        lessonsDone: 0,
-        coins: 0,
       };
     }
     const progress = payloads.get(row.id) ?? {};

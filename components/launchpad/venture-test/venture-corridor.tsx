@@ -96,17 +96,13 @@ export function VentureCorridor(props: CorridorProps) {
         {note && <p className="absolute inset-x-[26px] top-[478px] text-center text-xs text-[#8a9bb0]">{note}</p>}
         {complete && (
           <>
-            <div className="absolute inset-x-11 top-[476px] flex items-center gap-3 rounded-2xl bg-nga-ink px-3.5 py-3 text-white" role="status">
-              <span className="flex size-10 flex-none items-center justify-center rounded-full bg-nga-accent" aria-hidden="true">
-                <CheckIcon size={22} strokeWidth={2.4} />
-              </span>
-              <div>
-                <p className="font-heading text-base font-bold">Level {level} complete</p>
-                <p className="text-[12.5px] opacity-85">{complete.nextLabel ? `${complete.nextLabel} is unlocked` : "Every floor is done"}</p>
-              </div>
-            </div>
+            {/* Level complete: every plaque sealed, then the lift (design r3 screen 6, without the banner). */}
+            <p className="absolute inset-x-[26px] top-[486px] text-center font-heading text-[13px] font-semibold text-nga-slate" role="status">
+              <span className="sr-only">Level {level} complete. </span>
+              {complete.nextLabel ? `${complete.nextLabel} is unlocked` : "Every floor is done"}
+            </p>
             {complete.onLift && (
-              <button type="button" onClick={complete.onLift} className={`${BTN_ORANGE} absolute inset-x-11 top-[556px]`}>
+              <button type="button" onClick={complete.onLift} className={`${BTN_ORANGE} absolute inset-x-11 top-[524px]`}>
                 Take the lift up
               </button>
             )}

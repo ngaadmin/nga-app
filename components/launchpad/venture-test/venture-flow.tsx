@@ -16,7 +16,9 @@ import {
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import {
   clearVentureTestProgress,
+  hasSeenVentureTestOnboarding,
   loadVentureTestProgress,
+  markVentureTestOnboardingSeen,
   saveVentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-storage";
 import { VentureTestShell } from "@/components/launchpad/venture-test/venture-test-shell";
@@ -52,11 +54,13 @@ function buildingFloors(progress: VentureTestProgress): BuildingFloorView[] {
 
 export function VentureFlow({ ventureId, ventureTitle, reset }: { ventureId: string; ventureTitle: string; reset: boolean }) {
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
-  // Onboarding shows every time on the test build (the "seen" rule is TBC).
-  const [view, setView] = useState<View>({ screen: "onboarding" });
+  // The building intro shows only the first time this venture is opened
+  // (right after it is picked); after that the learner lands on the building.
+  const [view, setView] = useState<View>({ screen: "building" });
 
   useEffect(() => {
     if (reset) clearVentureTestProgress(ventureId);
+    setView({ screen: hasSeenVentureTestOnboarding(ventureId) ? "building" : "onboarding" });
     setProgress(loadVentureTestProgress(ventureId));
   }, [ventureId, reset]);
 
@@ -87,7 +91,15 @@ export function VentureFlow({ ventureId, ventureTitle, reset }: { ventureId: str
   let body: ReactNode;
   switch (view.screen) {
     case "onboarding":
-      body = <VentureOnboarding floors={buildingFloors(progress)} onStart={toBuilding} />;
+      body = (
+        <VentureOnboarding
+          floors={buildingFloors(progress)}
+          onStart={() => {
+            markVentureTestOnboardingSeen(ventureId);
+            toBuilding();
+          }}
+        />
+      );
       break;
     case "building": {
       const level = currentLevel(progress);

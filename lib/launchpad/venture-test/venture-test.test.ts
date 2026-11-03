@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { VENTURE_TEST_FLOORS, getVentureTestFloor } from "@/lib/launchpad/venture-test/venture-test-structure";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
@@ -10,7 +10,14 @@ import {
   silverStates,
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
-import { parseVentureTestProgress, ventureTestStorageKey } from "@/lib/launchpad/venture-test/venture-test-storage";
+import {
+  clearVentureTestProgress,
+  hasSeenVentureTestOnboarding,
+  markVentureTestOnboardingSeen,
+  parseVentureTestProgress,
+  saveVentureTestProgress,
+  ventureTestStorageKey,
+} from "@/lib/launchpad/venture-test/venture-test-storage";
 import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-gate";
 
 const L1 = getVentureTestFloor(1);
@@ -88,6 +95,29 @@ describe("venture test storage stub", () => {
     expect(parseVentureTestProgress("not json")).toEqual(EMPTY_VENTURE_TEST_PROGRESS);
     expect(parseVentureTestProgress('{"completedTaskIds":[1,"a"]}')).toEqual({ completedTaskIds: ["a"] });
     expect(ventureTestStorageKey("lemonade-stand")).toBe("lp-venture-test:v1:lemonade-stand");
+  });
+});
+
+describe("venture test onboarding seen flag", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("is per venture, and reset clears it with the progress", () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+        removeItem: (k: string) => void store.delete(k),
+      },
+    });
+    expect(hasSeenVentureTestOnboarding("lemonade-stand")).toBe(false);
+    markVentureTestOnboardingSeen("lemonade-stand");
+    saveVentureTestProgress("lemonade-stand", { completedTaskIds: ["a"] });
+    expect(hasSeenVentureTestOnboarding("lemonade-stand")).toBe(true);
+    expect(hasSeenVentureTestOnboarding("dog-walking")).toBe(false);
+    clearVentureTestProgress("lemonade-stand");
+    expect(hasSeenVentureTestOnboarding("lemonade-stand")).toBe(false);
+    expect(store.size).toBe(0);
   });
 });
 

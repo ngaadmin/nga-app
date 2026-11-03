@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { VENTURE_TEST_FLOORS, getVentureTestFloor } from "@/lib/launchpad/venture-test/venture-test-structure";
 import {
@@ -29,9 +28,12 @@ import { VentureDoors } from "@/components/launchpad/venture-test/venture-doors"
 import { VentureTaskList } from "@/components/launchpad/venture-test/venture-tasks";
 import { VentureWorkbook } from "@/components/launchpad/venture-test/venture-workbook";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
-import { BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
+import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
+import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
+import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
 
 type View =
+  | { screen: "home" }
   | { screen: "onboarding" }
   | { screen: "building" }
   | { screen: "corridor"; level: number; entering: boolean }
@@ -52,21 +54,81 @@ function buildingFloors(progress: VentureTestProgress): BuildingFloorView[] {
   }));
 }
 
-export function VentureFlow({ ventureId, ventureTitle, reset }: { ventureId: string; ventureTitle: string; reset: boolean }) {
-  const [progress, setProgress] = useState<VentureTestProgress | null>(null);
-  // The building intro shows only the first time this venture is opened
-  // (right after it is picked); after that the learner lands on the building.
-  const [view, setView] = useState<View>({ screen: "building" });
+/** Display name on the landing page tile (for the In Progress card). */
+function tileName(ventureId: string): string | null {
+  for (const c of LAUNCHPAD_CATEGORIES)
+    for (const t of c.tiles) if (t.kind === "idea" && t.ventureId === ventureId) return t.name;
+  return null;
+}
 
-  useEffect(() => {
-    if (reset) clearVentureTestProgress(ventureId);
-    setView({ screen: hasSeenVentureTestOnboarding(ventureId) ? "building" : "onboarding" });
-    setProgress(loadVentureTestProgress(ventureId));
-  }, [ventureId, reset]);
+/** Ventures underway in this browser: intro seen or any task done. */
+function loadInProgress(ids: string[], titles: Record<string, string>): InProgressVenture[] {
+  return ids.flatMap((id) => {
+    const p = loadVentureTestProgress(id);
+    if (!hasSeenVentureTestOnboarding(id) && p.completedTaskIds.length === 0) return [];
+    const floor = getVentureTestFloor(currentLevel(p));
+    const states = silverStates(p, floor);
+    return [
+      {
+        ventureId: id,
+        name: tileName(id) ?? titles[id] ?? id,
+        level: floor.level,
+        floorName: floor.name,
+        done: states.filter((s) => s === "done").length,
+        total: floor.silvers.length,
+      },
+    ];
+  });
+}
+
+/**
+ * TEST-ONLY Launchpad flow. The landing page is the Business Ideas carousel;
+ * tapping a live tile opens that venture. The building intro shows only the
+ * first time a venture is opened, then the learner lands on its building.
+ * `?venture=<id>` deep-links straight into a venture (test convenience).
+ */
+export function VentureFlow({
+  initialVentureId,
+  ventureTitles,
+  reset,
+}: {
+  initialVentureId: string | null;
+  ventureTitles: Record<string, string>;
+  reset: boolean;
+}) {
+  const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
+  const [progress, setProgress] = useState<VentureTestProgress | null>(null);
+  const [inProgress, setInProgress] = useState<InProgressVenture[] | null>(null);
+  const [view, setView] = useState<View>({ screen: "home" });
+  const ventureTitle = ventureId ? (ventureTitles[ventureId] ?? ventureId) : "";
 
   const go = useCallback((next: View) => {
     setView(next);
     window.scrollTo({ top: 0 });
+  }, []);
+
+  const openVenture = useCallback(
+    (id: string) => {
+      setVentureId(id);
+      setProgress(loadVentureTestProgress(id));
+      go({ screen: hasSeenVentureTestOnboarding(id) ? "building" : "onboarding" });
+    },
+    [go],
+  );
+
+  const toHome = useCallback(() => {
+    setInProgress(loadInProgress(liveVentureIds(), ventureTitles));
+    go({ screen: "home" });
+  }, [go, ventureTitles]);
+
+  useEffect(() => {
+    if (reset) {
+      for (const id of new Set([...liveVentureIds(), ...(initialVentureId ? [initialVentureId] : [])])) clearVentureTestProgress(id);
+    }
+    setInProgress(loadInProgress(liveVentureIds(), ventureTitles));
+    if (initialVentureId) openVenture(initialVentureId);
+    // Run once per load; reset and the deep link come from the URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -75,7 +137,15 @@ export function VentureFlow({ ventureId, ventureTitle, reset }: { ventureId: str
     return () => window.clearTimeout(t);
   }, [view, go]);
 
-  if (!progress) {
+  if (view.screen === "home") {
+    return (
+      <VentureTestShell>
+        {inProgress ? <LaunchpadHome inProgress={inProgress} onOpenVenture={openVenture} /> : null}
+      </VentureTestShell>
+    );
+  }
+
+  if (!progress || !ventureId) {
     // White frame while the local progress stub loads.
     return <VentureTestShell>{null}</VentureTestShell>;
   }
@@ -106,9 +176,7 @@ export function VentureFlow({ ventureId, ventureTitle, reset }: { ventureId: str
       const allDone = isFloorDone(progress, getVentureTestFloor(VENTURE_TEST_FLOORS.length));
       body = (
         <section className="flex flex-1 flex-col">
-          <nav aria-label="Breadcrumb" className="mx-5 mt-1.5 font-heading text-[13px] font-semibold leading-5 text-nga-slate">
-            <Link href="/dashboard/launchpad">‹ Launchpad</Link>
-          </nav>
+          <BackCrumb label="Launchpad" onClick={toHome} />
           <Heading>{ventureTitle}</Heading>
           <VentureBuilding
             floors={buildingFloors(progress)}

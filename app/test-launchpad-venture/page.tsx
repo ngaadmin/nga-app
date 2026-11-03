@@ -15,6 +15,8 @@ export const metadata: Metadata = {
 /**
  * TEST-ONLY route for the Launchpad venture flow. Reachable on Vercel preview
  * deployments and local dev; 404 in production. Progress is a local stub.
+ * The landing page is the Launchpad home (Business Ideas carousel);
+ * `?venture=<id>` deep-links into a venture, `?reset=1` clears local progress.
  */
 export default async function TestLaunchpadVenturePage({
   searchParams,
@@ -23,8 +25,8 @@ export default async function TestLaunchpadVenturePage({
 }) {
   if (!isVentureTestEnabled()) notFound();
   const params = await searchParams;
-  const ventureId = params.venture ?? "lemonade-stand";
-  const blueprint = VENTURE_BLUEPRINTS.find((v) => v.id === ventureId);
-  if (!blueprint) notFound();
-  return <VentureFlow ventureId={ventureId} ventureTitle={blueprint.title} reset={params.reset === "1"} />;
+  const ventureId = params.venture ?? null;
+  if (ventureId && !VENTURE_BLUEPRINTS.some((v) => v.id === ventureId)) notFound();
+  const ventureTitles = Object.fromEntries(VENTURE_BLUEPRINTS.map((v) => [v.id, v.title]));
+  return <VentureFlow initialVentureId={ventureId} ventureTitles={ventureTitles} reset={params.reset === "1"} />;
 }

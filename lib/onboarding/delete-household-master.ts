@@ -2,8 +2,8 @@
 
 import "server-only";
 
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import { assessParentPin, PARENT_PIN_GATE_COPY } from "@/lib/dashboard/parent-pin-gate";
+import { PARENT_PIN_GATE_COPY } from "@/lib/dashboard/parent-pin-gate";
+import { checkParentPinWithLockout } from "@/lib/parent/parent-pin-lockout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
@@ -67,15 +67,17 @@ export async function deleteHouseholdMasterAccount(
     };
   }
 
-  const storedPin =
-    typeof profile.parent_pin_hash === "string" ? profile.parent_pin_hash.trim() : "";
-  if (storedPin) {
-    const pinLimit = consumeRateLimit(`parent-pin:${user.id}`, 8, 15 * 60 * 1000);
-    if (!pinLimit.allowed) {
-      return { success: false, error: PARENT_PIN_GATE_COPY.limited };
-    }
-  }
-  const pin = assessParentPin(parentPin, profile.parent_pin_hash);
+  const pin = await checkParentPinWithLockout({
+    parentId: user.id,
+    pin: parentPin,
+    storedHash: profile.parent_pin_hash,
+    copy: {
+      missing: PARENT_PIN_GATE_COPY.missing,
+      format: PARENT_PIN_GATE_COPY.required,
+      wrong: PARENT_PIN_GATE_COPY.wrong,
+      locked: PARENT_PIN_GATE_COPY.limited,
+    },
+  });
   if (!pin.ok) return { success: false, error: pin.error };
 
   const parentEmail = user.email?.trim().toLowerCase() || null;

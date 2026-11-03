@@ -8,10 +8,11 @@ import {
   createParentPin,
   getParentPinState,
   openParentTabGate,
+  resetParentPinWithPassword,
 } from "@/lib/parent/parent-tab-server";
 import { cn } from "@/lib/utils/cn";
 
-type Phase = "loading" | "set" | "confirm" | "enter";
+type Phase = "loading" | "set" | "confirm" | "enter" | "forgot";
 
 export const PIN_GATE_CARD_SHADOW = "shadow-[0_4px_24px_-4px_rgb(3_31_130/0.14)]";
 const CARD_SHADOW = PIN_GATE_CARD_SHADOW;
@@ -101,8 +102,11 @@ export function ParentPinGate({
   const [busy, setBusy] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [password, setPassword] = useState("");
   const pendingPin = useRef("");
   const hasPin = useRef(false);
+  /** True while a forgotten PIN is being replaced via the account password. */
+  const resetting = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +125,7 @@ export function ParentPinGate({
     return () => {
       cancelled = true;
       pendingPin.current = "";
+      resetting.current = false;
     };
   }, []);
 
@@ -146,7 +151,21 @@ export function ParentPinGate({
     setPhase(next);
   }
 
-  /** "Forgot your PIN?" emails a reset link. It never changes the PIN here. */
+  function startReset() {
+    resetting.current = true;
+    pendingPin.current = "";
+    setPassword("");
+    go("forgot");
+  }
+
+  function cancelReset() {
+    resetting.current = false;
+    pendingPin.current = "";
+    setPassword("");
+    go(hasPin.current ? "enter" : "set");
+  }
+
+  /** Fallback: email a reset link. It never changes the PIN here. */
   async function forgot() {
     if (sending) return;
     setSending(true);
@@ -167,6 +186,15 @@ export function ParentPinGate({
     event.preventDefault();
     if (busy || phase === "loading") return;
     setError(null);
+
+    if (phase === "forgot") {
+      if (!password) {
+        setError("Enter your account password.");
+        return;
+      }
+      go("set");
+      return;
+    }
 
     if (!isParentTabPin(pin)) {
       setError("Enter 4 numbers.");
@@ -189,6 +217,22 @@ export function ParentPinGate({
           return;
         }
         pendingPin.current = "";
+        if (resetting.current) {
+          const reset = await resetParentPinWithPassword(password, pin);
+          if (!reset.ok) {
+            setPin("");
+            setPassword("");
+            setPhase("forgot");
+            setError(reset.error);
+            return;
+          }
+          resetting.current = false;
+          setPassword("");
+          hasPin.current = true;
+          setLockedUntil(null);
+          await onUnlocked(reset.pass);
+          return;
+        }
         const created = await createParentPin(pin);
         if (!created.ok) {
           setPin("");
@@ -236,14 +280,23 @@ export function ParentPinGate({
     );
   }
 
+  const resetFlow = resetting.current;
   const title =
-    phase === "set"
+    phase === "forgot"
+      ? "Reset your Parent PIN"
+      : phase === "set" && resetFlow
+        ? "Pick a new Parent PIN"
+        : phase === "set"
       ? "Create your Parent PIN"
       : phase === "confirm"
         ? "Enter your new PIN again"
         : "Enter your Parent PIN";
   const body =
-    phase === "set"
+    phase === "forgot"
+      ? "Confirm your account password, then pick a new PIN."
+      : phase === "set" && resetFlow
+        ? "Pick 4 new numbers. Your old PIN stops working."
+        : phase === "set"
       ? "Pick 4 numbers. You'll use them for the Parent Hub, approvals and your account."
       : phase === "confirm"
         ? "Type the same 4 numbers to confirm."
@@ -270,6 +323,23 @@ export function ParentPinGate({
       <p className="mx-auto mt-1 max-w-[17rem] font-sans text-[13px] leading-snug text-[#1E3A5F]">
         {body}
       </p>
+      {phase === "forgot" ? (
+        <input
+          data-parent-tab-password
+          type="password"
+          autoComplete="current-password"
+          aria-label="Account password"
+          placeholder="Account password"
+          autoFocus
+          value={password}
+          disabled={busy}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            if (error) setError(null);
+          }}
+          className="mx-auto mt-3 block w-full max-w-[15rem] rounded-xl border-2 border-[#C9D6EA] bg-white px-3 py-2.5 font-sans text-sm text-[#031F82] outline-none focus:border-[#031F82]"
+        />
+      ) : (
       <PinBoxes
         key={phase}
         value={pin}
@@ -280,13 +350,14 @@ export function ParentPinGate({
         disabled={busy || lockedOut}
         label={phase === "confirm" ? "Confirm Parent PIN" : "Parent PIN"}
       />
+      )}
 
       <p
         data-parent-tab-gate-error
         role="alert"
         className="mt-2 min-h-[1.25rem] font-sans text-[12.5px] font-semibold text-[#B42318]"
       >
-        {lockedOut && lockedUntil
+        {lockedOut && lockedUntil && !resetFlow
           ? `Too many wrong tries. Try again in ${formatCountdown(lockedUntil - now)}.`
           : error}
       </p>
@@ -296,8 +367,9 @@ export function ParentPinGate({
         data-parent-tab-continue
         disabled={
           busy ||
-          lockedOut ||
-          pin.length !== 4
+          (phase === "forgot"
+            ? !password
+            : (lockedOut && !resetFlow) || pin.length !== 4)
         }
         className="mt-1 w-full max-w-[15rem] rounded-full bg-[#FFA503] py-2.5 font-heading text-sm font-bold text-white shadow-[0_3px_0_#C88202] transition-opacity disabled:opacity-50"
       >
@@ -308,16 +380,44 @@ export function ParentPinGate({
         <button
           type="button"
           data-parent-tab-forgot
-          onClick={() => void forgot()}
-          disabled={sending}
-          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2 disabled:opacity-50"
+          onClick={startReset}
+          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
         >
-          {sending ? "Sending…" : "Forgot your PIN?"}
+          Forgot your PIN?
+        </button>
+      ) : phase === "forgot" ? (
+        <>
+          <button
+            type="button"
+            data-parent-tab-forgot-email
+            onClick={() => void forgot()}
+            disabled={sending}
+            className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2 disabled:opacity-50"
+          >
+            {sending ? "Sending…" : "Email me a reset link instead"}
+          </button>
+          <button
+            type="button"
+            data-parent-tab-reset-back
+            onClick={cancelReset}
+            className="mt-2 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
+          >
+            Back
+          </button>
+        </>
+      ) : phase === "set" && resetFlow ? (
+        <button
+          type="button"
+          data-parent-tab-reset-back
+          onClick={cancelReset}
+          className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
+        >
+          Back
         </button>
       ) : phase === "confirm" ? (
         <button
           type="button"
-          onClick={() => go(hasPin.current ? "enter" : "set")}
+          onClick={() => go(resetting.current || !hasPin.current ? "set" : "enter")}
           className="mt-3 block w-full font-sans text-xs font-semibold text-[#031F82] underline underline-offset-2"
         >
           Back

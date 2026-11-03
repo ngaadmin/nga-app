@@ -6,6 +6,7 @@ const server = vi.hoisted(() => ({
   getParentPinState: vi.fn(),
   createParentPin: vi.fn(),
   openParentTabGate: vi.fn(),
+  resetParentPinWithPassword: vi.fn(),
 }));
 const reset = vi.hoisted(() => ({ requestParentPinReset: vi.fn() }));
 
@@ -99,5 +100,61 @@ describe("ParentPinGate with a Parent PIN saved", () => {
     render(<ParentPinGate parentName="Sam" onUnlocked={vi.fn()} />);
     expect(await screen.findByText("Enter your Parent PIN")).toBeTruthy();
     expect(screen.getByText("Forgot your PIN?")).toBeTruthy();
+  });
+});
+
+describe("ParentPinGate forgotten PIN and lockout", () => {
+  beforeEach(() => {
+    server.getParentPinState.mockResolvedValue({ ok: true, hasPin: true, lockedUntil: null });
+  });
+
+  it("resets with the account password and a new PIN typed twice, then unlocks", async () => {
+    server.resetParentPinWithPassword.mockResolvedValue({ ok: true, pass: "reset-pass" });
+    const onUnlocked = vi.fn();
+    render(<ParentPinGate parentName="Sam" onUnlocked={onUnlocked} />);
+    fireEvent.click(await screen.findByText("Forgot your PIN?"));
+    expect(screen.getByText("Reset your Parent PIN")).toBeTruthy();
+    expect(screen.getByText("Confirm your account password, then pick a new PIN.")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Account password"), { target: { value: "secret-pass" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(await screen.findByText("Pick a new Parent PIN")).toBeTruthy();
+    typeAndContinue("1357");
+    expect(await screen.findByText("Enter your new PIN again")).toBeTruthy();
+    typeAndContinue("1357");
+    await waitFor(() => expect(onUnlocked).toHaveBeenCalledWith("reset-pass"));
+    expect(server.resetParentPinWithPassword).toHaveBeenCalledWith("secret-pass", "1357");
+    expect(server.createParentPin).not.toHaveBeenCalled();
+    expect(reset.requestParentPinReset).not.toHaveBeenCalled();
+  });
+
+  it("returns to the password step when the password is wrong", async () => {
+    server.resetParentPinWithPassword.mockResolvedValue({
+      ok: false,
+      error: "That password didn't match. Try again.",
+    });
+    render(<ParentPinGate parentName="Sam" onUnlocked={vi.fn()} />);
+    fireEvent.click(await screen.findByText("Forgot your PIN?"));
+    fireEvent.change(screen.getByLabelText("Account password"), { target: { value: "nope" } });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    typeAndContinue("1357");
+    typeAndContinue("1357");
+    expect(await screen.findByText("That password didn't match. Try again.")).toBeTruthy();
+    expect(screen.getByText("Reset your Parent PIN")).toBeTruthy();
+  });
+
+  it("shows the lockout countdown after the fifth wrong PIN, and the reset still works", async () => {
+    server.openParentTabGate.mockResolvedValue({
+      ok: false,
+      reason: "locked",
+      error: "Too many wrong tries.",
+      triesLeft: 0,
+      lockedUntil: Date.now() + 5 * 60 * 1000,
+    });
+    render(<ParentPinGate parentName="Sam" onUnlocked={vi.fn()} />);
+    await screen.findByText("Enter your Parent PIN");
+    typeAndContinue("0000");
+    expect(await screen.findByText(/Too many wrong tries\. Try again in [45]:\d\d\./)).toBeTruthy();
+    fireEvent.click(screen.getByText("Forgot your PIN?"));
+    expect(screen.getByText("Reset your Parent PIN")).toBeTruthy();
   });
 });

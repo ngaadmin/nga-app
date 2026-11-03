@@ -93,7 +93,7 @@ describe("resetParentPinWithPassword (forgotten Parent PIN)", () => {
     const result = await resetParentPinWithPassword("right-password", "1357");
     expect(result).toEqual({ ok: true, pass: `pass-for-parent-${n}` });
     expect(state.updates).toHaveLength(1);
-    const { values, filters } = state.updates[0];
+    const { values, filters } = state.updates[0]!;
     expect(filters).toEqual({ id: `parent-${n}`, account_role: "parent_master" });
     expect(verifyCredential("1357", String(values.parent_pin_hash))).toBe(true);
     expect(values).toMatchObject({ parent_pin_reset_hash: null, parent_pin_reset_expires_at: null });

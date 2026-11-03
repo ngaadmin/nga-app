@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { authorizeBrowserMutation } from "@/lib/auth/request-guard";
-import {
-  assessParentPin,
-  PARENT_PIN_GATE_COPY,
-} from "@/lib/dashboard/parent-pin-gate";
+import { PARENT_PIN_GATE_COPY } from "@/lib/dashboard/parent-pin-gate";
+import { checkParentPinWithLockout } from "@/lib/parent/parent-pin-lockout";
 import {
   deleteLinkedChildAccount,
   parseLinkedChildId,
@@ -118,19 +115,22 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   }
-  const storedPin = pinProfile.parent_pin_hash?.trim() ?? "";
-  if (storedPin) {
-    const pinLimit = consumeRateLimit(`parent-pin:${parentId}`, 8, 15 * 60 * 1000);
-    if (!pinLimit.allowed) {
-      return NextResponse.json(
-        { success: false, error: PARENT_PIN_GATE_COPY.limited },
-        { status: 429 },
-      );
-    }
-  }
-  const pin = assessParentPin(body.parentPin, pinProfile.parent_pin_hash);
+  const pin = await checkParentPinWithLockout({
+    parentId,
+    pin: body.parentPin,
+    storedHash: pinProfile.parent_pin_hash,
+    copy: {
+      missing: PARENT_PIN_GATE_COPY.missing,
+      format: PARENT_PIN_GATE_COPY.required,
+      wrong: PARENT_PIN_GATE_COPY.wrong,
+      locked: PARENT_PIN_GATE_COPY.limited,
+    },
+  });
   if (!pin.ok) {
-    return NextResponse.json({ success: false, error: pin.error }, { status: 403 });
+    return NextResponse.json(
+      { success: false, error: pin.error },
+      { status: pin.reason === "locked" ? 429 : 403 },
+    );
   }
 
   const admin: DeleteLinkedChildAdmin = {

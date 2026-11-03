@@ -13,6 +13,7 @@ import {
 import { hashCredential } from "@/lib/auth/credential-hash";
 import { getDefaultAppUrl } from "@/lib/email/templates";
 import { sendOnboardingEmail } from "@/lib/email/resend-client";
+import { clearParentPinLockout } from "@/lib/parent/parent-pin-lockout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isFourDigitPin } from "@/lib/validation/pin";
@@ -145,5 +146,6 @@ export async function completeParentPinReset(input: {
   if (error) {
     return { ok: false, error: "We could not save the new PIN. Try again." };
   }
+  await clearParentPinLockout(claims.userId);
   return { ok: true };
 }

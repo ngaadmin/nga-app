@@ -43,7 +43,7 @@ const hubData = {
   messages: [],
   children: [
     { userId: "a1", username: "Zed", cohort: "explorer", status: "active", lessonsDone: 3, coins: 10 },
-    { userId: "p1", username: "Amy", cohort: "explorer", status: "waiting", lessonsDone: 0, coins: 0, requestId: "r1" },
+    { userId: "p1", username: "Amy", cohort: "explorer", status: "waiting", requestId: "r1" },
   ],
   needsOk: [
     { kind: "approval", requestId: "r1", childUsername: "Amy", childCohort: "explorer", expiresAt: "2026-11-20T00:00:00Z" },

@@ -11,8 +11,6 @@ const waiting: ParentHubChild = {
   username: "Amy",
   cohort: "explorer",
   status: "waiting",
-  lessonsDone: 0,
-  coins: 0,
   requestId: "r1",
 };
 
@@ -41,7 +39,7 @@ describe("ParentHubChildCard", () => {
 
   it("is not tappable when no approval is open", () => {
     const onOpen = vi.fn();
-    render(<ParentHubChildCard child={{ ...waiting, requestId: undefined }} onOpen={onOpen} />);
+    render(<ParentHubChildCard child={{ userId: "p1", username: "Amy", cohort: "explorer", status: "waiting" }} onOpen={onOpen} />);
     expect(screen.queryByRole("button")).toBeNull();
   });
 
@@ -49,7 +47,7 @@ describe("ParentHubChildCard", () => {
     const onOpen = vi.fn();
     const { container } = render(
       <ParentHubChildCard
-        child={{ ...waiting, status: "active", lessonsDone: 3, coins: 12, requestId: undefined }}
+        child={{ userId: "p1", username: "Amy", cohort: "explorer", status: "active", lessonsDone: 3, coins: 12 }}
         onOpen={onOpen}
       />,
     );

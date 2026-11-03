@@ -18,8 +18,15 @@ import {
   signParentTabGatePass,
 } from "@/lib/parent/parent-tab-gate-pass";
 import { isParentTabPin, type ParentTabPinCheck } from "@/lib/parent/parent-tab-pin";
+import {
+  checkParentPinWithLockout,
+  clearParentPinLockout,
+  readParentPinLock,
+} from "@/lib/parent/parent-pin-lockout";
+import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import { assessParentPin } from "@/lib/dashboard/parent-pin-gate";
+import { hashCredential } from "@/lib/auth/credential-hash";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/keys";
 import { persistParentPin } from "@/lib/dashboard/persist-parent-pin";
 import {
   PARENT_DATA_GRANT_COOKIE,
@@ -152,9 +159,6 @@ const PIN_COPY = {
   format: "Enter 4 numbers.",
 } as const;
 
-/** Same in-memory bucket as the Parent PIN checks for account and child data. */
-const PARENT_PIN_TRIES = 8;
-const PARENT_PIN_WINDOW_MS = 15 * 60 * 1000;
 
 /**
  * Signed-in parent (any parent_master, linked child or not). Server-checked.
@@ -205,7 +209,14 @@ export async function getParentPinState(): Promise<
   try {
     const parent = await resolveSignedInParent();
     if (!parent) return { ok: false, error: PIN_COPY.notParent };
-    return { ok: true, hasPin: Boolean(parent.parentPinHash), lockedUntil: null };
+    const lock = parent.parentPinHash
+      ? await readParentPinLock(parent.userId)
+      : { locked: false, lockedUntil: null };
+    return {
+      ok: true,
+      hasPin: Boolean(parent.parentPinHash),
+      lockedUntil: lock.locked ? lock.lockedUntil : null,
+    };
   } catch {
     return { ok: false, error: PIN_COPY.error };
   }
@@ -234,10 +245,75 @@ export async function createParentPin(
   }
 }
 
+const RESET_COPY = {
+  password: "Enter your account password.",
+  wrongPassword: "That password didn't match. Try again.",
+  limited: "Too many password tries. Wait a few minutes, then try again.",
+  error: "We could not reset your Parent PIN. Try again.",
+} as const;
+
+/** Signs in with a throwaway client (no cookies), so the parent's session is untouched. */
+async function accountPasswordMatches(
+  userId: string,
+  email: string,
+  password: string,
+): Promise<boolean> {
+  const client = createSupabaseJsClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  const matches = !error && data.user?.id === userId;
+  if (data.session) await client.auth.signOut({ scope: "local" }).catch(() => undefined);
+  return matches;
+}
+
 /**
- * Checks the Parent PIN (profiles.parent_pin_hash) on the server. Nothing is
- * written to the database on a check: misses count in the same in-memory
- * bucket as the account and child data gates. A match signs the short-lived
+ * Forgotten Parent PIN: the signed-in parent account re-enters its account
+ * password and sets a new 4-digit PIN in one step. There is one Parent PIN,
+ * so this replaces profiles.parent_pin_hash and clears the wrong-PIN lockout.
+ * A child profile (or anyone not signed in as the parent) is refused.
+ */
+export async function resetParentPinWithPassword(
+  password: string,
+  newPin: string,
+): Promise<{ ok: true; pass: string } | { ok: false; error: string }> {
+  try {
+    const parent = await resolveSignedInParent();
+    if (!parent) return { ok: false, error: PIN_COPY.notParent };
+    if (typeof newPin !== "string" || !isParentTabPin(newPin)) {
+      return { ok: false, error: PIN_COPY.format };
+    }
+    if (typeof password !== "string" || !password) {
+      return { ok: false, error: RESET_COPY.password };
+    }
+    if (!parent.email) return { ok: false, error: RESET_COPY.error };
+    const limit = consumeRateLimit(`parent-pin-reset-password:${parent.userId}`, 5, 15 * 60 * 1000);
+    if (!limit.allowed) return { ok: false, error: RESET_COPY.limited };
+    if (!(await accountPasswordMatches(parent.userId, parent.email, password))) {
+      return { ok: false, error: RESET_COPY.wrongPassword };
+    }
+    const { error } = await createAdminClient()
+      .from("profiles")
+      .update({
+        parent_pin_hash: hashCredential(newPin),
+        parent_pin_reset_hash: null,
+        parent_pin_reset_expires_at: null,
+      })
+      .eq("id", parent.userId)
+      .eq("account_role", "parent_master");
+    if (error) return { ok: false, error: RESET_COPY.error };
+    await clearParentPinLockout(parent.userId);
+    await grantParentData(parent.userId);
+    return { ok: true, pass: signParentTabGatePass(parent.userId) };
+  } catch {
+    return { ok: false, error: RESET_COPY.error };
+  }
+}
+
+/**
+ * Checks the Parent PIN (profiles.parent_pin_hash) on the server. Wrong tries
+ * count in public.parent_pin_lockouts (5 misses, then a 5-minute lock), shared
+ * with every other Parent PIN check. A match signs the short-lived
  * gate pass (kept in memory by the client) and opens the data views.
  * Used by the Parent Hub, the cash rate and every approval.
  */
@@ -254,19 +330,20 @@ export async function openParentTabGate(
     if (!parent) return fail("error", PIN_COPY.notParent);
     if (!parent.parentPinHash) return fail("missing", PIN_COPY.missing);
 
-    const limit = consumeRateLimit(
-      `parent-pin:${parent.userId}`,
-      PARENT_PIN_TRIES,
-      PARENT_PIN_WINDOW_MS,
-    );
-    if (!limit.allowed) {
-      return fail("locked", PIN_COPY.locked, Date.now() + limit.retryAfterMs);
-    }
-    const checked = assessParentPin(pin, parent.parentPinHash);
+    const checked = await checkParentPinWithLockout({
+      parentId: parent.userId,
+      pin,
+      storedHash: parent.parentPinHash,
+      copy: PIN_COPY,
+    });
     if (!checked.ok) {
-      return isParentTabPin(String(pin ?? ""))
-        ? fail("wrong", PIN_COPY.wrong)
-        : fail("wrong", PIN_COPY.format);
+      return {
+        ok: false,
+        reason: checked.reason === "format" ? "wrong" : checked.reason,
+        error: checked.error,
+        triesLeft: checked.triesLeft,
+        lockedUntil: checked.lockedUntil,
+      };
     }
     await grantParentData(parent.userId);
     return { ok: true, pass: signParentTabGatePass(parent.userId) };
@@ -390,13 +467,12 @@ export async function loadParentTabData(
   const linked: ParentTabChildSummary[] = shown.map((row) => {
     const username = String(row.username).trim();
     if (row.account_status !== "active") {
+      // Identity only: no progress, usage or wallet field for a waiting child.
       return {
         userId: row.id,
         username,
         cohort: asCohort(row.curriculum_cohort),
         status: "waiting" as const,
-        lessonsDone: 0,
-        coins: 0,
       };
     }
     const progress = payloads.get(row.id) ?? {};

@@ -1224,6 +1224,208 @@ export function buildParentPinResetEmail(
   return { subject, preheader, html, text };
 }
 
+/*
+ * Plan emails: trial started, payment receipt, cancellation confirmed.
+ * Templates only. Nothing sends these yet (there are no payments in the app),
+ * so they are not part of OnboardingEmailType. All values come from the
+ * caller, already formatted (for example "US$9.99" or "December 3, 2026").
+ */
+
+export type TrialStartedEmailData = {
+  planName: string;
+  /** Formatted date the free trial ends. */
+  trialEndsOn: string;
+};
+
+export type PaymentReceiptEmailData = {
+  planName: string;
+  /** Formatted amount with currency, for example "US$9.99". */
+  amount: string;
+  /** Formatted payment date. */
+  paidOn: string;
+  receiptNumber: string;
+  /** For example "Visa ending 4242". */
+  paymentMethod?: string;
+  /** Formatted date of the next payment, when the plan renews. */
+  nextPaymentOn?: string;
+};
+
+export type CancellationConfirmedEmailData = {
+  planName: string;
+  /** Formatted date the plan's features stop. */
+  accessEndsOn: string;
+};
+
+const PLAN_SIGN_OFF = "The Team at NextGenAchievers";
+
+function planParentHubUrl(appUrl?: string): string {
+  return `${resolveAppUrl(appUrl)}/dashboard/parent`;
+}
+
+function planParagraph(text: string): string {
+  return `<p style="margin:0 0 16px;font-size:16px;">${escapeHtml(text)}</p>`;
+}
+
+function planDetails(rows: Array<[string, string]>): string {
+  const cells = rows
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding:8px 12px 8px 0;font-size:14px;color:#5B6B7C;vertical-align:top;">${escapeHtml(label)}</td>
+          <td style="padding:8px 0;font-size:14px;font-weight:700;color:#031F82;vertical-align:top;">${escapeHtml(value)}</td>
+        </tr>`,
+    )
+    .join("");
+  return `
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 16px;width:100%;background:#E8F6FC;border-radius:12px;padding:8px 16px;">
+      ${cells}
+    </table>
+  `;
+}
+
+function planHelpLine(): string {
+  return `Questions? Email us at ${SUPPORT_EMAIL}.`;
+}
+
+export function buildTrialStartedEmail(
+  data: TrialStartedEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const planName = emailPlain(data.planName).trim();
+  const trialEndsOn = emailPlain(data.trialEndsOn).trim();
+  const hubUrl = planParentHubUrl(appUrl);
+  const subject = "Your NextGenAchievers free trial has started";
+  const preheader = `Your free trial of ${planName} runs until ${trialEndsOn}.`;
+  const header = "Your free trial has started";
+  const thanks = `Thanks for trying ${planName}.`;
+  const manage = "You can see your plan, or cancel it, any time in the Parent Hub.";
+  const lines = [thanks, `Your free trial runs until ${trialEndsOn}.`, manage];
+  const text = [
+    "Hi there,",
+    "",
+    ...lines.flatMap((line) => [line, ""]),
+    `Open the Parent Hub: ${hubUrl}`,
+    "",
+    planHelpLine(),
+    "",
+    PLAN_SIGN_OFF,
+  ].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      ${planParagraph("Hi there,")}
+      ${planParagraph(thanks)}
+      ${planDetails([
+        ["Plan", planName],
+        ["Free trial ends", trialEndsOn],
+      ])}
+      ${planParagraph(manage)}
+      ${ctaButton("Open the Parent Hub", hubUrl)}
+      ${planParagraph(planHelpLine())}
+      <p style="margin:24px 0 0;font-size:16px;">${PLAN_SIGN_OFF}</p>
+    `,
+  });
+  return { subject, preheader, html, text };
+}
+
+export function buildPaymentReceiptEmail(
+  data: PaymentReceiptEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const planName = emailPlain(data.planName).trim();
+  const amount = emailPlain(data.amount).trim();
+  const paidOn = emailPlain(data.paidOn).trim();
+  const receiptNumber = emailPlain(data.receiptNumber).trim();
+  const paymentMethod = data.paymentMethod ? emailPlain(data.paymentMethod).trim() : "";
+  const nextPaymentOn = data.nextPaymentOn ? emailPlain(data.nextPaymentOn).trim() : "";
+  const hubUrl = planParentHubUrl(appUrl);
+  const subject = "Your NextGenAchievers payment receipt";
+  const preheader = `We received your payment of ${amount} for ${planName}.`;
+  const header = "Thanks for your payment";
+  const rows: Array<[string, string]> = [
+    ["Plan", planName],
+    ["Amount paid", amount],
+    ["Date", paidOn],
+    ["Receipt number", receiptNumber],
+  ];
+  if (paymentMethod) rows.push(["Paid with", paymentMethod]);
+  if (nextPaymentOn) rows.push(["Next payment", nextPaymentOn]);
+  const intro = `We received your payment of ${amount} for ${planName}. Please keep this email as your receipt.`;
+  const manage = "You can see your plan, or cancel it, any time in the Parent Hub.";
+  const text = [
+    "Hi there,",
+    "",
+    intro,
+    "",
+    ...rows.map(([label, value]) => `${label}: ${value}`),
+    "",
+    manage,
+    "",
+    `Open the Parent Hub: ${hubUrl}`,
+    "",
+    planHelpLine(),
+    "",
+    PLAN_SIGN_OFF,
+  ].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      ${planParagraph("Hi there,")}
+      ${planParagraph(intro)}
+      ${planDetails(rows)}
+      ${planParagraph(manage)}
+      ${ctaButton("Open the Parent Hub", hubUrl)}
+      ${planParagraph(planHelpLine())}
+      <p style="margin:24px 0 0;font-size:16px;">${PLAN_SIGN_OFF}</p>
+    `,
+  });
+  return { subject, preheader, html, text };
+}
+
+export function buildCancellationConfirmedEmail(
+  data: CancellationConfirmedEmailData,
+  appUrl?: string,
+): BuiltEmail {
+  const planName = emailPlain(data.planName).trim();
+  const accessEndsOn = emailPlain(data.accessEndsOn).trim();
+  const hubUrl = planParentHubUrl(appUrl);
+  const subject = "Your NextGenAchievers plan has been canceled";
+  const preheader = `${planName} stays on until ${accessEndsOn}.`;
+  const header = "Your plan has been canceled";
+  const canceled = `We've canceled ${planName}, as you asked. You won't be charged again.`;
+  const restart = "You can start a plan again any time in the Parent Hub.";
+  const lines = [canceled, `You can keep using it until ${accessEndsOn}.`, restart];
+  const text = [
+    "Hi there,",
+    "",
+    ...lines.flatMap((line) => [line, ""]),
+    `Open the Parent Hub: ${hubUrl}`,
+    "",
+    planHelpLine(),
+    "",
+    PLAN_SIGN_OFF,
+  ].join("\n");
+  const html = wrapHtml({
+    header,
+    preheader,
+    bodyInner: `
+      ${planParagraph("Hi there,")}
+      ${planParagraph(canceled)}
+      ${planDetails([
+        ["Plan", planName],
+        ["Plan ends", accessEndsOn],
+      ])}
+      ${planParagraph(restart)}
+      ${ctaButton("Open the Parent Hub", hubUrl)}
+      ${planParagraph(planHelpLine())}
+      <p style="margin:24px 0 0;font-size:16px;">${PLAN_SIGN_OFF}</p>
+    `,
+  });
+  return { subject, preheader, html, text };
+}
+
 export function buildOnboardingEmail<T extends OnboardingEmailType>(
   type: T,
   data: OnboardingEmailDataMap[T],

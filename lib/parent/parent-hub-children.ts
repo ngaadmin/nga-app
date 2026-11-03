@@ -1,19 +1,42 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
 
-/** One card in the Parent Hub list. */
-export type ParentHubChild = {
+/** A child the parent has approved: their progress shows on the card. */
+export type ParentHubActiveChild = {
   userId: string;
   username: string;
   cohort: MasteryCohort | null;
-  /** "waiting": the parent hasn't given consent yet. */
-  status: "active" | "waiting";
-  /** Lifetime lessons completed (survives a track change). 0 while waiting. */
+  status: "active";
+  /** Lifetime lessons completed (survives a track change). */
   lessonsDone: number;
-  /** Coins the child can still cash in. 0 while waiting. */
+  /** Coins the child can still cash in. */
   coins: number;
-  /** Waiting child with an open approval in "Needs your OK". */
+};
+
+/**
+ * A child still waiting for the parent's consent. Only who they are: no
+ * lessons, coins or any other progress or usage field exists on this shape,
+ * so none can reach the browser before the parent approves.
+ */
+export type ParentHubWaitingChild = {
+  userId: string;
+  username: string;
+  cohort: MasteryCohort | null;
+  status: "waiting";
+  /** Open approval in "Needs your OK", when there is one. */
   requestId?: string;
 };
+
+/** One card in the Parent Hub list. */
+export type ParentHubChild = ParentHubActiveChild | ParentHubWaitingChild;
+
+/** Keys a waiting child may carry to the client. Anything else is a leak. */
+export const WAITING_CHILD_KEYS = [
+  "userId",
+  "username",
+  "cohort",
+  "status",
+  "requestId",
+] as const;
 
 export type PendingApprovalRef = {
   requestId: string;
@@ -25,12 +48,26 @@ export type PendingApprovalRef = {
 /** Chip on a waiting child's card. Same words as the "Needs your OK" row. */
 export const PENDING_CONSENT_CHIP = "Waiting for approval";
 
+function waitingChild(
+  base: { userId: string; username: string; cohort: MasteryCohort | null },
+  requestId?: string,
+): ParentHubWaitingChild {
+  // Built field by field so nothing extra from a source row is copied over.
+  return {
+    userId: base.userId,
+    username: base.username,
+    cohort: base.cohort,
+    status: "waiting",
+    ...(requestId ? { requestId } : {}),
+  };
+}
+
 /**
  * Every child the parent should see: linked children plus children whose
  * consent request is still waiting for this parent (not linked until
- * approved). A waiting child carries no progress (lessons and coins are 0)
- * because the parent hasn't consented yet, and is matched to its open
- * approval so the card can open it. Active first, then by name.
+ * approved). A waiting child carries identity only (id, name, track) and is
+ * matched to its open approval so the card can open it. Active first, then
+ * by name.
  */
 export function mergeParentHubChildren(
   linked: readonly ParentHubChild[],
@@ -46,17 +83,12 @@ export function mergeParentHubChildren(
   const seen = new Set<string>();
   const merged: ParentHubChild[] = linked.map((child) => {
     seen.add(child.userId);
-    if (child.status !== "waiting") return { ...child };
+    if (child.status === "active") return { ...child };
     const request =
       byChildId.get(child.userId) ??
       byName.get(child.username.trim().toLowerCase());
     if (request) seen.add(request.childId);
-    return {
-      ...child,
-      lessonsDone: 0,
-      coins: 0,
-      ...(request ? { requestId: request.requestId } : {}),
-    };
+    return waitingChild(child, request?.requestId ?? child.requestId);
   });
 
   const linkedNames = new Set(
@@ -66,15 +98,16 @@ export function mergeParentHubChildren(
     if (seen.has(request.childId)) continue;
     if (linkedNames.has(request.childUsername.trim().toLowerCase())) continue;
     seen.add(request.childId);
-    merged.push({
-      userId: request.childId,
-      username: request.childUsername.trim(),
-      cohort: request.childCohort,
-      status: "waiting",
-      lessonsDone: 0,
-      coins: 0,
-      requestId: request.requestId,
-    });
+    merged.push(
+      waitingChild(
+        {
+          userId: request.childId,
+          username: request.childUsername.trim(),
+          cohort: request.childCohort,
+        },
+        request.requestId,
+      ),
+    );
   }
 
   return merged.sort((a, b) =>

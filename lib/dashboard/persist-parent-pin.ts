@@ -2,8 +2,11 @@
 
 import "server-only";
 
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
-import { hashCredential, verifyCredential } from "@/lib/auth/credential-hash";
+import { hashCredential } from "@/lib/auth/credential-hash";
+import {
+  checkParentPinWithLockout,
+  clearParentPinLockout,
+} from "@/lib/parent/parent-pin-lockout";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isFourDigitPin } from "@/lib/validation/pin";
@@ -54,21 +57,22 @@ export async function persistParentPin(input: {
     return { ok: false, error: NOT_PARENT };
   }
 
-  const limit = consumeRateLimit(`parent-pin:${userId}`, 8, 15 * 60 * 1000);
-  if (!limit.allowed) {
-    return {
-      ok: false,
-      error: "Too many PIN attempts. Wait a few minutes, then try again.",
-    };
-  }
-
   const existing =
     typeof profile.parent_pin_hash === "string" ? profile.parent_pin_hash.trim() : "";
   if (existing && !input.recovery) {
-    const current = input.currentPin?.trim() ?? "";
-    if (!isFourDigitPin(current) || !verifyCredential(current, existing)) {
-      return { ok: false, error: "Current PIN doesn't match." };
-    }
+    // Changing a PIN needs the current one, under the shared wrong-PIN lockout.
+    const checked = await checkParentPinWithLockout({
+      parentId: userId,
+      pin: input.currentPin?.trim() ?? "",
+      storedHash: existing,
+      copy: {
+        missing: "Current PIN doesn't match.",
+        format: "Current PIN doesn't match.",
+        wrong: "Current PIN doesn't match.",
+        locked: "Too many PIN attempts. Wait a few minutes, then try again.",
+      },
+    });
+    if (!checked.ok) return { ok: false, error: checked.error };
   }
 
   const { error: saved } = await admin
@@ -77,6 +81,7 @@ export async function persistParentPin(input: {
     .eq("id", userId)
     .eq("account_role", "parent_master");
   if (saved) return { ok: false, error: SAVE_ERROR };
+  await clearParentPinLockout(userId);
   return { ok: true };
 }
 

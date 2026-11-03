@@ -1,0 +1,121 @@
+/**
+ * TEST-ONLY progress logic for the Launchpad venture flow.
+ *
+ * Progress is a list of completed task ids. Everything else (which bronze
+ * door, silver plaque and floor is done or current) is derived from it, so
+ * a real backend only has to persist completed task ids per learner and
+ * venture. See `venture-test-storage.ts` for the client-side stub.
+ */
+import {
+  VENTURE_TEST_FLOORS,
+  getVentureTestFloor,
+  type VentureTestBronze,
+  type VentureTestFloor,
+  type VentureTestSilver,
+} from "@/lib/launchpad/venture-test/venture-test-structure";
+
+export type VentureTestProgress = {
+  completedTaskIds: readonly string[];
+};
+
+export const EMPTY_VENTURE_TEST_PROGRESS: VentureTestProgress = {
+  completedTaskIds: [],
+};
+
+export type NodeState = "done" | "current" | "locked";
+
+export function isBronzeDone(progress: VentureTestProgress, bronze: VentureTestBronze): boolean {
+  return bronze.tasks.every((t) => progress.completedTaskIds.includes(t.id));
+}
+
+export function isSilverDone(progress: VentureTestProgress, silver: VentureTestSilver): boolean {
+  return silver.bronzes.every((b) => isBronzeDone(progress, b));
+}
+
+export function isFloorDone(progress: VentureTestProgress, floor: VentureTestFloor): boolean {
+  return floor.silvers.every((s) => isSilverDone(progress, s));
+}
+
+/** The first floor that is not done (the top floor once everything is done). */
+export function currentLevel(progress: VentureTestProgress): number {
+  const open = VENTURE_TEST_FLOORS.find((f) => !isFloorDone(progress, f));
+  return open ? open.level : VENTURE_TEST_FLOORS.length;
+}
+
+export function floorState(progress: VentureTestProgress, level: number): NodeState {
+  const floor = getVentureTestFloor(level);
+  if (isFloorDone(progress, floor)) return "done";
+  return level === currentLevel(progress) ? "current" : "locked";
+}
+
+/** Plaque states on a floor: done ones first, one current, the rest locked. */
+export function silverStates(progress: VentureTestProgress, floor: VentureTestFloor): NodeState[] {
+  const open = floorState(progress, floor.level) !== "locked";
+  let seenCurrent = false;
+  return floor.silvers.map((s) => {
+    if (isSilverDone(progress, s)) return "done";
+    if (open && !seenCurrent) {
+      seenCurrent = true;
+      return "current";
+    }
+    return "locked";
+  });
+}
+
+/** Door states inside a silver: done ones first, one current, the rest locked. */
+export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver): NodeState[] {
+  let seenCurrent = false;
+  return silver.bronzes.map((b) => {
+    if (isBronzeDone(progress, b)) return "done";
+    if (!seenCurrent) {
+      seenCurrent = true;
+      return "current";
+    }
+    return "locked";
+  });
+}
+
+export function completeTask(progress: VentureTestProgress, taskId: string): VentureTestProgress {
+  if (progress.completedTaskIds.includes(taskId)) return progress;
+  return { completedTaskIds: [...progress.completedTaskIds, taskId] };
+}
+
+export function tasksDoneCount(progress: VentureTestProgress, bronze: VentureTestBronze): number {
+  return bronze.tasks.filter((t) => progress.completedTaskIds.includes(t.id)).length;
+}
+
+/** Index of the first task not done, or 0 when all are done. */
+export function firstOpenTaskIndex(progress: VentureTestProgress, bronze: VentureTestBronze): number {
+  const i = bronze.tasks.findIndex((t) => !progress.completedTaskIds.includes(t.id));
+  return i === -1 ? 0 : i;
+}
+
+export type WorkbookAdvance =
+  | { kind: "task"; taskIndex: number }
+  | { kind: "bronze-done" }
+  | { kind: "silver-done" }
+  | { kind: "floor-done" };
+
+/**
+ * Where the workbook goes after the learner finishes the task at `taskIndex`.
+ * The learner stays in the workbook until every task is done; then the flow
+ * goes back to the doors, the corridor, or the level-complete corridor.
+ */
+export function advanceAfterTask(
+  progress: VentureTestProgress,
+  floor: VentureTestFloor,
+  silver: VentureTestSilver,
+  bronze: VentureTestBronze,
+  taskIndex: number,
+): WorkbookAdvance {
+  if (!isBronzeDone(progress, bronze)) {
+    const next = bronze.tasks.findIndex(
+      (t, i) => i > taskIndex && !progress.completedTaskIds.includes(t.id),
+    );
+    if (next !== -1) return { kind: "task", taskIndex: next };
+    return { kind: "task", taskIndex: firstOpenTaskIndex(progress, bronze) };
+  }
+  if (!isSilverDone(progress, silver)) return { kind: "bronze-done" };
+  if (!isFloorDone(progress, floor)) return { kind: "silver-done" };
+  return { kind: "floor-done" };
+}

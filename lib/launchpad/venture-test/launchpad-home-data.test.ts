@@ -10,22 +10,40 @@ import { VENTURE_BLUEPRINTS } from "@/lib/launchpad/venture-blueprints";
 
 describe("Launchpad home data (r12)", () => {
   it("keeps Jasper's category and tile order", () => {
-    const names = LAUNCHPAD_CATEGORIES.map((c) => [c.name, c.tiles.map((t) => (t.kind === "idea" ? t.name : "MORE"))]);
+    const names = LAUNCHPAD_CATEGORIES.map((c) => [
+      c.name,
+      c.tiles.map((t) => (t.kind === "idea" ? t.name : "MORE")),
+    ]);
     expect(names).toEqual([
       ["Services", ["Dog walking", "Lawn mowing", "Babysitting"]],
       [
         "Make and Sell: Physical",
-        ["Craft", "Lemonade stand", "Fixed-up secondhand items", LAUNCHPAD_HOME_COPY.nursery, "Baked goods", "Printed T-shirts", "Writing a book"],
+        [
+          "Craft",
+          "Lemonade stand",
+          "Fixed-up secondhand items",
+          LAUNCHPAD_HOME_COPY.nursery,
+          "Baked goods",
+          "Printed T-shirts",
+          "Writing a book",
+        ],
       ],
-      ["Make and Sell: Digital", ["Printables", "Digital stickers", "Digital art shop", "MORE"]],
+      [
+        "Make and Sell: Digital",
+        ["Printables", "Digital stickers", "Digital art shop", "MORE"],
+      ],
       ["Growth Add-ons", ["Teach others"]],
     ]);
   });
 
   it("has Dog walking as the only live, featured tile, backed by a blueprint", () => {
     expect(liveVentureIds()).toEqual(["dog-walking"]);
-    const featured = LAUNCHPAD_CATEGORIES.flatMap((c) => c.tiles).filter((t) => t.kind === "idea" && t.featured);
-    expect(featured.map((t) => (t.kind === "idea" ? t.name : ""))).toEqual(["Dog walking"]);
+    const featured = LAUNCHPAD_CATEGORIES.flatMap((c) => c.tiles).filter(
+      (t) => t.kind === "idea" && t.featured,
+    );
+    expect(featured.map((t) => (t.kind === "idea" ? t.name : ""))).toEqual([
+      "Dog walking",
+    ]);
     expect(VENTURE_BLUEPRINTS.some((b) => b.id === "dog-walking")).toBe(true);
   });
 
@@ -44,5 +62,21 @@ describe("Launchpad home data (r12)", () => {
     expect(categoryPillOpacity(330, 330)).toBe(1);
     expect(categoryPillOpacity(0, 50)).toBe(0.5);
     expect(categoryPillOpacity(0, 230)).toBe(0);
+  });
+});
+
+describe("r3 building window counts", () => {
+  it("upper floors match Jasper's r3 art (one window per silver)", async () => {
+    const { VENTURE_TEST_FLOORS } =
+      await import("@/lib/launchpad/venture-test/venture-test-structure");
+    const counts = Object.fromEntries(
+      VENTURE_TEST_FLOORS.map((f) => [f.level, f.silvers.length]),
+    );
+    expect({ 2: counts[2], 3: counts[3], 4: counts[4], 5: counts[5] }).toEqual({
+      2: 3,
+      3: 6,
+      4: 4,
+      5: 4,
+    });
   });
 });

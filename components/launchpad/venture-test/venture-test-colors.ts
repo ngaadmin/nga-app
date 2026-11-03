@@ -26,6 +26,8 @@ export const VT = {
   liftDoor: "#dde7ef",
   liftDoorEdge: "#c9d6e2",
   divider: "#e3eef5",
+  leaf: "#3fb67a", // rooftop plants
+  leafDark: "#2f9e66",
 } as const;
 
 /** SVG <text> can't use next/font class names, so it reads the font variable. */

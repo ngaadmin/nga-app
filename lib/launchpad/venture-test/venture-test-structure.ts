@@ -76,12 +76,12 @@ export const VENTURE_TEST_FLOORS: readonly VentureTestFloor[] = [
     silvers: [
       {
         id: "l1-s1",
-        title: "Define your business",
+        title: "Define the business",
         placeholder: false,
         bronzes: [
-          bronze("l1-s1-b1", "Pick a product type", false),
-          bronze("l1-s1-b2", "Shape what it is", false),
-          bronze("l1-s1-b3", "Land on a name", false),
+          bronze("l1-s1-b1", "Pick a business type", false),
+          bronze("l1-s1-b2", "Find the why", false),
+          bronze("l1-s1-b3", "Pick a cause", false),
         ],
       },
       {

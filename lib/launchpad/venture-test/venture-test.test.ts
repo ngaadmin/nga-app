@@ -28,7 +28,7 @@ function doneThrough(progress: VentureTestProgress, ids: string[]): VentureTestP
 describe("venture test structure", () => {
   it("has five floors with the design window counts", () => {
     expect(VENTURE_TEST_FLOORS.map((f) => f.silvers.length)).toEqual([3, 3, 6, 4, 4]);
-    expect(L1.silvers.map((s) => s.title)).toEqual(["Define your business", "Find your why", "Set your goals"]);
+    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Find your why", "Set your goals"]);
   });
 });
 

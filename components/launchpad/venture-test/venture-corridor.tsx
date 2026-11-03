@@ -23,7 +23,9 @@ function Plaque({ label, state, onOpen }: { label: string; state: NodeState; onO
           </>
         )}
       </span>
-      {state === "current" && <span className="mt-0.5 block text-xs font-medium opacity-95">Tap to start</span>}
+      <span className="mt-0.5 block text-xs font-medium opacity-95">
+        {state === "current" ? "Tap to start" : state === "done" ? "Tap to review" : "Tap to look inside"}
+      </span>
       {(["top", "bottom"] as const).flatMap((v) =>
         (["left", "right"] as const).map((h) => (
           <span
@@ -42,18 +44,16 @@ function Plaque({ label, state, onOpen }: { label: string; state: NodeState; onO
     </>
   );
   const cls = `relative mx-auto mb-[18px] block w-[236px] rounded-[10px] px-3 py-4 text-center ${surface}`;
-  // Only the current plaque can be tapped.
-  if (state === "current") {
-    return (
-      <button type="button" onClick={onOpen} className={cls}>
-        {body}
-      </button>
-    );
-  }
+  // Every plaque can be tapped. A locked plaque opens its doors read-only.
   return (
-    <div className={cls} aria-disabled="true" aria-label={`${label}, ${state === "done" ? "done" : "locked"}`}>
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cls}
+      aria-label={`${label}, ${state === "current" ? "up next" : state === "done" ? "done" : "locked"}`}
+    >
       {body}
-    </div>
+    </button>
   );
 }
 

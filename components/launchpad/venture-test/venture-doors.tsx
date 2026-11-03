@@ -2,7 +2,7 @@ import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progre
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
-function Door({ label, state, onOpen }: { label: string; state: NodeState; onOpen: () => void }) {
+function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: string; state: NodeState; onOpen: () => void }) {
   const doorColor = state === "done" ? VT.panel : state === "current" ? VT.secondary : VT.lockDot;
   const knob = state === "current" ? VT.cta : "#fff";
   const surface =
@@ -22,6 +22,9 @@ function Door({ label, state, onOpen }: { label: string; state: NodeState; onOpe
       </svg>
       <span className="block text-left">
         <span className={`block font-heading text-[17px] font-bold ${state === "locked" ? "text-[#8a9bb0]" : "text-nga-ink"}`}>{label}</span>
+        {subtitle && (
+          <span className={`mt-0.5 block text-[13px] leading-snug ${state === "locked" ? "text-[#8a9bb0]" : "text-nga-slate"}`}>{subtitle}</span>
+        )}
         <span className="mt-1.5 block">
           {state === "done" && <span className="font-heading text-[13px] font-semibold text-nga-secondary-shadow">✓ Done</span>}
           {state === "current" && (
@@ -54,7 +57,9 @@ function Door({ label, state, onOpen }: { label: string; state: NodeState; onOpe
 export function VentureDoors(props: {
   level: number;
   silverTitle: string;
-  bronzes: readonly { id: string; title: string; state: NodeState }[];
+  bronzes: readonly { id: string; title: string; subtitle?: string; state: NodeState }[];
+  /** Set when the plaque is still locked: the doors show read-only. */
+  lockedNote?: string;
   onBuilding: () => void;
   onCorridor: () => void;
   onOpenBronze: (bronzeId: string) => void;
@@ -63,9 +68,9 @@ export function VentureDoors(props: {
     <section className="flex flex-1 flex-col">
       <TrailCrumb level={props.level} current={props.silverTitle} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
       <Heading>{props.silverTitle}</Heading>
-      <SubLine className="mb-4">Open a door to see its tasks.</SubLine>
+      <SubLine className="mb-4">{props.lockedNote ?? "Open a door to see its tasks."}</SubLine>
       {props.bronzes.map((b) => (
-        <Door key={b.id} label={b.title} state={b.state} onOpen={() => props.onOpenBronze(b.id)} />
+        <Door key={b.id} label={b.title} subtitle={b.subtitle} state={b.state} onOpen={() => props.onOpenBronze(b.id)} />
       ))}
     </section>
   );

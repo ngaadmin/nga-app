@@ -141,13 +141,19 @@ export function VentureFlow({ ventureId, ventureTitle, reset }: { ventureId: str
     }
     case "doors": {
       const floor = getVentureTestFloor(view.level);
-      const silver = floor.silvers.find((s) => s.id === view.silverId)!;
-      const states = bronzeStates(progress, silver);
+      const silverIndex = floor.silvers.findIndex((s) => s.id === view.silverId);
+      const silver = floor.silvers[silverIndex]!;
+      const open = silverStates(progress, floor)[silverIndex] !== "locked";
+      const states = bronzeStates(progress, silver, open);
+      const prevTitle = floor.silvers[silverIndex - 1]?.title;
       body = (
         <VentureDoors
           level={floor.level}
           silverTitle={silver.title}
-          bronzes={silver.bronzes.map((b, i) => ({ id: b.id, title: b.title, state: states[i] ?? "locked" }))}
+          bronzes={silver.bronzes.map((b, i) => ({ id: b.id, title: b.title, subtitle: b.subtitle, state: states[i] ?? "locked" }))}
+          lockedNote={
+            open ? undefined : prevTitle ? `Finish "${prevTitle}" to unlock these doors.` : `Finish Level ${floor.level - 1} to unlock these doors.`
+          }
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           onOpenBronze={(bronzeId) => go({ screen: "tasks", level: floor.level, silverId: silver.id, bronzeId })}

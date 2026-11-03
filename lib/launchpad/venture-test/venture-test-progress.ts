@@ -62,12 +62,16 @@ export function silverStates(progress: VentureTestProgress, floor: VentureTestFl
   });
 }
 
-/** Door states inside a silver: done ones first, one current, the rest locked. */
-export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver): NodeState[] {
+/**
+ * Door states inside a silver: done ones first, one current, the rest locked.
+ * Every plaque can be tapped, so when the silver itself is locked (`open` is
+ * false) no door is current and the learner can only look.
+ */
+export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true): NodeState[] {
   let seenCurrent = false;
   return silver.bronzes.map((b) => {
     if (isBronzeDone(progress, b)) return "done";
-    if (!seenCurrent) {
+    if (open && !seenCurrent) {
       seenCurrent = true;
       return "current";
     }

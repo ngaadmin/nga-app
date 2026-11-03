@@ -4,7 +4,8 @@
  * local dev only.
  *
  * Titles marked `placeholder: true` are TBC and must not ship as real copy.
- * Level 1 titles come from the approved design (lp-polished-r3).
+ * Level 1 follows Storybird's 3 Nov core structure: two silvers, "Define the
+ * business" (3 bronzes) and "Set your goals" (1 bronze).
  */
 
 export type VentureTestTask = {
@@ -17,6 +18,8 @@ export type VentureTestTask = {
 export type VentureTestBronze = {
   id: string;
   title: string;
+  /** Optional short line under the door title. */
+  subtitle?: string;
   placeholder: boolean;
   tasks: readonly VentureTestTask[];
 };
@@ -47,8 +50,8 @@ function placeholderTasks(prefix: string): VentureTestTask[] {
   }));
 }
 
-function bronze(id: string, title: string, placeholder: boolean): VentureTestBronze {
-  return { id, title, placeholder, tasks: placeholderTasks(id) };
+function bronze(id: string, title: string, placeholder: boolean, subtitle?: string): VentureTestBronze {
+  return { id, title, placeholder, tasks: placeholderTasks(id), ...(subtitle ? { subtitle } : {}) };
 }
 
 function placeholderBronzes(prefix: string): VentureTestBronze[] {
@@ -66,13 +69,13 @@ function placeholderSilvers(prefix: string, count: number): VentureTestSilver[] 
 
 /**
  * Five floors, L1 Vision and Goals to L5 Growing. The window count on each
- * floor equals its silver count (design r3: 3, 3, 6, 4, 4).
+ * floor equals its silver count (L1 is 2 per the 3 Nov core structure; then 3, 6, 4, 4).
  */
 export const VENTURE_TEST_FLOORS: readonly VentureTestFloor[] = [
   {
     level: 1,
     name: "Vision and Goals",
-    goal: "Know what business you'll start, why it matters, and what it should achieve",
+    goal: "Know what type of business to start, why it matters to you, and the goals you'll aim for.",
     silvers: [
       {
         id: "l1-s1",
@@ -86,15 +89,9 @@ export const VENTURE_TEST_FLOORS: readonly VentureTestFloor[] = [
       },
       {
         id: "l1-s2",
-        title: "Find your why",
-        placeholder: false,
-        bronzes: placeholderBronzes("l1-s2"),
-      },
-      {
-        id: "l1-s3",
         title: "Set your goals",
         placeholder: false,
-        bronzes: placeholderBronzes("l1-s3"),
+        bronzes: [bronze("l1-s2-b1", "Set goals", false, "Your money goal and how much to donate")],
       },
     ],
   },

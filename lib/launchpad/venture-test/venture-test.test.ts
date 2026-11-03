@@ -27,8 +27,11 @@ function doneThrough(progress: VentureTestProgress, ids: string[]): VentureTestP
 
 describe("venture test structure", () => {
   it("has five floors with the design window counts", () => {
-    expect(VENTURE_TEST_FLOORS.map((f) => f.silvers.length)).toEqual([3, 3, 6, 4, 4]);
-    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Find your why", "Set your goals"]);
+    expect(VENTURE_TEST_FLOORS.map((f) => f.silvers.length)).toEqual([2, 3, 6, 4, 4]);
+    expect(L1.goal).toBe("Know what type of business to start, why it matters to you, and the goals you'll aim for.");
+    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Set your goals"]);
+    expect(at(L1.silvers, 0).bronzes.map((b) => b.title)).toEqual(["Pick a business type", "Find the why", "Pick a cause"]);
+    expect(at(L1.silvers, 1).bronzes.map((b) => b.title)).toEqual(["Set goals"]);
   });
 });
 
@@ -37,8 +40,13 @@ describe("venture test progress", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
     expect(currentLevel(p)).toBe(1);
     expect(floorState(p, 2)).toBe("locked");
-    expect(silverStates(p, L1)).toEqual(["current", "locked", "locked"]);
+    expect(silverStates(p, L1)).toEqual(["current", "locked"]);
     expect(bronzeStates(p, at(L1.silvers, 0))).toEqual(["current", "locked", "locked"]);
+  });
+
+  it("shows a locked plaque's doors all locked", () => {
+    const p = EMPTY_VENTURE_TEST_PROGRESS;
+    expect(bronzeStates(p, at(L1.silvers, 1), silverStates(p, L1)[1] !== "locked")).toEqual(["locked"]);
   });
 
   it("goes back to the doors after the last task of a bronze", () => {
@@ -62,9 +70,10 @@ describe("venture test progress", () => {
     let p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, all1);
     const lastB = at(s.bronzes, s.bronzes.length - 1);
     expect(advanceAfterTask(p, L1, s, lastB, lastB.tasks.length - 1)).toEqual({ kind: "silver-done" });
-    expect(silverStates(p, L1)).toEqual(["done", "current", "locked"]);
+    expect(silverStates(p, L1)).toEqual(["done", "current"]);
+    expect(bronzeStates(p, at(L1.silvers, 1), true)).toEqual(["current"]);
     p = doneThrough(p, L1.silvers.flatMap((x) => x.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
-    const s3 = at(L1.silvers, 2);
+    const s3 = at(L1.silvers, 1);
     const b3 = at(s3.bronzes, s3.bronzes.length - 1);
     expect(advanceAfterTask(p, L1, s3, b3, b3.tasks.length - 1)).toEqual({ kind: "floor-done" });
     expect(floorState(p, 1)).toBe("done");

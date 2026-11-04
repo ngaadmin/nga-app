@@ -10,6 +10,16 @@ import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answer
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { ScreenGuidance, ScreenIntro, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
+/** The values with the currency filled from the Parent Hub preference when the screen has a currency blank still empty. */
+export function withCurrency(
+  values: Readonly<Record<string, string | number>>,
+  currencyField: LaunchpadTextField | undefined,
+  preference: () => string = readCurrencyPreference,
+): Readonly<Record<string, string | number>> {
+  if (!currencyField || values[currencyField.name]) return values;
+  return { ...values, [currencyField.name]: preference() };
+}
+
 /**
  * Short text box. Goal mode: one sentence with inline blanks. Paragraph
  * mode: the paragraph with text blanks as full-width boxes. Carried values
@@ -31,7 +41,11 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currencyField?.name, currencyMissing]);
 
-  const setValue = (name: string, v: string | number) => save(fieldsAnswer({ ...values, [name]: v }, na));
+  // Every save carries the currency too. The effect above saves it after the
+  // first paint; a blank typed before that re-render would otherwise save the
+  // stale values without it, leaving the chip at "—" and Next stuck off.
+  const setValue = (name: string, v: string | number) =>
+    save(fieldsAnswer({ ...withCurrency(values, currencyField), [name]: v }, na));
   const catalog = summaryCatalog(floors);
   const prefix = screen.id;
   const block = screen.mode === "paragraph";

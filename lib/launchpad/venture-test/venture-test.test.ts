@@ -4,9 +4,14 @@ import {
   EMPTY_VENTURE_TEST_PROGRESS,
   advanceAfterTask,
   bronzeStates,
+  buildingCta,
   completeTask,
   currentLevel,
+  firstOpenTaskIndex,
+  floorAccess,
   floorState,
+  isBuildingDone,
+  lockedDoorsNote,
   silverStates,
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -106,6 +111,80 @@ describe("venture test progress", () => {
       expect(floorState(p, FLOORS, floor.level)).toBe("done");
     }
     expect(currentLevel(p, FLOORS)).toBe(6);
+  });
+});
+
+function allTaskIds(levels: number[]): string[] {
+  return FLOORS.filter((f) => levels.includes(f.level)).flatMap((f) =>
+    f.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))),
+  );
+}
+
+describe("building floor access (tap any floor)", () => {
+  it("mid level 1: L1 enterable, every floor above is preview only", () => {
+    const s = at(L1.silvers, 0);
+    const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, at(s.bronzes, 0).tasks.map((t) => t.id));
+    expect(currentLevel(p, FLOORS)).toBe(1);
+    expect(FLOORS.map((f) => floorAccess(p, FLOORS, f.level))).toEqual([
+      "enter",
+      "preview",
+      "preview",
+      "preview",
+      "preview",
+      "preview",
+    ]);
+    expect(buildingCta(p, FLOORS)).toEqual({ kind: "level", level: 1, label: "Go to Level 1" });
+  });
+
+  it("a preview floor shows every plaque locked and every door read-only", () => {
+    const p = EMPTY_VENTURE_TEST_PROGRESS;
+    const l4 = at(FLOORS, 3);
+    const states = silverStates(p, FLOORS, l4);
+    expect(states).toEqual(["locked", "locked", "locked"]);
+    l4.silvers.forEach((s, i) => {
+      expect(bronzeStates(p, s, states[i] !== "locked").every((b) => b === "locked")).toBe(true);
+      expect(lockedDoorsNote(p, FLOORS, l4, i)).toBe("Finish Level 3 to unlock these doors.");
+    });
+  });
+
+  it("the current floor still unlocks plaques in order", () => {
+    const p = EMPTY_VENTURE_TEST_PROGRESS;
+    expect(lockedDoorsNote(p, FLOORS, L1, 0)).toBeUndefined();
+    expect(lockedDoorsNote(p, FLOORS, L1, 1)).toBe('Finish "Define the business" to unlock these doors.');
+  });
+
+  it("L1 done, L2 current: L1 re-enterable for review without changing progress", () => {
+    const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, allTaskIds([1]));
+    const before = [...p.completedTaskIds];
+    expect(currentLevel(p, FLOORS)).toBe(2);
+    expect(floorAccess(p, FLOORS, 1)).toBe("enter");
+    expect(floorAccess(p, FLOORS, 2)).toBe("enter");
+    expect(floorAccess(p, FLOORS, 3)).toBe("preview");
+    expect(silverStates(p, FLOORS, L1)).toEqual(["done", "done"]);
+    for (const s of L1.silvers) {
+      expect(bronzeStates(p, s, true).every((b) => b === "done")).toBe(true);
+      expect(lockedDoorsNote(p, FLOORS, L1, L1.silvers.indexOf(s))).toBeUndefined();
+      for (const b of s.bronzes) {
+        // Reopening a finished bronze starts at its first task; re-finishing tasks is a no-op.
+        expect(firstOpenTaskIndex(p, b)).toBe(0);
+        const again = doneThrough(p, b.tasks.map((t) => t.id));
+        expect(again).toBe(p);
+      }
+    }
+    expect(p.completedTaskIds).toEqual(before);
+    expect(buildingCta(p, FLOORS)).toEqual({ kind: "level", level: 2, label: "Go to Level 2" });
+  });
+
+  it("button names the working level, then the rooftop once every floor is done", () => {
+    let p = EMPTY_VENTURE_TEST_PROGRESS;
+    for (const floor of FLOORS) {
+      expect(buildingCta(p, FLOORS)).toEqual({ kind: "level", level: floor.level, label: `Go to Level ${floor.level}` });
+      expect(isBuildingDone(p, FLOORS)).toBe(false);
+      p = doneThrough(p, allTaskIds([floor.level]));
+    }
+    expect(isBuildingDone(p, FLOORS)).toBe(true);
+    expect(buildingCta(p, FLOORS)).toEqual({ kind: "rooftop", label: "Go to the rooftop" });
+    expect(FLOORS.every((f) => floorAccess(p, FLOORS, f.level) === "enter")).toBe(true);
   });
 });
 

@@ -342,18 +342,36 @@ export function VentureBuildingArt({
 /** r4 frame: the r3 390 x 604 box. Taller art is scaled to fit, centered, top-anchored. */
 const FRAME_H = 604;
 
-/** Full-size building for screen 1 (building-r4.svg framing). */
+/**
+ * Tap targets over each floor, in the unscaled art box. Invisible (no fill
+ * drawn), so the building art is unchanged; focus shows an outline only.
+ */
+export function buildingFloorHitBoxes(floors: readonly BuildingFloorView[]): { level: number; y: number; height: number }[] {
+  const upper = floors.filter((f) => f.level > 1).sort((a, b) => b.level - a.level);
+  const boxes = upper.map((f, idx) => ({ level: f.level, y: 48 + idx * FH, height: FH }));
+  if (floors.some((f) => f.level === 1)) boxes.push({ level: 1, y: 48 + upper.length * FH, height: 128 });
+  return boxes;
+}
+
+function floorTapLabel(f: BuildingFloorView): string {
+  const what = f.state === "done" ? "done, tap to review" : f.state === "current" ? "you are here" : "locked, tap to look inside";
+  return `Level ${f.level} · ${f.name}, ${what}`;
+}
+
+/** Full-size building for screen 1 (building-r4.svg framing). Every floor can be tapped when `onSelectFloor` is set. */
 export function VentureBuilding({
   floors,
   label,
+  onSelectFloor,
 }: {
   floors: readonly BuildingFloorView[];
   label: string;
+  onSelectFloor?: (level: number) => void;
 }) {
   const scale = Math.min(1, FRAME_H / buildingArtHeight(floors.length));
   return (
     <svg
-      role="img"
+      role={onSelectFloor ? "group" : "img"}
       aria-label={label}
       width="390"
       height="573"
@@ -362,6 +380,32 @@ export function VentureBuilding({
     >
       <g transform={`translate(195 -44) scale(${scale.toFixed(6)}) translate(-195 44)`}>
         <VentureBuildingArt floors={floors} />
+        {onSelectFloor &&
+          buildingFloorHitBoxes(floors).map((box) => {
+            const f = floors.find((x) => x.level === box.level)!;
+            return (
+              <rect
+                key={`hit-${box.level}`}
+                role="button"
+                tabIndex={0}
+                aria-label={floorTapLabel(f)}
+                data-floor-hit={`L${box.level}`}
+                x={BX}
+                y={box.y}
+                width={BW}
+                height={box.height}
+                fill="transparent"
+                className="cursor-pointer outline-none focus-visible:[stroke:#0cc1e0] focus-visible:[stroke-width:3]"
+                onClick={() => onSelectFloor(box.level)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectFloor(box.level);
+                  }
+                }}
+              />
+            );
+          })}
       </g>
     </svg>
   );

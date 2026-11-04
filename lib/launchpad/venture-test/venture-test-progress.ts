@@ -133,3 +133,56 @@ export function advanceAfterTask(
   if (!isFloorDone(progress, floor)) return { kind: "silver-done" };
   return { kind: "floor-done" };
 }
+
+/** True once every floor in the building is done. */
+export function isBuildingDone(progress: VentureTestProgress, floors: readonly VentureTestFloor[]): boolean {
+  return floors.length > 0 && floors.every((f) => isFloorDone(progress, f));
+}
+
+/**
+ * What tapping a floor on the building does. Every floor opens its corridor:
+ * done floors and the current floor can be entered (done ones fully
+ * re-entered for review), floors above the current one are preview only
+ * (locked plaques, read-only doors, nothing can be started).
+ */
+export type FloorAccess = "enter" | "preview";
+
+export function floorAccess(
+  progress: VentureTestProgress,
+  floors: readonly VentureTestFloor[],
+  level: number,
+): FloorAccess {
+  return floorState(progress, floors, level) === "locked" ? "preview" : "enter";
+}
+
+/**
+ * The building screen's bottom button: always "Go to Level N" for the level
+ * the learner is working on (whatever floor they previewed), or the rooftop
+ * finish once every floor is done.
+ */
+export type BuildingCta = { kind: "level"; level: number; label: string } | { kind: "rooftop"; label: string };
+
+export function buildingCta(progress: VentureTestProgress, floors: readonly VentureTestFloor[]): BuildingCta {
+  if (isBuildingDone(progress, floors)) return { kind: "rooftop", label: "Go to the rooftop" };
+  const level = currentLevel(progress, floors);
+  return { kind: "level", level, label: `Go to Level ${level}` };
+}
+
+/**
+ * Note on a plaque's doors when that plaque is still locked. On a preview
+ * floor (above the current one) it names the level to finish; on the current
+ * floor it names the plaque before it.
+ */
+export function lockedDoorsNote(
+  progress: VentureTestProgress,
+  floors: readonly VentureTestFloor[],
+  floor: VentureTestFloor,
+  silverIndex: number,
+): string | undefined {
+  const state = silverStates(progress, floors, floor)[silverIndex];
+  if (state !== "locked") return undefined;
+  const prevTitle = floor.silvers[silverIndex - 1]?.title;
+  if (floorState(progress, floors, floor.level) === "locked" || !prevTitle)
+    return `Finish Level ${floor.level - 1} to unlock these doors.`;
+  return `Finish "${prevTitle}" to unlock these doors.`;
+}

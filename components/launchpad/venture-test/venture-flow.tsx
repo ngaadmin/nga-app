@@ -6,12 +6,14 @@ import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view"
 import {
   advanceAfterTask,
   bronzeStates,
+  buildingCta,
   completeTask,
   currentLevel,
   firstOpenTaskIndex,
   floorState,
   isFloorDone,
   isSilverDone,
+  lockedDoorsNote,
   silverStates,
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -31,6 +33,7 @@ import { BronzeTaskList } from "@/components/launchpad/venture/bronze-task-list"
 import { TaskWorkbook } from "@/components/launchpad/venture/task-workbook";
 import { VentureUnavailable } from "@/components/launchpad/venture/venture-unavailable";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
+import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
@@ -43,7 +46,9 @@ type View =
   | { screen: "doors"; level: number; silverId: string }
   | { screen: "tasks"; level: number; silverId: string; bronzeId: string }
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number }
-  | { screen: "lift"; from: number };
+  | { screen: "lift"; from: number }
+  /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
+  | { screen: "rooftop" };
 
 /** Doors close, the indicator moves, then the next corridor opens. */
 const LIFT_MS = 2400;
@@ -203,25 +208,38 @@ export function VentureFlow({
       );
       break;
     case "building": {
+      const cta = buildingCta(progress, floors);
       const level = currentLevel(progress, floors);
-      const allDone = isFloorDone(progress, floorAt(floors, floors.length));
       body = (
         <section className="flex flex-1 flex-col">
           <BackCrumb label="Launchpad" onClick={toHome} />
           <Heading>{ventureTitle}</Heading>
           <VentureBuilding
             floors={buildingFloors(progress, floors)}
-            label={`${ventureTitle} building. Level ${level} is open.`}
+            label={
+              cta.kind === "rooftop"
+                ? `${ventureTitle} building. Every floor is done. Tap a floor to look inside.`
+                : `${ventureTitle} building. Level ${level} is open. Tap a floor to look inside.`
+            }
+            // Any floor can be tapped; floors above the current one open as a preview.
+            onSelectFloor={(l) => go({ screen: "corridor", level: l, entering: true })}
           />
           <div className="mx-5 -mt-1.5 pb-4">
-            <button type="button" className={`${BTN_ORANGE} w-full`} onClick={() => go({ screen: "corridor", level, entering: true })}>
-              {allDone ? `Revisit Level ${level}` : `Enter Level ${level}`}
+            <button
+              type="button"
+              className={`${BTN_ORANGE} w-full`}
+              onClick={() => go(cta.kind === "rooftop" ? { screen: "rooftop" } : { screen: "corridor", level: cta.level, entering: true })}
+            >
+              {cta.label}
             </button>
           </div>
         </section>
       );
       break;
     }
+    case "rooftop":
+      body = <VentureRooftopFinish onLaunchpadHome={toHome} />;
+      break;
     case "corridor": {
       const floor = floorAt(floors, view.level);
       const states = silverStates(progress, floors, floor);
@@ -257,15 +275,12 @@ export function VentureFlow({
       const silver = floor.silvers[silverIndex]!;
       const open = silverStates(progress, floors, floor)[silverIndex] !== "locked";
       const states = bronzeStates(progress, silver, open);
-      const prevTitle = floor.silvers[silverIndex - 1]?.title;
       body = (
         <BronzeDoors
           level={floor.level}
           silverTitle={silver.title}
           bronzes={silver.bronzes.map((b, i) => ({ id: b.id, title: b.title, subtitle: b.subtitle, state: states[i] ?? "locked" }))}
-          lockedNote={
-            open ? undefined : prevTitle ? `Finish "${prevTitle}" to unlock these doors.` : `Finish Level ${floor.level - 1} to unlock these doors.`
-          }
+          lockedNote={lockedDoorsNote(progress, floors, floor, silverIndex)}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           onOpenBronze={(bronzeId) => go({ screen: "tasks", level: floor.level, silverId: silver.id, bronzeId })}

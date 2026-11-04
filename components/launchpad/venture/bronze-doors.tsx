@@ -40,7 +40,8 @@ function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: st
     </>
   );
   const cls = `mx-5 mb-4 flex items-center gap-4 rounded-2xl p-3.5 ${surface}`;
-  if (state === "current") {
+  // The open door and finished doors (to review saved work) can be tapped; locked doors are read-only.
+  if (state === "current" || state === "done") {
     return (
       <button type="button" onClick={onOpen} className={`${cls} w-[calc(100%-40px)]`}>
         {body}

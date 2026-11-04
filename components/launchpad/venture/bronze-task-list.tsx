@@ -55,7 +55,7 @@ export function BronzeTaskList(props: {
       </ol>
       <div className="mx-5 mt-2.5">
         <button type="button" onClick={props.onStart} className={`${BTN_ORANGE} w-full`}>
-          Start
+          {props.tasks.length > 0 && doneCount === props.tasks.length ? "Review tasks" : "Start"}
         </button>
       </div>
       <p className="mx-5 my-4 text-center text-[12.5px] text-[#8a9bb0]">Task content TBC. Each milestone has 2 to 4 tasks.</p>

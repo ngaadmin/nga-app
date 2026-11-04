@@ -597,6 +597,14 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     const done = idPage.locator("[data-inline-editor-done]");
     await expect(done).toBeVisible();
     expect((await done.boundingBox())!.width).toBeLessThan(140);
+    const fit = await idPage.getByRole("radiogroup", { name: "Logo shape" }).evaluate((g) => {
+      const card = g.closest(".bg-white")!.getBoundingClientRect();
+      return [...g.querySelectorAll("button")].every((t) => {
+        const r = t.getBoundingClientRect();
+        return r.left >= card.left - 0.5 && r.right <= card.right + 0.5;
+      });
+    });
+    expect(fit).toBe(true);
     await shot(t, "Workbook identity page, inline editor open", null);
     await done.click();
     await expect(done).toHaveCount(0);

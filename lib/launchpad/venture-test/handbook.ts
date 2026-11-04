@@ -274,3 +274,8 @@ export function milestoneView(progress: VentureTestProgress, floors: readonly La
 export function partLabel(title: string, i: number): string {
   return /\b(bronze|silver|gold)\b/i.test(title) ? `Part ${i + 1}` : title;
 }
+
+/** Placeholder titles like "Bronze 1" or "Silver 2" never reach the screen: the tier word shows as "Step". */
+export function neutralTitle(title: string): string {
+  return title.replace(/\b(bronze|silver|gold)\b/gi, "Step");
+}

@@ -3,6 +3,7 @@ import { TaskScreen } from "@/components/launchpad/venture/task-screen-renderer"
 import { identityTaskKind, LogoBuilder, NameForm } from "@/components/launchpad/venture/identity/picker-screens";
 import { BTN_CYAN_COMPACT, BTN_CYAN_OUTLINE_COMPACT, Heading, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
+import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 
 /**
  * Workbook page. Previous and Next move freely between tasks; the learner
@@ -45,7 +46,7 @@ export function TaskWorkbook(props: {
   const previousDisabled = index === 0 && (!page || page.index === 0);
   return (
     <section className="flex flex-1 flex-col">
-      <TrailCrumb level={props.level} current={task.title} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
+      <TrailCrumb level={props.level} current={neutralTitle(task.title)} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
       <div className="mx-5 mt-2.5 flex justify-between font-heading text-[13px] font-semibold">
         <button type="button" onClick={props.onExit} className="text-nga-slate">
           ✕ Exit
@@ -88,7 +89,7 @@ export function TaskWorkbook(props: {
           {props.eyebrow}
         </p>
       )}
-      <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5"}>{task.title}</Heading>
+      <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5"}>{neutralTitle(task.title)}</Heading>
       {kind === "logo" && <LogoBuilder key={task.id} screens={task.screens as readonly LaunchpadLogoPickerScreen[]} />}
       {kind === "name" && <NameForm key={task.id} screens={task.screens as readonly LaunchpadNamePickerScreen[]} />}
       {page && <TaskScreen key={page.screen.id} screen={page.screen} />}

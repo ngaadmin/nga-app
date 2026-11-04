@@ -2,6 +2,7 @@ import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progre
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_PRIMARY, Heading, LockIcon, SubLine, TickBadge, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
+import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 
 /** Small orange marker on a door or plaque whose task was left open. */
 export function ComeBackMarker({ className = "" }: { className?: string }) {
@@ -103,7 +104,7 @@ export function BronzeDoors(props: {
       <Heading>{props.silverTitle}</Heading>
       <SubLine className="mb-4">{props.lockedNote ?? "Open a door to see its tasks."}</SubLine>
       {props.bronzes.map((b) => (
-        <Door key={b.id} label={b.title} subtitle={b.subtitle} state={b.state} comeBack={b.comeBack} onOpen={() => props.onOpenBronze(b.id)} />
+        <Door key={b.id} label={neutralTitle(b.title)} subtitle={b.subtitle} state={b.state} comeBack={b.comeBack} onOpen={() => props.onOpenBronze(b.id)} />
       ))}
       {props.wrapUp && (
         <div className="mx-5 mt-1 pb-4">

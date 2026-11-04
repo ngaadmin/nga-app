@@ -1,4 +1,5 @@
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
+import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 
 export type OpenStep = { taskId: string; title: string; onFinish: () => void };
 
@@ -18,7 +19,7 @@ export function OpenSteps({ steps }: { steps: readonly OpenStep[] }) {
       <ul className="mt-0.5 pl-3">
         {steps.map((s) => (
           <li key={s.taskId} className="flex items-center justify-between gap-3" data-open-step={s.taskId}>
-            <span className="min-w-0 text-[14px] text-nga-slate">{s.title}</span>
+            <span className="min-w-0 text-[14px] text-nga-slate">{neutralTitle(s.title)}</span>
             <button
               type="button"
               onClick={s.onFinish}

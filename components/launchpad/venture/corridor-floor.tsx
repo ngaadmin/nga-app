@@ -6,6 +6,7 @@ import { BackCrumb, BTN_LIFT, CheckIcon, Heading, LockIcon, TICK_COLOR } from "@
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
+import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 
 function Plaque({ label, state, onOpen, onComeBack }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void }) {
   const dot = state === "current" ? "#fff" : state === "done" ? VT.panel : VT.lockDot;
@@ -120,7 +121,7 @@ export type CorridorProps = {
 export function CorridorFloor(props: CorridorProps) {
   const { level, floorName, goal, silvers, entering, note, complete, onBack, onOpenSilver } = props;
   const plaques: ReactNode = silvers.map((s) => (
-    <Plaque key={s.id} label={s.title} state={s.state} onOpen={() => onOpenSilver(s.id)} onComeBack={s.onComeBack} />
+    <Plaque key={s.id} label={neutralTitle(s.title)} state={s.state} onOpen={() => onOpenSilver(s.id)} onComeBack={s.onComeBack} />
   ));
   return (
     <section className="flex flex-1 flex-col" aria-labelledby="lp-corridor-title">

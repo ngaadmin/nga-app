@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
@@ -24,7 +25,7 @@ function renderFlow(shortcut: VentureTestShortcut) {
   );
 }
 
-const door = (title: string) => screen.getByRole("button", { name: new RegExp(title) });
+const door = (title: string) => screen.getByRole("button", { name: new RegExp(neutralTitle(title)) });
 
 describe("bronze doors open their tasks directly (no task list)", () => {
   it("the 'Design your logo' door lands on the logo builder; Exit goes back to the doors", async () => {
@@ -50,7 +51,7 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     const bronze = silver.bronzes[0]!;
     const capture = bronze.tasks[0]!.screens[0]!;
     if (capture.type !== "choice-capture") throw new Error("expected the offer capture first");
-    fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     fireEvent.click(door(bronze.title));
     expect(bronze.tasks[0]!.screens).toHaveLength(1);
     expect(document.querySelector("[data-screen-type='context']")).toBeNull();
@@ -95,7 +96,7 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     const silver = PAYLOAD.floors[2]!.silvers[0]!;
     const bronze = silver.bronzes[0]!;
     expect(bronze.tasks.length).toBeGreaterThan(1);
-    fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     fireEvent.click(door(bronze.title));
     expect(screen.getByText(`Task 1 of ${bronze.tasks.length}`)).toBeTruthy();
     for (let i = 1; i < bronze.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
@@ -109,7 +110,7 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
   it("walks L1, edits on the wrap-up, then shows the silver page and the gold completion", async () => {
     renderFlow({ kind: "level", level: 1 });
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
-    fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     // Offer: one screen.
     fireEvent.click(door(silver.bronzes[0]!.title));
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
@@ -250,7 +251,7 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
 
 /** Opens every bronze of `silver` in turn and clicks through all its tasks. */
 async function finishSilver(silver: (typeof PAYLOAD.floors)[number]["silvers"][number]) {
-  fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+  fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
   for (const bronze of silver.bronzes) {
     fireEvent.click(door(bronze.title));
     for (let i = 0; i < bronze.tasks.length; i++) {
@@ -264,7 +265,7 @@ describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44p
   const rankIds = () => [...document.querySelectorAll("[data-rank-item]")].map((el) => el.getAttribute("data-rank-item"));
   async function openWhyRank() {
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
-    fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     // The why door opens once the offer is picked.
     fireEvent.click(door(silver.bronzes[0]!.title));
     while (!screen.queryByRole("button", { name: "Dog walking" })) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
@@ -323,7 +324,7 @@ describe("finishing a silver shows its handbook page", () => {
     expect(silver.wrapUp).toBeUndefined();
     // Review the silver's last bronze and finish its last task again.
     const last = silver.bronzes[silver.bronzes.length - 1]!;
-    fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     fireEvent.click(door(last.title));
     for (let i = 0; i < last.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
@@ -393,7 +394,7 @@ describe("Come back to this later", () => {
     render(<VentureFlow initialVentureId="dog-walking" ventureTitles={{ "dog-walking": "Dog walking" }} ventures={VENTURES} reset={false} />);
   const toDoors = async () => {
     fireEvent.click(await screen.findByRole("button", { name: "Go to Level 1" }));
-    fireEvent.click(screen.getAllByRole("button", { name: new RegExp(silver.title) })[0]!);
+    fireEvent.click(screen.getAllByRole("button", { name: new RegExp(neutralTitle(silver.title)) })[0]!);
   };
 
   it("defers with a draft, marks the door, blocks the wrap-up, then Finish this restores the draft and completes", async () => {
@@ -460,7 +461,7 @@ describe("Come back to this later", () => {
     fireEvent.click(screen.getByRole("button", { name: `Go: ${goals.title}` }));
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Level 1 corridor/ }));
-    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Come back: finish a step in ${silver.title}`) }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Come back: finish a step in ${neutralTitle(silver.title)}`) }));
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
   });
 });

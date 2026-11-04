@@ -59,11 +59,11 @@ function LogoTile({
       aria-label={label}
       data-option={option}
       onClick={onPick}
-      className="flex w-[92px] flex-col items-center gap-2 text-[13px] font-medium text-[#374151]"
+      className="flex min-w-0 max-w-[92px] flex-1 flex-col items-center gap-2 text-[13px] font-medium text-[#374151]"
     >
       <span
         aria-hidden="true"
-        className="flex size-[84px] items-center justify-center rounded-[20px]"
+        className="flex aspect-square w-full max-w-[84px] items-center justify-center rounded-[20px] [&_svg]:h-auto [&_svg]:w-[72%]"
         style={{ background: on ? "#FFFFFF" : "#F9FAFB", boxShadow: on ? `0 0 0 2px ${ring}` : undefined }}
       >
         {children}
@@ -84,7 +84,7 @@ export function ShapeChoices({
 }) {
   const base = answer.color ?? LOGO_PREVIEW_BASE;
   return (
-    <Group label="Logo shape" className="flex justify-center gap-4">
+    <Group label="Logo shape" className="flex w-full justify-center gap-2">
       {options.map((o) => (
         <LogoTile key={o.id} on={answer.shape === o.id} label={o.label} ring={base} option={o.id} onPick={() => update("shape", o.id)}>
           <LogoMark shape={o.id} color={base} icon={answer.icon} size={60} />
@@ -145,7 +145,7 @@ export function IconChoices({
 }) {
   const base = answer.color ?? LOGO_PREVIEW_BASE;
   return (
-    <Group label="Logo icon" className="flex justify-center gap-4">
+    <Group label="Logo icon" className="flex w-full justify-center gap-2">
       {options.map((o) => (
         <LogoTile key={o.id} on={answer.icon === o.id} label={o.label} ring={base} option={o.id} onPick={() => update("icon", o.id)}>
           <LogoMark shape={answer.shape ?? "circle"} color={base} icon={o.id} size={60} />

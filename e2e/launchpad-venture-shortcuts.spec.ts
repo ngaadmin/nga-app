@@ -88,7 +88,11 @@ test("deep links", async ({ page }, info) => {
   await step(t, "Level 3 workbook: compact Previous (left) and Next (right), aqua", async () => {
     await page.goto(url("reset=1&complete=l2-s1"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 3/, { timeout: 60_000 });
+    await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
     await page.getByRole("button", { name: /up next/ }).first().click();
+    await expect(page.locator("main").getByRole("button", { name: /Up next/ }).first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
+    await page.screenshot({ path: test.info().outputPath("level-3-doors.png") });
     await page.locator("main").getByRole("button", { name: /Up next/ }).first().click();
     await page.locator("[data-workbook-next]").click();
     const prev = page.locator("[data-workbook-previous]");
@@ -99,6 +103,7 @@ test("deep links", async ({ page }, info) => {
     expect(n!.width).toBeLessThan(160);
     expect(p!.x).toBeLessThan(40);
     expect(n!.x + n!.width).toBeGreaterThan(350);
+    await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
   });
   await shot(t, "Level 3 workbook, Previous and Next", page.locator("[data-workbook-next]"));
   await page.goto(url("reset=1&complete=l2-s1"));

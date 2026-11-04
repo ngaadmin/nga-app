@@ -15,15 +15,17 @@ import {
   LockedShopFrontArt,
   SHOP_ICONS,
 } from "@/components/launchpad/venture-test/launchpad-home-art";
-import { BTN_ORANGE } from "@/components/launchpad/venture-test/venture-test-ui";
-import { HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
+import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 
 export type InProgressVenture = {
   ventureId: string;
   name: string;
   level: number;
+  /** The current level's name, e.g. "Budgeting". */
   floorName: string;
+  /** Silvers done across the whole business. */
   done: number;
+  /** Every silver in the business's content. */
   total: number;
   /** At least one completed silver: the card shows the handbook button. */
   hasHandbook: boolean;
@@ -105,6 +107,61 @@ function MoreTile({ pill, pillOpacity }: { pill: string | null; pillOpacity: num
   );
 }
 
+/** Shared shape for the tile's two buttons: same height and corner radius. */
+const TILE_BTN = "h-12 min-w-12 rounded-[14px]";
+
+/** One "In Progress" tile: name, current level name, whole-business progress, handbook + Continue. */
+function InProgressTile({
+  venture: v,
+  onOpenVenture,
+  onOpenHandbook,
+}: {
+  venture: InProgressVenture;
+  onOpenVenture: (ventureId: string) => void;
+  onOpenHandbook?: (ventureId: string) => void;
+}) {
+  const pct = Math.round((v.done / Math.max(1, v.total)) * 100);
+  const progressLabel = `${v.done} of ${v.total} milestones done`;
+  return (
+    <div className="mb-2 rounded-2xl bg-nga-mist p-3" data-in-progress={v.ventureId}>
+      <p className="font-heading text-[15px] font-bold text-nga-ink">{v.name}</p>
+      <p className="mt-0.5 text-[13px] font-medium leading-[1.35] text-nga-slate" data-tile-level-name="">
+        {v.floorName}
+      </p>
+      <div
+        className="mt-[7px] h-1.5 overflow-hidden rounded-[3px] bg-white"
+        role="progressbar"
+        aria-label={progressLabel}
+        aria-valuemin={0}
+        aria-valuemax={v.total}
+        aria-valuenow={v.done}
+      >
+        <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        {v.hasHandbook && onOpenHandbook && (
+          <button
+            type="button"
+            aria-label="Open handbook"
+            onClick={() => onOpenHandbook(v.ventureId)}
+            className={`${TILE_BTN} flex w-12 flex-none items-center justify-center border border-[#BDE9FB] bg-white`}
+            data-handbook-button=""
+          >
+            <HandbookIcon />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onOpenVenture(v.ventureId)}
+          className={`${TILE_BTN} flex-1 bg-nga-cta font-heading text-[15px] font-bold text-white shadow-[0_3px_0_#c88202]`}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /** TEST-ONLY Launchpad landing page (Jasper's r12 home). */
 export function LaunchpadHome({
   inProgress,
@@ -174,28 +231,7 @@ export function LaunchpadHome({
         <p className="rounded-2xl bg-nga-mist p-[18px] text-base font-medium text-nga-slate">{LAUNCHPAD_HOME_COPY.emptyInProgress}</p>
       ) : (
         inProgress.map((v) => (
-          <div key={v.ventureId} className="mb-2 flex items-center gap-3 rounded-2xl bg-nga-mist p-3">
-            <span className="flex size-[34px] flex-none items-center justify-center rounded-[10px] bg-nga-secondary font-heading text-[13px] font-bold text-white">
-              L{v.level}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-heading text-[15px] font-bold text-nga-ink">{v.name}</p>
-              <p className="mt-0.5 text-[13px] font-medium leading-[1.35] text-nga-slate">
-                L{v.level} · {v.floorName} · {v.done} of {v.total} milestones
-              </p>
-              <div className="mt-[7px] h-1.5 overflow-hidden rounded-[3px] bg-white">
-                <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${Math.round((v.done / Math.max(1, v.total)) * 100)}%` }} />
-              </div>
-            </div>
-            {v.hasHandbook && onOpenHandbook && <HandbookButton onClick={() => onOpenHandbook(v.ventureId)} />}
-            <button
-              type="button"
-              onClick={() => onOpenVenture(v.ventureId)}
-              className={`${BTN_ORANGE} flex-none !px-3.5 !py-2 !text-sm shadow-[0_3px_0_#c88202]`}
-            >
-              Continue
-            </button>
-          </div>
+          <InProgressTile key={v.ventureId} venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} />
         ))
       )}
     </section>

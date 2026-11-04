@@ -110,15 +110,16 @@ function loadInProgress(
     const p = loadVentureTestProgress(id);
     if (!hasSeenVentureTestOnboarding(id) && p.completedTaskIds.length === 0) return [];
     const floor = floorAt(floors, currentLevel(p, floors));
-    const states = silverStates(p, floors, floor);
+    // Progress through the whole business: silvers done out of every silver in the content.
+    const silvers = floors.flatMap((f) => f.silvers);
     return [
       {
         ventureId: id,
         name: tileName(id) ?? titles[id] ?? id,
         level: floor.level,
         floorName: floor.name,
-        done: states.filter((s) => s === "done").length,
-        total: floor.silvers.length,
+        done: silvers.filter((s) => isSilverDone(p, s)).length,
+        total: silvers.length,
         hasHandbook: hasHandbook(p, floors),
       },
     ];

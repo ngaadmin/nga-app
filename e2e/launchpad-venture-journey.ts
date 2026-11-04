@@ -98,13 +98,14 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await shot(t, "Level 1 doors after the offer door", btn(page, /Find the why/));
 
   // Why (rank-order)
-  await step(t, "Find the why: exactly 5 items, no 'Prove I can do it'", async () => {
+  await step(t, "Find the why: exactly 4 items in order, no 'Prove I can do it' or 'Support a cause'", async () => {
     await btn(page, /Find the why/).click();
-    await expect(page.locator("[data-rank-item]")).toHaveCount(5);
+    await expect(page.locator("[data-rank-item]")).toHaveCount(4);
     await expect(main(page)).not.toContainText("Prove I can do it");
+    await expect(main(page)).not.toContainText("Support a cause");
     const labels = await page.locator("[data-rank-item]").allInnerTexts();
-    for (const l of ["Make money", "Help others", "Learn new skills", "Be my own boss", "Support a cause"])
-      expect(labels.join(" | ")).toContain(l);
+    const order = ["Make money", "Help others", "Learn new skills", "Be my own boss"];
+    order.forEach((l, i) => expect(labels[i]).toContain(l));
   });
   await shot(t, "Find the why, authored order", next);
   await step(t, "Find the why: move Help others to the top with the arrow", async () => {
@@ -124,12 +125,13 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(next).toBeDisabled();
     await expect(hint).toHaveText("Make a choice to keep going.");
     await btn(page, "Animals").click();
-    await btn(page, "Environment").click();
+    await btn(page, "The environment").click();
     await expect(btn(page, "Animals")).toHaveAttribute("aria-pressed", "false");
-    await expect(btn(page, "Environment")).toHaveAttribute("aria-pressed", "true");
+    for (const l of ["Animals", "The environment", "Kids in need", "People who are hungry", "Older people"]) await expect(btn(page, l)).toBeVisible();
+    await expect(btn(page, "The environment")).toHaveAttribute("aria-pressed", "true");
     await expect(next).toBeEnabled();
   });
-  await shot(t, "Know your impact, Environment picked", next);
+  await shot(t, "Know your impact, The environment picked", next);
   await step(t, "Finish Know your impact", async () => {
     await next.click();
     await expect(btn(page, /Set your goals/)).toContainText("Up next");
@@ -140,23 +142,27 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(main(page)).toContainText(`Goal ${n} of 6`, { ignoreCase: true });
     await expect(main(page)).toContainText(title);
   };
-  await step(t, "Set your goals: intro screen first (Step 1 of 7)", async () => {
+  await step(t, "Set your goals: Step 1 of 6 shows the intro, the guidance and goal 1's input together", async () => {
     await btn(page, /Set your goals/).click();
-    await expect(main(page)).toContainText("Step 1 of 7");
-    await expect(next).toHaveText("Next ›");
-    await expect(next).toBeEnabled();
-  });
-  await shot(t, "Set your goals, intro", next);
-
-  await step(t, "Goal 1 (4a) follows my ranking: Help others; Next off until every blank is filled", async () => {
-    await next.click();
+    await expect(main(page)).toContainText("Step 1 of 6");
+    await expect(main(page)).toContainText(
+      "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
+    );
     await goalPage(1, "Help others");
+    await expect(main(page).getByLabel("Benefit")).toBeVisible();
+  });
+  await shot(t, "Set your goals, step 1 with goal 1", next);
+
+  await step(t, "Goal 1 (4a) follows my ranking: Help others, benefit only (no timeframe), starts empty, no Not applicable", async () => {
+    await expect(main(page).getByRole("button", { name: "Not applicable" })).toHaveCount(0);
+    await expect(main(page).getByLabel("Weeks or months")).toHaveCount(0);
+    await expect(main(page).getByLabel("Number")).toHaveCount(0);
+    await expect(main(page).getByLabel("Benefit")).toHaveValue("");
     await expect(next).toBeDisabled();
     await expect(hint).toHaveText("Fill in each blank to keep going.");
+    // The full stop stays on the line with the benefit box.
+    await expect(main(page).locator("[data-sentence] [data-glued-punct]")).toHaveText(".");
     await main(page).getByLabel("Benefit").fill("TEST benefit one");
-    await main(page).getByLabel("Number").fill("3");
-    await expect(next).toBeDisabled();
-    await main(page).getByLabel("Months or years").selectOption("months");
     await expect(next).toBeEnabled();
   });
   await shot(t, "Goal 1 of 6, Help others, filled", next);
@@ -164,10 +170,15 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await step(t, "Goal 2 (4b): Make money with amount, currency, timeframe", async () => {
     await next.click();
     await goalPage(2, "Make money");
+    await expect(main(page)).toContainText(/I want to earn .* in /);
     await expect(next).toBeDisabled();
+    await expect(main(page).getByLabel("Amount")).toHaveValue("");
+    await expect(main(page).getByLabel("Number")).toHaveValue("");
+    await expect(main(page).getByLabel("Weeks or months")).toHaveValue("");
+    expect(await main(page).getByLabel("Weeks or months").locator("option").evaluateAll((o) => o.map((e) => (e as HTMLOptionElement).value).filter(Boolean))).toEqual(["weeks", "months"]);
     await main(page).getByLabel("Amount").fill("500");
     await main(page).getByLabel("Number").fill("6");
-    await main(page).getByLabel("Months or years").selectOption("months");
+    await main(page).getByLabel("Weeks or months").selectOption("months");
     await expect(main(page).locator("[data-currency-chip]")).not.toHaveText("—");
     await expect(next).toBeEnabled();
   });
@@ -186,8 +197,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await next.click();
     await goalPage(3, "Learn new skills");
     await main(page).getByLabel("Skill").fill("TEST skill");
-    await main(page).getByLabel("Number").fill("1");
-    await main(page).getByLabel("Months or years").selectOption("years");
+    await main(page).getByLabel("Number").fill("3");
+    await main(page).getByLabel("Weeks or months").selectOption("weeks");
     await expect(next).toBeEnabled();
   });
   await shot(t, "Goal 3 of 6, Learn new skills, filled", next);
@@ -202,10 +213,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Goal 4 of 6, Be my own boss, Choosing when I work picked", next);
 
-  await step(t, "Goal 5 (4e): Support a cause carries my cause (Environment)", async () => {
+  await step(t, "Goal 5 (4e): Support a cause carries my cause, lower-cased mid-sentence (to support the environment)", async () => {
     await next.click();
     await goalPage(5, "Support a cause");
-    await expect(main(page)).toContainText(/environment/i);
+    await expect(main(page).locator("[data-sentence]")).toContainText("to support the environment");
     await expect(next).toBeDisabled();
     await main(page).getByLabel("Percent").fill("10");
     await expect(next).toBeEnabled();
@@ -217,10 +228,19 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await goalPage(6, "Add another goal");
     await expect(next).toHaveText("Finish ›");
     await expect(next).toBeEnabled();
-    await main(page).getByLabel("My goal").fill("TEST other goal");
-    await main(page).getByLabel("Number").fill("20");
-    await main(page).getByLabel("Timeframe").fill("6");
-    await main(page).getByLabel("Months or years").selectOption("months");
+    // One inline sentence, everything empty at the start, no separate boxes and no Number field.
+    const sentence = main(page).locator("[data-sentence]");
+    await expect(main(page).locator("[data-extra-fields]")).toHaveCount(0);
+    await expect(sentence).toContainText("My goal is to");
+    await expect(sentence.getByLabel("My goal")).toHaveValue("");
+    await expect(sentence.getByLabel("Number")).toHaveValue("");
+    await expect(sentence.getByLabel("Weeks or months")).toHaveValue("");
+    await expect(main(page).getByLabel("Timeframe")).toHaveCount(0);
+    await expect(sentence.locator("[data-glued-punct]")).toHaveCount(0);
+    await sentence.getByLabel("My goal").fill("TEST other goal");
+    await expect(next).toBeEnabled();
+    await sentence.getByLabel("Number").fill("6");
+    await sentence.getByLabel("Weeks or months").selectOption("months");
   });
   await shot(t, "Goal 6 of 6, Add another goal, filled", next);
 
@@ -233,11 +253,13 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(offer).toContainText("Dog walking");
     await expect(offer).toContainText("Training");
     const why = await wrap.locator('[data-summary-section="my-why"]').innerText();
-    expect(why.replace(/\s+/g, " ")).toMatch(/1\. Help others 2\. Make money 3\. Learn new skills 4\. Be my own boss 5\. Support a cause/);
-    await expect(wrap.locator('[data-summary-section="my-cause"]')).toContainText("Environment");
+    expect(why.replace(/\s+/g, " ")).toMatch(/1\. Help others 2\. Make money 3\. Learn new skills 4\. Be my own boss(?! 5\.)/);
+    await expect(wrap.locator('[data-summary-section="my-cause"]')).toContainText(/the environment/i);
     const goals = wrap.locator('[data-summary-section="my-goals"]');
     for (const s of ["TEST benefit one", "500", "TEST skill", "Choosing when I work", "10", "TEST other goal"])
       await expect(goals).toContainText(s, { ignoreCase: true });
+    await expect(goals).toContainText("to support the environment");
+    await expect(goals).toContainText("My goal is to TEST other goal in 6 months.");
   });
   await shot(t, "Level 1 wrap-up, all answers shown", btn(page, "Confirm and continue"));
 
@@ -270,7 +292,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(sc).toBeVisible();
     await expect(sc.getByRole("heading", { name: "Added to your handbook" })).toBeVisible();
     await expect(sc).toContainText("TEST benefit edit");
-    await expect(sc).toContainText("Environment");
+    await expect(sc).toContainText(/the environment/i);
   });
   await shot(t, "Level 1 silver complete, handbook page", page.locator('[data-silver-complete="l1-s1"]').getByRole("button", { name: "Continue" }));
 
@@ -463,7 +485,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await hb.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
     await expect(hb.locator('[data-handbook-page="l1-s1"]')).toBeVisible();
     await expect(hb.locator('[data-handbook-page="l1-s1"]')).toContainText("TEST benefit edit");
-    await expect(hb.locator('[data-handbook-page="l1-s1"]')).toContainText("Environment");
+    await expect(hb.locator('[data-handbook-page="l1-s1"]')).toContainText(/the environment/i);
     const l1Tab = hb.getByRole("button", { name: "Level 1, Vision and Goals" });
     await expect(l1Tab).toHaveAttribute("data-viewed", /.*/);
     const outline = await l1Tab.evaluate((e) => {
@@ -516,7 +538,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     expect(saved).toContain("TEST benefit edit");
     await home.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
     await expect(home.locator('[data-handbook-page="l1-s1"]')).toContainText("TEST benefit edit");
-    await expect(home.locator('[data-handbook-page="l1-s1"]')).toContainText("Environment");
+    await expect(home.locator('[data-handbook-page="l1-s1"]')).toContainText(/the environment/i);
     await expect(page.locator('[data-handbook="home"] [data-pencil]')).toHaveCount(0);
   });
   await shot(t, "Handbook from home, read only", null);

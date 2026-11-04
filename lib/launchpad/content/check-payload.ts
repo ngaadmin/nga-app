@@ -246,6 +246,8 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       saves(answers, screen, "fields", where);
       return;
     case "goal-loop": {
+      text(screen.context, `${where} context`, true);
+      text(screen.guidance, `${where} guidance`, true);
       const ranking = reads(answers, screen.orderFrom, ["ranking"], `${where} orderFrom`);
       const itemIds = (ranking.items as Obj[]).map((o) => String(o.id));
       list(screen.skipRankItemIds, `${where} skipRankItemIds`, 0).forEach((raw) => {

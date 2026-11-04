@@ -73,13 +73,16 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     expect(door(silver.bronzes[1]!.title)).toBeTruthy();
   });
 
-  it("every L1 and L2 capture bronze is one screen with its context; Set your goals keeps its intro", () => {
+  it("every L1 and L2 capture bronze is one screen with its context; Set your goals carries its intro on the goal loop", () => {
     const bronzes = [...PAYLOAD.floors[0]!.silvers[0]!.bronzes, ...PAYLOAD.floors[1]!.silvers[0]!.bronzes];
     for (const b of bronzes) {
       const screens = b.tasks[0]!.screens;
-      if (screens[0]!.type === "context") {
+      expect(screens.some((s) => s.type === "context")).toBe(false);
+      if (screens[0]!.type === "goal-loop") {
         expect(b.title).toBe("Set your goals");
-        expect(screens[1]!.type).toBe("goal-loop");
+        expect(screens).toHaveLength(1);
+        expect(screens[0]!.context).toBeTruthy();
+        expect(screens[0]!.guidance).toBeTruthy();
       } else {
         expect(screens).toHaveLength(1);
         expect((screens[0] as { context?: string }).context).toBeTruthy();
@@ -124,19 +127,40 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     expect(finish.disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Animals" }));
     next();
-    // Goals, one page each in the ranked order (struck and skipped reasons left out).
+    // Goals, one page each in the ranked order (struck reasons left out). Step 1
+    // shows the Set your goals intro and the first goal's inputs together.
     fireEvent.click(door(silver.bronzes[3]!.title));
-    next();
+    const loop = silver.bronzes[3]!.tasks[0]!.screens[0]!;
+    if (loop.type !== "goal-loop") throw new Error("expected goal-loop");
+    expect(screen.getByText("Step 1 of 5")).toBeTruthy();
     expect(screen.getByText("Goal 1 of 5")).toBeTruthy();
+    expect(document.querySelector("[data-screen-intro] [data-guidance]")?.textContent).toBe(loop.guidance);
     expect(screen.getByText(/I want my customers to/)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Not applicable" }));
+    // No goal-level Not applicable (Cath, 4 Nov 8:49pm); Help others has no timeframe and starts empty.
+    expect(screen.queryByRole("button", { name: "Not applicable" })).toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
+    const benefit = screen.getByRole("textbox", { name: "Benefit" }) as HTMLInputElement;
+    expect(benefit.value).toBe("");
+    expect((screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(benefit, { target: { value: "have happy dogs" } });
     next();
+    expect(screen.getByText("Step 2 of 5")).toBeTruthy();
     expect(screen.getByText("Goal 2 of 5")).toBeTruthy();
     expect(screen.getByText(/I want to earn/)).toBeTruthy();
+    expect(document.body.textContent).toMatch(/ in /);
+    expect(document.querySelector("[data-screen-intro]")).toBeNull();
     expect((screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: "Amount" }), { target: { value: "500" } });
+    // Amount and duration start empty, with hints; the unit is weeks or months only.
+    const amount = screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement;
+    const weeksOrMonths = screen.getByRole("combobox", { name: "Weeks or months" }) as HTMLSelectElement;
+    expect(amount.value).toBe("");
+    expect((screen.getByRole("textbox", { name: "Number" }) as HTMLInputElement).value).toBe("");
+    expect((screen.getByRole("textbox", { name: "Number" }) as HTMLInputElement).placeholder).toBe("[1–99]");
+    expect(weeksOrMonths.value).toBe("");
+    expect([...weeksOrMonths.options].map((o) => o.value)).toEqual(["", "weeks", "months"]);
+    fireEvent.change(amount, { target: { value: "500" } });
     fireEvent.change(screen.getByRole("textbox", { name: "Number" }), { target: { value: "6" } });
-    fireEvent.change(screen.getByRole("combobox", { name: "Months or years" }), { target: { value: "months" } });
+    fireEvent.change(weeksOrMonths, { target: { value: "months" } });
     expect(document.querySelector("[data-currency-chip]")?.textContent).toBeTruthy();
     next();
     expect(screen.getByText("Goal 3 of 5")).toBeTruthy();
@@ -144,7 +168,8 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     next();
     expect(screen.getByText("Goal 4 of 5")).toBeTruthy();
     // The cause carries into the donate goal.
-    expect(document.querySelector("[data-carried='l1-cause']")?.textContent).toMatch(/^animals$/i);
+    expect(document.querySelector("[data-carried='l1-cause']")?.textContent).toBe("animals");
+    expect(document.querySelector("[data-sentence]")?.textContent).toMatch(/to support animals/);
     fireEvent.change(screen.getByRole("textbox", { name: "Percent" }), { target: { value: "10" } });
     next();
     expect(screen.getByText("Goal 5 of 5")).toBeTruthy();
@@ -194,8 +219,8 @@ async function finishSilver(silver: (typeof PAYLOAD.floors)[number]["silvers"][n
   }
 }
 
-describe("Find the why: five reasons (Cath, 4 Nov)", () => {
-  const FIVE = ["make-money", "help-others", "learn-new-skills", "be-my-own-boss", "support-a-cause"];
+describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44pm)", () => {
+  const FOUR = ["make-money", "help-others", "learn-new-skills", "be-my-own-boss"];
   const rankIds = () => [...document.querySelectorAll("[data-rank-item]")].map((el) => el.getAttribute("data-rank-item"));
   async function openWhyRank() {
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
@@ -209,14 +234,15 @@ describe("Find the why: five reasons (Cath, 4 Nov)", () => {
     while (!document.querySelector("[data-rank-item]")) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
   }
 
-  it("ranks exactly the five reasons", async () => {
+  it("ranks exactly the four reasons", async () => {
     renderFlow({ kind: "level", level: 1 });
     await openWhyRank();
-    expect(rankIds()).toEqual(FIVE);
+    expect(rankIds()).toEqual(FOUR);
+    expect(document.body.textContent).not.toMatch(/support a cause/i);
     expect(document.body.textContent).not.toMatch(/\bprove/i);
   });
 
-  it("an old saved ranking with the retired reason does not crash; the id is dropped", async () => {
+  it("an old saved ranking with the retired reasons (Prove I can do it, Support a cause) does not crash; the ids are dropped", async () => {
     const old = ["prove-i-can-do-it", "support-a-cause", "make-money", "help-others", "learn-new-skills", "be-my-own-boss"];
     localStorage.setItem(
       "lp-venture-test:v1:dog-walking",
@@ -224,7 +250,7 @@ describe("Find the why: five reasons (Cath, 4 Nov)", () => {
     );
     renderFlow({ kind: "level", level: 1 });
     await openWhyRank();
-    expect(rankIds()).toEqual(old.slice(1));
+    expect(rankIds()).toEqual(old.slice(2));
     expect(document.querySelectorAll("[data-rank-item][data-struck]")).toHaveLength(0);
     expect(document.body.textContent).not.toMatch(/\bprove/i);
   });
@@ -305,6 +331,16 @@ describe("finishing a silver shows its handbook page", () => {
   });
 });
 
+/** Fills every empty blank on the current goal page (numbers 5, text "TEST", the first unit). */
+function fillGoalBlanks() {
+  for (const el of document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[data-sentence] input, [data-sentence] textarea, [data-extra-fields] input")) {
+    if (!el.value) fireEvent.change(el, { target: { value: el.inputMode === "numeric" ? "5" : "TEST" } });
+  }
+  for (const el of document.querySelectorAll<HTMLSelectElement>("[data-sentence] select, [data-extra-fields] select")) {
+    if (!el.value) fireEvent.change(el, { target: { value: el.options[1]!.value } });
+  }
+}
+
 describe("Come back to this later", () => {
   const silver = PAYLOAD.floors[0]!.silvers[0]!;
   const goals = silver.bronzes[3]!;
@@ -324,17 +360,18 @@ describe("Come back to this later", () => {
     renderPlain();
     await toDoors();
     fireEvent.click(door(goals.title));
-    // Only on eligible steps: the button sits under the primary button.
-    next();
+    // Only on eligible steps: the button sits under the primary button. Step 1 is the first goal.
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Not applicable" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Amount" }), { target: { value: "500" } });
     fireEvent.click(screen.getByRole("button", { name: "Come back to this later" }));
 
     // Back on the doors: the Set your goals door says Come back; the wrap-up is reachable.
     const marker = document.querySelector("[data-come-back-marker]");
     expect(marker?.textContent).toBe("Come back");
     const saved = JSON.parse(localStorage.getItem("lp-venture-test:v1:dog-walking")!);
-    expect(saved.tasks[goals.tasks[0]!.id]).toMatchObject({ status: "open", draftPage: 1 });
+    // Page 0 (the first goal) is stored as no draftPage.
+    expect(saved.tasks[goals.tasks[0]!.id]).toMatchObject({ status: "open" });
+    expect(saved.tasks[goals.tasks[0]!.id].draftPage).toBeUndefined();
     expect(Object.keys(saved.tasks[goals.tasks[0]!.id].draft)).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: silver.wrapUp!.type === "workbook-summary" ? silver.wrapUp!.heading : /logo/ }));
 
@@ -345,12 +382,11 @@ describe("Come back to this later", () => {
     expect(document.querySelector(`[data-open-step='${goals.tasks[0]!.id}']`)?.textContent).toContain(goals.title);
     fireEvent.click(screen.getByRole("button", { name: "Finish this" }));
 
-    // Back on the page left, the draft restored (Not applicable still on).
+    // Back on the page left, the draft restored.
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Not applicable" }).getAttribute("aria-pressed")).toBe("true");
+    expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toMatch(/500/);
     for (let i = 0; i < 10 && !document.querySelector("[data-wrap-up]"); i++) {
-      const na = screen.queryByRole("button", { name: "Not applicable" });
-      if (na && na.getAttribute("aria-pressed") !== "true") fireEvent.click(na);
+      fillGoalBlanks();
       const forward = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
       const group = screen.queryAllByRole("group")[0];
       if (forward.disabled && group) fireEvent.click(within(group).getAllByRole("button")[0]!);
@@ -373,7 +409,7 @@ describe("Come back to this later", () => {
   it("the corridor marker and the home tile's Go open the open task", async () => {
     saveVentureTestProgress("dog-walking", {
       completedTaskIds: silver.bronzes.slice(0, 3).map((b) => b.tasks[0]!.id),
-      tasks: { [goals.tasks[0]!.id]: { status: "open", draftPage: 1, openedAt: "2026-11-04T10:00:00.000Z" } },
+      tasks: { [goals.tasks[0]!.id]: { status: "open", openedAt: "2026-11-04T10:00:00.000Z" } },
     });
     markVentureTestOnboardingSeen("dog-walking");
     render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={VENTURES} reset={false} />);

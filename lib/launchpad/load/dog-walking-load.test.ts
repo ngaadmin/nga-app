@@ -37,12 +37,46 @@ describe("dog walking load reader", () => {
     expect({ ...load, source: COMMITTED.source }).toEqual(COMMITTED);
   });
 
-  it("Find the why has exactly five items; the retired item is dropped even if the sheet lists it", () => {
+  it("Find the why has exactly four items (Support a cause removed 4 Nov 8:44pm); the retired item is dropped even if the sheet lists it", () => {
     const why = screenOf(build(SHEETS).load, "l1-s1-b2");
     if (why.type !== "rank-order") throw new Error("expected rank-order");
-    expect(why.items.map((i) => i.label)).toEqual(["Make money", "Help others", "Learn new skills", "Be my own boss", "Support a cause"]);
+    expect(why.items.map((i) => i.label)).toEqual(["Make money", "Help others", "Learn new skills", "Be my own boss"]);
     expect(why.items.some((i) => RETIRED_WHY_ITEM_IDS.includes(i.id))).toBe(false);
     expect(JSON.stringify(COMMITTED)).not.toMatch(/\bprove|prove-i-can/i);
+  });
+
+  it("Set your goals: intro on the loop (step 1), Support a cause from Know your impact, no goal-level not applicable, 'in' before the timeframe, weeks or months", () => {
+    const bronze = build(SHEETS).load.levels[0]!.silvers[0]!.bronzes.find((b) => b.id === "l1-s1-b4")!;
+    const screens = bronze.tasks[0]!.screens;
+    expect(screens.some((s) => s.payload?.type === "context")).toBe(false);
+    const loop = screens[0]!.payload!;
+    if (loop.type !== "goal-loop") throw new Error("expected goal-loop first");
+    expect(loop.context).toBeTruthy();
+    expect(loop.guidance).toBe(
+      "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
+    );
+    const cause = loop.goals.find((g) => g.screen.answerKey === "l1-goal-support-a-cause")!;
+    expect(cause.rankItemId).toBeUndefined();
+    expect(cause.position).toBe("after-ranked");
+    expect(loop.skipRankItemIds).toEqual([]);
+    // Help others: benefit only, no timeframe (Cath, 4 Nov 8:50pm, tracker H7/U7).
+    const help = loop.goals.find((g) => g.rankItemId === "help-others")!;
+    if (help.screen.type !== "short-text") throw new Error("expected short-text");
+    expect(help.screen.fields.map((f) => f.name)).toEqual(["benefit"]);
+    expect(help.screen.parts.map((p) => (p.kind === "text" ? p.text : "_")).join("")).toBe("I want my customers to _.");
+    for (const g of loop.goals) {
+      expect((g.screen as { notApplicableLabel?: string }).notApplicableLabel).toBeUndefined();
+      if (g.screen.type !== "short-text") continue;
+      const text = g.screen.parts.map((p) => (p.kind === "text" ? p.text : "_")).join("");
+      expect(text).not.toMatch(/ by _/);
+      const unit = g.screen.fields.find((f) => f.name === "timeframeUnit");
+      if (unit) {
+        // Add another goal shows its timeframe as labelled fields under the sentence, not in it.
+        if (g.screen.parts.some((p) => p.kind === "field" && p.field === "timeframeNumber")) expect(text).toMatch(/ in _ _\.$/);
+        expect(unit.options!.map((o) => o.id)).toEqual(["weeks", "months"]);
+        expect(g.screen.fields.find((f) => f.name === "timeframeNumber")!.hint).toBe("1–99");
+      }
+    }
   });
 
   it("splits a pipe-separated Options cell", () => {
@@ -53,7 +87,7 @@ describe("dog walking load reader", () => {
     const { load, issues } = build(
       withColumns(["Options", "Input type"], {
         2: ["Dog walking | Pet sitting | Puppy training", "multi-choice"],
-        3: ["Make money | Help others | Learn new skills | Be my own boss | Support a cause | Prove I can do it", "rank"],
+        3: ["Make money | Help others | Learn new skills | Be my own boss | Prove I can do it", "rank"],
       }),
     );
     expect(issues).toEqual([]);
@@ -66,7 +100,7 @@ describe("dog walking load reader", () => {
     ]);
     const why = screenOf(load, "l1-s1-b2");
     if (why.type !== "rank-order") throw new Error("expected rank-order");
-    expect(why.items).toHaveLength(5);
+    expect(why.items).toHaveLength(4);
   });
 
   it("Option N columns win over the pipe Options column and keep the current ids", () => {
@@ -92,8 +126,8 @@ describe("dog walking load reader", () => {
   it("the 4 Nov options-columns workbook layout rebuilds the committed load", () => {
     const rows: Record<number, string[]> = {
       2: ["multi-choice", "Dog walking", "Grooming", "Bookings", "Training", "Manage bookings for others", "", ""],
-      3: ["rank", "Make money", "Help others", "Learn new skills", "Be my own boss", "Support a cause", "", ""],
-      4: ["single-choice", "Animals", "Environment", "Kids in need", "Food for people who are hungry", "Helping the elderly", "", ""],
+      3: ["rank", "Make money", "Help others", "Learn new skills", "Be my own boss", "", "", ""],
+      4: ["single-choice", "Animals", "The environment", "Kids in need", "People who are hungry", "Older people", "", ""],
       9: ["single-choice", "Choosing when I work (my own schedule and hours)", "Keeping the money I make", "Working where I want", "Making things my own way", "", "", ""],
       6: ["fill-in", "", "", "", "", "", "", ""],
       11: ["fill-in", "", "", "", "", "", "", ""],

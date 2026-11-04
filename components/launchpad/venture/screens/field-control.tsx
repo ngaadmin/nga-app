@@ -8,7 +8,8 @@ const BOX =
 
 /** Rough inline width for a goal blank, in ch. */
 function inlineWidth(field: LaunchpadTextField): string {
-  if (field.input === "integer") return `${Math.max(String(field.max ?? 99).length, 3) + 2}ch`;
+  // Wide enough for the largest value and the bracketed hint ("[1–99]"), so the placeholder is not clipped.
+  if (field.input === "integer") return `${Math.max(String(field.max ?? 99).length, field.hint ? field.hint.length + 2 : 0, 3) + 2}ch`;
   return "100%";
 }
 

@@ -30,7 +30,8 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
   const { answers, save, floors } = useCaptureAnswer(screen.answerKey);
   const answer = fieldsOf(answers, screen.answerKey);
   const values = answer?.values ?? {};
-  const na = !!answer?.notApplicable;
+  // A saved not-applicable flag counts only where the screen still offers the chip.
+  const na = !!answer?.notApplicable && !!screen.notApplicableLabel;
   const currencyField = screen.fields.find((f) => f.input === "currency");
   const currencyMissing = !!currencyField && !values[currencyField.name];
 
@@ -69,7 +70,14 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
       {screen.guidance && !screen.context && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
       <div className={`mx-5 mt-4 rounded-2xl border-2 border-[#C5D4EA] bg-white px-4 py-3.5 text-[17px] leading-[2.1] ${na ? "text-[#9CA3AF]" : "text-nga-ink"}`} data-sentence="">
         {screen.parts.map((part, i) => {
-          if (part.kind === "text") return <span key={i}>{part.text}</span>;
+          // A full-width inline text box keeps the punctuation right after it on its line (no stray ".").
+          const prev = screen.parts[i - 1];
+          const prevField = prev?.kind === "field" ? fieldByName(screen, prev.field) : undefined;
+          const glued = !block && prevField?.input === "text" && part.kind === "text" ? /^[.,!?;:]+/.exec(part.text)?.[0] : undefined;
+          if (part.kind === "text") {
+            const text = glued ? part.text.slice(glued.length) : part.text;
+            return text ? <span key={i}>{text}</span> : null;
+          }
           if (part.kind === "carried") {
             const label = selectionLabels(catalog, answers, part.answerKey)[0];
             return (
@@ -80,7 +88,15 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
           }
           const field = fieldByName(screen, part.field);
           if (!field) return null;
-          return control(field);
+          const after = screen.parts[i + 1];
+          const punct = !block && field.input === "text" && after?.kind === "text" ? /^[.,!?;:]+/.exec(after.text)?.[0] : undefined;
+          if (!punct) return control(field);
+          return (
+            <span key={i} className="flex w-full items-center gap-1" data-glued-punct="">
+              {control(field)}
+              <span>{punct}</span>
+            </span>
+          );
         })}
       </div>
       {(screen.extraFields ?? []).length > 0 && (

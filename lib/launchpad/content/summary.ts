@@ -81,7 +81,9 @@ export function rankedLabels(catalog: SummaryCatalog, answers: LaunchpadAnswers 
 
 /**
  * A short-text answer as one sentence ("I want to earn 500 USD by 6 months.").
- * Null when it is marked not applicable, or when a sentence blank is empty.
+ * Null when it is marked not applicable, when a required blank is empty, or
+ * when every blank is empty. An empty optional blank drops with its connector
+ * ("My goal is to save up." when the optional duration is left out).
  * Extra fields follow in brackets when filled.
  */
 export function filledSentence(
@@ -90,21 +92,33 @@ export function filledSentence(
   catalog: SummaryCatalog,
 ): string | null {
   const answer = fieldsOf(answers, screen.answerKey);
-  if (!answer || answer.notApplicable) return null;
+  if (!answer || (answer.notApplicable && screen.notApplicableLabel)) return null;
+  // Text before an empty optional blank is its connector ("in"), so it is dropped with it.
   let out = "";
+  let pending = "";
+  let any = false;
   for (const part of screen.parts) {
-    if (part.kind === "text") out += part.text;
+    if (part.kind === "text") pending += part.text;
     else if (part.kind === "carried") {
       const label = selectionLabels(catalog, answers, part.answerKey)[0];
       if (!label) return null;
-      out += lowerFirst(label);
+      out += pending + lowerFirst(label);
+      pending = "";
     } else {
       const field = fieldByName(screen, part.field);
       const shown = field ? displayFieldValue(field, answer.values[part.field]) : "";
-      if (!shown) return null;
-      out += shown;
+      if (!shown) {
+        // A required blank, or the leading blank (the goal itself), left empty: nothing to show.
+        if (!field?.optional || !any) return null;
+        pending = "";
+        continue;
+      }
+      out += pending + shown;
+      pending = "";
+      any = true;
     }
   }
+  out += pending;
   const extras: string[] = [];
   for (const name of screen.extraFields ?? []) {
     const field = fieldByName(screen, name);
@@ -131,7 +145,7 @@ function sourceLines(source: LaunchpadSummarySource, section: LaunchpadSummarySe
       if (screen.type !== "short-text" || !source.field) return [];
       const answer = fieldsOf(answers, source.answerKey);
       const field = fieldByName(screen, source.field);
-      const shown = field && answer && !answer.notApplicable ? displayFieldValue(field, answer.values[source.field]) : "";
+      const shown = field && answer && !(answer.notApplicable && screen.notApplicableLabel) ? displayFieldValue(field, answer.values[source.field]) : "";
       return shown ? [shown] : [];
     }
     case "sentences": {

@@ -4,7 +4,7 @@
  *   "___ [hint]"   a blank with a square-bracket hint ("___ [number]")
  *   "___"          a blank with no hint (the last field of a sentence)
  *   "[word]"       a bracket field ("[amount]", "[free text]")
- *   "[a/b]"        a bracket choice ("[months/years]", "[Yes/No]")
+ *   "[a/b]"        a bracket choice ("[weeks/months]", "[Yes/No]")
  *   "{token}"      a skin token filled from the venture ("{product}")
  *
  * "Your paragraph:" and "Starter:" prefixes become the prompt line; any

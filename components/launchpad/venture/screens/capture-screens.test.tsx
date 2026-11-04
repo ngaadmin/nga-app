@@ -7,7 +7,7 @@ import type { LaunchpadShortTextScreen, LaunchpadTextField } from "@/lib/launchp
 
 const amount: LaunchpadTextField = { name: "amount", input: "integer", label: "Amount", min: 1, max: 1000000 };
 const benefit: LaunchpadTextField = { name: "benefit", input: "text", label: "Benefit", maxLength: 10 };
-const unit: LaunchpadTextField = { name: "unit", input: "choice", label: "Months or years", options: [{ id: "months", label: "months" }, { id: "years", label: "years" }] };
+const unit: LaunchpadTextField = { name: "unit", input: "choice", label: "Weeks or months", options: [{ id: "weeks", label: "weeks" }, { id: "months", label: "months" }] };
 
 describe("capture screen rules", () => {
   it("toggleChoice: single replaces, multi toggles in pick order", () => {
@@ -29,8 +29,8 @@ describe("capture screen rules", () => {
     expect(sanitizeFieldInput(amount, "99999999")).toBe(9999999);
     expect(isFieldValueValid(amount, 9999999)).toBe(false);
     expect(sanitizeFieldInput(benefit, "  a\nlong   benefit text")).toBe("a long ben");
-    expect(sanitizeFieldInput(unit, "weeks")).toBe("");
-    expect(sanitizeFieldInput(unit, "years")).toBe("years");
+    expect(sanitizeFieldInput(unit, "years")).toBe("");
+    expect(sanitizeFieldInput(unit, "weeks")).toBe("weeks");
   });
 
   it("short text: Not applicable answers the page; otherwise every field must be valid", () => {

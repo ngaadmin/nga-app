@@ -10,7 +10,6 @@
  */
 import type {
   LaunchpadChoiceCaptureScreen,
-  LaunchpadContextScreen,
   LaunchpadGoalLoopGoal,
   LaunchpadGoalLoopScreen,
   LaunchpadRankOrderScreen,
@@ -51,7 +50,6 @@ export const LIMITS = {
   paragraphTextMax: 200,
   shortParagraphTextMax: 120,
   peopleAskedMax: 99,
-  otherGoalNumberMax: 9_999_999,
 } as const;
 
 /** Answer keys (one per capture screen). */
@@ -71,7 +69,7 @@ export const RETIRED_WHY_ITEM_IDS: readonly string[] = ["prove-i-can-do-it"];
 export const DECISIONS: LoadDecision[] = [
   { id: "D1", topic: "Level 1 silvers", applied: "One silver, Define the business, as in the sheet: bronzes Pick what your business will offer, Find the why, Know your impact, Set your goals (goal loop with Add another goal inside it), and one wrap-up (row 12). The framework's separate Set your goals silver is gone, so L1 shows one plaque.", status: "decided-cath", rows: [2, 3, 4, 5, 11, 12] },
   { id: "D2", topic: "Money cap", applied: "Amount is a whole number, 7 digits (1 to 9,999,999). K5 still says 1 billion cap.", status: "default-pending-cath", rows: [5, 6] },
-  { id: "D3", topic: "Why items", applied: "Per Cath's 4 Nov call, Find the why ranks five items: Make money, Help others, Learn new skills, Be my own boss, Support a cause. The reader drops the retired sixth item if the sheet still lists it, so every ranked item has a goal row.", status: "decided-cath", rows: [3, 5] },
+  { id: "D3", topic: "Why items", applied: "Per Cath's 4 Nov calls, Find the why ranks four items: Make money, Help others, Learn new skills, Be my own boss (Support a cause removed 8:44pm). The reader drops the retired item if the sheet still lists it, so every ranked item has a goal row.", status: "decided-cath", rows: [3, 5] },
   { id: "D4", topic: "What I am selling display", applied: "The row 14 service description shows as plain text in the wrap-up and handbook. I14/I16 say bullet list.", status: "default-pending-cath", rows: [14, 16] },
   { id: "D5", topic: "{product}", applied: `Filled from the venture noun: "${DOG_WALKING_NOUN}".`, status: "default-pending-cath", rows: [15] },
   { id: "D6", topic: "[Yes/No]", applied: "A two-option choice (Yes, No) shown as an inline dropdown in the sentence.", status: "default-pending-cath", rows: [15] },
@@ -79,17 +77,18 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D8", topic: "Wrap-up editing", applied: "Per Cath's 4 Nov correction: a wrap-up value is edited in place (pencil on its section) only when that does not rewire logic owned by another screen; the rest stays read-only. No navigating back to earlier screens. See wrapup-edit-calls.md.", status: "decided-cath", rows: [12, 16] },
   { id: "D9", topic: "Level 2 gold", applied: "No L2 gold row in the sheet; the seed gold (Readiness to make) stays and there is no L2 gold screen.", status: "default-pending-cath", rows: [] },
   { id: "D10", topic: "K15 interest level", applied: "Ignored. Row 15 captures number asked, Yes/No and the specific interest only. K15 still says the payload lists interest level.", status: "pending-cath", rows: [15] },
-  { id: "D11", topic: "Support a cause goal position", applied: "Shown after the ranked goals (K4, E10), keyed to the Support a cause reason, so striking that reason as not applicable skips it.", status: "build-assumption", rows: [4, 10] },
+  { id: "D11", topic: "Support a cause goal position", applied: "Support a cause is no longer a Find the why reason (Cath, 4 Nov 8:44pm). Its goal comes from the Know your impact pick: always shown after the ranked goals (K4, E10) and never skipped by the ranking. Like every shown goal it must be filled in (D23).", status: "build-assumption", rows: [3, 4, 10] },
   { id: "D12", topic: "Struck reasons", applied: "A reason marked not applicable in Find the why gets no goal page.", status: "build-assumption", rows: [3, 5] },
+  { id: "D23", topic: "Goal not applicable", applied: "Per Cath (4 Nov 8:49pm), goal pages have no Not applicable chip: a goal is dropped only in the Find the why ranking, and every goal shown must be filled in, except Add another goal, which stays optional. The sheet's goal rows (I5, I10, X6 to X10) still mention not applicable.", status: "decided-cath", rows: [5, 6, 7, 8, 10] },
   { id: "D13", topic: "Text caps", applied: `Goal text up to ${LIMITS.goalTextMax} characters, the added goal ${LIMITS.otherGoalTextMax}, the service description ${LIMITS.paragraphTextMax}, availability and specific interest ${LIMITS.shortParagraphTextMax}.`, status: "build-assumption", rows: [7, 8, 11, 14, 15] },
   { id: "D14", topic: "Minimum picks", applied: "Pick what your business will offer needs at least one pick before Next.", status: "build-assumption", rows: [2] },
-  { id: "D15", topic: "Number caps", applied: `Timeframe number 1 to ${LIMITS.timeframeMax}; people asked 1 to ${LIMITS.peopleAskedMax}; added-goal number 1 to 9,999,999; donate percent 1 to 100 (sheet).`, status: "build-assumption", rows: [6, 7, 8, 11, 15] },
+  { id: "D15", topic: "Number caps", applied: `Timeframe number 1 to ${LIMITS.timeframeMax}, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has no timeframe (Cath, 4 Nov 8:50pm); people asked 1 to ${LIMITS.peopleAskedMax} (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).`, status: "build-assumption", rows: [6, 7, 8, 11, 15] },
   { id: "D16", topic: "Ranking control", applied: "Up and down buttons move a reason; no drag yet. G3 says “Drag the reasons into order”; shown as “Use the arrows to put the reasons in order”.", status: "build-assumption", rows: [3] },
   { id: "D17", topic: "Be my own boss check-in", applied: "The six-month check-in in I9 is not built.", status: "build-assumption", rows: [9] },
   { id: "D18", topic: "Wrap-up copy and art", applied: "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.", status: "build-assumption", rows: [12, 16] },
   { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell shows the service description (row 14). A section with no answer is hidden.", status: "build-assumption", rows: [19] },
   { id: "D20", topic: "Identity titles", applied: "The locked build keeps Design your logo and Name your business (sheet: Design the logo, Name the business), and its own wrap-up behavior.", status: "build-assumption", rows: [17, 18, 19] },
-  { id: "D21", topic: "One screen per bronze", applied: "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals keeps its intro page before the goal loop.", status: "decided-cath", rows: [2, 3, 4, 14, 15] },
+  { id: "D21", topic: "One screen per bronze", applied: "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals shows its context and guidance above the first goal on step 1 (Cath, 4 Nov 8:45pm), then one goal per step.", status: "decided-cath", rows: [2, 3, 4, 5, 14, 15] },
   { id: "D22", topic: "Come back later", applied: `Sample, pending tracker column: the tracker has no "Come back later" column yet, so a TEST override turns it on for Set your goals (row 5) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.`, status: "sample-pending-tracker-column", rows: [5, 15] },
 ];
 
@@ -180,17 +179,20 @@ export function sectionLabels(cell: string): string[] {
     .filter(Boolean);
 }
 
-/** Timeframe fields used by every timed goal (K5: number plus months/years, no weeks). */
+/** Short placeholder that fits the inline timeframe box (Cath, 4 Nov 8:48pm: "[num" was clipped). */
+const TIMEFRAME_HINT = `1–${LIMITS.timeframeMax}`;
+
+/** Timeframe fields used by every timed goal: a number plus weeks or months (Cath, 4 Nov 7:58pm and 8:47pm). */
 function timeframeFields(optional = false): LaunchpadTextField[] {
   return [
-    { name: "timeframeNumber", input: "integer", label: "Number", hint: "number", min: 1, max: LIMITS.timeframeMax, ...(optional ? { optional } : {}) },
+    { name: "timeframeNumber", input: "integer", label: "Number", hint: TIMEFRAME_HINT, min: 1, max: LIMITS.timeframeMax, ...(optional ? { optional } : {}) },
     {
       name: "timeframeUnit",
       input: "choice",
-      label: "Months or years",
+      label: "Weeks or months",
       options: [
+        { id: "weeks", label: "weeks" },
         { id: "months", label: "months" },
-        { id: "years", label: "years" },
       ],
       ...(optional ? { optional } : {}),
     },
@@ -294,7 +296,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   // D3: the retired why item is dropped even if the sheet still lists it.
   expectInput(ctx, rWhy, ["rank"]);
   const whyItems = rowOptions(rWhy, () => optionsAfter(rWhy.dataInput, /Items \([^)]*\):\s*/)).filter((i) => !RETIRED_WHY_ITEM_IDS.includes(i.id));
-  if (whyItems.length !== 5) issue(ctx, rWhy.row, `Expected five why items, read ${whyItems.length}.`);
+  if (whyItems.length !== 4) issue(ctx, rWhy.row, `Expected four why items, read ${whyItems.length}.`);
   // The quoted toggle name, e.g. 'not applicable' (an apostrophe in "doesn't" is not a quote).
   const naLabel = sentenceCase(/(?:^|\s)'([^']+)'/.exec(rWhy.guidance)?.[1] ?? NOT_APPLICABLE);
   // D16: no drag yet, so the shown how-to line names the arrows.
@@ -331,15 +333,18 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const itemFor = (title: string) => whyItems.find((i) => i.label.toLowerCase() === title.toLowerCase())?.id;
   goalRows.forEach((row) => {
     const title = trackerLabel(row.bronze).replace(/^Set your goals:\s*/, "").replace(/\s*\(.*\)$/, "");
-    const item = itemFor(title);
+    // D11: the Support a cause goal is driven by the Know your impact pick, not by a why item.
+    const causeGoal = /Know your impact/i.test(row.bronze);
+    const whyItem = itemFor(title);
+    const item = whyItem ?? (causeGoal ? kebab(title) : undefined);
     if (!item) {
       issue(ctx, row.row, `Goal "${title}" matches no Find the why item.`);
       return;
     }
     const key = KEYS.goal(item);
     const sid = `${b4}-t1-goal-${item}`;
-    const flags: string[] = ["D12"];
-    const feeds: LoadFeed[] = [{ answerKey: KEYS.why, use: "goal order and not-applicable skip" }];
+    const flags: string[] = whyItem ? ["D12", "D23"] : ["D23"];
+    const feeds: LoadFeed[] = whyItem ? [{ answerKey: KEYS.why, use: "goal order and not-applicable skip" }] : [];
     let screen: LaunchpadShortTextScreen | LaunchpadChoiceCaptureScreen;
     let answer: LoadAnswerSpec;
     let validation: string[] = [];
@@ -374,7 +379,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         ];
         slots = [{ field: "amount" }, { field: "currency" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }];
         flags.push("D2", "D15");
-      } else if (item === "support-a-cause") {
+      } else if (causeGoal) {
         fields = [{ name: "donatePercent", input: "integer", label: "Percent", hint: hints[0], min: 1, max: 100 }];
         slots = [{ field: "donatePercent" }, { carried: KEYS.cause, label: "cause area" }];
         feeds.push({ answerKey: KEYS.cause, use: "cause area carried into the sentence" });
@@ -382,9 +387,11 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         position = "after-ranked";
       } else {
         const name = item === "help-others" ? "benefit" : item === "learn-new-skills" ? "skill" : kebab(title).replace(/-./g, (m) => m[1]!.toUpperCase());
-        fields = [{ name, input: "text", label: sentenceCase(hints[0] ?? name), hint: hints[0], maxLength: LIMITS.goalTextMax }, ...timeframeFields()];
-        slots = [{ field: name }, { field: "timeframeNumber" }, { field: "timeframeUnit" }];
-        flags.push("D13", "D15");
+        // A goal sentence with one blank has no duration (Help others, Cath 4 Nov 8:50pm: H7/U7).
+        const timed = hints.length > 1;
+        fields = [{ name, input: "text", label: sentenceCase(hints[0] ?? name), hint: hints[0], maxLength: LIMITS.goalTextMax }, ...(timed ? timeframeFields() : [])];
+        slots = timed ? [{ field: name }, { field: "timeframeNumber" }, { field: "timeframeUnit" }] : [{ field: name }];
+        flags.push("D13", ...(timed ? ["D15"] : []));
       }
       const { prompt, parts } = sentenceParts(ctx, row, row.question, slots);
       screen = {
@@ -396,12 +403,12 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         ...(prompt ? { prompt } : {}),
         parts,
         fields,
-        notApplicableLabel: NOT_APPLICABLE,
       };
+      // D23: no goal-level not-applicable; a goal is dropped only in Find the why.
       const spec = fieldSpecs(fields);
-      answer = fieldsAnswer(key, fields, [{ name: "notApplicable", type: "boolean", required: false }]);
-      validation = [...spec.validation, "or marked not applicable"];
-      goals.push({ rankItemId: item, position, title, screen });
+      answer = fieldsAnswer(key, fields);
+      validation = [...spec.validation];
+      goals.push({ ...(whyItem ? { rankItemId: item } : {}), position, title, screen });
       goalMetas.push({
         ...meta(row, { screenId: sid, index: "", template: "short-text:goal", question: row.question, answer, validation, feeds, flags }),
         inGoalLoop: loopId,
@@ -422,10 +429,10 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const otherTitle = trackerLabel(rOther.bronze).replace(/\s*\(.*\)$/, "");
   const otherFields: LaunchpadTextField[] = [
     { name: "goalText", input: "text", label: "My goal", hint: "free text", maxLength: LIMITS.otherGoalTextMax, optional: true },
-    { name: "targetNumber", input: "integer", label: "Number", min: 1, max: LIMITS.otherGoalNumberMax, optional: true },
-    ...timeframeFields(true).map((f) => (f.name === "timeframeNumber" ? { ...f, label: "Timeframe" } : f)),
+    ...timeframeFields(true),
   ];
-  const otherSentence = sentenceParts(ctx, rOther, rOther.question, [{ field: "goalText" }]);
+  // One inline sentence: "My goal is to [text] in [1–99] [weeks/months]." Text and duration optional, no number (Cath, 4 Nov 8:54pm; tracker I11/U11).
+  const otherSentence = sentenceParts(ctx, rOther, rOther.question, [{ field: "goalText" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }]);
   const otherScreen: LaunchpadShortTextScreen = {
     id: `${b4}-t1-goal-other`,
     type: "short-text",
@@ -436,7 +443,6 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     guidance: rOther.guidance,
     parts: otherSentence.parts,
     fields: otherFields,
-    extraFields: ["targetNumber", "timeframeNumber", "timeframeUnit"],
     optional: true,
   };
   goals.push({ position: "last", title: otherTitle, screen: otherScreen });
@@ -458,19 +464,16 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   // Number goal pages in authored order (the learner's order varies).
   goalMetas.forEach((g, i) => (g.index = `2.${i + 1}`));
 
-  const loop: LaunchpadGoalLoopScreen = { id: loopId, type: "goal-loop", orderFrom: KEYS.why, skipRankItemIds: skip, goals };
-
-  const contextScreen = (bronzeId: string, row: TrackerRow): LaunchpadContextScreen => ({
-    id: `${bronzeId}-t1-s1`,
-    type: "context",
-    context: row.context,
-    ...(row.guidance ? { guidance: row.guidance } : {}),
-  });
-
-  const ctxMeta = (row: TrackerRow, screen: LaunchpadContextScreen): LoadScreen => ({
-    ...meta(row, { screenId: screen.id, index: "1", template: "context", context: screen.context, guidance: screen.guidance }),
-    payload: screen,
-  });
+  // D21: the Set your goals context and guidance sit above the first goal (step 1), no intro-only page.
+  const loop: LaunchpadGoalLoopScreen = {
+    id: loopId,
+    type: "goal-loop",
+    ...(rSeq.context ? { context: rSeq.context } : {}),
+    ...(rSeq.guidance ? { guidance: rSeq.guidance } : {}),
+    orderFrom: KEYS.why,
+    skipRankItemIds: skip,
+    goals,
+  };
 
   const bronzes: LoadBronze[] = [];
   // D21: one screen per bronze; the context and guidance sit above the question and its options.
@@ -514,11 +517,11 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
           kind: "ranking",
           version: 1,
           fields: [
-            { name: "order", type: "option ids (all five, most important first)", required: true },
+            { name: "order", type: "option ids (all four, most important first)", required: true },
             { name: "notApplicable", type: "option ids", required: false },
           ],
         },
-        validation: ["all five items always shown; the shown order is a valid answer"],
+        validation: ["all four items always shown; the shown order is a valid answer"],
         flags: ["D3", "D16"],
       }),
       payload: whyScreen,
@@ -538,7 +541,6 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
       payload: causeScreen,
     }),
   );
-  const seqContext = contextScreen(b4, rSeq);
   const seqTitle = trackerLabel(rSeq.bronze).replace(/\s*\(.*\)$/, "");
   bronzes.push({
     id: b4,
@@ -553,15 +555,16 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         paged: true,
         canComeBackLater: false,
         screens: [
-          ctxMeta(rSeq, seqContext),
           {
             ...meta(rSeq, {
               screenId: loopId,
-              index: "2",
+              index: "1",
               template: "goal-loop",
+              context: loop.context,
+              guidance: loop.guidance,
               question: rSeq.question,
               feeds: [{ answerKey: KEYS.why, use: "goal order; not-applicable reasons skipped" }],
-              validation: [`skips ${skip.join(", ") || "none"}`, "Support a cause after the ranked goals", "Add another goal last"],
+              validation: [`skips ${skip.join(", ") || "none"}`, "context and guidance above the first goal", "Support a cause after the ranked goals (from Know your impact, not the ranking)", "Add another goal last"],
               flags: ["D1", "D3", "D11", "D12"],
             }),
             payload: loop,

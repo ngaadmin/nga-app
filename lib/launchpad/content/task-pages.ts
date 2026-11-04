@@ -54,6 +54,22 @@ export function goalLoopGoals(
   ];
 }
 
+/**
+ * The first goal's screen with the loop's context and guidance on top, so
+ * step 1 shows the intro and the first goal's inputs together.
+ */
+export function withLoopIntro(
+  loop: LaunchpadGoalLoopScreen,
+  screen: LaunchpadGoalLoopGoal["screen"],
+): LaunchpadGoalLoopGoal["screen"] {
+  if (!loop.context && !loop.guidance) return screen;
+  return {
+    ...screen,
+    ...(loop.context ? { context: loop.context } : {}),
+    ...(loop.guidance ? { guidance: loop.guidance } : {}),
+  };
+}
+
 /** Every page of a task, goal loops expanded for these answers. */
 export function taskPages(
   task: Pick<LaunchpadTask, "screens">,
@@ -64,7 +80,9 @@ export function taskPages(
   for (const screen of task.screens) {
     if (screen.type === "goal-loop") {
       const items = rankItemsFor(floors, screen.orderFrom);
-      for (const goal of goalLoopGoals(screen, answers, items)) pages.push({ screen: goal.screen, goal });
+      goalLoopGoals(screen, answers, items).forEach((goal, i) =>
+        pages.push({ screen: i === 0 ? withLoopIntro(screen, goal.screen) : goal.screen, goal }),
+      );
     } else pages.push({ screen });
   }
   return pages;

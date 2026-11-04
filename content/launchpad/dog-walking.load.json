@@ -5,7 +5,7 @@
   "source": {
     "file": "lib/launchpad/content/source/dog-walking/bronze-task-tracker.xlsx",
     "sheet": "Bronze Task Tracker",
-    "md5": "13215cfbeb2b7e87639c0de922b8339a",
+    "md5": "fd62685792d1c673b07d866e70a2dd30",
     "rows": "2-19",
     "notes": [
       {
@@ -185,7 +185,7 @@
                     {
                       "sourceRow": 3,
                       "validation": [
-                        "all five items always shown; the shown order is a valid answer"
+                        "all four items always shown; the shown order is a valid answer"
                       ],
                       "feeds": [],
                       "feedsInto": [
@@ -194,7 +194,6 @@
                         "l1-s1-b4-t1-goal-help-others",
                         "l1-s1-b4-t1-goal-learn-new-skills",
                         "l1-s1-b4-t1-goal-be-my-own-boss",
-                        "l1-s1-b4-t1-goal-support-a-cause",
                         "l1-s1-wrap"
                       ],
                       "flags": [
@@ -221,10 +220,6 @@
                         {
                           "id": "be-my-own-boss",
                           "label": "Be my own boss"
-                        },
-                        {
-                          "id": "support-a-cause",
-                          "label": "Support a cause"
                         }
                       ],
                       "answer": {
@@ -234,7 +229,7 @@
                         "fields": [
                           {
                             "name": "order",
-                            "type": "option ids (all five, most important first)",
+                            "type": "option ids (all four, most important first)",
                             "required": true
                           },
                           {
@@ -265,10 +260,6 @@
                           {
                             "id": "be-my-own-boss",
                             "label": "Be my own boss"
-                          },
-                          {
-                            "id": "support-a-cause",
-                            "label": "Support a cause"
                           }
                         ],
                         "notApplicableLabel": "Not applicable",
@@ -316,20 +307,20 @@
                           "label": "Animals"
                         },
                         {
-                          "id": "environment",
-                          "label": "Environment"
+                          "id": "the-environment",
+                          "label": "The environment"
                         },
                         {
                           "id": "kids-in-need",
                           "label": "Kids in need"
                         },
                         {
-                          "id": "food-for-people-who-are-hungry",
-                          "label": "Food for people who are hungry"
+                          "id": "people-who-are-hungry",
+                          "label": "People who are hungry"
                         },
                         {
-                          "id": "helping-the-elderly",
-                          "label": "Helping the elderly"
+                          "id": "older-people",
+                          "label": "Older people"
                         }
                       ],
                       "answer": {
@@ -357,20 +348,20 @@
                             "label": "Animals"
                           },
                           {
-                            "id": "environment",
-                            "label": "Environment"
+                            "id": "the-environment",
+                            "label": "The environment"
                           },
                           {
                             "id": "kids-in-need",
                             "label": "Kids in need"
                           },
                           {
-                            "id": "food-for-people-who-are-hungry",
-                            "label": "Food for people who are hungry"
+                            "id": "people-who-are-hungry",
+                            "label": "People who are hungry"
                           },
                           {
-                            "id": "helping-the-elderly",
-                            "label": "Helping the elderly"
+                            "id": "older-people",
+                            "label": "Older people"
                           }
                         ],
                         "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
@@ -398,29 +389,10 @@
                   "screens": [
                     {
                       "sourceRow": 5,
-                      "validation": [],
-                      "feeds": [],
-                      "feedsInto": [],
-                      "flags": [
-                        "D22"
-                      ],
-                      "screenId": "l1-s1-b4-t1-s1",
-                      "index": "1",
-                      "template": "context",
-                      "context": "Goals turn your \"Why\" into something you can measure and check.",
-                      "guidance": "Finish the sentence for each reason you ranked. Use a number and a timeframe so you can check your progress later. If a goal doesn't apply, mark it not applicable to close it.",
-                      "payload": {
-                        "id": "l1-s1-b4-t1-s1",
-                        "type": "context",
-                        "context": "Goals turn your \"Why\" into something you can measure and check.",
-                        "guidance": "Finish the sentence for each reason you ranked. Use a number and a timeframe so you can check your progress later. If a goal doesn't apply, mark it not applicable to close it."
-                      }
-                    },
-                    {
-                      "sourceRow": 5,
                       "validation": [
                         "skips none",
-                        "Support a cause after the ranked goals",
+                        "context and guidance above the first goal",
+                        "Support a cause after the ranked goals (from Know your impact, not the ranking)",
                         "Add another goal last"
                       ],
                       "feeds": [
@@ -434,15 +406,20 @@
                         "D1",
                         "D3",
                         "D11",
-                        "D12"
+                        "D12",
+                        "D22"
                       ],
                       "screenId": "l1-s1-b4-t1-s2",
-                      "index": "2",
+                      "index": "1",
                       "template": "goal-loop",
+                      "context": "Goals turn your \"Why\" into something you can measure and check.",
+                      "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
                       "question": "One goal screen per inherited reason (see rows below).",
                       "payload": {
                         "id": "l1-s1-b4-t1-s2",
                         "type": "goal-loop",
+                        "context": "Goals turn your \"Why\" into something you can measure and check.",
+                        "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
                         "orderFrom": "l1-why",
                         "skipRankItemIds": [],
                         "goals": [
@@ -475,7 +452,7 @@
                                 },
                                 {
                                   "kind": "text",
-                                  "text": " by "
+                                  "text": " in "
                                 },
                                 {
                                   "kind": "field",
@@ -512,27 +489,26 @@
                                   "name": "timeframeNumber",
                                   "input": "integer",
                                   "label": "Number",
-                                  "hint": "number",
+                                  "hint": "1–99",
                                   "min": 1,
                                   "max": 99
                                 },
                                 {
                                   "name": "timeframeUnit",
                                   "input": "choice",
-                                  "label": "Months or years",
+                                  "label": "Weeks or months",
                                   "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
                                     {
                                       "id": "months",
                                       "label": "months"
-                                    },
-                                    {
-                                      "id": "years",
-                                      "label": "years"
                                     }
                                   ]
                                 }
-                              ],
-                              "notApplicableLabel": "Not applicable"
+                              ]
                             }
                           },
                           {
@@ -556,22 +532,6 @@
                                 },
                                 {
                                   "kind": "text",
-                                  "text": " in "
-                                },
-                                {
-                                  "kind": "field",
-                                  "field": "timeframeNumber"
-                                },
-                                {
-                                  "kind": "text",
-                                  "text": " "
-                                },
-                                {
-                                  "kind": "field",
-                                  "field": "timeframeUnit"
-                                },
-                                {
-                                  "kind": "text",
                                   "text": "."
                                 }
                               ],
@@ -582,32 +542,8 @@
                                   "label": "Benefit",
                                   "hint": "benefit",
                                   "maxLength": 80
-                                },
-                                {
-                                  "name": "timeframeNumber",
-                                  "input": "integer",
-                                  "label": "Number",
-                                  "hint": "number",
-                                  "min": 1,
-                                  "max": 99
-                                },
-                                {
-                                  "name": "timeframeUnit",
-                                  "input": "choice",
-                                  "label": "Months or years",
-                                  "options": [
-                                    {
-                                      "id": "months",
-                                      "label": "months"
-                                    },
-                                    {
-                                      "id": "years",
-                                      "label": "years"
-                                    }
-                                  ]
                                 }
-                              ],
-                              "notApplicableLabel": "Not applicable"
+                              ]
                             }
                           },
                           {
@@ -662,27 +598,26 @@
                                   "name": "timeframeNumber",
                                   "input": "integer",
                                   "label": "Number",
-                                  "hint": "number",
+                                  "hint": "1–99",
                                   "min": 1,
                                   "max": 99
                                 },
                                 {
                                   "name": "timeframeUnit",
                                   "input": "choice",
-                                  "label": "Months or years",
+                                  "label": "Weeks or months",
                                   "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
                                     {
                                       "id": "months",
                                       "label": "months"
-                                    },
-                                    {
-                                      "id": "years",
-                                      "label": "years"
                                     }
                                   ]
                                 }
-                              ],
-                              "notApplicableLabel": "Not applicable"
+                              ]
                             }
                           },
                           {
@@ -718,7 +653,6 @@
                             }
                           },
                           {
-                            "rankItemId": "support-a-cause",
                             "position": "after-ranked",
                             "title": "Support a cause",
                             "screen": {
@@ -738,7 +672,7 @@
                                 },
                                 {
                                   "kind": "text",
-                                  "text": "% of every sale to help "
+                                  "text": "% of every sale to support "
                                 },
                                 {
                                   "kind": "carried",
@@ -759,8 +693,7 @@
                                   "min": 1,
                                   "max": 100
                                 }
-                              ],
-                              "notApplicableLabel": "Not applicable"
+                              ]
                             }
                           },
                           {
@@ -785,6 +718,22 @@
                                 },
                                 {
                                   "kind": "text",
+                                  "text": " in "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeNumber"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeUnit"
+                                },
+                                {
+                                  "kind": "text",
                                   "text": "."
                                 }
                               ],
@@ -798,18 +747,10 @@
                                   "optional": true
                                 },
                                 {
-                                  "name": "targetNumber",
-                                  "input": "integer",
-                                  "label": "Number",
-                                  "min": 1,
-                                  "max": 9999999,
-                                  "optional": true
-                                },
-                                {
                                   "name": "timeframeNumber",
                                   "input": "integer",
-                                  "label": "Timeframe",
-                                  "hint": "number",
+                                  "label": "Number",
+                                  "hint": "1–99",
                                   "min": 1,
                                   "max": 99,
                                   "optional": true
@@ -817,24 +758,19 @@
                                 {
                                   "name": "timeframeUnit",
                                   "input": "choice",
-                                  "label": "Months or years",
+                                  "label": "Weeks or months",
                                   "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
                                     {
                                       "id": "months",
                                       "label": "months"
-                                    },
-                                    {
-                                      "id": "years",
-                                      "label": "years"
                                     }
                                   ],
                                   "optional": true
                                 }
-                              ],
-                              "extraFields": [
-                                "targetNumber",
-                                "timeframeNumber",
-                                "timeframeUnit"
                               ],
                               "optional": true
                             }
@@ -848,8 +784,7 @@
                         "amount: whole number 1 to 9,999,999",
                         "currency: Parent Hub currency (10 codes, USD default), read-only",
                         "timeframeNumber: whole number 1 to 99",
-                        "timeframeUnit: one of months | years",
-                        "or marked not applicable"
+                        "timeframeUnit: one of weeks | months"
                       ],
                       "feeds": [
                         {
@@ -862,13 +797,14 @@
                       ],
                       "flags": [
                         "D12",
+                        "D23",
                         "D2",
                         "D15"
                       ],
                       "screenId": "l1-s1-b4-t1-goal-make-money",
                       "index": "2.1",
                       "template": "short-text:goal",
-                      "question": "I want to earn [amount] [currency] by [number] [months/years].",
+                      "question": "I want to earn [amount] [currency] in [number] [weeks/months].",
                       "answer": {
                         "answerKey": "l1-goal-make-money",
                         "kind": "fields",
@@ -896,12 +832,7 @@
                             "name": "timeframeUnit",
                             "type": "choice",
                             "required": true,
-                            "limits": "one of months | years"
-                          },
-                          {
-                            "name": "notApplicable",
-                            "type": "boolean",
-                            "required": false
+                            "limits": "one of weeks | months"
                           }
                         ]
                       },
@@ -910,10 +841,7 @@
                     {
                       "sourceRow": 7,
                       "validation": [
-                        "benefit: up to 80 characters",
-                        "timeframeNumber: whole number 1 to 99",
-                        "timeframeUnit: one of months | years",
-                        "or marked not applicable"
+                        "benefit: up to 80 characters"
                       ],
                       "feeds": [
                         {
@@ -926,13 +854,13 @@
                       ],
                       "flags": [
                         "D12",
-                        "D13",
-                        "D15"
+                        "D23",
+                        "D13"
                       ],
                       "screenId": "l1-s1-b4-t1-goal-help-others",
                       "index": "2.2",
                       "template": "short-text:goal",
-                      "question": "I want my customers to [benefit] in [number] [months/years].",
+                      "question": "I want my customers to [benefit].",
                       "answer": {
                         "answerKey": "l1-goal-help-others",
                         "kind": "fields",
@@ -943,23 +871,6 @@
                             "type": "text",
                             "required": true,
                             "limits": "up to 80 characters"
-                          },
-                          {
-                            "name": "timeframeNumber",
-                            "type": "integer",
-                            "required": true,
-                            "limits": "whole number 1 to 99"
-                          },
-                          {
-                            "name": "timeframeUnit",
-                            "type": "choice",
-                            "required": true,
-                            "limits": "one of months | years"
-                          },
-                          {
-                            "name": "notApplicable",
-                            "type": "boolean",
-                            "required": false
                           }
                         ]
                       },
@@ -970,8 +881,7 @@
                       "validation": [
                         "skill: up to 80 characters",
                         "timeframeNumber: whole number 1 to 99",
-                        "timeframeUnit: one of months | years",
-                        "or marked not applicable"
+                        "timeframeUnit: one of weeks | months"
                       ],
                       "feeds": [
                         {
@@ -984,13 +894,14 @@
                       ],
                       "flags": [
                         "D12",
+                        "D23",
                         "D13",
                         "D15"
                       ],
                       "screenId": "l1-s1-b4-t1-goal-learn-new-skills",
                       "index": "2.3",
                       "template": "short-text:goal",
-                      "question": "I want to learn [skill] in [number] [months/years].",
+                      "question": "I want to learn [skill] in [number] [weeks/months].",
                       "answer": {
                         "answerKey": "l1-goal-learn-new-skills",
                         "kind": "fields",
@@ -1012,12 +923,7 @@
                             "name": "timeframeUnit",
                             "type": "choice",
                             "required": true,
-                            "limits": "one of months | years"
-                          },
-                          {
-                            "name": "notApplicable",
-                            "type": "boolean",
-                            "required": false
+                            "limits": "one of weeks | months"
                           }
                         ]
                       },
@@ -1039,6 +945,7 @@
                       ],
                       "flags": [
                         "D12",
+                        "D23",
                         "D17"
                       ],
                       "screenId": "l1-s1-b4-t1-goal-be-my-own-boss",
@@ -1081,14 +988,9 @@
                     {
                       "sourceRow": 10,
                       "validation": [
-                        "donatePercent: whole number 1 to 100",
-                        "or marked not applicable"
+                        "donatePercent: whole number 1 to 100"
                       ],
                       "feeds": [
-                        {
-                          "answerKey": "l1-why",
-                          "use": "goal order and not-applicable skip"
-                        },
                         {
                           "answerKey": "l1-cause",
                           "use": "cause area carried into the sentence"
@@ -1098,13 +1000,13 @@
                         "l1-s1-wrap"
                       ],
                       "flags": [
-                        "D12",
+                        "D23",
                         "D11"
                       ],
                       "screenId": "l1-s1-b4-t1-goal-support-a-cause",
                       "index": "2.5",
                       "template": "short-text:goal",
-                      "question": "I will give [number]% of every sale to help [cause area from Know your impact].",
+                      "question": "I will give [number]% of every sale to support [cause area from Know your impact].",
                       "answer": {
                         "answerKey": "l1-goal-support-a-cause",
                         "kind": "fields",
@@ -1115,11 +1017,6 @@
                             "type": "integer",
                             "required": true,
                             "limits": "whole number 1 to 100"
-                          },
-                          {
-                            "name": "notApplicable",
-                            "type": "boolean",
-                            "required": false
                           }
                         ]
                       },
@@ -1129,9 +1026,8 @@
                       "sourceRow": 11,
                       "validation": [
                         "goalText: up to 120 characters (optional)",
-                        "targetNumber: whole number 1 to 9,999,999 (optional)",
                         "timeframeNumber: whole number 1 to 99 (optional)",
-                        "timeframeUnit: one of months | years (optional)",
+                        "timeframeUnit: one of weeks | months (optional)",
                         "the whole page is optional"
                       ],
                       "feeds": [],
@@ -1146,7 +1042,7 @@
                       "index": "2.6",
                       "template": "short-text:goal",
                       "guidance": "Optional. Add a goal only if there is something important you haven't covered yet.",
-                      "question": "Add any other goal you haven't already captured that you feel is important for the success of your business. Starter: My goal is to [free text].",
+                      "question": "Add any other goal you haven't already captured that you feel is important for the success of your business. Starter: My goal is to [free text] in [number] [weeks/months].",
                       "answer": {
                         "answerKey": "l1-goal-other",
                         "kind": "fields",
@@ -1159,12 +1055,6 @@
                             "limits": "up to 120 characters"
                           },
                           {
-                            "name": "targetNumber",
-                            "type": "integer",
-                            "required": false,
-                            "limits": "whole number 1 to 9,999,999"
-                          },
-                          {
                             "name": "timeframeNumber",
                             "type": "integer",
                             "required": false,
@@ -1174,7 +1064,7 @@
                             "name": "timeframeUnit",
                             "type": "choice",
                             "required": false,
-                            "limits": "one of months | years"
+                            "limits": "one of weeks | months"
                           }
                         ]
                       },
@@ -1291,9 +1181,7 @@
                     {
                       "answerKey": "l1-goal-help-others",
                       "editFields": [
-                        "benefit",
-                        "timeframeNumber",
-                        "timeframeUnit"
+                        "benefit"
                       ]
                     },
                     {
@@ -1318,7 +1206,6 @@
                       "answerKey": "l1-goal-other",
                       "editFields": [
                         "goalText",
-                        "targetNumber",
                         "timeframeNumber",
                         "timeframeUnit"
                       ]
@@ -1851,7 +1738,7 @@
     {
       "id": "D3",
       "topic": "Why items",
-      "applied": "Per Cath's 4 Nov call, Find the why ranks five items: Make money, Help others, Learn new skills, Be my own boss, Support a cause. The reader drops the retired sixth item if the sheet still lists it, so every ranked item has a goal row.",
+      "applied": "Per Cath's 4 Nov calls, Find the why ranks four items: Make money, Help others, Learn new skills, Be my own boss (Support a cause removed 8:44pm). The reader drops the retired item if the sheet still lists it, so every ranked item has a goal row.",
       "status": "decided-cath",
       "rows": [
         3,
@@ -1925,9 +1812,10 @@
     {
       "id": "D11",
       "topic": "Support a cause goal position",
-      "applied": "Shown after the ranked goals (K4, E10), keyed to the Support a cause reason, so striking that reason as not applicable skips it.",
+      "applied": "Support a cause is no longer a Find the why reason (Cath, 4 Nov 8:44pm). Its goal comes from the Know your impact pick: always shown after the ranked goals (K4, E10) and never skipped by the ranking. Like every shown goal it must be filled in (D23).",
       "status": "build-assumption",
       "rows": [
+        3,
         4,
         10
       ]
@@ -1940,6 +1828,19 @@
       "rows": [
         3,
         5
+      ]
+    },
+    {
+      "id": "D23",
+      "topic": "Goal not applicable",
+      "applied": "Per Cath (4 Nov 8:49pm), goal pages have no Not applicable chip: a goal is dropped only in the Find the why ranking, and every goal shown must be filled in, except Add another goal, which stays optional. The sheet's goal rows (I5, I10, X6 to X10) still mention not applicable.",
+      "status": "decided-cath",
+      "rows": [
+        5,
+        6,
+        7,
+        8,
+        10
       ]
     },
     {
@@ -1967,7 +1868,7 @@
     {
       "id": "D15",
       "topic": "Number caps",
-      "applied": "Timeframe number 1 to 99; people asked 1 to 99; added-goal number 1 to 9,999,999; donate percent 1 to 100 (sheet).",
+      "applied": "Timeframe number 1 to 99, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has no timeframe (Cath, 4 Nov 8:50pm); people asked 1 to 99 (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).",
       "status": "build-assumption",
       "rows": [
         6,
@@ -2028,12 +1929,13 @@
     {
       "id": "D21",
       "topic": "One screen per bronze",
-      "applied": "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals keeps its intro page before the goal loop.",
+      "applied": "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals shows its context and guidance above the first goal on step 1 (Cath, 4 Nov 8:45pm), then one goal per step.",
       "status": "decided-cath",
       "rows": [
         2,
         3,
         4,
+        5,
         14,
         15
       ]

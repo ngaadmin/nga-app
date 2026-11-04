@@ -1,7 +1,7 @@
 "use client";
 
 import type { LaunchpadGoalLoopScreen } from "@/lib/launchpad/content/types";
-import { goalLoopGoals, rankItemsFor } from "@/lib/launchpad/content/task-pages";
+import { goalLoopGoals, rankItemsFor, withLoopIntro } from "@/lib/launchpad/content/task-pages";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { ChoiceCaptureScreen } from "@/components/launchpad/venture/screens/choice-capture-screen";
 import { ShortTextScreen } from "@/components/launchpad/venture/screens/short-text-screen";
@@ -16,14 +16,17 @@ export function GoalLoopScreen({ screen }: { screen: LaunchpadGoalLoopScreen }) 
   const goals = goalLoopGoals(screen, answers, rankItemsFor(floors, screen.orderFrom));
   return (
     <div className="flex flex-col gap-2" data-screen-type="goal-loop">
-      {goals.map((g, i) => (
+      {goals.map((g, i) => {
+        const s = i === 0 ? withLoopIntro(screen, g.screen) : g.screen;
+        return (
         <div key={g.screen.id}>
           <ScreenEyebrow>
             Goal {i + 1} of {goals.length}
           </ScreenEyebrow>
-          {g.screen.type === "short-text" ? <ShortTextScreen screen={g.screen} /> : <ChoiceCaptureScreen screen={g.screen} />}
+          {s.type === "short-text" ? <ShortTextScreen screen={s} /> : <ChoiceCaptureScreen screen={s} />}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

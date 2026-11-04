@@ -218,6 +218,10 @@ export type LaunchpadGoalLoopGoal = {
  */
 export type LaunchpadGoalLoopScreen = TaskScreenBase & {
   type: "goal-loop";
+  /** Why the goals matter; shown above the first goal (step 1), not on a page of its own. */
+  context?: string;
+  /** How-to line, shown with the context above the first goal. */
+  guidance?: string;
   orderFrom: string;
   skipRankItemIds: readonly string[];
   goals: readonly LaunchpadGoalLoopGoal[];

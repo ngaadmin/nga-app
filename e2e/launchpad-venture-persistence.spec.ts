@@ -25,10 +25,10 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await main.getByRole("button", { name: "Move Learn new skills up" }).click();
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Know your impact/ }).click();
-    await main.getByRole("button", { name: "Helping the elderly", exact: true }).click();
+    await main.getByRole("button", { name: "Older people", exact: true }).click();
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Set your goals/ }).click();
-    await main.getByRole("button", { name: "Next ›" }).click();
+    // Step 1 is goal 1 (no separate intro page).
     await expect(main).toContainText("Make money");
     await main.getByLabel("Amount").fill("250");
   });
@@ -53,7 +53,7 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await expect(main.getByRole("button", { name: "Grooming", exact: true })).toHaveAttribute("aria-pressed", "true");
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Set your goals/ }).click();
-    await main.getByRole("button", { name: "Next ›" }).click();
+    // Step 1 is goal 1 (no separate intro page).
     await expect(main).toContainText("Goal 1 of 6", { ignoreCase: true });
     await expect(main).toContainText("Make money");
     await expect(main.getByLabel("Amount")).toHaveValue(/250/);

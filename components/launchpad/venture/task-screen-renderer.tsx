@@ -3,6 +3,7 @@ import type { LaunchpadTaskScreen, LaunchpadTaskScreenType } from "@/lib/launchp
 import { ChecklistScreen } from "@/components/launchpad/venture/screens/checklist-screen";
 import { PlaceholderScreen } from "@/components/launchpad/venture/screens/placeholder-screen";
 import { TextScreen } from "@/components/launchpad/venture/screens/text-screen";
+import { LogoPickerScreen, NamePickerScreen } from "@/components/launchpad/venture/identity/picker-screens";
 
 type Renderers = {
   [T in LaunchpadTaskScreenType]: (screen: Extract<LaunchpadTaskScreen, { type: T }>) => ReactElement;
@@ -17,6 +18,8 @@ export const LAUNCHPAD_TASK_SCREEN_RENDERERS: Renderers = {
   placeholder: (screen) => <PlaceholderScreen screen={screen} />,
   text: (screen) => <TextScreen screen={screen} />,
   checklist: (screen) => <ChecklistScreen screen={screen} />,
+  "logo-picker": (screen) => <LogoPickerScreen screen={screen} />,
+  "name-picker": (screen) => <NamePickerScreen screen={screen} />,
 };
 
 export const REGISTERED_LAUNCHPAD_TASK_SCREEN_TYPES = Object.keys(

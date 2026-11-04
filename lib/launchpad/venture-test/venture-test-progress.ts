@@ -1,10 +1,11 @@
 /**
  * TEST-ONLY progress logic for the Launchpad venture flow.
  *
- * Progress is a list of completed task ids. Everything else (which bronze
+ * Progress is a list of completed task ids, plus the learner's saved answers
+ * (picker screens, keyed by answerKey). Everything else (which bronze
  * door, silver plaque and floor is done or current) is derived from it, so
- * a real backend only has to persist completed task ids per learner and
- * venture. See `venture-test-storage.ts` for the client-side stub.
+ * a real backend only has to persist completed task ids and answers per
+ * learner and venture. See `venture-test-storage.ts` for the client-side stub.
  *
  * The floors come from the venture's content payload (database or bundled
  * seed), so any number of levels works (the r4 building has six).
@@ -14,9 +15,12 @@ import type {
   LaunchpadFloor as VentureTestFloor,
   LaunchpadSilver as VentureTestSilver,
 } from "@/lib/launchpad/content/types";
+import type { BusinessIdentityAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/identity";
 
 export type VentureTestProgress = {
   completedTaskIds: readonly string[];
+  /** Saved answers by answerKey (e.g. the business identity). Shaped to move to the DB as one JSON column. */
+  answers?: LaunchpadAnswers;
 };
 
 export const EMPTY_VENTURE_TEST_PROGRESS: VentureTestProgress = {
@@ -91,7 +95,16 @@ export function bronzeStates(progress: VentureTestProgress, silver: VentureTestS
 
 export function completeTask(progress: VentureTestProgress, taskId: string): VentureTestProgress {
   if (progress.completedTaskIds.includes(taskId)) return progress;
-  return { completedTaskIds: [...progress.completedTaskIds, taskId] };
+  return { ...progress, completedTaskIds: [...progress.completedTaskIds, taskId] };
+}
+
+/** Saves one answer, keeping progress and the other answers. */
+export function setProgressAnswer(
+  progress: VentureTestProgress,
+  answerKey: string,
+  answer: BusinessIdentityAnswer,
+): VentureTestProgress {
+  return { ...progress, answers: { ...progress.answers, [answerKey]: answer } };
 }
 
 export function tasksDoneCount(progress: VentureTestProgress, bronze: VentureTestBronze): number {
@@ -194,19 +207,72 @@ export function allTasksCompleteProgress(floors: readonly VentureTestFloor[]): V
   };
 }
 
-/** Where a test shortcut lands once every task is marked complete. */
-export type VentureTestShortcut = "rooftop" | "building";
+/** A TEST-ONLY URL shortcut (see ventureTestShortcut). */
+export type VentureTestShortcut =
+  /** Every task complete; land on the rooftop finish or the building. */
+  | { kind: "all"; land: "rooftop" | "building" }
+  /** Every floor below `level` complete; land in that floor's corridor. */
+  | { kind: "level"; level: number }
+  /** Every silver up to and including `silverId` complete; land in the corridor of the next open silver. */
+  | { kind: "through-silver"; silverId: string };
 
 /** The venture opened by a shortcut when `?venture=` is not given. */
 export const VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE = "dog-walking";
 
+const SILVER_ID_PARAM_RE = /^l\d{1,2}-s\d{1,2}$/;
+const LEVEL_PARAM_RE = /^[1-9]\d?$/;
+
 /**
- * TEST-ONLY URL shortcuts: `?rooftop=1` marks everything complete and opens the
- * rooftop finish screen; `?complete=all` does the same but lands on the
- * building (so "Go to the rooftop" shows). `rooftop` wins if both are given.
+ * TEST-ONLY URL shortcuts:
+ * - `?rooftop=1`: everything complete, open the rooftop finish screen.
+ * - `?complete=all`: everything complete, land on the building.
+ * - `?complete=<silver id>` (e.g. `l2-s1`): every silver up to and including
+ *   that one complete, land in the corridor of the next open silver.
+ * - `?level=<n>`: every floor below n complete, land in Level n's corridor.
+ * Precedence: rooftop, then complete, then level.
  */
-export function ventureTestShortcut(params: { rooftop?: string; complete?: string }): VentureTestShortcut | null {
-  if (params.rooftop === "1") return "rooftop";
-  if (params.complete === "all") return "building";
+export function ventureTestShortcut(params: {
+  rooftop?: string;
+  complete?: string;
+  level?: string;
+}): VentureTestShortcut | null {
+  if (params.rooftop === "1") return { kind: "all", land: "rooftop" };
+  if (params.complete === "all") return { kind: "all", land: "building" };
+  if (params.complete && SILVER_ID_PARAM_RE.test(params.complete)) return { kind: "through-silver", silverId: params.complete };
+  if (params.level && LEVEL_PARAM_RE.test(params.level)) return { kind: "level", level: Number(params.level) };
   return null;
+}
+
+export type VentureTestShortcutLanding =
+  | { screen: "rooftop" }
+  | { screen: "building" }
+  | { screen: "corridor"; level: number };
+
+/**
+ * Progress for a shortcut and where it lands, or null when the shortcut does
+ * not fit this venture (unknown level or silver). Saved answers are kept.
+ */
+export function applyVentureTestShortcut(
+  shortcut: VentureTestShortcut,
+  floors: readonly VentureTestFloor[],
+  progress: VentureTestProgress,
+): { progress: VentureTestProgress; land: VentureTestShortcutLanding } | null {
+  const taskIds = (silvers: readonly VentureTestSilver[]) =>
+    silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id)));
+  if (shortcut.kind === "all") {
+    return { progress: { ...progress, ...allTasksCompleteProgress(floors) }, land: { screen: shortcut.land } };
+  }
+  if (shortcut.kind === "level") {
+    if (!floors.some((f) => f.level === shortcut.level)) return null;
+    const below = floors.filter((f) => f.level < shortcut.level).flatMap((f) => f.silvers);
+    return {
+      progress: { ...progress, completedTaskIds: taskIds(below) },
+      land: { screen: "corridor", level: shortcut.level },
+    };
+  }
+  const ordered = floors.flatMap((f) => f.silvers);
+  const end = ordered.findIndex((s) => s.id === shortcut.silverId);
+  if (end === -1) return null;
+  const next: VentureTestProgress = { ...progress, completedTaskIds: taskIds(ordered.slice(0, end + 1)) };
+  return { progress: next, land: { screen: "corridor", level: currentLevel(next, floors) } };
 }

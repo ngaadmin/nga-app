@@ -3,9 +3,11 @@
  * localStorage so the preview never writes to the shared database.
  *
  * A real backend would need a per-learner, per-venture table of completed
- * task ids (with RLS on the learner id), plus an onboarding "seen" flag per
+ * task ids and saved answers (one JSON column keyed by answerKey; see
+ * lib/launchpad/content/identity.ts), with RLS on the learner id, plus an onboarding "seen" flag per
  * venture (stubbed here as a second localStorage key). Nothing here talks to Supabase.
  */
+import { parseLaunchpadAnswers } from "@/lib/launchpad/content/identity";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
   type VentureTestProgress,
@@ -29,7 +31,8 @@ export function parseVentureTestProgress(raw: string | null): VentureTestProgres
       const ids = (parsed as { completedTaskIds: unknown[] }).completedTaskIds.filter(
         (id): id is string => typeof id === "string",
       );
-      return { completedTaskIds: ids };
+      const answers = parseLaunchpadAnswers((parsed as { answers?: unknown }).answers);
+      return Object.keys(answers).length ? { completedTaskIds: ids, answers } : { completedTaskIds: ids };
     }
   } catch {
     // Fall through to empty progress.

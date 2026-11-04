@@ -1,6 +1,6 @@
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
-import { Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_ORANGE, Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: string; state: NodeState; onOpen: () => void }) {
   const doorColor = state === "done" ? VT.panel : state === "current" ? VT.secondary : VT.lockDot;
@@ -65,6 +65,8 @@ export function BronzeDoors(props: {
   onBuilding: () => void;
   onCorridor: () => void;
   onOpenBronze: (bronzeId: string) => void;
+  /** Shown once the silver is done and has a wrap-up, e.g. "See your logo". */
+  wrapUp?: { label: string; onOpen: () => void };
 }) {
   return (
     <section className="flex flex-1 flex-col">
@@ -74,6 +76,13 @@ export function BronzeDoors(props: {
       {props.bronzes.map((b) => (
         <Door key={b.id} label={b.title} subtitle={b.subtitle} state={b.state} onOpen={() => props.onOpenBronze(b.id)} />
       ))}
+      {props.wrapUp && (
+        <div className="mx-5 mt-1 pb-4">
+          <button type="button" className={`${BTN_ORANGE} w-full`} onClick={props.wrapUp.onOpen}>
+            {props.wrapUp.label}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

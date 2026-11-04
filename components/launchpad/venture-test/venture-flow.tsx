@@ -5,7 +5,7 @@ import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import {
   advanceAfterTask,
-  allTasksCompleteProgress,
+  applyVentureTestShortcut,
   bronzeStates,
   buildingCta,
   completeTask,
@@ -15,6 +15,7 @@ import {
   isFloorDone,
   isSilverDone,
   lockedDoorsNote,
+  setProgressAnswer,
   silverStates,
   type VentureTestProgress,
   type VentureTestShortcut,
@@ -39,6 +40,9 @@ import { VentureRooftopFinish } from "@/components/launchpad/venture-test/ventur
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
+import { identityChoices, isTaskAnswered } from "@/lib/launchpad/content/identity-content";
+import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
+import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
 
 type View =
   | { screen: "home" }
@@ -48,6 +52,8 @@ type View =
   | { screen: "doors"; level: number; silverId: string }
   | { screen: "tasks"; level: number; silverId: string; bronzeId: string }
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number }
+  /** The silver's wrap-up screen (e.g. the identity logo), once its bronzes are done. */
+  | { screen: "wrap-up"; level: number; silverId: string }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
   | { screen: "rooftop" };
@@ -119,13 +125,16 @@ export function VentureFlow({
   ventures,
   reset,
   shortcut = null,
+  iconSetOverride = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
   ventures: Record<string, LaunchpadVentureView>;
   reset: boolean;
-  /** TEST-ONLY `?rooftop=1` / `?complete=all`: mark everything complete, then land here. */
+  /** TEST-ONLY `?rooftop=1`, `?complete=all|<silver id>`, `?level=<n>`: set progress, then land there. */
   shortcut?: VentureTestShortcut | null;
+  /** TEST-ONLY `?iconSet=<venture id>`: offer that business's logo icons instead of this venture's. */
+  iconSetOverride?: string | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -157,14 +166,17 @@ export function VentureFlow({
       for (const id of new Set([...liveVentureIds(), ...(initialVentureId ? [initialVentureId] : [])])) clearVentureTestProgress(id);
     }
     const shortcutContent = shortcut && initialVentureId ? ventures[initialVentureId] : undefined;
-    if (shortcut && initialVentureId && shortcutContent?.ok) {
-      const all = allTasksCompleteProgress(shortcutContent.payload.floors);
-      saveVentureTestProgress(initialVentureId, all);
+    const applied =
+      shortcut && initialVentureId && shortcutContent?.ok
+        ? applyVentureTestShortcut(shortcut, shortcutContent.payload.floors, loadVentureTestProgress(initialVentureId))
+        : null;
+    if (applied && initialVentureId) {
+      saveVentureTestProgress(initialVentureId, applied.progress);
       markVentureTestOnboardingSeen(initialVentureId);
       setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
       setVentureId(initialVentureId);
-      setProgress(all);
-      go({ screen: shortcut });
+      setProgress(applied.progress);
+      go(applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land);
       return;
     }
     setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
@@ -206,6 +218,10 @@ export function VentureFlow({
     setProgress(next);
     saveVentureTestProgress(ventureId, next);
   };
+
+  const iconVentureId = iconSetOverride ?? ventureId;
+  const setAnswer = (answerKey: string, answer: Parameters<typeof setProgressAnswer>[2]) =>
+    save(setProgressAnswer(progress, answerKey, answer));
 
   const toBuilding = () => go({ screen: "building" });
   const toCorridor = (level: number) => () => go({ screen: "corridor", level, entering: false });
@@ -291,6 +307,7 @@ export function VentureFlow({
       const silver = floor.silvers[silverIndex]!;
       const open = silverStates(progress, floors, floor)[silverIndex] !== "locked";
       const states = bronzeStates(progress, silver, open);
+      const wrapUp = silver.wrapUp;
       body = (
         <BronzeDoors
           level={floor.level}
@@ -300,6 +317,14 @@ export function VentureFlow({
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           onOpenBronze={(bronzeId) => go({ screen: "tasks", level: floor.level, silverId: silver.id, bronzeId })}
+          wrapUp={
+            wrapUp && isSilverDone(progress, silver)
+              ? {
+                  label: wrapUp.type === "identity-wrap-up" ? "See your logo" : wrapUp.heading,
+                  onOpen: () => go({ screen: "wrap-up", level: floor.level, silverId: silver.id }),
+                }
+              : undefined
+          }
         />
       );
       break;
@@ -330,6 +355,8 @@ export function VentureFlow({
         );
       } else {
         const index = view.index;
+        const current = bronze.tasks[index];
+        const answered = current ? isTaskAnswered(current, progress.answers) : true;
         body = (
           <TaskWorkbook
             level={floor.level}
@@ -340,6 +367,8 @@ export function VentureFlow({
             onExit={() => go({ screen: "tasks", ...where })}
             onJump={(i) => go({ screen: "workbook", ...where, index: i })}
             onPrevious={() => go({ screen: "workbook", ...where, index: Math.max(0, index - 1) })}
+            nextDisabled={!answered}
+            nextHint="Make a choice to keep going."
             onNext={() => {
               const task = bronze.tasks[index];
               if (!task) return;
@@ -353,11 +382,29 @@ export function VentureFlow({
               const adv = advanceAfterTask(updated, floor, silver, bronze, index);
               if (adv.kind === "task") go({ screen: "workbook", ...where, index: adv.taskIndex });
               else if (adv.kind === "bronze-done") go({ screen: "doors", level: floor.level, silverId: silver.id });
+              else if (silver.wrapUp) go({ screen: "wrap-up", level: floor.level, silverId: silver.id });
               else go({ screen: "corridor", level: floor.level, entering: false });
             }}
           />
         );
       }
+      break;
+    }
+    case "wrap-up": {
+      const floor = floorAt(floors, view.level);
+      const silver = floor.silvers.find((s) => s.id === view.silverId)!;
+      const wrapUp = silver.wrapUp;
+      body = wrapUp ? (
+        <IdentityWrapUp
+          level={floor.level}
+          silverTitle={silver.title}
+          wrapUp={wrapUp}
+          choices={identityChoices(silver, wrapUp.answerKey, iconVentureId)}
+          onBuilding={toBuilding}
+          onCorridor={toCorridor(floor.level)}
+          onFinalize={toCorridor(floor.level)}
+        />
+      ) : null;
       break;
     }
     case "lift": {
@@ -370,7 +417,7 @@ export function VentureFlow({
   return (
     <VentureTestShell>
       <div className="flex flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
-        {body}
+        <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer }}>{body}</LaunchpadAnswersProvider>
       </div>
     </VentureTestShell>
   );

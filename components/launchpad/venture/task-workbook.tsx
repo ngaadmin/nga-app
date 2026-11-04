@@ -17,6 +17,9 @@ export function TaskWorkbook(props: {
   onJump: (index: number) => void;
   onPrevious: () => void;
   onNext: () => void;
+  /** Picker steps keep Next off until a choice is made; `nextHint` says what is missing. */
+  nextDisabled?: boolean;
+  nextHint?: string;
 }) {
   const { tasks, index } = props;
   const task = tasks[index];
@@ -57,11 +60,22 @@ export function TaskWorkbook(props: {
       {task.screens.map((screen) => (
         <TaskScreen key={screen.id} screen={screen} />
       ))}
+      {props.nextDisabled && props.nextHint && (
+        <p id="workbook-next-hint" className="mx-5 mb-2 text-center text-[13px] text-nga-slate">
+          {props.nextHint}
+        </p>
+      )}
       <div className="mx-5 flex gap-3 pb-4">
         <button type="button" onClick={props.onPrevious} disabled={index === 0} className={`${BTN_WHITE} flex-1`}>
           ‹ Previous
         </button>
-        <button type="button" onClick={props.onNext} className={`${BTN_CYAN} flex-1`}>
+        <button
+          type="button"
+          onClick={props.onNext}
+          disabled={props.nextDisabled}
+          aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
+          className={`${BTN_CYAN} flex-1 disabled:opacity-50`}
+        >
           {isLast ? "Finish ›" : "Next ›"}
         </button>
       </div>

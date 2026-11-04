@@ -6,6 +6,7 @@ import { VENTURE_BLUEPRINTS } from "@/lib/launchpad/venture-blueprints";
 import { liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { loadLaunchpadVenture } from "@/lib/launchpad/content/fetch-published";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
+import { LAUNCHPAD_VENTURE_ID_RE } from "@/lib/launchpad/content/check-payload";
 import {
   VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE,
   ventureTestShortcut,
@@ -34,14 +35,30 @@ export const metadata: Metadata = {
  *   rooftop finish screen directly.
  * - `?complete=all` marks every task complete and lands on the building, so
  *   the "Go to the rooftop" button shows.
- * Both use `?venture=<id>` when given, otherwise the dog-walking venture, and
- * skip the building intro. `?rooftop=1` wins if both are set; `?reset=1` runs
- * first, so `?reset=1&complete=all` still ends fully complete.
+ * - `?complete=<silver id>` (e.g. `?complete=l2-s1`) marks every silver up to
+ *   and including that one complete and lands in the corridor of the next
+ *   open silver (so `l2-s1` opens Level 2 with "Build your identity" current).
+ * - `?level=<n>` (e.g. `?level=2`) marks every floor below n complete and
+ *   lands in Level n's corridor.
+ * - `?iconSet=<venture id>` (e.g. `friendship-bracelets`) shows that
+ *   business's icon set in the logo picker, for ventures not yet in the app.
+ * The shortcuts use `?venture=<id>` when given, otherwise the dog-walking
+ * venture, and skip the building intro. Precedence: rooftop, complete, level.
+ * They replace completed tasks but keep saved answers; `?reset=1` runs first,
+ * so `?reset=1&complete=all` still ends fully complete (with no answers).
  */
 export default async function TestLaunchpadVenturePage({
   searchParams,
 }: {
-  searchParams: Promise<{ venture?: string; reset?: string; draft?: string; rooftop?: string; complete?: string }>;
+  searchParams: Promise<{
+    venture?: string;
+    reset?: string;
+    draft?: string;
+    rooftop?: string;
+    complete?: string;
+    level?: string;
+    iconSet?: string;
+  }>;
 }) {
   if (!isVentureTestEnabled()) notFound();
   const params = await searchParams;
@@ -67,6 +84,7 @@ export default async function TestLaunchpadVenturePage({
       ventures={ventures}
       reset={params.reset === "1"}
       shortcut={shortcut}
+      iconSetOverride={params.iconSet && LAUNCHPAD_VENTURE_ID_RE.test(params.iconSet) ? params.iconSet : null}
     />
   );
 }

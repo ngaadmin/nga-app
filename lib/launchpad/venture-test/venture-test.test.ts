@@ -5,6 +5,7 @@ import {
   VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE,
   advanceAfterTask,
   allTasksCompleteProgress,
+  applyVentureTestShortcut,
   bronzeStates,
   buildingCta,
   completeTask,
@@ -14,6 +15,7 @@ import {
   floorState,
   isBuildingDone,
   lockedDoorsNote,
+  setProgressAnswer,
   silverStates,
   type VentureTestProgress,
   ventureTestShortcut,
@@ -232,16 +234,44 @@ describe("venture test gate", () => {
   });
 });
 
-describe("test shortcuts (?rooftop=1, ?complete=all)", () => {
+describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("parses the params: rooftop wins, anything else is no shortcut", () => {
-    expect(ventureTestShortcut({ rooftop: "1" })).toBe("rooftop");
-    expect(ventureTestShortcut({ complete: "all" })).toBe("building");
-    expect(ventureTestShortcut({ rooftop: "1", complete: "all" })).toBe("rooftop");
+  it("parses the params: rooftop, then complete, then level; anything else is no shortcut", () => {
+    expect(ventureTestShortcut({ rooftop: "1" })).toEqual({ kind: "all", land: "rooftop" });
+    expect(ventureTestShortcut({ complete: "all" })).toEqual({ kind: "all", land: "building" });
+    expect(ventureTestShortcut({ rooftop: "1", complete: "all" })).toEqual({ kind: "all", land: "rooftop" });
+    expect(ventureTestShortcut({ complete: "l2-s1" })).toEqual({ kind: "through-silver", silverId: "l2-s1" });
+    expect(ventureTestShortcut({ level: "2" })).toEqual({ kind: "level", level: 2 });
+    expect(ventureTestShortcut({ complete: "l2-s1", level: "3" })).toEqual({ kind: "through-silver", silverId: "l2-s1" });
     expect(ventureTestShortcut({})).toBeNull();
     expect(ventureTestShortcut({ rooftop: "0", complete: "some" })).toBeNull();
+    expect(ventureTestShortcut({ level: "0" })).toBeNull();
+    expect(ventureTestShortcut({ level: "two" })).toBeNull();
     expect(VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE).toBe("dog-walking");
+  });
+
+  it("?level=2 completes Level 1 only and lands in the Level 2 corridor", () => {
+    const applied = applyVentureTestShortcut({ kind: "level", level: 2 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)!;
+    expect(applied.land).toEqual({ screen: "corridor", level: 2 });
+    expect(floorState(applied.progress, FLOORS, 1)).toBe("done");
+    expect(floorState(applied.progress, FLOORS, 2)).toBe("current");
+    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["current", "locked"]);
+    expect(applyVentureTestShortcut({ kind: "level", level: 99 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)).toBeNull();
+  });
+
+  it("?complete=l2-s1 lands in Level 2 with Build your identity current, keeping saved answers", () => {
+    const withAnswer = setProgressAnswer(EMPTY_VENTURE_TEST_PROGRESS, "l2-s2-identity", {
+      kind: "business-identity",
+      version: 1,
+      shape: "round",
+    });
+    const applied = applyVentureTestShortcut({ kind: "through-silver", silverId: "l2-s1" }, FLOORS, withAnswer)!;
+    expect(applied.land).toEqual({ screen: "corridor", level: 2 });
+    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["done", "current"]);
+    expect(at(at(FLOORS, 1).silvers, 1).title).toBe("Build your identity");
+    expect(applied.progress.answers?.["l2-s2-identity"]?.shape).toBe("round");
+    expect(applyVentureTestShortcut({ kind: "through-silver", silverId: "l9-s9" }, FLOORS, withAnswer)).toBeNull();
   });
 
   it("marks every task complete, so the building is done and the button says Go to the rooftop", () => {
@@ -267,5 +297,48 @@ describe("test shortcuts (?rooftop=1, ?complete=all)", () => {
     saveVentureTestProgress("dog-walking", all);
     const reloaded = parseVentureTestProgress(store.get(ventureTestStorageKey("dog-walking")) ?? null);
     expect(isBuildingDone(reloaded, FLOORS)).toBe(true);
+  });
+});
+
+describe("Planning (L2) silvers", () => {
+  const L2 = at(FLOORS, 1);
+
+  it("stays at two silvers, Know the product and its buyers then Build your identity", () => {
+    expect(L2.silvers.map((s) => [s.id, s.title, s.placeholder])).toEqual([
+      ["l2-s1", "Know the product and its buyers", false],
+      ["l2-s2", "Build your identity", false],
+    ]);
+  });
+
+  it("unlocks in order: silver 2 stays locked until silver 1 is done", () => {
+    const l1Done = applyVentureTestShortcut({ kind: "level", level: 2 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)!.progress;
+    expect(silverStates(l1Done, FLOORS, L2)).toEqual(["current", "locked"]);
+    const s1Done = doneThrough(
+      l1Done,
+      at(L2.silvers, 0).bronzes.flatMap((b) => b.tasks.map((t) => t.id)),
+    );
+    expect(silverStates(s1Done, FLOORS, L2)).toEqual(["done", "current"]);
+    expect(bronzeStates(s1Done, at(L2.silvers, 1), true)).toEqual(["current", "locked"]);
+  });
+});
+
+describe("saved answers live with progress", () => {
+  const answer = { kind: "business-identity" as const, version: 1 as const, shape: "round" as const, color: "#0A8FA8" };
+
+  it("completeTask keeps answers", () => {
+    const p = setProgressAnswer(EMPTY_VENTURE_TEST_PROGRESS, "l2-s2-identity", answer);
+    expect(completeTask(p, "l1-s1-b1-t1").answers).toEqual({ "l2-s2-identity": answer });
+  });
+
+  it("round-trips through the storage parser and drops bad fields", () => {
+    const raw = JSON.stringify({
+      completedTaskIds: ["a"],
+      answers: { "l2-s2-identity": { ...answer, color: "teal", icon: "rocket" }, "Bad Key": answer },
+    });
+    expect(parseVentureTestProgress(raw)).toEqual({
+      completedTaskIds: ["a"],
+      answers: { "l2-s2-identity": { kind: "business-identity", version: 1, shape: "round" } },
+    });
+    expect(parseVentureTestProgress(JSON.stringify({ completedTaskIds: ["a"] }))).toEqual({ completedTaskIds: ["a"] });
   });
 });

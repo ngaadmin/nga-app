@@ -1,8 +1,20 @@
 import {
   LAUNCHPAD_FLOOR_TYPES,
   LAUNCHPAD_PLACEHOLDER_BLOCK_KINDS,
+  LAUNCHPAD_WRAP_UP_TYPES,
+  LOGO_PICKER_STEPS,
+  NAME_PICKER_STEPS,
   type LaunchpadVenturePayload,
 } from "@/lib/launchpad/content/types";
+import {
+  ANSWER_KEY_RE,
+  BUSINESS_NAME_MAX,
+  HEX_COLOR_RE,
+  LOGO_ICON_IDS,
+  LOGO_SHAPES,
+  NAME_COLOR_IDS,
+  NAME_FONTS,
+} from "@/lib/launchpad/content/identity";
 import { LAUNCHPAD_PAYLOAD_SCHEMA_VERSION } from "@/lib/launchpad/content/schema-version";
 
 /** Most plaques a floor wall holds (the building art draws one window each). */
@@ -104,6 +116,13 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
       id(silver.id, sw);
       text(silver.title, `${sw} title`);
       bool(silver.placeholder, `${sw} placeholder`);
+      const pickerSteps = new Map<string, Set<string>>();
+      const notePicker = (screen: unknown) => {
+        if (!isObj(screen) || (screen.type !== "logo-picker" && screen.type !== "name-picker")) return;
+        const key = String(screen.answerKey);
+        if (!pickerSteps.has(key)) pickerSteps.set(key, new Set());
+        pickerSteps.get(key)!.add(String(screen.step));
+      };
       list(silver.bronzes, `${sw} bronzes`, 1, LAUNCHPAD_MAX_BRONZES_PER_SILVER).forEach((bronze, bi) => {
         const bw = `${sw} bronze ${bi + 1}`;
         if (!isObj(bronze)) fail(`${bw} is malformed.`);
@@ -117,9 +136,13 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
           id(task.id, tw);
           text(task.title, `${tw} title`);
           bool(task.placeholder, `${tw} placeholder`);
-          list(task.screens, `${tw} screens`).forEach((screen, ki) => checkScreen(screen, `${tw} screen ${ki + 1}`, id));
+          list(task.screens, `${tw} screens`).forEach((screen, ki) => {
+            checkScreen(screen, `${tw} screen ${ki + 1}`, id);
+            notePicker(screen);
+          });
         });
       });
+      if (silver.wrapUp !== undefined) checkWrapUp(silver.wrapUp, `${sw} wrap-up`, pickerSteps);
     });
   });
 }
@@ -145,8 +168,100 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       text(screen.intro, `${where} intro`, true);
       list(screen.items, `${where} items`).forEach((item, i) => text(item, `${where} item ${i + 1}`));
       return;
+    case "logo-picker":
+      checkPickerBase(screen, where);
+      checkLogoStep(screen, where);
+      return;
+    case "name-picker":
+      checkPickerBase(screen, where);
+      checkNameStep(screen, where);
+      return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
   }
+}
+
+function checkPickerBase(screen: Obj, where: string): void {
+  if (typeof screen.answerKey !== "string" || !ANSWER_KEY_RE.test(screen.answerKey)) fail(`${where} has no valid answerKey.`);
+  text(screen.prompt, `${where} prompt`);
+}
+
+/** Labelled options whose ids are unique and (when `allowed` is given) from that vocabulary. */
+function options(value: unknown, where: string, allowed?: readonly string[]): Obj[] {
+  const seen = new Set<string>();
+  return list(value, `${where} options`).map((raw, i) => {
+    const ow = `${where} option ${i + 1}`;
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id)) fail(`${ow} has no valid id.`);
+    if (allowed && !allowed.includes(raw.id)) fail(`${ow} has unknown id ${raw.id}.`);
+    if (seen.has(raw.id)) fail(`${where} option ${raw.id} is used twice.`);
+    seen.add(raw.id);
+    text(raw.label, `${ow} label`);
+    return raw;
+  });
+}
+
+function checkLogoStep(screen: Obj, where: string): void {
+  switch (screen.step) {
+    case "shape":
+      options(screen.options, where, LOGO_SHAPES);
+      return;
+    case "color":
+      options(screen.options, where).forEach((o, i) => {
+        if (typeof o.hex !== "string" || !HEX_COLOR_RE.test(o.hex)) fail(`${where} option ${i + 1} has no valid hex color.`);
+      });
+      return;
+    case "icon": {
+      if (!isObj(screen.iconSets) || Object.keys(screen.iconSets).length === 0) fail(`${where} iconSets is missing.`);
+      for (const [venture, set] of Object.entries(screen.iconSets)) {
+        if (!LAUNCHPAD_VENTURE_ID_RE.test(venture)) fail(`${where} icon set ${venture} is not a venture id.`);
+        options(set, `${where} icon set ${venture}`, LOGO_ICON_IDS);
+      }
+      if (typeof screen.fallbackVentureId !== "string" || !(screen.fallbackVentureId in screen.iconSets)) {
+        fail(`${where} fallbackVentureId must name one of its icon sets.`);
+      }
+      return;
+    }
+    default:
+      fail(`${where} has unknown logo step ${String(screen.step)} (expected ${LOGO_PICKER_STEPS.join(", ")}).`);
+  }
+}
+
+function checkNameStep(screen: Obj, where: string): void {
+  switch (screen.step) {
+    case "name":
+      text(screen.inputLabel, `${where} inputLabel`);
+      text(screen.placeholderText, `${where} placeholderText`, true);
+      if (
+        typeof screen.maxLength !== "number" ||
+        !Number.isInteger(screen.maxLength) ||
+        screen.maxLength < 1 ||
+        screen.maxLength > BUSINESS_NAME_MAX
+      ) {
+        fail(`${where} maxLength must be 1 to ${BUSINESS_NAME_MAX}.`);
+      }
+      return;
+    case "font":
+      options(screen.options, where, NAME_FONTS);
+      return;
+    case "nameColor":
+      options(screen.options, where, NAME_COLOR_IDS);
+      return;
+    default:
+      fail(`${where} has unknown name step ${String(screen.step)} (expected ${NAME_PICKER_STEPS.join(", ")}).`);
+  }
+}
+
+/** The identity wrap-up edits every pick, so its silver must have all six picker steps for that answerKey. */
+function checkWrapUp(wrapUp: unknown, where: string, pickerSteps: Map<string, Set<string>>): void {
+  if (!isObj(wrapUp)) fail(`${where} is malformed.`);
+  if (!(LAUNCHPAD_WRAP_UP_TYPES as readonly unknown[]).includes(wrapUp.type)) fail(`${where} has unknown type ${String(wrapUp.type)}.`);
+  if (typeof wrapUp.answerKey !== "string" || !ANSWER_KEY_RE.test(wrapUp.answerKey)) fail(`${where} has no valid answerKey.`);
+  text(wrapUp.heading, `${where} heading`);
+  text(wrapUp.body, `${where} body`, true);
+  text(wrapUp.finalizeLabel, `${where} finalizeLabel`);
+  bool(wrapUp.placeholder, `${where} placeholder`);
+  const steps = pickerSteps.get(wrapUp.answerKey) ?? new Set<string>();
+  const missing = [...LOGO_PICKER_STEPS, ...NAME_PICKER_STEPS].filter((st) => !steps.has(st));
+  if (missing.length) fail(`${where} needs picker steps for ${wrapUp.answerKey}: missing ${missing.join(", ")}.`);
 }
 

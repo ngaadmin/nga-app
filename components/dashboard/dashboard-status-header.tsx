@@ -274,6 +274,8 @@ export function DashboardStatusHeader() {
         <ProfilePanel
           displayName={username}
           trackLabel={trackLabel}
+          // TODO(role pill): Cath is deciding what the parent's line under the
+          // username should say. Keep "Parent" until then.
           roleLabel={isParent ? "Parent" : null}
           avatarId={avatarId}
           onChooseAvatar={chooseAvatar}

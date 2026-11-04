@@ -3,7 +3,11 @@ import {
   authorizeBrowserMutation,
   clientIpKey,
 } from "@/lib/auth/request-guard";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import {
+  AUTH_RATE_LIMITS,
+  consumeSharedRateLimit,
+  normalizeRateLimitAccount,
+} from "@/lib/auth/shared-rate-limit";
 import { requestHouseholdPasswordRecovery } from "@/lib/onboarding/household-recovery";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
@@ -25,10 +29,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const ipLimit = consumeRateLimit(
+  const ipLimit = await consumeSharedRateLimit(
     `password-recovery:ip:${clientIpKey(request)}`,
-    8,
-    60_000,
+    AUTH_RATE_LIMITS.recoveryIp.limit,
+    AUTH_RATE_LIMITS.recoveryIp.windowMs,
   );
   if (!ipLimit.allowed) {
     return NextResponse.json(
@@ -75,6 +79,22 @@ export async function POST(request: Request) {
             "Enter the email for that login, or a username that identifies one account.",
         },
         { status: 400 },
+      );
+    }
+
+    // Per-account limit (each accepted request sends an email).
+    const accountLimit = await consumeSharedRateLimit(
+      `password-recovery:account:${normalizeRateLimitAccount(email || username)}`,
+      AUTH_RATE_LIMITS.recoveryAccount.limit,
+      AUTH_RATE_LIMITS.recoveryAccount.windowMs,
+    );
+    if (!accountLimit.allowed) {
+      return NextResponse.json(
+        {
+          accepted: false,
+          error: "Too many recovery requests for this account. Try again in 15 minutes.",
+        },
+        { status: 429 },
       );
     }
 

@@ -2,7 +2,7 @@
 
 import "server-only";
 
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { consumeSharedRateLimit } from "@/lib/auth/shared-rate-limit";
 import {
   generateOpaqueConsentToken,
 } from "@/lib/auth/consent-request-token";
@@ -31,7 +31,7 @@ export async function resendExplorerPendingApprovalEmail(): Promise<ResendExplor
     };
   }
 
-  const limit = consumeRateLimit(
+  const limit = await consumeSharedRateLimit(
     `explorer-pending-resend:${childId}`,
     3,
     15 * 60_000,

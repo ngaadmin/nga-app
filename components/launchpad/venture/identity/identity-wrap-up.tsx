@@ -12,7 +12,7 @@ import { IdentityEditor } from "@/components/launchpad/venture/identity/identity
  * Silver wrap-up "identity-wrap-up": the learner's one logo, drawn from the
  * saved answer, with every pick editable right here through the Logo and
  * Name tabs (edits save to the same answer and the learner stays on this
- * screen). Finalize marks it done.
+ * screen). Confirm and continue marks it done.
  * The frame is a PLACEHOLDER pending Jasper's wrap-up art.
  */
 export function IdentityWrapUp({

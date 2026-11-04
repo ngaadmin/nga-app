@@ -169,7 +169,7 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     fireEvent.change(within(editor).getByRole("textbox", { name: "Amount" }), { target: { value: "750" } });
     fireEvent.click(within(editor).getByRole("button", { name: "Save" }));
     expect(document.querySelector("[data-summary-section='my-goals']")?.textContent).toMatch(/750/);
-    fireEvent.click(screen.getByRole("button", { name: "Finalize" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
 
     // Silver page, then the gold completion, then on to Planning.
     expect(document.querySelector("[data-silver-complete='l1-s1']")).toBeTruthy();
@@ -271,12 +271,12 @@ describe("finishing a silver shows its handbook page", () => {
     next();
     expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
     expect(document.querySelector("[data-summary-section='who-might-want-it']")?.textContent).not.toMatch(/Not answered yet/);
-    fireEvent.click(screen.getByRole("button", { name: "Finalize" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
   });
 
-  it("identity: the wrap-up stays, and Finalize opens the vision/products handbook page", async () => {
+  it("identity: the wrap-up stays, and Confirm and continue opens the vision/products handbook page", async () => {
     renderFlow({ kind: "through-silver", silverId: "l2-s1" });
     fireEvent.click(await screen.findByRole("button", { name: /Build your identity/ }));
     fireEvent.click(door("Design your logo"));
@@ -289,7 +289,7 @@ describe("finishing a silver shows its handbook page", () => {
     fireEvent.click(screen.getByRole("button", { name: /Save to my workbook/ }));
     expect(document.querySelector("[data-wrap-up='identity']")).toBeTruthy();
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Finalize/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirm and continue/ }));
     expect(document.querySelector("[data-silver-complete='l2-s2']")).toBeTruthy();
     expect(document.querySelector("[data-handbook-page='l2-s2']")).toBeTruthy();
     expect(screen.getAllByText("Happy Paws").length).toBeGreaterThan(0);
@@ -298,7 +298,7 @@ describe("finishing a silver shows its handbook page", () => {
     // Re-opening the finished identity wrap-up and finalizing again does not show the page.
     fireEvent.click(screen.getByRole("button", { name: /Build your identity/ }));
     fireEvent.click(screen.getByRole("button", { name: /See your logo/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Finalize/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirm and continue/ }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
   });

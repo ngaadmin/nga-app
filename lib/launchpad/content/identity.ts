@@ -105,7 +105,7 @@ export type BusinessIdentityAnswer = {
   name?: string;
   font?: NameFontId;
   nameColor?: NameColorId;
-  /** Set when the learner taps Finalize on the wrap-up. */
+  /** Set when the learner taps Confirm and continue on the wrap-up. */
   finalized?: boolean;
 };
 
@@ -174,7 +174,7 @@ export function isIdentityFieldSet(answer: BusinessIdentityAnswer | undefined, f
   return answer[field] !== undefined;
 }
 
-/** Sets one pick, returning a new answer (any edit un-finalizes nothing: Finalize stays). */
+/** Sets one pick, returning a new answer (any edit un-finalizes nothing: the confirmation stays). */
 export function setIdentityField<F extends IdentityField>(
   answer: BusinessIdentityAnswer | undefined,
   field: F,

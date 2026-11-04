@@ -75,7 +75,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D4", topic: "What I am selling display", applied: "The row 14 service description shows as plain text in the wrap-up and handbook. I14/I16 say bullet list.", status: "default-pending-cath", rows: [14, 16] },
   { id: "D5", topic: "{product}", applied: `Filled from the venture noun: "${DOG_WALKING_NOUN}".`, status: "default-pending-cath", rows: [15] },
   { id: "D6", topic: "[Yes/No]", applied: "A two-option choice (Yes, No) shown as an inline dropdown in the sentence.", status: "default-pending-cath", rows: [15] },
-  { id: "D7", topic: "Wrap-up button", applied: 'Kept "Finalize". I12 and I16 say "Confirm and continue".', status: "default-pending-cath", rows: [12, 16] },
+  { id: "D7", topic: "Wrap-up button", applied: "Cath 4 Nov 7:36pm: Confirm and continue (matches tracker I12/I16)", status: "decided-cath", rows: [12, 16] },
   { id: "D8", topic: "Wrap-up editing", applied: "Per Cath's 4 Nov correction: a wrap-up value is edited in place (pencil on its section) only when that does not rewire logic owned by another screen; the rest stays read-only. No navigating back to earlier screens. See wrapup-edit-calls.md.", status: "decided-cath", rows: [12, 16] },
   { id: "D9", topic: "Level 2 gold", applied: "No L2 gold row in the sheet; the seed gold (Readiness to make) stays and there is no L2 gold screen.", status: "default-pending-cath", rows: [] },
   { id: "D10", topic: "K15 interest level", applied: "Ignored. Row 15 captures number asked, Yes/No and the specific interest only. K15 still says the payload lists interest level.", status: "pending-cath", rows: [15] },
@@ -569,8 +569,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const wrap: LaunchpadSummaryWrapUp = {
     type: "workbook-summary",
     heading: "Your workbook page",
-    body: "Check your answers. Tap the pencil to change one, then tap Finalize.",
-    finalizeLabel: "Finalize",
+    body: "Check your answers. Tap the pencil to change one, then tap Confirm and continue.",
+    finalizeLabel: "Confirm and continue",
     sections,
     placeholder: true,
   };
@@ -748,8 +748,8 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const wrap: LaunchpadSummaryWrapUp = {
     type: "workbook-summary",
     heading: "Your workbook page",
-    body: "Check your answers. Tap the pencil to change one, then tap Finalize.",
-    finalizeLabel: "Finalize",
+    body: "Check your answers. Tap the pencil to change one, then tap Confirm and continue.",
+    finalizeLabel: "Confirm and continue",
     sections,
     placeholder: true,
   };

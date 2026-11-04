@@ -1259,8 +1259,8 @@
             "payload": {
               "type": "workbook-summary",
               "heading": "Your workbook page",
-              "body": "Check your answers. Tap the pencil to change one, then tap Finalize.",
-              "finalizeLabel": "Finalize",
+              "body": "Check your answers. Tap the pencil to change one, then tap Confirm and continue.",
+              "finalizeLabel": "Confirm and continue",
               "sections": [
                 {
                   "id": "what-my-business-will-offer",
@@ -1643,8 +1643,8 @@
             "payload": {
               "type": "workbook-summary",
               "heading": "Your workbook page",
-              "body": "Check your answers. Tap the pencil to change one, then tap Finalize.",
-              "finalizeLabel": "Finalize",
+              "body": "Check your answers. Tap the pencil to change one, then tap Confirm and continue.",
+              "finalizeLabel": "Confirm and continue",
               "sections": [
                 {
                   "id": "what-i-am-selling",
@@ -1904,8 +1904,8 @@
     {
       "id": "D7",
       "topic": "Wrap-up button",
-      "applied": "Kept \"Finalize\". I12 and I16 say \"Confirm and continue\".",
-      "status": "default-pending-cath",
+      "applied": "Cath 4 Nov 7:36pm: Confirm and continue (matches tracker I12/I16)",
+      "status": "decided-cath",
       "rows": [
         12,
         16

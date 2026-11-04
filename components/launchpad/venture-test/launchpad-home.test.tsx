@@ -43,17 +43,26 @@ describe("Launchpad home In Progress tile", () => {
     expect((bar.firstElementChild as HTMLElement).style.width).toBe("81%");
   });
 
-  it("the handbook button is a square icon-only button in Continue's shape family", () => {
+  it("compact row: thumb + name, level name, then workbook and Continue side by side with the same shape", () => {
     const onOpenHandbook = vi.fn();
     const onOpenVenture = vi.fn();
     render(<LaunchpadHome inProgress={[L6]} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} />);
+    const tile = document.querySelector("[data-in-progress='dog-walking']") as HTMLElement;
+    expect(tile.className).toContain("bg-white");
+    expect(tile.querySelector("[data-tile-thumb] svg")).toBeTruthy();
+    expect(tile.textContent).not.toMatch(/NGA|XP/);
     const book = screen.getByRole("button", { name: "Open handbook" });
     const go = screen.getByRole("button", { name: "Continue" });
     expect(book.textContent).toBe("");
-    for (const c of ["h-12", "w-12", "rounded-[14px]", "border-[#BDE9FB]", "bg-white"]) expect(book.className).toContain(c);
-    for (const c of ["h-12", "rounded-[14px]", "flex-1", "bg-nga-cta"]) expect(go.className).toContain(c);
+    expect(book.querySelector("svg")!.getAttribute("width")).toBe("28");
+    expect(book.className).not.toContain("BDE9FB");
+    for (const c of ["h-11", "w-11", "rounded-xl", "border-2", "border-nga-ink", "bg-white"]) expect(book.className).toContain(c);
+    for (const c of ["h-11", "rounded-xl", "border-2", "bg-nga-cta"]) expect(go.className).toContain(c);
+    expect(go.className).not.toContain("flex-1");
     expect(book.parentElement).toBe(go.parentElement);
-    expect(book.parentElement!.className).toContain("gap-2");
+    const row = tile.querySelector("[data-tile-row]")!;
+    expect(row.contains(tile.querySelector("[data-tile-level-name]"))).toBe(true);
+    expect(tile.querySelector("[data-tile-level-name]")!.className).toContain("truncate");
     fireEvent.click(book);
     fireEvent.click(go);
     expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking");

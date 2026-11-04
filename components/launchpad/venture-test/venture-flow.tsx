@@ -76,7 +76,7 @@ type View =
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number }
   /** The silver's wrap-up screen (e.g. the identity logo), once its bronzes are done. */
-  /** `justCompleted`: reached by finishing the silver, so Finalize goes on to its handbook page. */
+  /** `justCompleted`: reached by finishing the silver, so Confirm and continue goes on to its handbook page. */
   | { screen: "wrap-up"; level: number; silverId: string; justCompleted?: boolean }
   /** The silver's handbook page, shown once right after the silver is finished. */
   | { screen: "silver-complete"; level: number; silverId: string }

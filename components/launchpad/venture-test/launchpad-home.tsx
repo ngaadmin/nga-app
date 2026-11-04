@@ -107,10 +107,31 @@ function MoreTile({ pill, pillOpacity }: { pill: string | null; pillOpacity: num
   );
 }
 
-/** Shared shape for the tile's two buttons: same height and corner radius. */
-const TILE_BTN = "h-12 min-w-12 rounded-[14px]";
+/** Shared shape for the tile's two buttons: same height, corner radius and weight. */
+const TILE_BTN = "h-11 min-w-11 rounded-xl border-2";
 
-/** One "In Progress" tile: name, current level name, whole-business progress, handbook + Continue. */
+/** Small shop-front thumbnail for a business, matching its Business Ideas tile. */
+function VentureThumb({ ventureId }: { ventureId: string }) {
+  const idea = TILES.map((t) => t.tile).find(
+    (t): t is Extract<LaunchpadTile, { kind: "idea" }> => t.kind === "idea" && t.ventureId === ventureId,
+  );
+  return (
+    <span className="relative block h-[30px] w-[36px] overflow-hidden rounded-md" data-tile-thumb="">
+      {idea && (
+        <span className="absolute left-0 top-0 block h-[84px] w-[100px] origin-top-left scale-[0.36]">
+          <LiveShopFrontArt awning={idea.awning} />
+          <span className="absolute left-[26px] top-[20px] block size-12">
+            <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+              {SHOP_ICONS[idea.icon](LIVE_ICON_TONES)}
+            </svg>
+          </span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** One compact "In Progress" tile: thumb + name | level name | workbook + Continue, slim progress bar under. */
 function InProgressTile({
   venture: v,
   onOpenVenture,
@@ -123,13 +144,40 @@ function InProgressTile({
   const pct = Math.round((v.done / Math.max(1, v.total)) * 100);
   const progressLabel = `${v.done} of ${v.total} milestones done`;
   return (
-    <div className="mb-2 rounded-2xl bg-nga-mist p-3" data-in-progress={v.ventureId}>
-      <p className="font-heading text-[15px] font-bold text-nga-ink">{v.name}</p>
-      <p className="mt-0.5 text-[13px] font-medium leading-[1.35] text-nga-slate" data-tile-level-name="">
-        {v.floorName}
-      </p>
+    <div className="mb-2 rounded-2xl border border-nga-mist bg-white px-2 py-1.5" data-in-progress={v.ventureId}>
+      <div className="flex items-center gap-2" data-tile-row="">
+        <div className="flex w-[72px] flex-none flex-col items-center">
+          <VentureThumb ventureId={v.ventureId} />
+          <p className="mt-0.5 w-full truncate text-center font-heading text-[11px] font-bold leading-[14px] text-nga-ink" title={v.name}>
+            {v.name}
+          </p>
+        </div>
+        <p className="min-w-0 flex-1 truncate font-heading text-[14px] font-bold text-nga-ink" data-tile-level-name="">
+          {v.floorName}
+        </p>
+        <div className="flex flex-none items-center gap-1.5" data-tile-actions="">
+          {v.hasHandbook && onOpenHandbook && (
+            <button
+              type="button"
+              aria-label="Open handbook"
+              onClick={() => onOpenHandbook(v.ventureId)}
+              className={`${TILE_BTN} flex w-11 items-center justify-center border-nga-ink bg-white`}
+              data-handbook-button=""
+            >
+              <HandbookIcon size={28} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenVenture(v.ventureId)}
+            className={`${TILE_BTN} border-nga-cta bg-nga-cta px-3 font-heading text-[14px] font-bold text-white`}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
       <div
-        className="mt-[7px] h-1.5 overflow-hidden rounded-[3px] bg-white"
+        className="mt-1.5 h-1.5 overflow-hidden rounded-[3px] bg-nga-mist"
         role="progressbar"
         aria-label={progressLabel}
         aria-valuemin={0}
@@ -137,26 +185,6 @@ function InProgressTile({
         aria-valuenow={v.done}
       >
         <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${pct}%` }} />
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        {v.hasHandbook && onOpenHandbook && (
-          <button
-            type="button"
-            aria-label="Open handbook"
-            onClick={() => onOpenHandbook(v.ventureId)}
-            className={`${TILE_BTN} flex w-12 flex-none items-center justify-center border border-[#BDE9FB] bg-white`}
-            data-handbook-button=""
-          >
-            <HandbookIcon />
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onOpenVenture(v.ventureId)}
-          className={`${TILE_BTN} flex-1 bg-nga-cta font-heading text-[15px] font-bold text-white shadow-[0_3px_0_#c88202]`}
-        >
-          Continue
-        </button>
       </div>
     </div>
   );

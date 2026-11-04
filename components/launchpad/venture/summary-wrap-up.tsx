@@ -210,7 +210,7 @@ function SectionCard({
  * page, one card per section. A pencil edits a value in place on the card
  * (no navigating back) when the content marks it editable; values whose
  * edit would rewire another screen (the why ranking, the cause, the
- * currency) stay read-only. Finalize goes on.
+ * currency) stay read-only. Confirm and continue goes on.
  * The frame is a PLACEHOLDER pending wrap-up art.
  */
 export function SummaryWrapUp({

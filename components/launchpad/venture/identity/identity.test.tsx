@@ -302,7 +302,7 @@ describe("picker screens", () => {
 });
 
 describe("identity wrap-up", () => {
-  it("edits write back to the same answer and the learner stays on the screen; Finalize marks it done", () => {
+  it("edits write back to the same answer and the learner stays on the screen; Confirm and continue marks it done", () => {
     let finalized = 0;
     render(
       <WithAnswers initial={{ [IDENTITY_ANSWER_KEY]: FULL }}>
@@ -330,7 +330,7 @@ describe("identity wrap-up", () => {
     expect(screen.getByText("Paw Patrol Walks").getAttribute("data-name-font")).toBe("pacifico");
     expect(screen.getByText("Frame art TBC")).toBeTruthy();
     expect(finalized).toBe(0);
-    fireEvent.click(screen.getByRole("button", { name: "Finalize" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
     expect(finalized).toBe(1);
     expect(saved().finalized).toBe(true);
   });

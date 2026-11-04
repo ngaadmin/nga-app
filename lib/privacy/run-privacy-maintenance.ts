@@ -23,6 +23,7 @@ import {
   removeOwnedClassSeats,
   type OwnedClassSeat,
 } from "@/lib/school/remove-class-seats";
+import { purgeExpiredAuthRateLimits } from "@/lib/auth/shared-rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
@@ -34,6 +35,8 @@ type Admin = ReturnType<typeof createAdminClient>;
 export type PrivacyMaintenanceSummary = {
   auditLogRemoved: number | null;
   guestUsageRemoved: number | null;
+  /** Rate-limit rows whose window ended over 24 hours ago (null if it could not run). */
+  authRateLimitsRemoved: number | null;
   warningsSent: number;
   warningsCleared: number;
   accountsDeleted: number;
@@ -96,6 +99,14 @@ async function purgeGuestUsage(admin: Admin, errors: string[]): Promise<number |
     return null;
   }
   return typeof data === "number" ? data : null;
+}
+
+async function purgeAuthRateLimits(admin: Admin, errors: string[]): Promise<number | null> {
+  const result = await purgeExpiredAuthRateLimits(
+    admin as unknown as Parameters<typeof purgeExpiredAuthRateLimits>[0],
+  );
+  if (result.error) errors.push("Could not delete old rate-limit counters.");
+  return result.removed;
 }
 
 async function loadAccounts(admin: Admin): Promise<ActivityAccount[]> {
@@ -498,6 +509,7 @@ export async function runDeletion(
 
 /**
  * Daily privacy maintenance: 30-day sign-in log, 30-day guest activity,
+ * rate-limit counters 24 hours after their window ends,
  * learner accounts still waiting for parent approval after 30 days,
  * then 12-month inactivity warnings and deletions.
  * One account's failure does not stop the rest.
@@ -510,6 +522,7 @@ export async function runPrivacyMaintenance(
   const summary: PrivacyMaintenanceSummary = {
     auditLogRemoved: await purgeAuditLog(admin, errors),
     guestUsageRemoved: await purgeGuestUsage(admin, errors),
+    authRateLimitsRemoved: await purgeAuthRateLimits(admin, errors),
     warningsSent: 0,
     warningsCleared: 0,
     accountsDeleted: 0,

@@ -1,73 +1,29 @@
+import { createHash } from "node:crypto";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-type Row = { key_hash: string; hit_count: number; window_reset_at: string };
-const db = vi.hoisted(() => ({
-  rows: new Map<string, Row>(),
-  missing: false,
-  tables: [] as string[],
-}));
+vi.mock("@/lib/supabase/admin", async () => {
+  const fake = await import("@/lib/test-support/fake-auth-rate-limits-db");
+  return { createAdminClient: () => fake.fakeRateLimitAdmin };
+});
 
-const MISSING = {
-  code: "PGRST205",
-  message: "Could not find the table 'public.auth_rate_limits' in the schema cache",
-};
-
-function table(name: string) {
-  db.tables.push(name);
-  let mode: "select" | "update" = "select";
-  let values: Partial<Row> = {};
-  const filters: Record<string, unknown> = {};
-  const matches = (row: Row) =>
-    Object.entries(filters).every(([k, v]) => (row as Record<string, unknown>)[k] === v);
-  const run = () => {
-    if (db.missing) return { data: null, error: MISSING };
-    const row = db.rows.get(filters.key_hash as string);
-    if (mode === "update") {
-      if (!row || !matches(row)) return { data: [], error: null };
-      Object.assign(row, values);
-      return { data: [{ key_hash: row.key_hash }], error: null };
-    }
-    return { data: row ? { ...row } : null, error: null };
-  };
-  const builder = {
-    select: () => builder,
-    eq: (k: string, v: unknown) => {
-      filters[k] = v;
-      return builder;
-    },
-    is: (k: string, v: unknown) => {
-      filters[k] = v;
-      return builder;
-    },
-    maybeSingle: async () => run(),
-    update: (v: Partial<Row>) => {
-      mode = "update";
-      values = v;
-      return builder;
-    },
-    insert: async (row: Row) => {
-      if (db.missing) return { error: MISSING };
-      if (db.rows.has(row.key_hash)) return { error: { code: "23505", message: "dup" } };
-      db.rows.set(row.key_hash, { ...row });
-      return { error: null };
-    },
-    then: (resolve: (v: unknown) => void) => resolve(run()),
-  };
-  return builder;
-}
-
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ from: table }),
-}));
-
-import { consumeSharedRateLimit, sharedRateLimitKeyHash } from "@/lib/auth/shared-rate-limit";
+import {
+  consumeSharedRateLimit,
+  normalizeRateLimitAccount,
+  purgeExpiredAuthRateLimits,
+  sharedRateLimitKeyHash,
+} from "@/lib/auth/shared-rate-limit";
+import {
+  fakeRateLimitAdmin,
+  fakeRateLimitDb as db,
+} from "@/lib/test-support/fake-auth-rate-limits-db";
 
 beforeEach(() => {
-  db.rows.clear();
-  db.missing = false;
-  db.tables = [];
+  db.reset();
+  vi.unstubAllEnvs();
+  vi.stubEnv("NGA_TOKEN_SECRET", "test-secret-one");
 });
 
 describe("consumeSharedRateLimit", () => {
@@ -105,5 +61,52 @@ describe("consumeSharedRateLimit", () => {
     expect(await consumeSharedRateLimit(key, 2, 60_000)).toMatchObject({ allowed: true, source: "memory" });
     expect(await consumeSharedRateLimit(key, 2, 60_000)).toMatchObject({ allowed: true, source: "memory" });
     expect(await consumeSharedRateLimit(key, 2, 60_000)).toMatchObject({ allowed: false, source: "memory" });
+  });
+
+  it("uses HMAC-SHA256 with NGA_TOKEN_SECRET, not a plain SHA-256", () => {
+    const key = "sign-in:ip:203.0.113.7";
+    const withOne = sharedRateLimitKeyHash(key);
+    expect(withOne).toMatch(/^[0-9a-f]{64}$/);
+    expect(withOne).not.toBe(
+      createHash("sha256").update(`auth-rate-limit:${key}`).digest("hex"),
+    );
+    vi.stubEnv("NGA_TOKEN_SECRET", "test-secret-two");
+    expect(sharedRateLimitKeyHash(key)).not.toBe(withOne);
+  });
+
+  it("falls back to memory in production when NGA_TOKEN_SECRET is missing", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NGA_TOKEN_SECRET", "");
+    const result = await consumeSharedRateLimit(`no-secret-${Math.random()}`, 1, 60_000);
+    expect(result).toMatchObject({ allowed: true, source: "memory" });
+    expect(db.rows.size).toBe(0);
+  });
+
+  it("normalizes account keys by case and surrounding spaces", () => {
+    expect(normalizeRateLimitAccount("  Sam.Learner ")).toBe("sam.learner");
+    expect(normalizeRateLimitAccount("Parent@Example.COM")).toBe("parent@example.com");
+  });
+});
+
+describe("purgeExpiredAuthRateLimits", () => {
+  it("deletes only rows whose window ended more than 24 hours ago", async () => {
+    const now = new Date("2026-11-04T00:00:00.000Z");
+    const hours = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+    db.rows.set("a".repeat(64), { key_hash: "a".repeat(64), hit_count: 3, window_reset_at: hours(30) });
+    db.rows.set("b".repeat(64), { key_hash: "b".repeat(64), hit_count: 3, window_reset_at: hours(25) });
+    db.rows.set("c".repeat(64), { key_hash: "c".repeat(64), hit_count: 3, window_reset_at: hours(23) });
+    db.rows.set("d".repeat(64), { key_hash: "d".repeat(64), hit_count: 3, window_reset_at: hours(-1) });
+
+    const result = await purgeExpiredAuthRateLimits(fakeRateLimitAdmin as never, now);
+    expect(result).toEqual({ removed: 2, error: false });
+    expect([...db.rows.keys()].sort()).toEqual(["c".repeat(64), "d".repeat(64)]);
+  });
+
+  it("treats a missing table as nothing to purge, not an error", async () => {
+    db.missing = true;
+    expect(await purgeExpiredAuthRateLimits(fakeRateLimitAdmin as never)).toEqual({
+      removed: null,
+      error: false,
+    });
   });
 });

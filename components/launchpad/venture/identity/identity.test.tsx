@@ -28,7 +28,7 @@ import type { LaunchpadNamePickerScreen } from "@/lib/launchpad/content/types";
 afterEach(cleanup);
 
 const SEED = launchpadTestVentureSeed("dog-walking");
-const IDENTITY: LaunchpadSilver = SEED.floors[1]!.silvers[1]!;
+const IDENTITY: LaunchpadSilver = SEED.floors[0]!.silvers[1]!;
 const SCREENS = IDENTITY.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens));
 const SWATCHES = ["#1D3F9A", "#3FB7DA", "#FFA503", "#BAC593"];
 const LOGO_SCREENS = SCREENS.slice(0, 3) as LaunchpadLogoPickerScreen[];
@@ -55,7 +55,7 @@ function reason(value: unknown): string {
   return r.reason;
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const identityScreens = (p: any) => p.floors[1].silvers[1].bronzes.flatMap((b: any) => b.tasks.flatMap((t: any) => t.screens));
+const identityScreens = (p: any) => p.floors[0].silvers[1].bronzes.flatMap((b: any) => b.tasks.flatMap((t: any) => t.screens));
 
 describe("Build your identity seed", () => {
   it("has two picker bronzes of one page each, six steps, all saving to one answer, plus the wrap-up", () => {
@@ -133,13 +133,13 @@ describe("picker payload validation", () => {
 
   it("rejects a wrap-up whose answer key has no pickers, or misses a step", () => {
     let p = mutable();
-    p.floors[1].silvers[1].wrapUp.answerKey = "someone-else";
+    p.floors[0].silvers[1].wrapUp.answerKey = "someone-else";
     expect(reason(p)).toMatch(/missing shape/);
     p = mutable();
-    p.floors[1].silvers[1].bronzes[1].tasks[0].screens.pop();
+    p.floors[0].silvers[1].bronzes[1].tasks[0].screens.pop();
     expect(reason(p)).toMatch(/missing nameColor/);
     p = mutable();
-    p.floors[1].silvers[1].wrapUp.type = "certificate";
+    p.floors[0].silvers[1].wrapUp.type = "certificate";
     expect(reason(p)).toMatch(/unknown type certificate/);
   });
 });

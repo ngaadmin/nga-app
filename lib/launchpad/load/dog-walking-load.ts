@@ -33,6 +33,7 @@ import {
   type LoadDecision,
   type LoadFeed,
   type LoadLevel,
+  type LoadSilver,
   type LoadRowMeta,
   type LoadScreen,
   type LoadWrapUp,
@@ -90,9 +91,10 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D16", topic: "Ranking control", applied: "Up and down buttons move a reason; no drag yet. G3 says “Drag the reasons into order”; shown as “Use the arrows to put the reasons in order”.", status: "build-assumption", rows: [3] },
   { id: "D17", topic: "Be my own boss check-in", applied: "The six-month check-in in I9 is not built.", status: "build-assumption", rows: [9] },
   { id: "D18", topic: "Wrap-up copy and art", applied: "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.", status: "build-assumption", rows: [12, 16] },
-  { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell shows the service description (row 14). A section with no answer is hidden.", status: "build-assumption", rows: [19] },
+  { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell (row 14) is left off the identity page since identity moved to Level 1 (D25) and shows on the Level 2 page. A section with no answer is hidden.", status: "build-assumption", rows: [19] },
   { id: "D20", topic: "Identity titles", applied: "The locked build keeps Design your logo and Name your business (sheet: Design the logo, Name the business), and its own wrap-up behavior.", status: "build-assumption", rows: [17, 18, 19] },
   { id: "D21", topic: "One screen per bronze", applied: "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals shows its context and guidance above the first goal on step 1 (Cath, 4 Nov 8:45pm), then one goal per step.", status: "decided-cath", rows: [2, 3, 4, 5, 14, 15] },
+  { id: "D25", topic: "Identity in Level 1", applied: "Per Cath (5 Nov 8:14am), Build your identity moves from Level 2 to Level 1, straight after Define the business (l1-s2). Level 1 ends on the identity wrap-up, then the Level 1 finish; Level 2 holds only Know the product and its buyers. The tracker still lists it under Level 2; the move is in the loader. The saved answer key stays l2-s2-identity so saved logos and names still load.", status: "decided-cath", rows: [17, 18, 19] },
   { id: "D22", topic: "Come back later", applied: `Sample, pending tracker column: the tracker has no "Come back later" column yet, so a TEST override turns it on for Set your goals (row 5) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.`, status: "sample-pending-tracker-column", rows: [5, 15] },
 ];
 
@@ -677,10 +679,6 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const rSell = need(ctx, rows, 2, S, "Decide what to sell");
   const rDemand = need(ctx, rows, 2, S, "Find out if people want it");
   const rWrap = need(ctx, rows, 2, S, /^Wrap-up/);
-  const I = "Build your identity";
-  const rLogo = need(ctx, rows, 2, I, "Design the logo");
-  const rName = need(ctx, rows, 2, I, "Name the business");
-  const rIdWrap = need(ctx, rows, 2, I, /^Wrap-up/);
   expectInput(ctx, rSell, ["fill-in"]);
   expectInput(ctx, rDemand, ["fill-in"]);
 
@@ -794,13 +792,59 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     placeholder: true,
   };
 
+  return {
+    level: 2,
+    name: rSell.levelName,
+    gold: { id: "l2-gold" },
+    silvers: [
+      {
+        id: "l2-s1",
+        title: S,
+        sheetLabel: rSell.silver,
+        build: "load",
+        bronzes,
+        wrapUp: {
+          ...meta(rWrap, {
+            screenId: "l2-s1-wrap",
+            index: "wrap-up",
+            template: "workbook-summary",
+            feeds: [
+              { answerKey: KEYS.sell, use: "What I am selling (serviceDescription) and When (availability), editable" },
+              { answerKey: KEYS.demand, use: "Who might want it, editable" },
+            ],
+            validation: ["read-only except the values listed in wrapup-edit-calls.md"],
+            flags: ["D4", "D7", "D8", "D18"],
+          }),
+          payload: wrap,
+        },
+      },
+    ],
+  };
+}
+
+/* ------------------------------------------------------------ identity */
+
+/**
+ * D25 (Cath, 5 Nov 8:14am): the tracker lists Build your identity under
+ * Level 2, but the build moves it into Level 1 straight after Define the
+ * business, as l1-s2. It stays a locked build: the seed's l2-s2 pickers are
+ * carried over and renumbered (see seedSilverId in to-payload.ts). The saved
+ * answer key stays IDENTITY_ANSWER_KEY so saved logos and names still load.
+ */
+const ID_SILVER = "l1-s2";
+
+function identity(ctx: Ctx, rows: readonly TrackerRow[]): LoadSilver {
+  const I = "Build your identity";
+  const rLogo = need(ctx, rows, 2, I, "Design the logo");
+  const rName = need(ctx, rows, 2, I, "Name the business");
+  const rIdWrap = need(ctx, rows, 2, I, /^Wrap-up/);
   // Identity (locked): record the rows; add the handbook sections from I19.
   if (!/Our vision/.test(rIdWrap.dataInput) || !/What we sell/.test(rIdWrap.dataInput)) {
     issue(ctx, rIdWrap.row, "I19 no longer names Our vision and What we sell.");
   }
   const handbookSections: LaunchpadSummarySection[] = [
     { id: "our-vision", label: "Our vision", display: "list", sources: [{ answerKey: KEYS.offer }] },
-    { id: "what-we-sell", label: "What we sell", display: "text", sources: [{ answerKey: KEYS.sell, field: "serviceDescription" }] },
+    // D25: What we sell (row 14) is saved in Level 2, after identity now, so the identity page leaves it out; it stays on the Level 2 page.
   ];
   // H19: the vision template; I19 names its tokens (D24).
   const visionTemplate = rIdWrap.question.trim().replace(/^["\u201c]|["\u201d]$/g, "").trim();
@@ -830,52 +874,24 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     });
 
   return {
-    level: 2,
-    name: rSell.levelName,
-    gold: { id: "l2-gold" },
-    silvers: [
-      {
-        id: "l2-s1",
-        title: S,
-        sheetLabel: rSell.silver,
-        build: "load",
-        bronzes,
-        wrapUp: {
-          ...meta(rWrap, {
-            screenId: "l2-s1-wrap",
-            index: "wrap-up",
-            template: "workbook-summary",
-            feeds: [
-              { answerKey: KEYS.sell, use: "What I am selling (serviceDescription) and When (availability), editable" },
-              { answerKey: KEYS.demand, use: "Who might want it, editable" },
-            ],
-            validation: ["read-only except the values listed in wrapup-edit-calls.md"],
-            flags: ["D4", "D7", "D8", "D18"],
-          }),
-          payload: wrap,
-        },
-      },
-      {
-        id: "l2-s2",
+        id: ID_SILVER,
+        seedSilverId: "l2-s2",
         title: I,
         sheetLabel: rLogo.silver,
         build: "locked",
         bronzes: [],
-        lockedRows: [locked(rLogo, "l2-s2-b1-t1", "logo-picker"), locked(rName, "l2-s2-b2-t1", "name-picker")],
+        lockedRows: [locked(rLogo, `${ID_SILVER}-b1-t1`, "logo-picker"), locked(rName, `${ID_SILVER}-b2-t1`, "name-picker")],
         wrapUp: {
-          ...locked(rIdWrap, "l2-s2-wrap", "identity-wrap-up"),
+          ...locked(rIdWrap, `${ID_SILVER}-wrap`, "identity-wrap-up"),
           feeds: [
             { answerKey: IDENTITY_ANSWER_KEY, use: "logo and name" },
             { answerKey: KEYS.offer, use: "handbook Our vision" },
-            { answerKey: KEYS.sell, use: "handbook What we sell" },
           ],
-          flags: ["D19", "D20", "D24"],
+          flags: ["D19", "D20", "D24", "D25"],
           handbookSections,
           vision,
         },
-      },
-    ],
-  };
+      };
 }
 
 /* ------------------------------------------------------------ feeds into */
@@ -907,7 +923,10 @@ export function buildDogWalkingLoad(
 ): { load: LaunchpadLoadFile; issues: TrackerIssue[] } {
   const ctx: Ctx = { issues: [...read.issues] };
   const rows = read.rows.filter((r) => r.level <= 2);
-  const levels = [level1(ctx, rows), level2(ctx, rows)];
+  const l1 = level1(ctx, rows);
+  // D25: identity sits in Level 1, after Define the business.
+  l1.silvers.push(identity(ctx, rows));
+  const levels = [l1, level2(ctx, rows)];
   linkFeeds(levels);
   applyComeBackLater(levels, rows);
   const used = new Set<number>();

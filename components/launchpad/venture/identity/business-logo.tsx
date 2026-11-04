@@ -110,8 +110,14 @@ export function IconChip({ icon, color, size = 44, label }: { icon: LogoIconId; 
 const SIZES = {
   lg: { mark: 132, width: 300, name: 32, longName: 26 },
   md: { mark: 92, width: 260, name: 26, longName: 22 },
-  /** Handbook identity page (r4): 96px logo on the paper card. */
-  hb: { mark: 96, width: 246, name: 26, longName: 22 },
+  /**
+   * Workbook cover, workbook identity page and the identity wrap-up: a
+   * compact lockup so the longer vision fits (Cath, 5 Nov 8:15am). Was mark
+   * 96, name 26, longName 22; now the name is 20% smaller. The logo was cut
+   * 40% (58px) first, but screen three still scrolled 28px with the long test
+   * vision, so per the same instruction the logo (not the vision) shrank again.
+   */
+  hb: { mark: 28, width: 246, name: 21, longName: 18 },
   sm: { mark: 76, width: 230, name: 22, longName: 20 },
 } as const;
 

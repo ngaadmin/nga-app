@@ -53,10 +53,10 @@ function doneThrough(progress: VentureTestProgress, ids: string[]): VentureTestP
 }
 
 describe("venture test structure", () => {
-  it("has the six floors; the loaded L1 has one silver (tracker 4 Nov), the rest keep the r4 counts", () => {
+  it("has the six floors; the loaded L1 has Define the business and Build your identity (D25), L2 one silver, the rest keep the r4 counts", () => {
     expect(FLOORS.map((f) => [f.level, f.name, f.silvers.length])).toEqual([
-      [1, "Vision and Goals", 1],
-      [2, "Planning", 2],
+      [1, "Vision and Goals", 2],
+      [2, "Planning", 1],
       [3, "Making", 4],
       [4, "Selling", 3],
       [5, "Growing", 2],
@@ -64,7 +64,7 @@ describe("venture test structure", () => {
     ]);
     expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
     expect(L1.gold.title).toBe("Know what type of business to start, why it matters to you, and the goals you'll aim for.");
-    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business"]);
+    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Build your identity"]);
     expect(at(L1.silvers, 0).bronzes.map((b) => b.title)).toEqual([
       "Pick what your business will offer",
       "Find the why",
@@ -280,20 +280,21 @@ describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () =
     expect(applied.land).toEqual({ screen: "corridor", level: 2 });
     expect(floorState(applied.progress, FLOORS, 1)).toBe("done");
     expect(floorState(applied.progress, FLOORS, 2)).toBe("current");
-    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["current", "locked"]);
+    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["current"]);
+    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 0))).toEqual(["done", "done"]);
     expect(applyVentureTestShortcut({ kind: "level", level: 99 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)).toBeNull();
   });
 
-  it("?complete=l2-s1 lands in Level 2 with Build your identity current, keeping saved answers", () => {
+  it("?complete=l1-s1 lands in Level 1 with Build your identity current, keeping saved answers", () => {
     const withAnswer = setProgressAnswer(EMPTY_VENTURE_TEST_PROGRESS, "l2-s2-identity", {
       kind: "business-identity",
       version: 2,
       shape: "circle",
     });
-    const applied = applyVentureTestShortcut({ kind: "through-silver", silverId: "l2-s1" }, FLOORS, withAnswer)!;
-    expect(applied.land).toEqual({ screen: "corridor", level: 2 });
-    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["done", "current"]);
-    expect(at(at(FLOORS, 1).silvers, 1).title).toBe("Build your identity");
+    const applied = applyVentureTestShortcut({ kind: "through-silver", silverId: "l1-s1" }, FLOORS, withAnswer)!;
+    expect(applied.land).toEqual({ screen: "corridor", level: 1 });
+    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 0))).toEqual(["done", "current"]);
+    expect(at(at(FLOORS, 0).silvers, 1).title).toBe("Build your identity");
     expect(identityAnswerOf(applied.progress.answers, "l2-s2-identity")?.shape).toBe("circle");
     expect(applyVentureTestShortcut({ kind: "through-silver", silverId: "l9-s9" }, FLOORS, withAnswer)).toBeNull();
   });
@@ -324,25 +325,29 @@ describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () =
   });
 });
 
-describe("Planning (L2) silvers", () => {
+describe("Build your identity in Level 1 (D25, Cath 5 Nov 8:14am)", () => {
+  const L1 = at(FLOORS, 0);
   const L2 = at(FLOORS, 1);
 
-  it("stays at two silvers, Know the product and its buyers then Build your identity", () => {
-    expect(L2.silvers.map((s) => [s.id, s.title, s.placeholder])).toEqual([
-      ["l2-s1", "Know the product and its buyers", false],
-      ["l2-s2", "Build your identity", false],
+  it("Level 1 is Define the business then Build your identity; Planning holds only Know the product and its buyers", () => {
+    expect(L1.silvers.map((s) => [s.id, s.title, s.placeholder])).toEqual([
+      ["l1-s1", "Define the business", false],
+      ["l1-s2", "Build your identity", false],
     ]);
+    expect(L1.silvers[1]!.bronzes.flatMap((b) => b.tasks.map((t) => t.id))).toEqual(["l1-s2-b1-t1", "l1-s2-b2-t1"]);
+    expect(L1.silvers[1]!.wrapUp).toMatchObject({ type: "identity-wrap-up", answerKey: "l2-s2-identity" });
+    expect(L2.silvers.map((s) => [s.id, s.title, s.placeholder])).toEqual([["l2-s1", "Know the product and its buyers", false]]);
   });
 
-  it("unlocks in order: silver 2 stays locked until silver 1 is done", () => {
-    const l1Done = applyVentureTestShortcut({ kind: "level", level: 2 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)!.progress;
-    expect(silverStates(l1Done, FLOORS, L2)).toEqual(["current", "locked"]);
+  it("unlocks in order: identity stays locked until Define the business is done", () => {
+    expect(silverStates(EMPTY_VENTURE_TEST_PROGRESS, FLOORS, L1)).toEqual(["current", "locked"]);
     const s1Done = doneThrough(
-      l1Done,
-      at(L2.silvers, 0).bronzes.flatMap((b) => b.tasks.map((t) => t.id)),
+      EMPTY_VENTURE_TEST_PROGRESS,
+      at(L1.silvers, 0).bronzes.flatMap((b) => b.tasks.map((t) => t.id)),
     );
-    expect(silverStates(s1Done, FLOORS, L2)).toEqual(["done", "current"]);
-    expect(bronzeStates(s1Done, at(L2.silvers, 1), true)).toEqual(["current", "locked"]);
+    expect(silverStates(s1Done, FLOORS, L1)).toEqual(["done", "current"]);
+    expect(bronzeStates(s1Done, at(L1.silvers, 1), true)).toEqual(["current", "locked"]);
+    expect(floorState(s1Done, FLOORS, 2)).toBe("locked");
   });
 });
 

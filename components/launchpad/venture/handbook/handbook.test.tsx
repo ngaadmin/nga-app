@@ -46,7 +46,8 @@ const IDENTITY: BusinessIdentityAnswer = {
   font: "fredoka-semibold",
   nameColor: "logo",
 };
-const WITH_IDENTITY = setProgressAnswer(through("l2-s2"), IDENTITY_ANSWER_KEY, IDENTITY);
+// D25: Build your identity is Level 1's second section (l1-s2).
+const WITH_IDENTITY = setProgressAnswer(through("l1-s2"), IDENTITY_ANSWER_KEY, IDENTITY);
 /** Identity plus the L1 offer and the L2 answers the handbook sections read. */
 const WITH_ANSWERS = [
   ["l1-offer", selectionAnswer(["dog-walking", "training"])],
@@ -54,6 +55,11 @@ const WITH_ANSWERS = [
   ["l2-demand", fieldsAnswer({ numberAsked: 5, yesNo: "yes", specificInterest: "puppy walks" })],
 ] as const;
 const FULL = WITH_ANSWERS.reduce<VentureTestProgress>((p, [k, a]) => setProgressAnswer(p, k, a), WITH_IDENTITY);
+/** The same answers with Level 2 done too (its page is then the latest). */
+const FULL_L2 = WITH_ANSWERS.reduce<VentureTestProgress>(
+  (p, [k, a]) => setProgressAnswer(p, k, a),
+  setProgressAnswer(through("l2-s1"), IDENTITY_ANSWER_KEY, IDENTITY),
+);
 
 describe("handbook pages", () => {
   it("has no pages (and no book button) until the first silver is done", () => {
@@ -66,22 +72,23 @@ describe("handbook pages", () => {
   });
 
   it("makes one page per completed silver in building order, the identity silver rendering the saved answer", () => {
-    const pages = handbookPages(through("l2-s2"), FLOORS);
-    // Page 1 is the cover (logo, name, vision), then one page per silver.
-    expect(pages.map((p) => p.silver.id)).toEqual(["l2-s2", "l1-s1", "l2-s1", "l2-s2"]);
-    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "summary", "identity"]);
+    const pages = handbookPages(through("l2-s1"), FLOORS);
+    // Page 1 is the cover (logo, name, vision), then one page per silver; identity is Level 1's second (D25).
+    expect(pages.map((p) => p.silver.id)).toEqual(["l1-s2", "l1-s1", "l1-s2", "l2-s1"]);
+    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "identity", "summary"]);
     expect(pages[1]!.bronzeTitles).toEqual(SILVERS[0]!.bronzes.map((b) => b.title));
     expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4]);
     expect(pages[0]).toMatchObject({ level: 1, kind: "cover" });
     expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder").map((p) => p.level)[0]).toBe(3);
-    expect(pages[3]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 2, done: true });
+    expect(pages[2]).toMatchObject({ level: 1, floorName: FLOORS[0]!.name, silverNumber: 2, done: true });
+    expect(pages[3]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 1, done: true });
   });
 
   it("opens at the latest page, and the ghost is the next silver", () => {
-    const pages = handbookPages(through("l2-s1"), FLOORS);
-    expect(handbookOpenIndex(pages)).toBe(2);
+    const pages = handbookPages(through("l1-s1"), FLOORS);
+    expect(handbookOpenIndex(pages)).toBe(1);
     expect(handbookOpenIndex([])).toBe(0);
-    expect(handbookGhost(through("l2-s1"), FLOORS)).toEqual({ level: 2, floorName: FLOORS[1]!.name, silverTitle: "Build your identity" });
+    expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Build your identity" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
     expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length + 1);
   });
@@ -98,9 +105,9 @@ describe("handbook tabs", () => {
   const states = (p: VentureTestProgress) => handbookTabs(p, FLOORS).map((t) => t.state);
   it("marks earned floors navy, the current floor cyan, the rest unearned and untappable", () => {
     expect(states(EMPTY_VENTURE_TEST_PROGRESS)).toEqual(["current", "unearned", "unearned", "unearned", "unearned", "unearned"]);
-    expect(states(through("l2-s1"))).toEqual(["earned", "current", "unearned", "unearned", "unearned", "unearned"]);
+    expect(states(through("l1-s2"))).toEqual(["earned", "current", "unearned", "unearned", "unearned", "unearned"]);
     expect(states(ALL)).toEqual(["earned", "earned", "earned", "earned", "earned", "earned"]);
-    const tabs = handbookTabs(through("l2-s1"), FLOORS);
+    const tabs = handbookTabs(through("l1-s2"), FLOORS);
     expect(tabs.map((t) => t.tappable)).toEqual([true, true, false, false, false, false]);
     expect(tabs.map((t) => t.level)).toEqual([1, 2, 3, 4, 5, 6]);
   });
@@ -109,15 +116,15 @@ describe("handbook tabs", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
     // A floor tab opens its first silver page, not the cover.
     expect(handbookTabTarget(pages, 1)).toBe(1);
-    expect(handbookTabTarget(pages, 2)).toBe(2);
+    expect(handbookTabTarget(pages, 2)).toBe(3);
     const l1Only = handbookPages(through("l1-s1"), FLOORS);
     expect(handbookTabTarget(l1Only, 2)).toBe(1);
   });
 });
 
 describe("shortcut sample answers (TEST-ONLY)", () => {
-  it("?complete=l2-s2 and ?complete=all give a handbook with a filled identity page", () => {
-    for (const p of [through("l2-s2"), ALL]) {
+  it("?complete=l1-s2 and ?complete=all give a handbook with a filled identity page", () => {
+    for (const p of [through("l1-s2"), ALL]) {
       const filled = withShortcutSampleAnswers(p, FLOORS, "dog-walking", "Dog walking");
       expect(handbookPages(filled, FLOORS).some((pg) => pg.kind === "identity")).toBe(true);
       expect(filled.answers?.[IDENTITY_ANSWER_KEY]).toMatchObject({
@@ -134,7 +141,7 @@ describe("shortcut sample answers (TEST-ONLY)", () => {
   });
   it("never overwrites saved picks, and adds nothing before the identity silver is done", () => {
     expect(withShortcutSampleAnswers(WITH_IDENTITY, FLOORS, "dog-walking", "X").answers?.[IDENTITY_ANSWER_KEY]).toEqual(IDENTITY);
-    const beforeIdentity = withShortcutSampleAnswers(through("l2-s1"), FLOORS, "dog-walking", "X");
+    const beforeIdentity = withShortcutSampleAnswers(through("l1-s1"), FLOORS, "dog-walking", "X");
     expect(identityAnswerOf(beforeIdentity.answers, IDENTITY_ANSWER_KEY)).toBeUndefined();
     const saved = setProgressAnswer(through("l1-s1"), "l1-offer", selectionAnswer(["grooming"]));
     expect(selectionOf(withShortcutSampleAnswers(saved, FLOORS, "dog-walking", "X").answers, "l1-offer")?.selected).toEqual(["grooming"]);
@@ -178,22 +185,21 @@ describe("<Handbook>", () => {
     const dialog = screen.getByRole("dialog", { name: "My handbook" });
     expect(within(dialog).getByText("Read only")).toBeTruthy();
     const page = dialog.querySelector("[data-handbook-page]")!;
-    expect(page.getAttribute("data-handbook-page")).toBe("l2-s2");
+    expect(page.getAttribute("data-handbook-page")).toBe("l1-s2");
     expect(page.getAttribute("data-editable")).toBe("false");
     expect(dialog.querySelectorAll("[data-edit-identity]")).toHaveLength(0);
     expect(within(dialog).getAllByText("Happy Paws").length).toBeGreaterThan(0);
     expect(within(dialog).getByRole("img", { name: "Logo: shield, paw icon" })).toBeTruthy();
     // The font shows with the label the learner saw on the task screen.
     expect(within(dialog).getByText("Font: Rounded")).toBeTruthy();
-    expect(within(dialog).getByText("Vision and products")).toBeTruthy();
-    // Real answers: the offer picks as tag chips, the service description as the quote.
+    expect(within(dialog).getByText("Your identity")).toBeTruthy();
+    // Cover order (D25): logo, name, then the vision block; the offer-picks list and What we sell are not on this page.
+    const lockup = dialog.querySelector("[data-identity-lockup]")!;
+    const vision = dialog.querySelector("[data-identity-page-vision] [data-vision]")!;
+    expect(lockup.compareDocumentPosition(vision) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(dialog).getByRole("heading", { name: "Our vision" })).toBeTruthy();
-    expect(within(within(dialog).getByRole("list", { name: "Our vision" })).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "Dog walking",
-      "Training",
-    ]);
-    expect(within(dialog).getByRole("heading", { name: "What we sell" })).toBeTruthy();
-    expect(within(dialog).getByText("Short walks for small dogs")).toBeTruthy();
+    expect(within(dialog).queryByRole("list", { name: "Our vision" })).toBeNull();
+    expect(within(dialog).queryByRole("heading", { name: "What we sell" })).toBeNull();
     // The sample copy is retired.
     expect(dialog.querySelectorAll("[data-sample]")).toHaveLength(0);
     expect(dialog.textContent).not.toMatch(/Overnight dog stay|relaxed owners/);
@@ -205,16 +211,16 @@ describe("<Handbook>", () => {
     expect(dialog.textContent).not.toMatch(/coming soon|NGA|XP/i);
   });
 
-  it("identity page hides a section with no answer yet", () => {
+  it("identity page shows the vision placeholder until Level 1 fills it, and no What we sell", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    expect(screen.queryByRole("heading", { name: "Our vision" })).toBeNull();
+    expect(document.querySelector("[data-identity-page-vision] [data-vision]")!.getAttribute("data-vision-state")).toBe("empty");
     expect(screen.queryByRole("heading", { name: "What we sell" })).toBeNull();
   });
 
   it("shows the ghost of the next silver, named by its title, behind the last page", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    const ghost = screen.getByRole("img", { name: "Next page, locked: Know how to make it" });
-    expect(ghost.textContent).toBe("Next: Know how to make it");
+    const ghost = screen.getByRole("img", { name: "Next page, locked: Know the product and its buyers" });
+    expect(ghost.textContent).toBe("Next: Know the product and its buyers");
     // The words silver, bronze and gold never reach the screen.
     expect(document.body.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
   });
@@ -223,11 +229,10 @@ describe("<Handbook>", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
     const nav = screen.getByRole("navigation", { name: "Handbook floors" });
     expect(within(nav).getByRole("button", { name: "Level 1, Vision and Goals" }).getAttribute("data-tab-state")).toBe("earned");
-    expect(within(nav).getByRole("button", { name: /Level 2/ }).getAttribute("data-tab-state")).toBe("earned");
-    expect(within(nav).getByRole("button", { name: /Level 3/ }).getAttribute("data-tab-state")).toBe("current");
-    const l4 = within(nav).getByRole("button", { name: /Level 4.*not earned yet/ }) as HTMLButtonElement;
-    expect(l4.disabled).toBe(true);
-    expect(l4.getAttribute("data-tab-state")).toBe("unearned");
+    expect(within(nav).getByRole("button", { name: /Level 2/ }).getAttribute("data-tab-state")).toBe("current");
+    const l3 = within(nav).getByRole("button", { name: /Level 3.*not earned yet/ }) as HTMLButtonElement;
+    expect(l3.disabled).toBe(true);
+    expect(l3.getAttribute("data-tab-state")).toBe("unearned");
     fireEvent.click(within(nav).getByRole("button", { name: "Level 1, Vision and Goals" }));
     expect(document.querySelector("[data-handbook-page]")!.getAttribute("data-handbook-page")).toBe("l1-s1");
   });
@@ -239,8 +244,8 @@ describe("<Handbook>", () => {
         .map((b) => b.getAttribute("aria-label"));
     const tab = (name: RegExp) => within(screen.getByRole("navigation", { name: "Handbook floors" })).getByRole("button", { name });
 
-    // Earned floor (L2) viewed on the identity page, which keeps its running page number.
-    const { unmount } = render(<Harness entry="building" initial={WITH_IDENTITY} />);
+    // Earned floor (L2) viewed on its page, which keeps its running page number.
+    const { unmount } = render(<Harness entry="building" initial={FULL_L2} />);
     expect(screen.getByText("Page 4")).toBeTruthy();
     expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
     const l2 = tab(/^Level 2/);
@@ -256,22 +261,21 @@ describe("<Handbook>", () => {
     unmount();
 
     // Current floor (cyan) viewed keeps its fill and also gets the ring.
-    render(<Harness entry="building" initial={through("l2-s1")} />);
-    const current = tab(/^Level 2/);
+    render(<Harness entry="building" initial={through("l1-s1")} />);
+    const current = tab(/^Level 1/);
     expect(current.getAttribute("data-tab-state")).toBe("current");
     expect(current.className).toContain("bg-[#3FB7DA]");
-    expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
+    expect(ringed()).toEqual(["Level 1, " + FLOORS[0]!.name]);
     // Locked tabs are not viewed, so they carry no ring.
-    expect(tab(/^Level 3.*not earned yet/).className).not.toContain("outline-[#FFA503]");
+    expect(tab(/^Level 2.*not earned yet/).className).not.toContain("outline-[#FFA503]");
   });
 
   it("summary pages show the wrap-up sections from saved answers, with nothing to edit here", () => {
-    render(<Harness entry="building" initial={FULL} />);
-    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    render(<Harness entry="building" initial={FULL_L2} />);
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
     expect(page.querySelectorAll("[data-edit-identity], [data-edit-section], button")).toHaveLength(0);
-    expect(within(page).getByRole("heading", { name: SILVERS[1]!.title })).toBeTruthy();
+    expect(within(page).getByRole("heading", { name: SILVERS[2]!.title })).toBeTruthy();
     expect(within(page).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["What I am selling", "When", "Who might want it"]);
     expect(page.textContent).toContain("Short walks for small dogs");
     expect(page.textContent).toContain("Weekday afternoons");

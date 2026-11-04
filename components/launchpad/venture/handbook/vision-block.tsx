@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { LaunchpadVisionSpec } from "@/lib/launchpad/content/types";
 import { summaryCatalog } from "@/lib/launchpad/content/summary";
 import { compileVision } from "@/lib/launchpad/content/vision";
@@ -19,11 +20,11 @@ export function useVisionSentence(spec: LaunchpadVisionSpec | undefined): string
  * 17/26 semibold, full width, never cut off. Until it can be filled: the
  * grey italic placeholder, no quote mark. Read-only.
  */
-export function VisionBlock({ spec }: { spec: LaunchpadVisionSpec }) {
+export function VisionBlock({ spec, doodle }: { spec: LaunchpadVisionSpec; doodle?: ReactNode }) {
   const sentence = useVisionSentence(spec);
   return (
     <div data-vision="" data-vision-state={sentence ? "filled" : "empty"} className="w-full">
-      <AccentLabel>{spec.label}</AccentLabel>
+      <AccentLabel doodle={doodle}>{spec.label}</AccentLabel>
       {sentence ? (
         <div className="relative mt-3 w-full">
           <svg width="34" height="28" viewBox="0 0 44 36" fill={PAPER_ACCENT} aria-hidden="true" className="mb-1 opacity-60" data-vision-quote="">

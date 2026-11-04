@@ -35,9 +35,24 @@ function loadSilver(s: LoadSilver): LaunchpadSilver {
   };
 }
 
+/** Moves a seed silver to a new id: its own id and every bronze, task and screen id under it (answer keys stay). */
+function renumberSilver(silver: LaunchpadSilver, from: string, to: string): LaunchpadSilver {
+  const re = (id: string) => (id === from || id.startsWith(`${from}-`) ? to + id.slice(from.length) : id);
+  return {
+    ...silver,
+    id: to,
+    bronzes: silver.bronzes.map((b) => ({
+      ...b,
+      id: re(b.id),
+      tasks: b.tasks.map((t) => ({ ...t, id: re(t.id), screens: t.screens.map((sc) => ({ ...sc, id: re(sc.id) })) })),
+    })),
+  };
+}
+
 /**
  * Overlays a load file onto a seed payload: each loaded level's silvers
- * replace the seed's (a "locked" silver keeps the seed's build and only takes
+ * replace the seed's (a "locked" silver keeps the seed's build, from any floor and renumbered
+ * when seedSilverId says so, and only takes
  * the handbook sections), the gold takes its completion screen, and every
  * level the load does not cover keeps the seed placeholders.
  */
@@ -49,8 +64,10 @@ export function overlayLoad(seed: LaunchpadVenturePayload, load: LaunchpadLoadFi
       if (!level) return floor;
       const silvers = level.silvers.map((s) => {
         if (s.build === "load") return loadSilver(s);
-        const kept = floor.silvers.find((x) => x.id === s.id);
-        if (!kept) throw new Error(`Locked silver ${s.id} is not in the seed.`);
+        const from = s.seedSilverId ?? s.id;
+        const seedSilver = seed.floors.flatMap((f) => f.silvers).find((x) => x.id === from);
+        if (!seedSilver) throw new Error(`Locked silver ${from} is not in the seed.`);
+        const kept = from === s.id ? seedSilver : renumberSilver(seedSilver, from, s.id);
         if (!s.wrapUp?.handbookSections || kept.wrapUp?.type !== "identity-wrap-up") return kept;
         const wrapUp: LaunchpadIdentityWrapUp = {
           ...kept.wrapUp,

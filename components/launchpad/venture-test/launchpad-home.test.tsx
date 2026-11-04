@@ -80,8 +80,8 @@ describe("Launchpad home In Progress tile", () => {
   it("the flow counts silvers done across the whole business out of the content's total", async () => {
     const payload = launchpadTestVentureSeed("dog-walking");
     const silvers = payload.floors.flatMap((f) => f.silvers);
-    // Every silver up to and including l2-s1, however many silvers L1 has.
-    const doneSilvers = silvers.slice(0, silvers.findIndex((s) => s.id === "l2-s1") + 1);
+    // Every silver up to and including l1-s2 (Build your identity, D25): Level 1 done, Level 2 next.
+    const doneSilvers = silvers.slice(0, silvers.findIndex((s) => s.id === "l1-s2") + 1);
     expect(doneSilvers.length).toBeGreaterThan(0);
     saveVentureTestProgress("dog-walking", {
       completedTaskIds: doneSilvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))),

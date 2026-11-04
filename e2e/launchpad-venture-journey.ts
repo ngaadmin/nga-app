@@ -337,27 +337,21 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(sc.getByRole("heading", { name: "Define the business: done!" })).toBeVisible();
     await expect(sc.locator("[data-milestone-steps]")).toHaveText("1 of 15 steps done");
     await expect(sc.locator("[data-what-you-built] [data-tag-chip]")).toHaveCount(4);
-    await expect(sc.locator("[data-next-up]")).toContainText("Level 2");
+    await expect(sc.locator("[data-next-up]")).toContainText("Build your identity");
     await expect(sc.locator("[data-binder-card] [data-spiral-binding]")).toHaveCount(1);
     expect(await sc.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
   });
   await shot(t, "Level 1 silver complete, handbook page", page.locator('[data-silver-complete="l1-s1"]').getByRole("button", { name: "Continue" }));
 
-  await step(t, "Continue: Level 1 gold screen", async () => {
+  await step(t, "Continue: back to the Level 1 corridor, Build your identity up next (D25), no Level 1 finish yet", async () => {
     await page.locator('[data-silver-complete="l1-s1"]').getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator("[data-gold-completion]")).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Gold unlocked: Vision and Goals!/ })).toBeVisible();
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
+    await expect(page.locator("[data-gold-completion]")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Build your identity, up next/ })).toBeVisible();
   });
-  await shot(t, "Level 1 gold", btn(page, "Continue"));
+  await shot(t, "Level 1 corridor, Build your identity up next", page.getByRole("button", { name: /Build your identity, up next/ }));
 
-  // ---------- 4. Level 2 ----------
-  await step(t, "Continue: lift, then the Level 2 corridor", async () => {
-    await btn(page, "Continue").click();
-    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/, { timeout: 15_000 });
-  });
-  await shot(t, "Level 2 corridor", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
-
-  await step(t, "Workbook cover (page 1) after Level 1: logo and name placeholders, the vision filled", async () => {
+  await step(t, "Workbook cover (page 1) after Define the business: logo and name placeholders, the vision filled", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
     await page.getByRole("button", { name: "Open handbook" }).first().click();
     const dlg = page.getByRole("dialog");
@@ -371,84 +365,14 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(cover.locator("[data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
     await expect(cover.locator("[data-pencil], [data-edit-identity]")).toHaveCount(0);
     expect(await cover.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
-    passed(t, "Cover vision after Level 1", await cover.locator("[data-vision-sentence]").innerText());
+    passed(t, "Cover vision after Define the business", await cover.locator("[data-vision-sentence]").innerText());
   });
   await shot(t, "Workbook cover, logo and name empty", null);
-  await step(t, "Close the workbook and go back up to the Level 2 corridor", async () => {
+  await step(t, "Close the workbook and go back to the Level 1 corridor", async () => {
     await page.getByRole("button", { name: "Close handbook" }).click();
-    await btn(page, "Go to Level 2").click();
-    await expect(page.getByRole("button", { name: /Know the product and its buyers, up next/ })).toBeVisible();
+    await btn(page, "Go to Level 1").click();
+    await expect(page.getByRole("button", { name: /Build your identity, up next/ })).toBeVisible();
   });
-
-  await step(t, "Open Know the product and its buyers: 2 doors", async () => {
-    await page.getByRole("button", { name: /Know the product and its buyers, up next/ }).click();
-    await expect(btn(page, /Decide what to sell/)).toContainText("Up next");
-    await expect(main(page).getByText("Find out if people want it", { exact: true })).toBeVisible();
-  });
-  await shot(t, "Level 2 silver 1 doors", btn(page, /Decide what to sell/));
-
-  await step(t, "Decide what to sell: both boxes needed", async () => {
-    await btn(page, /Decide what to sell/).click();
-    await expect(next).toBeDisabled();
-    const boxes = main(page).locator("textarea, input[type=text]");
-    expect(await boxes.count()).toBeGreaterThanOrEqual(2);
-    await boxes.nth(0).fill("TEST product");
-    await expect(next).toBeDisabled();
-    await boxes.nth(1).fill("TEST availability");
-    await expect(next).toBeEnabled();
-  });
-  await shot(t, "Decide what to sell, filled", next);
-  await step(t, "Finish Decide what to sell", async () => {
-    await next.click();
-    await expect(btn(page, /Find out if people want it/)).toContainText("Up next");
-  });
-
-  await step(t, "Find out if people want it: real-world task, number, yes/no, text", async () => {
-    await btn(page, /Find out if people want it/).click();
-    await expect(main(page)).toContainText(/Real-world task/i);
-    await expect(next).toBeDisabled();
-    const texts = main(page).locator("input[type=text], textarea");
-    // First input is the number asked.
-    await texts.nth(0).fill("8");
-    await main(page).locator("select").first().selectOption({ index: 1 });
-    await texts.nth(1).fill("TEST interest");
-    await expect(next).toBeEnabled();
-  });
-  await shot(t, "Find out if people want it, filled", next);
-
-  const wrap2 = page.locator('[data-wrap-up="workbook-summary"]');
-  await step(t, "Finish: Level 2 silver 1 wrap-up shows the answers", async () => {
-    await next.click();
-    if (await btn(page, /See your|wrap|workbook/i).count()) await btn(page, /See your|wrap|workbook/i).first().click();
-    await expect(wrap2).toBeVisible();
-    await expect(wrap2).toContainText("TEST product");
-    await expect(wrap2).toContainText("TEST availability");
-    await expect(wrap2).toContainText("TEST interest");
-  });
-  await shot(t, "Level 2 silver 1 wrap-up", btn(page, "Continue"));
-
-  await step(t, "Level 2 wrap-up: edit what I am selling with the pencil", async () => {
-    const sec = wrap2.locator('[data-summary-section="what-i-am-selling"]');
-    await sec.locator("[data-pencil]").first().click();
-    const ed = wrap2.locator("[data-inline-editor]");
-    await expect(ed).toBeVisible();
-    await ed.locator("textarea, input[type=text]").first().fill("TEST product edit");
-    await ed.getByRole("button", { name: "Save" }).click();
-    await expect(sec).toContainText("TEST product edit");
-  });
-  await shot(t, "Level 2 silver 1 wrap-up after the edit", btn(page, "Continue"));
-
-  await step(t, "Continue: silver-complete page, then back to the Level 2 corridor", async () => {
-    await btn(page, "Continue").click();
-    const sc = page.locator('[data-silver-complete="l2-s1"]');
-    await expect(sc).toBeVisible();
-    await expect(sc.getByRole("heading", { name: "Know the product and its buyers: done!" })).toBeVisible();
-    await expect(sc.locator("[data-milestone-steps]")).toHaveText("2 of 15 steps done");
-    await shot(t, "Level 2 silver 1 complete, handbook page", sc.getByRole("button", { name: "Continue" }));
-    await sc.getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/);
-  });
-  await shot(t, "Level 2 corridor, Build your identity up next", page.getByRole("button", { name: /Build your identity, up next/ }));
 
   await step(t, "Open Build your identity: logo door up next", async () => {
     await page.getByRole("button", { name: /Build your identity, up next/ }).click();
@@ -523,13 +447,95 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     });
     passed(t, "Screen three vision", await v.innerText());
     passed(t, "Screen three fit (no scroll when scrollHeight <= viewport)", JSON.stringify(fit));
+    expect(fit.scrollHeight, "screen three fits at 390x844 with the long vision").toBeLessThanOrEqual(fit.viewport);
   });
 
-  await step(t, "Continue (identity): silver-complete page, then Level 2 corridor shows the lift", async () => {
+  await step(t, "Continue (identity): silver-complete page, then the Level 1 finish", async () => {
     await btn(page, "Continue").click();
-    const sc = page.locator('[data-silver-complete="l2-s2"]');
+    const sc = page.locator('[data-silver-complete="l1-s2"]');
     await expect(sc).toBeVisible();
-    await shot(t, "Level 2 silver 2 complete, handbook page", sc.getByRole("button", { name: "Continue" }));
+    await expect(sc.locator("[data-milestone-steps]")).toHaveText("2 of 15 steps done");
+    await shot(t, "Level 1 identity complete, handbook page", sc.getByRole("button", { name: "Continue" }));
+    await sc.getByRole("button", { name: "Continue" }).click();
+    await expect(page.locator("[data-gold-completion]")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Gold unlocked: Vision and Goals!/ })).toBeVisible();
+  });
+  await shot(t, "Level 1 gold", btn(page, "Continue"));
+
+  // ---------- 4. Level 2 ----------
+  await step(t, "Continue: lift, then the Level 2 corridor (one section)", async () => {
+    await btn(page, "Continue").click();
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/, { timeout: 15_000 });
+    await expect(page.getByRole("button", { name: /Build your identity/ })).toHaveCount(0);
+  });
+  await shot(t, "Level 2 corridor", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
+
+
+  await step(t, "Open Know the product and its buyers: 2 doors", async () => {
+    await page.getByRole("button", { name: /Know the product and its buyers, up next/ }).click();
+    await expect(btn(page, /Decide what to sell/)).toContainText("Up next");
+    await expect(main(page).getByText("Find out if people want it", { exact: true })).toBeVisible();
+  });
+  await shot(t, "Level 2 silver 1 doors", btn(page, /Decide what to sell/));
+
+  await step(t, "Decide what to sell: both boxes needed", async () => {
+    await btn(page, /Decide what to sell/).click();
+    await expect(next).toBeDisabled();
+    const boxes = main(page).locator("textarea, input[type=text]");
+    expect(await boxes.count()).toBeGreaterThanOrEqual(2);
+    await boxes.nth(0).fill("TEST product");
+    await expect(next).toBeDisabled();
+    await boxes.nth(1).fill("TEST availability");
+    await expect(next).toBeEnabled();
+  });
+  await shot(t, "Decide what to sell, filled", next);
+  await step(t, "Finish Decide what to sell", async () => {
+    await next.click();
+    await expect(btn(page, /Find out if people want it/)).toContainText("Up next");
+  });
+
+  await step(t, "Find out if people want it: real-world task, number, yes/no, text", async () => {
+    await btn(page, /Find out if people want it/).click();
+    await expect(main(page)).toContainText(/Real-world task/i);
+    await expect(next).toBeDisabled();
+    const texts = main(page).locator("input[type=text], textarea");
+    // First input is the number asked.
+    await texts.nth(0).fill("8");
+    await main(page).locator("select").first().selectOption({ index: 1 });
+    await texts.nth(1).fill("TEST interest");
+    await expect(next).toBeEnabled();
+  });
+  await shot(t, "Find out if people want it, filled", next);
+
+  const wrap2 = page.locator('[data-wrap-up="workbook-summary"]');
+  await step(t, "Finish: Level 2 silver 1 wrap-up shows the answers", async () => {
+    await next.click();
+    if (await btn(page, /See your|wrap|workbook/i).count()) await btn(page, /See your|wrap|workbook/i).first().click();
+    await expect(wrap2).toBeVisible();
+    await expect(wrap2).toContainText("TEST product");
+    await expect(wrap2).toContainText("TEST availability");
+    await expect(wrap2).toContainText("TEST interest");
+  });
+  await shot(t, "Level 2 silver 1 wrap-up", btn(page, "Continue"));
+
+  await step(t, "Level 2 wrap-up: edit what I am selling with the pencil", async () => {
+    const sec = wrap2.locator('[data-summary-section="what-i-am-selling"]');
+    await sec.locator("[data-pencil]").first().click();
+    const ed = wrap2.locator("[data-inline-editor]");
+    await expect(ed).toBeVisible();
+    await ed.locator("textarea, input[type=text]").first().fill("TEST product edit");
+    await ed.getByRole("button", { name: "Save" }).click();
+    await expect(sec).toContainText("TEST product edit");
+  });
+  await shot(t, "Level 2 silver 1 wrap-up after the edit", btn(page, "Continue"));
+
+  await step(t, "Continue: silver-complete page, then back to the Level 2 corridor", async () => {
+    await btn(page, "Continue").click();
+    const sc = page.locator('[data-silver-complete="l2-s1"]');
+    await expect(sc).toBeVisible();
+    await expect(sc.getByRole("heading", { name: "Know the product and its buyers: done!" })).toBeVisible();
+    await expect(sc.locator("[data-milestone-steps]")).toHaveText("3 of 15 steps done");
+    await shot(t, "Level 2 silver 1 complete, handbook page", sc.getByRole("button", { name: "Continue" }));
     await sc.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/);
     await expect(btn(page, "Take the lift up")).toBeVisible();
@@ -577,18 +583,21 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Handbook, Level 1 page with orange viewed ring", null);
 
-  await step(t, "Handbook: Next page walks to the Level 2 pages with my answers", async () => {
+  await step(t, "Handbook: Next page walks to the identity page, then the Level 2 page", async () => {
+    await hb.getByRole("button", { name: "Next page" }).click();
+    const idPage = hb.locator('[data-handbook-page="l1-s2"]');
+    await expect(idPage).toBeVisible();
+    await expect(idPage).toContainText("TEST Business Name");
+    await expect(idPage.locator("[data-identity-page-vision] [data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
+    await shot(t, "Workbook identity page", null);
     await hb.getByRole("button", { name: "Next page" }).click();
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
     await shot(t, "Handbook, Level 2 silver 1 page", null);
-    await hb.getByRole("button", { name: "Next page" }).click();
-    await expect(hb.locator('[data-handbook-page="l2-s2"]')).toBeVisible();
-    await expect(hb.locator('[data-handbook-page="l2-s2"]')).toContainText("TEST Business Name");
     const l2Tab = hb.getByRole("button", { name: "Level 2, Planning" });
     await expect(l2Tab).toHaveAttribute("data-viewed", /.*/);
     await hb.getByRole("button", { name: "Previous page" }).click();
-    await expect(hb.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
+    await expect(hb.locator('[data-handbook-page="l1-s2"]')).toBeVisible();
   });
   await shot(t, "Handbook, Level 2 pages", null);
 
@@ -609,9 +618,9 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator('[data-handbook="home"]')).toContainText("Read only");
     await expect(page.locator('[data-handbook="home"] [data-handbook-page][data-editable="true"]')).toHaveCount(0);
     const home = page.locator('[data-handbook="home"]');
-    // The handbook opens on the latest earned page (by design: handbookOpenIndex), so it starts on Build your identity.
-    await expect(home.locator('[data-handbook-page="l2-s2"]')).toBeVisible();
-    await expect(home.locator('[data-handbook-page="l2-s2"]')).toContainText("TEST Business Name");
+    // The handbook opens on the latest earned page (by design: handbookOpenIndex), so it starts on Know the product and its buyers.
+    await expect(home.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
+    await expect(home.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");
     expect(saved).toContain("TEST benefit edit");

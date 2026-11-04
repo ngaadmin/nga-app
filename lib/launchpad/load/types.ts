@@ -114,6 +114,8 @@ export type LoadSilver = {
   sheetLabel: string;
   /** "locked": the build stays exactly as the seed has it (identity); the rows are recorded only. */
   build: "load" | "locked";
+  /** Locked silvers: the seed silver the build is taken from, when it differs from id (D25 moves l2-s2 to l1-s2). */
+  seedSilverId?: string;
   bronzes: LoadBronze[];
   /** Locked silvers: their rows, recorded for the export. */
   lockedRows?: LoadRowMeta[];

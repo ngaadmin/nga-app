@@ -27,6 +27,8 @@ import { OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
 const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
 const L1 = FLOORS[0]!;
 const L1S1 = L1.silvers[0]!;
+const IDS = L1.silvers[1]!;
+const ID_TASKS = IDS.bronzes.flatMap((b) => b.tasks.map((t) => t.id));
 const L2 = FLOORS[1]!;
 const L2S1 = L2.silvers[0]!;
 const [B1, B2, B3, B4] = L1S1.bronzes as [typeof L1S1.bronzes[0], typeof L1S1.bronzes[0], typeof L1S1.bronzes[0], typeof L1S1.bronzes[0]];
@@ -110,14 +112,17 @@ describe("wrap-up and the gold stay blocked while a task is open", () => {
     ]);
     // The next floor stays locked until the open step is finished.
     expect(floorState(p, FLOORS, 2)).toBe("locked");
-    expect(floorState(completeTask(p, GOALS.id), FLOORS, 2)).not.toBe("locked");
+    // Build your identity (D25: now in Level 1) also has to be done.
+    const withIdentity = { ...p, completedTaskIds: [...p.completedTaskIds, ...ID_TASKS] };
+    expect(floorState(withIdentity, FLOORS, 2)).toBe("locked");
+    expect(floorState(completeTask(withIdentity, GOALS.id), FLOORS, 2)).not.toBe("locked");
   });
 
   it("the next silver stays locked while a task in the silver before is open", () => {
-    const l2 = [B1, B2, B3, B4].map((b) => b.tasks[0]!.id).concat(L2S1.bronzes[0]!.tasks[0]!.id);
-    const p = deferTask(done(...l2), DEMAND, { now: NOW });
-    expect(silverStates(p, FLOORS, L2)).toEqual(["current", "locked"]);
-    expect(silverStates(completeTask(p, DEMAND.id), FLOORS, L2)[1]).toBe("current");
+    // D25: Build your identity follows Define the business in Level 1.
+    const p = deferTask(firstThree(), GOALS, { now: NOW });
+    expect(silverStates(p, FLOORS, L1)).toEqual(["current", "locked"]);
+    expect(silverStates(completeTask(p, GOALS.id), FLOORS, L1)[1]).toBe("current");
   });
 
   it("finishing the last other task with one left open goes back to the doors, not the wrap-up", () => {

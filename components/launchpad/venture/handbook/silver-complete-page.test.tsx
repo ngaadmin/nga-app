@@ -49,7 +49,7 @@ describe("SilverCompletePage", () => {
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("1");
     const chips = [...document.querySelectorAll("[data-what-you-built] [data-tag-chip]")].map((c) => c.textContent);
     expect(chips).toEqual(silver.bronzes.map((b) => b.title));
-    expect(document.querySelector("[data-next-up]")?.textContent).toBe("Level 2Your next floor is ready.");
+    expect(document.querySelector("[data-next-up]")?.textContent).toBe("Build your identityNext on Level 1.");
     const card = document.querySelector("[data-silver-complete-card]")!;
     expect(card.hasAttribute("data-binder-card")).toBe(true);
     expect(card.querySelector("[data-spiral-binding]")).toBeTruthy();

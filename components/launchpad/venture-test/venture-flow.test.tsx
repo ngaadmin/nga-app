@@ -28,7 +28,7 @@ const door = (title: string) => screen.getByRole("button", { name: new RegExp(ti
 
 describe("bronze doors open their tasks directly (no task list)", () => {
   it("the 'Design your logo' door lands on the logo builder; Exit goes back to the doors", async () => {
-    renderFlow({ kind: "through-silver", silverId: "l2-s1" });
+    renderFlow({ kind: "through-silver", silverId: "l1-s1" });
     fireEvent.click(await screen.findByRole("button", { name: /Build your identity/ }));
     fireEvent.click(door("Design your logo"));
     expect(document.querySelector("[data-task-screen='logo-builder']")).toBeTruthy();
@@ -38,7 +38,7 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     expect(screen.queryByRole("button", { name: /^(Start|Review tasks)$/ })).toBeNull();
     // Breadcrumb still leads back to the building and the floor's corridor.
     const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
-    expect(crumb.textContent).toMatch(/Building · Level 2 corridor · Design your logo/);
+    expect(crumb.textContent).toMatch(/Building · Level 1 corridor · Design your logo/);
     fireEvent.click(screen.getByRole("button", { name: /Exit/ }));
     expect(door("Design your logo")).toBeTruthy();
     expect(screen.getByText("Name your business")).toBeTruthy();
@@ -211,8 +211,28 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     expect(document.querySelector("[data-summary-section='my-goals']")?.textContent).toMatch(/750/);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
-    // Silver page, then the gold completion, then on to Planning.
+    // Silver page, then back to the Level 1 corridor: Build your identity comes next (D25), no gold yet.
     expect(document.querySelector("[data-silver-complete='l1-s1']")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-gold-completion]")).toBeNull();
+    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
+    // Build your identity, then its wrap-up (vision filled from Level 1, real logo and name), then the gold.
+    fireEvent.click(screen.getByRole("button", { name: /Build your identity/ }));
+    fireEvent.click(door("Design your logo"));
+    for (const label of ["Circle", "Light blue", "Paw"]) fireEvent.click(screen.getByRole("radio", { name: label }));
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
+    fireEvent.click(door("Name your business"));
+    fireEvent.change(document.querySelector("[data-task-screen='name-form'] input")!, { target: { value: "Happy Paws" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Rounded" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Logo color" }));
+    fireEvent.click(screen.getByRole("button", { name: /Save to my workbook/ }));
+    const idWrap = document.querySelector("[data-wrap-up='identity']") as HTMLElement;
+    expect(idWrap).toBeTruthy();
+    expect(idWrap.textContent).toContain("Happy Paws");
+    expect(idWrap.textContent).toMatch(/Dog walking|dog walking/);
+    expect(document.querySelector("[data-gold-completion]")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-silver-complete='l1-s2']")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-gold-completion='1']")).toBeTruthy();
     expect(screen.getByRole("heading", { name: PAYLOAD.floors[0]!.gold.completion!.heading })).toBeTruthy();
@@ -305,21 +325,25 @@ describe("finishing a silver shows its handbook page", () => {
   });
 
   it("a summary silver re-finalized from review does not show the page again", async () => {
-    renderFlow({ kind: "through-silver", silverId: "l2-s1" });
-    fireEvent.click(await screen.findByRole("button", { name: /Know the product and its buyers/ }));
-    const last = PAYLOAD.floors[1]!.silvers[0]!.bronzes[1]!;
+    // Define the business is done and Build your identity is current, so the doors stay on Level 1.
+    renderFlow({ kind: "through-silver", silverId: "l1-s1" });
+    fireEvent.click(await screen.findByRole("button", { name: /Define the business/ }));
+    const bronzes = PAYLOAD.floors[0]!.silvers[0]!.bronzes;
+    const last = bronzes[bronzes.length - 1]!;
     fireEvent.click(door(last.title));
-    // One screen; shortcut sample answers fill the captures, so Finish is on.
-    next();
+    for (let i = 0; i < 12 && !document.querySelector("[data-wrap-up='workbook-summary']"); i++) {
+      const btn = screen.queryByRole("button", { name: /^(Next|Finish|Continue)/ });
+      if (!btn) break;
+      fireEvent.click(btn);
+    }
     expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
-    expect(document.querySelector("[data-summary-section='who-might-want-it']")?.textContent).not.toMatch(/Not answered yet/);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
-    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
+    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
   });
 
   it("identity: the wrap-up stays, and Confirm and continue opens the vision/products handbook page", async () => {
-    renderFlow({ kind: "through-silver", silverId: "l2-s1" });
+    renderFlow({ kind: "through-silver", silverId: "l1-s1" });
     fireEvent.click(await screen.findByRole("button", { name: /Build your identity/ }));
     fireEvent.click(door("Design your logo"));
     for (const label of ["Circle", "Light blue", "Paw"]) fireEvent.click(screen.getByRole("radio", { name: label }));
@@ -332,17 +356,14 @@ describe("finishing a silver shows its handbook page", () => {
     expect(document.querySelector("[data-wrap-up='identity']")).toBeTruthy();
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-silver-complete='l2-s2']")).toBeTruthy();
-    expect(document.querySelector("[data-silver-complete='l2-s2']")?.textContent).toMatch(/Build your identity: done!/);
-    expect(document.querySelector("[data-silver-complete='l2-s2'] [data-what-you-built]")?.textContent).toBe("Design your logoName your business");
+    expect(document.querySelector("[data-silver-complete='l1-s2']")).toBeTruthy();
+    expect(document.querySelector("[data-silver-complete='l1-s2']")?.textContent).toMatch(/Build your identity: done!/);
+    expect(document.querySelector("[data-silver-complete='l1-s2'] [data-what-you-built]")?.textContent).toBe("Design your logoName your business");
+    // Identity finishes Level 1, so the Level 1 finish comes next, then the Level 2 corridor.
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
-    // Re-opening the finished identity wrap-up and finalizing again does not show the page.
-    fireEvent.click(screen.getByRole("button", { name: /Build your identity/ }));
-    fireEvent.click(screen.getByRole("button", { name: /See your logo/ }));
+    expect(document.querySelector("[data-gold-completion='1']")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-silver-complete]")).toBeNull();
-    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
+    expect(document.querySelector("[data-gold-completion]")).toBeNull();
   });
 });
 

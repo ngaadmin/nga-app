@@ -87,7 +87,7 @@
                       "feeds": [],
                       "feedsInto": [
                         "l1-s1-wrap",
-                        "l2-s2-wrap"
+                        "l1-s2-wrap"
                       ],
                       "flags": [
                         "D14"
@@ -1217,6 +1217,147 @@
               "placeholder": true
             }
           }
+        },
+        {
+          "id": "l1-s2",
+          "seedSilverId": "l2-s2",
+          "title": "Build your identity",
+          "sheetLabel": "3 Build your identity",
+          "build": "locked",
+          "bronzes": [],
+          "lockedRows": [
+            {
+              "sourceRow": 17,
+              "validation": [
+                "locked build: unchanged"
+              ],
+              "feeds": [],
+              "feedsInto": [
+                "l1-s2-wrap"
+              ],
+              "flags": [
+                "D20"
+              ],
+              "screenId": "l1-s2-b1-t1",
+              "index": "1",
+              "template": "logo-picker",
+              "context": "A logo is your business's signature. Have fun designing one here.",
+              "guidance": "",
+              "answer": {
+                "answerKey": "l2-s2-identity",
+                "kind": "business-identity",
+                "version": 1,
+                "fields": [
+                  {
+                    "name": "shape",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "color",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "icon",
+                    "type": "option id",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "sourceRow": 18,
+              "validation": [
+                "locked build: unchanged"
+              ],
+              "feeds": [],
+              "feedsInto": [],
+              "flags": [
+                "D20"
+              ],
+              "screenId": "l1-s2-b2-t1",
+              "index": "1",
+              "template": "name-picker",
+              "context": "Every business needs a name people remember. Good names are easy to remember, easy to say, and say what you do or who you are.",
+              "guidance": "Keep it short and easy to pronounce. It can say what you do or who you are, like Wag Squad or Leo's Leads (dog walking). Keep your last name and street out of it. Say it out loud. Want a second opinion? Ask a friend for feedback.",
+              "answer": {
+                "answerKey": "l2-s2-identity",
+                "kind": "business-identity",
+                "version": 1,
+                "fields": [
+                  {
+                    "name": "name",
+                    "type": "text",
+                    "required": true,
+                    "limits": "up to 24 characters"
+                  },
+                  {
+                    "name": "font",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "nameColor",
+                    "type": "option id",
+                    "required": true
+                  }
+                ]
+              }
+            }
+          ],
+          "wrapUp": {
+            "sourceRow": 19,
+            "validation": [
+              "locked build: unchanged"
+            ],
+            "feeds": [
+              {
+                "answerKey": "l2-s2-identity",
+                "use": "logo and name"
+              },
+              {
+                "answerKey": "l1-offer",
+                "use": "handbook Our vision"
+              }
+            ],
+            "feedsInto": [],
+            "flags": [
+              "D19",
+              "D20",
+              "D24",
+              "D25"
+            ],
+            "screenId": "l1-s2-wrap",
+            "index": "wrap-up",
+            "template": "identity-wrap-up",
+            "context": "",
+            "guidance": "",
+            "handbookSections": [
+              {
+                "id": "our-vision",
+                "label": "Our vision",
+                "display": "list",
+                "sources": [
+                  {
+                    "answerKey": "l1-offer"
+                  }
+                ]
+              }
+            ],
+            "vision": {
+              "label": "Our vision",
+              "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}.[[ As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
+              "businessType": "dog walking",
+              "offerKey": "l1-offer",
+              "whyKey": "l1-why",
+              "causeKey": "l1-cause",
+              "causeGoalKey": "l1-goal-support-a-cause",
+              "causePercentField": "donatePercent",
+              "goalLoopId": "l1-s1-b4-t1-s2",
+              "placeholder": "Your vision appears here when you finish Level 1."
+            }
+          }
         }
       ]
     },
@@ -1254,8 +1395,7 @@
                       ],
                       "feeds": [],
                       "feedsInto": [
-                        "l2-s1-wrap",
-                        "l2-s2-wrap"
+                        "l2-s1-wrap"
                       ],
                       "flags": [
                         "D4",
@@ -1566,160 +1706,6 @@
               "placeholder": true
             }
           }
-        },
-        {
-          "id": "l2-s2",
-          "title": "Build your identity",
-          "sheetLabel": "3 Build your identity",
-          "build": "locked",
-          "bronzes": [],
-          "lockedRows": [
-            {
-              "sourceRow": 17,
-              "validation": [
-                "locked build: unchanged"
-              ],
-              "feeds": [],
-              "feedsInto": [
-                "l2-s2-wrap"
-              ],
-              "flags": [
-                "D20"
-              ],
-              "screenId": "l2-s2-b1-t1",
-              "index": "1",
-              "template": "logo-picker",
-              "context": "A logo is your business's signature. Have fun designing one here.",
-              "guidance": "",
-              "answer": {
-                "answerKey": "l2-s2-identity",
-                "kind": "business-identity",
-                "version": 1,
-                "fields": [
-                  {
-                    "name": "shape",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "color",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "icon",
-                    "type": "option id",
-                    "required": true
-                  }
-                ]
-              }
-            },
-            {
-              "sourceRow": 18,
-              "validation": [
-                "locked build: unchanged"
-              ],
-              "feeds": [],
-              "feedsInto": [],
-              "flags": [
-                "D20"
-              ],
-              "screenId": "l2-s2-b2-t1",
-              "index": "1",
-              "template": "name-picker",
-              "context": "Every business needs a name people remember. Good names are easy to remember, easy to say, and say what you do or who you are.",
-              "guidance": "Keep it short and easy to pronounce. It can say what you do or who you are, like Wag Squad or Leo's Leads (dog walking). Keep your last name and street out of it. Say it out loud. Want a second opinion? Ask a friend for feedback.",
-              "answer": {
-                "answerKey": "l2-s2-identity",
-                "kind": "business-identity",
-                "version": 1,
-                "fields": [
-                  {
-                    "name": "name",
-                    "type": "text",
-                    "required": true,
-                    "limits": "up to 24 characters"
-                  },
-                  {
-                    "name": "font",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "nameColor",
-                    "type": "option id",
-                    "required": true
-                  }
-                ]
-              }
-            }
-          ],
-          "wrapUp": {
-            "sourceRow": 19,
-            "validation": [
-              "locked build: unchanged"
-            ],
-            "feeds": [
-              {
-                "answerKey": "l2-s2-identity",
-                "use": "logo and name"
-              },
-              {
-                "answerKey": "l1-offer",
-                "use": "handbook Our vision"
-              },
-              {
-                "answerKey": "l2-sell",
-                "use": "handbook What we sell"
-              }
-            ],
-            "feedsInto": [],
-            "flags": [
-              "D19",
-              "D20",
-              "D24"
-            ],
-            "screenId": "l2-s2-wrap",
-            "index": "wrap-up",
-            "template": "identity-wrap-up",
-            "context": "",
-            "guidance": "",
-            "handbookSections": [
-              {
-                "id": "our-vision",
-                "label": "Our vision",
-                "display": "list",
-                "sources": [
-                  {
-                    "answerKey": "l1-offer"
-                  }
-                ]
-              },
-              {
-                "id": "what-we-sell",
-                "label": "What we sell",
-                "display": "text",
-                "sources": [
-                  {
-                    "answerKey": "l2-sell",
-                    "field": "serviceDescription"
-                  }
-                ]
-              }
-            ],
-            "vision": {
-              "label": "Our vision",
-              "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}.[[ As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
-              "businessType": "dog walking",
-              "offerKey": "l1-offer",
-              "whyKey": "l1-why",
-              "causeKey": "l1-cause",
-              "causeGoalKey": "l1-goal-support-a-cause",
-              "causePercentField": "donatePercent",
-              "goalLoopId": "l1-s1-b4-t1-s2",
-              "placeholder": "Your vision appears here when you finish Level 1."
-            }
-          }
         }
       ]
     }
@@ -1932,7 +1918,7 @@
     {
       "id": "D19",
       "topic": "Identity handbook sections",
-      "applied": "Our vision lists the offer picks (row 2); What we sell shows the service description (row 14). A section with no answer is hidden.",
+      "applied": "Our vision lists the offer picks (row 2); What we sell (row 14) is left off the identity page since identity moved to Level 1 (D25) and shows on the Level 2 page. A section with no answer is hidden.",
       "status": "build-assumption",
       "rows": [
         19
@@ -1961,6 +1947,17 @@
         5,
         14,
         15
+      ]
+    },
+    {
+      "id": "D25",
+      "topic": "Identity in Level 1",
+      "applied": "Per Cath (5 Nov 8:14am), Build your identity moves from Level 2 to Level 1, straight after Define the business (l1-s2). Level 1 ends on the identity wrap-up, then the Level 1 finish; Level 2 holds only Know the product and its buyers. The tracker still lists it under Level 2; the move is in the loader. The saved answer key stays l2-s2-identity so saved logos and names still load.",
+      "status": "decided-cath",
+      "rows": [
+        17,
+        18,
+        19
       ]
     },
     {

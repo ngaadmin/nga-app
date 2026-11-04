@@ -131,11 +131,16 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
   const { answer, update } = useIdentityAnswer(answerKey);
   const choices = identityChoices(page.silver, answerKey, iconVentureId);
   const [editing, setEditing] = useState(false);
-  const sections = useSectionLines(wrapUp?.handbookSections ?? []).filter((s) => s.lines.length);
+  // D25 / cover order: logo, name, then the compiled vision. When the vision
+  // spec exists it stands in for the offer-picks "Our vision" section.
+  const vision = wrapUp?.vision;
+  const sections = useSectionLines(wrapUp?.handbookSections ?? [])
+    .filter((s) => s.lines.length)
+    .filter((s) => !(vision && s.section.id === "our-vision"));
   const fontLabel = choices.fonts.find((f) => f.id === answer.font)?.label;
   return (
     <>
-      <TopRow eyebrow="Vision and products" done={page.done} />
+      <TopRow eyebrow="Your identity" done={page.done} />
       <div className="mt-3.5 flex flex-col items-center gap-3" data-identity-lockup="">
         <BusinessLogo answer={answer} size="hb" namePlaceholder="Your business name" />
         {fontLabel && (
@@ -163,6 +168,12 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
           <button type="button" className={`${BTN_CYAN} mt-3 w-full !py-2 !text-sm`} onClick={() => setEditing(false)}>
             Done
           </button>
+        </div>
+      )}
+      {vision && (
+        <div className="mt-3 w-full" data-identity-page-vision="">
+          <HandRule />
+          <VisionBlock spec={vision} doodle={sections.length ? undefined : <Doodle ventureId={iconVentureId} />} />
         </div>
       )}
       {sections.map(({ section, lines }, i) => (
@@ -193,6 +204,9 @@ function RocketDoodle() {
  * the business name, then the vision. Read-only, no pencils; each slot fills
  * on its own from the saved answers and shows grey placeholder text until then.
  */
+/** Cover logo: 72px (was 120px; 40% smaller so the longer vision fits, Cath 5 Nov 8:15am). */
+const COVER_LOGO_PX = 72;
+
 function CoverPageBody({ page }: { page: HandbookPageView }) {
   const wrapUp = page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
   const { answer } = useIdentityAnswer(wrapUp?.answerKey ?? "");
@@ -201,15 +215,15 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
     <div className="flex flex-col items-center gap-3 pt-2" data-cover="">
       {hasLogo ? (
         <div data-cover-logo="filled">
-          <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={120} label={logoMarkLabel(answer)} />
+          <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={COVER_LOGO_PX} label={logoMarkLabel(answer)} />
         </div>
       ) : (
         <div
           data-cover-logo="empty"
-          className="flex h-[120px] w-[120px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
+          className="flex h-[72px] w-[72px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
         >
           <RocketDoodle />
-          <span className="px-3 text-[12px] leading-tight text-[#9AA3B5]">Your logo goes here</span>
+          <span className="px-1 text-[10px] leading-tight text-[#9AA3B5]">Your logo goes here</span>
         </div>
       )}
       {answer.name ? (
@@ -217,7 +231,7 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
           <BusinessName name={answer.name} font={answer.font ?? "poppins-bold"} color={resolveNameColor(answer)} size="hb" />
         </div>
       ) : (
-        <p data-cover-name="empty" className="font-heading text-[22px] font-semibold text-[#9AA3B5]">
+        <p data-cover-name="empty" className="font-heading text-[18px] font-semibold text-[#9AA3B5]">
           Your business name
         </p>
       )}

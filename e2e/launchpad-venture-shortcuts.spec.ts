@@ -61,30 +61,31 @@ test("deep links", async ({ page }, info) => {
   });
   await shot(t, "?level=1", page.getByRole("button", { name: /Define the business/ }));
 
-  await step(t, "?complete=l1-s1: Level 1 done, Level 2 corridor with Know the product up next", async () => {
+  await step(t, "?complete=l1-s1: Level 1 corridor with Build your identity up next", async () => {
     await page.goto(url("reset=1&complete=l1-s1"));
+    await expect(page.locator(corridorTitle)).toHaveText(/Level 1 · Vision and Goals/, { timeout: 60_000 });
+    await expect(page.getByRole("button", { name: /Build your identity, up next/ })).toBeVisible();
+  });
+  await shot(t, "?complete=l1-s1", page.getByRole("button", { name: /Build your identity, up next/ }));
+
+  await step(t, "?complete=l1-s2: Level 1 done, Level 2 corridor with Know the product up next", async () => {
+    await page.goto(url("reset=1&complete=l1-s2"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 2 · Planning/, { timeout: 60_000 });
     await expect(page.getByRole("button", { name: /Know the product and its buyers, up next/ })).toBeVisible();
   });
-  await shot(t, "?complete=l1-s1", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
+  await shot(t, "?complete=l1-s2", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
 
-  await step(t, "?complete=l2-s1: Build your identity up next", async () => {
+  await step(t, "?complete=l2-s1: Level 2 done (lift up or Level 3)", async () => {
     await page.goto(url("reset=1&complete=l2-s1"));
-    await expect(page.getByRole("button", { name: /Build your identity, up next/ })).toBeVisible({ timeout: 60_000 });
-  });
-  await shot(t, "?complete=l2-s1", page.getByRole("button", { name: /Build your identity, up next/ }));
-
-  await step(t, "?complete=l2-s2: Level 2 done (lift up or Level 3)", async () => {
-    await page.goto(url("reset=1&complete=l2-s2"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Making)/, { timeout: 60_000 });
     const title = await page.locator(corridorTitle).innerText();
     if (/Level 2/.test(title)) await expect(page.locator("main").getByRole("button", { name: "Take the lift up" })).toBeVisible();
   });
-  // ?complete=l2-s2 lands in the Level 3 corridor (no doors yet), so there is no primary button to check there.
+  // ?complete=l2-s1 lands in the Level 3 corridor (no doors yet), so there is no primary button to check there.
   const onL2 = /Level 2/.test(await page.locator(corridorTitle).innerText());
-  await shot(t, "?complete=l2-s2", onL2 ? page.locator("main").getByRole("button", { name: "Take the lift up" }) : null);
+  await shot(t, "?complete=l2-s1", onL2 ? page.locator("main").getByRole("button", { name: "Take the lift up" }) : null);
 
-  await step(t, "?complete=l2-s2: handbook shows sample answers on the Level 1 and Level 2 pages", async () => {
+  await step(t, "?complete=l2-s1: handbook shows sample answers on the Level 1 and Level 2 pages", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
     await page.getByRole("button", { name: "Open handbook" }).first().click();
     const hb = page.getByRole("dialog");
@@ -117,7 +118,7 @@ test("deep links", async ({ page }, info) => {
   });
 
   await step(t, "?iconSet=friendship-bracelets swaps the logo icons", async () => {
-    await page.goto(url("reset=1&complete=l2-s1&iconSet=friendship-bracelets"));
+    await page.goto(url("reset=1&complete=l1-s1&iconSet=friendship-bracelets"));
     await page.getByRole("button", { name: /Build your identity, up next/ }).click({ timeout: 60_000 });
     await page.locator("main").getByRole("button", { name: /Design your logo/ }).click();
     await page.locator("main").getByRole("tab", { name: "Icon" }).click();
@@ -127,7 +128,7 @@ test("deep links", async ({ page }, info) => {
   await shot(t, "?iconSet=friendship-bracelets, icon tab", null);
 
   await step(t, "Without ?iconSet the dog icons are back", async () => {
-    await page.goto(url("reset=1&complete=l2-s1"));
+    await page.goto(url("reset=1&complete=l1-s1"));
     await page.getByRole("button", { name: /Build your identity, up next/ }).click({ timeout: 60_000 });
     await page.locator("main").getByRole("button", { name: /Design your logo/ }).click();
     await page.locator("main").getByRole("tab", { name: "Icon" }).click();

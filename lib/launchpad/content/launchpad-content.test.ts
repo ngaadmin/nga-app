@@ -71,10 +71,10 @@ describe("launchpad payload schema", () => {
 
   it("rejects a plaque with no doors and a door with no tasks", () => {
     const noDoors = mutable();
-    noDoors.floors[1].silvers[1].bronzes = [];
+    noDoors.floors[0].silvers[1].bronzes = [];
     expect(reason(noDoors)).toMatch(/bronze/i);
     const noTasks = mutable();
-    noTasks.floors[1].silvers[1].bronzes[0].tasks = [];
+    noTasks.floors[0].silvers[1].bronzes[0].tasks = [];
     expect(reason(noTasks)).toMatch(/task/i);
   });
 

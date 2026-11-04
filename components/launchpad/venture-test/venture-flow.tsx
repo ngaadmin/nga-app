@@ -5,6 +5,7 @@ import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import {
   advanceAfterTask,
+  allTasksCompleteProgress,
   bronzeStates,
   buildingCta,
   completeTask,
@@ -16,6 +17,7 @@ import {
   lockedDoorsNote,
   silverStates,
   type VentureTestProgress,
+  type VentureTestShortcut,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import {
   clearVentureTestProgress,
@@ -116,11 +118,14 @@ export function VentureFlow({
   ventureTitles,
   ventures,
   reset,
+  shortcut = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
   ventures: Record<string, LaunchpadVentureView>;
   reset: boolean;
+  /** TEST-ONLY `?rooftop=1` / `?complete=all`: mark everything complete, then land here. */
+  shortcut?: VentureTestShortcut | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -151,9 +156,20 @@ export function VentureFlow({
     if (reset) {
       for (const id of new Set([...liveVentureIds(), ...(initialVentureId ? [initialVentureId] : [])])) clearVentureTestProgress(id);
     }
+    const shortcutContent = shortcut && initialVentureId ? ventures[initialVentureId] : undefined;
+    if (shortcut && initialVentureId && shortcutContent?.ok) {
+      const all = allTasksCompleteProgress(shortcutContent.payload.floors);
+      saveVentureTestProgress(initialVentureId, all);
+      markVentureTestOnboardingSeen(initialVentureId);
+      setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
+      setVentureId(initialVentureId);
+      setProgress(all);
+      go({ screen: shortcut });
+      return;
+    }
     setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
     if (initialVentureId) openVenture(initialVentureId);
-    // Run once per load; reset and the deep link come from the URL.
+    // Run once per load; reset, the shortcuts and the deep link come from the URL.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

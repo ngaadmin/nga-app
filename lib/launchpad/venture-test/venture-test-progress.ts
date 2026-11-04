@@ -186,3 +186,27 @@ export function lockedDoorsNote(
     return `Finish Level ${floor.level - 1} to unlock these doors.`;
   return `Finish "${prevTitle}" to unlock these doors.`;
 }
+
+/** TEST-ONLY: progress with every task of every floor complete (used by ?rooftop=1 / ?complete=all). */
+export function allTasksCompleteProgress(floors: readonly VentureTestFloor[]): VentureTestProgress {
+  return {
+    completedTaskIds: floors.flatMap((f) => f.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id)))),
+  };
+}
+
+/** Where a test shortcut lands once every task is marked complete. */
+export type VentureTestShortcut = "rooftop" | "building";
+
+/** The venture opened by a shortcut when `?venture=` is not given. */
+export const VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE = "dog-walking";
+
+/**
+ * TEST-ONLY URL shortcuts: `?rooftop=1` marks everything complete and opens the
+ * rooftop finish screen; `?complete=all` does the same but lands on the
+ * building (so "Go to the rooftop" shows). `rooftop` wins if both are given.
+ */
+export function ventureTestShortcut(params: { rooftop?: string; complete?: string }): VentureTestShortcut | null {
+  if (params.rooftop === "1") return "rooftop";
+  if (params.complete === "all") return "building";
+  return null;
+}

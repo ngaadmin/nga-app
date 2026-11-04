@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
+  VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE,
   advanceAfterTask,
+  allTasksCompleteProgress,
   bronzeStates,
   buildingCta,
   completeTask,
@@ -14,6 +16,7 @@ import {
   lockedDoorsNote,
   silverStates,
   type VentureTestProgress,
+  ventureTestShortcut,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
 import {
   clearVentureTestProgress,
@@ -226,5 +229,43 @@ describe("venture test gate", () => {
     expect(isVentureTestEnabled({ VERCEL_ENV: "production", NODE_ENV: "production" })).toBe(false);
     expect(isVentureTestEnabled({ NODE_ENV: "production" })).toBe(false);
     expect(isVentureTestEnabled({ NODE_ENV: "development" })).toBe(true);
+  });
+});
+
+describe("test shortcuts (?rooftop=1, ?complete=all)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("parses the params: rooftop wins, anything else is no shortcut", () => {
+    expect(ventureTestShortcut({ rooftop: "1" })).toBe("rooftop");
+    expect(ventureTestShortcut({ complete: "all" })).toBe("building");
+    expect(ventureTestShortcut({ rooftop: "1", complete: "all" })).toBe("rooftop");
+    expect(ventureTestShortcut({})).toBeNull();
+    expect(ventureTestShortcut({ rooftop: "0", complete: "some" })).toBeNull();
+    expect(VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE).toBe("dog-walking");
+  });
+
+  it("marks every task complete, so the building is done and the button says Go to the rooftop", () => {
+    const all = allTasksCompleteProgress(FLOORS);
+    const taskCount = FLOORS.flatMap((f) => f.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks))).length;
+    expect(all.completedTaskIds).toHaveLength(taskCount);
+    expect(new Set(all.completedTaskIds).size).toBe(taskCount);
+    expect(isBuildingDone(all, FLOORS)).toBe(true);
+    expect(buildingCta(all, FLOORS)).toEqual({ kind: "rooftop", label: "Go to the rooftop" });
+    for (const f of FLOORS) expect(floorState(all, FLOORS, f.level)).toBe("done");
+  });
+
+  it("survives a save and reload through the localStorage stub", () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => void store.set(k, v),
+        removeItem: (k: string) => void store.delete(k),
+      },
+    });
+    const all = allTasksCompleteProgress(FLOORS);
+    saveVentureTestProgress("dog-walking", all);
+    const reloaded = parseVentureTestProgress(store.get(ventureTestStorageKey("dog-walking")) ?? null);
+    expect(isBuildingDone(reloaded, FLOORS)).toBe(true);
   });
 });

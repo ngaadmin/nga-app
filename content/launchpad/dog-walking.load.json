@@ -693,7 +693,8 @@
                                   "min": 1,
                                   "max": 100
                                 }
-                              ]
+                              ],
+                              "optional": true
                             }
                           },
                           {
@@ -706,7 +707,7 @@
                               "answerKey": "l1-goal-other",
                               "heading": "Add another goal",
                               "prompt": "Add any other goal you haven't already captured that you feel is important for the success of your business.",
-                              "guidance": "Optional. Add a goal only if there is something important you haven't covered yet.",
+                              "guidance": "Add a goal only if there is something important you haven't covered yet.",
                               "parts": [
                                 {
                                   "kind": "text",
@@ -1041,7 +1042,7 @@
                       "screenId": "l1-s1-b4-t1-goal-other",
                       "index": "2.6",
                       "template": "short-text:goal",
-                      "guidance": "Optional. Add a goal only if there is something important you haven't covered yet.",
+                      "guidance": "Add a goal only if there is something important you haven't covered yet.",
                       "question": "Add any other goal you haven't already captured that you feel is important for the success of your business. Starter: My goal is to [free text] in [number] [weeks/months].",
                       "answer": {
                         "answerKey": "l1-goal-other",

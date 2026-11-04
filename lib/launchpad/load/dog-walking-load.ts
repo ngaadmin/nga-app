@@ -403,6 +403,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         ...(prompt ? { prompt } : {}),
         parts,
         fields,
+        // Support a cause is optional (Cath 4 Nov 10:07pm): an empty percent skips it; a bad value still blocks.
+        ...(causeGoal ? { optional: true } : {}),
       };
       // D23: no goal-level not-applicable; a goal is dropped only in Find the why.
       const spec = fieldSpecs(fields);
@@ -424,7 +426,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   // Rank items with no goal row are skipped (none since D3).
   const skip = whyItems.filter((i) => !goals.some((g) => g.rankItemId === i.id)).map((i) => i.id);
 
-  // Add another goal (optional, last).
+  // Add another goal (optional, last). The Optional tag sits by the heading, so the guidance drops its leading "Optional." (Cath 4 Nov 10:07pm).
+  const OTHER_GUIDANCE = rOther.guidance.replace(/^Optional\.\s*/, "");
   expectInput(ctx, rOther, ["fill-in"]);
   const otherTitle = trackerLabel(rOther.bronze).replace(/\s*\(.*\)$/, "");
   const otherFields: LaunchpadTextField[] = [
@@ -440,7 +443,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     answerKey: KEYS.otherGoal,
     heading: otherTitle,
     ...(otherSentence.prompt ? { prompt: otherSentence.prompt } : {}),
-    guidance: rOther.guidance,
+    guidance: OTHER_GUIDANCE,
     parts: otherSentence.parts,
     fields: otherFields,
     optional: true,
@@ -452,7 +455,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
       screenId: otherScreen.id,
       index: "",
       template: "short-text:goal",
-      guidance: rOther.guidance,
+      guidance: OTHER_GUIDANCE,
       question: rOther.question,
       answer: fieldsAnswer(KEYS.otherGoal, otherFields),
       validation: [...otherSpec.validation, "the whole page is optional"],

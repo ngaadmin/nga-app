@@ -65,9 +65,21 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
   return (
     <div className="flex flex-col" data-screen-type="short-text" data-mode={screen.mode} data-not-applicable={na ? "" : undefined}>
       {screen.context && <ScreenIntro context={screen.context} guidance={screen.guidance} />}
-      {screen.heading && <ScreenPrompt>{screen.heading}</ScreenPrompt>}
+      {screen.heading && (
+        <ScreenPrompt>
+          {screen.heading}
+          {screen.optional && (
+            <span
+              className="ml-2 inline-block rounded-full border border-nga-ink/40 bg-white px-2 py-0.5 align-[2px] font-heading text-[12px] font-semibold leading-none text-nga-ink/70"
+              data-optional-tag=""
+            >
+              Optional
+            </span>
+          )}
+        </ScreenPrompt>
+      )}
       {screen.prompt && (screen.heading ? <ScreenGuidance>{screen.prompt}</ScreenGuidance> : <ScreenPrompt>{screen.prompt}</ScreenPrompt>)}
-      {screen.guidance && !screen.context && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
+      {screen.guidance && !screen.context && <ScreenGuidance>{optionalGuidance(screen)}</ScreenGuidance>}
       <div className={`mx-5 mt-4 rounded-2xl border-2 border-[#C5D4EA] bg-white px-4 py-3.5 text-[17px] leading-[2.1] ${na ? "text-[#9CA3AF]" : "text-nga-ink"}`} data-sentence="">
         {screen.parts.map((part, i) => {
           // A full-width inline text box keeps the punctuation right after it on its line (no stray ".").
@@ -126,4 +138,10 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
       <div className="h-4" />
     </div>
   );
+}
+
+/** With the Optional tag by the heading, a leading "Optional." in the guidance is not repeated. */
+function optionalGuidance(screen: LaunchpadShortTextScreen): string {
+  const g = screen.guidance ?? "";
+  return screen.optional ? g.replace(/^Optional\.\s*/, "") : g;
 }

@@ -38,3 +38,26 @@ describe("Add another goal: one inline sentence, optional duration, no number (C
     expect(say({})).toBeNull();
   });
 });
+
+describe("Support a cause goal is optional (Cath, 4 Nov 10:07pm)", () => {
+  let cause: LaunchpadShortTextScreen | undefined;
+  JSON.stringify(LOAD, (_k, v) => {
+    if (v && typeof v === "object" && (v as { type?: string }).type === "short-text" && (v as LaunchpadShortTextScreen).fields?.some((f) => f.name === "donatePercent")) cause = v as LaunchpadShortTextScreen;
+    return v;
+  });
+
+  it("an empty percent passes and is left off the summary; a bad value still blocks", async () => {
+    const { isShortTextAnswered } = await import("@/lib/launchpad/content/fields");
+    const screen = cause!;
+    expect(screen.optional).toBe(true);
+    expect(isShortTextAnswered(screen, fieldsAnswer({}, false))).toBe(true);
+    expect(isShortTextAnswered(screen, fieldsAnswer({ donatePercent: 0 }, false))).toBe(false);
+    expect(isShortTextAnswered(screen, fieldsAnswer({ donatePercent: 150 }, false))).toBe(false);
+    expect(isShortTextAnswered(screen, fieldsAnswer({ donatePercent: 10 }, false))).toBe(true);
+    expect(filledSentence(screen, { [screen.answerKey]: fieldsAnswer({}, false) }, summaryCatalog([]))).toBeNull();
+  });
+
+  it("Add another goal drops the leading 'Optional.' (the tag carries it)", () => {
+    expect(OTHER!.guidance?.startsWith("Optional")).toBe(false);
+  });
+});

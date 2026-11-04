@@ -8,7 +8,7 @@ import { selectionLabels, summaryCatalog } from "@/lib/launchpad/content/summary
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
-import { ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { ScreenGuidance, ScreenIntro, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 /**
  * Short text box. Goal mode: one sentence with inline blanks. Paragraph
@@ -49,9 +49,10 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
 
   return (
     <div className="flex flex-col" data-screen-type="short-text" data-mode={screen.mode} data-not-applicable={na ? "" : undefined}>
+      {screen.context && <ScreenIntro context={screen.context} guidance={screen.guidance} />}
       {screen.heading && <ScreenPrompt>{screen.heading}</ScreenPrompt>}
       {screen.prompt && (screen.heading ? <ScreenGuidance>{screen.prompt}</ScreenGuidance> : <ScreenPrompt>{screen.prompt}</ScreenPrompt>)}
-      {screen.guidance && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
+      {screen.guidance && !screen.context && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
       <div className={`mx-5 mt-4 rounded-2xl border-2 border-[#C5D4EA] bg-white px-4 py-3.5 text-[17px] leading-[2.1] ${na ? "text-[#9CA3AF]" : "text-nga-ink"}`} data-sentence="">
         {screen.parts.map((part, i) => {
           if (part.kind === "text") return <span key={i}>{part.text}</span>;

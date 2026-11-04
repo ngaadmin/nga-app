@@ -4,7 +4,7 @@ import type { LaunchpadChoiceCaptureScreen } from "@/lib/launchpad/content/types
 import { selectionAnswer, selectionOf } from "@/lib/launchpad/content/answers";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
-import { ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { ScreenGuidance, ScreenIntro, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 /** Next selection after tapping `id`: single replaces, multi toggles (keeping pick order). */
 export function toggleChoice(mode: "single" | "multi", selected: readonly string[], id: string): string[] {
@@ -22,8 +22,9 @@ export function ChoiceCaptureScreen({ screen }: { screen: LaunchpadChoiceCapture
   const promptId = `${screen.id}-prompt`;
   return (
     <div className="flex flex-col" data-screen-type="choice-capture" data-mode={screen.mode}>
+      {screen.context && <ScreenIntro context={screen.context} guidance={screen.guidance} />}
       <ScreenPrompt id={promptId}>{screen.prompt}</ScreenPrompt>
-      {screen.guidance && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
+      {screen.guidance && !screen.context && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
       <div role="group" aria-labelledby={promptId} className="mx-5 mb-4 mt-4 flex flex-col gap-2.5">
         {screen.options.map((o) => (
           <LessonChoiceButton

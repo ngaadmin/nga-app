@@ -30,6 +30,24 @@ export const TRACKER_COLUMNS = [
   "Notes",
 ] as const;
 
+/**
+ * Optional structured columns, found by header name anywhere after column K
+ * (spec: tracker-columns-spec.md). When filled they win over parsing the
+ * Data Input sentence; when absent or blank the reader parses as before.
+ */
+export const TRACKER_OPTIONS_COLUMN = "Options";
+export const TRACKER_INPUT_TYPE_COLUMN = "Input type";
+export const TRACKER_INPUT_TYPES = ["multi-choice", "single-choice", "rank", "number", "text", "fill-in"] as const;
+export type TrackerInputType = (typeof TRACKER_INPUT_TYPES)[number];
+
+/** "Dog walking | Training |  Grooming" -> ["Dog walking", "Training", "Grooming"]. */
+export function splitOptionsCell(cell: string): string[] {
+  return cell
+    .split("|")
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
 export type TrackerRow = {
   row: number;
   /** Level number from column A ("1 Vision and Goals" -> 1). */
@@ -45,6 +63,10 @@ export type TrackerRow = {
   dataInput: string;
   template: string;
   notes: string;
+  /** "Options" column: labels, pipe-separated in the cell. Empty when absent. */
+  options?: string[];
+  /** "Input type" column. Undefined when absent or blank. */
+  inputType?: TrackerInputType;
 };
 
 export type TrackerIssue = { sheet: string; row: number; reason: string };
@@ -82,6 +104,12 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
       issues.push({ sheet: sheet.name, row: header?.row ?? 1, reason: `Column ${String.fromCharCode(65 + i)} should be "${col}".` });
     }
   });
+  const headerAt = (name: string) => {
+    const i = (header?.values ?? []).findIndex((v, idx) => idx >= TRACKER_COLUMNS.length && v.trim().toLowerCase() === name.toLowerCase());
+    return i === -1 ? undefined : i;
+  };
+  const optionsCol = headerAt(TRACKER_OPTIONS_COLUMN);
+  const inputTypeCol = headerAt(TRACKER_INPUT_TYPE_COLUMN);
   const rows: TrackerRow[] = [];
   for (const { row, values } of body) {
     if (values.every((v) => !v.trim())) continue;
@@ -91,6 +119,12 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
       continue;
     }
     if (level > maxLevel) continue;
+    const options = optionsCol === undefined ? [] : splitOptionsCell(cellText(values[optionsCol]));
+    const rawType = inputTypeCol === undefined ? "" : cellText(values[inputTypeCol]).toLowerCase();
+    const inputType = (TRACKER_INPUT_TYPES as readonly string[]).includes(rawType) ? (rawType as TrackerInputType) : undefined;
+    if (rawType && !inputType) {
+      issues.push({ sheet: sheet.name, row, reason: `Input type "${rawType}" is not one of ${TRACKER_INPUT_TYPES.join(", ")}.` });
+    }
     rows.push({
       row,
       level,
@@ -105,6 +139,8 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
       dataInput: cellText(values[8]),
       template: cellText(values[9]),
       notes: cellText(values[10]),
+      ...(options.length ? { options } : {}),
+      ...(inputType ? { inputType } : {}),
     });
   }
   const notesSheet = sheets.find((s) => s.name === LAUNCHPAD_TRACKER_NOTES_SHEET);

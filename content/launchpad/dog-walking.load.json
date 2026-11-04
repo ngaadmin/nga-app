@@ -80,24 +80,6 @@
                   "screens": [
                     {
                       "sourceRow": 2,
-                      "validation": [],
-                      "feeds": [],
-                      "feedsInto": [],
-                      "flags": [],
-                      "screenId": "l1-s1-b1-t1-s1",
-                      "index": "1",
-                      "template": "context",
-                      "context": "Every business starts with a picture of what it could become.",
-                      "guidance": "Tap everything you might like to offer, now or later. You can change your picks later.",
-                      "payload": {
-                        "id": "l1-s1-b1-t1-s1",
-                        "type": "context",
-                        "context": "Every business starts with a picture of what it could become.",
-                        "guidance": "Tap everything you might like to offer, now or later. You can change your picks later."
-                      }
-                    },
-                    {
-                      "sourceRow": 2,
                       "validation": [
                         "at least one pick"
                       ],
@@ -110,7 +92,7 @@
                         "D14"
                       ],
                       "screenId": "l1-s1-b1-t1-s2",
-                      "index": "2",
+                      "index": "1",
                       "template": "choice-capture:multi",
                       "question": "What will your business offer?",
                       "options": [
@@ -175,8 +157,12 @@
                             "id": "manage-bookings-for-others",
                             "label": "Manage bookings for others"
                           }
-                        ]
-                      }
+                        ],
+                        "context": "Every business starts with a picture of what it could become.",
+                        "guidance": "Tap everything you might like to offer, now or later. You can change your picks later."
+                      },
+                      "context": "Every business starts with a picture of what it could become.",
+                      "guidance": "Tap everything you might like to offer, now or later. You can change your picks later."
                     }
                   ]
                 }
@@ -196,26 +182,8 @@
                   "screens": [
                     {
                       "sourceRow": 3,
-                      "validation": [],
-                      "feeds": [],
-                      "feedsInto": [],
-                      "flags": [],
-                      "screenId": "l1-s1-b2-t1-s1",
-                      "index": "1",
-                      "template": "context",
-                      "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
-                      "guidance": "Use the arrows to put the reasons in order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out.",
-                      "payload": {
-                        "id": "l1-s1-b2-t1-s1",
-                        "type": "context",
-                        "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
-                        "guidance": "Use the arrows to put the reasons in order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
-                      }
-                    },
-                    {
-                      "sourceRow": 3,
                       "validation": [
-                        "all six items always shown; the shown order is a valid answer"
+                        "all five items always shown; the shown order is a valid answer"
                       ],
                       "feeds": [],
                       "feedsInto": [
@@ -232,7 +200,7 @@
                         "D16"
                       ],
                       "screenId": "l1-s1-b2-t1-s2",
-                      "index": "2",
+                      "index": "1",
                       "template": "rank-order",
                       "question": "Rank these in order of importance to you.",
                       "options": [
@@ -255,10 +223,6 @@
                         {
                           "id": "support-a-cause",
                           "label": "Support a cause"
-                        },
-                        {
-                          "id": "prove-i-can-do-it",
-                          "label": "Prove I can do it"
                         }
                       ],
                       "answer": {
@@ -268,7 +232,7 @@
                         "fields": [
                           {
                             "name": "order",
-                            "type": "option ids (all six, most important first)",
+                            "type": "option ids (all five, most important first)",
                             "required": true
                           },
                           {
@@ -303,14 +267,14 @@
                           {
                             "id": "support-a-cause",
                             "label": "Support a cause"
-                          },
-                          {
-                            "id": "prove-i-can-do-it",
-                            "label": "Prove I can do it"
                           }
                         ],
-                        "notApplicableLabel": "Not applicable"
-                      }
+                        "notApplicableLabel": "Not applicable",
+                        "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
+                        "guidance": "Use the arrows to put the reasons in order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
+                      },
+                      "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
+                      "guidance": "Use the arrows to put the reasons in order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
                     }
                   ]
                 }
@@ -330,24 +294,6 @@
                   "screens": [
                     {
                       "sourceRow": 4,
-                      "validation": [],
-                      "feeds": [],
-                      "feedsInto": [],
-                      "flags": [],
-                      "screenId": "l1-s1-b3-t1-s1",
-                      "index": "1",
-                      "template": "context",
-                      "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
-                      "guidance": "Think about what you care about most. Pick the one area you'd love to help.",
-                      "payload": {
-                        "id": "l1-s1-b3-t1-s1",
-                        "type": "context",
-                        "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
-                        "guidance": "Think about what you care about most. Pick the one area you'd love to help."
-                      }
-                    },
-                    {
-                      "sourceRow": 4,
                       "validation": [
                         "exactly one pick"
                       ],
@@ -358,7 +304,7 @@
                       ],
                       "flags": [],
                       "screenId": "l1-s1-b3-t1-s2",
-                      "index": "2",
+                      "index": "1",
                       "template": "choice-capture:single",
                       "question": "Pick one area you would love your business to support as your success grows.",
                       "options": [
@@ -423,8 +369,12 @@
                             "id": "helping-the-elderly",
                             "label": "Helping the elderly"
                           }
-                        ]
-                      }
+                        ],
+                        "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
+                        "guidance": "Think about what you care about most. Pick the one area you'd love to help."
+                      },
+                      "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
+                      "guidance": "Think about what you care about most. Pick the one area you'd love to help."
                     }
                   ]
                 }
@@ -463,7 +413,7 @@
                     {
                       "sourceRow": 5,
                       "validation": [
-                        "skips prove-i-can-do-it",
+                        "skips none",
                         "Support a cause after the ranked goals",
                         "Add another goal last"
                       ],
@@ -488,9 +438,7 @@
                         "id": "l1-s1-b4-t1-s2",
                         "type": "goal-loop",
                         "orderFrom": "l1-why",
-                        "skipRankItemIds": [
-                          "prove-i-can-do-it"
-                        ],
+                        "skipRankItemIds": [],
                         "goals": [
                           {
                             "rankItemId": "make-money",
@@ -1429,24 +1377,6 @@
                   "screens": [
                     {
                       "sourceRow": 14,
-                      "validation": [],
-                      "feeds": [],
-                      "feedsInto": [],
-                      "flags": [],
-                      "screenId": "l2-s1-b1-t1-s1",
-                      "index": "1",
-                      "template": "context",
-                      "context": "You picked dog walking as your business type and chose what to offer in Silver 1. Now let's get specific about exactly what you will offer.",
-                      "guidance": "Think about what a dog owner in your area would actually pay for. Consider length of walk, time of day, days available, group or solo walks, and any extras like treats or photos. There is no fixed list. Your offer is yours to define.",
-                      "payload": {
-                        "id": "l2-s1-b1-t1-s1",
-                        "type": "context",
-                        "context": "You picked dog walking as your business type and chose what to offer in Silver 1. Now let's get specific about exactly what you will offer.",
-                        "guidance": "Think about what a dog owner in your area would actually pay for. Consider length of walk, time of day, days available, group or solo walks, and any extras like treats or photos. There is no fixed list. Your offer is yours to define."
-                      }
-                    },
-                    {
-                      "sourceRow": 14,
                       "validation": [
                         "serviceDescription: up to 200 characters",
                         "availability: up to 120 characters"
@@ -1461,7 +1391,7 @@
                         "D13"
                       ],
                       "screenId": "l2-s1-b1-t1-s2",
-                      "index": "2",
+                      "index": "1",
                       "template": "short-text:paragraph",
                       "question": "Your paragraph: I offer ___. I am available ___.",
                       "options": [],
@@ -1526,8 +1456,12 @@
                             "hint": "days and times",
                             "maxLength": 120
                           }
-                        ]
-                      }
+                        ],
+                        "context": "You picked dog walking as your business type and chose what to offer in Silver 1. Now let's get specific about exactly what you will offer.",
+                        "guidance": "Think about what a dog owner in your area would actually pay for. Consider length of walk, time of day, days available, group or solo walks, and any extras like treats or photos. There is no fixed list. Your offer is yours to define."
+                      },
+                      "context": "You picked dog walking as your business type and chose what to offer in Silver 1. Now let's get specific about exactly what you will offer.",
+                      "guidance": "Think about what a dog owner in your area would actually pay for. Consider length of walk, time of day, days available, group or solo walks, and any extras like treats or photos. There is no fixed list. Your offer is yours to define."
                     }
                   ]
                 }
@@ -1547,24 +1481,6 @@
                   "screens": [
                     {
                       "sourceRow": 15,
-                      "validation": [],
-                      "feeds": [],
-                      "feedsInto": [],
-                      "flags": [],
-                      "screenId": "l2-s1-b2-t1-s1",
-                      "index": "1",
-                      "template": "context",
-                      "context": "You now know what you are selling. Before you spend time building it, check that people actually want it.",
-                      "guidance": "Ask three people you know who have dogs. Ask in person, by text, or make a quick call. Keep it simple: would you use this, which days or times would suit you, and is there anything you'd change about my offer? Then write up what you heard.",
-                      "payload": {
-                        "id": "l2-s1-b2-t1-s1",
-                        "type": "context",
-                        "context": "You now know what you are selling. Before you spend time building it, check that people actually want it.",
-                        "guidance": "Ask three people you know who have dogs. Ask in person, by text, or make a quick call. Keep it simple: would you use this, which days or times would suit you, and is there anything you'd change about my offer? Then write up what you heard."
-                      }
-                    },
-                    {
-                      "sourceRow": 15,
                       "validation": [
                         "numberAsked: whole number 1 to 99",
                         "yesNo: one of yes | no",
@@ -1582,7 +1498,7 @@
                         "D15"
                       ],
                       "screenId": "l2-s1-b2-t1-s2",
-                      "index": "2",
+                      "index": "1",
                       "template": "short-text:paragraph",
                       "question": "Your paragraph: I asked ___ [number] people about my {product}. They said [Yes/No] to my idea. They were specifically interested in ___ [e.g. a time, day or type of service].",
                       "options": [
@@ -1687,8 +1603,12 @@
                             "hint": "a time, day or type of service",
                             "maxLength": 120
                           }
-                        ]
-                      }
+                        ],
+                        "context": "You now know what you are selling. Before you spend time building it, check that people actually want it.",
+                        "guidance": "Ask three people you know who have dogs. Ask in person, by text, or make a quick call. Keep it simple: would you use this, which days or times would suit you, and is there anything you'd change about my offer? Then write up what you heard."
+                      },
+                      "context": "You now know what you are selling. Before you spend time building it, check that people actually want it.",
+                      "guidance": "Ask three people you know who have dogs. Ask in person, by text, or make a quick call. Keep it simple: would you use this, which days or times would suit you, and is there anything you'd change about my offer? Then write up what you heard."
                     }
                   ]
                 }
@@ -1945,9 +1865,9 @@
     },
     {
       "id": "D3",
-      "topic": "Prove I can do it",
-      "applied": "Has no goal row, so the goal loop skips it even when ranked.",
-      "status": "default-pending-cath",
+      "topic": "Why items",
+      "applied": "Per Cath's 4 Nov call, Find the why ranks five items: Make money, Help others, Learn new skills, Be my own boss, Support a cause. The reader drops the retired sixth item if the sheet still lists it, so every ranked item has a goal row.",
+      "status": "decided-cath",
       "rows": [
         3,
         5
@@ -2118,6 +2038,19 @@
         17,
         18,
         19
+      ]
+    },
+    {
+      "id": "D21",
+      "topic": "One screen per bronze",
+      "applied": "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals keeps its intro page before the goal loop.",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        3,
+        4,
+        14,
+        15
       ]
     }
   ]

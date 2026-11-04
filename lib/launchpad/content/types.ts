@@ -116,6 +116,12 @@ export type LaunchpadContextScreen = TaskScreenBase & {
 /** Capture screens save one answer (lib/launchpad/content/answers.ts) under `answerKey`. */
 type CaptureBase = TaskScreenBase & {
   answerKey: string;
+  /**
+   * Optional "why it matters" line shown at the top of the screen, above the
+   * guidance and the question, so a bronze opens on one screen (load D21).
+   * When set, `guidance` shows under it on the accent panel, not under the prompt.
+   */
+  context?: string;
   /** The question line above the interaction. */
   prompt: string;
   /** Optional how-to line under the prompt. */

@@ -43,27 +43,47 @@ describe("bronze doors open their tasks directly (no task list)", () => {
     expect(screen.getByText("Name your business")).toBeTruthy();
   });
 
-  it("an L1 door opens its task directly: context, then the capture page; Finish waits for a pick", async () => {
+  it("an L1 door opens one screen: context, guidance, then the question and options; Finish waits for a pick", async () => {
     renderFlow({ kind: "level", level: 1 });
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
     const bronze = silver.bronzes[0]!;
+    const capture = bronze.tasks[0]!.screens[0]!;
+    if (capture.type !== "choice-capture") throw new Error("expected the offer capture first");
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
     fireEvent.click(door(bronze.title));
-    expect(document.querySelector("[data-screen-type='context']")).toBeTruthy();
-    expect(screen.getByText("Step 1 of 2")).toBeTruthy();
+    expect(bronze.tasks[0]!.screens).toHaveLength(1);
+    expect(document.querySelector("[data-screen-type='context']")).toBeNull();
+    const page = document.querySelector("[data-screen-type='choice-capture'][data-mode='multi']") as HTMLElement;
+    expect(page).toBeTruthy();
+    // Context at the top, guidance under it, then the question, then the options.
+    const intro = page.querySelector("[data-screen-intro]") as HTMLElement;
+    expect(intro.textContent).toContain(capture.context!);
+    expect(intro.querySelector("[data-guidance]")?.textContent).toBe(capture.guidance);
+    const prompt = screen.getByText(capture.prompt);
+    const options = screen.getByRole("group");
+    expect(intro.compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(prompt.compareDocumentPosition(options) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByText(/tasks done/)).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
-    expect(document.querySelector("[data-screen-type='choice-capture'][data-mode='multi']")).toBeTruthy();
     const finish = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
     expect(finish.disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
     expect(finish.disabled).toBe(false);
-    // Previous goes back a page, and the pick is kept.
-    fireEvent.click(screen.getByRole("button", { name: /Previous/ }));
-    expect(document.querySelector("[data-screen-type='context']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /^Next/ }));
-    fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+    fireEvent.click(finish);
     expect(door(silver.bronzes[1]!.title)).toBeTruthy();
+  });
+
+  it("every L1 and L2 capture bronze is one screen with its context; Set your goals keeps its intro", () => {
+    const bronzes = [...PAYLOAD.floors[0]!.silvers[0]!.bronzes, ...PAYLOAD.floors[1]!.silvers[0]!.bronzes];
+    for (const b of bronzes) {
+      const screens = b.tasks[0]!.screens;
+      if (screens[0]!.type === "context") {
+        expect(b.title).toBe("Set your goals");
+        expect(screens[1]!.type).toBe("goal-loop");
+      } else {
+        expect(screens).toHaveLength(1);
+        expect((screens[0] as { context?: string }).context).toBeTruthy();
+      }
+    }
   });
 
   it("a multi-task bronze (placeholder floors) still steps task to task with no list", async () => {
@@ -86,22 +106,19 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     renderFlow({ kind: "level", level: 1 });
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
-    // Offer.
+    // Offer: one screen.
     fireEvent.click(door(silver.bronzes[0]!.title));
-    next();
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
     fireEvent.click(screen.getByRole("button", { name: "Training" }));
     next();
     // Why: arrows reorder, N/A strikes a reason out of the goal loop.
     fireEvent.click(door(silver.bronzes[1]!.title));
-    next();
     fireEvent.click(screen.getByRole("button", { name: "Move Help others up" }));
     fireEvent.click(screen.getByRole("button", { name: "Not applicable: Learn new skills" }));
     expect(document.querySelector("[data-rank-item='learn-new-skills'][data-struck]")).toBeTruthy();
     next();
     // Cause.
     fireEvent.click(door(silver.bronzes[2]!.title));
-    next();
     const finish = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
     expect(finish.disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Animals" }));
@@ -176,6 +193,42 @@ async function finishSilver(silver: (typeof PAYLOAD.floors)[number]["silvers"][n
   }
 }
 
+describe("Find the why: five reasons (Cath, 4 Nov)", () => {
+  const FIVE = ["make-money", "help-others", "learn-new-skills", "be-my-own-boss", "support-a-cause"];
+  const rankIds = () => [...document.querySelectorAll("[data-rank-item]")].map((el) => el.getAttribute("data-rank-item"));
+  async function openWhyRank() {
+    const silver = PAYLOAD.floors[0]!.silvers[0]!;
+    fireEvent.click(await screen.findByRole("button", { name: new RegExp(silver.title) }));
+    // The why door opens once the offer is picked.
+    fireEvent.click(door(silver.bronzes[0]!.title));
+    while (!screen.queryByRole("button", { name: "Dog walking" })) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
+    fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+    fireEvent.click(door(silver.bronzes[1]!.title));
+    while (!document.querySelector("[data-rank-item]")) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+  }
+
+  it("ranks exactly the five reasons", async () => {
+    renderFlow({ kind: "level", level: 1 });
+    await openWhyRank();
+    expect(rankIds()).toEqual(FIVE);
+    expect(document.body.textContent).not.toMatch(/\bprove/i);
+  });
+
+  it("an old saved ranking with the retired reason does not crash; the id is dropped", async () => {
+    const old = ["prove-i-can-do-it", "support-a-cause", "make-money", "help-others", "learn-new-skills", "be-my-own-boss"];
+    localStorage.setItem(
+      "lp-venture-test:v1:dog-walking",
+      JSON.stringify({ completedTaskIds: [], answers: { "l1-why": { kind: "ranking", version: 1, order: old, notApplicable: ["prove-i-can-do-it"] } } }),
+    );
+    renderFlow({ kind: "level", level: 1 });
+    await openWhyRank();
+    expect(rankIds()).toEqual(old.slice(1));
+    expect(document.querySelectorAll("[data-rank-item][data-struck]")).toHaveLength(0);
+    expect(document.body.textContent).not.toMatch(/\bprove/i);
+  });
+});
+
 describe("finishing a silver shows its handbook page", () => {
   it("a silver with no wrap-up opens its page in 'just completed' mode; Continue goes on", async () => {
     renderFlow({ kind: "level", level: 3 });
@@ -214,8 +267,7 @@ describe("finishing a silver shows its handbook page", () => {
     fireEvent.click(await screen.findByRole("button", { name: /Know the product and its buyers/ }));
     const last = PAYLOAD.floors[1]!.silvers[0]!.bronzes[1]!;
     fireEvent.click(door(last.title));
-    next();
-    // Shortcut sample answers fill the captures, so Finish is on.
+    // One screen; shortcut sample answers fill the captures, so Finish is on.
     next();
     expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
     expect(document.querySelector("[data-summary-section='who-might-want-it']")?.textContent).not.toMatch(/Not answered yet/);

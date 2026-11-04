@@ -22,3 +22,20 @@ export function ScreenEyebrow({ children }: { children: ReactNode }) {
     </p>
   );
 }
+
+/**
+ * Top of a one-screen capture page (load D21): the "why it matters" line, then
+ * the how-to line on the light accent panel, as on the context page.
+ */
+export function ScreenIntro({ context, guidance }: { context: string; guidance?: string }) {
+  return (
+    <div className="mx-5 mb-4 mt-2 flex flex-col gap-3" data-screen-intro="">
+      <p className="text-[16px] leading-[1.5] text-nga-ink">{context}</p>
+      {guidance && (
+        <p className="rounded-r-2xl border-l-4 border-nga-secondary bg-[#F7FAFD] px-4 py-3 text-[14px] leading-[1.5] text-nga-ink" data-guidance="">
+          {guidance}
+        </p>
+      )}
+    </div>
+  );
+}

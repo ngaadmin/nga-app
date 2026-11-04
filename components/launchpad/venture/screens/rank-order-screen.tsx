@@ -3,7 +3,7 @@
 import type { LaunchpadRankOrderScreen } from "@/lib/launchpad/content/types";
 import { rankingAnswer, rankingOf } from "@/lib/launchpad/content/answers";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
-import { ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { ScreenGuidance, ScreenIntro, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 /** Moves `id` one place up (-1) or down (+1). */
 export function moveRankItem(order: readonly string[], id: string, dir: -1 | 1): string[] {
@@ -33,13 +33,15 @@ export function RankOrderScreen({ screen }: { screen: LaunchpadRankOrderScreen }
   const { answers, save } = useCaptureAnswer(screen.answerKey);
   const saved = rankingOf(answers, screen.answerKey);
   const ids = screen.items.map((i) => i.id);
+  // Ids no longer on the screen (e.g. a retired item in an old saved ranking) are dropped.
   const order = saved ? [...saved.order.filter((id) => ids.includes(id)), ...ids.filter((id) => !saved.order.includes(id))] : ids;
-  const struck = saved?.notApplicable ?? [];
+  const struck = (saved?.notApplicable ?? []).filter((id) => ids.includes(id));
   let rank = 0;
   return (
     <div className="flex flex-col" data-screen-type="rank-order">
+      {screen.context && <ScreenIntro context={screen.context} guidance={screen.guidance} />}
       <ScreenPrompt>{screen.prompt}</ScreenPrompt>
-      {screen.guidance && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
+      {screen.guidance && !screen.context && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
       <ol className="mx-5 mb-4 mt-4 flex flex-col gap-2.5" aria-label="Your ranking">
         {order.map((id, i) => {
           const item = screen.items.find((x) => x.id === id)!;

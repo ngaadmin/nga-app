@@ -276,6 +276,7 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
 function checkCaptureBase(screen: Obj, where: string, promptOptional = false): void {
   answerKey(screen, where);
   text(screen.prompt, `${where} prompt`, promptOptional);
+  text(screen.context, `${where} context`, true);
   text(screen.guidance, `${where} guidance`, true);
 }
 

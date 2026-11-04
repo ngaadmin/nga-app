@@ -18,11 +18,12 @@ import type {
   LaunchpadShortTextScreen,
   LaunchpadSummarySection,
   LaunchpadSummaryWrapUp,
+  LaunchpadTaskScreen,
   LaunchpadTextField,
 } from "@/lib/launchpad/content/types";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import { kebab, optionsAfter, parseSentence, sentenceCase } from "@/lib/launchpad/load/sentence";
-import { trackerLabel, type TrackerIssue, type TrackerRead, type TrackerRow } from "@/lib/launchpad/load/read-tracker";
+import { trackerLabel, type TrackerInputType, type TrackerIssue, type TrackerRead, type TrackerRow } from "@/lib/launchpad/load/read-tracker";
 import {
   LAUNCHPAD_LOAD_VERSION,
   type LaunchpadLoadFile,
@@ -64,10 +65,13 @@ export const KEYS = {
   demand: "l2-demand",
 } as const;
 
+/** Why items Cath retired (4 Nov, D3); the reader drops them from the tracker's list. */
+export const RETIRED_WHY_ITEM_IDS: readonly string[] = ["prove-i-can-do-it"];
+
 export const DECISIONS: LoadDecision[] = [
   { id: "D1", topic: "Level 1 silvers", applied: "One silver, Define the business, as in the sheet: bronzes Pick what your business will offer, Find the why, Know your impact, Set your goals (goal loop with Add another goal inside it), and one wrap-up (row 12). The framework's separate Set your goals silver is gone, so L1 shows one plaque.", status: "decided-cath", rows: [2, 3, 4, 5, 11, 12] },
   { id: "D2", topic: "Money cap", applied: "Amount is a whole number, 7 digits (1 to 9,999,999). K5 still says 1 billion cap.", status: "default-pending-cath", rows: [5, 6] },
-  { id: "D3", topic: "Prove I can do it", applied: "Has no goal row, so the goal loop skips it even when ranked.", status: "default-pending-cath", rows: [3, 5] },
+  { id: "D3", topic: "Why items", applied: "Per Cath's 4 Nov call, Find the why ranks five items: Make money, Help others, Learn new skills, Be my own boss, Support a cause. The reader drops the retired sixth item if the sheet still lists it, so every ranked item has a goal row.", status: "decided-cath", rows: [3, 5] },
   { id: "D4", topic: "What I am selling display", applied: "The row 14 service description shows as plain text in the wrap-up and handbook. I14/I16 say bullet list.", status: "default-pending-cath", rows: [14, 16] },
   { id: "D5", topic: "{product}", applied: `Filled from the venture noun: "${DOG_WALKING_NOUN}".`, status: "default-pending-cath", rows: [15] },
   { id: "D6", topic: "[Yes/No]", applied: "A two-option choice (Yes, No) shown as an inline dropdown in the sentence.", status: "default-pending-cath", rows: [15] },
@@ -85,6 +89,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D18", topic: "Wrap-up copy and art", applied: "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.", status: "build-assumption", rows: [12, 16] },
   { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell shows the service description (row 14). A section with no answer is hidden.", status: "build-assumption", rows: [19] },
   { id: "D20", topic: "Identity titles", applied: "The locked build keeps Design your logo and Name your business (sheet: Design the logo, Name the business), and its own wrap-up behavior.", status: "build-assumption", rows: [17, 18, 19] },
+  { id: "D21", topic: "One screen per bronze", applied: "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals keeps its intro page before the goal loop.", status: "decided-cath", rows: [2, 3, 4, 14, 15] },
 ];
 
 /* ------------------------------------------------------------ helpers */
@@ -114,6 +119,19 @@ function need(ctx: Ctx, rows: readonly TrackerRow[], level: number, silver: stri
 }
 
 const opts = (labels: readonly string[]) => labels.map((l) => ({ id: kebab(l), label: sentenceCase(l) }));
+
+/** Option labels: the structured Options column when filled, else parsed from the Data Input sentence. */
+const rowOptions = (row: TrackerRow, parse: () => string[]) => opts(row.options?.length ? row.options : parse());
+
+/**
+ * The structured Input type column, when filled, must be one the reader can
+ * build for this row (each row's screen shape is fixed); anything else is an issue.
+ */
+function expectInput(ctx: Ctx, row: TrackerRow, allowed: readonly TrackerInputType[]): void {
+  if (row.inputType && !allowed.includes(row.inputType)) {
+    issue(ctx, row.row, `Input type "${row.inputType}" is not supported for this row; use ${allowed.join(" or ")}.`);
+  }
+}
 
 function meta(row: TrackerRow, m: Partial<LoadRowMeta> & Pick<LoadRowMeta, "screenId" | "index" | "template">): LoadRowMeta {
   return { sourceRow: row.row, validation: [], feeds: [], feedsInto: [], flags: [], ...m };
@@ -206,6 +224,18 @@ function fieldsAnswer(key: string, fields: readonly LaunchpadTextField[], extra:
 
 const NOT_APPLICABLE = "Not applicable";
 
+/**
+ * D21: puts a row's context and guidance on its capture screen (shown above
+ * the question), so the bronze opens on one screen with no context-only page.
+ */
+function withIntro(row: TrackerRow, s: LoadScreen): LoadScreen {
+  const p = s.payload;
+  if (!p || (p.type !== "choice-capture" && p.type !== "rank-order" && p.type !== "short-text")) return s;
+  const intro = { ...(row.context ? { context: row.context } : {}), ...(row.guidance ? { guidance: row.guidance } : {}) };
+  const payload: LaunchpadTaskScreen = { ...p, ...intro };
+  return { ...s, ...intro, index: "1", payload };
+}
+
 /* ------------------------------------------------------------ level 1 */
 
 function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
@@ -219,7 +249,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const rGold = need(ctx, rows, 1, "Gold", /^Gold milestone/);
 
   // Bronze 1: offer (multi-select capture).
-  const offerOptions = opts(optionsAfter(rOffer.dataInput, /not the payload:\s*/));
+  expectInput(ctx, rOffer, ["multi-choice"]);
+  const offerOptions = rowOptions(rOffer, () => optionsAfter(rOffer.dataInput, /not the payload:\s*/));
   if (offerOptions.length < 2) issue(ctx, rOffer.row, "Could not read the offer options.");
   const b1 = "l1-s1-b1";
   const offerScreen: LaunchpadChoiceCaptureScreen = {
@@ -232,8 +263,10 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   };
 
   // Bronze 2: why (rank-order with not applicable).
-  const whyItems = opts(optionsAfter(rWhy.dataInput, /Items \([^)]*\):\s*/));
-  if (whyItems.length !== 6) issue(ctx, rWhy.row, `Expected six why items, read ${whyItems.length}.`);
+  // D3: the retired why item is dropped even if the sheet still lists it.
+  expectInput(ctx, rWhy, ["rank"]);
+  const whyItems = rowOptions(rWhy, () => optionsAfter(rWhy.dataInput, /Items \([^)]*\):\s*/)).filter((i) => !RETIRED_WHY_ITEM_IDS.includes(i.id));
+  if (whyItems.length !== 5) issue(ctx, rWhy.row, `Expected five why items, read ${whyItems.length}.`);
   // The quoted toggle name, e.g. 'not applicable' (an apostrophe in "doesn't" is not a quote).
   const naLabel = sentenceCase(/(?:^|\s)'([^']+)'/.exec(rWhy.guidance)?.[1] ?? NOT_APPLICABLE);
   // D16: no drag yet, so the shown how-to line names the arrows.
@@ -249,7 +282,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   };
 
   // Bronze 3: cause (single select).
-  const causeOptions = opts(optionsAfter(rCause.dataInput, /Options:\s*/));
+  expectInput(ctx, rCause, ["single-choice"]);
+  const causeOptions = rowOptions(rCause, () => optionsAfter(rCause.dataInput, /Options:\s*/));
   const b3 = "l1-s1-b3";
   const causeScreen: LaunchpadChoiceCaptureScreen = {
     id: `${b3}-t1-s2`,
@@ -283,8 +317,10 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     let validation: string[] = [];
     let options: { id: string; label: string }[] | undefined;
     const hints = slotHints(row.question);
-    if (/^Single select:/.test(row.dataInput)) {
-      options = opts(optionsAfter(row.dataInput, /Single select:\s*/));
+    expectInput(ctx, row, ["single-choice", "fill-in"]);
+    // The Input type column wins; without it a "Single select:" Data Input makes a choice goal.
+    if (row.inputType ? row.inputType === "single-choice" : /^Single select:/.test(row.dataInput)) {
+      options = rowOptions(row, () => optionsAfter(row.dataInput, /Single select:\s*/));
       screen = {
         id: sid,
         type: "choice-capture",
@@ -350,10 +386,11 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
       inGoalLoop: loopId,
     });
   });
-  // Rank items with no goal row are skipped (D3).
+  // Rank items with no goal row are skipped (none since D3).
   const skip = whyItems.filter((i) => !goals.some((g) => g.rankItemId === i.id)).map((i) => i.id);
 
   // Add another goal (optional, last).
+  expectInput(ctx, rOther, ["fill-in"]);
   const otherTitle = trackerLabel(rOther.bronze).replace(/\s*\(.*\)$/, "");
   const otherFields: LaunchpadTextField[] = [
     { name: "goalText", input: "text", label: "My goal", hint: "free text", maxLength: LIMITS.otherGoalTextMax, optional: true },
@@ -408,20 +445,18 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   });
 
   const bronzes: LoadBronze[] = [];
+  // D21: one screen per bronze; the context and guidance sit above the question and its options.
   const simpleBronze = (
     id: string,
     row: TrackerRow,
     interaction: LoadScreen,
-  ): LoadBronze => {
-    const c = contextScreen(id, row);
-    return {
-      id,
-      title: trackerLabel(row.bronze),
-      sheetLabel: row.bronze,
-      sourceRow: row.row,
-      tasks: [{ id: `${id}-t1`, title: trackerLabel(row.bronze), kind: "in-app", paged: true, screens: [ctxMeta(row, c), interaction] }],
-    };
-  };
+  ): LoadBronze => ({
+    id,
+    title: trackerLabel(row.bronze),
+    sheetLabel: row.bronze,
+    sourceRow: row.row,
+    tasks: [{ id: `${id}-t1`, title: trackerLabel(row.bronze), kind: "in-app", paged: true, screens: [withIntro(row, interaction)] }],
+  });
 
   bronzes.push(
     simpleBronze(b1, rOffer, {
@@ -451,11 +486,11 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
           kind: "ranking",
           version: 1,
           fields: [
-            { name: "order", type: "option ids (all six, most important first)", required: true },
+            { name: "order", type: "option ids (all five, most important first)", required: true },
             { name: "notApplicable", type: "option ids", required: false },
           ],
         },
-        validation: ["all six items always shown; the shown order is a valid answer"],
+        validation: ["all five items always shown; the shown order is a valid answer"],
         flags: ["D3", "D16"],
       }),
       payload: whyScreen,
@@ -607,6 +642,8 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   const rLogo = need(ctx, rows, 2, I, "Design the logo");
   const rName = need(ctx, rows, 2, I, "Name the business");
   const rIdWrap = need(ctx, rows, 2, I, /^Wrap-up/);
+  expectInput(ctx, rSell, ["fill-in"]);
+  expectInput(ctx, rDemand, ["fill-in"]);
 
   // Bronze 1: Decide what to sell (paragraph).
   const b1 = "l2-s1-b1";
@@ -656,7 +693,6 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   };
 
   const paged = (id: string, row: TrackerRow, kind: "in-app" | "real-world", screen: LaunchpadShortTextScreen, fields: LaunchpadTextField[], flags: string[]): LoadBronze => {
-    const c: LaunchpadContextScreen = { id: `${id}-t1-s1`, type: "context", context: row.context, ...(row.guidance ? { guidance: row.guidance } : {}) };
     const spec = fieldSpecs(fields);
     return {
       id,
@@ -669,12 +705,12 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
           title: trackerLabel(row.bronze),
           kind,
           paged: true,
+          // D21: one screen, context and guidance above the sentence.
           screens: [
-            { ...meta(row, { screenId: c.id, index: "1", template: "context", context: c.context, guidance: c.guidance }), payload: c },
-            {
+            withIntro(row, {
               ...meta(row, {
                 screenId: screen.id,
-                index: "2",
+                index: "1",
                 template: "short-text:paragraph",
                 question: row.question,
                 options: fields.flatMap((f) => f.options ?? []),
@@ -683,7 +719,7 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
                 flags,
               }),
               payload: screen,
-            },
+            }),
           ],
         },
       ],

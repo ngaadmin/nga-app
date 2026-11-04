@@ -261,7 +261,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(goals).toContainText("to support the environment");
     await expect(goals).toContainText("My goal is to TEST other goal in 6 months.");
   });
-  await shot(t, "Level 1 wrap-up, all answers shown", btn(page, "Confirm and continue"));
+  await shot(t, "Level 1 wrap-up, all answers shown", btn(page, "Continue"));
 
   await step(t, "Wrap-up: binder page, sections on one paper card with no boxes, one pencil per section", async () => {
     await expect(wrap.locator("[data-binder-card] [data-spiral-binding]")).toHaveCount(1);
@@ -292,10 +292,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(wrap.locator('[data-summary-section="my-goals"]')).toContainText("TEST benefit edit");
     await expect(wrap.locator('[data-summary-section="my-goals"]')).not.toContainText("TEST benefit one");
   });
-  await shot(t, "Level 1 wrap-up after the edit", btn(page, "Confirm and continue"));
+  await shot(t, "Level 1 wrap-up after the edit", btn(page, "Continue"));
 
-  await step(t, "Confirm and continue: milestone wrap-up, done, steps done, what you built, next up", async () => {
-    await btn(page, "Confirm and continue").click();
+  await step(t, "Continue: milestone wrap-up, done, steps done, what you built, next up", async () => {
+    await btn(page, "Continue").click();
     const sc = page.locator('[data-silver-complete="l1-s1"]');
     await expect(sc).toBeVisible();
     await expect(sc.getByRole("heading", { name: "Define the business: done!" })).toBeVisible();
@@ -312,11 +312,11 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator("[data-gold-completion]")).toBeVisible();
     await expect(page.getByRole("heading", { name: /Gold unlocked: Vision and Goals!/ })).toBeVisible();
   });
-  await shot(t, "Level 1 gold", btn(page, "Continue to Planning"));
+  await shot(t, "Level 1 gold", btn(page, "Continue"));
 
   // ---------- 4. Level 2 ----------
-  await step(t, "Continue to Planning: lift, then the Level 2 corridor", async () => {
-    await btn(page, "Continue to Planning").click();
+  await step(t, "Continue: lift, then the Level 2 corridor", async () => {
+    await btn(page, "Continue").click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/, { timeout: 15_000 });
   });
   await shot(t, "Level 2 corridor", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
@@ -366,7 +366,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(wrap2).toContainText("TEST availability");
     await expect(wrap2).toContainText("TEST interest");
   });
-  await shot(t, "Level 2 silver 1 wrap-up", btn(page, "Confirm and continue"));
+  await shot(t, "Level 2 silver 1 wrap-up", btn(page, "Continue"));
 
   await step(t, "Level 2 wrap-up: edit what I am selling with the pencil", async () => {
     const sec = wrap2.locator('[data-summary-section="what-i-am-selling"]');
@@ -377,10 +377,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await ed.getByRole("button", { name: "Save" }).click();
     await expect(sec).toContainText("TEST product edit");
   });
-  await shot(t, "Level 2 silver 1 wrap-up after the edit", btn(page, "Confirm and continue"));
+  await shot(t, "Level 2 silver 1 wrap-up after the edit", btn(page, "Continue"));
 
-  await step(t, "Confirm and continue: silver-complete page, then back to the Level 2 corridor", async () => {
-    await btn(page, "Confirm and continue").click();
+  await step(t, "Continue: silver-complete page, then back to the Level 2 corridor", async () => {
+    await btn(page, "Continue").click();
     const sc = page.locator('[data-silver-complete="l2-s1"]');
     await expect(sc).toBeVisible();
     await expect(sc.getByRole("heading", { name: "Know the product and its buyers: done!" })).toBeVisible();
@@ -448,27 +448,16 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(idWrap).toBeVisible();
     await expect(idWrap).toContainText("TEST Business Name");
   });
-  await shot(t, "Identity wrap-up", btn(page, "Confirm and continue"));
+  await shot(t, "Identity wrap-up", btn(page, "Continue"));
 
-  await step(t, "Identity wrap-up: change the color in the editor (Light blue) and the name", async () => {
-    const tabs = idWrap.getByRole("tab");
-    const names = await tabs.allInnerTexts();
-    passed(t, "Identity wrap-up editor tabs", names.join(", "));
-    await idWrap.getByRole("tab", { name: "Color", exact: true }).click();
-    await idWrap.getByRole("radio", { name: "Light blue" }).click();
-    await expect(idWrap.getByRole("radio", { name: "Light blue" })).toHaveAttribute("aria-checked", "true");
-    const nameTab = idWrap.getByRole("tab", { name: "Name", exact: true });
-    if (await nameTab.count()) {
-      await nameTab.first().click();
-      await idWrap.getByRole("textbox").first().fill("TEST Name Edit");
-      await expect(idWrap.getByRole("textbox").first()).toHaveValue("TEST Name Edit");
-      await expect(idWrap).not.toContainText("TEST Business Name");
-    }
+  await step(t, "Identity wrap-up is a summary only: vision on top, then logo and name; no pick editor", async () => {
+    await expect(idWrap.getByRole("tab")).toHaveCount(0);
+    await expect(idWrap.getByRole("radio")).toHaveCount(0);
+    await expect(idWrap.locator("[data-identity-lockup]")).toBeVisible();
   });
-  await shot(t, "Identity wrap-up after edits", btn(page, "Confirm and continue"));
 
-  await step(t, "Confirm and continue (identity): silver-complete page, then Level 2 corridor shows the lift", async () => {
-    await btn(page, "Confirm and continue").click();
+  await step(t, "Continue (identity): silver-complete page, then Level 2 corridor shows the lift", async () => {
+    await btn(page, "Continue").click();
     const sc = page.locator('[data-silver-complete="l2-s2"]');
     await expect(sc).toBeVisible();
     await shot(t, "Level 2 silver 2 complete, handbook page", sc.getByRole("button", { name: "Continue" }));
@@ -517,7 +506,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await shot(t, "Handbook, Level 2 silver 1 page", null);
     await hb.getByRole("button", { name: "Next page" }).click();
     await expect(hb.locator('[data-handbook-page="l2-s2"]')).toBeVisible();
-    await expect(hb.locator('[data-handbook-page="l2-s2"]')).toContainText("TEST Name Edit");
+    await expect(hb.locator('[data-handbook-page="l2-s2"]')).toContainText("TEST Business Name");
     const l2Tab = hb.getByRole("button", { name: "Level 2, Planning" });
     await expect(l2Tab).toHaveAttribute("data-viewed", /.*/);
     await hb.getByRole("button", { name: "Previous page" }).click();
@@ -544,7 +533,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     const home = page.locator('[data-handbook="home"]');
     // The handbook opens on the latest earned page (by design: handbookOpenIndex), so it starts on Build your identity.
     await expect(home.locator('[data-handbook-page="l2-s2"]')).toBeVisible();
-    await expect(home.locator('[data-handbook-page="l2-s2"]')).toContainText("TEST Name Edit");
+    await expect(home.locator('[data-handbook-page="l2-s2"]')).toContainText("TEST Business Name");
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");
     expect(saved).toContain("TEST benefit edit");

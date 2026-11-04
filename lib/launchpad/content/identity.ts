@@ -105,7 +105,7 @@ export type BusinessIdentityAnswer = {
   name?: string;
   font?: NameFontId;
   nameColor?: NameColorId;
-  /** Set when the learner taps Confirm and continue on the wrap-up. */
+  /** Set when the learner taps Continue on the wrap-up. */
   finalized?: boolean;
 };
 

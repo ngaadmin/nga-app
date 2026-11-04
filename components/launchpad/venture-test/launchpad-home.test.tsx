@@ -57,7 +57,7 @@ describe("Launchpad home In Progress tile", () => {
     expect(book.querySelector("svg")!.getAttribute("width")).toBe("28");
     expect(book.className).not.toContain("BDE9FB");
     for (const c of ["h-11", "w-11", "rounded-xl", "border-2", "border-nga-ink", "bg-white"]) expect(book.className).toContain(c);
-    for (const c of ["h-11", "rounded-xl", "border-2", "bg-nga-cta"]) expect(go.className).toContain(c);
+    for (const c of ["h-11", "rounded-xl", "border-2", "bg-nga-ink", "text-white"]) expect(go.className).toContain(c);
     expect(go.className).not.toContain("flex-1");
     expect(book.parentElement).toBe(go.parentElement);
     const row = tile.querySelector("[data-tile-row]")!;
@@ -69,9 +69,11 @@ describe("Launchpad home In Progress tile", () => {
     expect(onOpenVenture).toHaveBeenCalledWith("dog-walking");
   });
 
-  it("no handbook yet: only Continue in the row", () => {
+  it("no handbook yet: the workbook button is an inactive placeholder (aria-disabled)", () => {
     render(<LaunchpadHome inProgress={[{ ...L6, hasHandbook: false }]} onOpenVenture={() => {}} onOpenHandbook={() => {}} />);
-    expect(screen.queryByRole("button", { name: "Open handbook" })).toBeNull();
+    const book = screen.getByRole("button", { name: "Open handbook" });
+    expect(book.getAttribute("aria-disabled")).toBe("true");
+    expect(book.getAttribute("data-handbook-button")).toBe("inactive");
     expect(screen.getByRole("button", { name: "Continue" })).toBeTruthy();
   });
 
@@ -100,12 +102,11 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
     { taskId: "l2-s1-b2-t1", title: "Find out if people want it" },
   ];
 
-  it("with 0 open tasks the line is hidden and the tile keeps its compact layout (no list, no extra row)", () => {
+  it("with 0 open tasks the line shows 0 open and the tile keeps its compact layout (no list, no extra row)", () => {
     render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [] }]} onOpenVenture={() => {}} />);
     const tile = document.querySelector("[data-in-progress='dog-walking']") as HTMLElement;
-    expect(tile.querySelector("[data-open-tasks-toggle]")).toBeNull();
+    expect(tile.querySelector("[data-open-tasks-toggle]")?.textContent).toContain("0 open");
     expect(tile.querySelector("[data-open-tasks-list]")).toBeNull();
-    expect(tile.textContent).not.toMatch(/open/);
     // Same children as a tile from before the feature: the row and the progress bar.
     expect(tile.children).toHaveLength(2);
   });
@@ -158,7 +159,7 @@ describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasp
     expect(book.className).toMatch(/border-nga-ink/);
     expect(book.className).toMatch(/bg-white/);
     expect(book.querySelector("svg")?.getAttribute("width")).toBe("28");
-    expect(go.className).toContain("w-[94px]");
+    expect(go.className).toContain("min-w-[84px]");
     expect([...actions.children]).toEqual([book, go]);
     // Two-line label block: level name, then "1 open".
     const level = document.querySelector("[data-tile-level-name]") as HTMLElement;

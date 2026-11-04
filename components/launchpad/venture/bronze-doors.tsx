@@ -1,6 +1,6 @@
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
-import { BTN_ORANGE, Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_PRIMARY, Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
 /** Small orange marker on a door or plaque whose task was left open. */
@@ -107,7 +107,7 @@ export function BronzeDoors(props: {
       ))}
       {props.wrapUp && (
         <div className="mx-5 mt-1 pb-4">
-          <button type="button" className={`${BTN_ORANGE} w-full`} onClick={props.wrapUp.onOpen}>
+          <button type="button" className={`${BTN_PRIMARY}`} onClick={props.wrapUp.onOpen}>
             {props.wrapUp.label}
           </button>
         </div>

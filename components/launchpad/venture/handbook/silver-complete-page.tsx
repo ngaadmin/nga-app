@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { partLabel, type HandbookPageView, type MilestoneView } from "@/lib/launchpad/venture-test/handbook";
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { AccentLabel, BinderCard, HandRule, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
-import { BTN_ORANGE, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_PRIMARY, PRIMARY_LABEL, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /**
  * Draws one finished step's handbook page. Swappable: a screen can render the
@@ -109,8 +109,8 @@ export function SilverCompletePage(props: {
         </div>
       </BinderCard>
       <div className="ml-[22px] mr-4 mt-3.5">
-        <button type="button" onClick={props.onContinue} className={`${BTN_ORANGE} w-full`}>
-          Continue
+        <button type="button" onClick={props.onContinue} className={`${BTN_PRIMARY}`}>
+          {PRIMARY_LABEL}
         </button>
       </div>
     </section>

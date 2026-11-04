@@ -6,7 +6,7 @@ import { DASHBOARD_DEFAULT_HREF } from "@/lib/dashboard/navigation";
 import { LessonCompletionConfetti } from "@/components/academy/lesson/lesson-completion-confetti";
 import { lessonMotionEnabled } from "@/lib/academy/lessons/coin-counter-flight";
 import { VentureRooftopArt } from "@/components/launchpad/venture-test/venture-rooftop-art";
-import { BTN_ORANGE, BTN_WHITE, Heading, SubLine } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_PRIMARY, BTN_WHITE, Heading, SubLine } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /**
  * PLACEHOLDER — pending Jasper's design. Rooftop finish screen shown once
@@ -49,7 +49,7 @@ export function VentureRooftopFinish({ onLaunchpadHome }: { onLaunchpadHome: () 
       </svg>
       <div className="mx-5 mt-auto flex flex-col gap-3 pb-4 pt-8">
         {/* Primary: back to the Launchpad home (Business Ideas tiles) to pick another venture. */}
-        <button type="button" className={`${BTN_ORANGE} w-full`} onClick={onLaunchpadHome}>
+        <button type="button" className={`${BTN_PRIMARY}`} onClick={onLaunchpadHome}>
           Try another one
         </button>
         <Link href={APP_HOME_HREF} className={`${BTN_WHITE} w-full`}>

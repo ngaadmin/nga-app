@@ -1,5 +1,5 @@
 import type { LaunchpadGoldCompletion } from "@/lib/launchpad/content/types";
-import { BTN_ORANGE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_PRIMARY, PRIMARY_LABEL, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function GoldMedal() {
   return (
@@ -39,8 +39,8 @@ export function GoldCompletion(props: {
       {c.recap && <p className="mx-6 mt-3 rounded-2xl bg-[#FFF8E6] px-4 py-3 text-center text-[15px] leading-[1.45] text-nga-ink">{c.recap}</p>}
       {c.guidance && <p className="mx-6 mt-4 text-center text-[14px] text-nga-slate">{c.guidance}</p>}
       <div className="mx-5 mt-auto pb-4 pt-6">
-        <button type="button" className={`${BTN_ORANGE} w-full`} onClick={props.onContinue}>
-          {c.buttonLabel}
+        <button type="button" className={`${BTN_PRIMARY}`} onClick={props.onContinue}>
+          {PRIMARY_LABEL}
         </button>
       </div>
     </section>

@@ -302,7 +302,7 @@ describe("picker screens", () => {
 });
 
 describe("identity wrap-up", () => {
-  it("edits write back to the same answer and the learner stays on the screen; Confirm and continue marks it done", () => {
+  it("is a summary only (no pick editor): logo and name in the chosen font; Continue marks it done", () => {
     let finalized = 0;
     render(
       <WithAnswers initial={{ [IDENTITY_ANSWER_KEY]: FULL }}>
@@ -317,23 +317,25 @@ describe("identity wrap-up", () => {
         />
       </WithAnswers>,
     );
-    fireEvent.click(screen.getByRole("radio", { name: "Circle" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Color" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Pale olive" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Font" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Script" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Name" }));
-    fireEvent.change(screen.getByLabelText("Business name"), { target: { value: "Paw Patrol Walks" } });
-    fireEvent.click(screen.getByRole("tab", { name: "Font color" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Dark ink" }));
-    expect(saved()).toEqual({ ...FULL, shape: "circle", color: "#BAC593", font: "pacifico", name: "Paw Patrol Walks", nameColor: "ink" });
-    expect(screen.getByText("Paw Patrol Walks").getAttribute("data-name-font")).toBe("pacifico");
+    expect(screen.queryByRole("radio")).toBeNull();
+    expect(screen.queryByRole("tab")).toBeNull();
+    expect(screen.getByText(FULL.name!).getAttribute("data-name-font")).toBe(FULL.font);
+    expect(document.querySelector("[data-identity-binder] [data-identity-lockup]")).toBeTruthy();
     // Drawn on the binder page: spiral binding, no placeholder frame.
     expect(screen.queryByText("Frame art TBC")).toBeNull();
     expect(document.querySelector("[data-identity-binder] [data-spiral-binding]")).toBeTruthy();
     expect(finalized).toBe(0);
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(finalized).toBe(1);
     expect(saved().finalized).toBe(true);
+  });
+});
+
+describe("vision sentence", () => {
+  it("reads [business type] offering [picks] as a natural list", async () => {
+    const { visionSentence, naturalList } = await import("@/components/launchpad/venture/identity/identity-wrap-up");
+    expect(naturalList(["a", "b", "c"])).toBe("a, b and c");
+    expect(visionSentence(["Dog walking", "Grooming", "Bookings"])).toBe("Dog walking offering grooming and bookings");
+    expect(visionSentence(["Dog walking"])).toBe("Dog walking");
   });
 });

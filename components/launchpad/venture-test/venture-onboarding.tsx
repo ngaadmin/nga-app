@@ -1,7 +1,7 @@
 import { VentureBuildingSmall, type BuildingFloorView } from "@/components/launchpad/venture-test/venture-building";
 import { OnboardingKit, OnboardingStack } from "@/components/launchpad/venture-test/venture-onboarding-art";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
-import { BTN_ORANGE } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_PRIMARY } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /** Onboarding art always shows the starting building: L1 open, the rest locked, no window lit. */
 function onboardingFloors(floors: readonly BuildingFloorView[]): BuildingFloorView[] {
@@ -51,7 +51,7 @@ export function VentureOnboarding({
       </h1>
       <p className="mx-[34px] mt-2.5 text-center text-base text-nga-slate">Finish a floor, unlock the next.</p>
       <div className="mt-auto px-6 pb-11 pt-6">
-        <button type="button" onClick={onStart} className={`${BTN_ORANGE} w-full`}>
+        <button type="button" onClick={onStart} className={`${BTN_PRIMARY}`}>
           Start building
         </button>
       </div>

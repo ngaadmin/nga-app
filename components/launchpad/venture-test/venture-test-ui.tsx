@@ -3,7 +3,19 @@ import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 
 export const BTN_BASE =
   "block rounded-full p-3.5 text-center font-heading text-[17px] font-bold leading-[1.5] disabled:cursor-not-allowed";
-export const BTN_ORANGE = `${BTN_BASE} bg-nga-cta text-white shadow-[0_4px_0_#c88202]`;
+/**
+ * Launchpad primary bottom button (Cath 4 Nov 9:59pm): compact 44px tap target,
+ * auto width centered, dark navy (nga-ink #031f82, the heading color) with white
+ * text (contrast about 13:1). Launchpad only; Academy buttons are untouched.
+ */
+export const BTN_PRIMARY =
+  "mx-auto flex h-11 min-w-[140px] items-center justify-center rounded-full bg-nga-ink px-6 text-center font-heading text-[15px] font-bold leading-none text-white disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-ink";
+/** Every Launchpad primary bottom button reads just "Continue". */
+export const PRIMARY_LABEL = "Continue";
+/** Older content copy still names the old label; show it as "Continue" on screen. */
+export function continueCopy(text: string): string {
+  return text.replace(/Confirm and continue/g, PRIMARY_LABEL);
+}
 export const BTN_CYAN = `${BTN_BASE} bg-nga-secondary text-white shadow-[0_4px_0_#099fb8]`;
 export const BTN_WHITE = `${BTN_BASE} bg-white text-nga-ink shadow-[inset_0_0_0_2px_#bde9fb]`;
 

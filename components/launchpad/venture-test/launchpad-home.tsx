@@ -114,6 +114,8 @@ function MoreTile({ pill, pillOpacity }: { pill: string | null; pillOpacity: num
 }
 
 /** Shared shape for the tile's two buttons: same height, corner radius and weight. */
+/** The bar never looks empty: a visible sliver even at 0 done. */
+const MIN_FILL_PCT = 6;
 const TILE_BTN = "h-11 min-w-11 rounded-xl border-2";
 
 /** Small shop-front thumbnail for a business, matching its Business Ideas tile. */
@@ -167,13 +169,13 @@ function InProgressTile({
           <p className="w-full truncate font-heading text-[14px] font-bold text-nga-ink" data-tile-level-name="">
             {v.floorName}
           </p>
-          {open.length > 0 && (
-            // Orange line under the level name: "2 open" and a chevron; expands the tile to list them.
+          {(
+            // Always shown (Cath 4 Nov 10:03pm), including "0 open". Orange line under the level name: "2 open" and a chevron; expands the tile to list them.
             <button
               type="button"
               aria-expanded={expanded}
               aria-controls={listId}
-              onClick={() => setExpanded((e) => !e)}
+              onClick={() => open.length > 0 && setExpanded((e) => !e)}
               className="-ml-1 flex h-6 items-center gap-0.5 rounded px-1 font-heading text-[13px] font-bold text-nga-cta-hover"
               data-open-tasks-toggle=""
             >
@@ -185,13 +187,17 @@ function InProgressTile({
           )}
         </div>
         <div className="flex flex-none items-center gap-1.5" data-tile-actions="">
-          {v.hasHandbook && onOpenHandbook && (
+          {onOpenHandbook && (
+            // Always in the row (Cath 4 Nov 10:04pm): a light, inactive placeholder until a step is complete.
             <button
               type="button"
               aria-label="Open handbook"
-              onClick={() => onOpenHandbook(v.ventureId)}
-              className={`${TILE_BTN} flex w-11 flex-none items-center justify-center border-nga-ink bg-white`}
-              data-handbook-button=""
+              aria-disabled={v.hasHandbook ? undefined : true}
+              onClick={v.hasHandbook ? () => onOpenHandbook(v.ventureId) : undefined}
+              className={`${TILE_BTN} flex w-11 flex-none items-center justify-center ${
+                v.hasHandbook ? "border-nga-ink bg-white" : "cursor-not-allowed border-nga-mist bg-nga-mist/40 opacity-40"
+              }`}
+              data-handbook-button={v.hasHandbook ? "" : "inactive"}
             >
               <HandbookIcon size={28} />
             </button>
@@ -199,7 +205,7 @@ function InProgressTile({
           <button
             type="button"
             onClick={() => onOpenVenture(v.ventureId)}
-            className={`${TILE_BTN} w-[94px] flex-none border-nga-cta bg-nga-cta px-3 font-heading text-[14px] font-bold text-white`}
+            className={`${TILE_BTN} min-w-[84px] flex-none border-nga-ink bg-nga-ink px-4 font-heading text-[14px] font-bold text-white`}
             data-continue-button=""
           >
             Continue
@@ -214,7 +220,7 @@ function InProgressTile({
         aria-valuemax={v.total}
         aria-valuenow={v.done}
       >
-        <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${pct}%` }} />
+        <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${Math.max(pct, MIN_FILL_PCT)}%` }} />
       </div>
       {open.length > 0 && expanded && (
         <ul id={listId} className="mt-1 border-t border-nga-mist" data-open-tasks-list="">

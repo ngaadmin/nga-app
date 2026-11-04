@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import styles from "@/components/launchpad/venture-test/venture-test.module.css";
-import { BackCrumb, BTN_ORANGE, CheckIcon, Heading, LockIcon } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BackCrumb, BTN_PRIMARY, CheckIcon, Heading, LockIcon } from "@/components/launchpad/venture-test/venture-test-ui";
 import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
@@ -120,7 +120,7 @@ export function CorridorFloor(props: CorridorProps) {
               {complete.nextLabel ? `${complete.nextLabel} is unlocked` : "Every floor is done"}
             </p>
             {complete.onLift && (
-              <button type="button" onClick={complete.onLift} className={`${BTN_ORANGE} absolute inset-x-11 top-[524px]`}>
+              <button type="button" onClick={complete.onLift} className={`${BTN_PRIMARY} absolute left-1/2 top-[524px] -translate-x-1/2`}>
                 Take the lift up
               </button>
             )}

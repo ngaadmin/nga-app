@@ -17,7 +17,7 @@ export const COME_BACK_LATER_COPY = {
   wrapUpListHeading: "Still to finish",
   /** Link on each open task row in the expanded home tile. */
   go: "Go",
-  /** Why Confirm and continue is off on a wrap-up with open steps. */
+  /** Why Continue is off on a wrap-up with open steps. */
   wrapUpBlocked: (count: number): string =>
     count === 1 ? "Finish the step above to confirm and continue." : `Finish the ${count} steps above to confirm and continue.`,
 } as const;

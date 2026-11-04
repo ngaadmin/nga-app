@@ -208,7 +208,7 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     fireEvent.change(within(editor).getByRole("textbox", { name: "Amount" }), { target: { value: "750" } });
     fireEvent.click(within(editor).getByRole("button", { name: "Save" }));
     expect(document.querySelector("[data-summary-section='my-goals']")?.textContent).toMatch(/750/);
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
 
     // Silver page, then the gold completion, then on to Planning.
     expect(document.querySelector("[data-silver-complete='l1-s1']")).toBeTruthy();
@@ -216,7 +216,7 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     expect(document.querySelector("[data-gold-completion='1']")).toBeTruthy();
     expect(screen.getByRole("heading", { name: PAYLOAD.floors[0]!.gold.completion!.heading })).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/\bNGA\b|\bXP\b/);
-    fireEvent.click(screen.getByRole("button", { name: PAYLOAD.floors[0]!.gold.completion!.buttonLabel }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-gold-completion]")).toBeNull();
   });
 });
@@ -312,7 +312,7 @@ describe("finishing a silver shows its handbook page", () => {
     next();
     expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
     expect(document.querySelector("[data-summary-section='who-might-want-it']")?.textContent).not.toMatch(/Not answered yet/);
-    fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
   });
@@ -330,7 +330,7 @@ describe("finishing a silver shows its handbook page", () => {
     fireEvent.click(screen.getByRole("button", { name: /Save to my workbook/ }));
     expect(document.querySelector("[data-wrap-up='identity']")).toBeTruthy();
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Confirm and continue/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-silver-complete='l2-s2']")).toBeTruthy();
     expect(document.querySelector("[data-silver-complete='l2-s2']")?.textContent).toMatch(/Build your identity: done!/);
     expect(document.querySelector("[data-silver-complete='l2-s2'] [data-what-you-built]")?.textContent).toBe("Design your logoName your business");
@@ -339,7 +339,7 @@ describe("finishing a silver shows its handbook page", () => {
     // Re-opening the finished identity wrap-up and finalizing again does not show the page.
     fireEvent.click(screen.getByRole("button", { name: /Build your identity/ }));
     fireEvent.click(screen.getByRole("button", { name: /See your logo/ }));
-    fireEvent.click(screen.getByRole("button", { name: /Confirm and continue/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
   });
@@ -390,7 +390,7 @@ describe("Come back to this later", () => {
     fireEvent.click(screen.getByRole("button", { name: silver.wrapUp!.type === "workbook-summary" ? silver.wrapUp!.heading : /logo/ }));
 
     // Wrap-up blocked: the open step is listed and Confirm and continue is off, with why.
-    const confirm = screen.getByRole("button", { name: "Confirm and continue" }) as HTMLButtonElement;
+    const confirm = screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
     expect(document.querySelector("[data-open-steps-hint]")?.textContent).toMatch(/Finish the step above/);
     // "Still to finish" is a light reminder, not a bordered box.
@@ -410,7 +410,7 @@ describe("Come back to this later", () => {
     }
     expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
     expect(document.querySelector("[data-open-steps]")).toBeNull();
-    expect((screen.getByRole("button", { name: "Confirm and continue" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("steps without the flag have no Come back to this later button", async () => {

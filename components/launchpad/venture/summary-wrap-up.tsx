@@ -13,7 +13,7 @@ import {
   type SummaryEdit,
 } from "@/lib/launchpad/content/summary";
 import { AccentLabel, BinderCard, HandRule, PAPER_ACCENT, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
-import { BTN_CYAN, BTN_ORANGE, BTN_WHITE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_CYAN, BTN_PRIMARY, PRIMARY_LABEL, continueCopy, BTN_WHITE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { toggleChoice } from "@/components/launchpad/venture/screens/choice-capture-screen";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
@@ -280,7 +280,7 @@ function BinderSection({
  * that edits a value in place on the page
  * (no navigating back) when the content marks it editable; values whose
  * edit would rewire another screen (the why ranking, the cause, the
- * currency) stay read-only. Confirm and continue goes on.
+ * currency) stay read-only. Continue goes on.
  */
 export function SummaryWrapUp({
   level,
@@ -312,7 +312,7 @@ export function SummaryWrapUp({
     <section className="flex flex-1 flex-col" data-wrap-up="workbook-summary">
       <TrailCrumb level={level} current={silverTitle} onBuilding={onBuilding} onCorridor={onCorridor} />
       <Heading>{wrapUp.heading}</Heading>
-      {wrapUp.body && <SubLine className="mb-3">{wrapUp.body}</SubLine>}
+      {wrapUp.body && <SubLine className="mb-3">{continueCopy(wrapUp.body)}</SubLine>}
       <BinderCard className="mt-1" data-workbook-binder="">
         {wrapUp.sections.map((section, i) => (
           <BinderSection
@@ -332,12 +332,12 @@ export function SummaryWrapUp({
         <OpenStepsHint count={openSteps.length} id="wrap-up-open-hint" />
         <button
           type="button"
-          className={`${BTN_ORANGE} w-full disabled:opacity-50`}
+          className={`${BTN_PRIMARY} disabled:opacity-50`}
           onClick={onFinalize}
           disabled={openSteps.length > 0}
           aria-describedby={openSteps.length > 0 ? "wrap-up-open-hint" : undefined}
         >
-          {wrapUp.finalizeLabel}
+          {PRIMARY_LABEL}
         </button>
       </div>
     </section>

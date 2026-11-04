@@ -226,8 +226,8 @@ function identitySilver(): LaunchpadSilver {
       type: "identity-wrap-up",
       answerKey: key,
       heading: "Your business identity",
-      body: "Tap a tab below to change a choice. When it looks right, tap Confirm and continue.",
-      finalizeLabel: "Confirm and continue",
+      body: "Tap a tab below to change a choice. When it looks right, tap Continue.",
+      finalizeLabel: "Continue",
       placeholder: true,
     },
   };

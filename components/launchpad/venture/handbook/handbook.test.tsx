@@ -319,10 +319,12 @@ describe("<LaunchpadHome> book button", () => {
     total: 2,
     hasHandbook,
   });
-  it("shows only once the business has a completed silver, and opens the handbook", () => {
+  it("is an inactive placeholder until a silver is done, then opens the handbook", () => {
     const open = vi.fn();
     const { rerender } = render(<LaunchpadHome inProgress={[card(false)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
-    expect(screen.queryByRole("button", { name: "Open handbook" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Open handbook" }));
+    expect(open).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Open handbook" }).getAttribute("aria-disabled")).toBe("true");
     rerender(<LaunchpadHome inProgress={[card(true)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
     fireEvent.click(screen.getByRole("button", { name: "Open handbook" }));
     expect(open).toHaveBeenCalledWith("dog-walking");

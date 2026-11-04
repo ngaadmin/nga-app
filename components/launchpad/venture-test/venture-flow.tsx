@@ -49,7 +49,7 @@ import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/ve
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
 import { handbookBusinessName, handbookPages, hasHandbook, milestoneView, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
-import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BackCrumb, BTN_PRIMARY, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
 import { identityChoices, isIdentityPicker } from "@/lib/launchpad/content/identity-content";
 import { isPageAnswered, isTaskAnswered, pageDefaultAnswer, taskPages, type TaskPage } from "@/lib/launchpad/content/task-pages";
 import { SummaryWrapUp } from "@/components/launchpad/venture/summary-wrap-up";
@@ -84,7 +84,7 @@ type View =
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number }
   /** The silver's wrap-up screen (e.g. the identity logo), once its bronzes are done. */
-  /** `justCompleted`: reached by finishing the silver, so Confirm and continue goes on to its handbook page. */
+  /** `justCompleted`: reached by finishing the silver, so Continue goes on to its handbook page. */
   | { screen: "wrap-up"; level: number; silverId: string; justCompleted?: boolean }
   /** The silver's handbook page, shown once right after the silver is finished. */
   | { screen: "silver-complete"; level: number; silverId: string }
@@ -367,7 +367,7 @@ export function VentureFlow({
           <div className="mx-5 -mt-1.5 flex items-center gap-3 pb-4">
             <button
               type="button"
-              className={`${BTN_ORANGE} min-w-0 flex-1`}
+              className={`${BTN_PRIMARY} min-w-0`}
               onClick={() => go(cta.kind === "rooftop" ? { screen: "rooftop" } : { screen: "corridor", level: cta.level, entering: true })}
             >
               {cta.label}

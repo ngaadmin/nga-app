@@ -37,6 +37,8 @@ export const TRACKER_COLUMNS = [
  */
 export const TRACKER_OPTIONS_COLUMN = "Options";
 export const TRACKER_INPUT_TYPE_COLUMN = "Input type";
+/** One option per cell: "Option 1", "Option 2", … (any count, read in number order). */
+export const TRACKER_OPTION_N_COLUMN = /^option\s*(\d+)$/i;
 export const TRACKER_INPUT_TYPES = ["multi-choice", "single-choice", "rank", "number", "text", "fill-in"] as const;
 export type TrackerInputType = (typeof TRACKER_INPUT_TYPES)[number];
 
@@ -110,6 +112,11 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
   };
   const optionsCol = headerAt(TRACKER_OPTIONS_COLUMN);
   const inputTypeCol = headerAt(TRACKER_INPUT_TYPE_COLUMN);
+  const optionNCols = (header?.values ?? [])
+    .map((v, idx) => ({ idx, n: idx >= TRACKER_COLUMNS.length ? TRACKER_OPTION_N_COLUMN.exec(v.trim())?.[1] : undefined }))
+    .filter((c): c is { idx: number; n: string } => c.n !== undefined)
+    .sort((a, b) => Number(a.n) - Number(b.n))
+    .map((c) => c.idx);
   const rows: TrackerRow[] = [];
   for (const { row, values } of body) {
     if (values.every((v) => !v.trim())) continue;
@@ -119,7 +126,13 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
       continue;
     }
     if (level > maxLevel) continue;
-    const options = optionsCol === undefined ? [] : splitOptionsCell(cellText(values[optionsCol]));
+    // Option N cells win; then the pipe-separated Options cell; else [] (the builder parses the sentence).
+    const optionCells = optionNCols.map((i) => cellText(values[i]).replace(/\s+/g, " ")).filter(Boolean);
+    const options = optionCells.length
+      ? optionCells
+      : optionsCol === undefined
+        ? []
+        : splitOptionsCell(cellText(values[optionsCol]));
     const rawType = inputTypeCol === undefined ? "" : cellText(values[inputTypeCol]).toLowerCase();
     const inputType = (TRACKER_INPUT_TYPES as readonly string[]).includes(rawType) ? (rawType as TrackerInputType) : undefined;
     if (rawType && !inputType) {

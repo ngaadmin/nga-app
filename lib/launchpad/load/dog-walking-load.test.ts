@@ -69,6 +69,43 @@ describe("dog walking load reader", () => {
     expect(why.items).toHaveLength(5);
   });
 
+  it("Option N columns win over the pipe Options column and keep the current ids", () => {
+    const { load, issues } = build(
+      withColumns(["Input type", "Option 2", "Option 1", "Options", "Option 3"], {
+        2: ["multi-choice", "Grooming", "Dog walking", "Ignored | Pipe", "Pet  sitting"],
+        4: ["single-choice", "", "", "Animals | Environment", ""],
+      }),
+    );
+    expect(issues).toEqual([]);
+    const offer = screenOf(load, "l1-s1-b1");
+    if (offer.type !== "choice-capture") throw new Error("expected choice-capture");
+    expect(offer.options).toEqual([
+      { id: "dog-walking", label: "Dog walking" },
+      { id: "grooming", label: "Grooming" },
+      { id: "pet-sitting", label: "Pet sitting" },
+    ]);
+    const cause = screenOf(load, "l1-s1-b3");
+    if (cause.type !== "choice-capture") throw new Error("expected choice-capture");
+    expect(cause.options.map((o) => o.id)).toEqual(["animals", "environment"]);
+  });
+
+  it("the 4 Nov options-columns workbook layout rebuilds the committed load", () => {
+    const rows: Record<number, string[]> = {
+      2: ["multi-choice", "Dog walking", "Grooming", "Bookings", "Training", "Manage bookings for others", "", ""],
+      3: ["rank", "Make money", "Help others", "Learn new skills", "Be my own boss", "Support a cause", "", ""],
+      4: ["single-choice", "Animals", "Environment", "Kids in need", "Food for people who are hungry", "Helping the elderly", "", ""],
+      9: ["single-choice", "Schedule", "Prices", "Customers", "Income", "Location", "Hours", "Creative control"],
+      6: ["fill-in", "", "", "", "", "", "", ""],
+      11: ["fill-in", "", "", "", "", "", "", ""],
+      14: ["fill-in", "", "", "", "", "", "", ""],
+      15: ["fill-in", "", "", "", "", "", "", ""],
+    };
+    const cols = ["Input type", ...Array.from({ length: 7 }, (_, i) => `Option ${i + 1}`)];
+    const { load, issues } = build(withColumns(cols, rows));
+    expect(issues).toEqual([]);
+    expect({ ...load, source: COMMITTED.source }).toEqual(COMMITTED);
+  });
+
   it("blank structured cells fall back to parsing the sentence", () => {
     const { load, issues } = build(withColumns(["Input type", "Options"], {}));
     expect(issues).toEqual([]);

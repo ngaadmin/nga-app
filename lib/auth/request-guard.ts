@@ -69,13 +69,33 @@ export function isAllowedBrowserOrigin(request: Request): boolean {
   });
 }
 
+/**
+ * Secret for `Authorization: Bearer` API calls.
+ *
+ * API_BEARER_SECRET is the dedicated value. It is kept apart from
+ * NGA_TOKEN_SECRET, which signs password-reset, consent and Parent PIN
+ * tokens, so a leak of one does not unlock the other.
+ *
+ * Until API_BEARER_SECRET is set, the old values still work (EMAIL_API_SECRET,
+ * then NGA_TOKEN_SECRET) so nothing breaks on deploy. Once it is set, only
+ * API_BEARER_SECRET is accepted and NGA_TOKEN_SECRET no longer authorizes
+ * bearer calls.
+ */
+export function apiBearerSecret(): string | null {
+  const dedicated = process.env.API_BEARER_SECRET?.trim();
+  if (dedicated) return dedicated;
+  return (
+    process.env.EMAIL_API_SECRET?.trim() ||
+    process.env.NGA_TOKEN_SECRET?.trim() ||
+    null
+  );
+}
+
 function hasValidBearerSecret(request: Request): boolean | "invalid" {
   const auth = request.headers.get("authorization")?.trim();
   if (!auth) return false;
 
-  const secret =
-    process.env.EMAIL_API_SECRET?.trim() ||
-    process.env.NGA_TOKEN_SECRET?.trim();
+  const secret = apiBearerSecret();
   if (!secret) return "invalid";
 
   const expected = `Bearer ${secret}`;
@@ -88,7 +108,8 @@ export type RequestAuthResult =
 
 /**
  * Authorize a mutating browser/API call:
- * - Bearer EMAIL_API_SECRET / NGA_TOKEN_SECRET, or
+ * - Bearer API_BEARER_SECRET (falls back to EMAIL_API_SECRET, then
+ *   NGA_TOKEN_SECRET, until API_BEARER_SECRET is set), or
  * - same-origin browser request.
  *
  * Production requires Origin or Referer on the deployment allowlist (not the

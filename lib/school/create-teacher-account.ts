@@ -18,8 +18,12 @@ import { parseMasteryCohort, type MasteryCohort } from "@/lib/dashboard/mastery-
 import { normalizeEmailAddress } from "@/lib/validation/email";
 import { recordTermsAcceptance } from "@/lib/legal/record-terms-acceptance";
 import { checkTermsAcceptance } from "@/lib/legal/terms-consent";
+import {
+  ADULT_PASSWORD_MIN_LENGTH,
+  ADULT_PASSWORD_TOO_SHORT_ERROR,
+} from "@/lib/auth/password-policy";
 
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = ADULT_PASSWORD_MIN_LENGTH;
 const DEFAULT_SEAT_CAP = 30;
 const TEACHER_SIGNUP_ERROR = "Could not create the teacher account. Try again.";
 
@@ -92,7 +96,7 @@ export async function createTeacherAccount(input: {
   if (input.password.length < MIN_PASSWORD_LENGTH) {
     return {
       success: false,
-      error: "Use at least 6 characters for your password.",
+      error: ADULT_PASSWORD_TOO_SHORT_ERROR,
     };
   }
 

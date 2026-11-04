@@ -3,8 +3,10 @@
 import { useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import type { HandbookPageView } from "@/lib/launchpad/venture-test/handbook";
-import { handbookVisionSample } from "@/lib/launchpad/venture-test/handbook-sample";
-import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
+import type { LaunchpadSummarySection } from "@/lib/launchpad/content/types";
+import { sectionLines, summaryCatalog } from "@/lib/launchpad/content/summary";
+import { useIdentityAnswer, useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
@@ -27,7 +29,7 @@ function HandRule() {
 }
 
 /** Accent section label (Fredoka, light blue) with its underline swash. */
-function AccentLabel({ children, doodle, sample }: { children: ReactNode; doodle?: ReactNode; sample?: boolean }) {
+function AccentLabel({ children, doodle }: { children: ReactNode; doodle?: ReactNode }) {
   return (
     <div className="flex items-end gap-2">
       <h3 className={`${NAME_FONT_CLASS["fredoka-semibold"]} mt-1 inline-flex flex-col gap-px text-[15.5px] font-semibold tracking-[0.01em]`} style={{ color: ACCENT }}>
@@ -37,11 +39,6 @@ function AccentLabel({ children, doodle, sample }: { children: ReactNode; doodle
         </svg>
       </h3>
       {doodle}
-      {sample && (
-        <span className="mb-1.5 ml-auto rounded border border-dashed border-[#C9CED6] px-1.5 text-[10px] font-medium uppercase tracking-[0.06em] text-[#6B7280]" data-sample="">
-          Sample
-        </span>
-      )}
     </div>
   );
 }
@@ -110,18 +107,65 @@ function EditPencil() {
   );
 }
 
+/** Section lines from the saved answers (the same lines the wrap-up shows). */
+function useSectionLines(sections: readonly LaunchpadSummarySection[]) {
+  const ctx = useLaunchpadAnswers();
+  const catalog = summaryCatalog(ctx?.floors ?? []);
+  return sections.map((section) => ({ section, lines: sectionLines(section, ctx?.answers, catalog) }));
+}
+
+/**
+ * One handbook section in the r4 look: a list answer as product tag chips,
+ * a single text answer as the big quote, anything else as plain lines.
+ */
+function HandbookSection({
+  section,
+  lines,
+  doodle,
+}: {
+  section: LaunchpadSummarySection;
+  lines: readonly string[];
+  doodle?: ReactNode;
+}) {
+  return (
+    <div data-handbook-section={section.id}>
+      <HandRule />
+      <AccentLabel doodle={doodle}>{section.label}</AccentLabel>
+      {section.display === "list" ? (
+        <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label={section.label}>
+          {lines.map((l) => (
+            <TagChip key={l}>{l}</TagChip>
+          ))}
+        </ul>
+      ) : section.display === "text" && lines.length === 1 ? (
+        <div className="relative mt-3 pl-7" data-quote="">
+          <svg className="absolute left-0 top-1 opacity-40" width="22" height="18" viewBox="0 0 44 36" fill={ACCENT} aria-hidden="true">
+            <path d="M4 36V22C4 10 10 3 19 1l2 5C15 8 12 13 12 18h8v18Z" />
+            <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
+          </svg>
+          <p className="font-heading text-[19px] font-semibold leading-[1.42] tracking-[-0.005em] text-[#111827]">{lines[0]}</p>
+        </div>
+      ) : (
+        <SummaryLines display={section.display} lines={lines} className="mt-3 text-[15px] leading-[1.45] text-[#111827]" />
+      )}
+    </div>
+  );
+}
+
 /**
  * "Vision and products" (r4): the logo and name drawn from the saved identity
  * answer (the same answer the lessons and the wrap-up write), an Edit button
- * when editable, then "Our vision" and "What we sell". The seed has no vision
- * or product answers yet, so those show clearly marked sample text.
+ * when editable, then the identity wrap-up's handbook sections ("Our vision",
+ * "What we sell") from the learner's saved answers. A section with no answer
+ * yet is left off.
  */
 function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPageView; editable: boolean; iconVentureId: string }) {
-  const answerKey = page.silver.wrapUp!.answerKey;
+  const wrapUp = page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
+  const answerKey = wrapUp?.answerKey ?? "";
   const { answer, update } = useIdentityAnswer(answerKey);
   const choices = identityChoices(page.silver, answerKey, iconVentureId);
   const [editing, setEditing] = useState(false);
-  const sample = handbookVisionSample(iconVentureId);
+  const sections = useSectionLines(wrapUp?.handbookSections ?? []).filter((s) => s.lines.length);
   const fontLabel = choices.fonts.find((f) => f.id === answer.font)?.label;
   return (
     <>
@@ -155,26 +199,37 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
           </button>
         </div>
       )}
+      {sections.map(({ section, lines }, i) => (
+        <HandbookSection
+          key={section.id}
+          section={section}
+          lines={lines}
+          doodle={i === sections.length - 1 ? <Doodle ventureId={iconVentureId} /> : undefined}
+        />
+      ))}
+    </>
+  );
+}
 
-      <HandRule />
-      <AccentLabel sample>Our vision</AccentLabel>
-      <div className="relative mt-3 pl-7" data-vision="">
-        <svg className="absolute left-0 top-1 opacity-40" width="22" height="18" viewBox="0 0 44 36" fill={ACCENT} aria-hidden="true">
-          <path d="M4 36V22C4 10 10 3 19 1l2 5C15 8 12 13 12 18h8v18Z" />
-          <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
-        </svg>
-        <p className="font-heading text-[19px] font-semibold leading-[1.42] tracking-[-0.005em] text-[#111827]">{sample.vision}</p>
-      </div>
-
-      <HandRule />
-      <AccentLabel sample doodle={<Doodle ventureId={iconVentureId} />}>
-        What we sell
-      </AccentLabel>
-      <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label="What we sell">
-        {sample.products.map((p) => (
-          <TagChip key={p}>{p}</TagChip>
-        ))}
-      </ul>
+/** A workbook-summary silver: its title, then the wrap-up's sections from saved answers. */
+function SummaryPageBody({ page, iconVentureId }: { page: HandbookPageView; iconVentureId: string }) {
+  const wrapUp = page.silver.wrapUp?.type === "workbook-summary" ? page.silver.wrapUp : null;
+  const sections = useSectionLines(wrapUp?.sections ?? []);
+  return (
+    <>
+      <TopRow eyebrow={`${page.floorName} · Silver ${page.silverNumber}`} done={page.done} />
+      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
+      {sections.map(({ section, lines }, i) =>
+        lines.length ? (
+          <HandbookSection key={section.id} section={section} lines={lines} doodle={i === 0 ? <Doodle ventureId={iconVentureId} /> : undefined} />
+        ) : (
+          <div key={section.id} data-handbook-section={section.id}>
+            <HandRule />
+            <AccentLabel>{section.label}</AccentLabel>
+            <p className="mt-2 text-[14px] italic text-[#9CA3AF]">Not answered yet</p>
+          </div>
+        ),
+      )}
     </>
   );
 }
@@ -200,8 +255,9 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
  * One handbook page (one completed silver), drawn on the r4 paper card.
  * `editable` comes from the entry point and the silver's completion (see
  * isHandbookPageEditable): from the building, completed identity pages get
- * an Edit button; from home everything is read-only. Placeholder pages have
- * nothing to edit.
+ * an Edit button; from home everything is read-only. Summary pages are read
+ * here (their values are edited on the silver's wrap-up). Placeholder pages
+ * have nothing to edit.
  */
 export function HandbookPage({ page, editable, iconVentureId }: { page: HandbookPageView; editable: boolean; iconVentureId: string }) {
   return (
@@ -213,6 +269,8 @@ export function HandbookPage({ page, editable, iconVentureId }: { page: Handbook
     >
       {page.kind === "identity" ? (
         <IdentityPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
+      ) : page.kind === "summary" ? (
+        <SummaryPageBody page={page} iconVentureId={iconVentureId} />
       ) : (
         <PlaceholderPageBody page={page} />
       )}

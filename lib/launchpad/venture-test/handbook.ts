@@ -7,7 +7,10 @@
  * content, so the handbook always reads the same saved answers the lessons
  * write (single source of truth).
  */
-import type { LaunchpadFloor, LaunchpadSilver } from "@/lib/launchpad/content/types";
+import type { LaunchpadFloor, LaunchpadSilver, LaunchpadTextField } from "@/lib/launchpad/content/types";
+import { fieldsAnswer, identityAnswerOf, rankingAnswer, selectionAnswer, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import type { CaptureScreen } from "@/lib/launchpad/content/task-pages";
+import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { clampBusinessName, IDENTITY_ANSWER_VERSION, type BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
@@ -30,8 +33,12 @@ export type HandbookPageView = {
   /** 1-based position of the silver on its floor. */
   silverNumber: number;
   silver: LaunchpadSilver;
-  /** "identity" pages render the saved identity answer; every other silver gets a placeholder page. */
-  kind: "identity" | "placeholder";
+  /**
+   * "identity": the saved identity answer (logo and name) plus its handbook
+   * sections; "summary": a workbook-summary silver's sections from saved
+   * answers; "placeholder": any other silver.
+   */
+  kind: "identity" | "summary" | "placeholder";
   /** Titles of the silver's finished bronzes (written out under plain headings on placeholder pages). */
   bronzeTitles: string[];
   done: true;
@@ -58,7 +65,7 @@ export function handbookPages(progress: VentureTestProgress, floors: readonly La
       floorName: floor.name,
       silverNumber,
       silver,
-      kind: silver.wrapUp?.type === "identity-wrap-up" ? "identity" : "placeholder",
+      kind: silver.wrapUp?.type === "identity-wrap-up" ? "identity" : silver.wrapUp?.type === "workbook-summary" ? "summary" : "placeholder",
       bronzeTitles: silver.bronzes.filter((b) => isBronzeDone(progress, b)).map((b) => b.title),
       done: true,
     }));
@@ -113,19 +120,22 @@ export function handbookTabTarget(pages: readonly HandbookPageView[], level: num
 export function handbookBusinessName(progress: VentureTestProgress, floors: readonly LaunchpadFloor[], fallback: string): string {
   for (const { silver } of orderedSilvers(floors)) {
     const key = silver.wrapUp?.type === "identity-wrap-up" ? silver.wrapUp.answerKey : undefined;
-    const name = key ? progress.answers?.[key]?.name?.trim() : undefined;
+    const name = key ? identityAnswerOf(progress.answers, key)?.name?.trim() : undefined;
     if (name) return name;
   }
   return fallback;
 }
 
 /**
- * TEST-ONLY. A `?complete=` shortcut marks identity silvers done without the
- * learner ever picking anything. So the handbook's identity page has a logo to
- * show, fill a sample answer for any completed identity silver that has no
- * saved picks yet: the first shape and icon, the second color (light blue, as
- * in the r4 handbook mock), the first font, the logo color for the name and
- * the business title as the name. Existing answers are never overwritten.
+ * TEST-ONLY. A `?complete=` shortcut marks silvers done without the learner
+ * ever answering anything. So the wrap-ups and handbook pages have something
+ * real to show, fill sample answers for completed silvers that have none:
+ * - identity: the first shape and icon, the second color (light blue, as in
+ *   the r4 handbook mock), the first font, the logo color for the name and the
+ *   business title as the name;
+ * - capture screens (choices, ranking, short text, every goal page): see
+ *   shortcutSampleAnswer.
+ * Existing answers are never overwritten.
  */
 export function withShortcutSampleAnswers(
   progress: VentureTestProgress,
@@ -135,9 +145,20 @@ export function withShortcutSampleAnswers(
 ): VentureTestProgress {
   let next = progress;
   for (const { silver } of orderedSilvers(floors)) {
+    if (!isSilverDone(progress, silver)) continue;
+    for (const b of silver.bronzes)
+      for (const t of b.tasks)
+        // Every goal page, whatever the (sample) ranking leaves out, so later edits have values.
+        for (const screen of captureScreensOf(t.screens)) {
+          if (next.answers?.[screen.answerKey]) continue;
+          const sample = shortcutSampleAnswer(screen);
+          if (sample) next = setProgressAnswer(next, screen.answerKey, sample);
+        }
+  }
+  for (const { silver } of orderedSilvers(floors)) {
     if (silver.wrapUp?.type !== "identity-wrap-up" || !isSilverDone(progress, silver)) continue;
     const key = silver.wrapUp.answerKey;
-    const saved = progress.answers?.[key];
+    const saved = identityAnswerOf(progress.answers, key);
     if (saved && (saved.shape || saved.color || saved.icon || saved.name || saved.font || saved.nameColor)) continue;
     const c = identityChoices(silver, key, iconVentureId);
     const sample: BusinessIdentityAnswer = {
@@ -154,4 +175,56 @@ export function withShortcutSampleAnswers(
     next = setProgressAnswer(next, key, sample);
   }
   return next;
+}
+
+function captureScreensOf(screens: LaunchpadSilver["bronzes"][number]["tasks"][number]["screens"]): CaptureScreen[] {
+  const out: CaptureScreen[] = [];
+  for (const sc of screens) {
+    if (sc.type === "choice-capture" || sc.type === "rank-order" || sc.type === "short-text") out.push(sc);
+    if (sc.type === "goal-loop") for (const g of sc.goals) out.push(g.screen);
+  }
+  return out;
+}
+
+/** TEST-ONLY sample text for short-text blanks, by "answerKey.field" (dog walking reads naturally). */
+const SAMPLE_TEXT: Record<string, string> = {
+  "l1-goal-help-others.benefit": "have happy, tired dogs after a long day",
+  "l1-goal-learn-new-skills.skill": "how to handle two dogs at once",
+  "l2-sell.serviceDescription": "30-minute neighborhood walks for small and medium dogs, with a photo after each walk",
+  "l2-sell.availability": "weekday afternoons from 3 to 6 and Saturday mornings",
+  "l2-demand.specificInterest": "after-school walks on weekdays",
+};
+
+const SAMPLE_NUMBER: Record<string, number> = { amount: 500, timeframeNumber: 6, donatePercent: 10, numberAsked: 3 };
+
+function sampleFieldValue(answerKey: string, f: LaunchpadTextField): string | number | undefined {
+  switch (f.input) {
+    case "text":
+      return SAMPLE_TEXT[`${answerKey}.${f.name}`] ?? `sample ${f.label.toLowerCase()}`;
+    case "integer": {
+      const n = SAMPLE_NUMBER[f.name] ?? f.min ?? 1;
+      return Math.min(Math.max(n, f.min ?? 0), f.max ?? n);
+    }
+    case "currency":
+      return readCurrencyPreference();
+    case "choice":
+      return f.options?.[0]?.id;
+  }
+}
+
+/**
+ * TEST-ONLY sample for one capture screen: the first two picks of a multi
+ * choice (one for single), the authored ranking with nothing struck, and a
+ * value in every blank. An optional screen (the extra goal) is left empty.
+ */
+export function shortcutSampleAnswer(screen: CaptureScreen): LaunchpadAnswer | null {
+  if (screen.type === "choice-capture") return selectionAnswer(screen.options.slice(0, screen.mode === "multi" ? 2 : 1).map((o) => o.id));
+  if (screen.type === "rank-order") return rankingAnswer(screen.items.map((i) => i.id));
+  if (screen.optional) return null;
+  const values: Record<string, string | number> = {};
+  for (const f of screen.fields) {
+    const v = sampleFieldValue(screen.answerKey, f);
+    if (v !== undefined) values[f.name] = v;
+  }
+  return fieldsAnswer(values);
 }

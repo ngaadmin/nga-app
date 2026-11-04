@@ -1,5 +1,14 @@
 /** Payload shape version stored in launchpad_venture_versions.payload. Bump on a shape change. */
-export const LAUNCHPAD_PAYLOAD_SCHEMA_VERSION = 1;
+export const LAUNCHPAD_PAYLOAD_SCHEMA_VERSION = 2;
+
+/**
+ * Versions this app can read. v2 adds the capture templates (context,
+ * choice-capture, rank-order, short-text, goal-loop), the workbook-summary
+ * wrap-up and the gold completion screen; a v1 payload is a valid v2 one
+ * without them, so it still reads.
+ */
+export const LAUNCHPAD_READABLE_SCHEMA_VERSIONS = [1, 2] as const;
+export type LaunchpadReadableSchemaVersion = (typeof LAUNCHPAD_READABLE_SCHEMA_VERSIONS)[number];
 
 /**
  * Ventures whose content is read from launchpad_venture_versions when the

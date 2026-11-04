@@ -1,6 +1,8 @@
 import {
+  LAUNCHPAD_FIELD_INPUTS,
   LAUNCHPAD_FLOOR_TYPES,
   LAUNCHPAD_PLACEHOLDER_BLOCK_KINDS,
+  LAUNCHPAD_SUMMARY_DISPLAYS,
   LAUNCHPAD_WRAP_UP_TYPES,
   LOGO_PICKER_STEPS,
   NAME_PICKER_STEPS,
@@ -15,7 +17,7 @@ import {
   NAME_COLOR_IDS,
   NAME_FONTS,
 } from "@/lib/launchpad/content/identity";
-import { LAUNCHPAD_PAYLOAD_SCHEMA_VERSION } from "@/lib/launchpad/content/schema-version";
+import { LAUNCHPAD_READABLE_SCHEMA_VERSIONS } from "@/lib/launchpad/content/schema-version";
 
 /** Most plaques a floor wall holds (the building art draws one window each). */
 export const LAUNCHPAD_MAX_SILVERS_PER_FLOOR = 6;
@@ -84,7 +86,7 @@ export function checkLaunchpadVenturePayload(value: unknown, expectedVentureId?:
 
 function checkOrThrow(value: unknown, expectedVentureId?: string): void {
   if (!isObj(value)) fail("Payload is not an object.");
-  if (value.schemaVersion !== LAUNCHPAD_PAYLOAD_SCHEMA_VERSION) {
+  if (!(LAUNCHPAD_READABLE_SCHEMA_VERSIONS as readonly unknown[]).includes(value.schemaVersion)) {
     fail(`Unsupported schemaVersion ${String(value.schemaVersion)}.`);
   }
   const ventureId = value.ventureId;
@@ -98,6 +100,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
     if (ids.has(raw)) fail(`Id ${raw} is used twice.`);
     ids.add(raw);
   };
+  const answers: Answers = new Map();
   const floors = list(value.floors, "floors");
   floors.forEach((floor, fi) => {
     const fw = `Floor ${fi + 1}`;
@@ -110,6 +113,15 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
     if (!isObj(floor.gold)) fail(`${fw} gold is missing.`);
     id(floor.gold.id, `${fw} gold`);
     text(floor.gold.title, `${fw} gold title`);
+    if (floor.gold.completion !== undefined) {
+      const c = floor.gold.completion;
+      if (!isObj(c)) fail(`${fw} gold completion is malformed.`);
+      text(c.heading, `${fw} gold completion heading`);
+      text(c.body, `${fw} gold completion body`);
+      text(c.guidance, `${fw} gold completion guidance`, true);
+      text(c.recap, `${fw} gold completion recap`, true);
+      text(c.buttonLabel, `${fw} gold completion buttonLabel`);
+    }
     list(floor.silvers, `${fw} silvers`, 1, LAUNCHPAD_MAX_SILVERS_PER_FLOOR).forEach((silver, si) => {
       const sw = `${fw} silver ${si + 1}`;
       if (!isObj(silver)) fail(`${sw} is malformed.`);
@@ -137,18 +149,49 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
           text(task.title, `${tw} title`);
           bool(task.placeholder, `${tw} placeholder`);
           text(task.ctaLabel, `${tw} ctaLabel`, true);
+          if (task.paged !== undefined) bool(task.paged, `${tw} paged`);
+          if (task.kind !== undefined && task.kind !== "in-app" && task.kind !== "real-world") fail(`${tw} has unknown kind ${String(task.kind)}.`);
           list(task.screens, `${tw} screens`).forEach((screen, ki) => {
-            checkScreen(screen, `${tw} screen ${ki + 1}`, id);
+            checkScreen(screen, `${tw} screen ${ki + 1}`, id, answers);
             notePicker(screen);
           });
         });
       });
-      if (silver.wrapUp !== undefined) checkWrapUp(silver.wrapUp, `${sw} wrap-up`, pickerSteps);
+      if (silver.wrapUp !== undefined) checkWrapUp(silver.wrapUp, `${sw} wrap-up`, pickerSteps, answers);
     });
   });
 }
 
-function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: string) => void): void {
+/**
+ * Answer keys saved so far, in course order, with the kind of answer each
+ * saves. A screen may only read (carry, order from, summarize) a key saved
+ * on an earlier screen; picker steps share one key, so a repeat is fine for
+ * those and rejected for capture screens.
+ */
+type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity";
+type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
+
+function answerKey(screen: Obj, where: string): string {
+  if (typeof screen.answerKey !== "string" || !ANSWER_KEY_RE.test(screen.answerKey)) fail(`${where} has no valid answerKey.`);
+  return screen.answerKey;
+}
+
+function saves(answers: Answers, screen: Obj, kind: AnswerKind, where: string): void {
+  const key = answerKey(screen, where);
+  const prior = answers.get(key);
+  if (prior && !(prior.kind === "business-identity" && kind === "business-identity")) fail(`${where} answerKey ${key} is used twice.`);
+  if (!prior) answers.set(key, { kind, screen });
+}
+
+function reads(answers: Answers, key: unknown, kinds: readonly AnswerKind[], where: string): Obj {
+  if (typeof key !== "string") fail(`${where} names no answer.`);
+  const found = answers.get(key);
+  if (!found) fail(`${where} reads ${key}, which no earlier screen saves.`);
+  if (!kinds.includes(found.kind)) fail(`${where} reads ${key}, which is a ${found.kind} answer.`);
+  return found.screen;
+}
+
+function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: string) => void, answers: Answers): void {
   if (!isObj(screen)) fail(`${where} is malformed.`);
   id(screen.id, where);
   text(screen.heading, `${where} heading`, true);
@@ -172,14 +215,116 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
     case "logo-picker":
       checkPickerBase(screen, where);
       checkLogoStep(screen, where);
+      saves(answers, screen, "business-identity", where);
       return;
     case "name-picker":
       checkPickerBase(screen, where);
       checkNameStep(screen, where);
+      saves(answers, screen, "business-identity", where);
       return;
+    case "context":
+      text(screen.context, `${where} context`);
+      text(screen.guidance, `${where} guidance`, true);
+      return;
+    case "choice-capture":
+      checkCaptureBase(screen, where);
+      if (screen.mode !== "single" && screen.mode !== "multi") fail(`${where} mode must be single or multi.`);
+      options(screen.options, where);
+      text(screen.summaryLabel, `${where} summaryLabel`, true);
+      saves(answers, screen, screen.mode === "single" ? "selection-single" : "selection-multi", where);
+      return;
+    case "rank-order":
+      checkCaptureBase(screen, where);
+      options(screen.items, where);
+      if ((screen.items as unknown[]).length < 2) fail(`${where} needs at least 2 items.`);
+      text(screen.notApplicableLabel, `${where} notApplicableLabel`);
+      saves(answers, screen, "ranking", where);
+      return;
+    case "short-text":
+      checkShortText(screen, where, answers);
+      saves(answers, screen, "fields", where);
+      return;
+    case "goal-loop": {
+      const ranking = reads(answers, screen.orderFrom, ["ranking"], `${where} orderFrom`);
+      const itemIds = (ranking.items as Obj[]).map((o) => String(o.id));
+      list(screen.skipRankItemIds, `${where} skipRankItemIds`, 0).forEach((raw) => {
+        if (!itemIds.includes(String(raw))) fail(`${where} skips unknown item ${String(raw)}.`);
+      });
+      const seen = new Set<string>();
+      list(screen.goals, `${where} goals`).forEach((goal, gi) => {
+        const gw = `${where} goal ${gi + 1}`;
+        if (!isObj(goal)) fail(`${gw} is malformed.`);
+        text(goal.title, `${gw} title`);
+        if (goal.position !== "ranked" && goal.position !== "after-ranked" && goal.position !== "last") fail(`${gw} has unknown position.`);
+        if (goal.position === "ranked") {
+          if (typeof goal.rankItemId !== "string" || !itemIds.includes(goal.rankItemId)) fail(`${gw} rankItemId is not an item of ${String(screen.orderFrom)}.`);
+          if (seen.has(goal.rankItemId)) fail(`${gw} repeats item ${goal.rankItemId}.`);
+          seen.add(goal.rankItemId);
+        }
+        if (!isObj(goal.screen) || (goal.screen.type !== "short-text" && goal.screen.type !== "choice-capture")) {
+          fail(`${gw} screen must be short-text or choice-capture.`);
+        }
+        checkScreen(goal.screen, `${gw} screen`, id, answers);
+      });
+      return;
+    }
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
   }
+}
+
+function checkCaptureBase(screen: Obj, where: string, promptOptional = false): void {
+  answerKey(screen, where);
+  text(screen.prompt, `${where} prompt`, promptOptional);
+  text(screen.guidance, `${where} guidance`, true);
+}
+
+const FIELD_NAME_RE = /^[a-z][A-Za-z0-9]{0,47}$/;
+
+function checkShortText(screen: Obj, where: string, answers: Answers): void {
+  checkCaptureBase(screen, where, true);
+  if (screen.mode !== "goal" && screen.mode !== "paragraph") fail(`${where} mode must be goal or paragraph.`);
+  const names = new Set<string>();
+  list(screen.fields, `${where} fields`).forEach((raw, i) => {
+    const fw = `${where} field ${i + 1}`;
+    if (!isObj(raw) || typeof raw.name !== "string" || !FIELD_NAME_RE.test(raw.name)) fail(`${fw} has no valid name.`);
+    if (names.has(raw.name)) fail(`${where} field ${raw.name} is used twice.`);
+    names.add(raw.name);
+    if (!(LAUNCHPAD_FIELD_INPUTS as readonly unknown[]).includes(raw.input)) fail(`${fw} has unknown input ${String(raw.input)}.`);
+    text(raw.label, `${fw} label`);
+    text(raw.hint, `${fw} hint`, true);
+    if (raw.input === "text" && !(Number.isInteger(raw.maxLength) && (raw.maxLength as number) > 0)) fail(`${fw} needs a maxLength.`);
+    if (raw.input === "integer") {
+      if (!Number.isInteger(raw.min) || !Number.isInteger(raw.max) || (raw.min as number) > (raw.max as number)) fail(`${fw} needs min and max.`);
+    }
+    if (raw.input === "choice") options(raw.options, fw);
+  });
+  const used = new Set<string>();
+  list(screen.parts, `${where} parts`).forEach((part, i) => {
+    const pw = `${where} part ${i + 1}`;
+    if (!isObj(part)) fail(`${pw} is malformed.`);
+    if (part.kind === "text") {
+      if (typeof part.text !== "string" || !part.text) fail(`${pw} text is missing.`);
+      text(part.text.trim() || ".", `${pw} text`);
+    } else if (part.kind === "field") {
+      if (typeof part.field !== "string" || !names.has(part.field)) fail(`${pw} names unknown field ${String(part.field)}.`);
+      used.add(part.field);
+    } else if (part.kind === "carried") {
+      reads(answers, part.answerKey, ["selection-single"], `${pw} carried`);
+      text(part.label, `${pw} label`);
+    } else fail(`${pw} has unknown kind ${String(part.kind)}.`);
+  });
+  if (screen.extraFields !== undefined) {
+    list(screen.extraFields, `${where} extraFields`).forEach((name) => {
+      if (typeof name !== "string" || !names.has(name)) fail(`${where} extraFields names unknown field ${String(name)}.`);
+      if (used.has(name)) fail(`${where} field ${name} is both in the sentence and extra.`);
+      used.add(name);
+    });
+  }
+  const unused = [...names].filter((n) => !used.has(n));
+  if (unused.length) fail(`${where} fields ${unused.join(", ")} are never shown.`);
+  text(screen.notApplicableLabel, `${where} notApplicableLabel`, true);
+  if (screen.optional !== undefined) bool(screen.optional, `${where} optional`);
 }
 
 function checkPickerBase(screen: Obj, where: string): void {
@@ -252,15 +397,91 @@ function checkNameStep(screen: Obj, where: string): void {
   }
 }
 
+/**
+ * Summary sections read earlier answers only: "list"/"choice" a selection,
+ * "ranked" a ranking, "text" one field of a fields answer, "sentences" a
+ * fields answer or a single selection.
+ */
+function checkSections(value: unknown, where: string, answers: Answers): void {
+  const seen = new Set<string>();
+  list(value, `${where} sections`).forEach((raw, i) => {
+    const sw = `${where} section ${i + 1}`;
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id)) fail(`${sw} has no valid id.`);
+    if (seen.has(raw.id)) fail(`${where} section ${raw.id} is used twice.`);
+    seen.add(raw.id);
+    text(raw.label, `${sw} label`);
+    if (!(LAUNCHPAD_SUMMARY_DISPLAYS as readonly unknown[]).includes(raw.display)) fail(`${sw} has unknown display ${String(raw.display)}.`);
+    list(raw.sources, `${sw} sources`).forEach((src, si) => {
+      const rw = `${sw} source ${si + 1}`;
+      if (!isObj(src)) fail(`${rw} is malformed.`);
+      checkEdit(src, rw, answers);
+      switch (raw.display) {
+        case "list":
+          reads(answers, src.answerKey, ["selection-multi", "selection-single"], rw);
+          return;
+        case "choice":
+          reads(answers, src.answerKey, ["selection-single"], rw);
+          return;
+        case "ranked":
+          reads(answers, src.answerKey, ["ranking"], rw);
+          return;
+        case "text": {
+          const screen = reads(answers, src.answerKey, ["fields"], rw);
+          if (!(screen.fields as Obj[]).some((f) => f.name === src.field)) fail(`${rw} reads unknown field ${String(src.field)} of ${String(src.answerKey)}.`);
+          return;
+        }
+        case "sentences":
+          reads(answers, src.answerKey, ["fields", "selection-single"], rw);
+          return;
+      }
+    });
+  });
+}
+
+/**
+ * Inline edit stays off anything another screen's logic owns: a ranking
+ * (it orders the goal loop), a single selection carried into a later
+ * sentence, a currency (Parent Hub) field, or a choice whose options depend
+ * on another answer. Selections and plain fields are fine.
+ */
+function checkEdit(src: Obj, where: string, answers: Answers): void {
+  if (src.editSelection !== undefined) {
+    bool(src.editSelection, `${where} editSelection`);
+    if (src.editSelection) {
+      const found = answers.get(String(src.answerKey));
+      if (!found || (found.kind !== "selection-single" && found.kind !== "selection-multi")) fail(`${where} editSelection needs a selection answer.`);
+      for (const other of answers.values()) {
+        const parts = other.screen.type === "short-text" ? (other.screen.parts as Obj[]) : [];
+        if (parts.some((p) => p.kind === "carried" && p.answerKey === src.answerKey)) fail(`${where} edits ${String(src.answerKey)}, which another screen carries in.`);
+      }
+    }
+  }
+  if (src.editFields !== undefined) {
+    const found = answers.get(String(src.answerKey));
+    if (!found || found.kind !== "fields") fail(`${where} editFields needs a fields answer.`);
+    const fields = found.screen.fields as Obj[];
+    list(src.editFields, `${where} editFields`).forEach((name) => {
+      const f = fields.find((x) => x.name === name);
+      if (!f) fail(`${where} edits unknown field ${String(name)}.`);
+      if (f.input === "currency") fail(`${where} field ${String(name)} comes from Parent Hub and cannot be edited here.`);
+    });
+  }
+}
+
 /** The identity wrap-up edits every pick, so its silver must have all six picker steps for that answerKey. */
-function checkWrapUp(wrapUp: unknown, where: string, pickerSteps: Map<string, Set<string>>): void {
+function checkWrapUp(wrapUp: unknown, where: string, pickerSteps: Map<string, Set<string>>, answers: Answers): void {
   if (!isObj(wrapUp)) fail(`${where} is malformed.`);
   if (!(LAUNCHPAD_WRAP_UP_TYPES as readonly unknown[]).includes(wrapUp.type)) fail(`${where} has unknown type ${String(wrapUp.type)}.`);
-  if (typeof wrapUp.answerKey !== "string" || !ANSWER_KEY_RE.test(wrapUp.answerKey)) fail(`${where} has no valid answerKey.`);
   text(wrapUp.heading, `${where} heading`);
   text(wrapUp.body, `${where} body`, true);
   text(wrapUp.finalizeLabel, `${where} finalizeLabel`);
   bool(wrapUp.placeholder, `${where} placeholder`);
+  if (wrapUp.type === "workbook-summary") {
+    checkSections(wrapUp.sections, where, answers);
+    return;
+  }
+  if (typeof wrapUp.answerKey !== "string" || !ANSWER_KEY_RE.test(wrapUp.answerKey)) fail(`${where} has no valid answerKey.`);
+  if (wrapUp.handbookSections !== undefined) checkSections(wrapUp.handbookSections, `${where} handbook`, answers);
   const steps = pickerSteps.get(wrapUp.answerKey) ?? new Set<string>();
   const missing = [...LOGO_PICKER_STEPS, ...NAME_PICKER_STEPS].filter((st) => !steps.has(st));
   if (missing.length) fail(`${where} needs picker steps for ${wrapUp.answerKey}: missing ${missing.join(", ")}.`);

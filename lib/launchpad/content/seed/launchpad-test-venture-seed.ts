@@ -30,6 +30,15 @@ import type {
   LaunchpadVenturePayload,
 } from "@/lib/launchpad/content/types";
 import { BUSINESS_NAME_MAX } from "@/lib/launchpad/content/identity";
+import { overlayLoad } from "@/lib/launchpad/load/to-payload";
+import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
+import dogWalkingLoadJson from "@/content/launchpad/dog-walking.load.json";
+
+/**
+ * The dog walking load file (L1 and L2 from the bronze task tracker; see
+ * tools/launchpad-load-from-xlsx.ts). Overlaid on the seed for that venture.
+ */
+export const DOG_WALKING_LOAD = dogWalkingLoadJson as unknown as LaunchpadLoadFile;
 
 /** Tasks per bronze for the test build. Real counts are TBC (2 to 4 each). */
 export const PLACEHOLDER_TASKS_PER_BRONZE = 3;
@@ -233,6 +242,15 @@ function floor(level: number, name: string, gold: string, silvers: LaunchpadSilv
  * count on each floor equals its silver count: 2, 2, 4, 3, 2, 3.
  */
 export function launchpadTestVentureSeed(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID): LaunchpadVenturePayload {
+  const base = launchpadSeedBase(ventureId);
+  return ventureId === DOG_WALKING_LOAD.ventureId ? overlayLoad(base, DOG_WALKING_LOAD) : base;
+}
+
+/**
+ * The seed before any load file: placeholders everywhere except the locked
+ * identity build. Other test ventures read this as is.
+ */
+export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID): LaunchpadVenturePayload {
   return {
     schemaVersion: LAUNCHPAD_PAYLOAD_SCHEMA_VERSION,
     ventureId,

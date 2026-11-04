@@ -23,13 +23,23 @@ export function TaskWorkbook(props: {
   /** Picker steps keep Next off until a choice is made; `nextHint` says what is missing. */
   nextDisabled?: boolean;
   nextHint?: string;
+  /**
+   * Paged task: only this page's screen shows, Previous and Next move a page
+   * at a time (Previous on the first page goes to the task before).
+   */
+  page?: { index: number; count: number; screen: LaunchpadTaskScreen };
 }) {
   const { tasks, index } = props;
   const task = tasks[index];
   if (!task) return null;
   const isLast = index === tasks.length - 1;
   const single = tasks.length === 1;
-  const kind = identityTaskKind(task.screens);
+  const page = props.page;
+  const kind = page ? null : identityTaskKind(task.screens);
+  const lastPage = !page || page.index === page.count - 1;
+  const forward = lastPage ? (task.ctaLabel ?? (isLast ? "Finish ›" : "Next ›")) : "Next ›";
+  const showPrevious = !single || (page && page.index > 0);
+  const previousDisabled = index === 0 && (!page || page.index === 0);
   return (
     <section className="flex flex-1 flex-col">
       <TrailCrumb level={props.level} current={task.title} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
@@ -40,6 +50,11 @@ export function TaskWorkbook(props: {
         {!single && (
           <span className="text-nga-secondary-shadow">
             Task {index + 1} of {tasks.length}
+          </span>
+        )}
+        {single && page && page.count > 1 && (
+          <span className="text-nga-secondary-shadow" data-page-count="">
+            Step {page.index + 1} of {page.count}
           </span>
         )}
       </div>
@@ -73,7 +88,9 @@ export function TaskWorkbook(props: {
       <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5"}>{task.title}</Heading>
       {kind === "logo" && <LogoBuilder key={task.id} screens={task.screens as readonly LaunchpadLogoPickerScreen[]} />}
       {kind === "name" && <NameForm key={task.id} screens={task.screens as readonly LaunchpadNamePickerScreen[]} />}
+      {page && <TaskScreen key={page.screen.id} screen={page.screen} />}
       {!kind &&
+        !page &&
         task.screens.map((screen) => (
           <TaskScreen key={screen.id} screen={screen} />
         ))}
@@ -83,8 +100,8 @@ export function TaskWorkbook(props: {
         </p>
       )}
       <div className="mx-5 mt-auto flex gap-3 pb-4">
-        {!single && (
-          <button type="button" onClick={props.onPrevious} disabled={index === 0} className={`${BTN_WHITE} flex-1`}>
+        {showPrevious && (
+          <button type="button" onClick={props.onPrevious} disabled={previousDisabled} className={`${BTN_WHITE} flex-1`}>
             ‹ Previous
           </button>
         )}
@@ -95,7 +112,7 @@ export function TaskWorkbook(props: {
           aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
           className={`${BTN_CYAN} flex-1 disabled:opacity-50`}
         >
-          {task.ctaLabel ?? (isLast ? "Finish ›" : "Next ›")}
+          {forward}
         </button>
       </div>
     </section>

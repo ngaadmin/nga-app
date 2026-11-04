@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
+import { launchpadSeedBase, launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
+import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
   VENTURE_TEST_SHORTCUT_DEFAULT_VENTURE,
@@ -33,6 +34,13 @@ import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-
 
 const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
 const L1 = FLOORS[0]!;
+/**
+ * Progress mechanics run on the pre-load structure (two silvers on L1, a
+ * three-task first bronze) so plaque, door and task stepping stay covered now
+ * that the loaded L1 has one silver and one task per bronze.
+ */
+const BASE_FLOORS = launchpadSeedBase("dog-walking").floors;
+const BASE_L1 = BASE_FLOORS[0]!;
 
 function at<T>(list: readonly T[], i: number): T {
   const v = list[i];
@@ -45,93 +53,98 @@ function doneThrough(progress: VentureTestProgress, ids: string[]): VentureTestP
 }
 
 describe("venture test structure", () => {
-  it("has the six r4 floors with the design window counts", () => {
+  it("has the six floors; the loaded L1 has one silver (tracker 4 Nov), the rest keep the r4 counts", () => {
     expect(FLOORS.map((f) => [f.level, f.name, f.silvers.length])).toEqual([
-      [1, "Vision and Goals", 2],
+      [1, "Vision and Goals", 1],
       [2, "Planning", 2],
       [3, "Making", 4],
       [4, "Selling", 3],
       [5, "Growing", 2],
       [6, "Budgeting", 3],
     ]);
-    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(16);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
     expect(L1.gold.title).toBe("Know what type of business to start, why it matters to you, and the goals you'll aim for.");
-    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business", "Set your goals"]);
-    expect(at(L1.silvers, 0).bronzes.map((b) => b.title)).toEqual(["Pick a business type", "Find the why", "Pick a cause"]);
-    expect(at(L1.silvers, 1).bronzes.map((b) => b.title)).toEqual(["Set goals"]);
+    expect(L1.silvers.map((s) => s.title)).toEqual(["Define the business"]);
+    expect(at(L1.silvers, 0).bronzes.map((b) => b.title)).toEqual([
+      "Pick what your business will offer",
+      "Find the why",
+      "Know your impact",
+      "Set your goals",
+    ]);
+    expect(L1.silvers[0]!.wrapUp?.type).toBe("workbook-summary");
   });
 });
 
 describe("venture test progress", () => {
   it("starts on level 1 with only the first plaque and door open", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
-    expect(currentLevel(p, FLOORS)).toBe(1);
-    expect(floorState(p, FLOORS, 2)).toBe("locked");
-    expect(silverStates(p, FLOORS, L1)).toEqual(["current", "locked"]);
-    expect(bronzeStates(p, at(L1.silvers, 0))).toEqual(["current", "locked", "locked"]);
+    expect(currentLevel(p, BASE_FLOORS)).toBe(1);
+    expect(floorState(p, BASE_FLOORS, 2)).toBe("locked");
+    expect(silverStates(p, BASE_FLOORS, BASE_L1)).toEqual(["current", "locked"]);
+    expect(bronzeStates(p, at(BASE_L1.silvers, 0))).toEqual(["current", "locked", "locked"]);
   });
 
   it("shows a locked plaque's doors all locked", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
-    expect(bronzeStates(p, at(L1.silvers, 1), silverStates(p, FLOORS, L1)[1] !== "locked")).toEqual(["locked"]);
+    expect(bronzeStates(p, at(BASE_L1.silvers, 1), silverStates(p, BASE_FLOORS, BASE_L1)[1] !== "locked")).toEqual(["locked"]);
   });
 
   it("goes back to the doors after the last task of a bronze", () => {
-    const s = at(L1.silvers, 0);
+    const s = at(BASE_L1.silvers, 0);
     const b = at(s.bronzes, 0);
     const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, b.tasks.map((t) => t.id));
-    expect(advanceAfterTask(p, L1, s, b, b.tasks.length - 1)).toEqual({ kind: "bronze-done" });
+    expect(advanceAfterTask(p, BASE_L1, s, b, b.tasks.length - 1)).toEqual({ kind: "bronze-done" });
     expect(bronzeStates(p, s)).toEqual(["done", "current", "locked"]);
   });
 
   it("keeps the learner in the workbook while tasks are open", () => {
-    const s = at(L1.silvers, 0);
+    const s = at(BASE_L1.silvers, 0);
     const b = at(s.bronzes, 0);
     const p = completeTask(EMPTY_VENTURE_TEST_PROGRESS, at(b.tasks, 2).id);
-    expect(advanceAfterTask(p, L1, s, b, 2)).toEqual({ kind: "task", taskIndex: 0 });
+    expect(advanceAfterTask(p, BASE_L1, s, b, 2)).toEqual({ kind: "task", taskIndex: 0 });
   });
 
   it("unlocks the next plaque, then the next floor", () => {
-    const s = at(L1.silvers, 0);
+    const s = at(BASE_L1.silvers, 0);
     const all1 = s.bronzes.flatMap((b) => b.tasks.map((t) => t.id));
     let p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, all1);
     const lastB = at(s.bronzes, s.bronzes.length - 1);
-    expect(advanceAfterTask(p, L1, s, lastB, lastB.tasks.length - 1)).toEqual({ kind: "silver-done" });
-    expect(silverStates(p, FLOORS, L1)).toEqual(["done", "current"]);
-    expect(bronzeStates(p, at(L1.silvers, 1), true)).toEqual(["current"]);
-    p = doneThrough(p, L1.silvers.flatMap((x) => x.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
-    const s3 = at(L1.silvers, 1);
+    expect(advanceAfterTask(p, BASE_L1, s, lastB, lastB.tasks.length - 1)).toEqual({ kind: "silver-done" });
+    expect(silverStates(p, BASE_FLOORS, BASE_L1)).toEqual(["done", "current"]);
+    expect(bronzeStates(p, at(BASE_L1.silvers, 1), true)).toEqual(["current"]);
+    p = doneThrough(p, BASE_L1.silvers.flatMap((x) => x.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
+    const s3 = at(BASE_L1.silvers, 1);
     const b3 = at(s3.bronzes, s3.bronzes.length - 1);
-    expect(advanceAfterTask(p, L1, s3, b3, b3.tasks.length - 1)).toEqual({ kind: "floor-done" });
-    expect(floorState(p, FLOORS, 1)).toBe("done");
-    expect(currentLevel(p, FLOORS)).toBe(2);
-    expect(floorState(p, FLOORS, 2)).toBe("current");
+    expect(advanceAfterTask(p, BASE_L1, s3, b3, b3.tasks.length - 1)).toEqual({ kind: "floor-done" });
+    expect(floorState(p, BASE_FLOORS, 1)).toBe("done");
+    expect(currentLevel(p, BASE_FLOORS)).toBe(2);
+    expect(floorState(p, BASE_FLOORS, 2)).toBe("current");
   });
 
   it("walks all six levels and ends on the top floor", () => {
     let p = EMPTY_VENTURE_TEST_PROGRESS;
-    for (const floor of FLOORS) {
-      expect(currentLevel(p, FLOORS)).toBe(floor.level);
-      expect(floorState(p, FLOORS, floor.level)).toBe("current");
+    for (const floor of BASE_FLOORS) {
+      expect(currentLevel(p, BASE_FLOORS)).toBe(floor.level);
+      expect(floorState(p, BASE_FLOORS, floor.level)).toBe("current");
       p = doneThrough(p, floor.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
-      expect(floorState(p, FLOORS, floor.level)).toBe("done");
+      expect(floorState(p, BASE_FLOORS, floor.level)).toBe("done");
     }
-    expect(currentLevel(p, FLOORS)).toBe(6);
+    expect(currentLevel(p, BASE_FLOORS)).toBe(6);
   });
 });
 
-function allTaskIds(levels: number[]): string[] {
-  return FLOORS.filter((f) => levels.includes(f.level)).flatMap((f) =>
+function allTaskIds(levels: number[], floors = BASE_FLOORS): string[] {
+  return floors.filter((f) => levels.includes(f.level)).flatMap((f) =>
     f.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))),
   );
 }
 
 describe("building floor access (tap any floor)", () => {
-  it("mid level 1: L1 enterable, every floor above is preview only", () => {
-    const s = at(L1.silvers, 0);
+  it("mid level 1: BASE_L1 enterable, every floor above is preview only", () => {
+    const s = at(BASE_L1.silvers, 0);
     const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, at(s.bronzes, 0).tasks.map((t) => t.id));
-    expect(currentLevel(p, FLOORS)).toBe(1);
-    expect(FLOORS.map((f) => floorAccess(p, FLOORS, f.level))).toEqual([
+    expect(currentLevel(p, BASE_FLOORS)).toBe(1);
+    expect(BASE_FLOORS.map((f) => floorAccess(p, BASE_FLOORS, f.level))).toEqual([
       "enter",
       "preview",
       "preview",
@@ -139,45 +152,45 @@ describe("building floor access (tap any floor)", () => {
       "preview",
       "preview",
     ]);
-    expect(buildingCta(p, FLOORS)).toEqual({ kind: "level", level: 1, label: "Go to Level 1" });
+    expect(buildingCta(p, BASE_FLOORS)).toEqual({ kind: "level", level: 1, label: "Go to Level 1" });
   });
 
   it("a preview floor shows every plaque locked and every door read-only", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
-    const l4 = at(FLOORS, 3);
-    const states = silverStates(p, FLOORS, l4);
+    const l4 = at(BASE_FLOORS, 3);
+    const states = silverStates(p, BASE_FLOORS, l4);
     expect(states).toEqual(["locked", "locked", "locked"]);
     l4.silvers.forEach((s, i) => {
       expect(bronzeStates(p, s, states[i] !== "locked").every((b) => b === "locked")).toBe(true);
-      expect(lockedDoorsNote(p, FLOORS, l4, i)).toBe("Finish Level 3 to unlock these doors.");
+      expect(lockedDoorsNote(p, BASE_FLOORS, l4, i)).toBe("Finish Level 3 to unlock these doors.");
     });
   });
 
   it("the current floor still unlocks plaques in order", () => {
     const p = EMPTY_VENTURE_TEST_PROGRESS;
-    expect(lockedDoorsNote(p, FLOORS, L1, 0)).toBeUndefined();
-    expect(lockedDoorsNote(p, FLOORS, L1, 1)).toBe('Finish "Define the business" to unlock these doors.');
+    expect(lockedDoorsNote(p, BASE_FLOORS, BASE_L1, 0)).toBeUndefined();
+    expect(lockedDoorsNote(p, BASE_FLOORS, BASE_L1, 1)).toBe('Finish "Define the business" to unlock these doors.');
   });
 
   it("a bronze door opens its first unfinished task directly", () => {
-    const b = L1.silvers[0]!.bronzes[0]!;
+    const b = BASE_L1.silvers[0]!.bronzes[0]!;
     expect(b.tasks.length).toBeGreaterThan(1);
     expect(bronzeEntryTaskIndex(EMPTY_VENTURE_TEST_PROGRESS, b)).toBe(0);
     const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, [b.tasks[0]!.id]);
     expect(bronzeEntryTaskIndex(p, b)).toBe(1);
   });
 
-  it("L1 done, L2 current: L1 re-enterable for review without changing progress", () => {
+  it("BASE_L1 done, L2 current: BASE_L1 re-enterable for review without changing progress", () => {
     const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, allTaskIds([1]));
     const before = [...p.completedTaskIds];
-    expect(currentLevel(p, FLOORS)).toBe(2);
-    expect(floorAccess(p, FLOORS, 1)).toBe("enter");
-    expect(floorAccess(p, FLOORS, 2)).toBe("enter");
-    expect(floorAccess(p, FLOORS, 3)).toBe("preview");
-    expect(silverStates(p, FLOORS, L1)).toEqual(["done", "done"]);
-    for (const s of L1.silvers) {
+    expect(currentLevel(p, BASE_FLOORS)).toBe(2);
+    expect(floorAccess(p, BASE_FLOORS, 1)).toBe("enter");
+    expect(floorAccess(p, BASE_FLOORS, 2)).toBe("enter");
+    expect(floorAccess(p, BASE_FLOORS, 3)).toBe("preview");
+    expect(silverStates(p, BASE_FLOORS, BASE_L1)).toEqual(["done", "done"]);
+    for (const s of BASE_L1.silvers) {
       expect(bronzeStates(p, s, true).every((b) => b === "done")).toBe(true);
-      expect(lockedDoorsNote(p, FLOORS, L1, L1.silvers.indexOf(s))).toBeUndefined();
+      expect(lockedDoorsNote(p, BASE_FLOORS, BASE_L1, BASE_L1.silvers.indexOf(s))).toBeUndefined();
       for (const b of s.bronzes) {
         // Reopening a finished bronze starts at its first task; re-finishing tasks is a no-op.
         expect(firstOpenTaskIndex(p, b)).toBe(0);
@@ -188,19 +201,19 @@ describe("building floor access (tap any floor)", () => {
       }
     }
     expect(p.completedTaskIds).toEqual(before);
-    expect(buildingCta(p, FLOORS)).toEqual({ kind: "level", level: 2, label: "Go to Level 2" });
+    expect(buildingCta(p, BASE_FLOORS)).toEqual({ kind: "level", level: 2, label: "Go to Level 2" });
   });
 
   it("button names the working level, then the rooftop once every floor is done", () => {
     let p = EMPTY_VENTURE_TEST_PROGRESS;
-    for (const floor of FLOORS) {
-      expect(buildingCta(p, FLOORS)).toEqual({ kind: "level", level: floor.level, label: `Go to Level ${floor.level}` });
-      expect(isBuildingDone(p, FLOORS)).toBe(false);
+    for (const floor of BASE_FLOORS) {
+      expect(buildingCta(p, BASE_FLOORS)).toEqual({ kind: "level", level: floor.level, label: `Go to Level ${floor.level}` });
+      expect(isBuildingDone(p, BASE_FLOORS)).toBe(false);
       p = doneThrough(p, allTaskIds([floor.level]));
     }
-    expect(isBuildingDone(p, FLOORS)).toBe(true);
-    expect(buildingCta(p, FLOORS)).toEqual({ kind: "rooftop", label: "Go to the rooftop" });
-    expect(FLOORS.every((f) => floorAccess(p, FLOORS, f.level) === "enter")).toBe(true);
+    expect(isBuildingDone(p, BASE_FLOORS)).toBe(true);
+    expect(buildingCta(p, BASE_FLOORS)).toEqual({ kind: "rooftop", label: "Go to the rooftop" });
+    expect(BASE_FLOORS.every((f) => floorAccess(p, BASE_FLOORS, f.level) === "enter")).toBe(true);
   });
 });
 
@@ -281,7 +294,7 @@ describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () =
     expect(applied.land).toEqual({ screen: "corridor", level: 2 });
     expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["done", "current"]);
     expect(at(at(FLOORS, 1).silvers, 1).title).toBe("Build your identity");
-    expect(applied.progress.answers?.["l2-s2-identity"]?.shape).toBe("circle");
+    expect(identityAnswerOf(applied.progress.answers, "l2-s2-identity")?.shape).toBe("circle");
     expect(applyVentureTestShortcut({ kind: "through-silver", silverId: "l9-s9" }, FLOORS, withAnswer)).toBeNull();
   });
 

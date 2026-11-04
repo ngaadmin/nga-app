@@ -7,7 +7,7 @@
  * lib/launchpad/content/identity.ts), with RLS on the learner id, plus an onboarding "seen" flag per
  * venture (stubbed here as a second localStorage key). Nothing here talks to Supabase.
  */
-import { parseLaunchpadAnswers } from "@/lib/launchpad/content/identity";
+import { parseLaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
   type VentureTestProgress,

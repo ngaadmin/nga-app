@@ -109,8 +109,8 @@ export type BusinessIdentityAnswer = {
   finalized?: boolean;
 };
 
-/** Saved answers by answerKey (stored with progress on the test route). */
-export type LaunchpadAnswers = Readonly<Record<string, BusinessIdentityAnswer>>;
+/** Saved answers by answerKey; every kind is defined in lib/launchpad/content/answers.ts. */
+export type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 
 export const EMPTY_IDENTITY: BusinessIdentityAnswer = { kind: "business-identity", version: IDENTITY_ANSWER_VERSION };
 
@@ -158,18 +158,6 @@ export function parseBusinessIdentityAnswer(value: unknown): BusinessIdentityAns
   if (includes(NAME_FONTS, v.font)) out.font = v.font;
   if (includes(NAME_COLOR_IDS, v.nameColor)) out.nameColor = v.nameColor;
   if (v.finalized === true) out.finalized = true;
-  return out;
-}
-
-/** Reads the whole answers map; drops keys or values that do not parse. */
-export function parseLaunchpadAnswers(value: unknown): LaunchpadAnswers {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  const out: Record<string, BusinessIdentityAnswer> = {};
-  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
-    if (!ANSWER_KEY_RE.test(key)) continue;
-    const parsed = parseBusinessIdentityAnswer(raw);
-    if (parsed) out[key] = parsed;
-  }
   return out;
 }
 

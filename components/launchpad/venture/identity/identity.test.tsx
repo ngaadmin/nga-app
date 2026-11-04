@@ -17,7 +17,8 @@ import {
   type BusinessIdentityAnswer,
   type LaunchpadAnswers,
 } from "@/lib/launchpad/content/identity";
-import { iconSetFor, identityChoices, isTaskAnswered } from "@/lib/launchpad/content/identity-content";
+import { iconSetFor, identityChoices } from "@/lib/launchpad/content/identity-content";
+import { isTaskAnswered } from "@/lib/launchpad/content/task-pages";
 import { BusinessLogo, IconChip } from "@/components/launchpad/venture/identity/business-logo";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";

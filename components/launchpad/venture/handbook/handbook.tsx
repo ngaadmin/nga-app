@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
-import type { BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
+import type { LaunchpadAnswer } from "@/lib/launchpad/content/answers";
 import {
   handbookGhost,
   handbookOpenIndex,
@@ -77,7 +77,7 @@ export function Handbook({
   progress: VentureTestProgress;
   iconVentureId: string;
   /** Save an answer. Only used from the building; home is read-only. */
-  setAnswer?: (answerKey: string, answer: BusinessIdentityAnswer) => void;
+  setAnswer?: (answerKey: string, answer: LaunchpadAnswer) => void;
   onClose: () => void;
 }) {
   const pages = handbookPages(progress, floors);
@@ -170,7 +170,7 @@ export function Handbook({
             <span aria-hidden="true" className="pointer-events-none absolute -left-5 bottom-[18px] z-raised h-5 w-20 rotate-[38deg] bg-[#3FB7DA] opacity-50 [clip-path:polygon(0_8%,6%_0,12%_10%,18%_0,82%_0,88%_12%,94%_0,100%_10%,100%_92%,94%_100%,88%_88%,82%_100%,18%_100%,12%_90%,6%_100%,0_88%)]" data-washi="" />
             <div className="h-full overflow-y-auto px-5 pb-10 pt-5">
               <LaunchpadAnswersProvider
-                value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE }}
+                value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
                 <HandbookPage key={page.silver.id} page={page} editable={editable} iconVentureId={iconVentureId} />
               </LaunchpadAnswersProvider>

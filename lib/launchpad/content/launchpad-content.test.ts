@@ -71,10 +71,10 @@ describe("launchpad payload schema", () => {
 
   it("rejects a plaque with no doors and a door with no tasks", () => {
     const noDoors = mutable();
-    noDoors.floors[0].silvers[1].bronzes = [];
+    noDoors.floors[1].silvers[1].bronzes = [];
     expect(reason(noDoors)).toMatch(/bronze/i);
     const noTasks = mutable();
-    noTasks.floors[0].silvers[1].bronzes[0].tasks = [];
+    noTasks.floors[1].silvers[1].bronzes[0].tasks = [];
     expect(reason(noTasks)).toMatch(/task/i);
   });
 
@@ -98,7 +98,8 @@ describe("launchpad payload schema", () => {
 
   it("accepts text and checklist screens", () => {
     const p = mutable();
-    p.floors[0].silvers[0].bronzes[0].tasks[0].screens = [
+    // L3 keeps placeholder content (L1 and L2 screens feed their wrap-ups).
+    p.floors[2].silvers[0].bronzes[0].tasks[0].screens = [
       { id: "t-text", type: "text", heading: "Why it matters", body: "Pick something you enjoy." },
       { id: "t-list", type: "checklist", items: ["Ask a neighbor", "Price a walk"] },
     ];

@@ -4,6 +4,11 @@ import { ChecklistScreen } from "@/components/launchpad/venture/screens/checklis
 import { PlaceholderScreen } from "@/components/launchpad/venture/screens/placeholder-screen";
 import { TextScreen } from "@/components/launchpad/venture/screens/text-screen";
 import { LogoPickerScreen, NamePickerScreen } from "@/components/launchpad/venture/identity/picker-screens";
+import { ContextScreen } from "@/components/launchpad/venture/screens/context-screen";
+import { ChoiceCaptureScreen } from "@/components/launchpad/venture/screens/choice-capture-screen";
+import { RankOrderScreen } from "@/components/launchpad/venture/screens/rank-order-screen";
+import { ShortTextScreen } from "@/components/launchpad/venture/screens/short-text-screen";
+import { GoalLoopScreen } from "@/components/launchpad/venture/screens/goal-loop-screen";
 
 type Renderers = {
   [T in LaunchpadTaskScreenType]: (screen: Extract<LaunchpadTaskScreen, { type: T }>) => ReactElement;
@@ -20,6 +25,11 @@ export const LAUNCHPAD_TASK_SCREEN_RENDERERS: Renderers = {
   checklist: (screen) => <ChecklistScreen screen={screen} />,
   "logo-picker": (screen) => <LogoPickerScreen screen={screen} />,
   "name-picker": (screen) => <NamePickerScreen screen={screen} />,
+  context: (screen) => <ContextScreen screen={screen} />,
+  "choice-capture": (screen) => <ChoiceCaptureScreen screen={screen} />,
+  "rank-order": (screen) => <RankOrderScreen screen={screen} />,
+  "short-text": (screen) => <ShortTextScreen screen={screen} />,
+  "goal-loop": (screen) => <GoalLoopScreen screen={screen} />,
 };
 
 export const REGISTERED_LAUNCHPAD_TASK_SCREEN_TYPES = Object.keys(

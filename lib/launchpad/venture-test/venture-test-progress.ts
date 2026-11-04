@@ -2,7 +2,7 @@
  * TEST-ONLY progress logic for the Launchpad venture flow.
  *
  * Progress is a list of completed task ids, plus the learner's saved answers
- * (picker screens, keyed by answerKey). Everything else (which bronze
+ * (capture and picker screens, keyed by answerKey; see content/answers.ts). Everything else (which bronze
  * door, silver plaque and floor is done or current) is derived from it, so
  * a real backend only has to persist completed task ids and answers per
  * learner and venture. See `venture-test-storage.ts` for the client-side stub.
@@ -15,7 +15,7 @@ import type {
   LaunchpadFloor as VentureTestFloor,
   LaunchpadSilver as VentureTestSilver,
 } from "@/lib/launchpad/content/types";
-import type { BusinessIdentityAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/identity";
+import type { LaunchpadAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 
 export type VentureTestProgress = {
   completedTaskIds: readonly string[];
@@ -102,7 +102,7 @@ export function completeTask(progress: VentureTestProgress, taskId: string): Ven
 export function setProgressAnswer(
   progress: VentureTestProgress,
   answerKey: string,
-  answer: BusinessIdentityAnswer,
+  answer: LaunchpadAnswer,
 ): VentureTestProgress {
   return { ...progress, answers: { ...progress.answers, [answerKey]: answer } };
 }

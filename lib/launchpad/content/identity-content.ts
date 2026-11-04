@@ -10,12 +10,12 @@ import {
   BUSINESS_NAME_MAX,
   isIdentityFieldSet,
   type IdentityField,
-  type LaunchpadAnswers,
   type LogoIconId,
   type LogoShapeId,
   type NameColorId,
   type NameFontId,
 } from "@/lib/launchpad/content/identity";
+import { identityAnswerOf, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 
 export type IdentityPickerScreen = LaunchpadLogoPickerScreen | LaunchpadNamePickerScreen;
 
@@ -35,9 +35,11 @@ export function iconSetFor(screen: IconStep, ventureId: string): readonly Launch
   return screen.iconSets[ventureId] ?? screen.iconSets[screen.fallbackVentureId] ?? [];
 }
 
-/** True when every picker on the task has its pick (Next stays off until then). */
-export function isTaskAnswered(task: Pick<LaunchpadTask, "screens">, answers: LaunchpadAnswers | undefined): boolean {
-  return task.screens.every((s) => !isIdentityPicker(s) || isIdentityFieldSet(answers?.[s.answerKey], pickerField(s)));
+/** True when every identity picker on the task has its pick. Capture screens are gated in task-pages.ts. */
+export function isIdentityTaskAnswered(task: Pick<LaunchpadTask, "screens">, answers: LaunchpadAnswers | undefined): boolean {
+  return task.screens.every(
+    (s) => !isIdentityPicker(s) || isIdentityFieldSet(identityAnswerOf(answers, s.answerKey), pickerField(s)),
+  );
 }
 
 /** Every choice the identity wrap-up offers for inline editing, gathered from the silver's picker screens. */

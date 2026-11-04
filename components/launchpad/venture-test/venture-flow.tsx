@@ -42,10 +42,22 @@ import { Handbook, HandbookButton } from "@/components/launchpad/venture/handboo
 import { handbookBusinessName, handbookPages, hasHandbook, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
-import { identityChoices, isIdentityPicker, isTaskAnswered } from "@/lib/launchpad/content/identity-content";
+import { identityChoices, isIdentityPicker } from "@/lib/launchpad/content/identity-content";
+import { isPageAnswered, isTaskAnswered, pageDefaultAnswer, taskPages, type TaskPage } from "@/lib/launchpad/content/task-pages";
+import { SummaryWrapUp } from "@/components/launchpad/venture/summary-wrap-up";
+import { GoldCompletion } from "@/components/launchpad/venture/gold-completion";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
 
+
+/** What the forward button is waiting for on a capture page. */
+function pageHint(page: TaskPage | undefined): string | undefined {
+  const screen = page?.screen;
+  if (!screen) return undefined;
+  if (screen.type === "choice-capture") return screen.mode === "multi" ? "Pick at least one to keep going." : "Make a choice to keep going.";
+  if (screen.type === "short-text") return "Fill in each blank to keep going.";
+  return undefined;
+}
 
 /** What the forward button is waiting for on an identity task. */
 function identityHint(task: LaunchpadTask | undefined): string {
@@ -61,12 +73,15 @@ type View =
   | { screen: "building" }
   | { screen: "corridor"; level: number; entering: boolean }
   | { screen: "doors"; level: number; silverId: string }
-  | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number }
+  /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
+  | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number }
   /** The silver's wrap-up screen (e.g. the identity logo), once its bronzes are done. */
   /** `justCompleted`: reached by finishing the silver, so Finalize goes on to its handbook page. */
   | { screen: "wrap-up"; level: number; silverId: string; justCompleted?: boolean }
   /** The silver's handbook page, shown once right after the silver is finished. */
   | { screen: "silver-complete"; level: number; silverId: string }
+  /** The floor's gold completion screen, after its last silver-complete page. */
+  | { screen: "gold"; level: number }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
   | { screen: "rooftop" };
@@ -405,25 +420,56 @@ export function VentureFlow({
       const where = { level: floor.level, silverId: silver.id, bronzeId: bronze.id };
       const index = view.index;
       const current = bronze.tasks[index];
-      const answered = current ? isTaskAnswered(current, progress.answers) : true;
+      const answers = progress.answers ?? {};
+      const pages = current?.paged ? taskPages(current, answers, floors) : null;
+      const pageIndex = pages ? Math.min(view.page ?? 0, Math.max(0, pages.length - 1)) : 0;
+      const page = pages?.[pageIndex];
+      const answered = page ? isPageAnswered(page.screen, answers) : current ? isTaskAnswered(current, answers, floors) : true;
+      const goalPages = pages?.filter((p) => p.goal) ?? [];
+      const eyebrow = page?.goal
+        ? `Goal ${goalPages.indexOf(page) + 1} of ${goalPages.length}`
+        : current?.kind === "real-world"
+          ? "Real-world task"
+          : current && current.screens.some(isIdentityPicker)
+            ? silver.title
+            : undefined;
+      /** Pages of the task before `i` (Previous from a first page lands on its last page). */
+      const lastPageOf = (i: number) => {
+        const t = bronze.tasks[i];
+        return t?.paged ? Math.max(0, taskPages(t, answers, floors).length - 1) : undefined;
+      };
       body = (
         <TaskWorkbook
           level={floor.level}
           tasks={tasks}
           index={index}
+          page={pages && page ? { index: pageIndex, count: pages.length, screen: page.screen } : undefined}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           // There is no task list, so Exit goes back to the bronze doors.
           onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
           onJump={(i) => go({ screen: "workbook", ...where, index: i })}
-          onPrevious={() => go({ screen: "workbook", ...where, index: Math.max(0, index - 1) })}
+          onPrevious={() =>
+            pages && pageIndex > 0
+              ? go({ screen: "workbook", ...where, index, page: pageIndex - 1 })
+              : go({ screen: "workbook", ...where, index: Math.max(0, index - 1), page: lastPageOf(Math.max(0, index - 1)) })
+          }
           nextDisabled={!answered}
-          nextHint={identityHint(current)}
-          eyebrow={current && current.screens.some(isIdentityPicker) ? silver.title : undefined}
+          nextHint={page ? pageHint(page) : identityHint(current)}
+          eyebrow={eyebrow}
           onNext={() => {
             const task = bronze.tasks[index];
             if (!task) return;
-            const updated = completeTask(progress, task.id);
+            // A rank order left as shown is saved as the learner's order.
+            const fill = page ? pageDefaultAnswer(page.screen, answers) : null;
+            let base = fill ? setProgressAnswer(progress, fill.answerKey, fill.answer) : progress;
+            if (pages && pageIndex < pages.length - 1) {
+              if (fill) save(base);
+              go({ screen: "workbook", ...where, index, page: pageIndex + 1 });
+              return;
+            }
+            base = completeTask(base, task.id);
+            const updated = base;
             save(updated);
             const isLast = index === bronze.tasks.length - 1;
             if (!isLast) {
@@ -448,19 +494,33 @@ export function VentureFlow({
       const floor = floorAt(floors, view.level);
       const silver = floor.silvers.find((s) => s.id === view.silverId)!;
       const wrapUp = silver.wrapUp;
-      body = wrapUp ? (
-        <IdentityWrapUp
-          level={floor.level}
-          silverTitle={silver.title}
-          wrapUp={wrapUp}
-          choices={identityChoices(silver, wrapUp.answerKey, iconVentureId)}
-          onBuilding={toBuilding}
-          onCorridor={toCorridor(floor.level)}
-          onFinalize={
-            view.justCompleted ? () => go({ screen: "silver-complete", level: floor.level, silverId: silver.id }) : toCorridor(floor.level)
-          }
-        />
-      ) : null;
+      const onFinalize = view.justCompleted
+        ? () => go({ screen: "silver-complete", level: floor.level, silverId: silver.id })
+        : toCorridor(floor.level);
+      body =
+        wrapUp?.type === "identity-wrap-up" ? (
+          <IdentityWrapUp
+            level={floor.level}
+            silverTitle={silver.title}
+            wrapUp={wrapUp}
+            choices={identityChoices(silver, wrapUp.answerKey, iconVentureId)}
+            onBuilding={toBuilding}
+            onCorridor={toCorridor(floor.level)}
+            onFinalize={onFinalize}
+          />
+        ) : wrapUp?.type === "workbook-summary" ? (
+          <SummaryWrapUp
+            level={floor.level}
+            silverTitle={silver.title}
+            wrapUp={wrapUp}
+            floors={floors}
+            answers={progress.answers ?? {}}
+            setAnswer={setAnswer}
+            onBuilding={toBuilding}
+            onCorridor={toCorridor(floor.level)}
+            onFinalize={onFinalize}
+          />
+        ) : null;
       break;
     }
     case "silver-complete": {
@@ -473,8 +533,29 @@ export function VentureFlow({
           iconVentureId={iconVentureId}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
-          // Continue goes where finishing a silver went before this page existed.
-          onContinue={toCorridor(floor.level)}
+          // Continue goes to the corridor, or to the floor's gold screen when this silver finished the floor.
+          onContinue={
+            isFloorDone(progress, floor) && floor.gold.completion
+              ? () => go({ screen: "gold", level: floor.level })
+              : toCorridor(floor.level)
+          }
+        />
+      ) : null;
+      break;
+    }
+    case "gold": {
+      const floor = floorAt(floors, view.level);
+      const next = view.level < floors.length ? floorAt(floors, view.level + 1) : null;
+      body = floor.gold.completion ? (
+        <GoldCompletion
+          level={floor.level}
+          floorName={floor.name}
+          goldTitle={floor.gold.title}
+          completion={floor.gold.completion}
+          onBuilding={toBuilding}
+          onCorridor={toCorridor(floor.level)}
+          // The lift up when there is a floor above; the building otherwise.
+          onContinue={next ? () => go({ screen: "lift", from: floor.level }) : toBuilding}
         />
       ) : null;
       break;
@@ -489,7 +570,7 @@ export function VentureFlow({
   return (
     <VentureTestShell>
       <div className="flex flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
-        <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer }}>{body}</LaunchpadAnswersProvider>
+        <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
       </div>
     </VentureTestShell>
   );

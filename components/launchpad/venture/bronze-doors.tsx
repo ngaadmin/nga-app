@@ -1,6 +1,6 @@
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
-import { BTN_PRIMARY, Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_PRIMARY, Heading, LockIcon, SubLine, TickBadge, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
 /** Small orange marker on a door or plaque whose task was left open. */
@@ -49,7 +49,7 @@ function Door({
           <span className={`mt-0.5 block text-[13px] leading-snug ${state === "locked" ? "text-[#8a9bb0]" : "text-nga-slate"}`}>{subtitle}</span>
         )}
         <span className="mt-1.5 block">
-          {state === "done" && <span className="font-heading text-[13px] font-semibold text-nga-secondary-shadow">✓ Done</span>}
+          {state === "done" && <span className="inline-flex items-center gap-1.5 font-heading text-[13px] font-semibold text-nga-ink"><TickBadge size={16} /> Done</span>}
           {state === "current" && comeBack && <ComeBackMarker />}
           {state === "current" && !comeBack && (
             <span className="rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-white">Up next</span>

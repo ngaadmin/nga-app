@@ -102,9 +102,11 @@ export function TagChip({ children, check = false }: { children: ReactNode; chec
     >
       <span aria-hidden="true" className="absolute left-[11px] top-1/2 -mt-[3px] size-1.5 rounded-full bg-[#FDFBF7]" />
       {check && (
-        <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke={PAPER_ACCENT} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12.5l4.5 4.5L19 7.5" />
-        </svg>
+        <span aria-hidden="true" className="inline-flex size-3.5 flex-none items-center justify-center rounded-full bg-[#FFA503]" data-tick="">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        </span>
       )}
       {children}
     </li>

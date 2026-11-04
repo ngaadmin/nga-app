@@ -233,12 +233,18 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     expect(document.querySelector("[data-gold-completion]")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-silver-complete='l1-s2']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-gold-completion='1']")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: PAYLOAD.floors[0]!.gold.completion!.heading })).toBeTruthy();
-    expect(document.body.textContent).not.toMatch(/\bNGA\b|\bXP\b/);
+    // No separate gold screen: Continue lands on the corridor in its level-done state.
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-gold-completion]")).toBeNull();
+    const done = document.querySelector("[data-level-done='1']") as HTMLElement;
+    expect(done.textContent).toBe("Congratulations!You've completed Level 1");
+    expect(document.body.textContent).not.toMatch(/\bNGA\b|\bXP\b|Gold unlocked|move on/);
+    expect(document.querySelectorAll("[data-plaque-tick]").length).toBe(PAYLOAD.floors[0]!.silvers.length);
+    expect(screen.queryByRole("button", { name: "Take the lift up" })).toBeNull();
+    const go = screen.getByRole("button", { name: "Go to Level 2" });
+    expect(go.className).toContain("bg-nga-secondary");
+    fireEvent.click(go);
+    expect(document.querySelector("[data-level-done]")).toBeNull();
   });
 });
 
@@ -359,11 +365,10 @@ describe("finishing a silver shows its handbook page", () => {
     expect(document.querySelector("[data-silver-complete='l1-s2']")).toBeTruthy();
     expect(document.querySelector("[data-silver-complete='l1-s2']")?.textContent).toMatch(/Build your identity: done!/);
     expect(document.querySelector("[data-silver-complete='l1-s2'] [data-what-you-built]")?.textContent).toBe("Design your logoName your business");
-    // Identity finishes Level 1, so the Level 1 finish comes next, then the Level 2 corridor.
+    // Identity finishes Level 1: Continue opens the Level 1 corridor in its level-done state.
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-gold-completion='1']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-gold-completion]")).toBeNull();
+    expect(document.querySelector("[data-level-done='1']")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Go to Level 2" })).toBeTruthy();
   });
 });
 

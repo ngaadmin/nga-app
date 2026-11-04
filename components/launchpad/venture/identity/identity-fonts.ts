@@ -32,3 +32,4 @@ export const NAME_FONT_LINE_HEIGHT: Record<NameFontId, number> = {
   "fredoka-semibold": 1.2,
   pacifico: 1.45,
 };
+export const FREDOKA_CLASS = fredokaSemiBold.className;

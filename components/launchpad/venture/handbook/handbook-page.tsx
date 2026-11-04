@@ -13,7 +13,7 @@ import { AccentLabel, HandRule, PAPER_ACCENT, TagChip } from "@/components/launc
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { BusinessName, LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
-import { BTN_CYAN } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_CYAN, TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -47,9 +47,7 @@ export function Doodle({ ventureId }: { ventureId: string }) {
 function DoneChip() {
   return (
     <span className="flex items-center gap-1 rounded-md bg-[#F3F4F6] py-[3px] pl-1.5 pr-[7px] text-[11px] font-medium text-[#374151]" data-done-chip="">
-      <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#374151" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 12.5l4.5 4.5L19 7.5" />
-      </svg>
+      <TickBadge size={13} />
       Done
     </span>
   );

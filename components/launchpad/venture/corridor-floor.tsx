@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import styles from "@/components/launchpad/venture-test/venture-test.module.css";
-import { BackCrumb, BTN_PRIMARY, CheckIcon, Heading, LockIcon } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BackCrumb, BTN_LIFT, CheckIcon, Heading, LockIcon, TICK_COLOR } from "@/components/launchpad/venture-test/venture-test-ui";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
@@ -39,7 +40,7 @@ function Plaque({ label, state, onOpen, onComeBack }: { label: string; state: No
         )),
       )}
       {state === "done" && (
-        <span className="absolute -right-2.5 -top-2.5 flex size-[30px] items-center justify-center rounded-full bg-nga-accent" aria-hidden="true">
+        <span className="absolute -right-2.5 -top-2.5 flex size-[30px] items-center justify-center rounded-full" style={{ background: TICK_COLOR }} aria-hidden="true" data-plaque-tick="">
           <CheckIcon />
         </span>
       )}
@@ -74,6 +75,33 @@ function Plaque({ label, state, onOpen, onComeBack }: { label: string; state: No
  * per silver (1 to 6, centered in the wall), lift doors on entry, and the
  * level-complete state. Registered in floor-templates.tsx.
  */
+function Sparkle() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" className="flex-none">
+      <path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#FFA503" />
+    </svg>
+  );
+}
+
+/** Level done on the lift wall: aqua "Congratulations!" with its swash and orange sparkles, then the level line. */
+function LevelDone({ level }: { level: number }) {
+  return (
+    <div className="mt-[34px] flex flex-col items-center text-center" role="status" data-level-done={level}>
+      <div className="flex items-center justify-center gap-1.5">
+        <Sparkle />
+        <span className={`inline-flex flex-col gap-0.5 text-[24px] leading-[1.2] text-[#0CC1E0] ${FREDOKA_CLASS}`}>
+          Congratulations!
+          <svg width="100%" height="7" viewBox="0 0 74 7" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M2 4.6C18 2 40 2.2 72 3.4" fill="none" stroke="#0CC1E0" strokeWidth="2.2" strokeLinecap="round" />
+          </svg>
+        </span>
+        <Sparkle />
+      </div>
+      <p className="mt-2.5 font-heading text-[17px] font-semibold text-[#19347D]">You&apos;ve completed Level {level}</p>
+    </div>
+  );
+}
+
 export type CorridorProps = {
   level: number;
   floorName: string;
@@ -83,7 +111,8 @@ export type CorridorProps = {
   /** Play the lift-doors entry animation. */
   entering: boolean;
   note?: string;
-  complete?: { nextLabel: string | null; onLift: (() => void) | null };
+  /** Level done (wrapup-binder-r5 screen D): `nextLevel` is null on the top floor. */
+  complete?: { nextLevel: number | null; onLift: (() => void) | null };
   onBack: () => void;
   onOpenSilver: (silverId: string) => void;
 };
@@ -106,25 +135,24 @@ export function CorridorFloor(props: CorridorProps) {
         <div className="absolute inset-x-[26px] top-5 h-[3px] bg-nga-panel" />
         <div className="absolute inset-x-[26px] top-[470px] h-[3px] bg-nga-panel" />
         <div className="absolute inset-x-[26px] top-[23px] flex h-[447px] flex-col items-center">
-          <p className="mt-[22px] font-heading text-[11px] font-bold tracking-[1.5px] text-nga-secondary">LEVEL {level} GOAL</p>
-          <p className="mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink">{goal}</p>
-          <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-accent" />
+          {complete ? (
+            <LevelDone level={level} />
+          ) : (
+            <>
+            <p className="mt-[22px] font-heading text-[11px] font-bold tracking-[1.5px] text-nga-secondary">LEVEL {level} GOAL</p>
+            <p className="mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink">{goal}</p>
+            <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-accent" />
+            </>
+          )}
           <div className={`flex w-full flex-1 flex-col justify-center ${entering ? styles.plaquesFadeIn : ""}`}>{plaques}</div>
         </div>
         {note && <p className="absolute inset-x-[26px] top-[478px] text-center text-xs text-[#8a9bb0]">{note}</p>}
-        {complete && (
-          <>
-            {/* Level complete: every plaque sealed, then the lift (design r3 screen 6, without the banner). */}
-            <p className="absolute inset-x-[26px] top-[486px] text-center font-heading text-[13px] font-semibold text-nga-slate" role="status">
-              <span className="sr-only">Level {level} complete. </span>
-              {complete.nextLabel ? `${complete.nextLabel} is unlocked` : "Every floor is done"}
-            </p>
-            {complete.onLift && (
-              <button type="button" onClick={complete.onLift} className={`${BTN_PRIMARY} absolute left-1/2 top-[524px] -translate-x-1/2`}>
-                Take the lift up
-              </button>
-            )}
-          </>
+        {complete?.onLift && complete.nextLevel !== null && (
+          <div className="absolute inset-x-[26px] top-[490px] flex justify-center">
+            <button type="button" onClick={complete.onLift} className={BTN_LIFT} data-go-to-level={complete.nextLevel}>
+              Go to Level {complete.nextLevel}
+            </button>
+          </div>
         )}
         {/* Lift doors: open strips at the sides; they slide apart on entry. */}
         <div

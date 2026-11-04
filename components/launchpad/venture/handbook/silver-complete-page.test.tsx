@@ -50,6 +50,13 @@ describe("SilverCompletePage", () => {
     const chips = [...document.querySelectorAll("[data-what-you-built] [data-tag-chip]")].map((c) => c.textContent);
     expect(chips).toEqual(silver.bronzes.map((b) => b.title));
     expect(document.querySelector("[data-next-up]")?.textContent).toBe("Build your identityNext on Level 1.");
+    // The real building, about 80px tall: no finished floors yet, Level 1 outlined in orange.
+    const bld = document.querySelector("[data-next-up] [data-next-up-building]") as SVGElement;
+    expect(bld.getAttribute("height")).toBe("80");
+    expect(bld.querySelector("[data-floor-next='1']")?.getAttribute("stroke")).toBe("#FFA503");
+    expect(bld.querySelector("[data-floor-done]")).toBeNull();
+    // Ticks are orange with a white check.
+    expect(document.querySelectorAll("[data-what-you-built] [data-tick]").length).toBeGreaterThan(0);
     const card = document.querySelector("[data-silver-complete-card]")!;
     expect(card.hasAttribute("data-binder-card")).toBe(true);
     expect(card.querySelector("[data-spiral-binding]")).toBeTruthy();

@@ -79,11 +79,11 @@ test("deep links", async ({ page }, info) => {
     await page.goto(url("reset=1&complete=l2-s1"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Making)/, { timeout: 60_000 });
     const title = await page.locator(corridorTitle).innerText();
-    if (/Level 2/.test(title)) await expect(page.locator("main").getByRole("button", { name: "Take the lift up" })).toBeVisible();
+    if (/Level 2/.test(title)) await expect(page.locator("main").getByRole("button", { name: "Go to Level 3" })).toBeVisible();
   });
   // ?complete=l2-s1 lands in the Level 3 corridor (no doors yet), so there is no primary button to check there.
   const onL2 = /Level 2/.test(await page.locator(corridorTitle).innerText());
-  await shot(t, "?complete=l2-s1", onL2 ? page.locator("main").getByRole("button", { name: "Take the lift up" }) : null);
+  await shot(t, "?complete=l2-s1", onL2 ? page.locator("main").getByRole("button", { name: "Go to Level 3" }) : null);
 
   await step(t, "?complete=l2-s1: handbook shows sample answers on the Level 1 and Level 2 pages", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();

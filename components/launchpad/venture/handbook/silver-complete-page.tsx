@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { partLabel, type HandbookPageView, type MilestoneView } from "@/lib/launchpad/venture-test/handbook";
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
+import { NextUpBuilding } from "@/components/launchpad/venture/handbook/next-up-building";
 import { AccentLabel, BinderCard, HandRule, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
 import { BTN_PRIMARY, PRIMARY_LABEL, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
@@ -18,22 +19,6 @@ function Star() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" className="flex-none">
       <path d="M12 2.5l2.8 6 6.5.7-4.9 4.4 1.4 6.4L12 16.8 6.2 20l1.4-6.4L2.7 9.2l6.5-.7z" fill="#FFA503" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-/** Mini building for "Next up": line art with the next window lit. */
-function MiniBuilding() {
-  return (
-    <svg width="46" height="60" viewBox="0 0 46 60" fill="none" stroke="#D9D1C3" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true" className="flex-none" data-mini-building="">
-      <path d="M6 58V8l17-6 17 6v50z" />
-      <path d="M6 44h34M6 30h34M6 16h34" />
-      <rect x="12" y="20" width="7" height="7" rx="1" />
-      <rect x="27" y="20" width="7" height="7" rx="1" />
-      <rect x="12" y="34" width="7" height="7" rx="1" />
-      <rect x="27" y="34" width="7" height="7" rx="1" />
-      <rect x="12" y="48" width="7" height="7" rx="1" stroke="#FFA503" strokeWidth="2" fill="#FFF3DC" />
-      <rect x="27" y="48" width="7" height="10" rx="1" />
     </svg>
   );
 }
@@ -97,7 +82,7 @@ export function SilverCompletePage(props: {
         <HandRule className="mb-2.5 mt-3.5" />
         <AccentLabel as="h2">Next up</AccentLabel>
         <div className="mt-2.5 flex items-center gap-3.5" data-next-up="">
-          <MiniBuilding />
+          <NextUpBuilding nextLevel={next ? next.level : null} />
           <div>
             <b className="block font-heading text-[17px] font-semibold text-[#111827]">
               {next ? (next.newFloor ? `Level ${next.level}` : next.silverTitle) : "The rooftop"}

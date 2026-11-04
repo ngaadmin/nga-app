@@ -450,21 +450,24 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     expect(fit.scrollHeight, "screen three fits at 390x844 with the long vision").toBeLessThanOrEqual(fit.viewport);
   });
 
-  await step(t, "Continue (identity): silver-complete page, then the Level 1 finish", async () => {
+  await step(t, "Continue (identity): silver-complete page, then Level 1 done on the corridor", async () => {
     await btn(page, "Continue").click();
     const sc = page.locator('[data-silver-complete="l1-s2"]');
     await expect(sc).toBeVisible();
     await expect(sc.locator("[data-milestone-steps]")).toHaveText("2 of 15 steps done");
     await shot(t, "Level 1 identity complete, handbook page", sc.getByRole("button", { name: "Continue" }));
     await sc.getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator("[data-gold-completion]")).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Gold unlocked: Vision and Goals!/ })).toBeVisible();
+    await expect(page.locator("[data-gold-completion]")).toHaveCount(0);
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/);
+    await expect(page.locator("[data-level-done='1']")).toHaveText("Congratulations!You've completed Level 1");
+    await expect(page.locator("[data-plaque-tick]")).toHaveCount(2);
+    await expect(page.getByText(/Gold unlocked|move on/)).toHaveCount(0);
   });
-  await shot(t, "Level 1 gold", btn(page, "Continue"));
+  await shot(t, "Level 1 done on the lift", btn(page, "Go to Level 2"));
 
   // ---------- 4. Level 2 ----------
-  await step(t, "Continue: lift, then the Level 2 corridor (one section)", async () => {
-    await btn(page, "Continue").click();
+  await step(t, "Go to Level 2: lift, then the Level 2 corridor (one section)", async () => {
+    await btn(page, "Go to Level 2").click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/, { timeout: 15_000 });
     await expect(page.getByRole("button", { name: /Build your identity/ })).toHaveCount(0);
   });
@@ -538,10 +541,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await shot(t, "Level 2 silver 1 complete, handbook page", sc.getByRole("button", { name: "Continue" }));
     await sc.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/);
-    await expect(btn(page, "Take the lift up")).toBeVisible();
-    await expect(page.locator("[data-gold-completion]")).toHaveCount(0);
+    await expect(page.locator("[data-level-done='2']")).toBeVisible();
+    await expect(btn(page, "Go to Level 3")).toBeVisible();
   });
-  await shot(t, "Level 2 corridor, level done, lift up", btn(page, "Take the lift up"));
+  await shot(t, "Level 2 corridor, level done, lift up", btn(page, "Go to Level 3"));
 
   // ---------- 5. Handbook ----------
   const hb = page.getByRole("dialog");

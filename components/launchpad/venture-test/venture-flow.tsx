@@ -53,7 +53,6 @@ import { BackCrumb, BTN_PRIMARY, Heading } from "@/components/launchpad/venture-
 import { identityChoices, isIdentityPicker } from "@/lib/launchpad/content/identity-content";
 import { isPageAnswered, isTaskAnswered, pageDefaultAnswer, taskPages, type TaskPage } from "@/lib/launchpad/content/task-pages";
 import { SummaryWrapUp } from "@/components/launchpad/venture/summary-wrap-up";
-import { GoldCompletion } from "@/components/launchpad/venture/gold-completion";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
 
@@ -89,8 +88,6 @@ type View =
   | { screen: "wrap-up"; level: number; silverId: string; justCompleted?: boolean }
   /** The silver's handbook page, shown once right after the silver is finished. */
   | { screen: "silver-complete"; level: number; silverId: string }
-  /** The floor's gold completion screen, after its last silver-complete page. */
-  | { screen: "gold"; level: number }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
   | { screen: "rooftop" };
@@ -419,7 +416,7 @@ export function VentureFlow({
           complete={
             done
               ? {
-                  nextLabel: next ? `Level ${next.level} · ${next.name}` : null,
+                  nextLevel: next ? next.level : null,
                   onLift: next ? () => go({ screen: "lift", from: floor.level }) : null,
                 }
               : undefined
@@ -614,29 +611,8 @@ export function VentureFlow({
           iconVentureId={iconVentureId}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
-          // Continue goes to the corridor, or to the floor's gold screen when this silver finished the floor.
-          onContinue={
-            isFloorDone(progress, floor) && floor.gold.completion
-              ? () => go({ screen: "gold", level: floor.level })
-              : toCorridor(floor.level)
-          }
-        />
-      ) : null;
-      break;
-    }
-    case "gold": {
-      const floor = floorAt(floors, view.level);
-      const next = view.level < floors.length ? floorAt(floors, view.level + 1) : null;
-      body = floor.gold.completion ? (
-        <GoldCompletion
-          level={floor.level}
-          floorName={floor.name}
-          goldTitle={floor.gold.title}
-          completion={floor.gold.completion}
-          onBuilding={toBuilding}
-          onCorridor={toCorridor(floor.level)}
-          // The lift up when there is a floor above; the building otherwise.
-          onContinue={next ? () => go({ screen: "lift", from: floor.level }) : toBuilding}
+          // Continue goes to the corridor; when this silver finished the floor the corridor shows the level-done state.
+          onContinue={toCorridor(floor.level)}
         />
       ) : null;
       break;

@@ -144,7 +144,7 @@ export function CorridorFloor(props: CorridorProps) {
             <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-accent" />
             </>
           )}
-          <div className={`flex w-full flex-1 flex-col justify-center ${entering ? styles.plaquesFadeIn : ""}`}>{plaques}</div>
+          <div className={`flex w-full flex-1 flex-col ${complete ? "-translate-y-10" : ""} justify-center ${entering ? styles.plaquesFadeIn : ""}`}>{plaques}</div>
         </div>
         {note && <p className="absolute inset-x-[26px] top-[478px] text-center text-xs text-[#8a9bb0]">{note}</p>}
         {complete?.onLift && complete.nextLevel !== null && (

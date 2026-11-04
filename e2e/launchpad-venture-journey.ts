@@ -593,6 +593,13 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(idPage).toContainText("TEST Business Name");
     await expect(idPage.locator("[data-identity-page-vision] [data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
     await shot(t, "Workbook identity page", null);
+    await idPage.getByRole("button", { name: /^Edit/ }).click();
+    const done = idPage.locator("[data-inline-editor-done]");
+    await expect(done).toBeVisible();
+    expect((await done.boundingBox())!.width).toBeLessThan(140);
+    await shot(t, "Workbook identity page, inline editor open", null);
+    await done.click();
+    await expect(done).toHaveCount(0);
     await hb.getByRole("button", { name: "Next page" }).click();
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");

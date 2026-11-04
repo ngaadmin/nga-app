@@ -36,6 +36,11 @@ export function continueCopy(text: string): string {
   return text.replace(/Confirm and continue/g, PRIMARY_LABEL);
 }
 export const BTN_CYAN = `${BTN_BASE} bg-nga-secondary text-white shadow-[0_4px_0_#099fb8]`;
+/** Compact secondary buttons (workbook Previous/Next, inline editor Done): 44px tall, only as wide as the label. */
+const BTN_COMPACT_SIDE =
+  "inline-flex h-11 flex-none items-center justify-center rounded-full px-5 font-heading text-[15px] font-bold leading-none disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nga-ink";
+export const BTN_CYAN_COMPACT = `${BTN_COMPACT_SIDE} bg-nga-secondary text-white`;
+export const BTN_CYAN_OUTLINE_COMPACT = `${BTN_COMPACT_SIDE} bg-white text-nga-ink shadow-[inset_0_0_0_2px_#0cc1e0]`;
 export const BTN_WHITE = `${BTN_BASE} bg-white text-nga-ink shadow-[inset_0_0_0_2px_#bde9fb]`;
 
 export function LockIcon({ size = 12, color = VT.lockIcon }: { size?: number; color?: string }) {

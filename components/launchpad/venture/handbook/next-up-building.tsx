@@ -16,7 +16,7 @@ export function NextUpBuilding({ nextLevel, floors = 6 }: { nextLevel: number | 
   let overlay = "";
   for (let k = 1; k <= done; k++) {
     const { y, h } = band(k);
-    overlay += `<rect x="55" y="${y}" width="280" height="${h}" fill="#E5E7EB" opacity="0.88" data-floor-done="${k}"/>`;
+    overlay += `<rect x="55" y="${y}" width="280" height="${h}" fill="#C4C9D1" opacity="0.95" data-floor-done="${k}"/>`;
   }
   if (nextLevel !== null && nextLevel <= floors) {
     const { y, h } = band(nextLevel);

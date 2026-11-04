@@ -2,18 +2,36 @@
 
 import { useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
-import { partLabel, type HandbookPageView } from "@/lib/launchpad/venture-test/handbook";
+import {
+  partLabel,
+  type HandbookPageView,
+} from "@/lib/launchpad/venture-test/handbook";
 import type { LaunchpadSummarySection } from "@/lib/launchpad/content/types";
 import { sectionLines, summaryCatalog } from "@/lib/launchpad/content/summary";
-import { useIdentityAnswer, useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import {
+  useIdentityAnswer,
+  useLaunchpadAnswers,
+} from "@/components/launchpad/venture/identity/answers-context";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
-import { AccentLabel, HandRule, PAPER_ACCENT, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
+import {
+  AccentLabel,
+  HandRule,
+  PAPER_ACCENT,
+  TagChip,
+} from "@/components/launchpad/venture/handbook/paper-art";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
-import { BusinessName, LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
+import {
+  BusinessName,
+  LogoMark,
+  logoMarkLabel,
+} from "@/components/launchpad/venture/identity/business-logo";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
-import { BTN_CYAN, TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
+import {
+  BTN_CYAN_COMPACT,
+  TickBadge,
+} from "@/components/launchpad/venture-test/venture-test-ui";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -26,7 +44,17 @@ const ACCENT = PAPER_ACCENT;
 export function Doodle({ ventureId }: { ventureId: string }) {
   if (ventureId === "friendship-bracelets")
     return (
-      <svg width="22" height="22" viewBox="0 0 100 100" fill="none" stroke={ACCENT} strokeWidth="7" aria-hidden="true" className="mb-1.5 rotate-[14deg]" data-doodle="bead">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 100 100"
+        fill="none"
+        stroke={ACCENT}
+        strokeWidth="7"
+        aria-hidden="true"
+        className="mb-1.5 rotate-[14deg]"
+        data-doodle="bead"
+      >
         <path d="M18 60C18 34 34 18 50 18S82 34 82 60" strokeLinecap="round" />
         <circle cx="18" cy="70" r="9" />
         <circle cx="50" cy="80" r="9" />
@@ -34,7 +62,18 @@ export function Doodle({ ventureId }: { ventureId: string }) {
       </svg>
     );
   return (
-    <svg width="22" height="22" viewBox="0 0 100 100" fill="none" stroke={ACCENT} strokeWidth="7" strokeLinejoin="round" aria-hidden="true" className="mb-1.5 rotate-[14deg]" data-doodle="paw">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 100 100"
+      fill="none"
+      stroke={ACCENT}
+      strokeWidth="7"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="mb-1.5 rotate-[14deg]"
+      data-doodle="paw"
+    >
       <circle cx="27" cy="42" r="9" />
       <circle cx="41" cy="25" r="9.5" />
       <circle cx="60" cy="25" r="9.5" />
@@ -46,7 +85,10 @@ export function Doodle({ ventureId }: { ventureId: string }) {
 
 function DoneChip() {
   return (
-    <span className="flex items-center gap-1 rounded-md bg-[#F3F4F6] py-[3px] pl-1.5 pr-[7px] text-[11px] font-medium text-[#374151]" data-done-chip="">
+    <span
+      className="flex items-center gap-1 rounded-md bg-[#F3F4F6] py-[3px] pl-1.5 pr-[7px] text-[11px] font-medium text-[#374151]"
+      data-done-chip=""
+    >
       <TickBadge size={13} />
       Done
     </span>
@@ -56,7 +98,9 @@ function DoneChip() {
 function TopRow({ eyebrow, done }: { eyebrow: string; done: boolean }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">{eyebrow}</span>
+      <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
+        {eyebrow}
+      </span>
       {done && <DoneChip />}
     </div>
   );
@@ -64,7 +108,17 @@ function TopRow({ eyebrow, done }: { eyebrow: string; done: boolean }) {
 
 function EditPencil() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      fill="none"
+      stroke="#374151"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" />
       <path d="M13.5 6.5l4 4" />
     </svg>
@@ -75,7 +129,10 @@ function EditPencil() {
 export function useSectionLines(sections: readonly LaunchpadSummarySection[]) {
   const ctx = useLaunchpadAnswers();
   const catalog = summaryCatalog(ctx?.floors ?? []);
-  return sections.map((section) => ({ section, lines: sectionLines(section, ctx?.answers, catalog) }));
+  return sections.map((section) => ({
+    section,
+    lines: sectionLines(section, ctx?.answers, catalog),
+  }));
 }
 
 /**
@@ -96,21 +153,37 @@ export function HandbookSection({
       <HandRule />
       <AccentLabel doodle={doodle}>{section.label}</AccentLabel>
       {section.display === "list" ? (
-        <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label={section.label}>
+        <ul
+          className="mt-3 flex flex-col items-start gap-[9px]"
+          aria-label={section.label}
+        >
           {lines.map((l) => (
             <TagChip key={l}>{l}</TagChip>
           ))}
         </ul>
       ) : section.display === "text" && lines.length === 1 ? (
         <div className="relative mt-3 pl-7" data-quote="">
-          <svg className="absolute left-0 top-1 opacity-40" width="22" height="18" viewBox="0 0 44 36" fill={ACCENT} aria-hidden="true">
+          <svg
+            className="absolute left-0 top-1 opacity-40"
+            width="22"
+            height="18"
+            viewBox="0 0 44 36"
+            fill={ACCENT}
+            aria-hidden="true"
+          >
             <path d="M4 36V22C4 10 10 3 19 1l2 5C15 8 12 13 12 18h8v18Z" />
             <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
           </svg>
-          <p className="font-heading text-[19px] font-semibold leading-[1.42] tracking-[-0.005em] text-[#111827]">{lines[0]}</p>
+          <p className="font-heading text-[19px] font-semibold leading-[1.42] tracking-[-0.005em] text-[#111827]">
+            {lines[0]}
+          </p>
         </div>
       ) : (
-        <SummaryLines display={section.display} lines={lines} className="mt-3 text-[15px] leading-[1.45] text-[#111827]" />
+        <SummaryLines
+          display={section.display}
+          lines={lines}
+          className="mt-3 text-[15px] leading-[1.45] text-[#111827]"
+        />
       )}
     </div>
   );
@@ -123,8 +196,17 @@ export function HandbookSection({
  * "What we sell") from the learner's saved answers. A section with no answer
  * yet is left off.
  */
-function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPageView; editable: boolean; iconVentureId: string }) {
-  const wrapUp = page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
+function IdentityPageBody({
+  page,
+  editable,
+  iconVentureId,
+}: {
+  page: HandbookPageView;
+  editable: boolean;
+  iconVentureId: string;
+}) {
+  const wrapUp =
+    page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
   const answerKey = wrapUp?.answerKey ?? "";
   const { answer, update } = useIdentityAnswer(answerKey);
   const choices = identityChoices(page.silver, answerKey, iconVentureId);
@@ -139,8 +221,15 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
   return (
     <>
       <TopRow eyebrow="Your identity" done={page.done} />
-      <div className="mt-3.5 flex flex-col items-center gap-3" data-identity-lockup="">
-        <BusinessLogo answer={answer} size="hb" namePlaceholder="Your business name" />
+      <div
+        className="mt-3.5 flex flex-col items-center gap-3"
+        data-identity-lockup=""
+      >
+        <BusinessLogo
+          answer={answer}
+          size="hb"
+          namePlaceholder="Your business name"
+        />
         {fontLabel && (
           <p className="-mt-2 text-[11px] text-[#9CA3AF]" data-font-label="">
             Font: {fontLabel}
@@ -161,17 +250,37 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
         )}
       </div>
       {editable && editing && (
-        <div className="mt-3 rounded-xl bg-white p-3" data-inline-editor="identity">
-          <IdentityEditor choices={choices} answer={answer} update={update} idPrefix={`handbook-${answerKey}`} />
-          <button type="button" className={`${BTN_CYAN} mt-3 w-full !py-2 !text-sm`} onClick={() => setEditing(false)}>
-            Done
-          </button>
+        <div
+          className="mt-3 rounded-xl bg-white p-3"
+          data-inline-editor="identity"
+        >
+          <IdentityEditor
+            choices={choices}
+            answer={answer}
+            update={update}
+            idPrefix={`handbook-${answerKey}`}
+          />
+          <div className="mt-3 flex w-full justify-center self-stretch">
+            <button
+              type="button"
+              className={BTN_CYAN_COMPACT}
+              data-inline-editor-done=""
+              onClick={() => setEditing(false)}
+            >
+              Done
+            </button>
+          </div>
         </div>
       )}
       {vision && (
         <div className="mt-3 w-full" data-identity-page-vision="">
           <HandRule />
-          <VisionBlock spec={vision} doodle={sections.length ? undefined : <Doodle ventureId={iconVentureId} />} />
+          <VisionBlock
+            spec={vision}
+            doodle={
+              sections.length ? undefined : <Doodle ventureId={iconVentureId} />
+            }
+          />
         </div>
       )}
       {sections.map(({ section, lines }, i) => (
@@ -179,7 +288,11 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
           key={section.id}
           section={section}
           lines={lines}
-          doodle={i === sections.length - 1 ? <Doodle ventureId={iconVentureId} /> : undefined}
+          doodle={
+            i === sections.length - 1 ? (
+              <Doodle ventureId={iconVentureId} />
+            ) : undefined
+          }
         />
       ))}
     </>
@@ -189,7 +302,18 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
 /** Small orange rocket doodle for the empty logo slot. */
 function RocketDoodle() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFA503" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" data-doodle="rocket">
+    <svg
+      width="26"
+      height="26"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#FFA503"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      data-doodle="rocket"
+    >
       <path d="M12 3c3 2 4.5 5.5 4.5 9.5L14 16h-4l-2.5-3.5C7.5 8.5 9 5 12 3z" />
       <circle cx="12" cy="9.5" r="1.6" />
       <path d="M7.5 12.5L5 15l2.5 1M16.5 12.5L19 15l-2.5 1M10.5 18.5L12 21l1.5-2.5" />
@@ -206,14 +330,21 @@ function RocketDoodle() {
 const COVER_LOGO_PX = 72;
 
 function CoverPageBody({ page }: { page: HandbookPageView }) {
-  const wrapUp = page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
+  const wrapUp =
+    page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
   const { answer } = useIdentityAnswer(wrapUp?.answerKey ?? "");
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
   return (
     <div className="flex flex-col items-center gap-3 pt-2" data-cover="">
       {hasLogo ? (
         <div data-cover-logo="filled">
-          <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={COVER_LOGO_PX} label={logoMarkLabel(answer)} />
+          <LogoMark
+            shape={answer.shape}
+            color={answer.color}
+            icon={answer.icon}
+            size={COVER_LOGO_PX}
+            label={logoMarkLabel(answer)}
+          />
         </div>
       ) : (
         <div
@@ -221,15 +352,25 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
           className="flex h-[72px] w-[72px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
         >
           <RocketDoodle />
-          <span className="px-1 text-[10px] leading-tight text-[#9AA3B5]">Your logo goes here</span>
+          <span className="px-1 text-[10px] leading-tight text-[#9AA3B5]">
+            Your logo goes here
+          </span>
         </div>
       )}
       {answer.name ? (
         <div data-cover-name="filled">
-          <BusinessName name={answer.name} font={answer.font ?? "poppins-bold"} color={resolveNameColor(answer)} size="hb" />
+          <BusinessName
+            name={answer.name}
+            font={answer.font ?? "poppins-bold"}
+            color={resolveNameColor(answer)}
+            size="hb"
+          />
         </div>
       ) : (
-        <p data-cover-name="empty" className="font-heading text-[18px] font-semibold text-[#9AA3B5]">
+        <p
+          data-cover-name="empty"
+          className="font-heading text-[18px] font-semibold text-[#9AA3B5]"
+        >
           Your business name
         </p>
       )}
@@ -242,21 +383,40 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
 }
 
 /** A workbook-summary silver: its title, then the wrap-up's sections from saved answers. */
-function SummaryPageBody({ page, iconVentureId }: { page: HandbookPageView; iconVentureId: string }) {
-  const wrapUp = page.silver.wrapUp?.type === "workbook-summary" ? page.silver.wrapUp : null;
+function SummaryPageBody({
+  page,
+  iconVentureId,
+}: {
+  page: HandbookPageView;
+  iconVentureId: string;
+}) {
+  const wrapUp =
+    page.silver.wrapUp?.type === "workbook-summary" ? page.silver.wrapUp : null;
   const sections = useSectionLines(wrapUp?.sections ?? []);
   return (
     <>
-      <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} done={page.done} />
-      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
+      <TopRow
+        eyebrow={`${page.floorName} · Step ${page.silverNumber}`}
+        done={page.done}
+      />
+      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">
+        {page.silver.title}
+      </h2>
       {sections.map(({ section, lines }, i) =>
         lines.length ? (
-          <HandbookSection key={section.id} section={section} lines={lines} doodle={i === 0 ? <Doodle ventureId={iconVentureId} /> : undefined} />
+          <HandbookSection
+            key={section.id}
+            section={section}
+            lines={lines}
+            doodle={i === 0 ? <Doodle ventureId={iconVentureId} /> : undefined}
+          />
         ) : (
           <div key={section.id} data-handbook-section={section.id}>
             <HandRule />
             <AccentLabel>{section.label}</AccentLabel>
-            <p className="mt-2 text-[14px] italic text-[#9CA3AF]">Not answered yet</p>
+            <p className="mt-2 text-[14px] italic text-[#9CA3AF]">
+              Not answered yet
+            </p>
           </div>
         ),
       )}
@@ -268,11 +428,19 @@ function SummaryPageBody({ page, iconVentureId }: { page: HandbookPageView; icon
 function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
   return (
     <>
-      <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} done={page.done} />
-      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
+      <TopRow
+        eyebrow={`${page.floorName} · Step ${page.silverNumber}`}
+        done={page.done}
+      />
+      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">
+        {page.silver.title}
+      </h2>
       <HandRule />
       <AccentLabel>What I did</AccentLabel>
-      <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label="What I did">
+      <ul
+        className="mt-3 flex flex-col items-start gap-[9px]"
+        aria-label="What I did"
+      >
         {page.bronzeTitles.map((t, i) => (
           <TagChip key={t}>{partLabel(t, i)}</TagChip>
         ))}
@@ -289,18 +457,34 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
  * here (their values are edited on the silver's wrap-up). Placeholder pages
  * have nothing to edit.
  */
-export function HandbookPage({ page, editable, iconVentureId }: { page: HandbookPageView; editable: boolean; iconVentureId: string }) {
+export function HandbookPage({
+  page,
+  editable,
+  iconVentureId,
+}: {
+  page: HandbookPageView;
+  editable: boolean;
+  iconVentureId: string;
+}) {
   return (
     <article
       className="relative"
       data-handbook-page={page.kind === "cover" ? "cover" : page.silver.id}
       data-editable={editable ? "true" : "false"}
-      aria-label={page.kind === "cover" ? `Page ${page.number}` : `Page ${page.number}: ${page.silver.title}`}
+      aria-label={
+        page.kind === "cover"
+          ? `Page ${page.number}`
+          : `Page ${page.number}: ${page.silver.title}`
+      }
     >
       {page.kind === "cover" ? (
         <CoverPageBody page={page} />
       ) : page.kind === "identity" ? (
-        <IdentityPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
+        <IdentityPageBody
+          page={page}
+          editable={editable}
+          iconVentureId={iconVentureId}
+        />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} iconVentureId={iconVentureId} />
       ) : (

@@ -11,7 +11,7 @@ describe("NextUpBuilding", () => {
     const svg = container.querySelector("[data-next-up-building]")!;
     expect(svg.getAttribute("height")).toBe("80");
     expect([...svg.querySelectorAll("[data-floor-done]")].map((r) => r.getAttribute("data-floor-done"))).toEqual(["1"]);
-    expect(svg.querySelector("[data-floor-done='1']")?.getAttribute("fill")).toBe("#E5E7EB");
+    expect(svg.querySelector("[data-floor-done='1']")?.getAttribute("fill")).toBe("#C4C9D1");
     expect(svg.querySelector("[data-floor-next='2']")?.getAttribute("stroke")).toBe("#FFA503");
     expect(svg.querySelector("text")).toBeNull();
   });

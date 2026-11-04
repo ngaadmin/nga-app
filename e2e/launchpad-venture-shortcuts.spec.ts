@@ -85,6 +85,25 @@ test("deep links", async ({ page }, info) => {
   const onL2 = /Level 2/.test(await page.locator(corridorTitle).innerText());
   await shot(t, "?complete=l2-s1", onL2 ? page.locator("main").getByRole("button", { name: "Go to Level 3" }) : null);
 
+  await step(t, "Level 3 workbook: compact Previous (left) and Next (right), aqua", async () => {
+    await page.goto(url("reset=1&complete=l2-s1"));
+    await expect(page.locator(corridorTitle)).toHaveText(/Level 3/, { timeout: 60_000 });
+    await page.getByRole("button", { name: /up next/ }).first().click();
+    await page.locator("main").getByRole("button", { name: /Up next/ }).first().click();
+    await page.locator("[data-workbook-next]").click();
+    const prev = page.locator("[data-workbook-previous]");
+    const next = page.locator("[data-workbook-next]");
+    await expect(prev).toBeEnabled();
+    const [p, n] = [await prev.boundingBox(), await next.boundingBox()];
+    expect(p!.width).toBeLessThan(160);
+    expect(n!.width).toBeLessThan(160);
+    expect(p!.x).toBeLessThan(40);
+    expect(n!.x + n!.width).toBeGreaterThan(350);
+  });
+  await shot(t, "Level 3 workbook, Previous and Next", page.locator("[data-workbook-next]"));
+  await page.goto(url("reset=1&complete=l2-s1"));
+  await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Making)/, { timeout: 60_000 });
+
   await step(t, "?complete=l2-s1: handbook shows sample answers on the Level 1 and Level 2 pages", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
     await page.getByRole("button", { name: "Open handbook" }).first().click();

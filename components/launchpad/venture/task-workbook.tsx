@@ -1,7 +1,7 @@
 import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
 import { TaskScreen } from "@/components/launchpad/venture/task-screen-renderer";
 import { identityTaskKind, LogoBuilder, NameForm } from "@/components/launchpad/venture/identity/picker-screens";
-import { BTN_CYAN, BTN_WHITE, Heading, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BTN_CYAN_COMPACT, BTN_CYAN_OUTLINE_COMPACT, Heading, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
 /**
@@ -102,9 +102,9 @@ export function TaskWorkbook(props: {
           {props.nextHint}
         </p>
       )}
-      <div className="mx-5 mt-auto flex gap-3 pb-4">
+      <div className="mx-5 mt-auto flex items-center justify-between gap-3 pb-4" data-workbook-nav="">
         {showPrevious && (
-          <button type="button" onClick={props.onPrevious} disabled={previousDisabled} className={`${BTN_WHITE} flex-1`}>
+          <button type="button" onClick={props.onPrevious} disabled={previousDisabled} className={BTN_CYAN_OUTLINE_COMPACT} data-workbook-previous="">
             ‹ Previous
           </button>
         )}
@@ -113,7 +113,8 @@ export function TaskWorkbook(props: {
           onClick={props.onNext}
           disabled={props.nextDisabled}
           aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
-          className={`${BTN_CYAN} flex-1 disabled:opacity-50`}
+          className={`${BTN_CYAN_COMPACT} ml-auto disabled:opacity-50`}
+          data-workbook-next=""
         >
           {forward}
         </button>

@@ -16,8 +16,10 @@ const PROFILE_COLUMNS =
 /**
  * Profiles in the signed-in user's household, for the top-bar switcher.
  * Reads only. The caller is taken from the Auth session, never from input:
- * a parent sees themselves and their linked children; a child sees only
- * themselves and their parent (siblings are never sent to a child). Usernames, roles and tracks only (no emails).
+ * a parent gets only their own row and a count of linked children (child
+ * rows are never sent to a parent: no parent-to-child switching, COPPA); a
+ * child sees only themselves and their parent (siblings are never sent to a
+ * child). Usernames, roles and tracks only (no emails).
  */
 export async function loadHouseholdProfiles(): Promise<HouseholdProfiles | null> {
   try {

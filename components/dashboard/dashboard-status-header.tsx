@@ -142,7 +142,8 @@ export function DashboardStatusHeader() {
   // One-time tip, stored with the per-account intro flags. Waits until no
   // modal intro is covering the screen, then counts as seen once shown.
   useEffect(() => {
-    if (!household) return;
+    // Parents have nothing to switch to (no parent-to-child switching, COPPA).
+    if (!household || isParent) return;
     if (hasAccountSeenProfileSwitcherTip()) return;
     let shown = false;
     const tryShow = () => {
@@ -155,7 +156,7 @@ export function DashboardStatusHeader() {
     tryShow();
     const timer = window.setInterval(tryShow, 600);
     return () => window.clearInterval(timer);
-  }, [household]);
+  }, [household, isParent]);
 
   useEffect(() => {
     if (!tipVisible) return;
@@ -235,7 +236,7 @@ export function DashboardStatusHeader() {
             open: switcherOpen,
             buttonRef: switcherButtonRef,
             tip:
-              household && tipVisible ? (
+              household && tipVisible && !isParent ? (
                 <ProfileSwitcherTip onDismiss={() => setTipVisible(false)} />
               ) : null,
           }}
@@ -280,6 +281,7 @@ export function DashboardStatusHeader() {
           avatarId={avatarId}
           onChooseAvatar={chooseAvatar}
           household={household}
+          isParent={isParent}
           onOpenParentHub={canOpenParentHub ? openParentHubFromProfile : undefined}
           achievementsInitiallyOpen={achievementsDeepLink}
         />

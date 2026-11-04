@@ -9,6 +9,7 @@ import {
 import { ParentHubTabIconA } from "@/lib/dashboard/tab-icons-a";
 import {
   PROFILE_SWITCHING_AVAILABLE,
+  householdChildCount,
   type HouseholdProfiles,
 } from "@/lib/profile-switcher/household-profiles";
 import { parentHubSubtitle } from "@/lib/parent/pin-copy";
@@ -36,6 +37,12 @@ type ProfilePanelProps = {
   roleLabel?: string | null;
   /** Linked profiles. Shown as the same switcher list as the avatar menu. */
   household?: HouseholdProfiles | null;
+  /**
+   * Parent account. Parents never get a profile switcher here: a parent must
+   * not be able to switch into a child profile (COPPA; parent-targeted ads
+   * must never reach kids). Their children live in the Parent Hub instead.
+   */
+  isParent?: boolean;
   /** Parent Hub entry. Only for a parent who can open the Hub. */
   onOpenParentHub?: () => void;
   /** Opens with Achievements expanded (old /dashboard/achievements links). */
@@ -64,11 +71,13 @@ export function ProfilePanel({
   onChooseAvatar,
   roleLabel = null,
   household = null,
+  isParent = false,
   onOpenParentHub,
   achievementsInitiallyOpen = false,
 }: ProfilePanelProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const profiles = household?.profiles ?? [];
+  // Parents never get a profile list: no parent-to-child switching (COPPA).
+  const profiles = isParent ? [] : (household?.profiles ?? []);
   const hasOthers = profiles.some((profile) => !profile.isCurrent);
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
@@ -89,9 +98,16 @@ export function ProfilePanel({
             aria-haspopup="dialog"
             aria-expanded={pickerOpen}
             onClick={() => setPickerOpen(true)}
-            className="absolute -bottom-2 -right-3 flex size-11 items-center justify-center rounded-full bg-[#031F82] text-white shadow-md ring-[3px] ring-white transition-transform active:scale-95"
+            // 44px tap area (invisible padding) around a 28px navy circle that
+            // sits on the avatar's top-right edge.
+            className="group absolute -top-3 left-[56px] flex size-11 items-center justify-center rounded-full"
           >
-            <PencilIcon />
+            <span
+              data-profile-avatar-edit-circle
+              className="flex size-7 items-center justify-center rounded-full bg-[#031F82] text-white shadow-md ring-2 ring-white transition-transform group-active:scale-95"
+            >
+              <PencilIcon />
+            </span>
           </button>
         </div>
         <p
@@ -144,9 +160,7 @@ export function ProfilePanel({
               {PROFILE_SWITCHER_COPY.parentHub}
             </span>
             <span className="text-[11.5px] font-medium text-[#1E3A5F]">
-              {parentHubSubtitle(
-                household ? profiles.filter((p) => p.role === "child").length : null,
-              )}
+              {parentHubSubtitle(householdChildCount(household))}
             </span>
           </span>
           <svg viewBox="0 0 12 12" fill="none" aria-hidden className="size-3.5 shrink-0 text-[#0288A3]">
@@ -179,7 +193,7 @@ export function ProfilePanel({
 
       <AchievementsSection initiallyOpen={achievementsInitiallyOpen} />
 
-      <AvatarPickerSheet
+      <AvatarPickerModal
         isOpen={pickerOpen}
         avatarId={avatarId}
         onChoose={(id) => {
@@ -202,7 +216,7 @@ function PencilIcon() {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
-      className="size-5"
+      className="size-4"
     >
       <path d="M4 20h4L18.5 9.5a2.12 2.12 0 0 0-4-4L4 16v4Z" />
       <path d="m13.5 6.5 4 4" />
@@ -213,9 +227,9 @@ function PencilIcon() {
 /**
  * The avatar picker, opened only from the pencil on the profile avatar.
  * A pick replaces the avatar, saves it the same way as before (this device),
- * and closes the sheet.
+ * and closes the picker.
  */
-function AvatarPickerSheet({
+function AvatarPickerModal({
   isOpen,
   avatarId,
   onChoose,
@@ -226,7 +240,7 @@ function AvatarPickerSheet({
   onChoose: (id: ProfileAvatarId) => void;
   onClose: () => void;
 }) {
-  // Escape closes only the sheet, not the Profile panel underneath.
+  // Escape closes only the picker, not the Profile panel underneath.
   useEffect(() => {
     if (!isOpen) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -243,11 +257,12 @@ function AvatarPickerSheet({
       isOpen={isOpen}
       onClose={onClose}
       layer="toast"
+      align="center"
       labelledBy="profile-avatar-heading"
       backdropClassName="bg-[#031F82]/45"
       panelClassName="max-w-md rounded-[24px] bg-white p-4 shadow-md"
     >
-      <div data-profile-avatar-sheet>
+      <div data-profile-avatar-picker>
         <div className="flex items-center justify-between gap-2">
           <h2
             id="profile-avatar-heading"

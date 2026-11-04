@@ -26,6 +26,7 @@ import {
 } from "@/lib/dashboard/tab-icons-a";
 import {
   PROFILE_SWITCHING_AVAILABLE,
+  householdChildCount,
   type HouseholdProfile,
   type HouseholdProfiles,
 } from "@/lib/profile-switcher/household-profiles";
@@ -335,9 +336,10 @@ export function ProfileSwitcherMenu({
   }, [anchorRef, onClose, open]);
 
   if (!open || !box || typeof document === "undefined") return null;
-  const profiles = household?.profiles ?? [];
+  // Parents never get a profile list: no parent-to-child switching (COPPA).
+  const profiles = isParent ? [] : (household?.profiles ?? []);
   const hasOthers = profiles.some((profile) => !profile.isCurrent);
-  const showList = loading || profiles.length > 0;
+  const showList = !isParent && (loading || profiles.length > 0);
 
   return createPortal(
     <>
@@ -417,11 +419,7 @@ export function ProfileSwitcherMenu({
             data-attr="parent-hub"
             icon={<ParentHubTabIconA className="size-5" />}
             title={PROFILE_SWITCHER_COPY.parentHub}
-            sub={parentHubSubtitle(
-              household
-                ? household.profiles.filter((p) => p.role === "child").length
-                : null,
-            )}
+            sub={parentHubSubtitle(householdChildCount(household))}
             onClick={onOpenParentHub}
           />
         ) : null}
@@ -450,7 +448,7 @@ export function ProfileSwitcherMenu({
             </ul>
           </>
         ) : null}
-        {!loading && hasOthers && !PROFILE_SWITCHING_AVAILABLE ? (
+        {!isParent && !loading && hasOthers && !PROFILE_SWITCHING_AVAILABLE ? (
           <p
             data-profile-switcher-soon-note
             className="px-2.5 pb-1 pt-2 text-[11.5px] font-medium leading-snug text-[#64748b]"

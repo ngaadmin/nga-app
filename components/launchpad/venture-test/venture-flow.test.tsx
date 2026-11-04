@@ -115,10 +115,11 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
     fireEvent.click(screen.getByRole("button", { name: "Training" }));
     next();
-    // Why: arrows reorder, N/A strikes a reason out of the goal loop.
+    // Why: arrows reorder; moving a reason below the line takes it out of the goal loop.
     fireEvent.click(door(silver.bronzes[1]!.title));
     fireEvent.click(screen.getByRole("button", { name: "Move Help others up" }));
-    fireEvent.click(screen.getByRole("button", { name: "Not applicable: Learn new skills" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move Learn new skills down" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move Learn new skills down" }));
     expect(document.querySelector("[data-rank-item='learn-new-skills'][data-struck]")).toBeTruthy();
     next();
     // Cause.

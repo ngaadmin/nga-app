@@ -64,6 +64,7 @@ function pageHint(page: TaskPage | undefined): string | undefined {
   if (!screen) return undefined;
   if (screen.type === "choice-capture") return screen.mode === "multi" ? "Pick at least one to keep going." : "Make a choice to keep going.";
   if (screen.type === "short-text") return "Fill in each blank to keep going.";
+  if (screen.type === "rank-order") return "Keep at least one reason above the line to keep going.";
   return undefined;
 }
 

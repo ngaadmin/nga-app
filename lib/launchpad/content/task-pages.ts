@@ -103,9 +103,11 @@ export function isPageAnswered(screen: LaunchpadPageScreen, answers: LaunchpadAn
   switch (screen.type) {
     case "choice-capture":
       return (selectionOf(answers, screen.answerKey)?.selected ?? []).some((id) => screen.options.some((o) => o.id === id));
-    case "rank-order":
-      // The authored order is a valid ranking, so Next is always on; see pageDefaultAnswer.
-      return true;
+    case "rank-order": {
+      // The authored order is a valid ranking (see pageDefaultAnswer); at least one reason must stay above the line.
+      const na = rankingOf(answers, screen.answerKey)?.notApplicable ?? [];
+      return screen.items.some((i) => !na.includes(i.id));
+    }
     case "short-text":
       return isShortTextAnswered(screen, fieldsOf(answers, screen.answerKey));
     case "logo-picker":

@@ -13,6 +13,8 @@ import {
 } from "@/components/launchpad/venture/task-screen-renderer";
 import { VentureBuilding } from "@/components/launchpad/venture-test/venture-building";
 import { buildingFloors } from "@/components/launchpad/venture-test/venture-flow";
+import { OnboardingKit, OnboardingStack } from "@/components/launchpad/venture-test/venture-onboarding-art";
+import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
 
 afterEach(cleanup);
 
@@ -122,5 +124,28 @@ describe("r4 building from data", () => {
     const { container } = render(<VentureBuilding floors={buildingFloors(p, floors)} label="Dog walking building" />);
     const lit = [...container.querySelectorAll('rect.win[data-lit="1"]')].map((el) => el.getAttribute("data-silver"));
     expect(lit).toEqual([silver.id]);
+  });
+});
+
+describe("six-floor intro art (r2)", () => {
+  it("kit has six numbered cards and the stack has windows 2, 2, 4, 3, 2, 3", () => {
+    const { container } = render(
+      <svg>
+        <OnboardingKit />
+        <OnboardingStack />
+      </svg>,
+    );
+    const [kit, stack] = [...container.querySelectorAll("svg > g")];
+    expect([...kit!.querySelectorAll("text")].map((t) => t.textContent)).toEqual(["1", "2", "3", "4", "5", "6", "Your business kit"]);
+    const windows = [...stack!.querySelectorAll(":scope > g")].map((g) => g.querySelectorAll('rect[width="10"]').length);
+    expect(windows).toEqual([2, 2, 4, 3, 2, 3]);
+  });
+
+  it("intro building keeps every window unlit, even after progress", () => {
+    const floors = launchpadTestVentureSeed("dog-walking").floors;
+    const p = floors[0]!.silvers[0]!.bronzes.flatMap((b) => b.tasks).reduce((acc, t) => completeTask(acc, t.id), EMPTY_VENTURE_TEST_PROGRESS);
+    const { container } = render(<VentureOnboarding floors={buildingFloors(p, floors)} onStart={noop} />);
+    expect(container.querySelectorAll("rect.win")).toHaveLength(16);
+    expect(container.querySelectorAll('rect.win[data-lit="1"]')).toHaveLength(0);
   });
 });

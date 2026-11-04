@@ -98,11 +98,19 @@ function TopBar() {
   );
 }
 
+/**
+ * The fixed tab bar is 78px tall plus the device's bottom safe-area inset. The page
+ * reserves exactly that much space under its content, so every screen's primary
+ * button can scroll fully clear of the bar.
+ */
+export const TAB_BAR_CLASS = "h-[calc(78px+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)]";
+export const TAB_BAR_CLEARANCE_CLASS = "pb-[calc(78px+env(safe-area-inset-bottom,0px))]";
+
 function BottomBar() {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-0 z-chrome mx-auto flex h-[78px] w-full max-w-[430px] items-center justify-between bg-white px-1.5"
+      className={`fixed inset-x-0 bottom-0 z-chrome mx-auto flex ${TAB_BAR_CLASS} w-full max-w-[430px] items-center justify-between bg-white px-1.5`}
       style={{ boxShadow: `0 -1px 0 ${VT.divider}` }}
     >
       {TABS.map((tab) => {
@@ -130,7 +138,7 @@ export function VentureTestShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white text-nga-ink">
       <TopBar />
-      <main className="flex min-h-0 flex-1 flex-col pb-[78px]">{children}</main>
+      <main className={`flex min-h-0 flex-1 flex-col ${TAB_BAR_CLEARANCE_CLASS}`} data-tab-bar-clearance="">{children}</main>
       <BottomBar />
     </div>
   );

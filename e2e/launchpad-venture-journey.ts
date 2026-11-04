@@ -44,9 +44,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(tile).toBeVisible();
     await expect(tile.locator("[data-tile-level-name]")).toContainText("Vision and Goals");
     await expect(tile.getByRole("button", { name: "Continue" })).toBeVisible();
-    await expect(tile.locator("[data-handbook-button]")).toHaveCount(0);
+    // Workbook button always shown: an inactive placeholder until a step is done.
+    await expect(tile.locator('[data-handbook-button="inactive"]')).toHaveAttribute("aria-disabled", "true");
   });
-  await shot(t, "Home, In Progress tile (Level 1)", page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }));
+  await shot(t, "Home, In Progress tile (Level 1), workbook button inactive", page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }));
 
   await step(t, "Continue goes straight to the building (no onboarding a second time)", async () => {
     await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();
@@ -114,6 +115,32 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator("[data-rank-item]").nth(1)).toContainText("Make money");
   });
   await shot(t, "Find the why, Help others moved to number 1", next);
+  const aboveTiles = page.locator('ol[aria-label="Your ranking"] [data-rank-item]');
+  const zone = page.locator('[aria-labelledby="rank-below-title"]').first();
+  await step(t, "Find the why: move Be my own boss below the line (Doesn't apply to me)", async () => {
+    await main(page).getByRole("button", { name: "Move Be my own boss down", exact: true }).click();
+    await expect(aboveTiles).toHaveCount(3);
+    await expect(main(page)).toContainText("Doesn't apply to me");
+    await expect(next).toBeEnabled();
+  });
+  await shot(t, "Find the why, one tile below the line", next);
+  await step(t, "Find the why: all four below the line disables Next", async () => {
+    // Above is now Help others, Make money, Learn new skills: the last one crosses each time.
+    for (const l of ["Learn new skills", "Make money", "Help others"]) {
+      await main(page).getByRole("button", { name: `Move ${l} down`, exact: true }).click();
+    }
+    await expect(aboveTiles).toHaveCount(0);
+    await expect(next).toBeDisabled();
+  });
+  await shot(t, "Find the why, all four below the line (Next disabled)", next);
+  await step(t, "Find the why: move all four back above the line", async () => {
+    for (const l of ["Help others", "Make money", "Learn new skills", "Be my own boss"]) {
+      await main(page).getByRole("button", { name: `Move ${l} up, doesn't apply to me`, exact: true }).click();
+    }
+    await expect(aboveTiles).toHaveCount(4);
+    await expect(aboveTiles.first()).toContainText("Help others");
+    void zone;
+  });
   await step(t, "Finish Find the why", async () => {
     await next.click();
     await expect(btn(page, /Know your impact/)).toContainText("Up next");
@@ -217,6 +244,13 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await next.click();
     await goalPage(5, "Support a cause");
     await expect(main(page).locator("[data-sentence]")).toContainText("to support the environment");
+    // Optional (Cath 4 Nov 10:07pm): Next works while empty; a bad value blocks.
+    await expect(main(page).locator("[data-optional-tag]")).toHaveText("Optional");
+    await expect(next).toBeEnabled();
+  });
+  await shot(t, "Goal 5 of 6, Support a cause, empty (optional)", next);
+  await step(t, "Goal 5: a bad percent blocks, then fill 10", async () => {
+    await main(page).getByLabel("Percent").fill("0");
     await expect(next).toBeDisabled();
     await main(page).getByLabel("Percent").fill("10");
     await expect(next).toBeEnabled();
@@ -226,6 +260,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await step(t, "Goal 6: Add another goal is optional (Finish on while empty), then fill it in", async () => {
     await next.click();
     await goalPage(6, "Add another goal");
+    await expect(main(page).locator("[data-optional-tag]")).toHaveText("Optional");
+    await expect(main(page)).not.toContainText("Optional. Add");
     await expect(next).toHaveText("Finish ›");
     await expect(next).toBeEnabled();
     // One inline sentence, everything empty at the start, no separate boxes and no Number field.
@@ -520,10 +556,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await page.getByRole("button", { name: /Launchpad/ }).first().click();
     const tile = page.locator('[data-in-progress="dog-walking"]');
     await expect(tile.locator("[data-tile-level-name]")).toContainText("Making");
-    await expect(tile.locator("[data-handbook-button]")).toBeVisible();
+    await expect(tile.locator('[data-handbook-button=""]')).toBeVisible();
     await expect(tile.getByRole("progressbar")).toBeVisible();
   });
-  await shot(t, "Home, In Progress tile with handbook button", page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }));
+  await shot(t, "Home, In Progress tile, workbook button active", page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }));
 
   await step(t, "Home handbook opens read-only with my answers", async () => {
     await page.locator('[data-in-progress="dog-walking"] [data-handbook-button]').click();

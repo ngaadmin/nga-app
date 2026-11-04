@@ -91,6 +91,7 @@ export function IconChip({ icon, color, size = 44, label }: { icon: LogoIconId; 
 const SIZES = {
   lg: { mark: 132, width: 300, name: 32, longName: 26 },
   md: { mark: 92, width: 260, name: 26, longName: 22 },
+  sm: { mark: 76, width: 230, name: 22, longName: 20 },
 } as const;
 
 /**

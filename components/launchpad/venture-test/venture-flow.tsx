@@ -38,6 +38,8 @@ import { VentureUnavailable } from "@/components/launchpad/venture/venture-unava
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
+import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
+import { handbookBusinessName, hasHandbook, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
 import { identityChoices, isTaskAnswered } from "@/lib/launchpad/content/identity-content";
@@ -106,6 +108,7 @@ function loadInProgress(
         floorName: floor.name,
         done: states.filter((s) => s === "done").length,
         total: floor.silvers.length,
+        hasHandbook: hasHandbook(p, floors),
       },
     ];
   });
@@ -140,9 +143,13 @@ export function VentureFlow({
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
   const [inProgress, setInProgress] = useState<InProgressVenture[] | null>(null);
   const [view, setView] = useState<View>({ screen: "home" });
+  /** Open handbook: from home (read-only, any In Progress business) or the building (editable). */
+  const [handbook, setHandbook] = useState<{ ventureId: string; entry: "home" | "building" } | null>(null);
+  const closeHandbook = useCallback(() => setHandbook(null), []);
   const ventureTitle = ventureId ? (ventureTitles[ventureId] ?? ventureId) : "";
 
   const go = useCallback((next: View) => {
+    setHandbook(null);
     setView(next);
     window.scrollTo({ top: 0 });
   }, []);
@@ -170,12 +177,18 @@ export function VentureFlow({
       shortcut && initialVentureId && shortcutContent?.ok
         ? applyVentureTestShortcut(shortcut, shortcutContent.payload.floors, loadVentureTestProgress(initialVentureId))
         : null;
-    if (applied && initialVentureId) {
-      saveVentureTestProgress(initialVentureId, applied.progress);
+    if (applied && initialVentureId && shortcutContent?.ok) {
+      const shortcutProgress = withShortcutSampleAnswers(
+        applied.progress,
+        shortcutContent.payload.floors,
+        iconSetOverride ?? initialVentureId,
+        tileName(initialVentureId) ?? ventureTitles[initialVentureId] ?? initialVentureId,
+      );
+      saveVentureTestProgress(initialVentureId, shortcutProgress);
       markVentureTestOnboardingSeen(initialVentureId);
       setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
       setVentureId(initialVentureId);
-      setProgress(applied.progress);
+      setProgress(shortcutProgress);
       go(applied.land.screen === "corridor" ? { ...applied.land, entering: true } : applied.land);
       return;
     }
@@ -194,7 +207,28 @@ export function VentureFlow({
   if (view.screen === "home") {
     return (
       <VentureTestShell>
-        {inProgress ? <LaunchpadHome inProgress={inProgress} onOpenVenture={openVenture} /> : null}
+        {inProgress ? (
+          <LaunchpadHome inProgress={inProgress} onOpenVenture={openVenture} onOpenHandbook={(id) => setHandbook({ ventureId: id, entry: "home" })} />
+        ) : null}
+        {handbook?.entry === "home" && ventures[handbook.ventureId]?.ok
+          ? (() => {
+              const id = handbook.ventureId;
+              const c = ventures[id]!;
+              if (!c.ok) return null;
+              const p = loadVentureTestProgress(id);
+              return (
+                <Handbook
+                  entry="home"
+                  businessName={handbookBusinessName(p, c.payload.floors, tileName(id) ?? ventureTitles[id] ?? id)}
+                  floors={c.payload.floors}
+                  progress={p}
+                  iconVentureId={iconSetOverride ?? id}
+                  ventureId={id}
+                  onClose={closeHandbook}
+                />
+              );
+            })()
+          : null}
       </VentureTestShell>
     );
   }
@@ -256,15 +290,28 @@ export function VentureFlow({
             // Any floor can be tapped; floors above the current one open as a preview.
             onSelectFloor={(l) => go({ screen: "corridor", level: l, entering: true })}
           />
-          <div className="mx-5 -mt-1.5 pb-4">
+          <div className="mx-5 -mt-1.5 flex items-center gap-3 pb-4">
             <button
               type="button"
-              className={`${BTN_ORANGE} w-full`}
+              className={`${BTN_ORANGE} min-w-0 flex-1`}
               onClick={() => go(cta.kind === "rooftop" ? { screen: "rooftop" } : { screen: "corridor", level: cta.level, entering: true })}
             >
               {cta.label}
             </button>
+            {hasHandbook(progress, floors) && <HandbookButton onClick={() => setHandbook({ ventureId, entry: "building" })} />}
           </div>
+          {handbook?.entry === "building" && handbook.ventureId === ventureId && (
+            <Handbook
+              entry="building"
+              businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
+              floors={floors}
+              progress={progress}
+              iconVentureId={iconVentureId}
+              ventureId={ventureId}
+              setAnswer={setAnswer}
+              onClose={closeHandbook}
+            />
+          )}
         </section>
       );
       break;

@@ -148,20 +148,25 @@ describe("business name", () => {
 });
 
 describe("name color", () => {
-  it("defaults to the logo color; ink is charcoal; no logo color yet falls back to charcoal", () => {
-    expect(resolveNameColor({ ...FULL, nameColor: undefined })).toBe("#0A8FA8");
+  it("unpicked renders charcoal; logo follows the logo color; ink is charcoal", () => {
+    expect(resolveNameColor({ ...FULL, nameColor: undefined })).toBe(NAME_INK_HEX);
+    expect(resolveNameColor({ ...FULL, nameColor: "logo" })).toBe("#0A8FA8");
     expect(resolveNameColor({ ...FULL, nameColor: "logo", color: "#E5484D" })).toBe("#E5484D");
     expect(resolveNameColor({ ...FULL, nameColor: "ink" })).toBe(NAME_INK_HEX);
     expect(resolveNameColor({ ...EMPTY_IDENTITY })).toBe(NAME_INK_HEX);
   });
 
-  it("the name color step is answered by default; the other steps need a pick", () => {
+  it("every step, the name color included, needs a pick before Next", () => {
     const [shape, , , nameTask, , colorTask] = IDENTITY.bronzes.flatMap((b) => b.tasks);
     const none: LaunchpadAnswers = {};
     expect(isTaskAnswered(shape!, none)).toBe(false);
     expect(isTaskAnswered(shape!, { [IDENTITY_ANSWER_KEY]: { ...EMPTY_IDENTITY, shape: "round" } })).toBe(true);
     expect(isTaskAnswered(nameTask!, { [IDENTITY_ANSWER_KEY]: { ...EMPTY_IDENTITY, name: "  " } })).toBe(false);
-    expect(isTaskAnswered(colorTask!, none)).toBe(true);
+    expect(isTaskAnswered(colorTask!, none)).toBe(false);
+    expect(isTaskAnswered(colorTask!, { [IDENTITY_ANSWER_KEY]: { ...EMPTY_IDENTITY, color: "#E5484D" } })).toBe(false);
+    expect(isTaskAnswered(colorTask!, { [IDENTITY_ANSWER_KEY]: { ...EMPTY_IDENTITY, nameColor: "ink" } })).toBe(true);
+    // nameColor stays optional in the saved answer until picked.
+    expect(parseBusinessIdentityAnswer({ ...FULL, nameColor: undefined })?.nameColor).toBeUndefined();
   });
 });
 
@@ -239,7 +244,7 @@ describe("picker screens", () => {
     expect(screen.getByRole("radio", { name: "Coral red" }).getAttribute("aria-checked")).toBe("true");
   });
 
-  it("the name box caps at 24 and the name color step shows the logo color checked by default", () => {
+  it("the name box caps at 24; the two name colors start equal (neither checked) with a charcoal preview", () => {
     render(
       <WithAnswers initial={{ [IDENTITY_ANSWER_KEY]: { ...EMPTY_IDENTITY, color: "#2E9E5B" } }}>
         <TaskScreen screen={SCREENS[3]!} />
@@ -250,7 +255,13 @@ describe("picker screens", () => {
     expect(input.maxLength).toBe(24);
     fireEvent.change(input, { target: { value: "The Very Best Bracelet Shop Ever" } });
     expect(saved().name).toBe("The Very Best Bracelet S");
-    expect(screen.getByRole("radio", { name: "Logo color" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "Logo color" }).getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByRole("radio", { name: "Dark ink" }).getAttribute("aria-checked")).toBe("false");
+    expect(saved().nameColor).toBeUndefined();
+    for (const el of screen.getAllByText("The Very Best Bracelet S")) expect((el as HTMLElement).style.color).toBe("rgb(31, 41, 55)");
+    fireEvent.click(screen.getByRole("radio", { name: "Logo color" }));
+    expect(saved().nameColor).toBe("logo");
+    for (const el of screen.getAllByText("The Very Best Bracelet S")) expect((el as HTMLElement).style.color).toBe("rgb(46, 158, 91)");
     fireEvent.click(screen.getByRole("radio", { name: "Dark ink" }));
     expect(saved().nameColor).toBe("ink");
   });

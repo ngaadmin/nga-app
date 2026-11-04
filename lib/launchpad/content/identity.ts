@@ -28,8 +28,11 @@ export type NameFontId = (typeof NAME_FONTS)[number];
 export const NAME_COLOR_IDS = ["logo", "ink"] as const;
 export type NameColorId = (typeof NAME_COLOR_IDS)[number];
 export const NAME_INK_HEX = "#1F2937";
-/** Default name color when none is picked yet: follow the logo color. */
-export const DEFAULT_NAME_COLOR: NameColorId = "logo";
+/**
+ * The two name colors are equal choices: neither is preselected. Until the
+ * learner picks one, the name previews (and renders) in charcoal.
+ */
+export const UNPICKED_NAME_HEX = NAME_INK_HEX;
 
 /** Business name cap (characters). The name wraps to at most 2 lines on render. */
 export const BUSINESS_NAME_MAX = 24;
@@ -108,17 +111,14 @@ export function parseLaunchpadAnswers(value: unknown): LaunchpadAnswers {
   return out;
 }
 
-/** The hex the business name is drawn in. Defaults to the logo color; ink when there is no logo color yet. */
+/** The hex the business name is drawn in: the logo color only when picked (and set); charcoal otherwise, including unpicked. */
 export function resolveNameColor(answer: BusinessIdentityAnswer): string {
-  const choice = answer.nameColor ?? DEFAULT_NAME_COLOR;
-  if (choice === "ink" || !answer.color) return NAME_INK_HEX;
-  return answer.color;
+  if (answer.nameColor === "logo" && answer.color) return answer.color;
+  return answer.nameColor === "ink" ? NAME_INK_HEX : UNPICKED_NAME_HEX;
 }
 
 /** True once the given pick has a value (gates Next on a picker step). */
 export function isIdentityFieldSet(answer: BusinessIdentityAnswer | undefined, field: IdentityField): boolean {
-  // The name color has a default (the logo color), so that step is always answered.
-  if (field === "nameColor") return true;
   if (!answer) return false;
   if (field === "name") return !!answer.name?.trim();
   return answer[field] !== undefined;

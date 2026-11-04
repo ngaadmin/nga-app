@@ -16,6 +16,7 @@ import {
   SHOP_ICONS,
 } from "@/components/launchpad/venture-test/launchpad-home-art";
 import { BTN_ORANGE } from "@/components/launchpad/venture-test/venture-test-ui";
+import { HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
 
 export type InProgressVenture = {
   ventureId: string;
@@ -24,6 +25,8 @@ export type InProgressVenture = {
   floorName: string;
   done: number;
   total: number;
+  /** At least one completed silver: the card shows the handbook button. */
+  hasHandbook: boolean;
 };
 
 const TILES = flatLaunchpadTiles();
@@ -106,9 +109,12 @@ function MoreTile({ pill, pillOpacity }: { pill: string | null; pillOpacity: num
 export function LaunchpadHome({
   inProgress,
   onOpenVenture,
+  onOpenHandbook,
 }: {
   inProgress: InProgressVenture[];
   onOpenVenture: (ventureId: string) => void;
+  /** Opens the business's handbook read-only. */
+  onOpenHandbook?: (ventureId: string) => void;
 }) {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [lockedNote, setLockedNote] = useState<string | null>(null);
@@ -181,6 +187,7 @@ export function LaunchpadHome({
                 <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${Math.round((v.done / Math.max(1, v.total)) * 100)}%` }} />
               </div>
             </div>
+            {v.hasHandbook && onOpenHandbook && <HandbookButton onClick={() => onOpenHandbook(v.ventureId)} />}
             <button
               type="button"
               onClick={() => onOpenVenture(v.ventureId)}

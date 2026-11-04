@@ -7,14 +7,7 @@ import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_ORANGE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
-import {
-  ColorChoices,
-  FontChoices,
-  IconChoices,
-  NameColorChoices,
-  NameInput,
-  ShapeChoices,
-} from "@/components/launchpad/venture/identity/identity-choices";
+import { IdentityFieldEditor } from "@/components/launchpad/venture/identity/identity-choices";
 
 const EDITORS = [
   { id: "shape", label: "Shape" },
@@ -91,20 +84,7 @@ export function IdentityWrapUp({
       </div>
 
       <div id="wrapup-editor" role="tabpanel" aria-labelledby={`wrapup-tab-${editor}`} className="mx-5 mb-4 mt-4" data-editor={editor}>
-        {editor === "shape" && <ShapeChoices options={choices.shapes} answer={answer} update={update} />}
-        {editor === "color" && <ColorChoices options={choices.colors} answer={answer} update={update} />}
-        {editor === "icon" && <IconChoices options={choices.icons} answer={answer} update={update} />}
-        {editor === "name" && (
-          <NameInput
-            id="wrapup-name"
-            label={choices.nameInputLabel}
-            maxLength={choices.nameMaxLength}
-            answer={answer}
-            update={update}
-          />
-        )}
-        {editor === "font" && <FontChoices options={choices.fonts} answer={answer} update={update} />}
-        {editor === "nameColor" && <NameColorChoices options={choices.nameColors} answer={answer} update={update} />}
+        <IdentityFieldEditor field={editor} choices={choices} answer={answer} update={update} nameInputId="wrapup-name" />
       </div>
 
       <div className="mx-5 mt-auto pb-4">

@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import type { LaunchpadPickerOption } from "@/lib/launchpad/content/types";
 import {
-  DEFAULT_NAME_COLOR,
   NAME_INK_HEX,
   type BusinessIdentityAnswer,
   type IdentityField,
@@ -15,6 +14,7 @@ import {
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { IconChip, LogoMark } from "@/components/launchpad/venture/identity/business-logo";
 import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
 
 /*
  * The choice groups shared by the picker steps and the wrap-up's inline
@@ -229,7 +229,8 @@ export function NameColorChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
-  const current = answer.nameColor ?? DEFAULT_NAME_COLOR;
+  // Equal choices: neither is checked until the learner picks one.
+  const current = answer.nameColor;
   return (
     <Group label="Name color">
       {options.map((o) => {
@@ -253,4 +254,39 @@ export function NameColorChoices({
       })}
     </Group>
   );
+}
+
+/**
+ * The inline editor for one identity field. Shared by the identity wrap-up's
+ * tabs and the handbook's edit pencils, so both edit the same saved answer.
+ */
+export function IdentityFieldEditor({
+  field,
+  choices,
+  answer,
+  update,
+  nameInputId,
+}: {
+  field: IdentityField;
+  choices: IdentityChoices;
+  answer: BusinessIdentityAnswer;
+  update: UpdateIdentity;
+  nameInputId: string;
+}) {
+  switch (field) {
+    case "shape":
+      return <ShapeChoices options={choices.shapes} answer={answer} update={update} />;
+    case "color":
+      return <ColorChoices options={choices.colors} answer={answer} update={update} />;
+    case "icon":
+      return <IconChoices options={choices.icons} answer={answer} update={update} />;
+    case "name":
+      return (
+        <NameInput id={nameInputId} label={choices.nameInputLabel} maxLength={choices.nameMaxLength} answer={answer} update={update} />
+      );
+    case "font":
+      return <FontChoices options={choices.fonts} answer={answer} update={update} />;
+    case "nameColor":
+      return <NameColorChoices options={choices.nameColors} answer={answer} update={update} />;
+  }
 }

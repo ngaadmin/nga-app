@@ -486,6 +486,12 @@ function checkWrapUp(wrapUp: unknown, where: string, pickerSteps: Map<string, Se
   }
   if (typeof wrapUp.answerKey !== "string" || !ANSWER_KEY_RE.test(wrapUp.answerKey)) fail(`${where} has no valid answerKey.`);
   if (wrapUp.handbookSections !== undefined) checkSections(wrapUp.handbookSections, `${where} handbook`, answers);
+  if (wrapUp.vision !== undefined) {
+    const v = wrapUp.vision;
+    if (!isObj(v)) fail(`${where} vision is malformed.`);
+    for (const k of ["label", "template", "businessType", "offerKey", "whyKey", "causeKey", "causeGoalKey", "causePercentField", "goalLoopId", "placeholder"] as const)
+      text(v[k], `${where} vision ${k}`);
+  }
   const steps = pickerSteps.get(wrapUp.answerKey) ?? new Set<string>();
   const missing = [...LOGO_PICKER_STEPS, ...NAME_PICKER_STEPS].filter((st) => !steps.has(st));
   if (missing.length) fail(`${where} needs picker steps for ${wrapUp.answerKey}: missing ${missing.join(", ")}.`);

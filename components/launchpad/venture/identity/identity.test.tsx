@@ -330,12 +330,3 @@ describe("identity wrap-up", () => {
     expect(saved().finalized).toBe(true);
   });
 });
-
-describe("vision sentence", () => {
-  it("reads [business type] offering [picks] as a natural list", async () => {
-    const { visionSentence, naturalList } = await import("@/components/launchpad/venture/identity/identity-wrap-up");
-    expect(naturalList(["a", "b", "c"])).toBe("a, b and c");
-    expect(visionSentence(["Dog walking", "Grooming", "Bookings"])).toBe("Dog walking offering grooming and bookings");
-    expect(visionSentence(["Dog walking"])).toBe("Dog walking");
-  });
-});

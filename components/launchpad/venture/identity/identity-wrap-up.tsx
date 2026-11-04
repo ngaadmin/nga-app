@@ -3,7 +3,7 @@
 import type { LaunchpadIdentityWrapUp } from "@/lib/launchpad/content/types";
 import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
 import { BinderCard, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
-import { useSectionLines } from "@/components/launchpad/venture/handbook/handbook-page";
+import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { BTN_PRIMARY, PRIMARY_LABEL, continueCopy, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { OpenSteps, OpenStepsHint, type OpenStep } from "@/components/launchpad/venture/open-steps";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
@@ -39,9 +39,6 @@ export function IdentityWrapUp({
   openSteps?: readonly OpenStep[];
 }) {
   const { answer, save } = useIdentityAnswer(wrapUp.answerKey);
-  const sections = useSectionLines(wrapUp.handbookSections ?? []).filter((x) => x.lines.length);
-  const vision = sections.find((x) => x.section.id === "our-vision") ?? sections[0];
-  const visionLine = vision ? visionSentence(vision.lines) : "";
   return (
     <section className="flex flex-1 flex-col" data-wrap-up="identity">
       <TrailCrumb level={level} current={silverTitle} onBuilding={onBuilding} onCorridor={onCorridor} />
@@ -50,14 +47,11 @@ export function IdentityWrapUp({
 
       <BinderCard className="mt-1" data-identity-binder="">
         {/* Summary only (Cath 4 Nov 10:01pm): the vision at the top, then the
-            logo and business name. No pick editor here. The vision line is a
-            slot: it shows the "Our vision" section until Storybird's template lands. */}
-        {visionLine && (
+            logo and business name. The vision is the compiled H19 sentence,
+            the same block as the workbook cover. */}
+        {wrapUp.vision && (
           <div data-identity-vision="" className="pt-1">
-            <p className="font-heading text-[13px] font-bold uppercase tracking-[0.08em] text-nga-slate">Vision</p>
-            <p className="mt-1 font-heading text-[19px] font-semibold leading-[1.35] text-nga-ink" data-vision-line="">
-              {visionLine}
-            </p>
+            <VisionBlock spec={wrapUp.vision} />
           </div>
         )}
         <HandRule />
@@ -84,23 +78,4 @@ export function IdentityWrapUp({
       </div>
     </section>
   );
-}
-
-/** "a", "a and b", "a, b and c". */
-export function naturalList(items: readonly string[]): string {
-  if (items.length <= 1) return items[0] ?? "";
-  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
-}
-
-/**
- * Storybird's vision draft (Cath 4 Nov 10:03pm): "[business type] offering
- * [offer picks]". Both come from row 2 (What will your business offer?):
- * the first pick is the business type, the rest are the offer picks.
- */
-export function visionSentence(picks: readonly string[]): string {
-  const [type, ...rest] = picks.filter(Boolean);
-  if (!type) return "";
-  if (!rest.length) return type;
-  const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
-  return `${type} offering ${naturalList(rest.map(lower))}`;
 }

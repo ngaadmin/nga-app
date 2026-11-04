@@ -257,6 +257,29 @@ export type LaunchpadIdentityWrapUp = {
   placeholder: boolean;
   /** Sections under the logo on the handbook page ("Our vision", "What we sell"). */
   handbookSections?: readonly LaunchpadSummarySection[];
+  /** The compiled vision sentence (tracker H19), shown on the wrap-up and the workbook cover. */
+  vision?: LaunchpadVisionSpec;
+};
+
+/**
+ * Tracker H19: a template with {tokens} and [[optional clauses]], filled from
+ * saved Level 1 answers. The label wording is open with Cath ("Our vision").
+ */
+export type LaunchpadVisionSpec = {
+  label: string;
+  template: string;
+  /** {business-type}: the venture noun, lower case. */
+  businessType: string;
+  offerKey: string;
+  whyKey: string;
+  causeKey: string;
+  /** The Support a cause goal and its percent field ({cause-percent}). */
+  causeGoalKey: string;
+  causePercentField: string;
+  /** The Set your goals loop ({goal-list}). */
+  goalLoopId: string;
+  /** Grey text until the sentence can be filled. */
+  placeholder: string;
 };
 
 /** How a summary section shows its answer(s). */

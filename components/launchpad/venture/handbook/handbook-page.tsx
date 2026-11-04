@@ -10,6 +10,9 @@ import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { AccentLabel, HandRule, PAPER_ACCENT, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
+import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
+import { BusinessName, LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
+import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import { BTN_CYAN } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /*
@@ -174,6 +177,58 @@ function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPag
   );
 }
 
+/** Small orange rocket doodle for the empty logo slot. */
+function RocketDoodle() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFA503" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" data-doodle="rocket">
+      <path d="M12 3c3 2 4.5 5.5 4.5 9.5L14 16h-4l-2.5-3.5C7.5 8.5 9 5 12 3z" />
+      <circle cx="12" cy="9.5" r="1.6" />
+      <path d="M7.5 12.5L5 15l2.5 1M16.5 12.5L19 15l-2.5 1M10.5 18.5L12 21l1.5-2.5" />
+    </svg>
+  );
+}
+
+/**
+ * Workbook page 1, the cover (workbook-page1-cover-spec-r1): the logo slot,
+ * the business name, then the vision. Read-only, no pencils; each slot fills
+ * on its own from the saved answers and shows grey placeholder text until then.
+ */
+function CoverPageBody({ page }: { page: HandbookPageView }) {
+  const wrapUp = page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
+  const { answer } = useIdentityAnswer(wrapUp?.answerKey ?? "");
+  const hasLogo = !!(answer.shape && answer.color && answer.icon);
+  return (
+    <div className="flex flex-col items-center gap-3 pt-2" data-cover="">
+      {hasLogo ? (
+        <div data-cover-logo="filled">
+          <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={120} label={logoMarkLabel(answer)} />
+        </div>
+      ) : (
+        <div
+          data-cover-logo="empty"
+          className="flex h-[120px] w-[120px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
+        >
+          <RocketDoodle />
+          <span className="px-3 text-[12px] leading-tight text-[#9AA3B5]">Your logo goes here</span>
+        </div>
+      )}
+      {answer.name ? (
+        <div data-cover-name="filled">
+          <BusinessName name={answer.name} font={answer.font ?? "poppins-bold"} color={resolveNameColor(answer)} size="hb" />
+        </div>
+      ) : (
+        <p data-cover-name="empty" className="font-heading text-[22px] font-semibold text-[#9AA3B5]">
+          Your business name
+        </p>
+      )}
+      <div className="w-full">
+        <HandRule />
+        {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} />}
+      </div>
+    </div>
+  );
+}
+
 /** A workbook-summary silver: its title, then the wrap-up's sections from saved answers. */
 function SummaryPageBody({ page, iconVentureId }: { page: HandbookPageView; iconVentureId: string }) {
   const wrapUp = page.silver.wrapUp?.type === "workbook-summary" ? page.silver.wrapUp : null;
@@ -226,11 +281,13 @@ export function HandbookPage({ page, editable, iconVentureId }: { page: Handbook
   return (
     <article
       className="relative"
-      data-handbook-page={page.silver.id}
+      data-handbook-page={page.kind === "cover" ? "cover" : page.silver.id}
       data-editable={editable ? "true" : "false"}
-      aria-label={`Page ${page.number}: ${page.silver.title}`}
+      aria-label={page.kind === "cover" ? `Page ${page.number}` : `Page ${page.number}: ${page.silver.title}`}
     >
-      {page.kind === "identity" ? (
+      {page.kind === "cover" ? (
+        <CoverPageBody page={page} />
+      ) : page.kind === "identity" ? (
         <IdentityPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} iconVentureId={iconVentureId} />

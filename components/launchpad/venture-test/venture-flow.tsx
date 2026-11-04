@@ -605,7 +605,7 @@ export function VentureFlow({
     }
     case "silver-complete": {
       const floor = floorAt(floors, view.level);
-      const page = handbookPages(progress, floors).find((p) => p.silver.id === view.silverId);
+      const page = handbookPages(progress, floors).find((p) => p.kind !== "cover" && p.silver.id === view.silverId);
       body = page ? (
         <SilverCompletePage
           level={floor.level}

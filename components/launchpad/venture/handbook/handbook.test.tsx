@@ -67,21 +67,23 @@ describe("handbook pages", () => {
 
   it("makes one page per completed silver in building order, the identity silver rendering the saved answer", () => {
     const pages = handbookPages(through("l2-s2"), FLOORS);
-    expect(pages.map((p) => p.silver.id)).toEqual(["l1-s1", "l2-s1", "l2-s2"]);
-    expect(pages.map((p) => p.kind)).toEqual(["summary", "summary", "identity"]);
-    expect(pages[0]!.bronzeTitles).toEqual(SILVERS[0]!.bronzes.map((b) => b.title));
-    expect(pages.map((p) => p.number)).toEqual([1, 2, 3]);
+    // Page 1 is the cover (logo, name, vision), then one page per silver.
+    expect(pages.map((p) => p.silver.id)).toEqual(["l2-s2", "l1-s1", "l2-s1", "l2-s2"]);
+    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "summary", "identity"]);
+    expect(pages[1]!.bronzeTitles).toEqual(SILVERS[0]!.bronzes.map((b) => b.title));
+    expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4]);
+    expect(pages[0]).toMatchObject({ level: 1, kind: "cover" });
     expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder").map((p) => p.level)[0]).toBe(3);
-    expect(pages[2]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 2, done: true });
+    expect(pages[3]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 2, done: true });
   });
 
   it("opens at the latest page, and the ghost is the next silver", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
-    expect(handbookOpenIndex(pages)).toBe(1);
+    expect(handbookOpenIndex(pages)).toBe(2);
     expect(handbookOpenIndex([])).toBe(0);
     expect(handbookGhost(through("l2-s1"), FLOORS)).toEqual({ level: 2, floorName: FLOORS[1]!.name, silverTitle: "Build your identity" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
-    expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length);
+    expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length + 1);
   });
 
   it("is editable only from the building and only for a completed silver", () => {
@@ -105,10 +107,11 @@ describe("handbook tabs", () => {
 
   it("jumps to a floor's first page, or the latest page when that floor has none yet", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
-    expect(handbookTabTarget(pages, 1)).toBe(0);
-    expect(handbookTabTarget(pages, 2)).toBe(1);
+    // A floor tab opens its first silver page, not the cover.
+    expect(handbookTabTarget(pages, 1)).toBe(1);
+    expect(handbookTabTarget(pages, 2)).toBe(2);
     const l1Only = handbookPages(through("l1-s1"), FLOORS);
-    expect(handbookTabTarget(l1Only, 2)).toBe(0);
+    expect(handbookTabTarget(l1Only, 2)).toBe(1);
   });
 });
 
@@ -238,7 +241,7 @@ describe("<Handbook>", () => {
 
     // Earned floor (L2) viewed on the identity page, which keeps its running page number.
     const { unmount } = render(<Harness entry="building" initial={WITH_IDENTITY} />);
-    expect(screen.getByText("Page 3")).toBeTruthy();
+    expect(screen.getByText("Page 4")).toBeTruthy();
     expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
     const l2 = tab(/^Level 2/);
     expect(l2.getAttribute("data-tab-state")).toBe("earned");

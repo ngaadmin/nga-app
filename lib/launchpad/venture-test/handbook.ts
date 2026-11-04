@@ -38,7 +38,7 @@ export type HandbookPageView = {
    * sections; "summary": a workbook-summary silver's sections from saved
    * answers; "placeholder": any other silver.
    */
-  kind: "identity" | "summary" | "placeholder";
+  kind: "cover" | "identity" | "summary" | "placeholder";
   /** Titles of the silver's finished bronzes (written out under plain headings on placeholder pages). */
   bronzeTitles: string[];
   done: true;
@@ -55,8 +55,29 @@ function orderedSilvers(floors: readonly LaunchpadFloor[]) {
   return floors.flatMap((f) => f.silvers.map((silver, i) => ({ floor: f, silver, silverNumber: i + 1 })));
 }
 
-/** One page per completed silver, in building order. */
+/**
+ * Page 1 is the cover (logo, name, vision; workbook-page1-cover-spec-r1) once
+ * the workbook has any page, when the venture has an identity silver with a
+ * vision. Then one page per completed silver, in building order.
+ */
 export function handbookPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
+  const pages = silverPages(progress, floors);
+  const id = orderedSilvers(floors).find(({ silver }) => silver.wrapUp?.type === "identity-wrap-up" && silver.wrapUp.vision);
+  if (!pages.length || !id) return pages;
+  const cover: HandbookPageView = {
+    number: 1,
+    level: floors[0]!.level,
+    floorName: floors[0]!.name,
+    silverNumber: 0,
+    silver: id.silver,
+    kind: "cover",
+    bronzeTitles: [],
+    done: true,
+  };
+  return [cover, ...pages.map((p) => ({ ...p, number: p.number + 1 }))];
+}
+
+function silverPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
   return orderedSilvers(floors)
     .filter(({ silver }) => isSilverDone(progress, silver))
     .map(({ floor, silver, silverNumber }, i) => ({
@@ -112,7 +133,7 @@ export function handbookTabs(progress: VentureTestProgress, floors: readonly Lau
  * silver is done; the ghost of its next silver peeks behind the latest page).
  */
 export function handbookTabTarget(pages: readonly HandbookPageView[], level: number): number {
-  const i = pages.findIndex((p) => p.level === level);
+  const i = pages.findIndex((p) => p.level === level && p.kind !== "cover");
   return i === -1 ? handbookOpenIndex(pages) : i;
 }
 

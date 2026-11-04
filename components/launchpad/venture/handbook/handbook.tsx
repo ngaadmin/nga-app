@@ -170,7 +170,7 @@ export function Handbook({
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
-                <HandbookPage key={page.silver.id} page={page} editable={editable} iconVentureId={iconVentureId} />
+                <HandbookPage key={`${page.kind}-${page.silver.id}`} page={page} editable={editable} iconVentureId={iconVentureId} />
               </LaunchpadAnswersProvider>
             </div>
             <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
@@ -226,7 +226,7 @@ export function Handbook({
           </button>
           <div className="flex items-center gap-[7px]" aria-hidden="true" data-page-dots="">
             {pages.map((p, i) => (
-              <span key={p.silver.id} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
+              <span key={`${p.kind}-${p.silver.id}`} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
             ))}
             {ghost && <span className="size-1.5 rounded-full shadow-[inset_0_0_0_1px_#9CA3AF]" />}
           </div>

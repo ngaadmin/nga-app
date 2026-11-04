@@ -357,6 +357,29 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Level 2 corridor", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
 
+  await step(t, "Workbook cover (page 1) after Level 1: logo and name placeholders, the vision filled", async () => {
+    await page.getByRole("button", { name: /Back to building/ }).click();
+    await page.getByRole("button", { name: "Open handbook" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg.locator('[data-handbook-page="l1-s1"]')).toBeVisible();
+    await dlg.getByRole("button", { name: "Previous page" }).click();
+    const cover = dlg.locator('[data-handbook-page="cover"]');
+    await expect(cover).toBeVisible();
+    await expect(cover.locator('[data-cover-logo="empty"]')).toContainText("Your logo goes here");
+    await expect(cover.locator('[data-doodle="rocket"]')).toBeVisible();
+    await expect(cover.locator('[data-cover-name="empty"]')).toHaveText("Your business name");
+    await expect(cover.locator("[data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
+    await expect(cover.locator("[data-pencil], [data-edit-identity]")).toHaveCount(0);
+    expect(await cover.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
+    passed(t, "Cover vision after Level 1", await cover.locator("[data-vision-sentence]").innerText());
+  });
+  await shot(t, "Workbook cover, logo and name empty", null);
+  await step(t, "Close the workbook and go back up to the Level 2 corridor", async () => {
+    await page.getByRole("button", { name: "Close handbook" }).click();
+    await btn(page, "Go to Level 2").click();
+    await expect(page.getByRole("button", { name: /Know the product and its buyers, up next/ })).toBeVisible();
+  });
+
   await step(t, "Open Know the product and its buyers: 2 doors", async () => {
     await page.getByRole("button", { name: /Know the product and its buyers, up next/ }).click();
     await expect(btn(page, /Decide what to sell/)).toContainText("Up next");
@@ -490,6 +513,16 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(idWrap.getByRole("tab")).toHaveCount(0);
     await expect(idWrap.getByRole("radio")).toHaveCount(0);
     await expect(idWrap.locator("[data-identity-lockup]")).toBeVisible();
+    // The Vision line is now the compiled vision sentence (H19), same block as the cover.
+    const v = idWrap.locator("[data-identity-vision] [data-vision-sentence]");
+    await expect(v).toContainText(/^I am starting a dog walking business\. I will offer /);
+    await expect(v).toContainText("As I grow, I'll give 10% of every sale to support the environment.");
+    const fit = await page.evaluate(() => {
+      const b = Array.from(document.querySelectorAll("main button")).find((e) => e.textContent?.trim() === "Continue")!.getBoundingClientRect();
+      return { scrollHeight: document.scrollingElement!.scrollHeight, viewport: window.innerHeight, continueBottom: Math.round(b.bottom) };
+    });
+    passed(t, "Screen three vision", await v.innerText());
+    passed(t, "Screen three fit (no scroll when scrollHeight <= viewport)", JSON.stringify(fit));
   });
 
   await step(t, "Continue (identity): silver-complete page, then Level 2 corridor shows the lift", async () => {
@@ -523,6 +556,15 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(hb.locator('[data-handbook-page="l1-s1"]')).toBeVisible();
     await expect(hb.locator('[data-handbook-page="l1-s1"]')).toContainText("TEST benefit edit");
     await expect(hb.locator('[data-handbook-page="l1-s1"]')).toContainText(/the environment/i);
+    await hb.getByRole("button", { name: "Previous page" }).click();
+    const cover = hb.locator('[data-handbook-page="cover"]');
+    await expect(cover.locator('[data-cover-logo="filled"]')).toBeVisible();
+    await expect(cover.locator('[data-cover-name="filled"]')).toHaveText("TEST Business Name");
+    await expect(cover.locator("[data-vision-quote]")).toBeVisible();
+    await expect(cover.locator("[data-vision-sentence]")).toContainText("As I grow, I'll give 10% of every sale to support the environment.");
+    await shot(t, "Workbook cover, filled", null);
+    await hb.getByRole("button", { name: "Next page" }).click();
+    await expect(hb.locator('[data-handbook-page="l1-s1"]')).toBeVisible();
     const l1Tab = hb.getByRole("button", { name: "Level 1, Vision and Goals" });
     await expect(l1Tab).toHaveAttribute("data-viewed", /.*/);
     const outline = await l1Tab.evaluate((e) => {
@@ -579,6 +621,28 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator('[data-handbook="home"] [data-pencil]')).toHaveCount(0);
   });
   await shot(t, "Handbook from home, read only", null);
+  await page.getByRole("button", { name: "Close handbook" }).click();
+
+  await step(t, "Cause skipped (Support a cause goal left empty): the cover drops the cause clause", async () => {
+    // TEST-ONLY: clear the optional Support a cause goal in the saved test progress, as if it was left empty.
+    await page.evaluate(() => {
+      const k = "lp-venture-test:v1:dog-walking";
+      const p = JSON.parse(localStorage.getItem(k) ?? "{}");
+      if (p.answers) delete p.answers["l1-goal-support-a-cause"];
+      localStorage.setItem(k, JSON.stringify(p));
+    });
+    await page.goto(ROUTE); // not reload: the URL still carries ?reset=1
+    await page.locator('[data-in-progress="dog-walking"] [data-handbook-button]').click();
+    const home = page.locator('[data-handbook="home"]');
+    await home.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
+    await home.getByRole("button", { name: "Previous page" }).click();
+    const s = home.locator('[data-handbook-page="cover"] [data-vision-sentence]');
+    await expect(s).toBeVisible();
+    await expect(s).not.toContainText("As I grow");
+    await expect(s).toContainText("My goals: ");
+    passed(t, "Cover vision, cause skipped", await s.innerText());
+  });
+  await shot(t, "Workbook cover, cause skipped", null);
   await page.getByRole("button", { name: "Close handbook" }).click();
   return t;
 }

@@ -5,7 +5,7 @@
   "source": {
     "file": "lib/launchpad/content/source/dog-walking/bronze-task-tracker.xlsx",
     "sheet": "Bronze Task Tracker",
-    "md5": "fd62685792d1c673b07d866e70a2dd30",
+    "md5": "967b76bc8a22589bee9dbf02b7674018",
     "rows": "2-19",
     "notes": [
       {
@@ -1676,7 +1676,8 @@
             "feedsInto": [],
             "flags": [
               "D19",
-              "D20"
+              "D20",
+              "D24"
             ],
             "screenId": "l2-s2-wrap",
             "index": "wrap-up",
@@ -1705,7 +1706,19 @@
                   }
                 ]
               }
-            ]
+            ],
+            "vision": {
+              "label": "Our vision",
+              "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}.[[ As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
+              "businessType": "dog walking",
+              "offerKey": "l1-offer",
+              "whyKey": "l1-why",
+              "causeKey": "l1-cause",
+              "causeGoalKey": "l1-goal-support-a-cause",
+              "causePercentField": "donatePercent",
+              "goalLoopId": "l1-s1-b4-t1-s2",
+              "placeholder": "Your vision appears here when you finish Level 1."
+            }
           }
         }
       ]
@@ -1754,6 +1767,15 @@
       "rows": [
         14,
         16
+      ]
+    },
+    {
+      "id": "D24",
+      "topic": "Vision sentence",
+      "applied": "H19 template filled from saved answers (I19). {business-type} is \"dog walking\" (I19 example). {goal-list} leaves out the Support a cause goal, which the [[ ]] clause covers (I19 example). Label \"Our vision\" by default; mission vs vision and cover page vs lift preview are open with Cath.",
+      "status": "default-pending-cath",
+      "rows": [
+        19
       ]
     },
     {

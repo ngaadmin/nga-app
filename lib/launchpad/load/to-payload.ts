@@ -52,7 +52,11 @@ export function overlayLoad(seed: LaunchpadVenturePayload, load: LaunchpadLoadFi
         const kept = floor.silvers.find((x) => x.id === s.id);
         if (!kept) throw new Error(`Locked silver ${s.id} is not in the seed.`);
         if (!s.wrapUp?.handbookSections || kept.wrapUp?.type !== "identity-wrap-up") return kept;
-        const wrapUp: LaunchpadIdentityWrapUp = { ...kept.wrapUp, handbookSections: s.wrapUp.handbookSections };
+        const wrapUp: LaunchpadIdentityWrapUp = {
+          ...kept.wrapUp,
+          handbookSections: s.wrapUp.handbookSections,
+          ...(s.wrapUp.vision ? { vision: s.wrapUp.vision } : {}),
+        };
         return { ...kept, wrapUp };
       });
       return {

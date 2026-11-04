@@ -1,6 +1,7 @@
 import type {
   LaunchpadGoldCompletion,
   LaunchpadSummarySection,
+  LaunchpadVisionSpec,
   LaunchpadTaskScreen,
   LaunchpadWrapUp,
 } from "@/lib/launchpad/content/types";
@@ -103,6 +104,7 @@ export type LoadWrapUp = LoadRowMeta & {
   /** Summary wrap-ups are written in full; the locked identity wrap-up only adds handbookSections. */
   payload?: LaunchpadWrapUp;
   handbookSections?: LaunchpadSummarySection[];
+  vision?: LaunchpadVisionSpec;
 };
 
 export type LoadSilver = {

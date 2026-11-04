@@ -9,6 +9,7 @@
  * DECISIONS and flagged on the rows it touches.
  */
 import type {
+  LaunchpadVisionSpec,
   LaunchpadChoiceCaptureScreen,
   LaunchpadGoalLoopGoal,
   LaunchpadGoalLoopScreen,
@@ -40,6 +41,8 @@ import {
 export const DOG_WALKING_VENTURE_ID = "dog-walking";
 /** {product} in sentences (decision D5). */
 export const DOG_WALKING_NOUN = "dog walking service";
+/** {business-type} in the vision sentence (I19 example: "a dog walking business"). */
+export const DOG_WALKING_BUSINESS_TYPE = "dog walking";
 
 /** Limits that the sheet does not give (decisions D2, D14, D16). */
 export const LIMITS = {
@@ -71,6 +74,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D2", topic: "Money cap", applied: "Amount is a whole number, 7 digits (1 to 9,999,999). K5 still says 1 billion cap.", status: "default-pending-cath", rows: [5, 6] },
   { id: "D3", topic: "Why items", applied: "Per Cath's 4 Nov calls, Find the why ranks four items: Make money, Help others, Learn new skills, Be my own boss (Support a cause removed 8:44pm). The reader drops the retired item if the sheet still lists it, so every ranked item has a goal row.", status: "decided-cath", rows: [3, 5] },
   { id: "D4", topic: "What I am selling display", applied: "The row 14 service description shows as plain text in the wrap-up and handbook. I14/I16 say bullet list.", status: "default-pending-cath", rows: [14, 16] },
+  { id: "D24", topic: "Vision sentence", applied: `H19 template filled from saved answers (I19). {business-type} is "${DOG_WALKING_BUSINESS_TYPE}" (I19 example). {goal-list} leaves out the Support a cause goal, which the [[ ]] clause covers (I19 example). Label "Our vision" by default; mission vs vision and cover page vs lift preview are open with Cath.`, status: "default-pending-cath", rows: [19] },
   { id: "D5", topic: "{product}", applied: `Filled from the venture noun: "${DOG_WALKING_NOUN}".`, status: "default-pending-cath", rows: [15] },
   { id: "D6", topic: "[Yes/No]", applied: "A two-option choice (Yes, No) shown as an inline dropdown in the sentence.", status: "default-pending-cath", rows: [15] },
   { id: "D7", topic: "Wrap-up button", applied: "Cath 4 Nov 9:59pm: Continue (compact navy button; was Confirm and continue, tracker I12/I16)", status: "decided-cath", rows: [12, 16] },
@@ -798,6 +802,21 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     { id: "our-vision", label: "Our vision", display: "list", sources: [{ answerKey: KEYS.offer }] },
     { id: "what-we-sell", label: "What we sell", display: "text", sources: [{ answerKey: KEYS.sell, field: "serviceDescription" }] },
   ];
+  // H19: the vision template; I19 names its tokens (D24).
+  const visionTemplate = rIdWrap.question.trim().replace(/^["\u201c]|["\u201d]$/g, "").trim();
+  if (!/\{business-type\}/.test(visionTemplate)) issue(ctx, rIdWrap.row, "H19 has no vision template ({business-type}).");
+  const vision: LaunchpadVisionSpec = {
+    label: "Our vision",
+    template: visionTemplate,
+    businessType: DOG_WALKING_BUSINESS_TYPE,
+    offerKey: KEYS.offer,
+    whyKey: KEYS.why,
+    causeKey: KEYS.cause,
+    causeGoalKey: KEYS.goal("support-a-cause"),
+    causePercentField: "donatePercent",
+    goalLoopId: "l1-s1-b4-t1-s2",
+    placeholder: "Your vision appears here when you finish Level 1.",
+  };
   const locked = (row: TrackerRow, screenId: string, template: "logo-picker" | "name-picker" | "identity-wrap-up"): LoadRowMeta =>
     meta(row, {
       screenId,
@@ -850,8 +869,9 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
             { answerKey: KEYS.offer, use: "handbook Our vision" },
             { answerKey: KEYS.sell, use: "handbook What we sell" },
           ],
-          flags: ["D19", "D20"],
+          flags: ["D19", "D20", "D24"],
           handbookSections,
+          vision,
         },
       },
     ],

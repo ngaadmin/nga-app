@@ -4,6 +4,7 @@ import type { LaunchpadIdentityWrapUp } from "@/lib/launchpad/content/types";
 import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_ORANGE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { OpenSteps, OpenStepsHint, type OpenStep } from "@/components/launchpad/venture/open-steps";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
@@ -23,6 +24,7 @@ export function IdentityWrapUp({
   onBuilding,
   onCorridor,
   onFinalize,
+  openSteps = [],
 }: {
   level: number;
   silverTitle: string;
@@ -31,6 +33,8 @@ export function IdentityWrapUp({
   onBuilding: () => void;
   onCorridor: () => void;
   onFinalize: () => void;
+  /** Steps left open ("Come back to this later"): listed, and the confirm button stays off until they are done. */
+  openSteps?: readonly OpenStep[];
 }) {
   const { answer, update, save } = useIdentityAnswer(wrapUp.answerKey);
   return (
@@ -54,10 +58,14 @@ export function IdentityWrapUp({
         <IdentityEditor choices={choices} answer={answer} update={update} idPrefix="wrapup" />
       </div>
 
+      <OpenSteps steps={openSteps} />
       <div className="mx-5 mt-auto pb-4">
+        <OpenStepsHint count={openSteps.length} id="wrap-up-open-hint" />
         <button
           type="button"
-          className={`${BTN_ORANGE} w-full`}
+          className={`${BTN_ORANGE} w-full disabled:opacity-50`}
+          disabled={openSteps.length > 0}
+          aria-describedby={openSteps.length > 0 ? "wrap-up-open-hint" : undefined}
           onClick={() => {
             save({ ...answer, finalized: true });
             onFinalize();

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { readWorkbookSheets, type WorkbookSheet } from "@/lib/academy/lessons/payload/parse-authoring-table";
-import { buildDogWalkingLoad, RETIRED_WHY_ITEM_IDS } from "@/lib/launchpad/load/dog-walking-load";
+import { buildDogWalkingLoad, RETIRED_WHY_ITEM_IDS, TEST_COME_BACK_LATER_TASK_IDS } from "@/lib/launchpad/load/dog-walking-load";
 import { DOG_WALKING_LOAD_PATH } from "@/lib/launchpad/load/paths";
 import { LAUNCHPAD_TRACKER_PATH, LAUNCHPAD_TRACKER_SHEET, splitOptionsCell, trackerFromSheets } from "@/lib/launchpad/load/read-tracker";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
@@ -117,5 +117,29 @@ describe("dog walking load reader", () => {
     expect(issues.map((i) => i.row)).toEqual(expect.arrayContaining([2, 4]));
     expect(issues.find((i) => i.row === 2)?.reason).toMatch(/not one of/);
     expect(issues.find((i) => i.row === 4)?.reason).toMatch(/not supported/);
+  });
+});
+
+describe("'Come back later' tracker column", () => {
+  const flagged = (load: LaunchpadLoadFile) =>
+    load.levels.flatMap((l) => l.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks))).filter((t) => t.canComeBackLater).map((t) => t.id);
+
+  it("with no column, only the TEST sample override applies, recorded as decision D22 (sample, pending tracker column)", () => {
+    const { load } = build(SHEETS);
+    expect(flagged(load)).toEqual([...TEST_COME_BACK_LATER_TASK_IDS]);
+    expect(load.levels.flatMap((l) => l.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks))).every((t) => typeof t.canComeBackLater === "boolean")).toBe(true);
+    const d22 = load.decisions.find((d) => d.id === "D22");
+    expect(d22).toMatchObject({ topic: "Come back later", status: "sample-pending-tracker-column", rows: [5, 15] });
+  });
+
+  it("once the column exists it is read by header name (Yes/No) and the override stops", () => {
+    const { load, issues } = build(withColumns(["Come back later"], { 2: ["Yes"], 5: ["No"], 15: ["no"] }));
+    expect(issues).toEqual([]);
+    expect(flagged(load)).toEqual(["l1-s1-b1-t1"]);
+  });
+
+  it("reports a cell that is not Yes or No", () => {
+    const { issues } = build(withColumns(["Come back later"], { 3: ["Maybe"] }));
+    expect(JSON.stringify(issues)).toMatch(/Yes or No/);
   });
 });

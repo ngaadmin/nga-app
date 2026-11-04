@@ -310,6 +310,12 @@ export type LaunchpadTask = {
   paged?: boolean;
   /** "real-world": the learner does it away from the app (may take days). Defaults to in-app. */
   kind?: "in-app" | "real-world";
+  /**
+   * The learner may leave this task open ("Come back to this later") and move
+   * on: the next task unlocks, but the silver's wrap-up stays blocked until it
+   * is finished. Defaults to false.
+   */
+  canComeBackLater?: boolean;
 };
 
 export type LaunchpadBronze = {

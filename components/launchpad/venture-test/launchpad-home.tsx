@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   LAUNCHPAD_HOME_COPY,
   categoryPillOpacity,
@@ -16,6 +16,7 @@ import {
   SHOP_ICONS,
 } from "@/components/launchpad/venture-test/launchpad-home-art";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
+import { COME_BACK_LATER_COPY, OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
 
 export type InProgressVenture = {
   ventureId: string;
@@ -29,7 +30,12 @@ export type InProgressVenture = {
   total: number;
   /** At least one completed silver: the card shows the handbook button. */
   hasHandbook: boolean;
+  /** Tasks left open ("Come back to this later") across the business, in order. Absent or empty: none. */
+  openTasks?: readonly OpenTaskLink[];
 };
+
+/** One open task on the home tile: its name, and the id the Go link deep-links to. */
+export type OpenTaskLink = { taskId: string; title: string };
 
 const TILES = flatLaunchpadTiles();
 
@@ -136,11 +142,16 @@ function InProgressTile({
   venture: v,
   onOpenVenture,
   onOpenHandbook,
+  onOpenTask,
 }: {
   venture: InProgressVenture;
   onOpenVenture: (ventureId: string) => void;
   onOpenHandbook?: (ventureId: string) => void;
+  onOpenTask?: (ventureId: string, taskId: string) => void;
 }) {
+  const open = v.openTasks ?? [];
+  const [expanded, setExpanded] = useState(false);
+  const listId = useId();
   const pct = Math.round((v.done / Math.max(1, v.total)) * 100);
   const progressLabel = `${v.done} of ${v.total} milestones done`;
   return (
@@ -152,9 +163,27 @@ function InProgressTile({
             {v.name}
           </p>
         </div>
-        <p className="min-w-0 flex-1 truncate font-heading text-[14px] font-bold text-nga-ink" data-tile-level-name="">
-          {v.floorName}
-        </p>
+        <div className="flex min-w-0 flex-1 flex-col items-start">
+          <p className="w-full truncate font-heading text-[14px] font-bold text-nga-ink" data-tile-level-name="">
+            {v.floorName}
+          </p>
+          {open.length > 0 && (
+            // Orange line under the level name: "2 open" and a chevron; expands the tile to list them.
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls={listId}
+              onClick={() => setExpanded((e) => !e)}
+              className="-ml-1 flex h-6 items-center gap-0.5 rounded px-1 font-heading text-[13px] font-bold text-nga-cta-hover"
+              data-open-tasks-toggle=""
+            >
+              {OPEN_TASKS_LABEL(open.length)}
+              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className={expanded ? "rotate-180" : undefined} data-chevron="">
+                <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+        </div>
         <div className="flex flex-none items-center gap-1.5" data-tile-actions="">
           {v.hasHandbook && onOpenHandbook && (
             <button
@@ -186,6 +215,23 @@ function InProgressTile({
       >
         <i className="block h-full rounded-[3px] bg-nga-secondary" style={{ width: `${pct}%` }} />
       </div>
+      {open.length > 0 && expanded && (
+        <ul id={listId} className="mt-1 border-t border-nga-mist" data-open-tasks-list="">
+          {open.map((t) => (
+            <li key={t.taskId} className="flex items-center justify-between gap-3 border-b border-nga-mist last:border-b-0" data-open-task={t.taskId}>
+              <span className="min-w-0 truncate text-[14px] text-nga-ink">{t.title}</span>
+              <button
+                type="button"
+                onClick={() => onOpenTask?.(v.ventureId, t.taskId)}
+                className="min-h-11 flex-none px-2 font-heading text-[14px] font-bold text-nga-ink underline underline-offset-4"
+                aria-label={`${COME_BACK_LATER_COPY.go}: ${t.title}`}
+              >
+                {COME_BACK_LATER_COPY.go}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -195,9 +241,12 @@ export function LaunchpadHome({
   inProgress,
   onOpenVenture,
   onOpenHandbook,
+  onOpenTask,
 }: {
   inProgress: InProgressVenture[];
   onOpenVenture: (ventureId: string) => void;
+  /** Go on an open task in the expanded tile: straight into that task. */
+  onOpenTask?: (ventureId: string, taskId: string) => void;
   /** Opens the business's handbook read-only. */
   onOpenHandbook?: (ventureId: string) => void;
 }) {
@@ -259,7 +308,7 @@ export function LaunchpadHome({
         <p className="rounded-2xl bg-nga-mist p-[18px] text-base font-medium text-nga-slate">{LAUNCHPAD_HOME_COPY.emptyInProgress}</p>
       ) : (
         inProgress.map((v) => (
-          <InProgressTile key={v.ventureId} venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} />
+          <InProgressTile key={v.ventureId} venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} onOpenTask={onOpenTask} />
         ))
       )}
     </section>

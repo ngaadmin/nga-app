@@ -1,8 +1,31 @@
 import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_ORANGE, Heading, LockIcon, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
-function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: string; state: NodeState; onOpen: () => void }) {
+/** Small orange marker on a door or plaque whose task was left open. */
+export function ComeBackMarker({ className = "" }: { className?: string }) {
+  return (
+    <span className={`rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-nga-ink ${className}`} data-come-back-marker="">
+      {COME_BACK_LATER_COPY.marker}
+    </span>
+  );
+}
+
+function Door({
+  label,
+  subtitle,
+  state,
+  comeBack,
+  onOpen,
+}: {
+  label: string;
+  subtitle?: string;
+  state: NodeState;
+  /** A task behind this door was left open: the badge reads "Come back". */
+  comeBack?: boolean;
+  onOpen: () => void;
+}) {
   const doorColor = state === "done" ? VT.panel : state === "current" ? VT.secondary : VT.lockDot;
   const knob = state === "current" ? VT.cta : "#fff";
   const surface =
@@ -27,7 +50,8 @@ function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: st
         )}
         <span className="mt-1.5 block">
           {state === "done" && <span className="font-heading text-[13px] font-semibold text-nga-secondary-shadow">✓ Done</span>}
-          {state === "current" && (
+          {state === "current" && comeBack && <ComeBackMarker />}
+          {state === "current" && !comeBack && (
             <span className="rounded-full bg-nga-cta px-2.5 py-[3px] font-heading text-xs font-bold text-white">Up next</span>
           )}
           {state === "locked" && (
@@ -43,7 +67,12 @@ function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: st
   // The open door and finished doors (to review saved work) can be tapped; locked doors are read-only.
   if (state === "current" || state === "done") {
     return (
-      <button type="button" onClick={onOpen} className={`${cls} w-[calc(100%-40px)]`}>
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`${cls} w-[calc(100%-40px)]`}
+        aria-label={comeBack ? `${label}, ${COME_BACK_LATER_COPY.marker.toLowerCase()} to finish` : undefined}
+      >
         {body}
       </button>
     );
@@ -59,13 +88,13 @@ function Door({ label, subtitle, state, onOpen }: { label: string; subtitle?: st
 export function BronzeDoors(props: {
   level: number;
   silverTitle: string;
-  bronzes: readonly { id: string; title: string; subtitle?: string; state: NodeState }[];
+  bronzes: readonly { id: string; title: string; subtitle?: string; state: NodeState; comeBack?: boolean }[];
   /** Set when the plaque is still locked: the doors show read-only. */
   lockedNote?: string;
   onBuilding: () => void;
   onCorridor: () => void;
   onOpenBronze: (bronzeId: string) => void;
-  /** Shown once the silver is done and has a wrap-up, e.g. "See your logo". */
+  /** Shown once every door is done or open and the silver has a wrap-up, e.g. "See your logo". */
   wrapUp?: { label: string; onOpen: () => void };
 }) {
   return (
@@ -74,7 +103,7 @@ export function BronzeDoors(props: {
       <Heading>{props.silverTitle}</Heading>
       <SubLine className="mb-4">{props.lockedNote ?? "Open a door to see its tasks."}</SubLine>
       {props.bronzes.map((b) => (
-        <Door key={b.id} label={b.title} subtitle={b.subtitle} state={b.state} onOpen={() => props.onOpenBronze(b.id)} />
+        <Door key={b.id} label={b.title} subtitle={b.subtitle} state={b.state} comeBack={b.comeBack} onOpen={() => props.onOpenBronze(b.id)} />
       ))}
       {props.wrapUp && (
         <div className="mx-5 mt-1 pb-4">

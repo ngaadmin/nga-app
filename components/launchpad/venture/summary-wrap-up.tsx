@@ -18,6 +18,7 @@ import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-bu
 import { toggleChoice } from "@/components/launchpad/venture/screens/choice-capture-screen";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
+import { OpenSteps, OpenStepsHint, type OpenStep } from "@/components/launchpad/venture/open-steps";
 
 function Pencil() {
   return (
@@ -223,10 +224,13 @@ export function SummaryWrapUp({
   onBuilding,
   onCorridor,
   onFinalize,
+  openSteps = [],
 }: {
   level: number;
   silverTitle: string;
   wrapUp: LaunchpadSummaryWrapUp;
+  /** Steps left open ("Come back to this later"): listed, and the confirm button stays off until they are done. */
+  openSteps?: readonly OpenStep[];
   floors: readonly LaunchpadFloor[];
   answers: LaunchpadAnswers;
   setAnswer: (answerKey: string, answer: LaunchpadAnswer) => void;
@@ -251,8 +255,16 @@ export function SummaryWrapUp({
           <SectionCard key={section.id} section={section} answers={answers} catalog={catalog} editing={editing} setEditing={setEditing} setAnswer={setAnswer} />
         ))}
       </div>
+      <OpenSteps steps={openSteps} />
       <div className="mx-5 mt-auto pb-4 pt-5">
-        <button type="button" className={`${BTN_ORANGE} w-full`} onClick={onFinalize}>
+        <OpenStepsHint count={openSteps.length} id="wrap-up-open-hint" />
+        <button
+          type="button"
+          className={`${BTN_ORANGE} w-full disabled:opacity-50`}
+          onClick={onFinalize}
+          disabled={openSteps.length > 0}
+          aria-describedby={openSteps.length > 0 ? "wrap-up-open-hint" : undefined}
+        >
           {wrapUp.finalizeLabel}
         </button>
       </div>

@@ -84,6 +84,8 @@ export type LoadTask = {
   title: string;
   kind: "in-app" | "real-world";
   paged: boolean;
+  /** "Come back to this later" allowed (tracker column "Come back later"; false when absent). */
+  canComeBackLater: boolean;
   ctaLabel?: string;
   screens: LoadScreen[];
 };
@@ -134,7 +136,7 @@ export type LoadDecision = {
   topic: string;
   /** What the load does now. */
   applied: string;
-  status: "decided-cath" | "default-pending-cath" | "pending-cath" | "build-assumption";
+  status: "decided-cath" | "default-pending-cath" | "pending-cath" | "build-assumption" | "sample-pending-tracker-column";
   rows: number[];
 };
 

@@ -20,6 +20,7 @@ function loadSilver(s: LoadSilver): LaunchpadSilver {
         placeholder: false,
         paged: t.paged,
         ...(t.kind === "real-world" ? { kind: t.kind } : {}),
+        ...(t.canComeBackLater ? { canComeBackLater: true } : {}),
         ...(t.ctaLabel ? { ctaLabel: t.ctaLabel } : {}),
         screens: t.screens.filter((sc) => sc.payload).map((sc) => sc.payload as LaunchpadTaskScreen),
       }),

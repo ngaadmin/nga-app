@@ -37,6 +37,8 @@ export const TRACKER_COLUMNS = [
  */
 export const TRACKER_OPTIONS_COLUMN = "Options";
 export const TRACKER_INPUT_TYPE_COLUMN = "Input type";
+/** "Come back later" column: Yes lets the learner leave the task open and move on. Blank or absent is No. */
+export const TRACKER_COME_BACK_LATER_COLUMN = "Come back later";
 /** One option per cell: "Option 1", "Option 2", … (any count, read in number order). */
 export const TRACKER_OPTION_N_COLUMN = /^option\s*(\d+)$/i;
 export const TRACKER_INPUT_TYPES = ["multi-choice", "single-choice", "rank", "number", "text", "fill-in"] as const;
@@ -69,6 +71,8 @@ export type TrackerRow = {
   options?: string[];
   /** "Input type" column. Undefined when absent or blank. */
   inputType?: TrackerInputType;
+  /** "Come back later" column (Yes/No). Undefined when the column is absent or the cell blank. */
+  comeBackLater?: boolean;
 };
 
 export type TrackerIssue = { sheet: string; row: number; reason: string };
@@ -112,6 +116,7 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
   };
   const optionsCol = headerAt(TRACKER_OPTIONS_COLUMN);
   const inputTypeCol = headerAt(TRACKER_INPUT_TYPE_COLUMN);
+  const comeBackCol = headerAt(TRACKER_COME_BACK_LATER_COLUMN);
   const optionNCols = (header?.values ?? [])
     .map((v, idx) => ({ idx, n: idx >= TRACKER_COLUMNS.length ? TRACKER_OPTION_N_COLUMN.exec(v.trim())?.[1] : undefined }))
     .filter((c): c is { idx: number; n: string } => c.n !== undefined)
@@ -138,6 +143,11 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
     if (rawType && !inputType) {
       issues.push({ sheet: sheet.name, row, reason: `Input type "${rawType}" is not one of ${TRACKER_INPUT_TYPES.join(", ")}.` });
     }
+    const rawComeBack = comeBackCol === undefined ? "" : cellText(values[comeBackCol]).toLowerCase();
+    const comeBackLater = rawComeBack === "yes" ? true : rawComeBack === "no" ? false : undefined;
+    if (rawComeBack && comeBackLater === undefined) {
+      issues.push({ sheet: sheet.name, row, reason: `Come back later "${rawComeBack}" should be Yes or No.` });
+    }
     rows.push({
       row,
       level,
@@ -154,6 +164,7 @@ export function trackerFromSheets(sheets: readonly WorkbookSheet[], maxLevel = N
       notes: cellText(values[10]),
       ...(options.length ? { options } : {}),
       ...(inputType ? { inputType } : {}),
+      ...(comeBackLater !== undefined ? { comeBackLater } : {}),
     });
   }
   const notesSheet = sheets.find((s) => s.name === LAUNCHPAD_TRACKER_NOTES_SHEET);

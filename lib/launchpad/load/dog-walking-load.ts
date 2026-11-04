@@ -90,7 +90,35 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell shows the service description (row 14). A section with no answer is hidden.", status: "build-assumption", rows: [19] },
   { id: "D20", topic: "Identity titles", applied: "The locked build keeps Design your logo and Name your business (sheet: Design the logo, Name the business), and its own wrap-up behavior.", status: "build-assumption", rows: [17, 18, 19] },
   { id: "D21", topic: "One screen per bronze", applied: "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals keeps its intro page before the goal loop.", status: "decided-cath", rows: [2, 3, 4, 14, 15] },
+  { id: "D22", topic: "Come back later", applied: `Sample, pending tracker column: the tracker has no "Come back later" column yet, so a TEST override turns it on for Set your goals (row 5) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.`, status: "sample-pending-tracker-column", rows: [5, 15] },
 ];
+
+/**
+ * TEST OVERRIDE (D22, sample, pending tracker column): tasks that allow
+ * "Come back to this later" while the tracker has no "Come back later"
+ * column. Remove once Cath adds the column.
+ */
+export const TEST_COME_BACK_LATER_TASK_IDS: readonly string[] = ["l1-s1-b4-t1", "l2-s1-b2-t1"];
+
+/**
+ * Sets canComeBackLater on each task from its source row's "Come back later"
+ * cell (No when blank). With no such column anywhere, the D22 test override
+ * applies instead and its tasks carry the D22 flag.
+ */
+function applyComeBackLater(levels: LoadLevel[], rows: readonly TrackerRow[]) {
+  const byRow = new Map(rows.map((r) => [r.row, r]));
+  const hasColumn = rows.some((r) => r.comeBackLater !== undefined);
+  for (const l of levels)
+    for (const s of l.silvers)
+      for (const b of s.bronzes)
+        for (const t of b.tasks) {
+          const first = t.screens[0];
+          const fromSheet = first ? byRow.get(first.sourceRow)?.comeBackLater : undefined;
+          const override = !hasColumn && TEST_COME_BACK_LATER_TASK_IDS.includes(t.id);
+          t.canComeBackLater = override || (fromSheet ?? false);
+          if (override && first && !first.flags.includes("D22")) first.flags.push("D22");
+        }
+}
 
 /* ------------------------------------------------------------ helpers */
 
@@ -455,7 +483,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     title: trackerLabel(row.bronze),
     sheetLabel: row.bronze,
     sourceRow: row.row,
-    tasks: [{ id: `${id}-t1`, title: trackerLabel(row.bronze), kind: "in-app", paged: true, screens: [withIntro(row, interaction)] }],
+    tasks: [{ id: `${id}-t1`, title: trackerLabel(row.bronze), kind: "in-app", paged: true, canComeBackLater: false, screens: [withIntro(row, interaction)] }],
   });
 
   bronzes.push(
@@ -523,6 +551,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         title: seqTitle,
         kind: "in-app",
         paged: true,
+        canComeBackLater: false,
         screens: [
           ctxMeta(rSeq, seqContext),
           {
@@ -705,6 +734,7 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
           title: trackerLabel(row.bronze),
           kind,
           paged: true,
+          canComeBackLater: false,
           // D21: one screen, context and guidance above the sentence.
           screens: [
             withIntro(row, {
@@ -853,6 +883,7 @@ export function buildDogWalkingLoad(
   const rows = read.rows.filter((r) => r.level <= 2);
   const levels = [level1(ctx, rows), level2(ctx, rows)];
   linkFeeds(levels);
+  applyComeBackLater(levels, rows);
   const used = new Set<number>();
   for (const l of levels) {
     for (const s of l.silvers) {

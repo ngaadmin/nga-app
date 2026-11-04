@@ -15,12 +15,34 @@ import type {
   LaunchpadFloor as VentureTestFloor,
   LaunchpadSilver as VentureTestSilver,
 } from "@/lib/launchpad/content/types";
+import type { LaunchpadTask } from "@/lib/launchpad/content/types";
 import type { LaunchpadAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+
+/**
+ * A task's status. "locked" and "available" are always derived (the step
+ * before is not yet done or open / it is); "open" (left with "Come back to
+ * this later") and "done" are saved. Done is also listed in completedTaskIds,
+ * which stays the source of truth so older saved progress reads the same.
+ */
+export type TaskStatus = "locked" | "available" | "open" | "done";
+
+/** Saved state for a task the learner has left open (or finished after leaving it open). */
+export type TaskProgressEntry = {
+  status: Extract<TaskStatus, "open" | "done">;
+  /** The partial answers (by answerKey) saved when the task was left open, until it is reopened. */
+  draft?: LaunchpadAnswers;
+  /** Page of a paged task the learner was on when they left it. */
+  draftPage?: number;
+  /** ISO time the task was first left open. */
+  openedAt?: string;
+};
 
 export type VentureTestProgress = {
   completedTaskIds: readonly string[];
   /** Saved answers by answerKey (e.g. the business identity). Shaped to move to the DB as one JSON column. */
   answers?: LaunchpadAnswers;
+  /** Per-task state, only for tasks left open at some point. Absent in progress saved before "Come back later". */
+  tasks?: Readonly<Record<string, TaskProgressEntry>>;
 };
 
 export const EMPTY_VENTURE_TEST_PROGRESS: VentureTestProgress = {
@@ -28,6 +50,144 @@ export const EMPTY_VENTURE_TEST_PROGRESS: VentureTestProgress = {
 };
 
 export type NodeState = "done" | "current" | "locked";
+
+export function isTaskDone(progress: VentureTestProgress, taskId: string): boolean {
+  return progress.completedTaskIds.includes(taskId);
+}
+
+/** Left with "Come back to this later" and not finished since. */
+export function isTaskOpen(progress: VentureTestProgress, taskId: string): boolean {
+  return !isTaskDone(progress, taskId) && progress.tasks?.[taskId]?.status === "open";
+}
+
+/** Done or open: the learner has moved past it, so the step after it is unlocked. */
+export function isTaskSettled(progress: VentureTestProgress, taskId: string): boolean {
+  return isTaskDone(progress, taskId) || isTaskOpen(progress, taskId);
+}
+
+export function isBronzeSettled(progress: VentureTestProgress, bronze: VentureTestBronze): boolean {
+  return bronze.tasks.every((t) => isTaskSettled(progress, t.id));
+}
+
+export function bronzeHasOpenTask(progress: VentureTestProgress, bronze: VentureTestBronze): boolean {
+  return bronze.tasks.some((t) => isTaskOpen(progress, t.id));
+}
+
+/** Every bronze done or open: the wrap-up can be opened (but not confirmed while any task is open). */
+export function isSilverSettled(progress: VentureTestProgress, silver: VentureTestSilver): boolean {
+  return silver.bronzes.every((b) => isBronzeSettled(progress, b));
+}
+
+export type OpenTaskRef = {
+  level: number;
+  silverId: string;
+  bronzeId: string;
+  taskId: string;
+  taskIndex: number;
+  title: string;
+};
+
+/** Open tasks in a silver, in order. */
+export function openTasksInSilver(progress: VentureTestProgress, silver: VentureTestSilver, level = 0): OpenTaskRef[] {
+  return silver.bronzes.flatMap((b) =>
+    b.tasks.flatMap((t, taskIndex) =>
+      isTaskOpen(progress, t.id)
+        ? [{ level, silverId: silver.id, bronzeId: b.id, taskId: t.id, taskIndex, title: b.tasks.length > 1 ? t.title : b.title }]
+        : [],
+    ),
+  );
+}
+
+/** Open tasks across the whole business (the home tile's count). */
+export function openTasks(progress: VentureTestProgress, floors: readonly VentureTestFloor[]): OpenTaskRef[] {
+  return floors.flatMap((f) => f.silvers.flatMap((s) => openTasksInSilver(progress, s, f.level)));
+}
+
+export function openTaskCount(progress: VentureTestProgress, floors: readonly VentureTestFloor[]): number {
+  return openTasks(progress, floors).length;
+}
+
+/**
+ * A task's status: done and open as saved; otherwise available when its
+ * silver is open and every task before it in the silver is done or open,
+ * else locked.
+ */
+export function taskStatus(progress: VentureTestProgress, floors: readonly VentureTestFloor[], taskId: string): TaskStatus {
+  if (isTaskDone(progress, taskId)) return "done";
+  if (isTaskOpen(progress, taskId)) return "open";
+  for (const floor of floors) {
+    const states = silverStates(progress, floors, floor);
+    for (const [si, silver] of floor.silvers.entries()) {
+      const ids = silver.bronzes.flatMap((b) => b.tasks.map((t) => t.id));
+      const i = ids.indexOf(taskId);
+      if (i === -1) continue;
+      if (states[si] === "locked") return "locked";
+      return ids.slice(0, i).every((id) => isTaskSettled(progress, id)) ? "available" : "locked";
+    }
+  }
+  return "locked";
+}
+
+/** Every answerKey a task's screens save (goal-loop goals included). */
+export function taskAnswerKeys(task: Pick<LaunchpadTask, "screens">): string[] {
+  const keys: string[] = [];
+  for (const sc of task.screens) {
+    if (sc.type === "goal-loop") for (const g of sc.goals) keys.push(g.screen.answerKey);
+    else if ("answerKey" in sc && typeof sc.answerKey === "string") keys.push(sc.answerKey);
+  }
+  return [...new Set(keys)];
+}
+
+/**
+ * "Come back to this later": moves the task's partial answers into its
+ * draft, marks it open (keeping the first openedAt) and remembers the page.
+ * The next task unlocks because an open task counts as settled.
+ */
+export function deferTask(
+  progress: VentureTestProgress,
+  task: Pick<LaunchpadTask, "id" | "screens">,
+  opts: { page?: number; now?: string } = {},
+): VentureTestProgress {
+  if (isTaskDone(progress, task.id)) return progress;
+  const answers: Record<string, LaunchpadAnswer> = { ...progress.answers };
+  const prev = progress.tasks?.[task.id];
+  const draft: Record<string, LaunchpadAnswer> = { ...prev?.draft };
+  for (const key of taskAnswerKeys(task)) {
+    if (answers[key] === undefined) continue;
+    draft[key] = answers[key]!;
+    delete answers[key];
+  }
+  const entry: TaskProgressEntry = {
+    status: "open",
+    ...(Object.keys(draft).length ? { draft } : {}),
+    ...(opts.page ? { draftPage: opts.page } : {}),
+    openedAt: prev?.openedAt ?? opts.now ?? new Date().toISOString(),
+  };
+  const next: VentureTestProgress = { ...progress, tasks: { ...progress.tasks, [task.id]: entry } };
+  if (Object.keys(answers).length) next.answers = answers;
+  else delete next.answers;
+  return next;
+}
+
+/**
+ * Reopening an open task: its draft goes back into the answers (so its
+ * screens show it) and the task stays open until it is completed.
+ */
+export function restoreTaskDraft(progress: VentureTestProgress, taskId: string): VentureTestProgress {
+  const entry = progress.tasks?.[taskId];
+  if (!entry?.draft || !isTaskOpen(progress, taskId)) return progress;
+  const { draft, ...rest } = entry;
+  return {
+    ...progress,
+    answers: { ...draft, ...progress.answers },
+    tasks: { ...progress.tasks, [taskId]: rest },
+  };
+}
+
+/** Saved page of an open task (0 when none). */
+export function draftPageOf(progress: VentureTestProgress, taskId: string): number {
+  return isTaskOpen(progress, taskId) ? (progress.tasks?.[taskId]?.draftPage ?? 0) : 0;
+}
 
 export function isBronzeDone(progress: VentureTestProgress, bronze: VentureTestBronze): boolean {
   return bronze.tasks.every((t) => progress.completedTaskIds.includes(t.id));
@@ -82,20 +242,25 @@ export function silverStates(
  * false) no door is current and the learner can only look.
  */
 export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true): NodeState[] {
-  let seenCurrent = false;
+  // A door left open ("Come back") stays current and does not block the next door.
+  let blocked = false;
   return silver.bronzes.map((b) => {
     if (isBronzeDone(progress, b)) return "done";
-    if (open && !seenCurrent) {
-      seenCurrent = true;
-      return "current";
-    }
-    return "locked";
+    if (!open || blocked) return "locked";
+    if (!isBronzeSettled(progress, b)) blocked = true;
+    return "current";
   });
 }
 
 export function completeTask(progress: VentureTestProgress, taskId: string): VentureTestProgress {
   if (progress.completedTaskIds.includes(taskId)) return progress;
-  return { ...progress, completedTaskIds: [...progress.completedTaskIds, taskId] };
+  const next: VentureTestProgress = { ...progress, completedTaskIds: [...progress.completedTaskIds, taskId] };
+  const entry = progress.tasks?.[taskId];
+  if (entry) {
+    // A task finished after being left open: done, draft gone, openedAt kept.
+    next.tasks = { ...progress.tasks, [taskId]: { status: "done", ...(entry.openedAt ? { openedAt: entry.openedAt } : {}) } };
+  }
+  return next;
 }
 
 /** Saves one answer, keeping progress and the other answers. */
@@ -145,11 +310,12 @@ export function advanceAfterTask(
   taskIndex: number,
 ): WorkbookAdvance {
   if (!isBronzeDone(progress, bronze)) {
-    const next = bronze.tasks.findIndex(
-      (t, i) => i > taskIndex && !progress.completedTaskIds.includes(t.id),
-    );
+    // Tasks left open are skipped: the learner comes back to them from the door.
+    const next = bronze.tasks.findIndex((t, i) => i > taskIndex && !isTaskSettled(progress, t.id));
     if (next !== -1) return { kind: "task", taskIndex: next };
-    return { kind: "task", taskIndex: firstOpenTaskIndex(progress, bronze) };
+    const first = bronze.tasks.findIndex((t) => !isTaskSettled(progress, t.id));
+    if (first !== -1) return { kind: "task", taskIndex: first };
+    return { kind: "bronze-done" };
   }
   if (!isSilverDone(progress, silver)) return { kind: "bronze-done" };
   if (!isFloorDone(progress, floor)) return { kind: "silver-done" };

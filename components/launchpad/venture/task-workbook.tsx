@@ -2,6 +2,7 @@ import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen, LaunchpadTas
 import { TaskScreen } from "@/components/launchpad/venture/task-screen-renderer";
 import { identityTaskKind, LogoBuilder, NameForm } from "@/components/launchpad/venture/identity/picker-screens";
 import { BTN_CYAN, BTN_WHITE, Heading, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
+import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
 /**
  * Workbook page. Previous and Next move freely between tasks; the learner
@@ -28,6 +29,8 @@ export function TaskWorkbook(props: {
    * at a time (Previous on the first page goes to the task before).
    */
   page?: { index: number; count: number; screen: LaunchpadTaskScreen };
+  /** Set on tasks that allow it: saves the partial answer as a draft, leaves the task open and moves on. */
+  onComeBackLater?: () => void;
 }) {
   const { tasks, index } = props;
   const task = tasks[index];
@@ -115,6 +118,18 @@ export function TaskWorkbook(props: {
           {forward}
         </button>
       </div>
+      {props.onComeBackLater && (
+        <div className="mx-5 -mt-1 pb-4 text-center">
+          <button
+            type="button"
+            onClick={props.onComeBackLater}
+            className="min-h-11 px-3 font-heading text-[15px] font-semibold text-nga-slate underline underline-offset-4"
+            data-come-back-later=""
+          >
+            {COME_BACK_LATER_COPY.button}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

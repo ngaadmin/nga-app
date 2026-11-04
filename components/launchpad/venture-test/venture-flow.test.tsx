@@ -5,6 +5,7 @@ import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import type { VentureTestShortcut } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
+import { markVentureTestOnboardingSeen, saveVentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-storage";
 
 const PAYLOAD = launchpadTestVentureSeed("dog-walking");
 const VENTURES: Record<string, LaunchpadVentureView> = {
@@ -301,5 +302,86 @@ describe("finishing a silver shows its handbook page", () => {
     fireEvent.click(screen.getByRole("button", { name: /Confirm and continue/ }));
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
+  });
+});
+
+describe("Come back to this later", () => {
+  const silver = PAYLOAD.floors[0]!.silvers[0]!;
+  const goals = silver.bronzes[3]!;
+  const seedFirstThree = () => {
+    saveVentureTestProgress("dog-walking", { completedTaskIds: silver.bronzes.slice(0, 3).map((b) => b.tasks[0]!.id) });
+    markVentureTestOnboardingSeen("dog-walking");
+  };
+  const renderPlain = () =>
+    render(<VentureFlow initialVentureId="dog-walking" ventureTitles={{ "dog-walking": "Dog walking" }} ventures={VENTURES} reset={false} />);
+  const toDoors = async () => {
+    fireEvent.click(await screen.findByRole("button", { name: "Go to Level 1" }));
+    fireEvent.click(screen.getAllByRole("button", { name: new RegExp(silver.title) })[0]!);
+  };
+
+  it("defers with a draft, marks the door, blocks the wrap-up, then Finish this restores the draft and completes", async () => {
+    seedFirstThree();
+    renderPlain();
+    await toDoors();
+    fireEvent.click(door(goals.title));
+    // Only on eligible steps: the button sits under the primary button.
+    next();
+    expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Not applicable" }));
+    fireEvent.click(screen.getByRole("button", { name: "Come back to this later" }));
+
+    // Back on the doors: the Set your goals door says Come back; the wrap-up is reachable.
+    const marker = document.querySelector("[data-come-back-marker]");
+    expect(marker?.textContent).toBe("Come back");
+    const saved = JSON.parse(localStorage.getItem("lp-venture-test:v1:dog-walking")!);
+    expect(saved.tasks[goals.tasks[0]!.id]).toMatchObject({ status: "open", draftPage: 1 });
+    expect(Object.keys(saved.tasks[goals.tasks[0]!.id].draft)).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: silver.wrapUp!.type === "workbook-summary" ? silver.wrapUp!.heading : /logo/ }));
+
+    // Wrap-up blocked: the open step is listed and Confirm and continue is off, with why.
+    const confirm = screen.getByRole("button", { name: "Confirm and continue" }) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    expect(document.querySelector("[data-open-steps-hint]")?.textContent).toMatch(/Finish the step above/);
+    expect(document.querySelector(`[data-open-step='${goals.tasks[0]!.id}']`)?.textContent).toContain(goals.title);
+    fireEvent.click(screen.getByRole("button", { name: "Finish this" }));
+
+    // Back on the page left, the draft restored (Not applicable still on).
+    expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Not applicable" }).getAttribute("aria-pressed")).toBe("true");
+    for (let i = 0; i < 10 && !document.querySelector("[data-wrap-up]"); i++) {
+      const na = screen.queryByRole("button", { name: "Not applicable" });
+      if (na && na.getAttribute("aria-pressed") !== "true") fireEvent.click(na);
+      const forward = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
+      const group = screen.queryAllByRole("group")[0];
+      if (forward.disabled && group) fireEvent.click(within(group).getAllByRole("button")[0]!);
+      next();
+    }
+    expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
+    expect(document.querySelector("[data-open-steps]")).toBeNull();
+    expect((screen.getByRole("button", { name: "Confirm and continue" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("steps without the flag have no Come back to this later button", async () => {
+    saveVentureTestProgress("dog-walking", { completedTaskIds: [] });
+    markVentureTestOnboardingSeen("dog-walking");
+    renderPlain();
+    await toDoors();
+    fireEvent.click(door(silver.bronzes[0]!.title));
+    expect(screen.queryByRole("button", { name: "Come back to this later" })).toBeNull();
+  });
+
+  it("the corridor marker and the home tile's Go open the open task", async () => {
+    saveVentureTestProgress("dog-walking", {
+      completedTaskIds: silver.bronzes.slice(0, 3).map((b) => b.tasks[0]!.id),
+      tasks: { [goals.tasks[0]!.id]: { status: "open", draftPage: 1, openedAt: "2026-11-04T10:00:00.000Z" } },
+    });
+    markVentureTestOnboardingSeen("dog-walking");
+    render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={VENTURES} reset={false} />);
+    fireEvent.click(await screen.findByRole("button", { name: "1 open" }));
+    fireEvent.click(screen.getByRole("button", { name: `Go: ${goals.title}` }));
+    expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Level 1 corridor/ }));
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Come back: finish a step in ${silver.title}`) }));
+    expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
   });
 });

@@ -3,8 +3,10 @@ import type { NodeState } from "@/lib/launchpad/venture-test/venture-test-progre
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import styles from "@/components/launchpad/venture-test/venture-test.module.css";
 import { BackCrumb, BTN_ORANGE, CheckIcon, Heading, LockIcon } from "@/components/launchpad/venture-test/venture-test-ui";
+import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
+import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 
-function Plaque({ label, state, onOpen }: { label: string; state: NodeState; onOpen: () => void }) {
+function Plaque({ label, state, onOpen, onComeBack }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void }) {
   const dot = state === "current" ? "#fff" : state === "done" ? VT.panel : VT.lockDot;
   const surface =
     state === "current"
@@ -45,7 +47,7 @@ function Plaque({ label, state, onOpen }: { label: string; state: NodeState; onO
   );
   const cls = `relative mx-auto mb-[18px] block w-[236px] rounded-[10px] px-3 py-4 text-center ${surface}`;
   // Every plaque can be tapped. A locked plaque opens its doors read-only.
-  return (
+  const plaque = (
     <button
       type="button"
       onClick={onOpen}
@@ -54,6 +56,16 @@ function Plaque({ label, state, onOpen }: { label: string; state: NodeState; onO
     >
       {body}
     </button>
+  );
+  if (!onComeBack) return plaque;
+  // A task in this silver was left open: the marker opens it straight away.
+  return (
+    <div className="relative mx-auto w-[236px]">
+      {plaque}
+      <button type="button" onClick={onComeBack} className="absolute -left-3 -top-3" aria-label={`${COME_BACK_LATER_COPY.marker}: finish a step in ${label}`}>
+        <ComeBackMarker className="block shadow-[0_2px_0_#c88202]" />
+      </button>
+    </div>
   );
 }
 
@@ -66,7 +78,8 @@ export type CorridorProps = {
   level: number;
   floorName: string;
   goal: string;
-  silvers: readonly { id: string; title: string; state: NodeState }[];
+  /** `onComeBack`: set when a task in the silver was left open; opens that task. */
+  silvers: readonly { id: string; title: string; state: NodeState; onComeBack?: () => void }[];
   /** Play the lift-doors entry animation. */
   entering: boolean;
   note?: string;
@@ -78,7 +91,7 @@ export type CorridorProps = {
 export function CorridorFloor(props: CorridorProps) {
   const { level, floorName, goal, silvers, entering, note, complete, onBack, onOpenSilver } = props;
   const plaques: ReactNode = silvers.map((s) => (
-    <Plaque key={s.id} label={s.title} state={s.state} onOpen={() => onOpenSilver(s.id)} />
+    <Plaque key={s.id} label={s.title} state={s.state} onOpen={() => onOpenSilver(s.id)} onComeBack={s.onComeBack} />
   ));
   return (
     <section className="flex flex-1 flex-col" aria-labelledby="lp-corridor-title">

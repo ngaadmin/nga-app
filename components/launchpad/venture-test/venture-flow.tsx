@@ -10,6 +10,14 @@ import {
   buildingCta,
   completeTask,
   currentLevel,
+  bronzeHasOpenTask,
+  deferTask,
+  draftPageOf,
+  isSilverSettled,
+  isTaskOpen,
+  openTasks,
+  openTasksInSilver,
+  restoreTaskDraft,
   bronzeEntryTaskIndex,
   floorState,
   isFloorDone,
@@ -136,6 +144,7 @@ function loadInProgress(
         done: silvers.filter((s) => isSilverDone(p, s)).length,
         total: silvers.length,
         hasHandbook: hasHandbook(p, floors),
+        openTasks: openTasks(p, floors).map((t) => ({ taskId: t.taskId, title: t.title })),
       },
     ];
   });
@@ -190,6 +199,24 @@ export function VentureFlow({
     [go],
   );
 
+  /** Go on an open task from the home tile: into the venture, the draft restored, on the page left. */
+  const openTaskFromHome = useCallback(
+    (id: string, taskId: string) => {
+      const c = ventures[id];
+      if (!c?.ok) return;
+      const p = loadVentureTestProgress(id);
+      const ref = openTasks(p, c.payload.floors).find((t) => t.taskId === taskId);
+      if (!ref) return openVenture(id);
+      const page = draftPageOf(p, taskId);
+      const restored = restoreTaskDraft(p, taskId);
+      saveVentureTestProgress(id, restored);
+      setVentureId(id);
+      setProgress(restored);
+      go({ screen: "workbook", level: ref.level, silverId: ref.silverId, bronzeId: ref.bronzeId, index: ref.taskIndex, ...(page ? { page } : {}) });
+    },
+    [go, openVenture, ventures],
+  );
+
   const toHome = useCallback(() => {
     setInProgress(loadInProgress(liveVentureIds(), ventureTitles, ventures));
     go({ screen: "home" });
@@ -235,7 +262,12 @@ export function VentureFlow({
     return (
       <VentureTestShell>
         {inProgress ? (
-          <LaunchpadHome inProgress={inProgress} onOpenVenture={openVenture} onOpenHandbook={(id) => setHandbook({ ventureId: id, entry: "home" })} />
+          <LaunchpadHome
+            inProgress={inProgress}
+            onOpenVenture={openVenture}
+            onOpenHandbook={(id) => setHandbook({ ventureId: id, entry: "home" })}
+            onOpenTask={openTaskFromHome}
+          />
         ) : null}
         {handbook?.entry === "home" && ventures[handbook.ventureId]?.ok
           ? (() => {
@@ -282,6 +314,22 @@ export function VentureFlow({
   const iconVentureId = iconSetOverride ?? ventureId;
   const setAnswer = (answerKey: string, answer: Parameters<typeof setProgressAnswer>[2]) =>
     save(setProgressAnswer(progress, answerKey, answer));
+
+  /**
+   * Opens a task from a door, a Come back marker or a Finish this link. A task
+   * left open gets its draft back and lands on the page the learner left.
+   */
+  const openTask = (where: { level: number; silverId: string; bronzeId: string }, index: number) => {
+    const floor = floorAt(floors, where.level);
+    const task = floor.silvers.find((s) => s.id === where.silverId)?.bronzes.find((b) => b.id === where.bronzeId)?.tasks[index];
+    if (task && isTaskOpen(progress, task.id)) {
+      const page = draftPageOf(progress, task.id);
+      save(restoreTaskDraft(progress, task.id));
+      go({ screen: "workbook", ...where, index, ...(page ? { page } : {}) });
+      return;
+    }
+    go({ screen: "workbook", ...where, index });
+  };
 
   const toBuilding = () => go({ screen: "building" });
   const toCorridor = (level: number) => () => go({ screen: "corridor", level, entering: false });
@@ -357,7 +405,15 @@ export function VentureFlow({
           floorName={floor.name}
           goal={floor.gold.title}
           entering={view.entering}
-          silvers={floor.silvers.map((s, i) => ({ id: s.id, title: s.title, state: states[i] ?? "locked" }))}
+          silvers={floor.silvers.map((s, i) => {
+            const firstOpen = openTasksInSilver(progress, s, floor.level)[0];
+            return {
+              id: s.id,
+              title: s.title,
+              state: states[i] ?? "locked",
+              onComeBack: firstOpen ? () => openTask(firstOpen, firstOpen.taskIndex) : undefined,
+            };
+          })}
           note={!done && floor.silvers.some((s) => s.placeholder) ? "Plaque titles TBC" : undefined}
           complete={
             done
@@ -384,7 +440,13 @@ export function VentureFlow({
         <BronzeDoors
           level={floor.level}
           silverTitle={silver.title}
-          bronzes={silver.bronzes.map((b, i) => ({ id: b.id, title: b.title, subtitle: b.subtitle, state: states[i] ?? "locked" }))}
+          bronzes={silver.bronzes.map((b, i) => ({
+            id: b.id,
+            title: b.title,
+            subtitle: b.subtitle,
+            state: states[i] ?? "locked",
+            comeBack: open && bronzeHasOpenTask(progress, b),
+          }))}
           lockedNote={lockedDoorsNote(progress, floors, floor, silverIndex)}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
@@ -392,10 +454,11 @@ export function VentureFlow({
             const bronze = silver.bronzes.find((b) => b.id === bronzeId);
             if (!bronze) return;
             // No task list: the door opens the first unfinished task (or the first, to review).
-            go({ screen: "workbook", level: floor.level, silverId: silver.id, bronzeId, index: bronzeEntryTaskIndex(progress, bronze) });
+            openTask({ level: floor.level, silverId: silver.id, bronzeId }, bronzeEntryTaskIndex(progress, bronze));
           }}
           wrapUp={
-            wrapUp && isSilverDone(progress, silver)
+            // Open once every door is done or left open; a wrap-up with open steps cannot be confirmed.
+            wrapUp && isSilverSettled(progress, silver)
               ? {
                   label: wrapUp.type === "identity-wrap-up" ? "See your logo" : wrapUp.heading,
                   onOpen: () => go({ screen: "wrap-up", level: floor.level, silverId: silver.id }),
@@ -448,7 +511,7 @@ export function VentureFlow({
           onCorridor={toCorridor(floor.level)}
           // There is no task list, so Exit goes back to the bronze doors.
           onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
-          onJump={(i) => go({ screen: "workbook", ...where, index: i })}
+          onJump={(i) => openTask(where, i)}
           onPrevious={() =>
             pages && pageIndex > 0
               ? go({ screen: "workbook", ...where, index, page: pageIndex - 1 })
@@ -457,6 +520,15 @@ export function VentureFlow({
           nextDisabled={!answered}
           nextHint={page ? pageHint(page) : identityHint(current)}
           eyebrow={eyebrow}
+          onComeBackLater={
+            current?.canComeBackLater && !progress.completedTaskIds.includes(current.id)
+              ? () => {
+                  // Partial answers go into the task's draft; the next step unlocks; back to the doors.
+                  save(deferTask(progress, current, { page: pageIndex }));
+                  go({ screen: "doors", level: floor.level, silverId: silver.id });
+                }
+              : undefined
+          }
           onNext={() => {
             const task = bronze.tasks[index];
             if (!task) return;
@@ -494,6 +566,11 @@ export function VentureFlow({
       const floor = floorAt(floors, view.level);
       const silver = floor.silvers.find((s) => s.id === view.silverId)!;
       const wrapUp = silver.wrapUp;
+      const openSteps = openTasksInSilver(progress, silver, floor.level).map((t) => ({
+        taskId: t.taskId,
+        title: t.title,
+        onFinish: () => openTask(t, t.taskIndex),
+      }));
       const onFinalize = view.justCompleted
         ? () => go({ screen: "silver-complete", level: floor.level, silverId: silver.id })
         : toCorridor(floor.level);
@@ -507,6 +584,7 @@ export function VentureFlow({
             onBuilding={toBuilding}
             onCorridor={toCorridor(floor.level)}
             onFinalize={onFinalize}
+            openSteps={openSteps}
           />
         ) : wrapUp?.type === "workbook-summary" ? (
           <SummaryWrapUp
@@ -519,6 +597,7 @@ export function VentureFlow({
             onBuilding={toBuilding}
             onCorridor={toCorridor(floor.level)}
             onFinalize={onFinalize}
+            openSteps={openSteps}
           />
         ) : null;
       break;

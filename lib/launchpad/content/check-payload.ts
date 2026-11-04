@@ -150,6 +150,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
           bool(task.placeholder, `${tw} placeholder`);
           text(task.ctaLabel, `${tw} ctaLabel`, true);
           if (task.paged !== undefined) bool(task.paged, `${tw} paged`);
+          if (task.canComeBackLater !== undefined) bool(task.canComeBackLater, `${tw} canComeBackLater`);
           if (task.kind !== undefined && task.kind !== "in-app" && task.kind !== "real-world") fail(`${tw} has unknown kind ${String(task.kind)}.`);
           list(task.screens, `${tw} screens`).forEach((screen, ki) => {
             checkScreen(screen, `${tw} screen ${ki + 1}`, id, answers);

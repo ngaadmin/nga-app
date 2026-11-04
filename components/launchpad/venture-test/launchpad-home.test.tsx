@@ -93,3 +93,46 @@ describe("Launchpad home In Progress tile", () => {
     expect(document.querySelector("[data-tile-level-name]")?.textContent).toBe(level2);
   });
 });
+
+describe("In Progress tile: open tasks (Come back to this later)", () => {
+  const OPEN = [
+    { taskId: "l1-s1-b4-t1", title: "Set your goals" },
+    { taskId: "l2-s1-b2-t1", title: "Find out if people want it" },
+  ];
+
+  it("with 0 open tasks the line is hidden and the tile keeps its compact layout (no list, no extra row)", () => {
+    render(<LaunchpadHome inProgress={[{ ...L6, openTasks: [] }]} onOpenVenture={() => {}} />);
+    const tile = document.querySelector("[data-in-progress='dog-walking']") as HTMLElement;
+    expect(tile.querySelector("[data-open-tasks-toggle]")).toBeNull();
+    expect(tile.querySelector("[data-open-tasks-list]")).toBeNull();
+    expect(tile.textContent).not.toMatch(/open/);
+    // Same children as a tile from before the feature: the row and the progress bar.
+    expect(tile.children).toHaveLength(2);
+  });
+
+  it("shows '2 open' under the level name, collapsed; tapping expands one row per task and flips the chevron", () => {
+    const onOpenTask = vi.fn();
+    render(<LaunchpadHome inProgress={[{ ...L6, openTasks: OPEN }]} onOpenVenture={() => {}} onOpenHandbook={() => {}} onOpenTask={onOpenTask} />);
+    const toggle = screen.getByRole("button", { name: "2 open" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(toggle.className).toContain("text-nga-cta-hover");
+    // Under the level name, in the same column.
+    const level = document.querySelector("[data-tile-level-name]") as HTMLElement;
+    expect(level.parentElement?.contains(toggle)).toBe(true);
+    expect(document.querySelector("[data-open-tasks-list]")).toBeNull();
+    // No badge on the workbook (handbook) button.
+    expect(document.querySelector("[data-handbook-button]")?.textContent).toBe("");
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle.querySelector("[data-chevron]")?.getAttribute("class")).toContain("rotate-180");
+    const rows = document.querySelectorAll("[data-open-task]");
+    expect([...rows].map((r) => r.textContent)).toEqual(["Set your goalsGo", "Find out if people want itGo"]);
+    fireEvent.click(screen.getByRole("button", { name: "Go: Find out if people want it" }));
+    expect(onOpenTask).toHaveBeenCalledWith("dog-walking", "l2-s1-b2-t1");
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(document.querySelector("[data-open-tasks-list]")).toBeNull();
+  });
+});

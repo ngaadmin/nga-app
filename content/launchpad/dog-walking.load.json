@@ -77,6 +77,7 @@
                   "title": "Pick what your business will offer",
                   "kind": "in-app",
                   "paged": true,
+                  "canComeBackLater": false,
                   "screens": [
                     {
                       "sourceRow": 2,
@@ -179,6 +180,7 @@
                   "title": "Find the why",
                   "kind": "in-app",
                   "paged": true,
+                  "canComeBackLater": false,
                   "screens": [
                     {
                       "sourceRow": 3,
@@ -291,6 +293,7 @@
                   "title": "Know your impact",
                   "kind": "in-app",
                   "paged": true,
+                  "canComeBackLater": false,
                   "screens": [
                     {
                       "sourceRow": 4,
@@ -391,13 +394,16 @@
                   "title": "Set your goals",
                   "kind": "in-app",
                   "paged": true,
+                  "canComeBackLater": true,
                   "screens": [
                     {
                       "sourceRow": 5,
                       "validation": [],
                       "feeds": [],
                       "feedsInto": [],
-                      "flags": [],
+                      "flags": [
+                        "D22"
+                      ],
                       "screenId": "l1-s1-b4-t1-s1",
                       "index": "1",
                       "template": "context",
@@ -1374,6 +1380,7 @@
                   "title": "Decide what to sell",
                   "kind": "in-app",
                   "paged": true,
+                  "canComeBackLater": false,
                   "screens": [
                     {
                       "sourceRow": 14,
@@ -1478,6 +1485,7 @@
                   "title": "Find out if people want it",
                   "kind": "real-world",
                   "paged": true,
+                  "canComeBackLater": true,
                   "screens": [
                     {
                       "sourceRow": 15,
@@ -1495,7 +1503,8 @@
                         "D6",
                         "D10",
                         "D13",
-                        "D15"
+                        "D15",
+                        "D22"
                       ],
                       "screenId": "l2-s1-b2-t1-s2",
                       "index": "1",
@@ -2050,6 +2059,16 @@
         3,
         4,
         14,
+        15
+      ]
+    },
+    {
+      "id": "D22",
+      "topic": "Come back later",
+      "applied": "Sample, pending tracker column: the tracker has no \"Come back later\" column yet, so a TEST override turns it on for Set your goals (row 5) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.",
+      "status": "sample-pending-tracker-column",
+      "rows": [
+        5,
         15
       ]
     }

@@ -136,3 +136,32 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
     expect(document.querySelector("[data-open-tasks-list]")).toBeNull();
   });
 });
+
+describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasper's review of 6f914e1)", () => {
+  it("with open tasks the 2-line label block keeps the 44px workbook button and the 94px Continue in the row", () => {
+    render(
+      <LaunchpadHome
+        inProgress={[{ ...L6, openTasks: [{ taskId: "l1-s1-b4-t1", title: "Set your goals" }] }]}
+        onOpenVenture={() => {}}
+        onOpenHandbook={() => {}}
+        onOpenTask={() => {}}
+      />,
+    );
+    const actions = document.querySelector("[data-tile-actions]") as HTMLElement;
+    const book = actions.querySelector("[data-handbook-button]") as HTMLElement;
+    const go = actions.querySelector("[data-continue-button]") as HTMLElement;
+    expect(book).toBeTruthy();
+    expect(book.className).toMatch(/\bh-11\b/);
+    expect(book.className).toMatch(/\bw-11\b/);
+    expect(book.className).toMatch(/rounded-xl/);
+    expect(book.className).toMatch(/border-2/);
+    expect(book.className).toMatch(/border-nga-ink/);
+    expect(book.className).toMatch(/bg-white/);
+    expect(book.querySelector("svg")?.getAttribute("width")).toBe("28");
+    expect(go.className).toContain("w-[94px]");
+    expect([...actions.children]).toEqual([book, go]);
+    // Two-line label block: level name, then "1 open".
+    const level = document.querySelector("[data-tile-level-name]") as HTMLElement;
+    expect(level.parentElement?.querySelector("[data-open-tasks-toggle]")?.textContent).toMatch(/^1 open/);
+  });
+});

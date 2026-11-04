@@ -190,7 +190,7 @@ function InProgressTile({
               type="button"
               aria-label="Open handbook"
               onClick={() => onOpenHandbook(v.ventureId)}
-              className={`${TILE_BTN} flex w-11 items-center justify-center border-nga-ink bg-white`}
+              className={`${TILE_BTN} flex w-11 flex-none items-center justify-center border-nga-ink bg-white`}
               data-handbook-button=""
             >
               <HandbookIcon size={28} />
@@ -199,7 +199,8 @@ function InProgressTile({
           <button
             type="button"
             onClick={() => onOpenVenture(v.ventureId)}
-            className={`${TILE_BTN} border-nga-cta bg-nga-cta px-3 font-heading text-[14px] font-bold text-white`}
+            className={`${TILE_BTN} w-[94px] flex-none border-nga-cta bg-nga-cta px-3 font-heading text-[14px] font-bold text-white`}
+            data-continue-button=""
           >
             Continue
           </button>

@@ -197,10 +197,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await goalPage(4, "own boss");
     await expect(next).toBeDisabled();
     await expect(hint).toHaveText("Make a choice to keep going.");
-    await btn(page, "Schedule").click();
+    await btn(page, "Choosing when I work (my own schedule and hours)").click();
     await expect(next).toBeEnabled();
   });
-  await shot(t, "Goal 4 of 6, Be my own boss, Schedule picked", next);
+  await shot(t, "Goal 4 of 6, Be my own boss, Choosing when I work picked", next);
 
   await step(t, "Goal 5 (4e): Support a cause carries my cause (Environment)", async () => {
     await next.click();
@@ -236,7 +236,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     expect(why.replace(/\s+/g, " ")).toMatch(/1\. Help others 2\. Make money 3\. Learn new skills 4\. Be my own boss 5\. Support a cause/);
     await expect(wrap.locator('[data-summary-section="my-cause"]')).toContainText("Environment");
     const goals = wrap.locator('[data-summary-section="my-goals"]');
-    for (const s of ["TEST benefit one", "500", "TEST skill", "schedule", "10", "TEST other goal"])
+    for (const s of ["TEST benefit one", "500", "TEST skill", "Choosing when I work", "10", "TEST other goal"])
       await expect(goals).toContainText(s, { ignoreCase: true });
   });
   await shot(t, "Level 1 wrap-up, all answers shown", btn(page, "Confirm and continue"));

@@ -94,7 +94,7 @@ describe("dog walking load reader", () => {
       2: ["multi-choice", "Dog walking", "Grooming", "Bookings", "Training", "Manage bookings for others", "", ""],
       3: ["rank", "Make money", "Help others", "Learn new skills", "Be my own boss", "Support a cause", "", ""],
       4: ["single-choice", "Animals", "Environment", "Kids in need", "Food for people who are hungry", "Helping the elderly", "", ""],
-      9: ["single-choice", "Schedule", "Prices", "Customers", "Income", "Location", "Hours", "Creative control"],
+      9: ["single-choice", "Choosing when I work (my own schedule and hours)", "Keeping the money I make", "Working where I want", "Making things my own way", "", "", ""],
       6: ["fill-in", "", "", "", "", "", "", ""],
       11: ["fill-in", "", "", "", "", "", "", ""],
       14: ["fill-in", "", "", "", "", "", "", ""],

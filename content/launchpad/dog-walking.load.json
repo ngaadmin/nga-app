@@ -5,7 +5,7 @@
   "source": {
     "file": "lib/launchpad/content/source/dog-walking/bronze-task-tracker.xlsx",
     "sheet": "Bronze Task Tracker",
-    "md5": "bc479e7bf9c327034cecd52c66592203",
+    "md5": "13215cfbeb2b7e87639c0de922b8339a",
     "rows": "2-19",
     "notes": [
       {
@@ -698,32 +698,20 @@
                               "prompt": "You said being your own boss matters. What's your top reason for wanting to be your own boss?",
                               "options": [
                                 {
-                                  "id": "schedule",
-                                  "label": "Schedule"
+                                  "id": "choosing-when-i-work-my-own-schedule-and-hours",
+                                  "label": "Choosing when I work (my own schedule and hours)"
                                 },
                                 {
-                                  "id": "prices",
-                                  "label": "Prices"
+                                  "id": "keeping-the-money-i-make",
+                                  "label": "Keeping the money I make"
                                 },
                                 {
-                                  "id": "customers",
-                                  "label": "Customers"
+                                  "id": "working-where-i-want",
+                                  "label": "Working where I want"
                                 },
                                 {
-                                  "id": "income",
-                                  "label": "Income"
-                                },
-                                {
-                                  "id": "location",
-                                  "label": "Location"
-                                },
-                                {
-                                  "id": "hours",
-                                  "label": "Hours"
-                                },
-                                {
-                                  "id": "creative-control",
-                                  "label": "Creative control"
+                                  "id": "making-things-my-own-way",
+                                  "label": "Making things my own way"
                                 }
                               ],
                               "summaryLabel": "My top reason to be my own boss"
@@ -1059,32 +1047,20 @@
                       "question": "You said being your own boss matters. What's your top reason for wanting to be your own boss?",
                       "options": [
                         {
-                          "id": "schedule",
-                          "label": "Schedule"
+                          "id": "choosing-when-i-work-my-own-schedule-and-hours",
+                          "label": "Choosing when I work (my own schedule and hours)"
                         },
                         {
-                          "id": "prices",
-                          "label": "Prices"
+                          "id": "keeping-the-money-i-make",
+                          "label": "Keeping the money I make"
                         },
                         {
-                          "id": "customers",
-                          "label": "Customers"
+                          "id": "working-where-i-want",
+                          "label": "Working where I want"
                         },
                         {
-                          "id": "income",
-                          "label": "Income"
-                        },
-                        {
-                          "id": "location",
-                          "label": "Location"
-                        },
-                        {
-                          "id": "hours",
-                          "label": "Hours"
-                        },
-                        {
-                          "id": "creative-control",
-                          "label": "Creative control"
+                          "id": "making-things-my-own-way",
+                          "label": "Making things my own way"
                         }
                       ],
                       "answer": {

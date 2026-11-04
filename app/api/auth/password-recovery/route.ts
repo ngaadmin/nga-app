@@ -3,7 +3,7 @@ import {
   authorizeBrowserMutation,
   clientIpKey,
 } from "@/lib/auth/request-guard";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { consumeSharedRateLimit } from "@/lib/auth/shared-rate-limit";
 import { requestHouseholdPasswordRecovery } from "@/lib/onboarding/household-recovery";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const ipLimit = consumeRateLimit(
+  const ipLimit = await consumeSharedRateLimit(
     `password-recovery:ip:${clientIpKey(request)}`,
     8,
     60_000,

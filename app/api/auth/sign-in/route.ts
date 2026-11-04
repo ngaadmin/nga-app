@@ -3,7 +3,7 @@ import {
   authorizeBrowserMutation,
   clientIpKey,
 } from "@/lib/auth/request-guard";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { consumeSharedRateLimit } from "@/lib/auth/shared-rate-limit";
 import {
   SIGN_IN_MISMATCH_ERROR,
   SIGN_IN_UNAVAILABLE_ERROR,
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const ipLimit = consumeRateLimit(
+  const ipLimit = await consumeSharedRateLimit(
     `sign-in:ip:${clientIpKey(request)}`,
     12,
     60_000,

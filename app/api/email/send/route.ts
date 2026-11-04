@@ -3,7 +3,7 @@ import {
   authorizeBrowserMutation,
   clientIpKey,
 } from "@/lib/auth/request-guard";
-import { consumeRateLimit } from "@/lib/auth/rate-limit";
+import { consumeSharedRateLimit } from "@/lib/auth/shared-rate-limit";
 import {
   isPublicConsentEmailType,
   storedConsentMatchesEmailType,
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const ipLimit = consumeRateLimit(
+    const ipLimit = await consumeSharedRateLimit(
       `email-send:ip:${clientIpKey(request)}`,
       8,
       60_000,
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const tokenLimit = consumeRateLimit(
+    const tokenLimit = await consumeSharedRateLimit(
       `email-send:token:${stored.request.id}`,
       3,
       15 * 60_000,

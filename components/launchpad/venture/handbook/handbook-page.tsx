@@ -1,262 +1,221 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import type { IdentityField, BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
-import { resolveNameColor } from "@/lib/launchpad/content/identity";
-import { identityChoices, type IdentityChoices } from "@/lib/launchpad/content/identity-content";
+import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import type { HandbookPageView } from "@/lib/launchpad/venture-test/handbook";
+import { handbookVisionSample } from "@/lib/launchpad/venture-test/handbook-sample";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
-import { IdentityFieldEditor } from "@/components/launchpad/venture/identity/identity-choices";
+import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { DoneStamp, HandbookProp, PencilIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { BTN_CYAN } from "@/components/launchpad/venture-test/venture-test-ui";
-import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 
-/** Section block tints and their sticker labels, cycled per block (existing tokens only). */
-const BLOCKS = [
-  { block: "bg-nga-mist", sticker: "bg-nga-secondary text-nga-ink" },
-  { block: "bg-nga-accent/20", sticker: "bg-nga-accent text-nga-ink" },
-  { block: "bg-nga-panel/45", sticker: "bg-nga-ink text-white" },
-  { block: "bg-nga-mist border-2 border-dashed border-nga-secondary", sticker: "bg-nga-ink text-white" },
-] as const;
+/*
+ * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
+ * card, hand-drawn dividers, accent labels with an underline swash, product
+ * tag chips and one doodle. The accent is the logo palette's light blue.
+ */
+const ACCENT = "#3FB7DA";
 
-function Banner({ page }: { page: HandbookPageView }) {
+/** Hand-drawn divider between sections. */
+function HandRule() {
   return (
-    <div className="mb-2.5 flex items-center gap-2.5 rounded-xl bg-nga-ink px-3 py-2.5 text-white">
-      <span className="flex size-[42px] flex-none items-center justify-center rounded-full bg-nga-accent font-heading text-[17px] font-extrabold text-nga-ink">
-        L{page.level}
-      </span>
-      <div className="min-w-0">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.8px] text-nga-secondary">
-          {page.floorName} · <span className="whitespace-nowrap">Silver {page.silverNumber}</span>
-        </p>
-        <h2 className="font-heading text-[17px] font-extrabold leading-[1.15]">{page.silver.title}</h2>
-      </div>
-    </div>
+    <svg className="mb-3.5 mt-5 block" width="100%" height="10" viewBox="0 0 254 10" preserveAspectRatio="none" aria-hidden="true" data-hand-rule="">
+      <path d="M2 6C30 2.5 52 8.5 84 5.2S140 2.8 170 6.4S226 8 252 4.6" fill="none" stroke="#D9D1C3" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
   );
 }
 
-/** One colored workbook block with a sticker label. */
-function Block({ label, tone, prop, children }: { label: string; tone: number; prop?: ReactNode; children: ReactNode }) {
-  const t = BLOCKS[tone % BLOCKS.length]!;
+/** Accent section label (Fredoka, light blue) with its underline swash. */
+function AccentLabel({ children, doodle, sample }: { children: ReactNode; doodle?: ReactNode; sample?: boolean }) {
   return (
-    <section className={`relative mb-2.5 rounded-xl px-2.5 pb-2.5 pt-2 ${t.block}`} aria-label={label}>
-      {prop}
-      <span className={`-ml-1 mb-1.5 inline-block -rotate-2 rounded-full px-2.5 py-0.5 font-heading text-xs font-bold ${t.sticker}`}>
-        {label}
-      </span>
-      {children}
-    </section>
-  );
-}
-
-/** A written entry: a plain heading with the learner's answer under it. */
-function Entry({
-  heading,
-  children,
-  edit,
-}: {
-  heading: string;
-  children: ReactNode;
-  edit?: { open: boolean; onToggle: () => void; editor: ReactNode };
-}) {
-  return (
-    <div className="border-t border-white/80 py-1 first:border-t-0" data-entry={heading}>
-      <div className="flex min-h-11 items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[11px] font-semibold uppercase tracking-[0.5px] text-nga-slate">{heading}</h3>
-          <div className="text-[14px] font-semibold text-nga-ink">{children}</div>
-        </div>
-        {edit && (
-          <button
-            type="button"
-            aria-label={`${edit.open ? "Close" : "Edit"} ${heading.toLowerCase()}`}
-            aria-expanded={edit.open}
-            onClick={edit.onToggle}
-            className={`flex size-11 flex-none items-center justify-center rounded-full ${edit.open ? "bg-nga-secondary" : "bg-white"} shadow-[inset_0_0_0_2px_#bde9fb]`}
-            data-edit-pencil=""
-          >
-            <PencilIcon />
-          </button>
-        )}
-      </div>
-      {edit?.open && (
-        <div className="mb-1 mt-1.5 rounded-xl bg-white p-2.5" data-inline-editor={heading}>
-          {edit.editor}
-          <button type="button" className={`${BTN_CYAN} mt-2.5 w-full !py-2 !text-sm`} onClick={edit.onToggle}>
-            Done
-          </button>
-        </div>
+    <div className="flex items-end gap-2">
+      <h3 className={`${NAME_FONT_CLASS["fredoka-semibold"]} mt-1 inline-flex flex-col gap-px text-[15.5px] font-semibold tracking-[0.01em]`} style={{ color: ACCENT }}>
+        {children}
+        <svg width="74" height="7" viewBox="0 0 74 7" aria-hidden="true">
+          <path d="M2 4.6C18 2 40 2.2 72 3.4" fill="none" stroke={ACCENT} strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      </h3>
+      {doodle}
+      {sample && (
+        <span className="mb-1.5 ml-auto rounded border border-dashed border-[#C9CED6] px-1.5 text-[10px] font-medium uppercase tracking-[0.06em] text-[#6B7280]" data-sample="">
+          Sample
+        </span>
       )}
     </div>
   );
 }
 
-const NOT_PICKED = <span className="font-medium text-nga-slate">Not picked yet</span>;
-
-function Swatch({ hex }: { hex: string }) {
-  return <span aria-hidden="true" className="mr-1.5 inline-block size-3.5 rounded-full align-[-2px]" style={{ background: hex }} />;
+/** The page's one doodle: an outline paw (dog walking) or bead loop (bracelets). */
+function Doodle({ ventureId }: { ventureId: string }) {
+  if (ventureId === "friendship-bracelets")
+    return (
+      <svg width="22" height="22" viewBox="0 0 100 100" fill="none" stroke={ACCENT} strokeWidth="7" aria-hidden="true" className="mb-1.5 rotate-[14deg]" data-doodle="bead">
+        <path d="M18 60C18 34 34 18 50 18S82 34 82 60" strokeLinecap="round" />
+        <circle cx="18" cy="70" r="9" />
+        <circle cx="50" cy="80" r="9" />
+        <circle cx="82" cy="70" r="9" />
+      </svg>
+    );
+  return (
+    <svg width="22" height="22" viewBox="0 0 100 100" fill="none" stroke={ACCENT} strokeWidth="7" strokeLinejoin="round" aria-hidden="true" className="mb-1.5 rotate-[14deg]" data-doodle="paw">
+      <circle cx="27" cy="42" r="9" />
+      <circle cx="41" cy="25" r="9.5" />
+      <circle cx="60" cy="25" r="9.5" />
+      <circle cx="74" cy="42" r="9" />
+      <path d="M50 50C62 50 76 62 76 73C76 82 67 85 59 83C55 82 45 82 41 83C33 85 24 82 24 73C24 62 38 50 50 50Z" />
+    </svg>
+  );
 }
 
-function labelOf(options: readonly { id: string; label: string }[], id: string | undefined): string | undefined {
-  return id === undefined ? undefined : options.find((o) => o.id === id)?.label;
+/** Product tag chip (a luggage tag with a punched hole). */
+function TagChip({ children }: { children: ReactNode }) {
+  return (
+    <li
+      className="relative flex h-8 items-center whitespace-nowrap rounded-r-lg bg-[#ECF8FB] pl-[23px] pr-3 text-[13px] font-medium text-[#111827] [clip-path:polygon(11px_0,100%_0,100%_100%,11px_100%,0_50%)]"
+      data-tag-chip=""
+    >
+      <span aria-hidden="true" className="absolute left-[11px] top-1/2 -mt-[3px] size-1.5 rounded-full bg-[#FDFBF7]" />
+      {children}
+    </li>
+  );
 }
 
-const LOGO_FIELDS: readonly { field: IdentityField; heading: string }[] = [
-  { field: "shape", heading: "Shape" },
-  { field: "color", heading: "Color" },
-  { field: "icon", heading: "Icon" },
-];
-const NAME_FIELDS: readonly { field: IdentityField; heading: string }[] = [
-  { field: "name", heading: "Business name" },
-  { field: "font", heading: "Font" },
-  { field: "nameColor", heading: "Name color" },
-];
+function DoneChip() {
+  return (
+    <span className="flex items-center gap-1 rounded-md bg-[#F3F4F6] py-[3px] pl-1.5 pr-[7px] text-[11px] font-medium text-[#374151]" data-done-chip="">
+      <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#374151" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12.5l4.5 4.5L19 7.5" />
+      </svg>
+      Done
+    </span>
+  );
+}
 
-function entryValue(field: IdentityField, a: BusinessIdentityAnswer, c: IdentityChoices): ReactNode {
-  switch (field) {
-    case "shape":
-      return labelOf(c.shapes, a.shape) ?? NOT_PICKED;
-    case "color": {
-      const label = c.colors.find((o) => o.hex.toUpperCase() === a.color?.toUpperCase())?.label;
-      return a.color ? (
-        <>
-          <Swatch hex={a.color} />
-          {label ?? a.color}
-        </>
-      ) : (
-        NOT_PICKED
-      );
-    }
-    case "icon":
-      return labelOf(c.icons, a.icon) ?? NOT_PICKED;
-    case "name":
-      return a.name ? (
-        <span className={a.font ? NAME_FONT_CLASS[a.font] : undefined} style={{ color: resolveNameColor(a), overflowWrap: "anywhere" }}>
-          {a.name}
-        </span>
-      ) : (
-        NOT_PICKED
-      );
-    case "font":
-      return labelOf(c.fonts, a.font) ?? NOT_PICKED;
-    case "nameColor": {
-      const label = labelOf(c.nameColors, a.nameColor);
-      return label ? (
-        <>
-          <Swatch hex={resolveNameColor(a)} />
-          {label}
-        </>
-      ) : (
-        NOT_PICKED
-      );
-    }
-  }
+function TopRow({ eyebrow, done }: { eyebrow: string; done: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">{eyebrow}</span>
+      {done && <DoneChip />}
+    </div>
+  );
+}
+
+function EditPencil() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </svg>
+  );
 }
 
 /**
- * "Build your identity": the logo drawn from the saved answer (the same
- * answer the lessons and the wrap-up write), plus each pick written out.
- * Every value is read live from the answer, so an edit here, in a lesson or
- * on the wrap-up shows everywhere, and any later page that derives from these
- * answers re-renders from them automatically (the default; no copies kept).
+ * "Vision and products" (r4): the logo and name drawn from the saved identity
+ * answer (the same answer the lessons and the wrap-up write), an Edit button
+ * when editable, then "Our vision" and "What we sell". The seed has no vision
+ * or product answers yet, so those show clearly marked sample text.
  */
 function IdentityPageBody({ page, editable, iconVentureId }: { page: HandbookPageView; editable: boolean; iconVentureId: string }) {
   const answerKey = page.silver.wrapUp!.answerKey;
   const { answer, update } = useIdentityAnswer(answerKey);
   const choices = identityChoices(page.silver, answerKey, iconVentureId);
-  const [open, setOpen] = useState<IdentityField | null>(null);
-  const [logoBronze, nameBronze] = page.silver.bronzes;
-  const entries = (fields: typeof LOGO_FIELDS) =>
-    fields.map(({ field, heading }) => (
-      <Entry
-        key={field}
-        heading={heading}
-        edit={
-          editable
-            ? {
-                open: open === field,
-                onToggle: () => setOpen(open === field ? null : field),
-                editor: (
-                  <IdentityFieldEditor
-                    field={field}
-                    choices={choices}
-                    answer={answer}
-                    update={update}
-                    nameInputId={`handbook-${answerKey}-name`}
-                  />
-                ),
-              }
-            : undefined
-        }
-      >
-        {entryValue(field, answer, choices)}
-      </Entry>
-    ));
+  const [editing, setEditing] = useState(false);
+  const sample = handbookVisionSample(iconVentureId);
+  const fontLabel = choices.fonts.find((f) => f.id === answer.font)?.label;
   return (
     <>
-      <Block label="My logo" tone={0}>
-        <div className="flex justify-center py-1">
-          <BusinessLogo answer={answer} size="sm" namePlaceholder="Your business name" />
+      <TopRow eyebrow="Vision and products" done={page.done} />
+      <div className="mt-3.5 flex flex-col items-center gap-3" data-identity-lockup="">
+        <BusinessLogo answer={answer} size="hb" namePlaceholder="Your business name" />
+        {fontLabel && (
+          <p className="-mt-2 text-[11px] text-[#9CA3AF]" data-font-label="">
+            Font: {fontLabel}
+          </p>
+        )}
+        {editable && (
+          <button
+            type="button"
+            aria-expanded={editing}
+            onClick={() => setEditing((e) => !e)}
+            className="relative flex h-[34px] items-center gap-[7px] rounded-[10px] pl-[13px] pr-4 text-sm font-medium text-[#374151] shadow-[inset_0_0_0_1px_#E5E7EB] before:absolute before:-inset-x-1 before:-inset-y-[5px] before:content-['']"
+            data-edit-identity=""
+          >
+            <EditPencil />
+            {editing ? "Close" : "Edit"}
+            <span className="sr-only"> logo and name</span>
+          </button>
+        )}
+      </div>
+      {editable && editing && (
+        <div className="mt-3 rounded-xl bg-white p-3" data-inline-editor="identity">
+          <IdentityEditor choices={choices} answer={answer} update={update} idPrefix={`handbook-${answerKey}`} />
+          <button type="button" className={`${BTN_CYAN} mt-3 w-full !py-2 !text-sm`} onClick={() => setEditing(false)}>
+            Done
+          </button>
         </div>
-      </Block>
-      <Block label={logoBronze?.title ?? "My logo"} tone={1}>
-        {entries(LOGO_FIELDS)}
-      </Block>
-      <Block label={nameBronze?.title ?? "My name"} tone={2}>
-        {entries(NAME_FIELDS)}
-      </Block>
+      )}
+
+      <HandRule />
+      <AccentLabel sample>Our vision</AccentLabel>
+      <div className="relative mt-3 pl-7" data-vision="">
+        <svg className="absolute left-0 top-1 opacity-40" width="22" height="18" viewBox="0 0 44 36" fill={ACCENT} aria-hidden="true">
+          <path d="M4 36V22C4 10 10 3 19 1l2 5C15 8 12 13 12 18h8v18Z" />
+          <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
+        </svg>
+        <p className="font-heading text-[19px] font-semibold leading-[1.42] tracking-[-0.005em] text-[#111827]">{sample.vision}</p>
+      </div>
+
+      <HandRule />
+      <AccentLabel sample doodle={<Doodle ventureId={iconVentureId} />}>
+        What we sell
+      </AccentLabel>
+      <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label="What we sell">
+        {sample.products.map((p) => (
+          <TagChip key={p}>{p}</TagChip>
+        ))}
+      </ul>
     </>
   );
 }
 
-/** Every other completed silver: the silver title as the block, its finished bronzes under plain headings. */
-function PlaceholderPageBody({ page, propVentureId }: { page: HandbookPageView; propVentureId: string }) {
+/** Every other completed silver: its title, then its finished bronzes as tag chips. */
+function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
   return (
-    <Block label={page.silver.title} tone={page.number} prop={<HandbookProp ventureId={propVentureId} index={page.number} />}>
-      <div className="pb-14">
+    <>
+      <TopRow eyebrow={`${page.floorName} · Silver ${page.silverNumber}`} done={page.done} />
+      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
+      <HandRule />
+      <AccentLabel>What I did</AccentLabel>
+      <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label="What I did">
         {page.bronzeTitles.map((t) => (
-          <h3 key={t} className="flex min-h-9 items-center gap-2 border-t border-white/80 font-heading text-[15px] font-bold text-nga-ink first:border-t-0">
-            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-              <circle cx="8" cy="8" r="8" fill={VT.secondary} />
-              <path d="M4.5 8.2l2.3 2.3 4.7-4.8" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" />
-            </svg>
-            {t}
-          </h3>
+          <TagChip key={t}>{t}</TagChip>
         ))}
-      </div>
-    </Block>
+      </ul>
+    </>
   );
 }
 
 /**
- * One handbook page (one completed silver). `editable` comes from the entry
- * point and the silver's completion (see isHandbookPageEditable): from the
- * building, completed pages get edit pencils; from home everything is
- * read-only. Placeholder pages have nothing to edit.
+ * One handbook page (one completed silver), drawn on the r4 paper card.
+ * `editable` comes from the entry point and the silver's completion (see
+ * isHandbookPageEditable): from the building, completed identity pages get
+ * an Edit button; from home everything is read-only. Placeholder pages have
+ * nothing to edit.
  */
-export function HandbookPage({
-  page,
-  editable,
-  iconVentureId,
-  propVentureId,
-}: {
-  page: HandbookPageView;
-  editable: boolean;
-  iconVentureId: string;
-  propVentureId: string;
-}) {
+export function HandbookPage({ page, editable, iconVentureId }: { page: HandbookPageView; editable: boolean; iconVentureId: string }) {
   return (
-    <article className="relative" data-handbook-page={page.silver.id} data-editable={editable ? "true" : "false"} aria-label={`Page ${page.number}: ${page.silver.title}`}>
-      <Banner page={page} />
-      {page.done && <DoneStamp />}
+    <article
+      className="relative"
+      data-handbook-page={page.silver.id}
+      data-editable={editable ? "true" : "false"}
+      aria-label={`Page ${page.number}: ${page.silver.title}`}
+    >
       {page.kind === "identity" ? (
         <IdentityPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : (
-        <PlaceholderPageBody page={page} propVentureId={propVentureId} />
+        <PlaceholderPageBody page={page} />
       )}
-      <p className="mt-1 text-right text-[10px] font-semibold text-nga-slate">Page {page.number}</p>
     </article>
   );
 }

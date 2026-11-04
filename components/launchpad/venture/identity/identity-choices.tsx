@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { LaunchpadPickerOption } from "@/lib/launchpad/content/types";
 import {
+  LOGO_PREVIEW_BASE,
   NAME_INK_HEX,
   type BusinessIdentityAnswer,
   type IdentityField,
@@ -11,27 +12,64 @@ import {
   type NameColorId,
   type NameFontId,
 } from "@/lib/launchpad/content/identity";
-import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
-import { IconChip, LogoMark } from "@/components/launchpad/venture/identity/business-logo";
+import { LogoMark } from "@/components/launchpad/venture/identity/business-logo";
 import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
 
 /*
- * The choice groups shared by the picker steps and the wrap-up's inline
- * editors. Each is a radiogroup of 44px+ buttons with accessible names.
+ * The choice groups shared by the logo builder, the name screen, the
+ * wrap-up's editor and the handbook's Edit panel (r8 builder, r10 name
+ * screen). Each is a radiogroup of 44px+ buttons with accessible names.
  */
 
 export type UpdateIdentity = <F extends IdentityField>(field: F, value: NonNullable<BusinessIdentityAnswer[F]>) => void;
 
-const OPTION =
-  "flex min-h-11 min-w-11 flex-col items-center justify-center gap-1.5 rounded-2xl bg-white p-2.5 font-heading text-[13px] font-semibold text-nga-ink";
-const ring = (on: boolean) => (on ? "shadow-[inset_0_0_0_3px_#0cc1e0] bg-nga-mist" : "shadow-[inset_0_0_0_2px_#bde9fb]");
+/** Form accent from the r8/r10 designs (the palette's light blue). */
+export const IDENTITY_ACCENT = "#3FB7DA";
 
 function Group({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <div role="radiogroup" aria-label={label} className={`flex flex-wrap justify-center gap-2.5 ${className}`}>
+    <div role="radiogroup" aria-label={label} className={className}>
       {children}
     </div>
+  );
+}
+
+/** A tile holding a small logo (shape and icon options): selected gets a 2px ring in the logo color. */
+function LogoTile({
+  on,
+  label,
+  ring,
+  option,
+  onPick,
+  children,
+}: {
+  on: boolean;
+  label: string;
+  ring: string;
+  option: string;
+  onPick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      aria-label={label}
+      data-option={option}
+      onClick={onPick}
+      className="flex w-[92px] flex-col items-center gap-2 text-[13px] font-medium text-[#374151]"
+    >
+      <span
+        aria-hidden="true"
+        className="flex size-[84px] items-center justify-center rounded-[20px]"
+        style={{ background: on ? "#FFFFFF" : "#F9FAFB", boxShadow: on ? `0 0 0 2px ${ring}` : undefined }}
+      >
+        {children}
+      </span>
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -44,30 +82,19 @@ export function ShapeChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
+  const base = answer.color ?? LOGO_PREVIEW_BASE;
   return (
-    <Group label="Logo shape">
-      {options.map((o) => {
-        const on = answer.shape === o.id;
-        return (
-          <button
-            key={o.id}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            aria-label={o.label}
-            data-option={o.id}
-            onClick={() => update("shape", o.id)}
-            className={`${OPTION} w-[132px] ${ring(on)}`}
-          >
-            <LogoMark shape={o.id} color={answer.color ?? VT.ink} size={56} />
-            <span>{o.label}</span>
-          </button>
-        );
-      })}
+    <Group label="Logo shape" className="flex justify-center gap-4">
+      {options.map((o) => (
+        <LogoTile key={o.id} on={answer.shape === o.id} label={o.label} ring={base} option={o.id} onPick={() => update("shape", o.id)}>
+          <LogoMark shape={o.id} color={base} icon={answer.icon} size={60} />
+        </LogoTile>
+      ))}
     </Group>
   );
 }
 
+/** r8 swatches: 52px ring around a 40px dot; the picked one gets a 2px ring in its own color, its name below. */
 export function ColorChoices({
   options,
   answer,
@@ -77,34 +104,33 @@ export function ColorChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
+  const picked = options.find((o) => o.hex.toUpperCase() === answer.color?.toUpperCase());
   return (
-    <Group label="Logo color" className="gap-3">
-      {options.map((o) => {
-        const on = answer.color?.toUpperCase() === o.hex.toUpperCase();
-        return (
-          <button
-            key={o.id}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            aria-label={o.label}
-            data-option={o.id}
-            onClick={() => update("color", o.hex.toUpperCase())}
-            className="flex w-14 flex-col items-center gap-1 font-heading text-[12px] font-semibold text-nga-ink"
-          >
-            <span
-              aria-hidden="true"
-              className="size-12 rounded-full"
-              style={{
-                background: o.hex,
-                boxShadow: on ? `0 0 0 3px #fff, 0 0 0 6px ${VT.secondary}` : "inset 0 0 0 2px rgba(255,255,255,0.35)",
-              }}
-            />
-            <span>{o.label}</span>
-          </button>
-        );
-      })}
-    </Group>
+    <div>
+      <Group label="Logo color" className="flex justify-center gap-7">
+        {options.map((o) => {
+          const on = picked?.id === o.id;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-label={o.label}
+              data-option={o.id}
+              onClick={() => update("color", o.hex.toUpperCase())}
+              className="flex size-[52px] items-center justify-center rounded-full"
+              style={{ boxShadow: on ? `0 0 0 2px ${o.hex}` : undefined }}
+            >
+              <span aria-hidden="true" className="size-10 rounded-full" style={{ background: o.hex }} />
+            </button>
+          );
+        })}
+      </Group>
+      <p className="mt-3.5 min-h-5 text-center text-sm font-medium text-[#374151]" aria-hidden="true" data-color-name="">
+        {picked?.label ?? ""}
+      </p>
+    </div>
   );
 }
 
@@ -117,27 +143,24 @@ export function IconChoices({
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
 }) {
+  const base = answer.color ?? LOGO_PREVIEW_BASE;
   return (
-    <Group label="Logo icon">
-      {options.map((o) => {
-        const on = answer.icon === o.id;
-        return (
-          <button
-            key={o.id}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            aria-label={o.label}
-            data-option={o.id}
-            onClick={() => update("icon", o.id)}
-            className={`${OPTION} w-[96px] ${ring(on)}`}
-          >
-            <IconChip icon={o.id} color={answer.color ?? VT.ink} size={52} />
-            <span>{o.label}</span>
-          </button>
-        );
-      })}
+    <Group label="Logo icon" className="flex justify-center gap-4">
+      {options.map((o) => (
+        <LogoTile key={o.id} on={answer.icon === o.id} label={o.label} ring={base} option={o.id} onPick={() => update("icon", o.id)}>
+          <LogoMark shape={answer.shape ?? "circle"} color={base} icon={o.id} size={60} />
+        </LogoTile>
+      ))}
     </Group>
+  );
+}
+
+/** r10 section heading (18px Poppins 600). */
+export function SectionHeading({ id, children }: { id?: string; children: ReactNode }) {
+  return (
+    <h3 id={id} className="mb-3 font-heading text-lg font-semibold leading-[1.3] text-[#111827]">
+      {children}
+    </h3>
   );
 }
 
@@ -148,6 +171,7 @@ export function NameInput({
   maxLength,
   answer,
   update,
+  visibleLabel = true,
 }: {
   id: string;
   label: string;
@@ -155,12 +179,14 @@ export function NameInput({
   maxLength: number;
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
+  /** The name screen shows its own section heading, so the field label is for screen readers only there. */
+  visibleLabel?: boolean;
 }) {
   const value = answer.name ?? "";
   const count = Array.from(value).length;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="font-heading text-[13px] font-semibold text-nga-slate">
+    <div className="flex flex-col">
+      <label htmlFor={id} className={visibleLabel ? "mb-2 text-[13px] font-medium text-[#374151]" : "sr-only"}>
         {label}
       </label>
       <input
@@ -172,27 +198,53 @@ export function NameInput({
         autoComplete="off"
         aria-describedby={`${id}-count`}
         onChange={(e) => update("name", e.target.value)}
-        className="min-h-12 w-full rounded-2xl bg-white px-4 font-heading text-lg font-semibold text-nga-ink shadow-[inset_0_0_0_2px_#bde9fb] outline-none focus:shadow-[inset_0_0_0_3px_#0cc1e0]"
+        className="h-[54px] w-full rounded-xl bg-white px-4 text-[17px] font-medium text-[#111827] shadow-[inset_0_0_0_1.5px_#E5E7EB] outline-none placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_1.5px_#3FB7DA]"
+        style={{ caretColor: IDENTITY_ACCENT }}
       />
-      <span id={`${id}-count`} className="self-end text-[12px] text-nga-slate" aria-live="polite">
-        {count} of {maxLength} letters
+      <span id={`${id}-count`} className="mt-[7px] self-end text-xs text-[#9CA3AF]" aria-live="polite">
+        <span aria-hidden="true">
+          {count}/{maxLength}
+        </span>
+        <span className="sr-only">
+          {count} of {maxLength} letters
+        </span>
       </span>
     </div>
   );
 }
 
+/** r10 radio: filled light blue with a white center when on, a grey ring when off. */
+function Radio({ on }: { on: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true" className="flex-none">
+      {on ? (
+        <>
+          <circle cx="11" cy="11" r="11" fill={IDENTITY_ACCENT} />
+          <circle cx="11" cy="11" r="4.5" fill="#fff" />
+        </>
+      ) : (
+        <circle cx="11" cy="11" r="10.25" fill="#fff" stroke="#C9CED6" strokeWidth="1.5" />
+      )}
+    </svg>
+  );
+}
+
+const ROW = "flex h-[52px] w-full items-center gap-3.5 border-b border-[#F3F4F6] pl-0.5 text-left last:border-b-0";
+
+/** Font radio rows, each label drawn in its own font (the same label the handbook shows). */
 export function FontChoices({
   options,
   answer,
   update,
+  labelledBy,
 }: {
   options: readonly LaunchpadPickerOption<NameFontId>[];
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
+  labelledBy?: string;
 }) {
-  const sample = answer.name ?? "Your name";
   return (
-    <Group label="Name font" className="flex-col items-stretch">
+    <div role="radiogroup" aria-label={labelledBy ? undefined : "Name font"} aria-labelledby={labelledBy}>
       {options.map((o) => {
         const on = answer.font === o.id;
         return (
@@ -204,37 +256,35 @@ export function FontChoices({
             aria-label={o.label}
             data-option={o.id}
             onClick={() => update("font", o.id)}
-            className={`${OPTION} flex-row justify-between px-4 ${ring(on)}`}
+            className={ROW}
           >
-            <span
-              className={`${NAME_FONT_CLASS[o.id]} min-w-0 flex-1 truncate text-left text-xl text-nga-ink`}
-              aria-hidden="true"
-            >
-              {sample}
+            <Radio on={on} />
+            <span className={`${NAME_FONT_CLASS[o.id]} text-lg leading-6 text-[#111827]`} aria-hidden="true">
+              {o.label}
             </span>
-            <span className="shrink-0 pl-2 text-nga-slate">{o.label}</span>
           </button>
         );
       })}
-    </Group>
+    </div>
   );
 }
 
+/** Font color radio rows with an 18px dot. Equal choices: neither is checked until the learner picks one. */
 export function NameColorChoices({
   options,
   answer,
   update,
+  labelledBy,
 }: {
   options: readonly LaunchpadPickerOption<NameColorId>[];
   answer: BusinessIdentityAnswer;
   update: UpdateIdentity;
+  labelledBy?: string;
 }) {
-  // Equal choices: neither is checked until the learner picks one.
-  const current = answer.nameColor;
   return (
-    <Group label="Name color">
+    <div role="radiogroup" aria-label={labelledBy ? undefined : "Name color"} aria-labelledby={labelledBy}>
       {options.map((o) => {
-        const on = current === o.id;
+        const on = answer.nameColor === o.id;
         const hex = o.id === "ink" || !answer.color ? NAME_INK_HEX : answer.color;
         return (
           <button
@@ -245,20 +295,21 @@ export function NameColorChoices({
             aria-label={o.label}
             data-option={o.id}
             onClick={() => update("nameColor", o.id)}
-            className={`${OPTION} w-[140px] ${ring(on)}`}
+            className={ROW}
           >
-            <span aria-hidden="true" className="size-8 rounded-full" style={{ background: hex }} />
-            <span>{o.label}</span>
+            <Radio on={on} />
+            <span aria-hidden="true" className="ml-0.5 size-[18px] flex-none rounded-full" style={{ background: hex }} />
+            <span className="-ml-1 text-base font-medium text-[#111827]">{o.label}</span>
           </button>
         );
       })}
-    </Group>
+    </div>
   );
 }
 
 /**
- * The inline editor for one identity field. Shared by the identity wrap-up's
- * tabs and the handbook's edit pencils, so both edit the same saved answer.
+ * The editor for one identity field. Shared by the identity wrap-up and the
+ * handbook's Edit panel, so both edit the same saved answer.
  */
 export function IdentityFieldEditor({
   field,
@@ -289,4 +340,90 @@ export function IdentityFieldEditor({
     case "nameColor":
       return <NameColorChoices options={choices.nameColors} answer={answer} update={update} />;
   }
+}
+
+/** r8 segmented control: grey track, the active item white with a hairline ring. */
+export function Segmented<T extends string>({
+  label,
+  items,
+  value,
+  onChange,
+  idPrefix,
+  panelId,
+}: {
+  label: string;
+  items: readonly { id: T; label: string }[];
+  value: T | null;
+  onChange: (id: T) => void;
+  idPrefix: string;
+  panelId: string;
+}) {
+  return (
+    <div role="tablist" aria-label={label} className="flex rounded-xl bg-[#F3F4F6] p-[3px]">
+      {items.map((it) => {
+        const on = value === it.id;
+        return (
+          <button
+            key={it.id}
+            type="button"
+            role="tab"
+            id={`${idPrefix}-${it.id}`}
+            aria-selected={on}
+            aria-controls={panelId}
+            onClick={() => onChange(it.id)}
+            className={`relative flex h-[38px] flex-1 items-center justify-center rounded-[9px] text-sm font-medium before:absolute before:-inset-y-[3px] before:inset-x-0 before:content-[''] ${
+              on ? "bg-white text-[#111827] shadow-[0_0_0_1px_#E5E7EB]" : "text-[#6B7280]"
+            }`}
+          >
+            {it.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const LOGO_TABS = [
+  { id: "shape", label: "Shape" },
+  { id: "color", label: "Color" },
+  { id: "icon", label: "Icon" },
+] as const;
+const NAME_TABS = [
+  { id: "name", label: "Name" },
+  { id: "font", label: "Font" },
+  { id: "nameColor", label: "Font color" },
+] as const;
+
+/**
+ * Change any identity pick in place: a Logo row (Shape, Color, Icon) and a
+ * Name row (Name, Font, Font color) of segmented tabs over one editor panel.
+ * Used by the wrap-up and by the handbook's Edit panel.
+ */
+export function IdentityEditor({
+  choices,
+  answer,
+  update,
+  idPrefix,
+  initial = "shape",
+}: {
+  choices: IdentityChoices;
+  answer: BusinessIdentityAnswer;
+  update: UpdateIdentity;
+  idPrefix: string;
+  initial?: IdentityField;
+}) {
+  const [field, setField] = useState<IdentityField>(initial);
+  const panelId = `${idPrefix}-panel`;
+  const logo = LOGO_TABS.some((t) => t.id === field);
+  return (
+    <div data-identity-editor="">
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Logo</p>
+      <Segmented label="Change your logo" items={LOGO_TABS} value={logo ? (field as (typeof LOGO_TABS)[number]["id"]) : null} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
+      <p className="mb-1.5 mt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">Name</p>
+      <Segmented label="Change your name" items={NAME_TABS} value={logo ? null : (field as (typeof NAME_TABS)[number]["id"])} onChange={setField} idPrefix={`${idPrefix}-tab`} panelId={panelId} />
+      <div id={panelId} role="tabpanel" aria-labelledby={`${idPrefix}-tab-${field}`} className="mt-5" data-editor={field}>
+        <IdentityFieldEditor field={field} choices={choices} answer={answer} update={update} nameInputId={`${idPrefix}-name`} />
+      </div>
+    </div>
+  );
 }

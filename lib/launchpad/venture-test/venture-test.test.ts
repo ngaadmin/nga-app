@@ -263,14 +263,14 @@ describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () =
   it("?complete=l2-s1 lands in Level 2 with Build your identity current, keeping saved answers", () => {
     const withAnswer = setProgressAnswer(EMPTY_VENTURE_TEST_PROGRESS, "l2-s2-identity", {
       kind: "business-identity",
-      version: 1,
-      shape: "round",
+      version: 2,
+      shape: "circle",
     });
     const applied = applyVentureTestShortcut({ kind: "through-silver", silverId: "l2-s1" }, FLOORS, withAnswer)!;
     expect(applied.land).toEqual({ screen: "corridor", level: 2 });
     expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["done", "current"]);
     expect(at(at(FLOORS, 1).silvers, 1).title).toBe("Build your identity");
-    expect(applied.progress.answers?.["l2-s2-identity"]?.shape).toBe("round");
+    expect(applied.progress.answers?.["l2-s2-identity"]?.shape).toBe("circle");
     expect(applyVentureTestShortcut({ kind: "through-silver", silverId: "l9-s9" }, FLOORS, withAnswer)).toBeNull();
   });
 
@@ -323,7 +323,7 @@ describe("Planning (L2) silvers", () => {
 });
 
 describe("saved answers live with progress", () => {
-  const answer = { kind: "business-identity" as const, version: 1 as const, shape: "round" as const, color: "#0A8FA8" };
+  const answer = { kind: "business-identity" as const, version: 2 as const, shape: "circle" as const, color: "#3FB7DA" };
 
   it("completeTask keeps answers", () => {
     const p = setProgressAnswer(EMPTY_VENTURE_TEST_PROGRESS, "l2-s2-identity", answer);
@@ -337,8 +337,44 @@ describe("saved answers live with progress", () => {
     });
     expect(parseVentureTestProgress(raw)).toEqual({
       completedTaskIds: ["a"],
-      answers: { "l2-s2-identity": { kind: "business-identity", version: 1, shape: "round" } },
+      answers: { "l2-s2-identity": { kind: "business-identity", version: 2, shape: "circle" } },
     });
     expect(parseVentureTestProgress(JSON.stringify({ completedTaskIds: ["a"] }))).toEqual({ completedTaskIds: ["a"] });
+  });
+
+  it("migrates a saved version 1 identity answer to version 2 without crashing", () => {
+    const v1 = {
+      kind: "business-identity",
+      version: 1,
+      shape: "rounded-square",
+      color: "#0A8FA8",
+      icon: "leash",
+      name: "Happy Paws",
+      font: "fredoka-semibold",
+      nameColor: "ink",
+      finalized: true,
+    };
+    expect(parseVentureTestProgress(JSON.stringify({ completedTaskIds: [], answers: { "l2-s2-identity": v1 } }))).toEqual({
+      completedTaskIds: [],
+      answers: {
+        "l2-s2-identity": {
+          kind: "business-identity",
+          version: 2,
+          shape: "shield",
+          color: "#3FB7DA",
+          icon: "dog-face",
+          name: "Happy Paws",
+          font: "fredoka-semibold",
+          nameColor: "ink",
+          finalized: true,
+        },
+      },
+    });
+    // Unknown old values fall back to "not picked" instead of crashing.
+    const odd = { kind: "business-identity", version: 1, shape: "star", color: "#123456", icon: "rocket" };
+    expect(parseVentureTestProgress(JSON.stringify({ completedTaskIds: [], answers: { "l2-s2-identity": odd } }))).toEqual({
+      completedTaskIds: [],
+      answers: { "l2-s2-identity": { kind: "business-identity", version: 2 } },
+    });
   });
 });

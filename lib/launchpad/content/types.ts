@@ -124,6 +124,8 @@ export type LaunchpadTask = {
   /** TBC copy. Must not ship as real content. */
   placeholder: boolean;
   screens: readonly LaunchpadTaskScreen[];
+  /** Label for the workbook's forward button on this task, e.g. "Save to my workbook". Defaults to Next / Finish. */
+  ctaLabel?: string;
 };
 
 export type LaunchpadBronze = {

@@ -36,9 +36,9 @@ const ALL = applyVentureTestShortcut({ kind: "all", land: "building" }, FLOORS, 
 
 const IDENTITY: BusinessIdentityAnswer = {
   kind: "business-identity",
-  version: 1,
-  shape: "rounded-square",
-  color: "#0A8FA8",
+  version: 2,
+  shape: "shield",
+  color: "#1D3F9A",
   icon: "paw",
   name: "Happy Paws",
   font: "fredoka-semibold",
@@ -107,7 +107,15 @@ describe("shortcut sample answers (TEST-ONLY)", () => {
     for (const p of [through("l2-s2"), ALL]) {
       const filled = withShortcutSampleAnswers(p, FLOORS, "dog-walking", "Dog walking");
       expect(handbookPages(filled, FLOORS).some((pg) => pg.kind === "identity")).toBe(true);
-      expect(filled.answers?.[IDENTITY_ANSWER_KEY]).toMatchObject({ name: "Dog walking", shape: "round", nameColor: "logo" });
+      expect(filled.answers?.[IDENTITY_ANSWER_KEY]).toMatchObject({
+        version: 2,
+        name: "Dog walking",
+        shape: "circle",
+        color: "#3FB7DA",
+        icon: "paw",
+        font: "poppins-bold",
+        nameColor: "logo",
+      });
       expect(handbookBusinessName(filled, FLOORS, "x")).toBe("Dog walking");
     }
   });
@@ -126,7 +134,6 @@ function Harness({ entry, initial, onSave }: { entry: "home" | "building"; initi
       floors={FLOORS}
       progress={progress}
       iconVentureId="dog-walking"
-      ventureId="dog-walking"
       setAnswer={
         entry === "building"
           ? (key, a) => {
@@ -141,24 +148,40 @@ function Harness({ entry, initial, onSave }: { entry: "home" | "building"; initi
 }
 
 describe("<Handbook>", () => {
-  it("from home: opens at the latest (identity) page, read-only, with no pencils", () => {
+  it("from home: opens at the latest (identity) page, read-only, with no Edit button", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
     const dialog = screen.getByRole("dialog", { name: "My handbook" });
     expect(within(dialog).getByText("Read only")).toBeTruthy();
     const page = dialog.querySelector("[data-handbook-page]")!;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s2");
     expect(page.getAttribute("data-editable")).toBe("false");
-    expect(dialog.querySelectorAll("[data-edit-pencil]")).toHaveLength(0);
+    expect(dialog.querySelectorAll("[data-edit-identity]")).toHaveLength(0);
     expect(within(dialog).getAllByText("Happy Paws").length).toBeGreaterThan(0);
-    expect(within(dialog).getByText("Rounded square sticker")).toBeTruthy();
-    expect(within(dialog).getByText("Teal")).toBeTruthy();
-    expect(dialog.querySelector("[data-done-stamp]")).toBeTruthy();
+    expect(within(dialog).getByRole("img", { name: "Logo: shield, paw icon" })).toBeTruthy();
+    // The font shows with the label the learner saw on the task screen.
+    expect(within(dialog).getByText("Font: Rounded")).toBeTruthy();
+    expect(within(dialog).getByText("Vision and products")).toBeTruthy();
+    expect(within(dialog).getByRole("heading", { name: "Our vision" })).toBeTruthy();
+    expect(within(dialog).getByText("Happy, tired dogs and relaxed owners in our neighborhood.")).toBeTruthy();
+    expect(within(within(dialog).getByRole("list", { name: "What we sell" })).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+      "30-minute neighborhood dog walk",
+      "60-minute dog walk",
+      "Overnight dog stay",
+    ]);
+    // Sample copy is clearly marked until the vision and product lessons exist.
+    expect(dialog.querySelectorAll("[data-sample]")).toHaveLength(2);
+    expect(dialog.querySelector("[data-done-chip]")).toBeTruthy();
+    expect(dialog.querySelectorAll("[data-paper-card]")).toHaveLength(1);
+    expect(dialog.querySelectorAll("[data-washi]")).toHaveLength(1);
+    expect(dialog.querySelectorAll("[data-doodle]")).toHaveLength(1);
     expect(dialog.textContent).not.toMatch(/coming soon|NGA|XP/i);
   });
 
-  it("shows the ghost of the next silver behind the last page", () => {
+  it("shows the ghost of the next silver, named by its title, behind the last page", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    expect(screen.getByRole("img", { name: /Next page, locked: Silver 1/ })).toBeTruthy();
+    const ghost = screen.getByRole("img", { name: "Next page, locked: Know how to make it" });
+    expect(ghost.textContent).toBe("Next: Know how to make it");
+    expect(document.body.textContent).not.toMatch(/Silver 1\b(?! ·)/);
   });
 
   it("tabs: earned and current floors are buttons, unearned ones are disabled; tapping L1 goes to page 1", () => {
@@ -179,25 +202,28 @@ describe("<Handbook>", () => {
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     const page = document.querySelector("[data-handbook-page]")!;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
-    expect(page.querySelectorAll("[data-edit-pencil]")).toHaveLength(0);
-    expect(within(page as HTMLElement).getByRole("heading", { name: "Bronze 1" })).toBeTruthy();
+    expect(page.querySelectorAll("[data-edit-identity]")).toHaveLength(0);
+    expect(within(page as HTMLElement).getByRole("heading", { name: SILVERS[2]!.title })).toBeTruthy();
+    expect(within(page as HTMLElement).getAllByRole("listitem").map((li) => li.textContent)).toEqual(SILVERS[2]!.bronzes.map((b) => b.title));
   });
 
-  it("from the building: the identity page has pencils and edits write back to the saved answer", () => {
+  it("from the building: the identity page has an Edit button and edits write back to the saved answer", () => {
     const onSave = vi.fn();
     render(<Harness entry="building" initial={WITH_IDENTITY} onSave={onSave} />);
     expect(document.querySelector("[data-handbook-page]")!.getAttribute("data-editable")).toBe("true");
     expect(screen.queryByText("Read only")).toBeNull();
-    expect(document.querySelectorAll("[data-edit-pencil]")).toHaveLength(6);
-    fireEvent.click(screen.getByRole("button", { name: "Edit color" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Green" }));
+    const edit = screen.getByRole("button", { name: "Edit logo and name" });
+    fireEvent.click(edit);
+    expect(edit.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(screen.getByRole("tab", { name: "Color" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Orange" }));
     expect(onSave).toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    expect(screen.queryByRole("radio", { name: "Green" })).toBeNull();
-    expect(within(document.querySelector('[data-entry="Color"]') as HTMLElement).getByText("Green")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Edit business name" }));
+    expect(screen.getByRole("img", { name: "Logo: shield, paw icon" }).getAttribute("data-logo-color")).toBe("#FFA503");
+    fireEvent.click(screen.getByRole("tab", { name: "Name" }));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Paw Pals" } });
-    expect(within(document.querySelector('[data-entry="Business name"]') as HTMLElement).getAllByText("Paw Pals").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Paw Pals").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByRole("radio", { name: "Orange" })).toBeNull();
   });
 });
 

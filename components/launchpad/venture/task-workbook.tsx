@@ -1,5 +1,6 @@
-import type { LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
+import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
 import { TaskScreen } from "@/components/launchpad/venture/task-screen-renderer";
+import { identityTaskKind, LogoBuilder, NameForm } from "@/components/launchpad/venture/identity/picker-screens";
 import { BTN_CYAN, BTN_WHITE, Heading, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /**
@@ -9,7 +10,9 @@ import { BTN_CYAN, BTN_WHITE, Heading, TrailCrumb } from "@/components/launchpad
  */
 export function TaskWorkbook(props: {
   level: number;
-  tasks: readonly { id: string; title: string; done: boolean; screens: readonly LaunchpadTaskScreen[] }[];
+  tasks: readonly { id: string; title: string; done: boolean; screens: readonly LaunchpadTaskScreen[]; ctaLabel?: string }[];
+  /** Small uppercase line over the title, e.g. the silver "Build your identity". */
+  eyebrow?: string;
   index: number;
   onBuilding: () => void;
   onCorridor: () => void;
@@ -25,6 +28,8 @@ export function TaskWorkbook(props: {
   const task = tasks[index];
   if (!task) return null;
   const isLast = index === tasks.length - 1;
+  const single = tasks.length === 1;
+  const kind = identityTaskKind(task.screens);
   return (
     <section className="flex flex-1 flex-col">
       <TrailCrumb level={props.level} current={task.title} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
@@ -32,10 +37,13 @@ export function TaskWorkbook(props: {
         <button type="button" onClick={props.onExit} className="text-nga-slate">
           ✕ Exit
         </button>
-        <span className="text-nga-secondary-shadow">
-          Task {index + 1} of {tasks.length}
-        </span>
+        {!single && (
+          <span className="text-nga-secondary-shadow">
+            Task {index + 1} of {tasks.length}
+          </span>
+        )}
       </div>
+      {!single && (
       <div className="mb-0.5 mt-2.5 flex items-center justify-center gap-2.5" role="group" aria-label="Tasks">
         {tasks.map((t, i) => {
           const cur = i === index;
@@ -56,19 +64,30 @@ export function TaskWorkbook(props: {
           );
         })}
       </div>
-      <Heading className="mb-2.5 mt-1.5">{task.title}</Heading>
-      {task.screens.map((screen) => (
-        <TaskScreen key={screen.id} screen={screen} />
-      ))}
+      )}
+      {props.eyebrow && (
+        <p className="mx-6 mt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]" data-eyebrow="">
+          {props.eyebrow}
+        </p>
+      )}
+      <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5"}>{task.title}</Heading>
+      {kind === "logo" && <LogoBuilder key={task.id} screens={task.screens as readonly LaunchpadLogoPickerScreen[]} />}
+      {kind === "name" && <NameForm key={task.id} screens={task.screens as readonly LaunchpadNamePickerScreen[]} />}
+      {!kind &&
+        task.screens.map((screen) => (
+          <TaskScreen key={screen.id} screen={screen} />
+        ))}
       {props.nextDisabled && props.nextHint && (
         <p id="workbook-next-hint" className="mx-5 mb-2 text-center text-[13px] text-nga-slate">
           {props.nextHint}
         </p>
       )}
-      <div className="mx-5 flex gap-3 pb-4">
-        <button type="button" onClick={props.onPrevious} disabled={index === 0} className={`${BTN_WHITE} flex-1`}>
-          ‹ Previous
-        </button>
+      <div className="mx-5 mt-auto flex gap-3 pb-4">
+        {!single && (
+          <button type="button" onClick={props.onPrevious} disabled={index === 0} className={`${BTN_WHITE} flex-1`}>
+            ‹ Previous
+          </button>
+        )}
         <button
           type="button"
           onClick={props.onNext}
@@ -76,7 +95,7 @@ export function TaskWorkbook(props: {
           aria-describedby={props.nextDisabled && props.nextHint ? "workbook-next-hint" : undefined}
           className={`${BTN_CYAN} flex-1 disabled:opacity-50`}
         >
-          {isLast ? "Finish ›" : "Next ›"}
+          {task.ctaLabel ?? (isLast ? "Finish ›" : "Next ›")}
         </button>
       </div>
     </section>

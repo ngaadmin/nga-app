@@ -8,7 +8,7 @@
  * write (single source of truth).
  */
 import type { LaunchpadFloor, LaunchpadSilver } from "@/lib/launchpad/content/types";
-import { clampBusinessName, type BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
+import { clampBusinessName, IDENTITY_ANSWER_VERSION, type BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   currentLevel,
@@ -122,9 +122,10 @@ export function handbookBusinessName(progress: VentureTestProgress, floors: read
 /**
  * TEST-ONLY. A `?complete=` shortcut marks identity silvers done without the
  * learner ever picking anything. So the handbook's identity page has a logo to
- * show, fill a sample answer (the first option of every picker and the
- * business title as the name) for any completed identity silver that has no
- * saved picks yet. Existing answers are never overwritten.
+ * show, fill a sample answer for any completed identity silver that has no
+ * saved picks yet: the first shape and icon, the second color (light blue, as
+ * in the r4 handbook mock), the first font, the logo color for the name and
+ * the business title as the name. Existing answers are never overwritten.
  */
 export function withShortcutSampleAnswers(
   progress: VentureTestProgress,
@@ -141,9 +142,9 @@ export function withShortcutSampleAnswers(
     const c = identityChoices(silver, key, iconVentureId);
     const sample: BusinessIdentityAnswer = {
       kind: "business-identity",
-      version: 1,
+      version: IDENTITY_ANSWER_VERSION,
       shape: c.shapes[0]?.id,
-      color: c.colors[0]?.hex.toUpperCase(),
+      color: (c.colors[1] ?? c.colors[0])?.hex.toUpperCase(),
       icon: c.icons[0]?.id,
       name: clampBusinessName(businessName).trim() || undefined,
       font: c.fonts[0]?.id,

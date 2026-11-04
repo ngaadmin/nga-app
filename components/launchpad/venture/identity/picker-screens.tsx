@@ -1,56 +1,102 @@
 "use client";
 
-import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen } from "@/lib/launchpad/content/types";
+import { useState } from "react";
+import type { LaunchpadLogoPickerScreen, LaunchpadNamePickerScreen, LaunchpadTaskScreen } from "@/lib/launchpad/content/types";
+import { isIdentityFieldSet, type BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
 import { iconSetFor } from "@/lib/launchpad/content/identity-content";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
-import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
+import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import {
   ColorChoices,
   FontChoices,
   IconChoices,
   NameColorChoices,
   NameInput,
+  SectionHeading,
+  Segmented,
   ShapeChoices,
+  type UpdateIdentity,
 } from "@/components/launchpad/venture/identity/identity-choices";
 
-const PREVIEW = "flex min-h-[156px] items-center justify-center rounded-3xl bg-white px-4 py-3 shadow-[inset_0_0_0_2px_#e3eef5]";
+type LogoStep = LaunchpadLogoPickerScreen["step"];
+
+const TAB_LABEL: Record<LogoStep, string> = { shape: "Shape", color: "Color", icon: "Icon" };
+
+/** Which grouped identity page a task is: every screen a logo picker, every screen a name picker, or neither. */
+export function identityTaskKind(screens: readonly LaunchpadTaskScreen[]): "logo" | "name" | null {
+  if (screens.length > 1 && screens.every((s) => s.type === "logo-picker")) return "logo";
+  if (screens.length > 1 && screens.every((s) => s.type === "name-picker")) return "name";
+  return null;
+}
+
+function LogoStepChoices({
+  screen,
+  answer,
+  update,
+  iconVentureId,
+}: {
+  screen: LaunchpadLogoPickerScreen;
+  answer: BusinessIdentityAnswer;
+  update: UpdateIdentity;
+  iconVentureId: string;
+}) {
+  if (screen.step === "shape") return <ShapeChoices options={screen.options} answer={answer} update={update} />;
+  if (screen.step === "color") return <ColorChoices options={screen.options} answer={answer} update={update} />;
+  return <IconChoices options={iconSetFor(screen, iconVentureId)} answer={answer} update={update} />;
+}
 
 /**
- * Task screen "logo-picker": one step of the logo builder (shape, color or
- * icon) with the live logo preview on top. Picks save straight into the
- * learner's answer, so Previous / Next go back and change freely.
+ * The logo builder (r8): one page with the live logo in a hero card, then
+ * Shape, Color and Icon tabs. Every logo is Split style; there is no style or
+ * layer choice. After a pick it moves on to the next tab if that one is not
+ * picked yet. The workbook's forward button stays off until all three are set.
  */
-export function LogoPickerScreen({ screen }: { screen: LaunchpadLogoPickerScreen }) {
-  const { answer, update, iconVentureId } = useIdentityAnswer(screen.answerKey);
+export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPickerScreen[] }) {
+  const answerKey = screens[0]!.answerKey;
+  const { answer, update, iconVentureId } = useIdentityAnswer(answerKey);
+  const [tab, setTab] = useState<LogoStep>(() => screens.find((s) => !isIdentityFieldSet(answer, s.step))?.step ?? screens[0]!.step);
+  const screen = screens.find((s) => s.step === tab) ?? screens[0]!;
+  const pick: UpdateIdentity = (field, value) => {
+    update(field, value);
+    const i = screens.findIndex((s) => s.step === field);
+    const next = screens[i + 1];
+    if (next && !isIdentityFieldSet(answer, next.step)) setTab(next.step);
+  };
   return (
-    <div data-task-screen="logo-picker" data-step={screen.step} className="mx-5 mb-4 flex flex-col gap-4">
-      <div className={PREVIEW} aria-label="Logo preview" role="group">
-        <BusinessLogo answer={answer} showName={false} />
+    <div data-task-screen="logo-builder" data-step={tab} className="mx-6 mb-4 flex flex-col">
+      <p className="text-[15px] leading-[1.45] text-[#6B7280]" data-lede="">
+        {screen.prompt}
+      </p>
+      <div
+        role="group"
+        aria-label="Logo preview"
+        className="mt-5 flex h-[248px] items-center justify-center rounded-3xl bg-[#F9FAFB]"
+        data-logo-hero=""
+      >
+        <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={164} label={logoMarkLabel(answer)} />
       </div>
-      {screen.heading && <h3 className="font-heading text-base font-bold text-nga-ink">{screen.heading}</h3>}
-      <p className="text-center text-base text-nga-slate">{screen.prompt}</p>
-      {screen.step === "shape" && <ShapeChoices options={screen.options} answer={answer} update={update} />}
-      {screen.step === "color" && <ColorChoices options={screen.options} answer={answer} update={update} />}
-      {screen.step === "icon" && (
-        <IconChoices options={iconSetFor(screen, iconVentureId)} answer={answer} update={update} />
-      )}
+      <div className="mt-6">
+        <Segmented
+          label="Logo parts"
+          items={screens.map((s) => ({ id: s.step, label: TAB_LABEL[s.step] }))}
+          value={tab}
+          onChange={setTab}
+          idPrefix={`${screens[0]!.id}-tab`}
+          panelId={`${screens[0]!.id}-panel`}
+        />
+      </div>
+      <div id={`${screens[0]!.id}-panel`} role="tabpanel" aria-labelledby={`${screens[0]!.id}-tab-${tab}`} className="mt-7">
+        <LogoStepChoices screen={screen} answer={answer} update={pick} iconVentureId={iconVentureId} />
+      </div>
     </div>
   );
 }
 
-/**
- * Task screen "name-picker": one step of naming the business (name, font,
- * then name color last) with the live logo and name on top.
- */
-export function NamePickerScreen({ screen }: { screen: LaunchpadNamePickerScreen }) {
-  const { answer, update } = useIdentityAnswer(screen.answerKey);
+function NameSection({ screen, answer, update }: { screen: LaunchpadNamePickerScreen; answer: BusinessIdentityAnswer; update: UpdateIdentity }) {
+  const headingId = `${screen.id}-heading`;
   return (
-    <div data-task-screen="name-picker" data-step={screen.step} className="mx-5 mb-4 flex flex-col gap-4">
-      <div className={PREVIEW} aria-label="Logo preview" role="group">
-        <BusinessLogo answer={answer} size="md" namePlaceholder="Your business name" />
-      </div>
-      {screen.heading && <h3 className="font-heading text-base font-bold text-nga-ink">{screen.heading}</h3>}
-      <p className="text-center text-base text-nga-slate">{screen.prompt}</p>
+    <section className="mt-[30px] first:mt-2" data-step={screen.step} aria-labelledby={headingId}>
+      <SectionHeading id={headingId}>{screen.heading ?? screen.prompt}</SectionHeading>
       {screen.step === "name" && (
         <NameInput
           id={`${screen.id}-input`}
@@ -59,10 +105,39 @@ export function NamePickerScreen({ screen }: { screen: LaunchpadNamePickerScreen
           maxLength={screen.maxLength}
           answer={answer}
           update={update}
+          visibleLabel={false}
         />
       )}
-      {screen.step === "font" && <FontChoices options={screen.options} answer={answer} update={update} />}
-      {screen.step === "nameColor" && <NameColorChoices options={screen.options} answer={answer} update={update} />}
+      {screen.step === "font" && <FontChoices options={screen.options} answer={answer} update={update} labelledBy={headingId} />}
+      {screen.step === "nameColor" && (
+        <NameColorChoices options={screen.options} answer={answer} update={update} labelledBy={headingId} />
+      )}
+    </section>
+  );
+}
+
+/**
+ * The name screen (r10): name field with a letter counter, font rows (each
+ * label drawn in its own font) and font color rows, all on one page. Neither
+ * color is preselected; until one is picked the name renders in dark ink.
+ */
+export function NameForm({ screens }: { screens: readonly LaunchpadNamePickerScreen[] }) {
+  const { answer, update } = useIdentityAnswer(screens[0]!.answerKey);
+  return (
+    <div data-task-screen="name-form" className="mx-6 mb-4 flex flex-col">
+      {screens.map((s) => (
+        <NameSection key={s.id} screen={s} answer={answer} update={update} />
+      ))}
     </div>
   );
+}
+
+/** Task screen "logo-picker" on its own (a task holding one step): the same builder with one tab. */
+export function LogoPickerScreen({ screen }: { screen: LaunchpadLogoPickerScreen }) {
+  return <LogoBuilder screens={[screen]} />;
+}
+
+/** Task screen "name-picker" on its own (a task holding one step). */
+export function NamePickerScreen({ screen }: { screen: LaunchpadNamePickerScreen }) {
+  return <NameForm screens={[screen]} />;
 }

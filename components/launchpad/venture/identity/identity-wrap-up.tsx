@@ -1,28 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import type { LaunchpadIdentityWrapUp } from "@/lib/launchpad/content/types";
 import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
 import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
 import { BTN_ORANGE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
-import { IdentityFieldEditor } from "@/components/launchpad/venture/identity/identity-choices";
-
-const EDITORS = [
-  { id: "shape", label: "Shape" },
-  { id: "color", label: "Color" },
-  { id: "icon", label: "Icon" },
-  { id: "name", label: "Name" },
-  { id: "font", label: "Font" },
-  { id: "nameColor", label: "Name color" },
-] as const;
-type EditorId = (typeof EDITORS)[number]["id"];
+import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 
 /**
  * Silver wrap-up "identity-wrap-up": the learner's one logo, drawn from the
- * saved answer, with every pick editable right here (edits save to the same
- * answer and the learner stays on this screen). Finalize marks it done.
+ * saved answer, with every pick editable right here through the Logo and
+ * Name tabs (edits save to the same answer and the learner stays on this
+ * screen). Finalize marks it done.
  * The frame is a PLACEHOLDER pending Jasper's wrap-up art.
  */
 export function IdentityWrapUp({
@@ -43,7 +33,6 @@ export function IdentityWrapUp({
   onFinalize: () => void;
 }) {
   const { answer, update, save } = useIdentityAnswer(wrapUp.answerKey);
-  const [editor, setEditor] = useState<EditorId>("shape");
   return (
     <section className="flex flex-1 flex-col" data-wrap-up="identity">
       <TrailCrumb level={level} current={silverTitle} onBuilding={onBuilding} onCorridor={onCorridor} />
@@ -51,8 +40,8 @@ export function IdentityWrapUp({
       {wrapUp.body && <SubLine className="mb-3">{wrapUp.body}</SubLine>}
 
       <div
-        className="relative mx-5 flex min-h-[230px] items-center justify-center rounded-3xl bg-white px-4 py-5"
-        style={wrapUp.placeholder ? { border: `3px dashed ${VT.panel}` } : undefined}
+        className="relative mx-5 mt-1 flex min-h-[230px] items-center justify-center rounded-3xl bg-[#F9FAFB] px-4 py-5"
+        style={wrapUp.placeholder ? { border: `2px dashed ${VT.panel}` } : undefined}
         data-placeholder-frame={wrapUp.placeholder ? "" : undefined}
       >
         {wrapUp.placeholder && (
@@ -61,30 +50,8 @@ export function IdentityWrapUp({
         <BusinessLogo answer={answer} namePlaceholder="Your business name" />
       </div>
 
-      <div role="tablist" aria-label="Change a part of your logo" className="mx-5 mt-4 grid grid-cols-3 gap-2">
-        {EDITORS.map((e) => {
-          const on = editor === e.id;
-          return (
-            <button
-              key={e.id}
-              type="button"
-              role="tab"
-              id={`wrapup-tab-${e.id}`}
-              aria-selected={on}
-              aria-controls="wrapup-editor"
-              onClick={() => setEditor(e.id)}
-              className={`min-h-11 rounded-full font-heading text-[13px] font-bold ${
-                on ? "bg-nga-secondary text-white" : "bg-white text-nga-ink shadow-[inset_0_0_0_2px_#bde9fb]"
-              }`}
-            >
-              {e.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div id="wrapup-editor" role="tabpanel" aria-labelledby={`wrapup-tab-${editor}`} className="mx-5 mb-4 mt-4" data-editor={editor}>
-        <IdentityFieldEditor field={editor} choices={choices} answer={answer} update={update} nameInputId="wrapup-name" />
+      <div className="mx-5 mb-5 mt-5">
+        <IdentityEditor choices={choices} answer={answer} update={update} idPrefix="wrapup" />
       </div>
 
       <div className="mx-5 mt-auto pb-4">

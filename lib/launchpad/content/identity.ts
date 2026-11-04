@@ -9,28 +9,78 @@
  * can move from the test route's localStorage to a per-learner DB row as is.
  */
 
-/** Sticker shapes the logo art can draw. */
-export const LOGO_SHAPES = ["round", "rounded-square"] as const;
+/**
+ * Container shapes the logo art can draw (r8 logo system). Every logo is built
+ * one way, "Split": the shape in the base color, its lower-right half in the
+ * layer tone, and a white glyph on top. There is no Solid or Inset style.
+ */
+export const LOGO_SHAPES = ["circle", "shield", "hexagon"] as const;
 export type LogoShapeId = (typeof LOGO_SHAPES)[number];
 
 /**
- * Icon art ids. PLACEHOLDER stand-in art pending Jasper's icons
- * (components/launchpad/venture/identity/logo-icons.tsx draws each one).
+ * Glyph ids (r8 logo system, svg-r2 glyphs; dog face is glyph-dogface-r2).
+ * components/launchpad/venture/identity/logo-icons.tsx draws each one.
  */
-export const LOGO_ICON_IDS = ["paw", "leash", "bone", "bead", "heart", "braid"] as const;
+export const LOGO_ICON_IDS = ["paw", "bone", "dog-face", "bead-strand", "knot", "heart-loop"] as const;
 export type LogoIconId = (typeof LOGO_ICON_IDS)[number];
+
+/**
+ * The r8 logo palette: base color to its fixed layer tone (the lower-right
+ * half of the Split). White glyphs on all four. Low contrast of white on the
+ * light blue, orange and olive is approved as designed.
+ */
+export const LOGO_LAYER_TONES: Readonly<Record<string, string>> = {
+  "#1D3F9A": "#19347D",
+  "#3FB7DA": "#39A5C4",
+  "#FFA503": "#E89400",
+  "#BAC593": "#A4B07A",
+};
+
+/** Base color the builder previews shapes and icons in before a color is picked (the palette's navy). */
+export const LOGO_PREVIEW_BASE = "#1D3F9A";
+
+/** The layer tone for a base color: its fixed palette tone, else the base mixed 12% toward black. */
+export function logoLayerHex(base: string): string {
+  const hex = base.toUpperCase();
+  const known = LOGO_LAYER_TONES[hex];
+  if (known) return known;
+  if (!HEX_COLOR_RE.test(hex)) return hex;
+  const mix = [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * 0.88));
+  return `#${mix.map((c) => c.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+}
+
+/**
+ * Picks saved before the r8 logo system (answer version 1) mapped onto the
+ * current vocabularies. Anything not listed is dropped, so the learner sees
+ * that pick as not chosen yet and nothing crashes.
+ */
+const LEGACY_SHAPES: Readonly<Record<string, LogoShapeId>> = { round: "circle", "rounded-square": "shield" };
+const LEGACY_COLORS: Readonly<Record<string, string>> = {
+  "#031F82": "#1D3F9A", // Navy
+  "#0A8FA8": "#3FB7DA", // Teal to Light blue
+  "#0CC1E0": "#3FB7DA", // r6 light blue
+  "#E5484D": "#FFA503", // Coral red to Orange
+  "#2E9E5B": "#BAC593", // Green to Pale olive
+  "#7B4FD6": "#1D3F9A", // Purple to Navy
+};
+const LEGACY_ICONS: Readonly<Record<string, LogoIconId>> = {
+  leash: "dog-face",
+  bead: "bead-strand",
+  heart: "heart-loop",
+  braid: "knot",
+};
 
 /** Fonts the business name can be set in (loaded with next/font/google in identity-fonts.ts). */
 export const NAME_FONTS = ["poppins-bold", "fredoka-semibold", "pacifico"] as const;
 export type NameFontId = (typeof NAME_FONTS)[number];
 
-/** Name color choices: the logo color from bronze 1, or dark ink charcoal. */
+/** Name color choices: the logo color from bronze 1, or dark ink. */
 export const NAME_COLOR_IDS = ["logo", "ink"] as const;
 export type NameColorId = (typeof NAME_COLOR_IDS)[number];
-export const NAME_INK_HEX = "#1F2937";
+export const NAME_INK_HEX = "#111C3A";
 /**
  * The two name colors are equal choices: neither is preselected. Until the
- * learner picks one, the name previews (and renders) in charcoal.
+ * learner picks one, the name previews (and renders) in dark ink.
  */
 export const UNPICKED_NAME_HEX = NAME_INK_HEX;
 
@@ -42,9 +92,12 @@ export const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
 export const ANSWER_KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 /** The learner's saved picks for one identity (one answerKey). Every pick is optional until chosen. */
+export const IDENTITY_ANSWER_VERSION = 2;
+
 export type BusinessIdentityAnswer = {
   kind: "business-identity";
-  version: 1;
+  /** 2 since the r8 logo system (circle / shield / hexagon, 4-color palette). Version 1 answers are migrated on read. */
+  version: typeof IDENTITY_ANSWER_VERSION;
   shape?: LogoShapeId;
   /** Logo color as a hex value (the swatch picked in bronze 1). */
   color?: string;
@@ -59,7 +112,7 @@ export type BusinessIdentityAnswer = {
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, BusinessIdentityAnswer>>;
 
-export const EMPTY_IDENTITY: BusinessIdentityAnswer = { kind: "business-identity", version: 1 };
+export const EMPTY_IDENTITY: BusinessIdentityAnswer = { kind: "business-identity", version: IDENTITY_ANSWER_VERSION };
 
 export type IdentityField = "shape" | "color" | "icon" | "name" | "font" | "nameColor";
 
@@ -78,17 +131,26 @@ export function clampBusinessName(raw: string): string {
 
 /**
  * Reads a stored answer. Unknown or bad fields are dropped (never thrown),
- * so a stale or hand-edited store still renders. Returns null for anything
- * that is not a business-identity answer.
+ * so a stale or hand-edited store still renders. Version 1 answers (saved
+ * before the r8 logo system) are migrated: old shapes, colors and icons map
+ * to their nearest new pick, anything else is dropped. Returns null for
+ * anything that is not a business-identity answer.
  */
 export function parseBusinessIdentityAnswer(value: unknown): BusinessIdentityAnswer | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const v = value as Record<string, unknown>;
-  if (v.kind !== "business-identity" || v.version !== 1) return null;
-  const out: BusinessIdentityAnswer = { kind: "business-identity", version: 1 };
-  if (includes(LOGO_SHAPES, v.shape)) out.shape = v.shape;
-  if (typeof v.color === "string" && HEX_COLOR_RE.test(v.color)) out.color = v.color.toUpperCase();
-  if (includes(LOGO_ICON_IDS, v.icon)) out.icon = v.icon;
+  if (v.kind !== "business-identity" || (v.version !== 1 && v.version !== IDENTITY_ANSWER_VERSION)) return null;
+  const legacy = v.version === 1;
+  const out: BusinessIdentityAnswer = { kind: "business-identity", version: IDENTITY_ANSWER_VERSION };
+  const shape = legacy && typeof v.shape === "string" ? (LEGACY_SHAPES[v.shape] ?? v.shape) : v.shape;
+  if (includes(LOGO_SHAPES, shape)) out.shape = shape;
+  if (typeof v.color === "string" && HEX_COLOR_RE.test(v.color)) {
+    const hex = v.color.toUpperCase();
+    const mapped = legacy ? LEGACY_COLORS[hex] : hex;
+    if (mapped) out.color = mapped;
+  }
+  const icon = legacy && typeof v.icon === "string" ? (LEGACY_ICONS[v.icon] ?? v.icon) : v.icon;
+  if (includes(LOGO_ICON_IDS, icon)) out.icon = icon;
   if (typeof v.name === "string") {
     const name = clampBusinessName(v.name).trim();
     if (name) out.name = name;
@@ -111,7 +173,7 @@ export function parseLaunchpadAnswers(value: unknown): LaunchpadAnswers {
   return out;
 }
 
-/** The hex the business name is drawn in: the logo color only when picked (and set); charcoal otherwise, including unpicked. */
+/** The hex the business name is drawn in: the logo color only when picked (and set); dark ink otherwise, including unpicked. */
 export function resolveNameColor(answer: BusinessIdentityAnswer): string {
   if (answer.nameColor === "logo" && answer.color) return answer.color;
   return answer.nameColor === "ink" ? NAME_INK_HEX : UNPICKED_NAME_HEX;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
+import type { LaunchpadFloor, LaunchpadTask } from "@/lib/launchpad/content/types";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import {
   advanceAfterTask,
@@ -42,9 +42,18 @@ import { Handbook, HandbookButton } from "@/components/launchpad/venture/handboo
 import { handbookBusinessName, hasHandbook, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
-import { identityChoices, isTaskAnswered } from "@/lib/launchpad/content/identity-content";
+import { identityChoices, isIdentityPicker, isTaskAnswered } from "@/lib/launchpad/content/identity-content";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
+
+
+/** What the forward button is waiting for on an identity task. */
+function identityHint(task: LaunchpadTask | undefined): string {
+  const pickers = task?.screens.filter(isIdentityPicker) ?? [];
+  if (pickers.length > 1 && pickers.every((s) => s.type === "logo-picker")) return "Pick a shape, a color and an icon to keep going.";
+  if (pickers.length > 1 && pickers.every((s) => s.type === "name-picker")) return "Add a name, a font and a font color to save.";
+  return "Make a choice to keep going.";
+}
 
 type View =
   | { screen: "home" }
@@ -223,7 +232,6 @@ export function VentureFlow({
                   floors={c.payload.floors}
                   progress={p}
                   iconVentureId={iconSetOverride ?? id}
-                  ventureId={id}
                   onClose={closeHandbook}
                 />
               );
@@ -307,7 +315,6 @@ export function VentureFlow({
               floors={floors}
               progress={progress}
               iconVentureId={iconVentureId}
-              ventureId={ventureId}
               setAnswer={setAnswer}
               onClose={closeHandbook}
             />
@@ -386,6 +393,7 @@ export function VentureFlow({
         title: t.title,
         done: progress.completedTaskIds.includes(t.id),
         screens: t.screens,
+        ctaLabel: t.ctaLabel,
       }));
       const where = { level: floor.level, silverId: silver.id, bronzeId: bronze.id };
       if (view.screen === "tasks") {
@@ -415,7 +423,8 @@ export function VentureFlow({
             onJump={(i) => go({ screen: "workbook", ...where, index: i })}
             onPrevious={() => go({ screen: "workbook", ...where, index: Math.max(0, index - 1) })}
             nextDisabled={!answered}
-            nextHint="Make a choice to keep going."
+            nextHint={identityHint(current)}
+            eyebrow={current && current.screens.some(isIdentityPicker) ? silver.title : undefined}
             onNext={() => {
               const task = bronze.tasks[index];
               if (!task) return;

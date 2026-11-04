@@ -136,6 +136,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
           id(task.id, tw);
           text(task.title, `${tw} title`);
           bool(task.placeholder, `${tw} placeholder`);
+          text(task.ctaLabel, `${tw} ctaLabel`, true);
           list(task.screens, `${tw} screens`).forEach((screen, ki) => {
             checkScreen(screen, `${tw} screen ${ki + 1}`, id);
             notePicker(screen);

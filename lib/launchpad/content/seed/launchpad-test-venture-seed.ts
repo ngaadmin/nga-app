@@ -67,27 +67,42 @@ function placeholderBronzes(prefix: string): LaunchpadBronze[] {
   return [1, 2, 3].map((n) => bronze(`${prefix}-b${n}`, `Bronze ${n}`, true));
 }
 
+/**
+ * Silver titles from the CORE Launchpad framework (six modules), used for
+ * the silvers whose content is still placeholder so the handbook's ghost
+ * page can name what comes next (e.g. "Next: Know how to make it").
+ */
+const FRAMEWORK_SILVER_TITLES: Readonly<Record<string, readonly string[]>> = {
+  l3: ["Know how to make it", "Cost and fund it", "Price the product", "Make and test"],
+  l4: ["Plan your event", "Final prep", "Know your profit"],
+  l5: ["Continuous Improvement", "New Opportunities"],
+  l6: ["Set up your budget", "Split your income", "Track your jars"],
+};
+
 function placeholderSilvers(prefix: string, count: number): LaunchpadSilver[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `${prefix}-s${i + 1}`,
-    title: `Silver ${i + 1}`,
+    title: FRAMEWORK_SILVER_TITLES[prefix]?.[i] ?? `Silver ${i + 1}`,
     placeholder: true,
     bronzes: placeholderBronzes(`${prefix}-s${i + 1}`),
   }));
 }
 
-/** One task holding one picker screen. */
-function pickerTask(id: string, title: string, screen: LaunchpadTaskScreen): LaunchpadTask {
-  return { id, title, placeholder: false, screens: [screen] };
+/** One task holding several picker screens (one builder page). */
+function pickerTask(id: string, title: string, ctaLabel: string, screens: LaunchpadTaskScreen[]): LaunchpadTask {
+  return { id, title, placeholder: false, ctaLabel, screens };
 }
 
 /** Answer key the identity pickers and wrap-up save under. */
 export const IDENTITY_ANSWER_KEY = "l2-s2-identity";
 
 /**
- * L2 silver 2 "Build your identity". Every step is one task (one workbook
- * page) so Previous / Next and the task dots give Back and change for free.
- * DRAFT copy. Icon art is PLACEHOLDER pending Jasper's icons.
+ * L2 silver 2 "Build your identity" (r8 logo system, r10 name screen).
+ * Bronze 1 is one task, the logo builder: Shape, Color and Icon tabs over a
+ * live logo. Every logo is Split style: the shape in the base color with its
+ * fixed layer tone (see LOGO_LAYER_TONES) and a white glyph. Bronze 2 is one
+ * task, the name screen: name, font and font color on one page.
+ * DRAFT copy (Storybird may refine).
  */
 function identitySilver(): LaunchpadSilver {
   const key = IDENTITY_ANSWER_KEY;
@@ -102,51 +117,53 @@ function identitySilver(): LaunchpadSilver {
         subtitle: "Pick a shape, a color and an icon",
         placeholder: false,
         tasks: [
-          pickerTask("l2-s2-b1-t1", "Pick a shape", {
-            id: "l2-s2-b1-t1-s1",
-            type: "logo-picker",
-            answerKey: key,
-            step: "shape",
-            prompt: "Your logo is a sticker. Which shape do you like?",
-            options: [
-              { id: "round", label: "Round sticker" },
-              { id: "rounded-square", label: "Rounded square sticker" },
-            ],
-          }),
-          pickerTask("l2-s2-b1-t2", "Pick a color", {
-            id: "l2-s2-b1-t2-s1",
-            type: "logo-picker",
-            answerKey: key,
-            step: "color",
-            prompt: "Pick the color for your sticker.",
-            options: [
-              { id: "navy", label: "Navy", hex: "#031F82" },
-              { id: "teal", label: "Teal", hex: "#0A8FA8" },
-              { id: "coral-red", label: "Coral red", hex: "#E5484D" },
-              { id: "green", label: "Green", hex: "#2E9E5B" },
-              { id: "purple", label: "Purple", hex: "#7B4FD6" },
-            ],
-          }),
-          pickerTask("l2-s2-b1-t3", "Pick an icon", {
-            id: "l2-s2-b1-t3-s1",
-            type: "logo-picker",
-            answerKey: key,
-            step: "icon",
-            prompt: "Pick an icon that shows what you do.",
-            iconSets: {
-              "dog-walking": [
-                { id: "paw", label: "Paw" },
-                { id: "leash", label: "Leash" },
-                { id: "bone", label: "Dog bone" },
-              ],
-              "friendship-bracelets": [
-                { id: "bead", label: "Bead" },
-                { id: "heart", label: "Heart" },
-                { id: "braid", label: "Braided loop" },
+          pickerTask("l2-s2-b1-t1", "Design your logo", "Continue", [
+            {
+              id: "l2-s2-b1-t1-shape",
+              type: "logo-picker",
+              answerKey: key,
+              step: "shape",
+              prompt: "Pick a shape for your logo.",
+              options: [
+                { id: "circle", label: "Circle" },
+                { id: "shield", label: "Shield" },
+                { id: "hexagon", label: "Hexagon" },
               ],
             },
-            fallbackVentureId: "dog-walking",
-          }),
+            {
+              id: "l2-s2-b1-t1-color",
+              type: "logo-picker",
+              answerKey: key,
+              step: "color",
+              prompt: "Pick a color that fits your business.",
+              options: [
+                { id: "navy", label: "Navy", hex: "#1D3F9A" },
+                { id: "light-blue", label: "Light blue", hex: "#3FB7DA" },
+                { id: "orange", label: "Orange", hex: "#FFA503" },
+                { id: "pale-olive", label: "Pale olive", hex: "#BAC593" },
+              ],
+            },
+            {
+              id: "l2-s2-b1-t1-icon",
+              type: "logo-picker",
+              answerKey: key,
+              step: "icon",
+              prompt: "Pick an icon that shows what you do.",
+              iconSets: {
+                "dog-walking": [
+                  { id: "paw", label: "Paw" },
+                  { id: "bone", label: "Bone" },
+                  { id: "dog-face", label: "Dog face" },
+                ],
+                "friendship-bracelets": [
+                  { id: "bead-strand", label: "Bead strand" },
+                  { id: "knot", label: "Knot" },
+                  { id: "heart-loop", label: "Heart loop" },
+                ],
+              },
+              fallbackVentureId: "dog-walking",
+            },
+          ]),
         ],
       },
       {
@@ -155,39 +172,44 @@ function identitySilver(): LaunchpadSilver {
         subtitle: "Choose a name, a font and a color",
         placeholder: false,
         tasks: [
-          pickerTask("l2-s2-b2-t1", "Name it", {
-            id: "l2-s2-b2-t1-s1",
-            type: "name-picker",
-            answerKey: key,
-            step: "name",
-            prompt: `Give your business a name. Keep it short: up to ${BUSINESS_NAME_MAX} letters and spaces.`,
-            inputLabel: "Business name",
-            placeholderText: "Type your business name",
-            maxLength: BUSINESS_NAME_MAX,
-          }),
-          pickerTask("l2-s2-b2-t2", "Pick a font", {
-            id: "l2-s2-b2-t2-s1",
-            type: "name-picker",
-            answerKey: key,
-            step: "font",
-            prompt: "Pick the lettering for your name.",
-            options: [
-              { id: "poppins-bold", label: "Bold" },
-              { id: "fredoka-semibold", label: "Rounded" },
-              { id: "pacifico", label: "Script" },
-            ],
-          }),
-          pickerTask("l2-s2-b2-t3", "Pick a name color", {
-            id: "l2-s2-b2-t3-s1",
-            type: "name-picker",
-            answerKey: key,
-            step: "nameColor",
-            prompt: "Last step: what color should your name be?",
-            options: [
-              { id: "logo", label: "Logo color" },
-              { id: "ink", label: "Dark ink" },
-            ],
-          }),
+          pickerTask("l2-s2-b2-t1", "Name your business", "Save to my workbook", [
+            {
+              id: "l2-s2-b2-t1-name",
+              type: "name-picker",
+              answerKey: key,
+              step: "name",
+              heading: "Enter your business name",
+              prompt: `Keep it short: up to ${BUSINESS_NAME_MAX} letters and spaces.`,
+              inputLabel: "Business name",
+              placeholderText: "Type your business name",
+              maxLength: BUSINESS_NAME_MAX,
+            },
+            {
+              id: "l2-s2-b2-t1-font",
+              type: "name-picker",
+              answerKey: key,
+              step: "font",
+              heading: "Choose a font",
+              prompt: "Pick the lettering for your name.",
+              options: [
+                { id: "poppins-bold", label: "Bold" },
+                { id: "fredoka-semibold", label: "Rounded" },
+                { id: "pacifico", label: "Script" },
+              ],
+            },
+            {
+              id: "l2-s2-b2-t1-name-color",
+              type: "name-picker",
+              answerKey: key,
+              step: "nameColor",
+              heading: "Choose a font color",
+              prompt: "What color should your name be?",
+              options: [
+                { id: "logo", label: "Logo color" },
+                { id: "ink", label: "Dark ink" },
+              ],
+            },
+          ]),
         ],
       },
     ],
@@ -195,7 +217,7 @@ function identitySilver(): LaunchpadSilver {
       type: "identity-wrap-up",
       answerKey: key,
       heading: "Your business identity",
-      body: "Tap a choice below to change it. When it looks right, tap Finalize.",
+      body: "Tap a tab below to change a choice. When it looks right, tap Finalize.",
       finalizeLabel: "Finalize",
       placeholder: true,
     },

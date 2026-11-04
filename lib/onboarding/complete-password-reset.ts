@@ -6,8 +6,13 @@ import {
 } from "@/lib/auth/password-reset-token";
 import { consumeRateLimit } from "@/lib/auth/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  LEARNER_PASSWORD_MIN_LENGTH,
+  LEARNER_PASSWORD_TOO_SHORT_ERROR,
+  newPasswordLengthError,
+  passwordMinLengthForRole,
+} from "@/lib/auth/password-policy";
 
-const MIN_PASSWORD_LENGTH = 6;
 
 export type CompletePasswordResetResult =
   | { ok: true; username: string }
@@ -47,8 +52,10 @@ export async function completePasswordReset(
   }
 
   const trimmedPassword = password.trim();
-  if (trimmedPassword.length < MIN_PASSWORD_LENGTH) {
-    return { ok: false, error: "Use at least 6 characters for your password." };
+  // Shortest any account accepts. Parent and teacher accounts are checked
+  // against the longer adult minimum once the profile role is known.
+  if (trimmedPassword.length < LEARNER_PASSWORD_MIN_LENGTH) {
+    return { ok: false, error: LEARNER_PASSWORD_TOO_SHORT_ERROR };
   }
 
   const limit = consumeRateLimit(
@@ -77,6 +84,14 @@ export async function completePasswordReset(
       idsMatch: profile?.id === claims.userId,
       role: profile?.account_role ?? null,
     });
+
+    const adultLengthError = newPasswordLengthError(
+      trimmedPassword,
+      passwordMinLengthForRole(profile?.account_role ?? null),
+    );
+    if (adultLengthError) {
+      return { ok: false, error: adultLengthError };
+    }
 
     const { data, error } = await admin.auth.admin.updateUserById(
       claims.userId,

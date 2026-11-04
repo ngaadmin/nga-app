@@ -14,6 +14,10 @@ import {
 import { finalizeRegisteredSignup } from "@/lib/onboarding/signup-finalize";
 import { cn } from "@/lib/utils/cn";
 import { EMAIL_PATTERN } from "@/lib/validation/email";
+import {
+  ADULT_PASSWORD_MIN_LENGTH,
+  ADULT_PASSWORD_TOO_SHORT_ERROR,
+} from "@/lib/auth/password-policy";
 
 const floatingPanelClass = "rounded-2xl border-0 bg-white shadow-md";
 const fieldBase =
@@ -77,8 +81,8 @@ export function CreateParentProfilePanel({
 
     if (!password) {
       next.password = "Create a password to secure your parent profile.";
-    } else if (password.trim().length < 6) {
-      next.password = "Use at least 6 characters for your password.";
+    } else if (password.trim().length < ADULT_PASSWORD_MIN_LENGTH) {
+      next.password = ADULT_PASSWORD_TOO_SHORT_ERROR;
     }
 
     if (!confirmPassword) {

@@ -117,6 +117,15 @@ export function firstOpenTaskIndex(progress: VentureTestProgress, bronze: Ventur
   return i === -1 ? 0 : i;
 }
 
+/**
+ * Which task tapping a bronze door opens. There is no task list: the door goes
+ * straight into the first unfinished task, or the first task when the bronze is
+ * done (review), and the workbook then steps task to task.
+ */
+export function bronzeEntryTaskIndex(progress: VentureTestProgress, bronze: VentureTestBronze): number {
+  return firstOpenTaskIndex(progress, bronze);
+}
+
 export type WorkbookAdvance =
   | { kind: "task"; taskIndex: number }
   | { kind: "bronze-done" }

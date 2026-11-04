@@ -10,6 +10,7 @@ import {
   buildingCta,
   completeTask,
   currentLevel,
+  bronzeEntryTaskIndex,
   firstOpenTaskIndex,
   floorAccess,
   floorState,
@@ -158,6 +159,14 @@ describe("building floor access (tap any floor)", () => {
     expect(lockedDoorsNote(p, FLOORS, L1, 1)).toBe('Finish "Define the business" to unlock these doors.');
   });
 
+  it("a bronze door opens its first unfinished task directly", () => {
+    const b = L1.silvers[0]!.bronzes[0]!;
+    expect(b.tasks.length).toBeGreaterThan(1);
+    expect(bronzeEntryTaskIndex(EMPTY_VENTURE_TEST_PROGRESS, b)).toBe(0);
+    const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, [b.tasks[0]!.id]);
+    expect(bronzeEntryTaskIndex(p, b)).toBe(1);
+  });
+
   it("L1 done, L2 current: L1 re-enterable for review without changing progress", () => {
     const p = doneThrough(EMPTY_VENTURE_TEST_PROGRESS, allTaskIds([1]));
     const before = [...p.completedTaskIds];
@@ -172,6 +181,8 @@ describe("building floor access (tap any floor)", () => {
       for (const b of s.bronzes) {
         // Reopening a finished bronze starts at its first task; re-finishing tasks is a no-op.
         expect(firstOpenTaskIndex(p, b)).toBe(0);
+        // The door opens that task directly (there is no task list).
+        expect(bronzeEntryTaskIndex(p, b)).toBe(0);
         const again = doneThrough(p, b.tasks.map((t) => t.id));
         expect(again).toBe(p);
       }

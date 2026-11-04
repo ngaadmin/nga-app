@@ -197,6 +197,39 @@ describe("<Handbook>", () => {
     expect(document.querySelector("[data-handbook-page]")!.getAttribute("data-handbook-page")).toBe("l1-s1");
   });
 
+  it("rings the viewed floor's tab in orange whatever its state, and only that tab", () => {
+    const ringed = () =>
+      Array.from(document.querySelectorAll("nav[aria-label='Handbook floors'] button"))
+        .filter((b) => b.className.includes("outline-[#FFA503]"))
+        .map((b) => b.getAttribute("aria-label"));
+    const tab = (name: RegExp) => within(screen.getByRole("navigation", { name: "Handbook floors" })).getByRole("button", { name });
+
+    // Earned floor (L2) viewed on the identity page, which keeps its running page number.
+    const { unmount } = render(<Harness entry="building" initial={WITH_IDENTITY} />);
+    expect(screen.getByText("Page 4")).toBeTruthy();
+    expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
+    const l2 = tab(/^Level 2/);
+    expect(l2.getAttribute("data-tab-state")).toBe("earned");
+    expect(l2.hasAttribute("data-viewed")).toBe(true);
+    expect(l2.getAttribute("aria-current")).toBe("true");
+    expect(l2.className).toMatch(/\boutline-2\b/);
+    expect(l2.className).toContain("w-11");
+    // Moving to L1 moves the ring.
+    fireEvent.click(tab(/^Level 1/));
+    expect(ringed()).toEqual(["Level 1, " + FLOORS[0]!.name]);
+    expect(tab(/^Level 2/).hasAttribute("data-viewed")).toBe(false);
+    unmount();
+
+    // Current floor (cyan) viewed keeps its fill and also gets the ring.
+    render(<Harness entry="building" initial={through("l2-s1")} />);
+    const current = tab(/^Level 2/);
+    expect(current.getAttribute("data-tab-state")).toBe("current");
+    expect(current.className).toContain("bg-[#3FB7DA]");
+    expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
+    // Locked tabs are not viewed, so they carry no ring.
+    expect(tab(/^Level 3.*not earned yet/).className).not.toContain("outline-[#FFA503]");
+  });
+
   it("placeholder pages list finished bronzes and have nothing to edit, even from the building", () => {
     render(<Harness entry="building" initial={WITH_IDENTITY} />);
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));

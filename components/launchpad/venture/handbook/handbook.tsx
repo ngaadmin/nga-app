@@ -184,7 +184,11 @@ export function Handbook({
         <nav aria-label="Handbook floors" className="absolute right-2.5 top-[14px] flex w-11 flex-col gap-2">
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
-            const base = "flex h-[58px] w-11 flex-col items-center justify-center gap-1 rounded-[10px] text-[13px]";
+            const viewing = page?.level === t.level;
+            // The floor being viewed gets the app's orange ring (outline, so it sits outside
+            // the 44px tab and stacks with any state styling) whatever the tab's state.
+            const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
+            const base = `flex h-[58px] w-11 flex-col items-center justify-center gap-1 rounded-[10px] text-[13px] ${viewedRing}`;
             if (!t.tappable)
               return (
                 <button
@@ -192,14 +196,15 @@ export function Handbook({
                   type="button"
                   disabled
                   aria-label={`${label}, not earned yet`}
+                  aria-current={viewing ? "true" : undefined}
                   className={`${base} font-medium text-[#9CA3AF] shadow-[inset_0_0_0_1px_#E5E7EB]`}
                   data-tab-state={t.state}
+                  data-viewed={viewing ? "" : undefined}
                 >
                   L{t.level}
                   <SmallLock />
                 </button>
               );
-            const viewing = page?.level === t.level;
             return (
               <button
                 key={t.level}
@@ -207,10 +212,9 @@ export function Handbook({
                 aria-label={label}
                 aria-current={viewing ? "true" : undefined}
                 onClick={() => go(handbookTabTarget(pages, t.level))}
-                className={`${base} font-semibold ${t.state === "current" ? "bg-[#3FB7DA] text-white" : "bg-[#F3F4F6] text-[#374151]"} ${
-                  viewing && t.state !== "current" ? "shadow-[inset_0_0_0_1.5px_#9CA3AF]" : ""
-                }`}
+                className={`${base} font-semibold ${t.state === "current" ? "bg-[#3FB7DA] text-white" : "bg-[#F3F4F6] text-[#374151]"}`}
                 data-tab-state={t.state}
+                data-viewed={viewing ? "" : undefined}
               >
                 L{t.level}
               </button>

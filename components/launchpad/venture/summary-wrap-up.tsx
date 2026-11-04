@@ -12,12 +12,11 @@ import {
   type SummaryCatalog,
   type SummaryEdit,
 } from "@/lib/launchpad/content/summary";
-import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
+import { AccentLabel, BinderCard, HandRule, PAPER_ACCENT, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
 import { BTN_CYAN, BTN_ORANGE, BTN_WHITE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { toggleChoice } from "@/components/launchpad/venture/screens/choice-capture-screen";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
-import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { OpenSteps, OpenStepsHint, type OpenStep } from "@/components/launchpad/venture/open-steps";
 
 function Pencil() {
@@ -109,13 +108,14 @@ function InlineEditor({
   );
 }
 
-function PencilButton({ label, onClick }: { label: string; onClick: () => void }) {
+function PencilButton({ label, onClick, expanded }: { label: string; onClick: () => void; expanded?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex size-8 flex-none items-center justify-center rounded-full text-nga-secondary-shadow hover:bg-[#EEF7FB]"
+      aria-expanded={expanded}
+      className="-mr-2 flex size-9 flex-none items-center justify-center rounded-full text-[#6B7280] hover:bg-[#F3EEE4]"
       data-pencil=""
     >
       <Pencil />
@@ -132,8 +132,55 @@ function goalTitle(catalog: SummaryCatalog, answerKey: string): string | undefin
   return undefined;
 }
 
-function SectionCard({
+/** A section's lines on the binder page (wrapup-binder-r1 screen B): chips, accent numbers, a big line, or plain sentences. */
+function PaperLines({ display, lines }: { display: LaunchpadSummarySection["display"]; lines: readonly string[] }) {
+  if (display === "list")
+    return (
+      <ul className="mt-2.5 flex flex-wrap gap-[9px]">
+        {lines.map((l, i) => (
+          <TagChip key={i}>{l}</TagChip>
+        ))}
+      </ul>
+    );
+  if (display === "ranked")
+    return (
+      <ol className="mt-2 text-[14px] leading-[1.75]">
+        {lines.map((l, i) => (
+          <li key={i} className="flex">
+            <span className="w-[18px] flex-none font-semibold" style={{ color: PAPER_ACCENT }}>
+              {i + 1}
+            </span>
+            <span>{l}</span>
+          </li>
+        ))}
+      </ol>
+    );
+  if (display === "text")
+    return (
+      <div className="mt-2 font-heading text-[15px] font-medium leading-[1.4]">
+        {lines.map((l, i) => (
+          <p key={i}>{l}</p>
+        ))}
+      </div>
+    );
+  return (
+    <div className="text-[14px] leading-[1.45]">
+      {lines.map((l, i) => (
+        <p key={i} className="mt-2">
+          {l}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * One section on the binder page: swash label, one pencil, the content, and
+ * a hand-drawn divider before the next section. No boxes.
+ */
+function BinderSection({
   section,
+  first,
   answers,
   catalog,
   editing,
@@ -141,6 +188,7 @@ function SectionCard({
   setAnswer,
 }: {
   section: LaunchpadSummarySection;
+  first: boolean;
   answers: LaunchpadAnswers;
   catalog: SummaryCatalog;
   editing: string | null;
@@ -165,30 +213,49 @@ function SectionCard({
     />
   );
   const editKey = (src: LaunchpadSummarySource) => `${section.id}:${src.answerKey}:${src.field ?? ""}`;
-  // A sentences section edits line by line; the others edit as one block.
+  // A sentences section (the goals) edits line by line: its one pencil opens a pick of which line to change.
+  // The others edit as one block from the section's pencil.
   const perLine = section.display === "sentences";
+  const pickKey = `pick:${section.id}`;
+  const lineEdits = perLine ? rows.filter((r) => r.edit && r.lines.length) : [];
   const sectionEdit = !perLine ? rows.find((r) => r.edit && r.lines.length) : undefined;
+  const picking = editing === pickKey;
+  const lineOpen = perLine && rows.some((r) => editing === editKey(r.src));
   return (
-    <div className="rounded-2xl border-2 border-[#E5E7EB] bg-white px-4 py-3" data-summary-section={section.id}>
+    <div data-summary-section={section.id}>
+      {!first && <HandRule className="mb-2.5 mt-3.5" />}
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-heading text-[13px] font-bold uppercase tracking-[0.06em] text-nga-secondary-shadow">{section.label}</h3>
+        <AccentLabel>{section.label}</AccentLabel>
         {sectionEdit && editing !== editKey(sectionEdit.src) && (
           <PencilButton label={`Edit ${section.label}`} onClick={() => setEditing(editKey(sectionEdit.src))} />
         )}
+        {lineEdits.length > 0 && !lineOpen && (
+          <PencilButton label={`Edit ${section.label}`} expanded={picking} onClick={() => setEditing(picking ? null : pickKey)} />
+        )}
       </div>
-      {empty && <p className="mt-1 text-[15px] italic text-nga-slate">Not answered yet</p>}
+      {empty && <p className="mt-2 text-[14px] italic text-[#9CA3AF]">Not answered yet</p>}
       {perLine ? (
-        <ul className="mt-1 flex flex-col gap-1.5">
+        <ul className="flex flex-col">
           {rows.flatMap((r) =>
             r.lines.map((line, i) => {
               const open = editing === editKey(r.src);
               const caption = goalTitle(catalog, r.src.answerKey);
               return (
-                <li key={`${r.src.answerKey}-${i}`} className="flex flex-col" data-summary-line={r.src.answerKey}>
+                <li key={`${r.src.answerKey}-${i}`} className="mt-2 flex flex-col" data-summary-line={r.src.answerKey}>
                   <div className="flex items-start gap-2">
-                    <span className="mt-[10px] size-1.5 flex-none rounded-full bg-nga-secondary" aria-hidden="true" />
-                    <span className="flex-1 text-[15.5px] leading-[1.45] text-nga-ink">{line}</span>
-                    {r.edit && i === 0 && !open && <PencilButton label={`Edit ${caption ?? section.label}`} onClick={() => setEditing(editKey(r.src))} />}
+                    <span className="flex-1 text-[14px] leading-[1.45]">{line}</span>
+                    {picking && r.edit && i === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setEditing(editKey(r.src))}
+                        aria-label={`Edit ${caption ?? section.label}`}
+                        className="-my-1 flex h-8 flex-none items-center gap-1 rounded-lg px-2 text-[12.5px] font-semibold text-nga-secondary-shadow shadow-[inset_0_0_0_1px_#E5E7EB]"
+                        data-pencil=""
+                      >
+                        <Pencil />
+                        Edit
+                      </button>
+                    )}
                   </div>
                   {open && r.edit && editor(r.src, r.edit, caption)}
                 </li>
@@ -198,7 +265,7 @@ function SectionCard({
         </ul>
       ) : (
         <>
-          <SummaryLines display={section.display} lines={rows.flatMap((r) => r.lines)} className="mt-1 text-[15.5px] leading-[1.45] text-nga-ink" />
+          <PaperLines display={section.display} lines={rows.flatMap((r) => r.lines)} />
           {sectionEdit && editing === editKey(sectionEdit.src) && sectionEdit.edit && editor(sectionEdit.src, sectionEdit.edit)}
         </>
       )}
@@ -208,11 +275,12 @@ function SectionCard({
 
 /**
  * Silver wrap-up "workbook-summary": the silver's answers as one workbook
- * page, one card per section. A pencil edits a value in place on the card
+ * page on the shared binder card (wrapup-binder-r1 screen B): each section is a
+ * swash label, its content and a hand-drawn divider, with one pencil per section
+ * that edits a value in place on the page
  * (no navigating back) when the content marks it editable; values whose
  * edit would rewire another screen (the why ranking, the cause, the
  * currency) stay read-only. Confirm and continue goes on.
- * The frame is a PLACEHOLDER pending wrap-up art.
  */
 export function SummaryWrapUp({
   level,
@@ -245,16 +313,20 @@ export function SummaryWrapUp({
       <TrailCrumb level={level} current={silverTitle} onBuilding={onBuilding} onCorridor={onCorridor} />
       <Heading>{wrapUp.heading}</Heading>
       {wrapUp.body && <SubLine className="mb-3">{wrapUp.body}</SubLine>}
-      <div
-        className="relative mx-5 mt-1 flex flex-col gap-3 rounded-3xl bg-[#F9FAFB] px-3 pb-3 pt-7"
-        style={wrapUp.placeholder ? { border: `2px dashed ${VT.panel}` } : undefined}
-        data-placeholder-frame={wrapUp.placeholder ? "" : undefined}
-      >
-        {wrapUp.placeholder && <span className="absolute right-3 top-2 font-heading text-[11px] font-semibold text-nga-slate">Frame art TBC</span>}
-        {wrapUp.sections.map((section) => (
-          <SectionCard key={section.id} section={section} answers={answers} catalog={catalog} editing={editing} setEditing={setEditing} setAnswer={setAnswer} />
+      <BinderCard className="mt-1" data-workbook-binder="">
+        {wrapUp.sections.map((section, i) => (
+          <BinderSection
+            key={section.id}
+            section={section}
+            first={i === 0}
+            answers={answers}
+            catalog={catalog}
+            editing={editing}
+            setEditing={setEditing}
+            setAnswer={setAnswer}
+          />
         ))}
-      </div>
+      </BinderCard>
       <OpenSteps steps={openSteps} />
       <div className="mx-5 mt-auto pb-4 pt-5">
         <OpenStepsHint count={openSteps.length} id="wrap-up-open-hint" />

@@ -15,6 +15,7 @@ import {
   hasHandbook,
   isHandbookPageEditable,
   withShortcutSampleAnswers,
+  partLabel,
 } from "@/lib/launchpad/venture-test/handbook";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
@@ -196,6 +197,7 @@ describe("<Handbook>", () => {
     expect(dialog.querySelector("[data-done-chip]")).toBeTruthy();
     expect(dialog.querySelectorAll("[data-paper-card]")).toHaveLength(1);
     expect(dialog.querySelectorAll("[data-washi]")).toHaveLength(1);
+    expect(dialog.querySelectorAll("[data-paper-card] [data-spiral-binding]")).toHaveLength(1);
     expect(dialog.querySelectorAll("[data-doodle]")).toHaveLength(1);
     expect(dialog.textContent).not.toMatch(/coming soon|NGA|XP/i);
   });
@@ -210,7 +212,8 @@ describe("<Handbook>", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
     const ghost = screen.getByRole("img", { name: "Next page, locked: Know how to make it" });
     expect(ghost.textContent).toBe("Next: Know how to make it");
-    expect(document.body.textContent).not.toMatch(/Silver 1\b(?! ·)/);
+    // The words silver, bronze and gold never reach the screen.
+    expect(document.body.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
   });
 
   it("tabs: earned and current floors are buttons, unearned ones are disabled; tapping L1 goes to page 1", () => {
@@ -283,7 +286,7 @@ describe("<Handbook>", () => {
     const l3 = document.querySelector("[data-handbook-page]") as HTMLElement;
     const silver = FLOORS[2]!.silvers[0]!;
     expect(within(l3).getByRole("heading", { name: silver.title })).toBeTruthy();
-    expect(within(l3).getAllByRole("listitem").map((li) => li.textContent)).toEqual(silver.bronzes.map((b) => b.title));
+    expect(within(l3).getAllByRole("listitem").map((li) => li.textContent)).toEqual(silver.bronzes.map((b, i) => partLabel(b.title, i)));
   });
 
   it("from the building: the identity page has an Edit button and edits write back to the saved answer", () => {

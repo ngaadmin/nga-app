@@ -2,10 +2,11 @@
 
 import type { LaunchpadIdentityWrapUp } from "@/lib/launchpad/content/types";
 import type { IdentityChoices } from "@/lib/launchpad/content/identity-content";
-import { VT } from "@/components/launchpad/venture-test/venture-test-colors";
+import { BinderCard, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
+import { Doodle, HandbookSection, useSectionLines } from "@/components/launchpad/venture/handbook/handbook-page";
 import { BTN_ORANGE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { OpenSteps, OpenStepsHint, type OpenStep } from "@/components/launchpad/venture/open-steps";
-import { useIdentityAnswer } from "@/components/launchpad/venture/identity/answers-context";
+import { useIdentityAnswer, useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 
@@ -14,7 +15,9 @@ import { IdentityEditor } from "@/components/launchpad/venture/identity/identity
  * saved answer, with every pick editable right here through the Logo and
  * Name tabs (edits save to the same answer and the learner stays on this
  * screen). Confirm and continue marks it done.
- * The frame is a PLACEHOLDER pending Jasper's wrap-up art.
+ * Drawn on the shared binder page (wrapup-binder-r1, screen A): the paper
+ * card with the spiral binding, the logo lockup, then the editor and the
+ * page's handbook sections.
  */
 export function IdentityWrapUp({
   level,
@@ -37,26 +40,29 @@ export function IdentityWrapUp({
   openSteps?: readonly OpenStep[];
 }) {
   const { answer, update, save } = useIdentityAnswer(wrapUp.answerKey);
+  const ctx = useLaunchpadAnswers();
+  const sections = useSectionLines(wrapUp.handbookSections ?? []).filter((x) => x.lines.length);
   return (
     <section className="flex flex-1 flex-col" data-wrap-up="identity">
       <TrailCrumb level={level} current={silverTitle} onBuilding={onBuilding} onCorridor={onCorridor} />
       <Heading>{wrapUp.heading}</Heading>
       {wrapUp.body && <SubLine className="mb-3">{wrapUp.body}</SubLine>}
 
-      <div
-        className="relative mx-5 mt-1 flex min-h-[230px] items-center justify-center rounded-3xl bg-[#F9FAFB] px-4 py-5"
-        style={wrapUp.placeholder ? { border: `2px dashed ${VT.panel}` } : undefined}
-        data-placeholder-frame={wrapUp.placeholder ? "" : undefined}
-      >
-        {wrapUp.placeholder && (
-          <span className="absolute right-3 top-2 font-heading text-[11px] font-semibold text-nga-slate">Frame art TBC</span>
-        )}
-        <BusinessLogo answer={answer} namePlaceholder="Your business name" />
-      </div>
-
-      <div className="mx-5 mb-5 mt-5">
+      <BinderCard className="mt-1" data-identity-binder="">
+        <div className="flex flex-col items-center gap-3 pt-1" data-identity-lockup="">
+          <BusinessLogo answer={answer} size="hb" namePlaceholder="Your business name" />
+        </div>
+        <HandRule />
         <IdentityEditor choices={choices} answer={answer} update={update} idPrefix="wrapup" />
-      </div>
+        {sections.map(({ section, lines }, i) => (
+          <HandbookSection
+            key={section.id}
+            section={section}
+            lines={lines}
+            doodle={i === sections.length - 1 ? <Doodle ventureId={ctx?.iconVentureId ?? ""} /> : undefined}
+          />
+        ))}
+      </BinderCard>
 
       <OpenSteps steps={openSteps} />
       <div className="mx-5 mt-auto pb-4">

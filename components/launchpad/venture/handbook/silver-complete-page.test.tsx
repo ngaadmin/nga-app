@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
-import { handbookPages } from "@/lib/launchpad/venture-test/handbook";
+import { handbookPages, milestoneView, partLabel } from "@/lib/launchpad/venture-test/handbook";
 import { SilverCompletePage } from "@/components/launchpad/venture/handbook/silver-complete-page";
 
 afterEach(cleanup);
@@ -18,6 +18,7 @@ describe("SilverCompletePage", () => {
       <SilverCompletePage
         level={1}
         page={page}
+        milestone={milestoneView(progress, floors, 1)}
         iconVentureId="dog-walking"
         onBuilding={() => {}}
         onCorridor={() => {}}
@@ -29,5 +30,35 @@ describe("SilverCompletePage", () => {
     expect(document.querySelector("[data-handbook-page]")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onContinue).toHaveBeenCalledOnce();
+  });
+
+  it("milestone wrap-up: done heading, steps done, what you built, next up, on the binder page", () => {
+    render(
+      <SilverCompletePage
+        level={1}
+        page={page}
+        milestone={milestoneView(progress, floors, 1)}
+        iconVentureId="dog-walking"
+        onBuilding={() => {}}
+        onCorridor={() => {}}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Define the business: done! ");
+    expect(document.querySelector("[data-milestone-steps]")?.textContent).toBe("1 of 15 steps done");
+    expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("1");
+    const chips = [...document.querySelectorAll("[data-what-you-built] [data-tag-chip]")].map((c) => c.textContent);
+    expect(chips).toEqual(silver.bronzes.map((b) => b.title));
+    expect(document.querySelector("[data-next-up]")?.textContent).toBe("Level 2Your next floor is ready.");
+    const card = document.querySelector("[data-silver-complete-card]")!;
+    expect(card.hasAttribute("data-binder-card")).toBe(true);
+    expect(card.querySelector("[data-spiral-binding]")).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
+    expect(screen.getAllByRole("button", { name: "Continue" })).toHaveLength(1);
+  });
+
+  it("placeholder part titles never show the words bronze, silver or gold", () => {
+    expect(partLabel("Bronze 2", 1)).toBe("Part 2");
+    expect(partLabel("Find the why", 1)).toBe("Find the why");
   });
 });

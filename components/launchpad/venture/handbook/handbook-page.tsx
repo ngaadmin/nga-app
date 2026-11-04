@@ -2,14 +2,14 @@
 
 import { useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
-import type { HandbookPageView } from "@/lib/launchpad/venture-test/handbook";
+import { partLabel, type HandbookPageView } from "@/lib/launchpad/venture-test/handbook";
 import type { LaunchpadSummarySection } from "@/lib/launchpad/content/types";
 import { sectionLines, summaryCatalog } from "@/lib/launchpad/content/summary";
 import { useIdentityAnswer, useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
-import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { AccentLabel, HandRule, PAPER_ACCENT, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
 import { BTN_CYAN } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /*
@@ -17,34 +17,10 @@ import { BTN_CYAN } from "@/components/launchpad/venture-test/venture-test-ui";
  * card, hand-drawn dividers, accent labels with an underline swash, product
  * tag chips and one doodle. The accent is the logo palette's light blue.
  */
-const ACCENT = "#3FB7DA";
-
-/** Hand-drawn divider between sections. */
-function HandRule() {
-  return (
-    <svg className="mb-3.5 mt-5 block" width="100%" height="10" viewBox="0 0 254 10" preserveAspectRatio="none" aria-hidden="true" data-hand-rule="">
-      <path d="M2 6C30 2.5 52 8.5 84 5.2S140 2.8 170 6.4S226 8 252 4.6" fill="none" stroke="#D9D1C3" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Accent section label (Fredoka, light blue) with its underline swash. */
-function AccentLabel({ children, doodle }: { children: ReactNode; doodle?: ReactNode }) {
-  return (
-    <div className="flex items-end gap-2">
-      <h3 className={`${NAME_FONT_CLASS["fredoka-semibold"]} mt-1 inline-flex flex-col gap-px text-[15.5px] font-semibold tracking-[0.01em]`} style={{ color: ACCENT }}>
-        {children}
-        <svg width="74" height="7" viewBox="0 0 74 7" aria-hidden="true">
-          <path d="M2 4.6C18 2 40 2.2 72 3.4" fill="none" stroke={ACCENT} strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      </h3>
-      {doodle}
-    </div>
-  );
-}
+const ACCENT = PAPER_ACCENT;
 
 /** The page's one doodle: an outline paw (dog walking) or bead loop (bracelets). */
-function Doodle({ ventureId }: { ventureId: string }) {
+export function Doodle({ ventureId }: { ventureId: string }) {
   if (ventureId === "friendship-bracelets")
     return (
       <svg width="22" height="22" viewBox="0 0 100 100" fill="none" stroke={ACCENT} strokeWidth="7" aria-hidden="true" className="mb-1.5 rotate-[14deg]" data-doodle="bead">
@@ -62,19 +38,6 @@ function Doodle({ ventureId }: { ventureId: string }) {
       <circle cx="74" cy="42" r="9" />
       <path d="M50 50C62 50 76 62 76 73C76 82 67 85 59 83C55 82 45 82 41 83C33 85 24 82 24 73C24 62 38 50 50 50Z" />
     </svg>
-  );
-}
-
-/** Product tag chip (a luggage tag with a punched hole). */
-function TagChip({ children }: { children: ReactNode }) {
-  return (
-    <li
-      className="relative flex h-8 items-center whitespace-nowrap rounded-r-lg bg-[#ECF8FB] pl-[23px] pr-3 text-[13px] font-medium text-[#111827] [clip-path:polygon(11px_0,100%_0,100%_100%,11px_100%,0_50%)]"
-      data-tag-chip=""
-    >
-      <span aria-hidden="true" className="absolute left-[11px] top-1/2 -mt-[3px] size-1.5 rounded-full bg-[#FDFBF7]" />
-      {children}
-    </li>
   );
 }
 
@@ -108,7 +71,7 @@ function EditPencil() {
 }
 
 /** Section lines from the saved answers (the same lines the wrap-up shows). */
-function useSectionLines(sections: readonly LaunchpadSummarySection[]) {
+export function useSectionLines(sections: readonly LaunchpadSummarySection[]) {
   const ctx = useLaunchpadAnswers();
   const catalog = summaryCatalog(ctx?.floors ?? []);
   return sections.map((section) => ({ section, lines: sectionLines(section, ctx?.answers, catalog) }));
@@ -118,7 +81,7 @@ function useSectionLines(sections: readonly LaunchpadSummarySection[]) {
  * One handbook section in the r4 look: a list answer as product tag chips,
  * a single text answer as the big quote, anything else as plain lines.
  */
-function HandbookSection({
+export function HandbookSection({
   section,
   lines,
   doodle,
@@ -217,7 +180,7 @@ function SummaryPageBody({ page, iconVentureId }: { page: HandbookPageView; icon
   const sections = useSectionLines(wrapUp?.sections ?? []);
   return (
     <>
-      <TopRow eyebrow={`${page.floorName} · Silver ${page.silverNumber}`} done={page.done} />
+      <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} done={page.done} />
       <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
       {sections.map(({ section, lines }, i) =>
         lines.length ? (
@@ -238,13 +201,13 @@ function SummaryPageBody({ page, iconVentureId }: { page: HandbookPageView; icon
 function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
   return (
     <>
-      <TopRow eyebrow={`${page.floorName} · Silver ${page.silverNumber}`} done={page.done} />
+      <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} done={page.done} />
       <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
       <HandRule />
       <AccentLabel>What I did</AccentLabel>
       <ul className="mt-3 flex flex-col items-start gap-[9px]" aria-label="What I did">
-        {page.bronzeTitles.map((t) => (
-          <TagChip key={t}>{t}</TagChip>
+        {page.bronzeTitles.map((t, i) => (
+          <TagChip key={t}>{partLabel(t, i)}</TagChip>
         ))}
       </ul>
     </>

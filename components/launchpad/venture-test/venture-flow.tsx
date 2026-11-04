@@ -47,7 +47,7 @@ import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
-import { handbookBusinessName, handbookPages, hasHandbook, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
+import { handbookBusinessName, handbookPages, hasHandbook, milestoneView, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_ORANGE, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
 import { identityChoices, isIdentityPicker } from "@/lib/launchpad/content/identity-content";
@@ -609,6 +609,7 @@ export function VentureFlow({
         <SilverCompletePage
           level={floor.level}
           page={page}
+          milestone={milestoneView(progress, floors, floor.level)}
           iconVentureId={iconVentureId}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}

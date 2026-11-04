@@ -328,7 +328,9 @@ describe("identity wrap-up", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Dark ink" }));
     expect(saved()).toEqual({ ...FULL, shape: "circle", color: "#BAC593", font: "pacifico", name: "Paw Patrol Walks", nameColor: "ink" });
     expect(screen.getByText("Paw Patrol Walks").getAttribute("data-name-font")).toBe("pacifico");
-    expect(screen.getByText("Frame art TBC")).toBeTruthy();
+    // Drawn on the binder page: spiral binding, no placeholder frame.
+    expect(screen.queryByText("Frame art TBC")).toBeNull();
+    expect(document.querySelector("[data-identity-binder] [data-spiral-binding]")).toBeTruthy();
     expect(finalized).toBe(0);
     fireEvent.click(screen.getByRole("button", { name: "Confirm and continue" }));
     expect(finalized).toBe(1);

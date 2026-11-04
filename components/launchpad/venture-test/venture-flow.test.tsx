@@ -184,12 +184,25 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     // Read-only: the why ranking and the cause.
     expect(document.querySelector("[data-summary-section='my-why'] [data-pencil]")).toBeNull();
     expect(document.querySelector("[data-summary-section='my-cause'] [data-pencil]")).toBeNull();
+    // Binder page: one paper card with the spiral binding, sections have no boxes, one pencil per editable section.
+    const binder = document.querySelector("[data-wrap-up='workbook-summary'] [data-binder-card]")!;
+    expect(binder.querySelector("[data-spiral-binding]")).toBeTruthy();
+    for (const sec of binder.querySelectorAll("[data-summary-section]")) {
+      expect(sec.className).not.toMatch(/border|rounded/);
+      expect(sec.querySelectorAll("[data-pencil]").length).toBeLessThanOrEqual(1);
+    }
+    expect(binder.querySelectorAll("[data-hand-rule]")).toHaveLength(binder.querySelectorAll("[data-summary-section]").length - 1);
     // Editable: the offer picks, in place.
     fireEvent.click(screen.getByRole("button", { name: "Edit What my business will offer" }));
     fireEvent.click(within(offer).getByRole("button", { name: "Grooming" }));
     fireEvent.click(within(offer).getByRole("button", { name: "Save" }));
     expect(offer.textContent).toContain("Grooming");
     // Editable: a goal's amount, in place.
+    // One pencil per section: the goals pencil opens a pick of which goal to change.
+    const goalsPencil = screen.getByRole("button", { name: "Edit My goals" });
+    expect(goalsPencil.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("button", { name: "Edit Make money" })).toBeNull();
+    fireEvent.click(goalsPencil);
     fireEvent.click(screen.getByRole("button", { name: "Edit Make money" }));
     const editor = document.querySelector("[data-inline-editor='l1-goal-make-money']") as HTMLElement;
     fireEvent.change(within(editor).getByRole("textbox", { name: "Amount" }), { target: { value: "750" } });
@@ -264,9 +277,10 @@ describe("finishing a silver shows its handbook page", () => {
     await finishSilver(silver);
     const done = document.querySelector(`[data-silver-complete='${silver.id}']`);
     expect(done).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Added to your handbook" })).toBeTruthy();
-    const page = document.querySelector(`[data-handbook-page='${silver.id}']`);
-    expect(page?.getAttribute("data-editable")).toBe("false");
+    expect(screen.getByRole("heading", { name: `${silver.title}: done!` })).toBeTruthy();
+    // Placeholder part titles show as "Part N", never the word bronze.
+    expect(done?.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
+    expect([...done!.querySelectorAll("[data-what-you-built] [data-tag-chip]")].map((c) => c.textContent)).toEqual(silver.bronzes.map((_, i) => `Part ${i + 1}`));
     // A single primary action.
     expect(screen.getAllByRole("button", { name: "Continue" })).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -318,8 +332,8 @@ describe("finishing a silver shows its handbook page", () => {
     expect(document.querySelector("[data-silver-complete]")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Confirm and continue/ }));
     expect(document.querySelector("[data-silver-complete='l2-s2']")).toBeTruthy();
-    expect(document.querySelector("[data-handbook-page='l2-s2']")).toBeTruthy();
-    expect(screen.getAllByText("Happy Paws").length).toBeGreaterThan(0);
+    expect(document.querySelector("[data-silver-complete='l2-s2']")?.textContent).toMatch(/Build your identity: done!/);
+    expect(document.querySelector("[data-silver-complete='l2-s2'] [data-what-you-built]")?.textContent).toBe("Design your logoName your business");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
     // Re-opening the finished identity wrap-up and finalizing again does not show the page.
@@ -379,6 +393,8 @@ describe("Come back to this later", () => {
     const confirm = screen.getByRole("button", { name: "Confirm and continue" }) as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
     expect(document.querySelector("[data-open-steps-hint]")?.textContent).toMatch(/Finish the step above/);
+    // "Still to finish" is a light reminder, not a bordered box.
+    expect(document.querySelector("[data-open-steps]")?.className).not.toMatch(/shadow|border|rounded/);
     expect(document.querySelector(`[data-open-step='${goals.tasks[0]!.id}']`)?.textContent).toContain(goals.title);
     fireEvent.click(screen.getByRole("button", { name: "Finish this" }));
 

@@ -16,12 +16,9 @@ import type { VentureTestProgress } from "@/lib/launchpad/venture-test/venture-t
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
+import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/venture/handbook/paper-art";
 
 const READ_ONLY_SAVE = () => {};
-
-/** r4 warm paper grain (a faint SVG noise tile over #FDFBF7). */
-const PAPER_NOISE =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .07 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>";
 
 /** 44x44 book button that opens the handbook (home In Progress cards and the building screen). */
 export function HandbookButton({ onClick }: { onClick: () => void }) {
@@ -157,7 +154,7 @@ export function Handbook({
         {page && (
           <div
             className="absolute bottom-[52px] left-4 right-[88px] top-1 z-raised rounded-2xl border border-[#EDE7DC]"
-            style={{ background: `#FDFBF7 url("${PAPER_NOISE}")` }}
+            style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
             onPointerUp={(e) => {
@@ -167,8 +164,9 @@ export function Handbook({
               if (Math.abs(dx) > 60) go(at + (dx < 0 ? 1 : -1));
             }}
           >
-            <span aria-hidden="true" className="pointer-events-none absolute -left-5 bottom-[18px] z-raised h-5 w-20 rotate-[38deg] bg-[#3FB7DA] opacity-50 [clip-path:polygon(0_8%,6%_0,12%_10%,18%_0,82%_0,88%_12%,94%_0,100%_10%,100%_92%,94%_100%,88%_88%,82%_100%,18%_100%,12%_90%,6%_100%,0_88%)]" data-washi="" />
-            <div className="h-full overflow-y-auto px-5 pb-10 pt-5">
+            <SpiralBinding />
+            <Washi />
+            <div className="h-full overflow-y-auto pb-10 pl-10 pr-5 pt-5">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >

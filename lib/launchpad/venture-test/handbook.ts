@@ -228,3 +228,28 @@ export function shortcutSampleAnswer(screen: CaptureScreen): LaunchpadAnswer | n
   }
   return fieldsAnswer(values);
 }
+
+export type MilestoneView = {
+  /** Finished silvers across the venture, and how many there are. */
+  done: number;
+  total: number;
+  /** The next silver to do, or null when the venture is finished. */
+  next: { level: number; floorName: string; silverTitle: string; newFloor: boolean } | null;
+};
+
+/** Milestone wrap-up numbers after a silver: "N of M steps done" and what is up next. */
+export function milestoneView(progress: VentureTestProgress, floors: readonly LaunchpadFloor[], level: number): MilestoneView {
+  const all = orderedSilvers(floors);
+  const done = all.filter(({ silver }) => isSilverDone(progress, silver)).length;
+  const ghost = handbookGhost(progress, floors);
+  return {
+    done,
+    total: all.length,
+    next: ghost ? { ...ghost, newFloor: ghost.level !== level } : null,
+  };
+}
+
+/** Placeholder part titles ("Bronze 1") never reach the screen: they show as "Part 1". */
+export function partLabel(title: string, i: number): string {
+  return /\b(bronze|silver|gold)\b/i.test(title) ? `Part ${i + 1}` : title;
+}

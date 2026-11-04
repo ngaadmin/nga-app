@@ -32,7 +32,10 @@ describe("Launchpad home In Progress tile", () => {
     expect(tile.textContent).not.toMatch(/L6|Level|Phase|Step|of 16/);
   });
 
-  it("the progress bar covers the whole business, with an accessible label", () => {
+  it("the progress bar covers the whole business, with an accessible label that follows the given total", () => {
+    const { unmount } = render(<LaunchpadHome inProgress={[{ ...L6, done: 5, total: 15 }]} onOpenVenture={() => {}} />);
+    expect(screen.getByRole("progressbar", { name: "5 of 15 milestones done" })).toBeTruthy();
+    unmount();
     render(<LaunchpadHome inProgress={[L6]} onOpenVenture={() => {}} />);
     const bar = screen.getByRole("progressbar", { name: "13 of 16 milestones done" });
     expect(bar.getAttribute("aria-valuenow")).toBe("13");
@@ -66,15 +69,16 @@ describe("Launchpad home In Progress tile", () => {
   it("the flow counts silvers done across the whole business out of the content's total", async () => {
     const payload = launchpadTestVentureSeed("dog-walking");
     const silvers = payload.floors.flatMap((f) => f.silvers);
-    const doneSilvers = silvers.slice(0, 3); // L1 (2 silvers) + l2-s1
-    expect(doneSilvers.at(-1)!.id).toBe("l2-s1");
+    // Every silver up to and including l2-s1, however many silvers L1 has.
+    const doneSilvers = silvers.slice(0, silvers.findIndex((s) => s.id === "l2-s1") + 1);
+    expect(doneSilvers.length).toBeGreaterThan(0);
     saveVentureTestProgress("dog-walking", {
       completedTaskIds: doneSilvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))),
       answers: {},
     });
     const ventures: Record<string, LaunchpadVentureView> = { "dog-walking": { ok: true, payload, versionId: "seed", source: "seed" } };
     render(<VentureFlow initialVentureId={null} ventureTitles={{ "dog-walking": "Dog walking" }} ventures={ventures} reset={false} />);
-    const bar = await screen.findByRole("progressbar", { name: `3 of ${silvers.length} milestones done` });
+    const bar = await screen.findByRole("progressbar", { name: `${doneSilvers.length} of ${silvers.length} milestones done` });
     expect(bar).toBeTruthy();
     const level2 = payload.floors[1]!.name;
     expect(document.querySelector("[data-tile-level-name]")?.textContent).toBe(level2);

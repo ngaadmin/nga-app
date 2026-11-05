@@ -65,12 +65,15 @@ test("deep links", async ({ page }, info) => {
     await step(t, `?level=${level} corridor: description and plaques`, async () => {
       await page.goto(url(`reset=1&level=${level}`));
       await expect(page.locator(corridorTitle)).toHaveText(new RegExp(`Level ${level}`), { timeout: 60_000 });
+      // Wait out the lift-door entry (~0.6s) so plaques and the outcome are visible.
+      await expect(page.getByRole("button", { name: /, (up next|locked)$/ }).first()).toBeVisible({ timeout: 15_000 });
+      await page.waitForTimeout(700);
       await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
       await expect(page.locator("body")).not.toContainText(/TBC/i);
       await expect(page.locator("body")).not.toContainText(/LEVEL \d+ GOAL/i);
       await expect(page.getByText(new RegExp(`^Level ${level}$`))).toBeVisible();
     });
-    await shot(t, `?level=${level} corridor`, page.locator(corridorTitle));
+    await shot(t, `?level=${level} corridor`, page.getByRole("button", { name: /, (up next|locked)$/ }).first());
 
     await step(t, `?level=${level} locked doors from a plaque`, async () => {
       // Prefer a locked plaque so every door reads Locked; else the up-next plaque

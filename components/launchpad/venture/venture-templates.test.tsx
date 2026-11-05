@@ -45,13 +45,47 @@ describe("floor template", () => {
     expect(Object.keys(LAUNCHPAD_FLOOR_TEMPLATES).sort()).toEqual([...LAUNCHPAD_FLOOR_TYPES].sort());
   });
 
-  it.each([1, 2, 4])("renders the gold on the wall and %i plaque(s)", (n) => {
-    renderFloor(n);
-    expect(screen.getByText("LEVEL 1 GOAL")).toBeTruthy();
+  it.each([2, 3, 4])("renders Level N (no GOAL) and %i plaque(s) without overlap classes", (n) => {
+    const { container } = renderFloor(n);
+    expect(screen.getByText("Level 1")).toBeTruthy();
+    expect(screen.queryByText(/^LEVEL \d+ GOAL$/i)).toBeNull();
     expect(screen.getByText("Know what type of business to start.")).toBeTruthy();
+    const underline = container.querySelector(".h-\\[3px\\].w-\\[120px\\]");
+    expect(underline?.className).toContain("bg-nga-secondary");
+    expect(underline?.className).not.toContain("bg-nga-accent");
     const plaques = screen.getAllByRole("button", { name: /^Plaque \d, / });
     expect(plaques).toHaveLength(n);
     expect(plaques[0]!.getAttribute("aria-label")).toBe("Plaque 1, up next");
+    expect(container.querySelector("[data-corridor-plaques]")?.getAttribute("data-plaque-count")).toBe(String(n));
+    expect(container.querySelector(".-translate-y-10")).toBeNull();
+  });
+
+  it.each([2, 3, 4])("level-done heading and %i plaques never use the overlap pull-up", (n) => {
+    const silvers = Array.from({ length: n }, (_, i) => ({
+      id: `s${i}`,
+      title: `Plaque ${i + 1}`,
+      state: "done" as const,
+    }));
+    const { container } = render(
+      <FloorTemplate
+        floorType="corridor"
+        level={1}
+        floorName="Vision and Goals"
+        goal="Know what type of business to start."
+        entering={false}
+        silvers={silvers}
+        complete={{ nextLevel: 2, onLift: noop }}
+        onBack={noop}
+        onOpenSilver={noop}
+      />,
+    );
+    expect(screen.getByText("Congratulations!")).toBeTruthy();
+    expect(screen.getByText("You've completed Level 1")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Go to Level 2" })).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /^Plaque \d, done$/ })).toHaveLength(n);
+    expect(container.querySelector(".-translate-y-10")).toBeNull();
+    expect(container.querySelector("[data-level-done='1']")).toBeTruthy();
+    expect(container.querySelector("[data-corridor-plaques]")?.className).not.toMatch(/-translate-y/);
   });
 });
 
@@ -68,6 +102,31 @@ describe("bronze doors", () => {
       />,
     );
     expect(screen.getAllByText(/^Door \d$/)).toHaveLength(n);
+  });
+
+  it("Pricing placeholder doors show the Final titles, all locked", () => {
+    const titles = [
+      "Know your cost",
+      "Research what competitors offer and what they charge",
+      "Set the price",
+      "Work out how many jobs cover your costs",
+    ];
+    render(
+      <BronzeDoors
+        level={2}
+        silverTitle="Pricing"
+        bronzes={titles.map((title, i) => ({ id: `p${i}`, title, state: "locked" as const }))}
+        lockedNote="These doors aren't open yet."
+        onBuilding={noop}
+        onCorridor={noop}
+        onOpenBronze={noop}
+      />,
+    );
+    for (const title of titles) expect(screen.getByText(title)).toBeTruthy();
+    expect(screen.getAllByText("Locked")).toHaveLength(4);
+    expect(screen.getByText("These doors aren't open yet.")).toBeTruthy();
+    expect(screen.queryByText(/TBC/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Know your cost/ })).toBeNull();
   });
 });
 

@@ -61,6 +61,51 @@ test("deep links", async ({ page }, info) => {
   });
   await shot(t, "?level=1", page.getByRole("button", { name: /Define the business/ }));
 
+  for (const level of [3, 4, 5, 6] as const) {
+    await step(t, `?level=${level} corridor: description and plaques`, async () => {
+      await page.goto(url(`reset=1&level=${level}`));
+      await expect(page.locator(corridorTitle)).toHaveText(new RegExp(`Level ${level}`), { timeout: 60_000 });
+      await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
+      await expect(page.locator("body")).not.toContainText(/TBC/i);
+      await expect(page.locator("body")).not.toContainText(/LEVEL \d+ GOAL/i);
+      await expect(page.getByText(new RegExp(`^Level ${level}$`))).toBeVisible();
+    });
+    await shot(t, `?level=${level} corridor`, page.locator(corridorTitle));
+
+    await step(t, `?level=${level} locked doors from a plaque`, async () => {
+      // Prefer a locked plaque so every door reads Locked; else the up-next plaque
+      // (sibling doors after the first still show Locked).
+      const lockedPlaque = page.getByRole("button", { name: /, locked$/ });
+      if (await lockedPlaque.count()) await lockedPlaque.first().click();
+      else await page.getByRole("button", { name: /, up next$/ }).first().click();
+      await expect(page.getByText("Locked").first()).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator("body")).not.toContainText(/TBC/i);
+    });
+    await shot(t, `?level=${level} locked doors`, page.getByText("Locked").first());
+    await page.getByRole("button", { name: new RegExp(`Level ${level} corridor`) }).click();
+  }
+
+  await step(t, "Pricing doors: real titles, all locked, no empty flow", async () => {
+    await page.goto(url("reset=1&complete=l2-s1"));
+    await expect(page.locator(corridorTitle)).toHaveText(/Level 2/, { timeout: 60_000 });
+    await page.getByRole("button", { name: /Pricing, up next/ }).click();
+    for (const title of [
+      "Know your cost",
+      "Research what competitors offer and what they charge",
+      "Set the price",
+      "Work out how many jobs cover your costs",
+    ]) {
+      await expect(page.getByText(title)).toBeVisible();
+    }
+    await expect(page.getByText("Locked")).toHaveCount(4);
+    await expect(page.getByText("These doors aren't open yet.")).toBeVisible();
+    await expect(page.locator("body")).not.toContainText(/TBC/i);
+    // No enterable Up next door
+    await expect(page.locator("main").getByRole("button", { name: /Up next/ })).toHaveCount(0);
+  });
+  await shot(t, "Pricing doors locked with Final titles", page.getByText("Know your cost"));
+
+
   await step(t, "?complete=l1-s1: Level 1 corridor with Set your goals up next", async () => {
     await page.goto(url("reset=1&complete=l1-s1"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 1 · Vision and Goals/, { timeout: 60_000 });

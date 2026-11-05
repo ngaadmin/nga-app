@@ -412,7 +412,6 @@ export function VentureFlow({
               onComeBack: firstOpen ? () => openTask(firstOpen, firstOpen.taskIndex) : undefined,
             };
           })}
-          note={!done && floor.silvers.some((s) => s.placeholder) ? "Plaque titles TBC" : undefined}
           complete={
             done
               ? {
@@ -431,7 +430,10 @@ export function VentureFlow({
       const floor = floorAt(floors, view.level);
       const silverIndex = floor.silvers.findIndex((s) => s.id === view.silverId);
       const silver = floor.silvers[silverIndex]!;
-      const open = silverStates(progress, floors, floor)[silverIndex] !== "locked";
+      // Pricing is structure-only: show real door titles, all locked — never an
+      // empty placeholder task flow. Other floors keep normal progress locking.
+      const pricingPlaceholder = silver.placeholder && silver.title === "Pricing";
+      const open = !pricingPlaceholder && silverStates(progress, floors, floor)[silverIndex] !== "locked";
       const states = bronzeStates(progress, silver, open);
       const wrapUp = silver.wrapUp;
       body = (
@@ -445,7 +447,7 @@ export function VentureFlow({
             state: states[i] ?? "locked",
             comeBack: open && bronzeHasOpenTask(progress, b),
           }))}
-          lockedNote={lockedDoorsNote(progress, floors, floor, silverIndex)}
+          lockedNote={pricingPlaceholder ? "These doors aren't open yet." : lockedDoorsNote(progress, floors, floor, silverIndex)}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           onOpenBronze={(bronzeId) => {

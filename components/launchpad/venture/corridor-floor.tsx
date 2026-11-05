@@ -8,7 +8,7 @@ import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 
-function Plaque({ label, state, onOpen, onComeBack }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void }) {
+function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void; /** Tighter padding when the level-done heading is above the plaques. */ compact?: boolean }) {
   const dot = state === "current" ? "#fff" : state === "done" ? VT.panel : VT.lockDot;
   const surface =
     state === "current"
@@ -47,7 +47,7 @@ function Plaque({ label, state, onOpen, onComeBack }: { label: string; state: No
       )}
     </>
   );
-  const cls = `relative mx-auto mb-[18px] block w-[236px] rounded-[10px] px-3 py-4 text-center ${surface}`;
+  const cls = `relative mx-auto block w-[236px] rounded-[10px] px-3 text-center ${compact ? "mb-2.5 py-3" : "mb-[18px] py-4"} ${surface}`;
   // Every plaque can be tapped. A locked plaque opens its doors read-only.
   const plaque = (
     <button
@@ -87,7 +87,7 @@ function Sparkle() {
 /** Level done on the lift wall: aqua "Congratulations!" with its swash and orange sparkles, then the level line. */
 function LevelDone({ level }: { level: number }) {
   return (
-    <div className="mt-[34px] flex flex-col items-center text-center" role="status" data-level-done={level}>
+    <div className="mt-4 flex flex-col items-center text-center" role="status" data-level-done={level}>
       <div className="flex items-center justify-center gap-1.5">
         <Sparkle />
         <span className={`inline-flex flex-col gap-0.5 text-[24px] leading-[1.2] text-[#0CC1E0] ${FREDOKA_CLASS}`}>
@@ -121,7 +121,14 @@ export type CorridorProps = {
 export function CorridorFloor(props: CorridorProps) {
   const { level, floorName, goal, silvers, entering, note, complete, onBack, onOpenSilver } = props;
   const plaques: ReactNode = silvers.map((s) => (
-    <Plaque key={s.id} label={neutralTitle(s.title)} state={s.state} onOpen={() => onOpenSilver(s.id)} onComeBack={s.onComeBack} />
+    <Plaque
+      key={s.id}
+      label={neutralTitle(s.title)}
+      state={s.state}
+      onOpen={() => onOpenSilver(s.id)}
+      onComeBack={s.onComeBack}
+      compact={!!complete}
+    />
   ));
   return (
     <section className="flex flex-1 flex-col" aria-labelledby="lp-corridor-title">
@@ -140,12 +147,19 @@ export function CorridorFloor(props: CorridorProps) {
             <LevelDone level={level} />
           ) : (
             <>
-            <p className="mt-[22px] font-heading text-[11px] font-bold tracking-[1.5px] text-nga-secondary">LEVEL {level} GOAL</p>
+            <p className="mt-[22px] font-heading text-[11px] font-bold tracking-[1.5px] text-nga-secondary">Level {level}</p>
             <p className="mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink">{goal}</p>
-            <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-accent" />
+            <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-secondary" />
             </>
           )}
-          <div className={`flex w-full flex-1 flex-col ${complete ? "-translate-y-10" : ""} justify-center ${entering ? styles.plaquesFadeIn : ""}`}>{plaques}</div>
+          {/* Stack from the heading; never pull plaques up over LevelDone (2/3/4 plaques). */}
+          <div
+            className={`flex w-full flex-col items-center ${complete ? "mt-3 shrink-0" : "mt-0 flex-1 justify-center"} ${entering ? styles.plaquesFadeIn : ""}`}
+            data-corridor-plaques=""
+            data-plaque-count={silvers.length}
+          >
+            {plaques}
+          </div>
         </div>
         {note && <p className="absolute inset-x-[26px] top-[478px] text-center text-xs text-[#8a9bb0]">{note}</p>}
         {complete?.onLift && complete.nextLevel !== null && (

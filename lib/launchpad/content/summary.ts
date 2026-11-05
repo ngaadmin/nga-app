@@ -97,6 +97,7 @@ export function filledSentence(
   let out = "";
   let pending = "";
   let any = false;
+  let skipped = false;
   for (const part of screen.parts) {
     if (part.kind === "text") pending += part.text;
     else if (part.kind === "carried") {
@@ -106,16 +107,21 @@ export function filledSentence(
       pending = "";
     } else {
       const field = fieldByName(screen, part.field);
-      const shown = field ? displayFieldValue(field, answer.values[part.field]) : "";
+      const raw = answer.values[part.field];
+      // A defaulted unit (weeks) reads as its default; it drops with an empty number before it.
+      const unitAfterSkip = skipped && part.field.endsWith("Unit");
+      const shown = field && !unitAfterSkip ? displayFieldValue(field, raw === undefined || raw === "" ? field.defaultValue : raw) : "";
       if (!shown) {
         // A required blank, or the leading blank (the goal itself), left empty: nothing to show.
-        if (!field?.optional || !any) return null;
+        if ((!field?.optional && !unitAfterSkip) || !any) return null;
         pending = "";
+        skipped = true;
         continue;
       }
       out += pending + shown;
       pending = "";
       any = true;
+      skipped = false;
     }
   }
   out += pending;

@@ -64,7 +64,12 @@ export type LaunchpadChecklistScreen = TaskScreenBase & {
 };
 
 /** One labelled choice in a picker. */
-export type LaunchpadPickerOption<Id extends string = string> = { id: Id; label: string };
+export type LaunchpadPickerOption<Id extends string = string> = {
+  id: Id;
+  label: string;
+  /** choice fields with `prefills`: the text this option drops into that field (row 8 "skill | success line"). */
+  prefill?: string;
+};
 
 /** Picker screens save into the learner's answer for `answerKey` (see lib/launchpad/content/identity.ts). */
 type PickerBase = TaskScreenBase & {
@@ -126,6 +131,8 @@ type CaptureBase = TaskScreenBase & {
   prompt: string;
   /** Optional how-to line under the prompt. */
   guidance?: string;
+  /** Workbook (handbook) section this answer shows under, e.g. "My why" (Final column Z). */
+  handbookLabel?: string;
 };
 
 /**
@@ -172,6 +179,15 @@ export type LaunchpadTextField = {
   /** choice: the options (a dropdown). */
   options?: readonly LaunchpadPickerOption[];
   optional?: boolean;
+  /** choice: the option id picked before the learner touches it (weeks); no empty "Choose" row. */
+  defaultValue?: string;
+  /**
+   * choice: the text field this pick fills with the option's `prefill`. A new
+   * pick swaps the text only while the learner has not typed their own.
+   */
+  prefills?: string;
+  /** text: a two-line box in the sentence (long success lines). */
+  multiline?: boolean;
 };
 
 /** A short-text sentence: fixed text, blanks, and carried-in values. */
@@ -222,6 +238,8 @@ export type LaunchpadGoalLoopScreen = TaskScreenBase & {
   context?: string;
   /** How-to line, shown with the context above the first goal. */
   guidance?: string;
+  /** Workbook (handbook) section the goal sentences show under ("My goals", Final column Z). */
+  handbookLabel?: string;
   orderFrom: string;
   skipRankItemIds: readonly string[];
   goals: readonly LaunchpadGoalLoopGoal[];

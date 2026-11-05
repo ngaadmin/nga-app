@@ -25,13 +25,13 @@ export function ChoiceCaptureScreen({ screen }: { screen: LaunchpadChoiceCapture
       {screen.context && <ScreenIntro context={screen.context} guidance={screen.guidance} />}
       <ScreenPrompt id={promptId}>{screen.prompt}</ScreenPrompt>
       {screen.guidance && !screen.context && <ScreenGuidance>{screen.guidance}</ScreenGuidance>}
-      <div role="group" aria-labelledby={promptId} className="mx-5 mb-4 mt-4 flex flex-col gap-2.5">
+      <div role="group" aria-labelledby={promptId} className="mx-5 mb-4 mt-4 flex flex-col gap-2.5 short:mb-2 short:mt-2.5 short:gap-1.5">
         {screen.options.map((o) => (
           <LessonChoiceButton
             key={o.id}
             selected={selected.includes(o.id)}
             onClick={() => save(selectionAnswer(toggleChoice(screen.mode, selected, o.id)))}
-            className="!min-h-[54px] !text-[16px]"
+            className="!min-h-[54px] !text-[16px] short:!min-h-[44px] short:!py-1"
           >
             {o.label}
           </LessonChoiceButton>

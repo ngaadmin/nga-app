@@ -6,6 +6,11 @@ import { sanitizeFieldInput } from "@/lib/launchpad/content/fields";
 const BOX =
   "rounded-xl bg-white text-[16px] font-medium text-nga-ink shadow-[inset_0_0_0_1.5px_#C5D4EA] outline-none placeholder:font-normal placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_2px_#3FB7DA] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF] disabled:shadow-[inset_0_0_0_1.5px_#E5E7EB]";
 
+/** A dropdown whose options are phrases (row 7 benefits, row 8 skills) takes the full line so the pick is readable. */
+function wideChoice(field: LaunchpadTextField): boolean {
+  return (field.options ?? []).some((o) => o.label.length > 12);
+}
+
 /** Rough inline width for a goal blank, in ch. */
 function inlineWidth(field: LaunchpadTextField): string {
   // Wide enough for the largest value and the bracketed hint ("[1–99]"), so the placeholder is not clipped.
@@ -55,12 +60,14 @@ export function FieldControl({
         <select
           id={id}
           aria-label={field.label}
-          value={shown}
+          value={shown || field.defaultValue || ""}
           disabled={disabled}
           onChange={(e) => onChange(sanitizeFieldInput(field, e.target.value))}
-          className={`${BOX} ${block ? "h-[48px] w-full px-3" : "mx-0.5 h-[38px] px-2 align-middle"} appearance-auto`}
+          className={`${BOX} ${block || wideChoice(field) ? "my-1 h-[42px] w-full px-2" : "mx-0.5 h-[38px] max-w-full px-2 align-middle"} appearance-auto`}
+          data-field={field.name}
         >
-          <option value="">{field.hint ? `[${field.hint}]` : "Choose"}</option>
+          {/* A defaulted dropdown (weeks/months) never shows an empty "Choose" row. */}
+          {!field.defaultValue && <option value="">{field.hint ? `[${field.hint}]` : "Choose"}</option>}
           {(field.options ?? []).map((o) => (
             <option key={o.id} value={o.id}>
               {o.label}
@@ -86,7 +93,7 @@ export function FieldControl({
         />
       );
     case "text":
-      if (block) {
+      if (block || field.multiline) {
         return (
           <textarea
             id={id}
@@ -94,6 +101,7 @@ export function FieldControl({
             placeholder={placeholder}
             value={shown}
             rows={field.maxLength && field.maxLength > 120 ? 3 : 2}
+            data-field={field.name}
             maxLength={field.maxLength}
             disabled={disabled}
             onChange={(e) => onChange(sanitizeFieldInput(field, e.target.value))}

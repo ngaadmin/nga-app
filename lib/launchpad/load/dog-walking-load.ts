@@ -49,6 +49,10 @@ export const LIMITS = {
   moneyMax: 9_999_999,
   timeframeMax: 99,
   goalTextMax: 120,
+  /** V6: what the money goal is saving for. */
+  savingForMax: 60,
+  /** V7: Help others customer count. */
+  customerCountMax: 99,
   otherGoalTextMax: 120,
   paragraphTextMax: 200,
   shortParagraphTextMax: 120,
@@ -87,7 +91,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D13", topic: "Text caps", applied: `Goal text up to ${LIMITS.goalTextMax} characters, the added goal ${LIMITS.otherGoalTextMax}, the service description ${LIMITS.paragraphTextMax}, availability and specific interest ${LIMITS.shortParagraphTextMax}.`, status: "build-assumption", rows: [7, 8, 11, 14, 15] },
   { id: "D14", topic: "Minimum picks", applied: "Pick what kind of business you'll run needs at least one pick before Next.", status: "build-assumption", rows: [2] },
   { id: "D15", topic: "Number caps", applied: `Timeframe number 1 to ${LIMITS.timeframeMax}, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has no timeframe (Cath, 4 Nov 8:50pm); people asked 1 to ${LIMITS.peopleAskedMax} (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).`, status: "build-assumption", rows: [6, 7, 8, 11, 15] },
-  { id: "D16", topic: "Ranking control", applied: "Up and down buttons move a reason; no drag yet. G3 says “Drag the reasons into order”; shown as “Use the arrows to put the reasons in order”.", status: "build-assumption", rows: [3] },
+  { id: "D16", topic: "Ranking control", applied: "AC3 (Cath, 5 Nov): drag and drop replaces the up and down arrows. Drag a reason by its grip (mouse or touch) to reorder it or move it below the line; with the keyboard, focus a reason and use the up and down arrow keys. G3 \u201cDrag the reasons into order\u201d is shown as written.", status: "decided-cath", rows: [3] },
   { id: "D17", topic: "Be my own boss check-in", applied: "The six-month check-in in I9 is not built.", status: "build-assumption", rows: [9] },
   { id: "D18", topic: "Wrap-up copy and art", applied: "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.", status: "build-assumption", rows: [12, 16] },
   { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell (row 14) is left off the identity page since identity moved to Level 1 (D25) and shows on the Level 2 page. A section with no answer is hidden.", status: "build-assumption", rows: [19] },
@@ -96,10 +100,11 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D25", topic: "Identity in Level 1", applied: "Superseded by D26/D27: The Brand is l1-s3 after Set your goals (l1-s2). Answer key stays l2-s2-identity; seedSilverId stays l2-s2.", status: "decided-cath", rows: [12, 13, 14] },
   { id: "D22", topic: "Come back later", applied: `Sample, pending tracker column: the tracker has no "Come back later" column yet, so a TEST override turns it on for Set your goals (row 5 → task l1-s2-b1-t1) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.`, status: "sample-pending-tracker-column", rows: [5, 15] },
   { id: "D26", topic: "Module 1 three silvers + floors 1–6", applied: "Cath 5 Nov: Module 1 = Final rows 2–14 as three silvers (Define the business; Set your goals; The Brand). Handbook column (AB) is TEST validation only — never built. Building wires levels 1–6 (Vision and Goals, Planning, Getting Ready, Sales, Delivery, Growing). Level 7 Budgeting is the rooftop (future, not a floor). L2 keeps current Decide what to sell + demand screens working; Pricing and L3–6 are structure/placeholder doors with Final titles (Revised order where Final D/E say so).", status: "decided-cath", rows: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
-  { id: "D27", topic: "The Brand name-then-logo", applied: "Final D/E + Revised: Name the business is step 1, Design the logo is step 2 under 3 The Brand (l1-s3). Seed locked pickers reorder to match; answer key l2-s2-identity unchanged.", status: "decided-cath", rows: [12, 13] },
+  { id: "D27", topic: "The Brand logo-then-name", applied: "AC13 (Cath, 5 Nov): Design the logo comes first and Name the business second, so the name color can use the logo color. The sheet's D12/D13/E12/E13 still say name first; AC13 wins. Bronze ids keep their seed numbers (logo l1-s3-b2, name l1-s3-b1) so saved answers stay put; only the order changes. Answer key l2-s2-identity unchanged.", status: "decided-cath", rows: [12, 13] },
   { id: "D28", topic: "Level outcome statements", applied: "Storybird DRAFT outcomes (5 Nov) live in service-level-outcomes.ts as swappable data (SERVICE_LEVEL_OUTCOMES_DRAFT) feeding floor.gold.title. Not yet approved by Cath. Module 4 name is Sales. Delivery has a real draft (not a placeholder string).", status: "default-pending-cath", rows: [] },
   { id: "D29", topic: "Offer option Dog sitting", applied: "Final Option 3 is Dog sitting (was Bookings in an older tracker layout). Loader reads Option N columns from the Final sheet.", status: "decided-cath", rows: [2] },
-  { id: "D30", topic: "No Define wrap-up", applied: "Final has no silver wrap for Define the business or Set your goals. Level workbook is The Brand identity wrap-up (row 14 handbook). No gold-completion screen — lift shows Congratulations after the workbook.", status: "decided-cath", rows: [14] },
+  { id: "D30", topic: "No silver wrap-ups", applied: "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) a short silver-done card shows (Nice work! [Silver] is done., See my handbook / Keep going); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).", status: "decided-cath", rows: [11, 14] },
+  { id: "D31", topic: "Goal dropdowns", applied: "AC5 / J7 / J8: Help others picks one customer benefit from N7 to Q7 (four sheet options, none invented); Learn new skills picks one skill from N8 to R8 (text before the bar) and prefills the success line (text after the bar), which swaps on a new pick until the learner types their own. Options keep the sheet's lower case because they sit mid-sentence.", status: "decided-cath", rows: [7, 8] },
 ];
 
 /**
@@ -200,6 +205,8 @@ function timeframeFields(optional = false): LaunchpadTextField[] {
         { id: "weeks", label: "weeks" },
         { id: "months", label: "months" },
       ],
+      // AC5 / J5: pre-set to weeks, never a blank "choose"; the learner can switch to months.
+      defaultValue: "weeks",
       ...(optional ? { optional } : {}),
     },
   ];
@@ -295,6 +302,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     answerKey: KEYS.offer,
     prompt: rOffer.question,
     options: offerOptions,
+    ...(rOffer.workbookSection ? { handbookLabel: rOffer.workbookSection } : {}),
   };
 
   // Bronze 2: why (rank-order with not applicable).
@@ -304,8 +312,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   if (whyItems.length !== 4) issue(ctx, rWhy.row, `Expected four why items, read ${whyItems.length}.`);
   // The quoted toggle name, e.g. 'not applicable' (an apostrophe in "doesn't" is not a quote).
   const naLabel = sentenceCase(/(?:^|\s)'([^']+)'/.exec(rWhy.guidance)?.[1] ?? NOT_APPLICABLE);
-  // D16: no drag yet, so the shown how-to line names the arrows.
-  const whyRow: TrackerRow = { ...rWhy, guidance: rWhy.guidance.replace(/^Drag the reasons into order/, "Use the arrows to put the reasons in order") };
+  // D16: drag and drop (AC3), so G3's "Drag the reasons into order" shows as written.
+  const whyRow: TrackerRow = rWhy;
   const b2 = "l1-s1-b2";
   const whyScreen: LaunchpadRankOrderScreen = {
     id: `${b2}-t1-s2`,
@@ -314,6 +322,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     prompt: rWhy.question,
     items: whyItems,
     notApplicableLabel: naLabel,
+    ...(rWhy.workbookSection ? { handbookLabel: rWhy.workbookSection } : {}),
   };
 
   // Bronze 3: cause (single select).
@@ -327,6 +336,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     answerKey: KEYS.cause,
     prompt: rCause.question,
     options: causeOptions,
+    ...(rCause.workbookSection ? { handbookLabel: rCause.workbookSection } : {}),
   };
 
   // Bronze 4: the goal loop.
@@ -354,7 +364,9 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     let answer: LoadAnswerSpec;
     let validation: string[] = [];
     let options: { id: string; label: string }[] | undefined;
-    const hints = slotHints(row.question);
+    // Row 8 ends with a worked example for the writer ("\n\nExample: ..."); only the sentence is built.
+    const question = row.question.replace(/\s*Example:[\s\S]*$/, "").trim();
+    const hints = slotHints(question);
     expectInput(ctx, row, ["single-choice", "fill-in"]);
     // The Input type column wins; without it a "Single select:" Data Input makes a choice goal.
     if (row.inputType ? row.inputType === "single-choice" : /^Single select:/.test(row.dataInput)) {
@@ -377,12 +389,14 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
       let slots: SlotUse[];
       let position: "ranked" | "after-ranked" = "ranked";
       if (item === "make-money") {
+        // I6/V6: amount, currency, timeframe, then what they're saving for (free text, max 60, required).
         fields = [
           { name: "amount", input: "integer", label: "Amount", hint: hints[0], min: 1, max: LIMITS.moneyMax },
           { name: "currency", input: "currency", label: "Currency" },
           ...timeframeFields(),
+          { name: "savingFor", input: "text", label: "Saving for", hint: hints[4], maxLength: LIMITS.savingForMax },
         ];
-        slots = [{ field: "amount" }, { field: "currency" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }];
+        slots = [{ field: "amount" }, { field: "currency" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }, { field: "savingFor" }];
         flags.push("D2", "D15");
       } else if (causeGoal) {
         fields = [{ name: "donatePercent", input: "integer", label: "Percent", hint: hints[0], min: 1, max: 100 }];
@@ -390,15 +404,39 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         feeds.push({ answerKey: KEYS.cause, use: "cause area carried into the sentence" });
         flags.push("D11");
         position = "after-ranked";
+      } else if (item === "help-others") {
+        // I7/V7: customer count 1–99 + one benefit from N7–Q7 (lower case, it sits mid-sentence). No timeframe.
+        const benefits = (row.options ?? []).map((o) => ({ id: kebab(o), label: o.trim() }));
+        if (benefits.length < 2) issue(ctx, row.row, "Help others has no benefit options (N7 to Q7).");
+        fields = [
+          { name: "customerCount", input: "integer", label: "Number of customers", hint: hints[0], min: 1, max: LIMITS.customerCountMax },
+          { name: "benefit", input: "choice", label: "What your customers get", hint: "pick one", options: benefits },
+        ];
+        slots = [{ field: "customerCount" }, { field: "benefit" }];
+        flags.push("D15", "D31");
+      } else if (item === "learn-new-skills") {
+        // I8/J8/V8: skill pick (text before the bar in N8–R8), success line prefilled from the text after the bar, then the timeframe.
+        const skills = (row.options ?? []).map((o) => {
+          const [label, line] = o.split("|").map((p) => p.trim());
+          if (!label || !line) issue(ctx, row.row, `Skill option "${o}" is not "skill | success line".`);
+          return { id: kebab(label ?? o), label: label ?? o, ...(line ? { prefill: line } : {}) };
+        });
+        if (skills.length < 2) issue(ctx, row.row, "Learn new skills has no skill options (N8 to R8).");
+        fields = [
+          { name: "skill", input: "choice", label: "Skill", hint: "pick one", options: skills, prefills: "achievement" },
+          { name: "achievement", input: "text", label: "I'll know I've done it when I can", hint: "pick a skill first", maxLength: LIMITS.goalTextMax, multiline: true },
+          ...timeframeFields(),
+        ];
+        slots = [{ field: "skill" }, { field: "achievement" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }];
+        flags.push("D13", "D15", "D31");
       } else {
-        const name = item === "help-others" ? "benefit" : item === "learn-new-skills" ? "skill" : kebab(title).replace(/-./g, (m) => m[1]!.toUpperCase());
-        // A goal sentence with one blank has no duration (Help others, Cath 4 Nov 8:50pm: H7/U7).
+        const name = kebab(title).replace(/-./g, (m) => m[1]!.toUpperCase());
         const timed = hints.length > 1;
         fields = [{ name, input: "text", label: sentenceCase(hints[0] ?? name), hint: hints[0], maxLength: LIMITS.goalTextMax }, ...(timed ? timeframeFields() : [])];
         slots = timed ? [{ field: name }, { field: "timeframeNumber" }, { field: "timeframeUnit" }] : [{ field: name }];
         flags.push("D13", ...(timed ? ["D15"] : []));
       }
-      const { prompt, parts } = sentenceParts(ctx, row, row.question, slots);
+      const { prompt, parts } = sentenceParts(ctx, row, question, slots);
       screen = {
         id: sid,
         type: "short-text",
@@ -445,6 +483,8 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     : rOther.question.replace(/\[free text\]\.?/, "[free text] in [number] [weeks/months].");
   // One inline sentence: "My goal is to [text] in [1–99] [weeks/months]." Text and duration optional, no number (Cath, 4 Nov 8:54pm; tracker I11/U11).
   const otherSentence = sentenceParts(ctx, rOther, otherQuestion, [{ field: "goalText" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }]);
+  // The Optional tag sits by the heading, so I11's "(optional)" is not repeated in the prompt.
+  if (otherSentence.prompt) otherSentence.prompt = otherSentence.prompt.replace(/\s*\(optional\)/i, "").trim();
   const otherScreen: LaunchpadShortTextScreen = {
     id: `${b4}-t1-goal-other`,
     type: "short-text",
@@ -485,6 +525,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     type: "goal-loop",
     ...(rSeq.context ? { context: rSeq.context } : {}),
     guidance: GOALS_GUIDANCE,
+    ...(goalRows.find((r) => r.workbookSection)?.workbookSection ? { handbookLabel: goalRows.find((r) => r.workbookSection)!.workbookSection } : {}),
     orderFrom: KEYS.why,
     skipRankItemIds: skip,
     goals,
@@ -856,8 +897,8 @@ function identity(ctx: Ctx, rows: readonly TrackerRow[], visionTemplateFromHandb
     sheetLabel: rName.silver,
     build: "locked",
     bronzes: [],
-    // D27: name first (b1), logo second (b2) — matches seed bronze order after D27 reorder.
-    lockedRows: [locked(rName, `${ID_SILVER}-b1-t1`, "name-picker"), locked(rLogo, `${ID_SILVER}-b2-t1`, "logo-picker")],
+    // D27 / AC13: logo first (seed id b2), then name (seed id b1), matching the seed bronze order.
+    lockedRows: [locked(rLogo, `${ID_SILVER}-b2-t1`, "logo-picker"), locked(rName, `${ID_SILVER}-b1-t1`, "name-picker")],
     wrapUp: {
       ...locked(rIdWrap, `${ID_SILVER}-wrap`, "identity-wrap-up"),
       feeds: [

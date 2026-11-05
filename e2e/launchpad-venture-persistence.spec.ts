@@ -22,13 +22,19 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await main.getByRole("button", { name: "Grooming", exact: true }).click();
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Find the why/ }).click();
-    await main.getByRole("button", { name: "Move Learn new skills up" }).click();
+    // AC3: keyboard fallback on the drag list (focus a reason, Arrow Up).
+    await main.locator("[data-rank-item='learn-new-skills']").focus();
+    await page.keyboard.press("ArrowUp");
+    await expect(main.locator('ol[aria-label="Your ranking"] [data-rank-item]').nth(1)).toContainText("Learn new skills");
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Know your impact/ }).click();
     await main.getByRole("button", { name: "Older people", exact: true }).click();
     await main.getByRole("button", { name: "Finish ›" }).click();
+    // AC14: the after-step message, then Keep going to the corridor.
+    await page.locator('[data-silver-done="l1-s1"] [data-keep-going]').click();
+    await page.getByRole("button", { name: /Set your goals, up next/ }).click();
     await main.getByRole("button", { name: /Set your goals/ }).click();
-    // Step 1 is goal 1 (no separate intro page).
+    // Step 1 is goal 1 (goals follow the ranking, so Make money).
     await expect(main).toContainText("Make money");
     await main.getByLabel("Amount").fill("250");
   });
@@ -48,12 +54,20 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await page.getByRole("button", { name: /Define the business/ }).click();
     for (const d of ["Pick what kind of business you'll run", "Find the why", "Know your impact"])
       await expect(main.getByRole("button", { name: new RegExp(d) })).toContainText("Done");
-    await expect(main.getByRole("button", { name: /Set your goals/ })).toContainText("Up next");
     await main.getByRole("button", { name: /Pick what kind of business you'll run/ }).click();
     await expect(main.getByRole("button", { name: "Grooming", exact: true })).toHaveAttribute("aria-pressed", "true");
     await main.getByRole("button", { name: "Finish ›" }).click();
+    // Finishing a step you're reviewing returns to the Level 1 corridor.
+    await page.getByRole("button", { name: /Define the business/ }).click();
+    await main.getByRole("button", { name: /Find the why/ }).click();
+    await expect(main.locator('ol[aria-label="Your ranking"] [data-rank-item]').nth(1)).toContainText("Learn new skills");
+  });
+  await step(t, "Set your goals keeps goal 1's half-filled answer", async () => {
+    await page.goto(ROUTE);
+    await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();
+    await main.getByRole("button", { name: "Go to Level 1" }).click();
+    await page.getByRole("button", { name: /Set your goals, up next/ }).click();
     await main.getByRole("button", { name: /Set your goals/ }).click();
-    // Step 1 is goal 1 (no separate intro page).
     await expect(main).toContainText("Goal 1 of 6", { ignoreCase: true });
     await expect(main).toContainText("Make money");
     await expect(main.getByLabel("Amount")).toHaveValue(/250/);

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import type { LaunchpadShortTextScreen, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { fieldsAnswer, fieldsOf } from "@/lib/launchpad/content/answers";
-import { fieldByName } from "@/lib/launchpad/content/fields";
+import { applyFieldChange, fieldByName, withFieldDefaults } from "@/lib/launchpad/content/fields";
 import { selectionLabels, summaryCatalog } from "@/lib/launchpad/content/summary";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
@@ -45,8 +45,9 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
   // Every save carries the currency too. The effect above saves it after the
   // first paint; a blank typed before that re-render would otherwise save the
   // stale values without it, leaving the chip at "—" and Next stuck off.
+  // Defaults (weeks) save with the first edit; a skill pick may fill its success line.
   const setValue = (name: string, v: string | number) =>
-    save(fieldsAnswer({ ...withCurrency(values, currencyField), [name]: v }, na));
+    save(fieldsAnswer(applyFieldChange(screen.fields, withFieldDefaults(screen.fields, withCurrency(values, currencyField)), name, v), na));
   const catalog = summaryCatalog(floors);
   const prefix = screen.id;
   const block = screen.mode === "paragraph";

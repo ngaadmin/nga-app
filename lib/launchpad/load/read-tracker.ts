@@ -71,6 +71,8 @@ export type TrackerRow = {
   options?: string[];
   /** "Input type" column. Undefined when absent or blank. */
   inputType?: TrackerInputType;
+  /** Final column Z: the workbook (handbook) section this row's answer shows under, e.g. "My goals". */
+  workbookSection?: string;
   /** "Come back later" column (Yes/No). Undefined when the column is absent or the cell blank. */
   comeBackLater?: boolean;
 };

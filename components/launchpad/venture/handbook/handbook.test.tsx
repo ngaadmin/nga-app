@@ -74,13 +74,14 @@ describe("handbook pages", () => {
   it("makes one page per completed silver in building order, the identity silver rendering the saved answer", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
     // Page 1 is the cover (logo, name, vision), then one page per silver; identity is Level 1's third (D26/D27).
-    // through(l2-s1) completes Define + Goals + Brand + product. Define/Goals have no wrap → placeholder.
+    // through(l2-s1) completes Define + Goals + Brand + product. AC14: Define and Goals get real
+    // workbook pages built from the sheet's column Z sections (no placeholder).
     expect(pages.map((p) => p.silver.id)).toEqual(["l1-s3", "l1-s1", "l1-s2", "l1-s3", "l2-s1"]);
-    expect(pages.map((p) => p.kind)).toEqual(["cover", "placeholder", "placeholder", "identity", "summary"]);
+    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "summary", "identity", "summary"]);
     expect(pages[1]!.bronzeTitles).toEqual(SILVERS[0]!.bronzes.map((b) => b.title));
     expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4, 5]);
     expect(pages[0]).toMatchObject({ level: 1, kind: "cover" });
-    expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder").map((p) => p.level)[0]).toBe(1);
+    expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder" && p.level === 1)).toEqual([]);
     expect(pages[3]).toMatchObject({ level: 1, floorName: FLOORS[0]!.name, silverNumber: 3, done: true });
     expect(pages[4]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 1, done: true });
   });
@@ -184,6 +185,14 @@ function Harness({ entry, initial, onSave }: { entry: "home" | "building"; initi
   );
 }
 
+const GOAL_SCREENS = FLOORS[0]!.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens)));
+const goalField = (key: string, name: string) =>
+  GOAL_SCREENS.flatMap((sc) => (sc.type === "goal-loop" ? sc.goals.map((g) => g.screen) : []))
+    .flatMap((g) => (g.type === "short-text" && g.answerKey === key ? g.fields : []))
+    .find((f) => f.name === name)!;
+const GOAL_BENEFIT = goalField("l1-goal-help-others", "benefit").options![0]!.id;
+const SKILL_PREFILL = goalField("l1-goal-learn-new-skills", "skill").options![0]!.prefill!;
+
 describe("<Handbook>", () => {
   it("from home: opens at the latest (identity) page, read-only, with no Edit button", () => {
     render(<Harness entry="home" initial={FULL} />);
@@ -276,11 +285,15 @@ describe("<Handbook>", () => {
     expect(tab(/^Level 2.*not earned yet/).className).not.toContain("outline-[#FFA503]");
   });
 
-  it("summary pages show the wrap-up sections from saved answers, with nothing to edit here", () => {
+  it("summary pages show the sections from saved answers; read-only from home, pencils from the building (AC14: no wrap-ups)", () => {
+    render(<Harness entry="home" initial={FULL_L2} />);
+    const home = document.querySelector("[data-handbook-page]") as HTMLElement;
+    expect(home.querySelectorAll("[data-edit-identity], [data-edit-section], button")).toHaveLength(0);
+    cleanup();
     render(<Harness entry="building" initial={FULL_L2} />);
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
-    expect(page.querySelectorAll("[data-edit-identity], [data-edit-section], button")).toHaveLength(0);
+    expect(page.querySelectorAll("[data-pencil]").length).toBe(3);
     expect(within(page).getByRole("heading", { name: FLOORS[1]!.silvers[0]!.title })).toBeTruthy();
     expect(within(page).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["What I am selling", "When", "Who might want it"]);
     expect(page.textContent).toContain("Short walks for small dogs");
@@ -301,6 +314,42 @@ describe("<Handbook>", () => {
     const silver = FLOORS[2]!.silvers[0]!;
     expect(within(l3).getByRole("heading", { name: silver.title })).toBeTruthy();
     expect(within(l3).getAllByRole("listitem").map((li) => li.textContent)).toEqual(silver.bronzes.map((b, i) => partLabel(b.title, i)));
+  });
+
+  it("AA6 to AA8: the goals page edits the skill pick inline, swapping the success line until the learner types", () => {
+    const onSave = vi.fn();
+    const goals = [
+      ["l1-goal-make-money", fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 8, timeframeUnit: "weeks", savingFor: "a bike" })],
+      ["l1-goal-help-others", fieldsAnswer({ customerCount: 5, benefit: GOAL_BENEFIT })],
+      ["l1-goal-learn-new-skills", fieldsAnswer({ skill: "talking-to-customers", achievement: SKILL_PREFILL, timeframeNumber: 6, timeframeUnit: "weeks" })],
+    ] as const;
+    const initial = goals.reduce<VentureTestProgress>((p, [k, a]) => setProgressAnswer(p, k, a), through("l1-s2"));
+    render(<Harness entry="building" initial={initial} onSave={onSave} />);
+    const page = document.querySelector("[data-handbook-page]") as HTMLElement;
+    expect(page.getAttribute("data-handbook-page")).toBe("l1-s2");
+    const pencils = page.querySelectorAll<HTMLButtonElement>("[data-pencil]");
+    expect(pencils.length).toBe(1);
+    fireEvent.click(pencils[0]!);
+    // Only the three goals column AA marks editable offer an Edit pick.
+    const picks = Array.from(page.querySelectorAll<HTMLButtonElement>("[data-pencil]")).slice(1);
+    expect(picks.map((b) => b.closest("[data-summary-line]")!.getAttribute("data-summary-line"))).toEqual([
+      "l1-goal-make-money",
+      "l1-goal-help-others",
+      "l1-goal-learn-new-skills",
+    ]);
+    fireEvent.click(picks[2]!);
+    const editor = page.querySelector("[data-inline-editor='l1-goal-learn-new-skills']") as HTMLElement;
+    const skill = within(editor).getByRole("combobox") as HTMLSelectElement;
+    const achievement = editor.querySelector("textarea, input[type='text']") as HTMLInputElement;
+    fireEvent.change(skill, { target: { value: "managing-my-money" } });
+    expect(achievement.value).toBe("track every dollar coming in and going out of my business");
+    fireEvent.change(achievement, { target: { value: "TEST my own words" } });
+    fireEvent.change(skill, { target: { value: "solving-problems" } });
+    expect(achievement.value).toBe("TEST my own words");
+    fireEvent.click(within(editor).getByRole("button", { name: "Save" }));
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(page.textContent).toContain("TEST my own words");
+    expect(page.querySelector("[data-inline-editor]")).toBeNull();
   });
 
   it("from the building: the identity page has an Edit button and edits write back to the saved answer", () => {

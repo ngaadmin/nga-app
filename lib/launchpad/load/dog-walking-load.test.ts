@@ -92,7 +92,7 @@ describe("dog walking load reader (Final framework Module 1 + tracker L2)", () =
     expect(loop.skipRankItemIds).toEqual([]);
     const help = loop.goals.find((g) => g.rankItemId === "help-others")!;
     if (help.screen.type !== "short-text") throw new Error("expected short-text");
-    expect(help.screen.fields.map((f) => f.name)).toEqual(["benefit"]);
+    expect(help.screen.fields.map((f) => f.name)).toEqual(["customerCount", "benefit"]);
     for (const g of loop.goals) {
       expect((g.screen as { notApplicableLabel?: string }).notApplicableLabel).toBeUndefined();
       if (g.screen.type !== "short-text") continue;

@@ -28,12 +28,12 @@ import type { LaunchpadNamePickerScreen } from "@/lib/launchpad/content/types";
 afterEach(cleanup);
 
 const SEED = launchpadTestVentureSeed("dog-walking");
-// D26/D27: The Brand is l1-s3 (name then logo).
+// D26/D27: The Brand is l1-s3 (AC12/13: logo then name).
 const IDENTITY: LaunchpadSilver = SEED.floors[0]!.silvers.find((s) => s.wrapUp?.type === "identity-wrap-up")!;
 const SCREENS = IDENTITY.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens));
 const SWATCHES = ["#1D3F9A", "#3FB7DA", "#FFA503", "#BAC593"];
-const NAME_SCREENS = SCREENS.slice(0, 3) as LaunchpadNamePickerScreen[];
-const LOGO_SCREENS = SCREENS.slice(3) as LaunchpadLogoPickerScreen[];
+const LOGO_SCREENS = SCREENS.slice(0, 3) as LaunchpadLogoPickerScreen[];
+const NAME_SCREENS = SCREENS.slice(3) as LaunchpadNamePickerScreen[];
 
 const FULL: BusinessIdentityAnswer = {
   kind: "business-identity",
@@ -60,17 +60,17 @@ const identityScreens = (p: any) => p.floors[0].silvers.find((s: any) => s.wrapU
 
 describe("The Brand seed (D26/D27)", () => {
   it("has two picker bronzes of one page each, six steps, all saving to one answer, plus the wrap-up", () => {
-    expect(IDENTITY.bronzes.map((b) => b.title)).toEqual(["Name your business", "Design your logo"]);
+    expect(IDENTITY.bronzes.map((b) => b.title)).toEqual(["Design your logo", "Name your business"]);
     const tasks = IDENTITY.bronzes.flatMap((b) => b.tasks);
-    expect(tasks.map((t) => t.ctaLabel)).toEqual(["Save to my workbook", "Continue"]);
-    expect(tasks.map((t) => identityTaskKind(t.screens))).toEqual(["name", "logo"]);
+    expect(tasks.map((t) => t.ctaLabel)).toEqual(["Continue", "Save to my workbook"]);
+    expect(tasks.map((t) => identityTaskKind(t.screens))).toEqual(["logo", "name"]);
     expect(SCREENS.map((s) => `${s.type}:${"step" in s ? s.step : ""}`)).toEqual([
-      "name-picker:name",
-      "name-picker:font",
-      "name-picker:nameColor",
       "logo-picker:shape",
       "logo-picker:color",
       "logo-picker:icon",
+      "name-picker:name",
+      "name-picker:font",
+      "name-picker:nameColor",
     ]);
     expect(SCREENS.every((s) => "answerKey" in s && s.answerKey === IDENTITY_ANSWER_KEY)).toBe(true);
     expect(IDENTITY.wrapUp).toMatchObject({ type: "identity-wrap-up", answerKey: IDENTITY_ANSWER_KEY, placeholder: true });
@@ -90,7 +90,7 @@ describe("The Brand seed (D26/D27)", () => {
   });
 
   it("picks the icon set by venture, falling back to dog walking", () => {
-    const icon = SCREENS[5] as Extract<LaunchpadLogoPickerScreen, { step: "icon" }>;
+    const icon = SCREENS[2] as Extract<LaunchpadLogoPickerScreen, { step: "icon" }>;
     expect(iconSetFor(icon, "dog-walking").map((o) => o.id)).toEqual(["paw", "bone", "dog-face"]);
     expect(iconSetFor(icon, "friendship-bracelets").map((o) => o.id)).toEqual(["bead-strand", "knot", "heart-loop"]);
     expect(iconSetFor(icon, "lemonade-stand").map((o) => o.id)).toEqual(["paw", "bone", "dog-face"]);
@@ -104,31 +104,31 @@ describe("picker payload validation", () => {
 
   it("rejects a bad swatch hex, unknown shape, icon, font or name color", () => {
     let p = mutable();
-    identityScreens(p)[4].options[0].hex = "navy";
+    identityScreens(p)[1].options[0].hex = "navy";
     expect(reason(p)).toMatch(/hex/);
     p = mutable();
-    identityScreens(p)[3].options[0].id = "triangle";
+    identityScreens(p)[0].options[0].id = "triangle";
     expect(reason(p)).toMatch(/unknown id triangle/);
     p = mutable();
-    identityScreens(p)[5].iconSets["dog-walking"][0].id = "rocket";
+    identityScreens(p)[2].iconSets["dog-walking"][0].id = "rocket";
     expect(reason(p)).toMatch(/unknown id rocket/);
     p = mutable();
-    identityScreens(p)[1].options[0].id = "comic-sans";
+    identityScreens(p)[4].options[0].id = "comic-sans";
     expect(reason(p)).toMatch(/unknown id comic-sans/);
     p = mutable();
-    identityScreens(p)[2].options[1].id = "gold";
+    identityScreens(p)[5].options[1].id = "gold";
     expect(reason(p)).toMatch(/unknown id gold/);
   });
 
   it("rejects a missing fallback icon set, an unknown step and a name cap over 24", () => {
     let p = mutable();
-    identityScreens(p)[5].fallbackVentureId = "car-wash";
+    identityScreens(p)[2].fallbackVentureId = "car-wash";
     expect(reason(p)).toMatch(/fallbackVentureId/);
     p = mutable();
-    identityScreens(p)[3].step = "border";
+    identityScreens(p)[0].step = "border";
     expect(reason(p)).toMatch(/unknown logo step/);
     p = mutable();
-    identityScreens(p)[0].maxLength = 40;
+    identityScreens(p)[3].maxLength = 40;
     expect(reason(p)).toMatch(/maxLength/);
   });
 
@@ -139,7 +139,7 @@ describe("picker payload validation", () => {
     idSilver(p).wrapUp.answerKey = "someone-else";
     expect(reason(p)).toMatch(/missing shape/);
     p = mutable();
-    idSilver(p).bronzes[0].tasks[0].screens.pop();
+    idSilver(p).bronzes[1].tasks[0].screens.pop();
     expect(reason(p)).toMatch(/missing nameColor/);
     p = mutable();
     idSilver(p).wrapUp.type = "certificate";
@@ -171,7 +171,7 @@ describe("name color", () => {
   });
 
   it("every step, the name color included, needs a pick before the page can be saved", () => {
-    const [nameTask, logoTask] = IDENTITY.bronzes.flatMap((b) => b.tasks);
+    const [logoTask, nameTask] = IDENTITY.bronzes.flatMap((b) => b.tasks);
     const none: LaunchpadAnswers = {};
     const a = (x: Partial<BusinessIdentityAnswer>) => ({ [IDENTITY_ANSWER_KEY]: { ...EMPTY_IDENTITY, ...x } });
     expect(isTaskAnswered(logoTask!, none)).toBe(false);

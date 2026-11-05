@@ -18,8 +18,10 @@ function pickerTask(id: string, title: string, ctaLabel: string, screens: Launch
 }
 
 /**
- * Locked identity build (seed id l2-s2). D27: Name the business first, then
- * Design the logo. Overlay renumbers to l1-s3 (The Brand).
+ * Locked identity build (seed id l2-s2). AC13 (Cath, 5 Nov): Design the logo
+ * first, then Name the business, so the name color can use the logo color.
+ * Bronze ids keep their seed numbers (logo b2, name b1); only the order
+ * changed. Overlay renumbers to l1-s3 (The Brand).
  */
 export function identitySilver(): LaunchpadSilver {
   const key = IDENTITY_ANSWER_KEY;
@@ -28,52 +30,6 @@ export function identitySilver(): LaunchpadSilver {
     title: "The Brand",
     placeholder: false,
     bronzes: [
-      {
-        id: "l2-s2-b1",
-        title: "Name your business",
-        subtitle: "Choose a name, a font and a color",
-        placeholder: false,
-        tasks: [
-          pickerTask("l2-s2-b1-t1", "Name your business", "Save to my workbook", [
-            {
-              id: "l2-s2-b1-t1-name",
-              type: "name-picker",
-              answerKey: key,
-              step: "name",
-              heading: "Enter your business name",
-              prompt: `Keep it short: up to ${BUSINESS_NAME_MAX} letters and spaces.`,
-              inputLabel: "Business name",
-              placeholderText: "Type your business name",
-              maxLength: BUSINESS_NAME_MAX,
-            },
-            {
-              id: "l2-s2-b1-t1-font",
-              type: "name-picker",
-              answerKey: key,
-              step: "font",
-              heading: "Choose a font",
-              prompt: "Pick the lettering for your name.",
-              options: [
-                { id: "poppins-bold", label: "Bold" },
-                { id: "fredoka-semibold", label: "Rounded" },
-                { id: "pacifico", label: "Script" },
-              ],
-            },
-            {
-              id: "l2-s2-b1-t1-name-color",
-              type: "name-picker",
-              answerKey: key,
-              step: "nameColor",
-              heading: "Choose a font color",
-              prompt: "What color should your name be?",
-              options: [
-                { id: "logo", label: "Logo color" },
-                { id: "ink", label: "Dark ink" },
-              ],
-            },
-          ]),
-        ],
-      },
       {
         id: "l2-s2-b2",
         title: "Design your logo",
@@ -125,6 +81,52 @@ export function identitySilver(): LaunchpadSilver {
                 ],
               },
               fallbackVentureId: "dog-walking",
+            },
+          ]),
+        ],
+      },
+      {
+        id: "l2-s2-b1",
+        title: "Name your business",
+        subtitle: "Choose a name, a font and a color",
+        placeholder: false,
+        tasks: [
+          pickerTask("l2-s2-b1-t1", "Name your business", "Save to my workbook", [
+            {
+              id: "l2-s2-b1-t1-name",
+              type: "name-picker",
+              answerKey: key,
+              step: "name",
+              heading: "Enter your business name",
+              prompt: `Keep it short: up to ${BUSINESS_NAME_MAX} letters and spaces.`,
+              inputLabel: "Business name",
+              placeholderText: "Type your business name",
+              maxLength: BUSINESS_NAME_MAX,
+            },
+            {
+              id: "l2-s2-b1-t1-font",
+              type: "name-picker",
+              answerKey: key,
+              step: "font",
+              heading: "Choose a font",
+              prompt: "Pick the lettering for your name.",
+              options: [
+                { id: "poppins-bold", label: "Bold" },
+                { id: "fredoka-semibold", label: "Rounded" },
+                { id: "pacifico", label: "Script" },
+              ],
+            },
+            {
+              id: "l2-s2-b1-t1-name-color",
+              type: "name-picker",
+              answerKey: key,
+              step: "nameColor",
+              heading: "Choose a font color",
+              prompt: "What color should your name be?",
+              options: [
+                { id: "logo", label: "Logo color" },
+                { id: "ink", label: "Dark ink" },
+              ],
             },
           ]),
         ],

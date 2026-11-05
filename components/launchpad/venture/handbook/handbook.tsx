@@ -67,6 +67,8 @@ export function Handbook({
   iconVentureId,
   setAnswer,
   onClose,
+  openSilverId,
+  onBackToLift,
 }: {
   entry: HandbookEntry;
   businessName: string;
@@ -76,11 +78,18 @@ export function Handbook({
   /** Save an answer. Only used from the building; home is read-only. */
   setAnswer?: (answerKey: string, answer: LaunchpadAnswer) => void;
   onClose: () => void;
+  /** Open at this silver's page (the silver-done card's "See my handbook"). */
+  openSilverId?: string;
+  /** "Back to the lift": shown from the building; returns to the corridor with the plaques. */
+  onBackToLift?: () => void;
 }) {
   const pages = handbookPages(progress, floors);
   const ghost = handbookGhost(progress, floors);
   const tabs = handbookTabs(progress, floors);
-  const [index, setIndex] = useState(() => handbookOpenIndex(pages));
+  const [index, setIndex] = useState(() => {
+    const at = openSilverId ? pages.findIndex((p) => p.kind !== "cover" && p.silver.id === openSilverId) : -1;
+    return at >= 0 ? at : handbookOpenIndex(pages);
+  });
   const at = Math.min(index, Math.max(0, pages.length - 1));
   const page = pages[at];
   const isLast = at === pages.length - 1;
@@ -136,6 +145,16 @@ export function Handbook({
           </span>
         )}
       </header>
+      {onBackToLift && (
+        <button
+          type="button"
+          onClick={onBackToLift}
+          className="-mt-2 mb-1 ml-4 flex h-8 items-center self-start text-[14px] font-semibold text-nga-ink"
+          data-back-to-lift=""
+        >
+          ‹ Back to the lift
+        </button>
+      )}
 
       <div className="relative min-h-0 flex-1">
         {isLast && ghost && (

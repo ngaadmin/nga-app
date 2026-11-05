@@ -337,8 +337,9 @@ describe("The Brand in Level 1 (D26/D27)", () => {
       ["l1-s2", "Set your goals", false],
       ["l1-s3", "The Brand", false],
     ]);
-    expect(L1.silvers[2]!.bronzes.flatMap((b) => b.tasks.map((t) => t.id))).toEqual(["l1-s3-b1-t1", "l1-s3-b2-t1"]);
-    expect(L1.silvers[2]!.bronzes.map((b) => b.title)).toEqual(["Name your business", "Design your logo"]);
+    expect(L1.silvers[2]!.bronzes.flatMap((b) => b.tasks.map((t) => t.id))).toEqual(["l1-s3-b2-t1", "l1-s3-b1-t1"]);
+    // AC12/13: the logo comes before the name.
+    expect(L1.silvers[2]!.bronzes.map((b) => b.title)).toEqual(["Design your logo", "Name your business"]);
     expect(L1.silvers[2]!.wrapUp).toMatchObject({ type: "identity-wrap-up", answerKey: "l2-s2-identity" });
     expect(L2.silvers.map((s) => [s.id, s.title, s.placeholder])).toEqual([
       ["l2-s1", "The product and its buyers", false],

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** Question line over an interaction. */
 export function ScreenPrompt({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <p id={id} className="mx-5 mt-1 font-heading text-[18px] font-semibold leading-[1.35] text-nga-ink">
+    <p id={id} className="mx-5 mt-1 font-heading text-[18px] font-semibold leading-[1.35] text-nga-ink short:text-[17px] short:leading-[1.3]">
       {children}
     </p>
   );
@@ -29,10 +29,10 @@ export function ScreenEyebrow({ children }: { children: ReactNode }) {
  */
 export function ScreenIntro({ context, guidance }: { context: string; guidance?: string }) {
   return (
-    <div className="mx-5 mb-4 mt-2 flex flex-col gap-3" data-screen-intro="">
-      <p className="text-[16px] leading-[1.5] text-nga-ink">{context}</p>
+    <div className="mx-5 mb-4 mt-2 flex flex-col gap-3 short:mb-2.5 short:mt-1 short:gap-2" data-screen-intro="">
+      <p className="text-[16px] leading-[1.5] text-nga-ink short:text-[15px] short:leading-[1.4]">{context}</p>
       {guidance && (
-        <p className="rounded-r-2xl border-l-4 border-nga-secondary bg-[#F7FAFD] px-4 py-3 text-[14px] leading-[1.5] text-nga-ink" data-guidance="">
+        <p className="rounded-r-2xl border-l-4 border-nga-secondary bg-[#F7FAFD] px-4 py-3 text-[14px] leading-[1.5] text-nga-ink short:py-2 short:text-[13.5px] short:leading-[1.4]" data-guidance="">
           {guidance}
         </p>
       )}

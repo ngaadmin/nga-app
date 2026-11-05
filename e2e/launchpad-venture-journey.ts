@@ -1,11 +1,11 @@
 /**
  * The full Launchpad venture journey on /test-launchpad-venture, shared by the
  * mobile and desktop specs: home tile, onboarding, building, every Level 1
- * and Level 2 bronze door (really answered), both wrap-ups, the silver
- * pages, the Level 1 gold, then the handbook.
+ * and Level 2 bronze door (really answered), the after-step messages (AC14,
+ * no wrap-ups), the Level 1 done lift, then the handbook.
  */
 import { expect, type Page, type TestInfo } from "@playwright/test";
-import { nextButton, passed, ROUTE, shot, step, track } from "./launchpad-venture-helpers";
+import { fits, nextButton, passed, ROUTE, shot, step, track } from "./launchpad-venture-helpers";
 
 const main = (page: Page) => page.locator("main");
 const btn = (page: Page, name: string | RegExp, exact = true) =>
@@ -81,16 +81,17 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(hint).toHaveText("Pick at least one to keep going.");
   });
   await shot(t, "Offer door, nothing picked (Finish off)", next);
-  await step(t, "Offer door: pick Dog walking and Training (multi-select), then un-pick and re-pick", async () => {
+  await step(t, "Offer door: pick Dog walking and Dog Training (multi-select), then un-pick and re-pick", async () => {
     await btn(page, "Dog walking").click();
-    await btn(page, "Training").click();
+    await btn(page, "Dog Training").click();
     await expect(btn(page, "Dog walking")).toHaveAttribute("aria-pressed", "true");
-    await expect(btn(page, "Training")).toHaveAttribute("aria-pressed", "true");
-    await btn(page, "Training").click();
-    await expect(btn(page, "Training")).toHaveAttribute("aria-pressed", "false");
-    await btn(page, "Training").click();
+    await expect(btn(page, "Dog Training")).toHaveAttribute("aria-pressed", "true");
+    await btn(page, "Dog Training").click();
+    await expect(btn(page, "Dog Training")).toHaveAttribute("aria-pressed", "false");
+    await btn(page, "Dog Training").click();
     await expect(next).toBeEnabled();
   });
+  await fits(t, "Offer door", next);
   await shot(t, "Offer door, two picked", next);
   await step(t, "Finish the offer door: back on the doors, it shows Done and Find the why is up next", async () => {
     await next.click();
@@ -99,48 +100,49 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Level 1 doors after the offer door", btn(page, /Find the why/));
 
-  // Why (rank-order)
-  await step(t, "Find the why: exactly 4 items in order, no 'Prove I can do it' or 'Support a cause'", async () => {
+  // Why (rank-order): AC3 drag and drop, with a keyboard fallback
+  const tiles = page.locator('ol[aria-label="Your ranking"] [data-rank-item]');
+  const below = page.locator("[data-below-line] [data-rank-item]");
+  await step(t, "Find the why: exactly 4 items in order, no arrow buttons, no 'Prove I can do it' or 'Support a cause'", async () => {
     await btn(page, /Find the why/).click();
     await expect(page.locator("[data-rank-item]")).toHaveCount(4);
     await expect(main(page)).not.toContainText("Prove I can do it");
     await expect(main(page)).not.toContainText("Support a cause");
-    const labels = await page.locator("[data-rank-item]").allInnerTexts();
-    const order = ["Make money", "Help others", "Learn new skills", "Be my own boss"];
-    order.forEach((l, i) => expect(labels[i]).toContain(l));
-  });
-  await shot(t, "Find the why, authored order", next);
-  await step(t, "Find the why: move Help others to the top with the arrow", async () => {
-    await main(page).getByRole("button", { name: "Move Help others up" }).click();
-    await expect(page.locator("[data-rank-item]").first()).toContainText("Help others");
-    await expect(page.locator("[data-rank-item]").nth(1)).toContainText("Make money");
-  });
-  await shot(t, "Find the why, Help others moved to number 1", next);
-  const aboveTiles = page.locator('ol[aria-label="Your ranking"] [data-rank-item]');
-  const zone = page.locator('[aria-labelledby="rank-below-title"]').first();
-  await step(t, "Find the why: move Be my own boss below the line (Doesn't apply to me)", async () => {
-    await main(page).getByRole("button", { name: "Move Be my own boss down", exact: true }).click();
-    await expect(aboveTiles).toHaveCount(3);
-    await expect(main(page)).toContainText("Doesn't apply to me");
+    await expect(main(page).getByRole("button", { name: /^Move .* (up|down)/ })).toHaveCount(0);
+    const labels = await tiles.allInnerTexts();
+    ["Make money", "Help others", "Learn new skills", "Be my own boss"].forEach((l, i) => expect(labels[i]).toContain(l));
     await expect(next).toBeEnabled();
   });
-  await shot(t, "Find the why, one tile below the line", next);
-  await step(t, "Find the why: all four below the line disables Next", async () => {
-    // Above is now Help others, Make money, Learn new skills: the last one crosses each time.
-    for (const l of ["Learn new skills", "Make money", "Help others"]) {
-      await main(page).getByRole("button", { name: `Move ${l} down`, exact: true }).click();
-    }
-    await expect(aboveTiles).toHaveCount(0);
-    await expect(next).toBeDisabled();
+  await fits(t, "Find the why", next);
+  await shot(t, "Find the why, authored order (drag to reorder)", next);
+  await step(t, "Find the why: drag Help others to the top (pointer drag)", async () => {
+    const from = (await tiles.filter({ hasText: "Help others" }).boundingBox())!;
+    const to = (await tiles.first().boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    const y0 = from.y + from.height / 2;
+    for (let i = 1; i <= 10; i++) await page.mouse.move(from.x + from.width / 2, y0 + ((to.y + 4 - y0) * i) / 10);
+    await expect(page.locator("[data-rank-ghost]")).toHaveCount(1);
+    await shot(t, "Find the why, mid-drag (ghost tile)", null);
+    await page.mouse.up();
+    await expect(tiles.first()).toContainText("Help others");
+    await expect(tiles.nth(1)).toContainText("Make money");
   });
-  await shot(t, "Find the why, all four below the line (Next disabled)", next);
-  await step(t, "Find the why: move all four back above the line", async () => {
-    for (const l of ["Help others", "Make money", "Learn new skills", "Be my own boss"]) {
-      await main(page).getByRole("button", { name: `Move ${l} up, doesn't apply to me`, exact: true }).click();
-    }
-    await expect(aboveTiles).toHaveCount(4);
-    await expect(aboveTiles.first()).toContainText("Help others");
-    void zone;
+  await shot(t, "Find the why, Help others dragged to number 1", next);
+  await step(t, "Find the why: keyboard fallback moves Be my own boss below the line and back", async () => {
+    const boss = page.locator("[data-rank-item='be-my-own-boss']");
+    await boss.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(tiles).toHaveCount(3);
+    await expect(below).toHaveCount(1);
+    await expect(page.locator("[data-rank-announce]")).toContainText(/Be my own boss/);
+    await expect(next).toBeEnabled();
+    await shot(t, "Find the why, Be my own boss below the line (keyboard)", next);
+    await page.locator("[data-rank-item='be-my-own-boss']").focus();
+    await page.keyboard.press("ArrowUp");
+    await expect(tiles).toHaveCount(4);
+    await expect(tiles.first()).toContainText("Help others");
+    await expect(tiles.last()).toContainText("Be my own boss");
   });
   await step(t, "Finish Find the why", async () => {
     await next.click();
@@ -159,28 +161,34 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(btn(page, "The environment")).toHaveAttribute("aria-pressed", "true");
     await expect(next).toBeEnabled();
   });
+  await fits(t, "Know your impact", next);
   await shot(t, "Know your impact, The environment picked", next);
-  await step(t, "Finish Know your impact: Define silver-complete, Set your goals up next", async () => {
+  const done1 = page.locator('[data-silver-done="l1-s1"]');
+  await step(t, "Finish Know your impact: AC14 after-step message (no wrap-up), with handbook link and Back to the lift", async () => {
     await next.click();
-    const sc = page.locator('[data-silver-complete="l1-s1"]');
-    await expect(sc).toBeVisible();
-    await expect(sc.getByRole("heading", { name: "Define the business: done!" })).toBeVisible();
-    await expect(sc.locator("[data-milestone-steps]")).toHaveText("1 of 14 steps done");
-    await expect(sc.locator("[data-what-you-built] [data-tag-chip]")).toHaveCount(3);
-    await expect(sc.locator("[data-next-up]")).toContainText("Set your goals");
-    expect(await sc.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
+    await expect(done1).toBeVisible();
+    await expect(done1.getByRole("heading", { name: "Nice work! Define the business is done." })).toBeVisible();
+    await expect(done1.locator("[data-silver-done-message]")).toHaveText(
+      "See your progress in your workbook, or wait until you've completed all the steps in this level.",
+    );
+    await expect(done1.locator("[data-see-handbook]")).toHaveText("See my handbook");
+    await expect(done1.locator("[data-keep-going]")).toHaveText("Keep going");
+    await expect(done1.locator("[data-back-to-lift]")).toBeVisible();
+    await expect(page.locator("[data-wrap-up]")).toHaveCount(0);
+    expect(await done1.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
   });
-  await shot(t, "Level 1 Define silver complete", page.locator('[data-silver-complete="l1-s1"]').getByRole("button", { name: "Continue" }));
+  await fits(t, "After-step message l1-s1", done1.locator("[data-keep-going]"));
+  await shot(t, "After-step message, Define the business done", done1.locator("[data-keep-going]"));
 
-  await step(t, "Continue: Level 1 corridor, Set your goals up next (D26)", async () => {
-    await page.locator('[data-silver-complete="l1-s1"]').getByRole("button", { name: "Continue" }).click();
+  await step(t, "Keep going: Level 1 corridor, Set your goals up next", async () => {
+    await done1.locator("[data-keep-going]").click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
-    await expect(page.locator("[data-gold-completion]")).toHaveCount(0);
+    await expect(page.locator("[data-level-done]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Set your goals, up next/ })).toBeVisible();
   });
   await shot(t, "Level 1 corridor, Set your goals up next", page.getByRole("button", { name: /Set your goals, up next/ }));
 
-  // Goals (own silver l1-s2; D30: no wrap-up)
+  // Goals (l1-s2)
   const goalPage = async (n: number, title: string) => {
     await expect(main(page)).toContainText(`Goal ${n} of 6`, { ignoreCase: true });
     await expect(main(page)).toContainText(title);
@@ -190,65 +198,73 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(btn(page, /Set your goals/)).toContainText("Up next");
     await btn(page, /Set your goals/).click();
     await expect(main(page)).toContainText("Step 1 of 6");
-    await expect(main(page)).toContainText(
-      "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
-    );
     await goalPage(1, "Help others");
-    await expect(main(page).getByLabel("Benefit")).toBeVisible();
   });
-  await shot(t, "Set your goals, step 1 with goal 1", next);
 
-  await step(t, "Goal 1 (4a) follows my ranking: Help others, benefit only (no timeframe), starts empty, no Not applicable", async () => {
-    await expect(main(page).getByRole("button", { name: "Not applicable" })).toHaveCount(0);
+  let benefitLabel = "";
+  await step(t, "Goal 1 (row 7): Help others, 'I want [number] customers to [pick one]', four benefits, no timeframe", async () => {
     await expect(main(page).getByLabel("Weeks or months")).toHaveCount(0);
-    await expect(main(page).getByLabel("Number")).toHaveCount(0);
-    await expect(main(page).getByLabel("Benefit")).toHaveValue("");
+    await expect(main(page).locator("[data-sentence]")).toContainText("I want");
+    await expect(main(page).locator("[data-sentence]")).toContainText("customers to");
+    const benefit = main(page).getByLabel("What your customers get");
+    const opts = await benefit.locator("option").evaluateAll((o) => o.map((e) => (e as HTMLOptionElement).value).filter(Boolean));
+    expect(opts).toHaveLength(4);
     await expect(next).toBeDisabled();
-    await expect(hint).toHaveText("Fill in each blank to keep going.");
-    // The full stop stays on the line with the benefit box.
-    await expect(main(page).locator("[data-sentence] [data-glued-punct]")).toHaveText(".");
-    await main(page).getByLabel("Benefit").fill("TEST benefit one");
+    await main(page).getByLabel("Number of customers").fill("5");
+    await benefit.selectOption({ index: 1 });
+    benefitLabel = (await benefit.locator("option:checked").innerText()).trim();
     await expect(next).toBeEnabled();
+    passed(t, "Help others goal sentence", await main(page).locator("[data-sentence]").innerText());
   });
-  await shot(t, "Goal 1 of 6, Help others, filled", next);
+  await fits(t, "Goal 1 Help others", next);
+  await shot(t, "Goal 1 of 6, Help others, customers and benefit picked", next);
 
-  await step(t, "Goal 2 (4b): Make money with amount, currency, timeframe", async () => {
+  await step(t, "Goal 2 (row 6): Make money, weeks preset, saving for", async () => {
     await next.click();
     await goalPage(2, "Make money");
-    await expect(main(page)).toContainText(/I want to earn .* in /);
+    await expect(main(page).getByLabel("Weeks or months")).toHaveValue("weeks");
+    await expect(main(page).locator("[data-sentence]")).toContainText("I'm saving for");
     await expect(next).toBeDisabled();
-    await expect(main(page).getByLabel("Amount")).toHaveValue("");
-    await expect(main(page).getByLabel("Number")).toHaveValue("");
-    await expect(main(page).getByLabel("Weeks or months")).toHaveValue("");
-    expect(await main(page).getByLabel("Weeks or months").locator("option").evaluateAll((o) => o.map((e) => (e as HTMLOptionElement).value).filter(Boolean))).toEqual(["weeks", "months"]);
     await main(page).getByLabel("Amount").fill("500");
     await main(page).getByLabel("Number").fill("6");
-    await main(page).getByLabel("Weeks or months").selectOption("months");
+    await main(page).getByLabel("Saving for").fill("TEST a new bike");
     await expect(main(page).locator("[data-currency-chip]")).not.toHaveText("—");
     await expect(next).toBeEnabled();
   });
-  await shot(t, "Goal 2 of 6, Make money, filled", next);
+  await fits(t, "Goal 2 Make money", next);
+  await shot(t, "Goal 2 of 6, Make money, weeks preset, filled", next);
 
   await step(t, "Previous goes back to goal 1 with its answers kept", async () => {
     await main(page).getByRole("button", { name: "‹ Previous" }).click();
     await goalPage(1, "Help others");
-    await expect(main(page).getByLabel("Benefit")).toHaveValue("TEST benefit one");
+    await expect(main(page).getByLabel("Number of customers")).toHaveValue("5");
     await next.click();
     await goalPage(2, "Make money");
     await expect(main(page).getByLabel("Amount")).toHaveValue(/500/);
   });
 
-  await step(t, "Goal 3 (4c): Learn new skills", async () => {
+  await step(t, "Goal 3 (row 8): Skills dropdown prefills an editable success line, swapped until I type", async () => {
     await next.click();
     await goalPage(3, "Learn new skills");
-    await main(page).getByLabel("Skill").fill("TEST skill");
+    const skill = main(page).getByLabel("Skill");
+    const line = main(page).getByLabel("I'll know I've done it when I can");
+    await expect(main(page).getByLabel("Weeks or months")).toHaveValue("weeks");
+    await skill.selectOption("talking-to-customers");
+    await expect(line).toHaveValue("handle a new customer's questions from first contact to booking without help");
+    await shot(t, "Goal 3 of 6, Skills prefill after the first pick", next);
+    await skill.selectOption("managing-my-money");
+    await expect(line).toHaveValue("track every dollar coming in and going out of my business");
+    await shot(t, "Goal 3 of 6, Skills prefill swapped on a new pick", next);
+    await line.fill("TEST run my own books");
+    await skill.selectOption("planning-my-time");
+    await expect(line).toHaveValue("TEST run my own books");
     await main(page).getByLabel("Number").fill("3");
-    await main(page).getByLabel("Weeks or months").selectOption("weeks");
     await expect(next).toBeEnabled();
   });
-  await shot(t, "Goal 3 of 6, Learn new skills, filled", next);
+  await fits(t, "Goal 3 Learn new skills", next);
+  await shot(t, "Goal 3 of 6, Skills, my own words kept after a new pick", next);
 
-  await step(t, "Goal 4 (4d): Be my own boss, one choice", async () => {
+  await step(t, "Goal 4: Be my own boss, one choice", async () => {
     await next.click();
     await goalPage(4, "own boss");
     await expect(next).toBeDisabled();
@@ -256,74 +272,81 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await btn(page, "Choosing when I work (my own schedule and hours)").click();
     await expect(next).toBeEnabled();
   });
-  await shot(t, "Goal 4 of 6, Be my own boss, Choosing when I work picked", next);
+  await fits(t, "Goal 4 Be my own boss", next);
+  await shot(t, "Goal 4 of 6, Be my own boss, picked", next);
 
-  await step(t, "Goal 5 (4e): Support a cause carries my cause, lower-cased mid-sentence (to support the environment)", async () => {
+  await step(t, "Goal 5: Support a cause carries my cause (to support the environment), optional, fill 10", async () => {
     await next.click();
     await goalPage(5, "Support a cause");
     await expect(main(page).locator("[data-sentence]")).toContainText("to support the environment");
-    // Optional (Cath 4 Nov 10:07pm): Next works while empty; a bad value blocks.
     await expect(main(page).locator("[data-optional-tag]")).toHaveText("Optional");
     await expect(next).toBeEnabled();
-  });
-  await shot(t, "Goal 5 of 6, Support a cause, empty (optional)", next);
-  await step(t, "Goal 5: a bad percent blocks, then fill 10", async () => {
     await main(page).getByLabel("Percent").fill("0");
     await expect(next).toBeDisabled();
     await main(page).getByLabel("Percent").fill("10");
     await expect(next).toBeEnabled();
   });
+  await fits(t, "Goal 5 Support a cause", next);
   await shot(t, "Goal 5 of 6, Support a cause, filled", next);
 
-  await step(t, "Goal 6: Add another goal is optional (Finish on while empty), then fill it in", async () => {
+  await step(t, "Goal 6 (row 11): One more goal, weeks preset; Add this goal off until typed, Skip for now shown", async () => {
     await next.click();
-    await goalPage(6, "Add another goal");
+    await goalPage(6, "One more goal?");
+    await expect(main(page)).toContainText("This one's optional. You can skip it and keep going.");
     await expect(main(page).locator("[data-optional-tag]")).toHaveText("Optional");
-    await expect(main(page)).not.toContainText("Optional. Add");
-    await expect(next).toHaveText("Finish ›");
-    await expect(next).toBeEnabled();
-    // One inline sentence, everything empty at the start, no separate boxes and no Number field.
+    await expect(next).toHaveText("Add this goal");
+    await expect(next).toBeDisabled();
+    await expect(main(page).locator("[data-skip-for-now]")).toHaveText("Skip for now");
     const sentence = main(page).locator("[data-sentence]");
-    await expect(main(page).locator("[data-extra-fields]")).toHaveCount(0);
     await expect(sentence).toContainText("My goal is to");
-    await expect(sentence.getByLabel("My goal")).toHaveValue("");
-    await expect(sentence.getByLabel("Number")).toHaveValue("");
-    await expect(sentence.getByLabel("Weeks or months")).toHaveValue("");
-    await expect(main(page).getByLabel("Timeframe")).toHaveCount(0);
-    await expect(sentence.locator("[data-glued-punct]")).toHaveCount(0);
+    await expect(sentence.getByLabel("Weeks or months")).toHaveValue("weeks");
+    await shot(t, "Goal 6 of 6, One more goal, empty (Add this goal off, Skip for now)", next);
     await sentence.getByLabel("My goal").fill("TEST other goal");
     await expect(next).toBeEnabled();
     await sentence.getByLabel("Number").fill("6");
-    await sentence.getByLabel("Weeks or months").selectOption("months");
   });
-  await shot(t, "Goal 6 of 6, Add another goal, filled", next);
+  await fits(t, "Goal 6 One more goal", next);
+  await shot(t, "Goal 6 of 6, One more goal, filled", next);
 
-  // D30: no Define/Goals wrap-up — Finish goals → silver-complete l1-s2
-  await step(t, "Finish the goals: Set your goals silver-complete, The Brand up next", async () => {
+  const done2 = page.locator('[data-silver-done="l1-s2"]');
+  await step(t, "Add this goal: after-step message for Set your goals", async () => {
     await next.click();
-    const sc = page.locator('[data-silver-complete="l1-s2"]');
-    await expect(sc).toBeVisible();
-    await expect(sc.getByRole("heading", { name: "Set your goals: done!" })).toBeVisible();
-    await expect(sc.locator("[data-milestone-steps]")).toHaveText("2 of 14 steps done");
-    await expect(sc.locator("[data-next-up]")).toContainText("The Brand");
-    expect(await sc.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
+    await expect(done2).toBeVisible();
+    await expect(done2.getByRole("heading", { name: "Nice work! Set your goals is done." })).toBeVisible();
   });
-  await shot(t, "Level 1 goals silver complete", page.locator('[data-silver-complete="l1-s2"]').getByRole("button", { name: "Continue" }));
+  await fits(t, "After-step message l1-s2", done2.locator("[data-keep-going]"));
+  await shot(t, "After-step message, Set your goals done", done2.locator("[data-keep-going]"));
 
-  await step(t, "Continue: Level 1 corridor, The Brand up next (D26/D27)", async () => {
-    await page.locator('[data-silver-complete="l1-s2"]').getByRole("button", { name: "Continue" }).click();
+  const hb1 = page.getByRole("dialog");
+  await step(t, "See my handbook opens the handbook at the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
+    await done2.locator("[data-see-handbook]").click();
+    const gp = hb1.locator('[data-handbook-page="l1-s2"]');
+    await expect(gp).toBeVisible();
+    await expect(gp).toContainText("TEST a new bike");
+    await expect(gp).toContainText("TEST run my own books");
+    await expect(hb1.locator("[data-back-to-lift]")).toBeVisible();
+    await shot(t, "Handbook from the after-step message, Set your goals page", null);
+    await gp.locator("[data-pencil]").first().click();
+    await gp.locator("[data-summary-line='l1-goal-make-money'] [data-pencil]").click();
+    const ed = gp.locator("[data-inline-editor='l1-goal-make-money']");
+    await ed.getByLabel("Saving for").fill("TEST a used bike");
+    await shot(t, "Handbook goals page, saving for editor open", null);
+    await ed.getByRole("button", { name: "Save" }).click();
+    await expect(gp).toContainText("TEST a used bike");
+  });
+  await step(t, "Handbook Back to the lift lands on the Level 1 corridor", async () => {
+    await hb1.locator("[data-back-to-lift]").click();
+    await expect(hb1).toHaveCount(0);
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
-    await expect(page.locator("[data-gold-completion]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /The Brand, up next/ })).toBeVisible();
   });
-  await shot(t, "Level 1 corridor, The Brand up next", page.getByRole("button", { name: /The Brand, up next/ }));
+  await shot(t, "Back to the lift from the handbook: Level 1 corridor, The Brand up next", page.getByRole("button", { name: /The Brand, up next/ }));
 
-  await step(t, "Workbook cover after Set your goals: logo and name placeholders, the vision filled", async () => {
+  await step(t, "Workbook cover after Set your goals: logo on top, then name placeholder, the vision filled", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
     await page.getByRole("button", { name: "Open handbook" }).first().click();
     const dlg = page.getByRole("dialog");
     await expect(dlg.locator("[data-handbook-page]").first()).toBeVisible();
-    // Walk to cover (page 1)
     const coverBtn = dlg.getByRole("button", { name: "Previous page" });
     for (let i = 0; i < 4; i++) {
       if (await dlg.locator('[data-handbook-page="cover"]').isVisible().catch(() => false)) break;
@@ -332,8 +355,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     const cover = dlg.locator('[data-handbook-page="cover"]');
     await expect(cover).toBeVisible();
     await expect(cover.locator('[data-cover-logo="empty"]')).toContainText("Your logo goes here");
-    await expect(cover.locator('[data-doodle="rocket"]')).toBeVisible();
     await expect(cover.locator('[data-cover-name="empty"]')).toHaveText("Your business name");
+    const logoY = (await cover.locator("[data-cover-logo]").boundingBox())!.y;
+    const nameY = (await cover.locator("[data-cover-name]").boundingBox())!.y;
+    expect(logoY, "logo above the name").toBeLessThan(nameY);
     await expect(cover.locator("[data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
     await expect(cover.locator("[data-pencil], [data-edit-identity]")).toHaveCount(0);
     expect(await cover.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
@@ -346,30 +371,12 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.getByRole("button", { name: /The Brand, up next/ })).toBeVisible();
   });
 
-  await step(t, "Open The Brand: Name your business door up next (D27 name then logo)", async () => {
+  await step(t, "Open The Brand: Design your logo door up next (AC13 logo before name)", async () => {
     await page.getByRole("button", { name: /The Brand, up next/ }).click();
-    await expect(btn(page, /Name your business/)).toContainText("Up next");
-  });
-  await shot(t, "The Brand doors", btn(page, /Name your business/));
-
-  await step(t, "Name your business: Save off until name, font and font color", async () => {
-    await btn(page, /Name your business/).click();
-    await expect(next).toHaveText("Save to my workbook");
-    await expect(next).toBeDisabled();
-    await expect(hint).toHaveText("Add a name, a font and a font color to save.");
-    const name = main(page).getByRole("textbox", { name: /Business name/ });
-    await name.fill("TEST Business Name");
-    await main(page).getByRole("radio", { name: "Rounded" }).click();
-    await expect(next).toBeDisabled();
-    await main(page).getByRole("radio", { name: "Dark ink" }).click();
-    await expect(next).toBeEnabled();
-    await expect(name).toHaveValue("TEST Business Name");
-  });
-  await shot(t, "Name your business, filled", next);
-  await step(t, "Save name: back on the doors with Design your logo up next", async () => {
-    await next.click();
     await expect(btn(page, /Design your logo/)).toContainText("Up next");
+    await expect(btn(page, /Name your business/)).toHaveCount(0);
   });
+  await shot(t, "The Brand doors, logo first", btn(page, /Design your logo/));
 
   await step(t, "Logo builder: Continue off until shape, color and icon are picked", async () => {
     await btn(page, /Design your logo/).click();
@@ -378,6 +385,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(hint).toHaveText("Pick a shape, a color and an icon to keep going.");
     for (const tab of ["Shape", "Color", "Icon"]) await expect(main(page).getByRole("tab", { name: tab })).toBeVisible();
   });
+  await fits(t, "Logo builder", next);
   await shot(t, "Logo builder, empty", next);
   await step(t, "Logo builder: pick Shield, Orange, Bone through the tabs", async () => {
     await main(page).getByRole("tab", { name: "Shape" }).click();
@@ -386,51 +394,35 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await main(page).getByRole("radio", { name: "Orange" }).click();
     await main(page).getByRole("tab", { name: "Icon" }).click();
     await expect(main(page).getByRole("radio")).toHaveCount(3);
-    await expect(main(page).getByRole("radio", { name: "Paw" })).toBeVisible();
     await main(page).getByRole("radio", { name: "Bone" }).click();
     await expect(main(page).getByRole("radio", { name: "Bone" })).toHaveAttribute("aria-checked", "true");
-    await main(page).getByRole("tab", { name: "Shape" }).click();
-    await expect(main(page).getByRole("radio", { name: "Shield" })).toHaveAttribute("aria-checked", "true");
     await expect(next).toBeEnabled();
   });
   await shot(t, "Logo builder, Shield Orange Bone", next);
-
-  const idWrap = page.locator('[data-wrap-up="identity"]');
-  await step(t, "Finish logo: identity wrap-up shows the logo and name", async () => {
+  await step(t, "Save logo: back on the doors with Name your business up next", async () => {
     await next.click();
-    if (!(await idWrap.isVisible().catch(() => false)) && (await btn(page, "See your logo").count()))
-      await btn(page, "See your logo").click();
-    await expect(idWrap).toBeVisible();
-    await expect(idWrap).toContainText("TEST Business Name");
-  });
-  await shot(t, "Identity wrap-up", btn(page, "Continue"));
-
-  await step(t, "Identity wrap-up is a summary only: vision on top, then logo and name; no pick editor", async () => {
-    await expect(idWrap.getByRole("tab")).toHaveCount(0);
-    await expect(idWrap.getByRole("radio")).toHaveCount(0);
-    await expect(idWrap.locator("[data-identity-lockup]")).toBeVisible();
-    // The Vision line is now the compiled vision sentence (H19), same block as the cover.
-    const v = idWrap.locator("[data-identity-vision] [data-vision-sentence]");
-    await expect(v).toContainText(/^I am starting a dog walking business\. I will offer /);
-    await expect(v).toContainText("As I grow, I'll give 10% of every sale to support the environment.");
-    const fit = await page.evaluate(() => {
-      const b = Array.from(document.querySelectorAll("main button")).find((e) => e.textContent?.trim() === "Continue")!.getBoundingClientRect();
-      return { scrollHeight: document.scrollingElement!.scrollHeight, viewport: window.innerHeight, continueBottom: Math.round(b.bottom) };
-    });
-    passed(t, "Screen three vision", await v.innerText());
-    passed(t, "Screen three fit (no scroll when scrollHeight <= viewport)", JSON.stringify(fit));
-    expect(fit.scrollHeight, "screen three fits at 390x844 with the long vision").toBeLessThanOrEqual(fit.viewport);
+    if (await btn(page, "See your logo").count()) await btn(page, "See your logo").click();
+    await expect(btn(page, /Name your business/)).toContainText("Up next");
   });
 
-  await step(t, "Continue (identity): silver-complete page, then Level 1 done on the corridor", async () => {
-    await btn(page, "Continue").click();
-    const sc = page.locator('[data-silver-complete="l1-s3"]');
-    await expect(sc).toBeVisible();
-    await expect(sc.locator("[data-milestone-steps]")).toHaveText("3 of 14 steps done");
-    await shot(t, "Level 1 identity complete, handbook page", sc.getByRole("button", { name: "Continue" }));
-    await sc.getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator("[data-gold-completion]")).toHaveCount(0);
-    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/);
+  await step(t, "Name your business: Save off until name, font and font color", async () => {
+    await btn(page, /Name your business/).click();
+    await expect(next).toHaveText("Save to my workbook");
+    await expect(next).toBeDisabled();
+    const name = main(page).getByRole("textbox", { name: /Business name/ });
+    await name.fill("TEST Business Name");
+    await main(page).getByRole("radio", { name: "Rounded" }).click();
+    await main(page).getByRole("radio", { name: "Dark ink" }).click();
+    await expect(next).toBeEnabled();
+  });
+  await fits(t, "Name your business", next);
+  await shot(t, "Name your business, filled (logo already made)", next);
+
+  await step(t, "Save name: last step of the level goes straight to Level 1 done (no wrap-up, no after-step message)", async () => {
+    await next.click();
+    await expect(page.locator("[data-wrap-up]")).toHaveCount(0);
+    await expect(page.locator("[data-silver-done]")).toHaveCount(0);
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
     await expect(page.locator("[data-level-done='1']")).toHaveText("Congratulations!You've completed Level 1");
     await expect(page.locator("[data-plaque-tick]")).toHaveCount(3);
     await expect(page.getByText(/Gold unlocked|move on/)).toHaveCount(0);
@@ -482,37 +474,33 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Find out if people want it, filled", next);
 
-  const wrap2 = page.locator('[data-wrap-up="workbook-summary"]');
-  await step(t, "Finish: Level 2 silver 1 wrap-up shows the answers", async () => {
+  const done21 = page.locator('[data-silver-done="l2-s1"]');
+  await step(t, "Finish: Level 2 step 1 after-step message (no wrap-up)", async () => {
     await next.click();
-    if (await btn(page, /See your|wrap|workbook/i).count()) await btn(page, /See your|wrap|workbook/i).first().click();
-    await expect(wrap2).toBeVisible();
-    await expect(wrap2).toContainText("TEST product");
-    await expect(wrap2).toContainText("TEST availability");
-    await expect(wrap2).toContainText("TEST interest");
+    await expect(page.locator("[data-wrap-up]")).toHaveCount(0);
+    await expect(done21).toBeVisible();
+    await expect(done21.getByRole("heading", { name: "Nice work! The product and its buyers is done." })).toBeVisible();
   });
-  await shot(t, "Level 2 silver 1 wrap-up", btn(page, "Continue"));
+  await shot(t, "After-step message, The product and its buyers done", done21.locator("[data-keep-going]"));
 
-  await step(t, "Level 2 wrap-up: edit what I am selling with the pencil", async () => {
-    const sec = wrap2.locator('[data-summary-section="what-i-am-selling"]');
+  await step(t, "See my handbook: edit what I am selling with the pencil on the handbook page", async () => {
+    await done21.locator("[data-see-handbook]").click();
+    const pg = page.getByRole("dialog").locator('[data-handbook-page="l2-s1"]');
+    await expect(pg).toContainText("TEST product");
+    await expect(pg).toContainText("TEST availability");
+    await expect(pg).toContainText("TEST interest");
+    const sec = pg.locator('[data-summary-section="what-i-am-selling"]');
     await sec.locator("[data-pencil]").first().click();
-    const ed = wrap2.locator("[data-inline-editor]");
+    const ed = pg.locator("[data-inline-editor]");
     await expect(ed).toBeVisible();
     await ed.locator("textarea, input[type=text]").first().fill("TEST product edit");
     await ed.getByRole("button", { name: "Save" }).click();
     await expect(sec).toContainText("TEST product edit");
   });
-  await shot(t, "Level 2 silver 1 wrap-up after the edit", btn(page, "Continue"));
+  await shot(t, "Handbook, Level 2 step 1 page after the edit", null);
 
-  await step(t, "Continue: silver-complete page, then back to the Level 2 corridor with Pricing up next", async () => {
-    await btn(page, "Continue").click();
-    const sc = page.locator('[data-silver-complete="l2-s1"]');
-    await expect(sc).toBeVisible();
-    await expect(sc.getByRole("heading", { name: "The product and its buyers: done!" })).toBeVisible();
-    await expect(sc.locator("[data-milestone-steps]")).toHaveText("4 of 14 steps done");
-    await expect(sc.locator("[data-next-up]")).toContainText("Pricing");
-    await shot(t, "Level 2 silver 1 complete, handbook page", sc.getByRole("button", { name: "Continue" }));
-    await sc.getByRole("button", { name: "Continue" }).click();
+  await step(t, "Back to the lift: Level 2 corridor with Pricing up next", async () => {
+    await page.getByRole("dialog").locator("[data-back-to-lift]").click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/);
     await expect(page.locator("[data-level-done='2']")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Pricing, up next/ })).toBeVisible();
@@ -549,7 +537,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(cover.locator('[data-cover-name="filled"]')).toHaveText("TEST Business Name");
     await expect(cover.locator("[data-vision-quote]")).toBeVisible();
     await expect(cover.locator("[data-vision-sentence]")).toContainText("As I grow, I'll give 10% of every sale to support the environment.");
-    await expect(cover.locator("[data-vision-sentence]")).toContainText("TEST benefit one");
+    await expect(cover.locator("[data-vision-sentence]")).toContainText(benefitLabel);
     await shot(t, "Workbook cover, filled", null);
     await hb.getByRole("button", { name: "Next page" }).click();
     await expect(hb.locator('[data-handbook-page="l1-s1"]')).toBeVisible();
@@ -566,7 +554,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await shot(t, "Handbook, Level 1 page with orange viewed ring", null);
 
   await step(t, "Handbook: Next page walks past goals to the identity page (l1-s3), then Level 2", async () => {
-    await hb.getByRole("button", { name: "Next page" }).click(); // l1-s2 Set your goals (placeholder)
+    await hb.getByRole("button", { name: "Next page" }).click(); // l1-s2 Set your goals
     await expect(hb.locator('[data-handbook-page="l1-s2"]')).toBeVisible();
     await hb.getByRole("button", { name: "Next page" }).click(); // l1-s3 The Brand
     const idPage = hb.locator('[data-handbook-page="l1-s3"]');
@@ -622,7 +610,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(home.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");
-    expect(saved).toContain("TEST benefit one");
+    expect(saved).toContain("TEST a used bike");
     await home.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
     // Goals live in the cover vision (D30: no Define wrap); walk to cover and check.
     const prevHome = home.getByRole("button", { name: "Previous page" });
@@ -630,7 +618,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
       if (await home.locator('[data-handbook-page="cover"]').isVisible().catch(() => false)) break;
       await prevHome.click();
     }
-    await expect(home.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText("TEST benefit one");
+    await expect(home.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText(benefitLabel);
     await expect(home.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText(/the environment/i);
     await expect(page.locator('[data-handbook="home"] [data-pencil]')).toHaveCount(0);
   });

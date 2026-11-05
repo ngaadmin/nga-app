@@ -133,8 +133,20 @@ function BottomBar() {
   );
 }
 
-/** App-shell look-alike for the test build: white page, top bar, five tabs. */
-export function VentureTestShell({ children }: { children: ReactNode }) {
+/**
+ * App-shell look-alike for the test build: white page, top bar, five tabs.
+ * `focus` (task screens, AC2): like an Academy lesson, the top bar and tabs
+ * step aside and the page is pinned to the viewport, so a task never scrolls
+ * the page and its Next / Finish stays in view.
+ */
+export function VentureTestShell({ children, focus = false }: { children: ReactNode; focus?: boolean }) {
+  if (focus) {
+    return (
+      <div className="mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white text-nga-ink" data-focus-mode="">
+        <main className="flex min-h-0 flex-1 flex-col">{children}</main>
+      </div>
+    );
+  }
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white text-nga-ink">
       <TopBar />

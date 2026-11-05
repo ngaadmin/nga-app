@@ -198,13 +198,8 @@ test("deep links", async ({ page }, info) => {
   await step(t, "?iconSet=friendship-bracelets swaps the logo icons", async () => {
     await page.goto(url("reset=1&complete=l1-s2&iconSet=friendship-bracelets"));
     await page.getByRole("button", { name: /The Brand, up next/ }).click({ timeout: 60_000 });
-    // Name first (D27); finish it so Design your logo unlocks for the icon-set check.
+    // Logo first (AC13): Design your logo is the up-next door.
     const main = page.locator("main");
-    await main.getByRole("button", { name: /Name your business/ }).click();
-    await main.getByRole("textbox", { name: /Business name/ }).fill("Happy Paws");
-    await main.getByRole("radio", { name: "Rounded" }).click();
-    await main.getByRole("radio", { name: "Dark ink" }).click();
-    await main.getByRole("button", { name: /Save to my workbook/ }).click();
     await main.getByRole("button", { name: /Design your logo/ }).click();
     await main.getByRole("tab", { name: "Icon" }).click();
     for (const n of ["Bead strand", "Knot", "Heart loop"]) await expect(main.getByRole("radio", { name: n })).toBeVisible();
@@ -216,11 +211,6 @@ test("deep links", async ({ page }, info) => {
     await page.goto(url("reset=1&complete=l1-s2"));
     await page.getByRole("button", { name: /The Brand, up next/ }).click({ timeout: 60_000 });
     const main = page.locator("main");
-    await main.getByRole("button", { name: /Name your business/ }).click();
-    await main.getByRole("textbox", { name: /Business name/ }).fill("Happy Paws");
-    await main.getByRole("radio", { name: "Rounded" }).click();
-    await main.getByRole("radio", { name: "Dark ink" }).click();
-    await main.getByRole("button", { name: /Save to my workbook/ }).click();
     await main.getByRole("button", { name: /Design your logo/ }).click();
     await main.getByRole("tab", { name: "Icon" }).click();
     for (const n of ["Paw", "Bone", "Dog face"]) await expect(main.getByRole("radio", { name: n })).toBeVisible();

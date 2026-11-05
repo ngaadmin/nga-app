@@ -7,7 +7,9 @@
  * content, so the handbook always reads the same saved answers the lessons
  * write (single source of truth).
  */
-import type { LaunchpadFloor, LaunchpadSilver, LaunchpadTextField } from "@/lib/launchpad/content/types";
+import type { LaunchpadFloor, LaunchpadSilver, LaunchpadSummarySection, LaunchpadTextField } from "@/lib/launchpad/content/types";
+import { applyFieldChange } from "@/lib/launchpad/content/fields";
+import { kebabId } from "@/lib/launchpad/venture-test/handbook-ids";
 import { fieldsAnswer, identityAnswerOf, rankingAnswer, selectionAnswer, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
 import type { CaptureScreen } from "@/lib/launchpad/content/task-pages";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
@@ -86,10 +88,54 @@ function silverPages(progress: VentureTestProgress, floors: readonly LaunchpadFl
       floorName: floor.name,
       silverNumber,
       silver,
-      kind: silver.wrapUp?.type === "identity-wrap-up" ? "identity" : silver.wrapUp?.type === "workbook-summary" ? "summary" : "placeholder",
+      kind:
+        silver.wrapUp?.type === "identity-wrap-up"
+          ? "identity"
+          : silver.wrapUp?.type === "workbook-summary" || silverHandbookSections(silver).length
+            ? "summary"
+            : "placeholder",
       bronzeTitles: silver.bronzes.filter((b) => isBronzeDone(progress, b)).map((b) => b.title),
       done: true,
     }));
+}
+
+/**
+ * The handbook sections a silver's own answers fill (Final column Z, e.g.
+ * "What my business will offer", "My why", "My cause", "My goals"), in
+ * building order. A workbook-summary wrap-up's sections win when it has them.
+ * Multi picks show as chips, a ranking as a numbered list, a single pick as
+ * text, and a goal loop as one sentence per filled goal.
+ */
+/**
+ * The goal fields the sheet's column AA lets the learner retype inline on the
+ * handbook page (AA6 to AA8). Amount, currency and timeframes stay read-only.
+ */
+export const GOAL_INLINE_EDITS: Readonly<Record<string, readonly string[]>> = {
+  "l1-goal-make-money": ["savingFor"], // AA6
+  "l1-goal-help-others": ["customerCount", "benefit"], // AA7
+  "l1-goal-learn-new-skills": ["skill", "achievement"], // AA8
+};
+
+export function silverHandbookSections(silver: LaunchpadSilver): LaunchpadSummarySection[] {
+  if (silver.wrapUp?.type === "workbook-summary") return [...silver.wrapUp.sections];
+  const out: LaunchpadSummarySection[] = [];
+  const add = (label: string, display: LaunchpadSummarySection["display"], answerKeys: readonly string[]) => {
+    const prev = out.find((x) => x.label === label);
+    const sources = answerKeys.map((answerKey) =>
+      GOAL_INLINE_EDITS[answerKey] ? { answerKey, editFields: GOAL_INLINE_EDITS[answerKey] } : { answerKey },
+    );
+    if (prev) out[out.indexOf(prev)] = { ...prev, sources: [...prev.sources, ...sources] };
+    else out.push({ id: kebabId(label), label, display, sources });
+  };
+  for (const b of silver.bronzes)
+    for (const t of b.tasks)
+      for (const sc of t.screens) {
+        if (sc.type === "goal-loop" && sc.handbookLabel) add(sc.handbookLabel, "sentences", sc.goals.map((g) => g.screen.answerKey));
+        else if (sc.type === "choice-capture" && sc.handbookLabel) add(sc.handbookLabel, sc.mode === "multi" ? "list" : "choice", [sc.answerKey]);
+        else if (sc.type === "rank-order" && sc.handbookLabel) add(sc.handbookLabel, "ranked", [sc.answerKey]);
+        else if (sc.type === "short-text" && sc.handbookLabel) add(sc.handbookLabel, "sentences", [sc.answerKey]);
+      }
+  return out;
 }
 
 /** The next silver to earn (the ghost page), or null once every silver is done. */
@@ -209,14 +255,13 @@ function captureScreensOf(screens: LaunchpadSilver["bronzes"][number]["tasks"][n
 
 /** TEST-ONLY sample text for short-text blanks, by "answerKey.field" (dog walking reads naturally). */
 const SAMPLE_TEXT: Record<string, string> = {
-  "l1-goal-help-others.benefit": "have happy, tired dogs after a long day",
-  "l1-goal-learn-new-skills.skill": "how to handle two dogs at once",
+  "l1-goal-make-money.savingFor": "a new bike",
   "l2-sell.serviceDescription": "30-minute neighborhood walks for small and medium dogs, with a photo after each walk",
   "l2-sell.availability": "weekday afternoons from 3 to 6 and Saturday mornings",
   "l2-demand.specificInterest": "after-school walks on weekdays",
 };
 
-const SAMPLE_NUMBER: Record<string, number> = { amount: 500, timeframeNumber: 6, donatePercent: 10, numberAsked: 3 };
+const SAMPLE_NUMBER: Record<string, number> = { amount: 500, timeframeNumber: 6, donatePercent: 10, numberAsked: 3, customerCount: 10 };
 
 function sampleFieldValue(answerKey: string, f: LaunchpadTextField): string | number | undefined {
   switch (f.input) {
@@ -242,11 +287,13 @@ export function shortcutSampleAnswer(screen: CaptureScreen): LaunchpadAnswer | n
   if (screen.type === "choice-capture") return selectionAnswer(screen.options.slice(0, screen.mode === "multi" ? 2 : 1).map((o) => o.id));
   if (screen.type === "rank-order") return rankingAnswer(screen.items.map((i) => i.id));
   if (screen.optional) return null;
-  const values: Record<string, string | number> = {};
+  let values: Record<string, string | number> = {};
   for (const f of screen.fields) {
     const v = sampleFieldValue(screen.answerKey, f);
     if (v !== undefined) values[f.name] = v;
   }
+  // A pick that prefills a text field (the skill's success line) fills it as the learner would see it.
+  for (const f of screen.fields) if (f.prefills && values[f.name] !== undefined) values = applyFieldChange(screen.fields, { ...values, [f.prefills]: "" }, f.name, values[f.name]!);
   return fieldsAnswer(values);
 }
 

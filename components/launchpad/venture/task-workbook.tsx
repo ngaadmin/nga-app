@@ -32,6 +32,10 @@ export function TaskWorkbook(props: {
   page?: { index: number; count: number; screen: LaunchpadTaskScreen };
   /** Set on tasks that allow it: saves the partial answer as a draft, leaves the task open and moves on. */
   onComeBackLater?: () => void;
+  /** Overrides the forward label (the optional last goal reads "Add this goal"). */
+  forwardLabel?: string;
+  /** Optional last goal (Final J11): "Skip for now" saves nothing and moves on. */
+  onSkip?: () => void;
 }) {
   const { tasks, index } = props;
   const task = tasks[index];
@@ -41,11 +45,13 @@ export function TaskWorkbook(props: {
   const page = props.page;
   const kind = page ? null : identityTaskKind(task.screens);
   const lastPage = !page || page.index === page.count - 1;
-  const forward = lastPage ? (task.ctaLabel ?? (isLast ? "Finish ›" : "Next ›")) : "Next ›";
+  const forward = props.forwardLabel ?? (lastPage ? (task.ctaLabel ?? (isLast ? "Finish ›" : "Next ›")) : "Next ›");
   const showPrevious = !single || (page && page.index > 0);
   const previousDisabled = index === 0 && (!page || page.index === 0);
   return (
-    <section className="flex flex-1 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col">
+      {/* AC2: the body takes what's left and the nav stays pinned below it. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto" data-workbook-body="">
       <TrailCrumb level={props.level} current={neutralTitle(task.title)} onBuilding={props.onBuilding} onCorridor={props.onCorridor} />
       <div className="mx-5 mt-2.5 flex justify-between font-heading text-[13px] font-semibold">
         <button type="button" onClick={props.onExit} className="text-nga-slate">
@@ -89,7 +95,7 @@ export function TaskWorkbook(props: {
           {props.eyebrow}
         </p>
       )}
-      <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5"}>{neutralTitle(task.title)}</Heading>
+      <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5 short:mb-1.5 short:mt-0.5"}>{neutralTitle(task.title)}</Heading>
       {kind === "logo" && <LogoBuilder key={task.id} screens={task.screens as readonly LaunchpadLogoPickerScreen[]} />}
       {kind === "name" && <NameForm key={task.id} screens={task.screens as readonly LaunchpadNamePickerScreen[]} />}
       {page && <TaskScreen key={page.screen.id} screen={page.screen} />}
@@ -103,7 +109,8 @@ export function TaskWorkbook(props: {
           {props.nextHint}
         </p>
       )}
-      <div className="mx-5 mt-auto flex items-center justify-between gap-3 pb-4" data-workbook-nav="">
+      </div>
+      <div className="mx-5 mt-auto flex flex-none items-center justify-between gap-3 pb-4 pt-2 short:pb-3" data-workbook-nav="">
         {showPrevious && (
           <button type="button" onClick={props.onPrevious} disabled={previousDisabled} className={BTN_CYAN_OUTLINE_COMPACT} data-workbook-previous="">
             ‹ Previous
@@ -120,6 +127,18 @@ export function TaskWorkbook(props: {
           {forward}
         </button>
       </div>
+      {props.onSkip && (
+        <div className="mx-5 -mt-1 pb-4 text-center">
+          <button
+            type="button"
+            onClick={props.onSkip}
+            className="min-h-11 px-3 font-heading text-[15px] font-semibold text-nga-slate underline underline-offset-4"
+            data-skip-for-now=""
+          >
+            Skip for now
+          </button>
+        </div>
+      )}
       {props.onComeBackLater && (
         <div className="mx-5 -mt-1 pb-4 text-center">
           <button

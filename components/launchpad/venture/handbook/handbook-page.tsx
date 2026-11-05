@@ -4,8 +4,10 @@ import { useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   partLabel,
+  silverHandbookSections,
   type HandbookPageView,
 } from "@/lib/launchpad/venture-test/handbook";
+import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import type { LaunchpadSummarySection } from "@/lib/launchpad/content/types";
 import { sectionLines, summaryCatalog } from "@/lib/launchpad/content/summary";
 import {
@@ -13,6 +15,7 @@ import {
   useLaunchpadAnswers,
 } from "@/components/launchpad/venture/identity/answers-context";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
+import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import {
@@ -326,8 +329,12 @@ function RocketDoodle() {
  * the business name, then the vision. Read-only, no pencils; each slot fills
  * on its own from the saved answers and shows grey placeholder text until then.
  */
-/** Cover logo: 72px (was 120px; 40% smaller so the longer vision fits, Cath 5 Nov 8:15am). */
-const COVER_LOGO_PX = 72;
+/**
+ * Cover logo: 112px at the top (Jasper's binder r5 lockup; AC14 "logo at the
+ * top and larger"). The cover fills the card height: logo, name, then the
+ * vision in the space left.
+ */
+const COVER_LOGO_PX = 112;
 
 function CoverPageBody({ page }: { page: HandbookPageView }) {
   const wrapUp =
@@ -335,7 +342,7 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
   const { answer } = useIdentityAnswer(wrapUp?.answerKey ?? "");
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
   return (
-    <div className="flex flex-col items-center gap-3 pt-2" data-cover="">
+    <div className="flex min-h-full flex-col items-center gap-3 pt-1" data-cover="">
       {hasLogo ? (
         <div data-cover-logo="filled">
           <LogoMark
@@ -349,10 +356,10 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
       ) : (
         <div
           data-cover-logo="empty"
-          className="flex h-[72px] w-[72px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
+          className="flex h-[112px] w-[112px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
         >
           <RocketDoodle />
-          <span className="px-1 text-[10px] leading-tight text-[#9AA3B5]">
+          <span className="px-1 text-[11px] leading-tight text-[#9AA3B5]">
             Your logo goes here
           </span>
         </div>
@@ -374,7 +381,7 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
           Your business name
         </p>
       )}
-      <div className="w-full">
+      <div className="flex w-full flex-1 flex-col">
         <HandRule />
         {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} />}
       </div>
@@ -382,17 +389,77 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
   );
 }
 
-/** A workbook-summary silver: its title, then the wrap-up's sections from saved answers. */
+/**
+ * K14: every page after the cover carries a small identity header (logo and
+ * name) so the workbook reads as the learner's own. Left off until either is chosen.
+ */
+function MiniIdentity() {
+  const { answer } = useIdentityAnswer(IDENTITY_ANSWER_KEY);
+  const hasLogo = !!(answer.shape && answer.color && answer.icon);
+  if (!hasLogo && !answer.name) return null;
+  return (
+    <div className="mb-2 flex items-center gap-2" data-mini-identity="">
+      {hasLogo && (
+        <LogoMark
+          shape={answer.shape}
+          color={answer.color}
+          icon={answer.icon}
+          size={24}
+          label={logoMarkLabel(answer)}
+        />
+      )}
+      {answer.name && (
+        <span
+          className="truncate font-heading text-[13px] font-semibold"
+          style={{ color: resolveNameColor(answer) }}
+        >
+          {answer.name}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * An answers page: the silver's title, then its handbook sections (a
+ * workbook-summary wrap-up's, or the column Z sections its capture screens
+ * name) read from the saved answers. Read-only.
+ */
 function SummaryPageBody({
   page,
+  editable,
   iconVentureId,
 }: {
   page: HandbookPageView;
+  editable: boolean;
   iconVentureId: string;
 }) {
-  const wrapUp =
-    page.silver.wrapUp?.type === "workbook-summary" ? page.silver.wrapUp : null;
-  const sections = useSectionLines(wrapUp?.sections ?? []);
+  const sections = useSectionLines(silverHandbookSections(page.silver));
+  const ctx = useLaunchpadAnswers();
+  const [editing, setEditing] = useState<string | null>(null);
+  if (editable && ctx) {
+    const catalog = summaryCatalog(ctx.floors ?? []);
+    return (
+      <>
+        <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} done={page.done} />
+        <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
+        <div className="mt-3">
+          {sections.map(({ section }, i) => (
+            <BinderSection
+              key={section.id}
+              section={section}
+              first={i === 0}
+              answers={ctx.answers}
+              catalog={catalog}
+              editing={editing}
+              setEditing={setEditing}
+              setAnswer={ctx.setAnswer}
+            />
+          ))}
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <TopRow
@@ -453,8 +520,8 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
  * One handbook page (one completed silver), drawn on the r4 paper card.
  * `editable` comes from the entry point and the silver's completion (see
  * isHandbookPageEditable): from the building, completed identity pages get
- * an Edit button; from home everything is read-only. Summary pages are read
- * here (their values are edited on the silver's wrap-up). Placeholder pages
+ * an Edit button and summary pages get their pencils (the inline edits the
+ * sheet's column AA allows); from home everything is read-only. Placeholder pages
  * have nothing to edit.
  */
 export function HandbookPage({
@@ -468,7 +535,7 @@ export function HandbookPage({
 }) {
   return (
     <article
-      className="relative"
+      className={page.kind === "cover" ? "relative h-full" : "relative"}
       data-handbook-page={page.kind === "cover" ? "cover" : page.silver.id}
       data-editable={editable ? "true" : "false"}
       aria-label={
@@ -477,6 +544,7 @@ export function HandbookPage({
           : `Page ${page.number}: ${page.silver.title}`
       }
     >
+      {page.kind !== "cover" && page.kind !== "identity" && <MiniIdentity />}
       {page.kind === "cover" ? (
         <CoverPageBody page={page} />
       ) : page.kind === "identity" ? (
@@ -486,7 +554,7 @@ export function HandbookPage({
           iconVentureId={iconVentureId}
         />
       ) : page.kind === "summary" ? (
-        <SummaryPageBody page={page} iconVentureId={iconVentureId} />
+        <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : (
         <PlaceholderPageBody page={page} />
       )}

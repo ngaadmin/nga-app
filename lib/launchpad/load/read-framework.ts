@@ -48,6 +48,12 @@ const COL = {
   handbook: 27,
 } as const;
 
+/** Column Z label without its notes: "My why (not-applicable items left off); also ..." -> "My why". */
+function workbookSection(value: string | undefined): string | undefined {
+  const t = cellText(value).split(";")[0]!.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  return t && !/^(n\/a|none)$/i.test(t) ? t : undefined;
+}
+
 function cellText(value: string | undefined): string {
   const t = (value ?? "").replace(/\r\n?/g, "\n").trim();
   return /^N\/A$/i.test(t) ? "" : t;
@@ -210,6 +216,7 @@ export function frameworkFromSheets(sheets: readonly WorkbookSheet[], maxLevel =
         .join(" | "),
       ...(optionCells.length ? { options: optionCells } : {}),
       ...(inputType ? { inputType } : {}),
+      ...(workbookSection(values[COL.feedsWrapUp]) ? { workbookSection: workbookSection(values[COL.feedsWrapUp]) } : {}),
     };
     rows.push(remapModule1(base));
   }

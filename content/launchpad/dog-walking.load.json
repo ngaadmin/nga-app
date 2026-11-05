@@ -5,7 +5,7 @@
   "source": {
     "file": "lib/launchpad/content/source/dog-walking/service-business-framework.xlsx",
     "sheet": "Final Service Business Framewor",
-    "md5": "4573128ee6bb1e39f1eb44e4dd4d63bd",
+    "md5": "1a3823bd3835f6243c48d78f9901f6ab",
     "rows": "2-16",
     "notes": [
       {
@@ -91,8 +91,8 @@
                           "label": "Dog sitting"
                         },
                         {
-                          "id": "training",
-                          "label": "Training"
+                          "id": "dog-training",
+                          "label": "Dog Training"
                         },
                         {
                           "id": "manage-bookings-for-others",
@@ -132,14 +132,15 @@
                             "label": "Dog sitting"
                           },
                           {
-                            "id": "training",
-                            "label": "Training"
+                            "id": "dog-training",
+                            "label": "Dog Training"
                           },
                           {
                             "id": "manage-bookings-for-others",
                             "label": "Manage bookings for others"
                           }
                         ],
+                        "handbookLabel": "What my business will offer",
                         "context": "Every business starts with a picture of what it could become.",
                         "guidance": "Tap everything you might like to offer, now or later. You can change your picks later."
                       },
@@ -243,11 +244,12 @@
                           }
                         ],
                         "notApplicableLabel": "Not applicable",
+                        "handbookLabel": "My why",
                         "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
-                        "guidance": "Use the arrows to put the reasons in order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
+                        "guidance": "Drag the reasons into order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
                       },
                       "context": "Knowing your \"Why\" shapes what you build, who you serve, and how you grow.",
-                      "guidance": "Use the arrows to put the reasons in order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
+                      "guidance": "Drag the reasons into order, most important at the top. If one doesn't matter to you, select 'not applicable' to strike it out."
                     }
                   ]
                 }
@@ -343,6 +345,7 @@
                             "label": "Older people"
                           }
                         ],
+                        "handbookLabel": "My cause",
                         "context": "A business can do more than earn - it can also give back. A bigger purpose outside yourself gives your business a meaning that outlasts any single sale.",
                         "guidance": "Think about what you care about most. Pick the one area you'd love to help."
                       },
@@ -407,6 +410,7 @@
                         "type": "goal-loop",
                         "context": "Goals turn your \"Why\" into something you can measure and check.",
                         "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
+                        "handbookLabel": "My goals",
                         "orderFrom": "l1-why",
                         "skipRankItemIds": [],
                         "goals": [
@@ -455,6 +459,14 @@
                                 },
                                 {
                                   "kind": "text",
+                                  "text": ". I'm saving for "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "savingFor"
+                                },
+                                {
+                                  "kind": "text",
                                   "text": "."
                                 }
                               ],
@@ -493,7 +505,15 @@
                                       "id": "months",
                                       "label": "months"
                                     }
-                                  ]
+                                  ],
+                                  "defaultValue": "weeks"
+                                },
+                                {
+                                  "name": "savingFor",
+                                  "input": "text",
+                                  "label": "Saving for",
+                                  "hint": "free text",
+                                  "maxLength": 60
                                 }
                               ]
                             }
@@ -511,7 +531,15 @@
                               "parts": [
                                 {
                                   "kind": "text",
-                                  "text": "I want my customers to "
+                                  "text": "I want "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "customerCount"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " customers to "
                                 },
                                 {
                                   "kind": "field",
@@ -524,11 +552,36 @@
                               ],
                               "fields": [
                                 {
+                                  "name": "customerCount",
+                                  "input": "integer",
+                                  "label": "Number of customers",
+                                  "hint": "number",
+                                  "min": 1,
+                                  "max": 99
+                                },
+                                {
                                   "name": "benefit",
-                                  "input": "text",
-                                  "label": "Benefit",
-                                  "hint": "benefit",
-                                  "maxLength": 120
+                                  "input": "choice",
+                                  "label": "What your customers get",
+                                  "hint": "pick one",
+                                  "options": [
+                                    {
+                                      "id": "come-home-to-a-happy-well-looked-after-dog",
+                                      "label": "come home to a happy, well looked-after dog"
+                                    },
+                                    {
+                                      "id": "have-a-washed-and-groomed-dog",
+                                      "label": "have a washed and groomed dog"
+                                    },
+                                    {
+                                      "id": "manage-their-dog-s-behavior-problems",
+                                      "label": "manage their dog's behavior problems"
+                                    },
+                                    {
+                                      "id": "go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
+                                      "label": "go away for the weekend or holidays without having to worry about their pet"
+                                    }
+                                  ]
                                 }
                               ]
                             }
@@ -546,7 +599,7 @@
                               "parts": [
                                 {
                                   "kind": "text",
-                                  "text": "I want to learn "
+                                  "text": "I want to get better at "
                                 },
                                 {
                                   "kind": "field",
@@ -554,7 +607,15 @@
                                 },
                                 {
                                   "kind": "text",
-                                  "text": " in "
+                                  "text": ". I'll know I've done it when I can "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "achievement"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " in the next "
                                 },
                                 {
                                   "kind": "field",
@@ -576,10 +637,45 @@
                               "fields": [
                                 {
                                   "name": "skill",
-                                  "input": "text",
+                                  "input": "choice",
                                   "label": "Skill",
-                                  "hint": "skill",
-                                  "maxLength": 120
+                                  "hint": "pick one",
+                                  "options": [
+                                    {
+                                      "id": "talking-to-customers",
+                                      "label": "talking to customers",
+                                      "prefill": "handle a new customer's questions from first contact to booking without help"
+                                    },
+                                    {
+                                      "id": "selling-my-product-or-services",
+                                      "label": "selling my product or services",
+                                      "prefill": "win a paying customer who found me through my own marketing"
+                                    },
+                                    {
+                                      "id": "managing-my-money",
+                                      "label": "managing my money",
+                                      "prefill": "track every dollar coming in and going out of my business"
+                                    },
+                                    {
+                                      "id": "solving-problems",
+                                      "label": "solving problems",
+                                      "prefill": "sort out a problem on a job and still keep the customer"
+                                    },
+                                    {
+                                      "id": "planning-my-time",
+                                      "label": "planning my time",
+                                      "prefill": "deliver every job I have booked on time while keeping up with school or work"
+                                    }
+                                  ],
+                                  "prefills": "achievement"
+                                },
+                                {
+                                  "name": "achievement",
+                                  "input": "text",
+                                  "label": "I'll know I've done it when I can",
+                                  "hint": "pick a skill first",
+                                  "maxLength": 120,
+                                  "multiline": true
                                 },
                                 {
                                   "name": "timeframeNumber",
@@ -602,7 +698,8 @@
                                       "id": "months",
                                       "label": "months"
                                     }
-                                  ]
+                                  ],
+                                  "defaultValue": "weeks"
                                 }
                               ]
                             }
@@ -693,8 +790,8 @@
                               "mode": "goal",
                               "answerKey": "l1-goal-other",
                               "heading": "Add another goal",
-                              "prompt": "Add any other goal you haven't already captured that you feel is important for the success of your business.",
-                              "guidance": "Add a goal only if there is something important you haven't covered yet.",
+                              "prompt": "One more goal? Is there another goal that matters to you? Add it here, or skip it.",
+                              "guidance": "This one's optional. You can skip it and keep going.",
                               "parts": [
                                 {
                                   "kind": "text",
@@ -706,7 +803,7 @@
                                 },
                                 {
                                   "kind": "text",
-                                  "text": " in "
+                                  "text": " in the next "
                                 },
                                 {
                                   "kind": "field",
@@ -757,6 +854,7 @@
                                       "label": "months"
                                     }
                                   ],
+                                  "defaultValue": "weeks",
                                   "optional": true
                                 }
                               ],
@@ -772,7 +870,8 @@
                         "amount: whole number 1 to 9,999,999",
                         "currency: Parent Hub currency (10 codes, USD default), read-only",
                         "timeframeNumber: whole number 1 to 99",
-                        "timeframeUnit: one of weeks | months"
+                        "timeframeUnit: one of weeks | months",
+                        "savingFor: up to 60 characters"
                       ],
                       "feeds": [
                         {
@@ -790,7 +889,7 @@
                       "screenId": "l1-s2-b1-t1-goal-make-money",
                       "index": "2.1",
                       "template": "short-text:goal",
-                      "question": "I want to earn [amount] [currency] in [number] [weeks/months].",
+                      "question": "I want to earn [amount] [currency] in [number] [weeks/months]. I'm saving for [free text].",
                       "answer": {
                         "answerKey": "l1-goal-make-money",
                         "kind": "fields",
@@ -819,6 +918,12 @@
                             "type": "choice",
                             "required": true,
                             "limits": "one of weeks | months"
+                          },
+                          {
+                            "name": "savingFor",
+                            "type": "text",
+                            "required": true,
+                            "limits": "up to 60 characters"
                           }
                         ]
                       },
@@ -827,7 +932,8 @@
                     {
                       "sourceRow": 7,
                       "validation": [
-                        "benefit: up to 120 characters"
+                        "customerCount: whole number 1 to 99",
+                        "benefit: one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet"
                       ],
                       "feeds": [
                         {
@@ -839,22 +945,29 @@
                       "flags": [
                         "D12",
                         "D23",
-                        "D13"
+                        "D15",
+                        "D31"
                       ],
                       "screenId": "l1-s2-b1-t1-goal-help-others",
                       "index": "2.2",
                       "template": "short-text:goal",
-                      "question": "I want my customers to [benefit].",
+                      "question": "I want [number] customers to [pick one].",
                       "answer": {
                         "answerKey": "l1-goal-help-others",
                         "kind": "fields",
                         "version": 1,
                         "fields": [
                           {
-                            "name": "benefit",
-                            "type": "text",
+                            "name": "customerCount",
+                            "type": "integer",
                             "required": true,
-                            "limits": "up to 120 characters"
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "benefit",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet"
                           }
                         ]
                       },
@@ -863,7 +976,8 @@
                     {
                       "sourceRow": 8,
                       "validation": [
-                        "skill: up to 120 characters",
+                        "skill: one of talking-to-customers | selling-my-product-or-services | managing-my-money | solving-problems | planning-my-time",
+                        "achievement: up to 120 characters",
                         "timeframeNumber: whole number 1 to 99",
                         "timeframeUnit: one of weeks | months"
                       ],
@@ -878,12 +992,13 @@
                         "D12",
                         "D23",
                         "D13",
-                        "D15"
+                        "D15",
+                        "D31"
                       ],
                       "screenId": "l1-s2-b1-t1-goal-learn-new-skills",
                       "index": "2.3",
                       "template": "short-text:goal",
-                      "question": "I want to learn [skill] in [number] [weeks/months].",
+                      "question": "I want to get better at [pick one: the skill, text before the bar in N8 to R8]. I'll know I've done it when I can [prefilled with that skill's success line, text after the bar, editable] in the next [number] [weeks/months].\n\nExample: I want to get better at talking to customers. I'll know I've done it when I can handle a new customer's questions from first contact to booking without help in the next 4 weeks.",
                       "answer": {
                         "answerKey": "l1-goal-learn-new-skills",
                         "kind": "fields",
@@ -891,6 +1006,12 @@
                         "fields": [
                           {
                             "name": "skill",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of talking-to-customers | selling-my-product-or-services | managing-my-money | solving-problems | planning-my-time"
+                          },
+                          {
+                            "name": "achievement",
                             "type": "text",
                             "required": true,
                             "limits": "up to 120 characters"
@@ -1017,8 +1138,8 @@
                       "screenId": "l1-s2-b1-t1-goal-other",
                       "index": "2.6",
                       "template": "short-text:goal",
-                      "guidance": "Add a goal only if there is something important you haven't covered yet.",
-                      "question": "Add any other goal you haven't already captured that you feel is important for the success of your business. Starter: My goal is to [free text] in [number] [weeks/months].",
+                      "guidance": "This one's optional. You can skip it and keep going.",
+                      "question": "One more goal? (optional) Is there another goal that matters to you? Add it here, or skip it. Starter: My goal is to [free text] in the next [number] [weeks/months].",
                       "answer": {
                         "answerKey": "l1-goal-other",
                         "kind": "fields",
@@ -1061,7 +1182,7 @@
           "bronzes": [],
           "lockedRows": [
             {
-              "sourceRow": 13,
+              "sourceRow": 12,
               "validation": [
                 "locked build: unchanged"
               ],
@@ -1069,6 +1190,45 @@
               "feedsInto": [
                 "l1-s3-wrap"
               ],
+              "flags": [
+                "D20",
+                "D27"
+              ],
+              "screenId": "l1-s3-b2-t1",
+              "index": "1",
+              "template": "logo-picker",
+              "context": "A logo is your business's signature. Have fun designing one here.",
+              "guidance": "",
+              "answer": {
+                "answerKey": "l2-s2-identity",
+                "kind": "business-identity",
+                "version": 1,
+                "fields": [
+                  {
+                    "name": "shape",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "color",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "icon",
+                    "type": "option id",
+                    "required": true
+                  }
+                ]
+              }
+            },
+            {
+              "sourceRow": 13,
+              "validation": [
+                "locked build: unchanged"
+              ],
+              "feeds": [],
+              "feedsInto": [],
               "flags": [
                 "D20",
                 "D27"
@@ -1096,45 +1256,6 @@
                   },
                   {
                     "name": "nameColor",
-                    "type": "option id",
-                    "required": true
-                  }
-                ]
-              }
-            },
-            {
-              "sourceRow": 12,
-              "validation": [
-                "locked build: unchanged"
-              ],
-              "feeds": [],
-              "feedsInto": [],
-              "flags": [
-                "D20",
-                "D27"
-              ],
-              "screenId": "l1-s3-b2-t1",
-              "index": "1",
-              "template": "logo-picker",
-              "context": "A logo is your business's signature. Have fun designing one here.",
-              "guidance": "",
-              "answer": {
-                "answerKey": "l2-s2-identity",
-                "kind": "business-identity",
-                "version": 1,
-                "fields": [
-                  {
-                    "name": "shape",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "color",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "icon",
                     "type": "option id",
                     "required": true
                   }
@@ -1729,8 +1850,8 @@
     {
       "id": "D16",
       "topic": "Ranking control",
-      "applied": "Up and down buttons move a reason; no drag yet. G3 says “Drag the reasons into order”; shown as “Use the arrows to put the reasons in order”.",
-      "status": "build-assumption",
+      "applied": "AC3 (Cath, 5 Nov): drag and drop replaces the up and down arrows. Drag a reason by its grip (mouse or touch) to reorder it or move it below the line; with the keyboard, focus a reason and use the up and down arrow keys. G3 “Drag the reasons into order” is shown as written.",
+      "status": "decided-cath",
       "rows": [
         3
       ]
@@ -1832,8 +1953,8 @@
     },
     {
       "id": "D27",
-      "topic": "The Brand name-then-logo",
-      "applied": "Final D/E + Revised: Name the business is step 1, Design the logo is step 2 under 3 The Brand (l1-s3). Seed locked pickers reorder to match; answer key l2-s2-identity unchanged.",
+      "topic": "The Brand logo-then-name",
+      "applied": "AC13 (Cath, 5 Nov): Design the logo comes first and Name the business second, so the name color can use the logo color. The sheet's D12/D13/E12/E13 still say name first; AC13 wins. Bronze ids keep their seed numbers (logo l1-s3-b2, name l1-s3-b1) so saved answers stay put; only the order changes. Answer key l2-s2-identity unchanged.",
       "status": "decided-cath",
       "rows": [
         12,
@@ -1858,11 +1979,22 @@
     },
     {
       "id": "D30",
-      "topic": "No Define wrap-up",
-      "applied": "Final has no silver wrap for Define the business or Set your goals. Level workbook is The Brand identity wrap-up (row 14 handbook). No gold-completion screen — lift shows Congratulations after the workbook.",
+      "topic": "No silver wrap-ups",
+      "applied": "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) a short silver-done card shows (Nice work! [Silver] is done., See my handbook / Keep going); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).",
       "status": "decided-cath",
       "rows": [
+        11,
         14
+      ]
+    },
+    {
+      "id": "D31",
+      "topic": "Goal dropdowns",
+      "applied": "AC5 / J7 / J8: Help others picks one customer benefit from N7 to Q7 (four sheet options, none invented); Learn new skills picks one skill from N8 to R8 (text before the bar) and prefills the success line (text after the bar), which swaps on a new pick until the learner types their own. Options keep the sheet's lower case because they sit mid-sentence.",
+      "status": "decided-cath",
+      "rows": [
+        7,
+        8
       ]
     }
   ]

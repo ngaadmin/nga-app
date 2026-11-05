@@ -29,11 +29,11 @@ describe("Add another goal: one inline sentence, optional duration, no number (C
     expect(screen.fields.map((f) => f.name)).toEqual(["goalText", "timeframeNumber", "timeframeUnit"]);
     expect(screen.fields.every((f) => f.optional)).toBe(true);
     expect(screen.optional).toBe(true);
-    expect(screen.parts.map((p) => (p.kind === "text" ? p.text : "_")).join("")).toBe("My goal is to _ in _ _.");
+    expect(screen.parts.map((p) => (p.kind === "text" ? p.text : "_")).join("")).toBe("My goal is to _ in the next _ _.");
   });
 
-  it("reads as one sentence; an empty duration drops with its 'in'", () => {
-    expect(say({ goalText: "save up", timeframeNumber: 6, timeframeUnit: "weeks" })).toBe("My goal is to save up in 6 weeks.");
+  it("reads as one sentence; an empty duration drops with its 'in the next'", () => {
+    expect(say({ goalText: "save up", timeframeNumber: 6, timeframeUnit: "weeks" })).toBe("My goal is to save up in the next 6 weeks.");
     expect(say({ goalText: "save up" })).toBe("My goal is to save up.");
     expect(say({})).toBeNull();
   });

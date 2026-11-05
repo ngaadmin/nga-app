@@ -17,6 +17,7 @@ import { BTN_CYAN, BTN_PRIMARY, PRIMARY_LABEL, continueCopy, BTN_WHITE, Heading,
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { toggleChoice } from "@/components/launchpad/venture/screens/choice-capture-screen";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
+import { applyFieldChange } from "@/lib/launchpad/content/fields";
 import { OpenSteps, OpenStepsHint, type OpenStep } from "@/components/launchpad/venture/open-steps";
 
 function Pencil() {
@@ -76,7 +77,7 @@ function InlineEditor({
             <FieldControl
               field={f}
               value={draft.values?.[f.name]}
-              onChange={(v) => setDraft({ values: { ...(draft.values ?? {}), [f.name]: v } })}
+              onChange={(v) => setDraft({ values: applyFieldChange(edit.fields, draft.values ?? {}, f.name, v) })}
               block
               idPrefix={`edit-${source.answerKey}`}
             />
@@ -176,9 +177,11 @@ function PaperLines({ display, lines }: { display: LaunchpadSummarySection["disp
 
 /**
  * One section on the binder page: swash label, one pencil, the content, and
- * a hand-drawn divider before the next section. No boxes.
+ * a hand-drawn divider before the next section. No boxes. Also drawn on an
+ * editable handbook page (AC14 removed the wrap-ups, so the handbook is
+ * where AA's inline edits live).
  */
-function BinderSection({
+export function BinderSection({
   section,
   first,
   answers,

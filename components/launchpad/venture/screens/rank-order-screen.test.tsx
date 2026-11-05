@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach } from "vitest";
 afterEach(cleanup);
@@ -7,6 +7,18 @@ import { moveAcrossLine, RankOrderScreen, BELOW_LINE_HINT, RANK_GUIDANCE } from 
 import type { LaunchpadRankOrderScreen } from "@/lib/launchpad/content/types";
 import { isPageAnswered } from "@/lib/launchpad/content/task-pages";
 import { rankingAnswer } from "@/lib/launchpad/content/answers";
+
+// jsdom has no PointerEvent: a MouseEvent with a pointerId stands in.
+if (typeof window !== "undefined" && !("PointerEvent" in window)) {
+  class PointerEventShim extends MouseEvent {
+    pointerId: number;
+    constructor(type: string, init: MouseEventInit & { pointerId?: number } = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 0;
+    }
+  }
+  (window as unknown as { PointerEvent: unknown }).PointerEvent = PointerEventShim;
+}
 
 const SCREEN = {
   type: "rank-order",
@@ -35,20 +47,57 @@ describe("moveAcrossLine", () => {
 });
 
 describe("RankOrderScreen below the line", () => {
-  it("shows the empty zone hint and guidance, no N/A chips; arrows move tiles across the line and numbers run 1 to N", () => {
+  const tileOf = (id: string) => document.querySelector(`[data-rank-item='${id}']`) as HTMLElement;
+  it("shows the empty zone hint and drag guidance, no arrows or N/A chips; the keyboard moves tiles across the line", () => {
     render(<RankOrderScreen screen={SCREEN} />);
     expect(screen.getByText(BELOW_LINE_HINT)).toBeTruthy();
     expect(screen.getByText(RANK_GUIDANCE)).toBeTruthy();
+    expect(RANK_GUIDANCE).toMatch(/^Drag/);
     expect(screen.queryByText("N/A")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Move Delta down" }));
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    fireEvent.keyDown(tileOf("d"), { key: "ArrowDown" });
     expect(numbers()).toEqual(["a", "b", "c"]);
     expect(zone()).toEqual(["d"]);
+    expect(document.querySelector("[data-rank-announce]")?.textContent).toBe("Delta moved below the line: doesn't apply to me.");
     expect(screen.queryByText(BELOW_LINE_HINT)).toBeNull();
     const muted = document.querySelector("[data-below-line] [data-rank-item='d'] span") as HTMLElement;
     expect(muted.className).not.toMatch(/line-through/);
-    fireEvent.click(screen.getByRole("button", { name: "Move Delta up, doesn't apply to me" }));
+    fireEvent.keyDown(tileOf("d"), { key: "ArrowUp" });
     expect(numbers()).toEqual(["a", "b", "c", "d"]);
     expect(zone()).toEqual([]);
+    fireEvent.keyDown(tileOf("d"), { key: "ArrowUp" });
+    expect(numbers()).toEqual(["a", "b", "d", "c"]);
+    expect(document.querySelector("[data-rank-announce]")?.textContent).toBe("Delta is now number 3.");
+    expect(tileOf("d").getAttribute("tabindex")).toBe("0");
+    expect(tileOf("d").getAttribute("aria-label")).toMatch(/up and down arrow keys/);
+  });
+
+  it("a pointer drag moves a tile by midpoints, across the line too; a tap does nothing", () => {
+    render(<RankOrderScreen screen={SCREEN} />);
+    // Rows are 50px tall from y=0: a, b, c, d, then the line header at 220.
+    const ys: Record<string, number> = { a: 0, b: 50, c: 100, d: 150, __line__: 220 };
+    const rect = (el: Element) => {
+      const id = el.getAttribute("data-rank-item") ?? (el.hasAttribute("data-rank-line") ? "__line__" : null);
+      const top = id ? ys[id]! : 0;
+      return { top, bottom: top + 44, height: 44, left: 0, right: 300, width: 300, x: 0, y: top, toJSON: () => ({}) } as DOMRect;
+    };
+    const spy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      return rect(this);
+    });
+    fireEvent.pointerDown(tileOf("a"), { pointerId: 1, button: 0, clientY: 10 });
+    fireEvent.pointerUp(window, { pointerId: 1, clientY: 12 });
+    expect(numbers()).toEqual(["a", "b", "c", "d"]);
+    fireEvent.pointerDown(tileOf("a"), { pointerId: 2, button: 0, clientY: 10 });
+    fireEvent.pointerMove(window, { pointerId: 2, clientY: 140 });
+    expect(document.querySelector("[data-screen-type='rank-order'][data-dragging]")).toBeTruthy();
+    fireEvent.pointerUp(window, { pointerId: 2, clientY: 140 });
+    expect(numbers()).toEqual(["b", "c", "a", "d"]);
+    expect(document.querySelector("[data-dragging]")).toBeNull();
+    fireEvent.pointerDown(tileOf("b"), { pointerId: 3, button: 0, clientY: 10 });
+    fireEvent.pointerMove(window, { pointerId: 3, clientY: 260 });
+    fireEvent.pointerUp(window, { pointerId: 3, clientY: 260 });
+    expect(zone()).toEqual(["b"]);
+    spy.mockRestore();
   });
 
   it("is not answered once every reason is below the line", () => {

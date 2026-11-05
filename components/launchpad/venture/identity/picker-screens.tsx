@@ -70,12 +70,12 @@ export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPicker
       <div
         role="group"
         aria-label="Logo preview"
-        className="mt-5 flex h-[248px] items-center justify-center rounded-3xl bg-[#F9FAFB]"
+        className="mt-5 flex h-[248px] items-center short:mt-3 short:h-[196px] justify-center rounded-3xl bg-[#F9FAFB]"
         data-logo-hero=""
       >
         <LogoMark shape={answer.shape} color={answer.color} icon={answer.icon} size={164} label={logoMarkLabel(answer)} />
       </div>
-      <div className="mt-6">
+      <div className="mt-6 short:mt-4">
         <Segmented
           label="Logo parts"
           items={screens.map((s) => ({ id: s.step, label: TAB_LABEL[s.step] }))}
@@ -85,7 +85,7 @@ export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPicker
           panelId={`${screens[0]!.id}-panel`}
         />
       </div>
-      <div id={`${screens[0]!.id}-panel`} role="tabpanel" aria-labelledby={`${screens[0]!.id}-tab-${tab}`} className="mt-7">
+      <div id={`${screens[0]!.id}-panel`} role="tabpanel" aria-labelledby={`${screens[0]!.id}-tab-${tab}`} className="mt-7 short:mt-4">
         <LogoStepChoices screen={screen} answer={answer} update={pick} iconVentureId={iconVentureId} />
       </div>
     </div>
@@ -95,7 +95,7 @@ export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPicker
 function NameSection({ screen, answer, update }: { screen: LaunchpadNamePickerScreen; answer: BusinessIdentityAnswer; update: UpdateIdentity }) {
   const headingId = `${screen.id}-heading`;
   return (
-    <section className="mt-[30px] first:mt-2" data-step={screen.step} aria-labelledby={headingId}>
+    <section className="mt-[30px] first:mt-2 short:mt-4 short:first:mt-1" data-step={screen.step} aria-labelledby={headingId}>
       <SectionHeading id={headingId}>{screen.heading ?? screen.prompt}</SectionHeading>
       {screen.step === "name" && (
         <NameInput
@@ -124,7 +124,7 @@ function NameSection({ screen, answer, update }: { screen: LaunchpadNamePickerSc
 export function NameForm({ screens }: { screens: readonly LaunchpadNamePickerScreen[] }) {
   const { answer, update } = useIdentityAnswer(screens[0]!.answerKey);
   return (
-    <div data-task-screen="name-form" className="mx-6 mb-4 flex flex-col">
+    <div data-task-screen="name-form" className="mx-6 mb-4 flex flex-col short:mb-1">
       {screens.map((s) => (
         <NameSection key={s.id} screen={s} answer={answer} update={update} />
       ))}

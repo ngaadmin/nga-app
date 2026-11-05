@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { neutralTitle, partLabel } from "@/lib/launchpad/venture-test/handbook";
+import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 import type { LaunchpadVentureView } from "@/lib/launchpad/content/venture-view";
 import type { VentureTestShortcut } from "@/lib/launchpad/venture-test/venture-test-progress";
 import { VentureFlow } from "@/components/launchpad/venture-test/venture-flow";
+import { SILVER_DONE_MESSAGE } from "@/components/launchpad/venture/handbook/silver-done-card";
 import { markVentureTestOnboardingSeen, saveVentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-storage";
 
 const PAYLOAD = launchpadTestVentureSeed("dog-walking");
@@ -29,9 +30,12 @@ const door = (title: string) => screen.getByRole("button", { name: new RegExp(ne
 
 describe("bronze doors open their tasks directly (no task list)", () => {
   it("the 'Name your business' door lands on the name form; Exit goes back to the doors (D26/D27)", async () => {
-    // Goals done unlocks The Brand (name then logo).
+    // Goals done unlocks The Brand (AC12/13: logo then name; the name door opens once the logo is done).
     renderFlow({ kind: "through-silver", silverId: "l1-s2" });
     fireEvent.click(await screen.findByRole("button", { name: /The Brand/ }));
+    fireEvent.click(door("Design your logo"));
+    for (const label of ["Circle", "Light blue", "Paw"]) fireEvent.click(screen.getByRole("radio", { name: label }));
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
     fireEvent.click(door("Name your business"));
     expect(document.querySelector("[data-task-screen='name-form']")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Name your business" })).toBeTruthy();
@@ -108,37 +112,43 @@ describe("bronze doors open their tasks directly (no task list)", () => {
   });
 });
 
-const next = () => fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
+const next = () => fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish|Add this goal)/ }));
 
-describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () => {
-  it("walks L1, edits on the wrap-up, then shows the silver page and the gold completion", async () => {
+describe("Level 1 from the load: capture, goal loop, after-step message, level done", () => {
+  it("walks L1: keyboard rank, goals with presets, the after-step message, logo before name, then Congratulations", async () => {
     renderFlow({ kind: "level", level: 1 });
     const silver = PAYLOAD.floors[0]!.silvers[0]!;
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     // Offer: one screen.
     fireEvent.click(door(silver.bronzes[0]!.title));
     fireEvent.click(screen.getByRole("button", { name: "Dog walking" }));
-    fireEvent.click(screen.getByRole("button", { name: "Training" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dog Training" }));
     next();
-    // Why: arrows reorder; moving a reason below the line takes it out of the goal loop.
+    // Why (AC3): no arrows; the keyboard fallback reorders, and below the line takes a reason out of the goal loop.
     fireEvent.click(door(silver.bronzes[1]!.title));
-    fireEvent.click(screen.getByRole("button", { name: "Move Help others up" }));
-    fireEvent.click(screen.getByRole("button", { name: "Move Learn new skills down" }));
-    fireEvent.click(screen.getByRole("button", { name: "Move Learn new skills down" }));
+    expect(screen.queryByRole("button", { name: /^Move / })).toBeNull();
+    const tile = (id: string) => document.querySelector(`[data-rank-item='${id}']`) as HTMLElement;
+    fireEvent.keyDown(tile("help-others"), { key: "ArrowUp" });
+    fireEvent.keyDown(tile("learn-new-skills"), { key: "ArrowDown" });
+    fireEvent.keyDown(tile("learn-new-skills"), { key: "ArrowDown" });
     expect(document.querySelector("[data-rank-item='learn-new-skills'][data-struck]")).toBeTruthy();
     next();
-    // Cause. D30: Define has no goals bronze and no wrap-up — silver-done after three bronzes.
+    // Cause, then Define is done: the after-step message (AC14 / J11), not a wrap-up.
     fireEvent.click(door(silver.bronzes[2]!.title));
     const finish = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
     expect(finish.disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Animals" }));
     next();
-    expect(document.querySelector("[data-silver-complete='l1-s1']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const doneCard = document.querySelector("[data-silver-done='l1-s1']") as HTMLElement;
+    expect(doneCard).toBeTruthy();
+    expect(doneCard.textContent).toContain("Nice work! Define the business is done.");
+    expect(doneCard.textContent).toContain(SILVER_DONE_MESSAGE);
+    expect(document.querySelector("[data-wrap-up], [data-silver-complete]")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Keep going" }));
     expect(document.querySelector("[data-gold-completion]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
 
-    // Set your goals (l1-s2): own silver; Step 1 shows intro + first goal.
+    // Set your goals (l1-s2): help others first (ranked), then make money, be my own boss, cause, other.
     const goalsSilver = PAYLOAD.floors[0]!.silvers[1]!;
     fireEvent.click(screen.getByRole("button", { name: new RegExp(neutralTitle(goalsSilver.title)) }));
     fireEvent.click(door(goalsSilver.bronzes[0]!.title));
@@ -147,34 +157,24 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     expect(screen.getByText("Step 1 of 5")).toBeTruthy();
     expect(screen.getByText("Goal 1 of 5")).toBeTruthy();
     expect(document.querySelector("[data-screen-intro] [data-guidance]")?.textContent).toBe(loop.guidance);
-    expect(screen.getByText(/I want my customers to/)).toBeTruthy();
+    expect(document.querySelector("[data-sentence]")?.textContent).toMatch(/^I want .*customers to/);
     expect(screen.queryByRole("button", { name: "Not applicable" })).toBeNull();
-    expect(screen.queryByRole("combobox")).toBeNull();
-    const benefit = screen.getByRole("textbox", { name: "Benefit" }) as HTMLInputElement;
-    expect(benefit.value).toBe("");
     expect((screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.change(benefit, { target: { value: "have happy dogs" } });
+    fillGoalBlanks();
     next();
-    expect(screen.getByText("Step 2 of 5")).toBeTruthy();
     expect(screen.getByText("Goal 2 of 5")).toBeTruthy();
     expect(screen.getByText(/I want to earn/)).toBeTruthy();
-    expect(document.body.textContent).toMatch(/ in /);
     expect(document.querySelector("[data-screen-intro]")).toBeNull();
     expect((screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement).disabled).toBe(true);
-    const amount = screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement;
     const weeksOrMonths = screen.getByRole("combobox", { name: "Weeks or months" }) as HTMLSelectElement;
-    expect(amount.value).toBe("");
-    expect((screen.getByRole("textbox", { name: "Number" }) as HTMLInputElement).value).toBe("");
-    expect((screen.getByRole("textbox", { name: "Number" }) as HTMLInputElement).placeholder).toBe("[1–99]");
-    expect(weeksOrMonths.value).toBe("");
-    expect([...weeksOrMonths.options].map((o) => o.value)).toEqual(["", "weeks", "months"]);
-    fireEvent.change(amount, { target: { value: "500" } });
-    fireEvent.change(screen.getByRole("textbox", { name: "Number" }), { target: { value: "6" } });
-    fireEvent.change(weeksOrMonths, { target: { value: "months" } });
+    // AC5: weeks is the preset.
+    expect(weeksOrMonths.value).toBe("weeks");
+    expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("");
+    fillGoalBlanks();
     expect(document.querySelector("[data-currency-chip]")?.textContent).toBeTruthy();
     next();
     expect(screen.getByText("Goal 3 of 5")).toBeTruthy();
-    fireEvent.click(screen.getAllByRole("button").find((b) => b.textContent === "Set my own schedule" || /schedule/i.test(b.textContent ?? ""))!);
+    fireEvent.click(screen.getAllByRole("button").find((b) => /schedule/i.test(b.textContent ?? ""))!);
     next();
     expect(screen.getByText("Goal 4 of 5")).toBeTruthy();
     expect(document.querySelector("[data-carried='l1-cause']")?.textContent).toBe("animals");
@@ -182,31 +182,32 @@ describe("Level 1 from the load: capture, goal loop, wrap-up edits, gold", () =>
     fireEvent.change(screen.getByRole("textbox", { name: "Percent" }), { target: { value: "10" } });
     next();
     expect(screen.getByText("Goal 5 of 5")).toBeTruthy();
-    next();
-    // D30: goals has no wrap-up → silver-complete, then The Brand.
-    expect(document.querySelector("[data-silver-complete='l1-s2']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    // Final J11: the optional last goal reads Add this goal (off until typed) and has Skip for now.
+    const add = screen.getByRole("button", { name: "Add this goal" }) as HTMLButtonElement;
+    expect(add.disabled).toBe(true);
+    fireEvent.change(screen.getByRole("textbox", { name: "My goal" }), { target: { value: "TEST half typed" } });
+    expect((screen.getByRole("button", { name: "Add this goal" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
+    expect(document.querySelector("[data-silver-done='l1-s2']")).toBeTruthy();
+    // Skip saved nothing for the extra goal.
+    expect(localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "").not.toContain("TEST half typed");
+    // See my handbook opens the workbook; its Back to the lift lands on the corridor.
+    fireEvent.click(screen.getByRole("button", { name: "See my handbook" }));
+    const backs = document.querySelectorAll<HTMLElement>("[data-back-to-lift]");
+    fireEvent.click(backs[backs.length - 1]!);
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
 
-    // The Brand (l1-s3): name then logo (D26/D27), then identity wrap-up, then level done.
+    // The Brand (l1-s3): logo then name (AC12/13). The level's last step goes straight to the level done.
     fireEvent.click(screen.getByRole("button", { name: /The Brand/ }));
+    fireEvent.click(door("Design your logo"));
+    for (const label of ["Circle", "Light blue", "Paw"]) fireEvent.click(screen.getByRole("radio", { name: label }));
+    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
     fireEvent.click(door("Name your business"));
     fireEvent.change(document.querySelector("[data-task-screen='name-form'] input")!, { target: { value: "Happy Paws" } });
     fireEvent.click(screen.getByRole("radio", { name: "Rounded" }));
     fireEvent.click(screen.getByRole("radio", { name: "Logo color" }));
     fireEvent.click(screen.getByRole("button", { name: /Save to my workbook/ }));
-    fireEvent.click(door("Design your logo"));
-    for (const label of ["Circle", "Light blue", "Paw"]) fireEvent.click(screen.getByRole("radio", { name: label }));
-    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
-    const idWrap = document.querySelector("[data-wrap-up='identity']") as HTMLElement;
-    expect(idWrap).toBeTruthy();
-    expect(idWrap.textContent).toContain("Happy Paws");
-    expect(idWrap.textContent).toMatch(/Dog walking|dog walking/);
-    expect(document.querySelector("[data-gold-completion]")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-silver-complete='l1-s3']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-gold-completion]")).toBeNull();
+    expect(document.querySelector("[data-wrap-up], [data-silver-done], [data-silver-complete]")).toBeNull();
     const done = document.querySelector("[data-level-done='1']") as HTMLElement;
     expect(done.textContent).toBe("Congratulations!You've completed Level 1");
     expect(document.body.textContent).not.toMatch(/\bNGA\b|\bXP\b|Gold unlocked|move on/);
@@ -267,23 +268,19 @@ describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44p
   });
 });
 
-describe("finishing a silver shows its handbook page", () => {
-  it("a silver with no wrap-up opens its page in 'just completed' mode; Continue goes on", async () => {
+describe("finishing a silver shows the after-step message (AC14), no wrap-ups", () => {
+  it("a placeholder step shows the message with See my handbook, Keep going and Back to the lift", async () => {
     renderFlow({ kind: "level", level: 3 });
     const silver = PAYLOAD.floors[2]!.silvers[0]!;
-    expect(silver.wrapUp).toBeUndefined();
     await finishSilver(silver);
-    const done = document.querySelector(`[data-silver-complete='${silver.id}']`);
+    const done = document.querySelector(`[data-silver-done='${silver.id}']`) as HTMLElement;
     expect(done).toBeTruthy();
-    expect(screen.getByRole("heading", { name: `${silver.title}: done!` })).toBeTruthy();
-    // Placeholder part titles show as "Part N", never the word bronze.
-    expect(done?.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
-    expect([...done!.querySelectorAll("[data-what-you-built] [data-tag-chip]")].map((c) => c.textContent)).toEqual(silver.bronzes.map((b, i) => partLabel(b.title, i)));
-    // A single primary action.
-    expect(screen.getAllByRole("button", { name: "Continue" })).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-silver-complete]")).toBeNull();
-    // Back to the floor, as finishing a silver did before.
+    expect(screen.getByRole("heading", { name: `Nice work! ${silver.title} is done.` })).toBeTruthy();
+    expect(done.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
+    expect(done.querySelector("[data-back-to-lift]")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "See my handbook" }).className).toContain("bg-nga-ink");
+    fireEvent.click(screen.getByRole("button", { name: "Keep going" }));
+    expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);
   });
 
@@ -291,55 +288,28 @@ describe("finishing a silver shows its handbook page", () => {
     renderFlow({ kind: "through-silver", silverId: "l3-s1" });
     const silver = PAYLOAD.floors[2]!.silvers[0]!;
     expect(silver.id).toBe("l3-s1");
-    expect(silver.wrapUp).toBeUndefined();
-    // Review the silver's last bronze and finish its last task again.
     const last = silver.bronzes[silver.bronzes.length - 1]!;
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     fireEvent.click(door(last.title));
     for (let i = 0; i < last.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
-    expect(document.querySelector("[data-silver-complete]")).toBeNull();
+    expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);
   });
 
-  it("a summary silver re-finalized from review does not show the page again", async () => {
-    // Product (l2-s1) has the workbook-summary wrap; through it leaves Pricing current on Level 2.
+  it("a step with a summary wrap-up in the content skips it: re-finishing from review goes to the corridor", async () => {
     renderFlow({ kind: "through-silver", silverId: "l2-s1" });
+    expect(PAYLOAD.floors[1]!.silvers[0]!.wrapUp?.type).toBe("workbook-summary");
     fireEvent.click(await screen.findByRole("button", { name: /The product and its buyers/ }));
     const bronzes = PAYLOAD.floors[1]!.silvers[0]!.bronzes;
-    const last = bronzes[bronzes.length - 1]!;
-    fireEvent.click(door(last.title));
-    for (let i = 0; i < 12 && !document.querySelector("[data-wrap-up='workbook-summary']"); i++) {
+    fireEvent.click(door(bronzes[bronzes.length - 1]!.title));
+    for (let i = 0; i < 12 && !document.querySelector("#lp-corridor-title"); i++) {
       const btn = screen.queryByRole("button", { name: /^(Next|Finish|Continue)/ });
       if (!btn) break;
       fireEvent.click(btn);
     }
-    expect(document.querySelector("[data-wrap-up='workbook-summary']")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-silver-complete]")).toBeNull();
+    expect(document.querySelector("[data-wrap-up]")).toBeNull();
+    expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
-  });
-
-  it("identity: the wrap-up stays, and Confirm and continue opens The Brand handbook page", async () => {
-    renderFlow({ kind: "through-silver", silverId: "l1-s2" });
-    fireEvent.click(await screen.findByRole("button", { name: /The Brand/ }));
-    fireEvent.click(door("Name your business"));
-    fireEvent.change(document.querySelector("[data-task-screen='name-form'] input")!, { target: { value: "Happy Paws" } });
-    fireEvent.click(screen.getByRole("radio", { name: "Rounded" }));
-    fireEvent.click(screen.getByRole("radio", { name: "Logo color" }));
-    fireEvent.click(screen.getByRole("button", { name: /Save to my workbook/ }));
-    fireEvent.click(door("Design your logo"));
-    for (const label of ["Circle", "Light blue", "Paw"]) fireEvent.click(screen.getByRole("radio", { name: label }));
-    fireEvent.click(screen.getByRole("button", { name: /^Continue/ }));
-    expect(document.querySelector("[data-wrap-up='identity']")).toBeTruthy();
-    expect(document.querySelector("[data-silver-complete]")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-silver-complete='l1-s3']")).toBeTruthy();
-    expect(document.querySelector("[data-silver-complete='l1-s3']")?.textContent).toMatch(/The Brand: done!/);
-    expect(document.querySelector("[data-silver-complete='l1-s3'] [data-what-you-built]")?.textContent).toBe("Name your businessDesign your logo");
-    // Brand finishes Level 1: Continue opens the Level 1 corridor in its level-done state.
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(document.querySelector("[data-level-done='1']")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Go to Level 2" })).toBeTruthy();
   });
 });
 
@@ -388,14 +358,14 @@ describe("Come back to this later", () => {
     fireEvent.click(door(goals.title));
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
     expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toMatch(/500/);
-    for (let i = 0; i < 10 && !document.querySelector("[data-silver-complete='l1-s2']"); i++) {
+    for (let i = 0; i < 10 && !document.querySelector("[data-silver-done='l1-s2']"); i++) {
       fillGoalBlanks();
-      const forward = screen.getByRole("button", { name: /^(Next|Finish)/ }) as HTMLButtonElement;
+      const forward = screen.getByRole("button", { name: /^(Next|Finish|Add this goal)/ }) as HTMLButtonElement;
       const group = screen.queryAllByRole("group")[0];
       if (forward.disabled && group) fireEvent.click(within(group).getAllByRole("button")[0]!);
       next();
     }
-    expect(document.querySelector("[data-silver-complete='l1-s2']")).toBeTruthy();
+    expect(document.querySelector("[data-silver-done='l1-s2']")).toBeTruthy();
   });
 
   it("steps without the flag have no Come back to this later button", async () => {

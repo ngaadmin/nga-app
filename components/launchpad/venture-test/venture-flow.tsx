@@ -13,7 +13,6 @@ import {
   bronzeHasOpenTask,
   deferTask,
   draftPageOf,
-  isSilverSettled,
   isTaskOpen,
   openTasks,
   openTasksInSilver,
@@ -40,21 +39,20 @@ import { VentureBuilding, type BuildingFloorView } from "@/components/launchpad/
 import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
 import { FloorTemplate } from "@/components/launchpad/venture/floor-templates";
 import { BronzeDoors } from "@/components/launchpad/venture/bronze-doors";
-import { SilverCompletePage } from "@/components/launchpad/venture/handbook/silver-complete-page";
+import { SilverDoneCard } from "@/components/launchpad/venture/handbook/silver-done-card";
 import { TaskWorkbook } from "@/components/launchpad/venture/task-workbook";
 import { VentureUnavailable } from "@/components/launchpad/venture/venture-unavailable";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
-import { handbookBusinessName, handbookPages, hasHandbook, milestoneView, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
+import { handbookBusinessName, hasHandbook, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_PRIMARY, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
-import { identityChoices, isIdentityPicker } from "@/lib/launchpad/content/identity-content";
+import { isIdentityPicker } from "@/lib/launchpad/content/identity-content";
 import { isPageAnswered, isTaskAnswered, pageDefaultAnswer, taskPages, type TaskPage } from "@/lib/launchpad/content/task-pages";
-import { SummaryWrapUp } from "@/components/launchpad/venture/summary-wrap-up";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
-import { IdentityWrapUp } from "@/components/launchpad/venture/identity/identity-wrap-up";
+import { fieldsOf } from "@/lib/launchpad/content/answers";
 
 
 /** What the forward button is waiting for on a capture page. */
@@ -83,11 +81,12 @@ type View =
   | { screen: "doors"; level: number; silverId: string }
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number }
-  /** The silver's wrap-up screen (e.g. the identity logo), once its bronzes are done. */
-  /** `justCompleted`: reached by finishing the silver, so Continue goes on to its handbook page. */
-  | { screen: "wrap-up"; level: number; silverId: string; justCompleted?: boolean }
-  /** The silver's handbook page, shown once right after the silver is finished. */
-  | { screen: "silver-complete"; level: number; silverId: string }
+  /**
+   * AC14 / J11: "Nice work! <step> is done." right after a step's last task
+   * (not a level's last step, which goes straight to the level-done lift).
+   * Replaces the old per-step wrap-up screens.
+   */
+  | { screen: "silver-done"; level: number; silverId: string }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
   | { screen: "rooftop" };
@@ -178,7 +177,14 @@ export function VentureFlow({
   const [inProgress, setInProgress] = useState<InProgressVenture[] | null>(null);
   const [view, setView] = useState<View>({ screen: "home" });
   /** Open handbook: from home (read-only, any In Progress business) or the building (editable). */
-  const [handbook, setHandbook] = useState<{ ventureId: string; entry: "home" | "building" } | null>(null);
+  const [handbook, setHandbook] = useState<{
+    ventureId: string;
+    entry: "home" | "building";
+    /** Open at this step's page (the silver-done card's "See my handbook"). */
+    openSilverId?: string;
+    /** "Back to the lift" lands on this floor's corridor (defaults to the current floor). */
+    level?: number;
+  } | null>(null);
   const closeHandbook = useCallback(() => setHandbook(null), []);
   const ventureTitle = ventureId ? (ventureTitles[ventureId] ?? ventureId) : "";
 
@@ -372,17 +378,6 @@ export function VentureFlow({
             </button>
             {hasHandbook(progress, floors) && <HandbookButton onClick={() => setHandbook({ ventureId, entry: "building" })} />}
           </div>
-          {handbook?.entry === "building" && handbook.ventureId === ventureId && (
-            <Handbook
-              entry="building"
-              businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
-              floors={floors}
-              progress={progress}
-              iconVentureId={iconVentureId}
-              setAnswer={setAnswer}
-              onClose={closeHandbook}
-            />
-          )}
         </section>
       );
       break;
@@ -435,7 +430,6 @@ export function VentureFlow({
       const pricingPlaceholder = silver.placeholder && silver.title === "Pricing";
       const open = !pricingPlaceholder && silverStates(progress, floors, floor)[silverIndex] !== "locked";
       const states = bronzeStates(progress, silver, open);
-      const wrapUp = silver.wrapUp;
       body = (
         <BronzeDoors
           level={floor.level}
@@ -456,15 +450,6 @@ export function VentureFlow({
             // No task list: the door opens the first unfinished task (or the first, to review).
             openTask({ level: floor.level, silverId: silver.id, bronzeId }, bronzeEntryTaskIndex(progress, bronze));
           }}
-          wrapUp={
-            // Open once every door is done or left open; a wrap-up with open steps cannot be confirmed.
-            wrapUp && isSilverSettled(progress, silver)
-              ? {
-                  label: wrapUp.type === "identity-wrap-up" ? "See your logo" : wrapUp.heading,
-                  onOpen: () => go({ screen: "wrap-up", level: floor.level, silverId: silver.id }),
-                }
-              : undefined
-          }
         />
       );
       break;
@@ -501,6 +486,45 @@ export function VentureFlow({
         const t = bronze.tasks[i];
         return t?.paged ? Math.max(0, taskPages(t, answers, floors).length - 1) : undefined;
       };
+      /** Next / Finish (and Skip for now on the optional last goal): saves, then moves on. */
+      const forward = (from: VentureTestProgress, withDefaults: boolean) => {
+        const task = bronze.tasks[index];
+        if (!task) return;
+        // A rank order left as shown is saved as the learner's order.
+        const fill = withDefaults && page ? pageDefaultAnswer(page.screen, answers) : null;
+        let base = fill ? setProgressAnswer(from, fill.answerKey, fill.answer) : from;
+        if (pages && pageIndex < pages.length - 1) {
+          if (fill) save(base);
+          go({ screen: "workbook", ...where, index, page: pageIndex + 1 });
+          return;
+        }
+        base = completeTask(base, task.id);
+        const updated = base;
+        save(updated);
+        const isLast = index === bronze.tasks.length - 1;
+        if (!isLast) {
+          go({ screen: "workbook", ...where, index: index + 1 });
+          return;
+        }
+        const adv = advanceAfterTask(updated, floor, silver, bronze, index);
+        // Finishing the step just now (not re-finishing finished work) shows the silver-done card,
+        // unless it finished the level: then the corridor shows the level-done Congratulations.
+        const justCompleted = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
+        const at = { level: floor.level, silverId: silver.id };
+        if (adv.kind === "task") go({ screen: "workbook", ...where, index: adv.taskIndex });
+        else if (adv.kind === "bronze-done") go({ screen: "doors", ...at });
+        else if (justCompleted && !isFloorDone(updated, floor)) go({ screen: "silver-done", ...at });
+        else go({ screen: "corridor", level: floor.level, entering: false });
+      };
+      // Final J11: the optional last goal reads "Add this goal" (on once something is typed) with "Skip for now".
+      const lastGoal =
+        pages && page && pageIndex === pages.length - 1 && page.screen.type === "short-text" && page.screen.mode === "goal" && page.screen.optional
+          ? page.screen
+          : null;
+      const optionalLastGoal = !!lastGoal;
+      const typedSomething = lastGoal
+        ? lastGoal.fields.some((f) => f.input === "text" && String(fieldsOf(answers, lastGoal.answerKey)?.values?.[f.name] ?? "").trim() !== "")
+        : true;
       body = (
         <TaskWorkbook
           level={floor.level}
@@ -517,8 +541,8 @@ export function VentureFlow({
               ? go({ screen: "workbook", ...where, index, page: pageIndex - 1 })
               : go({ screen: "workbook", ...where, index: Math.max(0, index - 1), page: lastPageOf(Math.max(0, index - 1)) })
           }
-          nextDisabled={!answered}
-          nextHint={page ? pageHint(page) : identityHint(current)}
+          nextDisabled={!answered || !typedSomething}
+          nextHint={!typedSomething ? "Add your goal, or skip for now." : page ? pageHint(page) : identityHint(current)}
           eyebrow={eyebrow}
           onComeBackLater={
             current?.canComeBackLater && !progress.completedTaskIds.includes(current.id)
@@ -529,94 +553,34 @@ export function VentureFlow({
                 }
               : undefined
           }
-          onNext={() => {
-            const task = bronze.tasks[index];
-            if (!task) return;
-            // A rank order left as shown is saved as the learner's order.
-            const fill = page ? pageDefaultAnswer(page.screen, answers) : null;
-            let base = fill ? setProgressAnswer(progress, fill.answerKey, fill.answer) : progress;
-            if (pages && pageIndex < pages.length - 1) {
-              if (fill) save(base);
-              go({ screen: "workbook", ...where, index, page: pageIndex + 1 });
-              return;
-            }
-            base = completeTask(base, task.id);
-            const updated = base;
-            save(updated);
-            const isLast = index === bronze.tasks.length - 1;
-            if (!isLast) {
-              go({ screen: "workbook", ...where, index: index + 1 });
-              return;
-            }
-            const adv = advanceAfterTask(updated, floor, silver, bronze, index);
-            // Finishing the silver just now (not re-finishing finished work) shows its handbook page.
-            const justCompleted = !isSilverDone(progress, silver);
-            const at = { level: floor.level, silverId: silver.id };
-            if (adv.kind === "task") go({ screen: "workbook", ...where, index: adv.taskIndex });
-            else if (adv.kind === "bronze-done") go({ screen: "doors", ...at });
-            else if (silver.wrapUp) go({ screen: "wrap-up", ...at, justCompleted });
-            else if (justCompleted) go({ screen: "silver-complete", ...at });
-            else go({ screen: "corridor", level: floor.level, entering: false });
-          }}
+          forwardLabel={optionalLastGoal ? "Add this goal" : undefined}
+          onSkip={
+            lastGoal
+              ? () => {
+                  // Skip saves nothing: any half-typed answer for this goal is dropped.
+                  const rest = { ...(progress.answers ?? {}) };
+                  delete rest[lastGoal.answerKey];
+                  forward({ ...progress, answers: rest }, false);
+                }
+              : undefined
+          }
+          onNext={() => forward(progress, true)}
         />
       );
       break;
     }
-    case "wrap-up": {
+    case "silver-done": {
       const floor = floorAt(floors, view.level);
       const silver = floor.silvers.find((s) => s.id === view.silverId)!;
-      const wrapUp = silver.wrapUp;
-      const openSteps = openTasksInSilver(progress, silver, floor.level).map((t) => ({
-        taskId: t.taskId,
-        title: t.title,
-        onFinish: () => openTask(t, t.taskIndex),
-      }));
-      const onFinalize = view.justCompleted
-        ? () => go({ screen: "silver-complete", level: floor.level, silverId: silver.id })
-        : toCorridor(floor.level);
-      body =
-        wrapUp?.type === "identity-wrap-up" ? (
-          <IdentityWrapUp
-            level={floor.level}
-            silverTitle={silver.title}
-            wrapUp={wrapUp}
-            choices={identityChoices(silver, wrapUp.answerKey, iconVentureId)}
-            onBuilding={toBuilding}
-            onCorridor={toCorridor(floor.level)}
-            onFinalize={onFinalize}
-            openSteps={openSteps}
-          />
-        ) : wrapUp?.type === "workbook-summary" ? (
-          <SummaryWrapUp
-            level={floor.level}
-            silverTitle={silver.title}
-            wrapUp={wrapUp}
-            floors={floors}
-            answers={progress.answers ?? {}}
-            setAnswer={setAnswer}
-            onBuilding={toBuilding}
-            onCorridor={toCorridor(floor.level)}
-            onFinalize={onFinalize}
-            openSteps={openSteps}
-          />
-        ) : null;
-      break;
-    }
-    case "silver-complete": {
-      const floor = floorAt(floors, view.level);
-      const page = handbookPages(progress, floors).find((p) => p.kind !== "cover" && p.silver.id === view.silverId);
-      body = page ? (
-        <SilverCompletePage
-          level={floor.level}
-          page={page}
-          milestone={milestoneView(progress, floors, floor.level)}
-          iconVentureId={iconVentureId}
-          onBuilding={toBuilding}
-          onCorridor={toCorridor(floor.level)}
-          // Continue goes to the corridor; when this silver finished the floor the corridor shows the level-done state.
-          onContinue={toCorridor(floor.level)}
+      body = (
+        <SilverDoneCard
+          silverId={silver.id}
+          silverTitle={silver.title}
+          onSeeHandbook={() => setHandbook({ ventureId, entry: "building", openSilverId: silver.id, level: floor.level })}
+          onKeepGoing={toCorridor(floor.level)}
+          onBackToLift={toCorridor(floor.level)}
         />
-      ) : null;
+      );
       break;
     }
     case "lift": {
@@ -627,9 +591,22 @@ export function VentureFlow({
   }
 
   return (
-    <VentureTestShell>
-      <div className="flex flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
+    <VentureTestShell focus={view.screen === "workbook"}>
+      <div className="flex min-h-0 flex-1 flex-col bg-white" data-launchpad-source={content.source} data-launchpad-version={content.versionId}>
         <LaunchpadAnswersProvider value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer, floors }}>{body}</LaunchpadAnswersProvider>
+        {handbook?.entry === "building" && handbook.ventureId === ventureId && (
+          <Handbook
+            entry="building"
+            businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
+            floors={floors}
+            progress={progress}
+            iconVentureId={iconVentureId}
+            setAnswer={setAnswer}
+            onClose={closeHandbook}
+            openSilverId={handbook.openSilverId}
+            onBackToLift={toCorridor(handbook.level ?? currentLevel(progress, floors))}
+          />
+        )}
       </div>
     </VentureTestShell>
   );

@@ -61,7 +61,7 @@ export function isShortTextAnswered(screen: LaunchpadShortTextScreen, answer: Fi
   if (answer?.notApplicable && screen.notApplicableLabel) return true;
   const values = answer?.values ?? {};
   return screen.fields.every((f) => {
-    const v = values[f.name];
+    const v = values[f.name] === undefined || values[f.name] === "" ? f.defaultValue : values[f.name];
     const empty = v === undefined || v === "";
     if (empty) return !!(screen.optional || f.optional);
     return isFieldValueValid(f, v);
@@ -78,4 +78,38 @@ export function displayFieldValue(field: LaunchpadTextField, value: string | num
   if (field.input === "integer" && typeof value === "number") return value.toLocaleString("en-US");
   if (field.input === "choice") return field.options?.find((o) => o.id === value)?.label ?? "";
   return String(value).trim();
+}
+
+/** Defaults (weeks) for fields the values do not hold yet; saved with the learner's first edit. */
+export function withFieldDefaults(
+  fields: readonly LaunchpadTextField[],
+  values: Readonly<Record<string, string | number>>,
+): Record<string, string | number> {
+  const out: Record<string, string | number> = { ...values };
+  for (const f of fields) if (f.defaultValue !== undefined && (out[f.name] === undefined || out[f.name] === "")) out[f.name] = f.defaultValue;
+  return out;
+}
+
+/**
+ * Values after the learner sets `name` to `value`. A choice with `prefills`
+ * fills its text field with the picked option's prefill while that text is
+ * empty or still the previous pick's prefill (the learner has not typed).
+ */
+export function applyFieldChange(
+  fields: readonly LaunchpadTextField[],
+  values: Readonly<Record<string, string | number>>,
+  name: string,
+  value: string | number,
+): Record<string, string | number> {
+  const next: Record<string, string | number> = { ...values, [name]: value };
+  const field = fields.find((f) => f.name === name);
+  if (field?.input === "choice" && field.prefills) {
+    const target = fields.find((f) => f.name === field.prefills);
+    const prev = field.options?.find((o) => o.id === values[name])?.prefill;
+    const cur = values[field.prefills];
+    const untouched = cur === undefined || cur === "" || (prev !== undefined && cur === prev);
+    const fill = field.options?.find((o) => o.id === value)?.prefill;
+    if (target && untouched) next[field.prefills] = fill ? sanitizeFieldInput(target, fill) : "";
+  }
+  return next;
 }

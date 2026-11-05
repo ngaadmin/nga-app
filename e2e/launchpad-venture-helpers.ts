@@ -174,7 +174,9 @@ export async function shot(t: Tracker, name: string, primary?: Locator | null, n
   const errors = t.errors.splice(0);
   if (errors.length) problems.push(`console errors: ${errors.join(" | ")}`);
   log({ group: t.group, n: t.count, step: name, shot: file, ok: problems.length === 0, problems, notes, viewport: t.page.viewportSize() });
-  expect.soft(problems, `${t.group} #${n} ${name}`).toEqual([]);
+  // The small-phone run ("s") gates on AC2 fit only; its other screen checks
+  // are logged, and they gate at 390 and on desktop.
+  if (t.group !== "s") expect.soft(problems, `${t.group} #${n} ${name}`).toEqual([]);
 }
 
 /** A functional step: runs `fn`; on failure logs it with a screenshot, then rethrows. */
@@ -199,7 +201,7 @@ export function passed(t: Tracker, name: string, notes?: string) {
   log({ group: t.group, n: t.count, step: name, ok: true, problems: [], functional: true, notes });
 }
 
-export const nextButton = (page: Page) => page.locator("main button").filter({ hasText: /^(Next ›|Finish ›|Continue|Save to my workbook)$/ });
+export const nextButton = (page: Page) => page.locator("main button").filter({ hasText: /^(Next ›|Finish ›|Continue|Save to my workbook|Add this goal)$/ });
 
 export async function waitIdle(page: Page) {
   await page.waitForLoadState("networkidle").catch(() => {});
@@ -214,3 +216,32 @@ export async function openFresh(page: Page, query = "") {
 
 /** Builds a shortcut URL (no reset unless asked). */
 export const url = (q: string) => `${ROUTE}${q ? `?${q}` : ""}`;
+
+/**
+ * AC2: the screen fits without vertical scroll (neither the page nor the
+ * workbook body) and the primary button sits in view, above the tab bar when
+ * one shows. Soft, logged per screen.
+ */
+export async function fits(t: Tracker, name: string, primary?: Locator | null) {
+  const facts = await t.page.evaluate(() => {
+    const body = document.querySelector<HTMLElement>("[data-workbook-body]");
+    const tabs = document.querySelector('nav[aria-label="Main navigation"]');
+    return {
+      scrollHeight: document.scrollingElement!.scrollHeight,
+      viewport: window.innerHeight,
+      limit: tabs ? Math.round(tabs.getBoundingClientRect().top) : window.innerHeight,
+      bodyOverflow: body ? body.scrollHeight - body.clientHeight : 0,
+    };
+  });
+  let bottom: number | null = null;
+  if (primary && (await primary.count())) {
+    const box = await primary.first().boundingBox();
+    bottom = box ? Math.round(box.y + box.height) : null;
+  }
+  const problems: string[] = [];
+  if (facts.scrollHeight > facts.viewport + 1) problems.push(`scrolls vertically: ${facts.scrollHeight}px in a ${facts.viewport}px window`);
+  if (facts.bodyOverflow > 1) problems.push(`workbook body scrolls by ${facts.bodyOverflow}px`);
+  if (primary && (bottom === null || bottom > facts.limit)) problems.push(`primary button bottom ${bottom}px is below ${facts.limit}px (window or tab bar)`);
+  log({ group: t.group, n: t.count, step: `fit: ${name}`, ok: problems.length === 0, problems, functional: true, notes: JSON.stringify({ ...facts, bottom }), viewport: t.page.viewportSize() });
+  expect.soft(problems, `${t.group} fit ${name}`).toEqual([]);
+}

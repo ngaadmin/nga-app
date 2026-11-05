@@ -165,13 +165,13 @@ test("deep links", async ({ page }, info) => {
 
   await step(t, "?complete=l2-s1: handbook shows sample answers on the Level 1 and Level 2 pages", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
-    await page.getByRole("button", { name: "Open handbook" }).first().click();
+    await page.getByRole("button", { name: "Open workbook" }).first().click();
     const hb = page.getByRole("dialog");
     await expect(hb.locator("[data-handbook-page]")).toBeVisible();
     await hb.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
     const text = await hb.locator('[data-handbook-page="l1-s1"]').innerText();
     expect(text.length).toBeGreaterThan(40);
-    await page.getByRole("button", { name: "Close handbook" }).click();
+    await page.getByRole("button", { name: "Close workbook" }).click();
   });
 
   await step(t, "?venture=dog-walking opens that venture (first time: onboarding)", async () => {

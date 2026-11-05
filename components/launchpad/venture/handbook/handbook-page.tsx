@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   partLabel,
@@ -16,7 +16,6 @@ import {
 } from "@/components/launchpad/venture/identity/answers-context";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
-import { BusinessLogo } from "@/components/launchpad/venture/identity/business-logo";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import {
   AccentLabel,
@@ -24,7 +23,7 @@ import {
   PAPER_ACCENT,
   TagChip,
 } from "@/components/launchpad/venture/handbook/paper-art";
-import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
+import { useVisionSentence, VisionBlock, VISION_TEXT_STEPS } from "@/components/launchpad/venture/handbook/vision-block";
 import {
   BusinessName,
   LogoMark,
@@ -33,7 +32,6 @@ import {
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import {
   BTN_CYAN_COMPACT,
-  TickBadge,
 } from "@/components/launchpad/venture-test/venture-test-ui";
 
 /*
@@ -86,25 +84,13 @@ export function Doodle({ ventureId }: { ventureId: string }) {
   );
 }
 
-function DoneChip() {
+/** No Done chip on any workbook page (Cath, 5 Nov 5:35pm): the eyebrow only. */
+function TopRow({ eyebrow }: { eyebrow: string }) {
   return (
-    <span
-      className="flex items-center gap-1 rounded-md bg-[#F3F4F6] py-[3px] pl-1.5 pr-[7px] text-[11px] font-medium text-[#374151]"
-      data-done-chip=""
-    >
-      <TickBadge size={13} />
-      Done
-    </span>
-  );
-}
-
-function TopRow({ eyebrow, done }: { eyebrow: string; done: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center gap-2">
       <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
         {eyebrow}
       </span>
-      {done && <DoneChip />}
     </div>
   );
 }
@@ -192,111 +178,6 @@ export function HandbookSection({
   );
 }
 
-/**
- * "Vision and products" (r4): the logo and name drawn from the saved identity
- * answer (the same answer the lessons and the wrap-up write), an Edit button
- * when editable, then the identity wrap-up's handbook sections ("Our vision",
- * "What we sell") from the learner's saved answers. A section with no answer
- * yet is left off.
- */
-function IdentityPageBody({
-  page,
-  editable,
-  iconVentureId,
-}: {
-  page: HandbookPageView;
-  editable: boolean;
-  iconVentureId: string;
-}) {
-  const wrapUp =
-    page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
-  const answerKey = wrapUp?.answerKey ?? "";
-  const { answer, update } = useIdentityAnswer(answerKey);
-  const choices = identityChoices(page.silver, answerKey, iconVentureId);
-  const [editing, setEditing] = useState(false);
-  // D25 / cover order: logo, name, then the compiled vision. When the vision
-  // spec exists it stands in for the offer-picks "Our vision" section.
-  const vision = wrapUp?.vision;
-  const sections = useSectionLines(wrapUp?.handbookSections ?? [])
-    .filter((s) => s.lines.length)
-    .filter((s) => !(vision && s.section.id === "our-vision"));
-  return (
-    <>
-      {/* No Done chip on the identity page (Cath, 5 Nov 5:27pm). */}
-      <TopRow eyebrow="Your identity" done={false} />
-      <div
-        className="mt-3.5 flex flex-col items-center gap-3"
-        data-identity-lockup=""
-      >
-        <BusinessLogo
-          answer={answer}
-          size="hero"
-          namePlaceholder="Your business name"
-        />
-        {editable && (
-          <button
-            type="button"
-            aria-expanded={editing}
-            onClick={() => setEditing((e) => !e)}
-            className="relative flex h-[34px] items-center gap-[7px] rounded-[10px] pl-[13px] pr-4 text-sm font-medium text-[#374151] shadow-[inset_0_0_0_1px_#E5E7EB] before:absolute before:-inset-x-1 before:-inset-y-[5px] before:content-['']"
-            data-edit-identity=""
-          >
-            <EditPencil />
-            {editing ? "Close" : "Edit"}
-            <span className="sr-only"> logo and name</span>
-          </button>
-        )}
-      </div>
-      {editable && editing && (
-        <div
-          className="mt-3 rounded-xl bg-white p-3"
-          data-inline-editor="identity"
-        >
-          <IdentityEditor
-            choices={choices}
-            answer={answer}
-            update={update}
-            idPrefix={`handbook-${answerKey}`}
-          />
-          <div className="mt-3 flex w-full justify-center self-stretch">
-            <button
-              type="button"
-              className={BTN_CYAN_COMPACT}
-              data-inline-editor-done=""
-              onClick={() => setEditing(false)}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-      {vision && (
-        <div className="mt-3 w-full" data-identity-page-vision="">
-          <HandRule />
-          <VisionBlock
-            spec={vision}
-            doodle={
-              sections.length ? undefined : <Doodle ventureId={iconVentureId} />
-            }
-          />
-        </div>
-      )}
-      {sections.map(({ section, lines }, i) => (
-        <HandbookSection
-          key={section.id}
-          section={section}
-          lines={lines}
-          doodle={
-            i === sections.length - 1 ? (
-              <Doodle ventureId={iconVentureId} />
-            ) : undefined
-          }
-        />
-      ))}
-    </>
-  );
-}
-
 /** Small orange rocket doodle for the empty logo slot. */
 function RocketDoodle() {
   return (
@@ -320,24 +201,69 @@ function RocketDoodle() {
 }
 
 /**
- * Workbook page 1, the cover (workbook-page1-cover-spec-r1): the logo slot,
- * the business name, then the vision. Read-only, no pencils; each slot fills
- * on its own from the saved answers and shows grey placeholder text until then.
+ * Workbook page 1, the cover (workbook-page1-cover-spec-r1; Cath, 5 Nov
+ * 5:35pm): the logo at 80px centered at the top, a smaller business name, then
+ * Our vision. The identity silver has no separate page, so this is the only
+ * place the vision shows; from the building the logo and name are edited here.
+ * The whole cover must fit the page card with no scrolling: the vision text
+ * steps down (VISION_TEXT_STEPS) until it does. Grey placeholders until filled.
  */
-/**
- * Cover logo: 112px at the top (Jasper's binder r5 lockup; AC14 "logo at the
- * top and larger"). The cover fills the card height: logo, name, then the
- * vision in the space left.
- */
-const COVER_LOGO_PX = 112;
+const COVER_LOGO_PX = 80;
 
-function CoverPageBody({ page }: { page: HandbookPageView }) {
+function CoverPageBody({
+  page,
+  editable,
+  iconVentureId,
+}: {
+  page: HandbookPageView;
+  editable: boolean;
+  iconVentureId: string;
+}) {
   const wrapUp =
     page.silver.wrapUp?.type === "identity-wrap-up" ? page.silver.wrapUp : null;
-  const { answer } = useIdentityAnswer(wrapUp?.answerKey ?? "");
+  const answerKey = wrapUp?.answerKey ?? "";
+  const { answer, update } = useIdentityAnswer(answerKey);
+  const choices = identityChoices(page.silver, answerKey, iconVentureId);
+  const [editing, setEditing] = useState(false);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
+  const sentence = useVisionSentence(wrapUp?.vision);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [fitKey, setFitKey] = useState(0);
+  const fitSig = JSON.stringify([sentence, answer.name, answer.font, hasLogo, editable, editing, fitKey]);
+  const [fit, setFit] = useState({ sig: fitSig, step: 0 });
+  const step = fit.sig === fitSig ? fit.step : 0;
+
+  // Re-fit when the window resizes or the web fonts finish loading (glyph widths change).
+  useEffect(() => {
+    const bump = () => setFitKey((k) => k + 1);
+    window.addEventListener("resize", bump);
+    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
+    fonts?.addEventListener?.("loadingdone", bump);
+    void fonts?.ready?.then(bump);
+    return () => {
+      window.removeEventListener("resize", bump);
+      fonts?.removeEventListener?.("loadingdone", bump);
+    };
+  }, []);
+
+  // Step the vision down (text size, quote mark, spacing) one render at a time
+  // until the cover fits its page card with no scroll. Layout effects run
+  // before paint, so the learner only sees the final step. While the logo and
+  // name editor is open the card may scroll.
+  useLayoutEffect(() => {
+    if (fit.sig !== fitSig) {
+      setFit({ sig: fitSig, step: 0 });
+      return;
+    }
+    const scroller = rootRef.current?.closest<HTMLElement>("[data-paper-scroll]");
+    if (!scroller || editing) return;
+    if (scroller.scrollHeight > scroller.clientHeight + 1 && fit.step < VISION_TEXT_STEPS.length - 1) {
+      setFit({ sig: fitSig, step: fit.step + 1 });
+    }
+  }, [fit, fitSig, editing]);
+
   return (
-    <div className="flex min-h-full flex-col items-center gap-3 pt-1" data-cover="">
+    <div ref={rootRef} className={`relative flex flex-col items-center ${step >= 3 ? "gap-1.5" : "gap-2.5"}`} data-cover="" data-cover-fit-step={step}>
       {hasLogo ? (
         <div data-cover-logo="filled">
           <LogoMark
@@ -351,10 +277,10 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
       ) : (
         <div
           data-cover-logo="empty"
-          className="flex h-[112px] w-[112px] flex-col items-center justify-center gap-1 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
+          className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
         >
           <RocketDoodle />
-          <span className="px-1 text-[11px] leading-tight text-[#9AA3B5]">
+          <span className="px-1 text-[9.5px] leading-tight text-[#9AA3B5]">
             Your logo goes here
           </span>
         </div>
@@ -365,20 +291,56 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
             name={answer.name}
             font={answer.font ?? "poppins-bold"}
             color={resolveNameColor(answer)}
-            size="hero"
+            size="cover"
           />
         </div>
       ) : (
         <p
           data-cover-name="empty"
-          className="font-heading text-[18px] font-semibold text-[#9AA3B5]"
+          className="font-heading text-[16px] font-semibold text-[#9AA3B5]"
         >
           Your business name
         </p>
       )}
-      <div className="flex w-full flex-1 flex-col">
-        <HandRule />
-        {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} />}
+      {editable && (hasLogo || answer.name) && (
+        <button
+          type="button"
+          aria-expanded={editing}
+          onClick={() => setEditing((e) => !e)}
+          className="absolute -right-1 top-0 flex h-[30px] items-center gap-[5px] rounded-[10px] bg-white pl-2 pr-2.5 text-[13px] font-medium text-[#374151] shadow-[inset_0_0_0_1px_#E5E7EB] before:absolute before:-inset-x-1 before:-inset-y-[7px] before:content-['']"
+          data-edit-identity=""
+        >
+          <EditPencil />
+          {editing ? "Close" : "Edit"}
+          <span className="sr-only"> logo and name</span>
+        </button>
+      )}
+      {editable && editing && (
+        <div
+          className="w-full rounded-xl bg-white p-3"
+          data-inline-editor="identity"
+        >
+          <IdentityEditor
+            choices={choices}
+            answer={answer}
+            update={update}
+            idPrefix={`handbook-${answerKey}`}
+          />
+          <div className="mt-3 flex w-full justify-center self-stretch">
+            <button
+              type="button"
+              className={BTN_CYAN_COMPACT}
+              data-inline-editor-done=""
+              onClick={() => setEditing(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="flex w-full flex-col">
+        <HandRule className={step >= 3 ? "mb-2 mt-2.5" : "mb-3.5 mt-5"} />
+        {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} textStep={step} />}
       </div>
     </div>
   );
@@ -436,7 +398,7 @@ function SummaryPageBody({
     const catalog = summaryCatalog(ctx.floors ?? []);
     return (
       <>
-        <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} done={page.done} />
+        <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} />
         <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
         <div className="mt-3">
           {sections.map(({ section }, i) => (
@@ -459,8 +421,7 @@ function SummaryPageBody({
     <>
       <TopRow
         eyebrow={`${page.floorName} · Step ${page.silverNumber}`}
-        done={page.done}
-      />
+        />
       <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">
         {page.silver.title}
       </h2>
@@ -492,8 +453,7 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
     <>
       <TopRow
         eyebrow={`${page.floorName} · Step ${page.silverNumber}`}
-        done={page.done}
-      />
+        />
       <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">
         {page.silver.title}
       </h2>
@@ -530,7 +490,7 @@ export function HandbookPage({
 }) {
   return (
     <article
-      className={page.kind === "cover" ? "relative h-full" : "relative"}
+      className="relative"
       data-handbook-page={page.kind === "cover" ? "cover" : page.silver.id}
       data-editable={editable ? "true" : "false"}
       aria-label={
@@ -539,15 +499,9 @@ export function HandbookPage({
           : `Page ${page.number}: ${page.silver.title}`
       }
     >
-      {page.kind !== "cover" && page.kind !== "identity" && <MiniIdentity />}
+      {page.kind !== "cover" && <MiniIdentity />}
       {page.kind === "cover" ? (
-        <CoverPageBody page={page} />
-      ) : page.kind === "identity" ? (
-        <IdentityPageBody
-          page={page}
-          editable={editable}
-          iconVentureId={iconVentureId}
-        />
+        <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : (

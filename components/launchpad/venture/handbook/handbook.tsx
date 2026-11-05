@@ -25,7 +25,7 @@ export function HandbookButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
-      aria-label="Open handbook"
+      aria-label="Open workbook"
       onClick={onClick}
       className="flex size-11 flex-none items-center justify-center rounded-full bg-nga-panel shadow-[0_3px_0_#099fb8]"
       data-handbook-button=""
@@ -120,7 +120,7 @@ export function Handbook({
         <button
           ref={closeRef}
           type="button"
-          aria-label="Close handbook"
+          aria-label="Close workbook"
           onClick={onClose}
           className="flex size-11 flex-none items-center justify-center rounded-[10px]"
         >
@@ -130,7 +130,7 @@ export function Handbook({
         </button>
         <div className="min-w-0 flex-1">
           <h1 id="handbook-title" className="font-heading text-lg font-semibold leading-tight text-[#111827]">
-            My handbook
+            My workbook
           </h1>
           <p className="truncate text-[13px] text-[#6B7280]">{businessName}</p>
         </div>
@@ -180,7 +180,7 @@ export function Handbook({
           >
             <SpiralBinding />
             <Washi />
-            <div className="h-full overflow-y-auto pb-10 pl-10 pr-5 pt-5">
+            <div className="h-full overflow-y-auto pb-10 pl-10 pr-5 pt-5" data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
@@ -193,7 +193,7 @@ export function Handbook({
           </div>
         )}
 
-        <nav aria-label="Handbook floors" className="absolute right-2.5 top-[14px] flex w-11 flex-col gap-2">
+        <nav aria-label="Workbook floors" className="absolute right-2.5 top-[14px] flex w-11 flex-col gap-2">
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;

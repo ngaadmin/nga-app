@@ -222,7 +222,17 @@ export const url = (q: string) => `${ROUTE}${q ? `?${q}` : ""}`;
  * workbook body) and the primary button sits in view, above the tab bar when
  * one shows. Soft, logged per screen.
  */
-export async function fits(t: Tracker, name: string, primary?: Locator | null) {
+export async function fits(
+  t: Tracker,
+  name: string,
+  primary?: Locator | null,
+  /**
+   * The lift scene (corridor) is a 610px building box, so on short phones the
+   * page itself scrolls by design; there the check is that the primary control
+   * (the workbook button) is in view above the tab bar without scrolling.
+   */
+  opts: { pageScrollOk?: boolean } = {},
+) {
   const facts = await t.page.evaluate(() => {
     const body = document.querySelector<HTMLElement>("[data-workbook-body]");
     const tabs = document.querySelector('nav[aria-label="Main navigation"]');
@@ -260,9 +270,11 @@ export async function fits(t: Tracker, name: string, primary?: Locator | null) {
     bottom = box ? Math.round(box.y + box.height) : null;
   }
   const problems: string[] = [];
-  if (facts.scrollHeight > facts.viewport + 1) problems.push(`scrolls vertically: ${facts.scrollHeight}px in a ${facts.viewport}px window`);
+  if (!opts.pageScrollOk && facts.scrollHeight > facts.viewport + 1) problems.push(`scrolls vertically: ${facts.scrollHeight}px in a ${facts.viewport}px window`);
   if (facts.bodyOverflow > 1) problems.push(`workbook body scrolls by ${facts.bodyOverflow}px`);
   problems.push(...facts.strayPunct);
+  const top = primary && (await primary.count()) ? Math.round((await primary.first().boundingBox())?.y ?? -1) : 0;
+  if (primary && top < 0) problems.push(`primary button top ${top}px is above the window`);
   if (primary && (bottom === null || bottom > facts.limit)) problems.push(`primary button bottom ${bottom}px is below ${facts.limit}px (window or tab bar)`);
   log({ group: t.group, n: t.count, step: `fit: ${name}`, ok: problems.length === 0, problems, functional: true, notes: JSON.stringify({ ...facts, bottom }), viewport: t.page.viewportSize() });
   expect.soft(problems, `${t.group} fit ${name}`).toEqual([]);

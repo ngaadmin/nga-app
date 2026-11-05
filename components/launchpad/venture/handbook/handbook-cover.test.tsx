@@ -54,11 +54,12 @@ describe("workbook page 1, the cover", () => {
     expect(document.body.textContent).not.toMatch(/\b(NGA|silver|bronze|gold)\b/i);
   });
 
-  it("filled: the logo is the 112px hero, above a name no bigger than 20px", () => {
+  it("filled: the logo is 80px, centered at the top, above a smaller name (17px, or the font's floor)", () => {
     renderCover({ [IDENTITY_ANSWER_KEY]: ID as never });
-    expect(q("[data-cover-logo='filled'] svg")?.getAttribute("width")).toBe("112");
+    expect(q("[data-cover-logo='filled'] svg")?.getAttribute("width")).toBe("80");
+    expect(q("[data-cover]")!.className).toContain("items-center");
     const name = q("[data-cover-name='filled'] [data-business-name]") as HTMLElement;
-    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(20);
+    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(19); // Fredoka's 19px floor
   });
 
   it("each slot fills on its own", () => {
@@ -78,8 +79,10 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-vision-quote]")).toBeTruthy();
     const s = q("[data-vision-sentence]")!;
     expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have a washed and groomed dog in 6 months\.$/);
-    expect(s.className).toContain("text-[17px]");
-    expect(s.className).toContain("leading-[26px]");
+    // Starts at 17/26 and steps down only when the cover would overflow its card.
+    expect((s as HTMLElement).style.fontSize).toBe("17px");
+    expect((s as HTMLElement).style.lineHeight).toBe("26px");
+    expect(q("[data-cover]")!.getAttribute("data-cover-fit-step")).toBe("0");
     expect(s.className).toContain("text-[#19347D]");
     expect(s.className).not.toMatch(/truncate|line-clamp/);
   });

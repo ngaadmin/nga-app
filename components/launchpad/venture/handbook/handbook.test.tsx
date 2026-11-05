@@ -71,19 +71,17 @@ describe("handbook pages", () => {
     expect(hasHandbook(through("l1-s1"), FLOORS)).toBe(true);
   });
 
-  it("makes one page per completed silver in building order, the identity silver rendering the saved answer", () => {
+  it("makes the cover, then one page per completed silver in building order, with no separate identity page", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
-    // Page 1 is the cover (logo, name, vision), then one page per silver; identity is Level 1's third (D26/D27).
-    // through(l2-s1) completes Define + Goals + Brand + product. AC14: Define and Goals get real
-    // workbook pages built from the sheet's column Z sections (no placeholder).
-    expect(pages.map((p) => p.silver.id)).toEqual(["l1-s3", "l1-s1", "l1-s2", "l1-s3", "l2-s1"]);
-    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "summary", "identity", "summary"]);
+    // Page 1 is the cover (logo, name, vision), then Define, Goals, then Level 2 (Cath, 5 Nov 5:35pm):
+    // The Brand (l1-s3) has no page of its own; its answer feeds the cover only.
+    expect(pages.map((p) => p.silver.id)).toEqual(["l1-s3", "l1-s1", "l1-s2", "l2-s1"]);
+    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "summary", "summary"]);
     expect(pages[1]!.bronzeTitles).toEqual(SILVERS[0]!.bronzes.map((b) => b.title));
-    expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4, 5]);
+    expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4]);
     expect(pages[0]).toMatchObject({ level: 1, kind: "cover" });
     expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder" && p.level === 1)).toEqual([]);
-    expect(pages[3]).toMatchObject({ level: 1, floorName: FLOORS[0]!.name, silverNumber: 3, done: true });
-    expect(pages[4]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 1, done: true });
+    expect(pages[3]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 1, done: true });
   });
 
   it("opens on page 1, and the ghost is the next silver", () => {
@@ -92,7 +90,7 @@ describe("handbook pages", () => {
     expect(handbookOpenIndex([])).toBe(0);
     expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Set your goals" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
-    expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length + 1);
+    expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length); // cover + every silver but The Brand
   });
 
   it("is editable only from the building and only for a completed silver", () => {
@@ -119,17 +117,19 @@ describe("handbook tabs", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
     // A floor tab opens its first silver page, not the cover.
     expect(handbookTabTarget(pages, 1)).toBe(1);
-    expect(handbookTabTarget(pages, 2)).toBe(4);
+    expect(handbookTabTarget(pages, 2)).toBe(3);
     const l1Only = handbookPages(through("l1-s1"), FLOORS);
     expect(handbookTabTarget(l1Only, 2)).toBe(1);
   });
 });
 
 describe("shortcut sample answers (TEST-ONLY)", () => {
-  it("?complete=l1-s3 and ?complete=all give a handbook with a filled identity page", () => {
+  it("?complete=l1-s3 and ?complete=all give a workbook with a cover and no separate identity page", () => {
     for (const p of [through("l1-s3"), ALL]) {
       const filled = withShortcutSampleAnswers(p, FLOORS, "dog-walking", "Dog walking");
-      expect(handbookPages(filled, FLOORS).some((pg) => pg.kind === "identity")).toBe(true);
+      const pgs = handbookPages(filled, FLOORS);
+      expect(pgs[0]!.kind).toBe("cover");
+      expect(pgs.filter((pg) => pg.silver.id === "l1-s3")).toHaveLength(1);
       expect(filled.answers?.[IDENTITY_ANSWER_KEY]).toMatchObject({
         version: 2,
         name: "Dog walking",
@@ -207,7 +207,7 @@ const SKILL_PREFILL = goalField("l1-goal-learn-new-skills", "skill").options![0]
 describe("<Handbook>", () => {
   it("opens on page 1; Next page and a left swipe move forward in order, Previous and a right swipe go back, the dots follow", () => {
     render(<Harness entry="home" initial={FULL} />);
-    const order = ["cover", "l1-s1", "l1-s2", "l1-s3"];
+    const order = ["cover", "l1-s1", "l1-s2"];
     expect(shownPage()).toBe("cover");
     expect(screen.getByText("Page 1")).toBeTruthy();
     expect(activeDot()).toBe(0);
@@ -224,66 +224,63 @@ describe("<Handbook>", () => {
     // Swipe right (finger moves right) goes back one page; swipe left goes forward.
     fireEvent.pointerDown(card, { clientX: 300 });
     fireEvent.pointerUp(card, { clientX: 380 });
-    expect(shownPage()).toBe("l1-s2");
-    expect(activeDot()).toBe(2);
+    expect(shownPage()).toBe("l1-s1");
+    expect(activeDot()).toBe(1);
     fireEvent.pointerDown(card, { clientX: 300 });
     fireEvent.pointerUp(card, { clientX: 200 });
-    expect(shownPage()).toBe("l1-s3");
-    expect(activeDot()).toBe(3);
-    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     expect(shownPage()).toBe("l1-s2");
+    expect(activeDot()).toBe(2);
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    expect(shownPage()).toBe("l1-s1");
   });
 
-  it("from home: the identity page is read-only, with no Edit button, no font line and no Done chip", () => {
+  it("from home: the cover is read-only, with an 80px logo, a smaller name and the vision once; no Edit, no font line, no Done chip on any page", () => {
     render(<Harness entry="home" initial={FULL} />);
-    const dialog = screen.getByRole("dialog", { name: "My handbook" });
-    turnTo("l1-s3");
+    const dialog = screen.getByRole("dialog", { name: "My workbook" });
+    expect(within(dialog).getByRole("heading", { name: "My workbook" })).toBeTruthy();
+    expect(dialog.textContent).not.toMatch(/handbook/i);
     expect(within(dialog).getByText("Read only")).toBeTruthy();
     const page = dialog.querySelector("[data-handbook-page]")!;
-    expect(page.getAttribute("data-handbook-page")).toBe("l1-s3");
-    expect(page.getAttribute("data-editable")).toBe("false");
+    expect(page.getAttribute("data-handbook-page")).toBe("cover");
     expect(dialog.querySelectorAll("[data-edit-identity]")).toHaveLength(0);
     expect(within(dialog).getAllByText("Happy Paws").length).toBeGreaterThan(0);
-    expect(within(dialog).getByRole("img", { name: "Logo: shield, paw icon" })).toBeTruthy();
-    // No "Font: ..." line under the name (Cath, 5 Nov 5:27pm).
-    expect(dialog.querySelector("[data-font-label]")).toBeNull();
-    expect(dialog.textContent).not.toMatch(/Font:/);
-    expect(within(dialog).getByText("Your identity")).toBeTruthy();
-    // Cover order (D25): logo, name, then the vision block; the offer-picks list and What we sell are not on this page.
-    const lockup = dialog.querySelector("[data-identity-lockup]")!;
-    const vision = dialog.querySelector("[data-identity-page-vision] [data-vision]")!;
-    // The logo is the hero: 112px, centered above a smaller name (Cath, 5 Nov 5:26pm).
-    const mark = lockup.querySelector("svg[role='img']")!;
-    expect(mark.getAttribute("width")).toBe("112");
-    expect(lockup.className).toContain("items-center");
-    const name = lockup.querySelector<HTMLElement>("[data-business-name]")!;
+    const mark = within(dialog).getByRole("img", { name: "Logo: shield, paw icon" });
+    expect(mark.getAttribute("width")).toBe("80");
+    const name = dialog.querySelector<HTMLElement>("[data-cover-name] [data-business-name]")!;
     expect(mark.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(20);
-    expect(lockup.compareDocumentPosition(vision) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // 17px, or the chosen font's readability floor (Fredoka 19px), always under the 80px logo.
+    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(19);
+    const vision = dialog.querySelector("[data-vision]")!;
+    expect(name.compareDocumentPosition(vision) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(dialog).getByRole("heading", { name: "Our vision" })).toBeTruthy();
-    expect(within(dialog).queryByRole("list", { name: "Our vision" })).toBeNull();
-    expect(within(dialog).queryByRole("heading", { name: "What we sell" })).toBeNull();
-    // The sample copy is retired.
+    expect(dialog.querySelector("[data-font-label]")).toBeNull();
+    expect(dialog.textContent).not.toMatch(/Font:|Your identity/);
     expect(dialog.querySelectorAll("[data-sample]")).toHaveLength(0);
-    expect(dialog.textContent).not.toMatch(/Overnight dog stay|relaxed owners/);
-    expect(dialog.querySelector("[data-done-chip]")).toBeNull();
     expect(dialog.querySelectorAll("[data-paper-card]")).toHaveLength(1);
     expect(dialog.querySelectorAll("[data-washi]")).toHaveLength(1);
     expect(dialog.querySelectorAll("[data-paper-card] [data-spiral-binding]")).toHaveLength(1);
-    expect(dialog.querySelectorAll("[data-doodle]")).toHaveLength(1);
     expect(dialog.textContent).not.toMatch(/coming soon|NGA|XP/i);
+    // Every page: no Done chip, and the vision shows only on the cover.
+    for (let i = 0; i < 6; i++) {
+      expect(dialog.querySelector("[data-done-chip]")).toBeNull();
+      expect(dialog.querySelectorAll("[data-vision]").length).toBe(shownPage() === "cover" ? 1 : 0);
+      expect(within(dialog).queryByText("Done")).toBeNull();
+      const next = screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement;
+      if (next.disabled) break;
+      fireEvent.click(next);
+    }
   });
 
-  it("identity page shows the vision placeholder until Level 1 fills it, and no What we sell", () => {
+  it("the cover shows the vision placeholder until Level 1 fills it", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    turnTo("l1-s3");
-    expect(document.querySelector("[data-identity-page-vision] [data-vision]")!.getAttribute("data-vision-state")).toBe("empty");
+    expect(shownPage()).toBe("cover");
+    expect(document.querySelector("[data-vision]")!.getAttribute("data-vision-state")).toBe("empty");
     expect(screen.queryByRole("heading", { name: "What we sell" })).toBeNull();
   });
 
   it("shows the ghost of the next silver, named by its title, behind the last page", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    turnTo("l1-s3");
+    turnTo("l1-s2");
     const ghost = screen.getByRole("img", { name: "Next page, locked: The product and its buyers" });
     expect(ghost.textContent).toBe("Next: The product and its buyers");
     // The words silver, bronze and gold never reach the screen.
@@ -292,7 +289,7 @@ describe("<Handbook>", () => {
 
   it("tabs: earned and current floors are buttons, unearned ones are disabled; tapping L1 goes to page 1", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    const nav = screen.getByRole("navigation", { name: "Handbook floors" });
+    const nav = screen.getByRole("navigation", { name: "Workbook floors" });
     expect(within(nav).getByRole("button", { name: "Level 1, Vision and Goals" }).getAttribute("data-tab-state")).toBe("earned");
     expect(within(nav).getByRole("button", { name: /Level 2/ }).getAttribute("data-tab-state")).toBe("current");
     const l3 = within(nav).getByRole("button", { name: /Level 3.*not earned yet/ }) as HTMLButtonElement;
@@ -304,15 +301,15 @@ describe("<Handbook>", () => {
 
   it("rings the viewed floor's tab in orange whatever its state, and only that tab", () => {
     const ringed = () =>
-      Array.from(document.querySelectorAll("nav[aria-label='Handbook floors'] button"))
+      Array.from(document.querySelectorAll("nav[aria-label='Workbook floors'] button"))
         .filter((b) => b.className.includes("outline-[#FFA503]"))
         .map((b) => b.getAttribute("aria-label"));
-    const tab = (name: RegExp) => within(screen.getByRole("navigation", { name: "Handbook floors" })).getByRole("button", { name });
+    const tab = (name: RegExp) => within(screen.getByRole("navigation", { name: "Workbook floors" })).getByRole("button", { name });
 
     // Earned floor (L2) viewed on its page, which keeps its running page number.
     const { unmount } = render(<Harness entry="building" initial={FULL_L2} />);
     turnTo("l2-s1");
-    expect(screen.getByText("Page 5")).toBeTruthy();
+    expect(screen.getByText("Page 4")).toBeTruthy();
     expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
     const l2 = tab(/^Level 2/);
     // Product done, Pricing still open → floor stays current (D26 L2 has two silvers).
@@ -364,7 +361,7 @@ describe("<Handbook>", () => {
     expect(within(page).getAllByText("Not answered yet").length).toBeGreaterThan(0);
     cleanup();
     render(<Harness entry="building" initial={ALL} />);
-    fireEvent.click(within(screen.getByRole("navigation", { name: "Handbook floors" })).getByRole("button", { name: /^Level 3/ }));
+    fireEvent.click(within(screen.getByRole("navigation", { name: "Workbook floors" })).getByRole("button", { name: /^Level 3/ }));
     const l3 = document.querySelector("[data-handbook-page]") as HTMLElement;
     const silver = FLOORS[2]!.silvers[0]!;
     expect(within(l3).getByRole("heading", { name: silver.title })).toBeTruthy();
@@ -408,10 +405,10 @@ describe("<Handbook>", () => {
     expect(page.querySelector("[data-inline-editor]")).toBeNull();
   });
 
-  it("from the building: the identity page has an Edit button and edits write back to the saved answer", () => {
+  it("from the building: the cover has an Edit logo and name button and edits write back to the saved answer", () => {
     const onSave = vi.fn();
     render(<Harness entry="building" initial={WITH_IDENTITY} onSave={onSave} />);
-    turnTo("l1-s3");
+    expect(shownPage()).toBe("cover");
     expect(document.querySelector("[data-handbook-page]")!.getAttribute("data-editable")).toBe("true");
     expect(screen.queryByText("Read only")).toBeNull();
     const edit = screen.getByRole("button", { name: "Edit logo and name" });
@@ -442,11 +439,11 @@ describe("<LaunchpadHome> book button", () => {
   it("is an inactive placeholder until a silver is done, then opens the handbook", () => {
     const open = vi.fn();
     const { rerender } = render(<LaunchpadHome inProgress={[card(false)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
-    fireEvent.click(screen.getByRole("button", { name: "Open handbook" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open workbook" }));
     expect(open).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Open handbook" }).getAttribute("aria-disabled")).toBe("true");
+    expect(screen.getByRole("button", { name: "Open workbook" }).getAttribute("aria-disabled")).toBe("true");
     rerender(<LaunchpadHome inProgress={[card(true)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
-    fireEvent.click(screen.getByRole("button", { name: "Open handbook" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open workbook" }));
     expect(open).toHaveBeenCalledWith("dog-walking");
   });
 });

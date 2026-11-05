@@ -191,7 +191,7 @@ function InProgressTile({
             // Always in the row (Cath 4 Nov 10:04pm): a light, inactive placeholder until a step is complete.
             <button
               type="button"
-              aria-label="Open handbook"
+              aria-label="Open workbook"
               aria-disabled={v.hasHandbook ? undefined : true}
               onClick={v.hasHandbook ? () => onOpenHandbook(v.ventureId) : undefined}
               className={`${TILE_BTN} flex w-11 flex-none items-center justify-center ${

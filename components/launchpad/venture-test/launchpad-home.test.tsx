@@ -51,7 +51,7 @@ describe("Launchpad home In Progress tile", () => {
     expect(tile.className).toContain("bg-white");
     expect(tile.querySelector("[data-tile-thumb] svg")).toBeTruthy();
     expect(tile.textContent).not.toMatch(/NGA|XP/);
-    const book = screen.getByRole("button", { name: "Open handbook" });
+    const book = screen.getByRole("button", { name: "Open workbook" });
     const go = screen.getByRole("button", { name: "Continue" });
     expect(book.textContent).toBe("");
     expect(book.querySelector("svg")!.getAttribute("width")).toBe("28");
@@ -71,7 +71,7 @@ describe("Launchpad home In Progress tile", () => {
 
   it("no handbook yet: the workbook button is an inactive placeholder (aria-disabled)", () => {
     render(<LaunchpadHome inProgress={[{ ...L6, hasHandbook: false }]} onOpenVenture={() => {}} onOpenHandbook={() => {}} />);
-    const book = screen.getByRole("button", { name: "Open handbook" });
+    const book = screen.getByRole("button", { name: "Open workbook" });
     expect(book.getAttribute("aria-disabled")).toBe("true");
     expect(book.getAttribute("data-handbook-button")).toBe("inactive");
     expect(screen.getByRole("button", { name: "Continue" })).toBeTruthy();

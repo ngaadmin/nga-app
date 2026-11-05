@@ -119,11 +119,11 @@ const SIZES = {
    */
   hb: { mark: 28, width: 246, name: 21, longName: 18 },
   /**
-   * Workbook "Your identity" page and the cover: the logo is the hero at
-   * 112px (about 30% of the card), centered above the name, and the name is a
-   * smaller than hb (18px, 16px when long) so the logo clearly leads (Cath, 5 Nov 5:26pm).
+   * Workbook cover (page 1): the logo leads at 80px, centered at the top,
+   * with a smaller name (17px, 15px when long) so the whole vision fits the
+   * page card at 390x844 (Cath, 5 Nov 5:35pm; was 112px "hero").
    */
-  hero: { mark: 112, width: 246, name: 18, longName: 16 },
+  cover: { mark: 80, width: 246, name: 17, longName: 15 },
   sm: { mark: 76, width: 230, name: 22, longName: 20 },
 } as const;
 

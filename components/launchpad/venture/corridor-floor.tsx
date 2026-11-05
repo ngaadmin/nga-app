@@ -155,7 +155,7 @@ export function CorridorFloor(props: CorridorProps) {
           ) : (
             <>
             <p className="mt-[22px] font-heading text-[11px] font-bold tracking-[1.5px] text-nga-secondary">Level {level}</p>
-            <p className="mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink">{goal}</p>
+            <p className={`mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink ${workbook ? "pt-2" : ""}`}>{goal}</p>
             <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-secondary" />
             </>
           )}
@@ -177,16 +177,18 @@ export function CorridorFloor(props: CorridorProps) {
           </div>
         )}
         {workbook && !complete && (
-          <div className="absolute inset-x-[26px] top-[500px] flex justify-center">
+          // Near the top of the lift card, on the "Level N" row (right side), so
+          // it is in view without scrolling on short phones too (375x667; Cath, 5 Nov 5:35pm).
+          <div className="absolute right-[34px] top-[30px] flex" data-corridor-workbook-slot="">
             <button
               type="button"
               aria-label="Open your workbook"
               onClick={workbook.onOpen}
               // The In Progress tile's workbook button look: white, 2px navy outline, the book icon.
-              className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 border-nga-ink bg-white ${workbook.popIn ? styles.workbookPopIn : ""}`}
+              className={`relative flex h-10 w-10 items-center justify-center rounded-xl border-2 border-nga-ink bg-white before:absolute before:-inset-0.5 before:content-[''] ${workbook.popIn ? styles.workbookPopIn : ""}`}
               data-corridor-workbook={workbook.popIn ? "pop-in" : ""}
             >
-              <HandbookIcon size={28} />
+              <HandbookIcon size={24} />
             </button>
           </div>
         )}

@@ -193,6 +193,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     expect(look.anim).toBe("0.2s");
     await expect(page.getByRole("button", { name: /Set your goals, up next/ })).toBeVisible();
   });
+  await fits(t, "Corridor, after Define the business", cue, { pageScrollOk: true });
   await shot(t, "Lift with the workbook button after Define the business", cue);
   await step(t, "Open your workbook from the lift: Define the business page, then Back to the lift returns to the corridor", async () => {
     await cue.click();
@@ -333,6 +334,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator("[data-silver-done]")).toHaveCount(0);
     await expect(cue).toHaveAttribute("data-corridor-workbook", "pop-in");
   });
+  await fits(t, "Corridor, after Set your goals", cue, { pageScrollOk: true });
   await shot(t, "Lift with the workbook button after Set your goals", cue);
 
   const hb1 = page.getByRole("dialog");
@@ -363,7 +365,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
 
   await step(t, "Workbook cover after Set your goals: logo on top, then name placeholder, the vision filled", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
-    await page.getByRole("button", { name: "Open handbook" }).first().click();
+    await page.getByRole("button", { name: "Open workbook" }).first().click();
     const dlg = page.getByRole("dialog");
     await expect(dlg.locator("[data-handbook-page]").first()).toBeVisible();
     const coverBtn = dlg.getByRole("button", { name: "Previous page" });
@@ -385,7 +387,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Workbook cover, logo and name empty", null);
   await step(t, "Close the workbook and go back to the Level 1 corridor", async () => {
-    await page.getByRole("button", { name: "Close handbook" }).click();
+    await page.getByRole("button", { name: "Close workbook" }).click();
     await btn(page, "Go to Level 1").click();
     await expect(page.getByRole("button", { name: /The Brand, up next/ })).toBeVisible();
   });
@@ -537,8 +539,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await page.getByRole("button", { name: /Back to building/ }).click();
     // Back to building lands on the building overview (lift), not the corridor.
     await expect(page.getByRole("button", { name: "Go to Level 2" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Open handbook" }).first()).toBeVisible();
-    await page.getByRole("button", { name: "Open handbook" }).first().click();
+    await expect(page.getByRole("button", { name: "Open workbook" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "Open workbook" }).first().click();
     await expect(hb).toBeVisible();
     // The workbook opens on page 1 (the cover), with the first dot active.
     await expect(hb.locator('[data-handbook-page="cover"]')).toBeVisible();
@@ -548,7 +550,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await shot(t, "Handbook from the building, opens on page 1", null);
 
   await step(t, "Handbook tabs: Level 1 and Level 2 open their pages, Level 3 onward not earned", async () => {
-    const tabs = hb.getByRole("navigation", { name: "Handbook floors" }).getByRole("button");
+    const tabs = hb.getByRole("navigation", { name: "Workbook floors" }).getByRole("button");
     const labels = await tabs.evaluateAll((els) => els.map((e) => `${e.getAttribute("aria-label")}${(e as HTMLButtonElement).disabled ? " [off]" : ""}`));
     passed(t, "Handbook tab labels", labels.join(" | "));
     await hb.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
@@ -580,56 +582,60 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Handbook, Level 1 page with orange viewed ring", null);
 
-  await step(t, "Handbook: Next page walks past goals to the identity page (l1-s3), then Level 2", async () => {
+  await step(t, "Workbook: cover, Define, Set your goals, then Level 2 (no separate identity page, no Done chips); logo and name edit on the cover", async () => {
     await hb.getByRole("button", { name: "Next page" }).click(); // l1-s2 Set your goals
     await expect(hb.locator('[data-handbook-page="l1-s2"]')).toBeVisible();
     await expect(hb.locator("[data-page-dots] > span").nth(2)).toHaveClass(/w-\[18px\]/);
+    await expect(hb.locator("[data-done-chip]")).toHaveCount(0);
     await shot(t, "Workbook page 3, Set your goals", null);
-    await hb.getByRole("button", { name: "Next page" }).click(); // l1-s3 The Brand
-    const idPage = hb.locator('[data-handbook-page="l1-s3"]');
-    await expect(idPage).toBeVisible();
-    await expect(idPage).toContainText("TEST Business Name");
-    // AC12: the workbook identity page shows the logo above the name.
-    const pageLogo = await idPage.locator("svg").first().boundingBox();
-    const pageName = await idPage.getByText("TEST Business Name", { exact: true }).first().boundingBox();
-    expect(pageLogo && pageName && pageName.y > pageLogo.y, "logo above name on the identity page").toBeTruthy();
-    // The logo is the hero (112px, centered), no Font line, no Done chip (Cath, 5 Nov).
-    expect(pageLogo!.width).toBeGreaterThanOrEqual(110);
-    const card = (await idPage.boundingBox())!;
-    expect(Math.abs(pageLogo!.x + pageLogo!.width / 2 - (card.x + card.width / 2))).toBeLessThan(4);
-    await expect(idPage.locator("[data-font-label]")).toHaveCount(0);
-    await expect(idPage).not.toContainText("Font:");
-    await expect(idPage.locator("[data-done-chip]")).toHaveCount(0);
-    await expect(idPage.locator("[data-identity-page-vision] [data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
-    await shot(t, "Workbook identity page", null);
-    await idPage.getByRole("button", { name: /^Edit/ }).click();
-    const done = idPage.locator("[data-inline-editor-done]");
-    await expect(done).toBeVisible();
-    expect((await done.boundingBox())!.width).toBeLessThan(140);
-    const fit = await idPage.getByRole("radiogroup", { name: "Logo shape" }).evaluate((g) => {
-      const card = g.closest(".bg-white")!.getBoundingClientRect();
-      return [...g.querySelectorAll("button")].every((t) => {
-        const r = t.getBoundingClientRect();
-        return r.left >= card.left - 0.5 && r.right <= card.right + 0.5;
-      });
-    });
-    expect(fit).toBe(true);
-    await shot(t, "Workbook identity page, inline editor open", null);
-    await done.click();
-    await expect(done).toHaveCount(0);
-    await hb.getByRole("button", { name: "Next page" }).click();
+    await hb.getByRole("button", { name: "Next page" }).click(); // Level 2: no The Brand page (Cath, 5 Nov 5:35pm)
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
+    await expect(hb.locator('[data-handbook-page="l1-s3"]')).toHaveCount(0);
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
+    await expect(hb.locator("[data-done-chip]")).toHaveCount(0);
     await shot(t, "Handbook, Level 2 silver 1 page", null);
     const l2Tab = hb.getByRole("button", { name: "Level 2, Planning" });
     await expect(l2Tab).toHaveAttribute("data-viewed", /.*/);
     await hb.getByRole("button", { name: "Previous page" }).click();
-    await expect(hb.locator('[data-handbook-page="l1-s3"]')).toBeVisible();
+    await expect(hb.locator('[data-handbook-page="l1-s2"]')).toBeVisible();
+    // Back to page 1, the cover: 80px logo centered at the top, then the name, then the vision (shown once).
+    await hb.getByRole("button", { name: "Previous page" }).click();
+    await hb.getByRole("button", { name: "Previous page" }).click();
+    const cover = hb.locator('[data-handbook-page="cover"]');
+    await expect(cover).toBeVisible();
+    await expect(hb.locator("[data-vision-sentence]")).toHaveCount(1);
+    await expect(cover.locator("[data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
+    const logo = (await cover.locator("[data-cover-logo] svg").first().boundingBox())!;
+    const name = (await cover.locator("[data-business-name]").boundingBox())!;
+    const card = (await cover.boundingBox())!;
+    expect(logo.width).toBe(80);
+    expect(name.y, "logo above name").toBeGreaterThan(logo.y);
+    expect(Math.abs(logo.x + logo.width / 2 - (card.x + card.width / 2))).toBeLessThan(4);
+    const overflow = await cover.evaluate((el) => {
+      const sc = el.closest<HTMLElement>("[data-paper-scroll]")!;
+      return sc.scrollHeight - sc.clientHeight;
+    });
+    expect(overflow, "cover fits the page card with no scrolling").toBeLessThanOrEqual(1);
+    await cover.getByRole("button", { name: /^Edit/ }).click();
+    const done = cover.locator("[data-inline-editor-done]");
+    await expect(done).toBeVisible();
+    expect((await done.boundingBox())!.width).toBeLessThan(140);
+    const fit = await cover.getByRole("radiogroup", { name: "Logo shape" }).evaluate((g) => {
+      const c = g.closest(".bg-white")!.getBoundingClientRect();
+      return [...g.querySelectorAll("button")].every((b) => {
+        const r = b.getBoundingClientRect();
+        return r.left >= c.left - 0.5 && r.right <= c.right + 0.5;
+      });
+    });
+    expect(fit).toBe(true);
+    await shot(t, "Workbook cover, logo and name editor open", null);
+    await done.click();
+    await expect(done).toHaveCount(0);
   });
   await shot(t, "Handbook, Level 2 pages", null);
 
   await step(t, "Close the handbook; home tile still shows Planning (Pricing open) and a handbook button", async () => {
-    await page.getByRole("button", { name: "Close handbook" }).click();
+    await page.getByRole("button", { name: "Close workbook" }).click();
     await expect(hb).toHaveCount(0);
     await page.getByRole("button", { name: /Launchpad/ }).first().click();
     const tile = page.locator('[data-in-progress="dog-walking"]');
@@ -663,7 +669,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator('[data-handbook="home"] [data-pencil]')).toHaveCount(0);
   });
   await shot(t, "Handbook from home, read only", null);
-  await page.getByRole("button", { name: "Close handbook" }).click();
+  await page.getByRole("button", { name: "Close workbook" }).click();
 
   await step(t, "Cause skipped (Support a cause goal left empty): the cover drops the cause clause", async () => {
     // TEST-ONLY: clear the optional Support a cause goal in the saved test progress, as if it was left empty.
@@ -685,6 +691,6 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     passed(t, "Cover vision, cause skipped", await s.innerText());
   });
   await shot(t, "Workbook cover, cause skipped", null);
-  await page.getByRole("button", { name: "Close handbook" }).click();
+  await page.getByRole("button", { name: "Close workbook" }).click();
   return t;
 }

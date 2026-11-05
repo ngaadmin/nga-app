@@ -36,11 +36,12 @@ export type HandbookPageView = {
   silverNumber: number;
   silver: LaunchpadSilver;
   /**
-   * "identity": the saved identity answer (logo and name) plus its handbook
-   * sections; "summary": a workbook-summary silver's sections from saved
-   * answers; "placeholder": any other silver.
+   * "cover": page 1, the saved identity answer (logo and name) and the vision;
+   * "summary": a silver's sections from saved answers; "placeholder": any
+   * other silver. The identity silver has no page of its own (Cath, 5 Nov
+   * 5:35pm: the vision shows once, on the cover); its answer feeds the cover.
    */
-  kind: "cover" | "identity" | "summary" | "placeholder";
+  kind: "cover" | "summary" | "placeholder";
   /** Titles of the silver's finished bronzes (written out under plain headings on placeholder pages). */
   bronzeTitles: string[];
   done: true;
@@ -59,13 +60,14 @@ function orderedSilvers(floors: readonly LaunchpadFloor[]) {
 
 /**
  * Page 1 is the cover (logo, name, vision; workbook-page1-cover-spec-r1) once
- * the workbook has any page, when the venture has an identity silver with a
- * vision. Then one page per completed silver, in building order.
+ * any silver is done, when the venture has an identity silver with a vision.
+ * Then one page per completed silver, in building order, except the identity
+ * silver itself: it has no separate page (its answer is on the cover).
  */
 export function handbookPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
   const pages = silverPages(progress, floors);
   const id = orderedSilvers(floors).find(({ silver }) => silver.wrapUp?.type === "identity-wrap-up" && silver.wrapUp.vision);
-  if (!pages.length || !id) return pages;
+  if (!hasHandbook(progress, floors) || !id) return pages;
   const cover: HandbookPageView = {
     number: 1,
     level: floors[0]!.level,
@@ -81,19 +83,14 @@ export function handbookPages(progress: VentureTestProgress, floors: readonly La
 
 function silverPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
   return orderedSilvers(floors)
-    .filter(({ silver }) => isSilverDone(progress, silver))
+    .filter(({ silver }) => isSilverDone(progress, silver) && silver.wrapUp?.type !== "identity-wrap-up")
     .map(({ floor, silver, silverNumber }, i) => ({
       number: i + 1,
       level: floor.level,
       floorName: floor.name,
       silverNumber,
       silver,
-      kind:
-        silver.wrapUp?.type === "identity-wrap-up"
-          ? "identity"
-          : silver.wrapUp?.type === "workbook-summary" || silverHandbookSections(silver).length
-            ? "summary"
-            : "placeholder",
+      kind: silver.wrapUp?.type === "workbook-summary" || silverHandbookSections(silver).length ? "summary" : "placeholder",
       bronzeTitles: silver.bronzes.filter((b) => isBronzeDone(progress, b)).map((b) => b.title),
       done: true,
     }));

@@ -7,7 +7,7 @@ export const SILVER_DONE_MESSAGE =
 /**
  * Shown right after a step's last task (Final J11 / AC14), in place of the old
  * per-step wrap-up screens: "Nice work! <step> is done.", the progress
- * message, "See my handbook" (opens the handbook at this step's page) and
+ * message, "See my workbook" (opens the handbook at this step's page) and
  * "Keep going" (back to the corridor), plus a "Back to the lift" link. A
  * level's last step skips this and goes straight to the level-done lift.
  */
@@ -41,7 +41,7 @@ export function SilverDoneCard({
         </p>
         <div className="mt-2 flex w-full flex-col items-center gap-3">
           <button type="button" onClick={onSeeHandbook} className={BTN_PRIMARY} data-see-handbook="">
-            See my handbook
+            See my workbook
           </button>
           <button type="button" onClick={onKeepGoing} className={`${BTN_CYAN_OUTLINE_COMPACT} min-w-[140px]`} data-keep-going="">
             Keep going

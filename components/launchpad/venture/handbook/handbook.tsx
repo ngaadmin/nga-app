@@ -78,7 +78,7 @@ export function Handbook({
   /** Save an answer. Only used from the building; home is read-only. */
   setAnswer?: (answerKey: string, answer: LaunchpadAnswer) => void;
   onClose: () => void;
-  /** Open at this silver's page (the silver-done card's "See my handbook"). */
+  /** Open at this silver's page (the silver-done card's "See my workbook"). */
   openSilverId?: string;
   /** "Back to the lift": shown from the building; returns to the corridor with the plaques. */
   onBackToLift?: () => void;

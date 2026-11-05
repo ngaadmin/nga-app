@@ -103,6 +103,15 @@ describe("dog walking load reader (Final framework Module 1 + tracker L2)", () =
     }
   });
 
+  it("Make money goal: I'm saving for is capped at 60 characters (V6)", () => {
+    const bronze = build().load.levels[0]!.silvers[1]!.bronzes.find((b) => b.id === "l1-s2-b1")!;
+    const loop = bronze.tasks[0]!.screens[0]!.payload!;
+    if (loop.type !== "goal-loop") throw new Error("expected goal-loop first");
+    const money = loop.goals.find((g) => g.screen.answerKey === "l1-goal-make-money")!;
+    if (money.screen.type !== "short-text") throw new Error("expected short-text");
+    expect(money.screen.fields.find((f) => f.name === "savingFor")!.maxLength).toBe(60);
+  });
+
   it("L2 product silver keeps Decide what to sell and Know who your customers are (Final title)", () => {
     const { load } = build();
     const s = load.levels[1]!.silvers[0]!;

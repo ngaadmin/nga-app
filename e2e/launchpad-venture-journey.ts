@@ -171,7 +171,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(done1.locator("[data-silver-done-message]")).toHaveText(
       "See your progress in your workbook, or wait until you've completed all the steps in this level.",
     );
-    await expect(done1.locator("[data-see-handbook]")).toHaveText("See my handbook");
+    await expect(done1.locator("[data-see-handbook]")).toHaveText("See my workbook");
     await expect(done1.locator("[data-keep-going]")).toHaveText("Keep going");
     await expect(done1.locator("[data-back-to-lift]")).toBeVisible();
     await expect(page.locator("[data-wrap-up]")).toHaveCount(0);
@@ -318,7 +318,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await shot(t, "After-step message, Set your goals done", done2.locator("[data-keep-going]"));
 
   const hb1 = page.getByRole("dialog");
-  await step(t, "See my handbook opens the handbook at the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
+  await step(t, "See my workbook opens the handbook at the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
     await done2.locator("[data-see-handbook]").click();
     const gp = hb1.locator('[data-handbook-page="l1-s2"]');
     await expect(gp).toBeVisible();
@@ -375,6 +375,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await page.getByRole("button", { name: /The Brand, up next/ }).click();
     await expect(btn(page, /Design your logo/)).toContainText("Up next");
     await expect(btn(page, /Name your business/)).toHaveCount(0);
+    // The locked Name your business door sits below Design your logo.
+    const logoBox = await page.locator("main").getByText("Design your logo", { exact: true }).boundingBox();
+    const nameBox = await page.locator("main").getByText("Name your business", { exact: true }).boundingBox();
+    expect(logoBox && nameBox && nameBox.y > logoBox.y, "Name your business is below Design your logo").toBeTruthy();
   });
   await shot(t, "The Brand doors, logo first", btn(page, /Design your logo/));
 
@@ -483,7 +487,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "After-step message, The product and its buyers done", done21.locator("[data-keep-going]"));
 
-  await step(t, "See my handbook: edit what I am selling with the pencil on the handbook page", async () => {
+  await step(t, "See my workbook: edit what I am selling with the pencil on the handbook page", async () => {
     await done21.locator("[data-see-handbook]").click();
     const pg = page.getByRole("dialog").locator('[data-handbook-page="l2-s1"]');
     await expect(pg).toContainText("TEST product");
@@ -560,6 +564,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     const idPage = hb.locator('[data-handbook-page="l1-s3"]');
     await expect(idPage).toBeVisible();
     await expect(idPage).toContainText("TEST Business Name");
+    // AC12: the workbook identity page shows the logo above the name.
+    const pageLogo = await idPage.locator("svg").first().boundingBox();
+    const pageName = await idPage.getByText("TEST Business Name", { exact: true }).first().boundingBox();
+    expect(pageLogo && pageName && pageName.y > pageLogo.y, "logo above name on the identity page").toBeTruthy();
     await expect(idPage.locator("[data-identity-page-vision] [data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
     await shot(t, "Workbook identity page", null);
     await idPage.getByRole("button", { name: /^Edit/ }).click();

@@ -180,7 +180,7 @@ export function VentureFlow({
   const [handbook, setHandbook] = useState<{
     ventureId: string;
     entry: "home" | "building";
-    /** Open at this step's page (the silver-done card's "See my handbook"). */
+    /** Open at this step's page (the silver-done card's "See my workbook"). */
     openSilverId?: string;
     /** "Back to the lift" lands on this floor's corridor (defaults to the current floor). */
     level?: number;

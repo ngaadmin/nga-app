@@ -191,8 +191,8 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     expect(document.querySelector("[data-silver-done='l1-s2']")).toBeTruthy();
     // Skip saved nothing for the extra goal.
     expect(localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "").not.toContain("TEST half typed");
-    // See my handbook opens the workbook; its Back to the lift lands on the corridor.
-    fireEvent.click(screen.getByRole("button", { name: "See my handbook" }));
+    // See my workbook opens the workbook; its Back to the lift lands on the corridor.
+    fireEvent.click(screen.getByRole("button", { name: "See my workbook" }));
     const backs = document.querySelectorAll<HTMLElement>("[data-back-to-lift]");
     fireEvent.click(backs[backs.length - 1]!);
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
@@ -269,7 +269,7 @@ describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44p
 });
 
 describe("finishing a silver shows the after-step message (AC14), no wrap-ups", () => {
-  it("a placeholder step shows the message with See my handbook, Keep going and Back to the lift", async () => {
+  it("a placeholder step shows the message with See my workbook, Keep going and Back to the lift", async () => {
     renderFlow({ kind: "level", level: 3 });
     const silver = PAYLOAD.floors[2]!.silvers[0]!;
     await finishSilver(silver);
@@ -278,7 +278,7 @@ describe("finishing a silver shows the after-step message (AC14), no wrap-ups", 
     expect(screen.getByRole("heading", { name: `Nice work! ${silver.title} is done.` })).toBeTruthy();
     expect(done.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
     expect(done.querySelector("[data-back-to-lift]")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "See my handbook" }).className).toContain("bg-nga-ink");
+    expect(screen.getByRole("button", { name: "See my workbook" }).className).toContain("bg-nga-ink");
     fireEvent.click(screen.getByRole("button", { name: "Keep going" }));
     expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);

@@ -7,6 +7,7 @@ import type {
   LaunchpadVenturePayload,
 } from "@/lib/launchpad/content/types";
 import type { LaunchpadLoadFile, LoadSilver } from "@/lib/launchpad/load/types";
+import { SEED_LOCKED_IDENTITY_SILVER } from "@/lib/launchpad/content/seed/identity-silver";
 
 function loadSilver(s: LoadSilver): LaunchpadSilver {
   const bronzes: LaunchpadBronze[] = s.bronzes.map((b) => ({
@@ -65,21 +66,34 @@ export function overlayLoad(seed: LaunchpadVenturePayload, load: LaunchpadLoadFi
       const silvers = level.silvers.map((s) => {
         if (s.build === "load") return loadSilver(s);
         const from = s.seedSilverId ?? s.id;
-        const seedSilver = seed.floors.flatMap((f) => f.silvers).find((x) => x.id === from);
+        // Prefer the off-floor locked identity over any floor silver that reused id l2-s2 (Pricing).
+        const seedSilver =
+          (from === SEED_LOCKED_IDENTITY_SILVER.id ? SEED_LOCKED_IDENTITY_SILVER : undefined) ??
+          seed.floors.flatMap((f) => f.silvers).find((x) => x.id === from);
         if (!seedSilver) throw new Error(`Locked silver ${from} is not in the seed.`);
         const kept = from === s.id ? seedSilver : renumberSilver(seedSilver, from, s.id);
-        if (!s.wrapUp?.handbookSections || kept.wrapUp?.type !== "identity-wrap-up") return kept;
+        // Locked silvers take the load title (e.g. The Brand) when it differs from the seed.
+        const titled = s.title && s.title !== kept.title ? { ...kept, title: s.title } : kept;
+        if (!s.wrapUp?.handbookSections || titled.wrapUp?.type !== "identity-wrap-up") return titled;
         const wrapUp: LaunchpadIdentityWrapUp = {
-          ...kept.wrapUp,
+          ...titled.wrapUp,
           handbookSections: s.wrapUp.handbookSections,
           ...(s.wrapUp.vision ? { vision: s.wrapUp.vision } : {}),
         };
-        return { ...kept, wrapUp };
+        return { ...titled, wrapUp };
       });
+      // Keep seed silvers this level did not cover (e.g. L2 Pricing). Locked identity
+      // lives off-floor (SEED_LOCKED_IDENTITY_SILVER), so it never appears as an extra.
+      const covered = new Set(level.silvers.map((s) => s.id));
+      const extras = floor.silvers.filter((s) => !covered.has(s.id));
       return {
         ...floor,
-        gold: { ...floor.gold, ...(level.gold.completion ? { completion: level.gold.completion } : {}) },
-        silvers,
+        // Outcome statements stay on the seed (Storybird draft / swappable data).
+        gold: {
+          ...floor.gold,
+          ...(level.gold.completion ? { completion: level.gold.completion } : {}),
+        },
+        silvers: [...silvers, ...extras],
       };
     }),
   };

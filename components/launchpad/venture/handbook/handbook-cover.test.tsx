@@ -78,7 +78,8 @@ describe("workbook page 1, the cover", () => {
   });
 
   it("cause skipped: the cause clause drops out", () => {
-    const { "l1-cause": _c, "l1-goal-support-a-cause": _g, ...rest } = L1;
+    const { "l1-cause": _omitCause, "l1-goal-support-a-cause": _omitGoal, ...rest } = L1;
+    void _omitCause; void _omitGoal;
     renderCover(rest);
     expect(q("[data-vision-sentence]")!.textContent).toContain("make money and help others. My goals: ");
     expect(q("[data-vision-sentence]")!.textContent).not.toContain("As I grow");
@@ -89,7 +90,7 @@ describe("identity wrap-up (screen three)", () => {
   it("shows the same compiled vision block in place of the old Vision line", () => {
     render(
       <LaunchpadAnswersProvider value={{ iconVentureId: "dog-walking", answers: { ...L1, [IDENTITY_ANSWER_KEY]: ID as never }, setAnswer: () => {}, floors: FLOORS }}>
-        <IdentityWrapUp level={2} silverTitle="Build your identity" wrapUp={wrapUp} onBuilding={() => {}} onCorridor={() => {}} onFinalize={() => {}} />
+        <IdentityWrapUp level={2} silverTitle="The Brand" wrapUp={wrapUp} onBuilding={() => {}} onCorridor={() => {}} onFinalize={() => {}} />
       </LaunchpadAnswersProvider>,
     );
     expect(q("[data-identity-vision] [data-vision-sentence]")!.textContent).toMatch(/^I am starting a dog walking business\./);

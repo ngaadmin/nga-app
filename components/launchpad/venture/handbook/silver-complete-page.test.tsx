@@ -45,11 +45,11 @@ describe("SilverCompletePage", () => {
       />,
     );
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Define the business: done! ");
-    expect(document.querySelector("[data-milestone-steps]")?.textContent).toBe("1 of 15 steps done");
+    expect(document.querySelector("[data-milestone-steps]")?.textContent).toBe("1 of 14 steps done");
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("1");
     const chips = [...document.querySelectorAll("[data-what-you-built] [data-tag-chip]")].map((c) => c.textContent);
     expect(chips).toEqual(silver.bronzes.map((b) => b.title));
-    expect(document.querySelector("[data-next-up]")?.textContent).toBe("Build your identityNext on Level 1.");
+    expect(document.querySelector("[data-next-up]")?.textContent).toBe("Set your goalsNext on Level 1.");
     // The real building, about 80px tall: no finished floors yet, Level 1 outlined in orange.
     const bld = document.querySelector("[data-next-up] [data-next-up-building]") as SVGElement;
     expect(bld.getAttribute("height")).toBe("80");

@@ -30,7 +30,7 @@ describe("vision template (H19)", () => {
     expect(spec).toBeTruthy();
     expect(spec.label).toBe("Our vision");
     expect(spec.template).toMatch(/^I am starting a \{business-type\} business\./);
-    expect(spec.template).toContain("[[ As I grow, I'll give {cause-percent}% of every sale to support {cause}.]]");
+    expect(spec.template).toContain("[[As I grow, I'll give {cause-percent}% of every sale to support {cause}.]]");
     expect(spec.businessType).toBe("dog walking");
   });
 
@@ -39,7 +39,7 @@ describe("vision template (H19)", () => {
     expect(p.slots.map((s) => s.kind)).toEqual(["token", "token", "token", "optional", "token"]);
     const opt = p.slots[3]!;
     expect(opt.kind === "optional" && opt.inner.slots.map((s) => (s.kind === "token" ? s.token : s.kind))).toEqual(["cause-percent", "cause"]);
-    expect(opt.kind === "optional" && opt.inner.tokens[0]).toEqual({ kind: "text", text: " As I grow, I'll give " });
+    expect(opt.kind === "optional" && opt.inner.tokens[0]).toEqual({ kind: "text", text: "As I grow, I'll give " });
     const prod = parseSentence("Would you buy a {product}? [Yes/No]");
     expect(prod.slots).toEqual([
       { kind: "token", token: "product", raw: "{product}" },

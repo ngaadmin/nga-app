@@ -46,8 +46,8 @@ const IDENTITY: BusinessIdentityAnswer = {
   font: "fredoka-semibold",
   nameColor: "logo",
 };
-// D25: Build your identity is Level 1's second section (l1-s2).
-const WITH_IDENTITY = setProgressAnswer(through("l1-s2"), IDENTITY_ANSWER_KEY, IDENTITY);
+// D26/D27: The Brand is Level 1's third section (l1-s3).
+const WITH_IDENTITY = setProgressAnswer(through("l1-s3"), IDENTITY_ANSWER_KEY, IDENTITY);
 /** Identity plus the L1 offer and the L2 answers the handbook sections read. */
 const WITH_ANSWERS = [
   ["l1-offer", selectionAnswer(["dog-walking", "training"])],
@@ -73,22 +73,23 @@ describe("handbook pages", () => {
 
   it("makes one page per completed silver in building order, the identity silver rendering the saved answer", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
-    // Page 1 is the cover (logo, name, vision), then one page per silver; identity is Level 1's second (D25).
-    expect(pages.map((p) => p.silver.id)).toEqual(["l1-s2", "l1-s1", "l1-s2", "l2-s1"]);
-    expect(pages.map((p) => p.kind)).toEqual(["cover", "summary", "identity", "summary"]);
+    // Page 1 is the cover (logo, name, vision), then one page per silver; identity is Level 1's third (D26/D27).
+    // through(l2-s1) completes Define + Goals + Brand + product. Define/Goals have no wrap → placeholder.
+    expect(pages.map((p) => p.silver.id)).toEqual(["l1-s3", "l1-s1", "l1-s2", "l1-s3", "l2-s1"]);
+    expect(pages.map((p) => p.kind)).toEqual(["cover", "placeholder", "placeholder", "identity", "summary"]);
     expect(pages[1]!.bronzeTitles).toEqual(SILVERS[0]!.bronzes.map((b) => b.title));
-    expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4]);
+    expect(pages.map((p) => p.number)).toEqual([1, 2, 3, 4, 5]);
     expect(pages[0]).toMatchObject({ level: 1, kind: "cover" });
-    expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder").map((p) => p.level)[0]).toBe(3);
-    expect(pages[2]).toMatchObject({ level: 1, floorName: FLOORS[0]!.name, silverNumber: 2, done: true });
-    expect(pages[3]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 1, done: true });
+    expect(handbookPages(ALL, FLOORS).filter((p) => p.kind === "placeholder").map((p) => p.level)[0]).toBe(1);
+    expect(pages[3]).toMatchObject({ level: 1, floorName: FLOORS[0]!.name, silverNumber: 3, done: true });
+    expect(pages[4]).toMatchObject({ level: 2, floorName: FLOORS[1]!.name, silverNumber: 1, done: true });
   });
 
   it("opens at the latest page, and the ghost is the next silver", () => {
     const pages = handbookPages(through("l1-s1"), FLOORS);
     expect(handbookOpenIndex(pages)).toBe(1);
     expect(handbookOpenIndex([])).toBe(0);
-    expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Build your identity" });
+    expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Set your goals" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
     expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length + 1);
   });
@@ -105,9 +106,10 @@ describe("handbook tabs", () => {
   const states = (p: VentureTestProgress) => handbookTabs(p, FLOORS).map((t) => t.state);
   it("marks earned floors navy, the current floor cyan, the rest unearned and untappable", () => {
     expect(states(EMPTY_VENTURE_TEST_PROGRESS)).toEqual(["current", "unearned", "unearned", "unearned", "unearned", "unearned"]);
-    expect(states(through("l1-s2"))).toEqual(["earned", "current", "unearned", "unearned", "unearned", "unearned"]);
+    // l1-s3 completes Level 1 (Brand); L2 becomes current.
+    expect(states(through("l1-s3"))).toEqual(["earned", "current", "unearned", "unearned", "unearned", "unearned"]);
     expect(states(ALL)).toEqual(["earned", "earned", "earned", "earned", "earned", "earned"]);
-    const tabs = handbookTabs(through("l1-s2"), FLOORS);
+    const tabs = handbookTabs(through("l1-s3"), FLOORS);
     expect(tabs.map((t) => t.tappable)).toEqual([true, true, false, false, false, false]);
     expect(tabs.map((t) => t.level)).toEqual([1, 2, 3, 4, 5, 6]);
   });
@@ -116,15 +118,15 @@ describe("handbook tabs", () => {
     const pages = handbookPages(through("l2-s1"), FLOORS);
     // A floor tab opens its first silver page, not the cover.
     expect(handbookTabTarget(pages, 1)).toBe(1);
-    expect(handbookTabTarget(pages, 2)).toBe(3);
+    expect(handbookTabTarget(pages, 2)).toBe(4);
     const l1Only = handbookPages(through("l1-s1"), FLOORS);
     expect(handbookTabTarget(l1Only, 2)).toBe(1);
   });
 });
 
 describe("shortcut sample answers (TEST-ONLY)", () => {
-  it("?complete=l1-s2 and ?complete=all give a handbook with a filled identity page", () => {
-    for (const p of [through("l1-s2"), ALL]) {
+  it("?complete=l1-s3 and ?complete=all give a handbook with a filled identity page", () => {
+    for (const p of [through("l1-s3"), ALL]) {
       const filled = withShortcutSampleAnswers(p, FLOORS, "dog-walking", "Dog walking");
       expect(handbookPages(filled, FLOORS).some((pg) => pg.kind === "identity")).toBe(true);
       expect(filled.answers?.[IDENTITY_ANSWER_KEY]).toMatchObject({
@@ -148,12 +150,15 @@ describe("shortcut sample answers (TEST-ONLY)", () => {
   });
 
   it("fills sample capture answers for completed silvers only (multi: first two picks; every goal page)", () => {
-    const filled = withShortcutSampleAnswers(through("l1-s1"), FLOORS, "dog-walking", "X").answers ?? {};
-    expect(selectionOf(filled, "l1-offer")?.selected).toEqual(["dog-walking", "grooming"]);
-    expect(filled["l1-why"]).toMatchObject({ kind: "ranking", notApplicable: [] });
-    expect(filled["l1-goal-make-money"]).toMatchObject({ kind: "fields", values: { amount: 500, timeframeNumber: 6 } });
-    expect(filled["l1-goal-other"]).toBeUndefined();
-    expect(filled["l2-sell"]).toBeUndefined();
+    const defineOnly = withShortcutSampleAnswers(through("l1-s1"), FLOORS, "dog-walking", "X").answers ?? {};
+    expect(selectionOf(defineOnly, "l1-offer")?.selected).toEqual(["dog-walking", "grooming"]);
+    expect(defineOnly["l1-why"]).toMatchObject({ kind: "ranking", notApplicable: [] });
+    // Goals live on l1-s2 (D30) — not filled until that silver is done.
+    expect(defineOnly["l1-goal-make-money"]).toBeUndefined();
+    const withGoals = withShortcutSampleAnswers(through("l1-s2"), FLOORS, "dog-walking", "X").answers ?? {};
+    expect(withGoals["l1-goal-make-money"]).toMatchObject({ kind: "fields", values: { amount: 500, timeframeNumber: 6 } });
+    expect(withGoals["l1-goal-other"]).toBeUndefined();
+    expect(withGoals["l2-sell"]).toBeUndefined();
   });
 });
 
@@ -185,7 +190,7 @@ describe("<Handbook>", () => {
     const dialog = screen.getByRole("dialog", { name: "My handbook" });
     expect(within(dialog).getByText("Read only")).toBeTruthy();
     const page = dialog.querySelector("[data-handbook-page]")!;
-    expect(page.getAttribute("data-handbook-page")).toBe("l1-s2");
+    expect(page.getAttribute("data-handbook-page")).toBe("l1-s3");
     expect(page.getAttribute("data-editable")).toBe("false");
     expect(dialog.querySelectorAll("[data-edit-identity]")).toHaveLength(0);
     expect(within(dialog).getAllByText("Happy Paws").length).toBeGreaterThan(0);
@@ -219,8 +224,8 @@ describe("<Handbook>", () => {
 
   it("shows the ghost of the next silver, named by its title, behind the last page", () => {
     render(<Harness entry="home" initial={WITH_IDENTITY} />);
-    const ghost = screen.getByRole("img", { name: "Next page, locked: Know the product and its buyers" });
-    expect(ghost.textContent).toBe("Next: Know the product and its buyers");
+    const ghost = screen.getByRole("img", { name: "Next page, locked: The product and its buyers" });
+    expect(ghost.textContent).toBe("Next: The product and its buyers");
     // The words silver, bronze and gold never reach the screen.
     expect(document.body.textContent).not.toMatch(/\b(silver|bronze|gold)\b/i);
   });
@@ -246,10 +251,11 @@ describe("<Handbook>", () => {
 
     // Earned floor (L2) viewed on its page, which keeps its running page number.
     const { unmount } = render(<Harness entry="building" initial={FULL_L2} />);
-    expect(screen.getByText("Page 4")).toBeTruthy();
+    expect(screen.getByText("Page 5")).toBeTruthy();
     expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
     const l2 = tab(/^Level 2/);
-    expect(l2.getAttribute("data-tab-state")).toBe("earned");
+    // Product done, Pricing still open → floor stays current (D26 L2 has two silvers).
+    expect(l2.getAttribute("data-tab-state")).toBe("current");
     expect(l2.hasAttribute("data-viewed")).toBe(true);
     expect(l2.getAttribute("aria-current")).toBe("true");
     expect(l2.className).toMatch(/\boutline-2\b/);
@@ -275,7 +281,7 @@ describe("<Handbook>", () => {
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
     expect(page.querySelectorAll("[data-edit-identity], [data-edit-section], button")).toHaveLength(0);
-    expect(within(page).getByRole("heading", { name: SILVERS[2]!.title })).toBeTruthy();
+    expect(within(page).getByRole("heading", { name: FLOORS[1]!.silvers[0]!.title })).toBeTruthy();
     expect(within(page).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["What I am selling", "When", "Who might want it"]);
     expect(page.textContent).toContain("Short walks for small dogs");
     expect(page.textContent).toContain("Weekday afternoons");
@@ -283,9 +289,10 @@ describe("<Handbook>", () => {
   });
 
   it("summary sections with no answer say so; placeholder floors list finished bronzes", () => {
-    render(<Harness entry="home" initial={through("l1-s1")} />);
+    // Product summary with no L2 answers → "Not answered yet". Define alone is a placeholder (D30).
+    render(<Harness entry="home" initial={through("l2-s1")} />);
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
-    expect(page.getAttribute("data-handbook-page")).toBe("l1-s1");
+    expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
     expect(within(page).getAllByText("Not answered yet").length).toBeGreaterThan(0);
     cleanup();
     render(<Harness entry="building" initial={ALL} />);

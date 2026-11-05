@@ -53,7 +53,7 @@ test("deep links", async ({ page }, info) => {
     await page.goto(url("reset=1&level=2"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 2 · Planning/, { timeout: 60_000 });
   });
-  await shot(t, "?level=2", page.getByRole("button", { name: /Know the product and its buyers/ }));
+  await shot(t, "?level=2", page.getByRole("button", { name: /The product and its buyers/ }));
 
   await step(t, "?level=1 opens the Level 1 corridor", async () => {
     await page.goto(url("reset=1&level=1"));
@@ -61,32 +61,38 @@ test("deep links", async ({ page }, info) => {
   });
   await shot(t, "?level=1", page.getByRole("button", { name: /Define the business/ }));
 
-  await step(t, "?complete=l1-s1: Level 1 corridor with Build your identity up next", async () => {
+  await step(t, "?complete=l1-s1: Level 1 corridor with Set your goals up next", async () => {
     await page.goto(url("reset=1&complete=l1-s1"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 1 · Vision and Goals/, { timeout: 60_000 });
-    await expect(page.getByRole("button", { name: /Build your identity, up next/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Set your goals, up next/ })).toBeVisible();
   });
-  await shot(t, "?complete=l1-s1", page.getByRole("button", { name: /Build your identity, up next/ }));
+  await shot(t, "?complete=l1-s1", page.getByRole("button", { name: /Set your goals, up next/ }));
 
-  await step(t, "?complete=l1-s2: Level 1 done, Level 2 corridor with Know the product up next", async () => {
+  await step(t, "?complete=l1-s2: Level 1 corridor with The Brand up next", async () => {
     await page.goto(url("reset=1&complete=l1-s2"));
-    await expect(page.locator(corridorTitle)).toHaveText(/Level 2 · Planning/, { timeout: 60_000 });
-    await expect(page.getByRole("button", { name: /Know the product and its buyers, up next/ })).toBeVisible();
+    await expect(page.locator(corridorTitle)).toHaveText(/Level 1 · Vision and Goals/, { timeout: 60_000 });
+    await expect(page.getByRole("button", { name: /The Brand, up next/ })).toBeVisible();
   });
-  await shot(t, "?complete=l1-s2", page.getByRole("button", { name: /Know the product and its buyers, up next/ }));
+  await shot(t, "?complete=l1-s2", page.getByRole("button", { name: /The Brand, up next/ }));
 
-  await step(t, "?complete=l2-s1: Level 2 done (lift up or Level 3)", async () => {
-    await page.goto(url("reset=1&complete=l2-s1"));
-    await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Making)/, { timeout: 60_000 });
+  await step(t, "?complete=l1-s3: Level 1 done, Level 2 corridor with product up next", async () => {
+    await page.goto(url("reset=1&complete=l1-s3"));
+    await expect(page.locator(corridorTitle)).toHaveText(/Level 2 · Planning/, { timeout: 60_000 });
+    await expect(page.getByRole("button", { name: /The product and its buyers, up next/ })).toBeVisible();
+  });
+  await shot(t, "?complete=l1-s3", page.getByRole("button", { name: /The product and its buyers, up next/ }));
+
+  await step(t, "?complete=l2-s2: Level 2 done (lift up or Level 3)", async () => {
+    await page.goto(url("reset=1&complete=l2-s2"));
+    await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Getting Ready)/, { timeout: 60_000 });
     const title = await page.locator(corridorTitle).innerText();
     if (/Level 2/.test(title)) await expect(page.locator("main").getByRole("button", { name: "Go to Level 3" })).toBeVisible();
   });
-  // ?complete=l2-s1 lands in the Level 3 corridor (no doors yet), so there is no primary button to check there.
   const onL2 = /Level 2/.test(await page.locator(corridorTitle).innerText());
-  await shot(t, "?complete=l2-s1", onL2 ? page.locator("main").getByRole("button", { name: "Go to Level 3" }) : null);
+  await shot(t, "?complete=l2-s2", onL2 ? page.locator("main").getByRole("button", { name: "Go to Level 3" }) : null);
 
   await step(t, "Level 3 workbook: compact Previous (left) and Next (right), aqua", async () => {
-    await page.goto(url("reset=1&complete=l2-s1"));
+    await page.goto(url("reset=1&complete=l2-s2"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 3/, { timeout: 60_000 });
     await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
     await page.getByRole("button", { name: /up next/ }).first().click();
@@ -106,8 +112,8 @@ test("deep links", async ({ page }, info) => {
     await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
   });
   await shot(t, "Level 3 workbook, Previous and Next", page.locator("[data-workbook-next]"));
-  await page.goto(url("reset=1&complete=l2-s1"));
-  await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Making)/, { timeout: 60_000 });
+  await page.goto(url("reset=1&complete=l2-s2"));
+  await expect(page.locator(corridorTitle)).toHaveText(/Level (2 · Planning|3 · Getting Ready)/, { timeout: 60_000 });
 
   await step(t, "?complete=l2-s1: handbook shows sample answers on the Level 1 and Level 2 pages", async () => {
     await page.getByRole("button", { name: /Back to building/ }).click();
@@ -142,21 +148,34 @@ test("deep links", async ({ page }, info) => {
   });
 
   await step(t, "?iconSet=friendship-bracelets swaps the logo icons", async () => {
-    await page.goto(url("reset=1&complete=l1-s1&iconSet=friendship-bracelets"));
-    await page.getByRole("button", { name: /Build your identity, up next/ }).click({ timeout: 60_000 });
-    await page.locator("main").getByRole("button", { name: /Design your logo/ }).click();
-    await page.locator("main").getByRole("tab", { name: "Icon" }).click();
-    for (const n of ["Bead strand", "Knot", "Heart loop"]) await expect(page.locator("main").getByRole("radio", { name: n })).toBeVisible();
-    await expect(page.locator("main").getByRole("radio", { name: "Paw" })).toHaveCount(0);
+    await page.goto(url("reset=1&complete=l1-s2&iconSet=friendship-bracelets"));
+    await page.getByRole("button", { name: /The Brand, up next/ }).click({ timeout: 60_000 });
+    // Name first (D27); finish it so Design your logo unlocks for the icon-set check.
+    const main = page.locator("main");
+    await main.getByRole("button", { name: /Name your business/ }).click();
+    await main.getByRole("textbox", { name: /Business name/ }).fill("Happy Paws");
+    await main.getByRole("radio", { name: "Rounded" }).click();
+    await main.getByRole("radio", { name: "Dark ink" }).click();
+    await main.getByRole("button", { name: /Save to my workbook/ }).click();
+    await main.getByRole("button", { name: /Design your logo/ }).click();
+    await main.getByRole("tab", { name: "Icon" }).click();
+    for (const n of ["Bead strand", "Knot", "Heart loop"]) await expect(main.getByRole("radio", { name: n })).toBeVisible();
+    await expect(main.getByRole("radio", { name: "Paw" })).toHaveCount(0);
   });
   await shot(t, "?iconSet=friendship-bracelets, icon tab", null);
 
   await step(t, "Without ?iconSet the dog icons are back", async () => {
-    await page.goto(url("reset=1&complete=l1-s1"));
-    await page.getByRole("button", { name: /Build your identity, up next/ }).click({ timeout: 60_000 });
-    await page.locator("main").getByRole("button", { name: /Design your logo/ }).click();
-    await page.locator("main").getByRole("tab", { name: "Icon" }).click();
-    for (const n of ["Paw", "Bone", "Dog face"]) await expect(page.locator("main").getByRole("radio", { name: n })).toBeVisible();
+    await page.goto(url("reset=1&complete=l1-s2"));
+    await page.getByRole("button", { name: /The Brand, up next/ }).click({ timeout: 60_000 });
+    const main = page.locator("main");
+    await main.getByRole("button", { name: /Name your business/ }).click();
+    await main.getByRole("textbox", { name: /Business name/ }).fill("Happy Paws");
+    await main.getByRole("radio", { name: "Rounded" }).click();
+    await main.getByRole("radio", { name: "Dark ink" }).click();
+    await main.getByRole("button", { name: /Save to my workbook/ }).click();
+    await main.getByRole("button", { name: /Design your logo/ }).click();
+    await main.getByRole("tab", { name: "Icon" }).click();
+    for (const n of ["Paw", "Bone", "Dog face"]) await expect(main.getByRole("radio", { name: n })).toBeVisible();
   });
   await shot(t, "Default icon set, icon tab", null);
 });

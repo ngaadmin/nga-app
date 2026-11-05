@@ -36,7 +36,6 @@ import {
   type LoadSilver,
   type LoadRowMeta,
   type LoadScreen,
-  type LoadWrapUp,
 } from "@/lib/launchpad/load/types";
 
 export const DOG_WALKING_VENTURE_ID = "dog-walking";
@@ -49,7 +48,7 @@ export const DOG_WALKING_BUSINESS_TYPE = "dog walking";
 export const LIMITS = {
   moneyMax: 9_999_999,
   timeframeMax: 99,
-  goalTextMax: 80,
+  goalTextMax: 120,
   otherGoalTextMax: 120,
   paragraphTextMax: 200,
   shortParagraphTextMax: 120,
@@ -71,7 +70,7 @@ export const KEYS = {
 export const RETIRED_WHY_ITEM_IDS: readonly string[] = ["prove-i-can-do-it"];
 
 export const DECISIONS: LoadDecision[] = [
-  { id: "D1", topic: "Level 1 silvers", applied: "One silver, Define the business, as in the sheet: bronzes Pick what your business will offer, Find the why, Know your impact, Set your goals (goal loop with Add another goal inside it), and one wrap-up (row 12). The framework's separate Set your goals silver is gone, so L1 shows one plaque.", status: "decided-cath", rows: [2, 3, 4, 5, 11, 12] },
+  { id: "D1", topic: "Level 1 silvers", applied: "Superseded by D26: three L1 silvers from Final rows 2–14 (Define the business, Set your goals, The Brand). Kept for history.", status: "decided-cath", rows: [2, 3, 4, 5, 11, 12] },
   { id: "D2", topic: "Money cap", applied: "Amount is a whole number, 7 digits (1 to 9,999,999). K5 still says 1 billion cap.", status: "default-pending-cath", rows: [5, 6] },
   { id: "D3", topic: "Why items", applied: "Per Cath's 4 Nov calls, Find the why ranks four items: Make money, Help others, Learn new skills, Be my own boss (Support a cause removed 8:44pm). The reader drops the retired item if the sheet still lists it, so every ranked item has a goal row.", status: "decided-cath", rows: [3, 5] },
   { id: "D4", topic: "What I am selling display", applied: "The row 14 service description shows as plain text in the wrap-up and handbook. I14/I16 say bullet list.", status: "default-pending-cath", rows: [14, 16] },
@@ -86,16 +85,21 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D12", topic: "Struck reasons", applied: "A reason marked not applicable in Find the why gets no goal page.", status: "build-assumption", rows: [3, 5] },
   { id: "D23", topic: "Goal not applicable", applied: "Per Cath (4 Nov 8:49pm), goal pages have no Not applicable chip: a goal is dropped only in the Find the why ranking, and every goal shown must be filled in, except Add another goal, which stays optional. The sheet's goal rows (I5, I10, X6 to X10) still mention not applicable.", status: "decided-cath", rows: [5, 6, 7, 8, 10] },
   { id: "D13", topic: "Text caps", applied: `Goal text up to ${LIMITS.goalTextMax} characters, the added goal ${LIMITS.otherGoalTextMax}, the service description ${LIMITS.paragraphTextMax}, availability and specific interest ${LIMITS.shortParagraphTextMax}.`, status: "build-assumption", rows: [7, 8, 11, 14, 15] },
-  { id: "D14", topic: "Minimum picks", applied: "Pick what your business will offer needs at least one pick before Next.", status: "build-assumption", rows: [2] },
+  { id: "D14", topic: "Minimum picks", applied: "Pick what kind of business you'll run needs at least one pick before Next.", status: "build-assumption", rows: [2] },
   { id: "D15", topic: "Number caps", applied: `Timeframe number 1 to ${LIMITS.timeframeMax}, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has no timeframe (Cath, 4 Nov 8:50pm); people asked 1 to ${LIMITS.peopleAskedMax} (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).`, status: "build-assumption", rows: [6, 7, 8, 11, 15] },
   { id: "D16", topic: "Ranking control", applied: "Up and down buttons move a reason; no drag yet. G3 says “Drag the reasons into order”; shown as “Use the arrows to put the reasons in order”.", status: "build-assumption", rows: [3] },
   { id: "D17", topic: "Be my own boss check-in", applied: "The six-month check-in in I9 is not built.", status: "build-assumption", rows: [9] },
   { id: "D18", topic: "Wrap-up copy and art", applied: "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.", status: "build-assumption", rows: [12, 16] },
   { id: "D19", topic: "Identity handbook sections", applied: "Our vision lists the offer picks (row 2); What we sell (row 14) is left off the identity page since identity moved to Level 1 (D25) and shows on the Level 2 page. A section with no answer is hidden.", status: "build-assumption", rows: [19] },
-  { id: "D20", topic: "Identity titles", applied: "The locked build keeps Design your logo and Name your business (sheet: Design the logo, Name the business), and its own wrap-up behavior.", status: "build-assumption", rows: [17, 18, 19] },
+  { id: "D20", topic: "Identity titles", applied: "Superseded by D27: The Brand (l1-s3) uses Name the business then Design the logo (Revised order). Seed titles stay Design your logo / Name your business for the locked picker copy.", status: "build-assumption", rows: [12, 13, 14] },
   { id: "D21", topic: "One screen per bronze", applied: "Per Cath's 4 Nov call, each L1 and L2 capture bronze opens on one screen: context, then guidance, then the question with its options or inputs, then the button. No context-only page; Set your goals shows its context and guidance above the first goal on step 1 (Cath, 4 Nov 8:45pm), then one goal per step.", status: "decided-cath", rows: [2, 3, 4, 5, 14, 15] },
-  { id: "D25", topic: "Identity in Level 1", applied: "Per Cath (5 Nov 8:14am), Build your identity moves from Level 2 to Level 1, straight after Define the business (l1-s2). Level 1 ends on the identity wrap-up, then the Level 1 finish; Level 2 holds only Know the product and its buyers. The tracker still lists it under Level 2; the move is in the loader. The saved answer key stays l2-s2-identity so saved logos and names still load.", status: "decided-cath", rows: [17, 18, 19] },
-  { id: "D22", topic: "Come back later", applied: `Sample, pending tracker column: the tracker has no "Come back later" column yet, so a TEST override turns it on for Set your goals (row 5) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.`, status: "sample-pending-tracker-column", rows: [5, 15] },
+  { id: "D25", topic: "Identity in Level 1", applied: "Superseded by D26/D27: The Brand is l1-s3 after Set your goals (l1-s2). Answer key stays l2-s2-identity; seedSilverId stays l2-s2.", status: "decided-cath", rows: [12, 13, 14] },
+  { id: "D22", topic: "Come back later", applied: `Sample, pending tracker column: the tracker has no "Come back later" column yet, so a TEST override turns it on for Set your goals (row 5 → task l1-s2-b1-t1) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.`, status: "sample-pending-tracker-column", rows: [5, 15] },
+  { id: "D26", topic: "Module 1 three silvers + floors 1–6", applied: "Cath 5 Nov: Module 1 = Final rows 2–14 as three silvers (Define the business; Set your goals; The Brand). Handbook column (AB) is TEST validation only — never built. Building wires levels 1–6 (Vision and Goals, Planning, Getting Ready, Sales, Delivery, Growing). Level 7 Budgeting is the rooftop (future, not a floor). L2 keeps current Decide what to sell + demand screens working; Pricing and L3–6 are structure/placeholder doors with Final titles (Revised order where Final D/E say so).", status: "decided-cath", rows: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
+  { id: "D27", topic: "The Brand name-then-logo", applied: "Final D/E + Revised: Name the business is step 1, Design the logo is step 2 under 3 The Brand (l1-s3). Seed locked pickers reorder to match; answer key l2-s2-identity unchanged.", status: "decided-cath", rows: [12, 13] },
+  { id: "D28", topic: "Level outcome statements", applied: "Storybird DRAFT outcomes (5 Nov) live in service-level-outcomes.ts as swappable data (SERVICE_LEVEL_OUTCOMES_DRAFT) feeding floor.gold.title. Not yet approved by Cath. Module 4 name is Sales. Delivery has a real draft (not a placeholder string).", status: "default-pending-cath", rows: [] },
+  { id: "D29", topic: "Offer option Dog sitting", applied: "Final Option 3 is Dog sitting (was Bookings in an older tracker layout). Loader reads Option N columns from the Final sheet.", status: "decided-cath", rows: [2] },
+  { id: "D30", topic: "No Define wrap-up", applied: "Final has no silver wrap for Define the business or Set your goals. Level workbook is The Brand identity wrap-up (row 14 handbook). No gold-completion screen — lift shows Congratulations after the workbook.", status: "decided-cath", rows: [14] },
 ];
 
 /**
@@ -103,7 +107,7 @@ export const DECISIONS: LoadDecision[] = [
  * "Come back to this later" while the tracker has no "Come back later"
  * column. Remove once Cath adds the column.
  */
-export const TEST_COME_BACK_LATER_TASK_IDS: readonly string[] = ["l1-s1-b4-t1", "l2-s1-b2-t1"];
+export const TEST_COME_BACK_LATER_TASK_IDS: readonly string[] = ["l1-s2-b1-t1", "l2-s1-b2-t1"];
 
 /**
  * Sets canComeBackLater on each task from its source row's "Come back later"
@@ -170,10 +174,6 @@ function meta(row: TrackerRow, m: Partial<LoadRowMeta> & Pick<LoadRowMeta, "scre
   return { sourceRow: row.row, validation: [], feeds: [], feedsInto: [], flags: [], ...m };
 }
 
-/** The quoted button label in a Data Input cell ("Button: Continue."). */
-function buttonLabel(cell: string): string | undefined {
-  return /Button:\s*([^.,]+?)(?:,|\.|$)/.exec(cell)?.[1]?.trim();
-}
 
 /** Section labels in a wrap-up Data Input cell ("Sections: A (from X); B, in rank order (...)."). */
 export function sectionLabels(cell: string): string[] {
@@ -275,14 +275,13 @@ function withIntro(row: TrackerRow, s: LoadScreen): LoadScreen {
 /* ------------------------------------------------------------ level 1 */
 
 function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
-  const S = "Define the business";
-  const rOffer = need(ctx, rows, 1, S, "Pick what your business will offer");
-  const rWhy = need(ctx, rows, 1, S, "Find the why");
-  const rCause = need(ctx, rows, 1, S, "Know your impact");
-  const rSeq = need(ctx, rows, 1, S, /^Set your goals \(sequence\)$/);
-  const rOther = need(ctx, rows, 1, S, /^Add another goal/);
-  const rWrap = need(ctx, rows, 1, S, /^Wrap-up/);
-  const rGold = need(ctx, rows, 1, "Gold", /^Gold milestone/);
+  const S_DEFINE = "Define the business";
+  const S_GOALS = "Set your goals";
+  const rOffer = need(ctx, rows, 1, S_DEFINE, /Pick what kind of business you.ll run|Pick what your business will offer/);
+  const rWhy = need(ctx, rows, 1, S_DEFINE, "Find the why");
+  const rCause = need(ctx, rows, 1, S_DEFINE, "Know your impact");
+  const rSeq = need(ctx, rows, 1, S_GOALS, /^Set your goals \(sequence\)$/);
+  const rOther = need(ctx, rows, 1, S_GOALS, /^Add another goal/);
 
   // Bronze 1: offer (multi-select capture).
   expectInput(ctx, rOffer, ["multi-choice"]);
@@ -331,9 +330,9 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   };
 
   // Bronze 4: the goal loop.
-  const b4 = "l1-s1-b4";
+  const b4 = "l1-s2-b1";
   const loopId = `${b4}-t1-s2`;
-  const goalRows = rows.filter((r) => r.level === 1 && /^4[a-z] Set your goals: /.test(r.bronze.trim()));
+  const goalRows = rows.filter((r) => r.level === 1 && /^\d+[a-z] Set your goals: /.test(r.bronze.trim()));
   const goals: LaunchpadGoalLoopGoal[] = [];
   const goalMetas: LoadScreen[] = [];
   const itemFor = (title: string) => whyItems.find((i) => i.label.toLowerCase() === title.toLowerCase())?.id;
@@ -440,8 +439,12 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     { name: "goalText", input: "text", label: "My goal", hint: "free text", maxLength: LIMITS.otherGoalTextMax, optional: true },
     ...timeframeFields(true),
   ];
+  // Final AB row may only show [free text]; dataInput still calls for optional duration — expand so all three fields appear in the sentence.
+  const otherQuestion = /\[number\].*\[weeks\/months\]/.test(rOther.question)
+    ? rOther.question
+    : rOther.question.replace(/\[free text\]\.?/, "[free text] in [number] [weeks/months].");
   // One inline sentence: "My goal is to [text] in [1–99] [weeks/months]." Text and duration optional, no number (Cath, 4 Nov 8:54pm; tracker I11/U11).
-  const otherSentence = sentenceParts(ctx, rOther, rOther.question, [{ field: "goalText" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }]);
+  const otherSentence = sentenceParts(ctx, rOther, otherQuestion, [{ field: "goalText" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }]);
   const otherScreen: LaunchpadShortTextScreen = {
     id: `${b4}-t1-goal-other`,
     type: "short-text",
@@ -462,7 +465,7 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
       index: "",
       template: "short-text:goal",
       guidance: OTHER_GUIDANCE,
-      question: rOther.question,
+      question: otherQuestion,
       answer: fieldsAnswer(KEYS.otherGoal, otherFields),
       validation: [...otherSpec.validation, "the whole page is optional"],
       flags: ["D13", "D15"],
@@ -474,11 +477,14 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
   goalMetas.forEach((g, i) => (g.index = `2.${i + 1}`));
 
   // D21: the Set your goals context and guidance sit above the first goal (step 1), no intro-only page.
+  // D23: sheet still says mark goals not applicable; Cath dropped the chip — goals drop only via Find the why.
+  const GOALS_GUIDANCE =
+    "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.";
   const loop: LaunchpadGoalLoopScreen = {
     id: loopId,
     type: "goal-loop",
     ...(rSeq.context ? { context: rSeq.context } : {}),
-    ...(rSeq.guidance ? { guidance: rSeq.guidance } : {}),
+    guidance: GOALS_GUIDANCE,
     orderFrom: KEYS.why,
     skipRankItemIds: skip,
     goals,
@@ -584,89 +590,30 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
     ],
   });
 
-  // Wrap-up (row 12): one summary for the silver (D1), with the edit calls (D8).
-  const labels = sectionLabels(rWrap.dataInput);
-  const goalKeys = goals.map((g) => g.screen.answerKey);
-  const goalSource = (g: LaunchpadGoalLoopGoal) => {
-    if (g.screen.type === "choice-capture") return { answerKey: g.screen.answerKey, editSelection: true };
-    const editable = g.screen.fields.filter((f) => f.input !== "currency").map((f) => f.name);
-    return { answerKey: g.screen.answerKey, editFields: editable };
-  };
-  const sectionFor = (label: string): LaunchpadSummarySection | null => {
-    const id = kebab(label);
-    if (/offer/i.test(label)) return { id, label, display: "list", sources: [{ answerKey: KEYS.offer, editSelection: true }] };
-    if (/why/i.test(label)) return { id, label, display: "ranked", sources: [{ answerKey: KEYS.why }] };
-    if (/cause/i.test(label)) return { id, label, display: "choice", sources: [{ answerKey: KEYS.cause }] };
-    if (/goals/i.test(label)) return { id, label, display: "sentences", sources: goals.map(goalSource) };
-    return null;
-  };
-  const sections = labels.map((l) => {
-    const s = sectionFor(l);
-    if (!s) issue(ctx, rWrap.row, `Wrap-up section "${l}" has no resolution.`);
-    return s;
-  }).filter((s): s is LaunchpadSummarySection => !!s);
-  if (sections.length !== 4) issue(ctx, rWrap.row, `Expected four wrap-up sections, read ${sections.length}.`);
-  const wrapId = "l1-s1-wrap";
-  const wrap: LaunchpadSummaryWrapUp = {
-    type: "workbook-summary",
-    heading: "Your workbook page",
-    body: "Check your answers. Tap the pencil to change one, then tap Continue.",
-    finalizeLabel: "Continue",
-    sections,
-    placeholder: true,
-  };
-  const silverWrap: LoadWrapUp = {
-    ...meta(rWrap, {
-      screenId: wrapId,
-      index: "wrap-up",
-      template: "workbook-summary",
-      feeds: [
-        { answerKey: KEYS.offer, use: "What my business will offer (editable)" },
-        { answerKey: KEYS.why, use: "My why, rank order, not-applicable left off (read-only)" },
-        { answerKey: KEYS.cause, use: "My cause (read-only)" },
-        ...goalKeys.map((k) => ({ answerKey: k, use: "My goals" })),
-      ],
-      validation: ["read-only except the values listed in wrapup-edit-calls.md"],
-      flags: ["D1", "D7", "D8", "D18"],
-    }),
-    payload: wrap,
-  };
-
-  // Gold (row 13).
-  const recap = /One-line recap:\s*"([^"]+)"/.exec(rGold.dataInput)?.[1];
-  const goldButton = buttonLabel(rGold.dataInput.replace(/^[\s\S]*?(Button:)/, "$1")) ?? "Continue";
-  const gold = {
-    id: "l1-gold",
-    completion: {
-      heading: rGold.question,
-      body: rGold.context,
-      ...(rGold.guidance ? { guidance: rGold.guidance } : {}),
-      ...(recap ? { recap } : {}),
-      buttonLabel: goldButton,
-    },
-    row: meta(rGold, {
-      screenId: "l1-gold-completion",
-      index: "gold",
-      template: "gold-completion",
-      context: rGold.context,
-      guidance: rGold.guidance,
-      question: rGold.question,
-      validation: ["nothing is captured"],
-    }),
-  };
+  // D26/D30: no Define wrap-up and no gold-completion screen. The Brand
+  // identity wrap-up (row 14 handbook) is the Level 1 workbook; the lift
+  // shows Congratulations after it.
+  const defineBronzes = bronzes.filter((b) => b.id !== b4);
+  const goalsBronzes = bronzes.filter((b) => b.id === b4);
 
   return {
     level: 1,
     name: rOffer.levelName,
-    gold,
+    gold: { id: "l1-gold" },
     silvers: [
       {
         id: "l1-s1",
-        title: S,
+        title: S_DEFINE,
         sheetLabel: rOffer.silver,
         build: "load",
-        bronzes,
-        wrapUp: silverWrap,
+        bronzes: defineBronzes,
+      },
+      {
+        id: "l1-s2",
+        title: S_GOALS,
+        sheetLabel: rSeq.silver,
+        build: "load",
+        bronzes: goalsBronzes,
       },
     ],
   };
@@ -675,10 +622,12 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
 /* ------------------------------------------------------------ level 2 */
 
 function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
-  const S = "Know the product and its buyers";
-  const rSell = need(ctx, rows, 2, S, "Decide what to sell");
-  const rDemand = need(ctx, rows, 2, S, "Find out if people want it");
-  const rWrap = need(ctx, rows, 2, S, /^Wrap-up/);
+  // Tracker still uses these labels for row lookup; Final titles are emitted below.
+  const S_TRACKER = "Know the product and its buyers";
+  const S = "The product and its buyers"; // Final / Revised silver title
+  const rSell = need(ctx, rows, 2, S_TRACKER, "Decide what to sell");
+  const rDemand = need(ctx, rows, 2, S_TRACKER, "Find out if people want it");
+  const rWrap = need(ctx, rows, 2, S_TRACKER, /^Wrap-up/);
   expectInput(ctx, rSell, ["fill-in"]);
   expectInput(ctx, rDemand, ["fill-in"]);
 
@@ -766,7 +715,16 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
 
   const bronzes = [
     paged(b1, rSell, "in-app", sellScreen, sellFields, ["D4", "D13"]),
-    paged(b2, rDemand, "real-world", demandScreen, demandFields, ["D5", "D6", "D10", "D13", "D15"]),
+    // Final bronze title (tracker still says "Find out if people want it"); keep demand screens.
+    (() => {
+      const bronze = paged(b2, rDemand, "real-world", demandScreen, demandFields, ["D5", "D6", "D10", "D13", "D15"]);
+      const FINAL_TITLE = "Know who your customers are";
+      return {
+        ...bronze,
+        title: FINAL_TITLE,
+        tasks: bronze.tasks.map((task) => ({ ...task, title: FINAL_TITLE })),
+      };
+    })(),
   ];
 
   const sectionFor = (label: string): LaunchpadSummarySection | null => {
@@ -825,30 +783,28 @@ function level2(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
 /* ------------------------------------------------------------ identity */
 
 /**
- * D25 (Cath, 5 Nov 8:14am): the tracker lists Build your identity under
- * Level 2, but the build moves it into Level 1 straight after Define the
- * business, as l1-s2. It stays a locked build: the seed's l2-s2 pickers are
- * carried over and renumbered (see seedSilverId in to-payload.ts). The saved
- * answer key stays IDENTITY_ANSWER_KEY so saved logos and names still load.
+ * D26/D27: The Brand (l1-s3) after Set your goals. Locked seed pickers from
+ * l2-s2, renumbered; name before logo. Answer key stays IDENTITY_ANSWER_KEY.
+ * Vision template comes from Final AB14 handbook (validation source), not built
+ * as handbook UI from that column.
  */
-const ID_SILVER = "l1-s2";
+const ID_SILVER = "l1-s3";
 
-function identity(ctx: Ctx, rows: readonly TrackerRow[]): LoadSilver {
-  const I = "Build your identity";
-  const rLogo = need(ctx, rows, 2, I, "Design the logo");
-  const rName = need(ctx, rows, 2, I, "Name the business");
-  const rIdWrap = need(ctx, rows, 2, I, /^Wrap-up/);
-  // Identity (locked): record the rows; add the handbook sections from I19.
-  if (!/Our vision/.test(rIdWrap.dataInput) || !/What we sell/.test(rIdWrap.dataInput)) {
-    issue(ctx, rIdWrap.row, "I19 no longer names Our vision and What we sell.");
-  }
+const DEFAULT_VISION_TEMPLATE =
+  "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}. [[As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}";
+
+function identity(ctx: Ctx, rows: readonly TrackerRow[], visionTemplateFromHandbook?: string | null): LoadSilver {
+  const I = "The Brand";
+  const rName = need(ctx, rows, 1, I, "Name the business");
+  const rLogo = need(ctx, rows, 1, I, "Design the logo");
+  // Row 14 gold wrap — handbook validation source; used for vision template only.
+  const rIdWrap = need(ctx, rows, 1, "Gold", /^Wrap-up/);
   const handbookSections: LaunchpadSummarySection[] = [
     { id: "our-vision", label: "Our vision", display: "list", sources: [{ answerKey: KEYS.offer }] },
-    // D25: What we sell (row 14) is saved in Level 2, after identity now, so the identity page leaves it out; it stays on the Level 2 page.
   ];
-  // H19: the vision template; I19 names its tokens (D24).
-  const visionTemplate = rIdWrap.question.trim().replace(/^["\u201c]|["\u201d]$/g, "").trim();
-  if (!/\{business-type\}/.test(visionTemplate)) issue(ctx, rIdWrap.row, "H19 has no vision template ({business-type}).");
+  const fromWrap = rIdWrap.question.trim().replace(/^["\u201c]|["\u201d]$/g, "").trim();
+  const visionTemplate = (visionTemplateFromHandbook && visionTemplateFromHandbook.trim()) || fromWrap || DEFAULT_VISION_TEMPLATE;
+  if (!/\{business-type\}/.test(visionTemplate)) issue(ctx, rIdWrap.row, "Vision template has no {business-type}.");
   const vision: LaunchpadVisionSpec = {
     label: "Our vision",
     template: visionTemplate,
@@ -858,7 +814,7 @@ function identity(ctx: Ctx, rows: readonly TrackerRow[]): LoadSilver {
     causeKey: KEYS.cause,
     causeGoalKey: KEYS.goal("support-a-cause"),
     causePercentField: "donatePercent",
-    goalLoopId: "l1-s1-b4-t1-s2",
+    goalLoopId: "l1-s2-b1-t1-s2",
     placeholder: "Your vision appears here when you finish Level 1.",
   };
   const locked = (row: TrackerRow, screenId: string, template: "logo-picker" | "name-picker" | "identity-wrap-up"): LoadRowMeta =>
@@ -868,30 +824,51 @@ function identity(ctx: Ctx, rows: readonly TrackerRow[]): LoadSilver {
       template,
       context: row.context,
       guidance: row.guidance,
-      answer: template === "identity-wrap-up" ? undefined : { answerKey: IDENTITY_ANSWER_KEY, kind: "business-identity", version: 1, fields: template === "logo-picker" ? [{ name: "shape", type: "option id", required: true }, { name: "color", type: "option id", required: true }, { name: "icon", type: "option id", required: true }] : [{ name: "name", type: "text", required: true, limits: "up to 24 characters" }, { name: "font", type: "option id", required: true }, { name: "nameColor", type: "option id", required: true }] },
+      ...(template === "identity-wrap-up"
+        ? {}
+        : {
+            answer: {
+              answerKey: IDENTITY_ANSWER_KEY,
+              kind: "business-identity" as const,
+              version: 1 as const,
+              fields:
+                template === "logo-picker"
+                  ? [
+                      { name: "shape", type: "option id" as const, required: true },
+                      { name: "color", type: "option id" as const, required: true },
+                      { name: "icon", type: "option id" as const, required: true },
+                    ]
+                  : [
+                      { name: "name", type: "text" as const, required: true, limits: "up to 24 characters" },
+                      { name: "font", type: "option id" as const, required: true },
+                      { name: "nameColor", type: "option id" as const, required: true },
+                    ],
+            },
+          }),
       validation: ["locked build: unchanged"],
-      flags: ["D20"],
+      flags: ["D20", "D27"],
     });
 
   return {
-        id: ID_SILVER,
-        seedSilverId: "l2-s2",
-        title: I,
-        sheetLabel: rLogo.silver,
-        build: "locked",
-        bronzes: [],
-        lockedRows: [locked(rLogo, `${ID_SILVER}-b1-t1`, "logo-picker"), locked(rName, `${ID_SILVER}-b2-t1`, "name-picker")],
-        wrapUp: {
-          ...locked(rIdWrap, `${ID_SILVER}-wrap`, "identity-wrap-up"),
-          feeds: [
-            { answerKey: IDENTITY_ANSWER_KEY, use: "logo and name" },
-            { answerKey: KEYS.offer, use: "handbook Our vision" },
-          ],
-          flags: ["D19", "D20", "D24", "D25"],
-          handbookSections,
-          vision,
-        },
-      };
+    id: ID_SILVER,
+    seedSilverId: "l2-s2",
+    title: I,
+    sheetLabel: rName.silver,
+    build: "locked",
+    bronzes: [],
+    // D27: name first (b1), logo second (b2) — matches seed bronze order after D27 reorder.
+    lockedRows: [locked(rName, `${ID_SILVER}-b1-t1`, "name-picker"), locked(rLogo, `${ID_SILVER}-b2-t1`, "logo-picker")],
+    wrapUp: {
+      ...locked(rIdWrap, `${ID_SILVER}-wrap`, "identity-wrap-up"),
+      feeds: [
+        { answerKey: IDENTITY_ANSWER_KEY, use: "logo and name" },
+        { answerKey: KEYS.offer, use: "handbook Our vision" },
+      ],
+      flags: ["D19", "D20", "D24", "D25", "D26", "D27", "D30"],
+      handbookSections,
+      vision,
+    },
+  };
 }
 
 /* ------------------------------------------------------------ feeds into */
@@ -917,15 +894,28 @@ function linkFeeds(levels: LoadLevel[]): void {
   }
 }
 
+export type DogWalkingLoadSource = {
+  file: string;
+  md5: string;
+  sheet?: string;
+  /** When building Module 1 from the Final framework sheet. */
+  visionTemplateFromHandbook?: string | null;
+};
+
+/**
+ * Builds the dog-walking load. Pass Module 1 rows from the Final framework
+ * (read-framework) plus Level 2 rows from the bronze tracker (current L2
+ * screens kept working). Unused Module 1 rows outside 2–14 are not required.
+ */
 export function buildDogWalkingLoad(
   read: TrackerRead,
-  source: { file: string; md5: string },
+  source: DogWalkingLoadSource,
 ): { load: LaunchpadLoadFile; issues: TrackerIssue[] } {
   const ctx: Ctx = { issues: [...read.issues] };
   const rows = read.rows.filter((r) => r.level <= 2);
   const l1 = level1(ctx, rows);
-  // D25: identity sits in Level 1, after Define the business.
-  l1.silvers.push(identity(ctx, rows));
+  // D26: The Brand after Set your goals.
+  l1.silvers.push(identity(ctx, rows, source.visionTemplateFromHandbook));
   const levels = [l1, level2(ctx, rows)];
   linkFeeds(levels);
   applyComeBackLater(levels, rows);
@@ -938,7 +928,11 @@ export function buildDogWalkingLoad(
     }
     if (l.gold.row) used.add(l.gold.row.sourceRow);
   }
-  for (const r of rows) if (!used.has(r.row)) issue(ctx, r.row, `Row "${r.bronze}" is not in the load.`);
+  // Module 1: only rows 2–14 must be used. L2: every level-2 row must be used.
+  for (const r of rows) {
+    if (r.level === 1 && (r.row < 2 || r.row > 14)) continue;
+    if (!used.has(r.row)) issue(ctx, r.row, `Row "${r.bronze}" is not in the load.`);
+  }
   const first = rows[0]?.row ?? 0;
   const last = rows[rows.length - 1]?.row ?? 0;
   return {
@@ -946,7 +940,13 @@ export function buildDogWalkingLoad(
       loadVersion: LAUNCHPAD_LOAD_VERSION,
       ventureId: DOG_WALKING_VENTURE_ID,
       ventureNoun: DOG_WALKING_NOUN,
-      source: { file: source.file, sheet: "Bronze Task Tracker", md5: source.md5, rows: `${first}-${last}`, notes: read.notes },
+      source: {
+        file: source.file,
+        sheet: source.sheet ?? "Final Service Business Framewor",
+        md5: source.md5,
+        rows: `${first}-${last}`,
+        notes: read.notes,
+      },
       levels,
       decisions: DECISIONS,
     },

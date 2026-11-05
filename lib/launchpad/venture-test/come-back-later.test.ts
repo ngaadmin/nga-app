@@ -26,13 +26,14 @@ import { OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
 
 const FLOORS = launchpadTestVentureSeed("dog-walking").floors;
 const L1 = FLOORS[0]!;
-const L1S1 = L1.silvers[0]!;
-const IDS = L1.silvers[1]!;
+const L1S1 = L1.silvers[0]!; // Define the business
+const L1S2 = L1.silvers[1]!; // Set your goals
+const IDS = L1.silvers[2]!; // The Brand
 const ID_TASKS = IDS.bronzes.flatMap((b) => b.tasks.map((t) => t.id));
 const L2 = FLOORS[1]!;
 const L2S1 = L2.silvers[0]!;
-const [B1, B2, B3, B4] = L1S1.bronzes as [typeof L1S1.bronzes[0], typeof L1S1.bronzes[0], typeof L1S1.bronzes[0], typeof L1S1.bronzes[0]];
-const GOALS = B4.tasks[0]!;
+const [B1, B2, B3] = L1S1.bronzes as [typeof L1S1.bronzes[0], typeof L1S1.bronzes[0], typeof L1S1.bronzes[0]];
+const GOALS = L1S2.bronzes[0]!.tasks[0]!;
 const DEMAND = L2S1.bronzes[1]!.tasks[0]!;
 const NOW = "2026-11-04T10:00:00.000Z";
 
@@ -57,7 +58,7 @@ describe("deferring a task", () => {
   it("defer, then the next step unlocks with no hard block", () => {
     const p = deferTask(done(), B1.tasks[0]!, { now: NOW });
     expect(isTaskOpen(p, B1.tasks[0]!.id)).toBe(true);
-    expect(bronzeStates(p, L1S1)).toEqual(["current", "current", "locked", "locked"]);
+    expect(bronzeStates(p, L1S1)).toEqual(["current", "current", "locked"]);
     expect(taskStatus(p, FLOORS, B1.tasks[0]!.id)).toBe("open");
     expect(taskStatus(p, FLOORS, B2.tasks[0]!.id)).toBe("available");
     expect(taskStatus(p, FLOORS, B3.tasks[0]!.id)).toBe("locked");
@@ -96,40 +97,41 @@ describe("deferring a task", () => {
     expect(p.tasks?.[GOALS.id]).toEqual({ status: "done", openedAt: NOW });
     expect(isTaskOpen(p, GOALS.id)).toBe(false);
     expect(taskStatus(p, FLOORS, GOALS.id)).toBe("done");
-    expect(isSilverDone(p, L1S1)).toBe(true);
+    expect(isSilverDone(p, L1S2)).toBe(true);
     // A done task cannot be deferred.
     expect(deferTask(p, GOALS)).toBe(p);
   });
 });
 
 describe("wrap-up and the gold stay blocked while a task is open", () => {
-  it("the silver is settled (wrap-up opens) but not done; the open step is listed", () => {
-    const p = deferTask(firstThree(), GOALS, { now: NOW });
-    expect(isSilverSettled(p, L1S1)).toBe(true);
-    expect(isSilverDone(p, L1S1)).toBe(false);
-    expect(openTasksInSilver(p, L1S1, 1)).toEqual([
-      { level: 1, silverId: L1S1.id, bronzeId: B4.id, taskId: GOALS.id, taskIndex: 0, title: B4.title },
+  it("Set your goals is settled but not done while its task is open; The Brand and L2 stay locked", () => {
+    const defineDone = firstThree();
+    const p = deferTask(defineDone, GOALS, { now: NOW });
+    expect(isSilverSettled(p, L1S2)).toBe(true);
+    expect(isSilverDone(p, L1S2)).toBe(false);
+    expect(openTasksInSilver(p, L1S2, 1)).toEqual([
+      { level: 1, silverId: L1S2.id, bronzeId: L1S2.bronzes[0]!.id, taskId: GOALS.id, taskIndex: 0, title: L1S2.bronzes[0]!.title },
     ]);
-    // The next floor stays locked until the open step is finished.
     expect(floorState(p, FLOORS, 2)).toBe("locked");
-    // Build your identity (D25: now in Level 1) also has to be done.
+    // The Brand (l1-s3) also has to be done before L2 unlocks.
     const withIdentity = { ...p, completedTaskIds: [...p.completedTaskIds, ...ID_TASKS] };
     expect(floorState(withIdentity, FLOORS, 2)).toBe("locked");
     expect(floorState(completeTask(withIdentity, GOALS.id), FLOORS, 2)).not.toBe("locked");
   });
 
-  it("the next silver stays locked while a task in the silver before is open", () => {
-    // D25: Build your identity follows Define the business in Level 1.
+  it("The Brand stays locked while Set your goals is open", () => {
     const p = deferTask(firstThree(), GOALS, { now: NOW });
-    expect(silverStates(p, FLOORS, L1)).toEqual(["current", "locked"]);
-    expect(silverStates(completeTask(p, GOALS.id), FLOORS, L1)[1]).toBe("current");
+    expect(silverStates(p, FLOORS, L1)).toEqual(["done", "current", "locked"]);
+    expect(silverStates(completeTask(p, GOALS.id), FLOORS, L1)).toEqual(["done", "done", "current"]);
   });
 
-  it("finishing the last other task with one left open goes back to the doors, not the wrap-up", () => {
-    const p = completeTask(deferTask(done(B2.tasks[0]!.id, B3.tasks[0]!.id, GOALS.id), B1.tasks[0]!), B1.tasks[0]!.id);
-    expect(advanceAfterTask(p, L1, L1S1, B1, 0).kind).not.toBe("bronze-done");
-    const q = completeTask(deferTask(done(B1.tasks[0]!.id, B2.tasks[0]!.id), GOALS), B3.tasks[0]!.id);
-    expect(advanceAfterTask(q, L1, L1S1, B3, 0)).toEqual({ kind: "bronze-done" });
+  it("finishing a Define bronze while another stays open goes back to the doors; finishing the last is silver-done (D30 no wrap)", () => {
+    // B1 still open → finishing B3 returns to the doors.
+    const mid = completeTask(deferTask(done(B2.tasks[0]!.id), B1.tasks[0]!), B3.tasks[0]!.id);
+    expect(advanceAfterTask(mid, L1, L1S1, B3, 0)).toEqual({ kind: "bronze-done" });
+    // All three Define bronzes done, no wrap-up → silver-done.
+    const last = completeTask(mid, B1.tasks[0]!.id);
+    expect(advanceAfterTask(last, L1, L1S1, B1, 0)).toEqual({ kind: "silver-done" });
   });
 });
 

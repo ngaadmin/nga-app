@@ -66,13 +66,13 @@ describe("Launchpad home data (r12)", () => {
 });
 
 describe("r4 building window counts", () => {
-  it("one window per silver: r4 art counts, except L1 (Define the business and Build your identity, D25) and L2 (one silver)", async () => {
+  it("one window per silver: L1 three, L2 product+Pricing, L3–6 Final structure (D26)", async () => {
     const { launchpadTestVentureSeed } = await import(
       "@/lib/launchpad/content/seed/launchpad-test-venture-seed"
     );
     const counts = Object.fromEntries(
       launchpadTestVentureSeed("dog-walking").floors.map((f) => [f.level, f.silvers.length]),
     );
-    expect(counts).toEqual({ 1: 2, 2: 1, 3: 4, 4: 3, 5: 2, 6: 3 });
+    expect(counts).toEqual({ 1: 3, 2: 2, 3: 3, 4: 1, 5: 3, 6: 2 });
   });
 });

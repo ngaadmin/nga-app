@@ -18,7 +18,7 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await main.getByRole("button", { name: "Start building" }).click();
     await main.getByRole("button", { name: "Go to Level 1" }).click();
     await page.getByRole("button", { name: /Define the business, up next/ }).click();
-    await main.getByRole("button", { name: /Pick what your business will offer/ }).click();
+    await main.getByRole("button", { name: /Pick what kind of business you'll run/ }).click();
     await main.getByRole("button", { name: "Grooming", exact: true }).click();
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Find the why/ }).click();
@@ -46,10 +46,10 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();
     await main.getByRole("button", { name: "Go to Level 1" }).click();
     await page.getByRole("button", { name: /Define the business/ }).click();
-    for (const d of ["Pick what your business will offer", "Find the why", "Know your impact"])
+    for (const d of ["Pick what kind of business you'll run", "Find the why", "Know your impact"])
       await expect(main.getByRole("button", { name: new RegExp(d) })).toContainText("Done");
     await expect(main.getByRole("button", { name: /Set your goals/ })).toContainText("Up next");
-    await main.getByRole("button", { name: /Pick what your business will offer/ }).click();
+    await main.getByRole("button", { name: /Pick what kind of business you'll run/ }).click();
     await expect(main.getByRole("button", { name: "Grooming", exact: true })).toHaveAttribute("aria-pressed", "true");
     await main.getByRole("button", { name: "Finish ›" }).click();
     await main.getByRole("button", { name: /Set your goals/ }).click();

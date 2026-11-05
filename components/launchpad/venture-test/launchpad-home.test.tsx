@@ -17,9 +17,9 @@ const L6: InProgressVenture = {
   ventureId: "dog-walking",
   name: "Dog walking",
   level: 6,
-  floorName: "Budgeting",
+  floorName: "Growing",
   done: 13,
-  total: 16,
+  total: 14,
   hasHandbook: true,
 };
 
@@ -28,19 +28,19 @@ describe("Launchpad home In Progress tile", () => {
     render(<LaunchpadHome inProgress={[L6]} onOpenVenture={() => {}} onOpenHandbook={() => {}} />);
     const tile = document.querySelector("[data-in-progress='dog-walking']") as HTMLElement;
     expect(tile.textContent).toContain("Dog walking");
-    expect(tile.querySelector("[data-tile-level-name]")?.textContent).toBe("Budgeting");
-    expect(tile.textContent).not.toMatch(/L6|Level|Phase|Step|of 16/);
+    expect(tile.querySelector("[data-tile-level-name]")?.textContent).toBe("Growing");
+    expect(tile.textContent).not.toMatch(/L6|Level|Phase|Step|of 14/);
   });
 
   it("the progress bar covers the whole business, with an accessible label that follows the given total", () => {
-    const { unmount } = render(<LaunchpadHome inProgress={[{ ...L6, done: 5, total: 15 }]} onOpenVenture={() => {}} />);
-    expect(screen.getByRole("progressbar", { name: "5 of 15 milestones done" })).toBeTruthy();
+    const { unmount } = render(<LaunchpadHome inProgress={[{ ...L6, done: 5, total: 14 }]} onOpenVenture={() => {}} />);
+    expect(screen.getByRole("progressbar", { name: "5 of 14 milestones done" })).toBeTruthy();
     unmount();
     render(<LaunchpadHome inProgress={[L6]} onOpenVenture={() => {}} />);
-    const bar = screen.getByRole("progressbar", { name: "13 of 16 milestones done" });
+    const bar = screen.getByRole("progressbar", { name: "13 of 14 milestones done" });
     expect(bar.getAttribute("aria-valuenow")).toBe("13");
-    expect(bar.getAttribute("aria-valuemax")).toBe("16");
-    expect((bar.firstElementChild as HTMLElement).style.width).toBe("81%");
+    expect(bar.getAttribute("aria-valuemax")).toBe("14");
+    expect((bar.firstElementChild as HTMLElement).style.width).toBe("93%");
   });
 
   it("compact row: thumb + name, level name, then workbook and Continue side by side with the same shape", () => {
@@ -80,8 +80,8 @@ describe("Launchpad home In Progress tile", () => {
   it("the flow counts silvers done across the whole business out of the content's total", async () => {
     const payload = launchpadTestVentureSeed("dog-walking");
     const silvers = payload.floors.flatMap((f) => f.silvers);
-    // Every silver up to and including l1-s2 (Build your identity, D25): Level 1 done, Level 2 next.
-    const doneSilvers = silvers.slice(0, silvers.findIndex((s) => s.id === "l1-s2") + 1);
+    // Every silver up to and including l1-s3 (The Brand, D26): Level 1 done, Level 2 next.
+    const doneSilvers = silvers.slice(0, silvers.findIndex((s) => s.id === "l1-s3") + 1);
     expect(doneSilvers.length).toBeGreaterThan(0);
     saveVentureTestProgress("dog-walking", {
       completedTaskIds: doneSilvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))),
@@ -98,8 +98,8 @@ describe("Launchpad home In Progress tile", () => {
 
 describe("In Progress tile: open tasks (Come back to this later)", () => {
   const OPEN = [
-    { taskId: "l1-s1-b4-t1", title: "Set your goals" },
-    { taskId: "l2-s1-b2-t1", title: "Find out if people want it" },
+    { taskId: "l1-s2-b1-t1", title: "Set your goals" },
+    { taskId: "l2-s1-b2-t1", title: "Know who your customers are" },
   ];
 
   it("with 0 open tasks the line shows 0 open and the tile keeps its compact layout (no list, no extra row)", () => {
@@ -128,8 +128,8 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
     expect(toggle.querySelector("[data-chevron]")?.getAttribute("class")).toContain("rotate-180");
     const rows = document.querySelectorAll("[data-open-task]");
-    expect([...rows].map((r) => r.textContent)).toEqual(["Set your goalsGo", "Find out if people want itGo"]);
-    fireEvent.click(screen.getByRole("button", { name: "Go: Find out if people want it" }));
+    expect([...rows].map((r) => r.textContent)).toEqual(["Set your goalsGo", "Know who your customers areGo"]);
+    fireEvent.click(screen.getByRole("button", { name: "Go: Know who your customers are" }));
     expect(onOpenTask).toHaveBeenCalledWith("dog-walking", "l2-s1-b2-t1");
 
     fireEvent.click(toggle);
@@ -142,7 +142,7 @@ describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasp
   it("with open tasks the 2-line label block keeps the 44px workbook button and the 94px Continue in the row", () => {
     render(
       <LaunchpadHome
-        inProgress={[{ ...L6, openTasks: [{ taskId: "l1-s1-b4-t1", title: "Set your goals" }] }]}
+        inProgress={[{ ...L6, openTasks: [{ taskId: "l1-s2-b1-t1", title: "Set your goals" }] }]}
         onOpenVenture={() => {}}
         onOpenHandbook={() => {}}
         onOpenTask={() => {}}

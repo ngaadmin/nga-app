@@ -3,10 +3,10 @@
   "ventureId": "dog-walking",
   "ventureNoun": "dog walking service",
   "source": {
-    "file": "lib/launchpad/content/source/dog-walking/bronze-task-tracker.xlsx",
-    "sheet": "Bronze Task Tracker",
-    "md5": "967b76bc8a22589bee9dbf02b7674018",
-    "rows": "2-19",
+    "file": "lib/launchpad/content/source/dog-walking/service-business-framework.xlsx",
+    "sheet": "Final Service Business Framewor",
+    "md5": "4573128ee6bb1e39f1eb44e4dd4d63bd",
+    "rows": "2-16",
     "notes": [
       {
         "date": "4 Nov 2026",
@@ -27,6 +27,10 @@
       {
         "date": "4 Nov 2026",
         "note": "Wrap-up (silver summary) screens: Context, Guidance and Question are N/A. The wrap-up shows the workbook page filled in with the silver's answers, and the clearly marked edit icons tell the learner they can change things there (Cath, 4 Nov)."
+      },
+      {
+        "date": "5 Nov 2026",
+        "note": "Hybrid: Module 1 from lib/launchpad/content/source/dog-walking/service-business-framework.xlsx; Level 2 from lib/launchpad/content/source/dog-walking/bronze-task-tracker.xlsx."
       }
     ]
   },
@@ -35,29 +39,7 @@
       "level": 1,
       "name": "Vision and Goals",
       "gold": {
-        "id": "l1-gold",
-        "completion": {
-          "heading": "Gold unlocked: Vision and Goals!",
-          "body": "Know what type of business to start, why it matters to you, and the goals you'll aim for.",
-          "guidance": "You did it! Tap continue when you're ready for Planning.",
-          "recap": "You know what your business will offer, why it matters to you, and the goals you'll aim for.",
-          "buttonLabel": "Continue to Planning"
-        },
-        "row": {
-          "sourceRow": 13,
-          "validation": [
-            "nothing is captured"
-          ],
-          "feeds": [],
-          "feedsInto": [],
-          "flags": [],
-          "screenId": "l1-gold-completion",
-          "index": "gold",
-          "template": "gold-completion",
-          "context": "Know what type of business to start, why it matters to you, and the goals you'll aim for.",
-          "guidance": "You did it! Tap continue when you're ready for Planning.",
-          "question": "Gold unlocked: Vision and Goals!"
-        }
+        "id": "l1-gold"
       },
       "silvers": [
         {
@@ -68,13 +50,13 @@
           "bronzes": [
             {
               "id": "l1-s1-b1",
-              "title": "Pick what your business will offer",
-              "sheetLabel": "1 Pick what your business will offer",
+              "title": "Pick what kind of business you'll run",
+              "sheetLabel": "1 Pick what kind of business you'll run",
               "sourceRow": 2,
               "tasks": [
                 {
                   "id": "l1-s1-b1-t1",
-                  "title": "Pick what your business will offer",
+                  "title": "Pick what kind of business you'll run",
                   "kind": "in-app",
                   "paged": true,
                   "canComeBackLater": false,
@@ -86,8 +68,7 @@
                       ],
                       "feeds": [],
                       "feedsInto": [
-                        "l1-s1-wrap",
-                        "l1-s2-wrap"
+                        "l1-s3-wrap"
                       ],
                       "flags": [
                         "D14"
@@ -106,8 +87,8 @@
                           "label": "Grooming"
                         },
                         {
-                          "id": "bookings",
-                          "label": "Bookings"
+                          "id": "dog-sitting",
+                          "label": "Dog sitting"
                         },
                         {
                           "id": "training",
@@ -147,8 +128,8 @@
                             "label": "Grooming"
                           },
                           {
-                            "id": "bookings",
-                            "label": "Bookings"
+                            "id": "dog-sitting",
+                            "label": "Dog sitting"
                           },
                           {
                             "id": "training",
@@ -189,12 +170,11 @@
                       ],
                       "feeds": [],
                       "feedsInto": [
-                        "l1-s1-b4-t1-s2",
-                        "l1-s1-b4-t1-goal-make-money",
-                        "l1-s1-b4-t1-goal-help-others",
-                        "l1-s1-b4-t1-goal-learn-new-skills",
-                        "l1-s1-b4-t1-goal-be-my-own-boss",
-                        "l1-s1-wrap"
+                        "l1-s2-b1-t1-s2",
+                        "l1-s2-b1-t1-goal-make-money",
+                        "l1-s2-b1-t1-goal-help-others",
+                        "l1-s2-b1-t1-goal-learn-new-skills",
+                        "l1-s2-b1-t1-goal-be-my-own-boss"
                       ],
                       "flags": [
                         "D3",
@@ -293,8 +273,7 @@
                       ],
                       "feeds": [],
                       "feedsInto": [
-                        "l1-s1-b4-t1-goal-support-a-cause",
-                        "l1-s1-wrap"
+                        "l1-s2-b1-t1-goal-support-a-cause"
                       ],
                       "flags": [],
                       "screenId": "l1-s1-b3-t1-s2",
@@ -373,15 +352,23 @@
                   ]
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "id": "l1-s2",
+          "title": "Set your goals",
+          "sheetLabel": "2 Set your goals",
+          "build": "load",
+          "bronzes": [
             {
-              "id": "l1-s1-b4",
+              "id": "l1-s2-b1",
               "title": "Set your goals",
-              "sheetLabel": "4 Set your goals (sequence)",
+              "sheetLabel": "1 Set your goals (sequence)",
               "sourceRow": 5,
               "tasks": [
                 {
-                  "id": "l1-s1-b4-t1",
+                  "id": "l1-s2-b1-t1",
                   "title": "Set your goals",
                   "kind": "in-app",
                   "paged": true,
@@ -409,14 +396,14 @@
                         "D12",
                         "D22"
                       ],
-                      "screenId": "l1-s1-b4-t1-s2",
+                      "screenId": "l1-s2-b1-t1-s2",
                       "index": "1",
                       "template": "goal-loop",
                       "context": "Goals turn your \"Why\" into something you can measure and check.",
                       "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
                       "question": "One goal screen per inherited reason (see rows below).",
                       "payload": {
-                        "id": "l1-s1-b4-t1-s2",
+                        "id": "l1-s2-b1-t1-s2",
                         "type": "goal-loop",
                         "context": "Goals turn your \"Why\" into something you can measure and check.",
                         "guidance": "Finish the sentence for each reason you ranked above the line. Use a number and a timeframe so you can check your progress later. Reasons you moved below the line don't need a goal.",
@@ -428,7 +415,7 @@
                             "position": "ranked",
                             "title": "Make money",
                             "screen": {
-                              "id": "l1-s1-b4-t1-goal-make-money",
+                              "id": "l1-s2-b1-t1-goal-make-money",
                               "type": "short-text",
                               "mode": "goal",
                               "answerKey": "l1-goal-make-money",
@@ -516,7 +503,7 @@
                             "position": "ranked",
                             "title": "Help others",
                             "screen": {
-                              "id": "l1-s1-b4-t1-goal-help-others",
+                              "id": "l1-s2-b1-t1-goal-help-others",
                               "type": "short-text",
                               "mode": "goal",
                               "answerKey": "l1-goal-help-others",
@@ -541,7 +528,7 @@
                                   "input": "text",
                                   "label": "Benefit",
                                   "hint": "benefit",
-                                  "maxLength": 80
+                                  "maxLength": 120
                                 }
                               ]
                             }
@@ -551,7 +538,7 @@
                             "position": "ranked",
                             "title": "Learn new skills",
                             "screen": {
-                              "id": "l1-s1-b4-t1-goal-learn-new-skills",
+                              "id": "l1-s2-b1-t1-goal-learn-new-skills",
                               "type": "short-text",
                               "mode": "goal",
                               "answerKey": "l1-goal-learn-new-skills",
@@ -592,7 +579,7 @@
                                   "input": "text",
                                   "label": "Skill",
                                   "hint": "skill",
-                                  "maxLength": 80
+                                  "maxLength": 120
                                 },
                                 {
                                   "name": "timeframeNumber",
@@ -625,7 +612,7 @@
                             "position": "ranked",
                             "title": "Be my own boss",
                             "screen": {
-                              "id": "l1-s1-b4-t1-goal-be-my-own-boss",
+                              "id": "l1-s2-b1-t1-goal-be-my-own-boss",
                               "type": "choice-capture",
                               "mode": "single",
                               "answerKey": "l1-goal-be-my-own-boss",
@@ -656,7 +643,7 @@
                             "position": "after-ranked",
                             "title": "Support a cause",
                             "screen": {
-                              "id": "l1-s1-b4-t1-goal-support-a-cause",
+                              "id": "l1-s2-b1-t1-goal-support-a-cause",
                               "type": "short-text",
                               "mode": "goal",
                               "answerKey": "l1-goal-support-a-cause",
@@ -701,7 +688,7 @@
                             "position": "last",
                             "title": "Add another goal",
                             "screen": {
-                              "id": "l1-s1-b4-t1-goal-other",
+                              "id": "l1-s2-b1-t1-goal-other",
                               "type": "short-text",
                               "mode": "goal",
                               "answerKey": "l1-goal-other",
@@ -793,16 +780,14 @@
                           "use": "goal order and not-applicable skip"
                         }
                       ],
-                      "feedsInto": [
-                        "l1-s1-wrap"
-                      ],
+                      "feedsInto": [],
                       "flags": [
                         "D12",
                         "D23",
                         "D2",
                         "D15"
                       ],
-                      "screenId": "l1-s1-b4-t1-goal-make-money",
+                      "screenId": "l1-s2-b1-t1-goal-make-money",
                       "index": "2.1",
                       "template": "short-text:goal",
                       "question": "I want to earn [amount] [currency] in [number] [weeks/months].",
@@ -837,12 +822,12 @@
                           }
                         ]
                       },
-                      "inGoalLoop": "l1-s1-b4-t1-s2"
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
                     },
                     {
                       "sourceRow": 7,
                       "validation": [
-                        "benefit: up to 80 characters"
+                        "benefit: up to 120 characters"
                       ],
                       "feeds": [
                         {
@@ -850,15 +835,13 @@
                           "use": "goal order and not-applicable skip"
                         }
                       ],
-                      "feedsInto": [
-                        "l1-s1-wrap"
-                      ],
+                      "feedsInto": [],
                       "flags": [
                         "D12",
                         "D23",
                         "D13"
                       ],
-                      "screenId": "l1-s1-b4-t1-goal-help-others",
+                      "screenId": "l1-s2-b1-t1-goal-help-others",
                       "index": "2.2",
                       "template": "short-text:goal",
                       "question": "I want my customers to [benefit].",
@@ -871,16 +854,16 @@
                             "name": "benefit",
                             "type": "text",
                             "required": true,
-                            "limits": "up to 80 characters"
+                            "limits": "up to 120 characters"
                           }
                         ]
                       },
-                      "inGoalLoop": "l1-s1-b4-t1-s2"
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
                     },
                     {
                       "sourceRow": 8,
                       "validation": [
-                        "skill: up to 80 characters",
+                        "skill: up to 120 characters",
                         "timeframeNumber: whole number 1 to 99",
                         "timeframeUnit: one of weeks | months"
                       ],
@@ -890,16 +873,14 @@
                           "use": "goal order and not-applicable skip"
                         }
                       ],
-                      "feedsInto": [
-                        "l1-s1-wrap"
-                      ],
+                      "feedsInto": [],
                       "flags": [
                         "D12",
                         "D23",
                         "D13",
                         "D15"
                       ],
-                      "screenId": "l1-s1-b4-t1-goal-learn-new-skills",
+                      "screenId": "l1-s2-b1-t1-goal-learn-new-skills",
                       "index": "2.3",
                       "template": "short-text:goal",
                       "question": "I want to learn [skill] in [number] [weeks/months].",
@@ -912,7 +893,7 @@
                             "name": "skill",
                             "type": "text",
                             "required": true,
-                            "limits": "up to 80 characters"
+                            "limits": "up to 120 characters"
                           },
                           {
                             "name": "timeframeNumber",
@@ -928,7 +909,7 @@
                           }
                         ]
                       },
-                      "inGoalLoop": "l1-s1-b4-t1-s2"
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
                     },
                     {
                       "sourceRow": 9,
@@ -941,15 +922,13 @@
                           "use": "goal order and not-applicable skip"
                         }
                       ],
-                      "feedsInto": [
-                        "l1-s1-wrap"
-                      ],
+                      "feedsInto": [],
                       "flags": [
                         "D12",
                         "D23",
                         "D17"
                       ],
-                      "screenId": "l1-s1-b4-t1-goal-be-my-own-boss",
+                      "screenId": "l1-s2-b1-t1-goal-be-my-own-boss",
                       "index": "2.4",
                       "template": "choice-capture:single",
                       "question": "You said being your own boss matters. What's your top reason for wanting to be your own boss?",
@@ -984,7 +963,7 @@
                           }
                         ]
                       },
-                      "inGoalLoop": "l1-s1-b4-t1-s2"
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
                     },
                     {
                       "sourceRow": 10,
@@ -997,14 +976,12 @@
                           "use": "cause area carried into the sentence"
                         }
                       ],
-                      "feedsInto": [
-                        "l1-s1-wrap"
-                      ],
+                      "feedsInto": [],
                       "flags": [
                         "D23",
                         "D11"
                       ],
-                      "screenId": "l1-s1-b4-t1-goal-support-a-cause",
+                      "screenId": "l1-s2-b1-t1-goal-support-a-cause",
                       "index": "2.5",
                       "template": "short-text:goal",
                       "question": "I will give [number]% of every sale to support [cause area from Know your impact].",
@@ -1021,7 +998,7 @@
                           }
                         ]
                       },
-                      "inGoalLoop": "l1-s1-b4-t1-s2"
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
                     },
                     {
                       "sourceRow": 11,
@@ -1032,14 +1009,12 @@
                         "the whole page is optional"
                       ],
                       "feeds": [],
-                      "feedsInto": [
-                        "l1-s1-wrap"
-                      ],
+                      "feedsInto": [],
                       "flags": [
                         "D13",
                         "D15"
                       ],
-                      "screenId": "l1-s1-b4-t1-goal-other",
+                      "screenId": "l1-s2-b1-t1-goal-other",
                       "index": "2.6",
                       "template": "short-text:goal",
                       "guidance": "Add a goal only if there is something important you haven't covered yet.",
@@ -1069,214 +1044,36 @@
                           }
                         ]
                       },
-                      "inGoalLoop": "l1-s1-b4-t1-s2"
+                      "inGoalLoop": "l1-s2-b1-t1-s2"
                     }
                   ]
                 }
               ]
             }
-          ],
-          "wrapUp": {
-            "sourceRow": 12,
-            "validation": [
-              "read-only except the values listed in wrapup-edit-calls.md"
-            ],
-            "feeds": [
-              {
-                "answerKey": "l1-offer",
-                "use": "What my business will offer (editable)"
-              },
-              {
-                "answerKey": "l1-why",
-                "use": "My why, rank order, not-applicable left off (read-only)"
-              },
-              {
-                "answerKey": "l1-cause",
-                "use": "My cause (read-only)"
-              },
-              {
-                "answerKey": "l1-goal-make-money",
-                "use": "My goals"
-              },
-              {
-                "answerKey": "l1-goal-help-others",
-                "use": "My goals"
-              },
-              {
-                "answerKey": "l1-goal-learn-new-skills",
-                "use": "My goals"
-              },
-              {
-                "answerKey": "l1-goal-be-my-own-boss",
-                "use": "My goals"
-              },
-              {
-                "answerKey": "l1-goal-support-a-cause",
-                "use": "My goals"
-              },
-              {
-                "answerKey": "l1-goal-other",
-                "use": "My goals"
-              }
-            ],
-            "feedsInto": [],
-            "flags": [
-              "D1",
-              "D7",
-              "D8",
-              "D18"
-            ],
-            "screenId": "l1-s1-wrap",
-            "index": "wrap-up",
-            "template": "workbook-summary",
-            "payload": {
-              "type": "workbook-summary",
-              "heading": "Your workbook page",
-              "body": "Check your answers. Tap the pencil to change one, then tap Continue.",
-              "finalizeLabel": "Continue",
-              "sections": [
-                {
-                  "id": "what-my-business-will-offer",
-                  "label": "What my business will offer",
-                  "display": "list",
-                  "sources": [
-                    {
-                      "answerKey": "l1-offer",
-                      "editSelection": true
-                    }
-                  ]
-                },
-                {
-                  "id": "my-why",
-                  "label": "My why",
-                  "display": "ranked",
-                  "sources": [
-                    {
-                      "answerKey": "l1-why"
-                    }
-                  ]
-                },
-                {
-                  "id": "my-cause",
-                  "label": "My cause",
-                  "display": "choice",
-                  "sources": [
-                    {
-                      "answerKey": "l1-cause"
-                    }
-                  ]
-                },
-                {
-                  "id": "my-goals",
-                  "label": "My goals",
-                  "display": "sentences",
-                  "sources": [
-                    {
-                      "answerKey": "l1-goal-make-money",
-                      "editFields": [
-                        "amount",
-                        "timeframeNumber",
-                        "timeframeUnit"
-                      ]
-                    },
-                    {
-                      "answerKey": "l1-goal-help-others",
-                      "editFields": [
-                        "benefit"
-                      ]
-                    },
-                    {
-                      "answerKey": "l1-goal-learn-new-skills",
-                      "editFields": [
-                        "skill",
-                        "timeframeNumber",
-                        "timeframeUnit"
-                      ]
-                    },
-                    {
-                      "answerKey": "l1-goal-be-my-own-boss",
-                      "editSelection": true
-                    },
-                    {
-                      "answerKey": "l1-goal-support-a-cause",
-                      "editFields": [
-                        "donatePercent"
-                      ]
-                    },
-                    {
-                      "answerKey": "l1-goal-other",
-                      "editFields": [
-                        "goalText",
-                        "timeframeNumber",
-                        "timeframeUnit"
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "placeholder": true
-            }
-          }
+          ]
         },
         {
-          "id": "l1-s2",
+          "id": "l1-s3",
           "seedSilverId": "l2-s2",
-          "title": "Build your identity",
-          "sheetLabel": "3 Build your identity",
+          "title": "The Brand",
+          "sheetLabel": "3 The Brand",
           "build": "locked",
           "bronzes": [],
           "lockedRows": [
             {
-              "sourceRow": 17,
+              "sourceRow": 13,
               "validation": [
                 "locked build: unchanged"
               ],
               "feeds": [],
               "feedsInto": [
-                "l1-s2-wrap"
+                "l1-s3-wrap"
               ],
               "flags": [
-                "D20"
+                "D20",
+                "D27"
               ],
-              "screenId": "l1-s2-b1-t1",
-              "index": "1",
-              "template": "logo-picker",
-              "context": "A logo is your business's signature. Have fun designing one here.",
-              "guidance": "",
-              "answer": {
-                "answerKey": "l2-s2-identity",
-                "kind": "business-identity",
-                "version": 1,
-                "fields": [
-                  {
-                    "name": "shape",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "color",
-                    "type": "option id",
-                    "required": true
-                  },
-                  {
-                    "name": "icon",
-                    "type": "option id",
-                    "required": true
-                  }
-                ]
-              }
-            },
-            {
-              "sourceRow": 18,
-              "validation": [
-                "locked build: unchanged"
-              ],
-              "feeds": [],
-              "feedsInto": [],
-              "flags": [
-                "D20"
-              ],
-              "screenId": "l1-s2-b2-t1",
+              "screenId": "l1-s3-b1-t1",
               "index": "1",
               "template": "name-picker",
               "context": "Every business needs a name people remember. Good names are easy to remember, easy to say, and say what you do or who you are.",
@@ -1304,10 +1101,49 @@
                   }
                 ]
               }
+            },
+            {
+              "sourceRow": 12,
+              "validation": [
+                "locked build: unchanged"
+              ],
+              "feeds": [],
+              "feedsInto": [],
+              "flags": [
+                "D20",
+                "D27"
+              ],
+              "screenId": "l1-s3-b2-t1",
+              "index": "1",
+              "template": "logo-picker",
+              "context": "A logo is your business's signature. Have fun designing one here.",
+              "guidance": "",
+              "answer": {
+                "answerKey": "l2-s2-identity",
+                "kind": "business-identity",
+                "version": 1,
+                "fields": [
+                  {
+                    "name": "shape",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "color",
+                    "type": "option id",
+                    "required": true
+                  },
+                  {
+                    "name": "icon",
+                    "type": "option id",
+                    "required": true
+                  }
+                ]
+              }
             }
           ],
           "wrapUp": {
-            "sourceRow": 19,
+            "sourceRow": 14,
             "validation": [
               "locked build: unchanged"
             ],
@@ -1326,9 +1162,12 @@
               "D19",
               "D20",
               "D24",
-              "D25"
+              "D25",
+              "D26",
+              "D27",
+              "D30"
             ],
-            "screenId": "l1-s2-wrap",
+            "screenId": "l1-s3-wrap",
             "index": "wrap-up",
             "template": "identity-wrap-up",
             "context": "",
@@ -1347,14 +1186,14 @@
             ],
             "vision": {
               "label": "Our vision",
-              "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}.[[ As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
+              "template": "I am starting a {business-type} business. I will offer {offer-list}. I'm doing it to {why-list}. [[As I grow, I'll give {cause-percent}% of every sale to support {cause}.]] My goals: {goal-list}",
               "businessType": "dog walking",
               "offerKey": "l1-offer",
               "whyKey": "l1-why",
               "causeKey": "l1-cause",
               "causeGoalKey": "l1-goal-support-a-cause",
               "causePercentField": "donatePercent",
-              "goalLoopId": "l1-s1-b4-t1-s2",
+              "goalLoopId": "l1-s2-b1-t1-s2",
               "placeholder": "Your vision appears here when you finish Level 1."
             }
           }
@@ -1370,7 +1209,7 @@
       "silvers": [
         {
           "id": "l2-s1",
-          "title": "Know the product and its buyers",
+          "title": "The product and its buyers",
           "sheetLabel": "2 Know the product and its buyers",
           "build": "load",
           "bronzes": [
@@ -1480,13 +1319,13 @@
             },
             {
               "id": "l2-s1-b2",
-              "title": "Find out if people want it",
+              "title": "Know who your customers are",
               "sheetLabel": "2 Find out if people want it",
               "sourceRow": 15,
               "tasks": [
                 {
                   "id": "l2-s1-b2-t1",
-                  "title": "Find out if people want it",
+                  "title": "Know who your customers are",
                   "kind": "real-world",
                   "paged": true,
                   "canComeBackLater": true,
@@ -1714,7 +1553,7 @@
     {
       "id": "D1",
       "topic": "Level 1 silvers",
-      "applied": "One silver, Define the business, as in the sheet: bronzes Pick what your business will offer, Find the why, Know your impact, Set your goals (goal loop with Add another goal inside it), and one wrap-up (row 12). The framework's separate Set your goals silver is gone, so L1 shows one plaque.",
+      "applied": "Superseded by D26: three L1 silvers from Final rows 2–14 (Define the business, Set your goals, The Brand). Kept for history.",
       "status": "decided-cath",
       "rows": [
         2,
@@ -1855,7 +1694,7 @@
     {
       "id": "D13",
       "topic": "Text caps",
-      "applied": "Goal text up to 80 characters, the added goal 120, the service description 200, availability and specific interest 120.",
+      "applied": "Goal text up to 120 characters, the added goal 120, the service description 200, availability and specific interest 120.",
       "status": "build-assumption",
       "rows": [
         7,
@@ -1868,7 +1707,7 @@
     {
       "id": "D14",
       "topic": "Minimum picks",
-      "applied": "Pick what your business will offer needs at least one pick before Next.",
+      "applied": "Pick what kind of business you'll run needs at least one pick before Next.",
       "status": "build-assumption",
       "rows": [
         2
@@ -1927,12 +1766,12 @@
     {
       "id": "D20",
       "topic": "Identity titles",
-      "applied": "The locked build keeps Design your logo and Name your business (sheet: Design the logo, Name the business), and its own wrap-up behavior.",
+      "applied": "Superseded by D27: The Brand (l1-s3) uses Name the business then Design the logo (Revised order). Seed titles stay Design your logo / Name your business for the locked picker copy.",
       "status": "build-assumption",
       "rows": [
-        17,
-        18,
-        19
+        12,
+        13,
+        14
       ]
     },
     {
@@ -1952,22 +1791,78 @@
     {
       "id": "D25",
       "topic": "Identity in Level 1",
-      "applied": "Per Cath (5 Nov 8:14am), Build your identity moves from Level 2 to Level 1, straight after Define the business (l1-s2). Level 1 ends on the identity wrap-up, then the Level 1 finish; Level 2 holds only Know the product and its buyers. The tracker still lists it under Level 2; the move is in the loader. The saved answer key stays l2-s2-identity so saved logos and names still load.",
+      "applied": "Superseded by D26/D27: The Brand is l1-s3 after Set your goals (l1-s2). Answer key stays l2-s2-identity; seedSilverId stays l2-s2.",
       "status": "decided-cath",
       "rows": [
-        17,
-        18,
-        19
+        12,
+        13,
+        14
       ]
     },
     {
       "id": "D22",
       "topic": "Come back later",
-      "applied": "Sample, pending tracker column: the tracker has no \"Come back later\" column yet, so a TEST override turns it on for Set your goals (row 5) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.",
+      "applied": "Sample, pending tracker column: the tracker has no \"Come back later\" column yet, so a TEST override turns it on for Set your goals (row 5 → task l1-s2-b1-t1) and Find out if people want it (row 15). Every other task defaults to No. Once the column exists, the tracker wins and the override stops applying.",
       "status": "sample-pending-tracker-column",
       "rows": [
         5,
         15
+      ]
+    },
+    {
+      "id": "D26",
+      "topic": "Module 1 three silvers + floors 1–6",
+      "applied": "Cath 5 Nov: Module 1 = Final rows 2–14 as three silvers (Define the business; Set your goals; The Brand). Handbook column (AB) is TEST validation only — never built. Building wires levels 1–6 (Vision and Goals, Planning, Getting Ready, Sales, Delivery, Growing). Level 7 Budgeting is the rooftop (future, not a floor). L2 keeps current Decide what to sell + demand screens working; Pricing and L3–6 are structure/placeholder doors with Final titles (Revised order where Final D/E say so).",
+      "status": "decided-cath",
+      "rows": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "D27",
+      "topic": "The Brand name-then-logo",
+      "applied": "Final D/E + Revised: Name the business is step 1, Design the logo is step 2 under 3 The Brand (l1-s3). Seed locked pickers reorder to match; answer key l2-s2-identity unchanged.",
+      "status": "decided-cath",
+      "rows": [
+        12,
+        13
+      ]
+    },
+    {
+      "id": "D28",
+      "topic": "Level outcome statements",
+      "applied": "Storybird DRAFT outcomes (5 Nov) live in service-level-outcomes.ts as swappable data (SERVICE_LEVEL_OUTCOMES_DRAFT) feeding floor.gold.title. Not yet approved by Cath. Module 4 name is Sales. Delivery has a real draft (not a placeholder string).",
+      "status": "default-pending-cath",
+      "rows": []
+    },
+    {
+      "id": "D29",
+      "topic": "Offer option Dog sitting",
+      "applied": "Final Option 3 is Dog sitting (was Bookings in an older tracker layout). Loader reads Option N columns from the Final sheet.",
+      "status": "decided-cath",
+      "rows": [
+        2
+      ]
+    },
+    {
+      "id": "D30",
+      "topic": "No Define wrap-up",
+      "applied": "Final has no silver wrap for Define the business or Set your goals. Level workbook is The Brand identity wrap-up (row 14 handbook). No gold-completion screen — lift shows Congratulations after the workbook.",
+      "status": "decided-cath",
+      "rows": [
+        14
       ]
     }
   ]

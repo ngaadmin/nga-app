@@ -90,7 +90,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D23", topic: "Goal not applicable", applied: "Per Cath (4 Nov 8:49pm), goal pages have no Not applicable chip: a goal is dropped only in the Find the why ranking, and every goal shown must be filled in, except Add another goal, which stays optional. The sheet's goal rows (I5, I10, X6 to X10) still mention not applicable.", status: "decided-cath", rows: [5, 6, 7, 8, 10] },
   { id: "D13", topic: "Text caps", applied: `Goal text up to ${LIMITS.goalTextMax} characters, the added goal ${LIMITS.otherGoalTextMax}, the service description ${LIMITS.paragraphTextMax}, availability and specific interest ${LIMITS.shortParagraphTextMax}.`, status: "build-assumption", rows: [7, 8, 11, 14, 15] },
   { id: "D14", topic: "Minimum picks", applied: "Pick what kind of business you'll run needs at least one pick before Next.", status: "build-assumption", rows: [2] },
-  { id: "D15", topic: "Number caps", applied: `Timeframe number 1 to ${LIMITS.timeframeMax}, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has no timeframe (Cath, 4 Nov 8:50pm); people asked 1 to ${LIMITS.peopleAskedMax} (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).`, status: "build-assumption", rows: [6, 7, 8, 11, 15] },
+  { id: "D15", topic: "Number caps", applied: `Timeframe number 1 to ${LIMITS.timeframeMax}, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has the timeframe again (Cath, 5 Nov 5:20pm; I7/J7/V7 updated in the sheet); people asked 1 to ${LIMITS.peopleAskedMax} (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).`, status: "build-assumption", rows: [6, 7, 8, 11, 15] },
   { id: "D16", topic: "Ranking control", applied: "AC3 (Cath, 5 Nov): drag and drop replaces the up and down arrows. Drag a reason by its grip (mouse or touch) to reorder it or move it below the line; with the keyboard, focus a reason and use the up and down arrow keys. G3 \u201cDrag the reasons into order\u201d is shown as written.", status: "decided-cath", rows: [3] },
   { id: "D17", topic: "Be my own boss check-in", applied: "The six-month check-in in I9 is not built.", status: "build-assumption", rows: [9] },
   { id: "D18", topic: "Wrap-up copy and art", applied: "Wrap-up heading and body are build copy (H is N/A); the picture is a placeholder frame.", status: "build-assumption", rows: [12, 16] },
@@ -103,7 +103,7 @@ export const DECISIONS: LoadDecision[] = [
   { id: "D27", topic: "The Brand logo-then-name", applied: "AC13 (Cath, 5 Nov): Design the logo comes first and Name the business second, so the name color can use the logo color. The sheet's D12/D13/E12/E13 still say name first; AC13 wins. Bronze ids keep their seed numbers (logo l1-s3-b2, name l1-s3-b1) so saved answers stay put; only the order changes. Answer key l2-s2-identity unchanged.", status: "decided-cath", rows: [12, 13] },
   { id: "D28", topic: "Level outcome statements", applied: "Storybird DRAFT outcomes (5 Nov) live in service-level-outcomes.ts as swappable data (SERVICE_LEVEL_OUTCOMES_DRAFT) feeding floor.gold.title. Not yet approved by Cath. Module 4 name is Sales. Delivery has a real draft (not a placeholder string).", status: "default-pending-cath", rows: [] },
   { id: "D29", topic: "Offer option Dog sitting", applied: "Final Option 3 is Dog sitting (was Bookings in an older tracker layout). Loader reads Option N columns from the Final sheet.", status: "decided-cath", rows: [2] },
-  { id: "D30", topic: "No silver wrap-ups", applied: "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) a short silver-done card shows (Nice work! [Silver] is done., See my handbook / Keep going); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).", status: "decided-cath", rows: [11, 14] },
+  { id: "D30", topic: "No silver wrap-ups", applied: "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) the flow goes straight back to the corridor (no end screen; Cath, 5 Nov 5:19pm) and a small workbook icon button pops in (Open your workbook); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).", status: "decided-cath", rows: [11, 14] },
   { id: "D31", topic: "Goal dropdowns", applied: "AC5 / J7 / J8: Help others picks one customer benefit from N7 to Q7 (four sheet options, none invented); Learn new skills picks one skill from N8 to R8 (text before the bar) and prefills the success line (text after the bar), which swaps on a new pick until the learner types their own. Options keep the sheet's lower case because they sit mid-sentence.", status: "decided-cath", rows: [7, 8] },
 ];
 
@@ -405,14 +405,16 @@ function level1(ctx: Ctx, rows: readonly TrackerRow[]): LoadLevel {
         flags.push("D11");
         position = "after-ranked";
       } else if (item === "help-others") {
-        // I7/V7: customer count 1–99 + one benefit from N7–Q7 (lower case, it sits mid-sentence). No timeframe.
+        // I7/V7: customer count 1–99 + one benefit from N7–Q7 (lower case, it sits mid-sentence), then the
+        // timeframe (number 1–99 + weeks|months, weeks preset; Cath, 5 Nov 5:20pm: timeframe back in).
         const benefits = (row.options ?? []).map((o) => ({ id: kebab(o), label: o.trim() }));
         if (benefits.length < 2) issue(ctx, row.row, "Help others has no benefit options (N7 to Q7).");
         fields = [
           { name: "customerCount", input: "integer", label: "Number of customers", hint: hints[0], min: 1, max: LIMITS.customerCountMax },
           { name: "benefit", input: "choice", label: "What your customers get", hint: "pick one", options: benefits },
+          ...timeframeFields(),
         ];
-        slots = [{ field: "customerCount" }, { field: "benefit" }];
+        slots = [{ field: "customerCount" }, { field: "benefit" }, { field: "timeframeNumber" }, { field: "timeframeUnit" }];
         flags.push("D15", "D31");
       } else if (item === "learn-new-skills") {
         // I8/J8/V8: skill pick (text before the bar in N8–R8), success line prefilled from the text after the bar, then the timeframe.

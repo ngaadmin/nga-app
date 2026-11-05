@@ -7,7 +7,7 @@ import { applyFieldChange, fieldByName, withFieldDefaults } from "@/lib/launchpa
 import { selectionLabels, summaryCatalog } from "@/lib/launchpad/content/summary";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useCaptureAnswer } from "@/components/launchpad/venture/identity/answers-context";
-import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
+import { FieldControl, wideChoice } from "@/components/launchpad/venture/screens/field-control";
 import { ScreenGuidance, ScreenIntro, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 /** The values with the currency filled from the Parent Hub preference when the screen has a currency blank still empty. */
@@ -26,6 +26,9 @@ export function withCurrency(
  * (e.g. the chosen cause) show as a fixed chip; currency is fixed from the
  * Parent Hub preference. Optional "not applicable" greys the inputs out.
  */
+/** Sentence punctuation that must stay with the control before it. */
+const LEADING_PUNCT = /^[.,!?;:]+/;
+
 export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }) {
   const { answers, save, floors } = useCaptureAnswer(screen.answerKey);
   const answer = fieldsOf(answers, screen.answerKey);
@@ -83,31 +86,51 @@ export function ShortTextScreen({ screen }: { screen: LaunchpadShortTextScreen }
       {screen.guidance && !screen.context && <ScreenGuidance>{optionalGuidance(screen)}</ScreenGuidance>}
       <div className={`mx-5 mt-4 rounded-2xl border-2 border-[#C5D4EA] bg-white px-4 py-3.5 text-[17px] leading-[2.1] ${na ? "text-[#9CA3AF]" : "text-nga-ink"}`} data-sentence="">
         {screen.parts.map((part, i) => {
-          // A full-width inline text box keeps the punctuation right after it on its line (no stray ".").
+          // Punctuation right after a control stays on the control's line (no line starts with "."):
+          // it is cut from the text that follows and rendered with the control in one unbreakable span.
           const prev = screen.parts[i - 1];
           const prevField = prev?.kind === "field" ? fieldByName(screen, prev.field) : undefined;
-          const glued = !block && prevField?.input === "text" && part.kind === "text" ? /^[.,!?;:]+/.exec(part.text)?.[0] : undefined;
+          const glued = !block && (prevField || prev?.kind === "carried") && part.kind === "text" ? LEADING_PUNCT.exec(part.text)?.[0] : undefined;
           if (part.kind === "text") {
             const text = glued ? part.text.slice(glued.length) : part.text;
             return text ? <span key={i}>{text}</span> : null;
           }
           if (part.kind === "carried") {
             const label = selectionLabels(catalog, answers, part.answerKey)[0];
-            return (
+            const next = screen.parts[i + 1];
+            const carriedPunct = !block && next?.kind === "text" ? LEADING_PUNCT.exec(next.text)?.[0] : undefined;
+            const chip = (
               <span key={i} className="mx-0.5 rounded-lg bg-[#EEF7FB] px-2 py-1 font-semibold text-nga-ink" data-carried={part.answerKey} title={part.label}>
                 {label ? label.charAt(0).toLowerCase() + label.slice(1) : `[${part.label}]`}
+              </span>
+            );
+            if (!carriedPunct) return chip;
+            return (
+              <span key={i} className="whitespace-nowrap" data-glued-punct="">
+                {chip}
+                {carriedPunct}
               </span>
             );
           }
           const field = fieldByName(screen, part.field);
           if (!field) return null;
           const after = screen.parts[i + 1];
-          const punct = !block && field.input === "text" && after?.kind === "text" ? /^[.,!?;:]+/.exec(after.text)?.[0] : undefined;
+          const punct = !block && after?.kind === "text" ? LEADING_PUNCT.exec(after.text)?.[0] : undefined;
           if (!punct) return control(field);
+          if (field.input === "text" || (field.input === "choice" && wideChoice(field))) {
+            // A full-width inline box or dropdown: the punctuation sits at its end on the same row.
+            return (
+              <span key={i} className="flex w-full items-center gap-1" data-glued-punct="">
+                {control(field)}
+                <span>{punct}</span>
+              </span>
+            );
+          }
+          // An inline control (dropdown, number): control and punctuation in one nowrap span.
           return (
-            <span key={i} className="flex w-full items-center gap-1" data-glued-punct="">
+            <span key={i} className="inline-block whitespace-nowrap" data-glued-punct="">
               {control(field)}
-              <span>{punct}</span>
+              {punct}
             </span>
           );
         })}

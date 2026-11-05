@@ -220,24 +220,19 @@ function IdentityPageBody({
   const sections = useSectionLines(wrapUp?.handbookSections ?? [])
     .filter((s) => s.lines.length)
     .filter((s) => !(vision && s.section.id === "our-vision"));
-  const fontLabel = choices.fonts.find((f) => f.id === answer.font)?.label;
   return (
     <>
-      <TopRow eyebrow="Your identity" done={page.done} />
+      {/* No Done chip on the identity page (Cath, 5 Nov 5:27pm). */}
+      <TopRow eyebrow="Your identity" done={false} />
       <div
         className="mt-3.5 flex flex-col items-center gap-3"
         data-identity-lockup=""
       >
         <BusinessLogo
           answer={answer}
-          size="hb"
+          size="hero"
           namePlaceholder="Your business name"
         />
-        {fontLabel && (
-          <p className="-mt-2 text-[11px] text-[#9CA3AF]" data-font-label="">
-            Font: {fontLabel}
-          </p>
-        )}
         {editable && (
           <button
             type="button"
@@ -370,7 +365,7 @@ function CoverPageBody({ page }: { page: HandbookPageView }) {
             name={answer.name}
             font={answer.font ?? "poppins-bold"}
             color={resolveNameColor(answer)}
-            size="hb"
+            size="hero"
           />
         </div>
       ) : (

@@ -118,6 +118,12 @@ const SIZES = {
    * vision, so per the same instruction the logo (not the vision) shrank again.
    */
   hb: { mark: 28, width: 246, name: 21, longName: 18 },
+  /**
+   * Workbook "Your identity" page and the cover: the logo is the hero at
+   * 112px (about 30% of the card), centered above the name, and the name is a
+   * smaller than hb (18px, 16px when long) so the logo clearly leads (Cath, 5 Nov 5:26pm).
+   */
+  hero: { mark: 112, width: 246, name: 18, longName: 16 },
   sm: { mark: 76, width: 230, name: 22, longName: 20 },
 } as const;
 

@@ -11,6 +11,21 @@
   animation: fade-in 400ms ease-out 600ms both;
 }
 
+/* After a step: the workbook button pops in (scale 0.6 to 1, about 200ms). */
+.workbookPopIn {
+  animation: workbook-pop-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes workbook-pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Lift: doors close, then the indicator moves from 1 to 2. */
 .liftDoorLeftClose {
   animation: lift-left-close 600ms ease-in-out both;
@@ -102,7 +117,8 @@
   .liftDoorRightClose,
   .liftFromDim,
   .liftToLit,
-  .liftArrow {
+  .liftArrow,
+  .workbookPopIn {
     animation-duration: 1ms;
     animation-delay: 0ms;
     animation-iteration-count: 1;

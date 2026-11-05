@@ -67,7 +67,6 @@ export function Handbook({
   iconVentureId,
   setAnswer,
   onClose,
-  openSilverId,
   onBackToLift,
 }: {
   entry: HandbookEntry;
@@ -78,18 +77,14 @@ export function Handbook({
   /** Save an answer. Only used from the building; home is read-only. */
   setAnswer?: (answerKey: string, answer: LaunchpadAnswer) => void;
   onClose: () => void;
-  /** Open at this silver's page (the silver-done card's "See my workbook"). */
-  openSilverId?: string;
   /** "Back to the lift": shown from the building; returns to the corridor with the plaques. */
   onBackToLift?: () => void;
 }) {
   const pages = handbookPages(progress, floors);
   const ghost = handbookGhost(progress, floors);
   const tabs = handbookTabs(progress, floors);
-  const [index, setIndex] = useState(() => {
-    const at = openSilverId ? pages.findIndex((p) => p.kind !== "cover" && p.silver.id === openSilverId) : -1;
-    return at >= 0 ? at : handbookOpenIndex(pages);
-  });
+  // Always page 1 first; Next page (or a left swipe) moves forward in order.
+  const [index, setIndex] = useState(() => handbookOpenIndex(pages));
   const at = Math.min(index, Math.max(0, pages.length - 1));
   const page = pages[at];
   const isLast = at === pages.length - 1;

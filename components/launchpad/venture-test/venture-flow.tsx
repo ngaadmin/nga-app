@@ -39,7 +39,6 @@ import { VentureBuilding, type BuildingFloorView } from "@/components/launchpad/
 import { VentureOnboarding } from "@/components/launchpad/venture-test/venture-onboarding";
 import { FloorTemplate } from "@/components/launchpad/venture/floor-templates";
 import { BronzeDoors } from "@/components/launchpad/venture/bronze-doors";
-import { SilverDoneCard } from "@/components/launchpad/venture/handbook/silver-done-card";
 import { TaskWorkbook } from "@/components/launchpad/venture/task-workbook";
 import { VentureUnavailable } from "@/components/launchpad/venture/venture-unavailable";
 import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
@@ -77,16 +76,14 @@ type View =
   | { screen: "home" }
   | { screen: "onboarding" }
   | { screen: "building" }
-  | { screen: "corridor"; level: number; entering: boolean }
+  /**
+   * `workbookCue`: reached by finishing a step (not the level's last), so the
+   * corridor shows the workbook icon button; `popIn` only on the first arrival.
+   */
+  | { screen: "corridor"; level: number; entering: boolean; workbookCue?: { silverId: string; popIn: boolean } }
   | { screen: "doors"; level: number; silverId: string }
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
   | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number }
-  /**
-   * AC14 / J11: "Nice work! <step> is done." right after a step's last task
-   * (not a level's last step, which goes straight to the level-done lift).
-   * Replaces the old per-step wrap-up screens.
-   */
-  | { screen: "silver-done"; level: number; silverId: string }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
   | { screen: "rooftop" };
@@ -180,7 +177,7 @@ export function VentureFlow({
   const [handbook, setHandbook] = useState<{
     ventureId: string;
     entry: "home" | "building";
-    /** Open at this step's page (the silver-done card's "See my workbook"). */
+    /** Opened from the corridor's workbook button (Back to the lift keeps the button); the workbook still opens on page 1. */
     openSilverId?: string;
     /** "Back to the lift" lands on this floor's corridor (defaults to the current floor). */
     level?: number;
@@ -415,6 +412,15 @@ export function VentureFlow({
                 }
               : undefined
           }
+          workbook={
+            view.workbookCue && !done
+              ? {
+                  popIn: view.workbookCue.popIn,
+                  onOpen: () =>
+                    setHandbook({ ventureId, entry: "building", openSilverId: view.workbookCue!.silverId, level: floor.level }),
+                }
+              : undefined
+          }
           onBack={toBuilding}
           onOpenSilver={(silverId) => go({ screen: "doors", level: floor.level, silverId })}
         />
@@ -507,13 +513,15 @@ export function VentureFlow({
           return;
         }
         const adv = advanceAfterTask(updated, floor, silver, bronze, index);
-        // Finishing the step just now (not re-finishing finished work) shows the silver-done card,
+        // Finishing the step just now (not re-finishing finished work) goes straight back to the
+        // corridor with the workbook button popping in,
         // unless it finished the level: then the corridor shows the level-done Congratulations.
         const justCompleted = !isSilverDone(progress, silver) && isSilverDone(updated, silver);
         const at = { level: floor.level, silverId: silver.id };
         if (adv.kind === "task") go({ screen: "workbook", ...where, index: adv.taskIndex });
         else if (adv.kind === "bronze-done") go({ screen: "doors", ...at });
-        else if (justCompleted && !isFloorDone(updated, floor)) go({ screen: "silver-done", ...at });
+        else if (justCompleted && !isFloorDone(updated, floor))
+          go({ screen: "corridor", level: floor.level, entering: false, workbookCue: { silverId: silver.id, popIn: true } });
         else go({ screen: "corridor", level: floor.level, entering: false });
       };
       // Final J11: the optional last goal reads "Add this goal" (on once something is typed) with "Skip for now".
@@ -569,20 +577,6 @@ export function VentureFlow({
       );
       break;
     }
-    case "silver-done": {
-      const floor = floorAt(floors, view.level);
-      const silver = floor.silvers.find((s) => s.id === view.silverId)!;
-      body = (
-        <SilverDoneCard
-          silverId={silver.id}
-          silverTitle={silver.title}
-          onSeeHandbook={() => setHandbook({ ventureId, entry: "building", openSilverId: silver.id, level: floor.level })}
-          onKeepGoing={toCorridor(floor.level)}
-          onBackToLift={toCorridor(floor.level)}
-        />
-      );
-      break;
-    }
     case "lift": {
       const to = floorAt(floors, view.from + 1);
       body = <VentureLift from={view.from} to={to.level} toName={to.name} />;
@@ -603,8 +597,12 @@ export function VentureFlow({
             iconVentureId={iconVentureId}
             setAnswer={setAnswer}
             onClose={closeHandbook}
-            openSilverId={handbook.openSilverId}
-            onBackToLift={toCorridor(handbook.level ?? currentLevel(progress, floors))}
+            onBackToLift={() => {
+              const level = handbook.level ?? currentLevel(progress, floors);
+              // Back from the workbook opened on the corridor: the same corridor, button still there (no pop-in).
+              const cue = handbook.openSilverId && view.screen === "corridor" && view.workbookCue ? { silverId: view.workbookCue.silverId, popIn: false } : undefined;
+              go({ screen: "corridor", level, entering: false, ...(cue ? { workbookCue: cue } : {}) });
+            }}
           />
         )}
       </div>

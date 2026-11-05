@@ -7,6 +7,7 @@ import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-
 import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
+import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 
 function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void; /** Tighter padding when the level-done heading is above the plaques. */ compact?: boolean }) {
   const dot = state === "current" ? "#fff" : state === "done" ? VT.panel : VT.lockDot;
@@ -114,12 +115,18 @@ export type CorridorProps = {
   note?: string;
   /** Level done (wrapup-binder-r5 screen D): `nextLevel` is null on the top floor. */
   complete?: { nextLevel: number | null; onLift: (() => void) | null };
+  /**
+   * The workbook icon button (in place of the old after-step card), shown on the
+   * floor once the workbook has a page and the level isn't done. `popIn`: a step
+   * was just finished, so it pops in (scale 0.6 to 1, 200ms; reduced motion: none).
+   */
+  workbook?: { onOpen: () => void; popIn: boolean };
   onBack: () => void;
   onOpenSilver: (silverId: string) => void;
 };
 
 export function CorridorFloor(props: CorridorProps) {
-  const { level, floorName, goal, silvers, entering, note, complete, onBack, onOpenSilver } = props;
+  const { level, floorName, goal, silvers, entering, note, complete, workbook, onBack, onOpenSilver } = props;
   const plaques: ReactNode = silvers.map((s) => (
     <Plaque
       key={s.id}
@@ -166,6 +173,20 @@ export function CorridorFloor(props: CorridorProps) {
           <div className="absolute inset-x-[26px] top-[490px] flex justify-center">
             <button type="button" onClick={complete.onLift} className={BTN_LIFT} data-go-to-level={complete.nextLevel}>
               Go to Level {complete.nextLevel}
+            </button>
+          </div>
+        )}
+        {workbook && !complete && (
+          <div className="absolute inset-x-[26px] top-[500px] flex justify-center">
+            <button
+              type="button"
+              aria-label="Open your workbook"
+              onClick={workbook.onOpen}
+              // The In Progress tile's workbook button look: white, 2px navy outline, the book icon.
+              className={`flex h-11 w-11 items-center justify-center rounded-xl border-2 border-nga-ink bg-white ${workbook.popIn ? styles.workbookPopIn : ""}`}
+              data-corridor-workbook={workbook.popIn ? "pop-in" : ""}
+            >
+              <HandbookIcon size={28} />
             </button>
           </div>
         )}

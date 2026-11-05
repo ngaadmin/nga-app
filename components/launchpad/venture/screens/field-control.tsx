@@ -7,7 +7,7 @@ const BOX =
   "rounded-xl bg-white text-[16px] font-medium text-nga-ink shadow-[inset_0_0_0_1.5px_#C5D4EA] outline-none placeholder:font-normal placeholder:text-[#9CA3AF] focus:shadow-[inset_0_0_0_2px_#3FB7DA] disabled:bg-[#F3F4F6] disabled:text-[#9CA3AF] disabled:shadow-[inset_0_0_0_1.5px_#E5E7EB]";
 
 /** A dropdown whose options are phrases (row 7 benefits, row 8 skills) takes the full line so the pick is readable. */
-function wideChoice(field: LaunchpadTextField): boolean {
+export function wideChoice(field: LaunchpadTextField): boolean {
   return (field.options ?? []).some((o) => o.label.length > 12);
 }
 

@@ -4,12 +4,23 @@
  * and Level 2 bronze door (really answered), the after-step messages (AC14,
  * no wrap-ups), the Level 1 done lift, then the handbook.
  */
-import { expect, type Page, type TestInfo } from "@playwright/test";
+import { expect, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { fits, nextButton, passed, ROUTE, shot, step, track } from "./launchpad-venture-helpers";
 
 const main = (page: Page) => page.locator("main");
 const btn = (page: Page, name: string | RegExp, exact = true) =>
   main(page).getByRole("button", typeof name === "string" ? { name, exact } : { name });
+
+
+/** The workbook opens on page 1 (the cover); Next page walks forward in order until this page shows. */
+async function turnTo(dlg: Locator, pageId: string) {
+  await expect(dlg.locator('[data-handbook-page="cover"]')).toBeVisible({ timeout: 15_000 });
+  for (let i = 0; i < 12; i++) {
+    if (await dlg.locator(`[data-handbook-page="${pageId}"]`).isVisible().catch(() => false)) return;
+    await dlg.getByRole("button", { name: "Next page" }).click();
+  }
+  await expect(dlg.locator(`[data-handbook-page="${pageId}"]`)).toBeVisible();
+}
 
 export async function runJourney(page: Page, info: TestInfo, group: string) {
   const t = track(page, info, group);
@@ -163,28 +174,33 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await fits(t, "Know your impact", next);
   await shot(t, "Know your impact, The environment picked", next);
-  const done1 = page.locator('[data-silver-done="l1-s1"]');
-  await step(t, "Finish Know your impact: AC14 after-step message (no wrap-up), with handbook link and Back to the lift", async () => {
+  const cue = page.getByRole("button", { name: "Open your workbook" });
+  await step(t, "Finish Know your impact: straight back to the Level 1 corridor, no end screen, the workbook button pops in", async () => {
     await next.click();
-    await expect(done1).toBeVisible();
-    await expect(done1.getByRole("heading", { name: "Nice work! Define the business is done." })).toBeVisible();
-    await expect(done1.locator("[data-silver-done-message]")).toHaveText(
-      "See your progress in your workbook, or wait until you've completed all the steps in this level.",
-    );
-    await expect(done1.locator("[data-see-handbook]")).toHaveText("See my workbook");
-    await expect(done1.locator("[data-keep-going]")).toHaveText("Keep going");
-    await expect(done1.locator("[data-back-to-lift]")).toBeVisible();
-    await expect(page.locator("[data-wrap-up]")).toHaveCount(0);
-    expect(await done1.innerText()).not.toMatch(/\b(silver|bronze|gold|NGA)\b/i);
-  });
-  await fits(t, "After-step message l1-s1", done1.locator("[data-keep-going]"));
-  await shot(t, "After-step message, Define the business done", done1.locator("[data-keep-going]"));
-
-  await step(t, "Keep going: Level 1 corridor, Set your goals up next", async () => {
-    await done1.locator("[data-keep-going]").click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
+    await expect(page.locator("[data-silver-done], [data-wrap-up]")).toHaveCount(0);
+    await expect(page.locator("main")).not.toContainText(/Nice work!|Keep going|See my (handbook|workbook)/);
     await expect(page.locator("[data-level-done]")).toHaveCount(0);
+    await expect(cue).toBeVisible();
+    await expect(cue).toHaveAttribute("data-corridor-workbook", "pop-in");
+    const look = await cue.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { bg: cs.backgroundColor, border: cs.borderTopWidth, anim: cs.animationDuration, icon: !!el.querySelector("svg") };
+    });
+    expect(look.bg).toBe("rgb(255, 255, 255)");
+    expect(look.border).toBe("2px");
+    expect(look.icon).toBe(true);
+    expect(look.anim).toBe("0.2s");
     await expect(page.getByRole("button", { name: /Set your goals, up next/ })).toBeVisible();
+  });
+  await shot(t, "Lift with the workbook button after Define the business", cue);
+  await step(t, "Open your workbook from the lift: Define the business page, then Back to the lift returns to the corridor", async () => {
+    await cue.click();
+    await turnTo(page.getByRole("dialog"), "l1-s1");
+    await shot(t, "Workbook opened from the lift, Define the business", page.locator("[data-back-to-lift]"));
+    await page.locator("[data-back-to-lift]").click();
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
+    await expect(cue).toHaveAttribute("data-corridor-workbook", "");
   });
   await shot(t, "Level 1 corridor, Set your goals up next", page.getByRole("button", { name: /Set your goals, up next/ }));
 
@@ -202,8 +218,9 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
 
   let benefitLabel = "";
-  await step(t, "Goal 1 (row 7): Help others, 'I want [number] customers to [pick one]', four benefits, no timeframe", async () => {
-    await expect(main(page).getByLabel("Weeks or months")).toHaveCount(0);
+  await step(t, "Goal 1 (row 7): Help others, 'I want [number] customers to [pick one] in [number] [weeks|months]', four benefits, weeks preset", async () => {
+    await expect(main(page).getByLabel("Weeks or months")).toHaveValue("weeks");
+    await expect(main(page).locator("[data-sentence]")).toContainText(" in ");
     await expect(main(page).locator("[data-sentence]")).toContainText("I want");
     await expect(main(page).locator("[data-sentence]")).toContainText("customers to");
     const benefit = main(page).getByLabel("What your customers get");
@@ -213,6 +230,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await main(page).getByLabel("Number of customers").fill("5");
     await benefit.selectOption({ index: 1 });
     benefitLabel = (await benefit.locator("option:checked").innerText()).trim();
+    await expect(next).toBeDisabled();
+    await main(page).getByLabel("Number", { exact: true }).fill("3");
     await expect(next).toBeEnabled();
     passed(t, "Help others goal sentence", await main(page).locator("[data-sentence]").innerText());
   });
@@ -308,24 +327,24 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await fits(t, "Goal 6 One more goal", next);
   await shot(t, "Goal 6 of 6, One more goal, filled", next);
 
-  const done2 = page.locator('[data-silver-done="l1-s2"]');
-  await step(t, "Add this goal: after-step message for Set your goals", async () => {
+  await step(t, "Add this goal: Set your goals done, straight back to the corridor with the workbook button", async () => {
     await next.click();
-    await expect(done2).toBeVisible();
-    await expect(done2.getByRole("heading", { name: "Nice work! Set your goals is done." })).toBeVisible();
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
+    await expect(page.locator("[data-silver-done]")).toHaveCount(0);
+    await expect(cue).toHaveAttribute("data-corridor-workbook", "pop-in");
   });
-  await fits(t, "After-step message l1-s2", done2.locator("[data-keep-going]"));
-  await shot(t, "After-step message, Set your goals done", done2.locator("[data-keep-going]"));
+  await shot(t, "Lift with the workbook button after Set your goals", cue);
 
   const hb1 = page.getByRole("dialog");
-  await step(t, "See my workbook opens the handbook at the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
-    await done2.locator("[data-see-handbook]").click();
+  await step(t, "Open your workbook opens on page 1; Next page to the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
+    await cue.click();
+    await turnTo(hb1, "l1-s2");
     const gp = hb1.locator('[data-handbook-page="l1-s2"]');
     await expect(gp).toBeVisible();
     await expect(gp).toContainText("TEST a new bike");
     await expect(gp).toContainText("TEST run my own books");
     await expect(hb1.locator("[data-back-to-lift]")).toBeVisible();
-    await shot(t, "Handbook from the after-step message, Set your goals page", null);
+    await shot(t, "Workbook from the lift, Set your goals page", null);
     await gp.locator("[data-pencil]").first().click();
     await gp.locator("[data-summary-line='l1-goal-make-money'] [data-pencil]").click();
     const ed = gp.locator("[data-inline-editor='l1-goal-make-money']");
@@ -430,6 +449,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator("[data-level-done='1']")).toHaveText("Congratulations!You've completed Level 1");
     await expect(page.locator("[data-plaque-tick]")).toHaveCount(3);
     await expect(page.getByText(/Gold unlocked|move on/)).toHaveCount(0);
+    await expect(cue).toHaveCount(0);
   });
   await shot(t, "Level 1 done on the lift", btn(page, "Go to Level 2"));
 
@@ -478,17 +498,17 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Find out if people want it, filled", next);
 
-  const done21 = page.locator('[data-silver-done="l2-s1"]');
-  await step(t, "Finish: Level 2 step 1 after-step message (no wrap-up)", async () => {
+  await step(t, "Finish: Level 2 step 1 goes straight back to the Level 2 corridor with the workbook button", async () => {
     await next.click();
-    await expect(page.locator("[data-wrap-up]")).toHaveCount(0);
-    await expect(done21).toBeVisible();
-    await expect(done21.getByRole("heading", { name: "Nice work! The product and its buyers is done." })).toBeVisible();
+    await expect(page.locator("[data-wrap-up], [data-silver-done]")).toHaveCount(0);
+    await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 2 · Planning/, { timeout: 15_000 });
+    await expect(cue).toHaveAttribute("data-corridor-workbook", "pop-in");
   });
-  await shot(t, "After-step message, The product and its buyers done", done21.locator("[data-keep-going]"));
+  await shot(t, "Lift with the workbook button after The product and its buyers", cue);
 
-  await step(t, "See my workbook: edit what I am selling with the pencil on the handbook page", async () => {
-    await done21.locator("[data-see-handbook]").click();
+  await step(t, "Open your workbook: edit what I am selling with the pencil on the workbook page", async () => {
+    await cue.click();
+    await turnTo(page.getByRole("dialog"), "l2-s1");
     const pg = page.getByRole("dialog").locator('[data-handbook-page="l2-s1"]');
     await expect(pg).toContainText("TEST product");
     await expect(pg).toContainText("TEST availability");
@@ -520,9 +540,12 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.getByRole("button", { name: "Open handbook" }).first()).toBeVisible();
     await page.getByRole("button", { name: "Open handbook" }).first().click();
     await expect(hb).toBeVisible();
-    await expect(hb.locator("[data-handbook-page]").first()).toBeVisible();
+    // The workbook opens on page 1 (the cover), with the first dot active.
+    await expect(hb.locator('[data-handbook-page="cover"]')).toBeVisible();
+    await expect(hb.getByRole("button", { name: "Previous page" })).toBeDisabled();
+    await expect(hb.locator("[data-page-dots] > span").first()).toHaveClass(/w-\[18px\]/);
   });
-  await shot(t, "Handbook from the building", null);
+  await shot(t, "Handbook from the building, opens on page 1", null);
 
   await step(t, "Handbook tabs: Level 1 and Level 2 open their pages, Level 3 onward not earned", async () => {
     const tabs = hb.getByRole("navigation", { name: "Handbook floors" }).getByRole("button");
@@ -560,6 +583,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await step(t, "Handbook: Next page walks past goals to the identity page (l1-s3), then Level 2", async () => {
     await hb.getByRole("button", { name: "Next page" }).click(); // l1-s2 Set your goals
     await expect(hb.locator('[data-handbook-page="l1-s2"]')).toBeVisible();
+    await expect(hb.locator("[data-page-dots] > span").nth(2)).toHaveClass(/w-\[18px\]/);
+    await shot(t, "Workbook page 3, Set your goals", null);
     await hb.getByRole("button", { name: "Next page" }).click(); // l1-s3 The Brand
     const idPage = hb.locator('[data-handbook-page="l1-s3"]');
     await expect(idPage).toBeVisible();
@@ -568,6 +593,13 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     const pageLogo = await idPage.locator("svg").first().boundingBox();
     const pageName = await idPage.getByText("TEST Business Name", { exact: true }).first().boundingBox();
     expect(pageLogo && pageName && pageName.y > pageLogo.y, "logo above name on the identity page").toBeTruthy();
+    // The logo is the hero (112px, centered), no Font line, no Done chip (Cath, 5 Nov).
+    expect(pageLogo!.width).toBeGreaterThanOrEqual(110);
+    const card = (await idPage.boundingBox())!;
+    expect(Math.abs(pageLogo!.x + pageLogo!.width / 2 - (card.x + card.width / 2))).toBeLessThan(4);
+    await expect(idPage.locator("[data-font-label]")).toHaveCount(0);
+    await expect(idPage).not.toContainText("Font:");
+    await expect(idPage.locator("[data-done-chip]")).toHaveCount(0);
     await expect(idPage.locator("[data-identity-page-vision] [data-vision-sentence]")).toContainText(/^I am starting a dog walking business\./);
     await shot(t, "Workbook identity page", null);
     await idPage.getByRole("button", { name: /^Edit/ }).click();
@@ -613,8 +645,8 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator('[data-handbook="home"]')).toContainText("Read only");
     await expect(page.locator('[data-handbook="home"] [data-handbook-page][data-editable="true"]')).toHaveCount(0);
     const home = page.locator('[data-handbook="home"]');
-    // The handbook opens on the latest earned page (by design: handbookOpenIndex), so it starts on The product and its buyers.
-    await expect(home.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
+    // The workbook opens on page 1; Next page walks forward to The product and its buyers.
+    await turnTo(home, "l2-s1");
     await expect(home.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");

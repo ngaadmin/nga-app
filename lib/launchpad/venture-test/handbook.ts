@@ -144,9 +144,14 @@ export function handbookGhost(progress: VentureTestProgress, floors: readonly La
   return next ? { level: next.floor.level, floorName: next.floor.name, silverTitle: next.silver.title } : null;
 }
 
-/** The handbook opens at the latest page (the most recently earned silver). */
+/**
+ * The workbook always opens on page 1 (the cover with the identity) and the
+ * right arrow / a left swipe moves forward through the pages in order (Cath,
+ * 5 Nov 5:27pm). It used to open on the latest page.
+ */
 export function handbookOpenIndex(pages: readonly HandbookPageView[]): number {
-  return Math.max(0, pages.length - 1);
+  void pages;
+  return 0;
 }
 
 /** The book button shows only once the business has at least one completed silver (one page). */
@@ -180,7 +185,7 @@ export function handbookTabs(progress: VentureTestProgress, floors: readonly Lau
  */
 export function handbookTabTarget(pages: readonly HandbookPageView[], level: number): number {
   const i = pages.findIndex((p) => p.level === level && p.kind !== "cover");
-  return i === -1 ? handbookOpenIndex(pages) : i;
+  return i === -1 ? Math.max(0, pages.length - 1) : i;
 }
 
 /** The business name for the handbook header: the saved identity name, else the fallback (tile name). */

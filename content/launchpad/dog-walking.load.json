@@ -5,7 +5,7 @@
   "source": {
     "file": "lib/launchpad/content/source/dog-walking/service-business-framework.xlsx",
     "sheet": "Final Service Business Framewor",
-    "md5": "1a3823bd3835f6243c48d78f9901f6ab",
+    "md5": "fd69bc138b33228bfdada06619c3e6b6",
     "rows": "2-16",
     "notes": [
       {
@@ -547,6 +547,22 @@
                                 },
                                 {
                                   "kind": "text",
+                                  "text": " in "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeNumber"
+                                },
+                                {
+                                  "kind": "text",
+                                  "text": " "
+                                },
+                                {
+                                  "kind": "field",
+                                  "field": "timeframeUnit"
+                                },
+                                {
+                                  "kind": "text",
                                   "text": "."
                                 }
                               ],
@@ -582,6 +598,30 @@
                                       "label": "go away for the weekend or holidays without having to worry about their pet"
                                     }
                                   ]
+                                },
+                                {
+                                  "name": "timeframeNumber",
+                                  "input": "integer",
+                                  "label": "Number",
+                                  "hint": "1–99",
+                                  "min": 1,
+                                  "max": 99
+                                },
+                                {
+                                  "name": "timeframeUnit",
+                                  "input": "choice",
+                                  "label": "Weeks or months",
+                                  "options": [
+                                    {
+                                      "id": "weeks",
+                                      "label": "weeks"
+                                    },
+                                    {
+                                      "id": "months",
+                                      "label": "months"
+                                    }
+                                  ],
+                                  "defaultValue": "weeks"
                                 }
                               ]
                             }
@@ -933,7 +973,9 @@
                       "sourceRow": 7,
                       "validation": [
                         "customerCount: whole number 1 to 99",
-                        "benefit: one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet"
+                        "benefit: one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet",
+                        "timeframeNumber: whole number 1 to 99",
+                        "timeframeUnit: one of weeks | months"
                       ],
                       "feeds": [
                         {
@@ -951,7 +993,7 @@
                       "screenId": "l1-s2-b1-t1-goal-help-others",
                       "index": "2.2",
                       "template": "short-text:goal",
-                      "question": "I want [number] customers to [pick one].",
+                      "question": "I want [number] customers to [pick one] in [number] [weeks/months].",
                       "answer": {
                         "answerKey": "l1-goal-help-others",
                         "kind": "fields",
@@ -968,6 +1010,18 @@
                             "type": "choice",
                             "required": true,
                             "limits": "one of come-home-to-a-happy-well-looked-after-dog | have-a-washed-and-groomed-dog | manage-their-dog-s-behavior-problems | go-away-for-the-weekend-or-holidays-without-having-to-worry-about-their-pet"
+                          },
+                          {
+                            "name": "timeframeNumber",
+                            "type": "integer",
+                            "required": true,
+                            "limits": "whole number 1 to 99"
+                          },
+                          {
+                            "name": "timeframeUnit",
+                            "type": "choice",
+                            "required": true,
+                            "limits": "one of weeks | months"
                           }
                         ]
                       },
@@ -1837,7 +1891,7 @@
     {
       "id": "D15",
       "topic": "Number caps",
-      "applied": "Timeframe number 1 to 99, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has no timeframe (Cath, 4 Nov 8:50pm); people asked 1 to 99 (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).",
+      "applied": "Timeframe number 1 to 99, in weeks or months (Cath, 4 Nov; the sheet's goal cells now say weeks/months); Help others has the timeframe again (Cath, 5 Nov 5:20pm; I7/J7/V7 updated in the sheet); people asked 1 to 99 (optional on the added goal, which has no number); donate percent 1 to 100 (sheet).",
       "status": "build-assumption",
       "rows": [
         6,
@@ -1980,7 +2034,7 @@
     {
       "id": "D30",
       "topic": "No silver wrap-ups",
-      "applied": "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) a short silver-done card shows (Nice work! [Silver] is done., See my handbook / Keep going); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).",
+      "applied": "AC14 / J11 (Cath, 5 Nov): no silver wrap-up screens. After a silver's last step (except a level's last silver) the flow goes straight back to the corridor (no end screen; Cath, 5 Nov 5:19pm) and a small workbook icon button pops in (Open your workbook); after a level's last silver the lift shows Congratulations. The wrap-up data stays only to fill the handbook pages (cover, Define the business, Set your goals, The Brand, Level 2).",
       "status": "decided-cath",
       "rows": [
         11,

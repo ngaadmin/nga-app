@@ -231,6 +231,27 @@ export async function fits(t: Tracker, name: string, primary?: Locator | null) {
       viewport: window.innerHeight,
       limit: tabs ? Math.round(tabs.getBoundingClientRect().top) : window.innerHeight,
       bodyOverflow: body ? body.scrollHeight - body.clientHeight : 0,
+      // Goal sentences: punctuation that starts a rendered line (a "." alone at the left edge).
+      strayPunct: (() => {
+        const sentence = document.querySelector<HTMLElement>("[data-sentence]");
+        if (!sentence) return [] as string[];
+        const pad = parseFloat(getComputedStyle(sentence).paddingLeft) || 0;
+        const left = sentence.getBoundingClientRect().left + pad;
+        const out: string[] = [];
+        const walker = document.createTreeWalker(sentence, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          const text = n.textContent ?? "";
+          for (let i = 0; i < text.length; i++) {
+            if (!/[.,!?;:]/.test(text[i]!)) continue;
+            const r = document.createRange();
+            r.setStart(n, i);
+            r.setEnd(n, i + 1);
+            const box = r.getBoundingClientRect();
+            if (box.width > 0 && box.left - left < 3) out.push(`"${text.slice(i, i + 12)}" starts a line`);
+          }
+        }
+        return out;
+      })(),
     };
   });
   let bottom: number | null = null;
@@ -241,6 +262,7 @@ export async function fits(t: Tracker, name: string, primary?: Locator | null) {
   const problems: string[] = [];
   if (facts.scrollHeight > facts.viewport + 1) problems.push(`scrolls vertically: ${facts.scrollHeight}px in a ${facts.viewport}px window`);
   if (facts.bodyOverflow > 1) problems.push(`workbook body scrolls by ${facts.bodyOverflow}px`);
+  problems.push(...facts.strayPunct);
   if (primary && (bottom === null || bottom > facts.limit)) problems.push(`primary button bottom ${bottom}px is below ${facts.limit}px (window or tab bar)`);
   log({ group: t.group, n: t.count, step: `fit: ${name}`, ok: problems.length === 0, problems, functional: true, notes: JSON.stringify({ ...facts, bottom }), viewport: t.page.viewportSize() });
   expect.soft(problems, `${t.group} fit ${name}`).toEqual([]);

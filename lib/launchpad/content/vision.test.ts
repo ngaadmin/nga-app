@@ -20,7 +20,7 @@ const example: LaunchpadAnswers = {
   "l1-why": rankingAnswer(["make-money", "help-others", "learn-new-skills", "be-my-own-boss"], ["learn-new-skills", "be-my-own-boss"]),
   "l1-cause": selectionAnswer(["animals"]),
   "l1-goal-make-money": fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 3, timeframeUnit: "months", savingFor: "a new bike" }, false),
-  "l1-goal-help-others": fieldsAnswer({ customerCount: 10, benefit: "come-home-to-a-happy-well-looked-after-dog" }, false),
+  "l1-goal-help-others": fieldsAnswer({ customerCount: 10, benefit: "come-home-to-a-happy-well-looked-after-dog", timeframeNumber: 6, timeframeUnit: "months" }, false),
   "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false),
 };
 const without = (a: LaunchpadAnswers, ...keys: string[]) => Object.fromEntries(Object.entries(a).filter(([k]) => !keys.includes(k))) as LaunchpadAnswers;
@@ -62,9 +62,9 @@ describe("vision tokens", () => {
     expect(tokens["cause-percent"]).toBe("10");
   });
   it("goal list joins each filled goal sentence, ranked order, no cause goal, Add another goal last", () => {
-    expect(tokens["goal-list"]).toMatch(/^I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to come home to a happy, well looked-after dog\.$/);
+    expect(tokens["goal-list"]).toMatch(/^I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to come home to a happy, well looked-after dog in 6 months\.$/);
     const t = visionTokens(spec, { ...example, "l1-goal-other": fieldsAnswer({ goalText: "save up" }, false) }, catalog);
-    expect(t["goal-list"]).toMatch(/looked-after dog\. My goal is to save up\.$/);
+    expect(t["goal-list"]).toMatch(/looked-after dog in 6 months\. My goal is to save up\.$/);
   });
   it("single items read alone", () => {
     const one = { ...example, "l1-offer": selectionAnswer(["grooming"]), "l1-why": rankingAnswer(["make-money", "help-others", "learn-new-skills", "be-my-own-boss"], ["help-others", "learn-new-skills", "be-my-own-boss"]) };
@@ -83,7 +83,7 @@ describe("vision tokens", () => {
 describe("compiled vision sentence", () => {
   it("renders the dog walking example", () => {
     const s = compileVision(spec, example, catalog)!;
-    expect(s).toMatch(/^I am starting a dog walking business\. I will offer dog walk.+\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .+ in 3 months\. I'm saving for a new bike\. I want 10 customers to come home to a happy, well looked-after dog\.$/);
+    expect(s).toMatch(/^I am starting a dog walking business\. I will offer dog walk.+\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .+ in 3 months\. I'm saving for a new bike\. I want 10 customers to come home to a happy, well looked-after dog in 6 months\.$/);
   });
   it("drops the cause clause whole when no cause is picked or no percent is set", () => {
     for (const a of [without(example, "l1-cause"), without(example, "l1-goal-support-a-cause"), { ...example, "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 0 }, false) }]) {

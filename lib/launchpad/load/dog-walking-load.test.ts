@@ -92,7 +92,12 @@ describe("dog walking load reader (Final framework Module 1 + tracker L2)", () =
     expect(loop.skipRankItemIds).toEqual([]);
     const help = loop.goals.find((g) => g.rankItemId === "help-others")!;
     if (help.screen.type !== "short-text") throw new Error("expected short-text");
-    expect(help.screen.fields.map((f) => f.name)).toEqual(["customerCount", "benefit"]);
+    expect(help.screen.fields.map((f) => f.name)).toEqual(["customerCount", "benefit", "timeframeNumber", "timeframeUnit"]);
+    // Row 7 (Cath, 5 Nov): "... in [number 1–99] [weeks|months]", weeks preset, both required.
+    const helpUnit = help.screen.fields.find((f) => f.name === "timeframeUnit")!;
+    expect(helpUnit.defaultValue).toBe("weeks");
+    const helpNumber = help.screen.fields.find((f) => f.name === "timeframeNumber")!;
+    expect([helpNumber.min, helpNumber.max, helpNumber.optional, helpUnit.optional]).toEqual([1, 99, undefined, undefined]);
     for (const g of loop.goals) {
       expect((g.screen as { notApplicableLabel?: string }).notApplicableLabel).toBeUndefined();
       if (g.screen.type !== "short-text") continue;

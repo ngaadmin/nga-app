@@ -22,7 +22,7 @@ const L1: LaunchpadAnswers = {
   "l1-why": rankingAnswer(["make-money", "help-others", "learn-new-skills", "be-my-own-boss"], ["learn-new-skills", "be-my-own-boss"]),
   "l1-cause": selectionAnswer(["animals"]),
   "l1-goal-make-money": fieldsAnswer({ amount: 200, currency: "USD", timeframeNumber: 3, timeframeUnit: "months", savingFor: "a new bike" }, false),
-  "l1-goal-help-others": fieldsAnswer({ customerCount: 10, benefit: "have-a-washed-and-groomed-dog" }, false),
+  "l1-goal-help-others": fieldsAnswer({ customerCount: 10, benefit: "have-a-washed-and-groomed-dog", timeframeNumber: 6, timeframeUnit: "months" }, false),
   "l1-goal-support-a-cause": fieldsAnswer({ donatePercent: 10 }, false),
 };
 const ID = { kind: "business-identity", version: 2, shape: "shield", color: "#1D3F9A", icon: "paw", name: "Happy Paws", font: "fredoka-semibold", nameColor: "logo" };
@@ -54,6 +54,13 @@ describe("workbook page 1, the cover", () => {
     expect(document.body.textContent).not.toMatch(/\b(NGA|silver|bronze|gold)\b/i);
   });
 
+  it("filled: the logo is the 112px hero, above a name no bigger than 20px", () => {
+    renderCover({ [IDENTITY_ANSWER_KEY]: ID as never });
+    expect(q("[data-cover-logo='filled'] svg")?.getAttribute("width")).toBe("112");
+    const name = q("[data-cover-name='filled'] [data-business-name]") as HTMLElement;
+    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(20);
+  });
+
   it("each slot fills on its own", () => {
     renderCover({ [IDENTITY_ANSWER_KEY]: { ...ID, name: undefined } as never });
     expect(q("[data-cover-logo='filled']")).toBeTruthy();
@@ -70,7 +77,7 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-cover-name='filled']")?.textContent).toBe("Happy Paws");
     expect(q("[data-vision-quote]")).toBeTruthy();
     const s = q("[data-vision-sentence]")!;
-    expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have a washed and groomed dog\.$/);
+    expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have a washed and groomed dog in 6 months\.$/);
     expect(s.className).toContain("text-[17px]");
     expect(s.className).toContain("leading-[26px]");
     expect(s.className).toContain("text-[#19347D]");

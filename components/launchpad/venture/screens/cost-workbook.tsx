@@ -8,6 +8,7 @@ import {
 } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { AccentLabel, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
+import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 
 function Pencil() {
   return (
@@ -82,7 +83,7 @@ export function CostWorkbookBody({
       )}
       {part === "startup" && (
         <div className="mt-6 flex justify-end">
-          <img src="/assets/illustrations/characters/pairs/prop-pf-m1-startup-kit-r3.webp" alt="" width={96} height={96} className="h-auto w-24" />
+          <Sticker src={ART.kit} alt="" />
         </div>
       )}
       {part !== "startup" && (

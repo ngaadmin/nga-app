@@ -186,9 +186,10 @@ export function PricingSummarySheet() {
       </p>
       <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{idea ? `I could do differently: ${idea}.` : ""}</p>
       <p className="mt-3 text-[13px] text-[#6B7280]">Full list on Pages 3 and 3b. Tap a line to change it.</p>
-      <div className="mt-6 flex items-end justify-between">
-        <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto" />
-        <FlatSticker kind="bulb" />
+      <div className="mt-6 flex items-end gap-3">
+        <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto shrink-0" />
+        <FlatSticker kind="bulb" doodle />
+        <FlatSticker kind="sparkle" doodle />
         <FlatSticker kind="sparkle" doodle />
       </div>
     </div>

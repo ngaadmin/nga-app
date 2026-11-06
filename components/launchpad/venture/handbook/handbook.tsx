@@ -202,7 +202,7 @@ export function Handbook({
         )}
         {page && (
           <div
-            className={`absolute top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[112px] left-[11px] right-[11px]"}`}
+            className={`absolute top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[108px] left-[11px] right-[11px]"}`}
             style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
@@ -228,7 +228,7 @@ export function Handbook({
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[60px] left-3 grid w-[52%] grid-cols-6 gap-1"}>
+        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-6 gap-1"}>
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;
@@ -300,7 +300,7 @@ export function Handbook({
         </div>
         {page?.kind !== "cover" && (
           <>
-            <div className="absolute bottom-[60px] right-3 flex gap-1">
+            <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
               <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
                 <Chevron dir="left" />
               </button>

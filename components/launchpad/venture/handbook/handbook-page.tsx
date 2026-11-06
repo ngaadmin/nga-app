@@ -286,10 +286,13 @@ function CoverPageBody({
   return (
     <div ref={rootRef} className={`relative flex flex-col items-center ${step >= 3 ? "gap-1.5" : "gap-2.5"}`} data-cover="" data-cover-fit-step={step}>
       <img src="/launchpad/workbook/penny-protip.png" alt="" width={46} height={46} className="pointer-events-none absolute bottom-0 right-1 h-[46px] w-auto" />
-      <span className="pointer-events-none absolute right-2 top-1"><FlatSticker kind="sparkle" doodle /></span>
-      <span className="pointer-events-none absolute left-6 top-16"><FlatSticker kind="heart" doodle /></span>
+      <span className="pointer-events-none absolute left-8 top-20"><FlatSticker kind="heart" doodle /></span>
       {hasLogo ? (
-        <div data-cover-logo="filled">
+        <div className="relative">
+          <span className="pointer-events-none absolute -left-5 top-1"><FlatSticker kind="sparkle" doodle /></span>
+          <span className="pointer-events-none absolute -right-4 -top-1"><FlatSticker kind="star" doodle /></span>
+          <span className="pointer-events-none absolute -right-6 bottom-1"><FlatSticker kind="sparkle" doodle /></span>
+          <div data-cover-logo="filled">
           <LogoMark
             shape={answer.shape}
             color={answer.color}
@@ -297,6 +300,7 @@ function CoverPageBody({
             size={COVER_LOGO_PX}
             label={logoMarkLabel(answer)}
           />
+          </div>
         </div>
       ) : (
         <div
@@ -407,6 +411,28 @@ function MiniIdentity() {
  * workbook-summary wrap-up's, or the column Z sections its capture screens
  * name) read from the saved answers. Read-only.
  */
+function DefineMark({ id }: { id: string }) {
+  if (id.includes("offer")) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#FFA503" strokeWidth="1.8" strokeLinecap="round">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M8.5 13.5c1.2 1.8 5.8 1.8 7 0" />
+        <path d="M9 10h.01M15 10h.01" />
+      </svg>
+    );
+  }
+  if (id.includes("why")) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#FFA503" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 15a4.5 4.5 0 1 1 6 0c0 1.4-.7 2.2-1.2 2.8H10.2C9.7 17.2 9 16.4 9 15z" />
+        <path d="M10 19h4M10.6 21h2.8" />
+        <path d="M12 3v1.5M5 8l1.2 1M19 8l-1.2 1" />
+      </svg>
+    );
+  }
+  return null;
+}
+
 function SummaryPageBody({
   page,
   editable,
@@ -427,25 +453,24 @@ function SummaryPageBody({
         <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
         <div className="mt-3">
           {sections.map(({ section }, i) => (
-            <BinderSection
-              key={section.id}
-              section={section}
-              first={i === 0}
-              answers={ctx.answers}
-              catalog={catalog}
-              editing={editing}
-              setEditing={setEditing}
-              setAnswer={ctx.setAnswer}
-            />
+            <div key={section.id} className="relative">
+              {page.silver.id === "l1-s1" && (
+                <span className="pointer-events-none absolute right-0 top-7">
+                  <DefineMark id={section.id} />
+                </span>
+              )}
+              <BinderSection
+                section={section}
+                first={i === 0}
+                answers={ctx.answers}
+                catalog={catalog}
+                editing={editing}
+                setEditing={setEditing}
+                setAnswer={ctx.setAnswer}
+              />
+            </div>
           ))}
         </div>
-        {page.silver.id === "l1-s1" && (
-          <div className="mt-3 flex gap-2">
-            <FlatSticker kind="star" doodle />
-            <FlatSticker kind="heart" doodle />
-            <FlatSticker kind="sparkle" doodle />
-          </div>
-        )}
       </>
     );
   }
@@ -459,12 +484,18 @@ function SummaryPageBody({
       </h2>
       {sections.map(({ section, lines }, i) =>
         lines.length ? (
-          <HandbookSection
-            key={section.id}
-            section={section}
-            lines={lines}
-            doodle={i === 0 ? <Doodle ventureId={iconVentureId} /> : undefined}
-          />
+          <div key={section.id} className="relative">
+            {page.silver.id === "l1-s1" && (
+              <span className="pointer-events-none absolute right-0 top-8">
+                <DefineMark id={section.id} />
+              </span>
+            )}
+            <HandbookSection
+              section={section}
+              lines={lines}
+              doodle={i === 0 ? <Doodle ventureId={iconVentureId} /> : undefined}
+            />
+          </div>
         ) : (
           <div key={section.id} data-handbook-section={section.id}>
             <HandRule />
@@ -476,7 +507,7 @@ function SummaryPageBody({
         ),
       )}
       {page.silver.id === "l1-s1" && (
-        <div className="mt-3 flex gap-2">
+        <div className="mt-2 flex gap-2">
           <FlatSticker kind="star" doodle />
           <FlatSticker kind="heart" doodle />
           <FlatSticker kind="sparkle" doodle />

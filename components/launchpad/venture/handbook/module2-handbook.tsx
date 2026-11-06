@@ -116,6 +116,8 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
       <div className="mt-3 flex items-end gap-2">
         <Sticker src={ART.beagle} alt="" />
         <FlatSticker kind="paw" doodle />
+        <FlatSticker kind="paw" doodle />
+        <FlatSticker kind="paw" doodle />
         <FlatSticker kind="bone" doodle />
         <FlatSticker kind="heart" doodle />
       </div>

@@ -273,28 +273,32 @@ function FindStep({
           <Aqua>Attract the customer</Aqua>
           <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">How will you find your customers?</h3>
           <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{FIND_HINT}</p>
-          <ul className="mt-2">
+          <ul className="mt-1">
             {CHANNELS.map((row) => (
-              <li key={row.id}>
-                <Rule />
-                <span className="flex items-start gap-2 py-1">
+              <li key={row.id} className="border-b border-dashed border-[#E4D3B4] py-0.5">
+                <span className="flex items-start gap-2">
                   <Tick on={channels.includes(row.id)} label={row.label} onClick={() => toggle(row.id)} />
-                  <span className="text-[15px] font-semibold leading-snug text-[#19347D]">{row.label}</span>
+                  <span className="text-[14px] font-semibold leading-tight text-[#19347D]">{row.label}</span>
                 </span>
               </li>
             ))}
           </ul>
-          <div className="mt-3 flex items-end justify-end gap-2"><FlatSticker kind="flyer" /><FlatSticker kind="paw" doodle /></div>
-          <label className="mt-3 block text-[14px] text-[#6B7280]">
-            Also: Add your own (optional)
-            <input
-              aria-label="Add your own channel"
-              maxLength={60}
-              value={extra}
-              onChange={(event) => setExtra(event.target.value)}
-              className="mt-1 w-full border-b border-dashed border-[#E4D3B4] bg-transparent py-1 text-[15px] text-[#19347D] outline-none"
-            />
-          </label>
+          <div className="mt-2 flex items-end justify-between gap-2">
+            <label className="min-w-0 flex-1 text-[14px] text-[#6B7280]">
+              Also: Add your own (optional)
+              <input
+                aria-label="Add your own channel"
+                maxLength={60}
+                value={extra}
+                onChange={(event) => setExtra(event.target.value)}
+                className="mt-1 w-full border-b border-dashed border-[#E4D3B4] bg-transparent py-1 text-[15px] text-[#19347D] outline-none"
+              />
+            </label>
+            <span className="flex shrink-0 items-end gap-1">
+              <FlatSticker kind="paw" doodle />
+              <FlatSticker kind="flyer" />
+            </span>
+          </div>
         </>
       )}
     </WorkbookFrame>

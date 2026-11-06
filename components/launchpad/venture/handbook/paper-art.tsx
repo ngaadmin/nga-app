@@ -41,7 +41,7 @@ export function Washi() {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute right-3 top-3 z-raised h-4 w-[60px] rotate-3 bg-[#3FB7DA] opacity-50 [clip-path:polygon(0_8%,6%_0,12%_10%,18%_0,82%_0,88%_12%,94%_0,100%_10%,100%_92%,94%_100%,88%_88%,82%_100%,18%_100%,12%_90%,6%_100%,0_88%)]"
+      className="pointer-events-none absolute right-3 top-16 z-raised h-4 w-[60px] rotate-3 bg-[#3FB7DA] opacity-50 [clip-path:polygon(0_8%,6%_0,12%_10%,18%_0,82%_0,88%_12%,94%_0,100%_10%,100%_92%,94%_100%,88%_88%,82%_100%,18%_100%,12%_90%,6%_100%,0_88%)]"
       data-washi=""
     />
   );

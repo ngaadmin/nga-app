@@ -49,11 +49,11 @@ export function WorkbookFrame({
       <div className="relative min-h-0 flex-1 px-[11px]">
         <div className="relative h-full overflow-hidden rounded-2xl border border-[#EDE7DC]" style={{ background: PAPER_BACKGROUND }} data-paper-card="">
           <SpiralBinding />
-          <div className="h-full overflow-x-hidden overflow-y-auto pb-8 pl-11 pr-4 pt-4">{children}</div>
+          <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-11 pr-4 pt-3">{children}</div>
           {marker && <p className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-[#9CA3AF]">{marker}</p>}
         </div>
       </div>
-      <div className="flex flex-none items-end gap-2 px-3 pb-1 pt-2.5">
+      <div className="relative z-raised -mt-1.5 flex flex-none items-end gap-2 px-3 pb-1">
         <div className="grid w-1/2 grid-cols-6 gap-1" aria-label="Workbook floors">
           {[1, 2, 3, 4, 5, 6].map((n) => {
             const selected = n === level;

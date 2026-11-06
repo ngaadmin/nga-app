@@ -37,14 +37,16 @@ describe("Know your cost flow", () => {
     expect(screen.getByText("Continue stays off until both sections are done.")).toBeTruthy();
 
     fireEvent.click(screen.getAllByRole("button", { name: "Add costs" })[0]!);
-    expect(screen.getByText("Buy once to get started — you'll keep using these on jobs.")).toBeTruthy();
+    expect(screen.getByText("Buy once to get started. You will keep using these on jobs.")).toBeTruthy();
     expect(screen.getByText("Water bottle and fold-up bowl")).toBeTruthy();
     expect(screen.getByText("Poop bags (big pack)")).toBeTruthy();
+    expect(screen.getByText("Clicker")).toBeTruthy();
     expect(screen.queryByText("Dog shampoo")).toBeNull();
     expect(screen.getAllByText("Treat pouch")).toHaveLength(1);
-    expect(screen.getAllByText("Hand sanitizer")).toHaveLength(1);
     const pouch = screen.getByRole("textbox", { name: "Amount for Treat pouch" }) as HTMLInputElement;
-    expect(pouch.value).toBe("0");
+    expect(pouch.value).toBe("10");
+    fireEvent.change(pouch, { target: { value: "0" } });
+    fireEvent.blur(pouch);
 
     fireEvent.click(screen.getByRole("button", { name: "Remove Notebook for owners' notes" }));
     expect(screen.queryByText("Notebook for owners' notes")).toBeNull();

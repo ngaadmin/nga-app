@@ -1,14 +1,12 @@
 /**
- * PROVISIONAL dog-walking cost catalog for the test route.
+ * Dog-walking Know your cost presets from the Final Service Business
+ * Framework (sheet "Final Service Business Framewor").
  *
- * Starter-gear names (except the two r5 extras called out below) are the
- * Final framework row 17 options. The sheet does not yet say which service
- * each item belongs to, and it has no marketing split or restock cents.
- * Those links, the marketing rows, the amounts, and the per-service restock
- * lines are sample data until Storybird fills the framework. Do not treat
- * them as the product catalog.
- *
- * Dog sitting has no starter gear (framework notes on row 17).
+ * Row 18 is the parent bronze: Marketing & setup defaults in N18–P18.
+ * Rows 19–23 are lookup rows only (not learner screens), one per
+ * business_offer. Starter gear is the union of those rows for the services
+ * the learner already chose, deduped by item name. Restock for screen D
+ * comes from that service's Fields list.
  */
 import type { LaunchpadBronze, LaunchpadKnowYourCostScreen } from "@/lib/launchpad/content/types";
 
@@ -23,7 +21,7 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
     servicesFrom: "l1-offer",
     showTotals: SHOW_COST_TOTALS,
     sourceNote:
-      "Provisional test fixture. Starter-gear names follow Final framework row 17. Amounts, marketing rows, service links, and restock lines are sample data until Storybird fills the framework.",
+      "Content from Final framework rows 18–23. Row 18 is Marketing and setup. Rows 19–23 are per-service starter gear and restock lookups.",
     copy: {
       hubIntro: "Figure out what you spend once to start, and what each job costs you.",
       startupCard: "Things you buy once before your first job.",
@@ -31,7 +29,7 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
       startupIntro: "Buy once before your first job. Put 0 if you already have it. Remove any you don't need.",
       marketingLabel: "Marketing & setup",
       starterLabel: "Starter gear",
-      starterNote: "Buy once to get started — you'll keep using these on jobs.",
+      starterNote: "Buy once to get started. You will keep using these on jobs.",
       ongoingIntro: "These costs repeat each job. Tap Calculate the cost for each service. Put 0 for anything you already have.",
       serviceIntro:
         "What do you restock for one {service} job? Amounts are small — change any you need. Put 0 if you already have it, or remove a row you don't need.",
@@ -40,21 +38,31 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
       workbookHint: "You'll use these when you set your price. Totals stay calculated.",
       hubWait: "Continue stays off until both sections are done.",
     },
+    // Row 18, N–P. Whole dollars.
     marketing: [
       { id: "flyers", label: "Flyers or business cards", amount: 15 },
       { id: "logo-shirt", label: "T-shirt with your logo", amount: 22 },
       { id: "owners-notebook", label: "Notebook for owners' notes", amount: 5 },
     ],
+    // Rows 19–23 starter gear. Shared names stay as separate rows so the
+    // union can dedupe by item name (Treat pouch, Treats starter pack).
     starterGear: [
-      { id: "water-bowl", label: "Water bottle and fold-up bowl", amount: 12, serviceIds: ["dog-walking", "dog-training"] },
-      { id: "poop-bag-pack", label: "Poop bags (big pack)", amount: 8, serviceIds: ["dog-walking"] },
-      { id: "bright-top", label: "Bright or reflective top", amount: 14, serviceIds: ["dog-walking"] },
-      { id: "hand-sanitizer", label: "Hand sanitizer", amount: 4, serviceIds: ["dog-walking", "dog-training", "grooming"] },
-      { id: "treat-pouch", label: "Treat pouch", amount: 0, serviceIds: ["dog-walking", "dog-training"] },
-      { id: "flashlight", label: "Small flashlight", amount: 9, serviceIds: ["dog-walking"] },
-      { id: "treats-starter", label: "Treats (starter pack)", amount: 10, serviceIds: ["dog-walking", "dog-training"] },
-      { id: "dog-shampoo", label: "Dog shampoo", amount: 8, serviceIds: ["grooming"] },
+      { id: "walk-bowl", label: "Water bottle and fold-up bowl", amount: 12, serviceIds: ["dog-walking"] },
+      { id: "walk-poop-pack", label: "Poop bags (big pack)", amount: 8, serviceIds: ["dog-walking"] },
+      { id: "walk-treat-pouch", label: "Treat pouch", amount: 10, serviceIds: ["dog-walking"] },
+      { id: "walk-treats-pack", label: "Treats (starter pack)", amount: 10, serviceIds: ["dog-walking"] },
+      { id: "walk-reflective", label: "Reflective band or clip-on light", amount: 6, serviceIds: ["dog-walking"] },
+      { id: "groom-shampoo", label: "Dog shampoo", amount: 8, serviceIds: ["grooming"] },
+      { id: "groom-towels", label: "Towels (2-pack)", amount: 12, serviceIds: ["grooming"] },
+      { id: "groom-brush", label: "Slicker brush", amount: 10, serviceIds: ["grooming"] },
+      { id: "groom-clippers", label: "Nail clippers", amount: 9, serviceIds: ["grooming"] },
+      { id: "train-treat-pouch", label: "Treat pouch", amount: 10, serviceIds: ["dog-training"] },
+      { id: "train-treats-pack", label: "Treats (starter pack)", amount: 10, serviceIds: ["dog-training"] },
+      { id: "train-clicker", label: "Clicker", amount: 5, serviceIds: ["dog-training"] },
+      { id: "train-lead", label: "Training lead", amount: 15, serviceIds: ["dog-training"] },
     ],
+    // Fields restock lists on rows 19–23. Dog sitting has restock and no
+    // starter gear. Manage bookings has neither.
     ongoing: [
       {
         serviceId: "dog-walking",
@@ -65,17 +73,27 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
         ],
       },
       {
-        serviceId: "dog-training",
+        serviceId: "grooming",
         items: [
-          { id: "treats", label: "Treats", amount: 0.4 },
-          { id: "sanitizer-top-up", label: "Hand sanitizer top-up", amount: 0.15 },
+          { id: "shampoo-top-up", label: "Shampoo top-up", amount: 0.4 },
+          { id: "towel-wash", label: "Towel wash share", amount: 0.25 },
+          { id: "ear-wipe", label: "Ear wipe", amount: 0.15 },
         ],
       },
       {
-        serviceId: "grooming",
-        items: [{ id: "shampoo-top-up", label: "Shampoo top-up", amount: 0.35 }],
+        serviceId: "dog-sitting",
+        items: [
+          { id: "treats", label: "Treats", amount: 0.3 },
+          { id: "poop-bags", label: "Poop bags", amount: 0.1 },
+        ],
       },
-      { serviceId: "dog-sitting", items: [] },
+      {
+        serviceId: "dog-training",
+        items: [
+          { id: "treats", label: "Treats", amount: 0.35 },
+          { id: "poop-bags", label: "Poop bags", amount: 0.05 },
+        ],
+      },
       { serviceId: "manage-bookings-for-others", items: [] },
     ],
   };

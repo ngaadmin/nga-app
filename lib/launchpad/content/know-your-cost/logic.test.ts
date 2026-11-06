@@ -31,34 +31,48 @@ function gearIds(ids: readonly string[]): string[] {
 }
 
 describe("starter gear follows the services chosen in Gold 1", () => {
-  it("keeps items for the chosen services and lists a shared item once", () => {
+  it("unions the lookup rows and lists a shared item name once", () => {
     const gear = starterGearFor(screen.starterGear, ["dog-walking", "dog-training"]);
-    const ids = gear.map((item) => item.id);
-    expect(ids).toEqual(gearIds(["dog-walking", "dog-training"]));
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toContain("water-bowl");
-    expect(ids).toContain("treat-pouch");
-    expect(ids).toContain("poop-bag-pack");
-    expect(ids).not.toContain("dog-shampoo");
-    expect(gear.filter((item) => item.id === "water-bowl")).toHaveLength(1);
-    expect(gear.filter((item) => item.id === "treat-pouch")).toHaveLength(1);
+    const names = gear.map((item) => item.label);
+    expect(names.filter((name) => name === "Treat pouch")).toHaveLength(1);
+    expect(names.filter((name) => name === "Treats (starter pack)")).toHaveLength(1);
+    expect(names).toContain("Water bottle and fold-up bowl");
+    expect(names).toContain("Poop bags (big pack)");
+    expect(names).toContain("Reflective band or clip-on light");
+    expect(names).toContain("Clicker");
+    expect(names).toContain("Training lead");
+    expect(names).not.toContain("Dog shampoo");
+    // Walking's row comes first, so its id is the one that stays.
+    expect(gear.find((item) => item.label === "Treat pouch")?.id).toBe("walk-treat-pouch");
+    expect(gear.find((item) => item.label === "Treat pouch")?.amount).toBe(10);
   });
 
-  it("drops a duplicate catalog row that serves a second chosen service", () => {
-    const shared: LaunchpadCostItem = { id: "water-bowl", label: "Water bottle and fold-up bowl", amount: 12, serviceIds: ["dog-training"] };
+  it("drops a later row with the same item name even when the id differs", () => {
+    const shared: LaunchpadCostItem = { id: "extra-bowl", label: "Water bottle and fold-up bowl", amount: 99, serviceIds: ["dog-training"] };
     const gear = starterGearFor([...screen.starterGear, shared], ["dog-walking", "dog-training"]);
-    expect(gear.filter((item) => item.id === "water-bowl")).toHaveLength(1);
+    expect(gear.filter((item) => item.label === "Water bottle and fold-up bowl")).toEqual([
+      expect.objectContaining({ id: "walk-bowl", amount: 12 }),
+    ]);
   });
 
-  it("dog sitting adds no starter gear", () => {
+  it("dog sitting and manage bookings add no starter gear", () => {
     expect(starterGearFor(screen.starterGear, ["dog-sitting"])).toEqual([]);
+    expect(starterGearFor(screen.starterGear, ["manage-bookings-for-others"])).toEqual([]);
+    const sitting = seedCosts(screen, [{ id: "dog-sitting", label: "Dog sitting" }]);
+    expect(sitting.startup.starterGear).toEqual([]);
+    expect(sitting.ongoing[0]?.lines.map((line) => [line.label, line.amount])).toEqual([
+      ["Treats", 0.3],
+      ["Poop bags", 0.1],
+    ]);
+    const bookings = seedCosts(screen, [{ id: "manage-bookings-for-others", label: "Manage bookings for others" }]);
+    expect(bookings.startup.starterGear).toEqual([]);
+    expect(bookings.ongoing[0]?.lines).toEqual([]);
   });
 
-  it("grooming keeps shampoo and leaves the walking pack off", () => {
+  it("grooming keeps its own gear and leaves the walking pack off", () => {
     const ids = gearIds(["grooming"]);
-    expect(ids).toContain("dog-shampoo");
-    expect(ids).toContain("hand-sanitizer");
-    expect(ids).not.toContain("poop-bag-pack");
+    expect(ids).toEqual(["groom-shampoo", "groom-towels", "groom-brush", "groom-clippers"]);
+    expect(ids).not.toContain("walk-poop-pack");
   });
 });
 
@@ -110,20 +124,24 @@ describe("amounts: $0 is allowed, start-up is whole dollars, ongoing keeps cents
 
   it("keeps a $0 starter row in the total and does not roll ongoing cents into the grand total", () => {
     const answer = seedCosts(screen, [walking, training]);
-    expect(answer.startup.starterGear.find((line) => line.id === "treat-pouch")?.amount).toBe(0);
-    const done: CostsAnswer = {
+    const pouch = answer.startup.starterGear.find((line) => line.label === "Treat pouch");
+    expect(pouch?.amount).toBe(10);
+    const withZero: CostsAnswer = {
       ...answer,
-      startup: { ...answer.startup, done: true },
+      startup: {
+        ...answer.startup,
+        starterGear: answer.startup.starterGear.map((line) => (line.id === pouch?.id ? { ...line, amount: 0 } : line)),
+        done: true,
+      },
       ongoing: answer.ongoing.map((service) => ({ ...service, done: true })),
     };
-    const view = workbookView(done);
-    expect(view.starterGear.find((line) => line.id === "treat-pouch")?.amount).toBe(0);
-    expect(view.startupTotal).toBe(startupTotal(done));
+    const view = workbookView(withZero);
+    expect(view.starterGear.find((line) => line.label === "Treat pouch")?.amount).toBe(0);
+    expect(view.startupTotal).toBe(startupTotal(withZero));
     expect(view.grandTotal).toBe(view.startupTotal);
     const walkingJob = view.ongoing.find((service) => service.serviceId === "dog-walking");
     expect(walkingJob?.perJob).toBe(0.4);
-    expect(view.ongoing.find((service) => service.serviceId === "dog-training")?.perJob).toBe(0.55);
-    expect(view.grandTotal).not.toBe(view.grandTotal + (walkingJob?.perJob ?? 0));
+    expect(view.ongoing.find((service) => service.serviceId === "dog-training")?.perJob).toBe(0.4);
     expect(formatStartupMoney(0, "USD")).toBe("$0");
     expect(formatStartupMoney(view.startupTotal, "USD")).toMatch(/^\$\d+$/);
     expect(formatOngoingMoney(0.4, "USD")).toBe("$0.40");
@@ -138,7 +156,7 @@ describe("workbook My costs mirrors the saved answer", () => {
       ...answer,
       startup: {
         marketing: answer.startup.marketing.map((line) => (line.id === "flyers" ? { ...line, amount: 0 } : line)),
-        starterGear: answer.startup.starterGear.filter((line) => line.id !== "flashlight"),
+        starterGear: answer.startup.starterGear.filter((line) => line.id !== "walk-reflective"),
         done: true,
       },
       ongoing: answer.ongoing.map((service) => ({ ...service, done: true })),
@@ -148,7 +166,7 @@ describe("workbook My costs mirrors the saved answer", () => {
       saved.startup.marketing.map((line) => [line.label, line.amount]),
     );
     expect(view.starterGear.map((line) => line.id)).toEqual(saved.startup.starterGear.map((line) => line.id));
-    expect(view.starterGear.map((line) => line.id)).not.toContain("flashlight");
+    expect(view.starterGear.map((line) => line.id)).not.toContain("walk-reflective");
     expect(view.ongoing.map((service) => service.label)).toEqual(["Dog walking", "Grooming"]);
     expect(view.marketing.find((line) => line.id === "flyers")?.amount).toBe(0);
   });
@@ -184,9 +202,9 @@ describe("workbook My costs mirrors the saved answer", () => {
   it("refreshes starter gear when the chosen services change and the list is not finished", () => {
     const first = seedCosts(screen, [walking]);
     const next = ensureCosts(first, screen, [walking, grooming]);
-    expect(next.startup.starterGear.map((line) => line.id)).toContain("dog-shampoo");
-    expect(next.startup.starterGear.filter((line) => line.id === "water-bowl")).toHaveLength(1);
+    expect(next.startup.starterGear.map((line) => line.id)).toContain("groom-shampoo");
+    expect(next.startup.starterGear.filter((line) => line.label === "Treat pouch")).toHaveLength(1);
     const finished = ensureCosts({ ...first, startup: { ...first.startup, done: true } }, screen, [grooming]);
-    expect(finished.startup.starterGear.map((line) => line.id)).not.toContain("dog-shampoo");
+    expect(finished.startup.starterGear.map((line) => line.id)).not.toContain("groom-shampoo");
   });
 });

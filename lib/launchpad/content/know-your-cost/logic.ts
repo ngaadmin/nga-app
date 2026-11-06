@@ -67,18 +67,26 @@ export function chosenServices(
   });
 }
 
+function itemNameKey(label: string): string {
+  return label.trim().toLowerCase();
+}
+
 /**
- * Starter gear for the chosen services. An item with several services is
- * listed once. Items for services the learner did not pick are left off.
+ * Starter gear for the chosen services. Rows for services the learner did
+ * not pick are left off. The same item on more than one service (same name,
+ * or the same id) is listed once; the first row in catalog order wins.
  */
 export function starterGearFor(items: readonly LaunchpadCostItem[], serviceIds: readonly string[]): LaunchpadCostItem[] {
   const chosen = new Set(serviceIds);
-  const seen = new Set<string>();
+  const seenIds = new Set<string>();
+  const seenNames = new Set<string>();
   const out: LaunchpadCostItem[] = [];
   for (const item of items) {
     if (!item.serviceIds?.some((id) => chosen.has(id))) continue;
-    if (seen.has(item.id)) continue;
-    seen.add(item.id);
+    const name = itemNameKey(item.label);
+    if (seenIds.has(item.id) || seenNames.has(name)) continue;
+    seenIds.add(item.id);
+    seenNames.add(name);
     out.push(item);
   }
   return out;

@@ -117,7 +117,7 @@ function InlineMenu<T extends { id: string; label: string }>({
         </svg>
       </button>
       {open && (
-        <ul className="absolute left-0 z-20 mt-1 min-w-[160px] rounded-xl bg-white py-1 shadow-[0_8px_24px_rgba(25,52,125,0.16)]" data-open-menu="">
+        <ul className="absolute left-0 z-overlay mt-1 min-w-[160px] rounded-xl bg-white py-1 shadow-[0_8px_24px_rgba(25,52,125,0.16)]" data-open-menu="">
           {options.map((row) => (
             <li key={row.id}>
               <button

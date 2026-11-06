@@ -15,7 +15,6 @@ import {
   hasHandbook,
   isHandbookPageEditable,
   withShortcutSampleAnswers,
-  partLabel,
 } from "@/lib/launchpad/venture-test/handbook";
 import {
   EMPTY_VENTURE_TEST_PROGRESS,
@@ -91,7 +90,8 @@ describe("handbook pages", () => {
     expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Set your goals" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
     const allPages = handbookPages(ALL, FLOORS);
-    expect(new Set(allPages.map((p) => p.silver.id)).size).toBe(SILVERS.length);
+    expect(allPages.some((p) => p.silver.id === "l3-s1")).toBe(false);
+    expect(allPages.some((p) => p.sheet === "ready-a")).toBe(true);
   });
 
   it("is editable only from the building and only for a completed silver", () => {
@@ -361,9 +361,9 @@ describe("<Handbook>", () => {
     render(<Harness entry="building" initial={ALL} />);
     fireEvent.click(within(screen.getByRole("navigation", { name: "Workbook floors" })).getByRole("button", { name: /^Level 3/ }));
     const l3 = document.querySelector("[data-handbook-page]") as HTMLElement;
-    const silver = FLOORS[2]!.silvers[0]!;
-    expect(within(l3).getByRole("heading", { name: silver.title })).toBeTruthy();
-    expect(within(l3).getAllByRole("listitem").map((li) => li.textContent)).toEqual(silver.bronzes.map((b, i) => partLabel(b.title, i)));
+    expect(l3.getAttribute("data-handbook-page")).toBe("ready-a");
+    expect(within(l3).getByRole("heading", { name: "Getting Ready" })).toBeTruthy();
+    expect(within(l3).queryByText("What I did")).toBeNull();
   });
 
   it("AA6 to AA8: the goals page edits the skill pick inline, swapping the success line until the learner types", () => {

@@ -17,12 +17,22 @@ function Chip({
   tone,
   label,
   onClick,
+  lined = false,
 }: {
   selected: boolean;
   tone: "package" | "extra";
   label: string;
   onClick: () => void;
+  lined?: boolean;
 }) {
+  if (lined) {
+    return (
+      <button type="button" aria-pressed={selected} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-2 text-left text-[15px] text-[#19347D]">
+        <span className={`flex size-5 flex-none items-center justify-center rounded-[4px] text-[12px] text-white ${selected ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}>{selected ? "✓" : ""}</span>
+        {label}
+      </button>
+    );
+  }
   const on =
     tone === "extra"
       ? "border-[#F5B942] text-[#19347D]"
@@ -96,16 +106,14 @@ export function OfferLoopFlow({
   };
   const ready = onWhen || (!!offering && (offering.packages.length > 0 || !!offering.packagesExtra));
 
+  const anyPackage = draft.offerings.some((row) => row.packages.length > 0 || !!row.packagesExtra);
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step={onWhen ? "when" : service?.id}>
+    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
       <div className="mx-5 mt-2 flex items-center gap-2">
         <button type="button" aria-label="Back" onClick={() => (step === 0 ? onExit() : setStep(step - 1))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
         <h1 className="min-w-0 flex-1 font-heading text-[22px] font-bold text-[#19347D]">{onWhen ? screen.copy.whenTitle : service?.label}</h1>
-        <span className="rounded-full bg-[#E7F8FC] px-2.5 py-1 text-[12px] font-semibold text-[#0A8FA8]">
-          {onWhen ? "Last step" : `Service ${step + 1} of ${Math.max(services.length, 1)}`}
-        </span>
       </div>
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-3">
         <p className="text-[14px] leading-snug text-[#6B7280]">
@@ -123,7 +131,7 @@ export function OfferLoopFlow({
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {catalog.packages.map((item) => (
-                <Chip key={item.id} tone="package" label={item.label} selected={offering.packages.includes(item.id)} onClick={() => patchOffering(offering.serviceId, (row) => ({ ...row, packages: toggle(row.packages, item.id) }))} />
+                <Chip lined key={item.id} tone="package" label={item.label} selected={offering.packages.includes(item.id)} onClick={() => patchOffering(offering.serviceId, (row) => ({ ...row, packages: toggle(row.packages, item.id) }))} />
               ))}
             </div>
             <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "package" ? null : "package")}>{screen.copy.addPackage}</button>
@@ -136,7 +144,7 @@ export function OfferLoopFlow({
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {catalog.extras.map((item) => (
-                <Chip key={item.id} tone="extra" label={item.label} selected={offering.addons.includes(item.id)} onClick={() => patchOffering(offering.serviceId, (row) => ({ ...row, addons: toggle(row.addons, item.id) }))} />
+                <Chip lined key={item.id} tone="extra" label={item.label} selected={offering.addons.includes(item.id)} onClick={() => patchOffering(offering.serviceId, (row) => ({ ...row, addons: toggle(row.addons, item.id) }))} />
               ))}
             </div>
             <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "addon" ? null : "addon")}>{screen.copy.addExtra}</button>
@@ -161,7 +169,7 @@ export function OfferLoopFlow({
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {screen.times.map((item) => (
-                <Chip key={item.id} tone="package" label={item.label} selected={draft.availability.includes(item.id)} onClick={() => write({ ...draft, availability: toggle(draft.availability, item.id) })} />
+                <Chip lined key={item.id} tone="package" label={item.label} selected={draft.availability.includes(item.id)} onClick={() => write({ ...draft, availability: toggle(draft.availability, item.id) })} />
               ))}
             </div>
             <button type="button" className="mt-3 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "time" ? null : "time")}>{screen.copy.addTime}</button>

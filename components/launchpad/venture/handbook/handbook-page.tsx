@@ -32,12 +32,12 @@ import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import {
   BTN_CYAN_COMPACT,
 } from "@/components/launchpad/venture-test/venture-test-ui";
-import { costsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
+import { costsOf, practiceRunOf, selectionOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
-import { FundingSheet, JobsSheet, PriceSheet } from "@/components/launchpad/venture/handbook/planning-sheets";
+import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { ReadyWrap } from "@/components/launchpad/venture/screens/getting-ready-flow";
 
 /*
@@ -217,6 +217,19 @@ function RocketDoodle() {
  */
 const COVER_LOGO_PX = 80;
 
+function WhatWeSell() {
+  const ctx = useLaunchpadAnswers();
+  const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer").map((service) => service.label);
+  if (!labels.length) return null;
+  const sentence = labels.length === 1 ? labels[0] : labels.length === 2 ? `${labels[0]} and ${labels[1]}` : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+  return (
+    <div className="mt-2" data-what-we-sell="">
+      <AccentLabel>What we sell</AccentLabel>
+      <p className="mt-1 text-[14px] leading-snug text-[#19347D]">{sentence}.</p>
+    </div>
+  );
+}
+
 function CoverPageBody({
   page,
   editable,
@@ -271,6 +284,7 @@ function CoverPageBody({
 
   return (
     <div ref={rootRef} className={`relative flex flex-col items-center ${step >= 3 ? "gap-1.5" : "gap-2.5"}`} data-cover="" data-cover-fit-step={step}>
+      <img src="/assets/illustrations/characters/penny/penny-protip-512.webp" alt="" width={46} height={46} className="pointer-events-none absolute bottom-0 right-1 h-[46px] w-auto" />
       {hasLogo ? (
         <div data-cover-logo="filled">
           <LogoMark
@@ -348,6 +362,7 @@ function CoverPageBody({
       <div className="flex w-full flex-col">
         <HandRule className={step >= 3 ? "mb-2 mt-2.5" : "mb-3.5 mt-5"} />
         {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} textStep={step} />}
+        <WhatWeSell />
       </div>
     </div>
   );
@@ -513,8 +528,14 @@ export function HandbookPage({
         <PriceSheet />
       ) : page.sheet === "jobs" ? (
         <JobsSheet />
+      ) : page.sheet === "pricing-b" ? (
+        <PricingSummarySheet />
+      ) : page.sheet === "plan-1" || page.sheet === "plan-2" || page.sheet === "plan-3" || page.sheet === "plan-4" ? (
+        <PlanningWrapSheet sheet={page.sheet} />
       ) : page.sheet === "funding" ? (
         <FundingSheet />
+      ) : page.silver.id === "l2-s1" ? (
+        <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.sheet === "ready-a" || page.sheet === "ready-b" || page.sheet === "ready-c" ? (
         <ReadyWrapPage sheet={page.sheet} />
       ) : page.kind === "cover" ? (
@@ -542,10 +563,9 @@ function ProductOrSummary({
   iconVentureId: string;
 }) {
   const ctx = useLaunchpadAnswers();
-  if (ctx?.answers && "l2-offer" in ctx.answers && ctx.answers["l2-offer"]?.kind === "offer") {
-    return <ProductHandbook editable={editable} />;
-  }
-  return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
+  if (ctx?.answers && ctx.answers["l2-offer"]?.kind === "offer") return <ProductHandbook editable={editable} />;
+  if (page.kind === "summary") return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
+  return <PlaceholderPageBody page={page} />;
 }
 
 function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) {

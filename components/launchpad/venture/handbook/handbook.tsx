@@ -21,10 +21,15 @@ import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/v
 const READ_ONLY_SAVE = () => {};
 
 const SHEET_LABEL: Record<string, string> = {
+  "pricing-b": "Page 2b",
   "costs-a": "Page 3",
   "costs-b": "Page 3b",
   price: "Page 4",
   jobs: "Page 5",
+  "plan-1": "Page 6",
+  "plan-2": "Page 6b",
+  "plan-3": "Page 7",
+  "plan-4": "Page 7b",
   funding: "Page 7",
   "ready-a": "Page 8",
   "ready-b": "Page 9",
@@ -84,6 +89,7 @@ export function Handbook({
   onClose,
   onBackToLift,
   onEditCosts,
+  initialSheet,
 }: {
   entry: HandbookEntry;
   businessName: string;
@@ -97,12 +103,18 @@ export function Handbook({
   onBackToLift?: () => void;
   /** Pencil on My costs: open that sheet in the task. */
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
+  /** Open on a named sheet, such as the Planning wrap after Jobs. */
+  initialSheet?: string;
 }) {
   const pages = handbookPages(progress, floors);
   const ghost = handbookGhost(progress, floors);
   const tabs = handbookTabs(progress, floors);
   // Always page 1 first; Next page (or a left swipe) moves forward in order.
-  const [index, setIndex] = useState(() => handbookOpenIndex(pages));
+  const [index, setIndex] = useState(() => {
+    if (!initialSheet) return handbookOpenIndex(pages);
+    const found = pages.findIndex((item) => item.sheet === initialSheet);
+    return found === -1 ? handbookOpenIndex(pages) : found;
+  });
   const at = Math.min(index, Math.max(0, pages.length - 1));
   const page = pages[at];
   const isLast = at === pages.length - 1;
@@ -185,7 +197,7 @@ export function Handbook({
         )}
         {page && (
           <div
-            className={`absolute top-1 z-raised rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[112px] left-[11px] right-[11px]"}`}
+            className={`absolute top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[148px] left-[11px] right-[11px]"}`}
             style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
@@ -198,7 +210,7 @@ export function Handbook({
           >
             <SpiralBinding />
             <Washi />
-            <div className="h-full overflow-y-auto pb-10 pl-10 pr-5 pt-5" data-paper-scroll="">
+            <div className="h-full overflow-x-hidden overflow-y-auto pb-16 pl-10 pr-5 pt-5" data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
@@ -211,14 +223,25 @@ export function Handbook({
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[58px] left-3 right-[100px] grid grid-cols-6 gap-1"}>
+        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[72px] left-3 grid w-[52%] grid-cols-6 gap-1"}>
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;
+            const later = !!page && page.kind !== "cover" && t.level > page.level;
             // The floor being viewed gets the app's orange ring (outline, so it sits outside
             // the 44px tab and stacks with any state styling) whatever the tab's state.
             const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
-            const base = `${page?.kind === "cover" ? "flex h-[58px] w-11 flex-col gap-1 rounded-[10px] text-[13px]" : "flex h-9 w-11 items-center justify-center rounded-[7px] border text-[12px]"} ${viewedRing}`;
+            const base = `${page?.kind === "cover" ? "flex h-[58px] w-11 flex-col gap-1 rounded-[10px] text-[13px]" : "flex h-11 w-11 items-center justify-center rounded-b-[7px] rounded-t-[2px] border text-[12px]"} ${viewedRing}`;
+            const folder = page?.kind !== "cover";
+            const fill = !folder
+              ? t.state === "current"
+                ? "bg-[#3FB7DA] text-white"
+                : "bg-[#F3F4F6] text-[#374151]"
+              : viewing
+                ? "border-[#19347D] bg-white font-semibold text-[#19347D]"
+                : later
+                  ? "border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#C4C0B8]"
+                  : "border-[#E7E1D6] bg-[#F3EFE6] font-semibold text-[#6B645C]";
             if (!t.tappable)
               return (
                 <button
@@ -227,12 +250,12 @@ export function Handbook({
                   disabled
                   aria-label={`${label}, not earned yet`}
                   aria-current={viewing ? "true" : undefined}
-                  className={`${base} font-medium text-[#9CA3AF] shadow-[inset_0_0_0_1px_#E5E7EB]`}
+                  className={`${base} font-medium text-[#9CA3AF] ${folder ? "border-[#E5E7EB] bg-[#F7F5F1]" : "shadow-[inset_0_0_0_1px_#E5E7EB]"}`}
                   data-tab-state={t.state}
                   data-viewed={viewing ? "" : undefined}
                 >
                   L{t.level}
-                  <SmallLock />
+                  {folder ? null : <SmallLock />}
                 </button>
               );
             return (
@@ -242,7 +265,7 @@ export function Handbook({
                 aria-label={label}
                 aria-current={viewing ? "true" : undefined}
                 onClick={() => go(handbookTabTarget(pages, t.level))}
-                className={`${base} font-semibold ${t.state === "current" ? "bg-[#3FB7DA] text-white" : "bg-[#F3F4F6] text-[#374151]"}`}
+                className={`${base} ${fill}`}
                 data-tab-state={t.state}
                 data-viewed={viewing ? "" : undefined}
               >
@@ -252,23 +275,44 @@ export function Handbook({
           })}
         </nav>
 
-        <div className="absolute inset-x-0 bottom-1 flex h-11 items-center justify-center gap-2">
-          <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-full disabled:opacity-40">
-            <Chevron dir="left" />
-          </button>
+        <div className={page?.kind === "cover" ? "absolute inset-x-0 bottom-1 flex h-11 items-center justify-center gap-2" : "sr-only"}>
+          {page?.kind === "cover" && (
+            <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-full disabled:opacity-40">
+              <Chevron dir="left" />
+            </button>
+          )}
           <div className="flex items-center gap-[7px]" aria-hidden="true" data-page-dots="">
             {pages.map((p, i) => (
               <span key={`${p.kind}-${p.silver.id}-${p.sheet ?? i}`} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
             ))}
             {ghost && <span className="size-1.5 rounded-full shadow-[inset_0_0_0_1px_#9CA3AF]" />}
           </div>
-          <span className="sr-only" aria-live="polite">
-            Page {at + 1} of {pages.length}
-          </span>
-          <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-full disabled:opacity-40">
-            <Chevron dir="right" />
-          </button>
+          {page?.kind === "cover" && (
+            <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-full disabled:opacity-40">
+              <Chevron dir="right" />
+            </button>
+          )}
         </div>
+        {page?.kind !== "cover" && (
+          <>
+            <div className="absolute bottom-[72px] right-3 flex gap-1">
+              <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+                <Chevron dir="left" />
+              </button>
+              <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+                <Chevron dir="right" />
+              </button>
+            </div>
+            <div className="absolute inset-x-0 bottom-3 flex justify-center">
+              <button type="button" onClick={() => (isLast ? onClose() : go(at + 1))} className="h-11 min-w-[148px] rounded-full bg-[#19347D] px-6 text-[15px] font-semibold text-white">
+                Continue
+              </button>
+            </div>
+          </>
+        )}
+        <span className="sr-only" aria-live="polite">
+          Page {at + 1} of {pages.length}
+        </span>
       </div>
     </div>
   );

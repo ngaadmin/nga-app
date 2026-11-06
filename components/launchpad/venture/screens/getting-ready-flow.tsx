@@ -50,6 +50,7 @@ import {
   type WrapJobAnswer,
 } from "@/lib/launchpad/content/answers";
 import { ART, ContinueButton, Sticker, WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
+import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 
 type ReadyAnswer = FindCustomersAnswer | AgreeJobAnswer | DeliverJobAnswer | WrapJobAnswer | PracticeRunAnswer | PolishServiceAnswer;
 
@@ -117,7 +118,7 @@ function InlineMenu<T extends { id: string; label: string }>({
         </svg>
       </button>
       {open && (
-        <ul className="absolute left-0 z-overlay mt-1 min-w-[160px] rounded-xl bg-white py-1 shadow-[0_8px_24px_rgba(25,52,125,0.16)]" data-open-menu="">
+        <ul className="absolute right-0 z-overlay mt-1 w-[168px] rounded-xl bg-white py-1 shadow-[0_8px_24px_rgba(25,52,125,0.16)]" data-open-menu="">
           {options.map((row) => (
             <li key={row.id}>
               <button
@@ -262,6 +263,7 @@ function FindStep({
               </li>
             ))}
           </ul>
+          <div className="mt-4 flex justify-end"><FlatSticker kind="flyer" /></div>
           <label className="mt-3 block text-[14px] text-[#6B7280]">
             Also: Add your own (optional)
             <input
@@ -330,11 +332,12 @@ function AgreeStep({
           </li>
         ))}
       </ul>
-      {page === 2 && (
-        <div className="mt-4 flex justify-end">
-          <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto" />
-        </div>
-      )}
+      <div className="mt-4 flex items-end justify-end gap-2">
+        {page === 0 && <FlatSticker kind="clipboard" />}
+        {page === 1 && <FlatSticker kind="calendar" />}
+        {page === 2 && <FlatSticker kind="umbrella" />}
+        {page === 2 && <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto" />}
+      </div>
     </WorkbookFrame>
   );
 }
@@ -371,6 +374,10 @@ function DeliverStep({
         I will show proof by sending <InlineMenu label="How you will show proof" value={afterHow} options={AFTER_HOW} onPick={setAfter} />.
       </p>
       {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{DELIVER_PLAYBACK}</p>}
+      <div className="mt-4 flex justify-end gap-2">
+        <FlatSticker kind="phone" />
+        <FlatSticker kind="polaroid" />
+      </div>
     </WorkbookFrame>
   );
 }
@@ -407,6 +414,10 @@ function WrapJobStep({
         I will ask the owner for feedback or a short review by <InlineMenu label="How you will ask for feedback" value={feedbackHow} options={FEEDBACK_HOW} onPick={setFeedback} />.
       </p>
       {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
+      <div className="mt-4 flex justify-end gap-2">
+        <FlatSticker kind="stars" />
+        <FlatSticker kind="envelope" />
+      </div>
     </WorkbookFrame>
   );
 }
@@ -457,6 +468,7 @@ function PracticeStep({
       )}
       <div className="mt-4 flex items-end justify-between">
         <Sticker src={ART.ticket} alt="" />
+        <FlatSticker kind="ball" />
         <img src={ART.pennyJourney} alt="" width={46} height={46} className="h-[46px] w-auto" />
       </div>
     </WorkbookFrame>
@@ -530,6 +542,7 @@ function PolishStep({
           </li>
         ))}
       </ol>
+      <div className="mt-4 flex justify-end">{page === 0 ? <FlatSticker kind="note" /> : <FlatSticker kind="bulb" />}</div>
       <span className="sr-only">{services.length}</span>
     </WorkbookFrame>
   );

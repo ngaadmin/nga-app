@@ -49,12 +49,12 @@ export function WorkbookFrame({
       <div className="relative min-h-0 flex-1 px-[11px]">
         <div className="relative h-full overflow-hidden rounded-2xl border border-[#EDE7DC]" style={{ background: PAPER_BACKGROUND }} data-paper-card="">
           <SpiralBinding />
-          <div className="h-full overflow-y-auto pb-8 pl-11 pr-4 pt-4">{children}</div>
+          <div className="h-full overflow-x-hidden overflow-y-auto pb-8 pl-11 pr-4 pt-4">{children}</div>
           {marker && <p className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-[#9CA3AF]">{marker}</p>}
         </div>
       </div>
-      <div className="flex flex-none items-center gap-2 px-3 pb-1 pt-2">
-        <div className="grid flex-1 grid-cols-6 gap-1" aria-label="Workbook floors">
+      <div className="flex flex-none items-end gap-2 px-3 pb-1 pt-2.5">
+        <div className="grid w-1/2 grid-cols-6 gap-1" aria-label="Workbook floors">
           {[1, 2, 3, 4, 5, 6].map((n) => {
             const selected = n === level;
             const muted = n > level;
@@ -62,8 +62,8 @@ export function WorkbookFrame({
               <span
                 key={n}
                 aria-current={selected ? "page" : undefined}
-                className={`flex h-9 items-center justify-center rounded-[7px] border text-[12px] font-semibold ${
-                  selected ? "border-[#19347D] bg-white text-[#19347D]" : muted ? "border-[#E5E7EB] bg-[#F7F5F1] text-[#C4C0B8]" : "border-[#E7E1D6] bg-[#F3EFE6] text-[#8A8175]"
+                className={`flex h-11 items-center justify-center rounded-b-[7px] rounded-t-[2px] border text-[12px] font-semibold ${
+                  selected ? "border-[#19347D] bg-white text-[#19347D]" : muted ? "border-[#E5E7EB] bg-[#F7F5F1] text-[#C4C0B8]" : "border-[#E7E1D6] bg-[#F3EFE6] text-[#6B645C]"
                 }`}
               >
                 L{n}

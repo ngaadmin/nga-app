@@ -135,14 +135,10 @@ function goalTitle(catalog: SummaryCatalog, answerKey: string): string | undefin
 
 /** A section's lines on the binder page (wrapup-binder-r1 screen B): chips, accent numbers, a big line, or plain sentences. */
 function PaperLines({ display, lines }: { display: LaunchpadSummarySection["display"]; lines: readonly string[] }) {
-  if (display === "list")
-    return (
-      <ul className="mt-2.5 flex flex-wrap gap-[9px]">
-        {lines.map((l, i) => (
-          <TagChip key={i}>{l}</TagChip>
-        ))}
-      </ul>
-    );
+  if (display === "list") {
+    const sentence = lines.length < 2 ? (lines[0] ?? "") : lines.length === 2 ? `${lines[0]} and ${lines[1]}` : `${lines.slice(0, -1).join(", ")}, and ${lines[lines.length - 1]}`;
+    return <p className="mt-2.5 text-[15px] leading-snug text-[#19347D]">{sentence}</p>;
+  }
   if (display === "ranked")
     return (
       <ol className="mt-2 text-[14px] leading-[1.75]">

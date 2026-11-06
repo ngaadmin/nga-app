@@ -7,6 +7,7 @@ import { catalogFor, chipLabel } from "@/lib/launchpad/content/planning/catalog"
 import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
+import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function joinLabels(ids: readonly string[]): string {
@@ -92,6 +93,9 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
           </p>
         </>
       )}
+      <div className="mt-6 flex items-end gap-3">
+        <Sticker src={ART.beagle} alt="" />
+      </div>
     </div>
   );
 }

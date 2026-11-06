@@ -189,6 +189,7 @@ export function VentureFlow({
     entry: "home" | "building";
     /** Opened from the corridor's workbook button (Back to the lift keeps the button); the workbook still opens on page 1. */
     openSilverId?: string;
+    openSheet?: string;
     /** "Back to the lift" lands on this floor's corridor (defaults to the current floor). */
     level?: number;
   } | null>(null);
@@ -598,6 +599,7 @@ export function VentureFlow({
               const updated = completeTask(setProgressAnswer(progress, jobsScreen.answerKey, answer), taskId);
               save(updated);
               go({ screen: "doors", level: floor.level, silverId: silver.id });
+              setHandbook({ ventureId, entry: "building", level: floor.level, openSheet: "plan-1" });
             }}
           />
         );
@@ -778,6 +780,7 @@ export function VentureFlow({
             iconVentureId={iconVentureId}
             setAnswer={setAnswer}
             onClose={closeHandbook}
+            initialSheet={handbook.openSheet}
             onEditCosts={(step) => {
               const found = findKnowYourCost(floors);
               if (!found) return;

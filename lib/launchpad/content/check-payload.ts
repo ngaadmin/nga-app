@@ -169,7 +169,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
  * on an earlier screen; picker steps share one key, so a repeat is fine for
  * those and rejected for capture screens.
  */
-type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs";
+type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs" | "price" | "jobs";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
 function answerKey(screen: Obj, where: string): string {
@@ -274,6 +274,12 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
     case "know-your-cost":
       checkKnowYourCost(screen, where, answers);
       return;
+    case "set-price":
+      checkSetPrice(screen, where, answers);
+      return;
+    case "jobs-to-cover":
+      checkJobsCover(screen, where, answers);
+      return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
   }
@@ -335,6 +341,34 @@ function checkKnowYourCost(screen: Obj, where: string, answers: Answers): void {
     if (services.has(raw.serviceId)) fail(`${ow} repeats ${raw.serviceId}.`);
     services.add(raw.serviceId);
     checkCostItems(raw.items, `${ow} items`, new Set(), null, false);
+  });
+}
+
+const SET_PRICE_COPY = ["context", "guidance", "othersMissing", "keepLabel", "costLabel", "lowKeep", "emptyServices"] as const;
+const JOBS_COPY = ["context", "guidance", "singlePrompt", "multiPrompt", "covered", "needPrice", "weeklyLabel", "weeksLabel"] as const;
+
+function checkSetPrice(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "price", where);
+  reads(answers, screen.costsFrom, ["costs"], `${where} costsFrom`);
+  reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  for (const field of SET_PRICE_COPY) text(screen.copy[field], `${where} ${field}`);
+}
+
+function checkJobsCover(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "jobs", where);
+  reads(answers, screen.costsFrom, ["costs"], `${where} costsFrom`);
+  reads(answers, screen.priceFrom, ["price"], `${where} priceFrom`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  for (const field of JOBS_COPY) text(screen.copy[field], `${where} ${field}`);
+  const seen = new Set<string>();
+  list(screen.weekOptions, `${where} weekOptions`, 7, 7).forEach((raw, i) => {
+    const ow = `${where} week option ${i + 1}`;
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id)) fail(`${ow} has no valid id.`);
+    if (seen.has(raw.id)) fail(`${ow} repeats ${raw.id}.`);
+    seen.add(raw.id);
+    text(raw.label, `${ow} label`);
+    if (raw.jobs !== i + 1) fail(`${ow} must be ${i + 1} jobs a week.`);
   });
 }
 

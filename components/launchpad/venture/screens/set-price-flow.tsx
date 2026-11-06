@@ -1,0 +1,145 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import type { LaunchpadAnswers, PriceAnswer, ServicePrice } from "@/lib/launchpad/content/answers";
+import { priceOf } from "@/lib/launchpad/content/answers";
+import type { LaunchpadFloor, LaunchpadSetPriceScreen } from "@/lib/launchpad/content/types";
+import { findKnowYourCost, formatOngoingMoney, parseStartupInput, savedCosts, serviceTotal } from "@/lib/launchpad/content/know-your-cost/logic";
+import { isWholePrice, keptPerJob } from "@/lib/launchpad/content/pricing/calc";
+import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
+import { currencySymbol } from "@/lib/dashboard/currency/format-money";
+import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+
+const CONTINUE_ON =
+  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#19347D] px-6 font-heading text-[15px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#19347D]";
+const CONTINUE_OFF =
+  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
+const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
+
+function BackTitle({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="mx-5 mt-2 flex items-center gap-1">
+      <button type="button" onClick={onBack} aria-label="Back" className="flex size-11 items-center justify-center text-[#19347D]">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7" />
+        </svg>
+      </button>
+      <h1 className="font-heading text-[17px] font-bold text-[#19347D]">{title}</h1>
+    </div>
+  );
+}
+
+/**
+ * Set the price. One row per service: name, cost and keep, and a compact
+ * price field. Keep is price minus cost. Nothing is given to a cause here.
+ */
+export function SetPriceFlow({
+  screen,
+  floors: floorsProp,
+  answers: answersProp,
+  setAnswer: setAnswerProp,
+  onExit = () => {},
+  onFinish = () => {},
+}: {
+  screen: LaunchpadSetPriceScreen;
+  floors?: readonly LaunchpadFloor[];
+  answers?: LaunchpadAnswers;
+  setAnswer?: (answerKey: string, answer: PriceAnswer) => void;
+  onExit?: (answer: PriceAnswer) => void;
+  onFinish?: (answer: PriceAnswer) => void;
+}) {
+  const ctx = useLaunchpadAnswers();
+  const floors = floorsProp ?? ctx?.floors ?? [];
+  const answers = answersProp ?? ctx?.answers ?? {};
+  const persist = setAnswerProp ?? ((key, answer) => ctx?.setAnswer(key, answer));
+  const currency = readCurrencyPreference();
+  const symbol = currencySymbol(currency);
+  const costs = useMemo(() => {
+    const found = findKnowYourCost(floors);
+    return found ? savedCosts(answers, found.screen, floors) : null;
+  }, [answers, floors]);
+  const services = costs?.ongoing ?? [];
+  const saved = priceOf(answers, screen.answerKey);
+  const [drafts, setDrafts] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    for (const row of saved?.prices ?? []) init[row.serviceId] = String(row.price);
+    return init;
+  });
+
+  const rows: ServicePrice[] = services.flatMap((service) => {
+    const parsed = parseStartupInput(drafts[service.serviceId] ?? "");
+    if (parsed === null || !isWholePrice(parsed)) return [];
+    const cost = serviceTotal(service.lines);
+    return [{ serviceId: service.serviceId, price: parsed, costPerJob: cost, keptPerJob: keptPerJob(parsed, cost) }];
+  });
+  const answer: PriceAnswer = { kind: "price", version: 1, prices: rows };
+  const ready = services.length === 0 || (rows.length === services.length && rows.every((row) => row.keptPerJob > 0));
+
+  const commit = (nextDrafts: Record<string, string>) => {
+    setDrafts(nextDrafts);
+    const nextRows: ServicePrice[] = services.flatMap((service) => {
+      const parsed = parseStartupInput(nextDrafts[service.serviceId] ?? "");
+      if (parsed === null || !isWholePrice(parsed)) return [];
+      const cost = serviceTotal(service.lines);
+      return [{ serviceId: service.serviceId, price: parsed, costPerJob: cost, keptPerJob: keptPerJob(parsed, cost) }];
+    });
+    persist(screen.answerKey, { kind: "price", version: 1, prices: nextRows });
+  };
+
+  return (
+    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="set-price">
+      <BackTitle title="Set the price" onBack={() => onExit(answer)} />
+      <div className={`mx-5 mt-1 ${SCROLL}`}>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
+        <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.context}</p>
+        <p className="mt-2 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.guidance}</p>
+        <div className="mt-4 flex flex-col gap-2">
+          {services.length === 0 && <p className="text-[13.5px] text-[#6B7280]">{screen.copy.emptyServices}</p>}
+          {services.map((service) => {
+            const row = rows.find((item) => item.serviceId === service.serviceId);
+            const cost = serviceTotal(service.lines);
+            const low = row ? row.keptPerJob <= 0 : false;
+            return (
+              <article key={service.serviceId} className="rounded-[14px] bg-white px-3 py-2.5 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={service.serviceId}>
+                <div className="flex flex-row items-center gap-2" data-service-tile-layout="row">
+                  <h2 className="shrink-0 font-heading text-[15px] font-bold leading-tight text-[#19347D]">{service.label}</h2>
+                  <p className="min-w-0 flex-1 text-right text-[12px] leading-tight text-[#6B7280]">
+                    {screen.copy.costLabel} {formatOngoingMoney(cost, currency)}
+                    <span className="mx-1 text-[#D9DEE8]" aria-hidden="true">
+                      ·
+                    </span>
+                    <span className="font-semibold text-[#19347D]" data-kept="">
+                      {screen.copy.keepLabel} {row ? formatOngoingMoney(row.keptPerJob, currency) : "—"}
+                    </span>
+                  </p>
+                  <label className="flex h-9 w-[88px] shrink-0 items-center gap-0.5 rounded-[10px] bg-white px-2 shadow-[inset_0_0_0_1.5px_#D9DEE8]">
+                    <span className="text-[14px] text-[#9AA3B5]" aria-hidden="true">
+                      {symbol}
+                    </span>
+                    <input
+                      inputMode="numeric"
+                      aria-label={`Price for ${service.label}`}
+                      value={drafts[service.serviceId] ?? ""}
+                      onChange={(event) => {
+                        const next = event.target.value.replace(/\D/g, "").slice(0, 4);
+                        commit({ ...drafts, [service.serviceId]: next });
+                      }}
+                      className="w-full bg-transparent text-right font-heading text-[15px] font-bold tabular-nums text-[#19347D] outline-none"
+                    />
+                  </label>
+                </div>
+                <p className="mt-1 text-[12px] text-[#9AA3B5]">{screen.copy.othersMissing}</p>
+                {low && <p className="mt-1 text-[12.5px] text-[#B45309]">{screen.copy.lowKeep}</p>}
+              </article>
+            );
+          })}
+        </div>
+      </div>
+      <div className="mx-5 flex flex-none justify-center pb-4 pt-3 [@media(max-height:879px)]:mt-auto">
+        <button type="button" disabled={!ready} className={ready ? CONTINUE_ON : CONTINUE_OFF} onClick={() => ready && onFinish(answer)}>
+          Continue
+        </button>
+      </div>
+    </section>
+  );
+}

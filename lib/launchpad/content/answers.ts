@@ -3,6 +3,7 @@ import {
   parseBusinessIdentityAnswer,
   type BusinessIdentityAnswer,
 } from "@/lib/launchpad/content/identity";
+import { keptPerJob, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep, jobsNeeded } from "@/lib/launchpad/content/pricing/calc";
 
 /**
  * The learner's saved answers, one per answerKey, each tagged with a `kind`
@@ -62,7 +63,55 @@ export type CostsAnswer = {
   ongoingAcknowledged?: boolean;
 };
 
-export type LaunchpadAnswer = BusinessIdentityAnswer | SelectionAnswer | RankingAnswer | FieldsAnswer | CostsAnswer;
+/** One priced service. `keptPerJob` is always price minus cost. Charity is not stored. */
+export type ServicePrice = {
+  serviceId: string;
+  /** Whole dollars. */
+  price: number;
+  costPerJob: number;
+  keptPerJob: number;
+};
+
+/**
+ * Set the price. One entry per offered service. The payload has no
+ * charity percent, charity share, or cause.
+ */
+export type PriceAnswer = {
+  kind: "price";
+  version: 1;
+  prices: readonly ServicePrice[];
+};
+
+export type TypicalWeekRow = {
+  serviceId: string;
+  jobsPerWeek: number;
+  keptPerJob: number;
+  /** jobs per week × keep. */
+  subtotal: number;
+};
+
+/**
+ * Jobs to cover start-up. Single: jobs needed and a week pick.
+ * Multi: a typical week, weekly keep, and weeks.
+ */
+export type JobsAnswer = {
+  kind: "jobs";
+  version: 1;
+  mode: "single" | "multi";
+  startupTotal: number;
+  weeksNeeded: number;
+  /** Single path. */
+  jobsNeeded?: number;
+  jobsPerWeek?: number;
+  /** Option id N25–T25 when the learner picked a single-service week. */
+  jobsPerWeekOptionId?: string;
+  keptPerJob?: number;
+  /** Multi path. */
+  typicalWeek?: readonly TypicalWeekRow[];
+  weeklyKeep?: number;
+};
+
+export type LaunchpadAnswer = BusinessIdentityAnswer | SelectionAnswer | RankingAnswer | FieldsAnswer | CostsAnswer | PriceAnswer | JobsAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -150,6 +199,79 @@ export function parseCostsAnswer(value: unknown): CostsAnswer | null {
   return parsed;
 }
 
+function wholePrice(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 9999) return null;
+  return value;
+}
+
+export function parsePriceAnswer(value: unknown): PriceAnswer | null {
+  if (!isRecord(value) || value.kind !== "price" || value.version !== 1 || !Array.isArray(value.prices)) return null;
+  const prices: ServicePrice[] = [];
+  const seen = new Set<string>();
+  for (const raw of value.prices.slice(0, 20)) {
+    if (!isRecord(raw) || typeof raw.serviceId !== "string" || !ID_RE.test(raw.serviceId) || seen.has(raw.serviceId)) continue;
+    const price = wholePrice(raw.price);
+    const cost = moneyAmount(raw.costPerJob, false);
+    if (price === null || cost === null) continue;
+    seen.add(raw.serviceId);
+    prices.push({ serviceId: raw.serviceId, price, costPerJob: cost, keptPerJob: keptPerJob(price, cost) });
+  }
+  return { kind: "price", version: 1, prices };
+}
+
+function weekCount(value: unknown, max: number): number | null {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > max) return null;
+  return value;
+}
+
+export function parseJobsAnswer(value: unknown): JobsAnswer | null {
+  if (!isRecord(value) || value.kind !== "jobs" || value.version !== 1) return null;
+  if (value.mode !== "single" && value.mode !== "multi") return null;
+  const startup = moneyAmount(value.startupTotal, true);
+  if (startup === null) return null;
+  if (value.mode === "single") {
+    const kept = moneyAmount(value.keptPerJob, false);
+    const perWeek = weekCount(value.jobsPerWeek, 7);
+    if (kept === null || perWeek === null || perWeek < 1) return null;
+    const needed = jobsNeeded(startup, kept);
+    if (needed === null) return null;
+    const weeks = weeksFromJobs(needed, perWeek);
+    if (weeks === null) return null;
+    const optionId = typeof value.jobsPerWeekOptionId === "string" && ID_RE.test(value.jobsPerWeekOptionId) ? value.jobsPerWeekOptionId : undefined;
+    return {
+      kind: "jobs",
+      version: 1,
+      mode: "single",
+      startupTotal: startup,
+      keptPerJob: kept,
+      jobsNeeded: needed,
+      jobsPerWeek: perWeek,
+      weeksNeeded: weeks,
+      ...(optionId ? { jobsPerWeekOptionId: optionId } : {}),
+    };
+  }
+  if (!Array.isArray(value.typicalWeek)) return null;
+  const typicalWeek: TypicalWeekRow[] = [];
+  const seen = new Set<string>();
+  for (const raw of value.typicalWeek.slice(0, 20)) {
+    if (!isRecord(raw) || typeof raw.serviceId !== "string" || !ID_RE.test(raw.serviceId) || seen.has(raw.serviceId)) continue;
+    const jobs = weekCount(raw.jobsPerWeek, 7);
+    const kept = moneyAmount(raw.keptPerJob, false);
+    if (jobs === null || kept === null) continue;
+    seen.add(raw.serviceId);
+    typicalWeek.push({
+      serviceId: raw.serviceId,
+      jobsPerWeek: jobs,
+      keptPerJob: kept,
+      subtotal: (jobs * Math.round(kept * 100)) / 100,
+    });
+  }
+  const weekly = weeklyKeep(typicalWeek);
+  const weeks = weeksFromWeeklyKeep(startup, weekly);
+  if (weeks === null) return null;
+  return { kind: "jobs", version: 1, mode: "multi", startupTotal: startup, typicalWeek, weeklyKeep: weekly, weeksNeeded: weeks };
+}
+
 export function parseFieldsAnswer(value: unknown): FieldsAnswer | null {
   if (!isRecord(value) || value.kind !== "fields" || value.version !== 1) return null;
   const values: Record<string, string | number> = {};
@@ -179,6 +301,10 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseFieldsAnswer(value);
     case "costs":
       return parseCostsAnswer(value);
+    case "price":
+      return parsePriceAnswer(value);
+    case "jobs":
+      return parseJobsAnswer(value);
     default:
       return null;
   }
@@ -221,6 +347,16 @@ export function fieldsOf(answers: LaunchpadAnswers | undefined, key: string): Fi
 export function costsOf(answers: LaunchpadAnswers | undefined, key: string): CostsAnswer | undefined {
   const a = answers?.[key];
   return a?.kind === "costs" ? a : undefined;
+}
+
+export function priceOf(answers: LaunchpadAnswers | undefined, key: string): PriceAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "price" ? a : undefined;
+}
+
+export function jobsOf(answers: LaunchpadAnswers | undefined, key: string): JobsAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "jobs" ? a : undefined;
 }
 
 export const selectionAnswer = (selected: readonly string[]): SelectionAnswer => ({ kind: "selection", version: 1, selected });

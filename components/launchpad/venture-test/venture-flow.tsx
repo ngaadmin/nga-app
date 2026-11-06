@@ -7,6 +7,7 @@ import {
   advanceAfterTask,
   applyVentureTestShortcut,
   bronzeStates,
+  pricingBronzeStates,
   buildingCta,
   completeTask,
   currentLevel,
@@ -54,6 +55,10 @@ import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identit
 import { fieldsOf } from "@/lib/launchpad/content/answers";
 import { findKnowYourCost, type CostEditorStep } from "@/lib/launchpad/content/know-your-cost/logic";
 import { KnowYourCostFlow } from "@/components/launchpad/venture/screens/know-your-cost-flow";
+import { SetPriceFlow } from "@/components/launchpad/venture/screens/set-price-flow";
+import { JobsCoverFlow } from "@/components/launchpad/venture/screens/jobs-cover-flow";
+import { identityAnswerOf } from "@/lib/launchpad/content/answers";
+import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
 
 /** What the forward button is waiting for on a capture page. */
@@ -433,13 +438,12 @@ export function VentureFlow({
       const floor = floorAt(floors, view.level);
       const silverIndex = floor.silvers.findIndex((s) => s.id === view.silverId);
       const silver = floor.silvers[silverIndex]!;
-      // Pricing keeps Final door titles. Know your cost follows progress.
-      // Its placeholder siblings stay locked so they never open an empty task.
-      // Other floors keep normal progress locking.
+      // Pricing keeps Final door titles. Built doors follow progress.
+      // A placeholder door stays locked and does not block the next built door.
       const pricing = silver.title === "Pricing";
       const pricingBuilt = pricing && silver.bronzes.some((b) => !b.placeholder);
       const open = (pricing && !pricingBuilt ? false : silverStates(progress, floors, floor)[silverIndex] !== "locked");
-      const states = bronzeStates(progress, silver, open);
+      const states = pricing ? pricingBronzeStates(progress, silver, open) : bronzeStates(progress, silver, open);
       body = (
         <BronzeDoors
           level={floor.level}
@@ -448,7 +452,7 @@ export function VentureFlow({
             id: b.id,
             title: b.title,
             subtitle: b.subtitle,
-            state: pricing && b.placeholder ? "locked" : (states[i] ?? "locked"),
+            state: states[i] ?? "locked",
             comeBack: open && !b.placeholder && bronzeHasOpenTask(progress, b),
           }))}
           lockedNote={pricing && !pricingBuilt ? "These doors aren't open yet." : lockedDoorsNote(progress, floors, floor, silverIndex)}
@@ -540,7 +544,7 @@ export function VentureFlow({
             answers={answers}
             levelName={floor.name}
             silverTitle={silver.title}
-            businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
+            businessName={identityAnswerOf(answers, IDENTITY_ANSWER_KEY)?.name?.trim() ?? ""}
             initialStep={view.costStep}
             onBuilding={toBuilding}
             onCorridor={toCorridor(floor.level)}
@@ -550,6 +554,45 @@ export function VentureFlow({
             }}
             onFinish={(answer) => {
               const updated = completeTask(setProgressAnswer(progress, costScreen.answerKey, answer), taskId);
+              save(updated);
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const priceScreen = current?.screens.find((s) => s.type === "set-price");
+      if (priceScreen && priceScreen.type === "set-price" && current) {
+        const taskId = current.id;
+        body = (
+          <SetPriceFlow
+            screen={priceScreen}
+            floors={floors}
+            answers={answers}
+            onExit={(answer) => {
+              save(setProgressAnswer(progress, priceScreen.answerKey, answer));
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+            onFinish={(answer) => {
+              const updated = completeTask(setProgressAnswer(progress, priceScreen.answerKey, answer), taskId);
+              save(updated);
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const jobsScreen = current?.screens.find((s) => s.type === "jobs-to-cover");
+      if (jobsScreen && jobsScreen.type === "jobs-to-cover" && current) {
+        const taskId = current.id;
+        body = (
+          <JobsCoverFlow
+            screen={jobsScreen}
+            floors={floors}
+            answers={answers}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              const updated = completeTask(setProgressAnswer(progress, jobsScreen.answerKey, answer), taskId);
               save(updated);
               go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}

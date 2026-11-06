@@ -241,6 +241,22 @@ export function silverStates(
  * Every plaque can be tapped, so when the silver itself is locked (`open` is
  * false) no door is current and the learner can only look.
  */
+/**
+ * Pricing doors. Placeholder doors (competitor research) stay locked and do
+ * not block the next built door. A built door opens once every earlier built
+ * door is done.
+ */
+export function pricingBronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true): NodeState[] {
+  let blocked = false;
+  return silver.bronzes.map((bronze) => {
+    if (bronze.placeholder) return "locked";
+    if (isBronzeDone(progress, bronze)) return "done";
+    if (!open || blocked) return "locked";
+    if (!isBronzeSettled(progress, bronze)) blocked = true;
+    return "current";
+  });
+}
+
 export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true): NodeState[] {
   // A door left open ("Come back") stays current and does not block the next door.
   let blocked = false;

@@ -32,8 +32,8 @@ export function dogWalkingKnowYourCostScreen(): LaunchpadKnowYourCostScreen {
       starterNote: "Buy once to get started. You will keep using these on jobs.",
       ongoingIntro: "These costs repeat each job. Tap Calculate the cost for each service. Put 0 for anything you already have.",
       serviceIntro:
-        "What do you restock for one {service} job? Amounts are small — change any you need. Put 0 if you already have it, or remove a row you don't need.",
-      totalsIntro: "Quick check before your workbook. Start-up is what you spend to open; ongoing costs repeat each job.",
+        "What do you restock each time you do this job? Amounts are small — change any you need. Put 0 if you already have it, or remove a row you don't need.",
+      totalsIntro: "Quick check before your handbook. Start-up is what you spend to open; ongoing costs repeat each job.",
       grandNote: "Start-up only. Ongoing costs stay per job — you'll use them when you set your price.",
       workbookHint: "You'll use these when you set your price. Totals stay calculated.",
       hubWait: "Continue stays off until both sections are done.",

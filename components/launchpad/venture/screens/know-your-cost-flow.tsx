@@ -20,6 +20,8 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { currencySymbol } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
+import { BinderCard } from "@/components/launchpad/venture/handbook/paper-art";
+import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { BTN_CYAN_COMPACT, TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
@@ -81,8 +83,15 @@ function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">{children}</p>;
 }
 
+/**
+ * On a short screen the list scrolls and the button stays at the bottom.
+ * On a tall screen the button sits under the content, so desktop width does
+ * not leave a blank band above it.
+ */
+const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
+
 function Footer({ children }: { children: ReactNode }) {
-  return <div className="mx-5 mt-auto flex flex-none justify-center pb-4 pt-3">{children}</div>;
+  return <div className="mx-5 flex flex-none justify-center pb-4 pt-3 [@media(max-height:879px)]:mt-auto">{children}</div>;
 }
 
 function MoneyField({
@@ -205,7 +214,8 @@ export function KnowYourCostFlow({
   const ready = costsReady(ref.current);
   const floorName = levelName ?? "Planning";
   const plaque = silverTitle ?? "Pricing";
-  const name = businessName || identityAnswerOf(answers, IDENTITY_ANSWER_KEY)?.name || "";
+  const identity = identityAnswerOf(answers, IDENTITY_ANSWER_KEY);
+  const businessLabel = identity?.name?.trim() || businessName?.trim() || "";
 
   const crumb = (
     <Crumb floorName={floorName} silverTitle={plaque} current={screen.heading ?? "Know your cost"} onBuilding={onBuilding} onCorridor={onCorridor} />
@@ -248,7 +258,7 @@ export function KnowYourCostFlow({
     body = (
       <>
         <BackTitle title="Start-up costs" onBack={() => setStep({ name: "hub" })} />
-        <div className="mx-5 mt-1 min-h-0 flex-1 overflow-y-auto pb-2">
+        <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
           <Eyebrow>{plaque}</Eyebrow>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.startupIntro}</p>
           <h2 className="mb-0.5 mt-3 text-[11px] font-bold uppercase tracking-[0.06em] text-[#9AA3B5]">{screen.copy.marketingLabel}</h2>
@@ -322,7 +332,7 @@ export function KnowYourCostFlow({
       body = (
         <>
           <BackTitle title={service.label} onBack={() => setStep({ name: "ongoing" })} />
-          <div className="mx-5 mt-1 min-h-0 flex-1 overflow-y-auto pb-2">
+          <div className={`mx-5 mt-1 ${SCROLL} pb-2`}>
             <p className="text-[13.5px] leading-snug text-[#6B7280]">{intro}</p>
             <div className="mt-2">
               {lineRows(
@@ -388,40 +398,40 @@ export function KnowYourCostFlow({
     body = (
       <>
         <BackTitle title="Ongoing costs" onBack={() => setStep({ name: "hub" })} />
-        <div className="mx-5 mt-1 min-h-0 flex-1 overflow-y-auto">
+        <div className={`mx-5 mt-1 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Ongoing costs</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.ongoingIntro}</p>
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-4 flex flex-col gap-2">
             {services.length === 0 && <p className="text-[13.5px] text-[#6B7280]">You have not chosen a service yet. You can still mark this done.</p>}
             {services.map((service) => (
               <article
                 key={service.serviceId}
-                className={`flex flex-col gap-2.5 rounded-[14px] p-3.5 ${service.done ? "bg-[#FFFCF5] shadow-[inset_0_0_0_1.5px_#FFE6B8]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
+                className={`flex flex-row items-center gap-2 rounded-[14px] px-3 py-2.5 ${service.done ? "bg-[#FFFCF5] shadow-[inset_0_0_0_1.5px_#FFE6B8]" : "bg-white shadow-[inset_0_0_0_1.5px_#E5E7EB]"}`}
                 data-service-card={service.serviceId}
+                data-service-tile-layout="row"
               >
-                <div className="flex items-center gap-2">
-                  <h2 className="flex-1 font-heading text-base font-bold text-[#19347D]">{service.label}</h2>
-                  {service.done && <TickBadge size={26} />}
-                </div>
-                <p className="text-[13.5px] text-[#6B7280]">
+                <h2 className="shrink-0 font-heading text-[15px] font-bold leading-tight text-[#19347D]">{service.label}</h2>
+                <p className="shrink-0 whitespace-nowrap text-right text-[12px] leading-tight text-[#6B7280]">
                   {service.done ? (
-                    <>
-                      <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b> per job
-                    </>
+                    <b className="font-bold text-[#19347D]">{formatOngoingMoney(serviceTotal(service.lines), currency)}</b>
                   ) : (
                     "Not calculated yet"
                   )}
                 </p>
                 {service.done ? (
-                  <button type="button" className="self-start font-semibold text-[#0CC1E0]" onClick={() => setStep({ name: "service", serviceId: service.serviceId })}>
+                  <button type="button" className="shrink-0 font-semibold text-[#0CC1E0]" onClick={() => setStep({ name: "service", serviceId: service.serviceId })}>
                     Edit
                   </button>
                 ) : (
-                  <button type="button" className={ADD} onClick={() => setStep({ name: "service", serviceId: service.serviceId })}>
+                  <button
+                    type="button"
+                    className="inline-flex h-8 shrink-0 items-center rounded-[10px] bg-[#0CC1E0] px-2.5 font-heading text-[12.5px] font-bold text-white"
+                    onClick={() => setStep({ name: "service", serviceId: service.serviceId })}
+                  >
                     Calculate the cost
                   </button>
                 )}
+                {service.done && <TickBadge size={22} />}
               </article>
             ))}
           </div>
@@ -447,7 +457,7 @@ export function KnowYourCostFlow({
     body = (
       <>
         {crumb}
-        <div className="mx-5 mt-3 min-h-0 flex-1 overflow-y-auto">
+        <div className={`mx-5 mt-3 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Your costs</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
@@ -495,22 +505,33 @@ export function KnowYourCostFlow({
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>
-          <div>
-            <p className="font-heading text-base font-semibold text-[#19347D]">My workbook</p>
-            {name && <p className="text-[12.5px] text-[#9AA3B5]">{name}</p>}
+          <div className="min-w-0">
+            <h1 className="font-heading text-base font-semibold text-[#19347D]">My handbook</h1>
+            {businessLabel && <p className="truncate text-[12.5px] text-[#9AA3B5]">{businessLabel}</p>}
           </div>
         </header>
-        <div className="mx-3 mb-2 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-[#EDE7DC] bg-[#FDFBF7] px-4 py-4">
-          <CostWorkbookBody
-            answer={ref.current}
-            currency={currency}
-            marketingLabel={screen.copy.marketingLabel}
-            starterLabel={screen.copy.starterLabel}
-            hint={screen.copy.workbookHint}
-            editable
-            onEditStartup={() => setStep({ name: "startup" })}
-            onEditService={(serviceId) => setStep({ name: "service", serviceId })}
-          />
+        <div className={`mb-2 ${SCROLL}`}>
+          <BinderCard data-cost-sheet="">
+            <div className="mb-3 flex items-center gap-2.5" data-mini-identity="">
+              {identity?.shape && identity.color && identity.icon ? (
+                <LogoMark shape={identity.shape} color={identity.color} icon={identity.icon} size={32} label={logoMarkLabel(identity)} />
+              ) : (
+                <span aria-hidden="true" className="size-8 flex-none rounded-full bg-[#19347D]" data-logo-fallback="" />
+              )}
+              {businessLabel && <span className="truncate font-heading text-[17px] font-bold text-[#19347D]">{businessLabel}</span>}
+            </div>
+            <CostWorkbookBody
+              answer={ref.current}
+              currency={currency}
+              marketingLabel={screen.copy.marketingLabel}
+              starterLabel={screen.copy.starterLabel}
+              hint={screen.copy.workbookHint}
+              editable
+              onEditStartup={() => setStep({ name: "startup" })}
+              onEditService={(serviceId) => setStep({ name: "service", serviceId })}
+            />
+            <p className="mt-4 text-right text-[11px] text-[#9CA3AF]">Page 3</p>
+          </BinderCard>
         </div>
         <Footer>
           <button type="button" className={CONTINUE_ON} onClick={() => onFinish(ref.current)}>
@@ -531,7 +552,7 @@ export function KnowYourCostFlow({
             ✕ Exit
           </button>
         </div>
-        <div className="mx-5 min-h-0 flex-1 overflow-y-auto">
+        <div className={`mx-5 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Know your cost</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
@@ -580,7 +601,7 @@ export function KnowYourCostFlow({
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-cost-step={step.name} data-task-screen="know-your-cost">
+    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-cost-step={step.name} data-task-screen="know-your-cost">
       {body}
     </section>
   );

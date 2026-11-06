@@ -32,6 +32,8 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "short-text",
   "goal-loop",
   "know-your-cost",
+  "set-price",
+  "jobs-to-cover",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -285,7 +287,7 @@ export type LaunchpadKnowYourCostScreen = TaskScreenBase & {
     starterLabel: string;
     starterNote: string;
     ongoingIntro: string;
-    /** `{service}` is the chosen service's label. */
+    /** The service name is the screen title, so this line does not say "one {service} job". */
     serviceIntro: string;
     totalsIntro: string;
     grandNote: string;
@@ -295,6 +297,58 @@ export type LaunchpadKnowYourCostScreen = TaskScreenBase & {
   marketing: readonly LaunchpadCostItem[];
   starterGear: readonly LaunchpadCostItem[];
   ongoing: readonly LaunchpadCostServicePreset[];
+};
+
+/**
+ * Set the price (Pricing). One card per offered service. Keep is price minus
+ * cost per job. No charity share is stored or shown on the breakdown.
+ */
+export type LaunchpadSetPriceScreen = TaskScreenBase & {
+  type: "set-price";
+  answerKey: string;
+  /** Costs answer (per-service job total). */
+  costsFrom: string;
+  /** Offer picks. One card per chosen service. */
+  servicesFrom: string;
+  copy: {
+    context: string;
+    guidance: string;
+    othersMissing: string;
+    keepLabel: string;
+    costLabel: string;
+    lowKeep: string;
+    emptyServices: string;
+  };
+};
+
+/** One jobs-per-week choice on the single-service path (1 through 7). */
+export type LaunchpadJobsWeekOption = {
+  id: string;
+  jobs: number;
+  label: string;
+};
+
+/**
+ * Work out how many jobs cover start-up. One priced service: jobs, then a
+ * week pick. Two or more: a typical week and weekly keep.
+ */
+export type LaunchpadJobsCoverScreen = TaskScreenBase & {
+  type: "jobs-to-cover";
+  answerKey: string;
+  costsFrom: string;
+  /** Price answer (kept per job, per service). */
+  priceFrom: string;
+  weekOptions: readonly LaunchpadJobsWeekOption[];
+  copy: {
+    context: string;
+    guidance: string;
+    singlePrompt: string;
+    multiPrompt: string;
+    covered: string;
+    needPrice: string;
+    weeklyLabel: string;
+    weeksLabel: string;
+  };
 };
 
 export type LaunchpadTaskScreen =
@@ -308,7 +362,9 @@ export type LaunchpadTaskScreen =
   | LaunchpadRankOrderScreen
   | LaunchpadShortTextScreen
   | LaunchpadGoalLoopScreen
-  | LaunchpadKnowYourCostScreen;
+  | LaunchpadKnowYourCostScreen
+  | LaunchpadSetPriceScreen
+  | LaunchpadJobsCoverScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

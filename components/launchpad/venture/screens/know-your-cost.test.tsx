@@ -89,4 +89,42 @@ describe("Know your cost flow", () => {
     expect(finished.current?.ongoing.every((service) => service.done)).toBe(true);
     expect(finished.current?.ongoing.find((service) => service.serviceId === "dog-walking")?.lines.find((line) => line.id === "treats")?.amount).toBe(0);
   });
+
+  it("puts each service on one row and does not repeat the ongoing title", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Add costs" })[1]!);
+    expect(screen.getAllByRole("heading", { name: "Ongoing costs" })).toHaveLength(1);
+    const tile = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
+    expect(tile.getAttribute("data-service-tile-layout")).toBe("row");
+    expect(tile.className).toContain("flex-row");
+    expect(tile.querySelector("h2")?.parentElement).toBe(tile);
+    const calculate = within(tile).getByRole("button", { name: "Calculate the cost" });
+    expect(calculate.className).toContain("shrink-0");
+    expect(calculate.className).not.toContain("w-full");
+    expect(within(tile).getByText("Not calculated yet")).toBeTruthy();
+    fireEvent.click(calculate);
+    expect(screen.queryByText(/one Dog walking job|one Grooming job/)).toBeNull();
+    expect(screen.getByText(/each time you do this job/)).toBeTruthy();
+  });
+
+  it("titles the costs sheet My handbook on spiral paper", () => {
+    render(
+      <KnowYourCostFlow
+        screen={costScreen}
+        floors={floors}
+        answers={{ "l1-offer": selectionAnswer(["dog-walking", "dog-training"]) }}
+        businessName="Paws & Paths"
+        initialStep={{ name: "workbook" }}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "My handbook" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "My workbook" })).toBeNull();
+    expect(screen.queryByText("My workbook")).toBeNull();
+    expect(screen.getAllByText("Paws & Paths").length).toBeGreaterThan(0);
+    expect(document.querySelector("[data-spiral-binding]")).toBeTruthy();
+    expect(document.querySelector("[data-mini-identity]")).toBeTruthy();
+    const book = document.querySelector("[data-cost-workbook]") as HTMLElement;
+    expect(within(book).getByRole("button", { name: "Edit start-up costs" })).toBeTruthy();
+    expect(within(book).queryByRole("button", { name: /total/i })).toBeNull();
+  });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PROFILE_SWITCHING_AVAILABLE,
   buildHouseholdProfiles,
+  householdChildCount,
   type HouseholdProfileRow,
 } from "@/lib/profile-switcher/household-profiles";
 import { mergePageIntroFlags } from "@/lib/dashboard/page-intro-flags";
@@ -28,7 +29,7 @@ const kid = (
 });
 
 describe("buildHouseholdProfiles", () => {
-  it("lists the parent first, then active children by name, current marked", () => {
+  it("never sends child rows to a parent: only their own row and a child count", () => {
     const result = buildHouseholdProfiles({
       currentUserId: "p1",
       parent,
@@ -36,10 +37,10 @@ describe("buildHouseholdProfiles", () => {
     });
     expect(result?.profiles.map((p) => [p.name, p.role, p.isCurrent])).toEqual([
       ["qaparent", "parent", true],
-      ["amy", "child", false],
-      ["zed", "child", false],
     ]);
-    expect(result?.profiles[1]?.cohort).toBe("explorer");
+    expect(result?.profiles.some((p) => p.role === "child")).toBe(false);
+    expect(result?.linkedChildCount).toBe(2);
+    expect(householdChildCount(result)).toBe(2);
   });
 
   it("marks the child as current when a child is signed in", () => {
@@ -67,13 +68,18 @@ describe("buildHouseholdProfiles", () => {
     ]);
   });
 
-  it("still lists every active child for the parent", () => {
+  it("lists the child first, then their parent, for a signed-in child", () => {
     const result = buildHouseholdProfiles({
-      currentUserId: "p1",
+      currentUserId: "c1",
       parent,
-      children: [kid("c1", "amy", "explorer"), kid("c2", "zed", "maverick")],
+      children: [kid("c1", "amy", "explorer")],
     });
-    expect(result?.profiles.map((p) => p.userId)).toEqual(["p1", "c1", "c2"]);
+    expect(result?.profiles.map((p) => [p.name, p.role, p.isCurrent])).toEqual([
+      ["amy", "child", true],
+      ["qaparent", "parent", false],
+    ]);
+    expect(result?.profiles[0]?.cohort).toBe("explorer");
+    expect(householdChildCount(result)).toBe(1);
   });
 
   it("leaves out children still waiting for approval, unless that is the caller", () => {
@@ -85,7 +91,8 @@ describe("buildHouseholdProfiles", () => {
         kid("c3", "waiting", "explorer", "pending_parent_consent"),
       ],
     });
-    expect(result?.profiles.map((p) => p.userId)).toEqual(["p1", "c1"]);
+    expect(result?.profiles.map((p) => p.userId)).toEqual(["p1"]);
+    expect(result?.linkedChildCount).toBe(1);
   });
 
   it("returns null for a parent with no linked children (no switcher)", () => {
@@ -102,6 +109,10 @@ describe("buildHouseholdProfiles", () => {
         children: [kid("c1", "amy", "explorer")],
       }),
     ).toBeNull();
+  });
+
+  it("counts nothing when there is no household", () => {
+    expect(householdChildCount(null)).toBeNull();
   });
 
   it("keeps switching off: separate Auth users need a session decision first", () => {

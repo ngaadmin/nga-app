@@ -1,4 +1,5 @@
 import type { MasteryCohort } from "@/lib/dashboard/mastery-cohort";
+import { COHORT_AVATAR } from "@/lib/onboarding/cohort-avatars";
 
 /**
  * Profile avatar picker. Uses character art that already ships in the app
@@ -32,7 +33,8 @@ export const PROFILE_AVATAR_OPTIONS: readonly ProfileAvatarOption[] = [
   {
     id: "lars",
     name: "Lars",
-    src: `${CHARACTER_DIR}/lars/lars-waving-512.webp`,
+    // Same file as the cohort picker and Add profile (shared cohort list).
+    src: COHORT_AVATAR.explorer.src,
     width: 191,
     height: 391,
     cropX: 43,
@@ -42,7 +44,7 @@ export const PROFILE_AVATAR_OPTIONS: readonly ProfileAvatarOption[] = [
   {
     id: "holly",
     name: "Holly",
-    src: `${CHARACTER_DIR}/holly/holly-waving-512.webp`,
+    src: COHORT_AVATAR.pathfinder.src,
     width: 199,
     height: 391,
     cropX: 40,
@@ -52,11 +54,11 @@ export const PROFILE_AVATAR_OPTIONS: readonly ProfileAvatarOption[] = [
   {
     id: "senna-older",
     name: "Senna Older",
-    src: `${CHARACTER_DIR}/senna-older/senna-older-waving-512.webp`,
-    width: 189,
-    height: 394,
-    cropX: 43,
-    cropY: 9,
+    src: COHORT_AVATAR.maverick.src,
+    width: 512,
+    height: 512,
+    cropX: 187,
+    cropY: 125,
     cropSize: 118,
   },
   {

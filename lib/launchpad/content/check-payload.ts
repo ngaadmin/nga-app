@@ -345,7 +345,7 @@ function checkKnowYourCost(screen: Obj, where: string, answers: Answers): void {
 }
 
 const SET_PRICE_COPY = ["context", "guidance", "othersMissing", "keepLabel", "costLabel", "lowKeep", "emptyServices"] as const;
-const JOBS_COPY = ["context", "guidance", "singlePrompt", "multiPrompt", "covered", "needPrice", "weeklyLabel", "weeksLabel"] as const;
+const JOBS_COPY = ["context", "guidance", "singlePrompt", "multiPrompt", "covered", "needPrice", "weeklyLabel", "startupLabel", "weeksLabel"] as const;
 
 function checkSetPrice(screen: Obj, where: string, answers: Answers): void {
   saves(answers, screen, "price", where);

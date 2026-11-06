@@ -186,10 +186,21 @@ export function JobsCoverFlow({
             <p className="text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.guidance}</p>
             <h2 className="mb-2 mt-3 font-heading text-[15px] font-bold text-[#19347D]">{screen.copy.multiPrompt}</h2>
             <div className="flex flex-col gap-2">
-              {priced.map((row) => (
+              {priced.map((row) => {
+                const jobs = counts[row.serviceId] ?? 0;
+                const subtotal = (jobs * Math.round(row.keptPerJob * 100)) / 100;
+                return (
                 <div key={row.serviceId} className="flex flex-row items-center gap-2 rounded-[14px] bg-white px-3 py-2 shadow-[inset_0_0_0_1.5px_#E5E7EB]" data-service-card={row.serviceId} data-service-tile-layout="row">
                   <span className="min-w-0 flex-1 font-heading text-[15px] font-bold leading-tight text-[#19347D]">{labels.get(row.serviceId)}</span>
-                  <span className="shrink-0 text-[12.5px] text-[#6B7280]">{formatOngoingMoney(row.keptPerJob, currency)} kept</span>
+                  <span className="shrink-0 text-right text-[12.5px] leading-tight text-[#6B7280]">
+                    {formatOngoingMoney(row.keptPerJob, currency)} kept
+                    {jobs > 0 && (
+                      <>
+                        {" · "}
+                        <span data-subtotal="">{formatOngoingMoney(subtotal, currency)}</span>
+                      </>
+                    )}
+                  </span>
                   <Stepper
                     label={labels.get(row.serviceId) ?? "service"}
                     value={counts[row.serviceId] ?? 0}
@@ -207,7 +218,8 @@ export function JobsCoverFlow({
                     }}
                   />
                 </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-4 flex items-baseline justify-between text-[15px] text-[#19347D]">
               <span>{screen.copy.weeklyLabel}</span>
@@ -216,11 +228,17 @@ export function JobsCoverFlow({
               </b>
             </div>
             <div className="mt-1 flex items-baseline justify-between text-[15px] text-[#19347D]">
-              <span>{screen.copy.weeksLabel}</span>
-              <b className="font-heading text-lg tabular-nums" data-weeks-needed="">
-                {multiWeeks === null ? "—" : multiWeeks}
+              <span>{screen.copy.startupLabel}</span>
+              <b className="font-heading text-lg tabular-nums" data-startup-total="">
+                {formatStartupMoney(startup, currency)}
               </b>
             </div>
+            <p className="mt-2 text-[15px] text-[#19347D]">
+              {screen.copy.weeksLabel}{" "}
+              <b className="font-heading text-lg tabular-nums" data-weeks-needed="">
+                {multiWeeks === null ? "—" : `${multiWeeks} ${multiWeeks === 1 ? "week" : "weeks"}`}
+              </b>
+            </p>
           </div>
         )}
       </div>

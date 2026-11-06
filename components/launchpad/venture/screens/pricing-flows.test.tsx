@@ -66,7 +66,10 @@ describe("Jobs to cover costs", () => {
     const training = document.querySelector("[data-service-card='dog-training']") as HTMLElement;
     fireEvent.click(within(training).getByRole("button", { name: "More Dog Training jobs" }));
     expect(document.querySelector("[data-weekly-keep]")?.textContent).toBe("$68.25");
-    expect(document.querySelector("[data-weeks-needed]")?.textContent).toBe(String(sample.weeks));
+    expect(document.querySelector("[data-weeks-needed]")?.textContent).toBe(`${sample.weeks} weeks`);
+    expect(document.querySelector("[data-startup-total]")?.textContent).toBe("$80");
+    const subs = [...document.querySelectorAll("[data-subtotal]")].map((node) => node.textContent);
+    expect(subs).toEqual(["$43.80", "$24.45"]);
     expect(screen.queryByText(/charity|I give|donate/i)).toBeNull();
   });
 });

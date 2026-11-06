@@ -347,6 +347,7 @@ export type LaunchpadJobsCoverScreen = TaskScreenBase & {
     covered: string;
     needPrice: string;
     weeklyLabel: string;
+    startupLabel: string;
     weeksLabel: string;
   };
 };

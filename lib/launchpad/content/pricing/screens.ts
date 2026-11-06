@@ -1,7 +1,10 @@
 /**
  * Set the price and Work out how many jobs (framework rows 24–25).
- * Dog-walking test build. Competitor research is still a locked door, so a
- * card with no saved range greys "what others charge".
+ * Source: Service Business Framework md5 6104be84. Keep is price minus
+ * cost per job. Charity percent, charity share, and cause are not on
+ * these screens. Rows 15–17 preset menus are not wired yet.
+ * Competitor research is still a locked door, so a card with no saved
+ * range greys "what others charge".
  */
 import type { LaunchpadBronze, LaunchpadJobsCoverScreen, LaunchpadSetPriceScreen } from "@/lib/launchpad/content/types";
 
@@ -28,13 +31,13 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
     servicesFrom: "l1-offer",
     copy: {
       context:
-        "Your price has to cover your job costs and still leave something for you. A fair price also has to make sense next to what others charge for the same kind of job. Charity giving is planned later, in marketing and budgeting, and is not taken off this price.",
+        "Your price has to cover your job costs and still leave something for you. A fair price also has to make sense next to what others charge for the same kind of job. Charity giving is planned later (marketing and budgeting), not taken off this price.",
       guidance:
-        "Type a price and watch what you keep: your price minus what that job costs you. For example, a walk at $15 with $0.40 of restock leaves you $14.60. If what you keep is too small, try a higher price.",
+        "Start with the range you found for that job. Pick the service this price is for if you offer more than one (or fill a card per service). Type a price and watch the breakdown. For example, a 30-minute walk at $15: restock for that walk is $0.40, so you keep $14.60. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
       othersMissing: "What others charge isn't in yet.",
       keepLabel: "You keep",
       costLabel: "Cost",
-      lowKeep: "Try a higher price so you keep something.",
+      lowKeep: "Your price doesn't cover your costs yet. Try a higher price.",
       emptyServices: "You have not chosen a service yet. You can still continue.",
     },
   };
@@ -51,13 +54,14 @@ export function dogWalkingJobsCoverScreen(): LaunchpadJobsCoverScreen {
     copy: {
       context: "Your start-up gear has to be paid for before the business really starts making money. Knowing how many jobs that takes gives you a clear first target.",
       guidance:
-        "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up. With more than one service, pick a typical week. Be realistic about school, homework, and a parent's time.",
+        "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up. For example, start-up costs of $80 with $14.60 kept per walk takes 6 walks. With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.25 covers $80 in about 2 weeks. Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
       singlePrompt: "How many jobs can you do each week?",
       multiPrompt: "Build a typical week. How many of each job will you do?",
       covered: "Your start-up costs are already covered.",
       needPrice: "Finish Set the price first. Each service needs a price that leaves you something.",
-      weeklyLabel: "You keep this week",
-      weeksLabel: "Weeks to cover start-up",
+      weeklyLabel: "Weekly keep",
+      startupLabel: "Start-up total",
+      weeksLabel: "About",
     },
   };
 }

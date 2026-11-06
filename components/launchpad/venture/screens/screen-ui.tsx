@@ -1,5 +1,34 @@
 import type { ReactNode } from "react";
 
+/**
+ * White lesson top bar: back chevron and the screen title.
+ * The padding keeps the title off the top edge. Screens that already have a
+ * breadcrumb above this bar do not use it.
+ */
+export function LessonTopBar({
+  title,
+  onBack,
+  titleClassName = "font-heading text-[17px] font-bold text-[#19347D]",
+  trailing,
+}: {
+  title: string;
+  onBack: () => void;
+  titleClassName?: string;
+  trailing?: ReactNode;
+}) {
+  return (
+    <div className="mx-5 flex items-center gap-1 pt-12" data-lesson-top-bar="">
+      <button type="button" onClick={onBack} aria-label="Back" className="flex size-11 shrink-0 items-center justify-center text-[#19347D]">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7" />
+        </svg>
+      </button>
+      <h1 className={`min-w-0 flex-1 ${titleClassName}`}>{title}</h1>
+      {trailing}
+    </div>
+  );
+}
+
 /** Question line over an interaction. */
 export function ScreenPrompt({ children, id }: { children: ReactNode; id?: string }) {
   return (

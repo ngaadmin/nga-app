@@ -109,7 +109,7 @@ export function OfferLoopFlow({
   const anyPackage = draft.offerings.some((row) => row.packages.length > 0 || !!row.packagesExtra);
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
-      <div className="mx-5 mt-2 flex items-center gap-2">
+      <div className="mx-5 mt-6 flex items-center gap-2">
         <button type="button" aria-label="Back" onClick={() => (step === 0 ? onExit() : setStep(step - 1))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
@@ -237,7 +237,7 @@ export function CustomerCheckFlow({
   const offeringChips = chips.filter((item) => !screen.times.some((time) => time.id === item.id));
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="customer-check">
-      <div className="mx-5 mt-2 flex items-center gap-2">
+      <div className="mx-5 mt-6 flex items-center gap-2">
         <button type="button" aria-label="Back" onClick={onExit} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
@@ -330,7 +330,7 @@ export function CompetitorFlow({
   const ideaReady = draft.doDifferently !== SOMETHING_ELSE_ID || !!draft.doDifferentlyExtra?.trim();
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="competitor-check" data-competitor-step={step}>
-      <div className="mx-5 mt-2 flex items-center gap-2">
+      <div className="mx-5 mt-6 flex items-center gap-2">
         <button type="button" aria-label="Back" onClick={() => (step === 2 ? setStep(1) : onExit())} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>

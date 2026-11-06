@@ -5,6 +5,7 @@ import type { LaunchpadVisionSpec } from "@/lib/launchpad/content/types";
 import { summaryCatalog } from "@/lib/launchpad/content/summary";
 import { compileVision } from "@/lib/launchpad/content/vision";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel, PAPER_ACCENT } from "@/components/launchpad/venture/handbook/paper-art";
 
 /** The compiled vision sentence (H19) from the learner's saved answers, or null until it can be filled. */
@@ -66,12 +67,12 @@ export function VisionBlock({
             <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
           </svg>
           <p
-            className="w-full whitespace-normal break-words font-semibold text-[#19347D]"
+            className="w-full whitespace-normal break-words text-[#19347D]"
             style={{ fontSize: px, lineHeight: `${lh}px` }}
             data-vision-sentence=""
             data-vision-step={textStep}
           >
-            {sentence}
+            <ChosenValue block>{sentence}</ChosenValue>
           </p>
         </div>
       ) : (

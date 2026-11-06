@@ -17,9 +17,8 @@ export const PAPER_BACKGROUND = `#FDFBF7 url("${PAPER_NOISE}")`;
 
 /**
  * One binding repeat (34 x 22): an 8px punched hole (white, faint #D9DEE8 rim)
- * 24px into the tile, so 14px in from the card's edge once the strip sits at
- * left -10px, and a flat navy #19347D coil loop wrapping over the edge.
- * No shading, no ruled lines.
+ * 24px into the tile, and a flat navy #19347D coil. The strip sits inside the
+ * card (left 6px) so the whole coil is on the paper. No shading, no ruled lines.
  */
 const COIL_TILE =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='34' height='22'><circle cx='24' cy='11' r='4' fill='%23fff' stroke='%23D9DEE8' stroke-width='1'/><path d='M23.5 10C17 3 3 3.5 2.5 11C2.5 15.5 7 15.5 10 14' fill='none' stroke='%2319347D' stroke-width='2.6' stroke-linecap='round'/></svg>";
@@ -29,7 +28,7 @@ export function SpiralBinding() {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute -left-2.5 bottom-3.5 top-3.5 z-raised w-[34px]"
+      className="pointer-events-none absolute bottom-3.5 left-1.5 top-3.5 z-raised w-[34px]"
       style={{ background: `url("${COIL_TILE}") 0 0 / 34px 22px`, backgroundRepeat: "no-repeat round" }}
       data-spiral-binding=""
     />
@@ -54,7 +53,7 @@ export function Washi() {
 export function BinderCard({ children, className = "", washi = false, ...data }: { children: ReactNode; className?: string; washi?: boolean } & Record<`data-${string}`, string | undefined>) {
   return (
     <div
-      className={`relative ml-[22px] mr-4 rounded-2xl border border-[#EDE7DC] pb-[18px] pl-10 pr-[18px] pt-[18px] text-[#111827] ${className}`}
+      className={`relative ml-[22px] mr-4 rounded-2xl border border-[#EDE7DC] pb-[18px] pl-10 pr-[18px] pt-7 text-[#111827] ${className}`}
       style={{ background: PAPER_BACKGROUND }}
       data-binder-card=""
       {...data}

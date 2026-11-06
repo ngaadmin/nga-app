@@ -260,6 +260,19 @@ describe("<Handbook>", () => {
     expect(dialog.querySelectorAll("[data-paper-card]")).toHaveLength(1);
     expect(dialog.querySelectorAll("[data-washi]")).toHaveLength(1);
     expect(dialog.querySelectorAll("[data-paper-card] [data-spiral-binding]")).toHaveLength(1);
+    const card = dialog.querySelector("[data-paper-card]")!;
+    expect(card.className).toContain("left-[11px]");
+    expect(card.className).toContain("right-[11px]");
+    expect(card.className).not.toContain("right-[88px]");
+    const floors = within(dialog).getByRole("navigation", { name: "Workbook floors" });
+    expect(floors.className).toContain("grid-cols-6");
+    expect(floors.getAttribute("data-workbook-chrome")).toBe("folder");
+    expect(within(dialog).getByRole("button", { name: "Continue" })).toBeTruthy();
+    const spiral = dialog.querySelector("[data-spiral-binding]")!;
+    expect(spiral.className).toContain("left-1.5");
+    expect(spiral.className).not.toContain("-left-");
+    const sell = dialog.querySelector("[data-what-we-sell]");
+    expect(sell?.querySelector("[data-chosen-value]")).toBeTruthy();
     expect(dialog.textContent).not.toMatch(/coming soon|NGA|XP/i);
     // Every page: no Done chip, and the vision shows only on the cover.
     for (let i = 0; i < 6; i++) {
@@ -325,11 +338,12 @@ describe("<Handbook>", () => {
     expect(tab(/^Level 2/).hasAttribute("data-viewed")).toBe(false);
     unmount();
 
-    // Current floor (cyan) viewed keeps its fill and also gets the ring.
+    // The page being viewed uses the folder tab (white, navy border) and the orange ring.
     render(<Harness entry="building" initial={through("l1-s1")} />);
     const current = tab(/^Level 1/);
     expect(current.getAttribute("data-tab-state")).toBe("current");
-    expect(current.className).toContain("bg-[#3FB7DA]");
+    expect(current.className).toContain("bg-white");
+    expect(current.className).toContain("border-[#19347D]");
     expect(ringed()).toEqual(["Level 1, " + FLOORS[0]!.name]);
     // Locked tabs are not viewed, so they carry no ring.
     expect(tab(/^Level 2.*not earned yet/).className).not.toContain("outline-[#FFA503]");

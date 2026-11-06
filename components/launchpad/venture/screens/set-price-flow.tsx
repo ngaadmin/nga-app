@@ -20,7 +20,7 @@ const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
 function BackTitle({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <div className="mx-5 mt-2 flex items-center gap-1">
+    <div className="mx-5 mt-6 flex items-center gap-1">
       <button type="button" onClick={onBack} aria-label="Back" className="flex size-11 items-center justify-center text-[#19347D]">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M15 5l-7 7 7 7" />

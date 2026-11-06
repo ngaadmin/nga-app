@@ -14,6 +14,7 @@ import {
   useIdentityAnswer,
   useLaunchpadAnswers,
 } from "@/components/launchpad/venture/identity/answers-context";
+import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
@@ -156,7 +157,7 @@ export function HandbookSection({
       <AccentLabel doodle={doodle}>{section.label}</AccentLabel>
       {section.display === "list" ? (
         <p className="mt-3 text-[15px] leading-snug text-[#19347D]" aria-label={section.label}>
-          {joinSentence(lines)}
+          <ChosenValue>{joinSentence(lines)}</ChosenValue>
         </p>
       ) : section.display === "text" && lines.length === 1 ? (
         <div className="relative mt-3 pl-7" data-quote="">
@@ -171,8 +172,8 @@ export function HandbookSection({
             <path d="M4 36V22C4 10 10 3 19 1l2 5C15 8 12 13 12 18h8v18Z" />
             <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
           </svg>
-          <p className="font-heading text-[19px] font-semibold leading-[1.42] tracking-[-0.005em] text-[#111827]">
-            {lines[0]}
+          <p className="font-heading text-[19px] leading-[1.42] tracking-[-0.005em]">
+            <ChosenValue block>{lines[0]}</ChosenValue>
           </p>
         </div>
       ) : (
@@ -226,7 +227,9 @@ function WhatWeSell() {
   return (
     <div className="mt-2" data-what-we-sell="">
       <AccentLabel>What we sell</AccentLabel>
-      <p className="mt-1 text-[14px] leading-snug text-[#19347D]">{sentence}.</p>
+      <p className="mt-1 text-[14px] leading-snug text-[#19347D]">
+        <ChosenValue>{sentence}</ChosenValue>.
+      </p>
     </div>
   );
 }

@@ -68,7 +68,7 @@ function Crumb({
 
 function BackTitle({ title, onBack }: { title: string; onBack: () => void }) {
   return (
-    <div className="mx-5 mt-2 flex items-center gap-1">
+    <div className="mx-5 mt-6 flex items-center gap-1">
       <button type="button" onClick={onBack} aria-label="Back" className="flex size-11 items-center justify-center text-[#19347D]">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M15 5l-7 7 7 7" />
@@ -457,7 +457,7 @@ export function KnowYourCostFlow({
     body = (
       <>
         {crumb}
-        <div className={`mx-5 mt-3 ${SCROLL}`}>
+        <div className={`mx-5 mt-6 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Your costs</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
@@ -552,7 +552,7 @@ export function KnowYourCostFlow({
             ✕ Exit
           </button>
         </div>
-        <div className={`mx-5 ${SCROLL}`}>
+        <div className={`mx-5 mt-4 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
           <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Know your cost</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>

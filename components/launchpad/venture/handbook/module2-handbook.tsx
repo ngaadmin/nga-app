@@ -6,6 +6,7 @@ import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { catalogFor, chipLabel } from "@/lib/launchpad/content/planning/catalog";
 import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
@@ -60,12 +61,18 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         const open = editing === row.serviceId;
         return (
           <div key={row.serviceId} className="mb-3">
-            <button type="button" className="font-heading text-[15px] font-bold text-[#19347D]" disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
+            <button type="button" className="border-b-2 border-[#3FB7DA] font-heading text-[15px] font-bold text-[#19347D]" disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
               {label === "dog walking" ? "Dog walking" : label === "dog training" ? "Dog Training" : label === "grooming" ? "Grooming" : label}
             </button>
             <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-              {joinLabels(row.packages)}
-              {row.addons.length > 0 ? ` with ${joinLabels(row.addons)}` : ""}.
+              <ChosenValue>{joinLabels(row.packages)}</ChosenValue>
+              {row.addons.length > 0 ? (
+                <>
+                  {" "}
+                  with <ChosenValue>{joinLabels(row.addons)}</ChosenValue>
+                </>
+              ) : null}
+              .
             </p>
             {open && catalog && (
               <div className="mt-2" data-inline-editor={row.serviceId}>
@@ -91,12 +98,17 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         );
       })}
       <h3 className="mb-2 mt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">When</h3>
-      <p className="text-[15px] leading-snug text-[#19347D]">{joinLabels(offer.availability)}.</p>
+      <p className="text-[15px] leading-snug text-[#19347D]">
+        <ChosenValue>{joinLabels(offer.availability)}</ChosenValue>.
+      </p>
       <div className="mt-2 flex items-center gap-2 text-[14px] text-[#19347D]">
         {editable && (
           <button type="button" aria-label="Edit your own time" data-pencil="" onClick={() => setEditing(editing === "also" ? null : "also")} className="text-[#6B7280]">✎</button>
         )}
-        <span>Also: {editing === "also" ? "" : offer.availabilityExtra || "…"}</span>
+        <span>
+          Also:{" "}
+          {editing === "also" ? "" : offer.availabilityExtra ? <ChosenValue>{offer.availabilityExtra}</ChosenValue> : "…"}
+        </span>
       </div>
       {editing === "also" && (
         <div className="mt-2" data-inline-editor="also">
@@ -108,7 +120,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         <>
           <h3 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Who might want it</h3>
           <p className="text-[15px] leading-snug text-[#19347D]">
-            I asked {customer.numberAsked} people. They said {customer.yesNo === "yes" ? "Yes" : "No"}. They were interested in {joinLabels(customer.interests)}.
+            I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They said <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>. They were interested in <ChosenValue>{joinLabels(customer.interests)}</ChosenValue>.
           </p>
         </>
       )}

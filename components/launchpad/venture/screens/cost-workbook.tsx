@@ -7,6 +7,7 @@ import {
   workbookView,
 } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
+import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 
@@ -23,7 +24,7 @@ function Row({ label, amount }: { label: string; amount: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 text-[13px] leading-tight text-[#19347D]">
       <span className="min-w-0 flex-1">{label}</span>
-      <span className="font-heading text-[14px] font-semibold tabular-nums">{amount}</span>
+      <ChosenValue>{amount}</ChosenValue>
     </div>
   );
 }
@@ -97,7 +98,7 @@ export function CostWorkbookBody({
           </div>
           <div className="mt-2.5 flex items-baseline justify-between font-heading text-[15px] font-bold text-[#19347D]">
             <span>Start-up total</span>
-            <span className="tabular-nums" data-startup-total="">{money(view.startupTotal)}</span>
+            <span className="tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
           <HandRule />
           <h3 className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Ongoing · cost per job</h3>
@@ -112,7 +113,7 @@ export function CostWorkbookBody({
                   )}
                   <span className="min-w-0">{service.label}</span>
                 </span>
-                <span className="font-heading text-[14px] font-semibold tabular-nums">{job(service.perJob)}</span>
+                <span className="font-heading text-[14px] tabular-nums"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
               </div>
             ))}
           </div>

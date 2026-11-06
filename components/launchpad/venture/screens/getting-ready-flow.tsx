@@ -11,6 +11,7 @@ import {
   AGREE_TEMPLATE,
   BEFORE_HOW,
   CHANNELS,
+  channelPhrase,
   DELIVER_HINT,
   DELIVER_PLAYBACK,
   FEEDBACK_HOW,
@@ -27,12 +28,9 @@ import {
   WRAP_JOB_HINT,
   WRAP_JOB_PLAYBACK,
   agreeTitles,
-  deliverLines,
   feedbackWrap,
   findReady,
-  findSentence,
   practiceLines,
-  wrapJobLines,
   type PolishRow,
 } from "@/lib/launchpad/content/getting-ready/copy";
 import {
@@ -49,6 +47,7 @@ import {
   type PracticeRunAnswer,
   type WrapJobAnswer,
 } from "@/lib/launchpad/content/answers";
+import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { ART, ContinueButton, Sticker, WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 
@@ -243,10 +242,6 @@ function FindStep({
         )
       }
     >
-      <div className="mb-3 flex items-center gap-2">
-        <span className="flex size-8 items-center justify-center rounded-full bg-[#19347D] text-[12px] font-bold text-white">P</span>
-        <span className="font-heading text-[16px] font-semibold text-[#19347D]">{businessName}</span>
-      </div>
       {confirming ? (
         <>
           <Eyebrow>Learn the customer journey</Eyebrow>
@@ -256,9 +251,9 @@ function FindStep({
             {channels.map((id) => (
               <li key={id}>
                 <Rule />
-                <span className="flex items-center gap-2 py-1 text-[15px] font-semibold text-[#19347D]">
+                <span className="flex items-center gap-2 py-1 text-[15px] text-[#19347D]">
                   <span className="flex size-6 items-center justify-center rounded-[5px] bg-[#FFA503]"><Check /></span>
-                  {CHANNELS.find((row) => row.id === id)?.label}
+                  <ChosenValue>{CHANNELS.find((row) => row.id === id)?.label}</ChosenValue>
                 </span>
               </li>
             ))}
@@ -399,9 +394,10 @@ function DeliverStep({
         I will show proof by sending <InlineMenu label="How you will show proof" value={afterHow} options={AFTER_HOW} onPick={setAfter} />.
       </p>
       {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{DELIVER_PLAYBACK}</p>}
-      <div className="mt-4 flex justify-end gap-2">
-        <FlatSticker kind="phone_chat" />
-        <FlatSticker kind="polaroid" />
+      <div className="mt-8 flex items-end justify-between px-6">
+        <FlatSticker kind="sparkle" doodle />
+        <FlatSticker kind="paw" doodle />
+        <FlatSticker kind="star" doodle />
       </div>
     </WorkbookFrame>
   );
@@ -439,9 +435,10 @@ function WrapJobStep({
         I will ask the owner for feedback or a short review by <InlineMenu label="How you will ask for feedback" value={feedbackHow} options={FEEDBACK_HOW} onPick={setFeedback} />.
       </p>
       {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
-      <div className="mt-4 flex justify-end gap-2">
-        <FlatSticker kind="star_bubble" />
-        <FlatSticker kind="envelope" />
+      <div className="mt-8 flex items-end justify-between px-6">
+        <FlatSticker kind="star" doodle />
+        <FlatSticker kind="heart" doodle />
+        <FlatSticker kind="sparkle" doodle />
       </div>
     </WorkbookFrame>
   );
@@ -595,7 +592,36 @@ export function ReadyWrap({
       <div data-ready-wrap="a">
         <Aqua>Getting Ready</Aqua>
         <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll find customers</h3>
-        <p className="mt-1 text-[15px] leading-snug text-[#19347D]">{find ? findSentence(find.channels, find.channelsExtra) : "Not answered yet"}</p>
+        <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+          {find ? (
+            <>
+              {find.channels.length > 0 && (
+                <>
+                  I&apos;ll find customers through{" "}
+                  {find.channels.map((id, index) => {
+                    const last = index === find.channels.length - 1;
+                    const sep = index === 0 ? "" : last && find.channels.length > 2 ? ", and " : last ? " and " : ", ";
+                    return (
+                      <span key={id}>
+                        {sep}
+                        <ChosenValue>{channelPhrase(id)}</ChosenValue>
+                      </span>
+                    );
+                  })}
+                  .
+                </>
+              )}
+              {find.channelsExtra?.trim() ? (
+                <>
+                  {" "}
+                  Also: <ChosenValue>{find.channelsExtra.trim()}</ChosenValue>
+                </>
+              ) : null}
+            </>
+          ) : (
+            "Not answered yet"
+          )}
+        </p>
         <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">What I&apos;ll agree before a job</h3>
         <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
           {titles.map((title) => (
@@ -610,20 +636,55 @@ export function ReadyWrap({
     );
   }
   if (page === "b") {
-    const delivered = deliver ? deliverLines(deliver.beforeHow, deliver.afterHow) : null;
-    const wrapped = wrap ? wrapJobLines(wrap.paymentHow, wrap.feedbackHow) : null;
+    const before = deliver ? BEFORE_HOW.find((row) => row.id === deliver.beforeHow)?.sentence : undefined;
+    const after = deliver ? AFTER_HOW.find((row) => row.id === deliver.afterHow)?.sentence : undefined;
+    const payment = wrap ? PAYMENT_HOW.find((row) => row.id === wrap.paymentHow)?.sentence : undefined;
+    const feedback = wrap ? FEEDBACK_HOW.find((row) => row.id === wrap.feedbackHow)?.sentence : undefined;
     return (
       <div data-ready-wrap="b">
-        <Section title="How I'll deliver the job" lead={delivered?.title} lines={delivered?.lines ?? []} />
-        <Section title="How I'll wrap up a job" lead={wrapped?.title} lines={wrapped?.lines ?? []} />
-        <div className="mt-4 flex justify-end gap-2">
-          <FlatSticker kind="polaroid" />
-          <FlatSticker kind="star_bubble" />
+        <div className="mt-3">
+          <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll deliver the job</h3>
+          {deliver && <p className="mt-1 text-[13px] text-[#9AA3B5]">{DELIVER_PLAYBACK}</p>}
+          <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
+            {before && (
+              <li>
+                I will contact the owner to confirm the agreed details of the job by <ChosenValue>{before}</ChosenValue>.
+              </li>
+            )}
+            {after && (
+              <li>
+                I will show proof by sending <ChosenValue>{after}</ChosenValue>.
+              </li>
+            )}
+          </ul>
+        </div>
+        <div className="mt-3">
+          <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll wrap up a job</h3>
+          {wrap && <p className="mt-1 text-[13px] text-[#9AA3B5]">{WRAP_JOB_PLAYBACK}</p>}
+          <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
+            {payment && (
+              <li>
+                I will collect payment by <ChosenValue>{payment}</ChosenValue>.
+              </li>
+            )}
+            {feedback && (
+              <li>
+                I will ask the owner for feedback or a short review by <ChosenValue>{feedback}</ChosenValue>.
+              </li>
+            )}
+          </ul>
+        </div>
+        <div className="mt-6 flex items-end justify-between px-4">
+          <FlatSticker kind="star" doodle />
+          <FlatSticker kind="sparkle" doodle />
+          <FlatSticker kind="heart" doodle />
         </div>
       </div>
     );
   }
-  const lines = practice ? practiceLines(practice.who, serviceLabel, practice.when) : [];
+  const whoLabel = practice ? (PRACTICE_WHO.find((row) => row.id === practice.who)?.label ?? practice.who) : "";
+  const whenLabel = practice ? (PRACTICE_WHEN.find((row) => row.id === practice.when)?.label ?? practice.when) : "";
+  const serviceWord = serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1);
   const feedback = polish
     ? feedbackWrap(
         POLISH_QUESTIONS.map((q): PolishRow => ({
@@ -636,13 +697,23 @@ export function ReadyWrap({
   return (
     <div data-ready-wrap="c">
       <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">Your practice run</h3>
-      {lines.map((line) => (
-        <p key={line} className="mt-1 text-[15px] leading-snug text-[#19347D]">{line}</p>
-      ))}
+      {practice && (
+        <>
+          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+            I will do a practice run for <ChosenValue>{whoLabel}</ChosenValue>.
+          </p>
+          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+            I will do <ChosenValue>{serviceWord}</ChosenValue> for them.
+          </p>
+          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+            I will do it <ChosenValue>{whenLabel}</ChosenValue>.
+          </p>
+        </>
+      )}
       <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">Feedback from my trial run</h3>
       {feedback?.notes.map((note) => (
         <p key={note.question} className="mt-1 text-[15px] leading-snug text-[#19347D]">
-          {note.question} {note.note}
+          {note.question} <ChosenValue>{note.note}</ChosenValue>
         </p>
       ))}
       {feedback && <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{feedback.other}</p>}
@@ -652,20 +723,6 @@ export function ReadyWrap({
         <FlatSticker kind="star" doodle />
         <img src={ART.pennyMaster} alt="" width={46} height={46} className="h-[46px] w-auto" />
       </div>
-    </div>
-  );
-}
-
-function Section({ title, lead, lines }: { title: string; lead?: string; lines: readonly string[] }) {
-  return (
-    <div className="mt-3">
-      <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">{title}</h3>
-      {lead && <p className="mt-1 text-[13px] text-[#9AA3B5]">{lead}</p>}
-      <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
-        {lines.map((line) => (
-          <li key={line}>{line}</li>
-        ))}
-      </ul>
     </div>
   );
 }

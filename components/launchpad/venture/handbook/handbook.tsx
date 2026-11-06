@@ -202,7 +202,7 @@ export function Handbook({
         )}
         {page && (
           <div
-            className={`absolute top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[108px] left-[11px] right-[11px]"}`}
+            className="absolute bottom-[108px] left-[11px] right-[11px] top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC]"
             style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
@@ -215,7 +215,7 @@ export function Handbook({
           >
             <SpiralBinding />
             <Washi />
-            <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-3" data-paper-scroll="">
+            <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6" data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
@@ -228,25 +228,20 @@ export function Handbook({
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-6 gap-1"}>
+        <nav aria-label="Workbook floors" className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-6 gap-1" data-workbook-chrome="folder">
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;
-            const later = !!page && page.kind !== "cover" && t.level > page.level;
+            const later = !!page && t.level > page.level;
             // The floor being viewed gets the app's orange ring (outline, so it sits outside
             // the 44px tab and stacks with any state styling) whatever the tab's state.
             const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
-            const base = `${page?.kind === "cover" ? "flex h-[58px] w-11 flex-col gap-1 rounded-[10px] text-[13px]" : "flex h-10 w-11 items-center justify-center rounded-b-[3px] rounded-t-none border text-[12px]"} ${viewedRing}`;
-            const folder = page?.kind !== "cover";
-            const fill = !folder
-              ? t.state === "current"
-                ? "bg-[#3FB7DA] text-white"
-                : "bg-[#F3F4F6] text-[#374151]"
-              : viewing
-                ? "border-[#19347D] bg-white font-semibold text-[#19347D]"
-                : later
-                  ? "border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#C4C0B8]"
-                  : "border-[#E7E1D6] bg-[#F3EFE6] font-semibold text-[#6B645C]";
+            const base = `flex h-10 w-11 items-center justify-center rounded-b-[3px] rounded-t-none border text-[12px] ${viewedRing}`;
+            const fill = viewing
+              ? "border-[#19347D] bg-white font-semibold text-[#19347D]"
+              : later
+                ? "border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#C4C0B8]"
+                : "border-[#E7E1D6] bg-[#F3EFE6] font-semibold text-[#6B645C]";
             if (!t.tappable)
               return (
                 <button
@@ -255,12 +250,11 @@ export function Handbook({
                   disabled
                   aria-label={`${label}, not earned yet`}
                   aria-current={viewing ? "true" : undefined}
-                  className={`${base} font-medium text-[#9CA3AF] ${folder ? "border-[#E5E7EB] bg-[#F7F5F1]" : "shadow-[inset_0_0_0_1px_#E5E7EB]"}`}
+                  className={`${base} border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#9CA3AF]`}
                   data-tab-state={t.state}
                   data-viewed={viewing ? "" : undefined}
                 >
                   L{t.level}
-                  {folder ? null : <SmallLock />}
                 </button>
               );
             return (
@@ -280,41 +274,27 @@ export function Handbook({
           })}
         </nav>
 
-        <div className={page?.kind === "cover" ? "absolute inset-x-0 bottom-1 flex h-11 items-center justify-center gap-2" : "sr-only"}>
-          {page?.kind === "cover" && (
-            <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-full disabled:opacity-40">
-              <Chevron dir="left" />
-            </button>
-          )}
+        <div className="sr-only">
           <div className="flex items-center gap-[7px]" aria-hidden="true" data-page-dots="">
             {pages.map((p, i) => (
               <span key={`${p.kind}-${p.silver.id}-${p.sheet ?? i}`} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
             ))}
             {ghost && <span className="size-1.5 rounded-full shadow-[inset_0_0_0_1px_#9CA3AF]" />}
           </div>
-          {page?.kind === "cover" && (
-            <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-full disabled:opacity-40">
-              <Chevron dir="right" />
-            </button>
-          )}
         </div>
-        {page?.kind !== "cover" && (
-          <>
-            <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
-              <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
-                <Chevron dir="left" />
-              </button>
-              <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
-                <Chevron dir="right" />
-              </button>
-            </div>
-            <div className="absolute inset-x-0 bottom-3 flex justify-center">
-              <button type="button" onClick={() => (isLast ? onClose() : go(at + 1))} className="h-11 min-w-[148px] rounded-full bg-[#19347D] px-6 text-[15px] font-semibold text-white">
-                Continue
-              </button>
-            </div>
-          </>
-        )}
+        <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
+          <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+            <Chevron dir="left" />
+          </button>
+          <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+            <Chevron dir="right" />
+          </button>
+        </div>
+        <div className="absolute inset-x-0 bottom-3 flex justify-center">
+          <button type="button" onClick={() => (isLast ? onClose() : go(at + 1))} className="h-11 min-w-[148px] rounded-full bg-[#19347D] px-6 text-[15px] font-semibold text-white">
+            Continue
+          </button>
+        </div>
         <span className="sr-only" aria-live="polite">
           Page {at + 1} of {pages.length}
         </span>

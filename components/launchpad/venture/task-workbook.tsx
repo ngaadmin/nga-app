@@ -95,7 +95,7 @@ export function TaskWorkbook(props: {
           {props.eyebrow}
         </p>
       )}
-      <Heading className={kind ? "!mx-6 mb-1.5 !mt-1" : "mb-2.5 mt-1.5 short:mb-1.5 short:mt-0.5"}>{neutralTitle(task.title)}</Heading>
+      <Heading className={kind ? "!mx-6 mb-1.5 !mt-6" : "mb-2.5 mt-6 short:mb-1.5 short:mt-4"}>{neutralTitle(task.title)}</Heading>
       {kind === "logo" && <LogoBuilder key={task.id} screens={task.screens as readonly LaunchpadLogoPickerScreen[]} />}
       {kind === "name" && <NameForm key={task.id} screens={task.screens as readonly LaunchpadNamePickerScreen[]} />}
       {page && <TaskScreen key={page.screen.id} screen={page.screen} />}

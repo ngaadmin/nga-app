@@ -10,6 +10,7 @@ import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
+import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
@@ -51,17 +52,21 @@ export function PriceSheet() {
         <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2 leading-tight">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="font-heading text-[18px] font-semibold text-[#19347D]">{nameFor(row.serviceId, labels)}</h3>
-            <span className="font-heading text-[22px] font-bold text-[#19347D]">{formatMoney(row.price, currency)}</span>
+            <span className="font-heading text-[22px] font-bold text-[#19347D]"><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
           </div>
-          <p className="mt-1 text-[14px] text-[#19347D]">for one {pkg ? chipLabel(pkg) : "job"}</p>
+          <p className="mt-1 text-[14px] text-[#19347D]">for one <ChosenValue>{pkg ? chipLabel(pkg) : "job"}</ChosenValue></p>
           <p className="text-[14px] text-[#4B5563]">
-            {compared && competitor
-              ? `Others charge ${formatMoney(competitor.priceLow, currency)} to ${formatMoney(competitor.priceHigh, currency)}. Mine is ${row.comparedToOthers ?? "about the same as"} others.`
-              : "Others range: not checked yet."}
+            {compared && competitor ? (
+              <>
+                Others charge <ChosenValue>{formatMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatMoney(competitor.priceHigh, currency)}</ChosenValue>. Mine is <ChosenValue>{row.comparedToOthers ?? "about the same as"}</ChosenValue> others.
+              </>
+            ) : (
+              "Others range: not checked yet."
+            )}
           </p>
-          <p className="mt-2 text-[14px] text-[#19347D]">Price {formatMoney(row.price, currency)}</p>
-          <p className="text-[14px] text-[#19347D]">Job cost per job {formatMoney(row.costPerJob, currency)}</p>
-          <p className="font-semibold text-[#19347D]">I keep {formatMoney(row.keptPerJob, currency)}</p>
+          <p className="mt-2 text-[14px] text-[#19347D]">Price <ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></p>
+          <p className="text-[14px] text-[#19347D]">Job cost per job <ChosenValue>{formatMoney(row.costPerJob, currency)}</ChosenValue></p>
+          <p className="text-[#19347D]">I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue></p>
           <p className="text-[13px] text-[#6B7280]">
             {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
           </p>
@@ -107,22 +112,22 @@ export function JobsSheet() {
             <li key={row.serviceId} className="flex items-center justify-between gap-2 border-b border-dashed border-[#E4D3B4] py-2 text-[15px] text-[#19347D]">
               <span className="flex items-center gap-2">
                 <button type="button" aria-label={`Fewer ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, -1)}>−</button>
-                <span className="w-4 text-center font-semibold">{row.jobsPerWeek}</span>
+                <span className="w-4 text-center"><ChosenValue>{row.jobsPerWeek}</ChosenValue></span>
                 <button type="button" aria-label={`More ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, 1)}>+</button>
                 <span>{nameFor(row.serviceId, labels)}</span>
               </span>
-              <span>I keep {formatMoney(row.subtotal, currency)}</span>
+              <span>I keep <ChosenValue>{formatMoney(row.subtotal, currency)}</ChosenValue></span>
             </li>
           ))}
         </ul>
       ) : (
         <p className="mt-3 text-[15px] text-[#19347D]">
-          {jobs.jobsPerWeek} jobs a week · I keep {formatMoney(jobs.keptPerJob ?? 0, currency)}
+          <ChosenValue>{jobs.jobsPerWeek}</ChosenValue> jobs a week · I keep <ChosenValue>{formatMoney(jobs.keptPerJob ?? 0, currency)}</ChosenValue>
         </p>
       )}
-      <p className="mt-3 font-heading text-[16px] font-semibold text-[#19347D]">Weekly keep {formatMoney(jobs.weeklyKeep ?? 0, currency)}</p>
-      <p className="text-[15px] text-[#19347D]">Start-up to cover {formatStartupMoney(jobs.startupTotal, currency)}</p>
-      <p className="mt-1 text-[15px] font-semibold text-[#19347D]">About {jobs.weeksNeeded} weeks to cover start-up.</p>
+      <p className="mt-3 font-heading text-[16px] text-[#19347D]">Weekly keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue></p>
+      <p className="text-[15px] text-[#19347D]">Start-up to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue></p>
+      <p className="mt-1 text-[15px] text-[#19347D]">About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover start-up.</p>
       <p className="mt-1 text-[13px] text-[#6B7280]">
         {formatStartupMoney(jobs.startupTotal, currency)} ÷ {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week
         {jobs.weeklyKeep ? ` = ${(jobs.startupTotal / jobs.weeklyKeep).toFixed(2)}, round up to ${jobs.weeksNeeded}` : ""}.
@@ -150,14 +155,22 @@ export function FundingSheet() {
       <AccentLabel as="h2">Planning</AccentLabel>
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll cover my start-up costs</h3>
       {funding.fundingSource === "own_cash" ? (
-        <p className="mt-2 text-[15px] leading-snug text-[#19347D]">I&apos;ll cover my start-up cost of {total} from my own cash or savings.</p>
+        <p className="mt-2 text-[15px] leading-snug text-[#19347D]">
+          I&apos;ll cover my start-up cost of <ChosenValue>{total}</ChosenValue> from my own cash or savings.
+        </p>
       ) : (
         <ul className="mt-2 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
-          <li>I&apos;ll borrow {total}</li>
+          <li>I&apos;ll borrow <ChosenValue>{total}</ChosenValue></li>
           <li>
-            {funding.fundingRepayMode === "fixed_over_time"
-              ? `I'll pay it back: fixed amount, about ${pay} each ${funding.fundingRepayUnit === "months" ? "month" : "week"} for ${funding.fundingRepayCount} ${funding.fundingRepayUnit}.`
-              : `I'll pay it back: ${weekly} a week, about ${funding.fundingWeeksToRepay} weeks.`}
+            {funding.fundingRepayMode === "fixed_over_time" ? (
+              <>
+                I&apos;ll pay it back: fixed amount, about <ChosenValue>{pay}</ChosenValue> each {funding.fundingRepayUnit === "months" ? "month" : "week"} for <ChosenValue>{funding.fundingRepayCount}</ChosenValue> {funding.fundingRepayUnit}.
+              </>
+            ) : (
+              <>
+                I&apos;ll pay it back: <ChosenValue>{weekly}</ChosenValue> a week, about <ChosenValue>{funding.fundingWeeksToRepay}</ChosenValue> weeks.
+              </>
+            )}
           </li>
         </ul>
       )}
@@ -182,9 +195,15 @@ export function PricingSummarySheet() {
     <div data-pricing-summary="">
       <AccentLabel as="h2">Pricing</AccentLabel>
       <p className="mt-3 text-[15px] leading-snug text-[#19347D]">
-        {addons.length ? `They often include ${addons.join(" and ")}.` : "What others include is not checked yet."}
+        {addons.length ? (
+          <>
+            They often include <ChosenValue>{addons.join(" and ")}</ChosenValue>.
+          </>
+        ) : (
+          "What others include is not checked yet."
+        )}
       </p>
-      <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{idea ? `I could do differently: ${idea}.` : ""}</p>
+      <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{idea ? <>I could do differently: <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
       <p className="mt-3 text-[13px] text-[#6B7280]">Full list on Pages 3 and 3b. Tap a line to change it.</p>
       <div className="mt-6 flex items-end gap-3">
         <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto shrink-0" />
@@ -219,15 +238,23 @@ function PlanSelling() {
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">What I am selling</h3>
       {offer?.offerings.map((row) => (
         <p key={row.serviceId} className="mt-1 text-[15px] leading-snug text-[#19347D]">
-          {nameFor(row.serviceId, labels)}: {row.packages.map(chipLabel).join(", ")}
-          {row.addons.length ? ` with ${row.addons.map(chipLabel).join(", ")}` : ""}.
+          {nameFor(row.serviceId, labels)}: <ChosenValue>{row.packages.map(chipLabel).join(", ")}</ChosenValue>
+          {row.addons.length ? (
+            <>
+              {" "}
+              with <ChosenValue>{row.addons.map(chipLabel).join(", ")}</ChosenValue>
+            </>
+          ) : null}
+          .
         </p>
       ))}
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">When and who might want it</h3>
-      <p className="mt-1 text-[15px] text-[#19347D]">{offer?.availability.map(chipLabel).join(", ") || "Not answered yet"}.</p>
+      <p className="mt-1 text-[15px] text-[#19347D]">
+        {offer?.availability.length ? <ChosenValue>{offer.availability.map(chipLabel).join(", ")}</ChosenValue> : "Not answered yet"}.
+      </p>
       {customer && (
         <p className="mt-1 text-[15px] text-[#19347D]">
-          I asked {customer.numberAsked} people. They were interested in {customer.interests.map(chipLabel).join(", ")}.
+          I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They were interested in <ChosenValue>{customer.interests.map(chipLabel).join(", ")}</ChosenValue>.
         </p>
       )}
       <p className="mt-2 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>
@@ -248,12 +275,18 @@ function PlanCosts() {
       {[...view.marketing, ...view.starterGear].map((line) => (
         <p key={line.id} className="flex justify-between border-b border-dashed border-[#E4D3B4] py-1 text-[14px] text-[#19347D]">
           <span>{line.label}</span>
-          <span>{formatStartupMoney(line.amount, currency)}</span>
+          <ChosenValue>{formatStartupMoney(line.amount, currency)}</ChosenValue>
         </p>
       ))}
-      <p className="mt-2 font-semibold text-[#19347D]">Start-up total {formatStartupMoney(view.startupTotal, currency)}</p>
+      <p className="mt-2 text-[#19347D]">Start-up total <ChosenValue>{formatStartupMoney(view.startupTotal, currency)}</ChosenValue></p>
       <p className="mt-2 text-[14px] text-[#19347D]">
-        Ongoing cost per job: {view.ongoing.map((row) => `${row.label} ${formatMoney(row.perJob, currency)}`).join(", ")}.
+        Ongoing cost per job: {view.ongoing.map((row, index) => (
+          <span key={row.serviceId}>
+            {index > 0 ? ", " : ""}
+            {row.label} <ChosenValue>{formatMoney(row.perJob, currency)}</ChosenValue>
+          </span>
+        ))}
+        .
       </p>
     </div>
   );
@@ -271,14 +304,22 @@ function PlanOthers() {
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">What others charge</h3>
       <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
         {competitor
-          ? `${competitor.walkersChecked} other walkers charge ${formatMoney(competitor.priceLow, currency)} to ${formatMoney(competitor.priceHigh, currency)}. They often include ${addons}.`
+          ? (
+            <>
+              <ChosenValue>{competitor.walkersChecked}</ChosenValue> other walkers charge <ChosenValue>{formatMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatMoney(competitor.priceHigh, currency)}</ChosenValue>. They often include <ChosenValue>{addons}</ChosenValue>.
+            </>
+          )
           : "Not checked yet."}
       </p>
-      {competitor && <p className="mt-1 text-[15px] text-[#19347D]">I could do differently: {chipLabel(competitor.doDifferently).toLowerCase()}.</p>}
+      {competitor && (
+        <p className="mt-1 text-[15px] text-[#19347D]">
+          I could do differently: <ChosenValue>{chipLabel(competitor.doDifferently).toLowerCase()}</ChosenValue>.
+        </p>
+      )}
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">My price</h3>
       {price?.prices.map((row) => (
         <p key={row.serviceId} className="mt-1 text-[15px] leading-snug text-[#19347D]">
-          {nameFor(row.serviceId, labels)} · I keep {formatMoney(row.keptPerJob, currency)}
+          {nameFor(row.serviceId, labels)} · I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue>
           <span className="block text-[13px] text-[#6B7280]">
             {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
           </span>
@@ -301,9 +342,9 @@ function PlanWeek() {
     <div>
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">Jobs to cover my costs</h3>
       <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Typical week</p>
-      <p className="mt-1 text-[15px] text-[#19347D]">{mix} a week.</p>
-      <p className="text-[15px] text-[#19347D]">Keep {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week.</p>
-      <p className="text-[15px] font-semibold text-[#19347D]">About {jobs.weeksNeeded} weeks to cover {formatStartupMoney(jobs.startupTotal, currency)} start-up.</p>
+      <p className="mt-1 text-[15px] text-[#19347D]"><ChosenValue>{mix}</ChosenValue> a week.</p>
+      <p className="text-[15px] text-[#19347D]">Keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> a week.</p>
+      <p className="text-[15px] text-[#19347D]">About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
       {math && (
         <p className="mt-1 text-[13px] text-[#6B7280]">
           {math} = {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week.

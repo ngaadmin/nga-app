@@ -31,7 +31,7 @@ export function dogWalkingSetPriceScreen(): LaunchpadSetPriceScreen {
     servicesFrom: "l1-offer",
     copy: {
       context:
-        "Your price has to cover your job costs and still leave something for you. A fair price also has to make sense next to what others charge for the same kind of job. Charity giving is planned later (marketing and budgeting), not taken off this price.",
+        "Your price has to cover your job costs and still leave something for you. A fair price also has to make sense next to what others charge for the same kind of job.",
       guidance:
         "Start with the range you found for that job. Pick the service this price is for if you offer more than one (or fill a card per service). Type a price and watch the breakdown. For example, a 30-minute walk at $15: restock for that walk is $0.40, so you keep $14.60. If what you keep is too small, try a higher price. You can charge more if you offer something extra.",
       othersMissing: "What others charge isn't in yet.",

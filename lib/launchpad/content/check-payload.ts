@@ -169,7 +169,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
  * on an earlier screen; picker steps share one key, so a repeat is fine for
  * those and rejected for capture screens.
  */
-type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs" | "price" | "jobs";
+type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs" | "price" | "jobs" | "offer" | "customer" | "competitor";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
 function answerKey(screen: Obj, where: string): string {
@@ -280,6 +280,15 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
     case "jobs-to-cover":
       checkJobsCover(screen, where, answers);
       return;
+    case "offer-loop":
+      checkOfferLoop(screen, where, answers);
+      return;
+    case "customer-check":
+      checkCustomer(screen, where, answers);
+      return;
+    case "competitor-check":
+      checkCompetitor(screen, where, answers);
+      return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
   }
@@ -370,6 +379,54 @@ function checkJobsCover(screen: Obj, where: string, answers: Answers): void {
     text(raw.label, `${ow} label`);
     if (raw.jobs !== i + 1) fail(`${ow} must be ${i + 1} jobs a week.`);
   });
+}
+
+function checkChips(value: unknown, where: string): void {
+  const seen = new Set<string>();
+  list(value, where, 1).forEach((raw, i) => {
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id)) fail(`${where} chip ${i + 1} has no valid id.`);
+    if (seen.has(raw.id)) fail(`${where} repeats ${String(raw.id)}.`);
+    seen.add(raw.id);
+    text(raw.label, `${where} chip ${i + 1} label`);
+  });
+}
+
+function checkOfferLoop(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "offer", where);
+  reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
+  checkChips(screen.times, `${where} times`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  for (const field of ["serviceIntro", "whenTitle", "whenIntro", "whenNote", "addPackage", "addExtra", "addService", "addTime"] as const) {
+    text(screen.copy[field], `${where} ${field}`);
+  }
+  list(screen.catalogs, `${where} catalogs`, 1).forEach((raw, i) => {
+    if (!isObj(raw) || typeof raw.serviceId !== "string" || !NODE_ID_RE.test(raw.serviceId)) fail(`${where} catalog ${i + 1} has no service.`);
+    checkChips(raw.packages, `${where} catalog ${i + 1} packages`);
+    checkChips(raw.extras, `${where} catalog ${i + 1} extras`);
+  });
+}
+
+function checkCustomer(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "customer", where);
+  reads(answers, screen.offerFrom, ["offer"], `${where} offerFrom`);
+  reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
+  text(screen.productPhrase, `${where} productPhrase`);
+  checkChips(screen.times, `${where} times`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  text(screen.copy.intro, `${where} intro`);
+  text(screen.copy.addInterest, `${where} addInterest`);
+}
+
+function checkCompetitor(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "competitor", where);
+  reads(answers, screen.offerFrom, ["offer"], `${where} offerFrom`);
+  reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
+  checkChips(screen.addons, `${where} addons`);
+  checkChips(screen.ideas, `${where} ideas`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  for (const field of ["pricesIntro", "extrasIntro", "addJob", "addExtra", "ideaTitle", "ideaHint", "elseHint"] as const) {
+    text(screen.copy[field], `${where} ${field}`);
+  }
 }
 
 function checkCaptureBase(screen: Obj, where: string, promptOptional = false): void {

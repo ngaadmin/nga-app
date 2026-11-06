@@ -34,6 +34,9 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "know-your-cost",
   "set-price",
   "jobs-to-cover",
+  "offer-loop",
+  "customer-check",
+  "competitor-check",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -352,6 +355,64 @@ export type LaunchpadJobsCoverScreen = TaskScreenBase & {
   };
 };
 
+export type LaunchpadChip = { id: string; label: string };
+
+export type LaunchpadServiceCatalog = {
+  serviceId: string;
+  packages: readonly LaunchpadChip[];
+  extras: readonly LaunchpadChip[];
+};
+
+/** Row 15: one page per offered service, then one When page. */
+export type LaunchpadOfferLoopScreen = TaskScreenBase & {
+  type: "offer-loop";
+  answerKey: string;
+  servicesFrom: string;
+  times: readonly LaunchpadChip[];
+  catalogs: readonly LaunchpadServiceCatalog[];
+  copy: {
+    serviceIntro: string;
+    whenTitle: string;
+    whenIntro: string;
+    whenNote: string;
+    addPackage: string;
+    addExtra: string;
+    addService: string;
+    addTime: string;
+  };
+};
+
+/** Row 16: number, yes/no, and interest chips. */
+export type LaunchpadCustomerScreen = TaskScreenBase & {
+  type: "customer-check";
+  answerKey: string;
+  offerFrom: string;
+  servicesFrom: string;
+  times: readonly LaunchpadChip[];
+  /** Shown in the sentence. {product} has no defined lookup. */
+  productPhrase: string;
+  copy: { intro: string; addInterest: string };
+};
+
+/** Row 17: one competitor check, then add-ons and one different idea. */
+export type LaunchpadCompetitorScreen = TaskScreenBase & {
+  type: "competitor-check";
+  answerKey: string;
+  offerFrom: string;
+  servicesFrom: string;
+  addons: readonly LaunchpadChip[];
+  ideas: readonly LaunchpadChip[];
+  copy: {
+    pricesIntro: string;
+    extrasIntro: string;
+    addJob: string;
+    addExtra: string;
+    ideaTitle: string;
+    ideaHint: string;
+    elseHint: string;
+  };
+};
+
 export type LaunchpadTaskScreen =
   | LaunchpadPlaceholderScreen
   | LaunchpadTextScreen
@@ -365,7 +426,10 @@ export type LaunchpadTaskScreen =
   | LaunchpadGoalLoopScreen
   | LaunchpadKnowYourCostScreen
   | LaunchpadSetPriceScreen
-  | LaunchpadJobsCoverScreen;
+  | LaunchpadJobsCoverScreen
+  | LaunchpadOfferLoopScreen
+  | LaunchpadCustomerScreen
+  | LaunchpadCompetitorScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

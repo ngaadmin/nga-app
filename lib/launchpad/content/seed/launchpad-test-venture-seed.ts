@@ -3,7 +3,7 @@
  * is the rooftop (future work — see BUDGETING_ROOFTOP_NOTE). Module 1 content
  * and L2 product screens overlay from the load file. L2 Pricing keeps Final
  * titles. Know your cost, Set the price, and jobs are test builds.
- * Competitor research and L3–6 stay structure placeholders.
+ * Rows 15-17 are chip screens. L3-6 stay structure placeholders.
  */
 import dogWalkingLoadJson from "@/content/launchpad/dog-walking.load.json";
 import {
@@ -28,6 +28,7 @@ import type {
 } from "@/lib/launchpad/content/types";
 import { dogWalkingKnowYourCostBronze } from "@/lib/launchpad/content/know-your-cost/dog-walking-fixture";
 import { dogWalkingJobsCoverBronze, dogWalkingSetPriceBronze } from "@/lib/launchpad/content/pricing/screens";
+import { competitorBronze, customerBronze, offerBronze } from "@/lib/launchpad/content/planning/screens";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -107,19 +108,23 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
         ? floor
         : {
             ...floor,
-            silvers: floor.silvers.map((silver) =>
-              silver.id !== "l2-s2"
-                ? silver
-                : {
-                    ...silver,
-                    bronzes: silver.bronzes.map((door) => {
-                      if (door.id === "l2-s2-b1") return dogWalkingKnowYourCostBronze();
-                      if (door.id === "l2-s2-b3") return dogWalkingSetPriceBronze();
-                      if (door.id === "l2-s2-b4") return dogWalkingJobsCoverBronze();
-                      return door;
-                    }),
-                  },
-            ),
+            silvers: floor.silvers.map((silver) => {
+              if (silver.id === "l2-s1") {
+                const { wrapUp: _oldParagraph, ...rest } = silver;
+                return { ...rest, bronzes: [offerBronze(), customerBronze()] };
+              }
+              if (silver.id !== "l2-s2") return silver;
+              return {
+                ...silver,
+                bronzes: silver.bronzes.map((door) => {
+                  if (door.id === "l2-s2-b1") return dogWalkingKnowYourCostBronze();
+                  if (door.id === "l2-s2-b2") return competitorBronze();
+                  if (door.id === "l2-s2-b3") return dogWalkingSetPriceBronze();
+                  if (door.id === "l2-s2-b4") return dogWalkingJobsCoverBronze();
+                  return door;
+                }),
+              };
+            }),
           },
     ),
   };

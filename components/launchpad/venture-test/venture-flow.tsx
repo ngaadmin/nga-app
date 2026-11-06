@@ -57,6 +57,7 @@ import { findKnowYourCost, type CostEditorStep } from "@/lib/launchpad/content/k
 import { KnowYourCostFlow } from "@/components/launchpad/venture/screens/know-your-cost-flow";
 import { SetPriceFlow } from "@/components/launchpad/venture/screens/set-price-flow";
 import { JobsCoverFlow } from "@/components/launchpad/venture/screens/jobs-cover-flow";
+import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
@@ -594,6 +595,55 @@ export function VentureFlow({
             onFinish={(answer) => {
               const updated = completeTask(setProgressAnswer(progress, jobsScreen.answerKey, answer), taskId);
               save(updated);
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const offerScreen = current?.screens.find((s) => s.type === "offer-loop");
+      if (offerScreen && offerScreen.type === "offer-loop" && current) {
+        const taskId = current.id;
+        body = (
+          <OfferLoopFlow
+            screen={offerScreen}
+            floors={floors}
+            answers={answers}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              save(completeTask(setProgressAnswer(progress, offerScreen.answerKey, answer), taskId));
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const customerScreen = current?.screens.find((s) => s.type === "customer-check");
+      if (customerScreen && customerScreen.type === "customer-check" && current) {
+        const taskId = current.id;
+        body = (
+          <CustomerCheckFlow
+            screen={customerScreen}
+            answers={answers}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              save(completeTask(setProgressAnswer(progress, customerScreen.answerKey, answer), taskId));
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const competitorScreen = current?.screens.find((s) => s.type === "competitor-check");
+      if (competitorScreen && competitorScreen.type === "competitor-check" && current) {
+        const taskId = current.id;
+        body = (
+          <CompetitorFlow
+            screen={competitorScreen}
+            answers={answers}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              save(completeTask(setProgressAnswer(progress, competitorScreen.answerKey, answer), taskId));
               go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />

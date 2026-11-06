@@ -36,6 +36,7 @@ import {
 import { costsOf } from "@/lib/launchpad/content/answers";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
+import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -510,6 +511,8 @@ export function HandbookPage({
       {page.kind !== "cover" && <MiniIdentity />}
       {page.kind === "cover" ? (
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
+      ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (
+        <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "costs" ? (
@@ -519,6 +522,22 @@ export function HandbookPage({
       )}
     </article>
   );
+}
+
+function ProductOrSummary({
+  page,
+  editable,
+  iconVentureId,
+}: {
+  page: HandbookPageView;
+  editable: boolean;
+  iconVentureId: string;
+}) {
+  const ctx = useLaunchpadAnswers();
+  if (ctx?.answers && "l2-offer" in ctx.answers && ctx.answers["l2-offer"]?.kind === "offer") {
+    return <ProductHandbook editable={editable} />;
+  }
+  return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
 }
 
 function CostsPageBody({

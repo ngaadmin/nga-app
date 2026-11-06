@@ -471,14 +471,16 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Level 2 silver 1 doors", btn(page, /Decide what to sell/));
 
-  await step(t, "Decide what to sell: both boxes needed", async () => {
+  await step(t, "Decide what to sell: a package for each service, then when", async () => {
     await btn(page, /Decide what to sell/).click();
     await expect(next).toBeDisabled();
-    const boxes = main(page).locator("textarea, input[type=text]");
-    expect(await boxes.count()).toBeGreaterThanOrEqual(2);
-    await boxes.nth(0).fill("TEST product");
+    await page.getByRole("button", { name: "30-minute walk" }).click();
+    await expect(next).toBeEnabled();
+    await next.click();
     await expect(next).toBeDisabled();
-    await boxes.nth(1).fill("TEST availability");
+    await page.getByRole("button", { name: "Basic manners session" }).click();
+    await next.click();
+    await page.getByRole("button", { name: "After school" }).click();
     await expect(next).toBeEnabled();
   });
   await shot(t, "Decide what to sell, filled", next);
@@ -487,15 +489,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(btn(page, /Know who your customers are/)).toContainText("Up next");
   });
 
-  await step(t, "Know who your customers are (demand screens): real-world task, number, yes/no, text", async () => {
+  await step(t, "Know who your customers are: number, yes/no, and an interest chip", async () => {
     await btn(page, /Know who your customers are/).click();
-    await expect(main(page)).toContainText(/Real-world task/i);
     await expect(next).toBeDisabled();
-    const texts = main(page).locator("input[type=text], textarea");
-    // First input is the number asked.
-    await texts.nth(0).fill("8");
-    await main(page).locator("select").first().selectOption({ index: 1 });
-    await texts.nth(1).fill("TEST interest");
+    await page.getByRole("button", { name: "30-minute walk" }).click();
     await expect(next).toBeEnabled();
   });
   await shot(t, "Find out if people want it, filled", next);
@@ -512,16 +509,14 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await cue.click();
     await turnTo(page.getByRole("dialog"), "l2-s1");
     const pg = page.getByRole("dialog").locator('[data-handbook-page="l2-s1"]');
-    await expect(pg).toContainText("TEST product");
-    await expect(pg).toContainText("TEST availability");
-    await expect(pg).toContainText("TEST interest");
-    const sec = pg.locator('[data-summary-section="what-i-am-selling"]');
-    await sec.locator("[data-pencil]").first().click();
+    await expect(pg).toContainText("30-minute walk");
+    await expect(pg).toContainText("After school");
+    await pg.getByRole("button", { name: "Dog walking" }).click();
     const ed = pg.locator("[data-inline-editor]");
     await expect(ed).toBeVisible();
-    await ed.locator("textarea, input[type=text]").first().fill("TEST product edit");
-    await ed.getByRole("button", { name: "Save" }).click();
-    await expect(sec).toContainText("TEST product edit");
+    await ed.getByRole("button", { name: "15-minute walk" }).click();
+    await ed.getByRole("button", { name: "Done" }).click();
+    await expect(pg).toContainText("15-minute walk");
   });
   await shot(t, "Handbook, Level 2 step 1 page after the edit", null);
 
@@ -591,7 +586,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await hb.getByRole("button", { name: "Next page" }).click(); // Level 2: no The Brand page (Cath, 5 Nov 5:35pm)
     await expect(hb.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
     await expect(hb.locator('[data-handbook-page="l1-s3"]')).toHaveCount(0);
-    await expect(hb.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
+    await expect(hb.locator('[data-handbook-page="l2-s1"]')).toContainText("15-minute walk");
     await expect(hb.locator("[data-done-chip]")).toHaveCount(0);
     await shot(t, "Handbook, Level 2 silver 1 page", null);
     const l2Tab = hb.getByRole("button", { name: "Level 2, Planning" });
@@ -653,7 +648,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     const home = page.locator('[data-handbook="home"]');
     // The workbook opens on page 1; Next page walks forward to The product and its buyers.
     await turnTo(home, "l2-s1");
-    await expect(home.locator('[data-handbook-page="l2-s1"]')).toContainText("TEST product edit");
+    await expect(home.locator('[data-handbook-page="l2-s1"]')).toContainText("15-minute walk");
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");
     expect(saved).toContain("TEST a used bike");

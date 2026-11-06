@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { LaunchpadAnswers, PriceAnswer, ServicePrice } from "@/lib/launchpad/content/answers";
-import { priceOf } from "@/lib/launchpad/content/answers";
+import type { ComparedToOthers, LaunchpadAnswers, PriceAnswer, ServicePrice } from "@/lib/launchpad/content/answers";
+import { competitorOf, priceOf } from "@/lib/launchpad/content/answers";
+import { packageServiceId } from "@/lib/launchpad/content/planning/catalog";
+import { COMPETITOR_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import type { LaunchpadFloor, LaunchpadSetPriceScreen } from "@/lib/launchpad/content/types";
 import { findKnowYourCost, formatOngoingMoney, parseStartupInput, savedCosts, serviceTotal } from "@/lib/launchpad/content/know-your-cost/logic";
 import { isWholePrice, keptPerJob } from "@/lib/launchpad/content/pricing/calc";
@@ -59,31 +61,40 @@ export function SetPriceFlow({
     return found ? savedCosts(answers, found.screen, floors) : null;
   }, [answers, floors]);
   const services = costs?.ongoing ?? [];
+  const competitor = competitorOf(answers, COMPETITOR_ANSWER_KEY);
+  const rangedService = competitor?.jobComparedId ? packageServiceId(competitor.jobComparedId) : undefined;
   const saved = priceOf(answers, screen.answerKey);
   const [drafts, setDrafts] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     for (const row of saved?.prices ?? []) init[row.serviceId] = String(row.price);
     return init;
   });
-
-  const rows: ServicePrice[] = services.flatMap((service) => {
-    const parsed = parseStartupInput(drafts[service.serviceId] ?? "");
-    if (parsed === null || !isWholePrice(parsed)) return [];
-    const cost = serviceTotal(service.lines);
-    return [{ serviceId: service.serviceId, price: parsed, costPerJob: cost, keptPerJob: keptPerJob(parsed, cost) }];
+  const [compared, setCompared] = useState<Record<string, ComparedToOthers | "">>(() => {
+    const init: Record<string, ComparedToOthers | ""> = {};
+    for (const row of saved?.prices ?? []) if (row.comparedToOthers) init[row.serviceId] = row.comparedToOthers;
+    return init;
   });
-  const answer: PriceAnswer = { kind: "price", version: 1, prices: rows };
-  const ready = services.length === 0 || (rows.length === services.length && rows.every((row) => row.keptPerJob > 0));
 
-  const commit = (nextDrafts: Record<string, string>) => {
-    setDrafts(nextDrafts);
-    const nextRows: ServicePrice[] = services.flatMap((service) => {
+  const buildRows = (nextDrafts: Record<string, string>, nextCompared: Record<string, ComparedToOthers | "">): ServicePrice[] =>
+    services.flatMap((service) => {
       const parsed = parseStartupInput(nextDrafts[service.serviceId] ?? "");
       if (parsed === null || !isWholePrice(parsed)) return [];
       const cost = serviceTotal(service.lines);
-      return [{ serviceId: service.serviceId, price: parsed, costPerJob: cost, keptPerJob: keptPerJob(parsed, cost) }];
+      const row: ServicePrice = { serviceId: service.serviceId, price: parsed, costPerJob: cost, keptPerJob: keptPerJob(parsed, cost) };
+      const choice = nextCompared[service.serviceId];
+      if (rangedService === service.serviceId && choice) row.comparedToOthers = choice;
+      return [row];
     });
-    persist(screen.answerKey, { kind: "price", version: 1, prices: nextRows });
+  const rows = buildRows(drafts, compared);
+  const answer: PriceAnswer = { kind: "price", version: 1, prices: rows };
+  const ready =
+    services.length === 0 ||
+    (rows.length === services.length && rows.every((row) => row.keptPerJob > 0 && (rangedService !== row.serviceId || !!row.comparedToOthers)));
+
+  const commit = (nextDrafts: Record<string, string>, nextCompared = compared) => {
+    setDrafts(nextDrafts);
+    setCompared(nextCompared);
+    persist(screen.answerKey, { kind: "price", version: 1, prices: buildRows(nextDrafts, nextCompared) });
   };
 
   return (
@@ -128,7 +139,27 @@ export function SetPriceFlow({
                     />
                   </label>
                 </div>
-                <p className="mt-1 text-[12px] text-[#9AA3B5]">{screen.copy.othersMissing}</p>
+                {rangedService === service.serviceId && competitor ? (
+                  <p className="mt-1 text-[12.5px] text-[#19347D]">
+                    Others charge ${competitor.priceLow} to ${competitor.priceHigh}. Mine is{" "}
+                    <select
+                      aria-label={`Compared with others for ${service.label}`}
+                      value={compared[service.serviceId] ?? ""}
+                      onChange={(event) => {
+                        const value = event.target.value as ComparedToOthers | "";
+                        commit(drafts, { ...compared, [service.serviceId]: value });
+                      }}
+                      className="h-8 rounded-lg bg-white px-1 font-semibold shadow-[inset_0_0_0_1.5px_#D9DEE8]"
+                    >
+                      <option value="">Choose</option>
+                      <option value="lower than">lower than others</option>
+                      <option value="about the same as">about the same as others</option>
+                      <option value="higher than">higher than others</option>
+                    </select>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[12px] text-[#9AA3B5]">Others' range: not checked yet</p>
+                )}
                 {low && <p className="mt-1 text-[12.5px] text-[#B45309]">{screen.copy.lowKeep}</p>}
               </article>
             );

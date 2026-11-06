@@ -64,12 +64,16 @@ export type CostsAnswer = {
 };
 
 /** One priced service. `keptPerJob` is always price minus cost. Charity is not stored. */
+export type ComparedToOthers = "lower than" | "about the same as" | "higher than";
+
 export type ServicePrice = {
   serviceId: string;
   /** Whole dollars. */
   price: number;
   costPerJob: number;
   keptPerJob: number;
+  /** Set only when this service has a competitor range. Not a wrap-up field. */
+  comparedToOthers?: ComparedToOthers;
 };
 
 /**
@@ -111,7 +115,57 @@ export type JobsAnswer = {
   weeklyKeep?: number;
 };
 
-export type LaunchpadAnswer = BusinessIdentityAnswer | SelectionAnswer | RankingAnswer | FieldsAnswer | CostsAnswer | PriceAnswer | JobsAnswer;
+/** One service's packages and extras (row 15). Ids are catalog option ids, plus one optional free-text extra. */
+export type ServiceOffering = {
+  serviceId: string;
+  packages: readonly string[];
+  packagesExtra?: string;
+  addons: readonly string[];
+  addonsExtra?: string;
+};
+
+export type OfferAnswer = {
+  kind: "offer";
+  version: 1;
+  offerings: readonly ServiceOffering[];
+  availability: readonly string[];
+  availabilityExtra?: string;
+};
+
+export type CustomerAnswer = {
+  kind: "customer";
+  version: 1;
+  numberAsked: number;
+  yesNo: "yes" | "no";
+  interests: readonly string[];
+  interestExtra?: string;
+};
+
+export type CompetitorAnswer = {
+  kind: "competitor";
+  version: 1;
+  walkersChecked: number;
+  jobComparedId?: string;
+  jobComparedExtra?: string;
+  priceLow: number;
+  priceHigh: number;
+  addons: readonly string[];
+  addonsExtra?: string;
+  doDifferently: string;
+  doDifferentlyExtra?: string;
+};
+
+export type LaunchpadAnswer =
+  | BusinessIdentityAnswer
+  | SelectionAnswer
+  | RankingAnswer
+  | FieldsAnswer
+  | CostsAnswer
+  | PriceAnswer
+  | JobsAnswer
+  | OfferAnswer
+  | CustomerAnswer
+  | CompetitorAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -214,7 +268,10 @@ export function parsePriceAnswer(value: unknown): PriceAnswer | null {
     const cost = moneyAmount(raw.costPerJob, false);
     if (price === null || cost === null) continue;
     seen.add(raw.serviceId);
-    prices.push({ serviceId: raw.serviceId, price, costPerJob: cost, keptPerJob: keptPerJob(price, cost) });
+    const compared = raw.comparedToOthers;
+    const row: ServicePrice = { serviceId: raw.serviceId, price, costPerJob: cost, keptPerJob: keptPerJob(price, cost) };
+    if (compared === "lower than" || compared === "about the same as" || compared === "higher than") row.comparedToOthers = compared;
+    prices.push(row);
   }
   return { kind: "price", version: 1, prices };
 }
@@ -305,6 +362,12 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parsePriceAnswer(value);
     case "jobs":
       return parseJobsAnswer(value);
+    case "offer":
+      return parseOfferAnswer(value);
+    case "customer":
+      return parseCustomerAnswer(value);
+    case "competitor":
+      return parseCompetitorAnswer(value);
     default:
       return null;
   }
@@ -357,6 +420,97 @@ export function priceOf(answers: LaunchpadAnswers | undefined, key: string): Pri
 export function jobsOf(answers: LaunchpadAnswers | undefined, key: string): JobsAnswer | undefined {
   const a = answers?.[key];
   return a?.kind === "jobs" ? a : undefined;
+}
+
+function optText(value: unknown, max: number): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const text = value.replace(/\s+/g, " ").trim().slice(0, max);
+  return text || undefined;
+}
+
+function idGroup(value: unknown): string[] {
+  return idList(value).slice(0, 20);
+}
+
+export function parseOfferAnswer(value: unknown): OfferAnswer | null {
+  if (!isRecord(value) || value.kind !== "offer" || value.version !== 1 || !Array.isArray(value.offerings)) return null;
+  const offerings: ServiceOffering[] = [];
+  const seen = new Set<string>();
+  for (const raw of value.offerings.slice(0, 12)) {
+    if (!isRecord(raw) || typeof raw.serviceId !== "string" || !ID_RE.test(raw.serviceId) || seen.has(raw.serviceId)) continue;
+    seen.add(raw.serviceId);
+    const row: ServiceOffering = { serviceId: raw.serviceId, packages: idGroup(raw.packages), addons: idGroup(raw.addons) };
+    const packagesExtra = optText(raw.packagesExtra, 40);
+    const addonsExtra = optText(raw.addonsExtra, 40);
+    if (packagesExtra) row.packagesExtra = packagesExtra;
+    if (addonsExtra) row.addonsExtra = addonsExtra;
+    offerings.push(row);
+  }
+  const availabilityExtra = optText(value.availabilityExtra, 80);
+  return {
+    kind: "offer",
+    version: 1,
+    offerings,
+    availability: idGroup(value.availability),
+    ...(availabilityExtra ? { availabilityExtra } : {}),
+  };
+}
+
+export function parseCustomerAnswer(value: unknown): CustomerAnswer | null {
+  if (!isRecord(value) || value.kind !== "customer" || value.version !== 1) return null;
+  if (value.yesNo !== "yes" && value.yesNo !== "no") return null;
+  if (typeof value.numberAsked !== "number" || !Number.isInteger(value.numberAsked) || value.numberAsked < 1 || value.numberAsked > 20) return null;
+  const interestExtra = optText(value.interestExtra, 80);
+  return {
+    kind: "customer",
+    version: 1,
+    numberAsked: value.numberAsked,
+    yesNo: value.yesNo,
+    interests: idGroup(value.interests),
+    ...(interestExtra ? { interestExtra } : {}),
+  };
+}
+
+export function parseCompetitorAnswer(value: unknown): CompetitorAnswer | null {
+  if (!isRecord(value) || value.kind !== "competitor" || value.version !== 1) return null;
+  if (typeof value.walkersChecked !== "number" || !Number.isInteger(value.walkersChecked) || value.walkersChecked < 1 || value.walkersChecked > 10) return null;
+  const low = wholePrice(value.priceLow);
+  const high = wholePrice(value.priceHigh);
+  if (low === null || high === null || high < low) return null;
+  if (typeof value.doDifferently !== "string" || !ID_RE.test(value.doDifferently)) return null;
+  const jobId = typeof value.jobComparedId === "string" && ID_RE.test(value.jobComparedId) ? value.jobComparedId : undefined;
+  const jobExtra = optText(value.jobComparedExtra, 40);
+  const addonsExtra = optText(value.addonsExtra, 40);
+  const ideaExtra = optText(value.doDifferentlyExtra, 80);
+  if (!jobId && !jobExtra) return null;
+  return {
+    kind: "competitor",
+    version: 1,
+    walkersChecked: value.walkersChecked,
+    ...(jobId ? { jobComparedId: jobId } : {}),
+    ...(jobExtra ? { jobComparedExtra: jobExtra } : {}),
+    priceLow: low,
+    priceHigh: high,
+    addons: idGroup(value.addons),
+    ...(addonsExtra ? { addonsExtra } : {}),
+    doDifferently: value.doDifferently,
+    ...(ideaExtra ? { doDifferentlyExtra: ideaExtra } : {}),
+  };
+}
+
+export function offerOf(answers: LaunchpadAnswers | undefined, key: string): OfferAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "offer" ? a : undefined;
+}
+
+export function customerOf(answers: LaunchpadAnswers | undefined, key: string): CustomerAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "customer" ? a : undefined;
+}
+
+export function competitorOf(answers: LaunchpadAnswers | undefined, key: string): CompetitorAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "competitor" ? a : undefined;
 }
 
 export const selectionAnswer = (selected: readonly string[]): SelectionAnswer => ({ kind: "selection", version: 1, selected });

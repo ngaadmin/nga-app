@@ -83,8 +83,10 @@ describe("Pricing doors", () => {
   it("opens Set the price after Know your cost and leaves competitor research locked", () => {
     expect(pricingBronzeStates(EMPTY_VENTURE_TEST_PROGRESS, pricing, true)).toEqual(["current", "locked", "locked", "locked"]);
     const afterCosts = completeTask(EMPTY_VENTURE_TEST_PROGRESS, "l2-s2-b1-t1");
-    expect(pricingBronzeStates(afterCosts, pricing, true)).toEqual(["done", "locked", "current", "locked"]);
-    const afterPrice = completeTask(afterCosts, "l2-s2-b3-t1");
-    expect(pricingBronzeStates(afterPrice, pricing, true)).toEqual(["done", "locked", "done", "current"]);
+    expect(pricingBronzeStates(afterCosts, pricing, true)).toEqual(["done", "current", "locked", "locked"]);
+    const afterCompetitors = completeTask(afterCosts, "l2-s2-b2-t1");
+    expect(pricingBronzeStates(afterCompetitors, pricing, true)).toEqual(["done", "done", "current", "locked"]);
+    const afterPrice = completeTask(afterCompetitors, "l2-s2-b3-t1");
+    expect(pricingBronzeStates(afterPrice, pricing, true)).toEqual(["done", "done", "done", "current"]);
   });
 });

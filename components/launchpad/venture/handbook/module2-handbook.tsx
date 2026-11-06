@@ -8,13 +8,26 @@ import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/p
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
+import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 
+function RuledPick({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
+  return (
+    <button type="button" aria-pressed={on} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-1.5 text-left text-[15px] text-[#19347D]">
+      <span className={`flex size-5 flex-none items-center justify-center rounded-[4px] ${on ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}>
+        {on ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" strokeWidth="3">
+            <path d="M5 12.5l5 5L19 7" />
+          </svg>
+        ) : null}
+      </span>
+      {label}
+    </button>
+  );
+}
+
 function joinLabels(ids: readonly string[]): string {
-  const labels = ids.map((id) => {
-    const label = chipLabel(id);
-    return label.charAt(0).toLowerCase() + label.slice(1);
-  });
+  const labels = ids.map((id) => chipLabel(id));
   if (labels.length === 0) return "";
   if (labels.length === 1) return labels[0]!;
   if (labels.length === 2 && ids[0] === "after-school" && ids[1] === "weekend-days") return "after school and on weekend days";
@@ -54,18 +67,24 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
               {joinLabels(row.packages)}
               {row.addons.length > 0 ? ` with ${joinLabels(row.addons)}` : ""}.
             </p>
-            <p className="mt-1 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>
             {open && catalog && (
               <div className="mt-2" data-inline-editor={row.serviceId}>
-                <div className="flex flex-col">
-                  {catalog.packages.map((item) => (
-                    <button key={item.id} type="button" aria-pressed={row.packages.includes(item.id)} className="border-b border-dashed border-[#E4D3B4] py-2 text-left text-[14px] text-[#19347D]" onClick={() => {
-                      const packages = row.packages.includes(item.id) ? row.packages.filter((id) => id !== item.id) : [...row.packages, item.id];
-                      ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, packages } : entry) });
-                    }}>{item.label}</button>
-                  ))}
-                </div>
-                <button type="button" className={`${BTN_CYAN_COMPACT} mt-3`} onClick={() => setEditing(null)}>Done</button>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Packages</p>
+                {catalog.packages.map((item) => (
+                  <RuledPick key={item.id} label={item.label} on={row.packages.includes(item.id)} onClick={() => {
+                    const packages = row.packages.includes(item.id) ? row.packages.filter((id) => id !== item.id) : [...row.packages, item.id];
+                    ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, packages } : entry) });
+                  }} />
+                ))}
+                <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Extras</p>
+                {catalog.extras.map((item) => (
+                  <RuledPick key={item.id} label={item.label} on={row.addons.includes(item.id)} onClick={() => {
+                    const addons = row.addons.includes(item.id) ? row.addons.filter((id) => id !== item.id) : [...row.addons, item.id];
+                    ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, addons } : entry) });
+                  }} />
+                ))}
+                <p className="mt-2 text-[14px] font-semibold text-[#3FB7DA]">+ Add another</p>
+                <button type="button" className="mt-2 text-[15px] font-semibold text-[#3FB7DA]" onClick={() => setEditing(null)}>Done</button>
               </div>
             )}
           </div>
@@ -93,8 +112,12 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
           </p>
         </>
       )}
-      <div className="mt-6 flex items-end gap-3">
+      <p className="mt-3 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>
+      <div className="mt-3 flex items-end gap-2">
         <Sticker src={ART.beagle} alt="" />
+        <FlatSticker kind="paw" doodle />
+        <FlatSticker kind="bone" doodle />
+        <FlatSticker kind="heart" doodle />
       </div>
     </div>
   );

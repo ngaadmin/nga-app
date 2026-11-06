@@ -39,6 +39,7 @@ import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-wo
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { ReadyWrap } from "@/components/launchpad/venture/screens/getting-ready-flow";
+import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -284,7 +285,9 @@ function CoverPageBody({
 
   return (
     <div ref={rootRef} className={`relative flex flex-col items-center ${step >= 3 ? "gap-1.5" : "gap-2.5"}`} data-cover="" data-cover-fit-step={step}>
-      <img src="/assets/illustrations/characters/penny/penny-protip-512.webp" alt="" width={46} height={46} className="pointer-events-none absolute bottom-0 right-1 h-[46px] w-auto" />
+      <img src="/launchpad/workbook/penny-protip.png" alt="" width={46} height={46} className="pointer-events-none absolute bottom-0 right-1 h-[46px] w-auto" />
+      <span className="pointer-events-none absolute right-2 top-1"><FlatSticker kind="sparkle" doodle /></span>
+      <span className="pointer-events-none absolute left-6 top-16"><FlatSticker kind="heart" doodle /></span>
       {hasLogo ? (
         <div data-cover-logo="filled">
           <LogoMark
@@ -436,6 +439,13 @@ function SummaryPageBody({
             />
           ))}
         </div>
+        {page.silver.id === "l1-s1" && (
+          <div className="mt-3 flex gap-2">
+            <FlatSticker kind="star" doodle />
+            <FlatSticker kind="heart" doodle />
+            <FlatSticker kind="sparkle" doodle />
+          </div>
+        )}
       </>
     );
   }
@@ -464,6 +474,13 @@ function SummaryPageBody({
             </p>
           </div>
         ),
+      )}
+      {page.silver.id === "l1-s1" && (
+        <div className="mt-3 flex gap-2">
+          <FlatSticker kind="star" doodle />
+          <FlatSticker kind="heart" doodle />
+          <FlatSticker kind="sparkle" doodle />
+        </div>
       )}
     </>
   );

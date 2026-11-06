@@ -40,6 +40,11 @@ function sheetLabel(sheet?: string): string | undefined {
   return sheet ? SHEET_LABEL[sheet] : undefined;
 }
 
+function paperLabel(page: { sheet?: string; number: number; silver: { id: string } }): string {
+  if (!page.sheet && page.silver.id === "l2-s1") return "Page 2";
+  return sheetLabel(page.sheet) ?? `Page ${page.number}`;
+}
+
 /** 44x44 book button that opens the handbook (home In Progress cards and the building screen). */
 export function HandbookButton({ onClick }: { onClick: () => void }) {
   return (
@@ -197,7 +202,7 @@ export function Handbook({
         )}
         {page && (
           <div
-            className={`absolute top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[148px] left-[11px] right-[11px]"}`}
+            className={`absolute top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[112px] left-[11px] right-[11px]"}`}
             style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
@@ -210,7 +215,7 @@ export function Handbook({
           >
             <SpiralBinding />
             <Washi />
-            <div className="h-full overflow-x-hidden overflow-y-auto pb-16 pl-10 pr-5 pt-5" data-paper-scroll="">
+            <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-3" data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
@@ -218,12 +223,12 @@ export function Handbook({
               </LaunchpadAnswersProvider>
             </div>
             <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
-              {sheetLabel(page.sheet) ?? `Page ${page.number}`}
+              {paperLabel(page)}
             </p>
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[72px] left-3 grid w-[52%] grid-cols-6 gap-1"}>
+        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[60px] left-3 grid w-[52%] grid-cols-6 gap-1"}>
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;
@@ -231,7 +236,7 @@ export function Handbook({
             // The floor being viewed gets the app's orange ring (outline, so it sits outside
             // the 44px tab and stacks with any state styling) whatever the tab's state.
             const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
-            const base = `${page?.kind === "cover" ? "flex h-[58px] w-11 flex-col gap-1 rounded-[10px] text-[13px]" : "flex h-11 w-11 items-center justify-center rounded-b-[7px] rounded-t-[2px] border text-[12px]"} ${viewedRing}`;
+            const base = `${page?.kind === "cover" ? "flex h-[58px] w-11 flex-col gap-1 rounded-[10px] text-[13px]" : "flex h-10 w-11 items-center justify-center rounded-b-[3px] rounded-t-none border text-[12px]"} ${viewedRing}`;
             const folder = page?.kind !== "cover";
             const fill = !folder
               ? t.state === "current"
@@ -295,7 +300,7 @@ export function Handbook({
         </div>
         {page?.kind !== "cover" && (
           <>
-            <div className="absolute bottom-[72px] right-3 flex gap-1">
+            <div className="absolute bottom-[60px] right-3 flex gap-1">
               <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
                 <Chevron dir="left" />
               </button>

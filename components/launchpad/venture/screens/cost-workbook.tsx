@@ -20,7 +20,7 @@ function Pencil() {
 
 function Row({ label, amount }: { label: string; amount: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 text-[14px] leading-snug text-[#19347D]">
+    <div className="flex items-baseline justify-between gap-3 text-[13px] leading-tight text-[#19347D]">
       <span className="min-w-0 flex-1">{label}</span>
       <span className="font-heading text-[14px] font-semibold tabular-nums">{amount}</span>
     </div>
@@ -73,7 +73,7 @@ export function CostWorkbookBody({
         <div className="mt-3.5">
           {startupHead}
           <p className="mb-1 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">{marketingLabel}</p>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-0.5">
             {view.marketing.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
             ))}
@@ -89,7 +89,7 @@ export function CostWorkbookBody({
         <>
           {part === "rest" && startupHead}
           <p className="mb-1 mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">{starterLabel}</p>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-0.5">
             {view.starterGear.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
             ))}

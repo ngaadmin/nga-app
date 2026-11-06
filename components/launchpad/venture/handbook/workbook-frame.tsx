@@ -62,7 +62,7 @@ export function WorkbookFrame({
               <span
                 key={n}
                 aria-current={selected ? "page" : undefined}
-                className={`flex h-11 items-center justify-center rounded-b-[7px] rounded-t-[2px] border text-[12px] font-semibold ${
+                className={`flex h-11 items-center justify-center rounded-b-[3px] rounded-t-none border text-[12px] font-semibold ${
                   selected ? "border-[#19347D] bg-white text-[#19347D]" : muted ? "border-[#E5E7EB] bg-[#F7F5F1] text-[#C4C0B8]" : "border-[#E7E1D6] bg-[#F3EFE6] text-[#6B645C]"
                 }`}
               >
@@ -100,18 +100,19 @@ export function ContinueButton({ disabled, onClick, children = "Continue" }: { d
 }
 
 export const ART = {
-  beagle: "/assets/illustrations/characters/pairs/prop-pf-m1-beagle-r2.webp",
-  ticket: "/assets/illustrations/characters/pairs/prop-pf-m1-paw-ticket-r3.webp",
-  kit: "/assets/illustrations/characters/pairs/prop-pf-m1-startup-kit-r3.webp",
-  coins: "/assets/illustrations/concepts/concept-coin-stack-r2.webp",
-  wallet: "/assets/illustrations/concepts/concept-wallet-r2.webp",
-  growth: "/assets/illustrations/concepts/concept-growth-chart-r2.webp",
-  pennyThinking: "/assets/illustrations/characters/penny/penny-thinking-512.webp",
-  pennyJourney: "/assets/illustrations/characters/penny/penny-journey-512.webp",
-  pennyMaster: "/assets/illustrations/characters/penny/penny-master-512.webp",
-  pennyProtip: "/assets/illustrations/characters/penny/penny-protip-512.webp",
+  beagle: "/launchpad/workbook/beagle.png",
+  ticket: "/launchpad/workbook/paw-ticket.png",
+  kit: "/launchpad/workbook/startup-kit.png",
+  coins: "/launchpad/workbook/coin-stack.png",
+  wallet: "/launchpad/workbook/wallet.png",
+  growth: "/launchpad/workbook/growth-chart.png",
+  jar: "/launchpad/workbook/jar.png",
+  pennyThinking: "/launchpad/workbook/penny-thinking.png",
+  pennyJourney: "/launchpad/workbook/penny-journey.png",
+  pennyMaster: "/launchpad/workbook/penny-master.png",
+  pennyProtip: "/launchpad/workbook/penny-protip.png",
 } as const;
 
 export function Sticker({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
-  return <img src={src} alt={alt} width={96} height={96} className={`h-auto w-24 object-contain ${className}`} />;
+  return <img src={src} alt={alt} width={96} height={96} className={`h-auto w-[96px] max-w-none shrink-0 object-contain ${className}`} />;
 }

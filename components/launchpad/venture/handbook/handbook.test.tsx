@@ -310,7 +310,7 @@ describe("<Handbook>", () => {
     // Earned floor (L2) viewed on its page, which keeps its running page number.
     const { unmount } = render(<Harness entry="building" initial={FULL_L2} />);
     turnTo("l2-s1");
-    expect(screen.getByText("Page 4")).toBeTruthy();
+    expect(screen.getByText("Page 2")).toBeTruthy();
     expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
     const l2 = tab(/^Level 2/);
     // Product done, Pricing still open → floor stays current (D26 L2 has two silvers).

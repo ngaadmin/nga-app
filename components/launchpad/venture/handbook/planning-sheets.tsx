@@ -12,6 +12,20 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
+import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
+
+function WeekBar({ label, width }: { label: string; width: number }) {
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between text-[12px] text-[#6B7280]">
+        <span>{label}</span>
+      </div>
+      <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#E7E1D6]" aria-hidden="true">
+        <div className="h-full bg-[#3FB7DA]" style={{ width: `${Math.max(8, Math.min(100, width))}%` }} />
+      </div>
+    </div>
+  );
+}
 
 function nameFor(id: string, labels: readonly { id: string; label: string }[]): string {
   return labels.find((row) => row.id === id)?.label ?? id;
@@ -34,7 +48,7 @@ export function PriceSheet() {
         const pkg = offer?.offerings.find((item) => item.serviceId === row.serviceId)?.packages[0];
         const compared = row.serviceId === "dog-walking" || row.serviceId === competitor?.jobComparedId;
         return (
-        <div key={row.serviceId} className="mt-4 border-t border-dashed border-[#E4D3B4] pt-3">
+        <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2 leading-tight">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="font-heading text-[18px] font-semibold text-[#19347D]">{nameFor(row.serviceId, labels)}</h3>
             <span className="font-heading text-[22px] font-bold text-[#19347D]">{formatMoney(row.price, currency)}</span>
@@ -55,7 +69,7 @@ export function PriceSheet() {
         );
       })}
       <p className="mt-3 text-[12px] text-[#9AA3B5]">Job cost comes from My costs (Page 3b).</p>
-      <div className="mt-6 flex justify-end pr-2">
+      <div className="mt-2 flex justify-end pr-2">
         <Sticker src={ART.coins} alt="" />
       </div>
     </div>
@@ -109,10 +123,12 @@ export function JobsSheet() {
       <p className="mt-3 font-heading text-[16px] font-semibold text-[#19347D]">Weekly keep {formatMoney(jobs.weeklyKeep ?? 0, currency)}</p>
       <p className="text-[15px] text-[#19347D]">Start-up to cover {formatStartupMoney(jobs.startupTotal, currency)}</p>
       <p className="mt-1 text-[15px] font-semibold text-[#19347D]">About {jobs.weeksNeeded} weeks to cover start-up.</p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#E7E1D6]" aria-hidden="true">
-        <div className="h-full bg-[#19347D]" style={{ width: `${Math.min(100, (1 / Math.max(jobs.weeksNeeded, 1)) * 100)}%` }} />
-      </div>
-      <p className="mt-1 text-[12px] text-[#6B7280]">Week 1{jobs.weeksNeeded > 1 ? " and Week 2" : ""}</p>
+      <p className="mt-1 text-[13px] text-[#6B7280]">
+        {formatStartupMoney(jobs.startupTotal, currency)} ÷ {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week
+        {jobs.weeklyKeep ? ` = ${(jobs.startupTotal / jobs.weeklyKeep).toFixed(2)}, round up to ${jobs.weeksNeeded}` : ""}.
+      </p>
+      <WeekBar label="Week 1" width={100} />
+      {jobs.weeksNeeded > 1 && <WeekBar label="Week 2" width={Math.round(((jobs.startupTotal / (jobs.weeklyKeep || 1)) - 1) * 100)} />}
       <div className="mt-6 flex justify-end">
         <Sticker src={ART.growth} alt="" />
       </div>
@@ -172,6 +188,8 @@ export function PricingSummarySheet() {
       <p className="mt-3 text-[13px] text-[#6B7280]">Full list on Pages 3 and 3b. Tap a line to change it.</p>
       <div className="mt-6 flex items-end justify-between">
         <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto" />
+        <FlatSticker kind="bulb" />
+        <FlatSticker kind="sparkle" doodle />
       </div>
     </div>
   );
@@ -233,27 +251,66 @@ function PlanCosts() {
         </p>
       ))}
       <p className="mt-2 font-semibold text-[#19347D]">Start-up total {formatStartupMoney(view.startupTotal, currency)}</p>
+      <p className="mt-2 text-[14px] text-[#19347D]">
+        Ongoing cost per job: {view.ongoing.map((row) => `${row.label} ${formatMoney(row.perJob, currency)}`).join(", ")}.
+      </p>
     </div>
   );
 }
 
 function PlanOthers() {
+  const ctx = useLaunchpadAnswers();
+  const competitor = competitorOf(ctx?.answers, COMPETITOR_ANSWER_KEY);
+  const price = priceOf(ctx?.answers, SET_PRICE_ANSWER_KEY);
+  const currency = readCurrencyPreference();
+  const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
+  const addons = competitor?.addons.map((id) => chipLabel(id).toLowerCase()).join(" and ") ?? "";
   return (
     <div>
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">What others charge and my price</h3>
-      <PriceSheet />
-      <p className="mt-2 text-[13px] text-[#6B7280]">Each line: price − job cost = I keep. Costs and prices stay read-only here.</p>
+      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">What others charge</h3>
+      <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+        {competitor
+          ? `${competitor.walkersChecked} other walkers charge ${formatMoney(competitor.priceLow, currency)} to ${formatMoney(competitor.priceHigh, currency)}. They often include ${addons}.`
+          : "Not checked yet."}
+      </p>
+      {competitor && <p className="mt-1 text-[15px] text-[#19347D]">I could do differently: {chipLabel(competitor.doDifferently).toLowerCase()}.</p>}
+      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">My price</h3>
+      {price?.prices.map((row) => (
+        <p key={row.serviceId} className="mt-1 text-[15px] leading-snug text-[#19347D]">
+          {nameFor(row.serviceId, labels)} · I keep {formatMoney(row.keptPerJob, currency)}
+          <span className="block text-[13px] text-[#6B7280]">
+            {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
+          </span>
+        </p>
+      ))}
+      <p className="mt-2 text-[13px] text-[#6B7280]">Each line: price − job cost = I keep. Tap a line to change it. Costs and prices stay read-only here.</p>
     </div>
   );
 }
 
 function PlanWeek() {
+  const ctx = useLaunchpadAnswers();
+  const jobs = jobsOf(ctx?.answers, JOBS_COVER_ANSWER_KEY);
+  const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
+  const currency = readCurrencyPreference();
+  if (!jobs) return null;
+  const mix = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`).join(" + ") ?? "";
+  const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatMoney(row.keptPerJob, currency)}`).join(" + ");
   return (
     <div>
-      <JobsSheet />
+      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">Jobs to cover my costs</h3>
+      <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Typical week</p>
+      <p className="mt-1 text-[15px] text-[#19347D]">{mix} a week.</p>
+      <p className="text-[15px] text-[#19347D]">Keep {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week.</p>
+      <p className="text-[15px] font-semibold text-[#19347D]">About {jobs.weeksNeeded} weeks to cover {formatStartupMoney(jobs.startupTotal, currency)} start-up.</p>
+      {math && (
+        <p className="mt-1 text-[13px] text-[#6B7280]">
+          {math} = {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week.
+        </p>
+      )}
       <p className="mt-2 text-[13px] text-[#6B7280]">Your typical week stays read-only here.</p>
       <div className="mt-4 flex justify-end">
-        <Sticker src="/assets/illustrations/characters/pairs/prop-ex-m1-emergencies-jar-r2.webp" alt="" />
+        <Sticker src={ART.jar} alt="" />
       </div>
     </div>
   );

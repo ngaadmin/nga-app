@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import type { LaunchpadGettingReadyScreen } from "@/lib/launchpad/content/types";
@@ -90,6 +90,13 @@ function Rule() {
   return <div className="my-2 border-b border-dashed border-[#E4D3B4]" />;
 }
 
+const OpenMenuContext = createContext<{ id: string | null; setId: (id: string | null) => void } | null>(null);
+
+function MenuScope({ children }: { children: ReactNode }) {
+  const [id, setId] = useState<string | null>(null);
+  return <OpenMenuContext.Provider value={{ id, setId }}>{children}</OpenMenuContext.Provider>;
+}
+
 function InlineMenu<T extends { id: string; label: string }>({
   label,
   value,
@@ -101,7 +108,21 @@ function InlineMenu<T extends { id: string; label: string }>({
   options: readonly T[];
   onPick: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const menu = useContext(OpenMenuContext);
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = menu ? menu.id === label : localOpen;
+  const setOpen = (next: boolean) => {
+    if (next && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("lp-inline-menu", { detail: label }));
+    if (menu) menu.setId(next ? label : null);
+    else setLocalOpen(next);
+  };
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      if ((event as CustomEvent<string>).detail !== label) setLocalOpen(false);
+    };
+    window.addEventListener("lp-inline-menu", onOpen);
+    return () => window.removeEventListener("lp-inline-menu", onOpen);
+  }, [label]);
   const current = options.find((row) => row.id === value);
   return (
     <span className="relative inline-block align-baseline">
@@ -109,7 +130,7 @@ function InlineMenu<T extends { id: string; label: string }>({
         type="button"
         aria-expanded={open}
         aria-label={label}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(!open)}
         className="inline-flex items-center gap-1 border-b-2 border-[#3FB7DA] font-semibold text-[#19347D]"
       >
         {current?.label ?? "choose"}
@@ -263,7 +284,7 @@ function FindStep({
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex justify-end"><FlatSticker kind="flyer" /></div>
+          <div className="mt-3 flex items-end justify-end gap-2"><FlatSticker kind="flyer" /><FlatSticker kind="paw" doodle /></div>
           <label className="mt-3 block text-[14px] text-[#6B7280]">
             Also: Add your own (optional)
             <input
@@ -335,7 +356,7 @@ function AgreeStep({
       <div className="mt-4 flex items-end justify-end gap-2">
         {page === 0 && <FlatSticker kind="clipboard" />}
         {page === 1 && <FlatSticker kind="calendar" />}
-        {page === 2 && <FlatSticker kind="umbrella" />}
+        {page === 2 && <FlatSticker kind="umbrella_cloud" />}
         {page === 2 && <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto" />}
       </div>
     </WorkbookFrame>
@@ -375,7 +396,7 @@ function DeliverStep({
       </p>
       {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{DELIVER_PLAYBACK}</p>}
       <div className="mt-4 flex justify-end gap-2">
-        <FlatSticker kind="phone" />
+        <FlatSticker kind="phone_chat" />
         <FlatSticker kind="polaroid" />
       </div>
     </WorkbookFrame>
@@ -415,7 +436,7 @@ function WrapJobStep({
       </p>
       {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
       <div className="mt-4 flex justify-end gap-2">
-        <FlatSticker kind="stars" />
+        <FlatSticker kind="star_bubble" />
         <FlatSticker kind="envelope" />
       </div>
     </WorkbookFrame>
@@ -468,7 +489,7 @@ function PracticeStep({
       )}
       <div className="mt-4 flex items-end justify-between">
         <Sticker src={ART.ticket} alt="" />
-        <FlatSticker kind="ball" />
+        <FlatSticker kind="ball_leash" />
         <img src={ART.pennyJourney} alt="" width={46} height={46} className="h-[46px] w-auto" />
       </div>
     </WorkbookFrame>
@@ -542,7 +563,7 @@ function PolishStep({
           </li>
         ))}
       </ol>
-      <div className="mt-4 flex justify-end">{page === 0 ? <FlatSticker kind="note" /> : <FlatSticker kind="bulb" />}</div>
+      <div className="mt-4 flex justify-end">{page === 0 ? <FlatSticker kind="notepad_pencil" /> : <FlatSticker kind="bulb" />}</div>
       <span className="sr-only">{services.length}</span>
     </WorkbookFrame>
   );
@@ -577,7 +598,8 @@ export function ReadyWrap({
             <li key={title}>{title}</li>
           ))}
         </ul>
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex items-end justify-end gap-2">
+          <FlatSticker kind="paw" doodle />
           <Sticker src={ART.kit} alt="" />
         </div>
       </div>
@@ -590,6 +612,10 @@ export function ReadyWrap({
       <div data-ready-wrap="b">
         <Section title="How I'll deliver the job" lead={delivered?.title} lines={delivered?.lines ?? []} />
         <Section title="How I'll wrap up a job" lead={wrapped?.title} lines={wrapped?.lines ?? []} />
+        <div className="mt-4 flex justify-end gap-2">
+          <FlatSticker kind="polaroid" />
+          <FlatSticker kind="star_bubble" />
+        </div>
       </div>
     );
   }
@@ -616,7 +642,10 @@ export function ReadyWrap({
         </p>
       ))}
       {feedback && <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{feedback.other}</p>}
-      <div className="mt-4 flex items-end justify-between">
+      <div className="mt-4 flex items-end justify-between gap-2">
+        <FlatSticker kind="rosette" />
+        <FlatSticker kind="bone" doodle />
+        <FlatSticker kind="star" doodle />
         <img src={ART.pennyMaster} alt="" width={46} height={46} className="h-[46px] w-auto" />
       </div>
     </div>

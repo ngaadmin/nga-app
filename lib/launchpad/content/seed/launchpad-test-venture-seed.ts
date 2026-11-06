@@ -30,6 +30,7 @@ import { dogWalkingKnowYourCostBronze } from "@/lib/launchpad/content/know-your-
 import { dogWalkingJobsCoverBronze, dogWalkingSetPriceBronze } from "@/lib/launchpad/content/pricing/screens";
 import { competitorBronze, customerBronze, offerBronze } from "@/lib/launchpad/content/planning/screens";
 import { fundingBronze } from "@/lib/launchpad/content/planning/funding";
+import { learnJourneySilver, testTweakSilver } from "@/lib/launchpad/content/getting-ready/screens";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -75,12 +76,16 @@ function bronze(id: string, title: string, placeholder: boolean, subtitle?: stri
 }
 
 function structureSilvers(level: Exclude<ServiceFloorLevel, 1>): LaunchpadSilver[] {
-  return SERVICE_FLOOR_STRUCTURE[level].map((s, i) => ({
-    id: `l${level}-s${i + 1}`,
-    title: s.title,
-    placeholder: true,
-    bronzes: s.bronzes.map((title, j) => bronze(`l${level}-s${i + 1}-b${j + 1}`, title, true)),
-  }));
+  return SERVICE_FLOOR_STRUCTURE[level].map((s, i) => {
+    // Level 3 has no silver 2 in the sheet. The second window is silver 3.
+    const n = level === 3 && i === 1 ? 3 : i + 1;
+    return {
+      id: `l${level}-s${n}`,
+      title: s.title,
+      placeholder: true,
+      bronzes: s.bronzes.map((title, j) => bronze(`l${level}-s${n}-b${j + 1}`, title, true)),
+    };
+  });
 }
 
 function floor(level: ServiceFloorLevel, silvers: LaunchpadSilver[]): LaunchpadFloor {
@@ -104,8 +109,18 @@ function floor(level: ServiceFloorLevel, silvers: LaunchpadSilver[]): LaunchpadF
 function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePayload {
   return {
     ...payload,
-    floors: payload.floors.map((floor) =>
-      floor.level !== 2
+    floors: payload.floors.map((floor) => {
+      if (floor.level === 3) {
+        return {
+          ...floor,
+          silvers: floor.silvers.map((silver) => {
+            if (silver.id === "l3-s1") return learnJourneySilver();
+            if (silver.id === "l3-s3") return testTweakSilver();
+            return silver;
+          }),
+        };
+      }
+      return floor.level !== 2
         ? floor
         : {
             ...floor,
@@ -138,8 +153,8 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
                     },
                   ],
             ),
-          },
-    ),
+          };
+    }),
   };
 }
 

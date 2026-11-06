@@ -1,0 +1,117 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { PAPER_BACKGROUND, SpiralBinding } from "@/components/launchpad/venture/handbook/paper-art";
+
+const NAVY = "#19347D";
+
+function Arrow({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d={dir === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
+    </svg>
+  );
+}
+
+/**
+ * Workbook chrome for a lesson page: cream spiral, L1-L6 tabs, paired arrows, and a footer.
+ * The selected level is the one the learner is in. Later levels stay muted.
+ */
+export function WorkbookFrame({
+  businessName,
+  level,
+  marker,
+  canBack,
+  canForward,
+  onBack,
+  onForward,
+  footer,
+  children,
+}: {
+  businessName: string;
+  level: number;
+  marker?: string;
+  canBack: boolean;
+  canForward: boolean;
+  onBack: () => void;
+  onForward: () => void;
+  footer: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex h-full min-h-0 w-full flex-col bg-white text-[#111827]" data-workbook-frame="">
+      <header className="flex h-14 flex-none items-center gap-2 px-3">
+        <div className="min-w-0">
+          <h1 className="font-heading text-[17px] font-semibold leading-tight text-[#111827]">My workbook</h1>
+          <p className="truncate text-[13px] text-[#6B7280]">{businessName}</p>
+        </div>
+      </header>
+      <div className="relative min-h-0 flex-1 px-[11px]">
+        <div className="relative h-full overflow-hidden rounded-2xl border border-[#EDE7DC]" style={{ background: PAPER_BACKGROUND }} data-paper-card="">
+          <SpiralBinding />
+          <div className="h-full overflow-y-auto pb-8 pl-11 pr-4 pt-4">{children}</div>
+          {marker && <p className="pointer-events-none absolute bottom-2 right-3 text-[11px] text-[#9CA3AF]">{marker}</p>}
+        </div>
+      </div>
+      <div className="flex flex-none items-center gap-2 px-3 pb-1 pt-2">
+        <div className="grid flex-1 grid-cols-6 gap-1" aria-label="Workbook floors">
+          {[1, 2, 3, 4, 5, 6].map((n) => {
+            const selected = n === level;
+            const muted = n > level;
+            return (
+              <span
+                key={n}
+                aria-current={selected ? "page" : undefined}
+                className={`flex h-9 items-center justify-center rounded-[7px] border text-[12px] font-semibold ${
+                  selected ? "border-[#19347D] bg-white text-[#19347D]" : muted ? "border-[#E5E7EB] bg-[#F7F5F1] text-[#C4C0B8]" : "border-[#E7E1D6] bg-[#F3EFE6] text-[#8A8175]"
+                }`}
+              >
+                L{n}
+              </span>
+            );
+          })}
+        </div>
+        <div className="flex gap-1">
+          <button type="button" aria-label="Previous page" disabled={!canBack} onClick={onBack} className="flex size-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] disabled:opacity-40">
+            <Arrow dir="left" />
+          </button>
+          <button type="button" aria-label="Next page" disabled={!canForward} onClick={onForward} className="flex size-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#374151] disabled:opacity-40">
+            <Arrow dir="right" />
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-none justify-center px-4 pb-4 pt-1">{footer}</div>
+    </div>
+  );
+}
+
+export function ContinueButton({ disabled, onClick, children = "Continue" }: { disabled?: boolean; onClick: () => void; children?: string }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="h-11 min-w-[148px] rounded-full px-6 text-[15px] font-semibold text-white disabled:opacity-40"
+      style={{ background: NAVY }}
+    >
+      {children}
+    </button>
+  );
+}
+
+export const ART = {
+  beagle: "/assets/illustrations/characters/pairs/prop-pf-m1-beagle-r2.webp",
+  ticket: "/assets/illustrations/characters/pairs/prop-pf-m1-paw-ticket-r3.webp",
+  kit: "/assets/illustrations/characters/pairs/prop-pf-m1-startup-kit-r3.webp",
+  coins: "/assets/illustrations/concepts/concept-coin-stack-r2.webp",
+  wallet: "/assets/illustrations/concepts/concept-wallet-r2.webp",
+  growth: "/assets/illustrations/concepts/concept-growth-chart-r2.webp",
+  pennyThinking: "/assets/illustrations/characters/penny/penny-thinking-512.webp",
+  pennyJourney: "/assets/illustrations/characters/penny/penny-journey-512.webp",
+  pennyMaster: "/assets/illustrations/characters/penny/penny-master-512.webp",
+  pennyProtip: "/assets/illustrations/characters/penny/penny-protip-512.webp",
+} as const;
+
+export function Sticker({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+  return <img src={src} alt={alt} width={96} height={96} className={`h-auto w-24 object-contain ${className}`} />;
+}

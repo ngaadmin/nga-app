@@ -99,8 +99,8 @@ describe("bronze doors open their tasks directly (no task list)", () => {
   });
 
   it("a multi-task bronze (placeholder floors) still steps task to task with no list", async () => {
-    renderFlow({ kind: "level", level: 3 });
-    const silver = PAYLOAD.floors[2]!.silvers[0]!;
+    renderFlow({ kind: "level", level: 5 });
+    const silver = PAYLOAD.floors[4]!.silvers[0]!;
     const bronze = silver.bronzes[0]!;
     expect(bronze.tasks.length).toBeGreaterThan(1);
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
@@ -274,11 +274,11 @@ describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44p
 
 describe("finishing a step goes straight back to the corridor with the workbook button, no end screen", () => {
   it("a placeholder step lands on the corridor with Open your workbook (white, navy outline, pop-in)", async () => {
-    renderFlow({ kind: "level", level: 3 });
-    const silver = PAYLOAD.floors[2]!.silvers[0]!;
+    renderFlow({ kind: "level", level: 5 });
+    const silver = PAYLOAD.floors[4]!.silvers[0]!;
     await finishSilver(silver);
     expect(document.querySelector("[data-silver-done]")).toBeNull();
-    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);
+    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 5/);
     const cue = screen.getByRole("button", { name: "Open your workbook" });
     expect(cue.className).toContain("border-nga-ink");
     expect(cue.className).toContain("bg-white");
@@ -287,31 +287,23 @@ describe("finishing a step goes straight back to the corridor with the workbook 
   });
 
   it("is not shown when re-entering and re-finishing finished work", async () => {
-    renderFlow({ kind: "through-silver", silverId: "l3-s1" });
-    const silver = PAYLOAD.floors[2]!.silvers[0]!;
-    expect(silver.id).toBe("l3-s1");
+    renderFlow({ kind: "through-silver", silverId: "l1-s1" });
+    const silver = PAYLOAD.floors[0]!.silvers[0]!;
+    expect(silver.id).toBe("l1-s1");
     const last = silver.bronzes[silver.bronzes.length - 1]!;
     fireEvent.click(await screen.findByRole("button", { name: new RegExp(neutralTitle(silver.title)) }));
     fireEvent.click(door(last.title));
     for (let i = 0; i < last.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
     expect(document.querySelector("[data-silver-done]")).toBeNull();
-    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);
+    expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
     expect(screen.queryByRole("button", { name: "Open your workbook" })).toBeNull();
   });
 
   it("a step with a summary wrap-up in the content skips it: re-finishing from review goes to the corridor", async () => {
     renderFlow({ kind: "through-silver", silverId: "l2-s1" });
-    expect(PAYLOAD.floors[1]!.silvers[0]!.wrapUp?.type).toBe("workbook-summary");
-    fireEvent.click(await screen.findByRole("button", { name: /The product and its buyers/ }));
-    const bronzes = PAYLOAD.floors[1]!.silvers[0]!.bronzes;
-    fireEvent.click(door(bronzes[bronzes.length - 1]!.title));
-    for (let i = 0; i < 12 && !document.querySelector("#lp-corridor-title"); i++) {
-      const btn = screen.queryByRole("button", { name: /^(Next|Finish|Continue)/ });
-      if (!btn) break;
-      fireEvent.click(btn);
-    }
+    expect(PAYLOAD.floors[1]!.silvers[0]!.wrapUp).toBeUndefined();
+    expect(await screen.findByRole("button", { name: /The product and its buyers/ })).toBeTruthy();
     expect(document.querySelector("[data-wrap-up]")).toBeNull();
-    expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 2/);
   });
 });

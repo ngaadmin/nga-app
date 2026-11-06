@@ -65,11 +65,13 @@ export const SERVICE_FLOOR_STRUCTURE: Readonly<
     },
   ],
   3: [
-    { title: "Know how to do it", bronzes: ["Learn how to deliver the service"] },
-    { title: "Funding", bronzes: ["Get the money you need to start"] },
+    {
+      title: "Learn the customer journey",
+      bronzes: ["Attract the customer", "Agree the job", "Deliver the job", "Wrap-up"],
+    },
     {
       title: "Test & Tweak",
-      bronzes: ["Gather your gear", "Do a practice run", "Get feedback", "Fine-tune and improve"],
+      bronzes: ["Do the practice run", "Polish your service"],
     },
   ],
   4: [

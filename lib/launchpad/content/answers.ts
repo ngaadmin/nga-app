@@ -4,6 +4,7 @@ import {
   type BusinessIdentityAnswer,
 } from "@/lib/launchpad/content/identity";
 import { keptPerJob, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep, jobsNeeded } from "@/lib/launchpad/content/pricing/calc";
+import { AFTER_HOW, AGREE_ITEMS, BEFORE_HOW, CHANNELS, FEEDBACK_HOW, PAYMENT_HOW, POLISH_QUESTIONS, PRACTICE_WHEN, PRACTICE_WHO, ALSO_MAX } from "@/lib/launchpad/content/getting-ready/copy";
 
 /**
  * The learner's saved answers, one per answerKey, each tagged with a `kind`
@@ -174,6 +175,50 @@ export type FundingAnswer = {
   fundingWeeksToRepay?: number;
 };
 
+export type FindCustomersAnswer = {
+  kind: "find-customers";
+  version: 1;
+  channels: string[];
+  channelsExtra?: string;
+};
+
+export type AgreeJobAnswer = {
+  kind: "agree-job";
+  version: 1;
+  /** Item ids the learner ticked. Empty is allowed. */
+  ticked: string[];
+};
+
+export type DeliverJobAnswer = {
+  kind: "deliver-job";
+  version: 1;
+  beforeHow: string;
+  afterHow: string;
+};
+
+export type WrapJobAnswer = {
+  kind: "wrap-job";
+  version: 1;
+  paymentHow: string;
+  feedbackHow: string;
+};
+
+export type PracticeRunAnswer = {
+  kind: "practice-run";
+  version: 1;
+  who: string;
+  service: string;
+  when: string;
+};
+
+export type PolishResult = { result: "good" | "suggestions"; suggestion?: string };
+
+export type PolishServiceAnswer = {
+  kind: "polish-service";
+  version: 1;
+  rows: Record<string, PolishResult>;
+};
+
 export type LaunchpadAnswer =
   | BusinessIdentityAnswer
   | SelectionAnswer
@@ -185,7 +230,13 @@ export type LaunchpadAnswer =
   | OfferAnswer
   | CustomerAnswer
   | CompetitorAnswer
-  | FundingAnswer;
+  | FundingAnswer
+  | FindCustomersAnswer
+  | AgreeJobAnswer
+  | DeliverJobAnswer
+  | WrapJobAnswer
+  | PracticeRunAnswer
+  | PolishServiceAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -390,6 +441,18 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseCompetitorAnswer(value);
     case "funding":
       return parseFundingAnswer(value);
+    case "find-customers":
+      return parseFindCustomersAnswer(value);
+    case "agree-job":
+      return parseAgreeJobAnswer(value);
+    case "deliver-job":
+      return parseDeliverJobAnswer(value);
+    case "wrap-job":
+      return parseWrapJobAnswer(value);
+    case "practice-run":
+      return parsePracticeRunAnswer(value);
+    case "polish-service":
+      return parsePolishServiceAnswer(value);
     default:
       return null;
   }
@@ -561,6 +624,92 @@ export function parseFundingAnswer(value: unknown): FundingAnswer | null {
 export function fundingOf(answers: LaunchpadAnswers | undefined, key: string): FundingAnswer | undefined {
   const a = answers?.[key];
   return a?.kind === "funding" ? a : undefined;
+}
+
+function knownIds(value: unknown, allowed: readonly { id: string }[]): string[] {
+  const ok = new Set(allowed.map((row) => row.id));
+  return idList(value).filter((id) => ok.has(id));
+}
+
+export function parseFindCustomersAnswer(value: unknown): FindCustomersAnswer | null {
+  if (!isRecord(value) || value.kind !== "find-customers" || value.version !== 1) return null;
+  const channels = knownIds(value.channels, CHANNELS);
+  if (channels.length < 1) return null;
+  const extra = typeof value.channelsExtra === "string" ? value.channelsExtra.trim().slice(0, ALSO_MAX) : "";
+  return { kind: "find-customers", version: 1, channels, ...(extra ? { channelsExtra: extra } : {}) };
+}
+
+export function parseAgreeJobAnswer(value: unknown): AgreeJobAnswer | null {
+  if (!isRecord(value) || value.kind !== "agree-job" || value.version !== 1) return null;
+  return { kind: "agree-job", version: 1, ticked: knownIds(value.ticked, AGREE_ITEMS) };
+}
+
+export function parseDeliverJobAnswer(value: unknown): DeliverJobAnswer | null {
+  if (!isRecord(value) || value.kind !== "deliver-job" || value.version !== 1) return null;
+  const beforeHow = knownIds([value.beforeHow], BEFORE_HOW)[0];
+  const afterHow = knownIds([value.afterHow], AFTER_HOW)[0];
+  if (!beforeHow || !afterHow) return null;
+  return { kind: "deliver-job", version: 1, beforeHow, afterHow };
+}
+
+export function parseWrapJobAnswer(value: unknown): WrapJobAnswer | null {
+  if (!isRecord(value) || value.kind !== "wrap-job" || value.version !== 1) return null;
+  const paymentHow = knownIds([value.paymentHow], PAYMENT_HOW)[0];
+  const feedbackHow = knownIds([value.feedbackHow], FEEDBACK_HOW)[0];
+  if (!paymentHow || !feedbackHow) return null;
+  if ("funding_lender" in value) return null;
+  return { kind: "wrap-job", version: 1, paymentHow, feedbackHow };
+}
+
+export function parsePracticeRunAnswer(value: unknown): PracticeRunAnswer | null {
+  if (!isRecord(value) || value.kind !== "practice-run" || value.version !== 1) return null;
+  const who = knownIds([value.who], PRACTICE_WHO)[0];
+  const when = knownIds([value.when], PRACTICE_WHEN)[0];
+  const service = typeof value.service === "string" && ID_RE.test(value.service) ? value.service : "";
+  if (!who || !when || !service) return null;
+  return { kind: "practice-run", version: 1, who, service, when };
+}
+
+export function parsePolishServiceAnswer(value: unknown): PolishServiceAnswer | null {
+  if (!isRecord(value) || value.kind !== "polish-service" || value.version !== 1 || !isRecord(value.rows)) return null;
+  const rows: Record<string, PolishResult> = {};
+  for (const question of POLISH_QUESTIONS) {
+    const row = value.rows[question.id];
+    if (!isRecord(row) || (row.result !== "good" && row.result !== "suggestions")) return null;
+    const suggestion = typeof row.suggestion === "string" ? row.suggestion.trim().slice(0, 200) : "";
+    rows[question.id] = row.result === "suggestions" ? { result: "suggestions", ...(suggestion ? { suggestion } : {}) } : { result: "good" };
+  }
+  return { kind: "polish-service", version: 1, rows };
+}
+
+export function findCustomersOf(answers: LaunchpadAnswers | undefined, key: string): FindCustomersAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "find-customers" ? a : undefined;
+}
+
+export function agreeJobOf(answers: LaunchpadAnswers | undefined, key: string): AgreeJobAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "agree-job" ? a : undefined;
+}
+
+export function deliverJobOf(answers: LaunchpadAnswers | undefined, key: string): DeliverJobAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "deliver-job" ? a : undefined;
+}
+
+export function wrapJobOf(answers: LaunchpadAnswers | undefined, key: string): WrapJobAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "wrap-job" ? a : undefined;
+}
+
+export function practiceRunOf(answers: LaunchpadAnswers | undefined, key: string): PracticeRunAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "practice-run" ? a : undefined;
+}
+
+export function polishServiceOf(answers: LaunchpadAnswers | undefined, key: string): PolishServiceAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "polish-service" ? a : undefined;
 }
 
 export const selectionAnswer = (selected: readonly string[]): SelectionAnswer => ({ kind: "selection", version: 1, selected });

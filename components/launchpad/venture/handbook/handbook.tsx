@@ -20,6 +20,21 @@ import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/v
 
 const READ_ONLY_SAVE = () => {};
 
+const SHEET_LABEL: Record<string, string> = {
+  "costs-a": "Page 3",
+  "costs-b": "Page 3b",
+  price: "Page 4",
+  jobs: "Page 5",
+  funding: "Page 7",
+  "ready-a": "Page 8",
+  "ready-b": "Page 9",
+  "ready-c": "Page 10",
+};
+
+function sheetLabel(sheet?: string): string | undefined {
+  return sheet ? SHEET_LABEL[sheet] : undefined;
+}
+
 /** 44x44 book button that opens the handbook (home In Progress cards and the building screen). */
 export function HandbookButton({ onClick }: { onClick: () => void }) {
   return (
@@ -170,7 +185,7 @@ export function Handbook({
         )}
         {page && (
           <div
-            className="absolute bottom-[52px] left-4 right-[88px] top-1 z-raised rounded-2xl border border-[#EDE7DC]"
+            className={`absolute top-1 z-raised rounded-2xl border border-[#EDE7DC] ${page.kind === "cover" ? "bottom-[52px] left-4 right-[88px]" : "bottom-[112px] left-[11px] right-[11px]"}`}
             style={{ background: PAPER_BACKGROUND }}
             data-paper-card=""
             onPointerDown={(e) => (swipeX.current = e.clientX)}
@@ -187,23 +202,23 @@ export function Handbook({
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
-                <HandbookPage key={`${page.kind}-${page.silver.id}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
+                <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
               </LaunchpadAnswersProvider>
             </div>
             <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
-              Page {page.number}
+              {sheetLabel(page.sheet) ?? `Page ${page.number}`}
             </p>
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className="absolute right-2.5 top-[14px] flex w-11 flex-col gap-2">
+        <nav aria-label="Workbook floors" className={page?.kind === "cover" ? "absolute right-2.5 top-[14px] flex w-11 flex-col gap-2" : "absolute bottom-[58px] left-3 right-[100px] grid grid-cols-6 gap-1"}>
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;
             // The floor being viewed gets the app's orange ring (outline, so it sits outside
             // the 44px tab and stacks with any state styling) whatever the tab's state.
             const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
-            const base = `flex h-[58px] w-11 flex-col items-center justify-center gap-1 rounded-[10px] text-[13px] ${viewedRing}`;
+            const base = `${page?.kind === "cover" ? "flex h-[58px] w-11 flex-col gap-1 rounded-[10px] text-[13px]" : "flex h-9 w-11 items-center justify-center rounded-[7px] border text-[12px]"} ${viewedRing}`;
             if (!t.tappable)
               return (
                 <button
@@ -243,7 +258,7 @@ export function Handbook({
           </button>
           <div className="flex items-center gap-[7px]" aria-hidden="true" data-page-dots="">
             {pages.map((p, i) => (
-              <span key={`${p.kind}-${p.silver.id}`} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
+              <span key={`${p.kind}-${p.silver.id}-${p.sheet ?? i}`} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
             ))}
             {ghost && <span className="size-1.5 rounded-full shadow-[inset_0_0_0_1px_#9CA3AF]" />}
           </div>

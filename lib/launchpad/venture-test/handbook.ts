@@ -10,7 +10,12 @@
 import type { LaunchpadFloor, LaunchpadSilver, LaunchpadSummarySection, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { applyFieldChange } from "@/lib/launchpad/content/fields";
 import { kebabId } from "@/lib/launchpad/venture-test/handbook-ids";
-import { costsOf, fieldsAnswer, identityAnswerOf, rankingAnswer, selectionAnswer, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsAnswer, identityAnswerOf, jobsOf, priceOf, rankingAnswer, selectionAnswer, type JobsAnswer, type LaunchpadAnswer, type PriceAnswer } from "@/lib/launchpad/content/answers";
+import { keptPerJob, weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
+import { workbookView } from "@/lib/launchpad/content/know-your-cost/logic";
+import { AGREE_JOB_KEY, DELIVER_JOB_KEY, FIND_CUSTOMERS_KEY, POLISH_SERVICE_KEY, PRACTICE_RUN_KEY, WRAP_JOB_KEY } from "@/lib/launchpad/content/getting-ready/copy";
+import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
+import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { findKnowYourCost, sampleCostsAnswer } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { CaptureScreen } from "@/lib/launchpad/content/task-pages";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
@@ -44,6 +49,8 @@ export type HandbookPageView = {
    * 5:35pm: the vision shows once, on the cover); its answer feeds the cover.
    */
   kind: "cover" | "summary" | "placeholder" | "costs";
+  /** Extra sheet when one silver fills more than one workbook page. */
+  sheet?: string;
   /** Titles of the silver's finished bronzes (written out under plain headings on placeholder pages). */
   bronzeTitles: string[];
   done: true;
@@ -90,7 +97,7 @@ function withCostsPage(progress: VentureTestProgress, floors: readonly Launchpad
 export function handbookPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
   const pages = withCostsPage(progress, floors, silverPages(progress, floors));
   const id = orderedSilvers(floors).find(({ silver }) => silver.wrapUp?.type === "identity-wrap-up" && silver.wrapUp.vision);
-  if (!hasHandbook(progress, floors) || !id) return pages;
+  if (!hasHandbook(progress, floors) || !id) return expandSheets(progress, pages);
   const cover: HandbookPageView = {
     number: 1,
     level: floors[0]!.level,
@@ -101,7 +108,27 @@ export function handbookPages(progress: VentureTestProgress, floors: readonly La
     bronzeTitles: [],
     done: true,
   };
-  return [cover, ...pages.map((p) => ({ ...p, number: p.number + 1 }))];
+  return expandSheets(progress, [cover, ...pages.map((p) => ({ ...p, number: p.number + 1 }))]);
+}
+
+/** Split the busier workbook pages. Costs become 3 and 3b. Getting Ready becomes three pages. */
+function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[]): HandbookPageView[] {
+  const out: HandbookPageView[] = [];
+  for (const page of pages) {
+    if (page.kind === "costs") {
+      out.push({ ...page, sheet: "costs-a" });
+      out.push({ ...page, sheet: "costs-b" });
+      if (priceOf(progress.answers, SET_PRICE_ANSWER_KEY)) out.push({ ...page, kind: "summary", sheet: "price" });
+      if (jobsOf(progress.answers, JOBS_COVER_ANSWER_KEY)) out.push({ ...page, kind: "summary", sheet: "jobs" });
+    } else if (page.silver.id === "l2-s3") {
+      out.push({ ...page, sheet: "funding" });
+    } else if (page.silver.id === "l3-s3") {
+      out.push({ ...page, sheet: "ready-a" });
+      out.push({ ...page, sheet: "ready-b" });
+      out.push({ ...page, sheet: "ready-c" });
+    } else out.push(page);
+  }
+  return out.map((page, i) => ({ ...page, number: i + 1 }));
 }
 
 function silverPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
@@ -271,6 +298,83 @@ export function withShortcutSampleAnswers(
       finalized: true,
     };
     next = setProgressAnswer(next, key, sample);
+  }
+  return fillPlanningSamples(next);
+}
+
+/** TEST-ONLY. Gives the workbook the Paws & Paths sample when a shortcut skipped the lessons. */
+function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress {
+  let next = progress;
+  const costs = costsOf(next.answers, "l2-costs");
+  const view = costs ? workbookView(costs) : null;
+  if (view && isTaskDone(next, "l2-s2-b3-t1") && !priceOf(next.answers, SET_PRICE_ANSWER_KEY) && view.ongoing.length) {
+    const prices = view.ongoing.map((service, i) => {
+      const price = i === 0 ? 15 : 25;
+      const costPerJob = service.perJob;
+      return { serviceId: service.serviceId, price, costPerJob, keptPerJob: keptPerJob(price, costPerJob) };
+    });
+    const price: PriceAnswer = { kind: "price", version: 1, prices };
+    next = setProgressAnswer(next, SET_PRICE_ANSWER_KEY, price);
+    const typicalWeek = prices.map((row, i) => {
+      const jobsPerWeek = i === 0 ? 3 : 1;
+      return { serviceId: row.serviceId, jobsPerWeek, keptPerJob: row.keptPerJob, subtotal: Math.round(jobsPerWeek * row.keptPerJob * 100) / 100 };
+    });
+    const weekly = weeklyKeep(typicalWeek);
+    const jobs: JobsAnswer = {
+      kind: "jobs",
+      version: 1,
+      mode: prices.length > 1 ? "multi" : "single",
+      startupTotal: view.startupTotal,
+      weeksNeeded: weeksFromWeeklyKeep(view.startupTotal, weekly) ?? 0,
+      typicalWeek,
+      weeklyKeep: weekly,
+    };
+    next = setProgressAnswer(next, JOBS_COVER_ANSWER_KEY, jobs);
+  }
+  if (isTaskDone(next, "l2-s3-b1-t1") && !next.answers?.[FUNDING_ANSWER_KEY] && view) {
+    const total = view.startupTotal;
+    const count = 8;
+    next = setProgressAnswer(next, FUNDING_ANSWER_KEY, {
+      kind: "funding",
+      version: 1,
+      fundingSource: "borrow",
+      startupTotal: total,
+      currency: "USD",
+      fundingRepayMode: "fixed_over_time",
+      fundingRepayCount: count,
+      fundingRepayUnit: "weeks",
+      fundingPeriodPayment: Math.round((total / count) * 100) / 100,
+    });
+  }
+  if (isTaskDone(next, "l3-s1-b1-t1") && !next.answers?.[FIND_CUSTOMERS_KEY]) {
+    next = setProgressAnswer(next, FIND_CUSTOMERS_KEY, { kind: "find-customers", version: 1, channels: ["flyers", "friends", "noticeboard"] });
+  }
+  if (isTaskDone(next, "l3-s1-b2-t1") && !next.answers?.[AGREE_JOB_KEY]) {
+    next = setProgressAnswer(next, AGREE_JOB_KEY, { kind: "agree-job", version: 1, ticked: ["collect_info", "confirm_dog", "cost_payment"] });
+  }
+  if (isTaskDone(next, "l3-s1-b3-t1") && !next.answers?.[DELIVER_JOB_KEY]) {
+    next = setProgressAnswer(next, DELIVER_JOB_KEY, { kind: "deliver-job", version: 1, beforeHow: "text", afterHow: "photo" });
+  }
+  if (isTaskDone(next, "l3-s1-b4-t1") && !next.answers?.[WRAP_JOB_KEY]) {
+    next = setProgressAnswer(next, WRAP_JOB_KEY, { kind: "wrap-job", version: 1, paymentHow: "cash", feedbackHow: "in_person" });
+  }
+  if (isTaskDone(next, "l3-s3-b1-t1") && !next.answers?.[PRACTICE_RUN_KEY]) {
+    next = setProgressAnswer(next, PRACTICE_RUN_KEY, { kind: "practice-run", version: 1, who: "family", service: "dog-walking", when: "weekend" });
+  }
+  if (isTaskDone(next, "l3-s3-b2-t1") && !next.answers?.[POLISH_SERVICE_KEY]) {
+    next = setProgressAnswer(next, POLISH_SERVICE_KEY, {
+      kind: "polish-service",
+      version: 1,
+      rows: {
+        service_explained: { result: "good" },
+        cost: { result: "good" },
+        timing: { result: "good" },
+        communication: { result: "suggestions", suggestion: "Send a text when you are on your way, so the dog is ready." },
+        delivery: { result: "good" },
+        payment: { result: "good" },
+        proof: { result: "good" },
+      },
+    });
   }
   return next;
 }

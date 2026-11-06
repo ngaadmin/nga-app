@@ -9,9 +9,15 @@ import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/ans
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 
-function Pill({ label, tone }: { label: string; tone: "package" | "extra" | "time" }) {
-  const cls = tone === "extra" ? "border-[#F5B942] text-[#19347D]" : "border-[#0CC1E0] text-[#19347D]";
-  return <span className={`inline-flex h-7 items-center rounded-full border bg-white px-2.5 text-[13px] ${cls}`}>{label}</span>;
+function joinLabels(ids: readonly string[]): string {
+  const labels = ids.map((id) => {
+    const label = chipLabel(id);
+    return label.charAt(0).toLowerCase() + label.slice(1);
+  });
+  if (labels.length === 0) return "";
+  if (labels.length === 1) return labels[0]!;
+  if (labels.length === 2 && ids[0] === "after-school" && ids[1] === "weekend-days") return "after school and on weekend days";
+  return labels.length === 2 ? `${labels[0]} and ${labels[1]}` : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }
 
 /**
@@ -43,16 +49,16 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
             <button type="button" className="font-heading text-[15px] font-bold text-[#19347D]" disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
               {label === "dog walking" ? "Dog walking" : label === "dog training" ? "Dog Training" : label === "grooming" ? "Grooming" : label}
             </button>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[14px] text-[#19347D]">
-              {row.packages.map((id) => <Pill key={id} tone="package" label={chipLabel(id)} />)}
-              {row.addons.length > 0 && <span>with</span>}
-              {row.addons.map((id) => <Pill key={id} tone="extra" label={chipLabel(id)} />)}
-            </div>
+            <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+              {joinLabels(row.packages)}
+              {row.addons.length > 0 ? ` with ${joinLabels(row.addons)}` : ""}.
+            </p>
+            <p className="mt-1 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>
             {open && catalog && (
-              <div className="mt-2 rounded-2xl p-3 shadow-[inset_0_0_0_1.5px_#0CC1E0]" data-inline-editor={row.serviceId}>
-                <div className="flex flex-wrap gap-2">
+              <div className="mt-2" data-inline-editor={row.serviceId}>
+                <div className="flex flex-col">
                   {catalog.packages.map((item) => (
-                    <button key={item.id} type="button" aria-pressed={row.packages.includes(item.id)} className="rounded-full border border-[#0CC1E0] px-3 py-1 text-[13px]" onClick={() => {
+                    <button key={item.id} type="button" aria-pressed={row.packages.includes(item.id)} className="border-b border-dashed border-[#E4D3B4] py-2 text-left text-[14px] text-[#19347D]" onClick={() => {
                       const packages = row.packages.includes(item.id) ? row.packages.filter((id) => id !== item.id) : [...row.packages, item.id];
                       ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, packages } : entry) });
                     }}>{item.label}</button>
@@ -65,9 +71,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         );
       })}
       <h3 className="mb-2 mt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">When</h3>
-      <div className="flex flex-wrap gap-1.5">
-        {offer.availability.map((id) => <Pill key={id} tone="time" label={chipLabel(id)} />)}
-      </div>
+      <p className="text-[15px] leading-snug text-[#19347D]">{joinLabels(offer.availability)}.</p>
       <div className="mt-2 flex items-center gap-2 text-[14px] text-[#19347D]">
         {editable && (
           <button type="button" aria-label="Edit your own time" data-pencil="" onClick={() => setEditing(editing === "also" ? null : "also")} className="text-[#6B7280]">✎</button>
@@ -83,12 +87,9 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
       {customer && (
         <>
           <h3 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Who might want it</h3>
-          <p className="text-[14px] leading-snug text-[#19347D]">
-            I asked {customer.numberAsked} people. They said {customer.yesNo === "yes" ? "Yes" : "No"}. They were interested in
+          <p className="text-[15px] leading-snug text-[#19347D]">
+            I asked {customer.numberAsked} people. They said {customer.yesNo === "yes" ? "Yes" : "No"}. They were interested in {joinLabels(customer.interests)}.
           </p>
-          <div className="mt-1 flex flex-wrap gap-1.5">
-            {customer.interests.map((id) => <Pill key={id} tone="package" label={chipLabel(id)} />)}
-          </div>
         </>
       )}
     </div>

@@ -38,6 +38,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "customer-check",
   "competitor-check",
   "funding-start",
+  "getting-ready",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -48,6 +49,8 @@ type TaskScreenBase = {
   id: string;
   /** Screen heading. Blank uses the task title. */
   heading?: string;
+  context?: string;
+  guidance?: string;
 };
 
 /** Labelled grey blocks while workbook content is TBC. */
@@ -414,6 +417,15 @@ export type LaunchpadCompetitorScreen = TaskScreenBase & {
   };
 };
 
+/** Rows 28-33. One step per door. Copy lives with the step, not a second path. */
+export type GettingReadyStep = "find" | "agree" | "deliver" | "wrap-job" | "practice" | "polish";
+
+export type LaunchpadGettingReadyScreen = TaskScreenBase & {
+  type: "getting-ready";
+  step: GettingReadyStep;
+  answerKey: string;
+};
+
 /** Row 26. Own cash confirms. Borrow sets a payback plan. No lender. */
 export type LaunchpadFundingScreen = TaskScreenBase & {
   type: "funding-start";
@@ -456,7 +468,8 @@ export type LaunchpadTaskScreen =
   | LaunchpadOfferLoopScreen
   | LaunchpadCustomerScreen
   | LaunchpadCompetitorScreen
-  | LaunchpadFundingScreen;
+  | LaunchpadFundingScreen
+  | LaunchpadGettingReadyScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

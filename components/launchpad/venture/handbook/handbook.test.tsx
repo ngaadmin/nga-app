@@ -90,7 +90,8 @@ describe("handbook pages", () => {
     expect(handbookOpenIndex([])).toBe(0);
     expect(handbookGhost(through("l1-s1"), FLOORS)).toEqual({ level: 1, floorName: FLOORS[0]!.name, silverTitle: "Set your goals" });
     expect(handbookGhost(ALL, FLOORS)).toBeNull();
-    expect(handbookPages(ALL, FLOORS)).toHaveLength(SILVERS.length); // cover + every silver but The Brand
+    const allPages = handbookPages(ALL, FLOORS);
+    expect(new Set(allPages.map((p) => p.silver.id)).size).toBe(SILVERS.length);
   });
 
   it("is editable only from the building and only for a completed silver", () => {

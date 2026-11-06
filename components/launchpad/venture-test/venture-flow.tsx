@@ -59,6 +59,7 @@ import { SetPriceFlow } from "@/components/launchpad/venture/screens/set-price-f
 import { JobsCoverFlow } from "@/components/launchpad/venture/screens/jobs-cover-flow";
 import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
+import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
@@ -675,6 +676,31 @@ export function VentureFlow({
               save(updated);
               go({ screen: "corridor", level: floor.level, entering: false });
               setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l2-s2" });
+            }}
+          />
+        );
+        break;
+      }
+      const readyScreen = current?.screens.find((s) => s.type === "getting-ready");
+      if (readyScreen && readyScreen.type === "getting-ready" && current) {
+        const taskId = current.id;
+        const openHandbook = readyScreen.step === "polish";
+        body = (
+          <GettingReadyFlow
+            screen={readyScreen}
+            answers={answers}
+            floors={floors}
+            businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              const updated = completeTask(setProgressAnswer(progress, readyScreen.answerKey, answer), taskId);
+              save(updated);
+              if (openHandbook) {
+                go({ screen: "corridor", level: floor.level, entering: false });
+                setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l3-s3" });
+              } else {
+                go({ screen: "doors", level: floor.level, silverId: silver.id });
+              }
             }}
           />
         );

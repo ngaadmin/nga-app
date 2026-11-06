@@ -14,6 +14,7 @@ import { SetPriceFlow } from "@/components/launchpad/venture/screens/set-price-f
 import { JobsCoverFlow } from "@/components/launchpad/venture/screens/jobs-cover-flow";
 import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
+import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 
 type Renderers = {
   [T in LaunchpadTaskScreenType]: (screen: Extract<LaunchpadTaskScreen, { type: T }>) => ReactElement;
@@ -42,6 +43,9 @@ export const LAUNCHPAD_TASK_SCREEN_RENDERERS: Renderers = {
   "customer-check": (screen) => <CustomerCheckFlow screen={screen} />,
   "competitor-check": (screen) => <CompetitorFlow screen={screen} />,
   "funding-start": (screen) => <FundingFlow screen={screen} />,
+  "getting-ready": (screen) => (
+    <GettingReadyFlow screen={screen} floors={[]} businessName="Paws & Paths" onExit={() => {}} onFinish={() => {}} />
+  ),
 };
 
 export const REGISTERED_LAUNCHPAD_TASK_SCREEN_TYPES = Object.keys(

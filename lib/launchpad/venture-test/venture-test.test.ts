@@ -57,12 +57,12 @@ describe("venture test structure", () => {
     expect(FLOORS.map((f) => [f.level, f.name, f.silvers.length])).toEqual([
       [1, "Vision and Goals", 3],
       [2, "Planning", 3],
-      [3, "Getting Ready", 3],
+      [3, "Getting Ready", 2],
       [4, "Sales", 1],
       [5, "Delivery", 3],
       [6, "Growing", 2],
     ]);
-    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(14);
     expect(L1.gold.title).toBe(
       "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
     );

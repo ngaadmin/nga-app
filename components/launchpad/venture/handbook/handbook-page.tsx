@@ -21,7 +21,6 @@ import {
   AccentLabel,
   HandRule,
   PAPER_ACCENT,
-  TagChip,
 } from "@/components/launchpad/venture/handbook/paper-art";
 import { useVisionSentence, VisionBlock, VISION_TEXT_STEPS } from "@/components/launchpad/venture/handbook/vision-block";
 import {
@@ -33,13 +32,13 @@ import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import {
   BTN_CYAN_COMPACT,
 } from "@/components/launchpad/venture-test/venture-test-ui";
-import { costsOf, fundingOf } from "@/lib/launchpad/content/answers";
-import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
-import { formatMoney } from "@/lib/dashboard/currency/format-money";
-import { formatStartupMoney } from "@/lib/launchpad/content/know-your-cost/logic";
+import { costsOf, practiceRunOf } from "@/lib/launchpad/content/answers";
+import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
+import { FundingSheet, JobsSheet, PriceSheet } from "@/components/launchpad/venture/handbook/planning-sheets";
+import { ReadyWrap } from "@/components/launchpad/venture/screens/getting-ready-flow";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -131,9 +130,15 @@ export function useSectionLines(sections: readonly LaunchpadSummarySection[]) {
   }));
 }
 
+function joinSentence(lines: readonly string[]): string {
+  if (lines.length === 0) return "";
+  if (lines.length === 1) return lines[0]!;
+  if (lines.length === 2) return `${lines[0]} and ${lines[1]}`;
+  return `${lines.slice(0, -1).join(", ")}, and ${lines[lines.length - 1]}`;
+}
+
 /**
- * One handbook section in the r4 look: a list answer as product tag chips,
- * a single text answer as the big quote, anything else as plain lines.
+ * One handbook section. A list answer is one sentence on the page.
  */
 export function HandbookSection({
   section,
@@ -149,14 +154,9 @@ export function HandbookSection({
       <HandRule />
       <AccentLabel doodle={doodle}>{section.label}</AccentLabel>
       {section.display === "list" ? (
-        <ul
-          className="mt-3 flex flex-col items-start gap-[9px]"
-          aria-label={section.label}
-        >
-          {lines.map((l) => (
-            <TagChip key={l}>{l}</TagChip>
-          ))}
-        </ul>
+        <p className="mt-3 text-[15px] leading-snug text-[#19347D]" aria-label={section.label}>
+          {joinSentence(lines)}
+        </p>
       ) : section.display === "text" && lines.length === 1 ? (
         <div className="relative mt-3 pl-7" data-quote="">
           <svg
@@ -466,12 +466,9 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
       </h2>
       <HandRule />
       <AccentLabel>What I did</AccentLabel>
-      <ul
-        className="mt-3 flex flex-col items-start gap-[9px]"
-        aria-label="What I did"
-      >
+      <ul className="mt-3 flex flex-col gap-2" aria-label="What I did">
         {page.bronzeTitles.map((t, i) => (
-          <TagChip key={t}>{partLabel(t, i)}</TagChip>
+          <li key={t} className="text-[15px] leading-snug text-[#19347D]">{partLabel(t, i)}</li>
         ))}
       </ul>
     </>
@@ -501,7 +498,7 @@ export function HandbookPage({
   return (
     <article
       className="relative"
-      data-handbook-page={page.kind === "cover" ? "cover" : page.kind === "costs" ? "my-costs" : page.silver.id}
+      data-handbook-page={page.sheet ?? (page.kind === "cover" ? "cover" : page.kind === "costs" ? "my-costs" : page.silver.id)}
       data-editable={editable ? "true" : "false"}
       aria-label={
         page.kind === "cover"
@@ -512,14 +509,22 @@ export function HandbookPage({
       }
     >
       {page.kind !== "cover" && <MiniIdentity />}
-      {page.kind === "cover" ? (
+      {page.sheet === "price" ? (
+        <PriceSheet />
+      ) : page.sheet === "jobs" ? (
+        <JobsSheet />
+      ) : page.sheet === "funding" ? (
+        <FundingSheet />
+      ) : page.sheet === "ready-a" || page.sheet === "ready-b" || page.sheet === "ready-c" ? (
+        <ReadyWrapPage sheet={page.sheet} />
+      ) : page.kind === "cover" ? (
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (
         <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "costs" ? (
-        <CostsPageBody editable={editable && !!onEditCosts} onEditCosts={onEditCosts} silver={page.silver} />
+        <CostsPageBody editable={editable && !!onEditCosts} onEditCosts={onEditCosts} silver={page.silver} part={page.sheet === "costs-b" ? "rest" : page.sheet === "costs-a" ? "startup" : "all"} />
       ) : (
         <PlaceholderPageBody page={page} />
       )}
@@ -543,25 +548,29 @@ function ProductOrSummary({
   return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
 }
 
+function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) {
+  const ctx = useLaunchpadAnswers();
+  const practice = practiceRunOf(ctx?.answers, "practice_run");
+  const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
+  const serviceLabel = services.find((row) => row.id === practice?.service)?.label ?? "Dog walking";
+  return <ReadyWrap page={sheet === "ready-a" ? "a" : sheet === "ready-b" ? "b" : "c"} answers={ctx?.answers} serviceLabel={serviceLabel} />;
+}
+
 function CostsPageBody({
   silver,
   editable,
   onEditCosts,
+  part = "all",
 }: {
   silver: HandbookPageView["silver"];
   editable: boolean;
+  part?: "all" | "startup" | "rest";
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
   const ctx = useLaunchpadAnswers();
   const screen = silver.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens)).find((s) => s.type === "know-your-cost");
   const answer = screen && screen.type === "know-your-cost" ? costsOf(ctx?.answers, screen.answerKey) : undefined;
   if (!screen || screen.type !== "know-your-cost" || !answer) return null;
-  const funding = fundingOf(ctx?.answers, FUNDING_ANSWER_KEY);
-  const startupText = funding ? formatStartupMoney(funding.startupTotal, readCurrencyPreference()) : "";
-  const pay =
-    funding?.fundingPeriodPayment !== undefined ? formatMoney(funding.fundingPeriodPayment, readCurrencyPreference()) : "";
-  const weekly =
-    funding?.fundingWeeklyAmount !== undefined ? formatMoney(funding.fundingWeeklyAmount, readCurrencyPreference()) : "";
   return (
     <>
       <CostWorkbookBody
@@ -571,24 +580,10 @@ function CostsPageBody({
         starterLabel={screen.copy.starterLabel}
         hint={screen.copy.workbookHint}
         editable={editable}
+        part={part}
         onEditStartup={onEditCosts ? () => onEditCosts({ name: "startup" }) : undefined}
         onEditService={onEditCosts ? (serviceId) => onEditCosts({ name: "service", serviceId }) : undefined}
       />
-      {funding && (
-        <div className="mt-4" data-funding-summary="">
-          <h3 className="font-heading text-[15px] font-semibold text-[#3FB7DA]">{`How I'll cover my start-up costs`}</h3>
-          {funding.fundingSource === "own_cash" ? (
-            <p className="mt-2 text-[14px] leading-snug text-[#19347D]">I will cover my start-up cost of {startupText} from my own cash or savings.</p>
-          ) : (
-            <p className="mt-2 text-[14px] leading-snug text-[#19347D]">
-              {funding.fundingRepayMode === "fixed_over_time"
-                ? `I will pay about ${pay} each ${funding.fundingRepayUnit === "months" ? "month" : "week"} for ${funding.fundingRepayCount} ${funding.fundingRepayUnit}.`
-                : `At ${weekly} a week, it will take about ${funding.fundingWeeksToRepay} weeks to pay back ${startupText}.`}
-              {" "}Real loans usually add interest; we have left that out here to keep it simple.
-            </p>
-          )}
-        </div>
-      )}
     </>
   );
 }

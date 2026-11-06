@@ -37,6 +37,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "offer-loop",
   "customer-check",
   "competitor-check",
+  "funding-start",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -413,6 +414,31 @@ export type LaunchpadCompetitorScreen = TaskScreenBase & {
   };
 };
 
+/** Row 26. Own cash confirms. Borrow sets a payback plan. No lender. */
+export type LaunchpadFundingScreen = TaskScreenBase & {
+  type: "funding-start";
+  answerKey: string;
+  costsFrom: string;
+  copy: {
+    context: string;
+    guidance: string;
+    prompt: string;
+    ownCash: string;
+    borrow: string;
+    ownCashConfirm: string;
+    paybackTitle: string;
+    fixedMode: string;
+    fixedHelp: string;
+    weeklyMode: string;
+    weeklyHelp: string;
+    fixedShow: string;
+    weeklyShow: string;
+    disclaimer: string;
+    missing: string;
+    missingAction: string;
+  };
+};
+
 export type LaunchpadTaskScreen =
   | LaunchpadPlaceholderScreen
   | LaunchpadTextScreen
@@ -429,7 +455,8 @@ export type LaunchpadTaskScreen =
   | LaunchpadJobsCoverScreen
   | LaunchpadOfferLoopScreen
   | LaunchpadCustomerScreen
-  | LaunchpadCompetitorScreen;
+  | LaunchpadCompetitorScreen
+  | LaunchpadFundingScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

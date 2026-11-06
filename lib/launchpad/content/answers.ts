@@ -155,6 +155,25 @@ export type CompetitorAnswer = {
   doDifferentlyExtra?: string;
 };
 
+export type FundingSource = "own_cash" | "borrow";
+export type FundingRepayMode = "fixed_over_time" | "weekly_amount";
+export type FundingRepayUnit = "weeks" | "months";
+
+/** Row 26. No lender, charity, or cause. */
+export type FundingAnswer = {
+  kind: "funding";
+  version: 1;
+  fundingSource: FundingSource;
+  startupTotal: number;
+  currency: string;
+  fundingRepayMode?: FundingRepayMode;
+  fundingRepayCount?: number;
+  fundingRepayUnit?: FundingRepayUnit;
+  fundingPeriodPayment?: number;
+  fundingWeeklyAmount?: number;
+  fundingWeeksToRepay?: number;
+};
+
 export type LaunchpadAnswer =
   | BusinessIdentityAnswer
   | SelectionAnswer
@@ -165,7 +184,8 @@ export type LaunchpadAnswer =
   | JobsAnswer
   | OfferAnswer
   | CustomerAnswer
-  | CompetitorAnswer;
+  | CompetitorAnswer
+  | FundingAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -368,6 +388,8 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseCustomerAnswer(value);
     case "competitor":
       return parseCompetitorAnswer(value);
+    case "funding":
+      return parseFundingAnswer(value);
     default:
       return null;
   }
@@ -511,6 +533,34 @@ export function customerOf(answers: LaunchpadAnswers | undefined, key: string): 
 export function competitorOf(answers: LaunchpadAnswers | undefined, key: string): CompetitorAnswer | undefined {
   const a = answers?.[key];
   return a?.kind === "competitor" ? a : undefined;
+}
+
+export function parseFundingAnswer(value: unknown): FundingAnswer | null {
+  if (!isRecord(value) || value.kind !== "funding" || value.version !== 1) return null;
+  if (value.fundingSource !== "own_cash" && value.fundingSource !== "borrow") return null;
+  const startup = moneyAmount(value.startupTotal, true);
+  if (startup === null) return null;
+  const currency = typeof value.currency === "string" && /^[A-Z]{3}$/.test(value.currency) ? value.currency : "USD";
+  const base: FundingAnswer = { kind: "funding", version: 1, fundingSource: value.fundingSource, startupTotal: startup, currency };
+  if (value.fundingSource === "own_cash") return base;
+  if (value.fundingRepayMode === "fixed_over_time") {
+    const count = typeof value.fundingRepayCount === "number" && Number.isInteger(value.fundingRepayCount) && value.fundingRepayCount >= 1 ? value.fundingRepayCount : null;
+    const unit = value.fundingRepayUnit === "weeks" || value.fundingRepayUnit === "months" ? value.fundingRepayUnit : null;
+    if (count === null || !unit) return null;
+    return { ...base, fundingRepayMode: "fixed_over_time", fundingRepayCount: count, fundingRepayUnit: unit, fundingPeriodPayment: Math.round((startup / count) * 100) / 100 };
+  }
+  if (value.fundingRepayMode === "weekly_amount") {
+    const weekly = moneyAmount(value.fundingWeeklyAmount, false);
+    if (weekly === null || weekly <= 0) return null;
+    const weeks = startup <= 0 ? 0 : Math.ceil(Math.round(startup * 100) / Math.round(weekly * 100));
+    return { ...base, fundingRepayMode: "weekly_amount", fundingWeeklyAmount: weekly, fundingWeeksToRepay: weeks };
+  }
+  return null;
+}
+
+export function fundingOf(answers: LaunchpadAnswers | undefined, key: string): FundingAnswer | undefined {
+  const a = answers?.[key];
+  return a?.kind === "funding" ? a : undefined;
 }
 
 export const selectionAnswer = (selected: readonly string[]): SelectionAnswer => ({ kind: "selection", version: 1, selected });

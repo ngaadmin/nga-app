@@ -58,6 +58,7 @@ import { KnowYourCostFlow } from "@/components/launchpad/venture/screens/know-yo
 import { SetPriceFlow } from "@/components/launchpad/venture/screens/set-price-flow";
 import { JobsCoverFlow } from "@/components/launchpad/venture/screens/jobs-cover-flow";
 import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
+import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
@@ -645,6 +646,35 @@ export function VentureFlow({
             onFinish={(answer) => {
               save(completeTask(setProgressAnswer(progress, competitorScreen.answerKey, answer), taskId));
               go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
+      const fundingScreen = current?.screens.find((s) => s.type === "funding-start");
+      if (fundingScreen && fundingScreen.type === "funding-start" && current) {
+        const taskId = current.id;
+        body = (
+          <FundingFlow
+            screen={fundingScreen}
+            answers={answers}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onGoToCosts={() => {
+              const found = findKnowYourCost(floors);
+              if (!found) return;
+              go({
+                screen: "workbook",
+                level: found.floor.level,
+                silverId: found.silver.id,
+                bronzeId: found.bronze.id,
+                index: found.taskIndex,
+              });
+            }}
+            onFinish={(answer) => {
+              const updated = completeTask(setProgressAnswer(progress, fundingScreen.answerKey, answer), taskId);
+              save(updated);
+              go({ screen: "corridor", level: floor.level, entering: false });
+              setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l2-s2" });
             }}
           />
         );

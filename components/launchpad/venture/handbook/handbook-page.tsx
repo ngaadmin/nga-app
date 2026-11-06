@@ -33,7 +33,10 @@ import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import {
   BTN_CYAN_COMPACT,
 } from "@/components/launchpad/venture-test/venture-test-ui";
-import { costsOf } from "@/lib/launchpad/content/answers";
+import { costsOf, fundingOf } from "@/lib/launchpad/content/answers";
+import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
+import { formatMoney } from "@/lib/dashboard/currency/format-money";
+import { formatStartupMoney } from "@/lib/launchpad/content/know-your-cost/logic";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
@@ -553,16 +556,39 @@ function CostsPageBody({
   const screen = silver.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens)).find((s) => s.type === "know-your-cost");
   const answer = screen && screen.type === "know-your-cost" ? costsOf(ctx?.answers, screen.answerKey) : undefined;
   if (!screen || screen.type !== "know-your-cost" || !answer) return null;
+  const funding = fundingOf(ctx?.answers, FUNDING_ANSWER_KEY);
+  const startupText = funding ? formatStartupMoney(funding.startupTotal, readCurrencyPreference()) : "";
+  const pay =
+    funding?.fundingPeriodPayment !== undefined ? formatMoney(funding.fundingPeriodPayment, readCurrencyPreference()) : "";
+  const weekly =
+    funding?.fundingWeeklyAmount !== undefined ? formatMoney(funding.fundingWeeklyAmount, readCurrencyPreference()) : "";
   return (
-    <CostWorkbookBody
-      answer={answer}
-      currency={readCurrencyPreference()}
-      marketingLabel={screen.copy.marketingLabel}
-      starterLabel={screen.copy.starterLabel}
-      hint={screen.copy.workbookHint}
-      editable={editable}
-      onEditStartup={onEditCosts ? () => onEditCosts({ name: "startup" }) : undefined}
-      onEditService={onEditCosts ? (serviceId) => onEditCosts({ name: "service", serviceId }) : undefined}
-    />
+    <>
+      <CostWorkbookBody
+        answer={answer}
+        currency={readCurrencyPreference()}
+        marketingLabel={screen.copy.marketingLabel}
+        starterLabel={screen.copy.starterLabel}
+        hint={screen.copy.workbookHint}
+        editable={editable}
+        onEditStartup={onEditCosts ? () => onEditCosts({ name: "startup" }) : undefined}
+        onEditService={onEditCosts ? (serviceId) => onEditCosts({ name: "service", serviceId }) : undefined}
+      />
+      {funding && (
+        <div className="mt-4" data-funding-summary="">
+          <h3 className="font-heading text-[15px] font-semibold text-[#3FB7DA]">{`How I'll cover my start-up costs`}</h3>
+          {funding.fundingSource === "own_cash" ? (
+            <p className="mt-2 text-[14px] leading-snug text-[#19347D]">I will cover my start-up cost of {startupText} from my own cash or savings.</p>
+          ) : (
+            <p className="mt-2 text-[14px] leading-snug text-[#19347D]">
+              {funding.fundingRepayMode === "fixed_over_time"
+                ? `I will pay about ${pay} each ${funding.fundingRepayUnit === "months" ? "month" : "week"} for ${funding.fundingRepayCount} ${funding.fundingRepayUnit}.`
+                : `At ${weekly} a week, it will take about ${funding.fundingWeeksToRepay} weeks to pay back ${startupText}.`}
+              {" "}Real loans usually add interest; we have left that out here to keep it simple.
+            </p>
+          )}
+        </div>
+      )}
+    </>
   );
 }

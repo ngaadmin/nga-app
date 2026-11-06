@@ -169,7 +169,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
  * on an earlier screen; picker steps share one key, so a repeat is fine for
  * those and rejected for capture screens.
  */
-type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs" | "price" | "jobs" | "offer" | "customer" | "competitor";
+type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs" | "price" | "jobs" | "offer" | "customer" | "competitor" | "funding";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
 function answerKey(screen: Obj, where: string): string {
@@ -288,6 +288,9 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       return;
     case "competitor-check":
       checkCompetitor(screen, where, answers);
+      return;
+    case "funding-start":
+      checkFunding(screen, where, answers);
       return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
@@ -425,6 +428,32 @@ function checkCompetitor(screen: Obj, where: string, answers: Answers): void {
   checkChips(screen.ideas, `${where} ideas`);
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
   for (const field of ["pricesIntro", "extrasIntro", "addJob", "addExtra", "ideaTitle", "ideaHint", "elseHint"] as const) {
+    text(screen.copy[field], `${where} ${field}`);
+  }
+}
+
+function checkFunding(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "funding", where);
+  reads(answers, screen.costsFrom, ["costs"], `${where} costsFrom`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  for (const field of [
+    "context",
+    "guidance",
+    "prompt",
+    "ownCash",
+    "borrow",
+    "ownCashConfirm",
+    "paybackTitle",
+    "fixedMode",
+    "fixedHelp",
+    "weeklyMode",
+    "weeklyHelp",
+    "fixedShow",
+    "weeklyShow",
+    "disclaimer",
+    "missing",
+    "missingAction",
+  ] as const) {
     text(screen.copy[field], `${where} ${field}`);
   }
 }

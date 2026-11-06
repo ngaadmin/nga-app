@@ -172,7 +172,7 @@ describe("r4 building from data", () => {
       <VentureBuilding floors={buildingFloors(EMPTY_VENTURE_TEST_PROGRESS, floors)} label="Dog walking building" />,
     );
     const count = (lx: string) => container.querySelectorAll(`rect.win[data-floor="${lx}"]`).length;
-    expect(["L1", "L2", "L3", "L4", "L5", "L6"].map(count)).toEqual([3, 2, 3, 1, 3, 2]);
+    expect(["L1", "L2", "L3", "L4", "L5", "L6"].map(count)).toEqual([3, 3, 3, 1, 3, 2]);
     expect(container.querySelectorAll('rect.win[data-lit="1"]')).toHaveLength(0);
     expect(container.textContent).toContain("L6 · Growing");
   });
@@ -205,7 +205,7 @@ describe("six-floor intro art (r2)", () => {
     const floors = launchpadTestVentureSeed("dog-walking").floors;
     const p = floors[0]!.silvers[0]!.bronzes.flatMap((b) => b.tasks).reduce((acc, t) => completeTask(acc, t.id), EMPTY_VENTURE_TEST_PROGRESS);
     const { container } = render(<VentureOnboarding floors={buildingFloors(p, floors)} onStart={noop} />);
-    expect(container.querySelectorAll("rect.win")).toHaveLength(14);
+    expect(container.querySelectorAll("rect.win")).toHaveLength(15);
     expect(container.querySelectorAll('rect.win[data-lit="1"]')).toHaveLength(0);
   });
 });

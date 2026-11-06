@@ -56,13 +56,13 @@ describe("venture test structure", () => {
   it("has six floors (Budgeting is rooftop); L1 three silvers, L2 product+Pricing, Final titles (D26/D28)", () => {
     expect(FLOORS.map((f) => [f.level, f.name, f.silvers.length])).toEqual([
       [1, "Vision and Goals", 3],
-      [2, "Planning", 2],
+      [2, "Planning", 3],
       [3, "Getting Ready", 3],
       [4, "Sales", 1],
       [5, "Delivery", 3],
       [6, "Growing", 2],
     ]);
-    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(14);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
     expect(L1.gold.title).toBe(
       "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
     );
@@ -282,7 +282,7 @@ describe("test shortcuts (?rooftop=1, ?complete=all|<silver>, ?level=<n>)", () =
     expect(applied.land).toEqual({ screen: "corridor", level: 2 });
     expect(floorState(applied.progress, FLOORS, 1)).toBe("done");
     expect(floorState(applied.progress, FLOORS, 2)).toBe("current");
-    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["current", "locked"]);
+    expect(silverStates(applied.progress, FLOORS, at(FLOORS, 1))).toEqual(["current", "locked", "locked"]);
     expect(silverStates(applied.progress, FLOORS, at(FLOORS, 0))).toEqual(["done", "done", "done"]);
     expect(applyVentureTestShortcut({ kind: "level", level: 99 }, FLOORS, EMPTY_VENTURE_TEST_PROGRESS)).toBeNull();
   });
@@ -344,6 +344,7 @@ describe("The Brand in Level 1 (D26/D27)", () => {
     expect(L2.silvers.map((s) => [s.id, s.title, s.placeholder])).toEqual([
       ["l2-s1", "The product and its buyers", false],
       ["l2-s2", "Pricing", true],
+      ["l2-s3", "Funding", false],
     ]);
   });
 

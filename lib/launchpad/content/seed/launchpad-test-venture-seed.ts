@@ -29,6 +29,7 @@ import type {
 import { dogWalkingKnowYourCostBronze } from "@/lib/launchpad/content/know-your-cost/dog-walking-fixture";
 import { dogWalkingJobsCoverBronze, dogWalkingSetPriceBronze } from "@/lib/launchpad/content/pricing/screens";
 import { competitorBronze, customerBronze, offerBronze } from "@/lib/launchpad/content/planning/screens";
+import { fundingBronze } from "@/lib/launchpad/content/planning/funding";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -125,7 +126,18 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
                   return door;
                 }),
               };
-            }),
+            }).concat(
+              floor.silvers.some((silver) => silver.id === "l2-s3")
+                ? []
+                : [
+                    {
+                      id: "l2-s3",
+                      title: "Funding",
+                      placeholder: false,
+                      bronzes: [fundingBronze()],
+                    },
+                  ],
+            ),
           },
     ),
   };

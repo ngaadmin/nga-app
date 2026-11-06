@@ -89,7 +89,7 @@ export const BUSINESS_NAME_MAX = 24;
 export const BUSINESS_NAME_MAX_LINES = 2;
 
 export const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
-export const ANSWER_KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+export const ANSWER_KEY_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
 /** The learner's saved picks for one identity (one answerKey). Every pick is optional until chosen. */
 export const IDENTITY_ANSWER_VERSION = 2;

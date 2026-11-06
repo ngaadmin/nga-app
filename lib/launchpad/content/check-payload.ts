@@ -169,7 +169,7 @@ function checkOrThrow(value: unknown, expectedVentureId?: string): void {
  * on an earlier screen; picker steps share one key, so a repeat is fine for
  * those and rejected for capture screens.
  */
-type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity";
+type AnswerKind = "selection-single" | "selection-multi" | "ranking" | "fields" | "business-identity" | "costs";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
 function answerKey(screen: Obj, where: string): string {
@@ -271,9 +271,71 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       });
       return;
     }
+    case "know-your-cost":
+      checkKnowYourCost(screen, where, answers);
+      return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
   }
+}
+
+const COST_COPY_FIELDS = [
+  "hubIntro",
+  "startupCard",
+  "ongoingCard",
+  "startupIntro",
+  "marketingLabel",
+  "starterLabel",
+  "starterNote",
+  "ongoingIntro",
+  "serviceIntro",
+  "totalsIntro",
+  "grandNote",
+  "workbookHint",
+  "hubWait",
+] as const;
+
+function checkCostAmount(value: unknown, where: string, whole: boolean): void {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) fail(`${where} amount must be 0 or more.`);
+  if (whole && !Number.isInteger(value)) fail(`${where} amount must be a whole number.`);
+}
+
+/** `tiedTo` null: a marketing or restock row, with no service list of its own. */
+function checkCostItems(value: unknown, where: string, seen: Set<string>, tiedTo: readonly string[] | null, whole: boolean): void {
+  list(value, where, 0).forEach((raw, i) => {
+    const iw = `${where} item ${i + 1}`;
+    if (!isObj(raw) || typeof raw.id !== "string" || !NODE_ID_RE.test(raw.id)) fail(`${iw} has no valid id.`);
+    if (seen.has(raw.id)) fail(`${iw} repeats id ${raw.id}.`);
+    seen.add(raw.id);
+    text(raw.label, `${iw} label`);
+    checkCostAmount(raw.amount, iw, whole);
+    if (tiedTo) {
+      list(raw.serviceIds, `${iw} services`).forEach((id) => {
+        if (typeof id !== "string" || !tiedTo.includes(id)) fail(`${iw} is tied to an unknown service ${String(id)}.`);
+      });
+    } else if (raw.serviceIds !== undefined) fail(`${iw} cannot be tied to a service.`);
+  });
+}
+
+function checkKnowYourCost(screen: Obj, where: string, answers: Answers): void {
+  saves(answers, screen, "costs", where);
+  const offer = reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
+  const serviceIds = list(offer.options, `${where} servicesFrom options`, 0).map((raw) => (isObj(raw) ? String(raw.id) : ""));
+  text(screen.sourceNote, `${where} sourceNote`);
+  if (typeof screen.showTotals !== "boolean") fail(`${where} showTotals must be true or false.`);
+  if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
+  for (const field of COST_COPY_FIELDS) text(screen.copy[field], `${where} ${field}`);
+  const seen = new Set<string>();
+  checkCostItems(screen.marketing, `${where} marketing`, seen, null, true);
+  checkCostItems(screen.starterGear, `${where} starter gear`, seen, serviceIds, true);
+  const services = new Set<string>();
+  list(screen.ongoing, `${where} ongoing`, 0).forEach((raw, i) => {
+    const ow = `${where} ongoing ${i + 1}`;
+    if (!isObj(raw) || typeof raw.serviceId !== "string" || !serviceIds.includes(raw.serviceId)) fail(`${ow} has an unknown service.`);
+    if (services.has(raw.serviceId)) fail(`${ow} repeats ${raw.serviceId}.`);
+    services.add(raw.serviceId);
+    checkCostItems(raw.items, `${ow} items`, new Set(), null, false);
+  });
 }
 
 function checkCaptureBase(screen: Obj, where: string, promptOptional = false): void {

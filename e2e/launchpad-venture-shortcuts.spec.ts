@@ -88,7 +88,7 @@ test("deep links", async ({ page }, info) => {
     await page.getByRole("button", { name: new RegExp(`Level ${level} corridor`) }).click();
   }
 
-  await step(t, "Pricing doors: real titles, all locked, no empty flow", async () => {
+  await step(t, "Pricing doors: Know your cost is open, the other Final titles stay locked", async () => {
     await page.goto(url("reset=1&complete=l2-s1"));
     await expect(page.locator(corridorTitle)).toHaveText(/Level 2/, { timeout: 60_000 });
     await page.getByRole("button", { name: /Pricing, up next/ }).click();
@@ -100,13 +100,13 @@ test("deep links", async ({ page }, info) => {
     ]) {
       await expect(page.getByText(title)).toBeVisible();
     }
-    await expect(page.getByText("Locked")).toHaveCount(4);
-    await expect(page.getByText("These doors aren't open yet.")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Know your cost/ })).toBeVisible();
+    await expect(page.getByText("Locked")).toHaveCount(3);
+    await expect(page.getByText("These doors aren't open yet.")).toHaveCount(0);
     await expect(page.locator("body")).not.toContainText(/TBC/i);
-    // No enterable Up next door
-    await expect(page.locator("main").getByRole("button", { name: /Up next/ })).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText(/\b(gold|silver|bronze)\b/i);
   });
-  await shot(t, "Pricing doors locked with Final titles", page.getByText("Know your cost"));
+  await shot(t, "Pricing doors, Know your cost up next", page.getByText("Know your cost"));
 
 
   await step(t, "?complete=l1-s1: Level 1 corridor with Set your goals up next", async () => {

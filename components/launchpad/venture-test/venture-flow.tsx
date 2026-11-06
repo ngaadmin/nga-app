@@ -52,6 +52,8 @@ import { isIdentityPicker } from "@/lib/launchpad/content/identity-content";
 import { isPageAnswered, isTaskAnswered, pageDefaultAnswer, taskPages, type TaskPage } from "@/lib/launchpad/content/task-pages";
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { fieldsOf } from "@/lib/launchpad/content/answers";
+import { findKnowYourCost, type CostEditorStep } from "@/lib/launchpad/content/know-your-cost/logic";
+import { KnowYourCostFlow } from "@/components/launchpad/venture/screens/know-your-cost-flow";
 
 
 /** What the forward button is waiting for on a capture page. */
@@ -83,7 +85,7 @@ type View =
   | { screen: "corridor"; level: number; entering: boolean; workbookCue?: { silverId: string; popIn: boolean } }
   | { screen: "doors"; level: number; silverId: string }
   /** `page`: the page inside a paged task (context, then the interaction; goal loops expand). */
-  | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number }
+  | { screen: "workbook"; level: number; silverId: string; bronzeId: string; index: number; page?: number; costStep?: CostEditorStep }
   | { screen: "lift"; from: number }
   /** PLACEHOLDER rooftop finish (pending Jasper's design), once every floor is done. */
   | { screen: "rooftop" };
@@ -431,10 +433,12 @@ export function VentureFlow({
       const floor = floorAt(floors, view.level);
       const silverIndex = floor.silvers.findIndex((s) => s.id === view.silverId);
       const silver = floor.silvers[silverIndex]!;
-      // Pricing is structure-only: show real door titles, all locked — never an
-      // empty placeholder task flow. Other floors keep normal progress locking.
-      const pricingPlaceholder = silver.placeholder && silver.title === "Pricing";
-      const open = !pricingPlaceholder && silverStates(progress, floors, floor)[silverIndex] !== "locked";
+      // Pricing keeps Final door titles. Know your cost follows progress.
+      // Its placeholder siblings stay locked so they never open an empty task.
+      // Other floors keep normal progress locking.
+      const pricing = silver.title === "Pricing";
+      const pricingBuilt = pricing && silver.bronzes.some((b) => !b.placeholder);
+      const open = (pricing && !pricingBuilt ? false : silverStates(progress, floors, floor)[silverIndex] !== "locked");
       const states = bronzeStates(progress, silver, open);
       body = (
         <BronzeDoors
@@ -444,10 +448,10 @@ export function VentureFlow({
             id: b.id,
             title: b.title,
             subtitle: b.subtitle,
-            state: states[i] ?? "locked",
-            comeBack: open && bronzeHasOpenTask(progress, b),
+            state: pricing && b.placeholder ? "locked" : (states[i] ?? "locked"),
+            comeBack: open && !b.placeholder && bronzeHasOpenTask(progress, b),
           }))}
-          lockedNote={pricingPlaceholder ? "These doors aren't open yet." : lockedDoorsNote(progress, floors, floor, silverIndex)}
+          lockedNote={pricing && !pricingBuilt ? "These doors aren't open yet." : lockedDoorsNote(progress, floors, floor, silverIndex)}
           onBuilding={toBuilding}
           onCorridor={toCorridor(floor.level)}
           onOpenBronze={(bronzeId) => {
@@ -525,6 +529,34 @@ export function VentureFlow({
         else go({ screen: "corridor", level: floor.level, entering: false });
       };
       // Final J11: the optional last goal reads "Add this goal" (on once something is typed) with "Skip for now".
+      const costScreen = current?.screens.find((s) => s.type === "know-your-cost");
+      if (costScreen && costScreen.type === "know-your-cost" && current) {
+        const taskId = current.id;
+        body = (
+          <KnowYourCostFlow
+            key={`${costScreen.id}:${view.costStep?.name ?? "hub"}:${view.costStep?.name === "service" ? view.costStep.serviceId : ""}`}
+            screen={costScreen}
+            floors={floors}
+            answers={answers}
+            levelName={floor.name}
+            silverTitle={silver.title}
+            businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
+            initialStep={view.costStep}
+            onBuilding={toBuilding}
+            onCorridor={toCorridor(floor.level)}
+            onExit={(answer) => {
+              save(setProgressAnswer(progress, costScreen.answerKey, answer));
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+            onFinish={(answer) => {
+              const updated = completeTask(setProgressAnswer(progress, costScreen.answerKey, answer), taskId);
+              save(updated);
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
+            }}
+          />
+        );
+        break;
+      }
       const lastGoal =
         pages && page && pageIndex === pages.length - 1 && page.screen.type === "short-text" && page.screen.mode === "goal" && page.screen.optional
           ? page.screen
@@ -597,6 +629,19 @@ export function VentureFlow({
             iconVentureId={iconVentureId}
             setAnswer={setAnswer}
             onClose={closeHandbook}
+            onEditCosts={(step) => {
+              const found = findKnowYourCost(floors);
+              if (!found) return;
+              closeHandbook();
+              go({
+                screen: "workbook",
+                level: found.floor.level,
+                silverId: found.silver.id,
+                bronzeId: found.bronze.id,
+                index: found.taskIndex,
+                costStep: step,
+              });
+            }}
             onBackToLift={() => {
               const level = handbook.level ?? currentLevel(progress, floors);
               // Back from the workbook opened on the corridor: the same corridor, button still there (no pop-in).

@@ -31,6 +31,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "rank-order",
   "short-text",
   "goal-loop",
+  "know-your-cost",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -245,6 +246,57 @@ export type LaunchpadGoalLoopScreen = TaskScreenBase & {
   goals: readonly LaunchpadGoalLoopGoal[];
 };
 
+/** One preset cost row. `serviceIds` ties starter gear or restock to offer picks. */
+export type LaunchpadCostItem = {
+  id: string;
+  label: string;
+  /** Start-up: whole dollars. Ongoing restock: dollars, cents allowed. */
+  amount: number;
+  /** Offer option ids this row belongs to. Marketing rows omit this. */
+  serviceIds?: readonly string[];
+};
+
+/** Restock presets for one service the learner can offer. */
+export type LaunchpadCostServicePreset = {
+  serviceId: string;
+  items: readonly LaunchpadCostItem[];
+};
+
+/**
+ * Know your cost (Pricing). One task screen that runs the costs hub, the
+ * start-up list, the per-service restock sheets, an optional totals check,
+ * and the workbook page. The learner's lines live in a "costs" answer.
+ */
+export type LaunchpadKnowYourCostScreen = TaskScreenBase & {
+  type: "know-your-cost";
+  answerKey: string;
+  /** Selection answer of the services chosen earlier (the offer picks). */
+  servicesFrom: string;
+  /** Slim totals screen. Set false to skip it; the hub Continue goes to the workbook. */
+  showTotals: boolean;
+  /** Why this catalog is provisional. Not shown on screen. */
+  sourceNote: string;
+  copy: {
+    hubIntro: string;
+    startupCard: string;
+    ongoingCard: string;
+    startupIntro: string;
+    marketingLabel: string;
+    starterLabel: string;
+    starterNote: string;
+    ongoingIntro: string;
+    /** `{service}` is the chosen service's label. */
+    serviceIntro: string;
+    totalsIntro: string;
+    grandNote: string;
+    workbookHint: string;
+    hubWait: string;
+  };
+  marketing: readonly LaunchpadCostItem[];
+  starterGear: readonly LaunchpadCostItem[];
+  ongoing: readonly LaunchpadCostServicePreset[];
+};
+
 export type LaunchpadTaskScreen =
   | LaunchpadPlaceholderScreen
   | LaunchpadTextScreen
@@ -255,7 +307,8 @@ export type LaunchpadTaskScreen =
   | LaunchpadChoiceCaptureScreen
   | LaunchpadRankOrderScreen
   | LaunchpadShortTextScreen
-  | LaunchpadGoalLoopScreen;
+  | LaunchpadGoalLoopScreen
+  | LaunchpadKnowYourCostScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

@@ -68,6 +68,7 @@ export function Handbook({
   setAnswer,
   onClose,
   onBackToLift,
+  onEditCosts,
 }: {
   entry: HandbookEntry;
   businessName: string;
@@ -79,6 +80,8 @@ export function Handbook({
   onClose: () => void;
   /** "Back to the lift": shown from the building; returns to the corridor with the plaques. */
   onBackToLift?: () => void;
+  /** Pencil on My costs: open that sheet in the task. */
+  onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
   const pages = handbookPages(progress, floors);
   const ghost = handbookGhost(progress, floors);
@@ -184,7 +187,7 @@ export function Handbook({
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
-                <HandbookPage key={`${page.kind}-${page.silver.id}`} page={page} editable={editable} iconVentureId={iconVentureId} />
+                <HandbookPage key={`${page.kind}-${page.silver.id}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
               </LaunchpadAnswersProvider>
             </div>
             <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">

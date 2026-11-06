@@ -9,6 +9,7 @@ import { ChoiceCaptureScreen } from "@/components/launchpad/venture/screens/choi
 import { RankOrderScreen } from "@/components/launchpad/venture/screens/rank-order-screen";
 import { ShortTextScreen } from "@/components/launchpad/venture/screens/short-text-screen";
 import { GoalLoopScreen } from "@/components/launchpad/venture/screens/goal-loop-screen";
+import { KnowYourCostFlow } from "@/components/launchpad/venture/screens/know-your-cost-flow";
 
 type Renderers = {
   [T in LaunchpadTaskScreenType]: (screen: Extract<LaunchpadTaskScreen, { type: T }>) => ReactElement;
@@ -30,6 +31,7 @@ export const LAUNCHPAD_TASK_SCREEN_RENDERERS: Renderers = {
   "rank-order": (screen) => <RankOrderScreen screen={screen} />,
   "short-text": (screen) => <ShortTextScreen screen={screen} />,
   "goal-loop": (screen) => <GoalLoopScreen screen={screen} />,
+  "know-your-cost": (screen) => <KnowYourCostFlow screen={screen} />,
 };
 
 export const REGISTERED_LAUNCHPAD_TASK_SCREEN_TYPES = Object.keys(

@@ -1,8 +1,9 @@
 /**
  * TEST venture seed: six building floors (Vision → Growing). Level 7 Budgeting
  * is the rooftop (future work — see BUDGETING_ROOFTOP_NOTE). Module 1 content
- * and L2 product screens overlay from the load file; L2 Pricing and L3–6 are
- * structure placeholders with Final/Revised titles.
+ * and L2 product screens overlay from the load file. L2 Pricing keeps Final
+ * titles; Know your cost is a test build. The other Pricing doors and L3–6
+ * stay structure placeholders.
  */
 import dogWalkingLoadJson from "@/content/launchpad/dog-walking.load.json";
 import {
@@ -25,6 +26,7 @@ import type {
   LaunchpadTask,
   LaunchpadVenturePayload,
 } from "@/lib/launchpad/content/types";
+import { dogWalkingKnowYourCostBronze } from "@/lib/launchpad/content/know-your-cost/dog-walking-fixture";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -91,11 +93,36 @@ function floor(level: ServiceFloorLevel, silvers: LaunchpadSilver[]): LaunchpadF
 /**
  * Six floors (L1–L6). Window count equals silver count per floor.
  * L1 silvers are replaced by the load (Define, Set your goals, The Brand).
- * L2 product silver is replaced by the load; Pricing and L3–6 stay as structure.
+ * L2 product silver is replaced by the load. Pricing stays a structure plaque;
+ * its Know your cost door is a test build. The other Pricing doors and L3–6
+ * stay placeholders.
  */
+/** Dog walking only: Pricing's first door is the Know your cost test build. */
+function withKnowYourCost(payload: LaunchpadVenturePayload): LaunchpadVenturePayload {
+  return {
+    ...payload,
+    floors: payload.floors.map((floor) =>
+      floor.level !== 2
+        ? floor
+        : {
+            ...floor,
+            silvers: floor.silvers.map((silver) =>
+              silver.id !== "l2-s2"
+                ? silver
+                : {
+                    ...silver,
+                    bronzes: silver.bronzes.map((door) => (door.id === "l2-s2-b1" ? dogWalkingKnowYourCostBronze() : door)),
+                  },
+            ),
+          },
+    ),
+  };
+}
+
 export function launchpadTestVentureSeed(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID): LaunchpadVenturePayload {
   const base = launchpadSeedBase(ventureId);
-  return ventureId === DOG_WALKING_LOAD.ventureId ? overlayLoad(base, DOG_WALKING_LOAD) : base;
+  if (ventureId !== DOG_WALKING_LOAD.ventureId) return base;
+  return withKnowYourCost(overlayLoad(base, DOG_WALKING_LOAD));
 }
 
 export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID): LaunchpadVenturePayload {
@@ -121,8 +148,8 @@ export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID)
           bronzes: [bronze("l1-s2-b1", "Set your goals", false)],
         },
       ]),
-      // L2: product screens overlay from load; Pricing stays as structure placeholder.
-      // Locked identity (l2-s2) is SEED_LOCKED_IDENTITY_SILVER — not on a floor.
+      // L2: product screens overlay from load. Pricing keeps its Final door
+      // titles; Know your cost is a real test task. Locked identity is not on a floor.
       floor(2, [
         {
           id: "l2-s1",
@@ -133,7 +160,7 @@ export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID)
             bronze("l2-s1-b2", "Know who your customers are", false),
           ],
         },
-        ...structureSilvers(2).slice(1), // Pricing → l2-s2
+        ...structureSilvers(2).slice(1), // Pricing → l2-s2; dog walking replaces Know your cost after the load overlay
       ]),
       floor(3, structureSilvers(3)),
       floor(4, structureSilvers(4)),

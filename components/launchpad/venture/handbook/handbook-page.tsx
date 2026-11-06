@@ -33,6 +33,9 @@ import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import {
   BTN_CYAN_COMPACT,
 } from "@/components/launchpad/venture-test/venture-test-ui";
+import { costsOf } from "@/lib/launchpad/content/answers";
+import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
+import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -483,20 +486,25 @@ export function HandbookPage({
   page,
   editable,
   iconVentureId,
+  onEditCosts,
 }: {
   page: HandbookPageView;
   editable: boolean;
   iconVentureId: string;
+  /** Opens the cost sheet for the start-up list or one service. */
+  onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
   return (
     <article
       className="relative"
-      data-handbook-page={page.kind === "cover" ? "cover" : page.silver.id}
+      data-handbook-page={page.kind === "cover" ? "cover" : page.kind === "costs" ? "my-costs" : page.silver.id}
       data-editable={editable ? "true" : "false"}
       aria-label={
         page.kind === "cover"
           ? `Page ${page.number}`
-          : `Page ${page.number}: ${page.silver.title}`
+          : page.kind === "costs"
+            ? `Page ${page.number}: My costs`
+            : `Page ${page.number}: ${page.silver.title}`
       }
     >
       {page.kind !== "cover" && <MiniIdentity />}
@@ -504,9 +512,38 @@ export function HandbookPage({
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" ? (
         <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
+      ) : page.kind === "costs" ? (
+        <CostsPageBody editable={editable && !!onEditCosts} onEditCosts={onEditCosts} silver={page.silver} />
       ) : (
         <PlaceholderPageBody page={page} />
       )}
     </article>
+  );
+}
+
+function CostsPageBody({
+  silver,
+  editable,
+  onEditCosts,
+}: {
+  silver: HandbookPageView["silver"];
+  editable: boolean;
+  onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
+}) {
+  const ctx = useLaunchpadAnswers();
+  const screen = silver.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens)).find((s) => s.type === "know-your-cost");
+  const answer = screen && screen.type === "know-your-cost" ? costsOf(ctx?.answers, screen.answerKey) : undefined;
+  if (!screen || screen.type !== "know-your-cost" || !answer) return null;
+  return (
+    <CostWorkbookBody
+      answer={answer}
+      currency={readCurrencyPreference()}
+      marketingLabel={screen.copy.marketingLabel}
+      starterLabel={screen.copy.starterLabel}
+      hint={screen.copy.workbookHint}
+      editable={editable}
+      onEditStartup={onEditCosts ? () => onEditCosts({ name: "startup" }) : undefined}
+      onEditService={onEditCosts ? (serviceId) => onEditCosts({ name: "service", serviceId }) : undefined}
+    />
   );
 }

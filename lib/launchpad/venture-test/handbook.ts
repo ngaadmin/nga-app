@@ -10,7 +10,8 @@
 import type { LaunchpadFloor, LaunchpadSilver, LaunchpadSummarySection, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { applyFieldChange } from "@/lib/launchpad/content/fields";
 import { kebabId } from "@/lib/launchpad/venture-test/handbook-ids";
-import { fieldsAnswer, identityAnswerOf, rankingAnswer, selectionAnswer, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsAnswer, identityAnswerOf, rankingAnswer, selectionAnswer, type LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import { findKnowYourCost, sampleCostsAnswer } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { CaptureScreen } from "@/lib/launchpad/content/task-pages";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { clampBusinessName, IDENTITY_ANSWER_VERSION, type BusinessIdentityAnswer } from "@/lib/launchpad/content/identity";
@@ -20,6 +21,7 @@ import {
   isBronzeDone,
   isFloorDone,
   isSilverDone,
+  isTaskDone,
   setProgressAnswer,
   type VentureTestProgress,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -41,7 +43,7 @@ export type HandbookPageView = {
    * other silver. The identity silver has no page of its own (Cath, 5 Nov
    * 5:35pm: the vision shows once, on the cover); its answer feeds the cover.
    */
-  kind: "cover" | "summary" | "placeholder";
+  kind: "cover" | "summary" | "placeholder" | "costs";
   /** Titles of the silver's finished bronzes (written out under plain headings on placeholder pages). */
   bronzeTitles: string[];
   done: true;
@@ -64,8 +66,29 @@ function orderedSilvers(floors: readonly LaunchpadFloor[]) {
  * Then one page per completed silver, in building order, except the identity
  * silver itself: it has no separate page (its answer is on the cover).
  */
+/** My costs, once that task is saved. Replaces Pricing's placeholder page when the plaque is already done. */
+function withCostsPage(progress: VentureTestProgress, floors: readonly LaunchpadFloor[], pages: HandbookPageView[]): HandbookPageView[] {
+  const found = findKnowYourCost(floors);
+  if (!hasHandbook(progress, floors) || !found || !isTaskDone(progress, found.task.id)) return pages;
+  const answer = costsOf(progress.answers, found.screen.answerKey);
+  if (!answer) return pages;
+  const view: HandbookPageView = {
+    number: 0,
+    level: found.floor.level,
+    floorName: found.floor.name,
+    silverNumber: found.silverNumber,
+    silver: found.silver,
+    kind: "costs",
+    bronzeTitles: [],
+    done: true,
+  };
+  const existing = pages.findIndex((page) => page.silver.id === found.silver.id);
+  const next = existing >= 0 ? pages.map((page, i) => (i === existing ? { ...view, number: page.number } : page)) : [...pages, view];
+  return next.map((page, i) => ({ ...page, number: i + 1 }));
+}
+
 export function handbookPages(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookPageView[] {
-  const pages = silverPages(progress, floors);
+  const pages = withCostsPage(progress, floors, silverPages(progress, floors));
   const id = orderedSilvers(floors).find(({ silver }) => silver.wrapUp?.type === "identity-wrap-up" && silver.wrapUp.vision);
   if (!hasHandbook(progress, floors) || !id) return pages;
   const cover: HandbookPageView = {
@@ -223,6 +246,12 @@ export function withShortcutSampleAnswers(
           const sample = shortcutSampleAnswer(screen);
           if (sample) next = setProgressAnswer(next, screen.answerKey, sample);
         }
+      for (const b of silver.bronzes)
+        for (const t of b.tasks)
+          for (const screen of t.screens) {
+            if (screen.type !== "know-your-cost" || next.answers?.[screen.answerKey]) continue;
+            next = setProgressAnswer(next, screen.answerKey, sampleCostsAnswer(screen, floors, next.answers));
+          }
   }
   for (const { silver } of orderedSilvers(floors)) {
     if (silver.wrapUp?.type !== "identity-wrap-up" || !isSilverDone(progress, silver)) continue;

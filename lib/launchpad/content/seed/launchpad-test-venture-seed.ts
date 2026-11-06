@@ -110,7 +110,8 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
             ...floor,
             silvers: floor.silvers.map((silver) => {
               if (silver.id === "l2-s1") {
-                const { wrapUp: _oldParagraph, ...rest } = silver;
+                const rest = { ...silver };
+                delete rest.wrapUp;
                 return { ...rest, bronzes: [offerBronze(), customerBronze()] };
               }
               if (silver.id !== "l2-s2") return silver;

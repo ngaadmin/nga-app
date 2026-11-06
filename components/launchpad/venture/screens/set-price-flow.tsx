@@ -158,7 +158,7 @@ export function SetPriceFlow({
                     </select>
                   </p>
                 ) : (
-                  <p className="mt-1 text-[12px] text-[#9AA3B5]">Others' range: not checked yet</p>
+                  <p className="mt-1 text-[12px] text-[#9AA3B5]">Others range: not checked yet</p>
                 )}
                 {low && <p className="mt-1 text-[12.5px] text-[#B45309]">{screen.copy.lowKeep}</p>}
               </article>

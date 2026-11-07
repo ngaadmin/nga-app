@@ -4,7 +4,16 @@ import { useState } from "react";
 import type { CompetitorAnswer, CustomerAnswer, LaunchpadAnswers, OfferAnswer, ServiceOffering } from "@/lib/launchpad/content/answers";
 import { competitorOf, customerOf, offerOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
-import { SOMETHING_ELSE_ID, catalogFor, chipLabel } from "@/lib/launchpad/content/planning/catalog";
+import {
+  AVAILABILITY_COLUMNS,
+  AVAILABILITY_ROWS,
+  availabilityPhrase,
+  availabilitySlotId,
+  catalogFor,
+  chipLabel,
+  isAvailabilitySlot,
+  SOMETHING_ELSE_ID,
+} from "@/lib/launchpad/content/planning/catalog";
 import type { LaunchpadChip, LaunchpadCompetitorScreen, LaunchpadCustomerScreen, LaunchpadFloor, LaunchpadOfferLoopScreen } from "@/lib/launchpad/content/types";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
@@ -55,6 +64,11 @@ function Chip({
 
 function toggle(list: readonly string[], id: string): string[] {
   return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+}
+
+function toggleSlot(list: readonly string[], id: string): string[] {
+  const next = toggle(list.filter(isAvailabilitySlot), id);
+  return AVAILABILITY_COLUMNS.flatMap((column) => AVAILABILITY_ROWS.map((row) => availabilitySlotId(column.key, row.key))).filter((slot) => next.includes(slot));
 }
 
 function emptyOffering(serviceId: string): ServiceOffering {
@@ -161,15 +175,51 @@ export function OfferLoopFlow({
         )}
         {onWhen && (
           <>
-            <p className="mt-3 text-[15px] leading-snug text-[#19347D]">
-              I am available {draft.availability.map(chipLabel).join(", ") || "…"}.
+            <p className="mt-3 text-[15px] leading-snug text-[#19347D]" data-availability-summary="">
+              I am available {availabilityPhrase(draft.availability)}.
               {draft.availabilityExtra ? ` Also: ${draft.availabilityExtra}.` : ""}
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {screen.times.map((item) => (
-                <Chip lined key={item.id} tone="package" label={item.label} selected={draft.availability.includes(item.id)} onClick={() => write({ ...draft, availability: toggle(draft.availability, item.id) })} />
-              ))}
-            </div>
+            <table className="mt-4 w-full border-collapse text-left text-[15px] text-[#19347D]" data-availability-table="">
+              <thead>
+                <tr className="border-b border-[#F3D7A6]">
+                  <th scope="col" className="py-2 pr-2 font-semibold">Time</th>
+                  {AVAILABILITY_COLUMNS.map((column) => (
+                    <th key={column.key} scope="col" className="px-2 py-2 text-center font-semibold">
+                      {column.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {AVAILABILITY_ROWS.map((row) => (
+                  <tr key={row.key} className="border-b border-[#F6E2B8]">
+                    <th scope="row" className="py-3 pr-2 font-normal">{row.label}</th>
+                    {AVAILABILITY_COLUMNS.map((column) => {
+                      const id = availabilitySlotId(column.key, row.key);
+                      const on = draft.availability.includes(id);
+                      return (
+                        <td key={id} className="px-2 py-3 text-center">
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={on}
+                            aria-label={`${row.label}, ${column.label}`}
+                            onClick={() => write({ ...draft, availability: toggleSlot(draft.availability, id) })}
+                            className={`inline-flex size-6 items-center justify-center rounded-[4px] ${on ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}
+                          >
+                            {on ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 12.5l5 5L19 7" />
+                              </svg>
+                            ) : null}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <button type="button" className="mt-3 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "time" ? null : "time")}>{screen.copy.addTime}</button>
             {extraOpen === "time" && (
               <input aria-label="Another time" maxLength={80} value={draft.availabilityExtra ?? ""} onChange={(event) => write({ ...draft, availabilityExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Monday to Friday 4pm to 7pm" />
@@ -187,7 +237,7 @@ export function OfferLoopFlow({
           onClick={() => {
             if (!ready) return;
             if (!onWhen) setStep(step + 1);
-            else onFinish(draft);
+            else onFinish({ ...draft, availability: draft.availability.filter(isAvailabilitySlot) });
           }}
         >
           Continue

@@ -531,7 +531,7 @@ export function parseOfferAnswer(value: unknown): OfferAnswer | null {
     if (addonsExtra) row.addonsExtra = addonsExtra;
     offerings.push(row);
   }
-  const availabilityExtra = optText(value.availabilityExtra, 80);
+  const availabilityExtra = optText(value.availabilityExtra, 80) ?? optText(value.availability_extra, 80);
   return {
     kind: "offer",
     version: 1,

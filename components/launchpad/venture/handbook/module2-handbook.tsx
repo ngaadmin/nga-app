@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { customerOf, offerOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
-import { catalogFor, chipLabel } from "@/lib/launchpad/content/planning/catalog";
+import { availabilityPhrase, catalogFor, chipLabel, isAvailabilitySlot } from "@/lib/launchpad/content/planning/catalog";
 import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
@@ -30,8 +30,11 @@ function RuledPick({ label, on, onClick }: { label: string; on: boolean; onClick
 function joinLabels(ids: readonly string[]): string {
   const labels = ids.map((id) => chipLabel(id));
   if (labels.length === 0) return "";
+  if (ids.length > 0 && ids.every(isAvailabilitySlot)) {
+    const phrase = availabilityPhrase(ids);
+    return phrase === "…" ? "" : phrase;
+  }
   if (labels.length === 1) return labels[0]!;
-  if (labels.length === 2 && ids[0] === "after-school" && ids[1] === "weekend-days") return "after school and on weekend days";
   return labels.length === 2 ? `${labels[0]} and ${labels[1]}` : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }
 

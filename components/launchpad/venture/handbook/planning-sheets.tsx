@@ -4,7 +4,7 @@ import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf,
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
-import { chipLabel } from "@/lib/launchpad/content/planning/catalog";
+import { availabilityPhrase, chipLabel, isAvailabilitySlot } from "@/lib/launchpad/content/planning/catalog";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -250,7 +250,12 @@ function PlanSelling() {
       ))}
       <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">When and who might want it</h3>
       <p className="mt-1 text-[15px] text-[#19347D]">
-        {offer?.availability.length ? <ChosenValue>{offer.availability.map(chipLabel).join(", ")}</ChosenValue> : "Not answered yet"}.
+        {offer?.availability.length ? (
+          <ChosenValue>{offer.availability.every(isAvailabilitySlot) ? availabilityPhrase(offer.availability) : offer.availability.map(chipLabel).join(", ")}</ChosenValue>
+        ) : (
+          "Not answered yet"
+        )}
+        .
       </p>
       {customer && (
         <p className="mt-1 text-[15px] text-[#19347D]">

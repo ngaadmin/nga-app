@@ -364,7 +364,7 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
         packages: id === "grooming" ? ["bath"] : id === "dog-training" ? ["basic-manners-session"] : ["30-minute-walk"],
         addons: id === "dog-walking" ? ["photo-updates"] : [],
       })),
-      availability: ["after-school", "weekend-days"],
+      availability: ["weekday_morning", "weekday_afternoon", "weekend_morning"],
     });
   }
   if (isTaskDone(next, "l2-s1-b2-t1") && !next.answers?.["l2-customers"]) {

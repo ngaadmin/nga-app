@@ -480,7 +480,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(next).toBeDisabled();
     await page.getByRole("button", { name: "Basic manners session" }).click();
     await next.click();
-    await page.getByRole("button", { name: "After school" }).click();
+    await page.getByRole("checkbox", { name: "Afternoon, Weekdays" }).click();
     await expect(next).toBeEnabled();
   });
   await shot(t, "Decide what to sell, filled", next);
@@ -510,7 +510,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await turnTo(page.getByRole("dialog"), "l2-s1");
     const pg = page.getByRole("dialog").locator('[data-handbook-page="l2-s1"]');
     await expect(pg).toContainText("30-minute walk");
-    await expect(pg).toContainText("After school");
+    await expect(pg).toContainText("weekday afternoons");
     await pg.getByRole("button", { name: "Dog walking" }).click();
     const ed = pg.locator("[data-inline-editor]");
     await expect(ed).toBeVisible();

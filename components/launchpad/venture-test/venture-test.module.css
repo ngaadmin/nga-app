@@ -1,0 +1,126 @@
+/* TEST-ONLY venture flow animations. */
+
+/* Entry: the lift doors slide apart in about 0.6s, then the plaques fade in. */
+.doorLeftOpen {
+  animation: door-left-open 600ms ease-in-out both;
+}
+.doorRightOpen {
+  animation: door-right-open 600ms ease-in-out both;
+}
+.plaquesFadeIn {
+  animation: fade-in 400ms ease-out 600ms both;
+}
+
+/* After a step: the workbook button pops in (scale 0.6 to 1, about 200ms). */
+.workbookPopIn {
+  animation: workbook-pop-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes workbook-pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Lift: doors close, then the indicator moves from 1 to 2. */
+.liftDoorLeftClose {
+  animation: lift-left-close 600ms ease-in-out both;
+}
+.liftDoorRightClose {
+  animation: lift-right-close 600ms ease-in-out both;
+}
+.liftFromDim {
+  animation: lift-from-dim 400ms ease-out 1000ms both;
+}
+.liftToLit {
+  animation: lift-to-lit 400ms ease-out 1000ms both;
+}
+.liftArrow {
+  animation: lift-arrow 700ms ease-in-out 600ms 2 both;
+}
+
+@keyframes door-left-open {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% + 26px));
+  }
+}
+@keyframes door-right-open {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% - 26px));
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lift-left-close {
+  from {
+    transform: translateX(-120px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes lift-right-close {
+  from {
+    transform: translateX(120px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes lift-from-dim {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+@keyframes lift-to-lit {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lift-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doorLeftOpen,
+  .doorRightOpen,
+  .plaquesFadeIn,
+  .liftDoorLeftClose,
+  .liftDoorRightClose,
+  .liftFromDim,
+  .liftToLit,
+  .liftArrow,
+  .workbookPopIn {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+    animation-iteration-count: 1;
+  }
+}

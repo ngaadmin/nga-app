@@ -1,0 +1,334 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
+import type { LaunchpadAnswer } from "@/lib/launchpad/content/answers";
+import {
+  handbookGhost,
+  handbookOpenIndex,
+  handbookPages,
+  handbookTabs,
+  handbookTabTarget,
+  isHandbookPageEditable,
+  type HandbookEntry,
+} from "@/lib/launchpad/venture-test/handbook";
+import type { VentureTestProgress } from "@/lib/launchpad/venture-test/venture-test-progress";
+import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
+import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
+import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
+import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/venture/handbook/paper-art";
+import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
+
+const READ_ONLY_SAVE = () => {};
+
+const SHEET_LABEL: Record<string, string> = {
+  "pricing-b": "Page 2b",
+  "costs-a": "Page 3",
+  "costs-b": "Page 3b",
+  price: "Page 4",
+  jobs: "Page 5",
+  "plan-1": "Page 6",
+  "plan-2": "Page 6b",
+  "plan-3": "Page 7",
+  "plan-4": "Page 7b",
+  funding: "Page 7",
+  "ready-a": "Page 8",
+  "ready-b": "Page 9",
+  "ready-c": "Page 10",
+};
+
+/** Define the business scribbles (r3). Phone pixels on the 390×844 workbook, paper inset 11px under the header. */
+const DEFINE_FRAME = { left: 11, top: 72 };
+
+function DefineScribbles() {
+  const marks = [
+    ["smiley", 286, 216, 31, 32, -8],
+    ["smiley-black", 328, 220, 31, 32, 7],
+    ["bulb", 322, 303, 25, 33, 8],
+    ["star", 329, 341, 23, 23, -12],
+    ["sparkle", 326, 374, 16, 20, 12],
+    ["beagle", 53, 550, 72, 65, -7],
+    ["kit", 146, 548, 68, 66, 7],
+    ["treats", 255, 543, 48, 44, -12],
+    ["calendar", 286, 612, 57, 52, -8],
+    ["pawtrail", 67, 622, 57, 67, 8],
+    ["paw", 187, 631, 20, 21, -10],
+    ["heart", 237, 651, 20, 23, 12],
+    ["bone", 157, 671, 25, 16, -7],
+  ] as const;
+  return (
+    <>
+      {marks.map(([name, x, y, w, h, angle]) => (
+        <ScribbleMark key={name} name={name} x={x} y={y} w={w} h={h} angle={angle} frame={DEFINE_FRAME} />
+      ))}
+    </>
+  );
+}
+
+function sheetLabel(sheet?: string): string | undefined {
+  return sheet ? SHEET_LABEL[sheet] : undefined;
+}
+
+function paperLabel(page: { sheet?: string; number: number; silver: { id: string } }): string {
+  if (!page.sheet && page.silver.id === "l2-s1") return "Page 2";
+  return sheetLabel(page.sheet) ?? `Page ${page.number}`;
+}
+
+/** 44x44 book button that opens the handbook (home In Progress cards and the building screen). */
+export function HandbookButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label="Open workbook"
+      onClick={onClick}
+      className="flex size-11 flex-none items-center justify-center rounded-full bg-nga-panel shadow-[0_3px_0_#099fb8]"
+      data-handbook-button=""
+    >
+      <HandbookIcon />
+    </button>
+  );
+}
+
+function Chevron({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d={dir === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
+    </svg>
+  );
+}
+
+/** r4 lock glyph (outline, 10px). */
+function SmallLock() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#9CA3AF" strokeWidth="2.4">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
+/**
+ * The handbook overlay. Opened from home it is read-only; opened from the
+ * building, pages for completed silvers can be edited inline. It reads and
+ * writes the same saved answers as the lessons and wrap-ups (single source
+ * of truth), so every page re-renders straight from them.
+ */
+export function Handbook({
+  entry,
+  businessName,
+  floors,
+  progress,
+  iconVentureId,
+  setAnswer,
+  onClose,
+  onBackToLift,
+  onEditCosts,
+  initialSheet,
+}: {
+  entry: HandbookEntry;
+  businessName: string;
+  floors: readonly LaunchpadFloor[];
+  progress: VentureTestProgress;
+  iconVentureId: string;
+  /** Save an answer. Only used from the building; home is read-only. */
+  setAnswer?: (answerKey: string, answer: LaunchpadAnswer) => void;
+  onClose: () => void;
+  /** "Back to the lift": shown from the building; returns to the corridor with the plaques. */
+  onBackToLift?: () => void;
+  /** Pencil on My costs: open that sheet in the task. */
+  onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
+  /** Open on a named sheet, such as the Planning wrap after Jobs. */
+  initialSheet?: string;
+}) {
+  const pages = handbookPages(progress, floors);
+  const ghost = handbookGhost(progress, floors);
+  const tabs = handbookTabs(progress, floors);
+  // Always page 1 first; Next page (or a left swipe) moves forward in order.
+  const [index, setIndex] = useState(() => {
+    if (!initialSheet) return handbookOpenIndex(pages);
+    const found = pages.findIndex((item) => item.sheet === initialSheet);
+    return found === -1 ? handbookOpenIndex(pages) : found;
+  });
+  const at = Math.min(index, Math.max(0, pages.length - 1));
+  const page = pages[at];
+  const isLast = at === pages.length - 1;
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const swipeX = useRef<number | null>(null);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [onClose]);
+
+  const go = (i: number) => setIndex(Math.max(0, Math.min(pages.length - 1, i)));
+  const editable = page ? isHandbookPageEditable(entry, page.done) && !!setAnswer : false;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="handbook-title"
+      className="fixed inset-0 z-modal mx-auto flex w-full max-w-[430px] flex-col overflow-hidden bg-white text-[#111827]"
+      data-handbook={entry}
+    >
+      <header className="flex h-16 flex-none items-center gap-2 pl-1.5 pr-4">
+        <button
+          ref={closeRef}
+          type="button"
+          aria-label="Close workbook"
+          onClick={onClose}
+          className="flex size-11 flex-none items-center justify-center rounded-[10px]"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 id="handbook-title" className="font-heading text-lg font-semibold leading-tight text-[#111827]">
+            My workbook
+          </h1>
+          <p className="truncate text-[13px] text-[#6B7280]">{businessName}</p>
+        </div>
+        {entry === "home" && (
+          <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-[11px] font-medium text-[#374151]" data-read-only="">
+            Read only
+          </span>
+        )}
+      </header>
+      {onBackToLift && (
+        <button
+          type="button"
+          onClick={onBackToLift}
+          className="-mt-2 mb-1 ml-4 flex h-8 items-center self-start text-[14px] font-semibold text-nga-ink"
+          data-back-to-lift=""
+        >
+          ‹ Back to the lift
+        </button>
+      )}
+
+      <div className="relative min-h-0 flex-1">
+        {isLast && ghost && (
+          <div
+            aria-label={`Next page, locked: ${ghost.silverTitle}`}
+            role="img"
+            className="absolute bottom-[62px] right-[64px] top-[14px] w-9 rounded-r-[14px] border border-l-0 border-[#EDE7DC] bg-[#FDFBF7]"
+            data-handbook-ghost=""
+          >
+            <span className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 rotate-90 items-center gap-1.5 whitespace-nowrap pl-1.5 text-[11px] font-medium text-[#9CA3AF]">
+              <SmallLock />
+              Next: {ghost.silverTitle}
+            </span>
+          </div>
+        )}
+        {page && (
+          <div
+            className="absolute bottom-[108px] left-[11px] right-[11px] top-1 z-raised overflow-hidden rounded-2xl border border-[#EDE7DC]"
+            style={{ background: PAPER_BACKGROUND }}
+            data-paper-card=""
+            onPointerDown={(e) => (swipeX.current = e.clientX)}
+            onPointerUp={(e) => {
+              if (swipeX.current === null) return;
+              const dx = e.clientX - swipeX.current;
+              swipeX.current = null;
+              if (Math.abs(dx) > 60) go(at + (dx < 0 ? 1 : -1));
+            }}
+          >
+            <SpiralBinding />
+            <Washi />
+            {page.kind === "summary" && page.silver.id === "l1-s1" && <DefineScribbles />}
+            <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6" data-paper-scroll="">
+              <LaunchpadAnswersProvider
+                value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
+              >
+                <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
+              </LaunchpadAnswersProvider>
+            </div>
+            <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">
+              {paperLabel(page)}
+            </p>
+          </div>
+        )}
+
+        <nav aria-label="Workbook floors" className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-6 gap-1" data-workbook-chrome="folder">
+          {tabs.map((t) => {
+            const label = `Level ${t.level}, ${t.name}`;
+            const viewing = page?.level === t.level;
+            const later = !!page && t.level > page.level;
+            // The floor being viewed gets the app's orange ring (outline, so it sits outside
+            // the 44px tab and stacks with any state styling) whatever the tab's state.
+            const viewedRing = viewing ? "outline outline-2 outline-offset-2 outline-[#FFA503]" : "";
+            const base = `flex h-10 w-11 items-center justify-center rounded-b-[3px] rounded-t-none border text-[12px] ${viewedRing}`;
+            const fill = viewing
+              ? "border-[#19347D] bg-white font-semibold text-[#19347D]"
+              : later
+                ? "border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#C4C0B8]"
+                : "border-[#E7E1D6] bg-[#F3EFE6] font-semibold text-[#6B645C]";
+            if (!t.tappable)
+              return (
+                <button
+                  key={t.level}
+                  type="button"
+                  disabled
+                  aria-label={`${label}, not earned yet`}
+                  aria-current={viewing ? "true" : undefined}
+                  className={`${base} border-[#E5E7EB] bg-[#F7F5F1] font-medium text-[#9CA3AF]`}
+                  data-tab-state={t.state}
+                  data-viewed={viewing ? "" : undefined}
+                >
+                  L{t.level}
+                </button>
+              );
+            return (
+              <button
+                key={t.level}
+                type="button"
+                aria-label={label}
+                aria-current={viewing ? "true" : undefined}
+                onClick={() => go(handbookTabTarget(pages, t.level))}
+                className={`${base} ${fill}`}
+                data-tab-state={t.state}
+                data-viewed={viewing ? "" : undefined}
+              >
+                L{t.level}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="sr-only">
+          <div className="flex items-center gap-[7px]" aria-hidden="true" data-page-dots="">
+            {pages.map((p, i) => (
+              <span key={`${p.kind}-${p.silver.id}-${p.sheet ?? i}`} className={`h-1.5 rounded-full ${i === at ? "w-[18px] rounded-[3px] bg-[#111827]" : "w-1.5 bg-[#E5E7EB]"}`} />
+            ))}
+            {ghost && <span className="size-1.5 rounded-full shadow-[inset_0_0_0_1px_#9CA3AF]" />}
+          </div>
+        </div>
+        <div className="absolute bottom-[72px] right-3 z-raised flex gap-1">
+          <button type="button" aria-label="Previous page" disabled={at === 0} onClick={() => go(at - 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+            <Chevron dir="left" />
+          </button>
+          <button type="button" aria-label="Next page" disabled={isLast} onClick={() => go(at + 1)} className="flex size-11 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white disabled:opacity-40">
+            <Chevron dir="right" />
+          </button>
+        </div>
+        <div className="absolute inset-x-0 bottom-3 flex justify-center">
+          <button type="button" onClick={() => (isLast ? onClose() : go(at + 1))} className="h-11 min-w-[148px] rounded-full bg-[#19347D] px-6 text-[15px] font-semibold text-white">
+            Continue
+          </button>
+        </div>
+        <span className="sr-only" aria-live="polite">
+          Page {at + 1} of {pages.length}
+        </span>
+      </div>
+    </div>
+  );
+}

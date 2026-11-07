@@ -9,6 +9,7 @@ import { jobsNeeded, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep } from "@/li
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 const CONTINUE_ON =
   "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#19347D] px-6 font-heading text-[15px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#19347D]";
@@ -79,6 +80,7 @@ export function JobsCoverFlow({
   const mode: "single" | "multi" = priced.length >= 2 ? "multi" : "single";
   const [weekId, setWeekId] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [page, setPage] = useState<1 | 2>(1);
 
   const single = priced[0];
   const needed = single ? jobsNeeded(startup, single.keptPerJob) : null;
@@ -114,12 +116,32 @@ export function JobsCoverFlow({
 
   const save = (next: JobsAnswer) => persist(screen.answerKey, next);
 
+  const bullets = guidanceBullets(screen.copy.guidance);
+  const frame = { left: 0, top: 0 };
+
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-mode={pricesReady ? mode : "blocked"}>
-      <LessonTopBar title="Jobs to cover your costs" onBack={onExit} />
-      <div className={`mx-5 mt-1 ${SCROLL}`}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
-        <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.context}</p>
+    <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white [@media(max-height:879px)]:overflow-hidden" data-task-screen="jobs-to-cover" data-jobs-page={page === 1 ? "text" : "week"} data-jobs-mode={pricesReady ? mode : "blocked"}>
+      <LessonTopBar title="Jobs to cover your costs" onBack={page === 1 ? onExit : () => setPage(1)} />
+      {page === 1 ? (
+        <div className={`relative mx-5 mt-1 pl-8 pr-8 ${SCROLL}`}>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
+          <p className="mt-3 text-[15px] leading-snug text-[#4B5563]">{screen.copy.context}</p>
+          <ul className="mt-4 flex flex-col gap-3 pr-8 text-[15px] leading-snug text-[#19347D]">
+            {bullets.map((line) => (
+              <li key={line} className="flex gap-2">
+                <span aria-hidden="true" className="mt-2 size-1.5 flex-none rounded-full bg-[#19347D]" />
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+          <ScribbleMark name="heart" x={2} y={86} w={22} frame={frame} />
+          <ScribbleMark name="sparkle" x={324} y={4} w={22} frame={frame} />
+          <ScribbleMark name="bulb" x={324} y={176} w={22} h={29} frame={frame} />
+          <ScribbleMark name="star" x={2} y={400} w={22} frame={frame} />
+          <ScribbleMark name="smiley" x={318} y={438} w={26} h={26} frame={frame} />
+        </div>
+      ) : (
+      <div className={`mx-5 mt-4 ${SCROLL}`}>
         {!pricesReady && <p className="mt-4 text-[14px] text-[#19347D]">{screen.copy.needPrice}</p>}
         {pricesReady && startup <= 0 && <p className="mt-4 text-[14px] font-semibold text-[#19347D]">{screen.copy.covered}</p>}
         {pricesReady && mode === "single" && single && needed !== null && (
@@ -128,8 +150,7 @@ export function JobsCoverFlow({
               You need <b data-jobs-needed="">{needed}</b> {needed === 1 ? "job" : "jobs"} to cover {formatStartupMoney(startup, currency)} of start-up costs. You keep{" "}
               {formatOngoingMoney(single.keptPerJob, currency)} on each one.
             </p>
-            <p className="mt-3 text-[13.5px] text-[#6B7280]">{screen.copy.guidance}</p>
-            <h2 className="mb-2 mt-4 font-heading text-[15px] font-bold text-[#19347D]">{screen.copy.singlePrompt}</h2>
+            <h2 className="mb-2 mt-4 font-heading text-[20px] font-bold leading-tight text-[#19347D]">{screen.copy.singlePrompt}</h2>
             <div className="flex flex-col gap-2" role="radiogroup" aria-label={screen.copy.singlePrompt}>
               {screen.weekOptions.map((option) => {
                 const on = weekId === option.id;
@@ -170,9 +191,8 @@ export function JobsCoverFlow({
           </div>
         )}
         {pricesReady && mode === "multi" && (
-          <div className="mt-4">
-            <p className="text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.guidance}</p>
-            <h2 className="mb-2 mt-3 font-heading text-[15px] font-bold text-[#19347D]">{screen.copy.multiPrompt}</h2>
+          <div>
+            <h2 className="mb-3 font-heading text-[20px] font-bold leading-tight text-[#19347D]">{screen.copy.multiPrompt}</h2>
             <div className="flex flex-col gap-2">
               {priced.map((row) => {
                 const jobs = counts[row.serviceId] ?? 0;
@@ -230,12 +250,17 @@ export function JobsCoverFlow({
           </div>
         )}
       </div>
+      )}
       <div className="mx-5 flex flex-none justify-center pb-4 pt-3 [@media(max-height:879px)]:mt-auto">
         <button
           type="button"
-          disabled={!ready}
-          className={ready ? CONTINUE_ON : CONTINUE_OFF}
+          disabled={page === 2 && !ready}
+          className={page === 1 || ready ? CONTINUE_ON : CONTINUE_OFF}
           onClick={() => {
+            if (page === 1) {
+              setPage(2);
+              return;
+            }
             if (!answer) return;
             save(answer);
             onFinish(answer);
@@ -246,4 +271,15 @@ export function JobsCoverFlow({
       </div>
     </section>
   );
+}
+
+/** The four teaching lines already in `guidance`, kept as bullets. */
+function guidanceBullets(guidance: string): string[] {
+  const parts = [
+    "Each job leaves you a little after job costs. Divide your start-up total by what you keep and round up.",
+    "For example, start-up costs of $80 with $14.60 kept per walk takes 6 walks.",
+    "With more than one service, pick a typical week (e.g. 3 walks + 1 training): weekly keep $68.25 covers $80 in about 2 weeks.",
+    "Be realistic: if you can work Monday to Friday after school, how many jobs fit around school, homework and Mom or Dad's time?",
+  ];
+  return parts.join(" ") === guidance ? parts : [guidance];
 }

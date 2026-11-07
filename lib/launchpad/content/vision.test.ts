@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { fieldsAnswer, rankingAnswer, selectionAnswer, type LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import { summaryCatalog } from "@/lib/launchpad/content/summary";
 import type { LaunchpadVisionSpec } from "@/lib/launchpad/content/types";
-import { compileVision, compileVisionTemplate, naturalList, visionTokens } from "@/lib/launchpad/content/vision";
+import { compileVision, compileVisionTemplate, naturalList, visionPieces, visionTokens } from "@/lib/launchpad/content/vision";
 import { parseSentence } from "@/lib/launchpad/load/sentence";
 import { launchpadTestVentureSeed } from "@/lib/launchpad/content/seed/launchpad-test-venture-seed";
 
@@ -91,6 +91,26 @@ describe("compiled vision sentence", () => {
       expect(s).toContain("I'm doing it to make money and help others. My goals: ");
       expect(s).not.toMatch(/As I grow|support|%/);
     }
+  });
+  it("underlines only the filled-in slots, and joining them matches the sentence", () => {
+    const pieces = visionPieces(spec, example, catalog)!;
+    const joined = pieces
+      .map((piece) => piece.text)
+      .join("")
+      .replace(/\s+/g, " ")
+      .trim();
+    expect(joined).toBe(compileVision(spec, example, catalog));
+    const plain = pieces.filter((piece) => !piece.chosen).map((piece) => piece.text).join("");
+    expect(plain).toContain("I am starting a ");
+    expect(plain).toContain(" business. I will offer ");
+    expect(plain).not.toContain("dog walking");
+    expect(pieces.filter((piece) => piece.chosen).map((piece) => piece.text)).toEqual(
+      expect.arrayContaining(["dog walking", "make money", "help others", "10", "animals"]),
+    );
+    expect(plain).toContain("I want to earn ");
+    expect(plain).toContain("I'm saving for ");
+    expect(pieces.some((piece) => piece.chosen && piece.text.includes("200"))).toBe(true);
+    expect(pieces.some((piece) => piece.chosen && /new bike/.test(piece.text))).toBe(true);
   });
   it("is empty (placeholder) when a required token is empty", () => {
     expect(compileVision(spec, {}, catalog)).toBeNull();

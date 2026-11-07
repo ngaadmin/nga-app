@@ -60,6 +60,11 @@ describe("Jobs to cover costs", () => {
     render(
       <JobsCoverFlow screen={dogWalkingJobsCoverScreen()} floors={floors} answers={{ "l2-costs": costs, "l2-price": price }} />,
     );
+    expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("text");
+    expect(screen.getByText(/Your start-up gear has to be paid for/)).toBeTruthy();
+    expect(screen.getByText(/Each job leaves you a little after job costs/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(document.querySelector("[data-jobs-page]")?.getAttribute("data-jobs-page")).toBe("week");
     const walking = document.querySelector("[data-service-card='dog-walking']") as HTMLElement;
     expect(walking.getAttribute("data-service-tile-layout")).toBe("row");
     for (let i = 0; i < sample.walksPerWeek; i += 1) fireEvent.click(within(walking).getByRole("button", { name: "More Dog walking jobs" }));

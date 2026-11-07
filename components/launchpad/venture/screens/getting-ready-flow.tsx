@@ -13,7 +13,6 @@ import {
   CHANNELS,
   channelPhrase,
   DELIVER_HINT,
-  DELIVER_PLAYBACK,
   FEEDBACK_HOW,
   FIND_CONFIRM,
   FIND_HINT,
@@ -48,6 +47,8 @@ import {
   type WrapJobAnswer,
 } from "@/lib/launchpad/content/answers";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { ART, ContinueButton, Sticker, WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 
@@ -80,6 +81,26 @@ function Tick({ on, label, onClick }: { on: boolean; label: string; onClick: () 
 function Aqua({ children }: { children: ReactNode }) {
   return <h2 className="font-heading text-[22px] font-semibold leading-tight text-[#3FB7DA] underline decoration-[#7ED4EA] decoration-[3px] underline-offset-[5px]">{children}</h2>;
 }
+
+/** Deliver and Wrap-up title: Fredoka 600 at 22px, with room under the eyebrow. */
+function SheetTitle({ children }: { children: ReactNode }) {
+  return (
+    <h2 className={`${FREDOKA_CLASS} mt-[21px] text-[22px] font-semibold leading-tight text-[#3FB7DA] underline decoration-[#7ED4EA] decoration-[3px] underline-offset-[5px]`}>
+      {children}
+    </h2>
+  );
+}
+
+function SheetQuestion({ children }: { children: ReactNode }) {
+  return <h3 className="mt-[9px] font-heading text-[18px] font-bold leading-tight text-[#19347D]">{children}</h3>;
+}
+
+function SheetSubhead({ children }: { children: ReactNode }) {
+  return <p className={`${FREDOKA_CLASS} text-[15px] font-semibold text-[#0CC1E0]`}>{children}</p>;
+}
+
+/** Paper origin on the 390×844 workbook frame (header, then the 11px inset). */
+const PAPER_FRAME = { left: 11, top: 56 };
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">{children}</p>;
@@ -380,24 +401,38 @@ function DeliverStep({
   const [afterHow, setAfter] = useState(saved?.afterHow);
   const ready = !!beforeHow && !!afterHow;
   return (
-    <WorkbookFrame businessName={businessName} level={3} canBack canForward={false} onBack={onExit} onForward={() => {}} footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "deliver-job", version: 1, beforeHow: beforeHow!, afterHow: afterHow! })} />}>
+    <WorkbookFrame
+      businessName={businessName}
+      level={3}
+      canBack
+      canForward={false}
+      onBack={onExit}
+      onForward={() => {}}
+      footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "deliver-job", version: 1, beforeHow: beforeHow!, afterHow: afterHow! })} />}
+      marks={
+        <>
+          <ScribbleMark name="star" x={324} y={95} w={25} frame={PAPER_FRAME} />
+          <ScribbleMark name="bulb" x={293} y={135} w={20} h={26} frame={PAPER_FRAME} />
+          <ScribbleMark name="beagle" x={181} y={632} w={96} h={82} frame={PAPER_FRAME} />
+          <ScribbleMark name="sparkle" x={93} y={641} w={25} frame={PAPER_FRAME} />
+        </>
+      }
+    >
       <Eyebrow>Learn the customer journey</Eyebrow>
-      <Aqua>Deliver the job</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">How will you deliver a good job?</h3>
+      <SheetTitle>Deliver the job</SheetTitle>
+      <SheetQuestion>How will you deliver a good job?</SheetQuestion>
       <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{DELIVER_HINT}</p>
-      <p className="mt-4 font-heading text-[14px] font-semibold text-[#FFA503]">One day before the job</p>
-      <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-        I will contact the owner to confirm the agreed details of the job by <InlineMenu label="How you will confirm" value={beforeHow} options={BEFORE_HOW} onPick={setBefore} />.
-      </p>
-      <p className="mt-4 font-heading text-[14px] font-semibold text-[#FFA503]">Straight after I&apos;ve delivered the service</p>
-      <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-        I will show proof by sending <InlineMenu label="How you will show proof" value={afterHow} options={AFTER_HOW} onPick={setAfter} />.
-      </p>
-      {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{DELIVER_PLAYBACK}</p>}
-      <div className="mt-8 flex items-end justify-between px-6">
-        <FlatSticker kind="sparkle" doodle />
-        <FlatSticker kind="paw" doodle />
-        <FlatSticker kind="star" doodle />
+      <div className="mt-[30px]">
+        <SheetSubhead>One day before the job</SheetSubhead>
+        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
+          I will contact the owner to confirm the agreed details of the job by <InlineMenu label="How you will confirm" value={beforeHow} options={BEFORE_HOW} onPick={setBefore} />.
+        </p>
+      </div>
+      <div className="mt-[30px]">
+        <SheetSubhead>Straight after I&apos;ve delivered the service</SheetSubhead>
+        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
+          I will show proof by sending <InlineMenu label="How you will show proof" value={afterHow} options={AFTER_HOW} onPick={setAfter} />.
+        </p>
       </div>
     </WorkbookFrame>
   );
@@ -421,25 +456,40 @@ function WrapJobStep({
   const [feedbackHow, setFeedback] = useState(saved?.feedbackHow);
   const ready = !!paymentHow && !!feedbackHow;
   return (
-    <WorkbookFrame businessName={businessName} level={3} canBack canForward={false} onBack={onExit} onForward={() => {}} footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "wrap-job", version: 1, paymentHow: paymentHow!, feedbackHow: feedbackHow! })} />}>
+    <WorkbookFrame
+      businessName={businessName}
+      level={3}
+      canBack
+      canForward={false}
+      onBack={onExit}
+      onForward={() => {}}
+      footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "wrap-job", version: 1, paymentHow: paymentHow!, feedbackHow: feedbackHow! })} />}
+      marks={
+        <>
+          <ScribbleMark name="heart" x={324} y={95} w={25} frame={PAPER_FRAME} />
+          <ScribbleMark name="sparkle" x={293} y={135} w={25} frame={PAPER_FRAME} />
+          <ScribbleMark name="calendar" x={201} y={620} w={94} h={76} frame={PAPER_FRAME} />
+          <ScribbleMark name="star" x={116} y={652} w={25} frame={PAPER_FRAME} />
+        </>
+      }
+    >
       <Eyebrow>Learn the customer journey</Eyebrow>
-      <Aqua>Wrap-up</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">How will you wrap up a job?</h3>
+      <SheetTitle>Wrap-up</SheetTitle>
+      <SheetQuestion>How will you wrap up a job?</SheetQuestion>
       <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{WRAP_JOB_HINT}</p>
-      <p className="mt-4 font-heading text-[14px] font-semibold text-[#FFA503]">Taking payment</p>
-      <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-        I will collect payment by <InlineMenu label="How you will collect payment" value={paymentHow} options={PAYMENT_HOW} onPick={setPayment} />.
-      </p>
-      <p className="mt-4 font-heading text-[14px] font-semibold text-[#FFA503]">Getting feedback</p>
-      <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-        I will ask the owner for feedback or a short review by <InlineMenu label="How you will ask for feedback" value={feedbackHow} options={FEEDBACK_HOW} onPick={setFeedback} />.
-      </p>
-      {ready && <p className="mt-4 text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
-      <div className="mt-8 flex items-end justify-between px-6">
-        <FlatSticker kind="star" doodle />
-        <FlatSticker kind="heart" doodle />
-        <FlatSticker kind="sparkle" doodle />
+      <div className="mt-[30px]">
+        <SheetSubhead>Taking payment</SheetSubhead>
+        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
+          I will collect payment by <InlineMenu label="How you will collect payment" value={paymentHow} options={PAYMENT_HOW} onPick={setPayment} />.
+        </p>
       </div>
+      <div className="mt-[30px]">
+        <SheetSubhead>Getting feedback</SheetSubhead>
+        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
+          I will ask the owner for feedback or a short review by <InlineMenu label="How you will ask for feedback" value={feedbackHow} options={FEEDBACK_HOW} onPick={setFeedback} />.
+        </p>
+      </div>
+      {ready && <p className="mt-[18px] text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
     </WorkbookFrame>
   );
 }
@@ -644,7 +694,6 @@ export function ReadyWrap({
       <div data-ready-wrap="b">
         <div className="mt-3">
           <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll deliver the job</h3>
-          {deliver && <p className="mt-1 text-[13px] text-[#9AA3B5]">{DELIVER_PLAYBACK}</p>}
           <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
             {before && (
               <li>

@@ -50,6 +50,7 @@ export function WorkbookFrame({
   onBack,
   onForward,
   footer,
+  marks,
   children,
 }: {
   businessName: string;
@@ -60,6 +61,8 @@ export function WorkbookFrame({
   onBack: () => void;
   onForward: () => void;
   footer: ReactNode;
+  /** Scribbles pinned to the paper, in 390×844 phone pixels. */
+  marks?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -73,6 +76,7 @@ export function WorkbookFrame({
       <div className="relative min-h-0 flex-1 px-[11px]">
         <div className="relative h-full overflow-hidden rounded-2xl border border-[#EDE7DC]" style={{ background: PAPER_BACKGROUND }} data-paper-card="">
           <SpiralBinding />
+          {marks}
           <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-11 pr-4 pt-6">
             <PaperIdentity businessName={businessName} />
             {children}

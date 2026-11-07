@@ -17,6 +17,7 @@ import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identit
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/venture/handbook/paper-art";
+import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 const READ_ONLY_SAVE = () => {};
 
@@ -35,6 +36,34 @@ const SHEET_LABEL: Record<string, string> = {
   "ready-b": "Page 9",
   "ready-c": "Page 10",
 };
+
+/** Define the business scribbles (r3). Phone pixels on the 390×844 workbook, paper inset 11px under the header. */
+const DEFINE_FRAME = { left: 11, top: 72 };
+
+function DefineScribbles() {
+  const marks = [
+    ["smiley", 286, 216, 31, 32, -8],
+    ["smiley-black", 328, 220, 31, 32, 7],
+    ["bulb", 322, 303, 25, 33, 8],
+    ["star", 329, 341, 23, 23, -12],
+    ["sparkle", 326, 374, 16, 20, 12],
+    ["beagle", 53, 550, 72, 65, -7],
+    ["kit", 146, 548, 68, 66, 7],
+    ["treats", 255, 543, 48, 44, -12],
+    ["calendar", 286, 612, 57, 52, -8],
+    ["pawtrail", 67, 622, 57, 67, 8],
+    ["paw", 187, 631, 20, 21, -10],
+    ["heart", 237, 651, 20, 23, 12],
+    ["bone", 157, 671, 25, 16, -7],
+  ] as const;
+  return (
+    <>
+      {marks.map(([name, x, y, w, h, angle]) => (
+        <ScribbleMark key={name} name={name} x={x} y={y} w={w} h={h} angle={angle} frame={DEFINE_FRAME} />
+      ))}
+    </>
+  );
+}
 
 function sheetLabel(sheet?: string): string | undefined {
   return sheet ? SHEET_LABEL[sheet] : undefined;
@@ -215,6 +244,7 @@ export function Handbook({
           >
             <SpiralBinding />
             <Washi />
+            {page.kind === "summary" && page.silver.id === "l1-s1" && <DefineScribbles />}
             <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6" data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}

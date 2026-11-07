@@ -414,40 +414,6 @@ function MiniIdentity() {
  * workbook-summary wrap-up's, or the column Z sections its capture screens
  * name) read from the saved answers. Read-only.
  */
-function DefineMark({ id }: { id: string }) {
-  if (id.includes("offer")) {
-    return (
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#FFA503" strokeWidth="1.8" strokeLinecap="round">
-        <circle cx="12" cy="12" r="8" />
-        <path d="M8.5 13.5c1.2 1.8 5.8 1.8 7 0" />
-        <path d="M9 10h.01M15 10h.01" />
-      </svg>
-    );
-  }
-  if (id.includes("why")) {
-    return (
-      <span className="flex flex-col items-center gap-4">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#FFA503" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 15a4.5 4.5 0 1 1 6 0c0 1.4-.7 2.2-1.2 2.8H10.2C9.7 17.2 9 16.4 9 15z" />
-          <path d="M10 19h4M10.6 21h2.8" />
-          <path d="M12 3v1.5M5 8l1.2 1M19 8l-1.2 1" />
-        </svg>
-        <FlatSticker kind="star" doodle />
-        <FlatSticker kind="sparkle" doodle />
-      </span>
-    );
-  }
-  return null;
-}
-
-function DefineHeart() {
-  return (
-    <div className="mt-16 flex justify-end pr-2">
-      <FlatSticker kind="heart" doodle />
-    </div>
-  );
-}
-
 function SummaryPageBody({
   page,
   editable,
@@ -467,16 +433,11 @@ function SummaryPageBody({
         <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} />
         <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
         <div className="mt-3">
-          {sections.map(({ section }, i) => (
-            <div key={section.id} className={page.silver.id === "l1-s1" && section.id.includes("why") ? "relative pr-7" : "relative"}>
-              {page.silver.id === "l1-s1" && (
-                <span className="pointer-events-none absolute right-0 top-7">
-                  <DefineMark id={section.id} />
-                </span>
-              )}
+          {sections.map(({ section }, index) => (
+            <div key={section.id} className="relative">
               <BinderSection
                 section={section}
-                first={i === 0}
+                first={index === 0}
                 answers={ctx.answers}
                 catalog={catalog}
                 editing={editing}
@@ -486,7 +447,6 @@ function SummaryPageBody({
             </div>
           ))}
         </div>
-        {page.silver.id === "l1-s1" && <DefineHeart />}
       </>
     );
   }
@@ -500,16 +460,11 @@ function SummaryPageBody({
       </h2>
       {sections.map(({ section, lines }, i) =>
         lines.length ? (
-          <div key={section.id} className={page.silver.id === "l1-s1" && section.id.includes("why") ? "relative pr-7" : "relative"}>
-            {page.silver.id === "l1-s1" && (
-              <span className="pointer-events-none absolute right-0 top-8">
-                <DefineMark id={section.id} />
-              </span>
-            )}
+          <div key={section.id} className="relative">
             <HandbookSection
               section={section}
               lines={lines}
-              doodle={i === 0 ? <Doodle ventureId={iconVentureId} /> : undefined}
+              doodle={i === 0 && page.silver.id !== "l1-s1" ? <Doodle ventureId={iconVentureId} /> : undefined}
             />
           </div>
         ) : (
@@ -522,7 +477,6 @@ function SummaryPageBody({
           </div>
         ),
       )}
-      {page.silver.id === "l1-s1" && <DefineHeart />}
     </>
   );
 }

@@ -86,25 +86,49 @@ export function rankedLabels(catalog: SummaryCatalog, answers: LaunchpadAnswers 
  * ("My goal is to save up." when the optional duration is left out).
  * Extra fields follow in brackets when filled.
  */
-export function filledSentence(
+export type SentencePiece = { text: string; chosen: boolean };
+
+/** A goal sentence split into fixed words and the filled-in blanks. */
+export function filledSentencePieces(
   screen: LaunchpadShortTextScreen,
   answers: LaunchpadAnswers | undefined,
   catalog: SummaryCatalog,
-): string | null {
+): SentencePiece[] | null {
   const answer = fieldsOf(answers, screen.answerKey);
   if (!answer || (answer.notApplicable && screen.notApplicableLabel)) return null;
+  const pieces: SentencePiece[] = [];
+  const push = (text: string, chosen: boolean) => {
+    if (!text) return;
+    const prev = pieces[pieces.length - 1];
+    if (prev && prev.chosen === chosen) prev.text += text;
+    else pieces.push({ text, chosen });
+  };
   // Text before an empty optional blank is its connector ("in"), so it is dropped with it.
-  let out = "";
   let pending = "";
   let any = false;
   let skipped = false;
+  // Short joins (" in ") stay with the filled-in words. "to" before the next blank stays plain.
+  const flush = () => {
+    if (!pending) return;
+    if (!any || /[.!?]/.test(pending)) push(pending, false);
+    else {
+      const split = /^(.*\S)(\s+to\s+)$/.exec(pending);
+      if (split) {
+        push(split[1]!, true);
+        push(split[2]!, false);
+      } else push(pending, true);
+    }
+    pending = "";
+  };
   for (const part of screen.parts) {
     if (part.kind === "text") pending += part.text;
     else if (part.kind === "carried") {
       const label = selectionLabels(catalog, answers, part.answerKey)[0];
       if (!label) return null;
-      out += pending + lowerFirst(label);
-      pending = "";
+      flush();
+      push(lowerFirst(label), true);
+      any = true;
+      skipped = false;
     } else {
       const field = fieldByName(screen, part.field);
       const raw = answer.values[part.field];
@@ -118,13 +142,13 @@ export function filledSentence(
         skipped = true;
         continue;
       }
-      out += pending + shown;
-      pending = "";
+      flush();
+      push(shown, true);
       any = true;
       skipped = false;
     }
   }
-  out += pending;
+  push(pending, false);
   const extras: string[] = [];
   for (const name of screen.extraFields ?? []) {
     const field = fieldByName(screen, name);
@@ -134,8 +158,23 @@ export function filledSentence(
     if (field.input === "choice" && extras.length && name.endsWith("Unit")) extras[extras.length - 1] += ` ${lowerFirst(shown)}`;
     else extras.push(field.input === "choice" ? shown : `${field.label}: ${shown}`);
   }
-  out = out.replace(/\s+/g, " ").trim();
-  return extras.length ? `${out} (${extras.join("; ")})` : out;
+  if (extras.length) push(` (${extras.join("; ")})`, true);
+  return pieces.length ? pieces : null;
+}
+
+export function filledSentence(
+  screen: LaunchpadShortTextScreen,
+  answers: LaunchpadAnswers | undefined,
+  catalog: SummaryCatalog,
+): string | null {
+  const pieces = filledSentencePieces(screen, answers, catalog);
+  if (!pieces) return null;
+  const out = pieces
+    .map((piece) => piece.text)
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  return out || null;
 }
 
 function sourceLines(source: LaunchpadSummarySource, section: LaunchpadSummarySection, answers: LaunchpadAnswers | undefined, catalog: SummaryCatalog): string[] {

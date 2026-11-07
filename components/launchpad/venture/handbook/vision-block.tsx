@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import type { LaunchpadVisionSpec } from "@/lib/launchpad/content/types";
 import { summaryCatalog } from "@/lib/launchpad/content/summary";
-import { compileVision } from "@/lib/launchpad/content/vision";
+import { compileVision, visionPieces, type VisionPiece } from "@/lib/launchpad/content/vision";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel, PAPER_ACCENT } from "@/components/launchpad/venture/handbook/paper-art";
@@ -13,6 +13,12 @@ export function useVisionSentence(spec: LaunchpadVisionSpec | undefined): string
   const ctx = useLaunchpadAnswers();
   if (!spec) return null;
   return compileVision(spec, ctx?.answers, summaryCatalog(ctx?.floors ?? []));
+}
+
+function useVisionPieces(spec: LaunchpadVisionSpec | undefined): VisionPiece[] | null {
+  const ctx = useLaunchpadAnswers();
+  if (!spec) return null;
+  return visionPieces(spec, ctx?.answers, summaryCatalog(ctx?.floors ?? []));
 }
 
 /**
@@ -47,6 +53,7 @@ export function VisionBlock({
 }) {
   const [px, lh] = VISION_TEXT_STEPS[Math.min(textStep, VISION_TEXT_STEPS.length - 1)]!;
   const sentence = useVisionSentence(spec);
+  const pieces = useVisionPieces(spec);
   return (
     <div data-vision="" data-vision-state={sentence ? "filled" : "empty"} className="w-full">
       <AccentLabel doodle={doodle}>{spec.label}</AccentLabel>
@@ -72,7 +79,15 @@ export function VisionBlock({
             data-vision-sentence=""
             data-vision-step={textStep}
           >
-            <ChosenValue block>{sentence}</ChosenValue>
+            {pieces
+              ? pieces.map((piece, index) =>
+                  piece.chosen ? (
+                    <ChosenValue key={index}>{piece.text}</ChosenValue>
+                  ) : (
+                    <span key={index}>{piece.text}</span>
+                  ),
+                )
+              : sentence}
           </p>
         </div>
       ) : (

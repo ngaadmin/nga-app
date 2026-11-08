@@ -20,38 +20,63 @@ export const CHANNELS = [
   { id: "community", label: "A community group (check if allowed)" },
 ] as const;
 
-export const AGREE_ITEMS = [
+export const AGREE_PROMPT = "What will you agree with the owner before each job?";
+export const AGREE_NOTE = "When a booking comes in, write these on the Taking a customer order template in your workbook.";
+
+export type AgreeSectionId = "collect_info" | "confirm_dog" | "when_where" | "cost_payment" | "plans_change";
+
+export type AgreeSection = {
+  id: AgreeSectionId;
+  title: string;
+  lead: string;
+  bullets: readonly string[];
+  moreLead?: string;
+  moreBullets?: readonly string[];
+};
+
+/** Five sequential sections. Examples are display text, not inputs. */
+export const AGREE_ITEMS: readonly AgreeSection[] = [
   {
     id: "collect_info",
     title: "What information you'll collect from the owner",
-    guidance:
-      "Before a job, decide what you need to know so you can look after the dog well and reach someone if you need to, such as name, address, emergency contact, pickup and drop-off times, the dog's allergies or fears, and what a normal day looks like.",
+    lead: "What you need to look after the dog and reach someone:",
+    bullets: ["name,", "address,", "emergency contact,", "pickup and drop-off times,", "the dog's allergies or fears,", "and what a usual job looks like."],
   },
   {
     id: "confirm_dog",
     title: "What you'll confirm about the dog",
-    guidance:
-      "Agree the things that help you handle the walk the way the owner wants, such as how they walk on a leash, whether they are okay with other dogs, whether they are okay with other people, commands they know, and anything they are not allowed to do.",
+    lead: "Ask the owner if the dog:",
+    bullets: ["is okay with other dogs", "is okay with other people", "knows commands, if so, which ones"],
+    moreLead: "Suggested additional questions:",
+    moreBullets: ["Is there anything the dog isn't allowed to do?", "Is there anything else we need to know?"],
   },
   {
     id: "when_where",
     title: "When and where",
-    guidance:
-      "Agree the practical details so you both know where to be and for how long, such as which days, what time of day, whether you'll pick up at their home or meet somewhere, where you will walk, and how long the walk will be.",
+    lead: "The practical details:",
+    bullets: ["which days,", "what time of day,", "whether you'll pick up at the owner's home or meet somewhere,", "and where the job will happen."],
   },
   {
     id: "cost_payment",
     title: "Cost and payment",
-    guidance:
-      "Agree what the job costs (using the price you already set) and how you will be paid, such as cash on the day, a bank transfer, or an app.",
+    lead: "What the job costs and how you will be paid:",
+    bullets: ["cash on the day,", "a bank transfer,", "or an app."],
   },
   {
     id: "plans_change",
     title: "What happens if plans change",
-    guidance:
-      "Agree what you will do if something comes up, so neither of you is stuck guessing, such as if the owner is running late, you cannot make it, the weather is too bad, the dog seems unwell, or you need to cut the walk short.",
+    lead: "What you will do if something comes up:",
+    bullets: ["if the owner is running late,", "you cannot make it,", "the weather is too bad,", "the dog seems unwell,", "or you need to cut the walk short."],
   },
-] as const;
+];
+
+export const AGREE_UNDERSTOOD_EMPTY = {
+  collect_info: false,
+  confirm_dog: false,
+  when_where: false,
+  cost_payment: false,
+  plans_change: false,
+} as const;
 
 export const BEFORE_HOW = [
   { id: "text", label: "Text", sentence: "text" },

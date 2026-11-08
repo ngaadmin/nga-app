@@ -694,6 +694,7 @@ export function VentureFlow({
             floors={floors}
             businessName={handbookBusinessName(progress, floors, tileName(ventureId) ?? ventureTitle)}
             onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onSave={(answer) => save(setProgressAnswer(progress, readyScreen.answerKey, answer))}
             onFinish={(answer) => {
               const updated = completeTask(setProgressAnswer(progress, readyScreen.answerKey, answer), taskId);
               save(updated);

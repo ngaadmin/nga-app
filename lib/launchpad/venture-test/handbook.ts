@@ -392,7 +392,11 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
     next = setProgressAnswer(next, FIND_CUSTOMERS_KEY, { kind: "find-customers", version: 1, channels: ["flyers", "friends", "noticeboard"] });
   }
   if (isTaskDone(next, "l3-s1-b2-t1") && !next.answers?.[AGREE_JOB_KEY]) {
-    next = setProgressAnswer(next, AGREE_JOB_KEY, { kind: "agree-job", version: 1, ticked: ["collect_info", "confirm_dog", "cost_payment"] });
+    next = setProgressAnswer(next, AGREE_JOB_KEY, {
+      kind: "agree-job",
+      version: 1,
+      understood: { collect_info: true, confirm_dog: true, when_where: false, cost_payment: true, plans_change: false },
+    });
   }
   if (isTaskDone(next, "l3-s1-b3-t1") && !next.answers?.[DELIVER_JOB_KEY]) {
     next = setProgressAnswer(next, DELIVER_JOB_KEY, { kind: "deliver-job", version: 1, beforeHow: "text", afterHow: "photo" });

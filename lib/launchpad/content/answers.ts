@@ -185,8 +185,14 @@ export type FindCustomersAnswer = {
 export type AgreeJobAnswer = {
   kind: "agree-job";
   version: 1;
-  /** Item ids the learner ticked. Empty is allowed. */
-  ticked: string[];
+  /** Which of the five sections the learner marked as read. No booking details. */
+  understood: {
+    collect_info: boolean;
+    confirm_dog: boolean;
+    when_where: boolean;
+    cost_payment: boolean;
+    plans_change: boolean;
+  };
 };
 
 export type DeliverJobAnswer = {
@@ -641,7 +647,20 @@ export function parseFindCustomersAnswer(value: unknown): FindCustomersAnswer | 
 
 export function parseAgreeJobAnswer(value: unknown): AgreeJobAnswer | null {
   if (!isRecord(value) || value.kind !== "agree-job" || value.version !== 1) return null;
-  return { kind: "agree-job", version: 1, ticked: knownIds(value.ticked, AGREE_ITEMS) };
+  const understood = {
+    collect_info: false,
+    confirm_dog: false,
+    when_where: false,
+    cost_payment: false,
+    plans_change: false,
+  };
+  if (isRecord(value.understood)) {
+    for (const item of AGREE_ITEMS) understood[item.id] = value.understood[item.id] === true;
+  } else {
+    const ticked = new Set(knownIds(value.ticked, AGREE_ITEMS));
+    for (const item of AGREE_ITEMS) if (ticked.has(item.id)) understood[item.id] = true;
+  }
+  return { kind: "agree-job", version: 1, understood };
 }
 
 export function parseDeliverJobAnswer(value: unknown): DeliverJobAnswer | null {

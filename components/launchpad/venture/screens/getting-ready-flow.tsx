@@ -8,7 +8,8 @@ import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import {
   AFTER_HOW,
   AGREE_ITEMS,
-  AGREE_TEMPLATE,
+  AGREE_PROMPT,
+  AGREE_UNDERSTOOD_EMPTY,
   BEFORE_HOW,
   CHANNELS,
   channelPhrase,
@@ -187,6 +188,7 @@ export function GettingReadyFlow({
   floors,
   businessName,
   onExit,
+  onSave,
   onFinish,
 }: {
   screen: LaunchpadGettingReadyScreen;
@@ -194,6 +196,8 @@ export function GettingReadyFlow({
   floors: readonly LaunchpadFloor[];
   businessName: string;
   onExit: () => void;
+  /** Save without completing the bronze. Used when Agree the job is left early. */
+  onSave?: (answer: ReadyAnswer) => void;
   onFinish: (answer: ReadyAnswer) => void;
 }) {
   const services = useMemo(() => {
@@ -202,7 +206,7 @@ export function GettingReadyFlow({
   }, [floors, answers]);
 
   if (screen.step === "find") return <FindStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
-  if (screen.step === "agree") return <AgreeStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
+  if (screen.step === "agree") return <AgreeStep screen={screen} answers={answers} onExit={onExit} onSave={onSave} onFinish={onFinish} />;
   if (screen.step === "deliver") return <DeliverStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
   if (screen.step === "wrap-job") return <WrapJobStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
   if (screen.step === "practice") return <PracticeStep screen={screen} answers={answers} businessName={businessName} services={services} onExit={onExit} onFinish={onFinish} />;
@@ -321,65 +325,158 @@ function FindStep({
   );
 }
 
+const AGREE_ICON: Record<(typeof AGREE_ITEMS)[number]["id"], ReactNode> = {
+  collect_info: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="6" y="5" width="16" height="20" rx="2" />
+      <path d="M10 5V3h8v2" />
+      <circle cx="14" cy="12" r="2.5" />
+      <path d="M9.5 20c.8-2.6 2.5-3.8 4.5-3.8s3.7 1.2 4.5 3.8" />
+    </svg>
+  ),
+  confirm_dog: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <ellipse cx="14" cy="19" rx="5" ry="4" />
+      <circle cx="7" cy="12" r="2" />
+      <circle cx="11" cy="7.5" r="2" />
+      <circle cx="17" cy="7.5" r="2" />
+      <circle cx="21" cy="12" r="2" />
+    </svg>
+  ),
+  when_where: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 25s-7-7-7-12a7 7 0 0 1 14 0c0 5-7 12-7 12z" />
+      <circle cx="14" cy="13" r="2.5" />
+    </svg>
+  ),
+  cost_payment: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="14" cy="14" r="10" />
+      <path d="M17 10.5c-.7-1-1.8-1.5-3-1.5-1.7 0-3 .9-3 2.3 0 3.2 6 1.8 6 4.8 0 1.4-1.3 2.4-3 2.4-1.3 0-2.5-.6-3.2-1.6M14 7v2M14 19v2" />
+    </svg>
+  ),
+  plans_change: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M23 9a10 10 0 0 0-17.5 1M5 19a10 10 0 0 0 17.5-1" />
+      <path d="M23 4v5h-5M5 24v-5h5" />
+    </svg>
+  ),
+};
+
+function AgreeNoteIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 28 28" fill="none" stroke="#19347D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px shrink-0">
+      <rect x="6" y="5" width="16" height="20" rx="2" />
+      <path d="M10 5V3h8v2" />
+      <circle cx="14" cy="12" r="2.5" />
+      <path d="M9.5 20c.8-2.6 2.5-3.8 4.5-3.8s3.7 1.2 4.5 3.8" />
+    </svg>
+  );
+}
+
 function AgreeStep({
   screen,
   answers,
-  businessName,
   onExit,
+  onSave,
   onFinish,
 }: {
   screen: LaunchpadGettingReadyScreen;
   answers?: LaunchpadAnswers;
-  businessName: string;
   onExit: () => void;
+  onSave?: (answer: AgreeJobAnswer) => void;
   onFinish: (answer: AgreeJobAnswer) => void;
 }) {
   const saved = agreeJobOf(answers, screen.answerKey);
-  const [ticked, setTicked] = useState<string[]>(saved?.ticked ? [...saved.ticked] : []);
   const [page, setPage] = useState(0);
-  const groups = [[AGREE_ITEMS[0]!], [AGREE_ITEMS[1]!, AGREE_ITEMS[2]!], [AGREE_ITEMS[3]!, AGREE_ITEMS[4]!]];
-  const last = page === groups.length - 1;
-  const finish = () => onFinish({ kind: "agree-job", version: 1, ticked });
+  const [understood, setUnderstood] = useState<AgreeJobAnswer["understood"]>(() => ({ ...AGREE_UNDERSTOOD_EMPTY, ...(saved?.understood ?? {}) }));
+  const section = AGREE_ITEMS[page]!;
+  const last = page === AGREE_ITEMS.length - 1;
+  const answer = (): AgreeJobAnswer => ({ kind: "agree-job", version: 1, understood });
+  const goBack = () => {
+    if (page === 0) {
+      onSave?.(answer());
+      onExit();
+      return;
+    }
+    setPage((n) => n - 1);
+  };
   return (
-    <WorkbookFrame
-      businessName={businessName}
-      level={3}
-      marker={`${page + 1} of 3`}
-      canBack
-      canForward={!last}
-      onBack={page === 0 ? onExit : () => setPage((n) => n - 1)}
-      onForward={() => setPage((n) => Math.min(groups.length - 1, n + 1))}
-      footer={<ContinueButton onClick={last ? finish : () => setPage((n) => n + 1)} />}
-    >
-      <Eyebrow>Learn the customer journey</Eyebrow>
-      <Aqua>Agree the job</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">What will you agree with the owner before each job?</h3>
-      <p className="mt-2 text-[14px] leading-snug text-[#19347D]">{AGREE_TEMPLATE}</p>
-      <ul>
-        {groups[page]!.map((item) => (
-          <li key={item.id}>
-            <Rule />
-            <div className="flex items-start gap-2 py-1">
-              <Tick
-                on={ticked.includes(item.id)}
-                label={item.title}
-                onClick={() => setTicked((prev) => (prev.includes(item.id) ? prev.filter((id) => id !== item.id) : [...prev, item.id]))}
-              />
-              <div>
-                <p className="text-[15px] font-semibold text-[#19347D]">{item.title}</p>
-                <p className="mt-1 text-[13px] leading-snug text-[#4B5563]">{item.guidance}</p>
-              </div>
-            </div>
-          </li>
+    <section className="flex min-h-0 flex-1 flex-col bg-white text-[#19347D]" data-task-screen="agree-the-job" data-agree-section={section.id} data-agree-page={page + 1}>
+      <header className="flex items-center gap-2 px-4 pt-4">
+        <button type="button" aria-label="Back" onClick={goBack} className="flex size-11 items-center justify-center text-[#19347D]">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <h1 className="font-heading text-[19px] font-bold">Agree the job</h1>
+      </header>
+      <div className="flex items-center gap-2 px-6 pt-4" data-agree-progress="">
+        {AGREE_ITEMS.map((item, index) => (
+          <span key={item.id} aria-hidden="true" className={`size-[11px] rounded-full border-2 border-[#19347D] ${index <= page ? "bg-[#19347D]" : "bg-white"}`} />
         ))}
-      </ul>
-      <div className="mt-4 flex items-end justify-end gap-2">
-        {page === 0 && <FlatSticker kind="clipboard" />}
-        {page === 1 && <FlatSticker kind="calendar" />}
-        {page === 2 && <FlatSticker kind="umbrella_cloud" />}
-        {page === 2 && <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto" />}
+        <p className="ml-auto text-[15px] text-[#6B7A9E]">Section {page + 1} of 5</p>
       </div>
-    </WorkbookFrame>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-6">
+        <h2 className="font-heading text-[21px] font-bold leading-tight">{AGREE_PROMPT}</h2>
+        <div className="mt-4 flex gap-2 rounded-[10px] bg-[#F5F7FB] px-3 py-2.5 text-[15px] leading-snug text-[#4A5A82]">
+          <AgreeNoteIcon />
+          <p>
+            When a booking comes in, write these on the <b>Taking a customer order</b> template in your workbook.
+          </p>
+        </div>
+        <article className="mt-6 rounded-2xl border-[1.5px] border-[#0CC1E0] bg-[#F2FBFD] px-3.5 py-4">
+          <div className="flex items-center gap-3">
+            <span className="shrink-0">{AGREE_ICON[section.id]}</span>
+            <h3 className="min-w-0 flex-1 font-heading text-[17px] font-semibold leading-snug">{section.title}</h3>
+            <button
+              type="button"
+              aria-pressed={understood[section.id]}
+              aria-label={`I understand ${section.title}`}
+              onClick={() => setUnderstood((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
+              className={`flex size-[30px] shrink-0 items-center justify-center rounded-[7px] border-2 border-[#FFA503] ${understood[section.id] ? "bg-[#FFA503]" : "bg-white"}`}
+            >
+              {understood[section.id] ? (
+                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+                  <path d="M3 7.5l2.6 2.6L11 4.5" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : null}
+            </button>
+          </div>
+          <div className="pl-10 pr-1">
+            <p className="mb-1 mt-2 text-[15px] leading-snug">{section.lead}</p>
+            <ul className="m-0 list-none p-0">
+              {section.bullets.map((line) => (
+                <li key={line} className="relative py-0.5 pl-4 text-[15px] leading-snug before:absolute before:left-[3px] before:top-2 before:size-1.5 before:rounded-full before:bg-[#0CC1E0] before:content-['']">
+                  {line}
+                </li>
+              ))}
+            </ul>
+            {section.moreLead && (
+              <>
+                <p className="mb-1 mt-3 text-[15px] leading-snug">{section.moreLead}</p>
+                <ul className="m-0 list-none p-0">
+                  {section.moreBullets?.map((line) => (
+                    <li key={line} className="relative py-0.5 pl-4 text-[15px] leading-snug before:absolute before:left-[3px] before:top-2 before:size-1.5 before:rounded-full before:bg-[#0CC1E0] before:content-['']">
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        </article>
+      </div>
+      <div className="px-6 pb-6 pt-3">
+        <button
+          type="button"
+          onClick={() => (last ? onFinish(answer()) : setPage((n) => n + 1))}
+          className="h-12 w-full rounded-[14px] bg-[#19347D] text-[17px] font-semibold text-white"
+        >
+          Continue
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -637,7 +734,7 @@ export function ReadyWrap({
   const practice = practiceRunOf(answers, "practice_run");
   const polish = polishServiceOf(answers, "polish_service");
   if (page === "a") {
-    const titles = agreeTitles(agree?.ticked ?? []);
+    const titles = agreeTitles(AGREE_ITEMS.filter((item) => agree?.understood[item.id]).map((item) => item.id));
     return (
       <div data-ready-wrap="a">
         <Aqua>Getting Ready</Aqua>

@@ -79,3 +79,28 @@ describe("Agree the job", () => {
     expect(onExit).not.toHaveBeenCalled();
   });
 });
+
+describe("Getting Ready bronze task surfaces", () => {
+  function open(step: LaunchpadGettingReadyScreen["step"], answerKey: string) {
+    const spec: LaunchpadGettingReadyScreen = { id: `${step}-s1`, type: "getting-ready", step, answerKey };
+    render(<GettingReadyFlow screen={spec} floors={[]} businessName="Dog walking" onExit={() => {}} onFinish={() => {}} />);
+  }
+
+  it("opens Attract, Deliver, and Wrap-up as white lessons, not the spiral workbook", () => {
+    open("find", "find_customers");
+    expect(screen.getByRole("heading", { name: "Attract the customer", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Flyers or posters" })).toBeTruthy();
+    expect(document.querySelector("[data-lesson-surface]")).toBeTruthy();
+    expect(document.querySelector("[data-workbook-frame], [data-spiral-binding]")).toBeNull();
+    cleanup();
+    open("deliver", "deliver_the_job");
+    expect(screen.getByRole("heading", { name: "Deliver the job", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "How you will confirm" })).toBeTruthy();
+    expect(document.querySelector("[data-workbook-frame]")).toBeNull();
+    cleanup();
+    open("wrap-job", "wrap_up");
+    expect(screen.getByRole("heading", { name: "Wrap-up", level: 1 })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "How you will collect payment" })).toBeTruthy();
+    expect(document.querySelector("[data-workbook-frame]")).toBeNull();
+  });
+});

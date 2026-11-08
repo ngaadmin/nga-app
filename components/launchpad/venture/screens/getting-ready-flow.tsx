@@ -12,7 +12,6 @@ import {
   AGREE_UNDERSTOOD_EMPTY,
   BEFORE_HOW,
   CHANNELS,
-  channelPhrase,
   DELIVER_HINT,
   FEEDBACK_HOW,
   FIND_CONFIRM,
@@ -49,13 +48,10 @@ import {
 } from "@/lib/launchpad/content/answers";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { ART, ContinueButton, Sticker, WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 
 type ReadyAnswer = FindCustomersAnswer | AgreeJobAnswer | DeliverJobAnswer | WrapJobAnswer | PracticeRunAnswer | PolishServiceAnswer;
-
-const NAVY = "#19347D";
 
 function Check() {
   return (
@@ -100,8 +96,31 @@ function SheetSubhead({ children }: { children: ReactNode }) {
   return <p className={`${FREDOKA_CLASS} text-[15px] font-semibold text-[#0CC1E0]`}>{children}</p>;
 }
 
-/** Paper origin on the 390×844 workbook frame (header, then the 11px inset). */
-const PAPER_FRAME = { left: 11, top: 56 };
+/** White lesson chrome for a Getting Ready bronze. The spiral workbook is the record, not this task. */
+function LessonSurface({ title, onBack, footer, children }: { title: string; onBack: () => void; footer: ReactNode; children: ReactNode }) {
+  return (
+    <section className="flex min-h-0 flex-1 flex-col bg-white text-[#111827]" data-lesson-surface="">
+      <header className="flex items-center gap-2 px-3 pt-4">
+        <button type="button" aria-label="Back" onClick={onBack} className="flex size-11 items-center justify-center text-[#19347D]">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <h1 className="font-heading text-[19px] font-bold text-[#19347D]">{title}</h1>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">{children}</div>
+      <div className="px-6 pb-6">{footer}</div>
+    </section>
+  );
+}
+
+function LessonContinue({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" disabled={disabled} onClick={onClick} className="h-12 w-full rounded-[14px] bg-[#19347D] text-[17px] font-semibold text-white disabled:opacity-40">
+      Continue
+    </button>
+  );
+}
 
 function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">{children}</p>;
@@ -205,10 +224,10 @@ export function GettingReadyFlow({
     return chosen.length ? chosen : [{ id: "dog-walking", label: "Dog walking" }];
   }, [floors, answers]);
 
-  if (screen.step === "find") return <FindStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
+  if (screen.step === "find") return <FindStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
   if (screen.step === "agree") return <AgreeStep screen={screen} answers={answers} onExit={onExit} onSave={onSave} onFinish={onFinish} />;
-  if (screen.step === "deliver") return <DeliverStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
-  if (screen.step === "wrap-job") return <WrapJobStep screen={screen} answers={answers} businessName={businessName} onExit={onExit} onFinish={onFinish} />;
+  if (screen.step === "deliver") return <DeliverStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
+  if (screen.step === "wrap-job") return <WrapJobStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
   if (screen.step === "practice") return <PracticeStep screen={screen} answers={answers} businessName={businessName} services={services} onExit={onExit} onFinish={onFinish} />;
   return <PolishStep screen={screen} answers={answers} businessName={businessName} services={services} onExit={onExit} onFinish={onFinish} />;
 }
@@ -216,13 +235,11 @@ export function GettingReadyFlow({
 function FindStep({
   screen,
   answers,
-  businessName,
   onExit,
   onFinish,
 }: {
   screen: LaunchpadGettingReadyScreen;
   answers?: LaunchpadAnswers;
-  businessName: string;
   onExit: () => void;
   onFinish: (answer: FindCustomersAnswer) => void;
 }) {
@@ -233,17 +250,13 @@ function FindStep({
   const ready = findReady(channels, extra);
   const toggle = (id: string) => setChannels((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   return (
-    <WorkbookFrame
-      businessName={businessName}
-      level={3}
-      canBack
-      canForward={false}
+    <LessonSurface
+      title="Attract the customer"
       onBack={confirming ? () => setConfirming(false) : onExit}
-      onForward={() => {}}
       footer={
         confirming ? (
           <div className="flex gap-2">
-            <button type="button" onClick={() => setConfirming(false)} className="h-11 rounded-full border-2 border-[#19347D] px-5 text-[15px] font-semibold text-[#19347D]">
+            <button type="button" onClick={() => setConfirming(false)} className="h-12 flex-1 rounded-[14px] border-2 border-[#19347D] text-[17px] font-semibold text-[#19347D]">
               Change
             </button>
             <button
@@ -256,14 +269,13 @@ function FindStep({
                   ...(extra.trim() ? { channelsExtra: extra.trim() } : {}),
                 })
               }
-              className="h-11 rounded-full px-5 text-[15px] font-semibold text-white"
-              style={{ background: NAVY }}
+              className="h-12 flex-1 rounded-[14px] bg-[#19347D] text-[17px] font-semibold text-white"
             >
               That&apos;s mine
             </button>
           </div>
         ) : (
-          <ContinueButton disabled={!ready} onClick={() => setConfirming(true)} />
+          <LessonContinue disabled={!ready} onClick={() => setConfirming(true)} />
         )
       }
     >
@@ -283,9 +295,6 @@ function FindStep({
               </li>
             ))}
           </ul>
-          <div className="mt-6 flex justify-center">
-            <Sticker src={ART.beagle} alt="" />
-          </div>
         </>
       ) : (
         <>
@@ -314,14 +323,10 @@ function FindStep({
                 className="mt-1 w-full border-b border-dashed border-[#E4D3B4] bg-transparent py-1 text-[15px] text-[#19347D] outline-none"
               />
             </label>
-            <span className="flex shrink-0 items-end gap-1">
-              <FlatSticker kind="paw" doodle />
-              <FlatSticker kind="flyer" />
-            </span>
           </div>
         </>
       )}
-    </WorkbookFrame>
+    </LessonSurface>
   );
 }
 
@@ -483,13 +488,11 @@ function AgreeStep({
 function DeliverStep({
   screen,
   answers,
-  businessName,
   onExit,
   onFinish,
 }: {
   screen: LaunchpadGettingReadyScreen;
   answers?: LaunchpadAnswers;
-  businessName: string;
   onExit: () => void;
   onFinish: (answer: DeliverJobAnswer) => void;
 }) {
@@ -498,23 +501,7 @@ function DeliverStep({
   const [afterHow, setAfter] = useState(saved?.afterHow);
   const ready = !!beforeHow && !!afterHow;
   return (
-    <WorkbookFrame
-      businessName={businessName}
-      level={3}
-      canBack
-      canForward={false}
-      onBack={onExit}
-      onForward={() => {}}
-      footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "deliver-job", version: 1, beforeHow: beforeHow!, afterHow: afterHow! })} />}
-      marks={
-        <>
-          <ScribbleMark name="star" x={324} y={95} w={25} frame={PAPER_FRAME} />
-          <ScribbleMark name="bulb" x={293} y={135} w={20} h={26} frame={PAPER_FRAME} />
-          <ScribbleMark name="beagle" x={181} y={632} w={96} h={82} frame={PAPER_FRAME} />
-          <ScribbleMark name="sparkle" x={93} y={641} w={25} frame={PAPER_FRAME} />
-        </>
-      }
-    >
+    <LessonSurface title="Deliver the job" onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "deliver-job", version: 1, beforeHow: beforeHow!, afterHow: afterHow! })} />}>
       <Eyebrow>Learn the customer journey</Eyebrow>
       <SheetTitle>Deliver the job</SheetTitle>
       <SheetQuestion>How will you deliver a good job?</SheetQuestion>
@@ -531,20 +518,18 @@ function DeliverStep({
           I will show proof by sending <InlineMenu label="How you will show proof" value={afterHow} options={AFTER_HOW} onPick={setAfter} />.
         </p>
       </div>
-    </WorkbookFrame>
+    </LessonSurface>
   );
 }
 
 function WrapJobStep({
   screen,
   answers,
-  businessName,
   onExit,
   onFinish,
 }: {
   screen: LaunchpadGettingReadyScreen;
   answers?: LaunchpadAnswers;
-  businessName: string;
   onExit: () => void;
   onFinish: (answer: WrapJobAnswer) => void;
 }) {
@@ -553,23 +538,7 @@ function WrapJobStep({
   const [feedbackHow, setFeedback] = useState(saved?.feedbackHow);
   const ready = !!paymentHow && !!feedbackHow;
   return (
-    <WorkbookFrame
-      businessName={businessName}
-      level={3}
-      canBack
-      canForward={false}
-      onBack={onExit}
-      onForward={() => {}}
-      footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "wrap-job", version: 1, paymentHow: paymentHow!, feedbackHow: feedbackHow! })} />}
-      marks={
-        <>
-          <ScribbleMark name="heart" x={324} y={95} w={25} frame={PAPER_FRAME} />
-          <ScribbleMark name="sparkle" x={293} y={135} w={25} frame={PAPER_FRAME} />
-          <ScribbleMark name="calendar" x={201} y={620} w={94} h={76} frame={PAPER_FRAME} />
-          <ScribbleMark name="star" x={116} y={652} w={25} frame={PAPER_FRAME} />
-        </>
-      }
-    >
+    <LessonSurface title="Wrap-up" onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "wrap-job", version: 1, paymentHow: paymentHow!, feedbackHow: feedbackHow! })} />}>
       <Eyebrow>Learn the customer journey</Eyebrow>
       <SheetTitle>Wrap-up</SheetTitle>
       <SheetQuestion>How will you wrap up a job?</SheetQuestion>
@@ -587,7 +556,7 @@ function WrapJobStep({
         </p>
       </div>
       {ready && <p className="mt-[18px] text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
-    </WorkbookFrame>
+    </LessonSurface>
   );
 }
 
@@ -739,36 +708,22 @@ export function ReadyWrap({
       <div data-ready-wrap="a">
         <Aqua>Getting Ready</Aqua>
         <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll find customers</h3>
-        <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-          {find ? (
-            <>
-              {find.channels.length > 0 && (
-                <>
-                  I&apos;ll find customers through{" "}
-                  {find.channels.map((id, index) => {
-                    const last = index === find.channels.length - 1;
-                    const sep = index === 0 ? "" : last && find.channels.length > 2 ? ", and " : last ? " and " : ", ";
-                    return (
-                      <span key={id}>
-                        {sep}
-                        <ChosenValue>{channelPhrase(id)}</ChosenValue>
-                      </span>
-                    );
-                  })}
-                  .
-                </>
-              )}
-              {find.channelsExtra?.trim() ? (
-                <>
-                  {" "}
-                  Also: <ChosenValue>{find.channelsExtra.trim()}</ChosenValue>
-                </>
-              ) : null}
-            </>
-          ) : (
-            "Not answered yet"
-          )}
-        </p>
+        {find && find.channels.length > 0 ? (
+          <ul className="mt-2 list-none p-0 text-[15px] leading-snug text-[#19347D]">
+            {find.channels.map((id) => (
+              <li key={id} className="relative py-1 pl-4 before:absolute before:left-0 before:top-[11px] before:size-1.5 before:rounded-full before:bg-[#3FB7DA] before:content-['']">
+                <ChosenValue>{CHANNELS.find((row) => row.id === id)?.label}</ChosenValue>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">Not answered yet</p>
+        )}
+        {find?.channelsExtra?.trim() ? (
+          <p className="mt-2 text-[15px] leading-snug text-[#19347D]">
+            Also: <ChosenValue>{find.channelsExtra.trim()}</ChosenValue>
+          </p>
+        ) : null}
         <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">What I&apos;ll agree before a job</h3>
         <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
           {titles.map((title) => (
@@ -791,34 +746,41 @@ export function ReadyWrap({
       <div data-ready-wrap="b">
         <div className="mt-3">
           <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll deliver the job</h3>
-          <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
-            {before && (
-              <li>
-                I will contact the owner to confirm the agreed details of the job by <ChosenValue>{before}</ChosenValue>.
-              </li>
-            )}
-            {after && (
-              <li>
-                I will show proof by sending <ChosenValue>{after}</ChosenValue>.
-              </li>
-            )}
-          </ul>
+          {before && (
+            <>
+              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">One day before the job</p>
+              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+                I will contact the owner to confirm the agreed details of the job by <ChosenValue>{BEFORE_HOW.find((row) => row.id === deliver?.beforeHow)?.label ?? before}</ChosenValue>.
+              </p>
+            </>
+          )}
+          {after && (
+            <>
+              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Straight after I&apos;ve delivered the service</p>
+              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+                I will show proof by sending <ChosenValue>{AFTER_HOW.find((row) => row.id === deliver?.afterHow)?.label ?? after}</ChosenValue>.
+              </p>
+            </>
+          )}
         </div>
-        <div className="mt-3">
+        <div className="mt-4">
           <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll wrap up a job</h3>
-          {wrap && <p className="mt-1 text-[13px] text-[#9AA3B5]">{WRAP_JOB_PLAYBACK}</p>}
-          <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
-            {payment && (
-              <li>
-                I will collect payment by <ChosenValue>{payment}</ChosenValue>.
-              </li>
-            )}
-            {feedback && (
-              <li>
-                I will ask the owner for feedback or a short review by <ChosenValue>{feedback}</ChosenValue>.
-              </li>
-            )}
-          </ul>
+          {payment && (
+            <>
+              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Taking payment</p>
+              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+                I will collect payment by <ChosenValue>{PAYMENT_HOW.find((row) => row.id === wrap?.paymentHow)?.label ?? payment}</ChosenValue>.
+              </p>
+            </>
+          )}
+          {feedback && (
+            <>
+              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Getting feedback</p>
+              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+                I will ask the owner for feedback or a short review by <ChosenValue>{FEEDBACK_HOW.find((row) => row.id === wrap?.feedbackHow)?.label ?? feedback}</ChosenValue>.
+              </p>
+            </>
+          )}
         </div>
         <div className="mt-6 flex items-end justify-between px-4">
           <FlatSticker kind="star" doodle />

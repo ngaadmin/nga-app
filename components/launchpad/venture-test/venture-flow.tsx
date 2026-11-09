@@ -46,7 +46,7 @@ import { VentureLift } from "@/components/launchpad/venture-test/venture-lift";
 import { VentureRooftopFinish } from "@/components/launchpad/venture-test/venture-rooftop-finish";
 import { LaunchpadHome, type InProgressVenture } from "@/components/launchpad/venture-test/launchpad-home";
 import { Handbook, HandbookButton } from "@/components/launchpad/venture/handbook/handbook";
-import { handbookBusinessName, hasHandbook, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
+import { handbookBusinessName, hasHandbook, WORKBOOK_FLOOR_LABEL, withShortcutSampleAnswers } from "@/lib/launchpad/venture-test/handbook";
 import { LAUNCHPAD_CATEGORIES, liveVentureIds } from "@/lib/launchpad/venture-test/launchpad-home-data";
 import { BackCrumb, BTN_PRIMARY, Heading } from "@/components/launchpad/venture-test/venture-test-ui";
 import { isIdentityPicker } from "@/lib/launchpad/content/identity-content";
@@ -190,6 +190,7 @@ export function VentureFlow({
     /** Opened from the corridor's workbook button (Back to the lift keeps the button); the workbook still opens on page 1. */
     openSilverId?: string;
     openSheet?: string;
+    openLevel?: number;
     /** "Back to the lift" lands on this floor's corridor (defaults to the current floor). */
     level?: number;
   } | null>(null);
@@ -423,15 +424,12 @@ export function VentureFlow({
                 }
               : undefined
           }
-          workbook={
-            view.workbookCue && !done
-              ? {
-                  popIn: view.workbookCue.popIn,
-                  onOpen: () =>
-                    setHandbook({ ventureId, entry: "building", openSilverId: view.workbookCue!.silverId, level: floor.level }),
-                }
-              : undefined
-          }
+          workbook={{
+            label: WORKBOOK_FLOOR_LABEL,
+            popIn: Boolean(view.workbookCue?.popIn && !done),
+            onOpen: () =>
+              setHandbook({ ventureId, entry: "building", openSilverId: view.workbookCue?.silverId, level: floor.level, openLevel: floor.level }),
+          }}
           onBack={toBuilding}
           onOpenSilver={(silverId) => go({ screen: "doors", level: floor.level, silverId })}
         />
@@ -776,6 +774,7 @@ export function VentureFlow({
             setAnswer={setAnswer}
             onClose={closeHandbook}
             initialSheet={handbook.openSheet}
+            initialLevel={handbook.openLevel}
             onEditCosts={(step) => {
               const found = findKnowYourCost(floors);
               if (!found) return;

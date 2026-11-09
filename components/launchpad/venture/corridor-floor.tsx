@@ -120,7 +120,7 @@ export type CorridorProps = {
    * floor once the workbook has a page and the level isn't done. `popIn`: a step
    * was just finished, so it pops in (scale 0.6 to 1, 200ms; reduced motion: none).
    */
-  workbook?: { onOpen: () => void; popIn: boolean };
+  workbook?: { onOpen: () => void; popIn: boolean; label: string };
   onBack: () => void;
   onOpenSilver: (silverId: string) => void;
 };
@@ -176,16 +176,14 @@ export function CorridorFloor(props: CorridorProps) {
             </button>
           </div>
         )}
-        {workbook && !complete && (
-          // Near the top of the lift card, on the "Level N" row (right side), so
-          // it is in view without scrolling on short phones too (375x667; Cath, 5 Nov 5:35pm).
-          <div className="absolute right-[34px] top-[30px] flex" data-corridor-workbook-slot="">
+        {workbook && (
+          // Same spot on every floor: the right side of the Level row, clear of the title and the plaques.
+          <div className="absolute right-[34px] top-[30px] z-raised flex" data-corridor-workbook-slot="">
             <button
               type="button"
-              aria-label="Open your workbook"
+              aria-label={workbook.label}
               onClick={workbook.onOpen}
-              // The In Progress tile's workbook button look: white, 2px navy outline, the book icon.
-              className={`relative flex h-10 w-10 items-center justify-center rounded-xl border-2 border-nga-ink bg-white before:absolute before:-inset-0.5 before:content-[''] ${workbook.popIn ? styles.workbookPopIn : ""}`}
+              className={`relative flex size-11 items-center justify-center rounded-xl border-2 border-nga-ink bg-white before:absolute before:-inset-0.5 before:content-[''] ${workbook.popIn ? styles.workbookPopIn : ""}`}
               data-corridor-workbook={workbook.popIn ? "pop-in" : ""}
             >
               <HandbookIcon size={24} />

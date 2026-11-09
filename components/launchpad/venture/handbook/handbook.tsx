@@ -7,6 +7,7 @@ import {
   handbookGhost,
   handbookOpenIndex,
   handbookPages,
+  handbookPagesForLevel,
   handbookTabs,
   handbookTabTarget,
   isHandbookPageEditable,
@@ -124,6 +125,7 @@ export function Handbook({
   onBackToLift,
   onEditCosts,
   initialSheet,
+  initialLevel,
 }: {
   entry: HandbookEntry;
   businessName: string;
@@ -139,15 +141,23 @@ export function Handbook({
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
   /** Open on a named sheet, such as the Planning wrap after Jobs. */
   initialSheet?: string;
+  /** Open on this floor's workbook section, including a read-only preview when it is still empty. */
+  initialLevel?: number;
 }) {
-  const pages = handbookPages(progress, floors);
+  const pages = initialLevel == null ? handbookPages(progress, floors) : handbookPagesForLevel(progress, floors, initialLevel);
   const ghost = handbookGhost(progress, floors);
   const tabs = handbookTabs(progress, floors);
-  // Always page 1 first; Next page (or a left swipe) moves forward in order.
+  // A named sheet wins, then this floor's first page. Otherwise page 1. Next page moves forward.
   const [index, setIndex] = useState(() => {
-    if (!initialSheet) return handbookOpenIndex(pages);
-    const found = pages.findIndex((item) => item.sheet === initialSheet);
-    return found === -1 ? handbookOpenIndex(pages) : found;
+    if (initialSheet) {
+      const found = pages.findIndex((item) => item.sheet === initialSheet);
+      if (found !== -1) return found;
+    }
+    if (initialLevel != null) {
+      const found = pages.findIndex((item) => item.level === initialLevel);
+      if (found !== -1) return found;
+    }
+    return handbookOpenIndex(pages);
   });
   const at = Math.min(index, Math.max(0, pages.length - 1));
   const page = pages[at];

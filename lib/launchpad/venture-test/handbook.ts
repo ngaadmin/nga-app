@@ -53,7 +53,8 @@ export type HandbookPageView = {
   sheet?: string;
   /** Titles of the silver's finished bronzes (written out under plain headings on placeholder pages). */
   bronzeTitles: string[];
-  done: true;
+  /** False only for a floor preview opened before that level has a workbook page. */
+  done: boolean;
 };
 
 export type HandbookGhostView = { level: number; floorName: string; silverTitle: string };
@@ -214,11 +215,43 @@ export function hasHandbook(progress: VentureTestProgress, floors: readonly Laun
   return orderedSilvers(floors).some(({ silver }) => isSilverDone(progress, silver));
 }
 
+/** Accessible name of the workbook icon on a floor screen. */
+export const WORKBOOK_FLOOR_LABEL = "Open my workbook";
+
+/**
+ * Pages for a floor shortcut. A level that already has a workbook page is unchanged
+ * (existing edit rules). A level with none yet gets one read-only placeholder.
+ */
+export function handbookPagesForLevel(
+  progress: VentureTestProgress,
+  floors: readonly LaunchpadFloor[],
+  level: number,
+): HandbookPageView[] {
+  const pages = handbookPages(progress, floors);
+  // The cover is Level 1's page. A level that already has any page keeps those pages and their edit rules.
+  if (pages.some((page) => page.level === level)) return pages;
+  const floor = floors.find((item) => item.level === level);
+  const silver = floor?.silvers[0];
+  if (!floor || !silver) return pages;
+  return [
+    ...pages,
+    {
+      number: pages.length + 1,
+      level: floor.level,
+      floorName: floor.name,
+      silverNumber: 1,
+      silver,
+      kind: "placeholder",
+      bronzeTitles: [],
+      done: false,
+    },
+  ];
+}
+
 /**
  * Can this page be edited inline? Only from the building screen, and only
- * for a completed silver. From home the handbook is read-only; the ghost
- * (an unfinished silver) is never editable. Placeholder pages pass this check
- * but have nothing to edit.
+ * for a completed silver (`done`). From home the handbook is read-only.
+ * A floor preview is not done, so it stays read-only. Completed pages stay editable.
  */
 export function isHandbookPageEditable(entry: HandbookEntry, silverDone: boolean): boolean {
   return entry === "building" && silverDone;

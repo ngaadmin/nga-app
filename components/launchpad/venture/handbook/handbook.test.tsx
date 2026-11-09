@@ -10,6 +10,7 @@ import {
   handbookGhost,
   handbookOpenIndex,
   handbookPages,
+  handbookPagesForLevel,
   handbookTabs,
   handbookTabTarget,
   hasHandbook,
@@ -68,6 +69,17 @@ describe("handbook pages", () => {
     expect(hasHandbook(EMPTY_VENTURE_TEST_PROGRESS, FLOORS)).toBe(false);
     expect(hasHandbook(started, FLOORS)).toBe(false);
     expect(hasHandbook(through("l1-s1"), FLOORS)).toBe(true);
+  });
+
+  it("previews an empty floor as a read-only page and leaves a written floor's pages alone", () => {
+    const preview = handbookPagesForLevel(EMPTY_VENTURE_TEST_PROGRESS, FLOORS, 3);
+    expect(preview).toHaveLength(1);
+    expect(preview[0]).toMatchObject({ level: 3, silver: { id: "l3-s1" }, kind: "placeholder", done: false });
+    expect(isHandbookPageEditable("building", preview[0]!.done)).toBe(false);
+    const written = handbookPagesForLevel(through("l1-s1"), FLOORS, 1);
+    expect(written.some((page) => page.level === 1 && page.done)).toBe(true);
+    expect(written.some((page) => page.done === false)).toBe(false);
+    expect(isHandbookPageEditable("building", true)).toBe(true);
   });
 
   it("makes the cover, then one page per completed silver in building order, with no separate identity page", () => {

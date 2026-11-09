@@ -174,7 +174,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await fits(t, "Know your impact", next);
   await shot(t, "Know your impact, The environment picked", next);
-  const cue = page.getByRole("button", { name: "Open my workbook" });
+  const cue = page.getByRole("button", { name: "Open your workbook" });
   await step(t, "Finish Know your impact: straight back to the Level 1 corridor, no end screen, the workbook button pops in", async () => {
     await next.click();
     await expect(page.locator("#lp-corridor-title")).toHaveText(/Level 1 · Vision and Goals/, { timeout: 15_000 });
@@ -195,7 +195,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await fits(t, "Corridor, after Define the business", cue, { pageScrollOk: true });
   await shot(t, "Lift with the workbook button after Define the business", cue);
-  await step(t, "Open my workbook from the lift: Define the business page, then Back to the lift returns to the corridor", async () => {
+  await step(t, "Open your workbook from the lift: Define the business page, then Back to the lift returns to the corridor", async () => {
     await cue.click();
     await turnTo(page.getByRole("dialog"), "l1-s1");
     await shot(t, "Workbook opened from the lift, Define the business", page.locator("[data-back-to-lift]"));
@@ -338,7 +338,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   await shot(t, "Lift with the workbook button after Set your goals", cue);
 
   const hb1 = page.getByRole("dialog");
-  await step(t, "Open my workbook opens on page 1; Next page to the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
+  await step(t, "Open your workbook opens on page 1; Next page to the Set your goals page, goals editable inline (AA6 to AA8)", async () => {
     await cue.click();
     await turnTo(hb1, "l1-s2");
     const gp = hb1.locator('[data-handbook-page="l1-s2"]');
@@ -509,7 +509,7 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
   });
   await shot(t, "Lift with the workbook button after The product and its buyers", cue);
 
-  await step(t, "Open my workbook: edit what I am selling with the pencil on the workbook page", async () => {
+  await step(t, "Open your workbook: edit what I am selling with the pencil on the workbook page", async () => {
     await cue.click();
     await turnTo(page.getByRole("dialog"), "l2-s1");
     const pg = page.getByRole("dialog").locator('[data-handbook-page="l2-s1"]');

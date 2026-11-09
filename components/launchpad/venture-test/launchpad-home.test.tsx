@@ -138,6 +138,23 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
   });
 });
 
+describe("In Progress section workbook icon", () => {
+  it("sits under the venture and opens that venture's handbook", () => {
+    const onOpenHandbook = vi.fn();
+    render(<LaunchpadHome inProgress={[L6]} onOpenVenture={() => {}} onOpenHandbook={onOpenHandbook} />);
+    const heading = screen.getByRole("heading", { name: "In Progress" });
+    const book = screen.getByRole("button", { name: "Open your workbook" });
+    expect(heading.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(book.getAttribute("data-in-progress-workbook")).toBe("dog-walking");
+    expect(book.className).toContain("size-14");
+    expect(book.className).not.toContain("border-");
+    expect(book.querySelector("source")?.getAttribute("srcset")).toBe("/launchpad/workbook/workbook-icon-512.webp");
+    fireEvent.click(book);
+    expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking");
+    expect(screen.getByRole("button", { name: "Open workbook" }).getAttribute("data-handbook-button")).toBe("");
+  });
+});
+
 describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasper's review of 6f914e1)", () => {
   it("with open tasks the 2-line label block keeps the 44px workbook button and the 94px Continue in the row", () => {
     render(

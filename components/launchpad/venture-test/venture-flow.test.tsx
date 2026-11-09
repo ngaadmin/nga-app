@@ -140,7 +140,7 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     next();
     expect(document.querySelector("[data-wrap-up], [data-silver-done], [data-silver-complete]")).toBeNull();
     expect(document.body.textContent).not.toMatch(/Nice work!|Keep going|See my (handbook|workbook)/);
-    const cue = screen.getByRole("button", { name: "Open my workbook" });
+    const cue = screen.getByRole("button", { name: "Open your workbook" });
     expect(cue.getAttribute("data-corridor-workbook")).toBe("pop-in");
     expect(document.querySelector("[data-gold-completion], [data-level-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
@@ -185,11 +185,11 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     fireEvent.change(screen.getByRole("textbox", { name: "My goal" }), { target: { value: "TEST half typed" } });
     expect((screen.getByRole("button", { name: "Add this goal" }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
-    expect(screen.getByRole("button", { name: "Open my workbook" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open your workbook" })).toBeTruthy();
     // Skip saved nothing for the extra goal.
     expect(localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "").not.toContain("TEST half typed");
-    // Open my workbook opens it at this step's page; its Back to the lift lands on the corridor (button kept, no pop-in).
-    fireEvent.click(screen.getByRole("button", { name: "Open my workbook" }));
+    // Open your workbook opens it at this step's page; its Back to the lift lands on the corridor (button kept, no pop-in).
+    fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
     // The workbook opens on page 1 (the cover); Next page walks forward to the goals page.
     expect(document.querySelector('[data-handbook-page="cover"]')).toBeTruthy();
     for (let i = 0; i < 5 && !document.querySelector('[data-handbook-page="l1-s2"]'); i++) fireEvent.click(screen.getByRole("button", { name: "Next page" }));
@@ -197,7 +197,7 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     const backs = document.querySelectorAll<HTMLElement>("[data-back-to-lift]");
     fireEvent.click(backs[backs.length - 1]!);
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
-    expect(screen.getByRole("button", { name: "Open my workbook" }).getAttribute("data-corridor-workbook")).toBe("");
+    expect(screen.getByRole("button", { name: "Open your workbook" }).getAttribute("data-corridor-workbook")).toBe("");
 
     // The Brand (l1-s3): logo then name (AC12/13). The level's last step goes straight to the level done.
     fireEvent.click(screen.getByRole("button", { name: /The Brand/ }));
@@ -214,11 +214,15 @@ describe("Level 1 from the load: capture, goal loop, after-step message, level d
     expect(done.textContent).toBe("Congratulations!You've completed Level 1");
     expect(document.body.textContent).not.toMatch(/\bNGA\b|\bXP\b|Gold unlocked|move on/);
     expect(document.querySelectorAll("[data-plaque-tick]").length).toBe(PAYLOAD.floors[0]!.silvers.length);
-    // The floor workbook shortcut stays on a finished level too.
-    expect(screen.getByRole("button", { name: "Open my workbook" }).getAttribute("data-corridor-workbook")).toBe("");
+    // The floor workbook shortcut stays on a finished level, 14px to the right of the continue pill.
+    const book = screen.getByRole("button", { name: "Open your workbook" });
+    expect(book.getAttribute("data-corridor-workbook")).toBe("");
     expect(screen.queryByRole("button", { name: "Take the lift up" })).toBeNull();
     const go = screen.getByRole("button", { name: "Go to Level 2" });
     expect(go.className).toContain("bg-nga-secondary");
+    expect(go.parentElement).toBe(book.parentElement);
+    expect(go.parentElement?.className).toContain("gap-[14px]");
+    expect(go.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(go);
     expect(document.querySelector("[data-level-done]")).toBeNull();
   });
@@ -275,10 +279,12 @@ describe("Find the why: four reasons (Cath, 4 Nov; Support a cause removed 8:44p
 describe("floor workbook shortcut", () => {
   it("opens that level's section, previews an empty level read-only, and returns to the same floor", async () => {
     renderFlow({ kind: "level", level: 3 });
-    const open = await screen.findByRole("button", { name: "Open my workbook" });
-    expect(open.className).toContain("size-11");
-    expect(open.className).toContain("bg-white");
-    expect(open.className).toContain("border-nga-ink");
+    const open = await screen.findByRole("button", { name: "Open your workbook" });
+    expect(open.className).toContain("size-14");
+    expect(open.className).not.toContain("border-");
+    expect(open.querySelector("img")?.getAttribute("src")).toBe("/launchpad/workbook/workbook-icon-512.png");
+    expect(open.querySelector("source")?.getAttribute("srcset")).toBe("/launchpad/workbook/workbook-icon-512.webp");
+    expect(document.querySelector("[data-corridor-workbook-slot]")).toBeNull();
     expect((open as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(open);
     const page = document.querySelector("[data-handbook-page='l3-s1']");
@@ -287,12 +293,12 @@ describe("floor workbook shortcut", () => {
     expect(page?.textContent).toContain("Learn the customer journey");
     fireEvent.click(screen.getByRole("button", { name: /Back to the lift/ }));
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 3/);
-    expect(screen.getByRole("button", { name: "Open my workbook" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open your workbook" })).toBeTruthy();
   });
 
   it("keeps editing on a level that already has workbook content", async () => {
     renderFlow({ kind: "through-silver", silverId: "l1-s1" });
-    fireEvent.click(await screen.findByRole("button", { name: "Open my workbook" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Open your workbook" }));
     for (let i = 0; i < 6 && document.querySelector("[data-handbook-page]")?.getAttribute("data-editable") !== "true"; i++) {
       const nextPage = screen.queryByRole("button", { name: "Next page" });
       if (!nextPage) break;
@@ -303,17 +309,17 @@ describe("floor workbook shortcut", () => {
 });
 
 describe("finishing a step goes straight back to the corridor with the workbook button, no end screen", () => {
-  it("a placeholder step lands on the corridor with Open my workbook (white, navy outline, pop-in)", async () => {
+  it("a placeholder step lands on the corridor with Open your workbook (illustration, pop-in)", async () => {
     renderFlow({ kind: "level", level: 5 });
     const silver = PAYLOAD.floors[4]!.silvers[0]!;
     await finishSilver(silver);
     expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 5/);
-    const cue = screen.getByRole("button", { name: "Open my workbook" });
-    expect(cue.className).toContain("border-nga-ink");
-    expect(cue.className).toContain("bg-white");
+    const cue = screen.getByRole("button", { name: "Open your workbook" });
+    expect(cue.className).toContain("size-14");
+    expect(cue.className).not.toContain("border-");
     expect(cue.getAttribute("data-corridor-workbook")).toBe("pop-in");
-    expect(cue.querySelector("svg")).toBeTruthy();
+    expect(cue.querySelector("img")?.getAttribute("src")).toBe("/launchpad/workbook/workbook-icon-512.png");
   });
 
   it("is not shown when re-entering and re-finishing finished work", async () => {
@@ -326,7 +332,7 @@ describe("finishing a step goes straight back to the corridor with the workbook 
     for (let i = 0; i < last.tasks.length; i++) fireEvent.click(screen.getByRole("button", { name: /^(Next|Finish)/ }));
     expect(document.querySelector("[data-silver-done]")).toBeNull();
     expect(document.querySelector("#lp-corridor-title")?.textContent).toMatch(/^Level 1/);
-    expect(screen.getByRole("button", { name: "Open my workbook" }).getAttribute("data-corridor-workbook")).toBe("");
+    expect(screen.getByRole("button", { name: "Open your workbook" }).getAttribute("data-corridor-workbook")).toBe("");
   });
 
   it("a step with a summary wrap-up in the content skips it: re-finishing from review goes to the corridor", async () => {
@@ -383,14 +389,14 @@ describe("Come back to this later", () => {
     fireEvent.click(door(goals.title));
     expect(screen.getByText(/^Goal 1 of/)).toBeTruthy();
     expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toMatch(/500/);
-    for (let i = 0; i < 10 && !screen.queryByRole("button", { name: "Open my workbook" }); i++) {
+    for (let i = 0; i < 10 && !screen.queryByRole("button", { name: "Open your workbook" }); i++) {
       fillGoalBlanks();
       const forward = screen.getByRole("button", { name: /^(Next|Finish|Add this goal)/ }) as HTMLButtonElement;
       const group = screen.queryAllByRole("group")[0];
       if (forward.disabled && group) fireEvent.click(within(group).getAllByRole("button")[0]!);
       next();
     }
-    expect(screen.getByRole("button", { name: "Open my workbook" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open your workbook" })).toBeTruthy();
   });
 
   it("steps without the flag have no Come back to this later button", async () => {

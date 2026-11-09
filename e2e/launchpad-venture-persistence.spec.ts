@@ -31,7 +31,7 @@ test("reload keeps progress, ?reset=1 clears it", async ({ page }, info) => {
     await main.getByRole("button", { name: "Older people", exact: true }).click();
     await main.getByRole("button", { name: "Finish ›" }).click();
     // Finishing a step goes straight back to the corridor, with the workbook button.
-    await expect(page.getByRole("button", { name: "Open my workbook" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "Open your workbook" })).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /Set your goals, up next/ }).click();
     await main.getByRole("button", { name: /Set your goals/ }).click();
     // Step 1 is goal 1 (goals follow the ranking, so Make money).

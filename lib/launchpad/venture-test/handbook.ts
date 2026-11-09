@@ -215,8 +215,8 @@ export function hasHandbook(progress: VentureTestProgress, floors: readonly Laun
   return orderedSilvers(floors).some(({ silver }) => isSilverDone(progress, silver));
 }
 
-/** Accessible name of the workbook icon on a floor screen. */
-export const WORKBOOK_FLOOR_LABEL = "Open my workbook";
+/** Accessible name of the illustrated workbook icon on a floor and on Launchpad home. */
+export const WORKBOOK_FLOOR_LABEL = "Open your workbook";
 
 /**
  * Pages for a floor shortcut. A level that already has a workbook page is unchanged

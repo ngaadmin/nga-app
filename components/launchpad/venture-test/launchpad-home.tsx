@@ -16,6 +16,8 @@ import {
   SHOP_ICONS,
 } from "@/components/launchpad/venture-test/launchpad-home-art";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
+import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
+import { WORKBOOK_FLOOR_LABEL } from "@/lib/launchpad/venture-test/handbook";
 import { COME_BACK_LATER_COPY, OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
 
 export type InProgressVenture = {
@@ -315,7 +317,18 @@ export function LaunchpadHome({
         <p className="rounded-2xl bg-nga-mist p-[18px] text-base font-medium text-nga-slate">{LAUNCHPAD_HOME_COPY.emptyInProgress}</p>
       ) : (
         inProgress.map((v) => (
-          <InProgressTile key={v.ventureId} venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} onOpenTask={onOpenTask} />
+          <div key={v.ventureId}>
+            <InProgressTile venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} onOpenTask={onOpenTask} />
+            <button
+              type="button"
+              aria-label={WORKBOOK_FLOOR_LABEL}
+              onClick={() => onOpenHandbook?.(v.ventureId)}
+              className="mb-3 flex size-14 items-center justify-center"
+              data-in-progress-workbook={v.ventureId}
+            >
+              <WorkbookMark />
+            </button>
+          </div>
         ))
       )}
     </section>

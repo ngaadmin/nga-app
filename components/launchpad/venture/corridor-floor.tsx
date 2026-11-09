@@ -7,7 +7,7 @@ import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-
 import { ComeBackMarker } from "@/components/launchpad/venture/bronze-doors";
 import { COME_BACK_LATER_COPY } from "@/lib/launchpad/venture-test/come-back-later";
 import { neutralTitle } from "@/lib/launchpad/venture-test/handbook";
-import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
+import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
 
 function Plaque({ label, state, onOpen, onComeBack, compact }: { label: string; state: NodeState; onOpen: () => void; onComeBack?: () => void; /** Tighter padding when the level-done heading is above the plaques. */ compact?: boolean }) {
   const dot = state === "current" ? "#fff" : state === "done" ? VT.panel : VT.lockDot;
@@ -116,9 +116,8 @@ export type CorridorProps = {
   /** Level done (wrapup-binder-r5 screen D): `nextLevel` is null on the top floor. */
   complete?: { nextLevel: number | null; onLift: (() => void) | null };
   /**
-   * The workbook icon button (in place of the old after-step card), shown on the
-   * floor once the workbook has a page and the level isn't done. `popIn`: a step
-   * was just finished, so it pops in (scale 0.6 to 1, 200ms; reduced motion: none).
+   * Workbook shortcut beside the level continue pill. Always tappable.
+   * `popIn`: a step was just finished, so it pops in.
    */
   workbook?: { onOpen: () => void; popIn: boolean; label: string };
   onBack: () => void;
@@ -155,7 +154,7 @@ export function CorridorFloor(props: CorridorProps) {
           ) : (
             <>
             <p className="mt-[22px] font-heading text-[11px] font-bold tracking-[1.5px] text-nga-secondary">Level {level}</p>
-            <p className={`mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink ${workbook ? "pt-2" : ""}`}>{goal}</p>
+            <p className="mx-[18px] mt-1.5 text-center font-heading text-[19px] font-bold leading-[1.32] text-nga-ink">{goal}</p>
             <div className="mt-3.5 h-[3px] w-[120px] rounded-sm bg-nga-secondary" />
             </>
           )}
@@ -169,25 +168,25 @@ export function CorridorFloor(props: CorridorProps) {
           </div>
         </div>
         {note && <p className="absolute inset-x-[26px] top-[478px] text-center text-xs text-[#8a9bb0]">{note}</p>}
-        {complete?.onLift && complete.nextLevel !== null && (
-          <div className="absolute inset-x-[26px] top-[490px] flex justify-center">
-            <button type="button" onClick={complete.onLift} className={BTN_LIFT} data-go-to-level={complete.nextLevel}>
-              Go to Level {complete.nextLevel}
-            </button>
-          </div>
-        )}
-        {workbook && (
-          // Same spot on every floor: the right side of the Level row, clear of the title and the plaques.
-          <div className="absolute right-[34px] top-[30px] z-raised flex" data-corridor-workbook-slot="">
-            <button
-              type="button"
-              aria-label={workbook.label}
-              onClick={workbook.onOpen}
-              className={`relative flex size-11 items-center justify-center rounded-xl border-2 border-nga-ink bg-white before:absolute before:-inset-0.5 before:content-[''] ${workbook.popIn ? styles.workbookPopIn : ""}`}
-              data-corridor-workbook={workbook.popIn ? "pop-in" : ""}
-            >
-              <HandbookIcon size={24} />
-            </button>
+        {(workbook || (complete?.onLift && complete.nextLevel !== null)) && (
+          // Same row on every floor, under the plaques: the continue pill, then the workbook 14px to its right.
+          <div className="absolute inset-x-[26px] top-[490px] flex items-center justify-center gap-[14px]" data-corridor-continue="">
+            {complete?.onLift && complete.nextLevel !== null && (
+              <button type="button" onClick={complete.onLift} className={BTN_LIFT} data-go-to-level={complete.nextLevel}>
+                Go to Level {complete.nextLevel}
+              </button>
+            )}
+            {workbook && (
+              <button
+                type="button"
+                aria-label={workbook.label}
+                onClick={workbook.onOpen}
+                className={`flex size-14 shrink-0 items-center justify-center ${workbook.popIn ? styles.workbookPopIn : ""}`}
+                data-corridor-workbook={workbook.popIn ? "pop-in" : ""}
+              >
+                <WorkbookMark />
+              </button>
+            )}
           </div>
         )}
         {/* Lift doors: open strips at the sides; they slide apart on entry. */}

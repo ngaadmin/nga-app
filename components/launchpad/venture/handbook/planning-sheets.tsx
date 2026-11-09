@@ -11,7 +11,7 @@ import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpa
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
@@ -59,10 +59,10 @@ export function PriceSheet() {
         const pkg = offer?.offerings.find((item) => item.serviceId === row.serviceId)?.packages[0];
         const compared = row.serviceId === "dog-walking" || row.serviceId === competitor?.jobComparedId;
         return (
-        <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2 leading-tight">
+        <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2">
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-sans text-[16px] font-semibold leading-[26px] text-[#19347D]">{nameFor(row.serviceId, labels)}</h3>
-            <span className="font-sans text-[16px] font-semibold leading-[26px] text-[#19347D]"><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
+            <h3 className={WORKBOOK_ANSWER}>{nameFor(row.serviceId, labels)}</h3>
+            <span className={WORKBOOK_ANSWER}><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
           </div>
           <p className={`mt-1 ${WORKBOOK_BODY}`}>for one <ChosenValue>{pkg ? chipLabel(pkg) : "job"}</ChosenValue></p>
           <p className={WORKBOOK_BODY}>

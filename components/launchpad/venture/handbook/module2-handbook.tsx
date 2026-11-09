@@ -7,7 +7,7 @@ import { availabilityPhrase, catalogFor, chipLabel, isAvailabilitySlot, WHEN_OPT
 import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
@@ -76,7 +76,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         const open = editing === row.serviceId;
         return (
           <div key={row.serviceId} className="mb-3">
-            <button type="button" className="font-sans text-[16px] font-semibold leading-6 text-[#19347D]" disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
+            <button type="button" className={WORKBOOK_ANSWER} disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
               {label === "dog walking" ? "Dog walking" : label === "dog training" ? "Dog Training" : label === "grooming" ? "Grooming" : label}
             </button>
             <p className={`mt-1 ${WORKBOOK_BODY}`}>

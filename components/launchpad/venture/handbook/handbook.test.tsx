@@ -310,12 +310,18 @@ describe("<Handbook>", () => {
     const spiral = dialog.querySelector("[data-spiral-binding]")!;
     expect(spiral.className).toContain("left-1.5");
     expect(spiral.className).not.toContain("-left-");
-    const sell = dialog.querySelector("[data-what-we-sell]");
-    expect(sell?.querySelector("[data-chosen-value]")).toBeTruthy();
+    expect(dialog.querySelector("[data-what-we-sell]")).toBeNull();
+    expect(within(dialog).queryByRole("heading", { name: "What we sell" })).toBeNull();
     expect(dialog.textContent).not.toMatch(/coming soon|NGA|XP/i);
     // Every page: no Done chip, and the vision shows only on the cover.
     for (let i = 0; i < 6; i++) {
       expect(dialog.querySelector("[data-done-chip]")).toBeNull();
+      expect(dialog.querySelector("[data-what-we-sell]")).toBeNull();
+      if (shownPage() === "l1-s1") {
+        expect(within(dialog).getByRole("heading", { name: "What my business will offer" })).toBeTruthy();
+        expect(within(dialog).getByRole("heading", { name: "My why" })).toBeTruthy();
+        expect(within(dialog).getByRole("heading", { name: "My cause" })).toBeTruthy();
+      }
       expect(dialog.querySelectorAll("[data-vision]").length).toBe(shownPage() === "cover" ? 1 : 0);
       expect(within(dialog).queryByText("Done")).toBeNull();
       const next = screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement;

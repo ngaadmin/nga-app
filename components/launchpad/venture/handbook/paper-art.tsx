@@ -9,12 +9,16 @@ import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/i
  */
 export const PAPER_ACCENT = "#0CC1E0";
 
-/** Workbook body: Inter 400, 16px, 26px line height, navy. Page 1 vision stays denser. */
-export const WORKBOOK_BODY = "font-sans text-[16px] font-normal leading-[26px] text-[#19347D]";
+/** Workbook body: Inter 400, 16px, 24px line height, navy. Answers use WORKBOOK_ANSWER. */
+export const WORKBOOK_BODY = "font-sans text-[16px] font-normal leading-[24px] text-[#19347D]";
+/** A picked, typed, or calculated answer: Inter 600, 16px, 24px line height, navy. */
+export const WORKBOOK_ANSWER = "font-sans text-[16px] font-semibold leading-[24px] text-[#19347D]";
 /** Workbook subhead: Inter 600, 16px, 24px line height, aqua. */
 export const WORKBOOK_SUB = "font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]";
-/** Workbook hint: Inter 400, 16px, 26px line height, slate. */
-export const WORKBOOK_HINT = "font-sans text-[16px] font-normal leading-[26px] text-[#4A5568]";
+/** Cost-group label on a workbook page: Inter 600, 16px, navy. */
+export const WORKBOOK_GROUP = "font-sans text-[16px] font-semibold leading-6 text-[#19347D]";
+/** Workbook hint: Inter 400, 16px, 24px line height, slate. */
+export const WORKBOOK_HINT = "font-sans text-[16px] font-normal leading-[24px] text-[#4A5568]";
 
 /** r4 warm paper grain (a faint SVG noise tile over #FDFBF7). */
 export const PAPER_NOISE =
@@ -101,7 +105,7 @@ export function AccentLabel({ children, doodle, as: Tag = "h3" }: { children: Re
 export function TagChip({ children, check = false }: { children: ReactNode; check?: boolean }) {
   return (
     <li
-      className={`relative flex h-8 items-center gap-1.5 whitespace-nowrap rounded-r-lg bg-[#ECF8FB] pr-3 text-[13px] font-medium text-[#111827] [clip-path:polygon(11px_0,100%_0,100%_100%,11px_100%,0_50%)] ${check ? "pl-[21px]" : "pl-[23px]"}`}
+      className={`relative flex h-8 items-center gap-1.5 whitespace-nowrap rounded-r-lg bg-[#ECF8FB] pr-3 [clip-path:polygon(11px_0,100%_0,100%_100%,11px_100%,0_50%)] ${WORKBOOK_ANSWER} ${check ? "pl-[21px]" : "pl-[23px]"}`}
       data-tag-chip=""
     >
       <span aria-hidden="true" className="absolute left-[11px] top-1/2 -mt-[3px] size-1.5 rounded-full bg-[#FDFBF7]" />

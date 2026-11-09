@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { identityChoices } from "@/lib/launchpad/content/identity-content";
 import {
   partLabel,
@@ -19,7 +19,7 @@ import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
 import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
-import { useVisionSentence, VisionBlock, VISION_TEXT_STEPS } from "@/components/launchpad/venture/handbook/vision-block";
+import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
 import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
@@ -185,24 +185,9 @@ function RocketDoodle() {
  * 5:35pm): the logo at 80px centered at the top, a smaller business name, then
  * Our vision. The identity silver has no separate page, so this is the only
  * place the vision shows; from the building the logo and name are edited here.
- * The vision body stays Inter 400 at 16px / 24px. Grey placeholders until filled.
+ * Page 1 is the cover and Our vision. The offer lives on the next page.
  */
 const COVER_LOGO_PX = 48;
-
-function WhatWeSell() {
-  const ctx = useLaunchpadAnswers();
-  const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer").map((service) => service.label);
-  if (!labels.length) return null;
-  const sentence = labels.length === 1 ? labels[0] : labels.length === 2 ? `${labels[0]} and ${labels[1]}` : `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
-  return (
-    <div className="mt-2" data-what-we-sell="">
-      <AccentLabel>What we sell</AccentLabel>
-      <p className={`mt-1 ${WORKBOOK_BODY}`}>
-        <ChosenValue>{sentence}</ChosenValue>.
-      </p>
-    </div>
-  );
-}
 
 function CoverPageBody({
   page,
@@ -220,44 +205,9 @@ function CoverPageBody({
   const choices = identityChoices(page.silver, answerKey, iconVentureId);
   const [editing, setEditing] = useState(false);
   const hasLogo = !!(answer.shape && answer.color && answer.icon);
-  const sentence = useVisionSentence(wrapUp?.vision);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [fitKey, setFitKey] = useState(0);
-  const fitSig = JSON.stringify([sentence, answer.name, answer.font, hasLogo, editable, editing, fitKey]);
-  const [fit, setFit] = useState({ sig: fitSig, step: 0 });
-  const step = fit.sig === fitSig ? fit.step : 0;
-
-  // Re-fit when the window resizes or the web fonts finish loading (glyph widths change).
-  useEffect(() => {
-    const bump = () => setFitKey((k) => k + 1);
-    window.addEventListener("resize", bump);
-    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
-    fonts?.addEventListener?.("loadingdone", bump);
-    void fonts?.ready?.then(bump);
-    return () => {
-      window.removeEventListener("resize", bump);
-      fonts?.removeEventListener?.("loadingdone", bump);
-    };
-  }, []);
-
-  // Step the vision down (text size, quote mark, spacing) one render at a time
-  // until the cover fits its page card with no scroll. Layout effects run
-  // before paint, so the learner only sees the final step. While the logo and
-  // name editor is open the card may scroll.
-  useLayoutEffect(() => {
-    if (fit.sig !== fitSig) {
-      setFit({ sig: fitSig, step: 0 });
-      return;
-    }
-    const scroller = rootRef.current?.closest<HTMLElement>("[data-paper-scroll]");
-    if (!scroller || editing) return;
-    if (scroller.scrollHeight > scroller.clientHeight + 1 && fit.step < VISION_TEXT_STEPS.length - 1) {
-      setFit({ sig: fitSig, step: fit.step + 1 });
-    }
-  }, [fit, fitSig, editing]);
 
   return (
-    <div ref={rootRef} className="relative flex flex-col items-center" data-cover="" data-cover-fit-step={step} data-cover-dense="">
+    <div className="relative flex flex-col items-center" data-cover="" data-cover-dense="">
       <div className="flex items-center justify-center gap-3">
       {hasLogo ? (
         <div className="relative">
@@ -334,9 +284,8 @@ function CoverPageBody({
         </div>
       )}
       <div className="flex w-full flex-col">
-        <HandRule className={step >= 3 ? "mb-2 mt-2.5" : "mb-3.5 mt-5"} />
-        {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} textStep={step} />}
-        <WhatWeSell />
+        <HandRule className="mb-3.5 mt-5" />
+        {wrapUp?.vision && <VisionBlock spec={wrapUp.vision} />}
       </div>
     </div>
   );

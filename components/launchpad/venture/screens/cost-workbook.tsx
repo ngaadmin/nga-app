@@ -8,7 +8,7 @@ import {
 } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, HandRule, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, HandRule, WORKBOOK_BODY, WORKBOOK_GROUP, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 function Pencil() {
@@ -22,7 +22,7 @@ function Pencil() {
 
 function Row({ label, amount }: { label: string; amount: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 font-sans text-[16px] font-normal leading-[26px] text-[#19347D]">
+    <div className={`flex items-baseline justify-between gap-3 ${WORKBOOK_BODY}`}>
       <span className="min-w-0 flex-1">{label}</span>
       <ChosenValue>{amount}</ChosenValue>
     </div>
@@ -74,7 +74,7 @@ export function CostWorkbookBody({
       {part !== "rest" && (
         <div className="mt-3.5">
           {startupHead}
-          <p className="mb-1 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">{marketingLabel}</p>
+          <p className={`mb-1 ${WORKBOOK_GROUP}`}>{marketingLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.marketing.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
@@ -90,7 +90,7 @@ export function CostWorkbookBody({
       {part !== "startup" && (
         <>
           {part === "rest" && startupHead}
-          <p className="mb-1 mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">{starterLabel}</p>
+          <p className={`mb-1 mt-2 ${WORKBOOK_GROUP}`}>{starterLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.starterGear.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
@@ -101,7 +101,7 @@ export function CostWorkbookBody({
             <span className="tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
           <HandRule />
-          <h3 className="mb-1.5 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Ongoing · cost per job</h3>
+          <h3 className={`mb-1.5 ${WORKBOOK_GROUP}`}>Ongoing · cost per job</h3>
           <div className="flex flex-col gap-1">
             {view.ongoing.map((service) => (
               <div key={service.serviceId} className={`flex items-center justify-between gap-2 ${WORKBOOK_BODY}`}>
@@ -113,7 +113,7 @@ export function CostWorkbookBody({
                   )}
                   <span className="min-w-0">{service.label}</span>
                 </span>
-                <span className="font-sans text-[16px] font-semibold leading-[26px] tabular-nums text-[#19347D]"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
+                <span className="tabular-nums"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
               </div>
             ))}
           </div>

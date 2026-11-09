@@ -13,7 +13,7 @@ import {
   type SummaryEdit,
 } from "@/lib/launchpad/content/summary";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, BinderCard, HandRule, PAPER_ACCENT, TagChip } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, BinderCard, HandRule, PAPER_ACCENT, TagChip, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { BTN_CYAN, BTN_PRIMARY, PRIMARY_LABEL, continueCopy, BTN_WHITE, Heading, SubLine, TrailCrumb } from "@/components/launchpad/venture-test/venture-test-ui";
 import { LessonChoiceButton } from "@/components/academy/lesson/lesson-choice-button";
 import { toggleChoice } from "@/components/launchpad/venture/screens/choice-capture-screen";
@@ -139,14 +139,14 @@ function PaperLines({ display, lines }: { display: LaunchpadSummarySection["disp
   if (display === "list") {
     const sentence = lines.length < 2 ? (lines[0] ?? "") : lines.length === 2 ? `${lines[0]} and ${lines[1]}` : `${lines.slice(0, -1).join(", ")}, and ${lines[lines.length - 1]}`;
     return (
-      <p className="mt-2.5 text-[15px] leading-snug text-[#19347D]">
+      <p className={`mt-2.5 ${WORKBOOK_BODY}`}>
         <ChosenValue>{sentence}</ChosenValue>
       </p>
     );
   }
   if (display === "ranked")
     return (
-      <ol className="mt-2 text-[14px] leading-[1.75]">
+      <ol className={`mt-2 ${WORKBOOK_BODY}`}>
         {lines.map((l, i) => (
           <li key={i} className="flex">
             <span className="w-[18px] flex-none font-semibold" style={{ color: PAPER_ACCENT }}>
@@ -159,7 +159,7 @@ function PaperLines({ display, lines }: { display: LaunchpadSummarySection["disp
     );
   if (display === "text")
     return (
-      <div className="mt-2 font-heading text-[15px] font-medium leading-[1.4]">
+      <div className={`mt-2 ${WORKBOOK_BODY}`}>
         {lines.map((l, i) => (
           <p key={i}>
             <ChosenValue block>{l}</ChosenValue>
@@ -168,7 +168,7 @@ function PaperLines({ display, lines }: { display: LaunchpadSummarySection["disp
       </div>
     );
   return (
-    <div className="text-[14px] leading-[1.45]">
+    <div className={WORKBOOK_BODY}>
       {lines.map((l, i) => (
         <p key={i} className="mt-2">
           <ChosenValue>{l}</ChosenValue>
@@ -239,7 +239,7 @@ export function BinderSection({
           <PencilButton label={`Edit ${section.label}`} expanded={picking} onClick={() => setEditing(picking ? null : pickKey)} />
         )}
       </div>
-      {empty && <p className="mt-2 text-[14px] italic text-[#9CA3AF]">Not answered yet</p>}
+      {empty && <p className={`mt-2 italic ${WORKBOOK_HINT}`}>Not answered yet</p>}
       {perLine ? (
         <ul className="flex flex-col">
           {rows.flatMap((r) =>
@@ -249,7 +249,7 @@ export function BinderSection({
               return (
                 <li key={`${r.src.answerKey}-${i}`} className="mt-2 flex flex-col" data-summary-line={r.src.answerKey}>
                   <div className="flex items-start gap-2">
-                    <span className="flex-1 text-[14px] leading-[1.45]">
+                    <span className={`flex-1 ${WORKBOOK_BODY}`}>
                       <ChosenValue>{line}</ChosenValue>
                     </span>
                     {picking && r.edit && i === 0 && (

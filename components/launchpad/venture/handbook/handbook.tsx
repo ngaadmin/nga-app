@@ -18,7 +18,7 @@ import type { VentureTestProgress } from "@/lib/launchpad/venture-test/venture-t
 import { LaunchpadAnswersProvider } from "@/components/launchpad/venture/identity/answers-context";
 import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-page";
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
-import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/venture/handbook/paper-art";
+import { PAPER_BACKGROUND, SpiralBinding, Washi, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { placeRhythmDoodles } from "@/components/launchpad/venture/handbook/scribble-mark";
 
@@ -224,7 +224,7 @@ export function Handbook({
           >
             <SpiralBinding />
             {(page.number === 2 || page.number === 6) && <Washi page={page.number === 6 ? 6 : 2} />}
-            <div ref={paperRef} className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6" data-paper-scroll="">
+            <div ref={paperRef} className={`h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6 ${WORKBOOK_BODY}`} data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >

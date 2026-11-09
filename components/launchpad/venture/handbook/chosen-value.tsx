@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
+import { WORKBOOK_ANSWER } from "@/components/launchpad/venture/handbook/paper-art";
 
 /**
  * A learner's pick, typed words, or a calculated figure on a workbook page.
- * Same look as Wrap-up's "Cash": bold navy with an aqua underline, and no caret.
- * Interactive menus keep their own button. This mark is read-only.
+ * Bold navy at the shared body size, with no underline and no caret.
  */
 export function ChosenValue({ children }: { children: ReactNode; block?: boolean }) {
   return (
-    <span className="font-semibold text-[#19347D]" data-chosen-value="">
+    <span className={WORKBOOK_ANSWER} data-chosen-value="">
       {children}
     </span>
   );

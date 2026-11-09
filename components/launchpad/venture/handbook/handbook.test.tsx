@@ -285,7 +285,7 @@ describe("<Handbook>", () => {
     expect(dialog.querySelectorAll("[data-edit-identity]")).toHaveLength(0);
     expect(within(dialog).getAllByText("Happy Paws").length).toBeGreaterThan(0);
     const mark = within(dialog).getByRole("img", { name: "Logo: shield, paw icon" });
-    expect(mark.getAttribute("width")).toBe("80");
+    expect(mark.getAttribute("width")).toBe("48");
     const name = dialog.querySelector<HTMLElement>("[data-cover-name] [data-business-name]")!;
     expect(mark.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // 17px, or the chosen font's readability floor (Fredoka 19px), always under the 80px logo.
@@ -297,7 +297,7 @@ describe("<Handbook>", () => {
     expect(dialog.textContent).not.toMatch(/Font:|Your identity/);
     expect(dialog.querySelectorAll("[data-sample]")).toHaveLength(0);
     expect(dialog.querySelectorAll("[data-paper-card]")).toHaveLength(1);
-    expect(dialog.querySelectorAll("[data-washi]")).toHaveLength(1);
+    expect(dialog.querySelectorAll("[data-washi]")).toHaveLength(0);
     expect(dialog.querySelectorAll("[data-paper-card] [data-spiral-binding]")).toHaveLength(1);
     const card = dialog.querySelector("[data-paper-card]")!;
     expect(card.className).toContain("left-[11px]");
@@ -362,7 +362,7 @@ describe("<Handbook>", () => {
     // Earned floor (L2) viewed on its page, which keeps its running page number.
     const { unmount } = render(<Harness entry="building" initial={FULL_L2} />);
     turnTo("l2-s1");
-    expect(screen.getByText("Page 2")).toBeTruthy();
+    expect(screen.getByText("Page 4")).toBeTruthy();
     expect(ringed()).toEqual(["Level 2, " + FLOORS[1]!.name]);
     const l2 = tab(/^Level 2/);
     // Product done, Pricing still open → floor stays current (D26 L2 has two silvers).
@@ -398,7 +398,6 @@ describe("<Handbook>", () => {
     turnTo("l2-s1");
     const page = document.querySelector("[data-handbook-page]") as HTMLElement;
     expect(page.getAttribute("data-handbook-page")).toBe("l2-s1");
-    expect(within(page).getByRole("heading", { name: FLOORS[1]!.silvers[0]!.title })).toBeTruthy();
     expect(within(page).getByText("Decide what to sell")).toBeTruthy();
     expect(within(page).getByText("Know who your customers are")).toBeTruthy();
   });

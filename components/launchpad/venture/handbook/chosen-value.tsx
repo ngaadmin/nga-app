@@ -5,12 +5,9 @@ import type { ReactNode } from "react";
  * Same look as Wrap-up's "Cash": bold navy with an aqua underline, and no caret.
  * Interactive menus keep their own button. This mark is read-only.
  */
-export function ChosenValue({ children, block = false }: { children: ReactNode; block?: boolean }) {
-  const line = block
-    ? "font-semibold text-[#19347D] underline decoration-[#3FB7DA] decoration-2 underline-offset-[3px]"
-    : "border-b-2 border-[#3FB7DA] font-semibold text-[#19347D]";
+export function ChosenValue({ children }: { children: ReactNode; block?: boolean }) {
   return (
-    <span className={line} data-chosen-value="">
+    <span className="font-semibold text-[#19347D]" data-chosen-value="">
       {children}
     </span>
   );

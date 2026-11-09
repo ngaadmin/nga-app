@@ -16,7 +16,20 @@ export const SCRIBBLE_SRC = {
   sparkle: "/launchpad/scribbles/sparkle.png",
   smiley: "/launchpad/scribbles/smiley.png",
   "smiley-black": "/launchpad/scribbles/smiley-black-ink.png",
+  coins: "/launchpad/scribbles/coins.png",
+  growth: "/launchpad/scribbles/growth.png",
+  jar: "/launchpad/scribbles/jar.png",
+  wallet: "/launchpad/scribbles/wallet.png",
 } as const;
+
+/** End-of-page scribble, about 80px, right aligned. */
+export function LargeScribble({ name }: { name: ScribbleName }) {
+  return (
+    <div className="mt-11 flex justify-end pr-[18px]" data-scribble-large={name}>
+      <img src={SCRIBBLE_SRC[name]} alt="" width={80} height={80} draggable={false} className="h-auto w-20 mix-blend-multiply" />
+    </div>
+  );
+}
 
 export type ScribbleName = keyof typeof SCRIBBLE_SRC;
 

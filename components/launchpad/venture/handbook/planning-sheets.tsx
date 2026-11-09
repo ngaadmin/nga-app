@@ -12,9 +12,8 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
-import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
-import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
+import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 function WeekBar({ label, width }: { label: string; width: number }) {
   return (
@@ -84,10 +83,8 @@ export function PriceSheet() {
         </div>
         );
       })}
-      <p className="mt-3 text-[12px] text-[#9AA3B5]">Job cost comes from My costs (Page 3b).</p>
-      <div className="mt-2 flex justify-end pr-2">
-        <Sticker src={ART.coins} alt="" />
-      </div>
+      <p className="mt-3 text-[16px] leading-[26px] text-[#4A5568]">Job cost comes from My costs.</p>
+      <LargeScribble name="coins" />
     </div>
   );
 }
@@ -157,9 +154,7 @@ export function JobsSheet() {
       </p>
       <WeekBar label="Week 1" width={100} />
       {jobs.weeksNeeded > 1 && <WeekBar label="Week 2" width={Math.round(((jobs.startupTotal / (jobs.weeklyKeep || 1)) - 1) * 100)} />}
-      <div className="mt-6 flex justify-end">
-        <Sticker src={ART.growth} alt="" />
-      </div>
+      <LargeScribble name="growth" />
     </div>
   );
 }
@@ -212,10 +207,7 @@ export function FundingSheet() {
       {funding.fundingSource === "borrow" && (
         <p className="mt-2 text-[13px] text-[#6B7280]">Real loans usually add interest; we&apos;ve left that out here to keep it simple.</p>
       )}
-      <div className="mt-8 flex items-end justify-between">
-        <Sticker src={ART.wallet} alt="" />
-        <img src={ART.pennyMaster} alt="" width={46} height={46} className="h-[46px] w-auto" />
-      </div>
+      <LargeScribble name="wallet" />
     </div>
   );
 }
@@ -239,13 +231,7 @@ export function PricingSummarySheet() {
         )}
       </p>
       <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{idea ? <>I could do differently: <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
-      <p className="mt-3 text-[13px] text-[#6B7280]">Full list on Pages 3 and 3b. Tap a line to change it.</p>
-      <div className="mt-6 flex items-end gap-3">
-        <img src={ART.pennyThinking} alt="" width={46} height={46} className="h-[46px] w-auto shrink-0" />
-        <FlatSticker kind="bulb" doodle />
-        <FlatSticker kind="sparkle" doodle />
-        <FlatSticker kind="sparkle" doodle />
-      </div>
+      <LargeScribble name="coins" />
     </div>
   );
 }
@@ -301,8 +287,7 @@ function PlanSelling() {
           {customer.times && customer.times.length > 0 ? <> They wanted walks <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
         </p>
       )}
-      <p className="mt-2 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>
-      <div className="mt-4 flex justify-end"><Sticker src={ART.ticket} alt="" /></div>
+      <LargeScribble name="pawtrail" />
     </div>
   );
 }
@@ -369,7 +354,7 @@ function PlanOthers() {
           </span>
         </p>
       ))}
-      <p className="mt-2 text-[13px] text-[#6B7280]">Each line: price − job cost = I keep. Tap a line to change it. Costs and prices stay read-only here.</p>
+      <p className="mt-2 text-[16px] leading-[26px] text-[#4A5568]">Each line: price minus job cost equals what I keep. Costs and prices stay read-only here.</p>
     </div>
   );
 }
@@ -397,7 +382,7 @@ function PlanWeek() {
       )}
       <p className="mt-2 text-[13px] text-[#6B7280]">Your typical week stays read-only here.</p>
       <div className="mt-4 flex justify-end">
-        <Sticker src={ART.jar} alt="" />
+        <LargeScribble name="jar" />
       </div>
     </div>
   );

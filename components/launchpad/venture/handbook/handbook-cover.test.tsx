@@ -56,7 +56,7 @@ describe("workbook page 1, the cover", () => {
 
   it("filled: the logo is 80px, centered at the top, above a smaller name (17px, or the font's floor)", () => {
     renderCover({ [IDENTITY_ANSWER_KEY]: ID as never });
-    expect(q("[data-cover-logo='filled'] svg")?.getAttribute("width")).toBe("80");
+    expect(q("[data-cover-logo='filled'] svg")?.getAttribute("width")).toBe("48");
     expect(q("[data-cover]")!.className).toContain("items-center");
     const name = q("[data-cover-name='filled'] [data-business-name]") as HTMLElement;
     expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(19); // Fredoka's 19px floor
@@ -73,15 +73,15 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-vision-state='filled']")).toBeTruthy();
   });
 
-  it("filled: logo, name, then the quote mark and the full compiled sentence", () => {
+  it("filled: logo, name, and the full compiled sentence, with no quote mark", () => {
     renderCover({ ...L1, [IDENTITY_ANSWER_KEY]: ID as never });
     expect(q("[data-cover-name='filled']")?.textContent).toBe("Happy Paws");
-    expect(q("[data-vision-quote]")).toBeTruthy();
+    expect(q("[data-vision-quote]")).toBeNull();
     const s = q("[data-vision-sentence]")!;
     expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have a washed and groomed dog in 6 months\.$/);
     // Starts at 17/26 and steps down only when the cover would overflow its card.
-    expect((s as HTMLElement).style.fontSize).toBe("17px");
-    expect((s as HTMLElement).style.lineHeight).toBe("26px");
+    expect((s as HTMLElement).style.fontSize).toBe("16px");
+    expect((s as HTMLElement).style.lineHeight).toBe("24px");
     expect(q("[data-cover]")!.getAttribute("data-cover-fit-step")).toBe("0");
     expect(s.className).toContain("text-[#19347D]");
     expect(s.className).not.toMatch(/truncate|line-clamp/);

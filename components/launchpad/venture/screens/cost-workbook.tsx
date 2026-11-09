@@ -9,7 +9,7 @@ import {
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
-import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
+import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 function Pencil() {
   return (
@@ -84,7 +84,7 @@ export function CostWorkbookBody({
       )}
       {part === "startup" && (
         <div className="mt-6 flex justify-end">
-          <Sticker src={ART.kit} alt="" />
+          <LargeScribble name="wallet" />
         </div>
       )}
       {part !== "startup" && (

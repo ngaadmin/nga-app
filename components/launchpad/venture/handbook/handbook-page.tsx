@@ -40,7 +40,6 @@ import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-wo
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { ReadyWrap } from "@/components/launchpad/venture/screens/getting-ready-flow";
-import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 import { LevelTemplateSections } from "@/components/launchpad/venture/handbook/level-template";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
@@ -91,17 +90,6 @@ export function Doodle({ ventureId }: { ventureId: string }) {
       <circle cx="74" cy="42" r="9" />
       <path d="M50 50C62 50 76 62 76 73C76 82 67 85 59 83C55 82 45 82 41 83C33 85 24 82 24 73C24 62 38 50 50 50Z" />
     </svg>
-  );
-}
-
-/** No Done chip on any workbook page (Cath, 5 Nov 5:35pm): the eyebrow only. */
-function TopRow({ eyebrow }: { eyebrow: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
-        {eyebrow}
-      </span>
-    </div>
   );
 }
 
@@ -219,7 +207,7 @@ function RocketDoodle() {
  * The whole cover must fit the page card with no scrolling: the vision text
  * steps down (VISION_TEXT_STEPS) until it does. Grey placeholders until filled.
  */
-const COVER_LOGO_PX = 80;
+const COVER_LOGO_PX = 48;
 
 function WhatWeSell() {
   const ctx = useLaunchpadAnswers();
@@ -289,14 +277,10 @@ function CoverPageBody({
   }, [fit, fitSig, editing]);
 
   return (
-    <div ref={rootRef} className={`relative flex flex-col items-center ${step >= 3 ? "gap-1.5" : "gap-2.5"}`} data-cover="" data-cover-fit-step={step}>
-      <img src="/launchpad/workbook/penny-protip.png" alt="" width={46} height={46} className="pointer-events-none absolute bottom-0 right-1 h-[46px] w-auto" />
-      <span className="pointer-events-none absolute left-8 top-20"><FlatSticker kind="heart" doodle /></span>
+    <div ref={rootRef} className="relative flex flex-col items-center" data-cover="" data-cover-fit-step={step} data-cover-dense="">
+      <div className="flex items-center justify-center gap-3">
       {hasLogo ? (
         <div className="relative">
-          <span className="pointer-events-none absolute -left-5 top-1"><FlatSticker kind="sparkle" doodle /></span>
-          <span className="pointer-events-none absolute -right-4 -top-1"><FlatSticker kind="star" doodle /></span>
-          <span className="pointer-events-none absolute -right-6 bottom-1"><FlatSticker kind="sparkle" doodle /></span>
           <div data-cover-logo="filled">
           <LogoMark
             shape={answer.shape}
@@ -310,7 +294,7 @@ function CoverPageBody({
       ) : (
         <div
           data-cover-logo="empty"
-          className="flex h-[80px] w-[80px] flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
+          className="flex h-12 w-12 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[#D9DEE8] text-center"
         >
           <RocketDoodle />
           <span className="px-1 text-[9.5px] leading-tight text-[#9AA3B5]">
@@ -335,6 +319,7 @@ function CoverPageBody({
           Your business name
         </p>
       )}
+      </div>
       {editable && (hasLogo || answer.name) && (
         <button
           type="button"
@@ -433,8 +418,6 @@ function SummaryPageBody({
   if (templates) {
     return (
       <>
-        <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} />
-        <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
         <LevelTemplateSections sections={sectionList} />
       </>
     );
@@ -443,8 +426,6 @@ function SummaryPageBody({
     const catalog = summaryCatalog(ctx.floors ?? []);
     return (
       <>
-        <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} />
-        <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
         <div className="mt-3">
           {sections.map(({ section }, index) => (
             <div key={section.id} className="relative">
@@ -465,19 +446,12 @@ function SummaryPageBody({
   }
   return (
     <>
-      <TopRow
-        eyebrow={`${page.floorName} · Step ${page.silverNumber}`}
-        />
-      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">
-        {page.silver.title}
-      </h2>
       {sections.map(({ section, lines }, i) =>
         lines.length ? (
           <div key={section.id} className="relative">
             <HandbookSection
               section={section}
               lines={lines}
-              doodle={i === 0 && page.silver.id !== "l1-s1" ? <Doodle ventureId={iconVentureId} /> : undefined}
             />
           </div>
         ) : (
@@ -498,12 +472,7 @@ function SummaryPageBody({
 function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
   return (
     <>
-      <TopRow
-        eyebrow={`${page.floorName} · Step ${page.silverNumber}`}
-        />
-      <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">
-        {page.silver.title}
-      </h2>
+      <AccentLabel as="h2">{page.silver.title}</AccentLabel>
       <HandRule />
       <AccentLabel>What I did</AccentLabel>
       <ul className="mt-3 flex flex-col gap-2" aria-label="What I did">
@@ -620,8 +589,7 @@ function CostsPageBody({
     if (!templates || !screen || screen.type !== "know-your-cost") return null;
     return (
       <>
-        <TopRow eyebrow="My costs" />
-        <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">My costs</h2>
+        <AccentLabel as="h2">My costs</AccentLabel>
         <p className="mt-3 text-[15px] text-[#19347D]">{screen.copy.starterLabel} <BlankSlot /></p>
         <p className="mt-2 text-[15px] text-[#19347D]">{screen.copy.marketingLabel} <BlankSlot /></p>
       </>

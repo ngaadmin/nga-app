@@ -8,8 +8,7 @@ import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/p
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
-import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
-import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
+import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
@@ -141,15 +140,7 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
           </p>
         </>
       )}
-      <p className="mt-3 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>
-      <div className="mt-3 flex items-end gap-2">
-        <Sticker src={ART.beagle} alt="" />
-        <FlatSticker kind="paw" doodle />
-        <FlatSticker kind="paw" doodle />
-        <FlatSticker kind="paw" doodle />
-        <FlatSticker kind="bone" doodle />
-        <FlatSticker kind="heart" doodle />
-      </div>
+      <LargeScribble name="pawtrail" />
     </div>
   );
 }

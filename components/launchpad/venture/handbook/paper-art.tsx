@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 
 /*
  * Shared workbook paper art (handbook r4 + wrapup-binder-r1, 4 Nov): the warm
@@ -7,7 +7,7 @@ import { NAME_FONT_CLASS } from "@/components/launchpad/venture/identity/identit
  * underline swash and tag chips. Used by the handbook pages and every
  * wrap-up screen so they all sit on the same page.
  */
-export const PAPER_ACCENT = "#3FB7DA";
+export const PAPER_ACCENT = "#0CC1E0";
 
 /** r4 warm paper grain (a faint SVG noise tile over #FDFBF7). */
 export const PAPER_NOISE =
@@ -35,12 +35,13 @@ export function SpiralBinding() {
   );
 }
 
-/** Light-blue washi strip, taped over the card's bottom right corner. */
-export function Washi() {
+/** Light-blue washi. Page 2 is top-right; page 6 is the corner. */
+export function Washi({ page = 2 }: { page?: 2 | 6 }) {
+  const place = page === 6 ? "right-[-10px] top-10 -rotate-[38deg]" : "right-3.5 top-[58px] rotate-[4deg]";
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute right-3 top-16 z-raised h-4 w-[60px] rotate-3 bg-[#3FB7DA] opacity-50 [clip-path:polygon(0_8%,6%_0,12%_10%,18%_0,82%_0,88%_12%,94%_0,100%_10%,100%_92%,94%_100%,88%_88%,82%_100%,18%_100%,12%_90%,6%_100%,0_88%)]"
+      className={`pointer-events-none absolute z-raised h-[22px] w-[84px] bg-[#5CC8E3] opacity-70 [clip-path:polygon(0_8%,6%_0,12%_10%,18%_0,82%_0,88%_12%,94%_0,100%_10%,100%_92%,94%_100%,88%_88%,82%_100%,18%_100%,12%_90%,6%_100%,0_88%)] ${place}`}
       data-washi=""
     />
   );
@@ -74,17 +75,14 @@ export function HandRule({ className = "mb-3.5 mt-5" }: { className?: string }) 
   );
 }
 
-/** Accent section label (Fredoka, light blue) with its underline swash. */
+/** Accent section label (Fredoka heading weight, aqua) with the long curved swash. */
 export function AccentLabel({ children, doodle, as: Tag = "h3" }: { children: ReactNode; doodle?: ReactNode; as?: "h2" | "h3" }) {
   return (
-    <div className="flex items-end gap-2">
-      <Tag
-        className={`${NAME_FONT_CLASS["fredoka-semibold"]} mt-1 inline-flex flex-col gap-px text-[15.5px] font-semibold tracking-[0.01em]`}
-        style={{ color: PAPER_ACCENT }}
-      >
+    <div className="mt-[38px] flex items-end gap-2 first:mt-2.5">
+      <Tag className={`${FREDOKA_HEADING_CLASS} inline-flex flex-col gap-px text-[18px] font-bold leading-6 text-[#0CC1E0]`}>
         {children}
-        <svg width="100%" height="7" viewBox="0 0 74 7" preserveAspectRatio="none" aria-hidden="true" className="min-w-[52px]">
-          <path d="M2 4.6C18 2 40 2.2 72 3.4" fill="none" stroke={PAPER_ACCENT} strokeWidth="2.2" strokeLinecap="round" />
+        <svg width="286" height="7" viewBox="0 0 74 7" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M2 4.6C18 2 40 2.2 72 3.4" fill="none" stroke="#0CC1E0" strokeWidth="2.2" strokeLinecap="round" />
         </svg>
       </Tag>
       {doodle}

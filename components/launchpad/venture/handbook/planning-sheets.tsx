@@ -11,7 +11,7 @@ import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpa
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_ANSWER, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_PRICE_ROW } from "@/components/launchpad/venture/handbook/paper-art";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
@@ -60,9 +60,9 @@ export function PriceSheet() {
         const compared = row.serviceId === "dog-walking" || row.serviceId === competitor?.jobComparedId;
         return (
         <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2">
-          <div className="flex items-baseline justify-between gap-3">
+          <div className={WORKBOOK_PRICE_ROW}>
             <h3 className={WORKBOOK_ANSWER}>{nameFor(row.serviceId, labels)}</h3>
-            <span className={WORKBOOK_ANSWER}><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
+            <span className="text-left"><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
           </div>
           <p className={`mt-1 ${WORKBOOK_BODY}`}>for one <ChosenValue>{pkg ? chipLabel(pkg) : "job"}</ChosenValue></p>
           <p className={WORKBOOK_BODY}>
@@ -129,14 +129,14 @@ export function JobsSheet() {
       {jobs.mode === "multi" && jobs.typicalWeek ? (
         <ul className="mt-3">
           {jobs.typicalWeek.map((row) => (
-            <li key={row.serviceId} className={`flex items-center justify-between gap-2 border-b border-dashed border-[#E4D3B4] py-2 ${WORKBOOK_BODY}`}>
-              <span className="flex items-center gap-2">
+            <li key={row.serviceId} className={`grid grid-cols-[minmax(0,1fr)_11rem] items-center gap-x-3 border-b border-dashed border-[#E4D3B4] py-2 ${WORKBOOK_BODY}`}>
+              <span className="flex min-w-0 items-center gap-2">
                 <button type="button" aria-label={`Fewer ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, -1)}>−</button>
                 <span className="w-4 text-center"><ChosenValue>{row.jobsPerWeek}</ChosenValue></span>
                 <button type="button" aria-label={`More ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, 1)}>+</button>
-                <span>{nameFor(row.serviceId, labels)}</span>
+                <span className="min-w-0">{nameFor(row.serviceId, labels)}</span>
               </span>
-              <span>I keep <ChosenValue>{formatMoney(row.subtotal, currency)}</ChosenValue></span>
+              <span className="text-left">I keep <ChosenValue>{formatMoney(row.subtotal, currency)}</ChosenValue></span>
             </li>
           ))}
         </ul>
@@ -300,12 +300,15 @@ function PlanCosts() {
     <div>
       <AccentLabel>My costs</AccentLabel>
       {[...view.marketing, ...view.starterGear].map((line) => (
-        <p key={line.id} className={`flex justify-between border-b border-dashed border-[#E4D3B4] py-1 ${WORKBOOK_BODY}`}>
-          <span>{line.label}</span>
-          <ChosenValue>{formatStartupMoney(line.amount, currency)}</ChosenValue>
-        </p>
+        <div key={line.id} className={`${WORKBOOK_PRICE_ROW} border-b border-dashed border-[#E4D3B4] py-1 ${WORKBOOK_BODY}`} data-cost-row="">
+          <span className="min-w-0">{line.label}</span>
+          <span className="text-left tabular-nums"><ChosenValue>{formatStartupMoney(line.amount, currency)}</ChosenValue></span>
+        </div>
       ))}
-      <p className={`mt-2 ${WORKBOOK_BODY}`}>Start-up total <ChosenValue>{formatStartupMoney(view.startupTotal, currency)}</ChosenValue></p>
+      <div className={`${WORKBOOK_PRICE_ROW} mt-2 ${WORKBOOK_BODY}`}>
+        <span>Start-up total</span>
+        <span className="text-left tabular-nums"><ChosenValue>{formatStartupMoney(view.startupTotal, currency)}</ChosenValue></span>
+      </div>
       <p className={`mt-2 ${WORKBOOK_BODY}`}>
         Ongoing cost per job: {view.ongoing.map((row, index) => (
           <span key={row.serviceId}>

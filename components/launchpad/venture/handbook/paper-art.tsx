@@ -17,6 +17,8 @@ export const WORKBOOK_ANSWER = "font-sans text-[16px] font-semibold leading-[24p
 export const WORKBOOK_SUB = "font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]";
 /** Cost-group label on a workbook page: Inter 600, 16px, navy. */
 export const WORKBOOK_GROUP = "font-sans text-[16px] font-semibold leading-6 text-[#19347D]";
+/** Name and price on one line. The price column is fixed and left-aligned, so every amount starts at the same edge. */
+export const WORKBOOK_PRICE_ROW = "grid grid-cols-[minmax(0,1fr)_7.5rem] items-baseline gap-x-3";
 /** Workbook hint: Inter 400, 16px, 24px line height, slate. */
 export const WORKBOOK_HINT = "font-sans text-[16px] font-normal leading-[24px] text-[#4A5568]";
 

@@ -8,7 +8,7 @@ import {
 } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, HandRule, WORKBOOK_BODY, WORKBOOK_GROUP, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, HandRule, WORKBOOK_BODY, WORKBOOK_GROUP, WORKBOOK_HINT, WORKBOOK_PRICE_ROW } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 function Pencil() {
@@ -22,9 +22,9 @@ function Pencil() {
 
 function Row({ label, amount }: { label: string; amount: string }) {
   return (
-    <div className={`flex items-baseline justify-between gap-3 ${WORKBOOK_BODY}`}>
-      <span className="min-w-0 flex-1">{label}</span>
-      <ChosenValue>{amount}</ChosenValue>
+    <div className={`${WORKBOOK_PRICE_ROW} ${WORKBOOK_BODY}`} data-cost-row="">
+      <span className="min-w-0">{label}</span>
+      <span className="text-left tabular-nums"><ChosenValue>{amount}</ChosenValue></span>
     </div>
   );
 }
@@ -96,16 +96,16 @@ export function CostWorkbookBody({
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
             ))}
           </div>
-          <div className={`mt-2.5 flex items-baseline justify-between font-semibold ${WORKBOOK_BODY}`}>
+          <div className={`${WORKBOOK_PRICE_ROW} mt-2.5 ${WORKBOOK_BODY}`}>
             <span>Start-up total</span>
-            <span className="tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
+            <span className="text-left tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
           <HandRule />
           <h3 className={`mb-1.5 ${WORKBOOK_GROUP}`}>Ongoing · cost per job</h3>
           <div className="flex flex-col gap-1">
             {view.ongoing.map((service) => (
-              <div key={service.serviceId} className={`flex items-center justify-between gap-2 ${WORKBOOK_BODY}`}>
-                <span className="flex min-w-0 flex-1 items-center gap-1">
+              <div key={service.serviceId} className={`${WORKBOOK_PRICE_ROW} ${WORKBOOK_BODY}`}>
+                <span className="flex min-w-0 items-center gap-1">
                   {editable && onEditService && (
                     <button type="button" aria-label={`Edit ${service.label}`} onClick={() => onEditService(service.serviceId)} className="flex size-11 flex-none items-center justify-center rounded-lg" data-pencil="">
                       <Pencil />
@@ -113,7 +113,7 @@ export function CostWorkbookBody({
                   )}
                   <span className="min-w-0">{service.label}</span>
                 </span>
-                <span className="tabular-nums"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
+                <span className="text-left tabular-nums"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
               </div>
             ))}
           </div>

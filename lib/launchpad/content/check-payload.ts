@@ -420,7 +420,7 @@ function checkOfferLoop(screen: Obj, where: string, answers: Answers): void {
   reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
   checkChips(screen.times, `${where} times`);
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
-  for (const field of ["serviceIntro", "whenTitle", "whenIntro", "whenNote", "whenSummary", "addPackage", "addExtra", "addService", "addTime"] as const) {
+  for (const field of ["serviceIntro", "whenTitle", "whenIntro", "whenNote", "whenSummary", "packagesHeading", "extrasHeading", "packagesHint", "extrasHint", "addPackage", "addExtra", "addService", "addTime"] as const) {
     text(screen.copy[field], `${where} ${field}`);
   }
   list(screen.catalogs, `${where} catalogs`, 1).forEach((raw, i) => {

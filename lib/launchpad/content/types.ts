@@ -381,6 +381,10 @@ export type LaunchpadOfferLoopScreen = TaskScreenBase & {
     whenNote: string;
     /** "I am available {when}." */
     whenSummary: string;
+    packagesHeading: string;
+    extrasHeading: string;
+    packagesHint: string;
+    extrasHint: string;
     addPackage: string;
     addExtra: string;
     addService: string;

@@ -132,29 +132,29 @@ export function OfferLoopFlow({
               I offer {offering.packages.map((id) => chipLabel(id)).join(", ") || "…"}.
               {(offering.addons.length > 0 || offering.addonsExtra) && ` Extras I can add: ${[...offering.addons.map(chipLabel), offering.addonsExtra].filter(Boolean).join(", ")}.`}
             </p>
-            <div className="mt-4 flex items-baseline justify-between">
-              <h2 className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Packages</h2>
-              <span className="text-[12px] text-[#9AA3B5]">Pick at least 1</span>
+            <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
+              <ScreenPrompt tone="section" flush>{screen.copy.packagesHeading}</ScreenPrompt>
+              <p className={LESSON_HINT}>{screen.copy.packagesHint}</p>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {catalog.packages.map((item) => (
                 <Chip lined key={item.id} tone="package" label={item.label} selected={offering.packages.includes(item.id)} onClick={() => patchOffering(offering.serviceId, (row) => ({ ...row, packages: toggle(row.packages, item.id) }))} />
               ))}
             </div>
-            <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "package" ? null : "package")}>{screen.copy.addPackage}</button>
+            <button type="button" className="mt-2 block font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "package" ? null : "package")}>{screen.copy.addPackage}</button>
             {extraOpen === "package" && (
               <input aria-label="Your own package" maxLength={40} value={offering.packagesExtra ?? ""} onChange={(event) => patchOffering(offering.serviceId, (row) => ({ ...row, packagesExtra: event.target.value }))} className="mt-2 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Type your own package" />
             )}
-            <div className="mt-4 flex items-baseline justify-between">
-              <h2 className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Extras</h2>
-              <span className="text-[12px] text-[#9AA3B5]">Optional</span>
+            <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 [&_p]:mt-0">
+              <ScreenPrompt tone="section" flush>{screen.copy.extrasHeading}</ScreenPrompt>
+              <p className={LESSON_HINT}>{screen.copy.extrasHint}</p>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
               {catalog.extras.map((item) => (
                 <Chip lined key={item.id} tone="extra" label={item.label} selected={offering.addons.includes(item.id)} onClick={() => patchOffering(offering.serviceId, (row) => ({ ...row, addons: toggle(row.addons, item.id) }))} />
               ))}
             </div>
-            <button type="button" className="mt-2 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "addon" ? null : "addon")}>{screen.copy.addExtra}</button>
+            <button type="button" className="mt-2 block font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "addon" ? null : "addon")}>{screen.copy.addExtra}</button>
             {extraOpen === "addon" && (
               <label className="mt-2 block text-[13px] text-[#6B7280]">
                 Add another extra (optional)
@@ -162,9 +162,11 @@ export function OfferLoopFlow({
               </label>
             )}
             {step === services.length - 1 && (
-              <button type="button" data-add-service="" className="mt-4 inline-flex h-11 items-center rounded-full px-4 font-semibold text-[#0CC1E0] shadow-[inset_0_0_0_1.5px_#0CC1E0]" onClick={() => undefined}>
-                {screen.copy.addService}
-              </button>
+              <div className="mt-6">
+                <button type="button" data-add-service="" className="inline-flex h-11 items-center rounded-full px-4 font-semibold text-[#0CC1E0] shadow-[inset_0_0_0_1.5px_#0CC1E0]" onClick={() => undefined}>
+                  {screen.copy.addService}
+                </button>
+              </div>
             )}
           </>
         )}

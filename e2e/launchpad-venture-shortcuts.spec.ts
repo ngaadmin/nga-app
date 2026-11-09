@@ -61,7 +61,7 @@ test("deep links", async ({ page }, info) => {
   });
   await shot(t, "?level=1", page.getByRole("button", { name: /Define the business/ }));
 
-  for (const level of [3, 4, 5, 6] as const) {
+  for (const level of [3, 4, 5, 6, 7] as const) {
     await step(t, `?level=${level} corridor: description and plaques`, async () => {
       await page.goto(url(`reset=1&level=${level}`));
       await expect(page.locator(corridorTitle)).toHaveText(new RegExp(`Level ${level}`), { timeout: 60_000 });

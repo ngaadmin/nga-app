@@ -85,8 +85,8 @@ export function WorkbookFrame({
         </div>
       </div>
       <div className="relative z-raised -mt-1.5 flex flex-none items-end gap-2 px-3 pb-1">
-        <div className="grid w-1/2 grid-cols-6 gap-1" aria-label="Workbook floors">
-          {[1, 2, 3, 4, 5, 6].map((n) => {
+        <div className="grid w-1/2 grid-cols-7 gap-1" aria-label="Workbook floors">
+          {[1, 2, 3, 4, 5, 6, 7].map((n) => {
             const selected = n === level;
             const muted = n > level;
             return (

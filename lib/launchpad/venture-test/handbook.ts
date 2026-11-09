@@ -315,7 +315,7 @@ export function isHandbookPageEditable(entry: HandbookEntry, silverDone: boolean
   return entry === "building" && silverDone;
 }
 
-/** L1 to L6 thumb index. Earned and current floors can be tapped; unearned ones cannot. */
+/** Floor thumb index. Earned and current floors can be tapped; unearned ones cannot. */
 export function handbookTabs(progress: VentureTestProgress, floors: readonly LaunchpadFloor[]): HandbookTab[] {
   const current = currentLevel(progress, floors);
   return floors.map((f) => {

@@ -3,8 +3,8 @@
  * floor (`floor.gold.title`). Swappable data: Storybird drafts; Cath has not
  * approved them yet (decision D26). Do not hard-code these strings in UI.
  *
- * Floors 1–6 are wired in the building. Level 7 Budgeting is the rooftop
- * (future work, not a floor yet) — its draft is kept here for when it lands.
+ * Floors 1–7 are wired in the building. Budgeting sits after Delivery.
+ * Growing follows Budgeting. The rooftop is the finish after the last floor.
  */
 
 export const SERVICE_FLOOR_NAMES = {
@@ -13,7 +13,8 @@ export const SERVICE_FLOOR_NAMES = {
   3: "Getting Ready",
   4: "Sales",
   5: "Delivery",
-  6: "Growing",
+  6: "Budgeting",
+  7: "Growing",
 } as const;
 
 /** Draft outcomes (Storybird, 5 Nov 2026). Status: draft-pending-cath. */
@@ -23,12 +24,11 @@ export const SERVICE_LEVEL_OUTCOMES_DRAFT = {
   3: "Know more about your business, get the money and gear you need, then practice and fine-tune it.",
   4: "Know where to find customers, what to say, and how to tell people about it.",
   5: "Take bookings, do the job well, get paid, and know what you earned.",
-  6: "Know what to improve, how to keep customers coming back, where to grow, and how to fund it.",
-  /** Rooftop / future floor — not wired in the building yet. */
-  7: "Know what you owe, what you keep, and where every dollar goes.",
+  6: "Know what you owe, what you keep, and where every dollar goes.",
+  7: "Know what to improve, how to keep customers coming back, where to grow, and how to fund it.",
 } as const;
 
-export type ServiceFloorLevel = 1 | 2 | 3 | 4 | 5 | 6;
+export type ServiceFloorLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export function serviceLevelOutcome(level: ServiceFloorLevel): string {
   return SERVICE_LEVEL_OUTCOMES_DRAFT[level];
@@ -95,6 +95,12 @@ export const SERVICE_FLOOR_STRUCTURE: Readonly<
   ],
   6: [
     {
+      title: "Budgeting",
+      bronzes: ["Budgeting"],
+    },
+  ],
+  7: [
+    {
       title: "Continuous Improvement",
       bronzes: ["Make improvements based on customer feedback"],
     },
@@ -110,6 +116,6 @@ export const SERVICE_FLOOR_STRUCTURE: Readonly<
   ],
 };
 
-/** Future work note: Level 7 Budgeting becomes the rooftop, not a seventh floor. */
+/** The rooftop is the finish after Growing, not a named Budgeting floor. */
 export const BUDGETING_ROOFTOP_NOTE =
-  "Level 7 Budgeting (outcome draft kept in SERVICE_LEVEL_OUTCOMES_DRAFT[7]) is the rooftop finish — not wired as a building floor yet.";
+  "Budgeting is floor 6, after Delivery. Growing is floor 7. The rooftop finish comes after the last floor.";

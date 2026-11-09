@@ -239,7 +239,7 @@ export function Handbook({
           </div>
         )}
 
-        <nav aria-label="Workbook floors" className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-6 gap-1" data-workbook-chrome="folder">
+        <nav aria-label="Workbook floors" className="absolute bottom-[72px] left-3 z-raised grid w-[52%] grid-cols-7 gap-1" data-workbook-chrome="folder">
           {tabs.map((t) => {
             const label = `Level ${t.level}, ${t.name}`;
             const viewing = page?.level === t.level;

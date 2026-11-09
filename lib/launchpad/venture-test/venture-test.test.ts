@@ -53,16 +53,18 @@ function doneThrough(progress: VentureTestProgress, ids: string[]): VentureTestP
 }
 
 describe("venture test structure", () => {
-  it("has six floors (Budgeting is rooftop); L1 three silvers, L2 product+Pricing, Final titles (D26/D28)", () => {
+  it("orders Delivery, then Budgeting, then Growing; L1 three silvers, L2 product+Pricing, Final titles (D26/D28)", () => {
     expect(FLOORS.map((f) => [f.level, f.name, f.silvers.length])).toEqual([
       [1, "Vision and Goals", 3],
       [2, "Planning", 3],
       [3, "Getting Ready", 2],
       [4, "Sales", 1],
       [5, "Delivery", 3],
-      [6, "Growing", 2],
+      [6, "Budgeting", 1],
+      [7, "Growing", 2],
     ]);
-    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(14);
+    expect(FLOORS[6]!.silvers.map((s) => s.title)).toEqual(["Continuous Improvement", "New Opportunities"]);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
     expect(L1.gold.title).toBe(
       "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
     );
@@ -123,7 +125,7 @@ describe("venture test progress", () => {
     expect(floorState(p, BASE_FLOORS, 2)).toBe("current");
   });
 
-  it("walks all six levels and ends on the top floor", () => {
+  it("walks every level and ends on Growing", () => {
     let p = EMPTY_VENTURE_TEST_PROGRESS;
     for (const floor of BASE_FLOORS) {
       expect(currentLevel(p, BASE_FLOORS)).toBe(floor.level);
@@ -131,7 +133,7 @@ describe("venture test progress", () => {
       p = doneThrough(p, floor.silvers.flatMap((s) => s.bronzes.flatMap((b) => b.tasks.map((t) => t.id))));
       expect(floorState(p, BASE_FLOORS, floor.level)).toBe("done");
     }
-    expect(currentLevel(p, BASE_FLOORS)).toBe(6);
+    expect(currentLevel(p, BASE_FLOORS)).toBe(7);
   });
 });
 
@@ -148,6 +150,7 @@ describe("building floor access (tap any floor)", () => {
     expect(currentLevel(p, BASE_FLOORS)).toBe(1);
     expect(BASE_FLOORS.map((f) => floorAccess(p, BASE_FLOORS, f.level))).toEqual([
       "enter",
+      "preview",
       "preview",
       "preview",
       "preview",

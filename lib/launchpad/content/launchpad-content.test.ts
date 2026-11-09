@@ -37,10 +37,19 @@ afterEach(() => {
 });
 
 describe("launchpad payload schema", () => {
-  it("accepts the bundled seed, six floors", () => {
+  it("accepts the bundled seed, seven floors", () => {
     const r = checkLaunchpadVenturePayload(SEED, "dog-walking");
     expect(r.ok).toBe(true);
-    expect(SEED.floors).toHaveLength(6);
+    expect(SEED.floors).toHaveLength(7);
+    expect(SEED.floors.map((floor) => floor.name)).toEqual([
+      "Vision and Goals",
+      "Planning",
+      "Getting Ready",
+      "Sales",
+      "Delivery",
+      "Budgeting",
+      "Growing",
+    ]);
   });
 
   it("rejects the wrong schema version or venture", () => {
@@ -161,7 +170,7 @@ describe("loadLaunchpadVenture fallback order", () => {
   it("serves the seed through the validation path", async () => {
     const load = await loadLaunchpadVenture("dog-walking");
     expect(load.ok && load.source).toBe("seed");
-    expect(load.ok && load.venture.floors.length).toBe(6);
+    expect(load.ok && load.venture.floors.length).toBe(7);
   });
 
   it("serves current, then the last good copy, then an error", async () => {

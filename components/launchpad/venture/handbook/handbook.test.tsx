@@ -129,13 +129,13 @@ describe("handbook pages", () => {
 describe("handbook tabs", () => {
   const states = (p: VentureTestProgress) => handbookTabs(p, FLOORS).map((t) => t.state);
   it("marks earned floors navy, the current floor cyan, the rest unearned and untappable", () => {
-    expect(states(EMPTY_VENTURE_TEST_PROGRESS)).toEqual(["current", "unearned", "unearned", "unearned", "unearned", "unearned"]);
+    expect(states(EMPTY_VENTURE_TEST_PROGRESS)).toEqual(["current", "unearned", "unearned", "unearned", "unearned", "unearned", "unearned"]);
     // l1-s3 completes Level 1 (Brand); L2 becomes current.
-    expect(states(through("l1-s3"))).toEqual(["earned", "current", "unearned", "unearned", "unearned", "unearned"]);
-    expect(states(ALL)).toEqual(["earned", "earned", "earned", "earned", "earned", "earned"]);
+    expect(states(through("l1-s3"))).toEqual(["earned", "current", "unearned", "unearned", "unearned", "unearned", "unearned"]);
+    expect(states(ALL)).toEqual(["earned", "earned", "earned", "earned", "earned", "earned", "earned"]);
     const tabs = handbookTabs(through("l1-s3"), FLOORS);
-    expect(tabs.map((t) => t.tappable)).toEqual([true, true, false, false, false, false]);
-    expect(tabs.map((t) => t.level)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(tabs.map((t) => t.tappable)).toEqual([true, true, false, false, false, false, false]);
+    expect(tabs.map((t) => t.level)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
   it("jumps to a floor's first page, or the latest page when that floor has none yet", () => {
@@ -304,7 +304,7 @@ describe("<Handbook>", () => {
     expect(card.className).toContain("right-[11px]");
     expect(card.className).not.toContain("right-[88px]");
     const floors = within(dialog).getByRole("navigation", { name: "Workbook floors" });
-    expect(floors.className).toContain("grid-cols-6");
+    expect(floors.className).toContain("grid-cols-7");
     expect(floors.getAttribute("data-workbook-chrome")).toBe("folder");
     expect(within(dialog).getByRole("button", { name: "Continue" })).toBeTruthy();
     const spiral = dialog.querySelector("[data-spiral-binding]")!;

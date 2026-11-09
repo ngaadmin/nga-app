@@ -1,6 +1,6 @@
 /**
- * TEST venture seed: six building floors (Vision → Growing). Level 7 Budgeting
- * is the rooftop (future work — see BUDGETING_ROOFTOP_NOTE). Module 1 content
+ * TEST venture seed: seven building floors (Vision → Growing). Budgeting is
+ * floor 6, after Delivery. Growing is floor 7. See BUDGETING_ROOFTOP_NOTE. Module 1 content
  * and L2 product screens overlay from the load file. L2 Pricing keeps Final
  * titles. Know your cost, Set the price, and jobs are test builds.
  * Rows 15-17 are chip screens. L3-6 stay structure placeholders.
@@ -100,7 +100,7 @@ function floor(level: ServiceFloorLevel, silvers: LaunchpadSilver[]): LaunchpadF
 }
 
 /**
- * Six floors (L1–L6). Window count equals silver count per floor.
+ * Seven floors (L1–L7). Window count equals silver count per floor.
  * L1 silvers are replaced by the load (Define, Set your goals, The Brand).
  * L2 product silver is replaced by the load. Pricing stays a structure plaque;
  * Know your cost, Set the price, and jobs are test builds. Competitor
@@ -212,6 +212,7 @@ export function launchpadSeedBase(ventureId: string = LAUNCHPAD_SEED_VENTURE_ID)
       floor(4, structureSilvers(4)),
       floor(5, structureSilvers(5)),
       floor(6, structureSilvers(6)),
+      floor(7, structureSilvers(7)),
     ],
   };
 }

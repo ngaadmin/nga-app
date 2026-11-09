@@ -8,13 +8,9 @@ import { findKnowYourCost, formatOngoingMoney, formatStartupMoney, startupTotal 
 import { jobsNeeded, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
 
-const CONTINUE_ON =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#19347D] px-6 font-heading text-[15px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#19347D]";
-const CONTINUE_OFF =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
 function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (next: number) => void }) {
@@ -125,7 +121,7 @@ export function JobsCoverFlow({
       {page === 1 ? (
         <div className={`relative mx-5 mt-1 pl-8 pr-8 ${SCROLL}`}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
-          <p className="mt-3 text-[15px] leading-snug text-[#4B5563]">{screen.copy.context}</p>
+          <p className={`mt-3 ${LESSON_HINT}`}>{screen.copy.context}</p>
           <ul className="mt-4 flex flex-col gap-3 pr-8 text-[15px] leading-snug text-[#19347D]">
             {bullets.map((line) => (
               <li key={line} className="flex gap-2">
@@ -251,11 +247,9 @@ export function JobsCoverFlow({
         )}
       </div>
       )}
-      <div className="mx-5 flex flex-none justify-center pb-4 pt-3 [@media(max-height:879px)]:mt-auto">
-        <button
-          type="button"
+      <div className="flex flex-none justify-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
+        <LessonContinue
           disabled={page === 2 && !ready}
-          className={page === 1 || ready ? CONTINUE_ON : CONTINUE_OFF}
           onClick={() => {
             if (page === 1) {
               setPage(2);
@@ -267,7 +261,7 @@ export function JobsCoverFlow({
           }}
         >
           Continue
-        </button>
+        </LessonContinue>
       </div>
     </section>
   );

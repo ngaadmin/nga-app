@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parseCustomerAnswer, parseWrapJobAnswer } from "@/lib/launchpad/content/answers";
 import {
   AGREE_ITEMS,
   CHANNELS,
@@ -63,5 +64,15 @@ describe("getting ready sentences", () => {
       },
     ]);
     expect(wrap.other).toBe("The other 6 questions: was good, nothing to change.");
+  });
+
+  it("keeps an old wrap string and stores customer times as slot ids", () => {
+    expect(parseWrapJobAnswer({ kind: "wrap-job", version: 1, paymentHow: "cash", feedbackHow: "in_person" })).toEqual({
+      kind: "wrap-job",
+      version: 1,
+      paymentHow: ["cash"],
+      feedbackHow: ["in_person"],
+    });
+    expect(parseCustomerAnswer({ kind: "customer", version: 1, numberAsked: 3, yesNo: "yes", interests: ["weekdays", "15-minute-walk"], times: ["weekday_morning", "not-a-slot"] })?.times).toEqual(["weekday_morning"]);
   });
 });

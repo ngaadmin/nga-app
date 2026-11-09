@@ -27,9 +27,8 @@ import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silve
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 
 const CONTINUE_ON =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#19347D] px-6 font-heading text-[15px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#19347D]";
-const CONTINUE_OFF =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
+  "mx-auto flex h-11 w-[140px] items-center justify-center rounded-full bg-[#19347D] font-heading text-[15px] font-semibold leading-none text-white";
+const CONTINUE_OFF = `${CONTINUE_ON} pointer-events-none opacity-[0.35]`;
 const ADD =
   "inline-flex h-9 items-center gap-1.5 rounded-[10px] bg-[#0CC1E0] px-3.5 font-heading text-[13.5px] font-bold text-white";
 const GHOST =
@@ -74,7 +73,7 @@ function BackTitle({ title, onBack }: { title: string; onBack: () => void }) {
           <path d="M15 5l-7 7 7 7" />
         </svg>
       </button>
-      <h1 className="font-heading text-[17px] font-bold text-[#19347D]">{title}</h1>
+      <h1 className="font-heading text-[21px] font-bold leading-7 text-[#19347D]">{title}</h1>
     </div>
   );
 }
@@ -459,7 +458,7 @@ export function KnowYourCostFlow({
         {crumb}
         <div className={`mx-5 mt-6 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Your costs</h1>
+          <h1 className="mt-0.5 font-heading text-[21px] font-bold leading-7 text-[#19347D]">Your costs</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.totalsIntro}</p>
           <div className="mt-5 flex flex-col gap-3">
             <div className="flex items-baseline justify-between">
@@ -554,7 +553,7 @@ export function KnowYourCostFlow({
         </div>
         <div className={`mx-5 mt-4 ${SCROLL}`}>
           <Eyebrow>{plaque}</Eyebrow>
-          <h1 className="mt-0.5 font-heading text-[22px] font-bold leading-tight text-[#19347D]">Know your cost</h1>
+          <h1 className="mt-0.5 font-heading text-[21px] font-bold leading-7 text-[#19347D]">Know your cost</h1>
           <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.hubIntro}</p>
           <div className="mt-4 flex flex-col gap-3.5">
             <HubCard

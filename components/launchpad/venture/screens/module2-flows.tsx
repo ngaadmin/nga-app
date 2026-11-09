@@ -16,11 +16,10 @@ import {
 } from "@/lib/launchpad/content/planning/catalog";
 import type { LaunchpadChip, LaunchpadCompetitorScreen, LaunchpadCustomerScreen, LaunchpadFloor, LaunchpadOfferLoopScreen } from "@/lib/launchpad/content/types";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { AvailabilityTable, Chip as OfferChip } from "@/components/launchpad/venture/screens/lesson-controls";
+import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
+import { LESSON_BODY, LESSON_HINT, LessonContinue, LessonSurface, LessonTopBar, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 import { BTN_PRIMARY } from "@/components/launchpad/venture-test/venture-test-ui";
-
-const NEXT_OFF =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
 
 function Chip({
   selected,
@@ -119,14 +118,12 @@ export function OfferLoopFlow({
     const rows = draft.offerings.some((row) => row.serviceId === serviceId) ? draft.offerings : [...draft.offerings, emptyOffering(serviceId)];
     write({ ...draft, offerings: rows.map((row) => (row.serviceId === serviceId ? patch(row) : row)) });
   };
-  const ready = onWhen || (!!offering && (offering.packages.length > 0 || !!offering.packagesExtra));
-
-  const anyPackage = draft.offerings.some((row) => row.packages.length > 0 || !!row.packagesExtra);
+  const ready = onWhen ? (draft.availability.some(isAvailabilitySlot) || !!draft.availabilityExtra?.trim()) : (!!offering && (offering.packages.length > 0 || !!offering.packagesExtra));
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
       <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-3">
-        <p className="text-[14px] leading-snug text-[#6B7280]">
+        <p className={LESSON_HINT}>
           {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? "this service")}
         </p>
         {!onWhen && offering && catalog && (
@@ -173,73 +170,31 @@ export function OfferLoopFlow({
         )}
         {onWhen && (
           <>
-            <p className="mt-3 text-[15px] leading-snug text-[#19347D]" data-availability-summary="">
-              I am available {availabilityPhrase(draft.availability)}.
+            <p className={`mt-3 ${LESSON_BODY}`} data-availability-summary="">
+              {screen.copy.whenSummary.replace("{when}", availabilityPhrase(draft.availability))}
               {draft.availabilityExtra ? ` Also: ${draft.availabilityExtra}.` : ""}
             </p>
-            <table className="mt-4 w-full border-collapse text-left text-[15px] text-[#19347D]" data-availability-table="">
-              <thead>
-                <tr className="border-b border-[#F3D7A6]">
-                  <th scope="col" className="py-2 pr-2 font-semibold">Time</th>
-                  {AVAILABILITY_COLUMNS.map((column) => (
-                    <th key={column.key} scope="col" className="px-2 py-2 text-center font-semibold">
-                      {column.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {AVAILABILITY_ROWS.map((row) => (
-                  <tr key={row.key} className="border-b border-[#F6E2B8]">
-                    <th scope="row" className="py-3 pr-2 font-normal">{row.label}</th>
-                    {AVAILABILITY_COLUMNS.map((column) => {
-                      const id = availabilitySlotId(column.key, row.key);
-                      const on = draft.availability.includes(id);
-                      return (
-                        <td key={id} className="px-2 py-3 text-center">
-                          <button
-                            type="button"
-                            role="checkbox"
-                            aria-checked={on}
-                            aria-label={`${row.label}, ${column.label}`}
-                            onClick={() => write({ ...draft, availability: toggleSlot(draft.availability, id) })}
-                            className={`inline-flex size-6 items-center justify-center rounded-[4px] ${on ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}
-                          >
-                            {on ? (
-                              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M5 12.5l5 5L19 7" />
-                              </svg>
-                            ) : null}
-                          </button>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <button type="button" className="mt-3 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen(extraOpen === "time" ? null : "time")}>{screen.copy.addTime}</button>
-            {extraOpen === "time" && (
-              <input aria-label="Another time" maxLength={80} value={draft.availabilityExtra ?? ""} onChange={(event) => write({ ...draft, availabilityExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Monday to Friday 4pm to 7pm" />
-            )}
-            <p className="mt-4 text-[13px] text-[#9AA3B5]">{screen.copy.whenNote}</p>
+            <AvailabilityTable
+              selected={draft.availability}
+              onToggle={(id) => write({ ...draft, availability: toggleSlot(draft.availability, id) })}
+              addLabel={screen.copy.addTime}
+              extra={draft.availabilityExtra ?? ""}
+              onExtra={(value) => write({ ...draft, availabilityExtra: value })}
+              helper={screen.copy.whenNote}
+            />
           </>
         )}
-        {services.length === 0 && <p className="mt-4 text-[14px] text-[#6B7280]">Pick a service in Level 1 first.</p>}
+        {services.length === 0 && <p className={`mt-4 ${LESSON_HINT}`}>Pick a service in Level 1 first.</p>}
       </div>
-      <div className="mx-5 flex justify-center pb-4">
-        <button
-          type="button"
+      <div className="px-5 pb-[18px]">
+        <LessonContinue
           disabled={!ready || services.length === 0}
-          className={ready && services.length > 0 ? BTN_PRIMARY : NEXT_OFF}
           onClick={() => {
             if (!ready) return;
             if (!onWhen) setStep(step + 1);
             else onFinish({ ...draft, availability: draft.availability.filter(isAvailabilitySlot) });
           }}
-        >
-          Continue
-        </button>
+        />
       </div>
     </section>
   );
@@ -266,57 +221,105 @@ export function CustomerCheckFlow({
   const saved = customerOf(answers, screen.answerKey);
   const chips: LaunchpadChip[] = [];
   for (const row of offer?.offerings ?? []) {
-    const catalog = catalogFor(row.serviceId);
     for (const id of [...row.packages, ...row.addons]) {
-      const label = chipLabel(id);
-      if (!chips.some((item) => item.id === id)) chips.push({ id, label: catalog ? label : label });
+      if (!chips.some((item) => item.id === id) && !screen.times.some((time) => time.id === id)) chips.push({ id, label: chipLabel(id) });
     }
   }
-  for (const time of screen.times) if (!chips.some((item) => item.id === time.id)) chips.push(time);
+  const [step, setStep] = useState<0 | 1>(0);
   const [draft, setDraft] = useState<CustomerAnswer>(() => saved ?? { kind: "customer", version: 1, numberAsked: 3, yesNo: "yes", interests: [] });
-  const [extraOpen, setExtraOpen] = useState(false);
   const write = (next: CustomerAnswer) => {
     setDraft(next);
     persist(screen.answerKey, next);
   };
-  const ready = draft.interests.length > 0 || !!draft.interestExtra?.trim();
-  const offeringChips = chips.filter((item) => !screen.times.some((time) => time.id === item.id));
+  const times = draft.times ?? [];
+  const interestsReady = draft.interests.length > 0;
+  const timesReady = times.length > 0 || !!draft.timesExtra?.trim();
+  const sentence = screen.sentence.split(/(\{number\}|\{product\}|\{yesNo\})/g);
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="customer-check">
-      <LessonTopBar title="Know who your customers are" onBack={onExit} />
-      <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">
-        <p className="text-[14px] leading-snug text-[#6B7280]">{screen.copy.intro}</p>
-        <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-          I asked{" "}
-          <input aria-label="Number of people asked" inputMode="numeric" value={String(draft.numberAsked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 20) write({ ...draft, numberAsked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold text-[#19347D] shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
-          {" "}people about {screen.productPhrase}. They said{" "}
-          <select aria-label="Yes or no" value={draft.yesNo} onChange={(event) => write({ ...draft, yesNo: event.target.value === "no" ? "no" : "yes" })} className="mx-1 h-8 rounded-lg bg-white px-2 font-semibold text-[#19347D] shadow-[inset_0_0_0_1.5px_#D9DEE8]">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-          {" "}to my idea. They were specifically interested in:
-        </p>
-        <h2 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">From what you offer</h2>
-        <div className="flex flex-wrap gap-2">
-          {offeringChips.map((item) => (
-            <Chip key={item.id} tone="package" label={item.label} selected={draft.interests.includes(item.id)} onClick={() => write({ ...draft, interests: toggle(draft.interests, item.id) })} />
-          ))}
-        </div>
-        <h2 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Times</h2>
-        <div className="flex flex-wrap gap-2">
-          {screen.times.map((item) => (
-            <Chip key={item.id} tone="package" label={item.label} selected={draft.interests.includes(item.id)} onClick={() => write({ ...draft, interests: toggle(draft.interests, item.id) })} />
-          ))}
-        </div>
-        <button type="button" className="mt-3 font-semibold text-[#0CC1E0]" onClick={() => setExtraOpen((open) => !open)}>{screen.copy.addInterest}</button>
-        {extraOpen && (
-          <input aria-label="Your own interest" maxLength={80} value={draft.interestExtra ?? ""} onChange={(event) => write({ ...draft, interestExtra: event.target.value })} className="mt-2 h-11 w-full rounded-xl px-3 shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none" placeholder="Type your own" />
+    <LessonSurface
+      title={screen.title}
+      onBack={() => (step === 1 ? setStep(0) : onExit())}
+      footer={
+        <LessonContinue
+          disabled={step === 0 ? !interestsReady : !timesReady}
+          onClick={() => {
+            if (step === 0) {
+              if (interestsReady) setStep(1);
+              return;
+            }
+            if (timesReady) onFinish({ ...draft, times: times.filter(isAvailabilitySlot) });
+          }}
+        />
+      }
+    >
+      <div data-task-screen="customer-check" data-customer-step={step === 0 ? "interests" : "times"}>
+        {step === 0 ? (
+          <>
+            <ScreenGuidance flush>{screen.copy.intro}</ScreenGuidance>
+            <p className={`mt-3 ${LESSON_BODY}`}>
+              {sentence.map((part, index) => {
+                if (part === "{number}") {
+                  return (
+                    <FieldControl
+                      key={index}
+                      appearance="inline"
+                      idPrefix={screen.id}
+                      field={{ name: "numberAsked", label: "Number of people asked", input: "integer", min: 1, max: 20 }}
+                      value={draft.numberAsked}
+                      onChange={(value) => {
+                        const n = typeof value === "number" ? value : Number(value);
+                        if (n >= 1 && n <= 20) write({ ...draft, numberAsked: n });
+                      }}
+                    />
+                  );
+                }
+                if (part === "{product}") return <span key={index}>{screen.productPhrase}</span>;
+                if (part === "{yesNo}") {
+                  return (
+                    <FieldControl
+                      key={index}
+                      appearance="inline"
+                      idPrefix={screen.id}
+                      field={{
+                        name: "yesNo",
+                        label: "Yes or no",
+                        input: "choice",
+                        options: [
+                          { id: "yes", label: screen.yesLabel },
+                          { id: "no", label: screen.noLabel },
+                        ],
+                      }}
+                      value={draft.yesNo}
+                      onChange={(value) => write({ ...draft, yesNo: value === "no" ? "no" : "yes" })}
+                    />
+                  );
+                }
+                return <span key={index}>{part}</span>;
+              })}
+            </p>
+            <ScreenPrompt tone="section" flush>{screen.sectionHeading}</ScreenPrompt>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {chips.map((item) => (
+                <OfferChip key={item.id} label={item.label} selected={draft.interests.includes(item.id)} onClick={() => write({ ...draft, interests: toggle(draft.interests, item.id) })} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <ScreenPrompt tone="question" flush>{screen.timesTitle}</ScreenPrompt>
+            <ScreenGuidance flush>{screen.timesHint}</ScreenGuidance>
+            <AvailabilityTable
+              selected={times}
+              onToggle={(id) => write({ ...draft, times: toggle(times.filter(isAvailabilitySlot), id) })}
+              addLabel={screen.addTime}
+              extra={draft.timesExtra ?? ""}
+              onExtra={(value) => write({ ...draft, timesExtra: value })}
+              extraLabel="Another time"
+            />
+          </>
         )}
       </div>
-      <div className="mx-5 flex justify-center pb-4">
-        <button type="button" disabled={!ready} className={ready ? BTN_PRIMARY : NEXT_OFF} onClick={() => ready && onFinish(draft)}>Continue</button>
-      </div>
-    </section>
+    </LessonSurface>
   );
 }
 
@@ -379,8 +382,8 @@ export function CompetitorFlow({
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">
         {step === 1 ? (
           <>
-            <p className="text-[14px] leading-snug text-[#6B7280]">{screen.copy.pricesIntro}</p>
-            <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
+            <p className={LESSON_HINT}>{screen.copy.pricesIntro}</p>
+            <p className={`mt-3 ${LESSON_BODY}`}>
               I checked{" "}
               <input aria-label="Walkers checked" inputMode="numeric" value={String(draft.walkersChecked)} onChange={(event) => { const n = Number(event.target.value.replace(/\D/g, "")); if (n >= 1 && n <= 10) write({ ...draft, walkersChecked: n }); }} className="mx-1 inline-block h-8 w-12 rounded-lg text-center font-bold shadow-[inset_0_0_0_1.5px_#D9DEE8] outline-none" />
               {" "}other dog walkers. For a{" "}
@@ -401,7 +404,7 @@ export function CompetitorFlow({
           </>
         ) : (
           <>
-            <p className="text-[14px] leading-snug text-[#6B7280]">{screen.copy.extrasIntro}</p>
+            <p className={LESSON_HINT}>{screen.copy.extrasIntro}</p>
             <h2 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">They often include</h2>
             <div className="flex flex-wrap gap-2">
               {screen.addons.map((item) => (
@@ -435,11 +438,11 @@ export function CompetitorFlow({
           </>
         )}
       </div>
-      <div className="mx-5 flex justify-center pb-4">
+      <div className="px-5 pb-[18px]">
         {step === 1 ? (
-          <button type="button" disabled={!pricesReady} className={pricesReady ? BTN_PRIMARY : NEXT_OFF} onClick={() => setStep(2)}>Continue</button>
+          <LessonContinue disabled={!pricesReady} onClick={() => pricesReady && setStep(2)} />
         ) : (
-          <button type="button" disabled={!ideaReady} className={ideaReady ? BTN_PRIMARY : NEXT_OFF} onClick={() => ideaReady && onFinish(draft)}>Continue</button>
+          <LessonContinue disabled={!ideaReady} onClick={() => ideaReady && onFinish(draft)} />
         )}
       </div>
     </section>

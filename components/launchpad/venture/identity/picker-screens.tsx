@@ -64,7 +64,7 @@ export function LogoBuilder({ screens }: { screens: readonly LaunchpadLogoPicker
   };
   return (
     <div data-task-screen="logo-builder" data-step={tab} className="mx-6 mb-4 flex flex-col">
-      <p className="text-[15px] leading-[1.45] text-[#6B7280]" data-lede="">
+      <p className="font-sans text-[16px] font-normal leading-[23px] text-[#4A5568]" data-lede="">
         {screen.prompt}
       </p>
       <div

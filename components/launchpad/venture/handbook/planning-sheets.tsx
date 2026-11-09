@@ -4,7 +4,7 @@ import { competitorOf, costsOf, customerOf, jobsOf, offerOf, priceOf, fundingOf,
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { COMPETITOR_ANSWER_KEY, CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
-import { availabilityPhrase, chipLabel, isAvailabilitySlot } from "@/lib/launchpad/content/planning/catalog";
+import { availabilityPhrase, chipLabel, isAvailabilitySlot, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
@@ -259,7 +259,8 @@ function PlanSelling() {
       </p>
       {customer && (
         <p className="mt-1 text-[15px] text-[#19347D]">
-          I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They were interested in <ChosenValue>{customer.interests.map(chipLabel).join(", ")}</ChosenValue>.
+          I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They were interested in <ChosenValue>{customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)).map(chipLabel).join(", ")}</ChosenValue>.
+          {customer.times && customer.times.length > 0 ? <> They wanted walks <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
         </p>
       )}
       <p className="mt-2 text-[12px] text-[#9AA3B5]">Tap a line to change your picks.</p>

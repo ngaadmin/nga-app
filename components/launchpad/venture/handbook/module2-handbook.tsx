@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { customerOf, offerOf } from "@/lib/launchpad/content/answers";
 import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
-import { availabilityPhrase, catalogFor, chipLabel, isAvailabilitySlot } from "@/lib/launchpad/content/planning/catalog";
+import { availabilityPhrase, catalogFor, chipLabel, isAvailabilitySlot, WHEN_OPTIONS } from "@/lib/launchpad/content/planning/catalog";
 import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
@@ -123,7 +123,8 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
         <>
           <h3 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Who might want it</h3>
           <p className="text-[15px] leading-snug text-[#19347D]">
-            I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They said <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>. They were interested in <ChosenValue>{joinLabels(customer.interests)}</ChosenValue>.
+            I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They said <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>. They were interested in <ChosenValue>{joinLabels(customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)))}</ChosenValue>.
+            {customer.times && customer.times.length > 0 ? <> They wanted walks <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
           </p>
         </>
       )}

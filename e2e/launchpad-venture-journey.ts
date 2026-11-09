@@ -494,6 +494,10 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(next).toBeDisabled();
     await page.getByRole("button", { name: "30-minute walk" }).click();
     await expect(next).toBeEnabled();
+    await next.click();
+    await expect(page.getByText("When did your customers want walks?")).toBeVisible();
+    await page.getByRole("checkbox", { name: "Morning, Weekdays" }).click();
+    await expect(next).toBeEnabled();
   });
   await shot(t, "Find out if people want it, filled", next);
 

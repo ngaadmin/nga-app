@@ -11,12 +11,8 @@ import { isWholePrice, keptPerJob } from "@/lib/launchpad/content/pricing/calc";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { currencySymbol } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
+import { LESSON_HINT, LessonContinue, LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 
-const CONTINUE_ON =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#19347D] px-6 font-heading text-[15px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#19347D]";
-const CONTINUE_OFF =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
 const SCROLL = "min-h-0 overflow-y-auto [@media(max-height:879px)]:flex-1";
 
 /**
@@ -90,8 +86,8 @@ export function SetPriceFlow({
       <LessonTopBar title="Set the price" onBack={() => onExit(answer)} />
       <div className={`mx-5 mt-1 ${SCROLL}`}>
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9AA3B5]">Pricing</p>
-        <p className="mt-1 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.context}</p>
-        <p className="mt-2 text-[13.5px] leading-snug text-[#6B7280]">{screen.copy.guidance}</p>
+        <p className={`mt-1 ${LESSON_HINT}`}>{screen.copy.context}</p>
+        <p className={`mt-2 ${LESSON_HINT}`}>{screen.copy.guidance}</p>
         <div className="mt-4 flex flex-col gap-2">
           {services.length === 0 && <p className="text-[13.5px] text-[#6B7280]">{screen.copy.emptyServices}</p>}
           {services.map((service) => {
@@ -154,10 +150,10 @@ export function SetPriceFlow({
           })}
         </div>
       </div>
-      <div className="mx-5 flex flex-none justify-center pb-4 pt-3 [@media(max-height:879px)]:mt-auto">
-        <button type="button" disabled={!ready} className={ready ? CONTINUE_ON : CONTINUE_OFF} onClick={() => ready && onFinish(answer)}>
+      <div className="flex flex-none justify-center px-5 pb-[18px] pt-3 [@media(max-height:879px)]:mt-auto">
+        <LessonContinue disabled={!ready} onClick={() => ready && onFinish(answer)}>
           Continue
-        </button>
+        </LessonContinue>
       </div>
     </section>
   );

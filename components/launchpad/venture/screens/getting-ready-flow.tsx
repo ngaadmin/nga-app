@@ -8,24 +8,14 @@ import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
 import {
   AFTER_HOW,
   AGREE_ITEMS,
-  AGREE_PROMPT,
   AGREE_UNDERSTOOD_EMPTY,
   BEFORE_HOW,
   CHANNELS,
-  DELIVER_HINT,
   FEEDBACK_HOW,
-  FIND_CONFIRM,
-  FIND_HINT,
   PAYMENT_HOW,
-  POLISH_LEAD,
   POLISH_QUESTIONS,
-  POLISH_RESULTS,
-  PRACTICE_TIP,
   PRACTICE_WHEN,
   PRACTICE_WHO,
-  SUGGESTION_PROMPT,
-  WRAP_JOB_HINT,
-  WRAP_JOB_PLAYBACK,
   agreeTitles,
   feedbackWrap,
   findReady,
@@ -47,9 +37,11 @@ import {
   type WrapJobAnswer,
 } from "@/lib/launchpad/content/answers";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { ART, ContinueButton, Sticker, WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
+import { Chip, ReadTick } from "@/components/launchpad/venture/screens/lesson-controls";
+import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
+import { LESSON_BODY, LESSON_HINT, LESSON_PICK, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
 
 type ReadyAnswer = FindCustomersAnswer | AgreeJobAnswer | DeliverJobAnswer | WrapJobAnswer | PracticeRunAnswer | PolishServiceAnswer;
 
@@ -77,49 +69,6 @@ function Tick({ on, label, onClick }: { on: boolean; label: string; onClick: () 
 
 function Aqua({ children }: { children: ReactNode }) {
   return <h2 className="font-heading text-[22px] font-semibold leading-tight text-[#3FB7DA] underline decoration-[#7ED4EA] decoration-[3px] underline-offset-[5px]">{children}</h2>;
-}
-
-/** Deliver and Wrap-up title: Fredoka 600 at 22px, with room under the eyebrow. */
-function SheetTitle({ children }: { children: ReactNode }) {
-  return (
-    <h2 className={`${FREDOKA_CLASS} mt-[21px] text-[22px] font-semibold leading-tight text-[#3FB7DA] underline decoration-[#7ED4EA] decoration-[3px] underline-offset-[5px]`}>
-      {children}
-    </h2>
-  );
-}
-
-function SheetQuestion({ children }: { children: ReactNode }) {
-  return <h3 className="mt-[9px] font-heading text-[18px] font-bold leading-tight text-[#19347D]">{children}</h3>;
-}
-
-function SheetSubhead({ children }: { children: ReactNode }) {
-  return <p className={`${FREDOKA_CLASS} text-[15px] font-semibold text-[#0CC1E0]`}>{children}</p>;
-}
-
-/** White lesson chrome for a Getting Ready bronze. The spiral workbook is the record, not this task. */
-function LessonSurface({ title, onBack, footer, children }: { title: string; onBack: () => void; footer: ReactNode; children: ReactNode }) {
-  return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white text-[#111827]" data-lesson-surface="">
-      <header className="flex items-center gap-2 px-3 pt-4">
-        <button type="button" aria-label="Back" onClick={onBack} className="flex size-11 items-center justify-center text-[#19347D]">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-        </button>
-        <h1 className="font-heading text-[19px] font-bold text-[#19347D]">{title}</h1>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">{children}</div>
-      <div className="px-6 pb-6">{footer}</div>
-    </section>
-  );
-}
-
-function LessonContinue({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) {
-  return (
-    <button type="button" disabled={disabled} onClick={onClick} className="h-12 w-full rounded-[14px] bg-[#19347D] text-[17px] font-semibold text-white disabled:opacity-40">
-      Continue
-    </button>
-  );
 }
 
 function Eyebrow({ children }: { children: ReactNode }) {
@@ -246,136 +195,98 @@ function FindStep({
   const saved = findCustomersOf(answers, screen.answerKey);
   const [channels, setChannels] = useState<string[]>(saved?.channels ? [...saved.channels] : []);
   const [extra, setExtra] = useState(saved?.channelsExtra ?? "");
-  const [confirming, setConfirming] = useState(false);
+  const [extraOpen, setExtraOpen] = useState(!!saved?.channelsExtra);
   const ready = findReady(channels, extra);
   const toggle = (id: string) => setChannels((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   return (
     <LessonSurface
-      title="Attract the customer"
-      onBack={confirming ? () => setConfirming(false) : onExit}
+      title={screen.title}
+      onBack={onExit}
       footer={
-        confirming ? (
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setConfirming(false)} className="h-12 flex-1 rounded-[14px] border-2 border-[#19347D] text-[17px] font-semibold text-[#19347D]">
-              Change
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                onFinish({
-                  kind: "find-customers",
-                  version: 1,
-                  channels,
-                  ...(extra.trim() ? { channelsExtra: extra.trim() } : {}),
-                })
-              }
-              className="h-12 flex-1 rounded-[14px] bg-[#19347D] text-[17px] font-semibold text-white"
-            >
-              That&apos;s mine
-            </button>
-          </div>
-        ) : (
-          <LessonContinue disabled={!ready} onClick={() => setConfirming(true)} />
-        )
+        <LessonContinue
+          disabled={!ready}
+          onClick={() =>
+            ready &&
+            onFinish({
+              kind: "find-customers",
+              version: 1,
+              channels,
+              ...(extra.trim() ? { channelsExtra: extra.trim() } : {}),
+            })
+          }
+        />
       }
     >
-      {confirming ? (
-        <>
-          <Eyebrow>Learn the customer journey</Eyebrow>
-          <Aqua>How I&apos;ll find customers</Aqua>
-          <p className="mt-3 text-[15px] leading-snug text-[#19347D]">{FIND_CONFIRM}</p>
-          <ul className="mt-3">
-            {channels.map((id) => (
-              <li key={id}>
-                <Rule />
-                <span className="flex items-center gap-2 py-1 text-[15px] text-[#19347D]">
-                  <span className="flex size-6 items-center justify-center rounded-[5px] bg-[#FFA503]"><Check /></span>
-                  <ChosenValue>{CHANNELS.find((row) => row.id === id)?.label}</ChosenValue>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : (
-        <>
-          <Eyebrow>Learn the customer journey</Eyebrow>
-          <Aqua>Attract the customer</Aqua>
-          <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">How will you find your customers?</h3>
-          <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{FIND_HINT}</p>
-          <ul className="mt-1">
-            {CHANNELS.map((row) => (
-              <li key={row.id} className="border-b border-dashed border-[#E4D3B4] py-0.5">
-                <span className="flex items-start gap-2">
-                  <Tick on={channels.includes(row.id)} label={row.label} onClick={() => toggle(row.id)} />
-                  <span className="text-[14px] font-semibold leading-tight text-[#19347D]">{row.label}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-2 flex items-end justify-between gap-2">
-            <label className="min-w-0 flex-1 text-[14px] text-[#6B7280]">
-              Also: Add your own (optional)
-              <input
-                aria-label="Add your own channel"
-                maxLength={60}
-                value={extra}
-                onChange={(event) => setExtra(event.target.value)}
-                className="mt-1 w-full border-b border-dashed border-[#E4D3B4] bg-transparent py-1 text-[15px] text-[#19347D] outline-none"
-              />
-            </label>
-          </div>
-        </>
-      )}
+      <div data-task-screen="find-customers">
+        {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+        {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        <div className="mt-2">
+          {(screen.channels ?? []).map((row) => (
+            <Chip key={row.id} variant="lined" label={row.label} selected={channels.includes(row.id)} onClick={() => toggle(row.id)} />
+          ))}
+        </div>
+        <button type="button" className={`mt-3 ${LESSON_BODY}`} onClick={() => setExtraOpen(true)}>
+          {screen.alsoLabel}
+        </button>
+        {extraOpen ? (
+          <input
+            aria-label={screen.alsoLabel}
+            maxLength={60}
+            value={extra}
+            onChange={(event) => setExtra(event.target.value)}
+            className="mt-1 w-full border-b border-dashed border-[#F4D5A7] bg-transparent py-1 text-[16px] text-[#19347D] outline-none"
+          />
+        ) : null}
+      </div>
     </LessonSurface>
   );
 }
 
 const AGREE_ICON: Record<(typeof AGREE_ITEMS)[number]["id"], ReactNode> = {
   collect_info: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="6" y="5" width="16" height="20" rx="2" />
-      <path d="M10 5V3h8v2" />
-      <circle cx="14" cy="12" r="2.5" />
-      <path d="M9.5 20c.8-2.6 2.5-3.8 4.5-3.8s3.7 1.2 4.5 3.8" />
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 9h6M9 13h6M9 17h3" />
     </svg>
   ),
   confirm_dog: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <ellipse cx="14" cy="19" rx="5" ry="4" />
-      <circle cx="7" cy="12" r="2" />
-      <circle cx="11" cy="7.5" r="2" />
-      <circle cx="17" cy="7.5" r="2" />
-      <circle cx="21" cy="12" r="2" />
+    <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true">
+      <ellipse cx="12" cy="16" rx="4.5" ry="3.8" fill="#0CC1E0" />
+      <circle cx="6" cy="10" r="2" fill="#0CC1E0" />
+      <circle cx="18" cy="10" r="2" fill="#0CC1E0" />
+      <circle cx="9.5" cy="6" r="2" fill="#0CC1E0" />
+      <circle cx="14.5" cy="6" r="2" fill="#0CC1E0" />
     </svg>
   ),
   when_where: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M14 25s-7-7-7-12a7 7 0 0 1 14 0c0 5-7 12-7 12z" />
-      <circle cx="14" cy="13" r="2.5" />
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 21s-6-6-6-11a6 6 0 0 1 12 0c0 5-6 11-6 11z" />
+      <circle cx="12" cy="10" r="2" />
     </svg>
   ),
   cost_payment: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="14" cy="14" r="10" />
-      <path d="M17 10.5c-.7-1-1.8-1.5-3-1.5-1.7 0-3 .9-3 2.3 0 3.2 6 1.8 6 4.8 0 1.4-1.3 2.4-3 2.4-1.3 0-2.5-.6-3.2-1.6M14 7v2M14 19v2" />
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.4 0-2.5.8-2.5 2s1.1 1.6 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1 0-2-.5-2.5-1.5M12 6.5v11" />
     </svg>
   ),
   plans_change: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M23 9a10 10 0 0 0-17.5 1M5 19a10 10 0 0 0 17.5-1" />
-      <path d="M23 4v5h-5M5 24v-5h5" />
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0CC1E0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 9 3 3 0 0 1 17 15z" />
+      <path d="M9 18l-1 2M13 18l-1 2M17 18l-1 2" />
     </svg>
   ),
 };
 
-function AgreeNoteIcon() {
+function AgreeBullets({ lines }: { lines: readonly string[] }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 28 28" fill="none" stroke="#19347D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px shrink-0">
-      <rect x="6" y="5" width="16" height="20" rx="2" />
-      <path d="M10 5V3h8v2" />
-      <circle cx="14" cy="12" r="2.5" />
-      <path d="M9.5 20c.8-2.6 2.5-3.8 4.5-3.8s3.7 1.2 4.5 3.8" />
-    </svg>
+    <ul className="m-0 list-none p-0">
+      {lines.map((line) => (
+        <li key={line} className={`relative py-0.5 pl-4 before:absolute before:left-[3px] before:top-2 before:size-1.5 before:rounded-full before:bg-[#0CC1E0] before:content-[''] ${LESSON_BODY}`}>
+          {line}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -393,10 +304,14 @@ function AgreeStep({
   onFinish: (answer: AgreeJobAnswer) => void;
 }) {
   const saved = agreeJobOf(answers, screen.answerKey);
+  const pages = screen.agreePages ?? [];
+  const sections = screen.agreeSections ?? [];
   const [page, setPage] = useState(0);
   const [understood, setUnderstood] = useState<AgreeJobAnswer["understood"]>(() => ({ ...AGREE_UNDERSTOOD_EMPTY, ...(saved?.understood ?? {}) }));
-  const section = AGREE_ITEMS[page]!;
-  const last = page === AGREE_ITEMS.length - 1;
+  const current = pages[page];
+  const pageSections = sections.filter((section) => current?.sectionIds.includes(section.id));
+  const ticked = pageSections.length > 0 && pageSections.every((section) => understood[section.id]);
+  const last = page === pages.length - 1;
   const answer = (): AgreeJobAnswer => ({ kind: "agree-job", version: 1, understood });
   const goBack = () => {
     if (page === 0) {
@@ -406,82 +321,60 @@ function AgreeStep({
     }
     setPage((n) => n - 1);
   };
+  const toggleRead = () => {
+    const next = !ticked;
+    setUnderstood((prev) => {
+      const copy = { ...prev };
+      for (const id of current?.sectionIds ?? []) copy[id] = next;
+      return copy;
+    });
+  };
+  const note = screen.note?.split("{strong}") ?? [];
   return (
-    <section className="flex min-h-0 flex-1 flex-col bg-white text-[#19347D]" data-task-screen="agree-the-job" data-agree-section={section.id} data-agree-page={page + 1}>
-      <header className="flex items-center gap-2 px-4 pt-4">
-        <button type="button" aria-label="Back" onClick={goBack} className="flex size-11 items-center justify-center text-[#19347D]">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-        </button>
-        <h1 className="font-heading text-[19px] font-bold">Agree the job</h1>
-      </header>
-      <div className="flex items-center gap-2 px-6 pt-4" data-agree-progress="">
-        {AGREE_ITEMS.map((item, index) => (
-          <span key={item.id} aria-hidden="true" className={`size-[11px] rounded-full border-2 border-[#19347D] ${index <= page ? "bg-[#19347D]" : "bg-white"}`} />
-        ))}
-        <p className="ml-auto text-[15px] text-[#6B7A9E]">Section {page + 1} of 5</p>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-6">
-        <h2 className="font-heading text-[21px] font-bold leading-tight">{AGREE_PROMPT}</h2>
-        <div className="mt-4 flex gap-2 rounded-[10px] bg-[#F5F7FB] px-3 py-2.5 text-[15px] leading-snug text-[#4A5A82]">
-          <AgreeNoteIcon />
-          <p>
-            When a booking comes in, write these on the <b>Taking a customer order</b> template in your workbook.
+    <LessonSurface
+      title={screen.title}
+      onBack={goBack}
+      progress={{ index: page + 1, total: pages.length || 4 }}
+      footer={<LessonContinue disabled={false} onClick={() => (last ? onFinish(answer()) : setPage((n) => n + 1))} />}
+    >
+      <div data-task-screen="agree-the-job" data-agree-page={page + 1} data-agree-section={current?.sectionIds.join(",")}>
+        {current?.question ? <ScreenPrompt tone="question" flush>{current.question}</ScreenPrompt> : null}
+        {current?.showNote && screen.note ? (
+          <p className={`mt-3 ${LESSON_HINT}`}>
+            {note.map((part, index) => (
+              <span key={index}>
+                {part}
+                {index < note.length - 1 ? <span className="font-semibold text-[#19347D]">{screen.noteStrong}</span> : null}
+              </span>
+            ))}
           </p>
-        </div>
-        <article className="mt-6 rounded-2xl border-[1.5px] border-[#0CC1E0] bg-[#F2FBFD] px-3.5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="shrink-0">{AGREE_ICON[section.id]}</span>
-            <h3 className="min-w-0 flex-1 font-heading text-[17px] font-semibold leading-snug">{section.title}</h3>
-            <button
-              type="button"
-              aria-pressed={understood[section.id]}
-              aria-label={`I understand ${section.title}`}
-              onClick={() => setUnderstood((prev) => ({ ...prev, [section.id]: !prev[section.id] }))}
-              className={`flex size-[30px] shrink-0 items-center justify-center rounded-[7px] border-2 border-[#FFA503] ${understood[section.id] ? "bg-[#FFA503]" : "bg-white"}`}
-            >
-              {understood[section.id] ? (
-                <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-                  <path d="M3 7.5l2.6 2.6L11 4.5" stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : null}
-            </button>
-          </div>
-          <div className="pl-10 pr-1">
-            <p className="mb-1 mt-2 text-[15px] leading-snug">{section.lead}</p>
-            <ul className="m-0 list-none p-0">
-              {section.bullets.map((line) => (
-                <li key={line} className="relative py-0.5 pl-4 text-[15px] leading-snug before:absolute before:left-[3px] before:top-2 before:size-1.5 before:rounded-full before:bg-[#0CC1E0] before:content-['']">
-                  {line}
-                </li>
-              ))}
-            </ul>
-            {section.moreLead && (
-              <>
-                <p className="mb-1 mt-3 text-[15px] leading-snug">{section.moreLead}</p>
-                <ul className="m-0 list-none p-0">
-                  {section.moreBullets?.map((line) => (
-                    <li key={line} className="relative py-0.5 pl-4 text-[15px] leading-snug before:absolute before:left-[3px] before:top-2 before:size-1.5 before:rounded-full before:bg-[#0CC1E0] before:content-['']">
-                      {line}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-        </article>
+        ) : null}
+        {pageSections.map((section) => (
+          <article key={section.id} className="mt-6">
+            <h2 className="flex items-center gap-2.5 font-heading text-[18px] font-bold leading-6 text-[#0CC1E0]">
+              <span className="shrink-0">{AGREE_ICON[section.id]}</span>
+              {section.title}
+            </h2>
+            <p className={`mb-1 mt-2 ${LESSON_BODY}`}>{section.lead}</p>
+            <AgreeBullets lines={section.bullets} />
+            {section.moreLead ? <ScreenPrompt tone="sub" flush>{section.moreLead}</ScreenPrompt> : null}
+            {section.moreBullets ? <AgreeBullets lines={section.moreBullets} /> : null}
+          </article>
+        ))}
+        <ReadTick pressed={ticked} label={screen.readLabel ?? "I've read this"} onClick={toggleRead} />
       </div>
-      <div className="px-6 pb-6 pt-3">
-        <button
-          type="button"
-          onClick={() => (last ? onFinish(answer()) : setPage((n) => n + 1))}
-          className="h-12 w-full rounded-[14px] bg-[#19347D] text-[17px] font-semibold text-white"
-        >
-          Continue
-        </button>
-      </div>
-    </section>
+    </LessonSurface>
+  );
+}
+
+function slotSentence(lead: string, control: ReactNode) {
+  const [before, after] = lead.split("{pick}");
+  return (
+    <p className={LESSON_BODY}>
+      {before}
+      {control}
+      {after}
+    </p>
   );
 }
 
@@ -500,26 +393,53 @@ function DeliverStep({
   const [beforeHow, setBefore] = useState(saved?.beforeHow);
   const [afterHow, setAfter] = useState(saved?.afterHow);
   const ready = !!beforeHow && !!afterHow;
+  const valueFor = (slot: "before" | "after") => (slot === "before" ? beforeHow : afterHow);
+  const setFor = (slot: "before" | "after", id: string) => (slot === "before" ? setBefore(id) : setAfter(id));
+  const optionsFor = (slot: "before" | "after") => (slot === "before" ? screen.beforeOptions : screen.afterOptions) ?? [];
   return (
-    <LessonSurface title="Deliver the job" onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "deliver-job", version: 1, beforeHow: beforeHow!, afterHow: afterHow! })} />}>
-      <Eyebrow>Learn the customer journey</Eyebrow>
-      <SheetTitle>Deliver the job</SheetTitle>
-      <SheetQuestion>How will you deliver a good job?</SheetQuestion>
-      <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{DELIVER_HINT}</p>
-      <div className="mt-[30px]">
-        <SheetSubhead>One day before the job</SheetSubhead>
-        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-          I will contact the owner to confirm the agreed details of the job by <InlineMenu label="How you will confirm" value={beforeHow} options={BEFORE_HOW} onPick={setBefore} />.
-        </p>
-      </div>
-      <div className="mt-[30px]">
-        <SheetSubhead>Straight after I&apos;ve delivered the service</SheetSubhead>
-        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-          I will show proof by sending <InlineMenu label="How you will show proof" value={afterHow} options={AFTER_HOW} onPick={setAfter} />.
-        </p>
+    <LessonSurface
+      title={screen.title}
+      onBack={onExit}
+      footer={
+        <LessonContinue
+          disabled={!ready}
+          onClick={() => ready && onFinish({ kind: "deliver-job", version: 1, beforeHow: beforeHow!, afterHow: afterHow! })}
+        />
+      }
+    >
+      <div data-task-screen="deliver-the-job">
+        {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+        {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        {(screen.deliverBlocks ?? []).map((block) => (
+          <div key={block.slot} className="mt-7">
+            <ScreenPrompt tone="section" flush>{block.heading}</ScreenPrompt>
+            {slotSentence(
+              block.lead,
+              <FieldControl
+                appearance="underline"
+                idPrefix={`${screen.id}-${block.slot}`}
+                field={{
+                  name: block.slot,
+                  label: block.heading,
+                  input: "choice",
+                  options: optionsFor(block.slot).map((option) => ({ id: option.id, label: option.label })),
+                }}
+                value={valueFor(block.slot)}
+                onChange={(value) => typeof value === "string" && setFor(block.slot, value)}
+              />,
+            )}
+          </div>
+        ))}
       </div>
     </LessonSurface>
   );
+}
+
+function joinOr(ids: readonly string[], options: readonly { id: string; sentence?: string; label: string }[]): string {
+  const phrases = ids.map((id) => options.find((option) => option.id === id)?.sentence ?? options.find((option) => option.id === id)?.label ?? id);
+  if (phrases.length <= 1) return phrases[0] ?? "";
+  if (phrases.length === 2) return `${phrases[0]} or ${phrases[1]}`;
+  return `${phrases.slice(0, -1).join(", ")}, or ${phrases[phrases.length - 1]}`;
 }
 
 function WrapJobStep({
@@ -534,28 +454,65 @@ function WrapJobStep({
   onFinish: (answer: WrapJobAnswer) => void;
 }) {
   const saved = wrapJobOf(answers, screen.answerKey);
-  const [paymentHow, setPayment] = useState(saved?.paymentHow);
-  const [feedbackHow, setFeedback] = useState(saved?.feedbackHow);
-  const ready = !!paymentHow && !!feedbackHow;
+  const [paymentHow, setPayment] = useState<string[]>(saved?.paymentHow ? [...saved.paymentHow] : []);
+  const [feedbackHow, setFeedback] = useState<string[]>(saved?.feedbackHow ? [...saved.feedbackHow] : []);
+  const ready = paymentHow.length > 0 && feedbackHow.length > 0;
+  const payment = joinOr(paymentHow, screen.payment?.options ?? []);
+  const feedback = joinOr(feedbackHow, screen.feedback?.options ?? []);
+  const summary = !payment && !feedback
+    ? ""
+    : !feedback
+      ? (screen.summaryPayment ?? "").replace("{payment}", payment)
+      : !payment
+        ? (screen.summaryFeedback ?? "").replace("{feedback}", feedback)
+        : (screen.summaryBoth ?? "").replace("{payment}", payment).replace("{feedback}", feedback);
+  const toggle = (list: readonly string[], id: string, set: (next: string[]) => void) => {
+    set(list.includes(id) ? list.filter((item) => item !== id) : [...list, id]);
+  };
   return (
-    <LessonSurface title="Wrap-up" onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "wrap-job", version: 1, paymentHow: paymentHow!, feedbackHow: feedbackHow! })} />}>
-      <Eyebrow>Learn the customer journey</Eyebrow>
-      <SheetTitle>Wrap-up</SheetTitle>
-      <SheetQuestion>How will you wrap up a job?</SheetQuestion>
-      <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{WRAP_JOB_HINT}</p>
-      <div className="mt-[30px]">
-        <SheetSubhead>Taking payment</SheetSubhead>
-        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-          I will collect payment by <InlineMenu label="How you will collect payment" value={paymentHow} options={PAYMENT_HOW} onPick={setPayment} />.
-        </p>
+    <LessonSurface
+      title={screen.title}
+      onBack={onExit}
+      footer={
+        <LessonContinue
+          disabled={!ready}
+          onClick={() => ready && onFinish({ kind: "wrap-job", version: 1, paymentHow, feedbackHow })}
+        />
+      }
+    >
+      <div data-task-screen="wrap-up">
+        {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+        {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        {screen.payment ? (
+          <div className="mt-4">
+            <ScreenPrompt tone="section" flush>{screen.payment.heading}</ScreenPrompt>
+            <p className={`mt-1 ${LESSON_BODY}`}>{screen.payment.lead}</p>
+            {screen.payment.options.map((option) => (
+              <Chip key={option.id} variant="lined" label={option.label} selected={paymentHow.includes(option.id)} onClick={() => toggle(paymentHow, option.id, setPayment)} />
+            ))}
+          </div>
+        ) : null}
+        {screen.feedback ? (
+          <div className="mt-4">
+            <ScreenPrompt tone="section" flush>{screen.feedback.heading}</ScreenPrompt>
+            <p className={`mt-1 ${LESSON_BODY}`}>{screen.feedback.lead}</p>
+            {screen.feedback.options.map((option) => (
+              <Chip key={option.id} variant="lined" label={option.label} selected={feedbackHow.includes(option.id)} onClick={() => toggle(feedbackHow, option.id, setFeedback)} />
+            ))}
+          </div>
+        ) : null}
+        {summary ? (
+          <p className={`mt-4 ${LESSON_BODY}`}>
+            {summary.split(new RegExp(`(${[payment, feedback].filter(Boolean).map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g")).map((part, index) =>
+              part === payment || part === feedback ? (
+                <span key={index} className={LESSON_PICK}>{part}</span>
+              ) : (
+                <span key={index}>{part}</span>
+              ),
+            )}
+          </p>
+        ) : null}
       </div>
-      <div className="mt-[30px]">
-        <SheetSubhead>Getting feedback</SheetSubhead>
-        <p className="mt-1 text-[16px] leading-snug text-[#19347D]">
-          I will ask the owner for feedback or a short review by <InlineMenu label="How you will ask for feedback" value={feedbackHow} options={FEEDBACK_HOW} onPick={setFeedback} />.
-        </p>
-      </div>
-      {ready && <p className="mt-[18px] text-[15px] font-semibold text-[#3FB7DA]">{WRAP_JOB_PLAYBACK}</p>}
     </LessonSurface>
   );
 }
@@ -583,22 +540,28 @@ function PracticeStep({
   const label = services.find((row) => row.id === service)?.label ?? "Dog walking";
   return (
     <WorkbookFrame businessName={businessName} level={3} canBack canForward={false} onBack={onExit} onForward={() => {}} footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "practice-run", version: 1, who: who!, service: service!, when: when! })} />}>
-      <Eyebrow>Test &amp; Tweak</Eyebrow>
-      <Aqua>Do the practice run</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">How will you practice before your first paid job?</h3>
+      <Eyebrow>{screen.eyebrow}</Eyebrow>
+      <Aqua>{screen.title}</Aqua>
+      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">{screen.question}</h3>
       <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-        I will do a practice run for <InlineMenu label="Who you will practice with" value={who} options={PRACTICE_WHO} onPick={setWho} />.
+        {screen.practiceWhoLead?.split("{pick}")[0]}
+        <InlineMenu label="Who you will practice with" value={who} options={screen.practiceWho ?? []} onPick={setWho} />
+        {screen.practiceWhoLead?.split("{pick}")[1]}
       </p>
       <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-        I will do the following service for them <InlineMenu label="Which service" value={service} options={services.map((row) => ({ id: row.id, label: row.label }))} onPick={setService} />.
+        {screen.practiceServiceLead?.split("{pick}")[0]}
+        <InlineMenu label="Which service" value={service} options={services.map((row) => ({ id: row.id, label: row.label }))} onPick={setService} />
+        {screen.practiceServiceLead?.split("{pick}")[1]}
       </p>
       <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-        I will do it <InlineMenu label="When you will practice" value={when} options={PRACTICE_WHEN} onPick={setWhen} />.
+        {screen.practiceWhenLead?.split("{pick}")[0]}
+        <InlineMenu label="When you will practice" value={when} options={screen.practiceWhen ?? []} onPick={setWhen} />
+        {screen.practiceWhenLead?.split("{pick}")[1]}
       </p>
-      <p className="mt-3 text-[13px] leading-snug text-[#6B7280]">{PRACTICE_TIP}</p>
+      <p className={`mt-3 ${LESSON_HINT}`}>{screen.hint}</p>
       {ready && (
         <div className="mt-3">
-          <p className="font-heading text-[15px] font-semibold text-[#3FB7DA]">Your practice run</p>
+          <p className="font-heading text-[15px] font-semibold text-[#3FB7DA]">{screen.practicePlayback}</p>
           {practiceLines(who!, label, when!).map((line) => (
             <p key={line} className="mt-1 text-[14px] text-[#19347D]">{line}</p>
           ))}
@@ -631,14 +594,15 @@ function PolishStep({
   const saved = polishServiceOf(answers, screen.answerKey);
   const [rows, setRows] = useState<Record<string, { result?: "good" | "suggestions"; suggestion?: string }>>(saved?.rows ?? {});
   const [page, setPage] = useState(0);
-  const groups = [POLISH_QUESTIONS.slice(0, 3), POLISH_QUESTIONS.slice(3)];
+  const questions = screen.polishQuestions ?? [];
+  const groups = [questions.slice(0, 3), questions.slice(3)];
   const setResult = (id: string, result: "good" | "suggestions") => setRows((prev) => ({ ...prev, [id]: { ...prev[id], result, suggestion: result === "good" ? undefined : prev[id]?.suggestion } }));
   const pageReady = groups[page]!.every((q) => rows[q.id]?.result);
-  const allReady = POLISH_QUESTIONS.every((q) => rows[q.id]?.result);
+  const allReady = questions.every((q) => rows[q.id]?.result);
   const finish = () => {
     if (!allReady) return;
     const next: PolishServiceAnswer["rows"] = {};
-    for (const q of POLISH_QUESTIONS) {
+    for (const q of questions) {
       const row = rows[q.id]!;
       next[q.id] = row.result === "suggestions" ? { result: "suggestions", ...(row.suggestion?.trim() ? { suggestion: row.suggestion.trim() } : {}) } : { result: "good" };
     }
@@ -655,22 +619,22 @@ function PolishStep({
       onForward={() => pageReady && setPage(1)}
       footer={<ContinueButton disabled={!pageReady} onClick={page === 0 ? () => setPage(1) : finish} />}
     >
-      <Eyebrow>Test &amp; Tweak</Eyebrow>
-      <Aqua>Polish your service</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">What feedback did your trial customer give you?</h3>
-      <p className="mt-2 text-[14px] leading-snug text-[#4B5563]">{POLISH_LEAD}</p>
+      <Eyebrow>{screen.eyebrow}</Eyebrow>
+      <Aqua>{screen.title}</Aqua>
+      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">{screen.question}</h3>
+      <p className={`mt-2 ${LESSON_HINT}`}>{screen.hint}</p>
       <ol className="mt-2">
         {groups[page]!.map((q, i) => (
           <li key={q.id} className="mt-3">
             <p className="text-[15px] font-semibold text-[#19347D]">{page === 0 ? i + 1 : i + 4}. {q.prompt}</p>
             <p className="mt-1 text-[15px] text-[#19347D]">
-              <InlineMenu label={q.prompt} value={rows[q.id]?.result} options={POLISH_RESULTS} onPick={(id) => setResult(q.id, id as "good" | "suggestions")} />
+              <InlineMenu label={q.prompt} value={rows[q.id]?.result} options={screen.polishResults ?? []} onPick={(id) => setResult(q.id, id as "good" | "suggestions")} />
             </p>
             {rows[q.id]?.result === "suggestions" && (
-              <label className="mt-2 block text-[13px] text-[#6B7280]">
-                {SUGGESTION_PROMPT}
+              <label className={`mt-2 block ${LESSON_HINT}`}>
+                {screen.polishSuggestion}
                 <textarea
-                  aria-label={SUGGESTION_PROMPT}
+                  aria-label={screen.polishSuggestion}
                   value={rows[q.id]?.suggestion ?? ""}
                   onChange={(event) => setRows((prev) => ({ ...prev, [q.id]: { ...prev[q.id], result: "suggestions", suggestion: event.target.value } }))}
                   className="mt-1 w-full border-b border-dashed border-[#E4D3B4] bg-transparent py-1 text-[15px] text-[#19347D] outline-none"
@@ -740,8 +704,10 @@ export function ReadyWrap({
   if (page === "b") {
     const before = deliver ? BEFORE_HOW.find((row) => row.id === deliver.beforeHow)?.sentence : undefined;
     const after = deliver ? AFTER_HOW.find((row) => row.id === deliver.afterHow)?.sentence : undefined;
-    const payment = wrap ? PAYMENT_HOW.find((row) => row.id === wrap.paymentHow)?.sentence : undefined;
-    const feedback = wrap ? FEEDBACK_HOW.find((row) => row.id === wrap.feedbackHow)?.sentence : undefined;
+    const paymentLabels = (wrap?.paymentHow ?? []).map((id) => PAYMENT_HOW.find((row) => row.id === id)?.label ?? id);
+    const feedbackLabels = (wrap?.feedbackHow ?? []).map((id) => FEEDBACK_HOW.find((row) => row.id === id)?.label ?? id);
+    const payment = paymentLabels.length ? paymentLabels.join(" or ") : undefined;
+    const feedback = feedbackLabels.length ? feedbackLabels.join(" or ") : undefined;
     return (
       <div data-ready-wrap="b">
         <div className="mt-3">
@@ -769,7 +735,7 @@ export function ReadyWrap({
             <>
               <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Taking payment</p>
               <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-                I will collect payment by <ChosenValue>{PAYMENT_HOW.find((row) => row.id === wrap?.paymentHow)?.label ?? payment}</ChosenValue>.
+                I will collect payment by <ChosenValue>{payment}</ChosenValue>.
               </p>
             </>
           )}
@@ -777,7 +743,7 @@ export function ReadyWrap({
             <>
               <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Getting feedback</p>
               <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-                I will ask the owner for feedback or a short review by <ChosenValue>{FEEDBACK_HOW.find((row) => row.id === wrap?.feedbackHow)?.label ?? feedback}</ChosenValue>.
+                I will ask the owner for feedback or a short review by <ChosenValue>{feedback}</ChosenValue>.
               </p>
             </>
           )}

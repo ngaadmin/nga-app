@@ -9,10 +9,8 @@ import type { LaunchpadFundingScreen } from "@/lib/launchpad/content/types";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { formatMoney } from "@/lib/dashboard/currency/format-money";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
-import { BTN_PRIMARY, TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
-
-const OFF =
-  "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
+import { LessonContinue } from "@/components/launchpad/venture/screens/screen-ui";
+import { TickBadge } from "@/components/launchpad/venture-test/venture-test-ui";
 
 function unitWord(unit: FundingRepayUnit, count: number): string {
   if (unit === "months") return count === 1 ? "month" : "months";
@@ -99,12 +97,12 @@ export function FundingFlow({
         <button type="button" aria-label="Back" onClick={() => (step === "choose" ? onExit() : setStep("choose"))} className="flex size-11 items-center justify-center text-[#19347D]">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
         </button>
-        <h1 className="font-heading text-[22px] font-bold leading-tight text-[#19347D]">Get the money you need to start</h1>
+        <h1 className="font-heading text-[21px] font-bold leading-7 text-[#19347D]">Get the money you need to start</h1>
       </div>
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-4">
         {step === "choose" && (
           <>
-            <p className="text-[14.5px] leading-snug text-[#6B7280]">{screen.copy.context}</p>
+            <p className="font-sans text-[16px] font-normal leading-[23px] text-[#4A5568]">{screen.copy.context}</p>
             {known ? (
               <div className="mt-4 rounded-2xl bg-[#F4FBFE] px-4 py-5 text-center" data-startup-total="">
                 <p className="text-[14px] text-[#6B7280]">Your start-up cost is</p>
@@ -215,14 +213,12 @@ export function FundingFlow({
           </>
         )}
       </div>
-      <div className="mx-5 flex justify-center pb-4">
+      <div className="px-5 pb-[18px]">
         {step === "choose" ? (
-          <button type="button" disabled={!known || !source} className={known && source ? BTN_PRIMARY : OFF} onClick={() => source && setStep(source === "own_cash" ? "confirm" : "payback")}>Next</button>
+          <LessonContinue disabled={!known || !source} onClick={() => source && setStep(source === "own_cash" ? "confirm" : "payback")}>Next</LessonContinue>
         ) : (
-          <button
-            type="button"
+          <LessonContinue
             disabled={!answer}
-            className={answer ? BTN_PRIMARY : OFF}
             onClick={() => {
               if (!answer) return;
               save(answer);
@@ -230,7 +226,7 @@ export function FundingFlow({
             }}
           >
             Done
-          </button>
+          </LessonContinue>
         )}
       </div>
     </section>

@@ -335,7 +335,16 @@ function AgreeStep({
       title={screen.title}
       onBack={goBack}
       progress={{ index: page + 1, total: pages.length || 4 }}
-      footer={<LessonContinue disabled={false} onClick={() => (last ? onFinish(answer()) : setPage((n) => n + 1))} />}
+      footer={
+        <LessonContinue
+          disabled={!ticked}
+          onClick={() => {
+            if (!ticked) return;
+            if (last) onFinish(answer());
+            else setPage((n) => n + 1);
+          }}
+        />
+      }
     >
       <div data-task-screen="agree-the-job" data-agree-page={page + 1} data-agree-section={current?.sectionIds.join(",")}>
         {current?.question ? <ScreenPrompt tone="question" flush>{current.question}</ScreenPrompt> : null}

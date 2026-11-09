@@ -11,14 +11,14 @@ import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpa
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 function WeekBar({ label, width }: { label: string; width: number }) {
   return (
     <div className="mt-2">
-      <div className="flex items-center justify-between text-[12px] text-[#6B7280]">
+      <div className={`flex items-center justify-between ${WORKBOOK_HINT}`}>
         <span>{label}</span>
       </div>
       <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#E7E1D6]" aria-hidden="true">
@@ -46,26 +46,26 @@ export function PriceSheet() {
     return (
       <div data-price-sheet="">
         <AccentLabel as="h2">My price</AccentLabel>
-        <p className="mt-2 text-[13px] leading-snug text-[#6B7280]">Each service has its own price and its own job cost.</p>
-        <p className="mt-2 text-[15px] text-[#19347D]">Price <BlankSlot /> for one <BlankSlot /></p>
+        <p className={`mt-2 ${WORKBOOK_HINT}`}>Each service has its own price and its own job cost.</p>
+        <p className={`mt-2 ${WORKBOOK_BODY}`}>Price <BlankSlot /> for one <BlankSlot /></p>
       </div>
     );
   }
   return (
     <div data-price-sheet="">
       <AccentLabel as="h2">My price</AccentLabel>
-      <p className="mt-2 text-[13px] leading-snug text-[#6B7280]">Each service has its own price and its own job cost.</p>
+      <p className={`mt-2 ${WORKBOOK_HINT}`}>Each service has its own price and its own job cost.</p>
       {price.prices.map((row) => {
         const pkg = offer?.offerings.find((item) => item.serviceId === row.serviceId)?.packages[0];
         const compared = row.serviceId === "dog-walking" || row.serviceId === competitor?.jobComparedId;
         return (
         <div key={row.serviceId} className="mt-2 border-t border-dashed border-[#E4D3B4] pt-2 leading-tight">
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-heading text-[18px] font-semibold text-[#19347D]">{nameFor(row.serviceId, labels)}</h3>
-            <span className="font-heading text-[22px] font-bold text-[#19347D]"><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
+            <h3 className="font-sans text-[16px] font-semibold leading-[26px] text-[#19347D]">{nameFor(row.serviceId, labels)}</h3>
+            <span className="font-sans text-[16px] font-semibold leading-[26px] text-[#19347D]"><ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></span>
           </div>
-          <p className="mt-1 text-[14px] text-[#19347D]">for one <ChosenValue>{pkg ? chipLabel(pkg) : "job"}</ChosenValue></p>
-          <p className="text-[14px] text-[#4B5563]">
+          <p className={`mt-1 ${WORKBOOK_BODY}`}>for one <ChosenValue>{pkg ? chipLabel(pkg) : "job"}</ChosenValue></p>
+          <p className={WORKBOOK_BODY}>
             {compared && competitor ? (
               <>
                 Others charge <ChosenValue>{formatMoney(competitor.priceLow, currency)}</ChosenValue> to <ChosenValue>{formatMoney(competitor.priceHigh, currency)}</ChosenValue>. Mine is <ChosenValue>{row.comparedToOthers ?? "about the same as"}</ChosenValue> others.
@@ -74,16 +74,16 @@ export function PriceSheet() {
               "Others range: not checked yet."
             )}
           </p>
-          <p className="mt-2 text-[14px] text-[#19347D]">Price <ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></p>
-          <p className="text-[14px] text-[#19347D]">Job cost per job <ChosenValue>{formatMoney(row.costPerJob, currency)}</ChosenValue></p>
-          <p className="text-[#19347D]">I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue></p>
-          <p className="text-[13px] text-[#6B7280]">
+          <p className={`mt-2 ${WORKBOOK_BODY}`}>Price <ChosenValue>{formatMoney(row.price, currency)}</ChosenValue></p>
+          <p className={WORKBOOK_BODY}>Job cost per job <ChosenValue>{formatMoney(row.costPerJob, currency)}</ChosenValue></p>
+          <p className={WORKBOOK_BODY}>I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue></p>
+          <p className={WORKBOOK_HINT}>
             {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
           </p>
         </div>
         );
       })}
-      <p className="mt-3 text-[16px] leading-[26px] text-[#4A5568]">Job cost comes from My costs.</p>
+      <p className={`mt-3 ${WORKBOOK_HINT}`}>Job cost comes from My costs.</p>
       <LargeScribble name="coins" />
     </div>
   );
@@ -100,10 +100,10 @@ export function JobsSheet() {
     return (
       <div data-jobs-sheet="">
         <AccentLabel as="h2">Jobs to cover my costs</AccentLabel>
-        <p className="mt-3 text-[15px] text-[#19347D]"><BlankSlot /> jobs a week · I keep <BlankSlot /></p>
-        <p className="mt-3 font-heading text-[16px] text-[#19347D]">Weekly keep <BlankSlot /></p>
-        <p className="text-[15px] text-[#19347D]">Start-up to cover <BlankSlot /></p>
-        <p className="mt-1 text-[15px] text-[#19347D]">About <BlankSlot /> weeks to cover start-up.</p>
+        <p className={`mt-3 ${WORKBOOK_BODY}`}><BlankSlot /> jobs a week · I keep <BlankSlot /></p>
+        <p className={`mt-3 ${WORKBOOK_BODY}`}>Weekly keep <BlankSlot /></p>
+        <p className={WORKBOOK_BODY}>Start-up to cover <BlankSlot /></p>
+        <p className={`mt-1 ${WORKBOOK_BODY}`}>About <BlankSlot /> weeks to cover start-up.</p>
       </div>
     );
   }
@@ -129,7 +129,7 @@ export function JobsSheet() {
       {jobs.mode === "multi" && jobs.typicalWeek ? (
         <ul className="mt-3">
           {jobs.typicalWeek.map((row) => (
-            <li key={row.serviceId} className="flex items-center justify-between gap-2 border-b border-dashed border-[#E4D3B4] py-2 text-[15px] text-[#19347D]">
+            <li key={row.serviceId} className={`flex items-center justify-between gap-2 border-b border-dashed border-[#E4D3B4] py-2 ${WORKBOOK_BODY}`}>
               <span className="flex items-center gap-2">
                 <button type="button" aria-label={`Fewer ${nameFor(row.serviceId, labels)} jobs`} className="flex size-8 items-center justify-center rounded-full border border-[#19347D] text-[#19347D]" onClick={() => changeCount(row.serviceId, -1)}>−</button>
                 <span className="w-4 text-center"><ChosenValue>{row.jobsPerWeek}</ChosenValue></span>
@@ -141,14 +141,14 @@ export function JobsSheet() {
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-[15px] text-[#19347D]">
+        <p className={`mt-3 ${WORKBOOK_BODY}`}>
           <ChosenValue>{jobs.jobsPerWeek}</ChosenValue> jobs a week · I keep <ChosenValue>{formatMoney(jobs.keptPerJob ?? 0, currency)}</ChosenValue>
         </p>
       )}
-      <p className="mt-3 font-heading text-[16px] text-[#19347D]">Weekly keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue></p>
-      <p className="text-[15px] text-[#19347D]">Start-up to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue></p>
-      <p className="mt-1 text-[15px] text-[#19347D]">About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover start-up.</p>
-      <p className="mt-1 text-[13px] text-[#6B7280]">
+      <p className={`mt-3 ${WORKBOOK_BODY}`}>Weekly keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue></p>
+      <p className={WORKBOOK_BODY}>Start-up to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue></p>
+      <p className={`mt-1 ${WORKBOOK_BODY}`}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover start-up.</p>
+      <p className={`mt-1 ${WORKBOOK_HINT}`}>
         {formatStartupMoney(jobs.startupTotal, currency)} ÷ {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week
         {jobs.weeklyKeep ? ` = ${(jobs.startupTotal / jobs.weeklyKeep).toFixed(2)}, round up to ${jobs.weeksNeeded}` : ""}.
       </p>
@@ -165,12 +165,12 @@ export function FundingSheet() {
   const funding = fundingOf(ctx?.answers, FUNDING_ANSWER_KEY);
   const templates = useTemplateBlanks();
   if (!funding) {
-    if (!templates) return <p className="text-[14px] text-[#9CA3AF]">Not answered yet</p>;
+    if (!templates) return <p className={WORKBOOK_HINT}>Not answered yet</p>;
     return (
       <div data-funding-wrap="">
         <AccentLabel as="h2">Planning</AccentLabel>
-        <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll cover my start-up costs</h3>
-        <p className="mt-2 text-[15px] leading-snug text-[#19347D]">
+        <h3 className={`mt-3 ${WORKBOOK_SUB}`}>How I&apos;ll cover my start-up costs</h3>
+        <p className={`mt-2 ${WORKBOOK_BODY}`}>
           I&apos;ll cover my start-up cost of <BlankSlot /> from my own cash or savings.
         </p>
       </div>
@@ -183,13 +183,13 @@ export function FundingSheet() {
   return (
     <div data-funding-wrap="">
       <AccentLabel as="h2">Planning</AccentLabel>
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll cover my start-up costs</h3>
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>How I&apos;ll cover my start-up costs</h3>
       {funding.fundingSource === "own_cash" ? (
-        <p className="mt-2 text-[15px] leading-snug text-[#19347D]">
+        <p className={`mt-2 ${WORKBOOK_BODY}`}>
           I&apos;ll cover my start-up cost of <ChosenValue>{total}</ChosenValue> from my own cash or savings.
         </p>
       ) : (
-        <ul className="mt-2 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
+        <ul className={`mt-2 list-disc pl-5 ${WORKBOOK_BODY}`}>
           <li>I&apos;ll borrow <ChosenValue>{total}</ChosenValue></li>
           <li>
             {funding.fundingRepayMode === "fixed_over_time" ? (
@@ -205,7 +205,7 @@ export function FundingSheet() {
         </ul>
       )}
       {funding.fundingSource === "borrow" && (
-        <p className="mt-2 text-[13px] text-[#6B7280]">Real loans usually add interest; we&apos;ve left that out here to keep it simple.</p>
+        <p className={`mt-2 ${WORKBOOK_HINT}`}>Real loans usually add interest; we&apos;ve left that out here to keep it simple.</p>
       )}
       <LargeScribble name="wallet" />
     </div>
@@ -221,7 +221,7 @@ export function PricingSummarySheet() {
   return (
     <div data-pricing-summary="">
       <AccentLabel as="h2">Pricing</AccentLabel>
-      <p className="mt-3 text-[15px] leading-snug text-[#19347D]">
+      <p className={`mt-3 ${WORKBOOK_BODY}`}>
         {addons.length ? (
           <>
             They often include <ChosenValue>{addons.join(" and ")}</ChosenValue>.
@@ -230,17 +230,15 @@ export function PricingSummarySheet() {
           "What others include is not checked yet."
         )}
       </p>
-      <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{idea ? <>I could do differently: <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
+      <p className={`mt-2 ${WORKBOOK_BODY}`}>{idea ? <>I could do differently: <ChosenValue>{idea}</ChosenValue>.</> : ""}</p>
       <LargeScribble name="coins" />
     </div>
   );
 }
 
 export function PlanningWrapSheet({ sheet }: { sheet: "plan-1" | "plan-2" | "plan-3" | "plan-4" }) {
-  const part = sheet === "plan-1" ? 1 : sheet === "plan-2" ? 2 : sheet === "plan-3" ? 3 : 4;
   return (
     <div data-planning-wrap={sheet}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Planning · Level 2 · {part} of 4</p>
       {sheet === "plan-1" && <PlanSelling />}
       {sheet === "plan-2" && <PlanCosts />}
       {sheet === "plan-3" && <PlanOthers />}
@@ -257,9 +255,9 @@ function PlanSelling() {
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   return (
     <div>
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">What I am selling</h3>
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>What I am selling</h3>
       {offer?.offerings.map((row) => (
-        <p key={row.serviceId} className="mt-1 text-[15px] leading-snug text-[#19347D]">
+        <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
           {nameFor(row.serviceId, labels)}: <ChosenValue>{row.packages.map(chipLabel).join(", ")}</ChosenValue>
           {row.addons.length ? (
             <>
@@ -270,8 +268,8 @@ function PlanSelling() {
           .
         </p>
       ))}
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">When and who might want it</h3>
-      <p className="mt-1 text-[15px] text-[#19347D]">
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>When and who might want it</h3>
+      <p className={`mt-1 ${WORKBOOK_BODY}`}>
         {offer?.availability.length ? (
           <ChosenValue>{offer.availability.every(isAvailabilitySlot) ? availabilityPhrase(offer.availability) : offer.availability.map(chipLabel).join(", ")}</ChosenValue>
         ) : templates ? (
@@ -282,7 +280,7 @@ function PlanSelling() {
         .
       </p>
       {customer && (
-        <p className="mt-1 text-[15px] text-[#19347D]">
+        <p className={`mt-1 ${WORKBOOK_BODY}`}>
           I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They were interested in <ChosenValue>{customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)).map(chipLabel).join(", ")}</ChosenValue>.
           {customer.times && customer.times.length > 0 ? <> They wanted walks <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
         </p>
@@ -300,15 +298,15 @@ function PlanCosts() {
   if (!view) return null;
   return (
     <div>
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">My costs</h3>
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>My costs</h3>
       {[...view.marketing, ...view.starterGear].map((line) => (
-        <p key={line.id} className="flex justify-between border-b border-dashed border-[#E4D3B4] py-1 text-[14px] text-[#19347D]">
+        <p key={line.id} className={`flex justify-between border-b border-dashed border-[#E4D3B4] py-1 ${WORKBOOK_BODY}`}>
           <span>{line.label}</span>
           <ChosenValue>{formatStartupMoney(line.amount, currency)}</ChosenValue>
         </p>
       ))}
-      <p className="mt-2 text-[#19347D]">Start-up total <ChosenValue>{formatStartupMoney(view.startupTotal, currency)}</ChosenValue></p>
-      <p className="mt-2 text-[14px] text-[#19347D]">
+      <p className={`mt-2 ${WORKBOOK_BODY}`}>Start-up total <ChosenValue>{formatStartupMoney(view.startupTotal, currency)}</ChosenValue></p>
+      <p className={`mt-2 ${WORKBOOK_BODY}`}>
         Ongoing cost per job: {view.ongoing.map((row, index) => (
           <span key={row.serviceId}>
             {index > 0 ? ", " : ""}
@@ -330,8 +328,8 @@ function PlanOthers() {
   const addons = competitor?.addons.map((id) => chipLabel(id).toLowerCase()).join(" and ") ?? "";
   return (
     <div>
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">What others charge</h3>
-      <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>What others charge</h3>
+      <p className={`mt-1 ${WORKBOOK_BODY}`}>
         {competitor
           ? (
             <>
@@ -341,20 +339,20 @@ function PlanOthers() {
           : "Not checked yet."}
       </p>
       {competitor && (
-        <p className="mt-1 text-[15px] text-[#19347D]">
+        <p className={`mt-1 ${WORKBOOK_BODY}`}>
           I could do differently: <ChosenValue>{chipLabel(competitor.doDifferently).toLowerCase()}</ChosenValue>.
         </p>
       )}
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">My price</h3>
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>My price</h3>
       {price?.prices.map((row) => (
-        <p key={row.serviceId} className="mt-1 text-[15px] leading-snug text-[#19347D]">
+        <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
           {nameFor(row.serviceId, labels)} · I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue>
-          <span className="block text-[13px] text-[#6B7280]">
+          <span className={`block ${WORKBOOK_HINT}`}>
             {formatMoney(row.price, currency)} − {formatMoney(row.costPerJob, currency)} = {formatMoney(row.keptPerJob, currency)}
           </span>
         </p>
       ))}
-      <p className="mt-2 text-[16px] leading-[26px] text-[#4A5568]">Each line: price minus job cost equals what I keep. Costs and prices stay read-only here.</p>
+      <p className={`mt-2 ${WORKBOOK_HINT}`}>Each line: price minus job cost equals what I keep. Costs and prices stay read-only here.</p>
     </div>
   );
 }
@@ -365,22 +363,22 @@ function PlanWeek() {
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const currency = readCurrencyPreference();
   const templates = useTemplateBlanks();
-  if (!jobs) return templates ? <p className="mt-2 text-[15px] text-[#19347D]">A typical week <BlankSlot /></p> : null;
+  if (!jobs) return templates ? <p className={`mt-2 ${WORKBOOK_BODY}`}>A typical week <BlankSlot /></p> : null;
   const mix = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`).join(" + ") ?? "";
   const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatMoney(row.keptPerJob, currency)}`).join(" + ");
   return (
     <div>
-      <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">Jobs to cover my costs</h3>
-      <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Typical week</p>
-      <p className="mt-1 text-[15px] text-[#19347D]"><ChosenValue>{mix}</ChosenValue> a week.</p>
-      <p className="text-[15px] text-[#19347D]">Keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> a week.</p>
-      <p className="text-[15px] text-[#19347D]">About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
+      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>Jobs to cover my costs</h3>
+      <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Typical week</p>
+      <p className={`mt-1 ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> a week.</p>
+      <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> a week.</p>
+      <p className={WORKBOOK_BODY}>About <ChosenValue>{jobs.weeksNeeded}</ChosenValue> weeks to cover <ChosenValue>{formatStartupMoney(jobs.startupTotal, currency)}</ChosenValue> start-up.</p>
       {math && (
-        <p className="mt-1 text-[13px] text-[#6B7280]">
+        <p className={`mt-1 ${WORKBOOK_HINT}`}>
           {math} = {formatMoney(jobs.weeklyKeep ?? 0, currency)} a week.
         </p>
       )}
-      <p className="mt-2 text-[13px] text-[#6B7280]">Your typical week stays read-only here.</p>
+      <p className={`mt-2 ${WORKBOOK_HINT}`}>Your typical week stays read-only here.</p>
       <div className="mt-4 flex justify-end">
         <LargeScribble name="jar" />
       </div>

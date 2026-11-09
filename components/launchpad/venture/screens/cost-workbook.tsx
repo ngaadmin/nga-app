@@ -8,7 +8,7 @@ import {
 } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { SupportedCurrencyCode } from "@/lib/dashboard/currency/currencies";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, HandRule, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 function Pencil() {
@@ -22,7 +22,7 @@ function Pencil() {
 
 function Row({ label, amount }: { label: string; amount: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 text-[13px] leading-tight text-[#19347D]">
+    <div className="flex items-baseline justify-between gap-3 font-sans text-[16px] font-normal leading-[26px] text-[#19347D]">
       <span className="min-w-0 flex-1">{label}</span>
       <ChosenValue>{amount}</ChosenValue>
     </div>
@@ -60,7 +60,7 @@ export function CostWorkbookBody({
   const job = (amount: number) => formatOngoingMoney(amount, currency);
   const startupHead = (
     <div className="mb-1.5 flex items-center justify-between gap-2">
-      <h3 className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Start-up costs</h3>
+      <h3 className="font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">Start-up costs</h3>
       {editable && onEditStartup && (
         <button type="button" aria-label="Edit start-up costs" onClick={onEditStartup} className="flex size-11 items-center justify-center rounded-lg" data-pencil="">
           <Pencil />
@@ -74,7 +74,7 @@ export function CostWorkbookBody({
       {part !== "rest" && (
         <div className="mt-3.5">
           {startupHead}
-          <p className="mb-1 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">{marketingLabel}</p>
+          <p className="mb-1 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">{marketingLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.marketing.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
@@ -90,21 +90,21 @@ export function CostWorkbookBody({
       {part !== "startup" && (
         <>
           {part === "rest" && startupHead}
-          <p className="mb-1 mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">{starterLabel}</p>
+          <p className="mb-1 mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">{starterLabel}</p>
           <div className="flex flex-col gap-0.5">
             {view.starterGear.map((line) => (
               <Row key={line.id} label={line.label} amount={money(line.amount)} />
             ))}
           </div>
-          <div className="mt-2.5 flex items-baseline justify-between font-heading text-[15px] font-bold text-[#19347D]">
+          <div className={`mt-2.5 flex items-baseline justify-between font-semibold ${WORKBOOK_BODY}`}>
             <span>Start-up total</span>
             <span className="tabular-nums" data-startup-total=""><ChosenValue>{money(view.startupTotal)}</ChosenValue></span>
           </div>
           <HandRule />
-          <h3 className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Ongoing · cost per job</h3>
+          <h3 className="mb-1.5 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Ongoing · cost per job</h3>
           <div className="flex flex-col gap-1">
             {view.ongoing.map((service) => (
-              <div key={service.serviceId} className="flex items-center justify-between gap-2 text-[14px] text-[#19347D]">
+              <div key={service.serviceId} className={`flex items-center justify-between gap-2 ${WORKBOOK_BODY}`}>
                 <span className="flex min-w-0 flex-1 items-center gap-1">
                   {editable && onEditService && (
                     <button type="button" aria-label={`Edit ${service.label}`} onClick={() => onEditService(service.serviceId)} className="flex size-11 flex-none items-center justify-center rounded-lg" data-pencil="">
@@ -113,12 +113,12 @@ export function CostWorkbookBody({
                   )}
                   <span className="min-w-0">{service.label}</span>
                 </span>
-                <span className="font-heading text-[14px] tabular-nums"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
+                <span className="font-sans text-[16px] font-semibold leading-[26px] tabular-nums text-[#19347D]"><ChosenValue>{job(service.perJob)}</ChosenValue></span>
               </div>
             ))}
           </div>
           <HandRule />
-          <p className="text-[13.5px] leading-snug text-[#6B7280]">{hint}</p>
+          <p className={WORKBOOK_HINT}>{hint}</p>
         </>
       )}
     </div>

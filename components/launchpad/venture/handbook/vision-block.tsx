@@ -77,7 +77,7 @@ export function VisionBlock({
           </p>
         </div>
       ) : (
-        <p className="mt-2 text-[15px] italic text-[#9AA3B5]" data-vision-placeholder="">
+        <p className="mt-2 font-sans text-[16px] italic leading-[26px] text-[#4A5568]" data-vision-placeholder="">
           {spec.placeholder}
         </p>
       )}

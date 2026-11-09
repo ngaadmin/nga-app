@@ -9,6 +9,13 @@ import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/i
  */
 export const PAPER_ACCENT = "#0CC1E0";
 
+/** Workbook body: Inter 400, 16px, 26px line height, navy. Page 1 vision stays denser. */
+export const WORKBOOK_BODY = "font-sans text-[16px] font-normal leading-[26px] text-[#19347D]";
+/** Workbook subhead: Inter 600, 16px, 24px line height, aqua. */
+export const WORKBOOK_SUB = "font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]";
+/** Workbook hint: Inter 400, 16px, 26px line height, slate. */
+export const WORKBOOK_HINT = "font-sans text-[16px] font-normal leading-[26px] text-[#4A5568]";
+
 /** r4 warm paper grain (a faint SVG noise tile over #FDFBF7). */
 export const PAPER_NOISE =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .28  0 0 0 .07 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>";

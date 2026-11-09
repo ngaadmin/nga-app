@@ -16,8 +16,6 @@ import {
   POLISH_QUESTIONS,
   PRACTICE_WHEN,
   PRACTICE_WHO,
-  agreeTitles,
-  feedbackWrap,
   findReady,
   practiceLines,
   type PolishRow,
@@ -36,10 +34,6 @@ import {
   type PracticeRunAnswer,
   type WrapJobAnswer,
 } from "@/lib/launchpad/content/answers";
-import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { ART, ContinueButton, Sticker, WorkbookFrame } from "@/components/launchpad/venture/handbook/workbook-frame";
-import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
-import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { Chip, ReadTick } from "@/components/launchpad/venture/screens/lesson-controls";
 import { FieldControl } from "@/components/launchpad/venture/screens/field-control";
 import { LESSON_BODY, LESSON_HINT, LESSON_PICK, LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
@@ -682,161 +676,5 @@ function PolishStep({
         <span className="sr-only">{businessName}{services.length}</span>
       </div>
     </LessonSurface>
-  );
-}
-
-/** Three workbook pages for the empty row 34, built from the six saved sections. */
-export function ReadyWrap({
-  page,
-  answers,
-  serviceLabel,
-}: {
-  page: "a" | "b" | "c";
-  answers: LaunchpadAnswers | undefined;
-  serviceLabel: string;
-}) {
-  const find = findCustomersOf(answers, "find_customers");
-  const agree = agreeJobOf(answers, "agree_the_job");
-  const deliver = deliverJobOf(answers, "deliver_the_job");
-  const wrap = wrapJobOf(answers, "wrap_up");
-  const practice = practiceRunOf(answers, "practice_run");
-  const polish = polishServiceOf(answers, "polish_service");
-  const templates = useTemplateBlanks();
-  if (page === "a") {
-    const titles = agreeTitles(AGREE_ITEMS.filter((item) => agree?.understood[item.id]).map((item) => item.id));
-    return (
-      <div data-ready-wrap="a">
-        <Aqua>Getting Ready</Aqua>
-        <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll find customers</h3>
-        {find && find.channels.length > 0 ? (
-          <ul className="mt-2 list-none p-0 text-[15px] leading-snug text-[#19347D]">
-            {find.channels.map((id) => (
-              <li key={id} className="relative py-1 pl-4 before:absolute before:left-0 before:top-[11px] before:size-1.5 before:rounded-full before:bg-[#3FB7DA] before:content-['']">
-                <ChosenValue>{CHANNELS.find((row) => row.id === id)?.label}</ChosenValue>
-              </li>
-            ))}
-          </ul>
-        ) : templates ? (
-          <p className="mt-1 text-[15px] leading-snug text-[#19347D]"><BlankSlot /></p>
-        ) : (
-          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">Not answered yet</p>
-        )}
-        {find?.channelsExtra?.trim() ? (
-          <p className="mt-2 text-[15px] leading-snug text-[#19347D]">
-            Also: <ChosenValue>{find.channelsExtra.trim()}</ChosenValue>
-          </p>
-        ) : null}
-        <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">What I&apos;ll agree before a job</h3>
-        <ul className="mt-1 list-disc pl-5 text-[15px] leading-snug text-[#19347D]">
-          {titles.length > 0 ? titles.map((title) => (
-            <li key={title}>{title}</li>
-          )) : templates ? (
-            <li><BlankSlot /></li>
-          ) : null}
-        </ul>
-        <div className="mt-4 flex items-end justify-end gap-2">
-          <FlatSticker kind="paw" doodle />
-          <Sticker src={ART.kit} alt="" />
-        </div>
-      </div>
-    );
-  }
-  if (page === "b") {
-    const before = deliver ? BEFORE_HOW.find((row) => row.id === deliver.beforeHow)?.sentence : undefined;
-    const after = deliver ? AFTER_HOW.find((row) => row.id === deliver.afterHow)?.sentence : undefined;
-    const paymentLabels = (wrap?.paymentHow ?? []).map((id) => PAYMENT_HOW.find((row) => row.id === id)?.label ?? id);
-    const feedbackLabels = (wrap?.feedbackHow ?? []).map((id) => FEEDBACK_HOW.find((row) => row.id === id)?.label ?? id);
-    const payment = paymentLabels.length ? paymentLabels.join(" or ") : undefined;
-    const feedback = feedbackLabels.length ? feedbackLabels.join(" or ") : undefined;
-    return (
-      <div data-ready-wrap="b">
-        <div className="mt-3">
-          <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll deliver the job</h3>
-          {(before || templates) && (
-            <>
-              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">One day before the job</p>
-              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-                I will contact the owner to confirm the agreed details of the job by {before ? <ChosenValue>{BEFORE_HOW.find((row) => row.id === deliver?.beforeHow)?.label ?? before}</ChosenValue> : <BlankSlot />}.
-              </p>
-            </>
-          )}
-          {(after || templates) && (
-            <>
-              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Straight after I&apos;ve delivered the service</p>
-              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-                I will show proof by sending {after ? <ChosenValue>{AFTER_HOW.find((row) => row.id === deliver?.afterHow)?.label ?? after}</ChosenValue> : <BlankSlot />}.
-              </p>
-            </>
-          )}
-        </div>
-        <div className="mt-4">
-          <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll wrap up a job</h3>
-          {(payment || templates) && (
-            <>
-              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Taking payment</p>
-              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-                I will collect payment by {payment ? <ChosenValue>{payment}</ChosenValue> : <BlankSlot />}.
-              </p>
-            </>
-          )}
-          {(feedback || templates) && (
-            <>
-              <p className="mt-3 font-heading text-[15px] font-semibold text-[#3FB7DA]">Getting feedback</p>
-              <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-                I will ask the owner for feedback or a short review by {feedback ? <ChosenValue>{feedback}</ChosenValue> : <BlankSlot />}.
-              </p>
-            </>
-          )}
-        </div>
-        <div className="mt-6 flex items-end justify-between px-4">
-          <FlatSticker kind="star" doodle />
-          <FlatSticker kind="sparkle" doodle />
-          <FlatSticker kind="heart" doodle />
-        </div>
-      </div>
-    );
-  }
-  const whoLabel = practice ? (PRACTICE_WHO.find((row) => row.id === practice.who)?.label ?? practice.who) : "";
-  const whenLabel = practice ? (PRACTICE_WHEN.find((row) => row.id === practice.when)?.label ?? practice.when) : "";
-  const serviceWord = serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1);
-  const feedback = polish
-    ? feedbackWrap(
-        POLISH_QUESTIONS.map((q): PolishRow => ({
-          id: q.id,
-          result: polish.rows[q.id]?.result ?? "good",
-          suggestion: polish.rows[q.id]?.suggestion,
-        })),
-      )
-    : null;
-  return (
-    <div data-ready-wrap="c">
-      <h3 className="font-heading text-[16px] font-semibold text-[#3FB7DA]">Your practice run</h3>
-      {(practice || templates) && (
-        <>
-          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-            I will do a practice run for {practice ? <ChosenValue>{whoLabel}</ChosenValue> : <BlankSlot />}.
-          </p>
-          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-            I will do the following service for them {practice ? <ChosenValue>{serviceWord}</ChosenValue> : <BlankSlot />}.
-          </p>
-          <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-            I will do it {practice ? <ChosenValue>{whenLabel}</ChosenValue> : <BlankSlot />}.
-          </p>
-        </>
-      )}
-      <h3 className="mt-4 font-heading text-[16px] font-semibold text-[#3FB7DA]">Feedback from my trial run</h3>
-      {feedback?.notes.map((note) => (
-        <p key={note.question} className="mt-1 text-[15px] leading-snug text-[#19347D]">
-          {note.question} <ChosenValue>{note.note}</ChosenValue>
-        </p>
-      ))}
-      {feedback && <p className="mt-2 text-[15px] leading-snug text-[#19347D]">{feedback.other}</p>}
-      <div className="mt-4 flex items-end justify-between gap-2">
-        <FlatSticker kind="rosette" />
-        <FlatSticker kind="bone" doodle />
-        <FlatSticker kind="star" doodle />
-        <img src={ART.pennyMaster} alt="" width={46} height={46} className="h-[46px] w-auto" />
-      </div>
-    </div>
   );
 }

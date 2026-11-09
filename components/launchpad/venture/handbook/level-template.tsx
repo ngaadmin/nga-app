@@ -7,7 +7,7 @@ import { selectionLabels, sourceLinesOf, summaryCatalog, type SummaryCatalog } f
 import type { LaunchpadSummarySection, LaunchpadSummarySource } from "@/lib/launchpad/content/types";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, HandRule } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, HandRule, WORKBOOK_BODY } from "@/components/launchpad/venture/handbook/paper-art";
 import { BlankSlot } from "@/components/launchpad/venture/handbook/template-blanks";
 
 const lowerFirst = (value: string) => (value ? value.charAt(0).toLowerCase() + value.slice(1) : value);
@@ -74,7 +74,7 @@ export function LevelTemplateSections({ sections }: { sections: readonly Launchp
         <div key={section.id} data-handbook-section={section.id} data-template-section="">
           <HandRule />
           <AccentLabel>{section.label}</AccentLabel>
-          <div className="mt-3 flex flex-col gap-2 text-[15px] leading-snug text-[#19347D]">
+          <div className={`mt-3 flex flex-col gap-2 ${WORKBOOK_BODY}`}>
             {section.sources.length === 0 ? (
               <p>
                 <BlankSlot />

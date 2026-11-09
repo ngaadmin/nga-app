@@ -289,7 +289,7 @@ describe("<Handbook>", () => {
     const name = dialog.querySelector<HTMLElement>("[data-cover-name] [data-business-name]")!;
     expect(mark.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // 17px, or the chosen font's readability floor (Fredoka 19px), always under the 80px logo.
-    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(19);
+    expect(parseFloat(name.style.fontSize)).toBe(21);
     const vision = dialog.querySelector("[data-vision]")!;
     expect(name.compareDocumentPosition(vision) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(dialog).getByRole("heading", { name: "Our vision" })).toBeTruthy();

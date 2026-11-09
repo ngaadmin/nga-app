@@ -7,14 +7,14 @@ import { availabilityPhrase, catalogFor, chipLabel, isAvailabilitySlot, WHEN_OPT
 import { CUSTOMER_ANSWER_KEY, OFFER_ANSWER_KEY } from "@/lib/launchpad/content/planning/screens";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
 function RuledPick({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-pressed={on} onClick={onClick} className="flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-1.5 text-left text-[15px] text-[#19347D]">
+    <button type="button" aria-pressed={on} onClick={onClick} className={`flex w-full items-center gap-2 border-b border-dashed border-[#E4D3B4] py-1.5 text-left ${WORKBOOK_BODY}`}>
       <span className={`flex size-5 flex-none items-center justify-center rounded-[4px] ${on ? "bg-[#FFA503]" : "border-2 border-[#D1D5DB] bg-white"}`}>
         {on ? (
           <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" strokeWidth="3">
@@ -51,14 +51,14 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
   const [also, setAlso] = useState(offer?.availabilityExtra ?? "");
   const templates = useTemplateBlanks();
   if (!offer) {
-    if (!templates) return <p className="text-[14px] text-[#9CA3AF]">Not answered yet</p>;
+    if (!templates) return <p className={WORKBOOK_HINT}>Not answered yet</p>;
     return (
       <div data-module2-handbook="product">
         <AccentLabel as="h2">The product and its buyers</AccentLabel>
-        <h3 className="mb-2 mt-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">What I am selling</h3>
-        <p className="text-[15px] text-[#19347D]"><BlankSlot /></p>
-        <h3 className="mb-2 mt-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">When and who might want it</h3>
-        <p className="text-[15px] text-[#19347D]"><BlankSlot /></p>
+        <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>What I am selling</h3>
+        <p className={WORKBOOK_BODY}><BlankSlot /></p>
+        <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>When and who might want it</h3>
+        <p className={WORKBOOK_BODY}><BlankSlot /></p>
       </div>
     );
   }
@@ -69,17 +69,17 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
   return (
     <div data-module2-handbook="product">
       <AccentLabel as="h2">The product and its buyers</AccentLabel>
-      <h3 className="mb-2 mt-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">What I am selling</h3>
+      <h3 className={`mb-2 mt-3 ${WORKBOOK_SUB}`}>What I am selling</h3>
       {offer.offerings.map((row) => {
         const catalog = catalogFor(row.serviceId);
         const label = services.find((service) => service.id === row.serviceId)?.label ?? row.serviceId;
         const open = editing === row.serviceId;
         return (
           <div key={row.serviceId} className="mb-3">
-            <button type="button" className="border-b-2 border-[#3FB7DA] font-heading text-[15px] font-bold text-[#19347D]" disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
+            <button type="button" className="font-sans text-[16px] font-semibold leading-6 text-[#19347D]" disabled={!editable} onClick={() => editable && setEditing(open ? null : row.serviceId)}>
               {label === "dog walking" ? "Dog walking" : label === "dog training" ? "Dog Training" : label === "grooming" ? "Grooming" : label}
             </button>
-            <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
+            <p className={`mt-1 ${WORKBOOK_BODY}`}>
               <ChosenValue>{joinLabels(row.packages)}</ChosenValue>
               {row.addons.length > 0 ? (
                 <>
@@ -91,32 +91,32 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
             </p>
             {open && catalog && (
               <div className="mt-2" data-inline-editor={row.serviceId}>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Packages</p>
+                <p className="font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Packages</p>
                 {catalog.packages.map((item) => (
                   <RuledPick key={item.id} label={item.label} on={row.packages.includes(item.id)} onClick={() => {
                     const packages = row.packages.includes(item.id) ? row.packages.filter((id) => id !== item.id) : [...row.packages, item.id];
                     ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, packages } : entry) });
                   }} />
                 ))}
-                <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#9AA3B5]">Extras</p>
+                <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Extras</p>
                 {catalog.extras.map((item) => (
                   <RuledPick key={item.id} label={item.label} on={row.addons.includes(item.id)} onClick={() => {
                     const addons = row.addons.includes(item.id) ? row.addons.filter((id) => id !== item.id) : [...row.addons, item.id];
                     ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, offerings: offer.offerings.map((entry) => entry.serviceId === row.serviceId ? { ...entry, addons } : entry) });
                   }} />
                 ))}
-                <p className="mt-2 text-[14px] font-semibold text-[#3FB7DA]">+ Add another</p>
-                <button type="button" className="mt-2 text-[15px] font-semibold text-[#3FB7DA]" onClick={() => setEditing(null)}>Done</button>
+                <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]">+ Add another</p>
+                <button type="button" className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]" onClick={() => setEditing(null)}>Done</button>
               </div>
             )}
           </div>
         );
       })}
-      <h3 className="mb-2 mt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">When</h3>
-      <p className="text-[15px] leading-snug text-[#19347D]">
+      <h3 className={`mb-2 mt-2 ${WORKBOOK_SUB}`}>When</h3>
+      <p className={`${WORKBOOK_BODY}`}>
         <ChosenValue>{joinLabels(offer.availability)}</ChosenValue>.
       </p>
-      <div className="mt-2 flex items-center gap-2 text-[14px] text-[#19347D]">
+      <div className={`mt-2 flex items-center gap-2 ${WORKBOOK_BODY}`}>
         {editable && (
           <button type="button" aria-label="Edit your own time" data-pencil="" onClick={() => setEditing(editing === "also" ? null : "also")} className="text-[#6B7280]">✎</button>
         )}
@@ -133,8 +133,8 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
       )}
       {customer && (
         <>
-          <h3 className="mb-2 mt-4 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">Who might want it</h3>
-          <p className="text-[15px] leading-snug text-[#19347D]">
+          <h3 className={`mb-2 mt-4 ${WORKBOOK_SUB}`}>Who might want it</h3>
+          <p className={`${WORKBOOK_BODY}`}>
             I asked <ChosenValue>{customer.numberAsked}</ChosenValue> people. They said <ChosenValue>{customer.yesNo === "yes" ? "Yes" : "No"}</ChosenValue>. They were interested in <ChosenValue>{joinLabels(customer.interests.filter((id) => !WHEN_OPTIONS.some((time) => time.id === id)))}</ChosenValue>.
             {customer.times && customer.times.length > 0 ? <> They wanted walks <ChosenValue>{availabilityPhrase(customer.times)}</ChosenValue>.</> : null}
           </p>

@@ -59,7 +59,7 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-cover-logo='filled'] svg")?.getAttribute("width")).toBe("48");
     expect(q("[data-cover]")!.className).toContain("items-center");
     const name = q("[data-cover-name='filled'] [data-business-name]") as HTMLElement;
-    expect(parseFloat(name.style.fontSize)).toBeLessThanOrEqual(19); // Fredoka's 19px floor
+    expect(parseFloat(name.style.fontSize)).toBe(21);
   });
 
   it("each slot fills on its own", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
 import type { LaunchpadAnswer } from "@/lib/launchpad/content/answers";
 import {
@@ -20,6 +20,7 @@ import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-p
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/venture/handbook/paper-art";
 import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
+import { placeRhythmDoodles } from "@/components/launchpad/venture/handbook/scribble-mark";
 
 const READ_ONLY_SAVE = () => {};
 
@@ -129,6 +130,10 @@ export function Handbook({
   const closeRef = useRef<HTMLButtonElement>(null);
   const swipeX = useRef<number | null>(null);
 
+  const paperRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (paperRef.current) placeRhythmDoodles(paperRef.current, page?.number ?? 1);
+  });
   useEffect(() => {
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -219,7 +224,7 @@ export function Handbook({
           >
             <SpiralBinding />
             {(page.number === 2 || page.number === 6) && <Washi page={page.number === 6 ? 6 : 2} />}
-            <div className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6" data-paper-scroll="">
+            <div ref={paperRef} className="h-full overflow-x-hidden overflow-y-auto pb-2 pl-10 pr-4 pt-6" data-paper-scroll="">
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >

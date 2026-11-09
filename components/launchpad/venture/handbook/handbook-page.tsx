@@ -18,17 +18,10 @@ import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-valu
 import { SummaryLines } from "@/components/launchpad/venture/summary-lines";
 import { BinderSection } from "@/components/launchpad/venture/summary-wrap-up";
 import { IdentityEditor } from "@/components/launchpad/venture/identity/identity-choices";
-import {
-  AccentLabel,
-  HandRule,
-  PAPER_ACCENT,
-} from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { useVisionSentence, VisionBlock, VISION_TEXT_STEPS } from "@/components/launchpad/venture/handbook/vision-block";
-import {
-  BusinessName,
-  LogoMark,
-  logoMarkLabel,
-} from "@/components/launchpad/venture/identity/business-logo";
+import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
+import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import { resolveNameColor } from "@/lib/launchpad/content/identity";
 import {
   BTN_CYAN_COMPACT,
@@ -39,7 +32,8 @@ import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storag
 import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-workbook";
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
-import { ReadyWrap } from "@/components/launchpad/venture/screens/getting-ready-flow";
+import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
+import { ScriptedSheetPage } from "@/components/launchpad/venture/handbook/scripted-sheet";
 import { LevelTemplateSections } from "@/components/launchpad/venture/handbook/level-template";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
@@ -146,31 +140,18 @@ export function HandbookSection({
       <HandRule />
       <AccentLabel doodle={doodle}>{section.label}</AccentLabel>
       {section.display === "list" ? (
-        <p className="mt-3 text-[15px] leading-snug text-[#19347D]" aria-label={section.label}>
+        <p className={`mt-3 ${WORKBOOK_BODY}`} aria-label={section.label}>
           <ChosenValue>{joinSentence(lines)}</ChosenValue>
         </p>
       ) : section.display === "text" && lines.length === 1 ? (
-        <div className="relative mt-3 pl-7" data-quote="">
-          <svg
-            className="absolute left-0 top-1 opacity-40"
-            width="22"
-            height="18"
-            viewBox="0 0 44 36"
-            fill={ACCENT}
-            aria-hidden="true"
-          >
-            <path d="M4 36V22C4 10 10 3 19 1l2 5C15 8 12 13 12 18h8v18Z" />
-            <path d="M26 36V22C26 10 32 3 41 1l2 5C37 8 34 13 34 18h8v18Z" />
-          </svg>
-          <p className="font-heading text-[19px] leading-[1.42] tracking-[-0.005em]">
-            <ChosenValue block>{lines[0]}</ChosenValue>
-          </p>
-        </div>
+        <p className={`mt-3 ${WORKBOOK_BODY}`}>
+          <ChosenValue>{lines[0]}</ChosenValue>
+        </p>
       ) : (
         <SummaryLines
           display={section.display}
           lines={lines}
-          className="mt-3 text-[15px] leading-[1.45] text-[#111827]"
+          className={`mt-3 ${WORKBOOK_BODY}`}
         />
       )}
     </div>
@@ -217,7 +198,7 @@ function WhatWeSell() {
   return (
     <div className="mt-2" data-what-we-sell="">
       <AccentLabel>What we sell</AccentLabel>
-      <p className="mt-1 text-[14px] leading-snug text-[#19347D]">
+      <p className={`mt-1 ${WORKBOOK_BODY}`}>
         <ChosenValue>{sentence}</ChosenValue>.
       </p>
     </div>
@@ -304,12 +285,9 @@ function CoverPageBody({
       )}
       {answer.name ? (
         <div data-cover-name="filled">
-          <BusinessName
-            name={answer.name}
-            font={answer.font ?? "poppins-bold"}
-            color={resolveNameColor(answer)}
-            size="cover"
-          />
+          <p data-business-name="" className={`${FREDOKA_HEADING_CLASS} text-[21px] font-bold leading-7 text-[#19347D]`} style={{ fontSize: "21px" }}>
+            {answer.name}
+          </p>
         </div>
       ) : (
         <p
@@ -458,7 +436,7 @@ function SummaryPageBody({
           <div key={section.id} data-handbook-section={section.id}>
             <HandRule />
             <AccentLabel>{section.label}</AccentLabel>
-            <p className="mt-2 text-[14px] italic text-[#9CA3AF]">
+            <p className={`mt-2 ${WORKBOOK_HINT}`}>
               Not answered yet
             </p>
           </div>
@@ -477,7 +455,7 @@ function PlaceholderPageBody({ page }: { page: HandbookPageView }) {
       <AccentLabel>What I did</AccentLabel>
       <ul className="mt-3 flex flex-col gap-2" aria-label="What I did">
         {page.bronzeTitles.map((t, i) => (
-          <li key={t} className="text-[15px] leading-snug text-[#19347D]">{partLabel(t, i)}</li>
+          <li key={t} className={WORKBOOK_BODY}>{partLabel(t, i)}</li>
         ))}
       </ul>
     </>
@@ -564,10 +542,12 @@ function ProductOrSummary({
 
 function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) {
   const ctx = useLaunchpadAnswers();
+  const templates = useTemplateBlanks();
   const practice = practiceRunOf(ctx?.answers, "practice_run");
   const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const serviceLabel = services.find((row) => row.id === practice?.service)?.label ?? "Dog walking";
-  return <ReadyWrap page={sheet === "ready-a" ? "a" : sheet === "ready-b" ? "b" : "c"} answers={ctx?.answers} serviceLabel={serviceLabel} />;
+  const page = gettingReadyWorkbookSheets(ctx?.answers, serviceLabel, templates).find((item) => item.id === sheet);
+  return page ? <ScriptedSheetPage sheet={page} /> : null;
 }
 
 function CostsPageBody({
@@ -590,8 +570,8 @@ function CostsPageBody({
     return (
       <>
         <AccentLabel as="h2">My costs</AccentLabel>
-        <p className="mt-3 text-[15px] text-[#19347D]">{screen.copy.starterLabel} <BlankSlot /></p>
-        <p className="mt-2 text-[15px] text-[#19347D]">{screen.copy.marketingLabel} <BlankSlot /></p>
+        <p className={`mt-3 ${WORKBOOK_BODY}`}>{screen.copy.starterLabel} <BlankSlot /></p>
+        <p className={`mt-2 ${WORKBOOK_BODY}`}>{screen.copy.marketingLabel} <BlankSlot /></p>
       </>
     );
   }

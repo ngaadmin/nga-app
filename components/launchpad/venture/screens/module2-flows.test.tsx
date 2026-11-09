@@ -24,15 +24,13 @@ describe("Decide what to sell chips", () => {
     expect(screen.getByText("Pick at least 1").className).toContain("text-[#4A5568]");
     expect(screen.getByText("Extras").className).toContain("text-[18px]");
     expect(screen.getByText("Optional").className).toContain("text-[16px]");
+    expect(screen.queryByRole("button", { name: "Add another service" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Add another extra" })).toBeTruthy();
     expect(screen.queryByText(/bronze|gold|silver/i)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "30-minute walk" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("heading", { name: "Dog Training" })).toBeTruthy();
-    const addService = screen.getByRole("button", { name: "Add another service" });
-    expect(addService.parentElement?.className).toContain("mt-6");
-    expect(screen.getByRole("button", { name: "Add another extra" }).className).toContain("block");
-    fireEvent.click(screen.getByRole("button", { name: "Add another service" }));
-    expect(screen.getByRole("heading", { name: "Dog Training" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Add another service" })).toBeNull();
     expect(packageServiceId("overnight-stay")).toBe("dog-sitting");
     expect(packageServiceId("30-minute-walk")).toBe("dog-walking");
   });

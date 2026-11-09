@@ -31,7 +31,6 @@ export function offerLoopScreen(): LaunchpadOfferLoopScreen {
       extrasHint: "Optional",
       addPackage: "Add another package",
       addExtra: "Add another extra",
-      addService: "Add another service",
       addTime: "Add another time",
     },
   };

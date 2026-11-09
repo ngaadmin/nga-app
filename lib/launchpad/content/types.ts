@@ -387,7 +387,6 @@ export type LaunchpadOfferLoopScreen = TaskScreenBase & {
     extrasHint: string;
     addPackage: string;
     addExtra: string;
-    addService: string;
     addTime: string;
   };
 };

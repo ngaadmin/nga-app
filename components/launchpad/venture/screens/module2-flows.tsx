@@ -19,8 +19,6 @@ import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/ans
 import { LessonTopBar } from "@/components/launchpad/venture/screens/screen-ui";
 import { BTN_PRIMARY } from "@/components/launchpad/venture-test/venture-test-ui";
 
-const LESSON_TITLE = "font-heading text-[22px] font-bold text-[#19347D]";
-
 const NEXT_OFF =
   "inline-flex h-11 min-w-[140px] items-center justify-center rounded-full bg-[#E5E7EB] px-6 font-heading text-[15px] font-bold text-[#9AA3B5]";
 
@@ -126,7 +124,7 @@ export function OfferLoopFlow({
   const anyPackage = draft.offerings.some((row) => row.packages.length > 0 || !!row.packagesExtra);
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="offer-loop" data-offer-step="workbook">
-      <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} titleClassName={LESSON_TITLE} />
+      <LessonTopBar title={onWhen ? screen.copy.whenTitle : (service?.label ?? "")} onBack={() => (step === 0 ? onExit() : setStep(step - 1))} />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto pb-3">
         <p className="text-[14px] leading-snug text-[#6B7280]">
           {onWhen ? screen.copy.whenIntro : screen.copy.serviceIntro.split("{service}").join(service?.label ?? "this service")}
@@ -285,7 +283,7 @@ export function CustomerCheckFlow({
   const offeringChips = chips.filter((item) => !screen.times.some((time) => time.id === item.id));
   return (
     <section className="flex min-h-0 flex-1 flex-col bg-white" data-task-screen="customer-check">
-      <LessonTopBar title="Know who your customers are" onBack={onExit} titleClassName={LESSON_TITLE} />
+      <LessonTopBar title="Know who your customers are" onBack={onExit} />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">
         <p className="text-[14px] leading-snug text-[#6B7280]">{screen.copy.intro}</p>
         <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
@@ -376,7 +374,6 @@ export function CompetitorFlow({
       <LessonTopBar
         title="What others charge"
         onBack={() => (step === 2 ? setStep(1) : onExit())}
-        titleClassName={LESSON_TITLE}
         trailing={<span className="text-[13px] font-semibold text-[#0A8FA8]">{step} of 2</span>}
       />
       <div className="mx-5 mt-2 min-h-0 flex-1 overflow-y-auto">

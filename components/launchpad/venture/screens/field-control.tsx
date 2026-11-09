@@ -31,6 +31,7 @@ export function FieldControl({
   disabled,
   block,
   idPrefix,
+  appearance = "box",
 }: {
   field: LaunchpadTextField;
   value: string | number | undefined;
@@ -38,6 +39,8 @@ export function FieldControl({
   disabled?: boolean;
   block?: boolean;
   idPrefix: string;
+  /** `inline` is the small Know sentence box. `underline` is a Deliver pick. */
+  appearance?: "box" | "inline" | "underline";
 }) {
   const id = `${idPrefix}-${field.name}`;
   const shown = value === undefined ? "" : String(value);
@@ -55,15 +58,23 @@ export function FieldControl({
           {shown || "—"}
         </span>
       );
-    case "choice":
+    case "choice": {
+      const inline = appearance === "inline";
+      const underline = appearance === "underline";
+      const choiceClass = underline
+        ? "mx-0.5 appearance-none border-b-[1.5px] border-[#0CC1E0] bg-transparent pr-4 font-sans text-[16px] font-semibold text-[#19347D] outline-none"
+        : inline
+          ? "mx-0.5 inline-flex h-[26px] appearance-none rounded-lg border-[1.5px] border-[#D5DAE3] bg-[#EEF1F5] px-2 align-middle font-sans text-[16px] text-[#19347D] outline-none"
+          : `${BOX} ${block || wideChoice(field) ? "my-1 h-[42px] w-full px-2" : "mx-0.5 h-[38px] max-w-full px-2 align-middle"} appearance-auto`;
       return (
+        <span className={underline ? "relative inline-flex items-center" : "inline"}>
         <select
           id={id}
           aria-label={field.label}
           value={shown || field.defaultValue || ""}
           disabled={disabled}
           onChange={(e) => onChange(sanitizeFieldInput(field, e.target.value))}
-          className={`${BOX} ${block || wideChoice(field) ? "my-1 h-[42px] w-full px-2" : "mx-0.5 h-[38px] max-w-full px-2 align-middle"} appearance-auto`}
+          className={choiceClass}
           data-field={field.name}
         >
           {/* A defaulted dropdown (weeks/months) never shows an empty "Choose" row. */}
@@ -74,7 +85,14 @@ export function FieldControl({
             </option>
           ))}
         </select>
+        {underline ? (
+          <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden="true" className="pointer-events-none -ml-3">
+            <path d="M1 1l4 4 4-4" fill="none" stroke="#19347D" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        ) : null}
+        </span>
       );
+    }
     case "integer":
       return (
         <input
@@ -84,12 +102,16 @@ export function FieldControl({
           pattern="[0-9]*"
           autoComplete="off"
           aria-label={field.label}
-          placeholder={placeholder}
+          placeholder={appearance === "inline" ? undefined : placeholder}
           value={shown}
           disabled={disabled}
           onChange={(e) => onChange(sanitizeFieldInput(field, e.target.value))}
-          style={block ? undefined : { width: inlineWidth(field) }}
-          className={`${BOX} ${block ? "h-[48px] w-full px-3" : "mx-0.5 h-[38px] px-2 text-center align-middle"}`}
+          style={block || appearance === "inline" ? undefined : { width: inlineWidth(field) }}
+          className={
+            appearance === "inline"
+              ? "mx-0.5 inline-block h-[26px] w-7 rounded-lg border-[1.5px] border-[#D5DAE3] text-center align-middle font-sans text-[16px] text-[#19347D] outline-none"
+              : `${BOX} ${block ? "h-[48px] w-full px-3" : "mx-0.5 h-[38px] px-2 text-center align-middle"}`
+          }
         />
       );
     case "text":

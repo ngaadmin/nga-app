@@ -5,6 +5,7 @@ import {
 } from "@/lib/launchpad/content/identity";
 import { keptPerJob, weeklyKeep, weeksFromJobs, weeksFromWeeklyKeep, jobsNeeded } from "@/lib/launchpad/content/pricing/calc";
 import { AFTER_HOW, AGREE_ITEMS, BEFORE_HOW, CHANNELS, FEEDBACK_HOW, PAYMENT_HOW, POLISH_QUESTIONS, PRACTICE_WHEN, PRACTICE_WHO, ALSO_MAX } from "@/lib/launchpad/content/getting-ready/copy";
+import { isAvailabilitySlot } from "@/lib/launchpad/content/planning/catalog";
 
 /**
  * The learner's saved answers, one per answerKey, each tagged with a `kind`
@@ -140,6 +141,9 @@ export type CustomerAnswer = {
   yesNo: "yes" | "no";
   interests: readonly string[];
   interestExtra?: string;
+  /** Availability slot ids. Old time chips stay in interests. */
+  times?: readonly string[];
+  timesExtra?: string;
 };
 
 export type CompetitorAnswer = {
@@ -205,8 +209,8 @@ export type DeliverJobAnswer = {
 export type WrapJobAnswer = {
   kind: "wrap-job";
   version: 1;
-  paymentHow: string;
-  feedbackHow: string;
+  paymentHow: readonly string[];
+  feedbackHow: readonly string[];
 };
 
 export type PracticeRunAnswer = {
@@ -552,6 +556,8 @@ export function parseCustomerAnswer(value: unknown): CustomerAnswer | null {
   if (value.yesNo !== "yes" && value.yesNo !== "no") return null;
   if (typeof value.numberAsked !== "number" || !Number.isInteger(value.numberAsked) || value.numberAsked < 1 || value.numberAsked > 20) return null;
   const interestExtra = optText(value.interestExtra, 80);
+  const times = idGroup(value.times).filter(isAvailabilitySlot);
+  const timesExtra = optText(value.timesExtra, 80);
   return {
     kind: "customer",
     version: 1,
@@ -559,6 +565,8 @@ export function parseCustomerAnswer(value: unknown): CustomerAnswer | null {
     yesNo: value.yesNo,
     interests: idGroup(value.interests),
     ...(interestExtra ? { interestExtra } : {}),
+    ...(times.length ? { times } : {}),
+    ...(timesExtra ? { timesExtra } : {}),
   };
 }
 
@@ -671,13 +679,20 @@ export function parseDeliverJobAnswer(value: unknown): DeliverJobAnswer | null {
   return { kind: "deliver-job", version: 1, beforeHow, afterHow };
 }
 
+function optionList(value: unknown, allowed: readonly { id: string }[]): string[] {
+  if (typeof value === "string") return knownIds([value], allowed);
+  return knownIds(value, allowed);
+}
+
 export function parseWrapJobAnswer(value: unknown): WrapJobAnswer | null {
   if (!isRecord(value) || value.kind !== "wrap-job" || value.version !== 1) return null;
-  const paymentHow = knownIds([value.paymentHow], PAYMENT_HOW)[0];
-  const feedbackHow = knownIds([value.feedbackHow], FEEDBACK_HOW)[0];
-  if (!paymentHow || !feedbackHow) return null;
   if ("funding_lender" in value) return null;
-  return { kind: "wrap-job", version: 1, paymentHow, feedbackHow };
+  return {
+    kind: "wrap-job",
+    version: 1,
+    paymentHow: optionList(value.paymentHow, PAYMENT_HOW),
+    feedbackHow: optionList(value.feedbackHow, FEEDBACK_HOW),
+  };
 }
 
 export function parsePracticeRunAnswer(value: unknown): PracticeRunAnswer | null {

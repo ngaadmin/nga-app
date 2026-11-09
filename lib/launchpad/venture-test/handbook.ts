@@ -402,7 +402,7 @@ function fillPlanningSamples(progress: VentureTestProgress): VentureTestProgress
     next = setProgressAnswer(next, DELIVER_JOB_KEY, { kind: "deliver-job", version: 1, beforeHow: "text", afterHow: "photo" });
   }
   if (isTaskDone(next, "l3-s1-b4-t1") && !next.answers?.[WRAP_JOB_KEY]) {
-    next = setProgressAnswer(next, WRAP_JOB_KEY, { kind: "wrap-job", version: 1, paymentHow: "cash", feedbackHow: "in_person" });
+    next = setProgressAnswer(next, WRAP_JOB_KEY, { kind: "wrap-job", version: 1, paymentHow: ["cash"], feedbackHow: ["in_person"] });
   }
   if (isTaskDone(next, "l3-s3-b1-t1") && !next.answers?.[PRACTICE_RUN_KEY]) {
     next = setProgressAnswer(next, PRACTICE_RUN_KEY, { kind: "practice-run", version: 1, who: "family", service: "dog-walking", when: "weekend" });

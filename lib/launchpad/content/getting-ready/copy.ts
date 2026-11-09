@@ -92,17 +92,16 @@ export const AFTER_HOW = [
 ] as const;
 
 export const PAYMENT_HOW = [
-  { id: "cash", label: "Cash", sentence: "cash" },
+  { id: "cash", label: "Cash on the day", sentence: "cash on the day" },
   { id: "transfer", label: "Bank transfer", sentence: "bank transfer" },
-  { id: "app", label: "A payment app with Mom or Dad", sentence: "a payment app with Mom or Dad" },
+  { id: "app", label: "An app", sentence: "an app" },
 ] as const;
 
-/** Sheet wording is "by in person". The menu shows that phrase. */
 export const FEEDBACK_HOW = [
-  { id: "in_person", label: "in person", sentence: "in person" },
-  { id: "text", label: "text", sentence: "text" },
-  { id: "email", label: "email", sentence: "email" },
-  { id: "note", label: "a short note", sentence: "a short note" },
+  { id: "in_person", label: "In person", sentence: "in person" },
+  { id: "text", label: "Text", sentence: "text" },
+  { id: "email", label: "Email", sentence: "email" },
+  { id: "note", label: "A short note", sentence: "a short note" },
 ] as const;
 
 export const PRACTICE_WHO = [
@@ -142,8 +141,7 @@ export const AGREE_TEMPLATE =
 export const DELIVER_HINT =
   "For each statement, pick the option that fits how you will do it. The what and when stay the same. Your two choices become your plan.";
 export const DELIVER_PLAYBACK = "This is my plan for delivering the service.";
-export const WRAP_JOB_HINT =
-  "For each statement, pick the option that fits how you will do it. The what stays the same. Your two choices become your plan.";
+export const WRAP_JOB_HINT = "Tick every way you will do it. Your choices become your plan.";
 export const WRAP_JOB_PLAYBACK = "This is my plan for wrapping up the job.";
 export const PRACTICE_TIP = "This is not a paid job. Keep it simple, and ask a parent before you start.";
 export const POLISH_LEAD = "Straight after you've delivered your trial run, ask your customer these questions.";
@@ -190,13 +188,24 @@ export function deliverLines(beforeHow: string, afterHow: string): { title: stri
   };
 }
 
-export function wrapJobLines(paymentHow: string, feedbackHow: string): { title: string; lines: string[] } {
-  const payment = PAYMENT_HOW.find((row) => row.id === paymentHow)?.sentence ?? paymentHow;
-  const feedback = FEEDBACK_HOW.find((row) => row.id === feedbackHow)?.sentence ?? feedbackHow;
-  return {
-    title: WRAP_JOB_PLAYBACK,
-    lines: [`I will collect payment by ${payment}.`, `I will ask the owner for feedback or a short review by ${feedback}.`],
-  };
+function asIds(value: string | readonly string[]): readonly string[] {
+  return typeof value === "string" ? [value] : value;
+}
+
+function joinOr(phrases: readonly string[]): string {
+  if (phrases.length <= 1) return phrases[0] ?? "";
+  if (phrases.length === 2) return `${phrases[0]} or ${phrases[1]}`;
+  return `${phrases.slice(0, -1).join(", ")}, or ${phrases[phrases.length - 1]}`;
+}
+
+export function wrapJobLines(paymentHow: string | readonly string[], feedbackHow: string | readonly string[]): { title: string; lines: string[] } {
+  const payment = joinOr(asIds(paymentHow).map((id) => PAYMENT_HOW.find((row) => row.id === id)?.sentence ?? id));
+  const feedback = joinOr(asIds(feedbackHow).map((id) => FEEDBACK_HOW.find((row) => row.id === id)?.sentence ?? id));
+  const lines: string[] = [];
+  if (payment && feedback) lines.push(`I will collect payment by ${payment}, and ask for feedback ${feedback}.`);
+  else if (payment) lines.push(`I will collect payment by ${payment}.`);
+  else if (feedback) lines.push(`I will ask for feedback ${feedback}.`);
+  return { title: WRAP_JOB_PLAYBACK, lines };
 }
 
 export function practiceLines(who: string, serviceLabel: string, when: string): string[] {
@@ -205,7 +214,7 @@ export function practiceLines(who: string, serviceLabel: string, when: string): 
   const service = serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1);
   return [
     `I will do a practice run for ${whoLabel}.`,
-    `I will do ${service} for them.`,
+    `I will do ${service}.`,
     `I will do it ${whenLabel}.`,
   ];
 }

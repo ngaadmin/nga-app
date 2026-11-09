@@ -2,16 +2,12 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AGREE_ITEMS, AGREE_PROMPT } from "@/lib/launchpad/content/getting-ready/copy";
+import { gettingReadyScreen } from "@/lib/launchpad/content/getting-ready/screens";
 import type { LaunchpadGettingReadyScreen } from "@/lib/launchpad/content/types";
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import type { AgreeJobAnswer } from "@/lib/launchpad/content/answers";
 
-const screenSpec: LaunchpadGettingReadyScreen = {
-  id: "agree-s1",
-  type: "getting-ready",
-  step: "agree",
-  answerKey: "agree_the_job",
-};
+const screenSpec: LaunchpadGettingReadyScreen = gettingReadyScreen("agree", "agree_the_job");
 
 afterEach(cleanup);
 
@@ -82,7 +78,7 @@ describe("Agree the job", () => {
 
 describe("Getting Ready bronze task surfaces", () => {
   function open(step: LaunchpadGettingReadyScreen["step"], answerKey: string) {
-    const spec: LaunchpadGettingReadyScreen = { id: `${step}-s1`, type: "getting-ready", step, answerKey };
+    const spec: LaunchpadGettingReadyScreen = gettingReadyScreen(step, answerKey);
     render(<GettingReadyFlow screen={spec} floors={[]} businessName="Dog walking" onExit={() => {}} onFinish={() => {}} />);
   }
 

@@ -420,7 +420,7 @@ function checkOfferLoop(screen: Obj, where: string, answers: Answers): void {
   reads(answers, screen.servicesFrom, ["selection-multi", "selection-single"], `${where} servicesFrom`);
   checkChips(screen.times, `${where} times`);
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
-  for (const field of ["serviceIntro", "whenTitle", "whenIntro", "whenNote", "addPackage", "addExtra", "addService", "addTime"] as const) {
+  for (const field of ["serviceIntro", "whenTitle", "whenIntro", "whenNote", "whenSummary", "addPackage", "addExtra", "addService", "addTime"] as const) {
     text(screen.copy[field], `${where} ${field}`);
   }
   list(screen.catalogs, `${where} catalogs`, 1).forEach((raw, i) => {
@@ -439,6 +439,14 @@ function checkCustomer(screen: Obj, where: string, answers: Answers): void {
   if (!isObj(screen.copy)) fail(`${where} copy is missing.`);
   text(screen.copy.intro, `${where} intro`);
   text(screen.copy.addInterest, `${where} addInterest`);
+  text(screen.title, `${where} title`);
+  text(screen.sectionHeading, `${where} sectionHeading`);
+  text(screen.sentence, `${where} sentence`);
+  text(screen.yesLabel, `${where} yesLabel`);
+  text(screen.noLabel, `${where} noLabel`);
+  text(screen.timesTitle, `${where} timesTitle`);
+  text(screen.timesHint, `${where} timesHint`);
+  text(screen.addTime, `${where} addTime`);
 }
 
 function checkCompetitor(screen: Obj, where: string, answers: Answers): void {
@@ -462,10 +470,93 @@ const GETTING_READY_KIND = {
   polish: "polish-service",
 } as const;
 
+const AGREE_SECTION_IDS = ["collect_info", "confirm_dog", "when_where", "cost_payment", "plans_change"] as const;
+
+function checkReadyOptions(value: unknown, where: string): void {
+  list(value, where, 1).forEach((raw, i) => {
+    if (!isObj(raw)) fail(`${where} option ${i + 1} is malformed.`);
+    text(raw.id, `${where} option ${i + 1} id`);
+    text(raw.label, `${where} option ${i + 1} label`);
+  });
+}
+
 function checkGettingReady(screen: Obj, where: string, answers: Answers): void {
   const step = screen.step;
   if (typeof step !== "string" || !(step in GETTING_READY_KIND)) fail(`${where} has an unknown step.`);
   saves(answers, screen, GETTING_READY_KIND[step as keyof typeof GETTING_READY_KIND], where);
+  text(screen.title, `${where} title`);
+  if (step === "find") {
+    text(screen.question, `${where} question`);
+    text(screen.hint, `${where} hint`);
+    text(screen.alsoLabel, `${where} alsoLabel`);
+    checkReadyOptions(screen.channels, `${where} channels`);
+  } else if (step === "agree") {
+    text(screen.readLabel, `${where} readLabel`);
+    text(screen.note, `${where} note`);
+    text(screen.noteStrong, `${where} noteStrong`);
+    const ids = new Set<string>();
+    list(screen.agreeSections, `${where} agreeSections`, AGREE_SECTION_IDS.length).forEach((raw, i) => {
+      if (!isObj(raw) || typeof raw.id !== "string" || !AGREE_SECTION_IDS.includes(raw.id as (typeof AGREE_SECTION_IDS)[number])) {
+        fail(`${where} agree section ${i + 1} has an unknown id.`);
+      }
+      if (isObj(raw)) {
+        if (ids.has(String(raw.id))) fail(`${where} repeats agree section ${String(raw.id)}.`);
+        ids.add(String(raw.id));
+        text(raw.title, `${where} agree section ${i + 1} title`);
+        text(raw.lead, `${where} agree section ${i + 1} lead`);
+        list(raw.bullets, `${where} agree section ${i + 1} bullets`, 1).forEach((line, bi) => text(line, `${where} agree bullet ${bi + 1}`));
+      }
+    });
+    list(screen.agreePages, `${where} agreePages`, 1).forEach((raw, i) => {
+      if (!isObj(raw)) fail(`${where} agree page ${i + 1} is malformed.`);
+      const page = raw;
+      list(page.sectionIds, `${where} agree page ${i + 1} sections`, 1).forEach((id) => {
+        if (!ids.has(String(id))) fail(`${where} agree page ${i + 1} names unknown section ${String(id)}.`);
+      });
+    });
+  } else if (step === "deliver") {
+    text(screen.question, `${where} question`);
+    text(screen.hint, `${where} hint`);
+    checkReadyOptions(screen.beforeOptions, `${where} beforeOptions`);
+    checkReadyOptions(screen.afterOptions, `${where} afterOptions`);
+    list(screen.deliverBlocks, `${where} deliverBlocks`, 1).forEach((raw, i) => {
+      if (!isObj(raw)) fail(`${where} deliver block ${i + 1} is malformed.`);
+      text(raw.heading, `${where} deliver block ${i + 1} heading`);
+      text(raw.lead, `${where} deliver block ${i + 1} lead`);
+      if (raw.slot !== "before" && raw.slot !== "after") fail(`${where} deliver block ${i + 1} has an unknown slot.`);
+    });
+  } else if (step === "wrap-job") {
+    text(screen.question, `${where} question`);
+    text(screen.hint, `${where} hint`);
+    text(screen.summaryBoth, `${where} summaryBoth`);
+    text(screen.summaryPayment, `${where} summaryPayment`);
+    text(screen.summaryFeedback, `${where} summaryFeedback`);
+    for (const group of ["payment", "feedback"] as const) {
+      const block = screen[group];
+      if (!isObj(block)) fail(`${where} ${group} is missing.`);
+      text(block.heading, `${where} ${group} heading`);
+      text(block.lead, `${where} ${group} lead`);
+      checkReadyOptions(block.options, `${where} ${group} options`);
+    }
+  } else if (step === "practice") {
+    text(screen.question, `${where} question`);
+    text(screen.hint, `${where} hint`);
+    text(screen.practiceWhoLead, `${where} practiceWhoLead`);
+    text(screen.practiceServiceLead, `${where} practiceServiceLead`);
+    text(screen.practiceWhenLead, `${where} practiceWhenLead`);
+    checkReadyOptions(screen.practiceWho, `${where} practiceWho`);
+    checkReadyOptions(screen.practiceWhen, `${where} practiceWhen`);
+  } else if (step === "polish") {
+    text(screen.question, `${where} question`);
+    text(screen.hint, `${where} hint`);
+    text(screen.polishSuggestion, `${where} polishSuggestion`);
+    checkReadyOptions(screen.polishResults, `${where} polishResults`);
+    list(screen.polishQuestions, `${where} polishQuestions`, 1).forEach((raw, i) => {
+      if (!isObj(raw)) fail(`${where} polish question ${i + 1} is malformed.`);
+      text(raw.id, `${where} polish question ${i + 1} id`);
+      text(raw.prompt, `${where} polish question ${i + 1} prompt`);
+    });
+  }
 }
 
 function checkFunding(screen: Obj, where: string, answers: Answers): void {

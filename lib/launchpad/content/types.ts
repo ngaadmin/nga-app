@@ -379,6 +379,8 @@ export type LaunchpadOfferLoopScreen = TaskScreenBase & {
     whenTitle: string;
     whenIntro: string;
     whenNote: string;
+    /** "I am available {when}." */
+    whenSummary: string;
     addPackage: string;
     addExtra: string;
     addService: string;
@@ -386,7 +388,7 @@ export type LaunchpadOfferLoopScreen = TaskScreenBase & {
   };
 };
 
-/** Row 16: number, yes/no, and interest chips. */
+/** Row 16: number, yes/no, and interest chips, then the times table. */
 export type LaunchpadCustomerScreen = TaskScreenBase & {
   type: "customer-check";
   answerKey: string;
@@ -395,6 +397,16 @@ export type LaunchpadCustomerScreen = TaskScreenBase & {
   times: readonly LaunchpadChip[];
   /** Shown in the sentence. {product} has no defined lookup. */
   productPhrase: string;
+  title: string;
+  /** "From what you offer". */
+  sectionHeading: string;
+  /** Tokens: {number}, {product}, {yesNo}. */
+  sentence: string;
+  yesLabel: string;
+  noLabel: string;
+  timesTitle: string;
+  timesHint: string;
+  addTime: string;
   copy: { intro: string; addInterest: string };
 };
 
@@ -417,13 +429,59 @@ export type LaunchpadCompetitorScreen = TaskScreenBase & {
   };
 };
 
-/** Rows 28-33. One step per door. Copy lives with the step, not a second path. */
+/** Rows 28-33. One step per door. Copy lives on the screen, not in the component. */
 export type GettingReadyStep = "find" | "agree" | "deliver" | "wrap-job" | "practice" | "polish";
+
+export type ReadyOption = { id: string; label: string; sentence?: string };
+
+export type ReadyAgreeSection = {
+  id: "collect_info" | "confirm_dog" | "when_where" | "cost_payment" | "plans_change";
+  title: string;
+  lead: string;
+  bullets: readonly string[];
+  moreLead?: string;
+  moreBullets?: readonly string[];
+};
+
+export type ReadyAgreePage = {
+  sectionIds: readonly ReadyAgreeSection["id"][];
+  question?: string;
+  showNote?: boolean;
+};
 
 export type LaunchpadGettingReadyScreen = TaskScreenBase & {
   type: "getting-ready";
   step: GettingReadyStep;
   answerKey: string;
+  title: string;
+  question?: string;
+  hint?: string;
+  readLabel?: string;
+  note?: string;
+  noteStrong?: string;
+  alsoLabel?: string;
+  channels?: readonly ReadyOption[];
+  agreeSections?: readonly ReadyAgreeSection[];
+  agreePages?: readonly ReadyAgreePage[];
+  deliverBlocks?: readonly { heading: string; lead: string; slot: "before" | "after" }[];
+  beforeOptions?: readonly ReadyOption[];
+  afterOptions?: readonly ReadyOption[];
+  payment?: { heading: string; lead: string; options: readonly ReadyOption[] };
+  feedback?: { heading: string; lead: string; options: readonly ReadyOption[] };
+  /** Tokens {payment} and {feedback}. */
+  summaryBoth?: string;
+  summaryPayment?: string;
+  summaryFeedback?: string;
+  practiceWho?: readonly ReadyOption[];
+  practiceWhen?: readonly ReadyOption[];
+  practiceWhoLead?: string;
+  practiceServiceLead?: string;
+  practiceWhenLead?: string;
+  practicePlayback?: string;
+  polishQuestions?: readonly { id: string; prompt: string }[];
+  polishResults?: readonly ReadyOption[];
+  polishSuggestion?: string;
+  eyebrow?: string;
 };
 
 /** Row 26. Own cash confirms. Borrow sets a payback plan. No lender. */

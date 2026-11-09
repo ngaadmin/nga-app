@@ -39,12 +39,14 @@ describe("getting ready sentences", () => {
   it("keeps the sheet wording on the plan lines", () => {
     expect(deliverLines("text", "photo").lines[0]).toContain("by text");
     expect(deliverLines("text", "photo").lines[1]).toContain("a photo");
-    expect(wrapJobLines("cash", "in_person").lines[1]).toContain("by in person");
+    expect(wrapJobLines("cash", "in_person").lines[0]).toContain("cash on the day");
+    expect(wrapJobLines("cash", "in_person").lines[0]).toContain("in person");
+    expect(wrapJobLines(["cash", "transfer"], "in_person").lines[0]).toContain("cash on the day or bank transfer");
     expect(wrapJobLines("cash", "in_person").lines.join(" ")).not.toMatch(/funding_lender|parent/);
   });
 
   it("lowercases the practice service and groups the other feedback", () => {
-    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will do dog walking for them.");
+    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will do dog walking.");
     const wrap = feedbackWrap([
       { id: "service_explained", result: "good" },
       { id: "cost", result: "good" },

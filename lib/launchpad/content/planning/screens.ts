@@ -24,6 +24,7 @@ export function offerLoopScreen(): LaunchpadOfferLoopScreen {
       whenTitle: "When can you work?",
       whenIntro: "Pick when you can work. This is for your whole business, not each service.",
       whenNote: "The extra field is for specifics like days and hours.",
+      whenSummary: "I am available {when}.",
       addPackage: "Add another package",
       addExtra: "Add another extra",
       addService: "Add another service",
@@ -44,6 +45,14 @@ export function customerScreen(): LaunchpadCustomerScreen {
     times: WHEN_OPTIONS,
     /** {product} has no lookup. r4 uses this phrase. Not a guessed field. */
     productPhrase: "my dog walking business",
+    title: "Know who your customers are",
+    sectionHeading: "From what you offer",
+    sentence: "I asked {number} people about {product}. They said {yesNo} to my idea. They were specifically interested in:",
+    yesLabel: "Yes",
+    noLabel: "No",
+    timesTitle: "When did your customers want walks?",
+    timesHint: "Tick every time someone mentioned, even ones you can't do yet.",
+    addTime: "Add another",
     copy: {
       intro: "Ask three people you know who have dogs. Then pick what they were interested in, and add your own if needed.",
       addInterest: "Add another",

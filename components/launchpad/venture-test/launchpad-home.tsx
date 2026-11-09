@@ -7,14 +7,7 @@ import {
   flatLaunchpadTiles,
   type LaunchpadTile,
 } from "@/lib/launchpad/venture-test/launchpad-home-data";
-import {
-  LIVE_ICON_TONES,
-  LOCKED_ICON_TONES,
-  LiveShopFrontArt,
-  LockBadgeArt,
-  LockedShopFrontArt,
-  SHOP_ICONS,
-} from "@/components/launchpad/venture-test/launchpad-home-art";
+import { LiveShopFrontArt, LockBadgeArt } from "@/components/launchpad/venture-test/launchpad-home-art";
 import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
 import { WORKBOOK_FLOOR_LABEL } from "@/lib/launchpad/venture-test/handbook";
 import { COME_BACK_LATER_COPY, OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
@@ -39,6 +32,12 @@ export type InProgressVenture = {
 export type OpenTaskLink = { taskId: string; title: string };
 
 const TILES = flatLaunchpadTiles();
+
+/** 56px shop-front icon. Live tiles use the color web size; locked tiles use the grey master. */
+function ShopFrontIcon({ icon, locked }: { icon: string; locked: boolean }) {
+  const src = locked ? `/launchpad/shopfront/locked/${icon}.png` : `/launchpad/shopfront/web/${icon}-256.png`;
+  return <img src={src} alt="" width={56} height={56} draggable={false} className="pointer-events-none size-14" />;
+}
 
 function IdeaTile({
   tile,
@@ -72,16 +71,19 @@ function IdeaTile({
         </span>
       )}
       <span className="relative block h-[84px] w-[100px] overflow-hidden rounded-2xl">
-        {live ? <LiveShopFrontArt awning={tile.awning} /> : <LockedShopFrontArt />}
-        <span className="absolute left-[26px] block size-12" style={{ top: live ? 20 : 23 }}>
-          <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
-            {SHOP_ICONS[tile.icon](live ? LIVE_ICON_TONES : LOCKED_ICON_TONES)}
-          </svg>
+        <LiveShopFrontArt awning={tile.awning} />
+        <span className="absolute left-[22px] top-[22px] block size-14">
+          <ShopFrontIcon icon={tile.icon} locked={!live} />
         </span>
       </span>
       {tile.featured && (
         <span className="absolute left-1/2 top-[66px] -translate-x-1/2 whitespace-nowrap rounded-full bg-nga-ink px-2 py-[3px] font-heading text-[10px] font-bold leading-[1.5] text-white">
           {LAUNCHPAD_HOME_COPY.featured}
+        </span>
+      )}
+      {tile.isNew && (
+        <span className="absolute left-1/2 top-[66px] -translate-x-1/2 whitespace-nowrap rounded-full bg-[#FFA503] px-2 py-[3px] font-heading text-[10px] font-bold leading-[1.5] text-white">
+          {LAUNCHPAD_HOME_COPY.newTag}
         </span>
       )}
       {!live && (
@@ -129,10 +131,8 @@ function VentureThumb({ ventureId }: { ventureId: string }) {
       {idea && (
         <span className="absolute left-0 top-0 block h-[84px] w-[100px] origin-top-left scale-[0.36]">
           <LiveShopFrontArt awning={idea.awning} />
-          <span className="absolute left-[26px] top-[20px] block size-12">
-            <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
-              {SHOP_ICONS[idea.icon](LIVE_ICON_TONES)}
-            </svg>
+          <span className="absolute left-[22px] top-[22px] block size-14">
+            <ShopFrontIcon icon={idea.icon} locked={false} />
           </span>
         </span>
       )}

@@ -9,6 +9,7 @@ export const LAUNCHPAD_HOME_COPY = {
   nursery: "Nursery",
   moreIdeas: "More ideas coming",
   featured: "Featured",
+  newTag: "New",
   emptyInProgress: "No ventures in progress yet.",
   lockedNote: (name: string) => `${name} isn't open yet. Dog walking is open now.`,
 } as const;
@@ -16,21 +17,23 @@ export const LAUNCHPAD_HOME_COPY = {
 /** Awning colors (brand tokens in app/globals.css). */
 const AWNING = { orange: "#ffa503", cyan: "#0cc1e0", gold: "#dcb766", panel: "#bde9fb", navy: "#031f82" } as const;
 
+/** Shop-front art slug. Matches the file under public/launchpad/shopfront. */
 export type LaunchpadIconKey =
-  | "paw"
-  | "leaf"
-  | "rattle"
-  | "scissors"
-  | "lemon"
-  | "chair"
-  | "sprout"
-  | "cookie"
-  | "tshirt"
-  | "book"
-  | "page"
-  | "sticker"
-  | "palette"
-  | "board";
+  | "dog-walking"
+  | "lawn-mowing"
+  | "babysitting"
+  | "bin-cleaning"
+  | "curb-numbers"
+  | "craft"
+  | "lemonade-stand"
+  | "fixed-up-secondhand"
+  | "nursery"
+  | "baked-goods"
+  | "printed-t-shirts"
+  | "porch-design"
+  | "printables"
+  | "digital-stickers"
+  | "teach-others";
 
 export type LaunchpadTile =
   | {
@@ -42,6 +45,8 @@ export type LaunchpadTile =
       /** Live tiles open a venture (blueprint id in lib/launchpad/venture-blueprints). */
       ventureId: string | null;
       featured?: boolean;
+      /** Orange New tag. Bin cleaning, Curb numbers, Porch design. */
+      isNew?: boolean;
     }
   | { kind: "more"; key: string };
 
@@ -54,41 +59,48 @@ const idea = (
   awning: string,
   ventureId: string | null = null,
   featured = false,
-): LaunchpadTile => ({ kind: "idea", key, name, icon, awning, ventureId, featured });
+  isNew = false,
+): LaunchpadTile => ({ kind: "idea", key, name, icon, awning, ventureId, featured, ...(isNew ? { isNew } : {}) });
+
+/** One cycle across every idea tile, skipping More. Orange, aqua, gold, pale blue, navy. */
+const AWNING_CYCLE = [AWNING.orange, AWNING.cyan, AWNING.gold, AWNING.panel, AWNING.navy] as const;
+let awningIndex = 0;
+const nextAwning = () => AWNING_CYCLE[awningIndex++ % AWNING_CYCLE.length]!;
 
 export const LAUNCHPAD_CATEGORIES: LaunchpadCategory[] = [
   {
     name: "Services",
     tiles: [
-      idea("dog-walking", "Dog walking", "paw", AWNING.orange, "dog-walking", true),
-      idea("lawn-mowing", "Lawn mowing", "leaf", AWNING.cyan),
-      idea("babysitting", "Babysitting", "rattle", AWNING.gold),
+      idea("dog-walking", "Dog walking", "dog-walking", nextAwning(), "dog-walking", true),
+      idea("lawn-mowing", "Lawn mowing", "lawn-mowing", nextAwning()),
+      idea("babysitting", "Babysitting", "babysitting", nextAwning()),
+      idea("bin-cleaning", "Bin cleaning", "bin-cleaning", nextAwning(), null, false, true),
+      idea("curb-numbers", "Curb numbers", "curb-numbers", nextAwning(), null, false, true),
     ],
   },
   {
     name: "Make and Sell: Physical",
     tiles: [
-      idea("craft", "Craft", "scissors", AWNING.panel),
-      idea("lemonade-stand", "Lemonade stand", "lemon", AWNING.navy),
-      idea("fixed-up-secondhand", "Fixed-up secondhand items", "chair", AWNING.orange),
-      idea("nursery", LAUNCHPAD_HOME_COPY.nursery, "sprout", AWNING.cyan),
-      idea("baked-goods", "Baked goods", "cookie", AWNING.gold),
-      idea("printed-t-shirts", "Printed T-shirts", "tshirt", AWNING.panel),
-      idea("writing-a-book", "Writing a book", "book", AWNING.navy),
+      idea("craft", "Craft", "craft", nextAwning()),
+      idea("lemonade-stand", "Lemonade stand", "lemonade-stand", nextAwning()),
+      idea("fixed-up-secondhand", "Fixed-up secondhand items", "fixed-up-secondhand", nextAwning()),
+      idea("nursery", LAUNCHPAD_HOME_COPY.nursery, "nursery", nextAwning()),
+      idea("baked-goods", "Baked goods", "baked-goods", nextAwning()),
+      idea("printed-t-shirts", "Printed T-shirts", "printed-t-shirts", nextAwning()),
+      idea("porch-design", "Porch design", "porch-design", nextAwning(), null, false, true),
     ],
   },
   {
     name: "Make and Sell: Digital",
     tiles: [
-      idea("printables", "Printables", "page", AWNING.orange),
-      idea("digital-stickers", "Digital stickers", "sticker", AWNING.cyan),
-      idea("digital-art-shop", "Digital art shop", "palette", AWNING.gold),
+      idea("printables", "Printables", "printables", nextAwning()),
+      idea("digital-stickers", "Digital stickers", "digital-stickers", nextAwning()),
       { kind: "more", key: "more-digital" },
     ],
   },
   {
     name: "Growth Add-ons",
-    tiles: [idea("teach-others", "Teach others", "board", AWNING.panel)],
+    tiles: [idea("teach-others", "Teach others", "teach-others", nextAwning())],
   },
 ];
 

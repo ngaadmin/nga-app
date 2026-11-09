@@ -15,7 +15,7 @@ describe("Launchpad home data (r12)", () => {
       c.tiles.map((t) => (t.kind === "idea" ? t.name : "MORE")),
     ]);
     expect(names).toEqual([
-      ["Services", ["Dog walking", "Lawn mowing", "Babysitting"]],
+      ["Services", ["Dog walking", "Lawn mowing", "Babysitting", "Bin cleaning", "Curb numbers"]],
       [
         "Make and Sell: Physical",
         [
@@ -25,13 +25,10 @@ describe("Launchpad home data (r12)", () => {
           LAUNCHPAD_HOME_COPY.nursery,
           "Baked goods",
           "Printed T-shirts",
-          "Writing a book",
+          "Porch design",
         ],
       ],
-      [
-        "Make and Sell: Digital",
-        ["Printables", "Digital stickers", "Digital art shop", "MORE"],
-      ],
+      ["Make and Sell: Digital", ["Printables", "Digital stickers", "MORE"]],
       ["Growth Add-ons", ["Teach others"]],
     ]);
   });
@@ -51,10 +48,24 @@ describe("Launchpad home data (r12)", () => {
     const flat = flatLaunchpadTiles();
     expect(flat.filter((t) => t.pill).map((t) => [t.pill, t.x])).toEqual([
       ["Services", 0],
-      ["Make and Sell: Physical", 330],
-      ["Make and Sell: Digital", 1100],
-      ["Growth Add-ons", 1540],
+      ["Make and Sell: Physical", 550],
+      ["Make and Sell: Digital", 1320],
+      ["Growth Add-ons", 1650],
     ]);
+  });
+
+  it("cycles awnings orange, aqua, gold, pale blue, navy, and marks the three new tiles", () => {
+    const ideas = LAUNCHPAD_CATEGORIES.flatMap((c) => c.tiles).filter((t) => t.kind === "idea");
+    const cycle = ["#ffa503", "#0cc1e0", "#dcb766", "#bde9fb", "#031f82"];
+    expect(ideas.map((t) => (t.kind === "idea" ? t.awning : ""))).toEqual(ideas.map((_, i) => cycle[i % cycle.length]));
+    expect(ideas.at(-1)).toMatchObject({ name: "Teach others", awning: "#031f82" });
+    expect(ideas.filter((t) => t.kind === "idea" && t.isNew).map((t) => (t.kind === "idea" ? t.name : ""))).toEqual([
+      "Bin cleaning",
+      "Curb numbers",
+      "Porch design",
+    ]);
+    expect(ideas.map((t) => (t.kind === "idea" ? t.name : ""))).not.toContain("Writing a book");
+    expect(ideas.map((t) => (t.kind === "idea" ? t.name : ""))).not.toContain("Digital art shop");
   });
 
   it("fades a pill out over 100px once its tile scrolls past", () => {

@@ -23,6 +23,20 @@ const L6: InProgressVenture = {
   hasHandbook: true,
 };
 
+describe("Launchpad home shop fronts", () => {
+  it("draws the 56px color icon on Dog walking and the grey icon on a locked tile", () => {
+    render(<LaunchpadHome inProgress={[]} onOpenVenture={() => {}} />);
+    const live = screen.getByRole("button", { name: "Dog walking. Open" });
+    const locked = screen.getByRole("button", { name: "Lawn mowing. Locked" });
+    expect(live.querySelector("img")?.getAttribute("src")).toBe("/launchpad/shopfront/web/dog-walking-256.png");
+    expect(live.querySelector("img")?.className).toContain("size-14");
+    expect(locked.querySelector("img")?.getAttribute("src")).toBe("/launchpad/shopfront/locked/lawn-mowing.png");
+    expect(screen.getByRole("button", { name: "Bin cleaning. Locked" }).textContent).toContain("New");
+    expect(screen.queryByRole("button", { name: /Writing a book/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Digital art shop/ })).toBeNull();
+  });
+});
+
 describe("Launchpad home In Progress tile", () => {
   it("shows the name and only the current level's name: no level badge, prefix or milestone count", () => {
     render(<LaunchpadHome inProgress={[L6]} onOpenVenture={() => {}} onOpenHandbook={() => {}} />);

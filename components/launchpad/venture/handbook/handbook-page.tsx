@@ -21,8 +21,7 @@ import { IdentityEditor } from "@/components/launchpad/venture/identity/identity
 import { AccentLabel, HandRule, PAPER_ACCENT, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { VisionBlock } from "@/components/launchpad/venture/handbook/vision-block";
 import { LogoMark, logoMarkLabel } from "@/components/launchpad/venture/identity/business-logo";
-import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
-import { resolveNameColor } from "@/lib/launchpad/content/identity";
+import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 import {
   BTN_CYAN_COMPACT,
 } from "@/components/launchpad/venture-test/venture-test-ui";
@@ -33,6 +32,8 @@ import { CostWorkbookBody } from "@/components/launchpad/venture/screens/cost-wo
 import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2-handbook";
 import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
+import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
+import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { ScriptedSheetPage } from "@/components/launchpad/venture/handbook/scripted-sheet";
 import { LevelTemplateSections } from "@/components/launchpad/venture/handbook/level-template";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
@@ -312,8 +313,7 @@ function MiniIdentity() {
       )}
       {answer.name && (
         <span
-          className="truncate font-heading text-[13px] font-semibold"
-          style={{ color: resolveNameColor(answer) }}
+          className={`${FREDOKA_CLASS} truncate text-[16px] font-semibold leading-[22px] text-[#3FB7DA]`}
         >
           {answer.name}
         </span>
@@ -458,6 +458,8 @@ export function HandbookPage({
         <ProductOrSummary page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.sheet === "ready-a" || page.sheet === "ready-b" || page.sheet === "ready-c" ? (
         <ReadyWrapPage sheet={page.sheet} />
+      ) : page.sheet?.startsWith("sales-") ? (
+        <SalesWorkbookPage sheet={page.sheet} />
       ) : page.kind === "cover" ? (
         <CoverPageBody page={page} editable={editable} iconVentureId={iconVentureId} />
       ) : page.kind === "summary" && page.silver.id === "l2-s1" ? (
@@ -486,6 +488,13 @@ function ProductOrSummary({
   if (ctx?.answers && ctx.answers["l2-offer"]?.kind === "offer") return <ProductHandbook editable={editable} />;
   if (page.kind === "summary") return <SummaryPageBody page={page} editable={editable} iconVentureId={iconVentureId} />;
   return <PlaceholderPageBody page={page} />;
+}
+
+function SalesWorkbookPage({ sheet }: { sheet: string }) {
+  const ctx = useLaunchpadAnswers();
+  const name = identityAnswerOf(ctx?.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
+  const page = salesWorkbookSheets(ctx?.answers, name).find((item) => item.id === sheet);
+  return page ? <ScriptedSheetPage sheet={page} /> : null;
 }
 
 function ReadyWrapPage({ sheet }: { sheet: "ready-a" | "ready-b" | "ready-c" }) {

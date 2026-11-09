@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { FREDOKA_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 
 /** Navy Inter 400, 16px, 23px line-height. Body, hints' neighbors, and sentences. */
 export const LESSON_BODY = "font-sans text-[16px] font-normal leading-[23px] text-[#19347D]";
@@ -9,12 +10,12 @@ export const LESSON_PICK = "font-sans text-[16px] font-semibold text-[#19347D] u
 /** Single-line tick and option labels. */
 export const LESSON_TICK_LABEL = "font-sans text-[16px] font-normal leading-[22px] text-[#19347D]";
 
-const TITLE = "font-heading text-[21px] font-bold leading-7 tracking-[-0.4px] text-[#19347D]";
+const TITLE = `${FREDOKA_CLASS} text-[21px] font-semibold leading-7 tracking-[-0.4px] text-[#19347D]`;
 
 const PROMPT = {
-  question: "font-heading text-[19px] font-bold leading-[26px] text-[#0CC1E0]",
-  section: "font-heading text-[18px] font-bold leading-6 text-[#0CC1E0]",
-  sub: "font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]",
+  question: `${FREDOKA_CLASS} text-[19px] font-semibold leading-[26px] text-[#0CC1E0]`,
+  section: `${FREDOKA_CLASS} text-[18px] font-semibold leading-6 text-[#0CC1E0]`,
+  sub: `${FREDOKA_CLASS} text-[16px] font-semibold leading-6 text-[#0CC1E0]`,
 } as const;
 
 /**

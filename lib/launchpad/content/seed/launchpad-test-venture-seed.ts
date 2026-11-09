@@ -31,6 +31,7 @@ import { dogWalkingJobsCoverBronze, dogWalkingSetPriceBronze } from "@/lib/launc
 import { competitorBronze, customerBronze, offerBronze } from "@/lib/launchpad/content/planning/screens";
 import { fundingBronze } from "@/lib/launchpad/content/planning/funding";
 import { learnJourneySilver, testTweakSilver } from "@/lib/launchpad/content/getting-ready/screens";
+import { applySalesDoors } from "@/lib/launchpad/content/sales/screens";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -110,6 +111,12 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
   return {
     ...payload,
     floors: payload.floors.map((floor) => {
+      if (floor.level === 4) {
+        return {
+          ...floor,
+          silvers: floor.silvers.map((silver) => (silver.id === "l4-s1" ? applySalesDoors(silver) : silver)),
+        };
+      }
       if (floor.level === 3) {
         return {
           ...floor,

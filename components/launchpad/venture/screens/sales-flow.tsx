@@ -1,0 +1,275 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+import type { LaunchpadFloor, LaunchpadSalesScreen } from "@/lib/launchpad/content/types";
+import { chosenServices } from "@/lib/launchpad/content/know-your-cost/logic";
+import { marketingOf, salesChannelsOf, type MarketingMaterialsAnswer, type SalesChannelsAnswer, type TellPeopleAnswer } from "@/lib/launchpad/content/answers";
+import { MARKETING_MATERIALS_KEY, OWN_LABEL, SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
+import { Chip } from "@/components/launchpad/venture/screens/lesson-controls";
+import { LessonContinue, LessonSurface, ScreenGuidance, ScreenPrompt } from "@/components/launchpad/venture/screens/screen-ui";
+import { LESSON_BODY, LESSON_HINT } from "@/components/launchpad/venture/screens/screen-ui";
+
+type ReadyAnswer = SalesChannelsAnswer | MarketingMaterialsAnswer | TellPeopleAnswer;
+
+function toggle(list: readonly string[], id: string): string[] {
+  return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+}
+
+export function SalesFlow({
+  screen,
+  answers,
+  floors,
+  onExit,
+  onFinish,
+}: {
+  screen: LaunchpadSalesScreen;
+  answers?: LaunchpadAnswers;
+  floors: readonly LaunchpadFloor[];
+  onExit: () => void;
+  onSave?: (answer: ReadyAnswer) => void;
+  onFinish: (answer: ReadyAnswer) => void;
+}) {
+  if (screen.step === "materials") return <MaterialsStep screen={screen} answers={answers} floors={floors} onExit={onExit} onFinish={onFinish} />;
+  if (screen.step === "targets") return <TargetsStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
+  return <ChannelsStep screen={screen} answers={answers} onExit={onExit} onFinish={onFinish} />;
+}
+
+function ChannelsStep({
+  screen,
+  answers,
+  onExit,
+  onFinish,
+}: {
+  screen: LaunchpadSalesScreen;
+  answers?: LaunchpadAnswers;
+  onExit: () => void;
+  onFinish: (answer: SalesChannelsAnswer) => void;
+}) {
+  const saved = salesChannelsOf(answers, screen.answerKey);
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<string[]>(saved ? [...saved.selected] : []);
+  const [where, setWhere] = useState<Record<string, string[]>>(
+    Object.fromEntries(Object.entries(saved?.where ?? {}).map(([key, ids]) => [key, [...ids]])),
+  );
+  const [extra, setExtra] = useState<Record<string, string>>({ ...(saved?.whereExtra ?? {}) });
+  const groups = screen.whereGroups ?? [];
+  const pages = useMemo(() => {
+    const later = (screen.wherePages ?? []).map((ids) => ids.filter((id) => selected.includes(id))).filter((ids) => ids.length > 0);
+    return [[] as string[], ...later];
+  }, [screen.wherePages, selected]);
+  const total = pages.length;
+  const current = pages[Math.min(page, total - 1)] ?? [];
+  const ready = page === 0
+    ? selected.some((id) => id !== "tbc")
+    : current.every((id) => (where[id] ?? []).length > 0 || extra[id]?.trim());
+  const finish = () => {
+    if (!ready) return;
+    if (page < total - 1) {
+      setPage(page + 1);
+      return;
+    }
+    onFinish({ kind: "sales-channels", version: 1, selected, where, ...(Object.keys(extra).length ? { whereExtra: extra } : {}) });
+  };
+  return (
+    <LessonSurface
+      title={screen.title}
+      onBack={() => (page === 0 ? onExit() : setPage(page - 1))}
+      progress={{ index: page + 1, total }}
+      footer={<LessonContinue disabled={!ready} onClick={finish} />}
+    >
+      <div data-task-screen="sales-channels">
+        {page === 0 ? (
+          <>
+            {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+            {screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
+            {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+            <div className="mt-4">
+              {(screen.channels ?? []).map((channel) => (
+                <Chip key={channel.id} variant="lined" label={channel.label} selected={selected.includes(channel.id)} onClick={() => setSelected(toggle(selected, channel.id))} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            {page === 1 && screen.wherePrompt ? <ScreenPrompt tone="section" flush>{screen.wherePrompt}</ScreenPrompt> : null}
+            {current.map((id) => {
+              const group = groups.find((item) => item.channelId === id);
+              if (!group) return null;
+              const picked = where[id] ?? [];
+              return (
+                <div key={id} className="mt-4">
+                  <ScreenPrompt tone="section" flush>{group.heading}</ScreenPrompt>
+                  <ScreenPrompt tone="sub" flush>{group.label}</ScreenPrompt>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {group.options.map((option) => (
+                      <Chip key={option.id} label={option.label} selected={picked.includes(option.id)} onClick={() => setWhere({ ...where, [id]: toggle(picked, option.id) })} />
+                    ))}
+                    {group.allowOwn ? (
+                      <Chip label={OWN_LABEL} selected={picked.includes("own")} onClick={() => setWhere({ ...where, [id]: toggle(picked, "own") })} />
+                    ) : null}
+                  </div>
+                  {picked.includes("own") ? (
+                    <input
+                      aria-label={`${group.heading} own place`}
+                      value={extra[id] ?? ""}
+                      onChange={(event) => setExtra({ ...extra, [id]: event.target.value.slice(0, 80) })}
+                      className="mt-2 h-11 w-full rounded-xl px-3 font-sans text-[16px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#0CC1E0] outline-none"
+                    />
+                  ) : null}
+                </div>
+              );
+            })}
+            {page === total - 1 && screen.permission ? <p className={`mt-4 ${LESSON_HINT}`}>{screen.permission}</p> : null}
+          </>
+        )}
+      </div>
+    </LessonSurface>
+  );
+}
+
+function MaterialsStep({
+  screen,
+  answers,
+  floors,
+  onExit,
+  onFinish,
+}: {
+  screen: LaunchpadSalesScreen;
+  answers?: LaunchpadAnswers;
+  floors: readonly LaunchpadFloor[];
+  onExit: () => void;
+  onFinish: (answer: MarketingMaterialsAnswer) => void;
+}) {
+  const saved = marketingOf(answers, screen.answerKey);
+  const sales = salesChannelsOf(answers, SALES_CHANNELS_KEY);
+  const services = chosenServices(floors, answers, "l1-offer");
+  const [page, setPage] = useState(0);
+  const [mainService, setMain] = useState(saved?.mainService ?? services[0]?.id ?? "");
+  const [secondService, setSecond] = useState(saved?.secondService ?? services.find((row) => row.id !== (saved?.mainService ?? services[0]?.id))?.id ?? "");
+  const [hook, setHook] = useState(saved?.hook ?? "");
+  const [proof, setProof] = useState(saved?.proof ?? "");
+  const [pieces, setPieces] = useState<Record<string, string>>({ ...(saved?.pieces ?? {}) });
+  const selected = new Set(sales?.selected ?? []);
+  const friends = sales?.where.friends ?? [];
+  const fields = (screen.pieceFields ?? []).filter((field) => {
+    if (field.channelId === "flyers") return selected.has("flyers") || selected.has("noticeboard");
+    if (field.channelId === "verbal") return selected.has("friends") && friends.includes("see");
+    if (field.channelId === "message") return selected.has("friends") && friends.includes("message");
+    if (field.channelId === "online") return selected.has("online");
+    return false;
+  });
+  const total = fields.length ? 2 : 1;
+  const required = fields.filter((field) => !field.optional);
+  const ready = page === 0 ? Boolean(mainService && hook && proof) : required.every((field) => pieces[field.id]);
+  const finish = () => {
+    if (!ready) return;
+    const answer: MarketingMaterialsAnswer = {
+      kind: "marketing-materials",
+      version: 1,
+      mainService,
+      ...(secondService ? { secondService } : {}),
+      hook,
+      proof,
+      pieces,
+    };
+    if (page === 0 && total > 1) {
+      setPage(1);
+      return;
+    }
+    onFinish(answer);
+  };
+  const select = (label: string, value: string, options: readonly { id: string; label: string }[], onChange: (id: string) => void) => (
+    <label className="mt-4 block">
+      <ScreenPrompt tone="sub" flush>{label}</ScreenPrompt>
+      <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 h-11 w-full rounded-xl bg-white px-3 font-sans text-[16px] text-[#19347D] shadow-[inset_0_0_0_1.5px_#D5DAE3] outline-none">
+        <option value="">Choose</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>{option.label}</option>
+        ))}
+      </select>
+    </label>
+  );
+  return (
+    <LessonSurface
+      title={screen.title}
+      onBack={() => (page === 0 ? onExit() : setPage(0))}
+      progress={{ index: page + 1, total }}
+      footer={<LessonContinue disabled={!ready} onClick={finish} />}
+    >
+      <div data-task-screen="sales-materials">
+        {page === 0 ? (
+          <>
+            {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+            {screen.context ? <p className={`mt-3 ${LESSON_BODY}`}>{screen.context}</p> : null}
+            {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+            {select(screen.serviceLabels?.main ?? "Your main service", mainService, services.map((row) => ({ id: row.id, label: row.label })), setMain)}
+            {select(screen.serviceLabels?.second ?? "Second service to list", secondService, services.filter((row) => row.id !== mainService).map((row) => ({ id: row.id, label: row.label })), setSecond)}
+            {select("What's the hook?", hook, screen.hooks ?? [], setHook)}
+            {select("What's your proof?", proof, screen.proofs ?? [], setProof)}
+          </>
+        ) : (
+          fields.map((field) => (
+            <div key={field.id}>
+              {select(field.label, pieces[field.id] ?? "", field.options, (id) => setPieces({ ...pieces, [field.id]: id }))}
+            </div>
+          ))
+        )}
+      </div>
+    </LessonSurface>
+  );
+}
+
+function TargetsStep({
+  screen,
+  answers,
+  onExit,
+  onFinish,
+}: {
+  screen: LaunchpadSalesScreen;
+  answers?: LaunchpadAnswers;
+  onExit: () => void;
+  onFinish: (answer: TellPeopleAnswer) => void;
+}) {
+  const sales = salesChannelsOf(answers, SALES_CHANNELS_KEY);
+  const selected = new Set(sales?.selected ?? []);
+  const friends = sales?.where.friends ?? [];
+  const lines = [
+    selected.has("flyers") ? { id: "flyers", before: "I will print and distribute", after: "flyers." } : null,
+    selected.has("friends") && friends.includes("see") ? { id: "see", before: "I will tell", after: "people in person." } : null,
+    selected.has("friends") && friends.includes("message") ? { id: "message", before: "I will send the message to", after: "people." } : null,
+    selected.has("online") ? { id: "days", before: "I will share the post", after: "days in advance." } : null,
+    selected.has("online") ? { id: "ask", before: "I will ask", after: "friends to share it." } : null,
+    selected.has("noticeboard") ? { id: "board", before: "I will put up", after: "posters on a noticeboard." } : null,
+  ].filter((row): row is { id: string; before: string; after: string } => !!row);
+  const cards = selected.has("cards");
+  const [counts, setCounts] = useState<Record<string, string>>({});
+  const ids = [...lines.map((line) => line.id), ...(cards ? ["cards", "stores"] : [])];
+  const ready = ids.every((id) => Number(counts[id]) > 0);
+  const field = (id: string) => (
+    <input
+      aria-label={id}
+      inputMode="numeric"
+      value={counts[id] ?? ""}
+      onChange={(event) => setCounts({ ...counts, [id]: event.target.value.replace(/\D/g, "").slice(0, 3) })}
+      className="mx-1 inline-flex h-9 w-12 rounded-lg border border-[#D5DAE3] text-center font-sans text-[16px] font-semibold text-[#19347D] outline-none"
+    />
+  );
+  return (
+    <LessonSurface title={screen.title} onBack={onExit} footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "tell-people", version: 1, counts: Object.fromEntries(ids.map((id) => [id, Number(counts[id])])) })} />}>
+      <div data-task-screen="sales-targets">
+        {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+        {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        <div className="mt-4 flex flex-col gap-3">
+          {lines.map((line) => (
+            <p key={line.id} className={LESSON_BODY}>{line.before} {field(line.id)} {line.after}</p>
+          ))}
+          {cards ? (
+            <p className={LESSON_BODY}>I will print {field("cards")} business cards and ask {field("stores")} stores if I can leave them there for their customers.</p>
+          ) : null}
+        </div>
+        {screen.permission ? <p className={`mt-4 ${LESSON_HINT}`}>{screen.permission}</p> : null}
+      </div>
+    </LessonSurface>
+  );
+}

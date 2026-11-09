@@ -19,7 +19,25 @@ export function ScriptedSheetPage({ sheet }: { sheet: ScriptedSheet }) {
     <div data-scripted-sheet={sheet.id}>
       {sheet.blocks.map((block, index) => {
         if (block.kind === "section") return <AccentLabel key={index} as="h2">{block.text}</AccentLabel>;
-        if (block.kind === "sub") return <h3 key={index} className={`mt-4 ${WORKBOOK_SUB}`}>{block.text}</h3>;
+        if (block.kind === "sub") {
+          const mark = block.underline;
+          const at = mark ? block.text.indexOf(mark) : -1;
+          return (
+            <h3 key={index} className={`mt-4 ${WORKBOOK_SUB}`}>
+              <span>
+                {at >= 0 && mark ? (
+                  <>
+                    {block.text.slice(0, at)}
+                    <span className="text-[#19347D] underline decoration-[#0CC1E0] decoration-[1.5px] underline-offset-[3px]">{mark}</span>
+                    {block.text.slice(at + mark.length)}
+                  </>
+                ) : (
+                  block.text
+                )}
+              </span>
+            </h3>
+          );
+        }
         if (block.kind === "list") {
           return (
             <ul key={index} className={`mt-2 list-disc pl-5 ${WORKBOOK_BODY}`}>
@@ -30,7 +48,7 @@ export function ScriptedSheetPage({ sheet }: { sheet: ScriptedSheet }) {
           );
         }
         return (
-          <p key={index} className={`mt-2 ${WORKBOOK_BODY}`}>
+          <p key={index} className={`mb-4 ${WORKBOOK_BODY}`}>
             {block.parts.map((part, partIndex) => (
               <Part key={partIndex} part={part} />
             ))}

@@ -39,6 +39,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "competitor-check",
   "funding-start",
   "getting-ready",
+  "sales",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -487,6 +488,45 @@ export type LaunchpadGettingReadyScreen = TaskScreenBase & {
   eyebrow?: string;
 };
 
+export type SalesStep = "channels" | "materials" | "targets";
+
+export type SalesOption = { id: string; label: string; sentence?: string };
+
+export type SalesWhereGroup = {
+  channelId: string;
+  heading: string;
+  label: string;
+  allowOwn?: boolean;
+  options: readonly SalesOption[];
+};
+
+export type SalesPieceField = {
+  id: string;
+  channelId: string;
+  label: string;
+  optional?: boolean;
+  options: readonly SalesOption[];
+};
+
+/** Rows 35-37. One step per door. Copy and options live on the screen. */
+export type LaunchpadSalesScreen = TaskScreenBase & {
+  type: "sales";
+  step: SalesStep;
+  answerKey: string;
+  title: string;
+  question?: string;
+  hint?: string;
+  wherePrompt?: string;
+  permission?: string;
+  channels?: readonly SalesOption[];
+  whereGroups?: readonly SalesWhereGroup[];
+  wherePages?: readonly (readonly string[])[];
+  serviceLabels?: { main: string; second: string };
+  hooks?: readonly SalesOption[];
+  proofs?: readonly SalesOption[];
+  pieceFields?: readonly SalesPieceField[];
+};
+
 /** Row 26. Own cash confirms. Borrow sets a payback plan. No lender. */
 export type LaunchpadFundingScreen = TaskScreenBase & {
   type: "funding-start";
@@ -530,7 +570,8 @@ export type LaunchpadTaskScreen =
   | LaunchpadCustomerScreen
   | LaunchpadCompetitorScreen
   | LaunchpadFundingScreen
-  | LaunchpadGettingReadyScreen;
+  | LaunchpadGettingReadyScreen
+  | LaunchpadSalesScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

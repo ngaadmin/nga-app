@@ -187,7 +187,10 @@ type AnswerKind =
   | "deliver-job"
   | "wrap-job"
   | "practice-run"
-  | "polish-service";
+  | "polish-service"
+  | "sales-channels"
+  | "marketing-materials"
+  | "tell-people";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
 function answerKey(screen: Obj, where: string): string {
@@ -312,6 +315,9 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       return;
     case "getting-ready":
       checkGettingReady(screen, where, answers);
+      return;
+    case "sales":
+      checkSales(screen, where, answers);
       return;
     default:
       fail(`${where} has unknown type ${String(screen.type)}.`);
@@ -478,6 +484,26 @@ function checkReadyOptions(value: unknown, where: string): void {
     text(raw.id, `${where} option ${i + 1} id`);
     text(raw.label, `${where} option ${i + 1} label`);
   });
+}
+
+function checkSales(screen: Obj, where: string, answers: Answers): void {
+  const step = screen.step;
+  const kind = step === "channels" ? "sales-channels" : step === "materials" ? "marketing-materials" : step === "targets" ? "tell-people" : "";
+  if (!kind) fail(`${where} has an unknown sales step.`);
+  saves(answers, screen, kind, where);
+  text(screen.title, `${where} title`);
+  if (step === "channels") {
+    text(screen.question, `${where} question`);
+    text(screen.context, `${where} context`);
+    text(screen.hint, `${where} hint`);
+    checkReadyOptions(screen.channels, `${where} channels`);
+  }
+  if (step === "materials") {
+    text(screen.question, `${where} question`);
+    checkReadyOptions(screen.hooks, `${where} hooks`);
+    checkReadyOptions(screen.proofs, `${where} proofs`);
+  }
+  if (step === "targets") text(screen.hint, `${where} hint`);
 }
 
 function checkGettingReady(screen: Obj, where: string, answers: Answers): void {

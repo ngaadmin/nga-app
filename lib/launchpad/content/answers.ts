@@ -229,6 +229,33 @@ export type PolishServiceAnswer = {
   rows: Record<string, PolishResult>;
 };
 
+/** Row 35. Selected channels and where each one is used. */
+export type SalesChannelsAnswer = {
+  kind: "sales-channels";
+  version: 1;
+  selected: readonly string[];
+  where: Readonly<Record<string, readonly string[]>>;
+  whereExtra?: Readonly<Record<string, string>>;
+};
+
+/** Row 36. Hook, proof, two services, and the leftover piece choices. */
+export type MarketingMaterialsAnswer = {
+  kind: "marketing-materials";
+  version: 1;
+  mainService?: string;
+  secondService?: string;
+  hook?: string;
+  proof?: string;
+  pieces: Readonly<Record<string, string>>;
+};
+
+/** Row 37. The target numbers only. */
+export type TellPeopleAnswer = {
+  kind: "tell-people";
+  version: 1;
+  counts: Readonly<Record<string, number>>;
+};
+
 export type LaunchpadAnswer =
   | BusinessIdentityAnswer
   | SelectionAnswer
@@ -246,7 +273,10 @@ export type LaunchpadAnswer =
   | DeliverJobAnswer
   | WrapJobAnswer
   | PracticeRunAnswer
-  | PolishServiceAnswer;
+  | PolishServiceAnswer
+  | SalesChannelsAnswer
+  | MarketingMaterialsAnswer
+  | TellPeopleAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -425,6 +455,73 @@ export function parseFieldsAnswer(value: unknown): FieldsAnswer | null {
   return out;
 }
 
+function stringMap(value: unknown): Record<string, string> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (ID_RE.test(key) && typeof raw === "string" && raw.trim()) out[key] = raw.trim().slice(0, STORED_TEXT_MAX);
+  }
+  return out;
+}
+
+function idMap(value: unknown): Record<string, string[]> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, string[]> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (!ID_RE.test(key)) continue;
+    const ids = idList(raw);
+    if (ids.length) out[key] = ids;
+  }
+  return out;
+}
+
+function countMap(value: unknown): Record<string, number> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, number> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    const count = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
+    if (ID_RE.test(key) && Number.isFinite(count) && count >= 0 && count <= 999) out[key] = Math.round(count);
+  }
+  return out;
+}
+
+export function parseSalesChannelsAnswer(value: unknown): SalesChannelsAnswer | null {
+  if (!isRecord(value) || value.kind !== "sales-channels" || value.version !== 1) return null;
+  const selected = idList(value.selected);
+  if (selected.length === 0) return null;
+  const extra = stringMap(value.whereExtra);
+  return { kind: "sales-channels", version: 1, selected, where: idMap(value.where), ...(Object.keys(extra).length ? { whereExtra: extra } : {}) };
+}
+
+export function parseMarketingMaterialsAnswer(value: unknown): MarketingMaterialsAnswer | null {
+  if (!isRecord(value) || value.kind !== "marketing-materials" || value.version !== 1) return null;
+  const main = typeof value.mainService === "string" && ID_RE.test(value.mainService) ? value.mainService : undefined;
+  const second = typeof value.secondService === "string" && ID_RE.test(value.secondService) ? value.secondService : undefined;
+  const hook = typeof value.hook === "string" && ID_RE.test(value.hook) ? value.hook : undefined;
+  const proof = typeof value.proof === "string" && ID_RE.test(value.proof) ? value.proof : undefined;
+  return { kind: "marketing-materials", version: 1, ...(main ? { mainService: main } : {}), ...(second ? { secondService: second } : {}), ...(hook ? { hook } : {}), ...(proof ? { proof } : {}), pieces: stringMap(value.pieces) };
+}
+
+export function parseTellPeopleAnswer(value: unknown): TellPeopleAnswer | null {
+  if (!isRecord(value) || value.kind !== "tell-people" || value.version !== 1) return null;
+  return { kind: "tell-people", version: 1, counts: countMap(value.counts) };
+}
+
+export function salesChannelsOf(answers: LaunchpadAnswers | undefined, key: string): SalesChannelsAnswer | undefined {
+  const value = answers?.[key];
+  return value?.kind === "sales-channels" ? value : undefined;
+}
+
+export function marketingOf(answers: LaunchpadAnswers | undefined, key: string): MarketingMaterialsAnswer | undefined {
+  const value = answers?.[key];
+  return value?.kind === "marketing-materials" ? value : undefined;
+}
+
+export function tellPeopleOf(answers: LaunchpadAnswers | undefined, key: string): TellPeopleAnswer | undefined {
+  const value = answers?.[key];
+  return value?.kind === "tell-people" ? value : undefined;
+}
+
 /** One stored answer of any known kind, or null. */
 export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
   if (!isRecord(value)) return null;
@@ -463,6 +560,12 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parsePracticeRunAnswer(value);
     case "polish-service":
       return parsePolishServiceAnswer(value);
+    case "sales-channels":
+      return parseSalesChannelsAnswer(value);
+    case "marketing-materials":
+      return parseMarketingMaterialsAnswer(value);
+    case "tell-people":
+      return parseTellPeopleAnswer(value);
     default:
       return null;
   }

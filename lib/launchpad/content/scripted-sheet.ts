@@ -3,7 +3,7 @@ export type ScriptedPart = string | { value: string | null };
 
 export type ScriptedBlock =
   | { kind: "section"; text: string }
-  | { kind: "sub"; text: string }
+  | { kind: "sub"; text: string; /** Channel short name to underline inside the subhead. */ underline?: string }
   | { kind: "paragraph"; parts: readonly ScriptedPart[] }
   | { kind: "list"; items: readonly string[] };
 

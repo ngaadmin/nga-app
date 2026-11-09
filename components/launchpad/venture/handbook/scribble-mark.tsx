@@ -25,31 +25,32 @@ export const SCRIBBLE_SRC = {
 const RHYTHM = ["paw", "bone", "heart", "star", "sparkle", "treats"] as const;
 const RHYTHM_ROT = [-8, 6, -4, 9];
 
-/**
- * At most two small doodles, in a row under the page. They used to sit on
- * every other line and push prices sideways, so they stay out of the text.
- */
+/** A 32px doodle on the right of every second body paragraph. Price columns are left alone. */
 export function placeRhythmDoodles(root: HTMLElement, pageNumber: number) {
   root.querySelectorAll("[data-rhythm-doodle]").forEach((node) => node.remove());
-  const host = root.querySelector("article");
-  if (!(host instanceof HTMLElement)) return;
-  const tray = document.createElement("div");
-  tray.dataset.rhythmDoodle = "tray";
-  tray.className = "pointer-events-none mt-6 flex items-end justify-end gap-4";
-  const start = Math.max(0, pageNumber - 1) * 2;
-  for (let i = 0; i < 2; i++) {
-    const name = RHYTHM[(start + i) % RHYTHM.length]!;
+  const paras = [...root.querySelectorAll("p, li")].filter((el) => {
+    if (el.closest("[data-scribble-large], button, [data-inline-editor], [data-cost-workbook], [data-price-sheet], [data-jobs-sheet], [data-cost-row]")) return false;
+    return (el.textContent ?? "").trim().length > 0;
+  });
+  let cursor = Math.max(0, pageNumber - 1) * 3;
+  paras.forEach((el, index) => {
+    if (index % 2 !== 1) return;
+    const name = RHYTHM[cursor % RHYTHM.length]!;
+    cursor += 1;
     const img = document.createElement("img");
     img.src = SCRIBBLE_SRC[name];
     img.alt = "";
     img.width = 32;
     img.height = 32;
     img.dataset.rhythmDoodle = name;
-    img.className = "h-auto w-8 mix-blend-multiply";
-    img.style.transform = `rotate(${RHYTHM_ROT[i % RHYTHM_ROT.length]}deg)`;
-    tray.appendChild(img);
-  }
-  host.appendChild(tray);
+    img.className = "pointer-events-none absolute top-1/2 z-raised h-auto w-8 -translate-y-1/2 mix-blend-multiply";
+    const turn = Math.floor(index / 2);
+    img.style.right = `${turn % 2 ? 18 : 0}px`;
+    img.style.transform = `translateY(-50%) rotate(${RHYTHM_ROT[turn % RHYTHM_ROT.length]}deg)`;
+    const node = el as HTMLElement;
+    node.classList.add("relative", "pr-[54px]");
+    node.appendChild(img);
+  });
 }
 
 /** End-of-page scribble, about 80px, right aligned. */

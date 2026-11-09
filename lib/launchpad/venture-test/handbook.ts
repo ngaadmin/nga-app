@@ -10,11 +10,14 @@
 import type { LaunchpadFloor, LaunchpadSilver, LaunchpadSummarySection, LaunchpadTextField } from "@/lib/launchpad/content/types";
 import { applyFieldChange } from "@/lib/launchpad/content/fields";
 import { kebabId } from "@/lib/launchpad/venture-test/handbook-ids";
-import { costsOf, fieldsAnswer, identityAnswerOf, jobsOf, priceOf, rankingAnswer, selectionAnswer, selectionOf, type JobsAnswer, type LaunchpadAnswer, type PriceAnswer } from "@/lib/launchpad/content/answers";
+import { costsOf, fieldsAnswer, identityAnswerOf, jobsOf, priceOf, rankingAnswer, salesChannelsOf, selectionAnswer, selectionOf, type JobsAnswer, type LaunchpadAnswer, type PriceAnswer } from "@/lib/launchpad/content/answers";
 import { keptPerJob, weeklyKeep, weeksFromWeeklyKeep } from "@/lib/launchpad/content/pricing/calc";
 import { workbookView } from "@/lib/launchpad/content/know-your-cost/logic";
 import { AGREE_JOB_KEY, DELIVER_JOB_KEY, FIND_CUSTOMERS_KEY, POLISH_SERVICE_KEY, PRACTICE_RUN_KEY, WRAP_JOB_KEY } from "@/lib/launchpad/content/getting-ready/copy";
 import { FUNDING_ANSWER_KEY } from "@/lib/launchpad/content/planning/funding";
+import { salesWorkbookSheets } from "@/lib/launchpad/content/sales/workbook-sheets";
+import { SALES_CHANNELS_KEY } from "@/lib/launchpad/content/sales/copy";
+import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 import { JOBS_COVER_ANSWER_KEY, SET_PRICE_ANSWER_KEY } from "@/lib/launchpad/content/pricing/screens";
 import { findKnowYourCost, sampleCostsAnswer } from "@/lib/launchpad/content/know-your-cost/logic";
 import type { CaptureScreen } from "@/lib/launchpad/content/task-pages";
@@ -131,6 +134,11 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], 
       }
     } else if (page.silver.id === "l2-s3") {
       out.push({ ...page, sheet: "funding" });
+    } else if (page.silver.id === "l4-s1") {
+      const name = identityAnswerOf(progress.answers, IDENTITY_ANSWER_KEY)?.name || "My business";
+      const sheets = salesWorkbookSheets(progress.answers, name);
+      if (sheets.length === 0 || (!templates && !salesChannelsOf(progress.answers, SALES_CHANNELS_KEY))) out.push(page);
+      else for (const sheet of sheets) out.push({ ...page, kind: "summary", sheet: sheet.id });
     } else if (page.silver.id === "l3-s3") {
       out.push({ ...page, sheet: "ready-a" });
       out.push({ ...page, sheet: "ready-b" });

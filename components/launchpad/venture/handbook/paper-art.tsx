@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
+import { FREDOKA_CLASS, FREDOKA_HEADING_CLASS } from "@/components/launchpad/venture/identity/identity-fonts";
 
 /*
  * Shared workbook paper art (handbook r4 + wrapup-binder-r1, 4 Nov): the warm
@@ -13,8 +13,8 @@ export const PAPER_ACCENT = "#0CC1E0";
 export const WORKBOOK_BODY = "font-sans text-[16px] font-normal leading-[24px] text-[#19347D]";
 /** A picked, typed, or calculated answer: Inter 600, 16px, 24px line height, navy. */
 export const WORKBOOK_ANSWER = "font-sans text-[16px] font-semibold leading-[24px] text-[#19347D]";
-/** Workbook subhead: Inter 600, 16px, 24px line height, aqua. */
-export const WORKBOOK_SUB = "font-sans text-[16px] font-semibold leading-6 text-[#0CC1E0]";
+/** Workbook subhead: Fredoka 600, 16px, 24px line height, aqua. */
+export const WORKBOOK_SUB = `${FREDOKA_CLASS} text-[16px] font-semibold leading-6 text-[#0CC1E0]`;
 /** Cost-group label on a workbook page: Inter 600, 16px, navy. */
 export const WORKBOOK_GROUP = "font-sans text-[16px] font-semibold leading-6 text-[#19347D]";
 /** Name and price on one line. The price column is fixed and left-aligned, so every amount starts at the same edge. */

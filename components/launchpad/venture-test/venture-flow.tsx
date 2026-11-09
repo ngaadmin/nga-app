@@ -60,6 +60,7 @@ import { JobsCoverFlow } from "@/components/launchpad/venture/screens/jobs-cover
 import { CompetitorFlow, CustomerCheckFlow, OfferLoopFlow } from "@/components/launchpad/venture/screens/module2-flows";
 import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow";
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
+import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
 
@@ -679,6 +680,24 @@ export function VentureFlow({
               save(updated);
               go({ screen: "corridor", level: floor.level, entering: false });
               setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l2-s2" });
+            }}
+          />
+        );
+        break;
+      }
+      const salesScreen = current?.screens.find((s) => s.type === "sales");
+      if (salesScreen && salesScreen.type === "sales" && current) {
+        const taskId = current.id;
+        body = (
+          <SalesFlow
+            screen={salesScreen}
+            answers={answers}
+            floors={floors}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onFinish={(answer) => {
+              const updated = completeTask(setProgressAnswer(progress, salesScreen.answerKey, answer), taskId);
+              save(updated);
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />
         );

@@ -12,8 +12,8 @@ const fredokaSemiBold = Fredoka({ weight: "600", subsets: ["latin"], display: "s
  * Workbook section headings. Cath may switch this to "600".
  * next/font only accepts a written literal, so the Fredoka() weight below must stay equal to this constant.
  */
-export const WORKBOOK_HEADING_WEIGHT = "700" as const;
-const fredokaHeading = Fredoka({ weight: "700", subsets: ["latin"], display: "swap" });
+export const WORKBOOK_HEADING_WEIGHT = "600" as const;
+const fredokaHeading = Fredoka({ weight: "600", subsets: ["latin"], display: "swap" });
 export const FREDOKA_HEADING_CLASS = fredokaHeading.className;
 const pacifico = Pacifico({ weight: "400", subsets: ["latin"], display: "swap" });
 

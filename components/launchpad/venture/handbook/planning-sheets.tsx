@@ -265,6 +265,7 @@ export function PlanningWrapSheet({ sheet }: { sheet: "plan-1" | "plan-2" | "pla
 
 function PlanSelling() {
   const ctx = useLaunchpadAnswers();
+  const templates = useTemplateBlanks();
   const offer = offerOf(ctx?.answers, OFFER_ANSWER_KEY);
   const customer = customerOf(ctx?.answers, CUSTOMER_ANSWER_KEY);
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
@@ -287,7 +288,7 @@ function PlanSelling() {
       <p className="mt-1 text-[15px] text-[#19347D]">
         {offer?.availability.length ? (
           <ChosenValue>{offer.availability.every(isAvailabilitySlot) ? availabilityPhrase(offer.availability) : offer.availability.map(chipLabel).join(", ")}</ChosenValue>
-        ) : useTemplateBlanks() ? (
+        ) : templates ? (
           <BlankSlot />
         ) : (
           "Not answered yet"

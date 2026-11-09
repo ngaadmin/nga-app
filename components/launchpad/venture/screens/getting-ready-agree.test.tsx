@@ -5,6 +5,10 @@ import { AGREE_ITEMS, AGREE_PROMPT } from "@/lib/launchpad/content/getting-ready
 import { gettingReadyScreen } from "@/lib/launchpad/content/getting-ready/screens";
 import type { LaunchpadGettingReadyScreen } from "@/lib/launchpad/content/types";
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
+import { ScriptedSheetPage } from "@/components/launchpad/venture/handbook/scripted-sheet";
+import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
+import { WORKBOOK_ANSWER } from "@/components/launchpad/venture/handbook/paper-art";
+import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
 import type { AgreeJobAnswer } from "@/lib/launchpad/content/answers";
 
 const screenSpec: LaunchpadGettingReadyScreen = gettingReadyScreen("agree", "agree_the_job");
@@ -117,6 +121,13 @@ describe("Getting Ready bronze task surfaces", () => {
     expect(screen.queryByText("I will collect payment by:")).toBeNull();
     expect(screen.getByRole("button", { name: "Cash on the day" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "In person" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Cash on the day" }));
+    fireEvent.click(screen.getByRole("button", { name: "Text" }));
+    fireEvent.click(screen.getByRole("button", { name: "Email" }));
+    expect(screen.queryByText(/I will collect payment by/)).toBeNull();
+    expect(screen.queryByText(/ask for feedback/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Cash on the day" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Text" })).toBeTruthy();
     expect(document.querySelector("[data-workbook-frame]")).toBeNull();
   });
 
@@ -189,5 +200,32 @@ describe("Getting Ready bronze task surfaces", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(finishPolish.mock.calls[0]?.[0].kind).toBe("polish-service");
     expect(finishPolish.mock.calls[0]?.[0].rows.cost).toEqual({ result: "suggestions", suggestion: "Charge a little less." });
+  });
+});
+
+describe("Getting Ready workbook wrap-up", () => {
+  it("fills the existing wrap-up lines in bold navy with no underline", () => {
+    const sheet = gettingReadyWorkbookSheets(
+      { wrap_up: { kind: "wrap-job", version: 1, paymentHow: ["cash"], feedbackHow: ["text", "email"] } },
+      "Dog walking",
+      false,
+    ).find((page) => page.id === "ready-b")!;
+    render(<ScriptedSheetPage sheet={sheet} />);
+    const payment = screen.getByText("cash on the day");
+    const feedback = screen.getByText("text or email");
+    expect(payment.className).toBe(WORKBOOK_ANSWER);
+    expect(feedback.className).toBe(WORKBOOK_ANSWER);
+    expect(payment.className).not.toMatch(/underline|border-b/);
+    expect(document.body.textContent).toContain("I will collect payment by cash on the day.");
+    expect(document.body.textContent).toContain("I will ask the owner for feedback or a short review by text or email.");
+    cleanup();
+    const blank = gettingReadyWorkbookSheets(undefined, "Dog walking", true).find((page) => page.id === "ready-b")!;
+    render(
+      <TemplateBlanks on>
+        <ScriptedSheetPage sheet={blank} />
+      </TemplateBlanks>,
+    );
+    expect(document.querySelectorAll("[data-blank-slot]").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Not answered yet")).toBeNull();
   });
 });

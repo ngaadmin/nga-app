@@ -439,13 +439,6 @@ function DeliverStep({
   );
 }
 
-function joinOr(ids: readonly string[], options: readonly { id: string; sentence?: string; label: string }[]): string {
-  const phrases = ids.map((id) => options.find((option) => option.id === id)?.sentence ?? options.find((option) => option.id === id)?.label ?? id);
-  if (phrases.length <= 1) return phrases[0] ?? "";
-  if (phrases.length === 2) return `${phrases[0]} or ${phrases[1]}`;
-  return `${phrases.slice(0, -1).join(", ")}, or ${phrases[phrases.length - 1]}`;
-}
-
 function WrapJobStep({
   screen,
   answers,
@@ -461,15 +454,6 @@ function WrapJobStep({
   const [paymentHow, setPayment] = useState<string[]>(saved?.paymentHow ? [...saved.paymentHow] : []);
   const [feedbackHow, setFeedback] = useState<string[]>(saved?.feedbackHow ? [...saved.feedbackHow] : []);
   const ready = paymentHow.length > 0 && feedbackHow.length > 0;
-  const payment = joinOr(paymentHow, screen.payment?.options ?? []);
-  const feedback = joinOr(feedbackHow, screen.feedback?.options ?? []);
-  const summary = !payment && !feedback
-    ? ""
-    : !feedback
-      ? (screen.summaryPayment ?? "").replace("{payment}", payment)
-      : !payment
-        ? (screen.summaryFeedback ?? "").replace("{feedback}", feedback)
-        : (screen.summaryBoth ?? "").replace("{payment}", payment).replace("{feedback}", feedback);
   const toggle = (list: readonly string[], id: string, set: (next: string[]) => void) => {
     set(list.includes(id) ? list.filter((item) => item !== id) : [...list, id]);
   };
@@ -504,17 +488,6 @@ function WrapJobStep({
               <Chip key={option.id} variant="lined" label={option.label} selected={feedbackHow.includes(option.id)} onClick={() => toggle(feedbackHow, option.id, setFeedback)} />
             ))}
           </div>
-        ) : null}
-        {summary ? (
-          <p className={`mt-4 ${LESSON_BODY}`}>
-            {summary.split(new RegExp(`(${[payment, feedback].filter(Boolean).map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g")).map((part, index) =>
-              part === payment || part === feedback ? (
-                <span key={index} className={LESSON_PICK}>{part}</span>
-              ) : (
-                <span key={index}>{part}</span>
-              ),
-            )}
-          </p>
         ) : null}
       </div>
     </LessonSurface>

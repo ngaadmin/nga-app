@@ -197,13 +197,18 @@ function joinOr(phrases: readonly string[]): string {
   return `${phrases.slice(0, -1).join(", ")}, or ${phrases[phrases.length - 1]}`;
 }
 
+/** Sentence phrases for the ticked options, joined so two reads "a or b" and three reads "a, b, or c". */
+export function joinHow(ids: readonly string[], rows: readonly { id: string; sentence: string }[]): string {
+  return joinOr(ids.map((id) => rows.find((row) => row.id === id)?.sentence ?? id));
+}
+
 export function wrapJobLines(paymentHow: string | readonly string[], feedbackHow: string | readonly string[]): { title: string; lines: string[] } {
-  const payment = joinOr(asIds(paymentHow).map((id) => PAYMENT_HOW.find((row) => row.id === id)?.sentence ?? id));
-  const feedback = joinOr(asIds(feedbackHow).map((id) => FEEDBACK_HOW.find((row) => row.id === id)?.sentence ?? id));
+  const payment = joinHow(asIds(paymentHow), PAYMENT_HOW);
+  const feedback = joinHow(asIds(feedbackHow), FEEDBACK_HOW);
   const lines: string[] = [];
-  if (payment && feedback) lines.push(`I will collect payment by ${payment}, and ask for feedback ${feedback}.`);
+  if (payment && feedback) lines.push(`I will collect payment by ${payment}, and ask for feedback by ${feedback}.`);
   else if (payment) lines.push(`I will collect payment by ${payment}.`);
-  else if (feedback) lines.push(`I will ask for feedback ${feedback}.`);
+  else if (feedback) lines.push(`I will ask for feedback by ${feedback}.`);
   return { title: WRAP_JOB_PLAYBACK, lines };
 }
 

@@ -18,6 +18,7 @@ import {
   PRACTICE_WHO,
   agreeTitles,
   feedbackWrap,
+  joinHow,
   type PolishRow,
 } from "@/lib/launchpad/content/getting-ready/copy";
 import type { ScriptedBlock, ScriptedSheet } from "@/lib/launchpad/content/scripted-sheet";
@@ -49,8 +50,8 @@ export function gettingReadyWorkbookSheets(
   const titles = agreeTitles(AGREE_ITEMS.filter((item) => agree?.understood[item.id]).map((item) => item.id));
   const before = deliver ? BEFORE_HOW.find((row) => row.id === deliver.beforeHow)?.label : undefined;
   const after = deliver ? AFTER_HOW.find((row) => row.id === deliver.afterHow)?.label : undefined;
-  const payment = (wrap?.paymentHow ?? []).map((id) => PAYMENT_HOW.find((row) => row.id === id)?.label ?? id).join(" or ");
-  const feedback = (wrap?.feedbackHow ?? []).map((id) => FEEDBACK_HOW.find((row) => row.id === id)?.label ?? id).join(" or ");
+  const payment = joinHow(wrap?.paymentHow ?? [], PAYMENT_HOW);
+  const feedback = joinHow(wrap?.feedbackHow ?? [], FEEDBACK_HOW);
   const who = practice ? PRACTICE_WHO.find((row) => row.id === practice.who)?.label ?? practice.who : null;
   const when = practice ? PRACTICE_WHEN.find((row) => row.id === practice.when)?.label ?? practice.when : null;
   const service = serviceLabel.trim() ? serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1) : null;

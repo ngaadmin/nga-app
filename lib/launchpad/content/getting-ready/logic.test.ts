@@ -11,6 +11,7 @@ import {
   practiceLines,
   wrapJobLines,
 } from "@/lib/launchpad/content/getting-ready/copy";
+import { gettingReadyWorkbookSheets } from "@/lib/launchpad/content/getting-ready/workbook-sheets";
 
 describe("getting ready sentences", () => {
   it("requires at least one channel and caps the extra at 60", () => {
@@ -40,10 +41,30 @@ describe("getting ready sentences", () => {
   it("keeps the sheet wording on the plan lines", () => {
     expect(deliverLines("text", "photo").lines[0]).toContain("by text");
     expect(deliverLines("text", "photo").lines[1]).toContain("a photo");
-    expect(wrapJobLines("cash", "in_person").lines[0]).toContain("cash on the day");
-    expect(wrapJobLines("cash", "in_person").lines[0]).toContain("in person");
-    expect(wrapJobLines(["cash", "transfer"], "in_person").lines[0]).toContain("cash on the day or bank transfer");
+    expect(wrapJobLines("cash", "in_person").lines[0]).toBe("I will collect payment by cash on the day, and ask for feedback by in person.");
+    expect(wrapJobLines(["cash", "transfer"], ["text", "email"]).lines[0]).toBe(
+      "I will collect payment by cash on the day or bank transfer, and ask for feedback by text or email.",
+    );
     expect(wrapJobLines("cash", "in_person").lines.join(" ")).not.toMatch(/funding_lender|parent/);
+  });
+
+  it("keeps the wrap-up lines that are already on the Getting Ready workbook", () => {
+    const [sheet] = gettingReadyWorkbookSheets(
+      { wrap_up: { kind: "wrap-job", version: 1, paymentHow: ["cash", "transfer"], feedbackHow: ["text", "email"] } },
+      "Dog walking",
+      false,
+    ).filter((page) => page.id === "ready-b");
+    const text = sheet!.blocks
+      .flatMap((block) => (block.kind === "paragraph" ? block.parts.map((part) => (typeof part === "string" ? part : part.value ?? "")) : block.kind === "section" || block.kind === "sub" ? [block.text] : []))
+      .join("");
+    expect(text).toContain("How I'll wrap up a job");
+    expect(text.match(/How I'll wrap up a job/g)).toHaveLength(1);
+    expect(text).toContain("I will collect payment by cash on the day or bank transfer.");
+    expect(text).toContain("I will ask the owner for feedback or a short review by text or email.");
+    expect(text).not.toContain("and ask for feedback");
+    const empty = gettingReadyWorkbookSheets(undefined, "Dog walking", true).find((page) => page.id === "ready-b")!;
+    const feedback = empty.blocks.find((block) => block.kind === "paragraph" && block.parts.some((part) => typeof part === "string" && part.includes("ask the owner for feedback")));
+    expect(feedback && feedback.kind === "paragraph" && feedback.parts.some((part) => typeof part !== "string" && part.value === null)).toBe(true);
   });
 
   it("lowercases the practice service and groups the other feedback", () => {

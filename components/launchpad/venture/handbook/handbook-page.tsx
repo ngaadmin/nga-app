@@ -185,8 +185,7 @@ function RocketDoodle() {
  * 5:35pm): the logo at 80px centered at the top, a smaller business name, then
  * Our vision. The identity silver has no separate page, so this is the only
  * place the vision shows; from the building the logo and name are edited here.
- * The whole cover must fit the page card with no scrolling: the vision text
- * steps down (VISION_TEXT_STEPS) until it does. Grey placeholders until filled.
+ * The vision body stays Inter 400 at 16px / 24px. Grey placeholders until filled.
  */
 const COVER_LOGO_PX = 48;
 

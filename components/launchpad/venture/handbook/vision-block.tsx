@@ -23,23 +23,11 @@ function useVisionPieces(spec: LaunchpadVisionSpec | undefined): VisionPiece[] |
 
 /**
  * The vision slot (workbook cover and identity wrap-up): the content-driven
- * label, then a large light-blue quote mark and the paragraph in navy,
- * 17/26 semibold, full width, never cut off. Until it can be filled: the
- * grey italic placeholder, no quote mark. Read-only.
+ * label, then the paragraph in navy Inter 400 at 16px / 24px, full width.
+ * Until it can be filled: the grey italic placeholder. Read-only.
  */
-/**
- * Vision text steps for the workbook cover: start at 17/26 and step down for
- * long visions until the whole cover fits the page card with no scrolling.
- */
-export const VISION_TEXT_STEPS: readonly (readonly [px: number, lineHeight: number])[] = [
-  [16, 24],
-  [16, 24],
-  [15, 22],
-  [14, 20.5],
-  [13, 19],
-  [12, 17.5],
-  [11, 16],
-];
+/** Page 1 vision body: Inter 400, 16px, 24px line height. It does not step down. */
+export const VISION_TEXT_STEPS: readonly (readonly [px: number, lineHeight: number])[] = [[16, 24]];
 
 export function VisionBlock({
   spec,
@@ -60,7 +48,7 @@ export function VisionBlock({
       {sentence ? (
         <div className={`relative w-full ${textStep > 2 ? "mt-2" : "mt-3"}`}>
           <p
-            className="w-full whitespace-normal break-words text-[#19347D]"
+            className="w-full whitespace-normal break-words font-sans text-[16px] font-normal text-[#19347D]"
             style={{ fontSize: px, lineHeight: `${lh}px` }}
             data-vision-sentence=""
             data-vision-step={textStep}

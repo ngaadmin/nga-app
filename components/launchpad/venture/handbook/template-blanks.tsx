@@ -15,5 +15,5 @@ export function useTemplateBlanks(): boolean {
 
 /** Empty fill-in slot: the same aqua underline as a filled answer, with no text. */
 export function BlankSlot() {
-  return <span className="inline-block min-w-16 border-b-2 border-[#3FB7DA] align-baseline" data-blank-slot="">{"\u00a0"}</span>;
+  return <span className="inline-block min-w-16 border-b-2 border-[#0CC1E0] align-baseline" data-blank-slot="">{"\u00a0"}</span>;
 }

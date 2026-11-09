@@ -33,10 +33,12 @@ export function placeRhythmDoodles(root: HTMLElement, pageNumber: number) {
     return (el.textContent ?? "").trim().length > 0;
   });
   let cursor = Math.max(0, pageNumber - 1) * 3;
+  let placed = 0;
   paras.forEach((el, index) => {
     if (index % 2 !== 1) return;
     const name = RHYTHM[cursor % RHYTHM.length]!;
     cursor += 1;
+    placed += 1;
     const img = document.createElement("img");
     img.src = SCRIBBLE_SRC[name];
     img.alt = "";
@@ -49,6 +51,19 @@ export function placeRhythmDoodles(root: HTMLElement, pageNumber: number) {
     node.classList.add("relative", "pr-[54px]");
     node.appendChild(img);
   });
+  if (placed > 0) return;
+  const host = root.querySelector("article");
+  if (!(host instanceof HTMLElement)) return;
+  const name = RHYTHM[cursor % RHYTHM.length]!;
+  const img = document.createElement("img");
+  img.src = SCRIBBLE_SRC[name];
+  img.alt = "";
+  img.dataset.rhythmDoodle = name;
+  img.className = "pointer-events-none absolute bottom-1 z-raised h-auto w-8 mix-blend-multiply";
+  img.style.right = "0px";
+  img.style.transform = `rotate(${RHYTHM_ROT[0]}deg)`;
+  host.classList.add("relative", "pb-10");
+  host.appendChild(img);
 }
 
 /** End-of-page scribble, about 80px, right aligned. */

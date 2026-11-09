@@ -11,7 +11,7 @@ import { formatStartupMoney, workbookView, chosenServices } from "@/lib/launchpa
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
 import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-value";
-import { AccentLabel, WORKBOOK_BODY, WORKBOOK_HINT, WORKBOOK_SUB } from "@/components/launchpad/venture/handbook/paper-art";
+import { AccentLabel, WORKBOOK_BODY, WORKBOOK_HINT } from "@/components/launchpad/venture/handbook/paper-art";
 import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 import { LargeScribble } from "@/components/launchpad/venture/handbook/scribble-mark";
 
@@ -169,7 +169,7 @@ export function FundingSheet() {
     return (
       <div data-funding-wrap="">
         <AccentLabel as="h2">Planning</AccentLabel>
-        <h3 className={`mt-3 ${WORKBOOK_SUB}`}>How I&apos;ll cover my start-up costs</h3>
+        <AccentLabel>How I&apos;ll cover my start-up costs</AccentLabel>
         <p className={`mt-2 ${WORKBOOK_BODY}`}>
           I&apos;ll cover my start-up cost of <BlankSlot /> from my own cash or savings.
         </p>
@@ -183,7 +183,7 @@ export function FundingSheet() {
   return (
     <div data-funding-wrap="">
       <AccentLabel as="h2">Planning</AccentLabel>
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>How I&apos;ll cover my start-up costs</h3>
+      <AccentLabel>How I&apos;ll cover my start-up costs</AccentLabel>
       {funding.fundingSource === "own_cash" ? (
         <p className={`mt-2 ${WORKBOOK_BODY}`}>
           I&apos;ll cover my start-up cost of <ChosenValue>{total}</ChosenValue> from my own cash or savings.
@@ -255,7 +255,7 @@ function PlanSelling() {
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   return (
     <div>
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>What I am selling</h3>
+      <AccentLabel>What I am selling</AccentLabel>
       {offer?.offerings.map((row) => (
         <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
           {nameFor(row.serviceId, labels)}: <ChosenValue>{row.packages.map(chipLabel).join(", ")}</ChosenValue>
@@ -268,7 +268,7 @@ function PlanSelling() {
           .
         </p>
       ))}
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>When and who might want it</h3>
+      <AccentLabel>When and who might want it</AccentLabel>
       <p className={`mt-1 ${WORKBOOK_BODY}`}>
         {offer?.availability.length ? (
           <ChosenValue>{offer.availability.every(isAvailabilitySlot) ? availabilityPhrase(offer.availability) : offer.availability.map(chipLabel).join(", ")}</ChosenValue>
@@ -298,7 +298,7 @@ function PlanCosts() {
   if (!view) return null;
   return (
     <div>
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>My costs</h3>
+      <AccentLabel>My costs</AccentLabel>
       {[...view.marketing, ...view.starterGear].map((line) => (
         <p key={line.id} className={`flex justify-between border-b border-dashed border-[#E4D3B4] py-1 ${WORKBOOK_BODY}`}>
           <span>{line.label}</span>
@@ -328,7 +328,7 @@ function PlanOthers() {
   const addons = competitor?.addons.map((id) => chipLabel(id).toLowerCase()).join(" and ") ?? "";
   return (
     <div>
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>What others charge</h3>
+      <AccentLabel>What others charge</AccentLabel>
       <p className={`mt-1 ${WORKBOOK_BODY}`}>
         {competitor
           ? (
@@ -343,7 +343,7 @@ function PlanOthers() {
           I could do differently: <ChosenValue>{chipLabel(competitor.doDifferently).toLowerCase()}</ChosenValue>.
         </p>
       )}
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>My price</h3>
+      <AccentLabel>My price</AccentLabel>
       {price?.prices.map((row) => (
         <p key={row.serviceId} className={`mt-1 ${WORKBOOK_BODY}`}>
           {nameFor(row.serviceId, labels)} · I keep <ChosenValue>{formatMoney(row.keptPerJob, currency)}</ChosenValue>
@@ -368,7 +368,7 @@ function PlanWeek() {
   const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatMoney(row.keptPerJob, currency)}`).join(" + ");
   return (
     <div>
-      <h3 className={`mt-3 ${WORKBOOK_SUB}`}>Jobs to cover my costs</h3>
+      <AccentLabel>Jobs to cover my costs</AccentLabel>
       <p className="mt-2 font-sans text-[16px] font-semibold leading-6 text-[#4A5568]">Typical week</p>
       <p className={`mt-1 ${WORKBOOK_BODY}`}><ChosenValue>{mix}</ChosenValue> a week.</p>
       <p className={WORKBOOK_BODY}>Keep <ChosenValue>{formatMoney(jobs.weeklyKeep ?? 0, currency)}</ChosenValue> a week.</p>

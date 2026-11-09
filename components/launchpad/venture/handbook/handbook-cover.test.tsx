@@ -79,7 +79,7 @@ describe("workbook page 1, the cover", () => {
     expect(q("[data-vision-quote]")).toBeNull();
     const s = q("[data-vision-sentence]")!;
     expect(s.textContent).toMatch(/^I am starting a dog walking business\. I will offer dog walk.* and grooming.*\. I'm doing it to make money and help others\. As I grow, I'll give 10% of every sale to support animals\. My goals: I want to earn 200 .* in 3 months\. I'm saving for a new bike\. I want 10 customers to have a washed and groomed dog in 6 months\.$/);
-    // Starts at 17/26 and steps down only when the cover would overflow its card.
+    // Page 1 vision stays Inter 400 at 16px / 24px.
     expect((s as HTMLElement).style.fontSize).toBe("16px");
     expect((s as HTMLElement).style.lineHeight).toBe("24px");
     expect(q("[data-cover]")!.getAttribute("data-cover-fit-step")).toBe("0");

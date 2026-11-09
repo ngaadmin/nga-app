@@ -123,15 +123,13 @@ for (const vp of [
     expect(facts.logoCenterOff).toBeLessThan(4);
     expect(facts.logoTop).toBeLessThan(50);
     expect(facts.namePx).toBeLessThanOrEqual(19); // 17px, or the font's floor
-    expect(facts.visionPx).toBeGreaterThanOrEqual(11);
+    expect(facts.visionPx).toBe(16);
     if (vp.height >= 844) {
       // 390x844: the whole longest vision fits inside the card, nothing cut off, no scrolling.
       expect(facts.overflow, "cover scrolls inside the page card").toBeLessThanOrEqual(1);
       expect(facts.visionBottom, "vision cut off by the card").toBeLessThanOrEqual(facts.cardBottom);
     } else {
-      // 375x667 with a near-maximum vision: the text reaches its smallest step (11px);
-      // only then may the card scroll, and the end of the vision is reachable (never clipped).
-      if (facts.overflow > 1) expect(facts.step).toBe("6");
+      // Vision stays 16/24. A short viewport may scroll, and the end stays reachable.
       const end = await cover.evaluate((el) => {
         const sc = el.closest<HTMLElement>("[data-paper-scroll]")!;
         sc.scrollTop = sc.scrollHeight;

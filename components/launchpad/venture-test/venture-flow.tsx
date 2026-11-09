@@ -686,7 +686,6 @@ export function VentureFlow({
       const readyScreen = current?.screens.find((s) => s.type === "getting-ready");
       if (readyScreen && readyScreen.type === "getting-ready" && current) {
         const taskId = current.id;
-        const openHandbook = readyScreen.step === "polish";
         body = (
           <GettingReadyFlow
             screen={readyScreen}
@@ -698,12 +697,7 @@ export function VentureFlow({
             onFinish={(answer) => {
               const updated = completeTask(setProgressAnswer(progress, readyScreen.answerKey, answer), taskId);
               save(updated);
-              if (openHandbook) {
-                go({ screen: "corridor", level: floor.level, entering: false });
-                setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l3-s3" });
-              } else {
-                go({ screen: "doors", level: floor.level, silverId: silver.id });
-              }
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />
         );

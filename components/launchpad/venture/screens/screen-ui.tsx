@@ -69,14 +69,17 @@ export function ScreenPrompt({
   id,
   tone = "question",
   flush = false,
+  gap = false,
 }: {
   children: ReactNode;
   id?: string;
   tone?: keyof typeof PROMPT;
   flush?: boolean;
+  /** 16px above a subheading that follows a bullet or body line. */
+  gap?: boolean;
 }) {
   return (
-    <p id={id} className={`${flush ? "" : "mx-5"} mt-1 ${PROMPT[tone]}`}>
+    <p id={id} className={`${flush ? "" : "mx-5"} ${gap ? "mt-4" : "mt-1"} ${PROMPT[tone]}`}>
       {children}
     </p>
   );

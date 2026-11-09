@@ -13,8 +13,8 @@ export const POLISH_SERVICE_KEY = "polish_service";
 
 export const CHANNELS = [
   { id: "flyers", label: "Flyers or posters" },
-  { id: "friends", label: "Friends and family" },
-  { id: "noticeboard", label: "School or community noticeboard" },
+  { id: "friends", label: "Talking to friends and family" },
+  { id: "noticeboard", label: "Posting on a school or community board" },
   { id: "online", label: "An online post (check if allowed)" },
   { id: "cards", label: "Business cards" },
   { id: "community", label: "A community group (check if allowed)" },
@@ -127,8 +127,8 @@ export const POLISH_QUESTIONS = [
 ] as const;
 
 export const POLISH_RESULTS = [
-  { id: "good", label: "Was good, nothing to change" },
-  { id: "suggestions", label: "Customer had suggestions" },
+  { id: "good", label: "was good, nothing to change" },
+  { id: "suggestions", label: "customer had suggestions" },
 ] as const;
 
 export const ALSO_MAX = 60;
@@ -141,9 +141,9 @@ export const AGREE_TEMPLATE =
 export const DELIVER_HINT =
   "For each statement, pick the option that fits how you will do it. The what and when stay the same. Your two choices become your plan.";
 export const DELIVER_PLAYBACK = "This is my plan for delivering the service.";
-export const WRAP_JOB_HINT = "Tick every way you will do it. Your choices become your plan.";
+export const WRAP_JOB_HINT = "Thinking about wrap-up now means you're ready when the job ends. Select all the ways you'll wrap up a job.";
 export const WRAP_JOB_PLAYBACK = "This is my plan for wrapping up the job.";
-export const PRACTICE_TIP = "This is not a paid job. Keep it simple, and ask a parent before you start.";
+export const PRACTICE_TIP = "Pick who you will practice with and what you want to get better at. This is not a paid job. Keep it simple, and ask a parent before you start.";
 export const POLISH_LEAD = "Straight after you've delivered your trial run, ask your customer these questions.";
 export const SUGGESTION_PROMPT = "what was the customer's suggestion or feedback?";
 
@@ -151,9 +151,8 @@ export function channelById(id: string) {
   return CHANNELS.find((row) => row.id === id);
 }
 
-/** Wrap phrase. Noticeboard picks up the sketch's "a". Other labels lose the capital. */
+/** Sentence phrase. The stored id stays the same. The label loses its capital. */
 export function channelPhrase(id: string): string {
-  if (id === "noticeboard") return "a school or community noticeboard";
   const label = channelById(id)?.label ?? id;
   return label.charAt(0).toLowerCase() + label.slice(1);
 }
@@ -214,7 +213,7 @@ export function practiceLines(who: string, serviceLabel: string, when: string): 
   const service = serviceLabel.trim().charAt(0).toLowerCase() + serviceLabel.trim().slice(1);
   return [
     `I will do a practice run for ${whoLabel}.`,
-    `I will do ${service}.`,
+    `I will do the following service for them ${service}.`,
     `I will do it ${whenLabel}.`,
   ];
 }

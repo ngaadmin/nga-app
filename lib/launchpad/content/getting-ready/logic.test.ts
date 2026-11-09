@@ -23,7 +23,7 @@ describe("getting ready sentences", () => {
 
   it("writes the find sentence from the picked channels only", () => {
     expect(findSentence(["flyers", "friends", "noticeboard"])).toBe(
-      "I'll find customers through flyers or posters, friends and family, and a school or community noticeboard.",
+      "I'll find customers through flyers or posters, talking to friends and family, and posting on a school or community board.",
     );
     expect(findSentence(["flyers"], "Neighborhood group")).toContain("Also: Neighborhood group");
   });
@@ -47,7 +47,7 @@ describe("getting ready sentences", () => {
   });
 
   it("lowercases the practice service and groups the other feedback", () => {
-    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will do dog walking.");
+    expect(practiceLines("family", "Dog walking", "weekend")[1]).toBe("I will do the following service for them dog walking.");
     const wrap = feedbackWrap([
       { id: "service_explained", result: "good" },
       { id: "cost", result: "good" },

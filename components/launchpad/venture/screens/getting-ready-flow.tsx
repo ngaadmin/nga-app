@@ -366,7 +366,7 @@ function AgreeStep({
             </h2>
             <p className={`mb-1 mt-2 ${LESSON_BODY}`}>{section.lead}</p>
             <AgreeBullets lines={section.bullets} />
-            {section.moreLead ? <ScreenPrompt tone="sub" flush>{section.moreLead}</ScreenPrompt> : null}
+            {section.moreLead ? <ScreenPrompt tone="sub" flush gap>{section.moreLead}</ScreenPrompt> : null}
             {section.moreBullets ? <AgreeBullets lines={section.moreBullets} /> : null}
           </article>
         ))}
@@ -495,7 +495,7 @@ function WrapJobStep({
         {screen.payment ? (
           <div className="mt-4">
             <ScreenPrompt tone="section" flush>{screen.payment.heading}</ScreenPrompt>
-            <p className={`mt-1 ${LESSON_BODY}`}>{screen.payment.lead}</p>
+            {screen.payment.lead ? <p className={`mt-1 ${LESSON_BODY}`}>{screen.payment.lead}</p> : null}
             {screen.payment.options.map((option) => (
               <Chip key={option.id} variant="lined" label={option.label} selected={paymentHow.includes(option.id)} onClick={() => toggle(paymentHow, option.id, setPayment)} />
             ))}
@@ -526,6 +526,45 @@ function WrapJobStep({
   );
 }
 
+function FlowPick({
+  label,
+  value,
+  options,
+  onPick,
+}: {
+  label: string;
+  value?: string;
+  options: readonly { id: string; label: string }[];
+  onPick: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = options.find((row) => row.id === value);
+  return (
+    <span className="inline">
+      <button type="button" aria-expanded={open} aria-label={label} onClick={() => setOpen((next) => !next)} className={LESSON_PICK}>
+        {current?.label ?? "choose"}
+      </button>
+      {open && (
+        <span className="mt-1 block w-full max-w-full rounded-xl bg-white py-1 shadow-[0_8px_24px_rgba(25,52,125,0.16)]" data-open-menu="">
+          {options.map((row) => (
+            <button
+              key={row.id}
+              type="button"
+              className="block w-full px-3 py-2 text-left font-sans text-[16px] leading-[22px] text-[#19347D]"
+              onClick={() => {
+                onPick(row.id);
+                setOpen(false);
+              }}
+            >
+              {row.label}
+            </button>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function PracticeStep({
   screen,
   answers,
@@ -546,42 +585,33 @@ function PracticeStep({
   const [service, setService] = useState(saved?.service);
   const [when, setWhen] = useState(saved?.when);
   const ready = !!who && !!service && !!when;
-  const label = services.find((row) => row.id === service)?.label ?? "Dog walking";
+  const stems = [
+    { lead: screen.practiceWhoLead, label: "Who you will practice with", value: who, options: screen.practiceWho ?? [], onPick: setWho },
+    { lead: screen.practiceServiceLead, label: "Which service", value: service, options: services.map((row) => ({ id: row.id, label: row.label })), onPick: setService },
+    { lead: screen.practiceWhenLead, label: "When you will practice", value: when, options: screen.practiceWhen ?? [], onPick: setWhen },
+  ];
   return (
-    <WorkbookFrame businessName={businessName} level={3} canBack canForward={false} onBack={onExit} onForward={() => {}} footer={<ContinueButton disabled={!ready} onClick={() => ready && onFinish({ kind: "practice-run", version: 1, who: who!, service: service!, when: when! })} />}>
-      <Eyebrow>{screen.eyebrow}</Eyebrow>
-      <Aqua>{screen.title}</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">{screen.question}</h3>
-      <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-        {screen.practiceWhoLead?.split("{pick}")[0]}
-        <InlineMenu label="Who you will practice with" value={who} options={screen.practiceWho ?? []} onPick={setWho} />
-        {screen.practiceWhoLead?.split("{pick}")[1]}
-      </p>
-      <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-        {screen.practiceServiceLead?.split("{pick}")[0]}
-        <InlineMenu label="Which service" value={service} options={services.map((row) => ({ id: row.id, label: row.label }))} onPick={setService} />
-        {screen.practiceServiceLead?.split("{pick}")[1]}
-      </p>
-      <p className="mt-3 text-[16px] leading-snug text-[#19347D]">
-        {screen.practiceWhenLead?.split("{pick}")[0]}
-        <InlineMenu label="When you will practice" value={when} options={screen.practiceWhen ?? []} onPick={setWhen} />
-        {screen.practiceWhenLead?.split("{pick}")[1]}
-      </p>
-      <p className={`mt-3 ${LESSON_HINT}`}>{screen.hint}</p>
-      {ready && (
-        <div className="mt-3">
-          <p className="font-heading text-[15px] font-semibold text-[#3FB7DA]">{screen.practicePlayback}</p>
-          {practiceLines(who!, label, when!).map((line) => (
-            <p key={line} className="mt-1 text-[14px] text-[#19347D]">{line}</p>
-          ))}
-        </div>
-      )}
-      <div className="mt-4 flex items-end justify-between">
-        <Sticker src={ART.ticket} alt="" />
-        <FlatSticker kind="ball_leash" />
-        <img src={ART.pennyJourney} alt="" width={46} height={46} className="h-[46px] w-auto" />
+    <LessonSurface
+      title={screen.title}
+      onBack={onExit}
+      footer={<LessonContinue disabled={!ready} onClick={() => ready && onFinish({ kind: "practice-run", version: 1, who: who!, service: service!, when: when! })} />}
+    >
+      <div data-task-screen="practice-run">
+        {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+        {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        {stems.map((stem) => {
+          const [before, after] = stem.lead?.split("{pick}") ?? ["", ""];
+          return (
+            <p key={stem.label} className={`mt-4 ${LESSON_BODY}`}>
+              {before}
+              <FlowPick label={stem.label} value={stem.value} options={stem.options} onPick={stem.onPick} />
+              {after}
+            </p>
+          );
+        })}
+        <span className="sr-only">{businessName}</span>
       </div>
-    </WorkbookFrame>
+    </LessonSurface>
   );
 }
 
@@ -602,60 +632,55 @@ function PolishStep({
 }) {
   const saved = polishServiceOf(answers, screen.answerKey);
   const [rows, setRows] = useState<Record<string, { result?: "good" | "suggestions"; suggestion?: string }>>(saved?.rows ?? {});
-  const [page, setPage] = useState(0);
   const questions = screen.polishQuestions ?? [];
-  const groups = [questions.slice(0, 3), questions.slice(3)];
   const setResult = (id: string, result: "good" | "suggestions") => setRows((prev) => ({ ...prev, [id]: { ...prev[id], result, suggestion: result === "good" ? undefined : prev[id]?.suggestion } }));
-  const pageReady = groups[page]!.every((q) => rows[q.id]?.result);
-  const allReady = questions.every((q) => rows[q.id]?.result);
+  const allReady = questions.every((question) => {
+    const row = rows[question.id];
+    if (row?.result === "good") return true;
+    return row?.result === "suggestions" && !!row.suggestion?.trim();
+  });
   const finish = () => {
     if (!allReady) return;
     const next: PolishServiceAnswer["rows"] = {};
-    for (const q of questions) {
-      const row = rows[q.id]!;
-      next[q.id] = row.result === "suggestions" ? { result: "suggestions", ...(row.suggestion?.trim() ? { suggestion: row.suggestion.trim() } : {}) } : { result: "good" };
+    for (const question of questions) {
+      const row = rows[question.id]!;
+      next[question.id] = row.result === "suggestions" ? { result: "suggestions", suggestion: row.suggestion!.trim() } : { result: "good" };
     }
     onFinish({ kind: "polish-service", version: 1, rows: next });
   };
   return (
-    <WorkbookFrame
-      businessName={businessName}
-      level={3}
-      marker={`${page + 1} of 2`}
-      canBack
-      canForward={page === 0 && pageReady}
-      onBack={page === 0 ? onExit : () => setPage(0)}
-      onForward={() => pageReady && setPage(1)}
-      footer={<ContinueButton disabled={!pageReady} onClick={page === 0 ? () => setPage(1) : finish} />}
+    <LessonSurface
+      title={screen.title}
+      onBack={onExit}
+      footer={<LessonContinue disabled={!allReady} onClick={finish} />}
     >
-      <Eyebrow>{screen.eyebrow}</Eyebrow>
-      <Aqua>{screen.title}</Aqua>
-      <h3 className="mt-3 font-heading text-[20px] font-semibold leading-tight text-[#19347D]">{screen.question}</h3>
-      <p className={`mt-2 ${LESSON_HINT}`}>{screen.hint}</p>
-      <ol className="mt-2">
-        {groups[page]!.map((q, i) => (
-          <li key={q.id} className="mt-3">
-            <p className="text-[15px] font-semibold text-[#19347D]">{page === 0 ? i + 1 : i + 4}. {q.prompt}</p>
-            <p className="mt-1 text-[15px] text-[#19347D]">
-              <InlineMenu label={q.prompt} value={rows[q.id]?.result} options={screen.polishResults ?? []} onPick={(id) => setResult(q.id, id as "good" | "suggestions")} />
-            </p>
-            {rows[q.id]?.result === "suggestions" && (
-              <label className={`mt-2 block ${LESSON_HINT}`}>
-                {screen.polishSuggestion}
-                <textarea
-                  aria-label={screen.polishSuggestion}
-                  value={rows[q.id]?.suggestion ?? ""}
-                  onChange={(event) => setRows((prev) => ({ ...prev, [q.id]: { ...prev[q.id], result: "suggestions", suggestion: event.target.value } }))}
-                  className="mt-1 w-full border-b border-dashed border-[#E4D3B4] bg-transparent py-1 text-[15px] text-[#19347D] outline-none"
-                />
-              </label>
-            )}
-          </li>
-        ))}
-      </ol>
-      <div className="mt-4 flex justify-end">{page === 0 ? <FlatSticker kind="notepad_pencil" /> : <FlatSticker kind="bulb" />}</div>
-      <span className="sr-only">{services.length}</span>
-    </WorkbookFrame>
+      <div data-task-screen="polish-service">
+        {screen.question ? <ScreenPrompt tone="question" flush>{screen.question}</ScreenPrompt> : null}
+        {screen.hint ? <ScreenGuidance flush>{screen.hint}</ScreenGuidance> : null}
+        <ol className="mt-2 list-none p-0">
+          {questions.map((question) => (
+            <li key={question.id} className="mt-4">
+              <p className={LESSON_BODY}>{question.prompt}</p>
+              <p className={`mt-1 ${LESSON_BODY}`}>
+                <FlowPick label={question.prompt} value={rows[question.id]?.result} options={screen.polishResults ?? []} onPick={(id) => setResult(question.id, id as "good" | "suggestions")} />
+              </p>
+              {rows[question.id]?.result === "suggestions" && (
+                <label className={`mt-2 block ${LESSON_BODY}`}>
+                  {screen.polishSuggestion}
+                  <textarea
+                    aria-label={screen.polishSuggestion}
+                    value={rows[question.id]?.suggestion ?? ""}
+                    onChange={(event) => setRows((prev) => ({ ...prev, [question.id]: { ...prev[question.id], result: "suggestions", suggestion: event.target.value } }))}
+                    className="mt-1 w-full border-b border-[#D5DAE3] bg-transparent py-1 font-sans text-[16px] text-[#19347D] outline-none"
+                  />
+                </label>
+              )}
+            </li>
+          ))}
+        </ol>
+        <span className="sr-only">{businessName}{services.length}</span>
+      </div>
+    </LessonSurface>
   );
 }
 
@@ -786,7 +811,7 @@ export function ReadyWrap({
             I will do a practice run for <ChosenValue>{whoLabel}</ChosenValue>.
           </p>
           <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
-            I will do <ChosenValue>{serviceWord}</ChosenValue> for them.
+            I will do the following service for them <ChosenValue>{serviceWord}</ChosenValue>.
           </p>
           <p className="mt-1 text-[15px] leading-snug text-[#19347D]">
             I will do it <ChosenValue>{whenLabel}</ChosenValue>.

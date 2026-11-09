@@ -60,7 +60,7 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
   if (step === "deliver") {
     return {
       ...base,
-      title: "Deliver the job",
+      title: "How to deliver the job",
       question: "How will you deliver a good job?",
       hint: DELIVER_HINT,
       deliverBlocks: [
@@ -77,7 +77,7 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
       title: "Wrap-up",
       question: "How will you wrap up a job?",
       hint: WRAP_JOB_HINT,
-      payment: { heading: "Taking payment", lead: "I will collect payment by:", options: PAYMENT_HOW.map((row) => ({ ...row })) },
+      payment: { heading: "Taking payment, select all that apply", options: PAYMENT_HOW.map((row) => ({ ...row })) },
       feedback: {
         heading: "Getting feedback",
         lead: "I will ask the owner for feedback or a short review by:",
@@ -96,7 +96,7 @@ function withCopy(step: GettingReadyStep, answerKey: string, id: string): Launch
       question: "How will you practice before your first paid job?",
       hint: PRACTICE_TIP,
       practiceWhoLead: "I will do a practice run for {pick}.",
-      practiceServiceLead: "I will do the following service {pick}.",
+      practiceServiceLead: "I will do the following service for them {pick}.",
       practiceWhenLead: "I will do it {pick}.",
       practicePlayback: "Your practice run",
       practiceWho: PRACTICE_WHO.map((row) => ({ id: row.id, label: row.label })),
@@ -132,7 +132,7 @@ export function learnJourneySilver(): LaunchpadSilver {
     bronzes: [
       door("l3-s1-b1", "Attract the customer", "find", FIND_CUSTOMERS_KEY),
       door("l3-s1-b2", "Agree the job", "agree", AGREE_JOB_KEY),
-      door("l3-s1-b3", "Deliver the job", "deliver", DELIVER_JOB_KEY),
+      door("l3-s1-b3", "How to deliver the job", "deliver", DELIVER_JOB_KEY),
       door("l3-s1-b4", "Wrap-up", "wrap-job", WRAP_JOB_KEY),
     ],
   };

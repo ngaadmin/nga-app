@@ -535,7 +535,7 @@ function checkGettingReady(screen: Obj, where: string, answers: Answers): void {
       const block = screen[group];
       if (!isObj(block)) fail(`${where} ${group} is missing.`);
       text(block.heading, `${where} ${group} heading`);
-      text(block.lead, `${where} ${group} lead`);
+      if (group === "feedback" || typeof block.lead === "string") text(block.lead, `${where} ${group} lead`);
       checkReadyOptions(block.options, `${where} ${group} options`);
     }
   } else if (step === "practice") {

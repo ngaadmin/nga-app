@@ -469,7 +469,7 @@ export type LaunchpadGettingReadyScreen = TaskScreenBase & {
   deliverBlocks?: readonly { heading: string; lead: string; slot: "before" | "after" }[];
   beforeOptions?: readonly ReadyOption[];
   afterOptions?: readonly ReadyOption[];
-  payment?: { heading: string; lead: string; options: readonly ReadyOption[] };
+  payment?: { heading: string; lead?: string; options: readonly ReadyOption[] };
   feedback?: { heading: string; lead: string; options: readonly ReadyOption[] };
   /** Tokens {payment} and {feedback}. */
   summaryBoth?: string;

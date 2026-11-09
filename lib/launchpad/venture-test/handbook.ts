@@ -113,7 +113,7 @@ export function handbookPages(progress: VentureTestProgress, floors: readonly La
 }
 
 /** Split the busier workbook pages. Costs become 3 and 3b. Getting Ready becomes three pages. */
-function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[]): HandbookPageView[] {
+function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[], templates = false): HandbookPageView[] {
   const out: HandbookPageView[] = [];
   for (const page of pages) {
     if (page.silver.id === "l3-s1") continue;
@@ -121,8 +121,8 @@ function expandSheets(progress: VentureTestProgress, pages: HandbookPageView[]):
       out.push({ ...page, kind: "summary", sheet: "pricing-b" });
       out.push({ ...page, sheet: "costs-a" });
       out.push({ ...page, sheet: "costs-b" });
-      if (priceOf(progress.answers, SET_PRICE_ANSWER_KEY)) out.push({ ...page, kind: "summary", sheet: "price" });
-      if (jobsOf(progress.answers, JOBS_COVER_ANSWER_KEY)) {
+      if (templates || priceOf(progress.answers, SET_PRICE_ANSWER_KEY)) out.push({ ...page, kind: "summary", sheet: "price" });
+      if (templates || jobsOf(progress.answers, JOBS_COVER_ANSWER_KEY)) {
         out.push({ ...page, kind: "summary", sheet: "jobs" });
         out.push({ ...page, kind: "summary", sheet: "plan-1" });
         out.push({ ...page, kind: "summary", sheet: "plan-2" });
@@ -217,6 +217,56 @@ export function hasHandbook(progress: VentureTestProgress, floors: readonly Laun
 
 /** Accessible name of the illustrated workbook icon on a floor and on Launchpad home. */
 export const WORKBOOK_FLOOR_LABEL = "Open your workbook";
+
+/** Back control when the home card opens a level-scoped workbook. */
+export const WORKBOOK_HOME_BACK_LABEL = "‹ Back to Launchpad";
+
+/**
+ * Workbook pages for one level only, including pages whose answers are still empty.
+ * Used by the Launchpad home card. The floor shortcut does not use this.
+ */
+export function handbookScopePages(
+  progress: VentureTestProgress,
+  floors: readonly LaunchpadFloor[],
+  level: number,
+): HandbookPageView[] {
+  const floor = floors.find((item) => item.level === level);
+  if (!floor) return [];
+  const costSilverId = findKnowYourCost(floors)?.silver.id;
+  const views: HandbookPageView[] = [];
+  if (level === floors[0]?.level) {
+    const identity = orderedSilvers(floors).find(({ silver }) => silver.wrapUp?.type === "identity-wrap-up" && silver.wrapUp.vision);
+    if (identity) {
+      views.push({
+        number: 1,
+        level: floor.level,
+        floorName: floor.name,
+        silverNumber: 0,
+        silver: identity.silver,
+        kind: "cover",
+        bronzeTitles: [],
+        done: isSilverDone(progress, identity.silver),
+      });
+    }
+  }
+  floor.silvers.forEach((silver, index) => {
+    if (silver.wrapUp?.type === "identity-wrap-up") return;
+    const sections = silverHandbookSections(silver);
+    views.push({
+      number: views.length + 1,
+      level: floor.level,
+      floorName: floor.name,
+      silverNumber: index + 1,
+      silver,
+      kind: silver.id === costSilverId ? "costs" : silver.wrapUp?.type === "workbook-summary" || sections.length ? "summary" : "placeholder",
+      bronzeTitles: silver.bronzes.map((bronze) => bronze.title),
+      done: isSilverDone(progress, silver),
+    });
+  });
+  return expandSheets(progress, views, true)
+    .filter((page) => page.level === level)
+    .map((page, index) => ({ ...page, number: index + 1 }));
+}
 
 /**
  * Pages for a floor shortcut. A level that already has a workbook page is unchanged

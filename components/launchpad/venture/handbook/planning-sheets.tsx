@@ -14,6 +14,7 @@ import { ChosenValue } from "@/components/launchpad/venture/handbook/chosen-valu
 import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
+import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
 function WeekBar({ label, width }: { label: string; width: number }) {
   return (
@@ -40,7 +41,17 @@ export function PriceSheet() {
   const competitor = competitorOf(ctx?.answers, COMPETITOR_ANSWER_KEY);
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const currency = readCurrencyPreference();
-  if (!price) return null;
+  const templates = useTemplateBlanks();
+  if (!price) {
+    if (!templates) return null;
+    return (
+      <div data-price-sheet="">
+        <AccentLabel as="h2">My price</AccentLabel>
+        <p className="mt-2 text-[13px] leading-snug text-[#6B7280]">Each service has its own price and its own job cost.</p>
+        <p className="mt-2 text-[15px] text-[#19347D]">Price <BlankSlot /> for one <BlankSlot /></p>
+      </div>
+    );
+  }
   return (
     <div data-price-sheet="">
       <AccentLabel as="h2">My price</AccentLabel>
@@ -86,7 +97,19 @@ export function JobsSheet() {
   const jobs = jobsOf(ctx?.answers, JOBS_COVER_ANSWER_KEY);
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const currency = readCurrencyPreference();
-  if (!jobs) return null;
+  const templates = useTemplateBlanks();
+  if (!jobs) {
+    if (!templates) return null;
+    return (
+      <div data-jobs-sheet="">
+        <AccentLabel as="h2">Jobs to cover my costs</AccentLabel>
+        <p className="mt-3 text-[15px] text-[#19347D]"><BlankSlot /> jobs a week · I keep <BlankSlot /></p>
+        <p className="mt-3 font-heading text-[16px] text-[#19347D]">Weekly keep <BlankSlot /></p>
+        <p className="text-[15px] text-[#19347D]">Start-up to cover <BlankSlot /></p>
+        <p className="mt-1 text-[15px] text-[#19347D]">About <BlankSlot /> weeks to cover start-up.</p>
+      </div>
+    );
+  }
   const changeCount = (serviceId: string, delta: number) => {
     if (!jobs.typicalWeek || !ctx?.setAnswer) return;
     const typicalWeek = jobs.typicalWeek.map((row) => {
@@ -145,7 +168,19 @@ export function JobsSheet() {
 export function FundingSheet() {
   const ctx = useLaunchpadAnswers();
   const funding = fundingOf(ctx?.answers, FUNDING_ANSWER_KEY);
-  if (!funding) return <p className="text-[14px] text-[#9CA3AF]">Not answered yet</p>;
+  const templates = useTemplateBlanks();
+  if (!funding) {
+    if (!templates) return <p className="text-[14px] text-[#9CA3AF]">Not answered yet</p>;
+    return (
+      <div data-funding-wrap="">
+        <AccentLabel as="h2">Planning</AccentLabel>
+        <h3 className="mt-3 font-heading text-[16px] font-semibold text-[#3FB7DA]">How I&apos;ll cover my start-up costs</h3>
+        <p className="mt-2 text-[15px] leading-snug text-[#19347D]">
+          I&apos;ll cover my start-up cost of <BlankSlot /> from my own cash or savings.
+        </p>
+      </div>
+    );
+  }
   const currency = funding.currency === "USD" ? "USD" : funding.currency;
   const total = formatStartupMoney(funding.startupTotal, currency as "USD");
   const pay = funding.fundingPeriodPayment !== undefined ? formatMoney(funding.fundingPeriodPayment, currency as "USD") : "";
@@ -252,6 +287,8 @@ function PlanSelling() {
       <p className="mt-1 text-[15px] text-[#19347D]">
         {offer?.availability.length ? (
           <ChosenValue>{offer.availability.every(isAvailabilitySlot) ? availabilityPhrase(offer.availability) : offer.availability.map(chipLabel).join(", ")}</ChosenValue>
+        ) : useTemplateBlanks() ? (
+          <BlankSlot />
         ) : (
           "Not answered yet"
         )}
@@ -341,7 +378,8 @@ function PlanWeek() {
   const jobs = jobsOf(ctx?.answers, JOBS_COVER_ANSWER_KEY);
   const labels = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const currency = readCurrencyPreference();
-  if (!jobs) return null;
+  const templates = useTemplateBlanks();
+  if (!jobs) return templates ? <p className="mt-2 text-[15px] text-[#19347D]">A typical week <BlankSlot /></p> : null;
   const mix = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} ${nameFor(row.serviceId, labels)}`).join(" + ") ?? "";
   const math = jobs.typicalWeek?.map((row) => `${row.jobsPerWeek} × ${formatMoney(row.keptPerJob, currency)}`).join(" + ");
   return (

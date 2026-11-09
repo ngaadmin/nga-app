@@ -11,6 +11,7 @@ import { AccentLabel } from "@/components/launchpad/venture/handbook/paper-art";
 import { ART, Sticker } from "@/components/launchpad/venture/handbook/workbook-frame";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
 import { BTN_CYAN_COMPACT } from "@/components/launchpad/venture-test/venture-test-ui";
+import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
 function RuledPick({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
   return (
@@ -49,7 +50,19 @@ export function ProductHandbook({ editable }: { editable: boolean }) {
   const services = chosenServices(ctx?.floors ?? [], ctx?.answers, "l1-offer");
   const [editing, setEditing] = useState<string | null>(null);
   const [also, setAlso] = useState(offer?.availabilityExtra ?? "");
-  if (!offer) return <p className="text-[14px] text-[#9CA3AF]">Not answered yet</p>;
+  const templates = useTemplateBlanks();
+  if (!offer) {
+    if (!templates) return <p className="text-[14px] text-[#9CA3AF]">Not answered yet</p>;
+    return (
+      <div data-module2-handbook="product">
+        <AccentLabel as="h2">The product and its buyers</AccentLabel>
+        <h3 className="mb-2 mt-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">What I am selling</h3>
+        <p className="text-[15px] text-[#19347D]"><BlankSlot /></p>
+        <h3 className="mb-2 mt-3 text-[12px] font-semibold uppercase tracking-[0.06em] text-[#9AA3B5]">When and who might want it</h3>
+        <p className="text-[15px] text-[#19347D]"><BlankSlot /></p>
+      </div>
+    );
+  }
   const saveAlso = () => {
     ctx?.setAnswer(OFFER_ANSWER_KEY, { ...offer, availabilityExtra: also.trim() || undefined });
     setEditing(null);

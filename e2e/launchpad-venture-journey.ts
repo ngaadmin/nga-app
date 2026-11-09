@@ -55,8 +55,9 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(tile).toBeVisible();
     await expect(tile.locator("[data-tile-level-name]")).toContainText("Vision and Goals");
     await expect(tile.getByRole("button", { name: "Continue" })).toBeVisible();
-    // Workbook button always shown: an inactive placeholder until a step is done.
-    await expect(tile.locator('[data-handbook-button="inactive"]')).toHaveAttribute("aria-disabled", "true");
+    // Workbook button always shown and tappable, even before a step is done.
+    await expect(tile.locator("[data-handbook-button]")).toBeEnabled();
+    await expect(tile.locator("[data-handbook-button]")).not.toHaveAttribute("aria-disabled", "true");
   });
   await shot(t, "Home, In Progress tile (Level 1), workbook button inactive", page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }));
 
@@ -650,22 +651,28 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
     await expect(page.locator('[data-handbook="home"]')).toContainText("Read only");
     await expect(page.locator('[data-handbook="home"] [data-handbook-page][data-editable="true"]')).toHaveCount(0);
     const home = page.locator('[data-handbook="home"]');
-    // The workbook opens on page 1; Next page walks forward to The product and its buyers.
-    await turnTo(home, "l2-s1");
+    // Current level is Planning, so the home card opens only Level 2 pages.
+    await expect(home.locator('[data-handbook-scope="2"]')).toBeVisible();
+    await expect(home.locator('[data-handbook-page="l2-s1"]')).toBeVisible();
     await expect(home.locator('[data-handbook-page="l2-s1"]')).toContainText("15-minute walk");
+    await expect(home.getByRole("button", { name: /Level 1/ })).toHaveCount(0);
     // The edited Level 1 answer is saved and shows on the Level 1 page.
     const saved = await page.evaluate(() => localStorage.getItem("lp-venture-test:v1:dog-walking") ?? "");
     expect(saved).toContain("TEST a used bike");
-    await home.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
-    // Goals live in the cover vision (D30: no Define wrap); walk to cover and check.
-    const prevHome = home.getByRole("button", { name: "Previous page" });
+    // Level 1's cover is outside this level's pages. Open the full workbook from the building to check it.
+    await page.getByRole("button", { name: "Close workbook" }).click();
+    await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Open workbook" }).first().click();
+    const full = page.getByRole("dialog");
+    await full.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
+    const prevHome = full.getByRole("button", { name: "Previous page" });
     for (let i = 0; i < 4; i++) {
-      if (await home.locator('[data-handbook-page="cover"]').isVisible().catch(() => false)) break;
+      if (await full.locator('[data-handbook-page="cover"]').isVisible().catch(() => false)) break;
       await prevHome.click();
     }
-    await expect(home.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText(benefitLabel);
-    await expect(home.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText(/the environment/i);
-    await expect(page.locator('[data-handbook="home"] [data-pencil]')).toHaveCount(0);
+    await expect(full.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText(benefitLabel);
+    await expect(full.locator('[data-handbook-page="cover"] [data-vision-sentence]')).toContainText(/the environment/i);
+    await expect(full.locator("[data-pencil]")).toHaveCount(0);
   });
   await shot(t, "Handbook from home, read only", null);
   await page.getByRole("button", { name: "Close workbook" }).click();
@@ -679,11 +686,13 @@ export async function runJourney(page: Page, info: TestInfo, group: string) {
       localStorage.setItem(k, JSON.stringify(p));
     });
     await page.goto(ROUTE); // not reload: the URL still carries ?reset=1
-    await page.locator('[data-in-progress="dog-walking"] [data-handbook-button]').click();
-    const home = page.locator('[data-handbook="home"]');
-    await home.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
-    await home.getByRole("button", { name: "Previous page" }).click();
-    const s = home.locator('[data-handbook-page="cover"] [data-vision-sentence]');
+    // The home card is scoped to the current level, so the cover is opened from the building workbook.
+    await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "Open workbook" }).first().click();
+    const fullBook = page.getByRole("dialog");
+    await fullBook.getByRole("button", { name: "Level 1, Vision and Goals" }).click();
+    await fullBook.getByRole("button", { name: "Previous page" }).click();
+    const s = fullBook.locator('[data-handbook-page="cover"] [data-vision-sentence]');
     await expect(s).toBeVisible();
     await expect(s).not.toContainText("As I grow");
     await expect(s).toContainText("My goals: ");

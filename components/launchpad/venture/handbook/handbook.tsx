@@ -8,6 +8,7 @@ import {
   handbookOpenIndex,
   handbookPages,
   handbookPagesForLevel,
+  handbookScopePages,
   handbookTabs,
   handbookTabTarget,
   isHandbookPageEditable,
@@ -19,6 +20,7 @@ import { HandbookPage } from "@/components/launchpad/venture/handbook/handbook-p
 import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { PAPER_BACKGROUND, SpiralBinding, Washi } from "@/components/launchpad/venture/handbook/paper-art";
 import { ScribbleMark } from "@/components/launchpad/venture/handbook/scribble-mark";
+import { TemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
 const READ_ONLY_SAVE = () => {};
 
@@ -126,6 +128,8 @@ export function Handbook({
   onEditCosts,
   initialSheet,
   initialLevel,
+  scopeLevel,
+  backLabel = "‹ Back to the lift",
 }: {
   entry: HandbookEntry;
   businessName: string;
@@ -143,10 +147,20 @@ export function Handbook({
   initialSheet?: string;
   /** Open on this floor's workbook section, including a read-only preview when it is still empty. */
   initialLevel?: number;
+  /** Home card: only this level's template pages. Floor shortcuts leave this unset. */
+  scopeLevel?: number;
+  /** Label for the back control. The floor shortcut keeps "Back to the lift". */
+  backLabel?: string;
 }) {
-  const pages = initialLevel == null ? handbookPages(progress, floors) : handbookPagesForLevel(progress, floors, initialLevel);
-  const ghost = handbookGhost(progress, floors);
-  const tabs = handbookTabs(progress, floors);
+  const pages = scopeLevel != null
+    ? handbookScopePages(progress, floors, scopeLevel)
+    : initialLevel == null
+      ? handbookPages(progress, floors)
+      : handbookPagesForLevel(progress, floors, initialLevel);
+  const ghost = scopeLevel == null ? handbookGhost(progress, floors) : null;
+  const tabs = handbookTabs(progress, floors)
+    .filter((tab) => scopeLevel == null || tab.level === scopeLevel)
+    .map((tab) => (scopeLevel == null ? tab : { ...tab, tappable: true }));
   // A named sheet wins, then this floor's first page. Otherwise page 1. Next page moves forward.
   const [index, setIndex] = useState(() => {
     if (initialSheet) {
@@ -189,6 +203,7 @@ export function Handbook({
       aria-labelledby="handbook-title"
       className="fixed inset-0 z-modal mx-auto flex w-full max-w-[430px] flex-col overflow-hidden bg-white text-[#111827]"
       data-handbook={entry}
+      data-handbook-scope={scopeLevel ?? undefined}
     >
       <header className="flex h-16 flex-none items-center gap-2 pl-1.5 pr-4">
         <button
@@ -221,7 +236,7 @@ export function Handbook({
           className="-mt-2 mb-1 ml-4 flex h-8 items-center self-start text-[14px] font-semibold text-nga-ink"
           data-back-to-lift=""
         >
-          ‹ Back to the lift
+          {backLabel}
         </button>
       )}
 
@@ -259,7 +274,9 @@ export function Handbook({
               <LaunchpadAnswersProvider
                 value={{ iconVentureId, answers: progress.answers ?? {}, setAnswer: setAnswer ?? READ_ONLY_SAVE, floors }}
               >
-                <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
+                <TemplateBlanks on={scopeLevel != null}>
+                  <HandbookPage key={`${page.kind}-${page.silver.id}-${page.sheet ?? ""}`} page={page} editable={editable} iconVentureId={iconVentureId} onEditCosts={onEditCosts} />
+                </TemplateBlanks>
               </LaunchpadAnswersProvider>
             </div>
             <p className="pointer-events-none absolute bottom-3 right-[18px] text-[11px] text-[#9CA3AF]" aria-hidden="true">

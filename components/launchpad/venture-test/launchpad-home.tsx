@@ -149,7 +149,7 @@ function InProgressTile({
 }: {
   venture: InProgressVenture;
   onOpenVenture: (ventureId: string) => void;
-  onOpenHandbook?: (ventureId: string) => void;
+  onOpenHandbook?: (ventureId: string, level: number) => void;
   onOpenTask?: (ventureId: string, taskId: string) => void;
 }) {
   const open = v.openTasks ?? [];
@@ -197,14 +197,12 @@ function InProgressTile({
             Continue
           </button>
           {onOpenHandbook && (
-            // Same destination as the old book button: the venture handbook, only once a step is done.
             <button
               type="button"
               aria-label={WORKBOOK_FLOOR_LABEL}
-              aria-disabled={v.hasHandbook ? undefined : true}
-              onClick={v.hasHandbook ? () => onOpenHandbook(v.ventureId) : undefined}
-              className={`flex size-14 shrink-0 items-center justify-center ${v.hasHandbook ? "" : "cursor-not-allowed opacity-40"}`}
-              data-handbook-button={v.hasHandbook ? "" : "inactive"}
+              onClick={() => onOpenHandbook(v.ventureId, v.level)}
+              className="flex size-14 shrink-0 items-center justify-center"
+              data-handbook-button=""
             >
               <WorkbookMark />
             </button>
@@ -254,7 +252,7 @@ export function LaunchpadHome({
   /** Go on an open task in the expanded tile: straight into that task. */
   onOpenTask?: (ventureId: string, taskId: string) => void;
   /** Opens the business's handbook read-only. */
-  onOpenHandbook?: (ventureId: string) => void;
+  onOpenHandbook?: (ventureId: string, level: number) => void;
 }) {
   const [scrollLeft, setScrollLeft] = useState(0);
   const [lockedNote, setLockedNote] = useState<string | null>(null);

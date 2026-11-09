@@ -69,16 +69,18 @@ describe("Launchpad home In Progress tile", () => {
     expect(tile.querySelector("[data-tile-level-name]")!.className).toContain("truncate");
     fireEvent.click(book);
     fireEvent.click(go);
-    expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking");
+    expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking", 6);
     expect(onOpenVenture).toHaveBeenCalledWith("dog-walking");
   });
 
-  it("no handbook yet: the workbook button is an inactive placeholder (aria-disabled)", () => {
-    render(<LaunchpadHome inProgress={[{ ...L6, hasHandbook: false }]} onOpenVenture={() => {}} onOpenHandbook={() => {}} />);
+  it("no handbook yet: the workbook button stays tappable", () => {
+    const onOpenHandbook = vi.fn();
+    render(<LaunchpadHome inProgress={[{ ...L6, hasHandbook: false, level: 1 }]} onOpenVenture={() => {}} onOpenHandbook={onOpenHandbook} />);
     const book = screen.getByRole("button", { name: "Open your workbook" });
-    expect(book.getAttribute("aria-disabled")).toBe("true");
-    expect(book.getAttribute("data-handbook-button")).toBe("inactive");
-    expect(screen.getByRole("button", { name: "Continue" })).toBeTruthy();
+    expect(book.getAttribute("aria-disabled")).toBeNull();
+    expect(book.className).not.toContain("opacity-40");
+    fireEvent.click(book);
+    expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking", 1);
   });
 
   it("the flow counts silvers done across the whole business out of the content's total", async () => {

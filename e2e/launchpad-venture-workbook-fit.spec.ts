@@ -61,7 +61,8 @@ async function openLongVisionWorkbook(page: Page) {
     localStorage.setItem(k, JSON.stringify(p));
   }, answers);
   await page.goto(ROUTE);
-  await page.locator('[data-in-progress="dog-walking"] [data-handbook-button]').click();
+  await page.locator('[data-in-progress="dog-walking"]').getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Open workbook" }).click();
   const hb = page.getByRole("dialog");
   await expect(hb.getByRole("heading", { name: "My workbook" })).toBeVisible();
   return hb;

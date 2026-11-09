@@ -41,6 +41,8 @@ import { ProductHandbook } from "@/components/launchpad/venture/handbook/module2
 import { FundingSheet, JobsSheet, PlanningWrapSheet, PriceSheet, PricingSummarySheet } from "@/components/launchpad/venture/handbook/planning-sheets";
 import { ReadyWrap } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { FlatSticker } from "@/components/launchpad/venture/handbook/flat-stickers";
+import { LevelTemplateSections } from "@/components/launchpad/venture/handbook/level-template";
+import { BlankSlot, useTemplateBlanks } from "@/components/launchpad/venture/handbook/template-blanks";
 
 /*
  * Handbook page art from handbook-vision-products-r4 (4 Nov): one warm paper
@@ -423,9 +425,20 @@ function SummaryPageBody({
   editable: boolean;
   iconVentureId: string;
 }) {
-  const sections = useSectionLines(silverHandbookSections(page.silver));
+  const sectionList = silverHandbookSections(page.silver);
+  const sections = useSectionLines(sectionList);
+  const templates = useTemplateBlanks();
   const ctx = useLaunchpadAnswers();
   const [editing, setEditing] = useState<string | null>(null);
+  if (templates) {
+    return (
+      <>
+        <TopRow eyebrow={`${page.floorName} · Step ${page.silverNumber}`} />
+        <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">{page.silver.title}</h2>
+        <LevelTemplateSections sections={sectionList} />
+      </>
+    );
+  }
   if (editable && ctx) {
     const catalog = summaryCatalog(ctx.floors ?? []);
     return (
@@ -600,9 +613,20 @@ function CostsPageBody({
   onEditCosts?: (step: { name: "startup" } | { name: "service"; serviceId: string }) => void;
 }) {
   const ctx = useLaunchpadAnswers();
+  const templates = useTemplateBlanks();
   const screen = silver.bronzes.flatMap((b) => b.tasks.flatMap((t) => t.screens)).find((s) => s.type === "know-your-cost");
   const answer = screen && screen.type === "know-your-cost" ? costsOf(ctx?.answers, screen.answerKey) : undefined;
-  if (!screen || screen.type !== "know-your-cost" || !answer) return null;
+  if (!screen || screen.type !== "know-your-cost" || !answer) {
+    if (!templates || !screen || screen.type !== "know-your-cost") return null;
+    return (
+      <>
+        <TopRow eyebrow="My costs" />
+        <h2 className="mt-3 font-heading text-[22px] font-semibold leading-tight text-[#111827]">My costs</h2>
+        <p className="mt-3 text-[15px] text-[#19347D]">{screen.copy.starterLabel} <BlankSlot /></p>
+        <p className="mt-2 text-[15px] text-[#19347D]">{screen.copy.marketingLabel} <BlankSlot /></p>
+      </>
+    );
+  }
   return (
     <>
       <CostWorkbookBody

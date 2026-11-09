@@ -11,6 +11,7 @@ import {
   handbookOpenIndex,
   handbookPages,
   handbookPagesForLevel,
+  handbookScopePages,
   handbookTabs,
   handbookTabTarget,
   hasHandbook,
@@ -80,6 +81,17 @@ describe("handbook pages", () => {
     expect(written.some((page) => page.level === 1 && page.done)).toBe(true);
     expect(written.some((page) => page.done === false)).toBe(false);
     expect(isHandbookPageEditable("building", true)).toBe(true);
+  });
+
+  it("scopes a level to its own template pages, including an empty level", () => {
+    const level1 = handbookScopePages(EMPTY_VENTURE_TEST_PROGRESS, FLOORS, 1).map((page) => page.sheet ?? (page.kind === "cover" ? "cover" : page.silver.id));
+    expect(level1[0]).toBe("cover");
+    expect(level1).toContain("l1-s1");
+    expect(level1).toContain("l1-s2");
+    expect(level1.some((id) => id.startsWith("l2"))).toBe(false);
+    const level3 = handbookScopePages(EMPTY_VENTURE_TEST_PROGRESS, FLOORS, 3);
+    expect(level3.every((page) => page.level === 3)).toBe(true);
+    expect(level3.map((page) => page.sheet)).toEqual(["ready-a", "ready-b", "ready-c"]);
   });
 
   it("makes the cover, then one page per completed silver in building order, with no separate identity page", () => {
@@ -176,7 +188,19 @@ describe("shortcut sample answers (TEST-ONLY)", () => {
   });
 });
 
-function Harness({ entry, initial, onSave }: { entry: "home" | "building"; initial: VentureTestProgress; onSave?: () => void }) {
+function Harness({
+  entry,
+  initial,
+  onSave,
+  scopeLevel,
+  onBack,
+}: {
+  entry: "home" | "building";
+  initial: VentureTestProgress;
+  onSave?: () => void;
+  scopeLevel?: number;
+  onBack?: () => void;
+}) {
   const [progress, setProgress] = useState(initial);
   return (
     <Handbook
@@ -185,6 +209,9 @@ function Harness({ entry, initial, onSave }: { entry: "home" | "building"; initi
       floors={FLOORS}
       progress={progress}
       iconVentureId="dog-walking"
+      scopeLevel={scopeLevel}
+      backLabel={scopeLevel == null ? undefined : "‹ Back to Launchpad"}
+      onBackToLift={onBack}
       setAnswer={
         entry === "building"
           ? (key, a) => {
@@ -450,6 +477,28 @@ describe("<Handbook>", () => {
   });
 });
 
+describe("home level scope", () => {
+  it("pages only within the level, shows template blanks, and Back is for Launchpad", () => {
+    const onBack = vi.fn();
+    render(<Harness entry="home" initial={EMPTY_VENTURE_TEST_PROGRESS} scopeLevel={1} onBack={onBack} />);
+    const ids: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      ids.push(document.querySelector("[data-handbook-page]")!.getAttribute("data-handbook-page")!);
+      expect(document.body.textContent).not.toMatch(/Not answered yet/);
+      const next = screen.queryByRole("button", { name: "Next page" }) as HTMLButtonElement | null;
+      if (!next || next.disabled) break;
+      fireEvent.click(next);
+    }
+    expect(ids[0]).toBe("cover");
+    expect(ids).toContain("l1-s1");
+    expect(ids.some((id) => id.startsWith("l2") || id.startsWith("ready"))).toBe(false);
+    expect(document.querySelectorAll("[data-blank-slot]").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /Level 2/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "‹ Back to Launchpad" }));
+    expect(onBack).toHaveBeenCalled();
+  });
+});
+
 describe("<LaunchpadHome> book button", () => {
   const card = (hasHandbook: boolean): InProgressVenture => ({
     ventureId: "dog-walking",
@@ -460,14 +509,13 @@ describe("<LaunchpadHome> book button", () => {
     total: 2,
     hasHandbook,
   });
-  it("is an inactive placeholder until a silver is done, then opens the handbook", () => {
+  it("stays tappable before a silver is done and passes the card's level", () => {
     const open = vi.fn();
     const { rerender } = render(<LaunchpadHome inProgress={[card(false)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
     fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
-    expect(open).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Open your workbook" }).getAttribute("aria-disabled")).toBe("true");
-    rerender(<LaunchpadHome inProgress={[card(true)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
+    expect(open).toHaveBeenCalledWith("dog-walking", 1);
+    rerender(<LaunchpadHome inProgress={[{ ...card(true), level: 2 }]} onOpenVenture={() => {}} onOpenHandbook={open} />);
     fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
-    expect(open).toHaveBeenCalledWith("dog-walking");
+    expect(open).toHaveBeenLastCalledWith("dog-walking", 2);
   });
 });

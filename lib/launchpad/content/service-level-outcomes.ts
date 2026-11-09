@@ -20,7 +20,7 @@ export const SERVICE_FLOOR_NAMES = {
 export const SERVICE_LEVEL_OUTCOMES_DRAFT = {
   1: "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
   2: "Know what you'll offer, who wants it, what it costs, and what to charge.",
-  3: "Know how to do it, get the money and gear you need, then practice and fine-tune it.",
+  3: "Know more about your business, get the money and gear you need, then practice and fine-tune it.",
   4: "Know where to find customers, what to say, and how to tell people about it.",
   5: "Take bookings, do the job well, get paid, and know what you earned.",
   6: "Know what to improve, how to keep customers coming back, where to grow, and how to fund it.",

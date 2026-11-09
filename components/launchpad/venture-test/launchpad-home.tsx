@@ -15,7 +15,6 @@ import {
   LockedShopFrontArt,
   SHOP_ICONS,
 } from "@/components/launchpad/venture-test/launchpad-home-art";
-import { HandbookIcon } from "@/components/launchpad/venture/handbook/handbook-art";
 import { WorkbookMark } from "@/components/launchpad/venture/workbook-mark";
 import { WORKBOOK_FLOOR_LABEL } from "@/lib/launchpad/venture-test/handbook";
 import { COME_BACK_LATER_COPY, OPEN_TASKS_LABEL } from "@/lib/launchpad/venture-test/come-back-later";
@@ -141,7 +140,7 @@ function VentureThumb({ ventureId }: { ventureId: string }) {
   );
 }
 
-/** One compact "In Progress" tile: thumb + name | level name | workbook + Continue, slim progress bar under. */
+/** One compact "In Progress" tile: thumb + name | level name | Continue + workbook, slim progress bar under. */
 function InProgressTile({
   venture: v,
   onOpenVenture,
@@ -188,22 +187,7 @@ function InProgressTile({
             </button>
           )}
         </div>
-        <div className="flex flex-none items-center gap-1.5" data-tile-actions="">
-          {onOpenHandbook && (
-            // Always in the row (Cath 4 Nov 10:04pm): a light, inactive placeholder until a step is complete.
-            <button
-              type="button"
-              aria-label="Open workbook"
-              aria-disabled={v.hasHandbook ? undefined : true}
-              onClick={v.hasHandbook ? () => onOpenHandbook(v.ventureId) : undefined}
-              className={`${TILE_BTN} flex w-11 flex-none items-center justify-center ${
-                v.hasHandbook ? "border-nga-ink bg-white" : "cursor-not-allowed border-nga-mist bg-nga-mist/40 opacity-40"
-              }`}
-              data-handbook-button={v.hasHandbook ? "" : "inactive"}
-            >
-              <HandbookIcon size={28} />
-            </button>
-          )}
+        <div className="flex flex-none items-center gap-[14px]" data-tile-actions="">
           <button
             type="button"
             onClick={() => onOpenVenture(v.ventureId)}
@@ -212,6 +196,19 @@ function InProgressTile({
           >
             Continue
           </button>
+          {onOpenHandbook && (
+            // Same destination as the old book button: the venture handbook, only once a step is done.
+            <button
+              type="button"
+              aria-label={WORKBOOK_FLOOR_LABEL}
+              aria-disabled={v.hasHandbook ? undefined : true}
+              onClick={v.hasHandbook ? () => onOpenHandbook(v.ventureId) : undefined}
+              className={`flex size-14 shrink-0 items-center justify-center ${v.hasHandbook ? "" : "cursor-not-allowed opacity-40"}`}
+              data-handbook-button={v.hasHandbook ? "" : "inactive"}
+            >
+              <WorkbookMark />
+            </button>
+          )}
         </div>
       </div>
       <div
@@ -317,18 +314,7 @@ export function LaunchpadHome({
         <p className="rounded-2xl bg-nga-mist p-[18px] text-base font-medium text-nga-slate">{LAUNCHPAD_HOME_COPY.emptyInProgress}</p>
       ) : (
         inProgress.map((v) => (
-          <div key={v.ventureId}>
-            <InProgressTile venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} onOpenTask={onOpenTask} />
-            <button
-              type="button"
-              aria-label={WORKBOOK_FLOOR_LABEL}
-              onClick={() => onOpenHandbook?.(v.ventureId)}
-              className="mb-3 flex size-14 items-center justify-center"
-              data-in-progress-workbook={v.ventureId}
-            >
-              <WorkbookMark />
-            </button>
-          </div>
+          <InProgressTile key={v.ventureId} venture={v} onOpenVenture={onOpenVenture} onOpenHandbook={onOpenHandbook} onOpenTask={onOpenTask} />
         ))
       )}
     </section>

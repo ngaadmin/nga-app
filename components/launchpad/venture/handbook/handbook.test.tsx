@@ -463,11 +463,11 @@ describe("<LaunchpadHome> book button", () => {
   it("is an inactive placeholder until a silver is done, then opens the handbook", () => {
     const open = vi.fn();
     const { rerender } = render(<LaunchpadHome inProgress={[card(false)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
-    fireEvent.click(screen.getByRole("button", { name: "Open workbook" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
     expect(open).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Open workbook" }).getAttribute("aria-disabled")).toBe("true");
+    expect(screen.getByRole("button", { name: "Open your workbook" }).getAttribute("aria-disabled")).toBe("true");
     rerender(<LaunchpadHome inProgress={[card(true)]} onOpenVenture={() => {}} onOpenHandbook={open} />);
-    fireEvent.click(screen.getByRole("button", { name: "Open workbook" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open your workbook" }));
     expect(open).toHaveBeenCalledWith("dog-walking");
   });
 });

@@ -51,15 +51,19 @@ describe("Launchpad home In Progress tile", () => {
     expect(tile.className).toContain("bg-white");
     expect(tile.querySelector("[data-tile-thumb] svg")).toBeTruthy();
     expect(tile.textContent).not.toMatch(/NGA|XP/);
-    const book = screen.getByRole("button", { name: "Open workbook" });
+    const book = screen.getByRole("button", { name: "Open your workbook" });
     const go = screen.getByRole("button", { name: "Continue" });
     expect(book.textContent).toBe("");
-    expect(book.querySelector("svg")!.getAttribute("width")).toBe("28");
-    expect(book.className).not.toContain("BDE9FB");
-    for (const c of ["h-11", "w-11", "rounded-xl", "border-2", "border-nga-ink", "bg-white"]) expect(book.className).toContain(c);
+    expect(book.querySelector("img")?.getAttribute("src")).toBe("/launchpad/workbook/workbook-icon-512.png");
+    expect(book.className).toContain("size-14");
+    expect(book.className).not.toContain("border-");
+    expect(tile.contains(book)).toBe(true);
+    expect(document.querySelector("[data-in-progress-workbook]")).toBeNull();
     for (const c of ["h-11", "rounded-xl", "border-2", "bg-nga-ink", "text-white"]) expect(go.className).toContain(c);
     expect(go.className).not.toContain("flex-1");
     expect(book.parentElement).toBe(go.parentElement);
+    expect(book.parentElement?.className).toContain("gap-[14px]");
+    expect(go.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const row = tile.querySelector("[data-tile-row]")!;
     expect(row.contains(tile.querySelector("[data-tile-level-name]"))).toBe(true);
     expect(tile.querySelector("[data-tile-level-name]")!.className).toContain("truncate");
@@ -71,7 +75,7 @@ describe("Launchpad home In Progress tile", () => {
 
   it("no handbook yet: the workbook button is an inactive placeholder (aria-disabled)", () => {
     render(<LaunchpadHome inProgress={[{ ...L6, hasHandbook: false }]} onOpenVenture={() => {}} onOpenHandbook={() => {}} />);
-    const book = screen.getByRole("button", { name: "Open workbook" });
+    const book = screen.getByRole("button", { name: "Open your workbook" });
     expect(book.getAttribute("aria-disabled")).toBe("true");
     expect(book.getAttribute("data-handbook-button")).toBe("inactive");
     expect(screen.getByRole("button", { name: "Continue" })).toBeTruthy();
@@ -138,25 +142,8 @@ describe("In Progress tile: open tasks (Come back to this later)", () => {
   });
 });
 
-describe("In Progress section workbook icon", () => {
-  it("sits under the venture and opens that venture's handbook", () => {
-    const onOpenHandbook = vi.fn();
-    render(<LaunchpadHome inProgress={[L6]} onOpenVenture={() => {}} onOpenHandbook={onOpenHandbook} />);
-    const heading = screen.getByRole("heading", { name: "In Progress" });
-    const book = screen.getByRole("button", { name: "Open your workbook" });
-    expect(heading.compareDocumentPosition(book) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(book.getAttribute("data-in-progress-workbook")).toBe("dog-walking");
-    expect(book.className).toContain("size-14");
-    expect(book.className).not.toContain("border-");
-    expect(book.querySelector("source")?.getAttribute("srcset")).toBe("/launchpad/workbook/workbook-icon-512.webp");
-    fireEvent.click(book);
-    expect(onOpenHandbook).toHaveBeenCalledWith("dog-walking");
-    expect(screen.getByRole("button", { name: "Open workbook" }).getAttribute("data-handbook-button")).toBe("");
-  });
-});
-
 describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasper's review of 6f914e1)", () => {
-  it("with open tasks the 2-line label block keeps the 44px workbook button and the 94px Continue in the row", () => {
+  it("with open tasks the 2-line label block keeps Continue, then the 56px workbook, in the row", () => {
     render(
       <LaunchpadHome
         inProgress={[{ ...L6, openTasks: [{ taskId: "l1-s2-b1-t1", title: "Set your goals" }] }]}
@@ -169,15 +156,12 @@ describe("In Progress tile: workbook button beside Continue (as in c1f534c; Jasp
     const book = actions.querySelector("[data-handbook-button]") as HTMLElement;
     const go = actions.querySelector("[data-continue-button]") as HTMLElement;
     expect(book).toBeTruthy();
-    expect(book.className).toMatch(/\bh-11\b/);
-    expect(book.className).toMatch(/\bw-11\b/);
-    expect(book.className).toMatch(/rounded-xl/);
-    expect(book.className).toMatch(/border-2/);
-    expect(book.className).toMatch(/border-nga-ink/);
-    expect(book.className).toMatch(/bg-white/);
-    expect(book.querySelector("svg")?.getAttribute("width")).toBe("28");
+    expect(book.className).toContain("size-14");
+    expect(book.className).not.toContain("border-");
+    expect(book.querySelector("source")?.getAttribute("srcset")).toBe("/launchpad/workbook/workbook-icon-512.webp");
     expect(go.className).toContain("min-w-[84px]");
-    expect([...actions.children]).toEqual([book, go]);
+    expect([...actions.children]).toEqual([go, book]);
+    expect(actions.className).toContain("gap-[14px]");
     // Two-line label block: level name, then "1 open".
     const level = document.querySelector("[data-tile-level-name]") as HTMLElement;
     expect(level.parentElement?.querySelector("[data-open-tasks-toggle]")?.textContent).toMatch(/^1 open/);

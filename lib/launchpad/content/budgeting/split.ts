@@ -13,6 +13,31 @@ export type BudgetJarId = (typeof BUDGET_JARS)[number]["id"];
 
 const GIVING_BASE = 5;
 const PAY_BASE = 40;
+/** Each + or − moves one row by this many percentage points. */
+export const BUDGET_SPLIT_STEP = 5;
+const SPLIT_KEY = "lp-venture-test:budget-split";
+
+export function stepSplitPercent(value: number, direction: 1 | -1): number {
+  return Math.min(100, Math.max(0, value + direction * BUDGET_SPLIT_STEP));
+}
+
+export function readBudgetSplit(): number[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SPLIT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed) || parsed.length !== BUDGET_JARS.length) return null;
+    if (!parsed.every((value) => typeof value === "number" && value >= 0 && value <= 100)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function writeBudgetSplit(percents: readonly number[]): void {
+  window.localStorage.setItem(SPLIT_KEY, JSON.stringify(percents));
+}
 
 /**
  * Giving is the Module 1 giving percent when one is stored, otherwise 5.

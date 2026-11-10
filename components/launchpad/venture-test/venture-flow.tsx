@@ -69,8 +69,13 @@ import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silve
 
 
 /** A Budgeting-style picture door that has a narration file. */
-function bronzeHasVoice(bronze: { tasks: readonly { screens: readonly { type: string; pages?: readonly { audio?: { src?: string } }[] }[] }[] }): boolean {
-  return bronze.tasks.some((task) => task.screens.some((screen) => screen.type === "picture" && screen.pages?.some((page) => Boolean(page.audio?.src))));
+function bronzeHasVoice(bronze: { tasks: readonly { screens: readonly { type: string; pages?: readonly unknown[] }[] }[] }): boolean {
+  return bronze.tasks.some((task) =>
+    task.screens.some((screen) => {
+      if (screen.type !== "picture" || !screen.pages) return false;
+      return screen.pages.some((page) => typeof page === "object" && page !== null && "audio" in page && Boolean((page as { audio?: { src?: string } }).audio?.src));
+    }),
+  );
 }
 
 /** What the forward button is waiting for on a capture page. */

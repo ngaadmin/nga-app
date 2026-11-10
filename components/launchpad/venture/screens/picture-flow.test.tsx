@@ -2,6 +2,8 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
+import { playStoryClipFromGesture } from "@/lib/academy/lessons/story-audio/playback";
+import { readBudgetSplit } from "@/lib/launchpad/content/budgeting/split";
 import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 
@@ -62,6 +64,38 @@ describe("Budgeting picture screens", () => {
     fireEvent.click(continueButton());
     expect(document.querySelector("[data-picture-page='s3']")).toBeTruthy();
     expect(continueButton().disabled).toBe(true);
+  });
+
+  it("replays the current page from the start through the shared player", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    fireEvent.click(screen.getByRole("button", { name: "Replay" }));
+    expect(playStoryClipFromGesture).toHaveBeenCalledWith("/launchpad/budgeting/l6-s1-vo.mp3");
+    releaseContinue();
+    fireEvent.click(continueButton());
+    fireEvent.click(screen.getByRole("button", { name: "Replay" }));
+    expect(playStoryClipFromGesture).toHaveBeenLastCalledWith("/launchpad/budgeting/l6-s2-vo.mp3");
+  });
+
+  it("locks the split only when the four rows add up to 100", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    const onFinish = vi.fn();
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={onFinish} />);
+    for (let i = 0; i < 3; i += 1) {
+      releaseContinue();
+      fireEvent.click(continueButton());
+    }
+    const lock = screen.getByRole("button", { name: "Lock in my split" }) as HTMLButtonElement;
+    expect(screen.getByText("Total 100%")).toBeTruthy();
+    expect(lock.disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Less Giving" }));
+    expect(screen.getByText("Total 95%")).toBeTruthy();
+    expect(lock.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "More Giving" }));
+    expect(lock.disabled).toBe(false);
+    fireEvent.click(lock);
+    expect(readBudgetSplit()).toEqual([5, 15, 40, 40]);
+    expect(onFinish).toHaveBeenCalled();
   });
 
   it("puts the Grok credit above Continue on screen 1 only, and keeps the mute control on every screen", () => {

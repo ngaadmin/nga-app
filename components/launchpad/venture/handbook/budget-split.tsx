@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { LaunchpadAnswers } from "@/lib/launchpad/content/answers";
 import type { LaunchpadFloor } from "@/lib/launchpad/content/types";
-import { BUDGET_JARS, budgetPercents, earnedAmount, earnedDigits, splitDollars, storedGivingPercent } from "@/lib/launchpad/content/budgeting/split";
+import { BUDGET_JARS, budgetPercents, earnedAmount, earnedDigits, readBudgetSplit, splitDollars, storedGivingPercent } from "@/lib/launchpad/content/budgeting/split";
 import { formatWholeMoney } from "@/lib/dashboard/currency/format-money";
 import { readCurrencyPreference } from "@/lib/dashboard/currency/currency-storage";
 import { useLaunchpadAnswers } from "@/components/launchpad/venture/identity/answers-context";
@@ -36,7 +36,7 @@ export function BudgetSplit({
   percents?: readonly number[];
 }) {
   const ctx = useLaunchpadAnswers();
-  const shares = percents ?? budgetPercentsFor(ctx?.floors ?? [], ctx?.answers);
+  const shares = percents ?? readBudgetSplit() ?? budgetPercentsFor(ctx?.floors ?? [], ctx?.answers);
   const [raw, setRaw] = useState(() => {
     if (typeof window === "undefined") return "100";
     const saved = window.localStorage.getItem(EARNED_KEY);

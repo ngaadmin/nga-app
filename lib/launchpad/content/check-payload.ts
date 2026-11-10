@@ -325,6 +325,7 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       list(screen.pages, `${where} pages`, 1).forEach((page, i) => {
         if (!isObj(page)) fail(`${where} page ${i + 1} is malformed.`);
         text(page.id, `${where} page ${i + 1} id`);
+        if (page.split === true) return;
         text(page.image, `${where} page ${i + 1} image`);
         text(page.alt, `${where} page ${i + 1} alt`);
         text(page.body, `${where} page ${i + 1} body`);

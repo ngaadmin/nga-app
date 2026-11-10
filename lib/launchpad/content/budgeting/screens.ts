@@ -24,6 +24,7 @@ const PAGES: LaunchpadPictureScreen["pages"] = [
     body: BUDGETING_SCREEN_3,
     audio: { src: "/launchpad/budgeting/l6-s3-vo.mp3", durationMs: 24346 },
   },
+  { id: "s4", split: true },
 ];
 
 function budgetingScreen(taskId: string): LaunchpadPictureScreen {

@@ -509,17 +509,20 @@ export type SalesPieceField = {
   options: readonly SalesOption[];
 };
 
-/** One step of a picture lesson. `audio` is the narration file, when one exists. */
-export type LaunchpadPicturePage = {
-  id: string;
-  image: string;
-  alt: string;
-  body: string;
-  /** Footer credit, above Continue. Not part of the story paragraph. */
-  credit?: string;
-  /** Narration clip. Same shape as an Academy story beat. Omit when there is no file yet. */
-  audio?: { src: string; durationMs: number };
-};
+/** One narrated picture, or the split step that follows them. */
+export type LaunchpadPicturePage =
+  | {
+      id: string;
+      image: string;
+      alt: string;
+      body: string;
+      /** Footer credit, above Continue. Not part of the story paragraph. */
+      credit?: string;
+      /** Narration clip. Same shape as an Academy story beat. Omit when there is no file yet. */
+      audio?: { src: string; durationMs: number };
+      split?: false;
+    }
+  | { id: string; split: true };
 
 /** A read-through on the shared lesson page: one picture and one paragraph per step. */
 export type LaunchpadPictureScreen = TaskScreenBase & {

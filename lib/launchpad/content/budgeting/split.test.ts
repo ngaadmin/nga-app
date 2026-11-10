@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetPercents, earnedAmount, splitDollars } from "@/lib/launchpad/content/budgeting/split";
+import { budgetPercents, earnedAmount, splitDollars, stepSplitPercent } from "@/lib/launchpad/content/budgeting/split";
 
 const DEFAULT = [5, 15, 40, 40];
 
@@ -32,6 +32,13 @@ describe("budget split dollars", () => {
   it("breaks a remainder tie toward the higher percent", () => {
     expect(splitDollars(2, [10, 10])).toEqual([1, 1]);
     expect(splitDollars(1, [10, 30])).toEqual([0, 1]);
+  });
+
+  it("steps 5 points from the current percent and stays inside 0 to 100", () => {
+    expect(stepSplitPercent(12, 1)).toBe(17);
+    expect(stepSplitPercent(12, -1)).toBe(7);
+    expect(stepSplitPercent(3, -1)).toBe(0);
+    expect(stepSplitPercent(98, 1)).toBe(100);
   });
 
   it("takes a non-5 giving percent out of Pay yourself", () => {

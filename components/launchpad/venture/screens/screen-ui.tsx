@@ -146,6 +146,7 @@ export function LessonSurface({
   children,
   showMute = false,
   creditSlot = false,
+  aboveFooter,
 }: {
   title: string;
   onBack: () => void;
@@ -156,6 +157,8 @@ export function LessonSurface({
   showMute?: boolean;
   /** Mount the footer slot a story credit can portal into. */
   creditSlot?: boolean;
+  /** Sits above the credit and Continue, in the footer flow. */
+  aboveFooter?: ReactNode;
 }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const frame = (
@@ -164,6 +167,7 @@ export function LessonSurface({
       <LessonTopBar title={title} onBack={onBack} progress={progress} />
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
       <div className="px-5 pb-[18px]">
+        {aboveFooter}
         {creditSlot ? <div ref={setSlot} className="w-full" data-lesson-credit-slot="" /> : null}
         {footer}
       </div>

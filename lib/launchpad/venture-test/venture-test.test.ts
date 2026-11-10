@@ -63,10 +63,11 @@ describe("venture test structure", () => {
       [4, "Sales", 1],
       [5, "Delivery", 3],
       [6, "Budgeting", 1],
-      [7, "Growing", 2],
+      [7, "Growing", 1],
     ]);
-    expect(FLOORS[6]!.silvers.map((s) => s.title)).toEqual(["Continuous Improvement", "New Opportunities"]);
-    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(15);
+    expect(FLOORS[6]!.silvers.map((s) => s.title)).toEqual(["Level Up"]);
+    expect(FLOORS[6]!.silvers[0]!.bronzes.map((bronze) => bronze.title)).toEqual(["Reflect", "Improve", "Grow"]);
+    expect(FLOORS.reduce((n, f) => n + f.silvers.length, 0)).toBe(14);
     expect(L1.gold.title).toBe(
       "Know what your business offers, why it matters to you, the goals you'll aim for, and your brand.",
     );

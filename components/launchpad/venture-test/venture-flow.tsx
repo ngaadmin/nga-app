@@ -63,6 +63,9 @@ import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
+import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
+import type { LevelCohort } from "@/lib/launchpad/content/level-up/model";
+import { readGuestAccessSession } from "@/lib/onboarding/guest-session";
 import { primeStoryAudioFromGesture } from "@/lib/academy/lessons/story-audio/playback";
 import { identityAnswerOf } from "@/lib/launchpad/content/answers";
 import { IDENTITY_ANSWER_KEY } from "@/lib/launchpad/content/seed/identity-silver";
@@ -183,6 +186,7 @@ export function VentureFlow({
   reset,
   shortcut = null,
   iconSetOverride = null,
+  cohort = null,
 }: {
   initialVentureId: string | null;
   ventureTitles: Record<string, string>;
@@ -192,6 +196,8 @@ export function VentureFlow({
   shortcut?: VentureTestShortcut | null;
   /** TEST-ONLY `?iconSet=<venture id>`: offer that business's logo icons instead of this venture's. */
   iconSetOverride?: string | null;
+  /** Test route only. Which Grow expand list to show. */
+  cohort?: LevelCohort | null;
 }) {
   const [ventureId, setVentureId] = useState<string | null>(initialVentureId);
   const [progress, setProgress] = useState<VentureTestProgress | null>(null);
@@ -702,6 +708,26 @@ export function VentureFlow({
               save(updated);
               go({ screen: "corridor", level: floor.level, entering: false });
               setHandbook({ ventureId, entry: "building", level: floor.level, openSilverId: "l2-s2" });
+            }}
+          />
+        );
+        break;
+      }
+      const levelUpScreen = current?.screens.find((s) => s.type === "level-up");
+      if (levelUpScreen && levelUpScreen.type === "level-up" && current) {
+        const taskId = current.id;
+        const sessionCohort = readGuestAccessSession()?.curriculumCohort;
+        const track: LevelCohort = cohort ?? (sessionCohort === "explorer" || sessionCohort === "maverick" ? sessionCohort : "pathfinder");
+        body = (
+          <LevelUpFlow
+            screen={levelUpScreen}
+            answers={answers}
+            cohort={track}
+            onExit={() => go({ screen: "doors", level: floor.level, silverId: silver.id })}
+            onSave={(answer) => save(setProgressAnswer(progress, levelUpScreen.answerKey, answer))}
+            onFinish={(answer) => {
+              save(completeTask(setProgressAnswer(progress, levelUpScreen.answerKey, answer), taskId));
+              go({ screen: "doors", level: floor.level, silverId: silver.id });
             }}
           />
         );

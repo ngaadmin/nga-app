@@ -33,6 +33,7 @@ import { fundingBronze } from "@/lib/launchpad/content/planning/funding";
 import { learnJourneySilver, testTweakSilver } from "@/lib/launchpad/content/getting-ready/screens";
 import { applySalesDoors } from "@/lib/launchpad/content/sales/screens";
 import { applyBudgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
+import { levelUpSilver } from "@/lib/launchpad/content/level-up/screens";
 import { overlayLoad } from "@/lib/launchpad/load/to-payload";
 import type { LaunchpadLoadFile } from "@/lib/launchpad/load/types";
 
@@ -124,6 +125,7 @@ function withPricingBuilds(payload: LaunchpadVenturePayload): LaunchpadVenturePa
           silvers: floor.silvers.map((silver) => (silver.id === "l6-s1" ? applyBudgetingDoor(silver) : silver)),
         };
       }
+      if (floor.level === 7) return { ...floor, silvers: [levelUpSilver()] };
       if (floor.level === 3) {
         return {
           ...floor,

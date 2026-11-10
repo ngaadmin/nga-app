@@ -23,6 +23,8 @@ export function Chip({
   onClick,
   variant = "pill",
   dashed = false,
+  muted = false,
+  tag,
 }: {
   selected: boolean;
   label: string;
@@ -30,19 +32,25 @@ export function Chip({
   variant?: "pill" | "lined";
   /** Dashed outline, for an "Add your own" chip. */
   dashed?: boolean;
+  /** A win or an already-offered service: shown, not tappable. */
+  muted?: boolean;
+  /** Right-side timing tag on an Improve row. */
+  tag?: string;
 }) {
   if (variant === "lined") {
     return (
       <button
         type="button"
         aria-pressed={selected}
+        disabled={muted}
         onClick={onClick}
-        className="flex min-h-[42px] w-full items-start gap-3 border-b border-dashed border-[#F4D5A7] py-1.5 text-left"
+        className="flex min-h-[42px] w-full items-start gap-3 border-b border-dashed border-[#F4D5A7] py-1.5 text-left disabled:cursor-default"
       >
-        <span className={`mt-1 flex size-5 flex-none items-center justify-center rounded-[4px] border-2 ${selected ? "border-[#FFA503] bg-[#FFA503]" : "border-[#C5CDD8] bg-white"}`}>
-          {selected ? <OrangeCheck size={16} /> : null}
+        <span className={`mt-1 flex size-5 flex-none items-center justify-center rounded-[4px] border-2 ${selected && !muted ? "border-[#FFA503] bg-[#FFA503]" : "border-[#C5CDD8] bg-white"}`}>
+          {selected && !muted ? <OrangeCheck size={16} /> : null}
         </span>
-        <span className={LESSON_TICK_LABEL}>{label}</span>
+        <span className={muted ? "min-w-0 flex-1 font-sans text-[18px] font-normal leading-[26px] text-[#8A94A8] opacity-70" : `min-w-0 flex-1 ${LESSON_TICK_LABEL}`}>{label}</span>
+        {tag ? <span className="flex-none font-sans text-[18px] leading-[26px] text-[#8A94A8]">{tag}</span> : null}
       </button>
     );
   }

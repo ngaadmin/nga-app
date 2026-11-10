@@ -190,7 +190,8 @@ type AnswerKind =
   | "polish-service"
   | "sales-channels"
   | "marketing-materials"
-  | "tell-people";
+  | "tell-people"
+  | "level-up";
 type Answers = Map<string, { kind: AnswerKind; screen: Obj }>;
 
 function answerKey(screen: Obj, where: string): string {
@@ -318,6 +319,11 @@ function checkScreen(screen: unknown, where: string, id: (raw: unknown, where: s
       return;
     case "sales":
       checkSales(screen, where, answers);
+      return;
+    case "level-up":
+      text(screen.title, `${where} title`);
+      if (screen.step !== "reflect" && screen.step !== "improve" && screen.step !== "grow") fail(`${where} step is missing.`);
+      saves(answers, screen, "level-up", where);
       return;
     case "picture":
       text(screen.title, `${where} title`);

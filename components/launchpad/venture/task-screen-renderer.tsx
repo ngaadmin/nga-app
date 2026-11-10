@@ -17,6 +17,7 @@ import { FundingFlow } from "@/components/launchpad/venture/screens/funding-flow
 import { GettingReadyFlow } from "@/components/launchpad/venture/screens/getting-ready-flow";
 import { SalesFlow } from "@/components/launchpad/venture/screens/sales-flow";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
+import { LevelUpFlow } from "@/components/launchpad/venture/screens/level-up-flow";
 
 type Renderers = {
   [T in LaunchpadTaskScreenType]: (screen: Extract<LaunchpadTaskScreen, { type: T }>) => ReactElement;
@@ -50,6 +51,7 @@ export const LAUNCHPAD_TASK_SCREEN_RENDERERS: Renderers = {
   ),
   sales: (screen) => <SalesFlow screen={screen} floors={[]} onExit={() => {}} onFinish={() => {}} />,
   picture: (screen) => <PictureFlow screen={screen} onExit={() => {}} onFinish={() => {}} />,
+  "level-up": (screen) => <LevelUpFlow screen={screen} onExit={() => {}} onSave={() => {}} onFinish={() => {}} />,
 };
 
 export const REGISTERED_LAUNCHPAD_TASK_SCREEN_TYPES = Object.keys(

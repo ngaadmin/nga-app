@@ -41,6 +41,7 @@ export const LAUNCHPAD_TASK_SCREEN_TYPES = [
   "getting-ready",
   "sales",
   "picture",
+  "level-up",
 ] as const;
 export type LaunchpadTaskScreenType = (typeof LAUNCHPAD_TASK_SCREEN_TYPES)[number];
 
@@ -524,6 +525,14 @@ export type LaunchpadPicturePage =
     }
   | { id: string; split: true };
 
+/** Level 7 Level Up. One bronze step. The pages and copy live with the screen. */
+export type LaunchpadLevelUpScreen = TaskScreenBase & {
+  type: "level-up";
+  step: "reflect" | "improve" | "grow";
+  title: string;
+  answerKey: string;
+};
+
 /** A read-through on the shared lesson page: one picture and one paragraph per step. */
 export type LaunchpadPictureScreen = TaskScreenBase & {
   type: "picture";
@@ -597,7 +606,8 @@ export type LaunchpadTaskScreen =
   | LaunchpadFundingScreen
   | LaunchpadGettingReadyScreen
   | LaunchpadSalesScreen
-  | LaunchpadPictureScreen;
+  | LaunchpadPictureScreen
+  | LaunchpadLevelUpScreen;
 
 /** Silver wrap-up screen templates, shown once the silver's last bronze is done. */
 export const LAUNCHPAD_WRAP_UP_TYPES = ["identity-wrap-up", "workbook-summary"] as const;

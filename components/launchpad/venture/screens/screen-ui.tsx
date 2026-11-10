@@ -79,6 +79,7 @@ export function ScreenPrompt({
   tone = "question",
   flush = false,
   gap = false,
+  className = "",
 }: {
   children: ReactNode;
   id?: string;
@@ -86,9 +87,11 @@ export function ScreenPrompt({
   flush?: boolean;
   /** 16px above a subheading that follows a bullet or body line. */
   gap?: boolean;
+  /** Extra classes. Use an important margin when a screen needs a set gap. */
+  className?: string;
 }) {
   return (
-    <p id={id} className={`${flush ? "" : "mx-5"} ${gap ? "mt-4" : "mt-1"} ${PROMPT[tone]}`}>
+    <p id={id} className={`${flush ? "" : "mx-5"} ${gap ? "mt-4" : "mt-1"} ${PROMPT[tone]} ${className}`}>
       {children}
     </p>
   );

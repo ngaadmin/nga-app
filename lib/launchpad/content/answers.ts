@@ -256,6 +256,19 @@ export type TellPeopleAnswer = {
   counts: Readonly<Record<string, number>>;
 };
 
+/** Level 7 Reflect, Improve, or Grow. Lists and short ids only. */
+export type LevelUpAnswer = {
+  kind: "level-up";
+  version: 1;
+  selected: readonly string[];
+  picks: Readonly<Record<string, string>>;
+  starts: Readonly<Record<string, string>>;
+  idea: string;
+  option: string;
+  success: string;
+  start: string;
+};
+
 export type LaunchpadAnswer =
   | BusinessIdentityAnswer
   | SelectionAnswer
@@ -276,7 +289,8 @@ export type LaunchpadAnswer =
   | PolishServiceAnswer
   | SalesChannelsAnswer
   | MarketingMaterialsAnswer
-  | TellPeopleAnswer;
+  | TellPeopleAnswer
+  | LevelUpAnswer;
 
 /** Saved answers by answerKey (stored with progress on the test route). */
 export type LaunchpadAnswers = Readonly<Record<string, LaunchpadAnswer>>;
@@ -522,6 +536,36 @@ export function tellPeopleOf(answers: LaunchpadAnswers | undefined, key: string)
   return value?.kind === "tell-people" ? value : undefined;
 }
 
+function stringIdMap(value: unknown): Record<string, string> {
+  if (!isRecord(value)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (ID_RE.test(key) && typeof raw === "string" && ID_RE.test(raw)) out[key] = raw;
+  }
+  return out;
+}
+
+export function parseLevelUpAnswer(value: unknown): LevelUpAnswer | null {
+  if (!isRecord(value) || value.kind !== "level-up" || value.version !== 1) return null;
+  const text = (raw: unknown) => (typeof raw === "string" && (raw === "" || ID_RE.test(raw)) ? raw : "");
+  return {
+    kind: "level-up",
+    version: 1,
+    selected: idList(value.selected),
+    picks: stringIdMap(value.picks),
+    starts: stringIdMap(value.starts),
+    idea: text(value.idea),
+    option: text(value.option),
+    success: text(value.success),
+    start: text(value.start),
+  };
+}
+
+export function levelUpOf(answers: LaunchpadAnswers | undefined, key: string): LevelUpAnswer | undefined {
+  const value = answers?.[key];
+  return value?.kind === "level-up" ? value : undefined;
+}
+
 /** One stored answer of any known kind, or null. */
 export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
   if (!isRecord(value)) return null;
@@ -566,6 +610,8 @@ export function parseLaunchpadAnswer(value: unknown): LaunchpadAnswer | null {
       return parseMarketingMaterialsAnswer(value);
     case "tell-people":
       return parseTellPeopleAnswer(value);
+    case "level-up":
+      return parseLevelUpAnswer(value);
     default:
       return null;
   }

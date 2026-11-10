@@ -25,6 +25,7 @@ import {
   lockedDoorsNote,
   setProgressAnswer,
   silverStates,
+  ventureTestDoorsUnlocked,
   type VentureTestProgress,
   type VentureTestShortcut,
 } from "@/lib/launchpad/venture-test/venture-test-progress";
@@ -460,7 +461,7 @@ export function VentureFlow({
       const pricing = silver.title === "Pricing";
       const pricingBuilt = pricing && silver.bronzes.some((b) => !b.placeholder);
       const open = (pricing && !pricingBuilt ? false : silverStates(progress, floors, floor)[silverIndex] !== "locked");
-      const states = pricing ? pricingBronzeStates(progress, silver, open) : bronzeStates(progress, silver, open);
+      const states = pricing ? pricingBronzeStates(progress, silver, open) : bronzeStates(progress, silver, open, ventureTestDoorsUnlocked(floor.level));
       body = (
         <BronzeDoors
           level={floor.level}

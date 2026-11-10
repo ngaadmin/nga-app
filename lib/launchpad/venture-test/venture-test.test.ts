@@ -8,6 +8,8 @@ import {
   allTasksCompleteProgress,
   applyVentureTestShortcut,
   bronzeStates,
+  ventureTestDoorsUnlocked,
+  ventureTestFloorUnlocked,
   buildingCta,
   completeTask,
   currentLevel,
@@ -169,6 +171,40 @@ describe("building floor access (tap any floor)", () => {
       expect(bronzeStates(p, s, states[i] !== "locked").every((b) => b === "locked")).toBe(true);
       expect(lockedDoorsNote(p, BASE_FLOORS, l4, i)).toBe("Finish Level 3 to unlock these doors.");
     });
+  });
+
+  it("the test route opens Sales, Delivery, and Budgeting before the earlier floors are done", () => {
+    const previous = process.env.VERCEL_ENV;
+    process.env.VERCEL_ENV = "preview";
+    try {
+      const progress = EMPTY_VENTURE_TEST_PROGRESS;
+      expect(ventureTestFloorUnlocked(4)).toBe(true);
+      expect(ventureTestFloorUnlocked(5)).toBe(true);
+      expect(ventureTestFloorUnlocked(6)).toBe(true);
+      expect(ventureTestFloorUnlocked(3)).toBe(false);
+      expect(ventureTestDoorsUnlocked(4)).toBe(true);
+      expect(ventureTestDoorsUnlocked(5)).toBe(true);
+      expect(ventureTestDoorsUnlocked(6)).toBe(false);
+      expect([4, 5, 6].map((level) => floorState(progress, FLOORS, level))).toEqual(["current", "current", "current"]);
+      expect(floorState(progress, FLOORS, 7)).toBe("locked");
+      const sales = FLOORS.find((floor) => floor.level === 4)!;
+      expect(silverStates(progress, FLOORS, sales)).toEqual(["current"]);
+      const salesDoors = bronzeStates(progress, sales.silvers[0]!, true, true);
+      expect(salesDoors.filter((state) => state === "current").length).toBeGreaterThan(1);
+      expect(salesDoors.some((state) => state === "locked")).toBe(true);
+      const delivery = FLOORS.find((floor) => floor.level === 5)!;
+      expect(silverStates(progress, FLOORS, delivery).every((state) => state === "current")).toBe(true);
+      const budgeting = FLOORS.find((floor) => floor.level === 6)!;
+      const taskId = budgeting.silvers[0]!.bronzes[0]!.tasks[0]!.id;
+      const finished = completeTask(progress, taskId);
+      expect(() => advanceAfterTask(finished, budgeting, budgeting.silvers[0]!, budgeting.silvers[0]!.bronzes[0]!, 0)).not.toThrow();
+      expect(advanceAfterTask(finished, budgeting, budgeting.silvers[0]!, budgeting.silvers[0]!.bronzes[0]!, 0)).toEqual({ kind: "floor-done" });
+      expect(floorState(finished, FLOORS, 4)).toBe("current");
+      expect(floorState(finished, FLOORS, 5)).toBe("current");
+    } finally {
+      if (previous === undefined) delete process.env.VERCEL_ENV;
+      else process.env.VERCEL_ENV = previous;
+    }
   });
 
   it("the current floor still unlocks plaques in order", () => {

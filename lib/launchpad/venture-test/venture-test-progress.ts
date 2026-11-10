@@ -17,6 +17,20 @@ import type {
 } from "@/lib/launchpad/content/types";
 import type { LaunchpadTask } from "@/lib/launchpad/content/types";
 import type { LaunchpadAnswer, LaunchpadAnswers } from "@/lib/launchpad/content/answers";
+import { isVentureTestEnabled } from "@/lib/launchpad/venture-test/venture-test-gate";
+
+/** Test route only: Sales, Delivery, and Budgeting can be entered before earlier floors are done. */
+const TEST_OPEN_FLOORS = new Set([4, 5, 6]);
+/** Test route only: every door on Sales and Delivery is open, not waiting on the door before it. */
+const TEST_OPEN_DOORS = new Set([4, 5]);
+
+export function ventureTestFloorUnlocked(level: number): boolean {
+  return isVentureTestEnabled() && TEST_OPEN_FLOORS.has(level);
+}
+
+export function ventureTestDoorsUnlocked(level: number): boolean {
+  return isVentureTestEnabled() && TEST_OPEN_DOORS.has(level);
+}
 
 /**
  * A task's status. "locked" and "available" are always derived (the step
@@ -220,6 +234,7 @@ export function floorState(
   const floor = floors.find((f) => f.level === level);
   if (!floor) throw new Error(`Unknown venture floor: ${level}`);
   if (isFloorDone(progress, floor)) return "done";
+  if (ventureTestFloorUnlocked(level)) return "current";
   return level === currentLevel(progress, floors) ? "current" : "locked";
 }
 
@@ -230,6 +245,9 @@ export function silverStates(
   floor: VentureTestFloor,
 ): NodeState[] {
   const open = floorState(progress, floors, floor.level) !== "locked";
+  if (open && ventureTestDoorsUnlocked(floor.level)) {
+    return floor.silvers.map((s) => (isSilverDone(progress, s) ? "done" : "current"));
+  }
   let seenCurrent = false;
   return floor.silvers.map((s) => {
     if (isSilverDone(progress, s)) return "done";
@@ -262,15 +280,16 @@ export function pricingBronzeStates(progress: VentureTestProgress, silver: Ventu
   });
 }
 
-export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true): NodeState[] {
+export function bronzeStates(progress: VentureTestProgress, silver: VentureTestSilver, open = true, independent = false): NodeState[] {
   // A door left open ("Come back") stays current and does not block the next door.
   // A placeholder beside real doors (the Level 4 pitch) stays locked and does not gate the next door.
+  // `independent` opens every built door at once. The test route uses it for Sales and Delivery.
   let blocked = false;
   return silver.bronzes.map((b) => {
     if (skippedPlaceholder(silver, b)) return "locked";
     if (isBronzeDone(progress, b)) return "done";
     if (!open || blocked) return "locked";
-    if (!isBronzeSettled(progress, b)) blocked = true;
+    if (!independent && !isBronzeSettled(progress, b)) blocked = true;
     return "current";
   });
 }

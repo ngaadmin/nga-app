@@ -1,20 +1,24 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MASTER_MUTED_KEY } from "@/lib/academy/lessons/story-audio/master-mute";
 import { budgetingDoor } from "@/lib/launchpad/content/budgeting/screens";
 import { PictureFlow } from "@/components/launchpad/venture/screens/picture-flow";
 
-vi.mock("@/lib/academy/lessons/story-audio/playback", () => ({
-  playStoryClipOnScreen: vi.fn(() => Promise.resolve(false)),
-  playStoryClipFromGesture: vi.fn(),
-  stopStoryAudio: vi.fn(),
-  storyAudioElement: vi.fn(() => null),
-  installStoryAudioFallback: vi.fn(() => () => {}),
-  applyMasterMute: (muted: boolean) => {
-    window.localStorage.setItem("nga_master_muted", muted ? "1" : "0");
-  },
-}));
+vi.mock("@/lib/academy/lessons/story-audio/playback", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/academy/lessons/story-audio/playback")>();
+  return {
+    ...actual,
+    playStoryClipOnScreen: vi.fn(() => Promise.resolve(false)),
+    playStoryClipFromGesture: vi.fn(),
+    stopStoryAudio: vi.fn(),
+    storyAudioElement: vi.fn(() => null),
+    installStoryAudioFallback: vi.fn(() => () => {}),
+    applyMasterMute: (muted: boolean) => {
+      window.localStorage.setItem("nga_master_muted", muted ? "1" : "0");
+    },
+  };
+});
 
 afterEach(() => {
   cleanup();
@@ -23,7 +27,43 @@ afterEach(() => {
 
 const screenSpec = budgetingDoor().tasks[0]!.screens[0]!;
 
+function continueButton() {
+  return screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
+}
+
+function releaseContinue() {
+  act(() => {
+    vi.advanceTimersByTime(2000);
+  });
+}
+
 describe("Budgeting picture screens", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("holds Continue for 2 seconds on each Budgeting page, then lets it go", () => {
+    if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
+    render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
+    expect(continueButton().disabled).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(1999);
+    });
+    expect(continueButton().disabled).toBe(true);
+    releaseContinue();
+    expect(continueButton().disabled).toBe(false);
+    fireEvent.click(continueButton());
+    expect(document.querySelector("[data-picture-page='s2']")).toBeTruthy();
+    expect(continueButton().disabled).toBe(true);
+    releaseContinue();
+    fireEvent.click(continueButton());
+    expect(document.querySelector("[data-picture-page='s3']")).toBeTruthy();
+    expect(continueButton().disabled).toBe(true);
+  });
+
   it("puts the Grok credit above Continue on screen 1 only, and keeps the mute control on every screen", () => {
     if (screenSpec.type !== "picture") throw new Error("expected a picture screen");
     render(<PictureFlow screen={screenSpec} onExit={() => {}} onFinish={() => {}} />);
@@ -38,6 +78,7 @@ describe("Budgeting picture screens", () => {
     const mute = screen.getByRole("button", { name: "Mute sound" });
     expect(mute.getAttribute("aria-pressed")).toBe("false");
 
+    releaseContinue();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-picture-page='s2']")).toBeTruthy();
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
@@ -47,6 +88,7 @@ describe("Budgeting picture screens", () => {
     expect(screen.getByRole("button", { name: "Unmute sound" }).getAttribute("aria-pressed")).toBe("true");
     expect(window.localStorage.getItem(MASTER_MUTED_KEY)).toBe("1");
 
+    releaseContinue();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(document.querySelector("[data-picture-page='s3']")).toBeTruthy();
     expect(screen.queryByText("Voice created with Grok")).toBeNull();
